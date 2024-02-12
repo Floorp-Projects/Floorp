@@ -36,21 +36,11 @@ module.exports = {
     // Disallow extending of native objects.
     "no-extend-native": "error",
 
-    // Disallow case statement fallthrough without explicit `// falls through`
-    // annotation.
-    "no-fallthrough": "error",
-
-    // No reassigning native JS objects or read only globals.
-    "no-global-assign": "error",
-
     // Disallow use of assignment in return statement.
     "no-return-assign": ["error", "always"],
 
     // Disallow template literal placeholder syntax in regular strings.
     "no-template-curly-in-string": "error",
-
-    // Disallow use of this/super before calling super() in constructors.
-    "no-this-before-super": "error",
 
     // Disallow unmodified loop conditions.
     "no-unmodified-loop-condition": "error",

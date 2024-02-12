@@ -244,8 +244,6 @@ module.exports = {
     "no-empty": "error",
     // Disallow adding to native types
     "no-extend-native": "error",
-    // Disallow fallthrough of case statements, except if there is a comment.
-    "no-fallthrough": "error",
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "error",
     // Disallow usage of __proto__ property.

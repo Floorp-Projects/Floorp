@@ -221,14 +221,12 @@ module.exports = {
     "no-console": "off",
 
     // Disallows expressions where the operation doesn't affect the value.
+    // TODO: This is enabled by default in ESLint's v9 recommended configuration.
     "no-constant-binary-expression": "error",
 
     // XXX Bug 1487642 - decide if we want to enable this or not.
     // Disallow constant expressions in conditions
     "no-constant-condition": "off",
-
-    // No duplicate keys in object declarations
-    "no-dupe-keys": "error",
 
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
@@ -255,9 +253,6 @@ module.exports = {
       },
     ],
 
-    // Disallow assignments to native objects or read-only global variables
-    "no-global-assign": "error",
-
     // Disallow eval and setInteral/setTimeout with strings
     "no-implied-eval": "error",
 
@@ -276,9 +271,6 @@ module.exports = {
 
     // No single if block inside an else block
     "no-lonely-if": "error",
-
-    // Disallow the use of number literals that immediately lose precision at runtime when converted to JS Number
-    "no-loss-of-precision": "error",
 
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
@@ -307,9 +299,6 @@ module.exports = {
 
     // No declaring variables from an outer scope
     // "no-shadow": "error",
-
-    // No declaring variables that hide things like arguments
-    "no-shadow-restricted-names": "error",
 
     // Disallow throwing literals (eg. throw "error" instead of
     // throw new Error("error")).
@@ -348,9 +337,6 @@ module.exports = {
 
     // Disallow redundant return statements
     "no-useless-return": "error",
-
-    // No using with
-    "no-with": "error",
 
     // Require object-literal shorthand with ES6 method syntax
     "object-shorthand": ["error", "always", { avoidQuotes: true }],

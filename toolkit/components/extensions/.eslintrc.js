@@ -135,9 +135,6 @@ module.exports = {
     // Disallow adding to native types
     "no-extend-native": "error",
 
-    // Disallow fallthrough of case statements, except if there is a comment.
-    "no-fallthrough": "error",
-
     // Allow comments inline after code.
     "no-inline-comments": "off",
 

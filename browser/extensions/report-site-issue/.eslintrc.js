@@ -30,9 +30,6 @@ module.exports = {
     // Allow the console API aside from console.log.
     "no-console": ["error", { allow: ["error", "info", "trace", "warn"] }],
 
-    // Disallow fallthrough of case statements, except if there is a comment.
-    "no-fallthrough": "error",
-
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "error",
 
