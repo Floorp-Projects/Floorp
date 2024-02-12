@@ -1304,7 +1304,8 @@ bool LocalAccessible::AttributeChangesState(nsAtom* aAttribute) {
          aAttribute == nsGkAtoms::aria_busy ||
          aAttribute == nsGkAtoms::aria_multiline ||
          aAttribute == nsGkAtoms::aria_multiselectable ||
-         aAttribute == nsGkAtoms::contenteditable;
+         aAttribute == nsGkAtoms::contenteditable ||
+         aAttribute == nsGkAtoms::popovertarget;
 }
 
 void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,

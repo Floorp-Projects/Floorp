@@ -490,6 +490,7 @@ addAccessibleTask(
   `
   <button id="show-popover-btn" popovertarget="mypopover" popovertargetaction="show">Show popover</button>
   <button id="hide-popover-btn" popovertarget="mypopover" popovertargetaction="hide">Hide popover</button>
+  <button id="toggle">toggle</button>
   <div id="mypopover" popover>
     Popover content
     <button id="hide-inside" popovertarget="mypopover" popovertargetaction="hide">Hide inside popover</button>
@@ -500,23 +501,52 @@ addAccessibleTask(
     const hide = findAccessibleChildByID(docAcc, "hide-popover-btn");
     testStates(show, STATE_COLLAPSED, 0);
     testStates(hide, STATE_COLLAPSED, 0);
-
-    info("Expanding popover");
-    let onShowing = waitForEvent(EVENT_STATE_CHANGE, show);
-    await show.doAction(0);
-    let showingEvent = await onShowing;
-    testStates(showingEvent.accessible, STATE_EXPANDED, 0);
-    const hideInside = findAccessibleChildByID(
-      showingEvent.accessible,
-      "hide-inside"
+    const toggle = findAccessibleChildByID(docAcc, "toggle");
+    testStates(
+      toggle,
+      0,
+      0,
+      STATE_EXPANDED | STATE_COLLAPSED,
+      EXT_STATE_EXPANDABLE
     );
+
+    info("Setting toggle's popovertarget");
+    let stateChanged = waitForStateChange(
+      toggle,
+      EXT_STATE_EXPANDABLE,
+      true,
+      true
+    );
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("toggle")
+        .setAttribute("popovertarget", "mypopover");
+    });
+    await stateChanged;
+
+    // Changes to the popover should fire events on all invokers.
+    const changeEvents = [
+      [EVENT_STATE_CHANGE, show],
+      [EVENT_STATE_CHANGE, hide],
+      [EVENT_STATE_CHANGE, toggle],
+    ];
+    info("Expanding popover");
+    let onShowing = waitForEvents(changeEvents);
+    await show.doAction(0);
+    await onShowing;
+    testStates(show, STATE_EXPANDED, 0);
+    testStates(hide, STATE_EXPANDED, 0);
+    testStates(toggle, STATE_EXPANDED, 0);
+    const hideInside = findAccessibleChildByID(show, "hide-inside");
     testStates(hideInside, 0, 0, STATE_EXPANDED | STATE_COLLAPSED, 0);
 
     info("Collapsing popover");
-    let onHiding = waitForEvent(EVENT_STATE_CHANGE, hide);
+    let onHiding = waitForEvents(changeEvents);
     await hide.doAction(0);
-    let hidingEvent = await onHiding;
-    testStates(hidingEvent.accessible, STATE_COLLAPSED, 0);
+    await onHiding;
+    testStates(hide, STATE_COLLAPSED, 0);
+    testStates(show, STATE_COLLAPSED, 0);
+    testStates(toggle, STATE_COLLAPSED, 0);
   },
   { chrome: true, topLevel: true, remoteIframe: true }
 );

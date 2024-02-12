@@ -93,10 +93,6 @@
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/ElementInternals.h"
 
-#ifdef ACCESSIBILITY
-#  include "nsAccessibilityService.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -2865,18 +2861,6 @@ void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
   } else if (shouldShow) {
     target->ShowPopoverInternal(this, IgnoreErrors());
   }
-#ifdef ACCESSIBILITY
-  // Notify the accessibility service about the change.
-  if (shouldHide || shouldShow) {
-    if (RefPtr<Document> doc = GetComposedDoc()) {
-      if (PresShell* presShell = doc->GetPresShell()) {
-        if (nsAccessibilityService* accService = GetAccService()) {
-          accService->PopovertargetMaybeChanged(presShell, this);
-        }
-      }
-    }
-  }
-#endif
 }
 
 void nsGenericHTMLFormControlElementWithState::GetInvokeAction(
