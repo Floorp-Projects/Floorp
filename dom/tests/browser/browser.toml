@@ -24,6 +24,8 @@ support-files = [
 
 ["browser_ConsoleStoragePBTest_perwindowpb.js"]
 
+["browser_alert_from_about_blank.js"]
+
 ["browser_autofocus_background.js"]
 
 ["browser_autofocus_preference.js"]
