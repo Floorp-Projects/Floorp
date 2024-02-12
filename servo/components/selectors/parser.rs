@@ -1293,6 +1293,13 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             std::iter::once(Component::Invalid(Arc::new(String::from(s.trim())))),
         ))
     }
+
+    /// Is the compound starting at the offset the subject compound, or referring to its pseudo-element?
+    pub fn is_rightmost(&self, offset: usize) -> bool {
+        // There can really be only one pseudo-element, and it's not really valid for anything else to
+        // follow it.
+        offset == 0 || matches!(self.combinator_at_match_order(offset - 1), Combinator::PseudoElement)
+    }
 }
 
 #[derive(Clone)]

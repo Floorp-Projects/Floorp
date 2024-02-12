@@ -29,7 +29,7 @@ use selectors::matching::{
     ElementSelectorFlags, MatchingContext, MatchingForInvalidation, MatchingMode,
     NeedsSelectorFlags, QuirksMode, SelectorCaches, VisitedHandlingMode,
 };
-use selectors::parser::{Combinator, Component, SelectorKey};
+use selectors::parser::{Combinator, SelectorKey};
 use selectors::OpaqueElement;
 use smallvec::SmallVec;
 use std::ops::DerefMut;
@@ -849,27 +849,7 @@ where
                 return false;
             }
         }
-
-        // Check for the easy cases first
-        if outer_dependency.selector_offset == 0 {
-            return true;
-        }
-        if !outer_dependency.selector.has_pseudo_element() {
-            return false;
-        }
-
-        // Ok, need to traverse right and check that all combinators are pseudo
-        let iter = outer_dependency.selector.iter_raw_parse_order_from(
-            (outer_dependency.selector.len() - 1) - outer_dependency.selector_offset,
-        );
-        for c in iter {
-            if let Component::Combinator(c) = c {
-                if !c.is_pseudo_element() {
-                    return false;
-                }
-            }
-        }
-        true
+        outer_dependency.selector.is_rightmost(outer_dependency.selector_offset)
     }
 }
 
