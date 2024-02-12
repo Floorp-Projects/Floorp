@@ -1,6 +1,6 @@
 import { _ToolbarBadgeHub } from "modules/ToolbarBadgeHub.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
-import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.jsm";
+import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.sys.mjs";
 import {
   _ToolbarPanelHub,
   ToolbarPanelHub,

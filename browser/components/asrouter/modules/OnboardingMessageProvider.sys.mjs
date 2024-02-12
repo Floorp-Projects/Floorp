@@ -1,17 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils and AppConstants, and overrides importESModule
+// to be a no-op (which can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+
+// eslint-disable-next-line mozilla/use-static-import
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { FeatureCalloutMessages } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs"
-);
+
+import { FeatureCalloutMessages } from "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs";
 
 const lazy = {};
 
@@ -1208,7 +1215,7 @@ const BASE_MESSAGES = () => [
 const ONBOARDING_MESSAGES = () =>
   BASE_MESSAGES().concat(FeatureCalloutMessages.getMessages());
 
-const OnboardingMessageProvider = {
+export const OnboardingMessageProvider = {
   async getExtraAttributes() {
     const [header, button_label] = await L10N.formatMessages([
       { id: "onboarding-welcome-header" },
@@ -1404,5 +1411,3 @@ const OnboardingMessageProvider = {
     return message;
   },
 };
-
-const EXPORTED_SYMBOLS = ["OnboardingMessageProvider"];

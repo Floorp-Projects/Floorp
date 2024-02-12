@@ -465,7 +465,7 @@ fxms-schemas:
             - 'browser/components/asrouter/content-src/schemas/make-schemas.py'
             - 'browser/components/asrouter/content-src/**/*.schema.json'
             - 'browser/components/asrouter/modules/CFRMessageProvider.sys.mjs'
-            - 'browser/components/asrouter/modules/OnboardingMessageProvider.jsm'
+            - 'browser/components/asrouter/modules/OnboardingMessageProvider.sys.mjs'
             - 'browser/components/asrouter/modules/PanelTestProvider.sys.mjs'
 
 condprof:

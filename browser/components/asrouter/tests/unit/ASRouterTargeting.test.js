@@ -4,7 +4,7 @@ import {
   getSortedMessages,
   QueryCache,
 } from "modules/ASRouterTargeting.jsm";
-import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.jsm";
+import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.sys.mjs";
 import { ASRouterPreferences } from "modules/ASRouterPreferences.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 

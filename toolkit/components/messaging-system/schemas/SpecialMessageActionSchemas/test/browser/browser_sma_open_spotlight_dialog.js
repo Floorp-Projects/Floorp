@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
+const { OnboardingMessageProvider } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs"
 );
 
 const { Spotlight } = ChromeUtils.importESModule(

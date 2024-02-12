@@ -61,7 +61,7 @@ const { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } = ChromeUtils.importESModule(
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
-const { OnboardingMessageProvider } = ChromeUtils.import(
+const { OnboardingMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
