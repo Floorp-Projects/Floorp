@@ -1671,38 +1671,34 @@ scan_obj: {
 
   unsigned nslots = nobj->slotSpan();
 
-  do {
-    if (nobj->hasEmptyElements()) {
-      break;
-    }
-
+  if (!nobj->hasEmptyElements()) {
     base = nobj->getDenseElements();
     kind = SlotsOrElementsKind::Elements;
     index = 0;
     end = nobj->getDenseInitializedLength();
 
     if (!nslots) {
+      // No slots at all. Scan elements immediately.
       goto scan_value_range;
     }
+
     pushValueRange(nobj, kind, index, end);
-  } while (false);
+  }
 
   unsigned nfixed = nobj->numFixedSlots();
-
   base = nobj->fixedSlots();
   kind = SlotsOrElementsKind::FixedSlots;
   index = 0;
 
   if (nslots > nfixed) {
-    pushValueRange(nobj, kind, index, nfixed);
-    kind = SlotsOrElementsKind::DynamicSlots;
-    base = nobj->slots_;
-    end = nslots - nfixed;
-    goto scan_value_range;
+    // Push dynamic slots for later scan.
+    pushValueRange(nobj, SlotsOrElementsKind::DynamicSlots, 0, nslots - nfixed);
+    end = nfixed;
+  } else {
+    end = nslots;
   }
 
-  MOZ_ASSERT(nslots <= nobj->numFixedSlots());
-  end = nslots;
+  // Scan any fixed slots.
   goto scan_value_range;
 }
 }
