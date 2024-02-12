@@ -61,7 +61,6 @@ const wchar_t kClassNameHidden[] = L"MozillaHiddenWindowClass";
 const wchar_t kClassNameGeneral[] = L"MozillaWindowClass";
 const wchar_t kClassNameDialog[] = L"MozillaDialogClass";
 const wchar_t kClassNameDropShadow[] = L"MozillaDropShadowWindowClass";
-const wchar_t kClassNameTemp[] = L"MozillaTempWindowClass";
 const wchar_t kClassNameTransition[] = L"MozillaTransitionWindowClass";
 
 /**************************************************************
