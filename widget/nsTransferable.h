@@ -33,7 +33,6 @@ struct DataStruct {
   const nsCString& GetFlavor() const { return mFlavor; }
   void SetData(nsISupports* aData, bool aIsPrivateData);
   void GetData(nsISupports** aData);
-  void ClearData();
   bool IsDataAvailable() const { return mData || mCacheFD; }
 
  protected:

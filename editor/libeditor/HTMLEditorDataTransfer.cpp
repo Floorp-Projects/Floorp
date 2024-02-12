@@ -2323,12 +2323,7 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
     return NS_ERROR_FAILURE;
   }
   // Get the Data from the clipboard
-  auto* windowContext = GetDocument()->GetWindowContext();
-  if (!windowContext) {
-    NS_WARNING("No window context");
-    return NS_ERROR_FAILURE;
-  }
-  rv = clipboard->GetData(transferable, aClipboardType, windowContext);
+  rv = clipboard->GetData(transferable, aClipboardType);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsIClipboard::GetData() failed");
     return rv;
@@ -2362,8 +2357,7 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsITransferable::AddDataFlavor(kHTMLContext) failed, but ignored");
-    rvIgnored =
-        clipboard->GetData(contextTransferable, aClipboardType, windowContext);
+    rvIgnored = clipboard->GetData(contextTransferable, aClipboardType);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "nsIClipboard::GetData() failed, but ignored");
     nsCOMPtr<nsISupports> contextDataObj;
@@ -2393,9 +2387,7 @@ nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rvIgnored),
         "nsITransferable::AddDataFlavor(kHTMLInfo) failed, but ignored");
-
-    rvIgnored =
-        clipboard->GetData(infoTransferable, aClipboardType, windowContext);
+    clipboard->GetData(infoTransferable, aClipboardType);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "nsIClipboard::GetData() failed, but ignored");
     nsCOMPtr<nsISupports> infoDataObj;
@@ -2561,11 +2553,6 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(
     NS_WARNING("Editor didn't have document, but ignored");
     return NS_OK;
   }
-  auto* windowContext = GetDocument()->GetWindowContext();
-  if (!windowContext) {
-    NS_WARNING("Editor didn't have document window context, but ignored");
-    return NS_OK;
-  }
 
   Result<nsCOMPtr<nsITransferable>, nsresult> maybeTransferable =
       EditorUtils::CreateTransferableForPlainText(*GetDocument());
@@ -2586,7 +2573,7 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(
   }
 
   // Get the Data from the clipboard
-  rv = clipboard->GetData(transferable, aClipboardType, windowContext);
+  rv = clipboard->GetData(transferable, aClipboardType);
   if (NS_FAILED(rv)) {
     NS_WARNING("nsIClipboard::GetData() failed");
     return rv;
@@ -2830,12 +2817,6 @@ nsresult HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType) {
   }
 
   RefPtr<Document> destdoc = GetDocument();
-  auto* windowContext = GetDocument()->GetWindowContext();
-  if (!windowContext) {
-    NS_WARNING("Editor didn't have document window context");
-    return NS_ERROR_FAILURE;
-  }
-
   nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nullptr;
   DebugOnly<nsresult> rvIgnored = transferable->Init(loadContext);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
@@ -2848,7 +2829,7 @@ nsresult HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType) {
       "nsITransferable::AddDataFlavor(kTextMime) failed, but ignored");
 
   // Get the Data from the clipboard
-  rvIgnored = clipboard->GetData(transferable, aSelectionType, windowContext);
+  rvIgnored = clipboard->GetData(transferable, aSelectionType);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "nsIClipboard::GetData() failed, but ignored");
 
