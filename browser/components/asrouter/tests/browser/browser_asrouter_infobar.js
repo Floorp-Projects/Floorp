@@ -9,8 +9,8 @@ const { InfoBar } = ChromeUtils.importESModule(
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
 );
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 
 add_task(async function show_and_send_telemetry() {

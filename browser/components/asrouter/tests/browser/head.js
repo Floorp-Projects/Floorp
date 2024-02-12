@@ -1,15 +1,18 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   FeatureCallout: "resource:///modules/asrouter/FeatureCallout.sys.mjs",
+
   FeatureCalloutBroker:
     "resource:///modules/asrouter/FeatureCalloutBroker.sys.mjs",
+
   FeatureCalloutMessages:
     "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs",
+
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.jsm",
 });
 const { FxAccounts } = ChromeUtils.importESModule(

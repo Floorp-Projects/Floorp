@@ -1,19 +1,22 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
+
   DiscoveryStreamFeed:
     "resource://activity-stream/lib/DiscoveryStreamFeed.sys.mjs",
+
   FeatureCallout: "resource:///modules/asrouter/FeatureCallout.sys.mjs",
+
   FeatureCalloutBroker:
     "resource:///modules/asrouter/FeatureCalloutBroker.sys.mjs",
+
   FeatureCalloutMessages:
     "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs",
+
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
-});
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 // We import sinon here to make it available across all mochitest test files

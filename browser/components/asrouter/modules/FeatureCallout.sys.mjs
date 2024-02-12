@@ -8,12 +8,9 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PageEventManager: "resource:///modules/asrouter/PageEventManager.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 const TRANSITION_MS = 500;

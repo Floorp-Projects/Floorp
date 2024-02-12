@@ -7,8 +7,8 @@ ChromeUtils.defineESModuleGetters(this, {
   ShoppingUtils: "resource:///modules/ShoppingUtils.sys.mjs",
 });
 
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 
 const { FeatureCalloutMessages } = ChromeUtils.importESModule(

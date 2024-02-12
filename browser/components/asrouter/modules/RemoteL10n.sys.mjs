@@ -12,7 +12,7 @@ const USE_REMOTE_L10N_PREF =
 /**
  * All supported locales for remote l10n
  *
- * This is used by ASRouter.jsm to check if the locale is supported before
+ * This is used by ASRouter.sys.mjs to check if the locale is supported before
  * issuing the request for remote fluent files to RemoteSettings.
  *
  * Note:

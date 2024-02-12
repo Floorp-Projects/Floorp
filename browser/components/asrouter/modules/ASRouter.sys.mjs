@@ -2,14 +2,29 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils, AppConstants and RemoteSettings, and overrides
+// importESModule to be a no-op (which can't be done for a static import
+// statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+
+// eslint-disable-next-line mozilla/use-static-import
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
+
+// eslint-disable-next-line mozilla/use-static-import
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
+);
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -18,6 +33,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   ASRouterTriggerListeners:
     "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs",
+  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   Downloader: "resource://services-settings/Attachments.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   FeatureCalloutBroker:
@@ -51,27 +67,11 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   );
   return new Logger("ASRouter");
 });
-const { actionCreators: ac } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
-);
-const { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/MessagingExperimentConstants.sys.mjs"
-);
-const { CFRMessageProvider } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"
-);
-const { OnboardingMessageProvider } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
-);
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
-const { CFRPageActions } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/CFRPageActions.sys.mjs"
-);
-const { AttributionCode } = ChromeUtils.importESModule(
-  "resource:///modules/AttributionCode.sys.mjs"
-);
+import { actionCreators as ac } from "resource://activity-stream/common/Actions.sys.mjs";
+import { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } from "resource:///modules/asrouter/MessagingExperimentConstants.sys.mjs";
+import { CFRMessageProvider } from "resource:///modules/asrouter/CFRMessageProvider.sys.mjs";
+import { OnboardingMessageProvider } from "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs";
+import { CFRPageActions } from "resource:///modules/asrouter/CFRPageActions.sys.mjs";
 
 // List of hosts for endpoints that serve router messages.
 // Key is allowed host, value is a name for the endpoint host.
@@ -119,7 +119,7 @@ const REACH_EVENT_GROUPS = [
 const REACH_EVENT_CATEGORY = "messaging_experiments";
 const REACH_EVENT_METHOD = "reach";
 
-const MessageLoaderUtils = {
+export const MessageLoaderUtils = {
   STARTPAGE_VERSION,
   REMOTE_LOADER_CACHE_KEY: "RemoteLoaderCache",
   _errors: [],
@@ -591,7 +591,7 @@ const MessageLoaderUtils = {
  * Note: This is written as a constructor rather than just a plain object
  * so that it can be more easily unit tested.
  */
-class _ASRouter {
+export class _ASRouter {
   constructor(localProviders = LOCAL_MESSAGE_PROVIDERS) {
     this.initialized = false;
     this.clearChildMessages = null;
@@ -1854,12 +1854,12 @@ class _ASRouter {
    */
   async forceAttribution(data) {
     // Extract the parameters from data that will make up the referrer url
-    const attributionData = AttributionCode.allowedCodeKeys
+    const attributionData = lazy.AttributionCode.allowedCodeKeys
       .map(key => `${key}=${encodeURIComponent(data[key] || "")}`)
       .join("&");
     if (AppConstants.platform === "win") {
       // The whole attribution data is encoded (again) for windows
-      await AttributionCode.writeAttributionFile(
+      await lazy.AttributionCode.writeAttributionFile(
         encodeURIComponent(attributionData)
       );
     } else if (AppConstants.platform === "macosx") {
@@ -1870,8 +1870,8 @@ class _ASRouter {
     Services.env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
 
     // Clear and refresh Attribution, and then fetch the messages again to update
-    AttributionCode._clearCache();
-    await AttributionCode.getAttrDataAsync();
+    lazy.AttributionCode._clearCache();
+    await lazy.AttributionCode.getAttrDataAsync();
     await this._updateMessageProviders();
     return this.loadMessagesFromAllProviders();
   }
@@ -2076,6 +2076,4 @@ class _ASRouter {
  * ASRouter - singleton instance of _ASRouter that controls all messages
  * in the new tab page.
  */
-const ASRouter = new _ASRouter();
-
-const EXPORTED_SYMBOLS = ["_ASRouter", "ASRouter", "MessageLoaderUtils"];
+export const ASRouter = new _ASRouter();
