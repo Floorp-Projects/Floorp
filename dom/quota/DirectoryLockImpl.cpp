@@ -168,6 +168,20 @@ void DirectoryLockImpl::Unregister() {
   mBlocking.Clear();
 }
 
+bool DirectoryLockImpl::MustWait() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mRegistered);
+
+  for (const DirectoryLockImpl* const existingLock :
+       mQuotaManager->mDirectoryLocks) {
+    if (MustWaitFor(*existingLock)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsTArray<RefPtr<DirectoryLock>> DirectoryLockImpl::LocksMustWaitFor() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mRegistered);
@@ -251,13 +265,7 @@ void DirectoryLockImpl::AcquireInternal() {
 
 void DirectoryLockImpl::AcquireImmediately() {
   AssertIsOnOwningThread();
-
-#ifdef DEBUG
-  for (const DirectoryLockImpl* const existingLock :
-       mQuotaManager->mDirectoryLocks) {
-    MOZ_ASSERT(!MustWaitFor(*existingLock));
-  }
-#endif
+  MOZ_ASSERT(!MustWait());
 
   mQuotaManager->RegisterDirectoryLock(*this);
 
