@@ -17,8 +17,7 @@ use crate::selector_parser::{PseudoElement, SelectorImpl};
 use crate::stylist::RuleInclusion;
 use log::Level::Trace;
 use selectors::matching::{
-    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags,
-    RelativeSelectorMatchingState, VisitedHandlingMode,
+    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode,
 };
 use servo_arc::Arc;
 
@@ -509,24 +508,6 @@ where
                 }
             }
         }
-        // This is a bit awkward - ideally, the flag is set directly where `considered_relative_selector`
-        // is; however, in that context, the implementation detail of `extra_data` is not visible, so
-        // it's done here. A trait for manipulating the flags is an option, but not worth it for a single flag.
-        match matching_context.considered_relative_selector {
-            RelativeSelectorMatchingState::None => (),
-            RelativeSelectorMatchingState::Considered => {
-                matching_context
-                    .extra_data
-                    .cascade_input_flags
-                    .insert(ComputedValueFlags::CONSIDERED_RELATIVE_SELECTOR);
-            },
-            RelativeSelectorMatchingState::ConsideredAnchor => {
-                matching_context.extra_data.cascade_input_flags.insert(
-                    ComputedValueFlags::ANCHORS_RELATIVE_SELECTOR |
-                        ComputedValueFlags::CONSIDERED_RELATIVE_SELECTOR,
-                );
-            },
-        };
 
         MatchingResults {
             rule_node,
