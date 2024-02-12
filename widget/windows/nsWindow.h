@@ -593,7 +593,7 @@ class nsWindow final : public nsBaseWidget {
   DWORD WindowStyle();
   DWORD WindowExStyle();
 
-  static const wchar_t* ChooseWindowClass(WindowType, bool aForMenupopupFrame);
+  static const wchar_t* ChooseWindowClass(WindowType);
   // This method registers the given window class, and returns the class name.
   static const wchar_t* RegisterWindowClass(const wchar_t* aClassName,
                                             UINT aExtraStyle, LPWSTR aIconID);
@@ -754,7 +754,10 @@ class nsWindow final : public nsBaseWidget {
   bool mIsEarlyBlankWindow = false;
   bool mIsShowingPreXULSkeletonUI = false;
   bool mResizable = false;
-  bool mForMenupopupFrame = false;
+  // Whether we're an alert window. Alert windows don't have taskbar icons and
+  // don't steal focus from other windows when opened. They're also expected to
+  // be of type WindowType::Dialog.
+  bool mIsAlert = false;
   bool mIsPerformingDwmFlushHack = false;
   bool mDraggingWindowWithMouse = false;
   DWORD_PTR mOldStyle = 0;
@@ -835,7 +838,7 @@ class nsWindow final : public nsBaseWidget {
   // Whether we're in the process of sending a WM_SETTEXT ourselves
   bool mSendingSetText = false;
 
-  // Whether we we're created as a child window (aka ChildWindow) or not.
+  // Whether we were created as a child window (aka ChildWindow) or not.
   bool mIsChildWindow : 1;
 
   int32_t mCachedHitTestResult = 0;

@@ -868,9 +868,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   mIsRTL = aInitData->mRTL;
-  mForMenupopupFrame = aInitData->mForMenupopupFrame;
   mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
+  mIsAlert = aInitData->mIsAlert;
   mResizable = aInitData->mResizable;
 
   DWORD style = WindowStyle();
@@ -895,7 +895,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  const wchar_t* className = ChooseWindowClass(mWindowType, mForMenupopupFrame);
+  const wchar_t* className = ChooseWindowClass(mWindowType);
 
   // Take specific actions when creating the first top-level window
   static bool sFirstTopLevelWindowCreated = false;
@@ -1220,20 +1220,15 @@ const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 
 /* static */
-const wchar_t* nsWindow::ChooseWindowClass(WindowType aWindowType,
-                                           bool aForMenupopupFrame) {
-  MOZ_ASSERT_IF(aForMenupopupFrame, aWindowType == WindowType::Popup);
+const wchar_t* nsWindow::ChooseWindowClass(WindowType aWindowType) {
   switch (aWindowType) {
     case WindowType::Invisible:
       return RegisterWindowClass(kClassNameHidden, 0, gStockApplicationIcon);
     case WindowType::Dialog:
       return RegisterWindowClass(kClassNameDialog, 0, 0);
     case WindowType::Popup:
-      if (aForMenupopupFrame) {
-        return RegisterWindowClass(kClassNameDropShadow, CS_DROPSHADOW,
-                                   gStockApplicationIcon);
-      }
-      [[fallthrough]];
+      return RegisterWindowClass(kClassNameDropShadow, CS_DROPSHADOW,
+                                 gStockApplicationIcon);
     default:
       return RegisterWindowClass(GetMainWindowClass(), 0,
                                  gStockApplicationIcon);
@@ -1341,22 +1336,27 @@ DWORD nsWindow::WindowExStyle() {
     case WindowType::Child:
       return 0;
 
-    case WindowType::Dialog:
-      return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
-
     case WindowType::Popup: {
       DWORD extendedStyle = WS_EX_TOOLWINDOW;
-      if (mPopupLevel == PopupLevel::Top) extendedStyle |= WS_EX_TOPMOST;
+      if (mPopupLevel == PopupLevel::Top) {
+        extendedStyle |= WS_EX_TOPMOST;
+      }
       return extendedStyle;
     }
-    default:
-      NS_ERROR("unknown border style");
-      [[fallthrough]];
 
+    case WindowType::Sheet:
+      MOZ_FALLTHROUGH_ASSERT("Sheets are macOS specific");
+    case WindowType::Dialog:
     case WindowType::TopLevel:
     case WindowType::Invisible:
-      return WS_EX_WINDOWEDGE;
+      break;
   }
+  if (mIsAlert) {
+    MOZ_ASSERT(mWindowType == WindowType::Dialog,
+               "Expect alert windows to have type=dialog");
+    return WS_EX_TOOLWINDOW;
+  }
+  return WS_EX_WINDOWEDGE;
 }
 
 /**************************************************************
@@ -1575,9 +1575,8 @@ void nsWindow::Show(bool bState) {
 #endif  // defined(ACCESSIBILITY)
   }
 
-  if (mForMenupopupFrame) {
-    MOZ_ASSERT(ChooseWindowClass(mWindowType, mForMenupopupFrame) ==
-               kClassNameDropShadow);
+  if (mWindowType == WindowType::Popup) {
+    MOZ_ASSERT(ChooseWindowClass(mWindowType) == kClassNameDropShadow);
     const bool shouldUseDropShadow =
         mTransparencyMode != TransparencyMode::Transparent;
 
@@ -1644,8 +1643,12 @@ void nsWindow::Show(bool bState) {
         }
       } else {
         DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
-        if (wasVisible) flags |= SWP_NOZORDER;
-        if (mAlwaysOnTop) flags |= SWP_NOACTIVATE;
+        if (wasVisible) {
+          flags |= SWP_NOZORDER;
+        }
+        if (mAlwaysOnTop || mIsAlert) {
+          flags |= SWP_NOACTIVATE;
+        }
 
         if (mWindowType == WindowType::Popup) {
           // ensure popups are the topmost of the TOPMOST
@@ -7858,7 +7861,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       // because we cannot distinguish it's caused by mouse or not.
       if (LOWORD(aWParam) == WA_ACTIVE && aLParam) {
         nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
-        if (window && window->IsPopup()) {
+        if (window && (window->IsPopup() || window->mIsAlert)) {
           // Cancel notifying widget listeners of deactivating the previous
           // active window (see WM_KILLFOCUS case in ProcessMessage()).
           sJustGotDeactivate = false;
