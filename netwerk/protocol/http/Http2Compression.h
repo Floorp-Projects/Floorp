@@ -13,6 +13,7 @@
 #include "nsDeque.h"
 #include "nsString.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace net {
@@ -47,10 +48,18 @@ class nvFIFO {
   size_t StaticLength() const;
   void Clear();
   const nvPair* operator[](size_t index) const;
+  size_t SizeOfDynamicTable(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
   uint32_t mByteCount{0};
   nsDeque<nvPair> mTable;
+
+  // This mutex is held when adding or removing elements in the table
+  // and when accessing the table from the main thread (in SizeOfDynamicTable)
+  // Since the operator[] and other const methods are always called
+  // on the socket thread, they don't need to lock the mutex.
+  // Mutable so it can be locked in SizeOfDynamicTable which is const
+  mutable Mutex mMutex MOZ_UNANNOTATED{"nvFIFO"};
 };
 
 class HpackDynamicTableReporter;
