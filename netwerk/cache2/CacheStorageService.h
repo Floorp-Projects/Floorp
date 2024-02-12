@@ -5,6 +5,7 @@
 #ifndef CacheStorageService__h__
 #define CacheStorageService__h__
 
+#include "mozilla/LinkedList.h"
 #include "nsICacheStorageService.h"
 #include "nsIMemoryReporter.h"
 #include "nsINamed.h"
@@ -150,17 +151,13 @@ class CacheStorageService final : public nsICacheStorageService,
   friend class CacheEntry;
 
   /**
-   * Registers the entry in management ordered arrays, a mechanism
-   * helping with weighted purge of entries.
-   * Management arrays keep hard reference to the entry.  Entry is
-   * responsible to remove it self or the service is responsible to
-   * remove the entry when it's no longer needed.
+   * Registers the entry into the associated MemoryPool.
+   * Holds a strong reference until it is unregistered.
    */
   void RegisterEntry(CacheEntry* aEntry);
 
   /**
-   * Deregisters the entry from management arrays.  References are
-   * then released.
+   * Deregisters the entry from the associated MemoryPool.
    */
   void UnregisterEntry(CacheEntry* aEntry);
 
@@ -307,7 +304,7 @@ class CacheStorageService final : public nsICacheStorageService,
    * entries from the memory, first from the disk pool and then from the memory
    * pool.
    */
-  void PurgeOverMemoryLimit();
+  void PurgeExpiredOrOverMemoryLimit();
 
  private:
   nsresult DoomStorageEntries(const nsACString& aContextKey,
@@ -342,8 +339,8 @@ class CacheStorageService final : public nsICacheStorageService,
     explicit MemoryPool(EType aType);
     ~MemoryPool();
 
-    nsTArray<RefPtr<CacheEntry>> mFrecencyArray;
-    nsTArray<RefPtr<CacheEntry>> mExpirationArray;
+    // We want to have constant O(1) for removal from this list.
+    LinkedList<RefPtr<CacheEntry>> mManagedEntries;
     Atomic<uint32_t, Relaxed> mMemorySize{0};
 
     bool OnMemoryConsumptionChange(uint32_t aSavedMemorySize,
@@ -351,10 +348,10 @@ class CacheStorageService final : public nsICacheStorageService,
     /**
      * Purges entries from memory based on the frecency ordered array.
      */
-    void PurgeOverMemoryLimit();
-    void PurgeExpired();
-    void PurgeByFrecency(uint32_t aWhat);
-    void PurgeAll(uint32_t aWhat);
+    void PurgeExpiredOrOverMemoryLimit();
+    size_t PurgeExpired();
+    Result<size_t, nsresult> PurgeByFrecency();
+    size_t PurgeAll(uint32_t aWhat);
 
    private:
     uint32_t Limit() const;

@@ -5,6 +5,7 @@
 #ifndef CacheEntry__h__
 #define CacheEntry__h__
 
+#include "mozilla/LinkedList.h"
 #include "nsICacheEntry.h"
 #include "CacheFile.h"
 
@@ -42,7 +43,10 @@ class CacheStorage;
 class CacheOutputCloseListener;
 class CacheEntryHandle;
 
-class CacheEntry final : public nsIRunnable, public CacheFileListener {
+class CacheEntry final : public nsIRunnable,
+                         public CacheFileListener,
+                         // Used by CacheStorageService::MemoryPool
+                         public LinkedListElement<RefPtr<CacheEntry>> {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
