@@ -54,10 +54,9 @@ DirectoryLockImpl::DirectoryLockImpl(
 
 DirectoryLockImpl::~DirectoryLockImpl() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(!mRegistered, mBlocking.IsEmpty());
 
-  if (mRegistered) {
-    Unregister();
+  if (!mDropped) {
+    Drop();
   }
 }
 
@@ -125,6 +124,8 @@ void DirectoryLockImpl::NotifyOpenListener() {
   mPending.Flip();
 
   if (mInvalidated) {
+    mDropped.Flip();
+
     Unregister();
   }
 }
@@ -286,6 +287,17 @@ void DirectoryLockImpl::AssertIsAcquiredExclusively() {
   MOZ_ASSERT(found);
 }
 #endif
+
+void DirectoryLockImpl::Drop() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT_IF(!mRegistered, mBlocking.IsEmpty());
+
+  mDropped.Flip();
+
+  if (mRegistered) {
+    Unregister();
+  }
+}
 
 void DirectoryLockImpl::OnInvalidate(std::function<void()>&& aCallback) {
   mInvalidateCallback = std::move(aCallback);

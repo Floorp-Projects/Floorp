@@ -52,6 +52,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   FlippedOnce<true> mPending;
   FlippedOnce<false> mInvalidated;
   FlippedOnce<false> mAcquired;
+  FlippedOnce<false> mDropped;
 
  public:
   DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -185,6 +186,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   nsTArray<RefPtr<DirectoryLock>> LocksMustWaitFor() const override;
 
+  bool Dropped() const override { return mDropped; }
+
   RefPtr<BoolPromise> Acquire() override;
 
   void AcquireImmediately() override;
@@ -196,6 +199,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   {
   }
 #endif
+
+  void Drop() override;
 
   void OnInvalidate(std::function<void()>&& aCallback) override;
 
