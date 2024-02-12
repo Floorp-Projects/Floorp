@@ -184,6 +184,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   bool Acquired() const override { return mAcquired; }
 
+  bool MustWait() const override;
+
   nsTArray<RefPtr<DirectoryLock>> LocksMustWaitFor() const override;
 
   bool Dropped() const override { return mDropped; }
