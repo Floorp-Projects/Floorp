@@ -16,7 +16,7 @@
 
 var LIBC = ChromeUtils.getLibcConstants();
 
-const LIBC_CHOICES = ["libc.so", "libSystem.B.dylib", "a.out"];
+const LIBC_CHOICES = ["a.out"];
 
 const unix = {
   pid_t: ctypes.int32_t,
