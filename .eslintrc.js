@@ -445,7 +445,6 @@ module.exports = {
         "dom/html/test/**",
         "dom/media/webaudio/test/**",
         "dom/media/webrtc/tests/**",
-        "dom/messagechannel/tests/**",
         "dom/payments/test/**",
         "dom/performance/tests/**",
         "dom/quota/test/browser/**",

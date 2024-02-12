@@ -39,13 +39,13 @@ function test_fullDeliveredMessages() {
   var mc = new MessageChannel();
   worker.postMessage(42, [mc.port2]);
 
-  for (var i = 0; i < MAX; ++i) {
+  for (let i = 0; i < MAX; ++i) {
     mc.port1.postMessage(i);
   }
 
   mc.port1.close();
 
-  for (var i = 0; i < MAX * 2; ++i) {
+  for (let i = 0; i < MAX * 2; ++i) {
     mc.port1.postMessage(i);
   }
 }
