@@ -1009,6 +1009,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    * OOP iframe docs and tab documents.
    */
   nsIFrame* FindNearestAccessibleAncestorFrame();
+
+  LocalAccessible* GetPopoverTargetDetailsRelation() const;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(LocalAccessible, NS_ACCESSIBLE_IMPL_IID)

@@ -291,3 +291,76 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test details relations on popovers and their invokers.
+ */
+addAccessibleTask(
+  `
+<button id="hide" popovertarget="popover" popovertargetaction="hide">hide</button>
+<button id="toggle1" popovertarget="popover">toggle1</button>
+<button id="toggle2">toggle2</button>
+<button id="toggleSibling">toggleSibling</button>
+<div id="popover" popover>popover</div>
+<div id="details">details</div>
+  `,
+  async function testPopover(browser, docAcc) {
+    // The popover is hidden, so nothing should be referring to it.
+    const hide = findAccessibleChildByID(docAcc, "hide");
+    await testCachedRelation(hide, RELATION_DETAILS, []);
+    const toggle1 = findAccessibleChildByID(docAcc, "toggle1");
+    await testCachedRelation(toggle1, RELATION_DETAILS, []);
+    const toggle2 = findAccessibleChildByID(docAcc, "toggle2");
+    await testCachedRelation(toggle2, RELATION_DETAILS, []);
+    const toggleSibling = findAccessibleChildByID(docAcc, "toggleSibling");
+    await testCachedRelation(toggleSibling, RELATION_DETAILS, []);
+
+    info("Showing popover");
+    let shown = waitForEvent(EVENT_SHOW, "popover");
+    toggle1.doAction(0);
+    const popover = (await shown).accessible;
+    await testCachedRelation(toggle1, RELATION_DETAILS, popover);
+    // toggle2 shouldn't have a details relation because it doesn't have a
+    // popovertarget.
+    await testCachedRelation(toggle2, RELATION_DETAILS, []);
+    // hide shouldn't have a details relation because its action is hide.
+    await testCachedRelation(hide, RELATION_DETAILS, []);
+    // toggleSibling shouldn't have a details relation because it is a sibling
+    // of the popover.
+    await testCachedRelation(toggleSibling, RELATION_DETAILS, []);
+    await testCachedRelation(popover, RELATION_DETAILS_FOR, toggle1);
+
+    info("Setting toggle2 popovertargetaction");
+    await invokeSetAttribute(browser, "toggle2", "popovertarget", "popover");
+    await testCachedRelation(toggle2, RELATION_DETAILS, popover);
+    await testCachedRelation(popover, RELATION_DETAILS_FOR, [toggle1, toggle2]);
+
+    info("Removing toggle2 popovertarget");
+    await invokeSetAttribute(browser, "toggle2", "popovertarget", null);
+    await testCachedRelation(toggle2, RELATION_DETAILS, []);
+    await testCachedRelation(popover, RELATION_DETAILS_FOR, toggle1);
+
+    info("Setting aria-details on toggle1");
+    await invokeSetAttribute(browser, "toggle1", "aria-details", "details");
+    const details = findAccessibleChildByID(docAcc, "details");
+    // aria-details overrides popover.
+    await testCachedRelation(toggle1, RELATION_DETAILS, details);
+    await testCachedRelation(popover, RELATION_DETAILS_FOR, []);
+
+    info("Removing aria-details from toggle1");
+    await invokeSetAttribute(browser, "toggle1", "aria-details", null);
+    await testCachedRelation(toggle1, RELATION_DETAILS, popover);
+    await testCachedRelation(popover, RELATION_DETAILS_FOR, toggle1);
+
+    info("Hiding popover");
+    let hidden = waitForEvent(EVENT_HIDE, popover);
+    toggle1.doAction(0);
+    // The relations between toggle1 and popover are removed when popover shuts
+    // down. However, this doesn't cause a cache update notification. Therefore,
+    // to avoid timing out in testCachedRelation, we must wait for a hide event
+    // first.
+    await hidden;
+    await testCachedRelation(toggle1, RELATION_DETAILS, []);
+  },
+  { chrome: false, topLevel: true }
+);
