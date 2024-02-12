@@ -7,7 +7,6 @@
 #ifndef DOM_QUOTA_DIRECTORYLOCKIMPL_H_
 #define DOM_QUOTA_DIRECTORYLOCKIMPL_H_
 
-#include "mozilla/InitializedOnce.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
@@ -29,9 +28,6 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   const OriginScope mOriginScope;
   const nsCString mStorageOrigin;
   const Nullable<Client::Type> mClientType;
-  LazyInitializedOnceEarlyDestructible<
-      const NotNull<RefPtr<OpenDirectoryListener>>>
-      mOpenListener;
   MozPromiseHolder<BoolPromise> mAcquirePromiseHolder;
   std::function<void()> mInvalidateCallback;
 
@@ -188,8 +184,6 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   bool Acquired() const override { return mAcquired; }
 
   nsTArray<RefPtr<DirectoryLock>> LocksMustWaitFor() const override;
-
-  void Acquire(RefPtr<OpenDirectoryListener> aOpenListener) override;
 
   RefPtr<BoolPromise> Acquire() override;
 
