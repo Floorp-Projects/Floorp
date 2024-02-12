@@ -1897,6 +1897,19 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
   return aRole;
 }
 
+role LocalAccessible::GetMinimumRole(role aRole) const {
+  if (aRole != roles::TEXT && aRole != roles::TEXT_CONTAINER &&
+      aRole != roles::SECTION) {
+    // This isn't a generic role, so aRole is specific enough.
+    return aRole;
+  }
+  dom::Element* el = Elm();
+  if (el && el->IsHTMLElement() && el->HasAttr(nsGkAtoms::popover)) {
+    return roles::GROUPING;
+  }
+  return aRole;
+}
+
 role LocalAccessible::NativeRole() const { return roles::NOTHING; }
 
 uint8_t LocalAccessible::ActionCount() const {
