@@ -127,6 +127,7 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     "Android 13.0 Google Pixel 5 32bit": ["android-hw-p5-13.0-arm7"],
     "Android 13.0 Google Pixel 5 64bit": ["android-hw-p5-13.0-android-aarch64"],
     "Android 13.0 Google Pixel 6 64bit": ["android-hw-p6-13.0-android-aarch64"],
+    "Android 13.0 Samsung S21 64bit": ["android-hw-s21-13.0-android-aarch64"],
     "Windows 10": ["windows10-64"],
 }
 

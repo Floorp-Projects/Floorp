@@ -353,6 +353,7 @@ browsertime-benchmark-speedometer-mobile:
             cstm-car-m:
                 by-test-platform:
                     android-hw-p6.*shippable-qr.*: []
+                    android-hw-s21.*shippable-qr.*: []
                     default: [mozilla-central]
             default: []
     treeherder-symbol: Btime(sp)
@@ -380,6 +381,7 @@ browsertime-benchmark-speedometer3-mobile:
             cstm-car-m:
                 by-test-platform:
                     android-hw-p6.*shippable-qr.*: []
+                    android-hw-s21.*shippable-qr.*: []
                     default: [mozilla-central]
             default: []
     treeherder-symbol: Btime(sp3)
