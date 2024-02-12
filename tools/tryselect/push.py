@@ -120,7 +120,7 @@ def generate_try_task_config(method, labels, params=None, routes=None):
 def task_labels_from_try_config(try_task_config):
     if try_task_config["version"] == 2:
         parameters = try_task_config.get("parameters", {})
-        if parameters.get("try_mode") == "try_task_config":
+        if "try_task_config" in parameters:
             return parameters["try_task_config"]["tasks"]
         else:
             return None
