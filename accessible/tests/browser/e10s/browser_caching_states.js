@@ -490,7 +490,10 @@ addAccessibleTask(
   `
   <button id="show-popover-btn" popovertarget="mypopover" popovertargetaction="show">Show popover</button>
   <button id="hide-popover-btn" popovertarget="mypopover" popovertargetaction="hide">Hide popover</button>
-  <div id="mypopover" popover>Popover content</div>
+  <div id="mypopover" popover>
+    Popover content
+    <button id="hide-inside" popovertarget="mypopover" popovertargetaction="hide">Hide inside popover</button>
+  </div>
   `,
   async function (browser, docAcc) {
     const show = findAccessibleChildByID(docAcc, "show-popover-btn");
@@ -503,6 +506,11 @@ addAccessibleTask(
     await show.doAction(0);
     let showingEvent = await onShowing;
     testStates(showingEvent.accessible, STATE_EXPANDED, 0);
+    const hideInside = findAccessibleChildByID(
+      showingEvent.accessible,
+      "hide-inside"
+    );
+    testStates(hideInside, 0, 0, STATE_EXPANDED | STATE_COLLAPSED, 0);
 
     info("Collapsing popover");
     let onHiding = waitForEvent(EVENT_STATE_CHANGE, hide);
