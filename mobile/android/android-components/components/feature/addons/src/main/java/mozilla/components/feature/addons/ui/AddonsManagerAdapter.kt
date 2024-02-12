@@ -260,7 +260,7 @@ class AddonsManagerAdapter(
             val reviewCount = context.getString(R.string.mozac_feature_addons_user_rating_count_2)
             val ratingContentDescription =
                 String.format(
-                    context.getString(R.string.mozac_feature_addons_rating_content_description),
+                    context.getString(R.string.mozac_feature_addons_rating_content_description_2),
                     it.average,
                 )
             holder.ratingView.contentDescription = ratingContentDescription

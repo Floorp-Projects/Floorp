@@ -170,7 +170,7 @@ class AddonsManagerAdapterTest {
 
         adapter.bindAddon(addonViewHolder, addon, appName, appVersion)
 
-        verify(ratingAccessibleView).setText("4.50/5")
+        verify(ratingAccessibleView).setText("Rating: 4.50 out of 5")
         verify(titleView).setText("name")
         verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.addonNameTextColor!!))
         verify(summaryView).setText("summary")

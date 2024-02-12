@@ -64,9 +64,13 @@ class AddonDetailsBindingDelegate(
     private fun bindRating(addon: Addon) {
         addon.rating?.let { rating ->
             val resources = binding.root.resources
-            val ratingContentDescription = resources.getString(R.string.mozac_feature_addons_rating_content_description)
+            val ratingContentDescription =
+                resources.getString(R.string.mozac_feature_addons_rating_content_description_2)
+            binding.ratingLabel.contentDescription = String.format(ratingContentDescription, rating.average)
             binding.ratingView.rating = rating.average
 
+            val reviewCount = resources.getString(R.string.mozac_feature_addons_user_rating_count_2)
+            binding.reviewCount.contentDescription = String.format(reviewCount, numberFormatter.format(rating.reviews))
             binding.reviewCount.text = numberFormatter.format(rating.reviews)
 
             if (addon.ratingUrl.isNotBlank()) {
@@ -76,7 +80,6 @@ class AddonDetailsBindingDelegate(
                     interactor.openWebsite(addon.ratingUrl.toUri())
                 }
             }
-            binding.ratingLabel.joinContextDescriptions(String.format(ratingContentDescription, rating.average))
         }
     }
 
@@ -103,7 +106,7 @@ class AddonDetailsBindingDelegate(
 
         val formattedDate = dateFormatter.format(addon.updatedAtDate)
         binding.lastUpdatedText.text = formattedDate
-        binding.lastUpdatedLabel.joinContextDescriptions(formattedDate)
+        binding.lastUpdatedLabel.joinContentDescriptions(formattedDate)
     }
 
     private fun bindVersion(addon: Addon) {
@@ -121,7 +124,7 @@ class AddonDetailsBindingDelegate(
         } else {
             binding.versionText.setOnLongClickListener(null)
         }
-        binding.versionLabel.joinContextDescriptions(version)
+        binding.versionLabel.joinContentDescriptions(version)
     }
 
     private fun bindAuthor(addon: Addon) {
@@ -142,7 +145,7 @@ class AddonDetailsBindingDelegate(
                 interactor.openWebsite(author.url.toUri())
             }
         }
-        binding.authorLabel.joinContextDescriptions(author.name)
+        binding.authorLabel.joinContentDescriptions(author.name)
     }
 
     private fun bindDetails(addon: Addon) {
@@ -192,7 +195,7 @@ class AddonDetailsBindingDelegate(
     }
 
     @VisibleForTesting
-    internal fun TextView.joinContextDescriptions(text: String) {
+    internal fun TextView.joinContentDescriptions(text: String) {
         this.contentDescription = "${this.text} $text"
     }
 }

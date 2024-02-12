@@ -69,12 +69,15 @@ class AddonDetailsBindingDelegateTest {
         )
         assertEquals(4.5f, binding.ratingView.rating)
         assertEquals("100", binding.reviewCount.text)
-        val ratingContentDescription = testContext.getString(R.string.mozac_feature_addons_rating_content_description)
 
-        val formattedRatting = String.format(ratingContentDescription, 4.3f)
-        val expectedContentDescription = binding.ratingLabel.text.toString() + " " + formattedRatting
-        assertEquals(expectedContentDescription, binding.ratingLabel.contentDescription)
+        val ratingContentDescription = testContext.getString(R.string.mozac_feature_addons_rating_content_description_2)
+        var formattedRatting = String.format(ratingContentDescription, 4.3f)
+        assertEquals(formattedRatting, binding.ratingLabel.contentDescription)
         assertEquals(IMPORTANT_FOR_ACCESSIBILITY_NO, binding.ratingView.importantForAccessibility)
+
+        val reviewContentDescription = testContext.getString(R.string.mozac_feature_addons_user_rating_count_2)
+        formattedRatting = String.format(reviewContentDescription, 100)
+        assertEquals(formattedRatting, binding.reviewCount.contentDescription)
     }
 
     @Test
