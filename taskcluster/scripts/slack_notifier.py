@@ -53,9 +53,9 @@ send_error_notification(values, 'channel_id', taskcluster_options)
 
 import json
 import os
-from string import Template
 import time
 import traceback
+from string import Template
 
 import taskcluster
 

@@ -124,7 +124,7 @@ class TestRail:
         for attempt in range(max_retries):
             try:
                 return api_call(*args)
-            except Exception as e:
+            except Exception:
                 if attempt == max_retries - 1:
                     raise  # Reraise the last exception
                 time.sleep(delay)

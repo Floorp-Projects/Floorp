@@ -22,10 +22,10 @@ Functions:
   and handles potential errors during the loading process.
 """
 
-from datetime import datetime
 import json
 import os
 import textwrap
+from datetime import datetime
 
 
 def build_milestone_name(product_type, release_type, version_number):
