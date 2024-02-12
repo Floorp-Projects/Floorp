@@ -1,21 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
+const lazy = {};
+
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils. That environment overrides importESModule to be a no-op
+// (which can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  RemoteL10n: "resource:///modules/asrouter/RemoteL10n.sys.mjs",
-
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
+  RemoteL10n: "resource:///modules/asrouter/RemoteL10n.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -43,7 +49,7 @@ const APPMENU_BUTTON_ID = "appMenu-whatsnew-button";
 const BUTTON_STRING_ID = "cfr-whatsnew-button";
 const WHATS_NEW_PANEL_SELECTOR = "PanelUI-whatsNew-message-container";
 
-class _ToolbarPanelHub {
+export class _ToolbarPanelHub {
   constructor() {
     this.triggerId = "whatsNewPanelOpened";
     this._showAppmenuButton = this._showAppmenuButton.bind(this);
@@ -535,6 +541,4 @@ class _ToolbarPanelHub {
  * ToolbarPanelHub - singleton instance of _ToolbarPanelHub that can initiate
  * message requests and render messages.
  */
-const ToolbarPanelHub = new _ToolbarPanelHub();
-
-const EXPORTED_SYMBOLS = ["ToolbarPanelHub", "_ToolbarPanelHub"];
+export const ToolbarPanelHub = new _ToolbarPanelHub();

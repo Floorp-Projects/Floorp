@@ -6,12 +6,8 @@ ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
+  ToolbarPanelHub: "resource:///modules/asrouter/ToolbarPanelHub.jsm",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "ToolbarPanelHub",
-  "resource:///modules/asrouter/ToolbarPanelHub.jsm"
-);
 
 /**
  * Maintains the state and dispatches events for the main menu panel.
