@@ -260,6 +260,8 @@ void DirectoryLockImpl::AcquireImmediately() {
 #endif
 
   mQuotaManager->RegisterDirectoryLock(*this);
+
+  mAcquired.Flip();
 }
 
 #ifdef DEBUG
