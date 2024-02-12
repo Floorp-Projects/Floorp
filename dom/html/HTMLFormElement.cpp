@@ -24,7 +24,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
-#include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
@@ -275,10 +274,10 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
   // FIXME: Should be specified, see:
   // https://github.com/whatwg/html/issues/10066
   {
-    for (nsGenericHTMLFormElement* el : mControls->mElements.AsList()) {
+    for (nsGenericHTMLFormElement* el : mControls->mElements) {
       el->SetUserInteracted(true);
     }
-    for (nsGenericHTMLFormElement* el : mControls->mNotInElements.AsList()) {
+    for (nsGenericHTMLFormElement* el : mControls->mNotInElements) {
       el->SetUserInteracted(true);
     }
   }
@@ -502,9 +501,9 @@ void HTMLFormElement::UnbindFromTree(bool aNullParent) {
   RefPtr<Document> oldDocument = GetUncomposedDoc();
 
   // Mark all of our controls as maybe being orphans
-  MarkOrphans(mControls->mElements.AsList());
-  MarkOrphans(mControls->mNotInElements.AsList());
-  MarkOrphans(mImageElements.AsList());
+  MarkOrphans(mControls->mElements);
+  MarkOrphans(mControls->mNotInElements);
+  MarkOrphans(mImageElements);
 
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
@@ -516,7 +515,7 @@ void HTMLFormElement::UnbindFromTree(bool aNullParent) {
       break;
     }
     ancestor = cur;
-  } while (true);
+  } while (1);
 
   CollectOrphans(ancestor, mControls->mElements
 #ifdef DEBUG
@@ -653,7 +652,7 @@ nsresult HTMLFormElement::DoReset() {
   for (uint32_t elementX = 0; elementX < numElements; ++elementX) {
     // Hold strong ref in case the reset does something weird
     nsCOMPtr<nsIFormControl> controlNode = do_QueryInterface(
-        mControls->mElements->SafeElementAt(elementX, nullptr));
+        mControls->mElements.SafeElementAt(elementX, nullptr));
     if (controlNode) {
       controlNode->Reset();
     }
@@ -1121,7 +1120,7 @@ NotNull<const Encoding*> HTMLFormElement::GetSubmitEncoding() {
 }
 
 Element* HTMLFormElement::IndexedGetter(uint32_t aIndex, bool& aFound) {
-  Element* element = mControls->mElements->SafeElementAt(aIndex, nullptr);
+  Element* element = mControls->mElements.SafeElementAt(aIndex, nullptr);
   aFound = element != nullptr;
   return element;
 }
@@ -1191,11 +1190,11 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // Determine whether to add the new element to the elements or
   // the not-in-elements list.
   bool childInElements = HTMLFormControlsCollection::ShouldBeInElements(fc);
-  TreeOrderedArray<nsGenericHTMLFormElement*>& controlList =
+  nsTArray<nsGenericHTMLFormElement*>& controlList =
       childInElements ? mControls->mElements : mControls->mNotInElements;
 
-  const size_t insertedIndex = controlList.Insert(*aChild, this);
-  const bool lastElement = controlList->Length() == insertedIndex + 1;
+  bool lastElement =
+      nsContentUtils::AddElementToListByTreeOrder(controlList, aChild, this);
 
 #ifdef DEBUG
   AssertDocumentOrder(controlList, this);
@@ -1220,7 +1219,7 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
     // the slot, it becomes the default submit if either the default submit is
     // what's in the slot or the child is earlier than the default submit.
     if (!*firstSubmitSlot ||
-        (!lastElement && nsContentUtils::CompareTreePosition<TreeKind::DOM>(
+        (!lastElement && nsContentUtils::CompareTreePosition(
                              aChild, *firstSubmitSlot, this) < 0)) {
       // Update mDefaultSubmitElement if it's currently in a valid state.
       // Valid state means either non-null or null because there are in fact
@@ -1228,8 +1227,8 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
       if ((mDefaultSubmitElement ||
            (!mFirstSubmitInElements && !mFirstSubmitNotInElements)) &&
           (*firstSubmitSlot == mDefaultSubmitElement ||
-           nsContentUtils::CompareTreePosition<TreeKind::DOM>(
-               aChild, mDefaultSubmitElement, this) < 0)) {
+           nsContentUtils::CompareTreePosition(aChild, mDefaultSubmitElement,
+                                               this) < 0)) {
         SetDefaultSubmitElement(aChild);
       }
       *firstSubmitSlot = aChild;
@@ -1298,13 +1297,13 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   // Determine whether to remove the child from the elements list
   // or the not in elements list.
   bool childInElements = HTMLFormControlsCollection::ShouldBeInElements(fc);
-  TreeOrderedArray<nsGenericHTMLFormElement*>& controls =
+  nsTArray<nsGenericHTMLFormElement*>& controls =
       childInElements ? mControls->mElements : mControls->mNotInElements;
 
   // Find the index of the child. This will be used later if necessary
   // to find the default submit.
-  size_t index = controls->IndexOf(aChild);
-  NS_ENSURE_STATE(index != controls.AsList().NoIndex);
+  size_t index = controls.IndexOf(aChild);
+  NS_ENSURE_STATE(index != controls.NoIndex);
 
   controls.RemoveElementAt(index);
 
@@ -1315,13 +1314,12 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
     *firstSubmitSlot = nullptr;
 
     // We are removing the first submit in this list, find the new first submit
-    uint32_t length = controls->Length();
+    uint32_t length = controls.Length();
     for (uint32_t i = index; i < length; ++i) {
-      nsCOMPtr<nsIFormControl> currentControl =
-          do_QueryInterface(controls->ElementAt(i));
+      nsCOMPtr<nsIFormControl> currentControl = do_QueryInterface(controls[i]);
       MOZ_ASSERT(currentControl);
       if (currentControl->IsSubmitControl()) {
-        *firstSubmitSlot = controls->ElementAt(i);
+        *firstSubmitSlot = controls[i];
         break;
       }
     }
@@ -1368,8 +1366,8 @@ void HTMLFormElement::HandleDefaultSubmitRemoval() {
                  "How did that happen?");
     // Have both; use the earlier one
     newDefaultSubmit =
-        nsContentUtils::CompareTreePosition<TreeKind::DOM>(
-            mFirstSubmitInElements, mFirstSubmitNotInElements, this) < 0
+        nsContentUtils::CompareTreePosition(mFirstSubmitInElements,
+                                            mFirstSubmitNotInElements, this) < 0
             ? mFirstSubmitInElements
             : mFirstSubmitNotInElements;
   }
@@ -1689,10 +1687,9 @@ nsGenericHTMLFormElement* HTMLFormElement::GetDefaultSubmitElement() const {
 bool HTMLFormElement::ImplicitSubmissionIsDisabled() const {
   // Input text controls are always in the elements list.
   uint32_t numDisablingControlsFound = 0;
-  uint32_t length = mControls->mElements->Length();
+  uint32_t length = mControls->mElements.Length();
   for (uint32_t i = 0; i < length && numDisablingControlsFound < 2; ++i) {
-    nsCOMPtr<nsIFormControl> fc =
-        do_QueryInterface(mControls->mElements->ElementAt(i));
+    nsCOMPtr<nsIFormControl> fc = do_QueryInterface(mControls->mElements[i]);
     MOZ_ASSERT(fc);
     if (fc->IsSingleLineTextControl(false)) {
       numDisablingControlsFound++;
@@ -1705,7 +1702,7 @@ bool HTMLFormElement::IsLastActiveElement(
     const nsGenericHTMLFormElement* aElement) const {
   MOZ_ASSERT(aElement, "Unexpected call");
 
-  for (auto* element : Reversed(mControls->mElements.AsList())) {
+  for (auto* element : Reversed(mControls->mElements)) {
     nsCOMPtr<nsIFormControl> fc = do_QueryInterface(element);
     MOZ_ASSERT(fc);
     // XXX How about date/time control?
@@ -1830,8 +1827,8 @@ int32_t HTMLFormElement::IndexOfContent(nsIContent* aContent) {
 }
 
 void HTMLFormElement::Clear() {
-  for (HTMLImageElement* image : Reversed(mImageElements.AsList())) {
-    image->ClearForm(false);
+  for (int32_t i = mImageElements.Length() - 1; i >= 0; i--) {
+    mImageElements[i]->ClearForm(false);
   }
   mImageElements.Clear();
   mImageNameLookupTable.Clear();
@@ -1946,8 +1943,8 @@ nsresult HTMLFormElement::AddElementToTableInternal(
   });
 }
 
-nsresult HTMLFormElement::AddImageElement(HTMLImageElement* aElement) {
-  mImageElements.Insert(*aElement, this);
+nsresult HTMLFormElement::AddImageElement(HTMLImageElement* aChild) {
+  nsContentUtils::AddElementToListByTreeOrder(mImageElements, aChild, this);
   return NS_OK;
 }
 
@@ -1956,9 +1953,13 @@ nsresult HTMLFormElement::AddImageElementToTable(HTMLImageElement* aChild,
   return AddElementToTableInternal(mImageNameLookupTable, aChild, aName);
 }
 
-nsresult HTMLFormElement::RemoveImageElement(HTMLImageElement* aElement) {
-  RemoveElementFromPastNamesMap(aElement);
-  mImageElements.RemoveElement(*aElement);
+nsresult HTMLFormElement::RemoveImageElement(HTMLImageElement* aChild) {
+  RemoveElementFromPastNamesMap(aChild);
+
+  size_t index = mImageElements.IndexOf(aChild);
+  NS_ENSURE_STATE(index != mImageElements.NoIndex);
+
+  mImageElements.RemoveElementAt(index);
   return NS_OK;
 }
 

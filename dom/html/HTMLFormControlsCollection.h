@@ -9,7 +9,6 @@
 
 #include "nsIHTMLCollection.h"
 #include "nsInterfaceHashtable.h"
-#include "mozilla/dom/TreeOrderedArray.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
@@ -96,14 +95,15 @@ class HTMLFormControlsCollection final : public nsIHTMLCollection,
 
   HTMLFormElement* mForm;  // WEAK - the form owns me
 
-  // Holds WEAK references - bug 36639
-  TreeOrderedArray<nsGenericHTMLFormElement*> mElements;
+  nsTArray<nsGenericHTMLFormElement*>
+      mElements;  // Holds WEAK references - bug 36639
 
   // This array holds on to all form controls that are not contained
   // in mElements (form.elements in JS, see ShouldBeInFormControl()).
   // This is needed to properly clean up the bi-directional references
   // (both weak and strong) between the form and its form controls.
-  TreeOrderedArray<nsGenericHTMLFormElement*> mNotInElements;
+
+  nsTArray<nsGenericHTMLFormElement*> mNotInElements;  // Holds WEAK references
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLFormControlsCollection)
 
