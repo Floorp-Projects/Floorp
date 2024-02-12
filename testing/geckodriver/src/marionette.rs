@@ -102,6 +102,7 @@ pub(crate) struct MarionetteSettings {
     /// letting you debug internals.
     pub(crate) jsdebugger: bool,
 
+    pub(crate) enable_crash_reporter: bool,
     pub(crate) android_storage: AndroidStorageInput,
 }
 
@@ -199,6 +200,7 @@ impl MarionetteHandler {
                 marionette_port,
                 websocket_port,
                 self.settings.profile_root.as_deref(),
+                self.settings.enable_crash_reporter,
             )?)
         } else if !self.settings.connect_existing {
             Browser::Local(LocalBrowser::new(
@@ -206,6 +208,7 @@ impl MarionetteHandler {
                 marionette_port,
                 self.settings.jsdebugger,
                 self.settings.profile_root.as_deref(),
+                self.settings.enable_crash_reporter,
             )?)
         } else {
             Browser::Existing(marionette_port)

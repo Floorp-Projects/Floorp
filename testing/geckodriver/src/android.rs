@@ -258,6 +258,7 @@ impl AndroidHandler {
         &self,
         args: Option<Vec<String>>,
         envs: I,
+        enable_crash_reporter: bool,
     ) -> Result<String>
     where
         I: IntoIterator<Item = (K, V)>,
@@ -290,18 +291,20 @@ impl AndroidHandler {
             );
         }
 
-        config.env.insert(
-            Value::String("MOZ_CRASHREPORTER".to_owned()),
-            Value::String("1".to_owned()),
-        );
-        config.env.insert(
-            Value::String("MOZ_CRASHREPORTER_NO_REPORT".to_owned()),
-            Value::String("1".to_owned()),
-        );
-        config.env.insert(
-            Value::String("MOZ_CRASHREPORTER_SHUTDOWN".to_owned()),
-            Value::String("1".to_owned()),
-        );
+        if !enable_crash_reporter {
+            config.env.insert(
+                Value::String("MOZ_CRASHREPORTER".to_owned()),
+                Value::String("1".to_owned()),
+            );
+            config.env.insert(
+                Value::String("MOZ_CRASHREPORTER_NO_REPORT".to_owned()),
+                Value::String("1".to_owned()),
+            );
+            config.env.insert(
+                Value::String("MOZ_CRASHREPORTER_SHUTDOWN".to_owned()),
+                Value::String("1".to_owned()),
+            );
+        }
 
         let mut contents: Vec<String> = vec![CONFIG_FILE_HEADING.to_owned()];
         contents.push(serde_yaml::to_string(&config)?);
@@ -314,6 +317,7 @@ impl AndroidHandler {
         profile: &Profile,
         args: Option<Vec<String>>,
         env: I,
+        enable_crash_reporter: bool,
     ) -> Result<()>
     where
         I: IntoIterator<Item = (K, V)>,
@@ -340,7 +344,7 @@ impl AndroidHandler {
             .device
             .push_dir(&profile.path, &self.profile, 0o777)?;
 
-        let contents = self.generate_config_file(args, env)?;
+        let contents = self.generate_config_file(args, env, enable_crash_reporter)?;
         debug!("Content of generated GeckoView config file:\n{}", contents);
         let reader = &mut io::BufReader::new(contents.as_bytes());
 

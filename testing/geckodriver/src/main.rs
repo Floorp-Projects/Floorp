@@ -254,6 +254,7 @@ fn parse_args(args: &ArgMatches) -> ProgramResult<Operation> {
         allow_hosts: allow_hosts.clone(),
         allow_origins: allow_origins.clone(),
         jsdebugger: args.get_flag("jsdebugger"),
+        enable_crash_reporter: args.get_flag("enable_crash_reporter"),
         android_storage,
     };
     Ok(Operation::Server {
@@ -378,6 +379,12 @@ fn make_command() -> Command {
                 .requires("marionette_port")
                 .action(ArgAction::SetTrue)
                 .help("Connect to an existing Firefox instance"),
+        )
+        .arg(
+            Arg::new("enable_crash_reporter")
+                .long("enable-crash-reporter")
+                .action(ArgAction::SetTrue)
+                .help("Enable the Firefox crash reporter for diagnostic purposes"),
         )
         .arg(
             Arg::new("help")
