@@ -7,6 +7,7 @@ import { ReaderMode } from "resource://gre/modules/ReaderMode.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
+let gScrollPositions = new Map();
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
@@ -419,6 +420,7 @@ AboutReader.prototype = {
 
       case "pagehide":
         this._closeDropdowns();
+        this._saveScrollPosition();
 
         this._actor.readerModeHidden();
         this.clearActor();
@@ -1016,6 +1018,7 @@ AboutReader.prototype = {
     this._doc.body.classList.add("loaded");
 
     this._goToReference(articleUri.ref);
+    this._getScrollPosition();
 
     Services.obs.notifyObservers(this._win, "AboutReader:Ready");
 
@@ -1270,6 +1273,43 @@ AboutReader.prototype = {
           "load",
           () => {
             this._win.location.hash = ref;
+          },
+          { once: true }
+        );
+      }
+    }
+  },
+
+  _scrollToSavedPosition(pos) {
+    this._win.scrollTo({
+      top: pos,
+      left: 0,
+      behavior: "auto",
+    });
+    gScrollPositions.delete(this._win.location.href);
+  },
+
+  /*
+   * Save reader view vertical scroll position
+   */
+  _saveScrollPosition() {
+    let scrollTop = this._doc.documentElement.scrollTop;
+    gScrollPositions.set(this._win.location.href, scrollTop);
+  },
+
+  /*
+   * Scroll reader view to a saved position
+   */
+  _getScrollPosition() {
+    let scrollPosition = gScrollPositions.get(this._win.location.href);
+    if (scrollPosition !== undefined) {
+      if (this._doc.readyState == "complete") {
+        this._scrollToSavedPosition(scrollPosition);
+      } else {
+        this._win.addEventListener(
+          "load",
+          () => {
+            this._scrollToSavedPosition(scrollPosition);
           },
           { once: true }
         );

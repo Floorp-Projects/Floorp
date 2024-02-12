@@ -12,6 +12,9 @@ support-files = [
   "setSameSiteCookie.html^headers^",
 ]
 
+["browser_bug1780350_readerModeSaveScroll.js"]
+support-files = ["readerModeArticleContainsLink.html"]
+
 ["browser_drag_url_readerMode.js"]
 support-files = ["readerModeArticle.html"]
 
