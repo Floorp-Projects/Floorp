@@ -32,13 +32,13 @@ talos-bcv:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|macosx1015|windows10)-64-shippable-qr/opt: [mozilla-beta, trunk]
+                    (linux1804|macosx1015|windows10)-64-shippable-qr/opt: [trunk]
                     (windows10-64|macosx1015-64).*-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -67,7 +67,7 @@ talos-chrome:
             windows.*-32.*: []
             (linux|windows10-64|macos)(?!.*shippable).*: []
             (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+            default: [trunk]
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -96,14 +96,14 @@ talos-damp-inspector:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32-shippable.*/.*: []
                     (linux|windows|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     mozharness:
         extra-options:
             - --suite=damp-inspector
@@ -119,14 +119,14 @@ talos-damp-webconsole:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32-shippable.*/.*: []
                     (linux|windows|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     mozharness:
         extra-options:
             - --suite=damp-webconsole
@@ -142,14 +142,14 @@ talos-damp-other:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32-shippable.*/.*: []
                     (linux|windows|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     mozharness:
         extra-options:
             - --suite=damp-other
@@ -200,7 +200,7 @@ talos-dromaeojs:
             windows.*-32.*: []
             (linux|windows10-64|macos)(?!.*shippable).*: []
             (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+            default: [trunk]
     mozharness:
         extra-options:
             - --suite=dromaeojs
@@ -227,14 +227,14 @@ talos-g1:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time:
         by-test-platform:
             linux1804-64.*: 3600
@@ -268,14 +268,14 @@ talos-g3:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 900
     mozharness:
         extra-options:
@@ -303,14 +303,14 @@ talos-g4:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx1015)-64-shippable-qr/opt: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx1015)-64-shippable-qr/opt: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time:
         by-test-platform:
             linux1804-64.*: 1500
@@ -347,14 +347,14 @@ talos-g5:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time:
         by-test-platform:
             linux1804-64.*: 1200
@@ -385,7 +385,7 @@ talos-h1:
             windows.*-32.*: []
             (linux|windows10-64|macos)(?!.*shippable).*: []
             (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+            default: [trunk]
     mozharness:
         extra-options:
             - --suite=h1
@@ -403,7 +403,7 @@ talos-h2:
             windows.*-32.*: []
             (linux|windows10-64|macos)(?!.*shippable).*: []
             (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+            default: [trunk]
     max-run-time:
         by-test-platform:
             linux1804-64.*: 900
@@ -449,14 +449,14 @@ talos-other:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -519,14 +519,14 @@ talos-perf-reftest:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 1200
     mozharness:
         extra-options:
@@ -553,7 +553,7 @@ talos-perf-reftest-singletons:
             windows.*-32.*: []
             (linux|windows10-64|macos)(?!.*shippable).*: []
             (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+            default: [trunk]
     max-run-time: 1500
     mozharness:
         extra-options:
@@ -581,14 +581,14 @@ talos-svgr:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -616,14 +616,14 @@ talos-tp5o:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx.*)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -680,14 +680,14 @@ talos-webgl:
                     default: []
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [mozilla-beta, trunk]
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [trunk]
                     default: []
             default:
                 by-test-platform:
                     windows.*-32.*: []
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     (linux|windows10-64|macos)(?!.*-qr).*: []
-                    default: [mozilla-beta, trunk]
+                    default: [trunk]
     max-run-time: 2100
     mozharness:
         extra-options:
@@ -729,8 +729,8 @@ talos-xperf:
     run-on-projects:
         by-test-platform:
             windows.*-32-shippable(?:-qr)?/.*: []
-            windows10.*-shippable-qr/.*: [mozilla-beta, trunk]
-            windows11.*-shippable-qr/.*: [mozilla-beta, trunk]
+            windows10.*-shippable-qr/.*: [trunk]
+            windows11.*-shippable-qr/.*: [trunk]
             default: []
     mozharness:
         extra-options:
@@ -758,7 +758,7 @@ talos-realworld-webextensions:
             windows.*-32.*: []
             (linux|windows10-64|macos)(?!.*shippable).*: []
             (linux|windows10-64|macosx1015)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+            default: [trunk]
     max-run-time: 1500
     mozharness:
         extra-options:
