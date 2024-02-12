@@ -353,9 +353,6 @@ class NetworkModule extends Module {
    *     Raised if an argument is of an invalid type or value.
    */
   addIntercept(options = {}) {
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1845345.
-    this.assertExperimentalCommandsEnabled("network.addIntercept");
-
     const { phases, urlPatterns = [] } = options;
 
     lazy.assert.array(
@@ -426,7 +423,6 @@ class NetworkModule extends Module {
    *     requests map.
    */
   async continueRequest(options = {}) {
-    this.assertExperimentalCommandsEnabled("network.continueRequest");
     const {
       body = null,
       cookies = null,
@@ -554,7 +550,6 @@ class NetworkModule extends Module {
    *     requests map.
    */
   async continueResponse(options = {}) {
-    this.assertExperimentalCommandsEnabled("network.continueResponse");
     const {
       cookies = null,
       credentials = null,
@@ -685,7 +680,6 @@ class NetworkModule extends Module {
    *     requests map.
    */
   async continueWithAuth(options = {}) {
-    this.assertExperimentalCommandsEnabled("network.continueWithAuth");
     const { action, credentials, request: requestId } = options;
 
     lazy.assert.string(
@@ -756,7 +750,6 @@ class NetworkModule extends Module {
    *     requests map.
    */
   async failRequest(options = {}) {
-    this.assertExperimentalCommandsEnabled("network.failRequest");
     const { request: requestId } = options;
 
     lazy.assert.string(
@@ -803,8 +796,6 @@ class NetworkModule extends Module {
    *     map.
    */
   removeIntercept(options = {}) {
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1845345.
-    this.assertExperimentalCommandsEnabled("network.removeIntercept");
     const { intercept } = options;
 
     lazy.assert.string(
