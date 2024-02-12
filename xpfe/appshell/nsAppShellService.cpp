@@ -571,7 +571,13 @@ nsresult nsAppShellService::JustCreateTopWindow(
   }
 #endif
 
-  widgetInitData.mIsAlert = !!(aChromeMask & nsIWebBrowserChrome::CHROME_ALERT);
+  // alert=yes is expected to be used along with dialogs, not other window
+  // types.
+  MOZ_ASSERT_IF(aChromeMask & nsIWebBrowserChrome::CHROME_ALERT,
+                widgetInitData.mWindowType == widget::WindowType::Dialog);
+  widgetInitData.mIsAlert =
+      !!(aChromeMask & nsIWebBrowserChrome::CHROME_ALERT) &&
+      widgetInitData.mWindowType == widget::WindowType::Dialog;
 
 #ifdef XP_MACOSX
   // Mac OS X sheet support

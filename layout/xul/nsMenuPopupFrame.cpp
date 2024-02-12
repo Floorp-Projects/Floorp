@@ -268,7 +268,6 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   widget::InitData widgetData;
   widgetData.mWindowType = widget::WindowType::Popup;
   widgetData.mBorderStyle = widget::BorderStyle::Default;
-  widgetData.mForMenupopupFrame = true;
   widgetData.mClipSiblings = true;
   widgetData.mPopupHint = mPopupType;
   widgetData.mNoAutoHide = IsNoAutoHide();
