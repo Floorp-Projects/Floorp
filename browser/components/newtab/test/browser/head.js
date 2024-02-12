@@ -10,10 +10,10 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
-  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.jsm",
 });
 
 // We import sinon here to make it available across all mochitest test files

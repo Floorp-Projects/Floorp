@@ -23,9 +23,7 @@ const { SpecialMessageActions } = ChromeUtils.importESModule(
 const { ASRouterPreferences } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterPreferences.jsm"
 );
-const { QueryCache } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouterTargeting.jsm"
-);
+import { QueryCache } from "resource:///modules/asrouter/ASRouterTargeting.sys.mjs";
 import { ActivityStreamStorage } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
 
 const createStorage = async telemetryFeed => {

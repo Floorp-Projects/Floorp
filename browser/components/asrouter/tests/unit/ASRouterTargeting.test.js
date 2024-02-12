@@ -3,7 +3,7 @@ import {
   CachedTargetingGetter,
   getSortedMessages,
   QueryCache,
-} from "modules/ASRouterTargeting.jsm";
+} from "modules/ASRouterTargeting.sys.mjs";
 import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.sys.mjs";
 import { ASRouterPreferences } from "modules/ASRouterPreferences.jsm";
 import { GlobalOverrider } from "test/unit/utils";

@@ -15,9 +15,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
-  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
 });
 
 export const AWScreenUtils = {

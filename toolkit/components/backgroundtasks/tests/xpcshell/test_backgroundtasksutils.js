@@ -7,13 +7,10 @@
 const { BackgroundTasksUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/BackgroundTasksUtils.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
 });
 
 setupProfileService();
