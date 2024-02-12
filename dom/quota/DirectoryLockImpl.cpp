@@ -178,6 +178,21 @@ void DirectoryLockImpl::Unregister() {
   mBlocking.Clear();
 }
 
+nsTArray<RefPtr<DirectoryLock>> DirectoryLockImpl::LocksMustWaitFor() const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mRegistered);
+
+  nsTArray<RefPtr<DirectoryLock>> locks;
+
+  for (DirectoryLockImpl* const existingLock : mQuotaManager->mDirectoryLocks) {
+    if (MustWaitFor(*existingLock)) {
+      locks.AppendElement(static_cast<UniversalDirectoryLock*>(existingLock));
+    }
+  }
+
+  return locks;
+}
+
 void DirectoryLockImpl::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aOpenListener);
