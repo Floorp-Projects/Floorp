@@ -1883,45 +1883,6 @@ Maybe<uint32_t> nsINode::ComputeIndexInParentContent() const {
   return parent->ComputeIndexOf(this);
 }
 
-static Maybe<uint32_t> DoComputeFlatTreeIndexOf(FlattenedChildIterator& aIter,
-                                                const nsINode* aPossibleChild) {
-  if (aPossibleChild->GetFlattenedTreeParentNode() != aIter.Parent()) {
-    return Nothing();
-  }
-
-  uint32_t index = 0u;
-  for (nsIContent* child = aIter.GetNextChild(); child;
-       child = aIter.GetNextChild()) {
-    if (child == aPossibleChild) {
-      return Some(index);
-    }
-
-    ++index;
-  }
-
-  return Nothing();
-}
-
-Maybe<uint32_t> nsINode::ComputeFlatTreeIndexOf(
-    const nsINode* aPossibleChild) const {
-  if (!aPossibleChild) {
-    return Nothing();
-  }
-
-  if (!IsContent()) {
-    return ComputeIndexOf(aPossibleChild);
-  }
-
-  FlattenedChildIterator iter(AsContent());
-  if (!iter.ShadowDOMInvolved()) {
-    auto index = ComputeIndexOf(aPossibleChild);
-    MOZ_ASSERT(DoComputeFlatTreeIndexOf(iter, aPossibleChild) == index);
-    return index;
-  }
-
-  return DoComputeFlatTreeIndexOf(iter, aPossibleChild);
-}
-
 static already_AddRefed<nsINode> GetNodeFromNodeOrString(
     const OwningNodeOrString& aNode, Document* aDocument) {
   if (aNode.IsNode()) {

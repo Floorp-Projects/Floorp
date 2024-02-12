@@ -7,7 +7,7 @@
 /* base class for nsCounterList and nsQuoteList */
 
 #include "nsGenConList.h"
-#include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 
@@ -120,8 +120,7 @@ bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
   content1 = frame1->GetContent();
   content2 = frame2->GetContent();
 
-  int32_t cmp = nsContentUtils::CompareTreePosition<TreeKind::Flat>(
-      content1, content2, /* aCommonAncestor = */ nullptr);
+  int32_t cmp = nsLayoutUtils::CompareTreePosition(content1, content2);
   MOZ_ASSERT(cmp != 0, "same content, different frames");
   return cmp > 0;
 }

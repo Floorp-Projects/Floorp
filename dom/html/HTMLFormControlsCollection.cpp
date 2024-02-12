@@ -71,7 +71,11 @@ bool HTMLFormControlsCollection::ShouldBeInElements(
 }
 
 HTMLFormControlsCollection::HTMLFormControlsCollection(HTMLFormElement* aForm)
-    : mForm(aForm),
+    : mForm(aForm)
+      // Initialize the elements list to have an initial capacity
+      // of 8 to reduce allocations on small forms.
+      ,
+      mElements(8),
       mNameLookupTable(HTMLFormElement::FORM_CONTROL_LIST_HASHTABLE_LENGTH) {}
 
 HTMLFormControlsCollection::~HTMLFormControlsCollection() {
@@ -86,15 +90,15 @@ void HTMLFormControlsCollection::DropFormReference() {
 
 void HTMLFormControlsCollection::Clear() {
   // Null out childrens' pointer to me.  No refcounting here
-  for (nsGenericHTMLFormElement* element : Reversed(mElements.AsList())) {
-    nsCOMPtr<nsIFormControl> formControl = do_QueryObject(element);
+  for (int32_t i = mElements.Length() - 1; i >= 0; i--) {
+    nsCOMPtr<nsIFormControl> formControl = do_QueryObject(mElements[i]);
     MOZ_ASSERT(formControl);
     formControl->ClearForm(false, false);
   }
   mElements.Clear();
 
-  for (nsGenericHTMLFormElement* element : Reversed(mNotInElements.AsList())) {
-    nsCOMPtr<nsIFormControl> formControl = do_QueryObject(element);
+  for (int32_t i = mNotInElements.Length() - 1; i >= 0; i--) {
+    nsCOMPtr<nsIFormControl> formControl = do_QueryObject(mNotInElements[i]);
     MOZ_ASSERT(formControl);
     formControl->ClearForm(false, false);
   }
@@ -129,9 +133,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(HTMLFormControlsCollection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(HTMLFormControlsCollection)
 
-// nsIHTMLCollection interfac
+// nsIHTMLCollection interface
 
-uint32_t HTMLFormControlsCollection::Length() { return mElements->Length(); }
+uint32_t HTMLFormControlsCollection::Length() { return mElements.Length(); }
 
 nsISupports* HTMLFormControlsCollection::NamedItemInternal(
     const nsAString& aName) {
@@ -154,7 +158,9 @@ nsresult HTMLFormControlsCollection::IndexOfContent(nsIContent* aContent,
   // Note -- not a DOM method; callers should handle flushing themselves
 
   NS_ENSURE_ARG_POINTER(aIndex);
-  *aIndex = mElements->IndexOf(aContent);
+
+  *aIndex = mElements.IndexOf(aContent);
+
   return NS_OK;
 }
 
@@ -180,8 +186,8 @@ nsresult HTMLFormControlsCollection::GetSortedControls(
 
   // Merge the elements list and the not in elements list. Both lists are
   // already sorted.
-  uint32_t elementsLen = mElements->Length();
-  uint32_t notInElementsLen = mNotInElements->Length();
+  uint32_t elementsLen = mElements.Length();
+  uint32_t notInElementsLen = mNotInElements.Length();
   aControls.SetCapacity(elementsLen + notInElementsLen);
 
   uint32_t elementsIdx = 0;
@@ -195,7 +201,7 @@ nsresult HTMLFormControlsCollection::GetSortedControls(
       // Append the remaining mNotInElements elements
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
-      aControls.AppendElements(mNotInElements->Elements() + notInElementsIdx,
+      aControls.AppendElements(mNotInElements.Elements() + notInElementsIdx,
                                notInElementsLen - notInElementsIdx);
       break;
     }
@@ -206,24 +212,23 @@ nsresult HTMLFormControlsCollection::GetSortedControls(
       // Append the remaining mElements elements
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
-      aControls.AppendElements(mElements->Elements() + elementsIdx,
+      aControls.AppendElements(mElements.Elements() + elementsIdx,
                                elementsLen - elementsIdx);
       break;
     }
     // Both lists have elements left.
-    NS_ASSERTION(mElements->ElementAt(elementsIdx) &&
-                     mNotInElements->ElementAt(notInElementsIdx),
+    NS_ASSERTION(mElements[elementsIdx] && mNotInElements[notInElementsIdx],
                  "Should have remaining elements");
     // Determine which of the two elements should be ordered
     // first and add it to the end of the list.
     nsGenericHTMLFormElement* elementToAdd;
-    if (nsContentUtils::CompareTreePosition<TreeKind::DOM>(
-            mElements->ElementAt(elementsIdx),
-            mNotInElements->ElementAt(notInElementsIdx), mForm) < 0) {
-      elementToAdd = mElements->ElementAt(elementsIdx);
+    if (nsContentUtils::CompareTreePosition(mElements[elementsIdx],
+                                            mNotInElements[notInElementsIdx],
+                                            mForm) < 0) {
+      elementToAdd = mElements[elementsIdx];
       ++elementsIdx;
     } else {
-      elementToAdd = mNotInElements->ElementAt(notInElementsIdx);
+      elementToAdd = mNotInElements[notInElementsIdx];
       ++notInElementsIdx;
     }
     // Add the first element to the list.
@@ -242,7 +247,7 @@ nsresult HTMLFormControlsCollection::GetSortedControls(
 }
 
 Element* HTMLFormControlsCollection::GetElementAt(uint32_t aIndex) {
-  return mElements->SafeElementAt(aIndex, nullptr);
+  return mElements.SafeElementAt(aIndex, nullptr);
 }
 
 /* virtual */
