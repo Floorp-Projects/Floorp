@@ -18496,10 +18496,21 @@ void Document::DoCacheAllKnownLangPrefs() {
 }
 
 void Document::RecomputeLanguageFromCharset() {
-  nsLanguageAtomService* service = nsLanguageAtomService::GetService();
-  RefPtr<nsAtom> language = service->LookupCharSet(mCharacterSet);
-  if (language == nsGkAtoms::Unicode) {
-    language = service->GetLocaleLanguage();
+  RefPtr<nsAtom> language;
+  // Optimize the default character sets.
+  if (mCharacterSet == WINDOWS_1252_ENCODING) {
+    language = nsGkAtoms::x_western;
+  } else {
+    nsLanguageAtomService* service = nsLanguageAtomService::GetService();
+    if (mCharacterSet == UTF_8_ENCODING) {
+      language = nsGkAtoms::Unicode;
+    } else {
+      language = service->LookupCharSet(mCharacterSet);
+    }
+
+    if (language == nsGkAtoms::Unicode) {
+      language = service->GetLocaleLanguage();
+    }
   }
 
   if (language == mLanguageFromCharset) {
