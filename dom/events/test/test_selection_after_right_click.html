@@ -380,6 +380,118 @@ SimpleTest.waitForFocus(async () => {
     })`
   );
 
+  // If Shift + right click should forcibly open context menu, users may want the click to work as
+  // same as without Shift.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
+      ["dom.event.contextmenu.shift_suppresses_event", true],
+    ],
+  });
+  nonEditableDiv.innerHTML = "<b>bold</b> <i>italic</i>";
+  getSelection().collapse(nonEditableDiv.querySelector("b").firstChild, 0);
+  synthesizeMouseAtCenter(nonEditableDiv.querySelector("i"), {shiftKey: true, button: 2});
+  ok(
+    getSelection().isCollapsed,
+    `Selection should be collapsed by a Shift + right click on non-editable node when it does not open context menu (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    })`
+  );
+  is(
+    getSelection().focusNode,
+    nonEditableDiv.querySelector("i").firstChild,
+    `Selection should be collapsed at the click point by a Shift + right click on non-editable node when it does not open context menu (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    })`
+  );
+
+  editableDiv.innerHTML = "<b>bold</b> <i>italic</i>";
+  getSelection().collapse(editableDiv.querySelector("b").firstChild, 0);
+  synthesizeMouseAtCenter(editableDiv.querySelector("i"), {shiftKey: true, button: 2});
+  ok(
+    getSelection().isCollapsed,
+    `Selection should be collapsed by a Shift + right click on editable node when it does not open context menu (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    })`
+  );
+  is(
+    getSelection().focusNode,
+    editableDiv.querySelector("i").firstChild,
+    `Selection should be collapsed at the click point by a Shift + right click on editable node when it does not open context menu (${
+      getRangeDescription(getSelection().getRangeAt(0))
+    })`
+  );
+
+  input.focus();
+  input.setSelectionRange(0, 0);
+  synthesizeMouseAtCenter(input, {shiftKey: true, button: 2});
+  ok(
+    input.selectionStart == input.selectionEnd,
+    `Selection in <input> should be collapsed by a Shift + right click when it does not open context menu (got: ${
+      input.selectionStart
+    } - ${input.selectionEnd})`
+  );
+  isnot(
+    input.selectionStart,
+    0,
+    `Selection in <input> should be collapsed at the click point by a Shift + right click when it does not open context menu (got: ${
+      input.selectionStart
+    } - ${input.selectionEnd})`
+  );
+  input.blur();
+
+  // If Shift + right click should open context menu, users may want the click to work as
+  // same as a left click.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+      ["ui.mouse.right_click.move_caret.stop_if_in_focused_editable_node", false],
+      ["dom.event.contextmenu.shift_suppresses_event", false],
+    ],
+  });
+  nonEditableDiv.innerHTML = "<b>bold</b> <i>italic</i>";
+  getSelection().collapse(nonEditableDiv.querySelector("b").firstChild, 0);
+  synthesizeMouseAtCenter(nonEditableDiv.querySelector("i"), {shiftKey: true, button: 2});
+  is(
+    getRangeDescription(getSelection().getRangeAt(0)),
+    getRangeDescription({
+      startContainer: nonEditableDiv.querySelector("b").firstChild,
+      startOffset: 0,
+      endContainer: nonEditableDiv.querySelector("i").firstChild,
+      endOffset: getSelection().focusOffset,
+    }),
+    `Selection should be extended by a Shift + right click on non-editable node when it should open context menu`
+  );
+
+  editableDiv.innerHTML = "<b>bold</b> <i>italic</i>";
+  getSelection().collapse(editableDiv.querySelector("b").firstChild, 0);
+  synthesizeMouseAtCenter(editableDiv.querySelector("i"), {shiftKey: true, button: 2});
+  is(
+    getRangeDescription(getSelection().getRangeAt(0)),
+    getRangeDescription({
+      startContainer: editableDiv.querySelector("b").firstChild,
+      startOffset: 0,
+      endContainer: editableDiv.querySelector("i").firstChild,
+      endOffset: getSelection().focusOffset,
+    }),
+    `Selection should be extended by a Shift + right click on editable node when it should open context menu`
+  );
+
+  input.focus();
+  input.setSelectionRange(0, 0);
+  synthesizeMouseAtCenter(input, {shiftKey: true, button: 2});
+  isnot(
+    input.selectionStart,
+    input.selectionEnd,
+    `Selection in <input> should be extended by a Shift + right click when it should open context menu (got: ${
+      input.selectionStart
+    } - ${input.selectionEnd})`
+  );
+  input.blur();
+
   SimpleTest.finish();
 });
 </script>

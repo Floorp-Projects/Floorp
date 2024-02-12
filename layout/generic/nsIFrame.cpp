@@ -4735,7 +4735,9 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
 
-  if (aMouseEvent->mButton == MouseButton::eSecondary &&
+  const bool isSecondaryButton =
+      aMouseEvent->mButton == MouseButton::eSecondary;
+  if (isSecondaryButton &&
       !MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
           *frameselection, *aMouseEvent, *offsets.content,
           // When we collapse selection in nsFrameSelection::TakeFocus,
@@ -4833,7 +4835,14 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   const nsFrameSelection::FocusMode focusMode = [&]() {
     // If "Shift" and "Ctrl" are both pressed, "Shift" is given precedence. This
     // mimics the old behaviour.
-    if (aMouseEvent->IsShift()) {
+    const bool isShift =
+        aMouseEvent->IsShift() &&
+        // If Shift + secondary button press shoud open context menu without a
+        // contextmenu event, user wants to open context menu like as a
+        // secondary button press without Shift key.
+        !(isSecondaryButton &&
+          StaticPrefs::dom_event_contextmenu_shift_suppresses_event());
+    if (isShift) {
       // If clicked in a link when focused content is editable, we should
       // collapse selection in the link for compatibility with Blink.
       if (isEditor) {
