@@ -19,7 +19,6 @@ namespace mozilla::dom::quota {
 
 class ClientDirectoryLock;
 enum class DirectoryLockCategory : uint8_t;
-class OpenDirectoryListener;
 struct OriginMetadata;
 
 // Basic directory lock interface shared by all other directory lock classes.
@@ -36,10 +35,6 @@ class NS_NO_VTABLE DirectoryLock {
   virtual bool Acquired() const = 0;
 
   virtual nsTArray<RefPtr<DirectoryLock>> LocksMustWaitFor() const = 0;
-
-  // XXX This method is now deprecated, use the one which returns the
-  // `BoolPromise`
-  virtual void Acquire(RefPtr<OpenDirectoryListener> aOpenListener) = 0;
 
   virtual RefPtr<BoolPromise> Acquire() = 0;
 
@@ -94,18 +89,6 @@ class UniversalDirectoryLock : public DirectoryLock {
   virtual RefPtr<ClientDirectoryLock> SpecializeForClient(
       PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
       Client::Type aClientType) const = 0;
-};
-
-class NS_NO_VTABLE OpenDirectoryListener {
- public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-  virtual void DirectoryLockAcquired(DirectoryLock* aLock) = 0;
-
-  virtual void DirectoryLockFailed() = 0;
-
- protected:
-  virtual ~OpenDirectoryListener() = default;
 };
 
 }  // namespace mozilla::dom::quota
