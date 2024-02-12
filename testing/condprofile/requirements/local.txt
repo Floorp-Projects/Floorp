@@ -1,5 +1,5 @@
 # pulled when running locally
 ../mozbase/mozfile
+../mozbase/mozlog
 ../mozbase/mozprofile
 ../mozbase/mozdevice
-../mozbase/mozlog
