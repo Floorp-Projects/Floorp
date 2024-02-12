@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterDefaultConfig:
+    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+    "resource:///modules/asrouter/ASRouterDefaultConfig.sys.mjs",
+
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
 
   RemoteSettingsExperimentLoader:
@@ -39,10 +43,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouter:
     // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
     "resource:///modules/asrouter/ASRouter.jsm",
-
-  ASRouterDefaultConfig:
-    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
-    "resource:///modules/asrouter/ASRouterDefaultConfig.jsm",
 });
 
 class CannotLockProfileError extends Error {

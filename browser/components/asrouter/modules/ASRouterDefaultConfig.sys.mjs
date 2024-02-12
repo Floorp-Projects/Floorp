@@ -3,31 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["ASRouterDefaultConfig"];
-
 const { ASRouter } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouter.jsm"
 );
-const { TelemetryFeed } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/TelemetryFeed.sys.mjs"
-);
-const { ASRouterParentProcessMessageHandler } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/ASRouterParentProcessMessageHandler.sys.mjs"
-);
+import { TelemetryFeed } from "resource://activity-stream/lib/TelemetryFeed.sys.mjs";
+import { ASRouterParentProcessMessageHandler } from "resource:///modules/asrouter/ASRouterParentProcessMessageHandler.sys.mjs";
+
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment does not actually rely
+// on SpecialMessageActions, and overrides importESModule to be
+// a no-op (which can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { SpecialMessageActions } = ChromeUtils.importESModule(
   "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
+
 const { ASRouterPreferences } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterPreferences.jsm"
 );
 const { QueryCache } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterTargeting.jsm"
 );
-const { ActivityStreamStorage } = ChromeUtils.importESModule(
-  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
-);
+import { ActivityStreamStorage } from "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs";
 
 const createStorage = async telemetryFeed => {
   // "snippets" is the name of one storage space, but these days it is used
@@ -53,7 +52,7 @@ const createStorage = async telemetryFeed => {
   return dbStore.getDbTable("snippets");
 };
 
-const ASRouterDefaultConfig = () => {
+export const ASRouterDefaultConfig = () => {
   const router = ASRouter;
   const telemetry = new TelemetryFeed();
   const messageHandler = new ASRouterParentProcessMessageHandler({
