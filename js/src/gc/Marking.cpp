@@ -1215,14 +1215,23 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
 }
 
 template <uint32_t opts, typename S, typename T>
-void js::GCMarker::markAndTraverseEdge(S source, T* target) {
+void js::GCMarker::markAndTraverseEdge(S* source, T* target) {
   checkTraversedEdge(source, target);
   markAndTraverse<opts>(target);
 }
 
 template <uint32_t opts, typename S, typename T>
-void js::GCMarker::markAndTraverseEdge(S source, const T& target) {
+void js::GCMarker::markAndTraverseEdge(S* source, const T& target) {
   ApplyGCThingTyped(target, [this, source](auto t) {
+    this->markAndTraverseEdge<opts>(source, t);
+  });
+}
+
+template <uint32_t opts>
+MOZ_NEVER_INLINE void js::GCMarker::markAndTraversePrivateGCThing(
+    JSObject* source, TenuredCell* target) {
+  JS::TraceKind kind = target->getTraceKind();
+  ApplyGCThingTyped(target, kind, [this, source](auto t) {
     this->markAndTraverseEdge<opts>(source, t);
   });
 }
@@ -1615,9 +1624,7 @@ scan_value_range:
       markAndTraverseEdge<opts>(obj, v.toBigInt());
     } else {
       MOZ_ASSERT(v.isPrivateGCThing());
-      // v.toGCCellPtr cannot be inlined, so construct one manually.
-      Cell* cell = v.toGCThing();
-      markAndTraverseEdge<opts>(obj, JS::GCCellPtr(cell, cell->getTraceKind()));
+      markAndTraversePrivateGCThing<opts>(obj, &v.toGCThing()->asTenured());
     }
   }
 
