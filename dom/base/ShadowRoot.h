@@ -262,7 +262,7 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   UniquePtr<StyleAuthorStyles> mServoStyles;
   UniquePtr<mozilla::ServoStyleRuleMap> mStyleRuleMap;
 
-  using SlotArray = TreeOrderedArray<HTMLSlotElement>;
+  using SlotArray = TreeOrderedArray<HTMLSlotElement*>;
   // Map from name of slot to an array of all slots in the shadow DOM with with
   // the given name. The slots are stored as a weak pointer because the elements
   // are in the shadow tree and should be kept alive by its parent.

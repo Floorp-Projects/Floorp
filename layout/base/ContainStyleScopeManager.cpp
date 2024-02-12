@@ -6,14 +6,13 @@
 
 #include "ContainStyleScopeManager.h"
 
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/ServoStyleSet.h"
+#include "nsIContentInlines.h"
 #include "CounterStyleManager.h"
 #include "nsCounterManager.h"
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsQuoteList.h"
 
 namespace mozilla {
@@ -21,8 +20,9 @@ namespace mozilla {
 nsGenConNode* ContainStyleScope::GetPrecedingElementInGenConList(
     nsGenConList* aList) {
   auto IsAfter = [this](nsGenConNode* aNode) {
-    return nsLayoutUtils::CompareTreePosition(
-               mContent, aNode->mPseudoFrame->GetContent()) > 0;
+    return nsContentUtils::CompareTreePosition<TreeKind::Flat>(
+               mContent, aNode->mPseudoFrame->GetContent(),
+               /* aCommonAncestor = */ nullptr) > 0;
   };
   return aList->BinarySearch(IsAfter);
 }
