@@ -169,6 +169,11 @@ interface nsITransferable : nsISupports
   void setTransferData(in string aFlavor, in nsISupports aData);
 
   /**
+   * Removes the data from all flavors.
+   */
+  void clearAllData();
+
+  /**
     * Add the data flavor, indicating that this transferable
     * can receive this type of flavor
     *

@@ -159,7 +159,7 @@ function commonDialogOnLoad() {
               resources: [],
               analysisType: Ci.nsIContentAnalysisRequest.eBulkDataEntry,
               operationTypeForDisplay: Ci.nsIContentAnalysisRequest.eClipboard,
-              url: args.owningBrowsingContext.currentURI.spec,
+              url: args.owningBrowsingContext.currentURI,
               textContent: data,
               windowGlobalParent:
                 args.owningBrowsingContext.currentWindowContext,
