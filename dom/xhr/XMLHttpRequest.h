@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_XMLHttpRequest_h
 #define mozilla_dom_XMLHttpRequest_h
 
+#include <iterator>  // std::begin, std::end
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/XMLHttpRequestEventTarget.h"
@@ -24,6 +25,87 @@ class XMLHttpRequestUpload;
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget {
  public:
+  struct EventType {
+    const char* cStr;
+    const char16_t* str;
+
+    EventType(const char* name, const char16_t* uname)
+        : cStr(name), str(uname) {}
+
+    operator const nsDependentString() const { return nsDependentString(str); }
+
+    friend bool operator==(const EventType& a, const EventType& b) {
+      return !strcmp(a.cStr, b.cStr);
+    }
+
+    friend bool operator!=(const EventType& a, const EventType& b) {
+      return strcmp(a.cStr, b.cStr);
+    }
+
+    friend bool operator==(const nsAString& a, const EventType& b) {
+      return a.Equals(b.str);
+    }
+
+    friend bool operator!=(const nsAString& a, const EventType& b) {
+      return !a.Equals(b.str);
+    }
+
+    inline bool operator==(const nsString& b) const { return b.Equals(str); }
+
+    inline bool operator!=(const nsString& b) const { return !b.Equals(str); }
+  };
+
+  struct ProgressEventType : public EventType {
+    ProgressEventType(const char* name, const char16_t* uname)
+        : EventType(name, uname) {}
+  };
+
+  struct ErrorProgressEventType : public ProgressEventType {
+    const nsresult errorCode;
+
+    ErrorProgressEventType(const char* name, const char16_t* uname,
+                           const nsresult code)
+        : ProgressEventType(name, uname), errorCode(code) {}
+  };
+
+#define DECL_EVENT(NAME) \
+  static inline const EventType NAME = EventType(#NAME, u## #NAME);
+
+#define DECL_PROGRESSEVENT(NAME)               \
+  static inline const ProgressEventType NAME = \
+      ProgressEventType(#NAME, u## #NAME);
+
+#define DECL_ERRORPROGRESSEVENT(NAME, ERR)          \
+  static inline const ErrorProgressEventType NAME = \
+      ErrorProgressEventType(#NAME, u## #NAME, ERR);
+
+  struct Events {
+    DECL_EVENT(readystatechange);
+    DECL_PROGRESSEVENT(loadstart);
+    DECL_PROGRESSEVENT(progress);
+    DECL_ERRORPROGRESSEVENT(error, NS_ERROR_DOM_NETWORK_ERR);
+    DECL_ERRORPROGRESSEVENT(abort, NS_ERROR_DOM_ABORT_ERR);
+    DECL_ERRORPROGRESSEVENT(timeout, NS_ERROR_DOM_TIMEOUT_ERR);
+    DECL_PROGRESSEVENT(load);
+    DECL_PROGRESSEVENT(loadend);
+
+    static inline const EventType* All[]{
+        &readystatechange, &loadstart, &progress, &error, &abort,
+        &timeout,          &load,      &loadend};
+
+    static inline const EventType* ProgressEvents[]{
+        &loadstart, &progress, &error, &abort, &timeout, &load, &loadend};
+
+    static inline const EventType* Find(const nsString& name) {
+      for (const EventType* type : Events::All) {
+        if (*type == name) {
+          return type;
+        }
+      }
+      return nullptr;
+    }
+  };
+
   static already_AddRefed<XMLHttpRequest> Constructor(
       const GlobalObject& aGlobal, const MozXMLHttpRequestParameters& aParams,
       ErrorResult& aRv);
