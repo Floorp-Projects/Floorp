@@ -275,11 +275,11 @@ module.exports = {
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
 
-    // Use {} instead of new Object()
-    "no-new-object": "error",
-
     // Disallow use of new wrappers
     "no-new-wrappers": "error",
+
+    // Use {} instead of new Object(), unless arguments are passed.
+    "no-object-constructor": "error",
 
     // We don't want this, see bug 1551829
     "no-prototype-builtins": "off",
