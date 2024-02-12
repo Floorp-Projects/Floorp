@@ -3,19 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["ASRouterParentProcessMessageHandler"];
-
 const { ASRouterPreferences } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterPreferences.jsm"
 );
 
-const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(
-  "resource:///modules/asrouter/ActorConstants.sys.mjs"
-);
+import { MESSAGE_TYPE_HASH as msg } from "resource:///modules/asrouter/ActorConstants.sys.mjs";
 
-class ASRouterParentProcessMessageHandler {
+export class ASRouterParentProcessMessageHandler {
   constructor({
     router,
     preferences,
