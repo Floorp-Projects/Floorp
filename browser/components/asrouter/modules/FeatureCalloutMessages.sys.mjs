@@ -4,7 +4,7 @@
 
 // Eventually, make this a messaging system
 // provider instead of adding these message
-// into OnboardingMessageProvider.jsm
+// into OnboardingMessageProvider.sys.mjs
 const FIREFOX_VIEW_PREF = "browser.firefox-view.feature-tour";
 const PDFJS_PREF = "browser.pdfjs.feature-tour";
 // Empty screens are included as placeholders to ensure step

@@ -11,8 +11,8 @@ const { ASRouterTargeting } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouterTargeting.jsm"
 );
 
-const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
+const { OnboardingMessageProvider } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs"
 );
 
 async function waitForClick(selector, win) {

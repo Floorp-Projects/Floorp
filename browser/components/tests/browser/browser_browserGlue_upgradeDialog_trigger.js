@@ -9,8 +9,8 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
 const { ExperimentAPI } = ChromeUtils.importESModule(
   "resource://nimbus/ExperimentAPI.sys.mjs"
 );
-const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
+const { OnboardingMessageProvider } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs"
 );
 
 XPCOMUtils.defineLazyServiceGetters(this, {

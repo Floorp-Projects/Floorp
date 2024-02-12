@@ -1,5 +1,5 @@
-const { OnboardingMessageProvider } = ChromeUtils.import(
-  "resource:///modules/asrouter/OnboardingMessageProvider.jsm"
+const { OnboardingMessageProvider } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs"
 );
 const { ToolbarBadgeHub } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/ToolbarBadgeHub.sys.mjs"

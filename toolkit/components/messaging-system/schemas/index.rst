@@ -180,7 +180,7 @@ Triggers and actions
 
 ..  _CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/CFRMessageProvider.jsm
 ..  _PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/PanelTestProvider.jsm
-..  _OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/OnboardingMessageProvider.jsm
+..  _OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/OnboardingMessageProvider.sys.mjs
 ..  _Test_CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_CFMessageProvider.js
 ..  _Test_OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_OnboardingMessageProvider.js
 ..  _Test_PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_PanelTestProvider.js
