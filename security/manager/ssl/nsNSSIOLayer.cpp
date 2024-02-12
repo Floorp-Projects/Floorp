@@ -446,7 +446,8 @@ bool retryDueToTLSIntolerance(PRErrorCode err, NSSSocketControl* socketInfo) {
   }
 
   if (!socketInfo->IsPreliminaryHandshakeDone() &&
-      socketInfo->SentXyberShare()) {
+      socketInfo->SentXyberShare() && err != SSL_ERROR_ECH_RETRY_WITH_ECH &&
+      err != SSL_ERROR_ECH_RETRY_WITHOUT_ECH) {
     nsAutoCString errorName;
     const char* prErrorName = PR_ErrorToName(err);
     if (prErrorName) {
