@@ -2,6 +2,6 @@
 # the target.condprof.tests.tar.gz archive pulls those dependencies
 # directly into the condprof project root.
 ./mozfile
+./mozlog
 ./mozprofile
 ./mozdevice
-./mozlog
