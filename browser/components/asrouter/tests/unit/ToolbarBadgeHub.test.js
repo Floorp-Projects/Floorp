@@ -1,7 +1,10 @@
 import { _ToolbarBadgeHub } from "modules/ToolbarBadgeHub.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.jsm";
-import { _ToolbarPanelHub, ToolbarPanelHub } from "modules/ToolbarPanelHub.jsm";
+import {
+  _ToolbarPanelHub,
+  ToolbarPanelHub,
+} from "modules/ToolbarPanelHub.sys.mjs";
 
 describe("ToolbarBadgeHub", () => {
   let sandbox;

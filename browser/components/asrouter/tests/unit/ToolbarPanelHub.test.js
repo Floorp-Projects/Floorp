@@ -1,4 +1,4 @@
-import { _ToolbarPanelHub } from "modules/ToolbarPanelHub.jsm";
+import { _ToolbarPanelHub } from "modules/ToolbarPanelHub.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 import { PanelTestProvider } from "modules/PanelTestProvider.sys.mjs";
 
