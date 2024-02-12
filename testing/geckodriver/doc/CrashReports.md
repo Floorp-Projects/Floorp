@@ -50,3 +50,16 @@ crash report to the geckodriver issue.
 
 [crash reporter]: https://support.mozilla.org/kb/mozillacrashreporter#w_viewing-reports-outside-of-firefox
 [view the crash reports]: https://support.mozilla.orgkb/mozillacrashreporter#w_viewing-crash-reports
+
+## Enabling the crash reporter
+
+By default geckodriver disables the crash reporter so it doesn't submit crash
+reports to Mozilla's crash reporting system, and also doesn't interfere with
+testing.
+
+This behaviour can be overridden by using the command line argument
+`--enable-crash-reporter`. You can [view the crash reports] and share it with
+us after submission.
+
+**Important**: Please only enable the crash reporter if the above mentioned
+solution does not work.

@@ -73,6 +73,7 @@ impl LocalBrowser {
         marionette_port: u16,
         jsdebugger: bool,
         profile_root: Option<&Path>,
+        enable_crash_reporter: bool,
     ) -> WebDriverResult<LocalBrowser> {
         let binary = options.binary.ok_or_else(|| {
             WebDriverError::new(
@@ -124,10 +125,12 @@ impl LocalBrowser {
         }
 
         // https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
-        runner
-            .env("MOZ_CRASHREPORTER", "1")
-            .env("MOZ_CRASHREPORTER_NO_REPORT", "1")
-            .env("MOZ_CRASHREPORTER_SHUTDOWN", "1");
+        if !enable_crash_reporter {
+            runner
+                .env("MOZ_CRASHREPORTER", "1")
+                .env("MOZ_CRASHREPORTER_NO_REPORT", "1")
+                .env("MOZ_CRASHREPORTER_SHUTDOWN", "1");
+        }
 
         let process = match runner.start() {
             Ok(process) => process,
@@ -240,6 +243,7 @@ impl RemoteBrowser {
         marionette_port: u16,
         websocket_port: Option<u16>,
         profile_root: Option<&Path>,
+        enable_crash_reporter: bool,
     ) -> WebDriverResult<RemoteBrowser> {
         let android_options = options.android.unwrap();
 
@@ -271,7 +275,7 @@ impl RemoteBrowser {
             )
         })?;
 
-        handler.prepare(&profile, options.args, options.env.unwrap_or_default())?;
+        handler.prepare(&profile, options.args, options.env.unwrap_or_default(), enable_crash_reporter)?;
 
         handler.launch()?;
 
