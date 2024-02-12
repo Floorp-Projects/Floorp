@@ -36,11 +36,15 @@ class NS_NO_VTABLE DirectoryLock {
 
   virtual nsTArray<RefPtr<DirectoryLock>> LocksMustWaitFor() const = 0;
 
+  virtual bool Dropped() const = 0;
+
   virtual RefPtr<BoolPromise> Acquire() = 0;
 
   virtual void AcquireImmediately() = 0;
 
   virtual void AssertIsAcquiredExclusively() = 0;
+
+  virtual void Drop() = 0;
 
   virtual void OnInvalidate(std::function<void()>&& aCallback) = 0;
 
