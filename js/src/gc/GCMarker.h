@@ -176,13 +176,9 @@ class MarkStack {
 
   template <typename T>
   [[nodiscard]] bool push(T* ptr);
-
-  [[nodiscard]] bool push(JSObject* obj, SlotsOrElementsKind kind,
-                          size_t start);
+  void infalliblePush(JSObject* obj, SlotsOrElementsKind kind, size_t start);
   [[nodiscard]] bool push(const TaggedPtr& ptr);
-  [[nodiscard]] bool push(const SlotsOrElementsRange& array);
   void infalliblePush(const TaggedPtr& ptr);
-  void infalliblePush(const SlotsOrElementsRange& array);
 
   // GCMarker::eagerlyMarkChildren uses unused marking stack as temporary
   // storage to hold rope pointers.
@@ -478,7 +474,7 @@ class GCMarker {
   void markAndTraverseEdge(S* source, const T& target);
 
   template <uint32_t markingOptions>
-  void markAndTraversePrivateGCThing(JSObject* source, gc::TenuredCell* target);
+  bool markAndTraversePrivateGCThing(JSObject* source, gc::TenuredCell* target);
 
   template <typename S, typename T>
   void checkTraversedEdge(S source, T* target);
@@ -528,10 +524,6 @@ class GCMarker {
 
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
-
-  // Push an object onto the stack for later tracing and assert that it has
-  // already been marked.
-  inline void repush(JSObject* obj);
 
   template <typename T>
   void markImplicitEdgesHelper(T markedThing);
