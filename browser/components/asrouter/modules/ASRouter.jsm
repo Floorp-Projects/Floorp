@@ -13,6 +13,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouterPreferences:
+    "resource:///modules/asrouter/ASRouterPreferences.sys.mjs",
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   ASRouterTriggerListeners:
     "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs",
@@ -30,17 +32,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
+  TARGETING_PREFERENCES:
+    "resource:///modules/asrouter/ASRouterPreferences.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   Spotlight: "resource:///modules/asrouter/Spotlight.sys.mjs",
   ToastNotification: "resource:///modules/asrouter/ToastNotification.sys.mjs",
   ToolbarBadgeHub: "resource:///modules/asrouter/ToolbarBadgeHub.sys.mjs",
   ToolbarPanelHub: "resource:///modules/asrouter/ToolbarPanelHub.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouterPreferences: "resource:///modules/asrouter/ASRouterPreferences.jsm",
-  TARGETING_PREFERENCES: "resource:///modules/asrouter/ASRouterPreferences.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 const PROVIDER_PREF_BRANCH =
   "browser.newtabpage.activity-stream.asrouter.providers.";
@@ -33,9 +32,9 @@ const USER_PREFERENCES = {
 
 // Preferences that influence targeting attributes. When these change we need
 // to re-evaluate if the message targeting still matches
-const TARGETING_PREFERENCES = [FXA_USERNAME_PREF];
+export const TARGETING_PREFERENCES = [FXA_USERNAME_PREF];
 
-const TEST_PROVIDERS = [
+export const TEST_PROVIDERS = [
   {
     id: "panel_local_testing",
     type: "local",
@@ -44,7 +43,7 @@ const TEST_PROVIDERS = [
   },
 ];
 
-class _ASRouterPreferences {
+export class _ASRouterPreferences {
   constructor() {
     Object.assign(this, DEFAULT_STATE);
     this._callbacks = new Set();
@@ -239,11 +238,4 @@ class _ASRouterPreferences {
   }
 }
 
-const ASRouterPreferences = new _ASRouterPreferences();
-
-const EXPORTED_SYMBOLS = [
-  "_ASRouterPreferences",
-  "ASRouterPreferences",
-  "TEST_PROVIDERS",
-  "TARGETING_PREFERENCES",
-];
+export const ASRouterPreferences = new _ASRouterPreferences();
