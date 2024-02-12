@@ -48,16 +48,21 @@ class ThemeColors {
   using StyleSystemColor = mozilla::StyleSystemColor;
   using AccentColor = ThemeAccentColor;
 
+  struct HighContrastInfo {
+    bool mHighContrast = false;
+    bool mMustUseLightSystemColors = false;
+  };
+
   const Document& mDoc;
-  const bool mHighContrast;
+  const HighContrastInfo mHighContrastInfo;
   const ColorScheme mColorScheme;
   const AccentColor mAccentColor;
 
  public:
   explicit ThemeColors(const nsIFrame* aFrame, StyleAppearance aAppearance)
       : mDoc(*aFrame->PresContext()->Document()),
-        mHighContrast(ShouldBeHighContrast(*aFrame->PresContext())),
-        mColorScheme(ColorSchemeForWidget(aFrame, aAppearance, mHighContrast)),
+        mHighContrastInfo(ShouldBeHighContrast(*aFrame->PresContext())),
+        mColorScheme(ColorSchemeForWidget(aFrame, aAppearance, mHighContrastInfo)),
         mAccentColor(*aFrame->Style(), mColorScheme) {}
   virtual ~ThemeColors() = default;
 
@@ -66,7 +71,7 @@ class ThemeColors {
   }
 
   const AccentColor& Accent() const { return mAccentColor; }
-  bool HighContrast() const { return mHighContrast; }
+  bool HighContrast() const { return mHighContrastInfo.mHighContrast; }
   bool IsDark() const { return mColorScheme == ColorScheme::Dark; }
 
   nscolor SystemNs(StyleSystemColor aColor) const {
@@ -94,9 +99,9 @@ class ThemeColors {
   }
 
   // Whether we should use system colors (for high contrast mode).
-  static bool ShouldBeHighContrast(const nsPresContext&);
+  static HighContrastInfo ShouldBeHighContrast(const nsPresContext&);
   static ColorScheme ColorSchemeForWidget(const nsIFrame*, StyleAppearance,
-                                          bool aHighContrast);
+                                          const HighContrastInfo&);
 
   static void RecomputeAccentColors();
 
