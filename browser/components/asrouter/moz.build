@@ -22,7 +22,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterParentProcessMessageHandler.sys.mjs",
     "modules/ASRouterPreferences.jsm",
     "modules/ASRouterTargeting.jsm",
-    "modules/ASRouterTriggerListeners.jsm",
+    "modules/ASRouterTriggerListeners.sys.mjs",
     "modules/CFRMessageProvider.sys.mjs",
     "modules/CFRPageActions.sys.mjs",
     "modules/FeatureCallout.sys.mjs",

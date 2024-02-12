@@ -1,8 +1,8 @@
 const TEST_URL =
   "https://example.com/browser/toolkit/components/messaging-system/schemas/TriggerActionSchemas/test/browser/index.md";
 
-const { ASRouterTriggerListeners } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouterTriggerListeners.jsm"
+const { ASRouterTriggerListeners } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouterTriggerListeners.sys.mjs"
 );
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource:///modules/asrouter/CFRMessageProvider.sys.mjs"

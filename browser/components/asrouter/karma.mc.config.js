@@ -220,7 +220,7 @@ module.exports = function (config) {
               path.resolve("tests"),
               path.resolve("../newtab"),
               path.resolve("modules/ASRouterTargeting.jsm"),
-              path.resolve("modules/ASRouterTriggerListeners.jsm"),
+              path.resolve("modules/ASRouterTriggerListeners.sys.mjs"),
               path.resolve("modules/CFRMessageProvider.sys.mjs"),
               path.resolve("modules/CFRPageActions.sys.mjs"),
               path.resolve("modules/OnboardingMessageProvider.sys.mjs"),
