@@ -4077,18 +4077,6 @@ nsresult CacheFileIOManager::OpenNSPRHandle(CacheFileHandle* aHandle,
             ("CacheFileIOManager::OpenNSPRHandle() - Successfully evicted entry"
              " with hash %08x%08x%08x%08x%08x. %s to create the new file.",
              LOGSHA1(&hash), NS_SUCCEEDED(rv) ? "Succeeded" : "Failed"));
-
-        // Report the full size only once per session
-        static bool sSizeReported = false;
-        if (!sSizeReported) {
-          uint32_t cacheUsage;
-          if (NS_SUCCEEDED(CacheIndex::GetCacheSize(&cacheUsage))) {
-            cacheUsage >>= 10;
-            Telemetry::Accumulate(Telemetry::NETWORK_CACHE_SIZE_FULL_FAT,
-                                  cacheUsage);
-            sSizeReported = true;
-          }
-        }
       } else {
         LOG(
             ("CacheFileIOManager::OpenNSPRHandle() - Couldn't evict an existing"
