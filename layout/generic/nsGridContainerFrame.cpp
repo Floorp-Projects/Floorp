@@ -9,32 +9,28 @@
 #include "nsGridContainerFrame.h"
 
 #include <functional>
-#include <limits>
 #include <stdlib.h>  // for div()
-#include <numeric>
 #include <type_traits>
 #include "gfxContext.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Baseline.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSAlignUtils.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Grid.h"
 #include "mozilla/dom/GridBinding.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"  // for PodZero
-#include "mozilla/Poison.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAlgorithm.h"  // for clamped()
-#include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsTHashMap.h"
 #include "nsDisplayList.h"
-#include "nsHashKeys.h"
 #include "nsFieldSetFrame.h"
-#include "nsIFrameInlines.h"
+#include "nsHashKeys.h"
+#include "nsIFrameInlines.h"  // for nsIFrame::GetLogicalNormalPosition (don't remove)
+#include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
@@ -593,42 +589,56 @@ struct nsGridContainerFrame::GridItemInfo {
    * Item state per axis.
    */
   enum StateBits : uint16_t {
-    // clang-format off
-    eIsFlexing =              0x1, // does the item span a flex track?
-    eFirstBaseline =          0x2, // participate in 'first baseline' alignment?
-    // ditto 'last baseline', mutually exclusive w. eFirstBaseline
-    eLastBaseline =           0x4,
+    // Does the item span a flex track?
+    eIsFlexing = 0x1,
+
+    // First or last baseline alignment preference. They are mutually exclusive.
+    // This does *NOT* represent the baseline alignment group. See the member
+    // variable for that.
+    // <https://drafts.csswg.org/css-align-3/#baseline-alignment-preference>
+    eFirstBaseline = 0x2,
+    eLastBaseline = 0x4,
     eIsBaselineAligned = eFirstBaseline | eLastBaseline,
+
     // One of e[Self|Content]Baseline is set when eIsBaselineAligned is true
-    eSelfBaseline =           0x8, // is it *-self:[last ]baseline alignment?
+    eSelfBaseline = 0x8,  // is it *-self:[last ]baseline alignment?
     // Ditto *-content:[last ]baseline. Mutually exclusive w. eSelfBaseline.
-    eContentBaseline =       0x10,
+    eContentBaseline = 0x10,
+
     // The baseline affects the margin or padding on the item's end side when
     // this bit is set.  In a grid-axis it's always set for eLastBaseline and
     // always unset for eFirstBaseline.  In a masonry-axis, it's set for
     // baseline groups in the EndStretch set and unset for the StartStretch set.
-    eEndSideBaseline =       0x20,
+    eEndSideBaseline = 0x20,
     eAllBaselineBits = eIsBaselineAligned | eSelfBaseline | eContentBaseline |
                        eEndSideBaseline,
+
     // Should apply Automatic Minimum Size per:
     // https://drafts.csswg.org/css-grid/#min-size-auto
-    eApplyAutoMinSize =      0x40,
+    eApplyAutoMinSize = 0x40,
     // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
     eClampMarginBoxMinSize = 0x80,
-    eIsSubgrid =            0x100,
+    eIsSubgrid = 0x100,
     // set on subgrids and items in subgrids if they are adjacent to the grid
     // start/end edge (excluding grid-aligned abs.pos. frames)
-    eStartEdge =            0x200,
-    eEndEdge =              0x400,
+    eStartEdge = 0x200,
+    eEndEdge = 0x400,
     eEdgeBits = eStartEdge | eEndEdge,
     // Set if this item was auto-placed in this axis.
-    eAutoPlacement =        0x800,
+    eAutoPlacement = 0x800,
     // Set if this item is the last item in its track (masonry layout only)
-    eIsLastItemInMasonryTrack =   0x1000,
-    // clang-format on
+    eIsLastItemInMasonryTrack = 0x1000,
   };
 
   GridItemInfo(nsIFrame* aFrame, const GridArea& aArea);
+
+  GridItemInfo(const GridItemInfo& aOther)
+      : mFrame(aOther.mFrame), mArea(aOther.mArea) {
+    mBaselineOffset = aOther.mBaselineOffset;
+    mState = aOther.mState;
+  }
+
+  GridItemInfo& operator=(const GridItemInfo&) = delete;
 
   static bool BaselineAlignmentAffectsEndSide(StateBits state) {
     return state & StateBits::eEndSideBaseline;
@@ -654,10 +664,12 @@ struct nsGridContainerFrame::GridItemInfo {
    */
   GridItemInfo Transpose() const {
     GridItemInfo info(mFrame, GridArea(mArea.mRows, mArea.mCols));
-    info.mState[0] = mState[1];
-    info.mState[1] = mState[0];
-    info.mBaselineOffset[0] = mBaselineOffset[1];
-    info.mBaselineOffset[1] = mBaselineOffset[0];
+    info.mState[eLogicalAxisBlock] = mState[eLogicalAxisInline];
+    info.mState[eLogicalAxisInline] = mState[eLogicalAxisBlock];
+    info.mBaselineOffset[eLogicalAxisBlock] =
+        mBaselineOffset[eLogicalAxisInline];
+    info.mBaselineOffset[eLogicalAxisInline] =
+        mBaselineOffset[eLogicalAxisBlock];
     return info;
   }
 
@@ -816,13 +828,16 @@ struct nsGridContainerFrame::GridItemInfo {
 
   nsIFrame* const mFrame;
   GridArea mArea;
+
   // Offset from the margin edge to the baseline (LogicalAxis index).  It's from
-  // the start edge when eFirstBaseline is set, end edge otherwise. It's mutable
-  // since we update the value fairly late (just before reflowing the item).
-  mutable nscoord mBaselineOffset[2];
-  mutable StateBits mState[2];  // state bits per axis (LogicalAxis index)
-  static_assert(mozilla::eLogicalAxisBlock == 0, "unexpected index value");
-  static_assert(mozilla::eLogicalAxisInline == 1, "unexpected index value");
+  // the start edge for first baseline sharing group, otherwise from the end
+  // edge.
+  // It's mutable since we update the value fairly late (just before reflowing
+  // the item).
+  mutable PerLogicalAxis<nscoord> mBaselineOffset;
+
+  // State bits per axis.
+  mutable PerLogicalAxis<StateBits> mState;
 };
 
 using GridItemInfo = nsGridContainerFrame::GridItemInfo;
@@ -830,11 +845,12 @@ using ItemState = GridItemInfo::StateBits;
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ItemState)
 
 GridItemInfo::GridItemInfo(nsIFrame* aFrame, const GridArea& aArea)
-    : mFrame(aFrame), mArea(aArea) {
+    : mFrame(aFrame), mArea(aArea), mBaselineOffset{0, 0} {
   mState[eLogicalAxisBlock] =
       StateBits(mArea.mRows.mStart == kAutoLine ? eAutoPlacement : 0);
   mState[eLogicalAxisInline] =
       StateBits(mArea.mCols.mStart == kAutoLine ? eAutoPlacement : 0);
+
   if (auto* gridFrame = GetGridContainerFrame(mFrame)) {
     auto parentWM = aFrame->GetParent()->GetWritingMode();
     bool isOrthogonal = parentWM.IsOrthogonalTo(gridFrame->GetWritingMode());
@@ -847,8 +863,6 @@ GridItemInfo::GridItemInfo(nsIFrame* aFrame, const GridArea& aArea)
           StateBits::eIsSubgrid;
     }
   }
-  mBaselineOffset[eLogicalAxisBlock] = nscoord(0);
-  mBaselineOffset[eLogicalAxisInline] = nscoord(0);
 }
 
 void GridItemInfo::ReverseDirection(LogicalAxis aAxis, uint32_t aGridEnd) {
@@ -2906,12 +2920,18 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
               mGridItems.AppendElement(GridItemInfo(child, itemInfo.mArea));
           // Copy the item's baseline data so that the item's last fragment can
           // do 'last baseline' alignment if necessary.
-          item->mState[0] |= itemInfo.mState[0] & ItemState::eAllBaselineBits;
-          item->mState[1] |= itemInfo.mState[1] & ItemState::eAllBaselineBits;
-          item->mBaselineOffset[0] = itemInfo.mBaselineOffset[0];
-          item->mBaselineOffset[1] = itemInfo.mBaselineOffset[1];
-          item->mState[0] |= itemInfo.mState[0] & ItemState::eAutoPlacement;
-          item->mState[1] |= itemInfo.mState[1] & ItemState::eAutoPlacement;
+          item->mState[eLogicalAxisBlock] |=
+              itemInfo.mState[eLogicalAxisBlock] & ItemState::eAllBaselineBits;
+          item->mState[eLogicalAxisInline] |=
+              itemInfo.mState[eLogicalAxisInline] & ItemState::eAllBaselineBits;
+          item->mBaselineOffset[eLogicalAxisBlock] =
+              itemInfo.mBaselineOffset[eLogicalAxisBlock];
+          item->mBaselineOffset[eLogicalAxisInline] =
+              itemInfo.mBaselineOffset[eLogicalAxisInline];
+          item->mState[eLogicalAxisBlock] |=
+              itemInfo.mState[eLogicalAxisBlock] & ItemState::eAutoPlacement;
+          item->mState[eLogicalAxisInline] |=
+              itemInfo.mState[eLogicalAxisInline] & ItemState::eAutoPlacement;
           break;
         }
       }
