@@ -277,6 +277,8 @@ def add_extra_options(config, tests):
             extra_options.append("--device-name=p5_aarch64")
         elif test_platform.startswith("android-hw-p6"):
             extra_options.append("--device-name=p6_aarch64")
+        elif test_platform.startswith("android-hw-s21"):
+            extra_options.append("--device-name=s21_aarch64")
 
         if test["raptor"].pop("run-visual-metrics", False):
             extra_options.append("--browsertime-video")
