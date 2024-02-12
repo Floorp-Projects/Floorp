@@ -351,6 +351,10 @@ release-notify-started
 ----------------------
 Notify when a release has been started.
 
+release-notify-testrail
+-----------------------
+Create milestones in testrail for the next fenix/focus releases, and send a slack notification.
+
 release-bouncer-sub
 -------------------
 Submits bouncer information for releases.

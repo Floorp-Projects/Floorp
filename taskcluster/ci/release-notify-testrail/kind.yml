@@ -2,17 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - taskgraph.transforms.job:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
-task-defaults:
+kind-dependencies:
+    - ui-test-apk
+
+job-defaults:
     description: Sends Slack message to release testers that Testrail Milestone was created.
-    worker-type: b-android
+    worker-type: b-linux-gcp
     worker:
-        docker-image: {in-tree: ui-tests}
+        docker-image: {in-tree: android-ui-tests}
         max-run-time: 120
     run:
         use-caches: false
@@ -22,49 +25,46 @@ task-defaults:
               key: testrailCredentials
               path: .testrail_credentials.json
               json: true
+    run-on-projects: [mozilla-beta, mozilla-release]
     routes:
         - notify.slack-channel.G016BC5FUHJ.on-failed
     scopes:
-        - queue:route:notify.slack-channel.G016BC5FUHJ # notify mobile-alerts-sandbox on failure
+        - queue:route:notify.slack-channel.G016BC5FUHJ  # notify mobile-alerts-sandbox on failure
         - notify:slack-channel:G016BC5FUHJ
-        - queue:route:notify.slack-channel.C02KDDS9QM9 # notify mobile-testeng on success
+        - queue:route:notify.slack-channel.C02KDDS9QM9  # notify mobile-testeng on success
         - notify:slack-channel:C02KDDS9QM9
 
-tasks:
+jobs:
     create-milestone-focus:
         dependencies:
             ui-test-apk: ui-test-apk-focus-arm-beta
         description: Create Testrail Milestone for Focus
-        run-on-tasks-for: [github-push]
-        run-on-git-branches: [releases_v]
         run:
             pre-commands:
                 # get-secrets is called from '..' directory so we need to cd into any directory to make it work
-                - ["cd", "focus-android"]
+                - ["cd", "mobile/android/focus-android"]
             commands:
-                - [python3, "../taskcluster/scripts/testrail_main.py"]
+                - [python3, "../../../taskcluster/scripts/testrail_main.py"]
         worker:
             env:
                 SHIPPING_PRODUCT: focus
                 TESTRAIL_PRODUCT_TYPE: Focus
-                TESTRAIL_PROJECT_ID: '48' # Fenix Browser
-                TESTRAIL_TEST_SUITE_ID: '49386' # Test Automation Release Milestone - Focus
-    
+                TESTRAIL_PROJECT_ID: '48'  # Focus Browser
+                TESTRAIL_TEST_SUITE_ID: '49386'  # Test Automation Release Milestone - Focus
+
     create-milestone-fenix:
         dependencies:
             ui-test-apk: ui-test-apk-fenix-arm-beta
         description: Create Testrail Milestone for Fenix
-        run-on-tasks-for: [github-push]
-        run-on-git-branches: [releases_v]
         run:
             pre-commands:
                 # get-secrets is called from '..' directory so we need to cd into any directory to make it work
-                - ["cd", "fenix"]
+                - ["cd", "mobile/android/fenix"]
             commands:
-                - [python3, "../taskcluster/scripts/testrail_main.py"]
+                - [python3, "../../../taskcluster/scripts/testrail_main.py"]
         worker:
             env:
                 SHIPPING_PRODUCT: fenix
                 TESTRAIL_PRODUCT_TYPE: Firefox
-                TESTRAIL_PROJECT_ID: '59' # Fenix Browser
-                TESTRAIL_TEST_SUITE_ID: '49319' # Test Automation Release Milestone - Fenix
+                TESTRAIL_PROJECT_ID: '59'  # Fenix Browser
+                TESTRAIL_TEST_SUITE_ID: '49319'  # Test Automation Release Milestone - Fenix
