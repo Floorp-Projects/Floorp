@@ -3382,28 +3382,20 @@ GeckoDriver.prototype.setPermission = async function (cmd) {
     );
   }
 
-  // This abuses permissions.query() to do the IDL conversion in step 1 in the spec:
-  // https://w3c.github.io/permissions/#webdriver-command-set-permission
-  // If this does not throw then the descriptor is valid.
-  //
-  // TODO: Currently we consume the original JS object later on, but we should
-  // consume the IDL-converted dictionary instead.
-  // For WPT purpose the current state is fine, but for general webdriver extension
-  // this is not ideal as the script might get access to fields that are not in IDL.
-  // See bug 1876754.
+  let params;
   try {
-    await this.curBrowser.window.navigator.permissions.query(descriptor);
+    params =
+      await this.curBrowser.window.navigator.permissions.parseSetParameters({
+        descriptor,
+        state,
+      });
   } catch (err) {
     throw new lazy.error.InvalidArgumentError(`setPermission: ${err.message}`);
   }
 
   lazy.assert.boolean(oneRealm);
-  lazy.assert.that(
-    state => ["granted", "denied", "prompt"].includes(state),
-    `state is ${state}, expected "granted", "denied", or "prompt"`
-  )(state);
 
-  lazy.permissions.set(descriptor, state, oneRealm, browsingContext);
+  lazy.permissions.set(params.type, params.state, oneRealm, browsingContext);
 };
 
 /**

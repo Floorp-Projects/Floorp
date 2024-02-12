@@ -6,16 +6,14 @@
 
 #include "mozilla/dom/Permissions.h"
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MidiPermissionStatus.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/PermissionSetParametersBinding.h"
 #include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/PermissionsBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/StorageAccessPermissionStatus.h"
-#include "mozilla/Components.h"
-#include "nsIPermissionManager.h"
 #include "PermissionUtils.h"
 
 namespace mozilla::dom {
@@ -141,6 +139,44 @@ already_AddRefed<Promise> Permissions::Query(JSContext* aCx,
       });
 
   return promise.forget();
+}
+
+already_AddRefed<PermissionStatus> Permissions::ParseSetParameters(
+    JSContext* aCx, JS::Handle<JSObject*> aParameters, ErrorResult& aRv) {
+  // Step 1: Let parametersDict be the parameters argument, converted to an IDL
+  // value of type PermissionSetParameters. If this throws an exception,
+  // return an invalid argument error.
+  // (The error type should be handled by the caller)
+  JS::Rooted<JS::Value> parameters(aCx, JS::ObjectValue(*aParameters));
+  RootedDictionary<PermissionSetParameters> parametersDict(aCx);
+  if (!parametersDict.Init(aCx, parameters)) {
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(aCx);
+    return nullptr;
+  }
+
+  // Step 2: Let rootDesc be parameters.descriptor.
+  JS::Rooted<JSObject*> rootDesc(aCx, parametersDict.mDescriptor);
+
+  // Step 3: If parameters.state is an inappropriate permission state for any
+  // implementation-defined reason, return a invalid argument error.
+  // (We don't do this)
+
+  // Step 4: Let typedDescriptor be the object rootDesc refers to, converted
+  // to an IDL value of rootDesc.name's permission descriptor type. If this
+  // throws an exception, return a invalid argument error.
+  //
+  // We use PermissionStatus as the typed object.
+  RefPtr<PermissionStatus> status =
+      CreatePermissionStatus(aCx, rootDesc, nullptr, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Set the state too so that the caller can use it for step 5.
+  status->SetState(parametersDict.mState);
+
+  return status.forget();
 }
 
 }  // namespace mozilla::dom

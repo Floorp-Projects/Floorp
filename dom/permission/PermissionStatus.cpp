@@ -167,4 +167,8 @@ void PermissionStatus::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
+void PermissionStatus::GetType(nsACString& aName) const {
+  aName.Assign(GetPermissionType());
+}
+
 }  // namespace mozilla::dom

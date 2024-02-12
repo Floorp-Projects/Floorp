@@ -82,6 +82,7 @@ WEBIDL_FILES = [
     "MozStorageStatementRow.webidl",
     "NetDashboard.webidl",
     "PathUtils.webidl",
+    "PermissionSetParameters.webidl",
     "PrecompiledScript.webidl",
     "PromiseDebugging.webidl",
     "SessionStoreUtils.webidl",

@@ -29,12 +29,15 @@ class PermissionStatus : public DOMEventTargetHelper {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   PermissionState State() const { return mState; }
+  void SetState(PermissionState aState) { mState = aState; }
 
   IMPL_EVENT_HANDLER(change)
 
   void DisconnectFromOwner() override;
 
   PermissionName Name() const { return mName; }
+
+  void GetType(nsACString& aName) const;
 
   RefPtr<SimplePromise> Init();
 
