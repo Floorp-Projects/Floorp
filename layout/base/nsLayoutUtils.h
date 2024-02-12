@@ -357,42 +357,6 @@ class nsLayoutUtils {
    */
   static bool IsPrimaryStyleFrame(const nsIFrame* aFrame);
 
-#ifdef DEBUG
-  // TODO: remove, see bug 598468.
-  static bool gPreventAssertInCompareTreePosition;
-#endif  // DEBUG
-
-  /**
-   * CompareTreePosition determines whether aContent1 comes before or
-   * after aContent2 in a preorder traversal of the content tree.
-   *
-   * @param aCommonAncestor either null, or a common ancestor of
-   *                        aContent1 and aContent2.  Actually this is
-   *                        only a hint; if it's not an ancestor of
-   *                        aContent1 or aContent2, this function will
-   *                        still work, but it will be slower than
-   *                        normal.
-   * @return < 0 if aContent1 is before aContent2
-   *         > 0 if aContent1 is after aContent2,
-   *         0 otherwise (meaning they're the same, or they're in
-   *           different documents)
-   */
-  static int32_t CompareTreePosition(
-      nsIContent* aContent1, nsIContent* aContent2,
-      const nsIContent* aCommonAncestor = nullptr) {
-    return DoCompareTreePosition(aContent1, aContent2, -1, 1, aCommonAncestor);
-  }
-
-  /*
-   * More generic version of |CompareTreePosition|.  |aIf1Ancestor|
-   * gives the value to return when 1 is an ancestor of 2, and likewise
-   * for |aIf2Ancestor|.  Passing (-1, 1) gives preorder traversal
-   * order, and (1, -1) gives postorder traversal order.
-   */
-  static int32_t DoCompareTreePosition(
-      nsIContent* aContent1, nsIContent* aContent2, int32_t aIf1Ancestor,
-      int32_t aIf2Ancestor, const nsIContent* aCommonAncestor = nullptr);
-
   /**
    * CompareTreePosition determines whether aFrame1 comes before or
    * after aFrame2 in a preorder traversal of the frame tree, where out
@@ -414,34 +378,23 @@ class nsLayoutUtils {
    */
   static int32_t CompareTreePosition(nsIFrame* aFrame1, nsIFrame* aFrame2,
                                      nsIFrame* aCommonAncestor = nullptr) {
-    return DoCompareTreePosition(aFrame1, aFrame2, -1, 1, aCommonAncestor);
+    return DoCompareTreePosition(aFrame1, aFrame2, aCommonAncestor);
   }
 
   static int32_t CompareTreePosition(nsIFrame* aFrame1, nsIFrame* aFrame2,
                                      nsTArray<nsIFrame*>& aFrame2Ancestors,
                                      nsIFrame* aCommonAncestor = nullptr) {
-    return DoCompareTreePosition(aFrame1, aFrame2, aFrame2Ancestors, -1, 1,
+    return DoCompareTreePosition(aFrame1, aFrame2, aFrame2Ancestors,
                                  aCommonAncestor);
   }
-
-  /*
-   * More generic version of |CompareTreePosition|.  |aIf1Ancestor|
-   * gives the value to return when 1 is an ancestor of 2, and likewise
-   * for |aIf2Ancestor|.  Passing (-1, 1) gives preorder traversal
-   * order, and (1, -1) gives postorder traversal order.
-   */
-  static int32_t DoCompareTreePosition(nsIFrame* aFrame1, nsIFrame* aFrame2,
-                                       int32_t aIf1Ancestor,
-                                       int32_t aIf2Ancestor,
-                                       nsIFrame* aCommonAncestor = nullptr);
 
   static nsIFrame* FillAncestors(nsIFrame* aFrame, nsIFrame* aStopAtAncestor,
                                  nsTArray<nsIFrame*>* aAncestors);
 
   static int32_t DoCompareTreePosition(nsIFrame* aFrame1, nsIFrame* aFrame2,
+                                       nsIFrame* aCommonAncestor);
+  static int32_t DoCompareTreePosition(nsIFrame* aFrame1, nsIFrame* aFrame2,
                                        nsTArray<nsIFrame*>& aFrame2Ancestors,
-                                       int32_t aIf1Ancestor,
-                                       int32_t aIf2Ancestor,
                                        nsIFrame* aCommonAncestor);
 
   /**

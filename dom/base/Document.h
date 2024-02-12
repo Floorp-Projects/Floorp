@@ -5224,7 +5224,7 @@ class Document : public nsINode,
   // TODO(emilio): There are other meta tags in the spec that have a similar
   // processing model to color-scheme. We could store all in-document meta tags
   // here to get sane and fast <meta> element processing.
-  TreeOrderedArray<HTMLMetaElement> mColorSchemeMetaTags;
+  TreeOrderedArray<HTMLMetaElement*> mColorSchemeMetaTags;
 
   // These member variables cache information about the viewport so we don't
   // have to recalculate it each time.
