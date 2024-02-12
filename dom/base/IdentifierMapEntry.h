@@ -219,7 +219,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
                            bool aImageOnly = false);
 
   OwningAtomOrString mKey;
-  dom::TreeOrderedArray<Element> mIdContentList;
+  dom::TreeOrderedArray<Element*> mIdContentList;
   RefPtr<nsBaseContentList> mNameContentList;
   UniquePtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
   RefPtr<Element> mImageElement;
