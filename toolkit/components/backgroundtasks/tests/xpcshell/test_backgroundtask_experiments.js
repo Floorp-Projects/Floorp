@@ -14,8 +14,8 @@
 // 3.  We verify that relevant opt-out prefs disable the Nimbus and Firefox
 //     Messaging System experience.
 
-const { ASRouterTargeting } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouterTargeting.jsm"
+const { ASRouterTargeting } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouterTargeting.sys.mjs"
 );
 
 // These randomization IDs were extracted by hand from Firefox instances.

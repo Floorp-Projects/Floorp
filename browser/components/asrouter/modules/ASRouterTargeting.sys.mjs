@@ -6,15 +6,29 @@ const FXA_ENABLED_PREF = "identity.fxaccounts.enabled";
 const DISTRIBUTION_ID_PREF = "distribution.id";
 const DISTRIBUTION_ID_CHINA_REPACK = "MozillaOnline";
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// XPCOMUtils, AppConstants, NewTabUtils and ShellService, and
+// overrides importESModule to be a no-op (which can't be done
+// for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+
+// eslint-disable-next-line mozilla/use-static-import
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
+
+// eslint-disable-next-line mozilla/use-static-import
 const { NewTabUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/NewTabUtils.sys.mjs"
 );
+
+// eslint-disable-next-line mozilla/use-static-import
 const { ShellService } = ChromeUtils.importESModule(
   "resource:///modules/ShellService.sys.mjs"
 );
@@ -172,7 +186,7 @@ const jexlEvaluationCache = new Map();
  * @param options {any=} Options passed to the method
  * @param updateInterval {number?} Update interval for query. Defaults to FRECENT_SITES_UPDATE_INTERVAL
  */
-function CachedTargetingGetter(
+export function CachedTargetingGetter(
   property,
   options = null,
   updateInterval = FRECENT_SITES_UPDATE_INTERVAL,
@@ -269,7 +283,7 @@ function CheckBrowserNeedsUpdate(
   return checker;
 }
 
-const QueryCache = {
+export const QueryCache = {
   expireAll() {
     Object.keys(this.queries).forEach(query => {
       this.queries[query].expire();
@@ -376,7 +390,7 @@ function sortMessagesByWeightedRank(messages) {
  * @param {boolean} options.ordered - Should .order be used instead of random weighted sorting?
  * @returns {Array<Message>}
  */
-function getSortedMessages(messages, options = {}) {
+export function getSortedMessages(messages, options = {}) {
   let { ordered } = { ordered: false, ...options };
   let result = messages;
 
@@ -1040,7 +1054,7 @@ const TargetingGetters = {
   },
 };
 
-const ASRouterTargeting = {
+export const ASRouterTargeting = {
   Environment: TargetingGetters,
 
   /**
@@ -1282,10 +1296,3 @@ const ASRouterTargeting = {
     return matching;
   },
 };
-
-const EXPORTED_SYMBOLS = [
-  "ASRouterTargeting",
-  "QueryCache",
-  "CachedTargetingGetter",
-  "getSortedMessages",
-];

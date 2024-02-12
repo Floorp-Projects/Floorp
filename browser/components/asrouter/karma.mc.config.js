@@ -219,7 +219,7 @@ module.exports = function (config) {
             exclude: [
               path.resolve("tests"),
               path.resolve("../newtab"),
-              path.resolve("modules/ASRouterTargeting.jsm"),
+              path.resolve("modules/ASRouterTargeting.sys.mjs"),
               path.resolve("modules/ASRouterTriggerListeners.sys.mjs"),
               path.resolve("modules/CFRMessageProvider.sys.mjs"),
               path.resolve("modules/CFRPageActions.sys.mjs"),

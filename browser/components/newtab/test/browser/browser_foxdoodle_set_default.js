@@ -7,8 +7,8 @@ const { ASRouter } = ChromeUtils.import(
   "resource:///modules/asrouter/ASRouter.jsm"
 );
 
-const { ASRouterTargeting } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouterTargeting.jsm"
+const { ASRouterTargeting } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouterTargeting.sys.mjs"
 );
 
 const { OnboardingMessageProvider } = ChromeUtils.importESModule(

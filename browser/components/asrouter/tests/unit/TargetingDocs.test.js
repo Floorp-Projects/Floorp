@@ -1,4 +1,4 @@
-import { ASRouterTargeting } from "modules/ASRouterTargeting.jsm";
+import { ASRouterTargeting } from "modules/ASRouterTargeting.sys.mjs";
 import docs from "docs/targeting-attributes.md";
 
 // The following targeting parameters are either deprecated or should not be included in the docs for some reason.
