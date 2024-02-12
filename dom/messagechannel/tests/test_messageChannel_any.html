@@ -59,15 +59,15 @@ function compare(a, b) {
     ok (a !== b, 'They should not match');
 
     var aProps = [];
-    for (var p in a) aProps.push(p);
+    for (let p in a) aProps.push(p);
 
     var bProps = [];
-    for (var p in b) bProps.push(p);
+    for (let p in b) bProps.push(p);
 
     is (aProps.length, bProps.length, 'Props match');
     is (aProps.sort().toString(), bProps.sort().toString(), 'Prop names match');
 
-    for (var p in a) {
+    for (let p in a) {
       compare(a[p], b[p]);
     }
 

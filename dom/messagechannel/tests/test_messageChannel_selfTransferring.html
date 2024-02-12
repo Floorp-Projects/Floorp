@@ -18,14 +18,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
   var a = new MessageChannel();
 
-  var status = false;
+  var messageStatus = false;
   try {
     a.port1.postMessage('foobar', [a.port1]);
   } catch(e) {
-    status =true;
+    messageStatus = true;
   }
 
-  ok(status, "Transfering the same port should throw");
+  ok(messageStatus, "Transfering the same port should throw");
 
   </script>
 </body>
