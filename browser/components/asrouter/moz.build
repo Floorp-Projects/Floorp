@@ -20,7 +20,7 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/ASRouterDefaultConfig.sys.mjs",
     "modules/ASRouterNewTabHook.sys.mjs",
     "modules/ASRouterParentProcessMessageHandler.sys.mjs",
-    "modules/ASRouterPreferences.jsm",
+    "modules/ASRouterPreferences.sys.mjs",
     "modules/ASRouterTargeting.sys.mjs",
     "modules/ASRouterTriggerListeners.sys.mjs",
     "modules/CFRMessageProvider.sys.mjs",

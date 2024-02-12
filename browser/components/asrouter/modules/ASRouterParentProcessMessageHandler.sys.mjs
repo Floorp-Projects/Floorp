@@ -3,10 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ASRouterPreferences } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouterPreferences.jsm"
-);
-
+import { ASRouterPreferences } from "resource:///modules/asrouter/ASRouterPreferences.sys.mjs";
 import { MESSAGE_TYPE_HASH as msg } from "resource:///modules/asrouter/ActorConstants.sys.mjs";
 
 export class ASRouterParentProcessMessageHandler {
