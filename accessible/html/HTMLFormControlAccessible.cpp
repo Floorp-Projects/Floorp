@@ -180,10 +180,13 @@ uint64_t HTMLButtonAccessible::NativeState() const {
 
   dom::Element* elm = Elm();
   if (auto* popover = elm->GetEffectivePopoverTargetElement()) {
-    if (popover->IsPopoverOpen()) {
-      state |= states::EXPANDED;
-    } else {
-      state |= states::COLLAPSED;
+    LocalAccessible* popoverAcc = mDoc->GetAccessible(popover);
+    if (!popoverAcc || !popoverAcc->IsAncestorOf(this)) {
+      if (popover->IsPopoverOpen()) {
+        state |= states::EXPANDED;
+      } else {
+        state |= states::COLLAPSED;
+      }
     }
   }
 
