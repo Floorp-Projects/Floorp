@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettings
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.lib.state.MiddlewareContext
@@ -238,6 +239,106 @@ class TranslationsMiddlewareTest {
         )
 
         waitForIdle()
+    }
+
+    @Test
+    fun `WHEN UpdatePageSettingAction is dispatched WITH UPDATE_ALWAYS_TRANSLATE_LANGUAGE AND updating the setting is unsuccessful THEN OperationRequestedAction with FETCH_PAGE_SETTINGS is dispatched`() = runTest {
+        // Setup
+        setupMockState()
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        whenever(
+            engine.setLanguageSetting(
+                languageCode = any(),
+                languageSetting = any(),
+                onSuccess = any(),
+                onError = errorCallback.capture(),
+            ),
+        ).thenAnswer { errorCallback.value.invoke(Throwable()) }
+
+        // Send Action
+        val action =
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
+                setting = true,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        waitForIdle()
+
+        // Verify Dispatch
+        verify(store).dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN UpdatePageSettingAction is dispatched WITH UPDATE_NEVER_TRANSLATE_LANGUAGE AND updating the setting is unsuccessful THEN OperationRequestedAction with FETCH_PAGE_SETTINGS is dispatched`() = runTest {
+        // Setup
+        setupMockState()
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        whenever(
+            engine.setLanguageSetting(
+                languageCode = any(),
+                languageSetting = any(),
+                onSuccess = any(),
+                onError = errorCallback.capture(),
+            ),
+        )
+            .thenAnswer { errorCallback.value.invoke(Throwable()) }
+
+        // Send Action
+        val action =
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE,
+                setting = true,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        waitForIdle()
+
+        // Verify Dispatch
+        verify(store).dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN UpdatePageSettingAction is dispatched WITH UPDATE_NEVER_TRANSLATE_SITE AND updating the setting is unsuccessful THEN OperationRequestedAction with FETCH_PAGE_SETTINGS is dispatched`() = runTest {
+        // Setup
+        setupMockState()
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        whenever(
+            engineSession.setNeverTranslateSiteSetting(
+                setting = anyBoolean(),
+                onResult = any(),
+                onException = errorCallback.capture(),
+            ),
+        )
+            .thenAnswer { errorCallback.value.invoke(Throwable()) }
+
+        // Send Action
+        val action =
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE,
+                setting = true,
+            )
+        translationsMiddleware.invoke(context, {}, action)
+        waitForIdle()
+
+        // Verify Dispatch
+        verify(store).dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            ),
+        )
     }
 
     @Test

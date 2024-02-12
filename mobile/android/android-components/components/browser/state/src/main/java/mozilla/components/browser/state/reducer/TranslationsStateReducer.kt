@@ -9,6 +9,8 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettings
 
 internal object TranslationsStateReducer {
 
@@ -229,6 +231,53 @@ internal object TranslationsStateReducer {
                     state
                 }
             }
+
+        is TranslationsAction.UpdatePageSettingAction -> {
+            var pageSettings = state.findTab(action.tabId)?.translationsState?.pageSettings
+            // Initialize page settings, if null.
+            if (pageSettings == null) {
+                pageSettings = TranslationPageSettings()
+            }
+            when (action.operation) {
+                TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP -> {
+                    pageSettings.alwaysOfferPopup = action.setting
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            pageSettings = pageSettings,
+                        )
+                    }
+                }
+                TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE -> {
+                    pageSettings.alwaysTranslateLanguage = action.setting
+                    // Always and never translate sites are always opposites.
+                    pageSettings.neverTranslateLanguage = !action.setting
+
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            pageSettings = pageSettings,
+                        )
+                    }
+                }
+                TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE -> {
+                    pageSettings.neverTranslateLanguage = action.setting
+                    // Always and never translate sites are always opposites.
+                    pageSettings.alwaysTranslateLanguage = !action.setting
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            pageSettings = pageSettings,
+                        )
+                    }
+                }
+                TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE -> {
+                    pageSettings.neverTranslateSite = action.setting
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            pageSettings = pageSettings,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private inline fun BrowserState.copyWithTranslationsState(

@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettings
 import mozilla.components.concept.engine.translate.TranslationPair
 import mozilla.components.concept.engine.translate.TranslationSupport
@@ -411,5 +412,110 @@ class TranslationsActionTest {
 
         // Action success
         assertNull(tabState().translationsState.supportedLanguages)
+    }
+
+    @Test
+    fun `WHEN a UpdatePageSettingAction is dispatched for UPDATE_ALWAYS_OFFER_POPUP THEN set page settings for alwaysOfferPopup `() {
+        // Action started
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertTrue(tabState().translationsState.pageSettings?.alwaysOfferPopup!!)
+    }
+
+    @Test
+    fun `WHEN a UpdatePageSettingAction is dispatched for UPDATE_ALWAYS_TRANSLATE_LANGUAGE THEN set page settings for alwaysTranslateLanguage `() {
+        // Action started
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertTrue(tabState().translationsState.pageSettings?.alwaysTranslateLanguage!!)
+        assertFalse(tabState().translationsState.pageSettings?.neverTranslateLanguage!!)
+    }
+
+    @Test
+    fun `WHEN a UpdatePageSettingAction is dispatched for UPDATE_NEVER_TRANSLATE_LANGUAGE THEN set page settings for alwaysTranslateLanguage `() {
+        // Action started
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertTrue(tabState().translationsState.pageSettings?.neverTranslateLanguage!!)
+        assertFalse(tabState().translationsState.pageSettings?.alwaysTranslateLanguage!!)
+    }
+
+    @Test
+    fun `WHEN a UpdatePageSettingAction is dispatched for UPDATE_NEVER_TRANSLATE_SITE THEN set page settings for neverTranslateSite`() {
+        // Action started
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertTrue(tabState().translationsState.pageSettings?.neverTranslateSite!!)
+    }
+
+    @Test
+    fun `WHEN a UpdatePageSettingAction is dispatched for each option THEN the page setting is consistent`() {
+        // Action started
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        store.dispatch(
+            TranslationsAction.UpdatePageSettingAction(
+                tabId = tab.id,
+                operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE,
+                setting = true,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertTrue(tabState().translationsState.pageSettings?.alwaysOfferPopup!!)
+        // neverTranslateLanguage was posted last and will prevent a contradictory state on the alwaysTranslateLanguage state.
+        assertFalse(tabState().translationsState.pageSettings?.alwaysTranslateLanguage!!)
+        assertTrue(tabState().translationsState.pageSettings?.neverTranslateLanguage!!)
+        assertTrue(tabState().translationsState.pageSettings?.neverTranslateSite!!)
     }
 }

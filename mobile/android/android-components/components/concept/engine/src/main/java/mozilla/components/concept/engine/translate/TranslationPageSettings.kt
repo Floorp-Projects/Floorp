@@ -19,8 +19,8 @@ package mozilla.components.concept.engine.translate
  * When true, the engine will not offer a translation on the current host site.
  */
 data class TranslationPageSettings(
-    val alwaysOfferPopup: Boolean? = null,
-    val alwaysTranslateLanguage: Boolean? = null,
-    val neverTranslateLanguage: Boolean? = null,
-    val neverTranslateSite: Boolean? = null,
+    var alwaysOfferPopup: Boolean? = null,
+    var alwaysTranslateLanguage: Boolean? = null,
+    var neverTranslateLanguage: Boolean? = null,
+    var neverTranslateSite: Boolean? = null,
 )
