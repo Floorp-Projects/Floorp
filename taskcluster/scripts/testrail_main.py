@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-This Python script automates creating milestones and test runs in TestRail and updating 
+This Python script automates creating milestones and test runs in TestRail and updating
 test cases based on the results of automated smoke tests for different product releases.
 
 Functionality includes:
