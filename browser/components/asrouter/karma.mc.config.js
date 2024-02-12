@@ -95,7 +95,7 @@ module.exports = function (config) {
               functions: 100,
               branches: 66,
             },
-            "modules/ASRouter.jsm": {
+            "modules/ASRouter.sys.mjs": {
               statements: 75,
               lines: 75,
               functions: 64,

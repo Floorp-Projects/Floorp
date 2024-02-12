@@ -2,25 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// We use importESModule here instead of static import so that
-// the Karma test environment won't choke on this module. This
-// is because the Karma test environment already stubs out
-// XPCOMUtils, and overrides importESModule to be a no-op (which
-// can't be done for a static import statement).
-
-// eslint-disable-next-line mozilla/use-static-import
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   ASRouterTargeting: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 export const AWScreenUtils = {

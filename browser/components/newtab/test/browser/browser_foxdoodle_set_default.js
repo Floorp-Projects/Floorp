@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 
 const { ASRouterTargeting } = ChromeUtils.importESModule(

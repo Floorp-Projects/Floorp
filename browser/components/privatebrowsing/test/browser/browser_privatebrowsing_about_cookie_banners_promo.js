@@ -1,5 +1,5 @@
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 
 const promoImgSrc = "chrome://browser/content/assets/cookie-banners-begone.svg";

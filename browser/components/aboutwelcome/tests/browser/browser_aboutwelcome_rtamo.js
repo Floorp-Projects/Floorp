@@ -1,7 +1,7 @@
 "use strict";
 
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 const { AddonRepository } = ChromeUtils.importESModule(
   "resource://gre/modules/addons/AddonRepository.sys.mjs"

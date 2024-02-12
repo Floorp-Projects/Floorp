@@ -7,13 +7,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 const OPTED_IN_PREF = "browser.shopping.experience2023.optedIn";

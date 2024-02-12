@@ -52,11 +52,8 @@
 //   background task profile.
 
 import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
-
-const { ASRouter } = ChromeUtils.import(
-  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
-  "resource:///modules/asrouter/ASRouter.jsm"
-);
+// eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+import { ASRouter } from "resource:///modules/asrouter/ASRouter.sys.mjs";
 import { BackgroundTasksUtils } from "resource://gre/modules/BackgroundTasksUtils.sys.mjs";
 
 const lazy = {};

@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
-);
+import { ASRouter } from "resource:///modules/asrouter/ASRouter.sys.mjs";
 import { TelemetryFeed } from "resource://activity-stream/lib/TelemetryFeed.sys.mjs";
 import { ASRouterParentProcessMessageHandler } from "resource:///modules/asrouter/ASRouterParentProcessMessageHandler.sys.mjs";
 

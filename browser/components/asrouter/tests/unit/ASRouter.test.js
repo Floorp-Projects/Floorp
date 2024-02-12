@@ -1,4 +1,4 @@
-import { _ASRouter, MessageLoaderUtils } from "modules/ASRouter.jsm";
+import { _ASRouter, MessageLoaderUtils } from "modules/ASRouter.sys.mjs";
 import { QueryCache } from "modules/ASRouterTargeting.sys.mjs";
 import {
   FAKE_LOCAL_MESSAGES,
@@ -1071,7 +1071,7 @@ describe("ASRouter", () => {
   describe("#_updateMessageProviders", () => {
     it("should correctly replace %STARTPAGE_VERSION% in remote provider urls", async () => {
       // If this test fails, you need to update the constant STARTPAGE_VERSION in
-      // ASRouter.jsm to match the `version` property of provider-response-schema.json
+      // ASRouter.sys.mjs to match the `version` property of provider-response-schema.json
       const expectedStartpageVersion = ProviderResponseSchema.version;
       const provider = {
         id: "foo",

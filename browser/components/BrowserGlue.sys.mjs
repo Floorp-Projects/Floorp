@@ -9,6 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   ASRouterDefaultConfig:
     "resource:///modules/asrouter/ASRouterDefaultConfig.sys.mjs",
   ASRouterNewTabHook: "resource:///modules/asrouter/ASRouterNewTabHook.sys.mjs",
@@ -97,10 +98,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WindowsGPOParser: "resource://gre/modules/policies/WindowsGPOParser.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {

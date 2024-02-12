@@ -1,6 +1,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
   DoHController: "resource:///modules/DoHController.sys.mjs",
   DoHTestUtils: "resource://testing-common/DoHTestUtils.sys.mjs",
@@ -8,12 +9,8 @@ ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RegionTestUtils: "resource://testing-common/RegionTestUtils.sys.mjs",
-  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ASRouter: "resource:///modules/asrouter/ASRouter.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

@@ -4,8 +4,8 @@
 "use strict";
 requestLongerTimeout(5);
 
-const { ASRouter } = ChromeUtils.import(
-  "resource:///modules/asrouter/ASRouter.jsm"
+const { ASRouter } = ChromeUtils.importESModule(
+  "resource:///modules/asrouter/ASRouter.sys.mjs"
 );
 
 const { ExperimentFakes } = ChromeUtils.importESModule(
