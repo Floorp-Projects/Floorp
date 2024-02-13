@@ -1317,12 +1317,11 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
 
   front->WaitForBufferOwnership();
   front->LockProd();
-  auto resetLock = MakeScopeExit([&] { front->UnlockProd(); });
-  if (NS_WARN_IF(!front->ProducerReadAcquire())) {
-    gfxCriticalNote << "SnapshotInto: failed to acquire producer";
-    return {};
-  }
-  auto resetProducer = MakeScopeExit([&] { front->ProducerReadRelease(); });
+  front->ProducerReadAcquire();
+  auto reset = MakeScopeExit([&] {
+    front->ProducerReadRelease();
+    front->UnlockProd();
+  });
 
   // -
 
