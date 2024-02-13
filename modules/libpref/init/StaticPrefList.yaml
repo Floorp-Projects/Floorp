@@ -7404,7 +7404,7 @@
 
 - name: javascript.options.use_emulates_undefined_fuse
   type: bool
-  value: false
+  value: true
   mirror: always
   do_not_use_directly: true
   set_spidermonkey_pref: startup
