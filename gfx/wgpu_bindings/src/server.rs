@@ -46,6 +46,14 @@ const MAX_BUFFER_SIZE_U32: u32 = MAX_BUFFER_SIZE as u32;
 
 // Mesa has issues with height/depth that don't fit in a 16 bits signed integers.
 const MAX_TEXTURE_EXTENT: u32 = std::i16::MAX as u32;
+// We have to restrict the number of bindings for any given resource type so that
+// the sum of these limits multiplied by the number of shader stages fits
+// maxBindingsPerBindGroup (1000). This restriction is arbitrary and is likely to
+// change eventually. See github.com/gpuweb/gpuweb/pull/4484
+// For now it's impractical for users to have very large numbers of bindings so this
+// limit should not be too restrictive until we add support for a bindless API.
+// Then we may have to ignore the spec or get it changed.
+const MAX_BINDINGS_PER_RESOURCE_TYPE: u32 = 64;
 
 fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
     wgt::Limits {
@@ -55,12 +63,19 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
         max_texture_dimension_3d: limits.max_texture_dimension_3d.min(MAX_TEXTURE_EXTENT),
         max_sampled_textures_per_shader_stage: limits
             .max_sampled_textures_per_shader_stage
-            .min(256),
-        max_samplers_per_shader_stage: limits.max_samplers_per_shader_stage.min(256),
+            .min(MAX_BINDINGS_PER_RESOURCE_TYPE),
+        max_samplers_per_shader_stage: limits
+            .max_samplers_per_shader_stage
+            .min(MAX_BINDINGS_PER_RESOURCE_TYPE),
         max_storage_textures_per_shader_stage: limits
             .max_storage_textures_per_shader_stage
-            .min(256),
-        max_uniform_buffers_per_shader_stage: limits.max_uniform_buffers_per_shader_stage.min(256),
+            .min(MAX_BINDINGS_PER_RESOURCE_TYPE),
+        max_uniform_buffers_per_shader_stage: limits
+            .max_uniform_buffers_per_shader_stage
+            .min(MAX_BINDINGS_PER_RESOURCE_TYPE),
+        max_storage_buffers_per_shader_stage: limits
+            .max_storage_buffers_per_shader_stage
+            .min(MAX_BINDINGS_PER_RESOURCE_TYPE),
         max_uniform_buffer_binding_size: limits
             .max_uniform_buffer_binding_size
             .min(MAX_BUFFER_SIZE_U32),
