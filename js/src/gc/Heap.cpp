@@ -192,12 +192,12 @@ AutoGatherSweptArenas::AutoGatherSweptArenas(JS::Zone* zone, AllocKind kind) {
 
   // Link individual sorted arena lists together for iteration, saving the
   // internal state so we can restore it later.
-  linked = sortedList->convertToArenaList(segmentLastPointers);
+  linked = sortedList->convertToArenaList(bucketLastPointers);
 }
 
 AutoGatherSweptArenas::~AutoGatherSweptArenas() {
   if (sortedList) {
-    sortedList->restoreFromArenaList(linked, segmentLastPointers);
+    sortedList->restoreFromArenaList(linked, bucketLastPointers);
   }
   linked.clear();
 }
