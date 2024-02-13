@@ -13,7 +13,12 @@ transforms = TransformSequence()
 @transforms.add
 def test_confirm_failure_tasks(config, tasks):
     """Copy test-* tasks to have -cf copy."""
+
     for task in tasks:
+        if config.params["try_task_config"].get("new-test-config", False):
+            yield task
+            continue
+
         if "backlog" in task["suite"] or "failure" in task["suite"]:
             yield task
             continue

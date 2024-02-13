@@ -324,6 +324,9 @@ class AndroidHardwareTest(
                 )
             )
 
+        if self.config.get("restartAfterFailure", False):
+            cmd.append("--restartAfterFailure")
+
         return cmd
 
     def _query_suites(self):
