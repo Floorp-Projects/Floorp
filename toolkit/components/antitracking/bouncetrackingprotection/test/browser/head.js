@@ -271,5 +271,5 @@ async function runTestBounce(options = {}) {
       "No user activation hosts after closing private window."
     );
   }
-  bounceTrackingProtection.reset();
+  bounceTrackingProtection.clearAll();
 }

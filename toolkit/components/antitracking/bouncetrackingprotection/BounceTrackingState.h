@@ -50,6 +50,10 @@ class BounceTrackingState : public nsIWebProgressListener,
   // Reset state for all BounceTrackingState instances this includes resetting
   // BounceTrackingRecords and cancelling any running timers.
   static void ResetAll();
+  static void ResetAllForOriginAttributes(
+      const OriginAttributes& aOriginAttributes);
+  static void ResetAllForOriginAttributesPattern(
+      const OriginAttributesPattern& aPattern);
 
   BounceTrackingRecord* GetBounceTrackingRecord();
 
@@ -113,6 +117,12 @@ class BounceTrackingState : public nsIWebProgressListener,
 
   // Timer to wait to wait for a client redirect after a navigation ends.
   RefPtr<nsITimer> mClientBounceDetectionTimeout;
+
+  // Reset state for all BounceTrackingState instances this includes resetting
+  // BounceTrackingRecords and cancelling any running timers.
+  // Optionally filter by OriginAttributes or OriginAttributesPattern.
+  static void Reset(const OriginAttributes* aOriginAttributes,
+                    const OriginAttributesPattern* aPattern);
 
   // Whether the given web progress should hold a BounceTrackingState
   // instance to monitor bounce tracking navigations.
