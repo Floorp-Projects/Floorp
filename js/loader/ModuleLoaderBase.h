@@ -21,6 +21,7 @@
 #include "nsINode.h"        // nsIURI
 #include "nsThreadUtils.h"  // GetMainThreadSerialEventTarget
 #include "nsURIHashKey.h"
+#include "mozilla/Attributes.h"  // MOZ_RAII
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/JSExecutionContext.h"
 #include "mozilla/MaybeOneOf.h"
@@ -185,6 +186,11 @@ class ModuleLoaderBase : public nsISupports {
 
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
+  // If non-null, this module loader is overridden by the module loader pointed
+  // by mOverriddenBy.
+  // See ModuleLoaderBase::GetCurrentModuleLoader for more details.
+  RefPtr<ModuleLoaderBase> mOverriddenBy;
+
   // https://html.spec.whatwg.org/multipage/webappapis.html#import-maps-allowed
   //
   // Each Window has an import maps allowed boolean, initially true.
@@ -329,6 +335,22 @@ class ModuleLoaderBase : public nsISupports {
   // unlinked. Extreme care should be taken when calling this method.
   bool RemoveFetchedModule(nsIURI* aURL);
 
+  // Override the module loader with given loader until ResetOverride is called.
+  // While overridden, ModuleLoaderBase::GetCurrentModuleLoader returns aLoader.
+  //
+  // This is used by mozJSModuleLoader to temporarily override the global's
+  // module loader with SyncModuleLoader while importing a module graph
+  // synchronously.
+  void SetOverride(ModuleLoaderBase* aLoader);
+
+  // Returns true if SetOverride was called.
+  bool IsOverridden();
+
+  // Returns true if SetOverride was called with aLoader.
+  bool IsOverriddenBy(ModuleLoaderBase* aLoader);
+
+  void ResetOverride();
+
   // Internal methods.
 
  private:
@@ -444,6 +466,18 @@ class ModuleLoaderBase : public nsISupports {
  public:
   static mozilla::LazyLogModule gCspPRLog;
   static mozilla::LazyLogModule gModuleLoaderBaseLog;
+};
+
+// Override the target module loader with given module loader while this
+// instance is on the stack.
+class MOZ_RAII AutoOverrideModuleLoader {
+ public:
+  AutoOverrideModuleLoader(ModuleLoaderBase* aTarget,
+                           ModuleLoaderBase* aLoader);
+  ~AutoOverrideModuleLoader();
+
+ private:
+  RefPtr<ModuleLoaderBase> mTarget;
 };
 
 }  // namespace loader
