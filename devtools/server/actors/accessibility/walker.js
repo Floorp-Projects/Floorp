@@ -37,7 +37,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["getCurrentZoom", "isWindowIncluded", "isFrameWithChildTarget"],
+  ["isWindowIncluded", "isFrameWithChildTarget"],
   "resource://devtools/shared/layout/utils.js",
   true
 );
@@ -1084,10 +1084,6 @@ class AccessibleWalkerActor extends Actor {
     return accessible;
   }
 
-  get pixelRatio() {
-    return this.rootWin.devicePixelRatio;
-  }
-
   /**
    * Find deepest accessible object that corresponds to the screen coordinates of the
    * mouse pointer and attach it to the AccessibilityWalker tree.
@@ -1102,16 +1098,15 @@ class AccessibleWalkerActor extends Actor {
     const win = target.ownerGlobal;
     // This event might be inside a sub-document, so don't use this.rootDoc.
     const docAcc = this.getRawAccessibleFor(win.document);
-    const zoom = this.isXUL ? 1 : getCurrentZoom(win);
-    const scale = this.pixelRatio / zoom;
     // If the target is inside a pop-up widget, we need to query the pop-up
     // Accessible, not the DocAccessible. The DocAccessible can't hit test
     // inside pop-ups.
     const popup = win.isChromeWindow ? target.closest("panel") : null;
     const containerAcc = popup ? this.getRawAccessibleFor(popup) : docAcc;
+    const { devicePixelRatio } = this.rootWin;
     const rawAccessible = containerAcc.getDeepestChildAtPointInProcess(
-      event.screenX * scale,
-      event.screenY * scale
+      event.screenX * devicePixelRatio,
+      event.screenY * devicePixelRatio
     );
     return this.attachAccessible(rawAccessible, docAcc);
   }
