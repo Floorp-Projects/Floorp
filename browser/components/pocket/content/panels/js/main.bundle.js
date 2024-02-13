@@ -2,14 +2,14 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 140:
+/***/ 720:
 /***/ ((__unused_webpack___webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
 // EXTERNAL MODULE: ./node_modules/react/index.js
-var react = __webpack_require__(294);
+var react = __webpack_require__(504);
 // EXTERNAL MODULE: ./node_modules/react-dom/index.js
-var react_dom = __webpack_require__(935);
+var react_dom = __webpack_require__(104);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Header/Header.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -23,7 +23,6 @@ function Header(props) {
     className: "stp_header_logo"
   }), props.children);
 }
-
 /* harmony default export */ const Header_Header = (Header);
 ;// CONCATENATED MODULE: ./content/panels/js/messages.mjs
 /* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
@@ -98,7 +97,6 @@ function TelemetryLink(props) {
       });
     }
   }
-
   return /*#__PURE__*/react.createElement("a", {
     href: props.href,
     onClick: onClick,
@@ -106,7 +104,6 @@ function TelemetryLink(props) {
     className: props.className
   }, props.children);
 }
-
 /* harmony default export */ const TelemetryLink_TelemetryLink = (TelemetryLink);
 ;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -122,7 +119,6 @@ function ArticleUrl(props) {
       className: "stp_article_list_saved_article"
     }, props.children);
   }
-
   return /*#__PURE__*/react.createElement(TelemetryLink_TelemetryLink, {
     className: "stp_article_list_link",
     href: props.url,
@@ -131,12 +127,10 @@ function ArticleUrl(props) {
     model: props.model
   }, props.children);
 }
-
 function Article(props) {
   function encodeThumbnail(rawSource) {
     return rawSource ? `https://img-getpocket.cdn.mozilla.net/80x80/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(rawSource)}` : null;
   }
-
   const [thumbnailLoaded, setThumbnailLoaded] = (0,react.useState)(false);
   const [thumbnailLoadFailed, setThumbnailLoadFailed] = (0,react.useState)(false);
   const {
@@ -148,27 +142,23 @@ function Article(props) {
     utmParams,
     openInPocketReader
   } = props;
-
   if (!article.url && !article.resolved_url && !article.given_url) {
     return null;
   }
-
   const url = new URL(article.url || article.resolved_url || article.given_url);
   const urlSearchParams = new URLSearchParams(utmParams);
-
   if (openInPocketReader && article.item_id && !url.href.match(/getpocket\.com\/read/)) {
     url.href = `https://getpocket.com/read/${article.item_id}`;
   }
-
   for (let [key, val] of urlSearchParams.entries()) {
     url.searchParams.set(key, val);
-  } // Using array notation because there is a key titled `1` (`images` is an object)
+  }
 
-
+  // Using array notation because there is a key titled `1` (`images` is an object)
   const thumbnail = article.thumbnail || encodeThumbnail(article?.top_image_url || article?.images?.["1"]?.src);
   const alt = article.alt || "thumbnail image";
-  const title = article.title || article.resolved_title || article.given_title; // Sometimes domain_metadata is not there, depending on the source.
-
+  const title = article.title || article.resolved_title || article.given_title;
+  // Sometimes domain_metadata is not there, depending on the source.
   const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
   return /*#__PURE__*/react.createElement("li", {
     className: "stp_article_list_item"
@@ -204,7 +194,6 @@ function Article(props) {
     className: "stp_article_list_publisher"
   }, publisher)))));
 }
-
 function ArticleList(props) {
   return /*#__PURE__*/react.createElement("ul", {
     className: "stp_article_list"
@@ -218,7 +207,6 @@ function ArticleList(props) {
     openInPocketReader: props.openInPocketReader
   })));
 }
-
 /* harmony default export */ const ArticleList_ArticleList = (ArticleList);
 ;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -240,7 +228,6 @@ function PopularTopics(props) {
     position: position
   }, topic.title))));
 }
-
 /* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -257,7 +244,6 @@ function Button(props) {
     source: props.source
   }, props.children);
 }
-
 /* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Home/Home.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -290,7 +276,8 @@ function Home(props) {
   });
   const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
   const loadingRecentSaves = (0,react.useCallback)(resp => {
-    setArticlesState(prevState => ({ ...prevState,
+    setArticlesState(prevState => ({
+      ...prevState,
       status: "loading"
     }));
   }, []);
@@ -298,14 +285,13 @@ function Home(props) {
     const {
       data
     } = resp;
-
     if (data.status === "error") {
-      setArticlesState(prevState => ({ ...prevState,
+      setArticlesState(prevState => ({
+        ...prevState,
         status: "error"
       }));
       return;
     }
-
     setArticlesState({
       articles: data,
       status: "success"
@@ -324,7 +310,6 @@ function Home(props) {
     messages.sendMessage("PKT_show_home");
   }, []);
   let recentSavesSection = null;
-
   if (status === "error" || hideRecentSaves) {
     recentSavesSection = /*#__PURE__*/react.createElement("h3", {
       className: "header_medium",
@@ -367,7 +352,6 @@ function Home(props) {
       }));
     }
   }
-
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_panel_container"
   }, /*#__PURE__*/react.createElement("div", {
@@ -387,7 +371,6 @@ function Home(props) {
     source: "home_popular_topic"
   }))));
 }
-
 /* harmony default export */ const Home_Home = (Home);
 ;// CONCATENATED MODULE: ./content/panels/js/home/overlay.jsx
 /*
@@ -402,7 +385,6 @@ var HomeOverlay = function (options) {
   this.inited = false;
   this.active = false;
 };
-
 HomeOverlay.prototype = {
   create({
     pockethost
@@ -415,11 +397,9 @@ HomeOverlay.prototype = {
     const utmSource = searchParams.get(`utmSource`);
     const utmCampaign = searchParams.get(`utmCampaign`);
     const utmContent = searchParams.get(`utmContent`);
-
     if (this.active) {
       return;
     }
-
     this.active = true;
     react_dom.render( /*#__PURE__*/react.createElement(Home_Home, {
       locale: locale,
@@ -429,12 +409,10 @@ HomeOverlay.prototype = {
       utmCampaign: utmCampaign,
       utmContent: utmContent
     }), document.querySelector(`body`));
-
     if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
       document.querySelector(`body`).classList.add(`theme_dark`);
     }
   }
-
 };
 /* harmony default export */ const overlay = (HomeOverlay);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Signup/Signup.jsx
@@ -498,7 +476,6 @@ function Signup(props) {
     "data-l10n-id": "pocket-panel-button-activate"
   })))));
 }
-
 /* harmony default export */ const Signup_Signup = (Signup);
 ;// CONCATENATED MODULE: ./content/panels/js/signup/overlay.jsx
 /*
@@ -513,7 +490,6 @@ It does not contain any logic for saving or communication with the extension or 
 var SignupOverlay = function (options) {
   this.inited = false;
   this.active = false;
-
   this.create = function ({
     pockethost
   }) {
@@ -525,13 +501,12 @@ var SignupOverlay = function (options) {
     const utmSource = searchParams.get(`utmSource`);
     const utmCampaign = searchParams.get(`utmCampaign`);
     const utmContent = searchParams.get(`utmContent`);
-
     if (this.active) {
       return;
     }
+    this.active = true;
 
-    this.active = true; // Create actual content
-
+    // Create actual content
     react_dom.render( /*#__PURE__*/react.createElement(Signup_Signup, {
       pockethost: pockethost,
       utmSource: utmSource,
@@ -539,16 +514,14 @@ var SignupOverlay = function (options) {
       utmContent: utmContent,
       locale: locale
     }), document.querySelector(`body`));
-
     if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
       document.querySelector(`body`).classList.add(`theme_dark`);
-    } // tell back end we're ready
+    }
 
-
+    // tell back end we're ready
     messages.sendMessage("PKT_show_signup");
   };
 };
-
 /* harmony default export */ const signup_overlay = (SignupOverlay);
 ;// CONCATENATED MODULE: ./content/panels/js/components/TagPicker/TagPicker.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -559,14 +532,12 @@ var SignupOverlay = function (options) {
 
 function TagPicker(props) {
   const [tags, setTags] = (0,react.useState)(props.tags); // New tag group to store
-
   const [allTags, setAllTags] = (0,react.useState)([]); // All tags ever used (in no particular order)
-
   const [recentTags, setRecentTags] = (0,react.useState)([]); // Most recently used tags
-
   const [duplicateTag, setDuplicateTag] = (0,react.useState)(null);
-  const [inputValue, setInputValue] = (0,react.useState)(""); // Status can be success, waiting, or error.
+  const [inputValue, setInputValue] = (0,react.useState)("");
 
+  // Status can be success, waiting, or error.
   const [{
     tagInputStatus,
     tagInputErrorMessage
@@ -574,17 +545,16 @@ function TagPicker(props) {
     tagInputStatus: "",
     tagInputErrorMessage: ""
   });
-
   let handleKeyDown = e => {
     const enterKey = e.keyCode === 13;
     const commaKey = e.keyCode === 188;
-    const tabKey = inputValue && e.keyCode === 9; // Submit tags on enter with no input.
+    const tabKey = inputValue && e.keyCode === 9;
+
+    // Submit tags on enter with no input.
     // Enter tag on comma, tab, or enter with input.
     // Tab to next element with no input.
-
     if (commaKey || enterKey || tabKey) {
       e.preventDefault();
-
       if (inputValue) {
         addTag(inputValue.trim());
         setInputValue(``); // Clear out input
@@ -593,14 +563,11 @@ function TagPicker(props) {
       }
     }
   };
-
   let addTag = tagToAdd => {
     if (!tagToAdd?.length) {
       return;
     }
-
     let newDuplicateTag = tags.find(item => item === tagToAdd);
-
     if (!newDuplicateTag) {
       setTags([...tags, tagToAdd]);
     } else {
@@ -610,30 +577,24 @@ function TagPicker(props) {
       }, 1000);
     }
   };
-
   let removeTag = index => {
     let updatedTags = tags.slice(0); // Shallow copied array
-
     updatedTags.splice(index, 1);
     setTags(updatedTags);
   };
-
   let submitTags = () => {
     let tagsToSubmit = [];
-
     if (tags?.length) {
       tagsToSubmit = tags;
-    } // Capture tags that have been typed in but not explicitly added to the tag collection
+    }
 
-
+    // Capture tags that have been typed in but not explicitly added to the tag collection
     if (inputValue?.trim().length) {
       tagsToSubmit.push(inputValue.trim());
     }
-
     if (!props.itemUrl || !tagsToSubmit?.length) {
       return;
     }
-
     setTagInputStatus({
       tagInputStatus: "waiting",
       tagInputErrorMessage: ""
@@ -645,7 +606,6 @@ function TagPicker(props) {
       const {
         data
       } = resp;
-
       if (data.status === "success") {
         setTagInputStatus({
           tagInputStatus: "success",
@@ -659,7 +619,6 @@ function TagPicker(props) {
       }
     });
   };
-
   (0,react.useEffect)(() => {
     messages.sendMessage("PKT_getTags", {}, resp => {
       setAllTags(resp?.data?.tags);
@@ -721,7 +680,6 @@ function TagPicker(props) {
     className: "header_small"
   }, tagInputErrorMessage));
 }
-
 /* harmony default export */ const TagPicker_TagPicker = (TagPicker);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Saved/Saved.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -741,8 +699,8 @@ function Saved(props) {
     utmSource,
     utmCampaign,
     utmContent
-  } = props; // savedStatus can be success, loading, or error.
-
+  } = props;
+  // savedStatus can be success, loading, or error.
   const [{
     savedStatus,
     savedErrorId,
@@ -750,8 +708,8 @@ function Saved(props) {
     itemUrl
   }, setSavedStatusState] = (0,react.useState)({
     savedStatus: "loading"
-  }); // removedStatus can be removed, removing, or error.
-
+  });
+  // removedStatus can be removed, removing, or error.
   const [{
     removedStatus,
     removedErrorMessage
@@ -759,7 +717,6 @@ function Saved(props) {
   const [savedStory, setSavedStoryState] = (0,react.useState)();
   const [articleInfoAttempted, setArticleInfoAttempted] = (0,react.useState)();
   const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
-
   function removeItem(event) {
     event.preventDefault();
     setRemovedStatusState({
@@ -771,19 +728,17 @@ function Saved(props) {
       const {
         data
       } = resp;
-
       if (data.status == "success") {
         setRemovedStatusState({
           removedStatus: "removed"
         });
       } else if (data.status == "error") {
-        let errorMessage = ""; // The server returns English error messages, so in the case of
+        let errorMessage = "";
+        // The server returns English error messages, so in the case of
         // non English, we do our best with a generic translated error.
-
         if (data.error.message && locale?.startsWith("en")) {
           errorMessage = data.error.message;
         }
-
         setRemovedStatusState({
           removedStatus: "error",
           removedErrorMessage: errorMessage
@@ -791,14 +746,12 @@ function Saved(props) {
       }
     });
   }
-
   (0,react.useEffect)(() => {
     // Wait confirmation of save before flipping to final saved state
     messages.addMessageListener("PKT_saveLink", function (resp) {
       const {
         data
       } = resp;
-
       if (data.status == "error") {
         // Use localizedKey or fallback to a generic catch all error.
         setSavedStatusState({
@@ -806,9 +759,9 @@ function Saved(props) {
           savedErrorId: data?.error?.localizedKey || "pocket-panel-saved-error-generic"
         });
         return;
-      } // Success, so no localized error id needed.
+      }
 
-
+      // Success, so no localized error id needed.
       setSavedStatusState({
         savedStatus: "success",
         itemId: data.item?.item_id,
@@ -821,11 +774,11 @@ function Saved(props) {
     });
     messages.addMessageListener("PKT_getArticleInfoAttempted", function (resp) {
       setArticleInfoAttempted(true);
-    }); // tell back end we're ready
+    });
 
+    // tell back end we're ready
     messages.sendMessage("PKT_show_saved");
   }, []);
-
   if (savedStatus === "error") {
     return /*#__PURE__*/react.createElement("div", {
       className: "stp_panel_container"
@@ -840,7 +793,6 @@ function Saved(props) {
       "data-l10n-id": savedErrorId
     })));
   }
-
   return /*#__PURE__*/react.createElement("div", {
     className: "stp_panel_container"
   }, /*#__PURE__*/react.createElement("div", {
@@ -881,7 +833,6 @@ function Saved(props) {
     "data-l10n-id": "pocket-panel-saved-error-remove"
   }), removedErrorMessage && /*#__PURE__*/react.createElement("p", null, removedErrorMessage))));
 }
-
 /* harmony default export */ const Saved_Saved = (Saved);
 ;// CONCATENATED MODULE: ./content/panels/js/saved/overlay.jsx
 /*
@@ -896,7 +847,6 @@ var SavedOverlay = function (options) {
   this.inited = false;
   this.active = false;
 };
-
 SavedOverlay.prototype = {
   create({
     pockethost
@@ -904,7 +854,6 @@ SavedOverlay.prototype = {
     if (this.active) {
       return;
     }
-
     this.active = true;
     const {
       searchParams
@@ -920,12 +869,10 @@ SavedOverlay.prototype = {
       utmCampaign: utmCampaign,
       utmContent: utmContent
     }), document.querySelector(`body`));
-
     if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
       document.querySelector(`body`).classList.add(`theme_dark`);
     }
   }
-
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.jsx
@@ -936,9 +883,7 @@ SavedOverlay.prototype = {
 
 
 
-
 var StyleGuideOverlay = function (options) {};
-
 StyleGuideOverlay.prototype = {
   create() {
     // TODO: Wrap popular topics component in JSX to work without needing an explicit container hierarchy for styling
@@ -1036,7 +981,6 @@ StyleGuideOverlay.prototype = {
       className: "stp_styleguide_h4"
     }, "Horizontal Rule"), /*#__PURE__*/react.createElement("hr", null)), document.querySelector(`#stp_style_guide_components`));
   }
-
 };
 /* harmony default export */ const style_guide_overlay = (StyleGuideOverlay);
 ;// CONCATENATED MODULE: ./content/panels/js/main.mjs
@@ -1237,7 +1181,7 @@ window.pktPanelMessaging = messages;
 /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
 /******/ 		var installedChunks = {
-/******/ 			179: 0
+/******/ 			590: 0
 /******/ 		};
 /******/ 		
 /******/ 		// no chunk on demand loading
@@ -1287,7 +1231,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(140)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [968], () => (__webpack_require__(720)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()
