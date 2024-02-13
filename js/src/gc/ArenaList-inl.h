@@ -155,28 +155,76 @@ js::gc::Arena* js::gc::ArenaList::takeFirstArena() {
 js::gc::SortedArenaList::SortedArenaList(js::gc::AllocKind allocKind)
     : thingsPerArena_(Arena::thingsPerArena(allocKind)) {
 #ifdef DEBUG
-  MOZ_ASSERT(thingsPerArena_ < SegmentCount);
+  MOZ_ASSERT(thingsPerArena_ <= MaxThingsPerArena);
+  MOZ_ASSERT(emptyIndex() < SegmentCount);
   allocKind_ = allocKind;
 #endif
+}
+
+size_t js::gc::SortedArenaList::index(size_t nfree, bool* frontOut) const {
+  // Get the segment index to use for arenas with |nfree| free things and set
+  // |frontOut| to indicate whether to prepend or append to the segment.
+
+  MOZ_ASSERT(nfree <= thingsPerArena_);
+
+  // Full arenas go in the first segment on their own.
+  if (nfree == 0) {
+    *frontOut = false;
+    return 0;
+  }
+
+  // Empty arenas go in the last segment on their own.
+  if (nfree == thingsPerArena_) {
+    *frontOut = false;
+    return emptyIndex();
+  }
+
+  // All other arenas are alternately added to the front and back of successive
+  // segments as |nfree| increases.
+  *frontOut = (nfree % 2) != 0;
+  size_t index = (nfree + 1) / 2;
+  MOZ_ASSERT(index != 0);
+  MOZ_ASSERT(index != emptyIndex());
+  return index;
+}
+
+size_t js::gc::SortedArenaList::emptyIndex() const {
+  // Get the segment index to use for empty arenas. This must have its own
+  // segment so they can be removed with extractEmptyTo.
+  return segmentsUsed() - 1;
+}
+
+size_t js::gc::SortedArenaList::segmentsUsed() const {
+  // Get the total number of segments used for the current alloc kind.
+  return HowMany(thingsPerArena_ - 1, 2) + 2;
 }
 
 void js::gc::SortedArenaList::insertAt(Arena* arena, size_t nfree) {
   MOZ_ASSERT(!isConvertedToArenaList);
   MOZ_ASSERT(nfree <= thingsPerArena_);
-  segments[nfree].pushBack(arena);
+
+  bool front;
+  size_t i = index(nfree, &front);
+  MOZ_ASSERT(i < SegmentCount);
+  if (front) {
+    segments[i].pushFront(arena);
+  } else {
+    segments[i].pushBack(arena);
+  }
 }
 
 void js::gc::SortedArenaList::extractEmptyTo(Arena** destListHeadPtr) {
   MOZ_ASSERT(!isConvertedToArenaList);
   check();
 
-  Segment& segment = segments[thingsPerArena_];
+  Segment& segment = segments[emptyIndex()];
   if (!segment.isEmpty()) {
     Arena* tail = *destListHeadPtr;
     Arena* segmentLast = segment.last();
     *destListHeadPtr = segment.release();
     segmentLast->next = tail;
   }
+
   MOZ_ASSERT(segment.isEmpty());
 }
 
@@ -199,7 +247,7 @@ js::gc::ArenaList js::gc::SortedArenaList::convertToArenaList(
   Arena* lastFullArena = segments[0].last();
 
   Segment result;
-  for (size_t i = 0; i <= thingsPerArena_; ++i) {
+  for (size_t i = 0; i < segmentsUsed(); ++i) {
     result.append(std::move(segments[i]));
   }
 
@@ -219,7 +267,7 @@ void js::gc::SortedArenaList::restoreFromArenaList(
   Arena* remaining = list.head();
   list.clear();
 
-  for (size_t i = 0; i <= thingsPerArena_; i++) {
+  for (size_t i = 0; i < segmentsUsed(); i++) {
     MOZ_ASSERT(segments[i].isEmpty());
     if (segmentLast[i]) {
       Arena* first = remaining;
@@ -234,15 +282,32 @@ void js::gc::SortedArenaList::restoreFromArenaList(
 
 void js::gc::SortedArenaList::check() const {
 #ifdef DEBUG
-  for (size_t i = 0; i < SegmentCount; i++) {
+  const auto& fullSegment = segments[0];
+  for (auto arena = fullSegment.iter(); !arena.done(); arena.next()) {
+    MOZ_ASSERT(arena->getAllocKind() == allocKind());
+    MOZ_ASSERT(!arena->hasFreeThings());
+  }
+
+  for (size_t i = 1; i < emptyIndex(); i++) {
     const auto& segment = segments[i];
-    if (i > thingsPerArena_) {
-      MOZ_ASSERT(segment.isEmpty());
-    }
+    size_t lastFree = 0;
     for (auto arena = segment.iter(); !arena.done(); arena.next()) {
       MOZ_ASSERT(arena->getAllocKind() == allocKind());
-      MOZ_ASSERT(arena->countFreeCells() == i);
+      size_t nfree = arena->countFreeCells();
+      MOZ_ASSERT(nfree == i * 2 - 1 || nfree == i * 2);
+      MOZ_ASSERT(nfree >= lastFree);
+      lastFree = nfree;
     }
+  }
+
+  const auto& emptySegment = segments[emptyIndex()];
+  for (auto arena = emptySegment.iter(); !arena.done(); arena.next()) {
+    MOZ_ASSERT(arena->getAllocKind() == allocKind());
+    MOZ_ASSERT(arena->isEmpty());
+  }
+
+  for (size_t i = emptyIndex() + 1; i < SegmentCount; i++) {
+    MOZ_ASSERT(segments[i].isEmpty());
   }
 #endif
 }

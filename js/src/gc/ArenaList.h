@@ -165,9 +165,9 @@ class SortedArenaList {
   static const size_t MaxThingsPerArena =
       (ArenaSize - ArenaHeaderSize) / MinCellSize;
 
-  // The number of segments required, one for each possible number of free
-  // things in an arena plus one for full arenas.
-  static const size_t SegmentCount = MaxThingsPerArena + 1;
+  // The number of segments required: one full arenas, one for empty arenas and
+  // half the number of remaining size classes.
+  static const size_t SegmentCount = HowMany(MaxThingsPerArena - 1, 2) + 2;
 
  private:
   using Segment = SinglyLinkedList<Arena>;
@@ -212,6 +212,10 @@ class SortedArenaList {
 #endif
 
  private:
+  inline size_t index(size_t nfree, bool* frontOut) const;
+  inline size_t emptyIndex() const;
+  inline size_t segmentsUsed() const;
+
   inline void check() const;
 };
 
