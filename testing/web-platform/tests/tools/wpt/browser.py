@@ -1856,31 +1856,6 @@ class EdgeChromium(Browser):
         return m.group(1)
 
 
-class InternetExplorer(Browser):
-    """Internet Explorer-specific interface."""
-
-    product = "ie"
-    requirements = "requirements_ie.txt"
-
-    def download(self, dest=None, channel=None, rename=None):
-        raise NotImplementedError
-
-    def install(self, dest=None, channel=None):
-        raise NotImplementedError
-
-    def find_binary(self, venv_path=None, channel=None):
-        raise NotImplementedError
-
-    def find_webdriver(self, venv_path=None, channel=None):
-        return which("IEDriverServer.exe")
-
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
-        raise NotImplementedError
-
-    def version(self, binary=None, webdriver_binary=None):
-        return None
-
-
 class Safari(Browser):
     """Safari-specific interface.
 
