@@ -121,11 +121,11 @@ add_task(async function testTracingJSMGlobal() {
   // So only assert the last two frames.
   const lastFrame = listenerSandbox.frames.at(-1);
   const beforeLastFrame = listenerSandbox.frames.at(-2);
-  Assert.equal(beforeLastFrame.depth, 0);
+  Assert.equal(beforeLastFrame.depth, 7);
   Assert.equal(beforeLastFrame.formatedDisplayName, "λ foo");
   Assert.equal(beforeLastFrame.prefix, "testPrefix: ");
   Assert.ok(beforeLastFrame.frame);
-  Assert.equal(lastFrame.depth, 1);
+  Assert.equal(lastFrame.depth, 8);
   Assert.equal(lastFrame.formatedDisplayName, "λ bar");
   Assert.equal(lastFrame.prefix, "testPrefix: ");
   Assert.ok(lastFrame.frame);
@@ -165,6 +165,75 @@ add_task(async function testTracingValues() {
     logs[2],
     `λ bar(-0, 1, Array(1), [object Object], "4", BigInt(5), Symbol(6), Infinity, undefined, null, false, NaN, function foo(), function anonymous(), class MyClass)`
   );
+
+  info("Stop tracing");
+  stopTracing();
+});
+
+add_task(async function testTracingFunctionReturn() {
+  // Test the `traceFunctionReturn` flag
+  const sandbox = Cu.Sandbox("https://example.com");
+  Cu.evalInSandbox(
+    `function foo() { bar(); return 0 } function bar() { return "string" }; foo();`,
+    sandbox
+  );
+
+  // Pass an override method to catch all strings tentatively logged to stdout
+  const logs = [];
+  function loggingMethod(str) {
+    logs.push(str);
+  }
+
+  info("Start tracing");
+  startTracing({ global: sandbox, traceFunctionReturn: true, loggingMethod });
+
+  info("Call some code");
+  sandbox.foo();
+
+  Assert.equal(logs.length, 5);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ foo");
+  Assert.stringContains(logs[2], "λ bar");
+  Assert.stringContains(logs[3], `λ bar return`);
+  Assert.stringContains(logs[4], "λ foo return");
+
+  info("Stop tracing");
+  stopTracing();
+});
+
+add_task(async function testTracingFunctionReturnAndValues() {
+  // Test the `traceFunctionReturn` and `traceValues` flag
+  const sandbox = Cu.Sandbox("https://example.com");
+  Cu.evalInSandbox(
+    `function foo() { bar(); second(); } function bar() { return "string" }; function second() { return null; }; foo();`,
+    sandbox
+  );
+
+  // Pass an override method to catch all strings tentatively logged to stdout
+  const logs = [];
+  function loggingMethod(str) {
+    logs.push(str);
+  }
+
+  info("Start tracing");
+  startTracing({
+    global: sandbox,
+    traceFunctionReturn: true,
+    traceValues: true,
+    loggingMethod,
+  });
+
+  info("Call some code");
+  sandbox.foo();
+
+  Assert.equal(logs.length, 7);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ foo()");
+  Assert.stringContains(logs[2], "λ bar()");
+  Assert.stringContains(logs[3], `λ bar return "string"`);
+  Assert.stringContains(logs[4], "λ second()");
+  Assert.stringContains(logs[5], `λ second return null`);
+  Assert.stringContains(logs[6], "λ foo return undefined");
 
   info("Stop tracing");
   stopTracing();

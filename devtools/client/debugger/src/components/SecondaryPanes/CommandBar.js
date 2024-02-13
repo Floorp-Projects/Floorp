@@ -20,6 +20,7 @@ import {
   getJavascriptTracingValues,
   getJavascriptTracingOnNextInteraction,
   getJavascriptTracingOnNextLoad,
+  getJavascriptTracingFunctionReturn,
 } from "../../selectors/index";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions/index";
@@ -289,6 +290,15 @@ class CommandBar extends Component {
               this.props.toggleJavascriptTracingValues();
             },
           },
+          {
+            id: "debugger-trace-menu-item-function-return",
+            label: L10N.getStr("traceFunctionReturn"),
+            type: "checkbox",
+            checked: this.props.traceFunctionReturn,
+            click: () => {
+              this.props.toggleJavascriptTracingFunctionReturn();
+            },
+          },
         ];
         showMenu(event, items);
       },
@@ -464,6 +474,7 @@ const mapStateToProps = state => ({
   logValues: getJavascriptTracingValues(state),
   traceOnNextInteraction: getJavascriptTracingOnNextInteraction(state),
   traceOnNextLoad: getJavascriptTracingOnNextLoad(state),
+  traceFunctionReturn: getJavascriptTracingFunctionReturn(state),
 });
 
 export default connect(mapStateToProps, {
@@ -473,6 +484,8 @@ export default connect(mapStateToProps, {
   toggleJavascriptTracingOnNextInteraction:
     actions.toggleJavascriptTracingOnNextInteraction,
   toggleJavascriptTracingOnNextLoad: actions.toggleJavascriptTracingOnNextLoad,
+  toggleJavascriptTracingFunctionReturn:
+    actions.toggleJavascriptTracingFunctionReturn,
   resume: actions.resume,
   stepIn: actions.stepIn,
   stepOut: actions.stepOut,

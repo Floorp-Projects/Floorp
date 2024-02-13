@@ -96,6 +96,10 @@ export function getJavascriptTracingOnNextLoad(state) {
   return state.ui.javascriptTracingOnNextLoad;
 }
 
+export function getJavascriptTracingFunctionReturn(state) {
+  return state.ui.javascriptTracingFunctionReturn;
+}
+
 export function getSearchOptions(state, searchKey) {
   return state.ui.mutableSearchOptions[searchKey];
 }

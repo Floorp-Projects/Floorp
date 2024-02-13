@@ -821,6 +821,14 @@ a.learn-more-link.webconsole-learn-more-link {
   margin-inline: 2px;
 }
 
+.webconsole-app .jstracer-io {
+  color: var(--theme-comment);
+}
+
+.webconsole-app .jstracer-exit-frame-reason {
+  color: var(--theme-highlight-red);
+}
+
 /* console.table() */
 .message .consoletable-wrapper {
   --consoletable-border: var(--theme-splitter-color);

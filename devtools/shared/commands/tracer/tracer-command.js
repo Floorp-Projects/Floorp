@@ -63,6 +63,10 @@ class TracerCommand {
         "devtools.debugger.javascript-tracing-on-next-load",
         false
       ),
+      traceFunctionReturn: Services.prefs.getBoolPref(
+        "devtools.debugger.javascript-tracing-function-return",
+        false
+      ),
     };
   }
 

@@ -40,6 +40,7 @@ export const initialUIState = () => ({
   javascriptTracingValues: prefs.javascriptTracingValues,
   javascriptTracingOnNextInteraction: prefs.javascriptTracingOnNextInteraction,
   javascriptTracingOnNextLoad: prefs.javascriptTracingOnNextLoad,
+  javascriptTracingFunctionReturn: prefs.javascriptTracingFunctionReturn,
   mutableSearchOptions: prefs.searchOptions || {
     [searchKeys.FILE_SEARCH]: {
       regexMatch: false,
@@ -196,6 +197,15 @@ function update(state = initialUIState(), action) {
       return {
         ...state,
         javascriptTracingOnNextLoad: prefs.javascriptTracingOnNextLoad,
+      };
+    }
+
+    case "TOGGLE_JAVASCRIPT_TRACING_FUNCTION_RETURN": {
+      prefs.javascriptTracingFunctionReturn =
+        !prefs.javascriptTracingFunctionReturn;
+      return {
+        ...state,
+        javascriptTracingFunctionReturn: prefs.javascriptTracingFunctionReturn,
       };
     }
 
