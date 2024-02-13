@@ -1663,6 +1663,19 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
                                 SAMESITE_MDN_URL});
   }
 
+  // Ensure the partitioned cookie is set with the secure attribute.
+  if (aCookieData.isPartitioned() && !aCookieData.isSecure()) {
+    CookieLogging::LogMessageToConsole(
+        aCRC, aHostURI, nsIScriptError::errorFlag, CONSOLE_REJECTION_CATEGORY,
+        "CookieRejectedPartitionedRequiresSecure"_ns,
+        AutoTArray<nsString, 1>{NS_ConvertUTF8toUTF16(aCookieData.name())});
+
+    // We only drop the cookie if CHIPS is enabled.
+    if (StaticPrefs::network_cookie_cookieBehavior_optInPartitioning()) {
+      return newCookie;
+    }
+  }
+
   if (aCookieData.rawSameSite() == nsICookie::SAMESITE_NONE &&
       aCookieData.sameSite() == nsICookie::SAMESITE_LAX) {
     bool laxByDefault =
