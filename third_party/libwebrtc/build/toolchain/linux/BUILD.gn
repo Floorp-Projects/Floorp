@@ -297,6 +297,13 @@ gcc_toolchain("mips64el") {
   }
 }
 
+clang_toolchain("clang_riscv64") {
+  toolchain_args = {
+    target_cpu = "riscv64"
+    current_os = "linux"
+  }
+}
+
 gcc_toolchain("riscv64") {
   toolprefix = "riscv64-linux-gnu"
 
