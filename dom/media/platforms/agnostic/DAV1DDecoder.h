@@ -48,7 +48,8 @@ class DAV1DDecoder final : public MediaDataDecoder,
   virtual ~DAV1DDecoder();
   RefPtr<DecodePromise> InvokeDecode(MediaRawData* aSample);
   Result<already_AddRefed<VideoData>, MediaResult> GetPicture();
-  already_AddRefed<VideoData> ConstructImage(const Dav1dPicture& aPicture);
+  Result<already_AddRefed<VideoData>, MediaResult> ConstructImage(
+      const Dav1dPicture& aPicture);
 
   Dav1dContext* mContext = nullptr;
 
