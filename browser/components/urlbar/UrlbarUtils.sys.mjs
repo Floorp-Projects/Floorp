@@ -1585,6 +1585,45 @@ export var UrlbarUtils = {
   tupleString(...tokens) {
     return tokens.filter(t => t).join("|");
   },
+
+  /**
+   * Creates camelCase versions of snake_case keys in the given object and
+   * recursively all nested objects. All objects are modified in place and the
+   * original snake_case keys are preserved.
+   *
+   * @param {object} obj
+   *   The object to modify.
+   * @param {boolean} overwrite
+   *   Controls what happens when a camelCase key is already defined for a
+   *   snake_case key (excluding keys that don't have underscores). If true the
+   *   existing key will be overwritten. If false an error will be thrown.
+   * @returns {object} The passed-in modified-in-place object.
+   */
+  copySnakeKeysToCamel(obj, overwrite = true) {
+    for (let [key, value] of Object.entries(obj)) {
+      // Trim off leading underscores since they'll interfere with the replace.
+      // We'll tack them back on after.
+      let match = key.match(/^_+/);
+      if (match) {
+        key = key.substring(match[0].length);
+      }
+      let camelKey = key.replace(/_([^_])/g, (m, p1) => p1.toUpperCase());
+      if (match) {
+        camelKey = match[0] + camelKey;
+      }
+      if (!overwrite && camelKey != key && obj.hasOwnProperty(camelKey)) {
+        throw new Error(
+          `Can't copy snake_case key '${key}' to camelCase key ` +
+            `'${camelKey}' because '${camelKey}' is already defined`
+        );
+      }
+      obj[camelKey] = value;
+      if (value && typeof value == "object") {
+        this.copySnakeKeysToCamel(value);
+      }
+    }
+    return obj;
+  },
 };
 
 ChromeUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {

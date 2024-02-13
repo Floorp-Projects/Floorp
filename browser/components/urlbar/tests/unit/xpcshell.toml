@@ -22,6 +22,8 @@ support-files = ["data/engine.xml"]
 
 ["test_UrlbarUtils_addToUrlbarHistory.js"]
 
+["test_UrlbarUtils_copySnakeKeysToCamel.js"]
+
 ["test_UrlbarUtils_getShortcutOrURIAndPostData.js"]
 
 ["test_UrlbarUtils_getTokenMatches.js"]

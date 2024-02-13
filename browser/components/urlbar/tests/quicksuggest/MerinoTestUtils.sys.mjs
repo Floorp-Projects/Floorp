@@ -340,17 +340,21 @@ class _MerinoTestUtils {
    * Initializes the quick suggest weather feature and mock Merino server.
    */
   async initWeather() {
+    this.info("MockMerinoServer initializing weather, starting server");
     await this.server.start();
+    this.info("MockMerinoServer initializing weather, server now started");
     this.server.response.body.suggestions = [WEATHER_SUGGESTION];
 
     lazy.QuickSuggest.weather._test_fetchIntervalMs = WEATHER_FETCH_INTERVAL_MS;
 
     // Enabling weather will trigger a fetch. Wait for it to finish so the
     // suggestion is ready when this function returns.
+    this.info("MockMerinoServer initializing weather, waiting for fetch");
     let fetchPromise = lazy.QuickSuggest.weather.waitForFetches();
     lazy.UrlbarPrefs.set("weather.featureGate", true);
     lazy.UrlbarPrefs.set("suggest.weather", true);
     await fetchPromise;
+    this.info("MockMerinoServer initializing weather, got fetch");
 
     this.Assert.equal(
       lazy.QuickSuggest.weather._test_pendingFetchCount,

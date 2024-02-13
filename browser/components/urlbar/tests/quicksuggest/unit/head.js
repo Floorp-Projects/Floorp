@@ -23,8 +23,9 @@ add_setup(async function setUpQuickSuggestXpcshellTest() {
 /**
  * Adds two tasks: One with the Rust backend disabled and one with it enabled.
  * The names of the task functions will be the name of the passed-in task
- * function appended with "_rustDisabled" and "_rustEnabled" respectively. Call
- * with the usual `add_task()` arguments.
+ * function appended with "_rustDisabled" and "_rustEnabled". If the passed-in
+ * task doesn't have a name, "anonymousTask" will be used. Call this with the
+ * usual `add_task()` arguments.
  */
 function add_tasks_with_rust(...args) {
   let taskFnIndex = args.findIndex(a => typeof a == "function");
@@ -77,7 +78,9 @@ function add_tasks_with_rust(...args) {
     };
 
     Object.defineProperty(newTaskFn, "name", {
-      value: taskFn.name + (rustEnabled ? "_rustEnabled" : "_rustDisabled"),
+      value:
+        (taskFn.name || "anonymousTask") +
+        (rustEnabled ? "_rustEnabled" : "_rustDisabled"),
     });
     let addTaskArgs = [...args];
     addTaskArgs[taskFnIndex] = newTaskFn;
