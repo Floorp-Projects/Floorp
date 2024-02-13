@@ -487,8 +487,8 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
 }
 
 bool RenderDXGITextureHost::SyncObjectNeeded() {
-  return mGpuProcessTextureId.isNothing() &&
-         (!mHasKeyedMutex || !mAcquireFenceInfo.mFenceHandle);
+  return mGpuProcessTextureId.isNothing() && !mHasKeyedMutex &&
+         !mAcquireFenceInfo.mFenceHandle;
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
