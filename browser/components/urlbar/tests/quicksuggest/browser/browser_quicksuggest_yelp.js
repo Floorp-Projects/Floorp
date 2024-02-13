@@ -208,8 +208,34 @@ async function doShowLessFrequently({
   UrlbarPrefs.set("yelp.showLessFrequentlyCount", 0);
 }
 
-// Tests the "Don't show this again" result menu dismissal command.
+// Tests the "Not relevant" result menu dismissal command.
 add_task(async function resultMenu_not_interested() {
+  await doDismiss({
+    menu: "not_relevant",
+    assert: resuilt => {
+      Assert.ok(
+        QuickSuggest.blockedSuggestions.has(resuilt.payload.url),
+        "The URL should be register as blocked"
+      );
+    },
+  });
+
+  QuickSuggest.blockedSuggestions.clear();
+});
+
+// Tests the "Not interested" result menu dismissal command.
+add_task(async function resultMenu_not_interested() {
+  await doDismiss({
+    menu: "not_interested",
+    assert: () => {
+      Assert.ok(!UrlbarPrefs.get("suggest.yelp"));
+    },
+  });
+
+  UrlbarPrefs.clear("suggest.yelp");
+});
+
+async function doDismiss({ menu, assert }) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "ramen",
@@ -219,9 +245,10 @@ add_task(async function resultMenu_not_interested() {
   let resultIndex = 1;
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
   Assert.equal(details.result.payload.provider, "Yelp");
+  let result = details.result;
 
   // Click the command.
-  await UrlbarTestUtils.openResultMenuAndClickItem(window, "not_interested", {
+  await UrlbarTestUtils.openResultMenuAndClickItem(window, menu, {
     resultIndex,
     openByMouse: true,
   });
@@ -278,11 +305,10 @@ add_task(async function resultMenu_not_interested() {
     );
   }
 
-  Assert.ok(!UrlbarPrefs.get("suggest.yelp"));
+  assert(result);
 
   await UrlbarTestUtils.promisePopupClose(window);
-  UrlbarPrefs.clear("suggest.yelp");
-});
+}
 
 // Tests the row/group label.
 add_task(async function rowLabel() {
