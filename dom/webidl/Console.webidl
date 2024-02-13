@@ -198,6 +198,10 @@ interface ConsoleInstance {
 
   undefined profile(any... data);
   undefined profileEnd(any... data);
+
+  // Returns true if the given level would log a message. Used for avoiding
+  // long/significant processing when logging messages.
+  boolean shouldLog(ConsoleLogLevel level);
 };
 
 callback ConsoleInstanceDumpCallback = undefined (DOMString message);
