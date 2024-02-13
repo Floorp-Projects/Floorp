@@ -66,9 +66,6 @@ class JSONPrinter {
 
   void propertyName(const char* name);
 
-  GenericPrinter& beginStringPropertyName();
-  void endStringPropertyName();
-
   // JSON requires decimals to be separated by periods, but the LC_NUMERIC
   // setting may cause printf to use commas in some locales.
   enum TimePrecision { SECONDS, MILLISECONDS, MICROSECONDS };
