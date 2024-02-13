@@ -102,10 +102,8 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     memcpy(mapping.Bytes().data(), aData.Elements() + aDataOffset, size);
     ipc::ByteBuf bb;
     ffi::wgpu_queue_write_buffer(aBuffer.mId, aBufferOffset, ToFFI(&bb));
-    if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                       std::move(handle))) {
-      MOZ_CRASH("IPC failure");
-    }
+    mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                  std::move(handle));
   });
 }
 
@@ -149,10 +147,8 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
 
     ipc::ByteBuf bb;
     ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
-    if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                       std::move(handle))) {
-      MOZ_CRASH("IPC failure");
-    }
+    mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                  std::move(handle));
   });
 }
 
@@ -410,10 +406,8 @@ void Queue::CopyExternalImageToTexture(
   CommandEncoder::ConvertTextureCopyViewToFFI(aDestination, &copyView);
   ipc::ByteBuf bb;
   ffi::wgpu_queue_write_texture(copyView, dataLayout, extent, ToFFI(&bb));
-  if (!mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
-                                     std::move(handle))) {
-    MOZ_CRASH("IPC failure");
-  }
+  mBridge->SendQueueWriteAction(mId, mParent->mId, std::move(bb),
+                                std::move(handle));
 }
 
 }  // namespace mozilla::webgpu

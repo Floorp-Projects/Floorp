@@ -49,9 +49,7 @@ already_AddRefed<BindGroupLayout> ComputePipeline::GetBindGroupLayout(
   const RawId bglId = ffi::wgpu_client_compute_pipeline_get_bind_group_layout(
       client, mId, aIndex, ToFFI(&bb));
 
-  if (!bridge->SendDeviceAction(mParent->GetId(), std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
+  bridge->SendDeviceAction(mParent->GetId(), std::move(bb));
 
   RefPtr<BindGroupLayout> object = new BindGroupLayout(mParent, bglId, false);
   return object.forget();

@@ -113,9 +113,7 @@ RawId WebGPUChild::RenderBundleEncoderFinish(
   RawId id = ffi::wgpu_client_create_render_bundle(
       mClient.get(), &aEncoder, aDeviceId, &desc, ToFFI(&bb));
 
-  if (!SendDeviceAction(aDeviceId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
+  SendDeviceAction(aDeviceId, std::move(bb));
 
   return id;
 }
@@ -128,9 +126,7 @@ RawId WebGPUChild::RenderBundleEncoderFinishError(RawId aDeviceId,
   RawId id = ffi::wgpu_client_create_render_bundle_error(
       mClient.get(), aDeviceId, label.Get(), ToFFI(&bb));
 
-  if (!SendDeviceAction(aDeviceId, std::move(bb))) {
-    MOZ_CRASH("IPC failure");
-  }
+  SendDeviceAction(aDeviceId, std::move(bb));
 
   return id;
 }

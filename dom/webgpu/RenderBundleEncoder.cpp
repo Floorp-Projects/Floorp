@@ -60,10 +60,9 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
   ipc::ByteBuf failureAction;
   auto* bundle = ffi::wgpu_device_create_render_bundle_encoder(
       aDeviceId, &desc, ToFFI(&failureAction));
-  // report an error only if the operation failed
-  if (!bundle &&
-      !aBridge->SendDeviceAction(aDeviceId, std::move(failureAction))) {
-    MOZ_CRASH("IPC failure");
+  // Report an error only if the operation failed.
+  if (!bundle) {
+    aBridge->SendDeviceAction(aDeviceId, std::move(failureAction));
   }
   return bundle;
 }
