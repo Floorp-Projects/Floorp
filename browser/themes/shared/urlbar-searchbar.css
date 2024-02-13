@@ -629,7 +629,7 @@
   to { transform: rotate(360deg); }
 }
 
-@media (prefers-reduced-motion: no-preference) {
+@media not (prefers-reduced-motion) {
   #translations-button-circle-arrows {
     animation: translationsRotate 1.2s linear infinite;
   }
@@ -658,7 +658,7 @@
 
 #translations-button-locale {
   background-color: var(--toolbarbutton-icon-fill-attention);
-  color: var(--toolbar-field-background-color);
+  color: var(--toolbarbutton-icon-fill-attention-text);
   border-radius: 4px;
   font-size: 0.8em;
   height: 20px;
