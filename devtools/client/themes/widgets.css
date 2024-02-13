@@ -481,7 +481,6 @@
   padding: 3px 4px;
   min-width: 100px;
   -moz-user-focus: normal;
-  color: var(--theme-body-color);
 }
 
 .table-widget-cell[hidden] {
