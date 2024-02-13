@@ -20,19 +20,15 @@ XPCOM_MANIFESTS += [
 
 EXPORTS.mozilla += [
     "BounceTrackingProtection.h",
-    "BounceTrackingProtectionStorage.h",
     "BounceTrackingRecord.h",
     "BounceTrackingState.h",
-    "BounceTrackingStateGlobal.h",
     "BounceTrackingStorageObserver.h",
 ]
 
 UNIFIED_SOURCES += [
     "BounceTrackingProtection.cpp",
-    "BounceTrackingProtectionStorage.cpp",
     "BounceTrackingRecord.cpp",
     "BounceTrackingState.cpp",
-    "BounceTrackingStateGlobal.cpp",
     "BounceTrackingStorageObserver.cpp",
 ]
 

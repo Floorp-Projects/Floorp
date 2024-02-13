@@ -551,8 +551,7 @@ export var SiteDataManager = {
         Ci.nsIClearDataService.CLEAR_EME |
         Ci.nsIClearDataService.CLEAR_ALL_CACHES |
         Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
-        Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
-        Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE;
+        Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE;
       promises.push(
         new Promise(function (resolve) {
           const { clearData } = Services;
@@ -690,8 +689,7 @@ export var SiteDataManager = {
         Ci.nsIClearDataService.CLEAR_COOKIES |
           Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
           Ci.nsIClearDataService.CLEAR_HSTS |
-          Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE,
+          Ci.nsIClearDataService.CLEAR_EME,
         resolve
       );
     });

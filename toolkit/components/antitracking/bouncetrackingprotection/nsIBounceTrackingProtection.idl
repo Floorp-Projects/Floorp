@@ -6,41 +6,20 @@
 
 [scriptable, uuid(4866F748-29DA-4C10-8EAA-ED2F7851E6B1)]
 interface nsIBounceTrackingProtection : nsISupports {
+
+    readonly attribute Array<ACString> bounceTrackerCandidateHosts;
+    readonly attribute Array<ACString> userActivationHosts;
+
     // Reset the global bounce tracking state, including the maps for tracking
     // bounce tracker candidates and user activation.
-    void clearAll();
-
-    // Clear bounce tracking state for a specific site host and OriginAttributes pair.
-    [implicit_jscontext]
-    void clearBySiteHostAndOA(in ACString aSiteHost, in jsval originAttributes);
-
-    // Clear bounce tracking state for a specific site host for all OriginAttributes.
-    void clearBySiteHost(in ACString aSiteHost);
-
-    // Clear bounce tracking state for a specific time range.
-    void clearByTimeRange(in PRTime aFrom, in PRTime aTo);
-
-    // Clear bounce tracking state for the given origin attributes.
-    void clearByOriginAttributesPattern(in AString aPattern);
+    void reset();
 
     // Trigger the bounce tracking timer algorithm that clears state for
     // classified bounce trackers.
     [implicit_jscontext]
     Promise testRunPurgeBounceTrackers();
 
-    // Getters and setters for user activation and bounce tracker state.
-    // These are used for testing purposes only.
-    // State is keyed by OriginAttributes.
+    void testAddBounceTrackerCandidate(in ACString aHost, in PRTime aBounceTime);
 
-    [implicit_jscontext]
-    Array<ACString> testGetBounceTrackerCandidateHosts(in jsval originAttributes);
-
-    [implicit_jscontext]
-    Array<ACString> testGetUserActivationHosts(in jsval originAttributes);
-
-    [implicit_jscontext]
-    void testAddBounceTrackerCandidate(in jsval originAttributes, in ACString aSiteHost, in PRTime aBounceTime);
-
-    [implicit_jscontext]
-    void testAddUserActivation(in jsval originAttributes, in ACString aSiteHost, in PRTime aActivationTime);
+    void testAddUserActivation(in ACString aHost, in PRTime aActivationTime);
 };
