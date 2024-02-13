@@ -770,7 +770,7 @@ FFmpegVideoDecoder<LIBAV_VER>::AllocateTextureClientForImage(
       data.CbCrPictureSize().Height(), static_cast<uint8_t>(data.mColorDepth));
 
   // Allocate a shmem buffer for image.
-  if (!aImage->CreateEmptyBuffer(data, paddedYSize, paddedCbCrSize)) {
+  if (NS_FAILED(aImage->CreateEmptyBuffer(data, paddedYSize, paddedCbCrSize))) {
     return nullptr;
   }
   return aImage->GetTextureClient(mImageAllocator);
