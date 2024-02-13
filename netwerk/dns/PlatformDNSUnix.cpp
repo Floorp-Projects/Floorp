@@ -8,6 +8,7 @@
 #include "mozilla/net/DNSPacket.h"
 #include "nsIDNSService.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_network.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,11 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   nsAutoCString host(aHost);
   nsAutoCString cname;
   nsresult rv;
+
+  if (xpc::IsInAutomation() &&
+      !StaticPrefs::network_dns_native_https_query_in_automation()) {
+    return NS_ERROR_UNKNOWN_HOST;
+  }
 
   LOG("resolving %s\n", host.get());
   // Perform the query

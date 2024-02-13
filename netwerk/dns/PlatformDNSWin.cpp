@@ -9,6 +9,7 @@
 #include "nsIDNSService.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_network.h"
 
 #ifdef DNSQUERY_AVAILABLE
 // There is a bug in windns.h where the type of parameter ppQueryResultsSet for
@@ -32,6 +33,11 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   PDNS_RECORD result = nullptr;
   nsAutoCString cname;
   aTTL = UINT32_MAX;
+
+  if (xpc::IsInAutomation() &&
+      !StaticPrefs::network_dns_native_https_query_in_automation()) {
+    return NS_ERROR_UNKNOWN_HOST;
+  }
 
   DNS_STATUS status =
       DnsQuery_A(host.get(), nsIDNSService::RESOLVE_TYPE_HTTPSSVC,

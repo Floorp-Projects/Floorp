@@ -43,6 +43,11 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   nsAutoCString cname;
   nsresult rv;
 
+  if (xpc::IsInAutomation() &&
+      !StaticPrefs::network_dns_native_https_query_in_automation()) {
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
   if (!sLibLoading.exchange(true)) {
     // We're the first call here, load the library and symbols.
     void* handle = dlopen("libandroid.so", RTLD_LAZY | RTLD_LOCAL);
