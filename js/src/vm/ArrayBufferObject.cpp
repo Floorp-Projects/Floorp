@@ -748,7 +748,8 @@ bool ArrayBufferObject::fun_isView(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-// ES2017 draft 24.1.2.1
+// ES2024 draft rev 3a773fc9fae58be023228b13dbbd402ac18eeb6b
+// 25.1.4.1 ArrayBuffer ( length [ , options ] )
 bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
                                           Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -764,9 +765,9 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     return false;
   }
 
+  // Step 3.
   mozilla::Maybe<uint64_t> maxByteLength;
 #ifdef NIGHTLY_BUILD
-  // Step 3.
   if (JS::Prefs::experimental_arraybuffer_resizable()) {
     // Inline call to GetArrayBufferMaxByteLengthOption.
     if (args.get(1).isObject()) {
@@ -782,7 +783,7 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
           return false;
         }
 
-        // AllocateArrayBuffer, step 3.a.
+        // 25.1.3.1 AllocateArrayBuffer, step 3.a.
         if (byteLength > maxByteLengthInt) {
           JS_ReportErrorNumberASCII(
               cx, GetErrorMessage, nullptr,
@@ -795,25 +796,26 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   }
 #endif
 
-  // Step 4 (Inlined 25.1.2.1 AllocateArrayBuffer).
-  // 25.1.2.1, step 1 (Inlined 10.1.13 OrdinaryCreateFromConstructor).
+  // Step 4 (Inlined 25.1.3.1 AllocateArrayBuffer).
+  // 25.1.3.1, step 4 (Inlined 10.1.13 OrdinaryCreateFromConstructor, step 2).
   RootedObject proto(cx);
   if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_ArrayBuffer,
                                           &proto)) {
     return false;
   }
 
-  // 25.1.2.1, step 5 (Inlined 6.2.9.1 CreateByteDataBlock, step 2).
+  // 25.1.3.1, step 5 (Inlined 6.2.9.1 CreateByteDataBlock, step 2).
   if (!CheckArrayBufferTooLarge(cx, byteLength)) {
     return false;
   }
 
   if (maxByteLength) {
-    // 25.1.2.1, step 8.a.
+    // 25.1.3.1, step 8.a.
     if (!CheckArrayBufferTooLarge(cx, *maxByteLength)) {
       return false;
     }
 
+    // 25.1.3.1, remaining steps.
     auto* bufobj = ResizableArrayBufferObject::createZeroed(
         cx, byteLength, *maxByteLength, proto);
     if (!bufobj) {
@@ -823,7 +825,7 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     return true;
   }
 
-  // 25.1.2.1, steps 1 and 4-9.
+  // 25.1.3.1, remaining steps.
   JSObject* bufobj = createZeroed(cx, byteLength, proto);
   if (!bufobj) {
     return false;
