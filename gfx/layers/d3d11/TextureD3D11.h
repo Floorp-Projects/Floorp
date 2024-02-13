@@ -125,7 +125,7 @@ class D3D11TextureData final : public TextureData {
   D3D11TextureData(ID3D11Texture2D* aTexture, uint32_t aArrayIndex,
                    RefPtr<gfx::FileHandleWrapper> aSharedHandle,
                    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                   TextureAllocationFlags aFlags);
+                   TextureAllocationFlags aFlags, bool aUseCompositorDevice);
 
   bool PrepareDrawTargetInLock(OpenMode aMode);
 
@@ -143,6 +143,7 @@ class D3D11TextureData final : public TextureData {
   RefPtr<gfx::DrawTarget> mDrawTarget;
   const gfx::IntSize mSize;
   const gfx::SurfaceFormat mFormat;
+  const bool mUseCompositorDevice;
 
  public:
   gfx::ColorSpace2 mColorSpace = gfx::ColorSpace2::SRGB;
@@ -397,6 +398,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   gfx::SurfaceFormat mFormat;
   bool mHasKeyedMutex;
   gfx::FenceInfo mAcquireFenceInfo;
+  const bool mUseCompositorDevice;
 
  public:
   const gfx::ColorSpace2 mColorSpace;
