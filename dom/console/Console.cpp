@@ -1787,7 +1787,7 @@ static void MakeFormatString(nsCString& aFormat, int32_t aInteger,
 // The output is an array where any object is a separated item, the rest is
 // unified in a format string.
 // Example if the input is:
-//   "string: %s, integer: %d, object: %o, double: %d", 's', 1, window, 0.9
+//   "string: %s, integer: %d, object: %o, double: %f", 's', 1, window, 0.9
 // The output will be:
 //   [ "string: s, integer: 1, object: ", window, ", double: 0.9" ]
 //
