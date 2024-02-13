@@ -1232,13 +1232,16 @@ void PropMap::dumpDescriptorStringContentAt(js::GenericPrinter& out,
   }
 }
 
-void PropMap::dumpPropertyNameAt(js::JSONPrinter& json, uint32_t index) const {
-  js::GenericPrinter& out = json.beginStringPropertyName();
+JS::UniqueChars PropMap::getPropertyNameAt(uint32_t index) const {
+  Sprinter sp;
+  if (!sp.init()) {
+    return nullptr;
+  }
 
   PropertyKey key = getKey(index);
-  key.dumpPropertyName(out);
+  key.dumpPropertyName(sp);
 
-  json.endStringPropertyName();
+  return sp.release();
 }
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 
