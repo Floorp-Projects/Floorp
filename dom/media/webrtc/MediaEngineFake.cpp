@@ -393,7 +393,7 @@ void MediaEngineFakeVideoSource::GenerateFrame() {
                      sizeof(timestamp), 0, 0);
 #endif
 
-  bool setData = ycbcr_image->CopyData(data);
+  bool setData = NS_SUCCEEDED(ycbcr_image->CopyData(data));
   MOZ_ASSERT(setData);
 
   // SetData copies data, so we can free the frame

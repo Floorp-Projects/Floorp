@@ -309,11 +309,8 @@ MediaResult VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
   PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
 
   if (aCopyData) {
-    // TODO: PlanarYCbCrImage::CopyData may return false on non out-of-memory
-    // failures.
-    return MediaResult(
-        aVideoImage->CopyData(data) ? NS_OK : NS_ERROR_OUT_OF_MEMORY,
-        RESULT_DETAIL("Failed to copy image data"));
+    return MediaResult(aVideoImage->CopyData(data),
+                       RESULT_DETAIL("Failed to copy image data"));
   }
   return MediaResult(aVideoImage->AdoptData(data),
                      RESULT_DETAIL("Failed to adopt image data"));

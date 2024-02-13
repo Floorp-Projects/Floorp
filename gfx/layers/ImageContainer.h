@@ -803,7 +803,7 @@ class PlanarYCbCrImage : public Image {
    * This makes a copy of the data buffers, in order to support functioning
    * in all different layer managers.
    */
-  virtual bool CopyData(const Data& aData) = 0;
+  virtual nsresult CopyData(const Data& aData) = 0;
 
   /**
    * This doesn't make a copy of the data buffers.
@@ -876,7 +876,7 @@ class RecyclingPlanarYCbCrImage : public PlanarYCbCrImage {
   explicit RecyclingPlanarYCbCrImage(BufferRecycleBin* aRecycleBin)
       : mRecycleBin(aRecycleBin) {}
   virtual ~RecyclingPlanarYCbCrImage();
-  bool CopyData(const Data& aData) override;
+  nsresult CopyData(const Data& aData) override;
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 
  protected:

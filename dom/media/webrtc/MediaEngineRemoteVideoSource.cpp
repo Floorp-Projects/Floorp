@@ -527,7 +527,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     PerformanceRecorder<CopyVideoStage> rec(
         "MERVS::Copy"_ns, *mFrameDeliveringTrackingId, dst_width, dst_height);
     image = mImageContainer->CreatePlanarYCbCrImage();
-    if (!image->CopyData(data)) {
+    if (NS_FAILED(image->CopyData(data))) {
       MOZ_ASSERT_UNREACHABLE(
           "We might fail to allocate a buffer, but with this "
           "being a recycling container that shouldn't happen");
