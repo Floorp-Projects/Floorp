@@ -103,7 +103,6 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
       media::TimeUnit::FromMicroseconds(decodedFrame->Duration()), b,
       sampleData->mKeyframe, media::TimeUnit::FromMicroseconds(-1),
       pictureRegion, mKnowsCompositor);
-  RefPtr<GMPVideoDecoder> self = this;
   if (v) {
     mPerformanceRecorder.Record(static_cast<int64_t>(decodedFrame->Timestamp()),
                                 [&](DecodeStage& aStage) {
