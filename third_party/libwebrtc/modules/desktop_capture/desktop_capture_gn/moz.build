@@ -365,34 +365,6 @@ if CONFIG["TARGET_CPU"] == "ppc64":
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["TARGET_CPU"] == "riscv64":
-
-    DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_USE_X11"] = True
-
-    OS_LIBS += [
-        "X11",
-        "Xcomposite",
-        "Xdamage",
-        "Xext",
-        "Xfixes",
-        "Xrandr",
-        "Xrender"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
-    ]
-
 if CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -444,6 +416,34 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/screencast_portal.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/screencast_stream_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
+    ]
+
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "riscv64":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_USE_X11"] = True
+
+    OS_LIBS += [
+        "X11",
+        "Xcomposite",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xrandr",
+        "Xrender"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":

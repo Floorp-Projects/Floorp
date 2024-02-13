@@ -250,14 +250,6 @@ if CONFIG["TARGET_CPU"] == "ppc64":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["TARGET_CPU"] == "riscv64":
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
-        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
-        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
-    ]
-
 if CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -342,6 +334,14 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c"
+    ]
+
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "riscv64":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
