@@ -104,6 +104,7 @@
   --card-outline-color: var(--grey-30);
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
 
+  -moz-theme: non-native;
   accent-color: var(--in-content-accent-color);
   color-scheme: light dark;
 }
