@@ -18,8 +18,6 @@ export class PolicySearchEngine extends SearchEngine {
    *   The options for this search engine.
    * @param {object} options.details
    *   An object that matches the `SearchEngines` policy schema.
-   * @param {object[]} [options.enginesSettings]
-   *   The saved settings for the search engines.
    *
    * @see browser/components/enterprisepolicies/schemas/policies-schema.json
    */
@@ -47,8 +45,6 @@ export class PolicySearchEngine extends SearchEngine {
       suggest_url: options.details.SuggestURLTemplate,
     };
     this._initWithDetails(details);
-
-    this._loadSettings(options.enginesSettings);
   }
 
   /**

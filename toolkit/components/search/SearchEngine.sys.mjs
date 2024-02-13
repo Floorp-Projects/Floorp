@@ -1179,31 +1179,6 @@ export class SearchEngine {
   }
 
   /**
-   * Loads engine settings (_metaData) from the list of settings, finding
-   * the appropriate details for this engine.
-   *
-   * @param {object[]} enginesSettings
-   *   An array of search engine settings.
-   */
-  _loadSettings(enginesSettings) {
-    if (!enginesSettings) {
-      return;
-    }
-    let engineSettings = enginesSettings.find(e => e.id == this.id);
-
-    // If we can't find it by id, try falling back to the name as this is
-    // probably an upgrade from a version before we stored ids in the user's
-    // settings file.
-    if (!engineSettings) {
-      engineSettings = enginesSettings.find(e => e._name == this.name);
-    }
-
-    if (engineSettings?._metaData) {
-      this._metaData = structuredClone(engineSettings._metaData);
-    }
-  }
-
-  /**
    * Get the user-defined alias.
    *
    * @type {string}

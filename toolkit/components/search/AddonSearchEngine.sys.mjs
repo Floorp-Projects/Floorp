@@ -84,17 +84,14 @@ export class AddonSearchEngine extends SearchEngine {
    * @param {object} [options.config]
    *   The search engine configuration for application provided engines, that
    *   may be overriding some of the WebExtension's settings.
-   * @param {object[]} [options.enginesSettings]
-   *   The saved settings for the search engines.
    */
-  async init({ extension, locale, config, enginesSettings }) {
+  async init({ extension, locale, config }) {
     let { baseURI, manifest } = await this.#getExtensionDetailsForLocale(
       extension,
       locale
     );
 
     this.#initFromManifest(baseURI, manifest, locale, config);
-    this._loadSettings(enginesSettings);
   }
 
   /**
