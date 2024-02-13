@@ -21,6 +21,7 @@
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
 #include "jsapi.h"
+#include "js/CompileOptions.h"
 #include "js/experimental/JSStencil.h"
 #include "SkipCheckForBrokenURLOrZeroSized.h"
 
@@ -144,6 +145,16 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
       JS::loader::ModuleLoadRequest* aRequest,
       JS::MutableHandleScript aScriptOut);
 
+ private:
+  static nsresult ReadScriptOnMainThread(JSContext* aCx,
+                                         const nsCString& aLocation,
+                                         nsCString& aData);
+  static nsresult LoadSingleModuleScriptOnWorker(
+      mozilla::loader::SyncModuleLoader* aModuleLoader, JSContext* aCx,
+      JS::loader::ModuleLoadRequest* aRequest,
+      JS::MutableHandleScript aScriptOut);
+
+ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   bool DefineJSServices(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
@@ -180,6 +191,8 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
                              JS::MutableHandleScript aTableScript,
                              char** aLocation, bool aCatchException,
                              JS::MutableHandleValue aException);
+
+  static void SetModuleOptions(JS::CompileOptions& aOptions);
 
   // Get the script for a given location, either from a cached stencil or by
   // compiling it from source.
