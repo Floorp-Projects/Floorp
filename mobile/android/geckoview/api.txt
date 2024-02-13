@@ -2676,6 +2676,7 @@ package org.mozilla.geckoview {
     field @Nullable public final String fullDescription;
     field @Nullable public final String homepageUrl;
     field @NonNull public final Image icon;
+    field @Nullable public final String incognito;
     field public final boolean isRecommended;
     field @Nullable public final String name;
     field public final boolean openOptionsPageInTab;

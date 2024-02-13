@@ -96,6 +96,9 @@ class WebExtensionTest : BaseSessionTest() {
         // Check that the WebExtension was applied by checking the border color
         assertBodyBorderEqualTo("red")
 
+        // Check some of the metadata
+        assertEquals(borderify.metaData.incognito, "spanning")
+
         // Uninstall WebExtension and check again
         sessionRule.waitForResult(controller.uninstall(borderify))
 
@@ -330,6 +333,7 @@ class WebExtensionTest : BaseSessionTest() {
                     extension.metaData.blocklistState,
                     WebExtension.BlocklistStateFlags.NOT_BLOCKED,
                 )
+                assertEquals(extension.metaData.incognito, "spanning")
 
                 return GeckoResult.allow()
             }

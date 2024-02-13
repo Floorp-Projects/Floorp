@@ -1986,6 +1986,15 @@ public class WebExtension {
     /** The link to the AMO detail page for this extension. See `AddonWrapper.amoListingURL`. */
     public final @Nullable String amoListingUrl;
 
+    /**
+     * Indicates how the extension works with private browsing windows.
+     *
+     * <p>See <a
+     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/incognito">
+     * manifest.json/incognito </a>
+     */
+    public final @Nullable String incognito;
+
     /** Override for testing. */
     protected MetaData() {
       icon = null;
@@ -2014,6 +2023,7 @@ public class WebExtension {
       updateDate = null;
       downloadUrl = null;
       amoListingUrl = null;
+      incognito = null;
     }
 
     /* package */ MetaData(final GeckoBundle bundle) {
@@ -2041,6 +2051,7 @@ public class WebExtension {
       updateDate = bundle.getString("updateDate");
       downloadUrl = bundle.getString("downloadUrl");
       amoListingUrl = bundle.getString("amoListingURL");
+      incognito = bundle.getString("incognito");
 
       final int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
       if (signedState <= SignedStateFlags.LAST) {
