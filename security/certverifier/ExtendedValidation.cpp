@@ -1203,6 +1203,30 @@ static const struct EVInfo kEVInfos[] = {
     "LCBJbmMuMSQwIgYDVQQDDBtUcnVzdEFzaWEgR2xvYmFsIFJvb3QgQ0EgRzQ=",
     "TyNkuI6XY57GU4HBdk7LKnQV1tc=",
   },
+  {
+    // CN=Telekom Security TLS ECC Root 2020,O=Deutsche Telekom Security GmbH,C=DE
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x57, 0x8A, 0xF4, 0xDE, 0xD0, 0x85, 0x3F, 0x4E, 0x59, 0x98, 0xDB,
+      0x4A, 0xEA, 0xF9, 0xCB, 0xEA, 0x8D, 0x94, 0x5F, 0x60, 0xB6, 0x20,
+      0xA3, 0x8D, 0x1A, 0x3C, 0x13, 0xB2, 0xBC, 0x7B, 0xA8, 0xE1 },
+    "MGMxCzAJBgNVBAYTAkRFMScwJQYDVQQKDB5EZXV0c2NoZSBUZWxla29tIFNlY3Vy"
+    "aXR5IEdtYkgxKzApBgNVBAMMIlRlbGVrb20gU2VjdXJpdHkgVExTIEVDQyBSb290"
+    "IDIwMjA=",
+    "NjqWjMlcsljN0AFdxeVXAA==",
+  },
+  {
+    // CN=Telekom Security TLS RSA Root 2023,O=Deutsche Telekom Security GmbH,C=DE
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0xEF, 0xC6, 0x5C, 0xAD, 0xBB, 0x59, 0xAD, 0xB6, 0xEF, 0xE8, 0x4D,
+      0xA2, 0x23, 0x11, 0xB3, 0x56, 0x24, 0xB7, 0x1B, 0x3B, 0x1E, 0xA0,
+      0xDA, 0x8B, 0x66, 0x55, 0x17, 0x4E, 0xC8, 0x97, 0x86, 0x46 },
+    "MGMxCzAJBgNVBAYTAkRFMScwJQYDVQQKDB5EZXV0c2NoZSBUZWxla29tIFNlY3Vy"
+    "aXR5IEdtYkgxKzApBgNVBAMMIlRlbGVrb20gU2VjdXJpdHkgVExTIFJTQSBSb290"
+    "IDIwMjM=",
+    "IZxULej27HF3+k7ow3BXlw==",
+  },
     // clang-format on
 };
 
