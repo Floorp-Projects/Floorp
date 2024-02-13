@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SyncModuleLoader.h"
+#include "ComponentModuleLoader.h"
 
 #include "nsISupportsImpl.h"
 
@@ -20,48 +20,50 @@ namespace mozilla {
 namespace loader {
 
 //////////////////////////////////////////////////////////////
-// SyncScriptLoader
+// ComponentScriptLoader
 //////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS0(SyncScriptLoader)
+NS_IMPL_ISUPPORTS0(ComponentScriptLoader)
 
-nsIURI* SyncScriptLoader::GetBaseURI() const { return nullptr; }
+nsIURI* ComponentScriptLoader::GetBaseURI() const { return nullptr; }
 
-void SyncScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
-                                            nsresult aResult) const {}
+void ComponentScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
+                                                 nsresult aResult) const {}
 
-void SyncScriptLoader::ReportWarningToConsole(
+void ComponentScriptLoader::ReportWarningToConsole(
     ScriptLoadRequest* aRequest, const char* aMessageName,
     const nsTArray<nsString>& aParams) const {}
 
-nsresult SyncScriptLoader::FillCompileOptionsForRequest(
+nsresult ComponentScriptLoader::FillCompileOptionsForRequest(
     JSContext* cx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
     JS::MutableHandle<JSScript*> aIntroductionScript) {
   return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////
-// SyncModuleLoader
+// ComponentModuleLoader
 //////////////////////////////////////////////////////////////
 
-NS_IMPL_ADDREF_INHERITED(SyncModuleLoader, JS::loader::ModuleLoaderBase)
-NS_IMPL_RELEASE_INHERITED(SyncModuleLoader, JS::loader::ModuleLoaderBase)
+NS_IMPL_ADDREF_INHERITED(ComponentModuleLoader, JS::loader::ModuleLoaderBase)
+NS_IMPL_RELEASE_INHERITED(ComponentModuleLoader, JS::loader::ModuleLoaderBase)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(SyncModuleLoader,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ComponentModuleLoader,
                                    JS::loader::ModuleLoaderBase, mLoadRequests)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SyncModuleLoader)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ComponentModuleLoader)
 NS_INTERFACE_MAP_END_INHERITING(JS::loader::ModuleLoaderBase)
 
-SyncModuleLoader::SyncModuleLoader(SyncScriptLoader* aScriptLoader,
-                                   nsIGlobalObject* aGlobalObject)
+ComponentModuleLoader::ComponentModuleLoader(
+    ComponentScriptLoader* aScriptLoader, nsIGlobalObject* aGlobalObject)
     : ModuleLoaderBase(aScriptLoader, aGlobalObject) {}
 
-SyncModuleLoader::~SyncModuleLoader() { MOZ_ASSERT(mLoadRequests.isEmpty()); }
+ComponentModuleLoader::~ComponentModuleLoader() {
+  MOZ_ASSERT(mLoadRequests.isEmpty());
+}
 
-already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateStaticImport(
+already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  RefPtr<SyncLoadContext> context = new SyncLoadContext();
+  RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aParent->ReferrerPolicy(), aParent->mFetchOptions,
       dom::SRIMetadata(), aParent->mURI, context, false, /* is top level */
@@ -71,10 +73,10 @@ already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateStaticImport(
   return request.forget();
 }
 
-already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateDynamicImport(
+already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JSString*> aSpecifier, JS::Handle<JSObject*> aPromise) {
-  RefPtr<SyncLoadContext> context = new SyncLoadContext();
+  RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aMaybeActiveScript->ReferrerPolicy(),
       aMaybeActiveScript->GetFetchOptions(), dom::SRIMetadata(),
@@ -88,7 +90,8 @@ already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateDynamicImport(
   return request.forget();
 }
 
-void SyncModuleLoader::OnDynamicImportStarted(ModuleLoadRequest* aRequest) {
+void ComponentModuleLoader::OnDynamicImportStarted(
+    ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsDynamicImport());
   MOZ_ASSERT(!mLoadRequests.Contains(aRequest));
 
@@ -125,12 +128,12 @@ void SyncModuleLoader::OnDynamicImportStarted(ModuleLoadRequest* aRequest) {
   ProcessDynamicImport(aRequest);
 }
 
-bool SyncModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
-                                    nsresult* aRvOut) {
+bool ComponentModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
+                                         nsresult* aRvOut) {
   return mozJSModuleLoader::IsTrustedScheme(aRequest->mURI);
 }
 
-nsresult SyncModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
+nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->HasLoadContext());
 
   aRequest->mBaseURL = aRequest->mURI;
@@ -183,7 +186,7 @@ nsresult SyncModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   }
 
   // Otherwise remember the results in this context so we can report them later.
-  SyncLoadContext* context = aRequest->GetSyncLoadContext();
+  ComponentLoadContext* context = aRequest->GetComponentLoadContext();
   context->mRv = rv;
   if (threwException) {
     context->mExceptionValue.init(cx);
@@ -204,11 +207,11 @@ nsresult SyncModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   return NS_OK;
 }
 
-nsresult SyncModuleLoader::CompileFetchedModule(
+nsresult ComponentModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
   // Compilation already happened in StartFetch. Report the result here.
-  SyncLoadContext* context = aRequest->GetSyncLoadContext();
+  ComponentLoadContext* context = aRequest->GetComponentLoadContext();
   nsresult rv = context->mRv;
   if (context->mScript) {
     aModuleOut.set(JS::GetModuleObject(context->mScript));
@@ -225,7 +228,7 @@ nsresult SyncModuleLoader::CompileFetchedModule(
   return rv;
 }
 
-void SyncModuleLoader::MaybeReportLoadError(JSContext* aCx) {
+void ComponentModuleLoader::MaybeReportLoadError(JSContext* aCx) {
   if (JS_IsExceptionPending(aCx)) {
     // Do not override.
     return;
@@ -239,9 +242,9 @@ void SyncModuleLoader::MaybeReportLoadError(JSContext* aCx) {
   mLoadException = JS::UndefinedValue();
 }
 
-void SyncModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
+void ComponentModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
 
-nsresult SyncModuleLoader::ProcessRequests() {
+nsresult ComponentModuleLoader::ProcessRequests() {
   // Work list to drive module loader since this is all synchronous.
   while (!mLoadRequests.isEmpty()) {
     RefPtr<ScriptLoadRequest> request = mLoadRequests.StealFirst();

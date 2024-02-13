@@ -7,21 +7,16 @@
 #ifndef mozJSModuleLoader_h
 #define mozJSModuleLoader_h
 
-#include "SyncModuleLoader.h"
-#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
+#include "ComponentModuleLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FileLocation.h"
-#include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/RefPtr.h"  // RefPtr, mozilla::StaticRefPtr
 #include "mozilla/StaticPtr.h"
-#include "mozilla/ThreadLocal.h"  // MOZ_THREAD_LOCAL
 #include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
 #include "nsClassHashtable.h"
 #include "jsapi.h"
-#include "js/CompileOptions.h"
 #include "js/experimental/JSStencil.h"
 #include "SkipCheckForBrokenURLOrZeroSized.h"
 
@@ -41,12 +36,6 @@ class ModuleLoadRequest;
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
 #  define STARTUP_RECORDER_ENABLED
 #endif
-
-namespace mozilla::loader {
-
-class NonSharedGlobalSyncModuleLoaderScope;
-
-}  // namespace mozilla::loader
 
 class mozJSModuleLoader final : public nsIMemoryReporter {
  public:
@@ -78,13 +67,6 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
   JSObject* GetSharedGlobal(JSContext* aCx);
 
- private:
-  void InitSyncModuleLoaderForGlobal(nsIGlobalObject* aGlobal);
-  void DisconnectSyncModuleLoaderFromGlobal();
-
-  friend class mozilla::loader::NonSharedGlobalSyncModuleLoaderScope;
-
- public:
   static mozJSModuleLoader* GetDevToolsLoader() { return sDevToolsLoader; }
   static mozJSModuleLoader* GetOrCreateDevToolsLoader();
 
@@ -135,26 +117,13 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
   bool IsDevToolsLoader() const { return this == sDevToolsLoader; }
 
-  static bool IsSharedSystemGlobal(nsIGlobalObject* aGlobal);
-  static bool IsDevToolsLoaderGlobal(nsIGlobalObject* aGlobal);
-
-  // Public methods for use from SyncModuleLoader.
+  // Public methods for use from ComponentModuleLoader.
   static bool IsTrustedScheme(nsIURI* aURI);
   static nsresult LoadSingleModuleScript(
-      mozilla::loader::SyncModuleLoader* aModuleLoader, JSContext* aCx,
+      mozilla::loader::ComponentModuleLoader* aModuleLoader, JSContext* aCx,
       JS::loader::ModuleLoadRequest* aRequest,
       JS::MutableHandleScript aScriptOut);
 
- private:
-  static nsresult ReadScriptOnMainThread(JSContext* aCx,
-                                         const nsCString& aLocation,
-                                         nsCString& aData);
-  static nsresult LoadSingleModuleScriptOnWorker(
-      mozilla::loader::SyncModuleLoader* aModuleLoader, JSContext* aCx,
-      JS::loader::ModuleLoadRequest* aRequest,
-      JS::MutableHandleScript aScriptOut);
-
- public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   bool DefineJSServices(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
@@ -191,8 +160,6 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
                              JS::MutableHandleScript aTableScript,
                              char** aLocation, bool aCatchException,
                              JS::MutableHandleValue aException);
-
-  static void SetModuleOptions(JS::CompileOptions& aOptions);
 
   // Get the script for a given location, either from a cached stencil or by
   // compiling it from source.
@@ -291,60 +258,7 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   JS::PersistentRooted<JSObject*> mLoaderGlobal;
   JS::PersistentRooted<JSObject*> mServicesObj;
 
-  RefPtr<mozilla::loader::SyncModuleLoader> mModuleLoader;
+  RefPtr<mozilla::loader::ComponentModuleLoader> mModuleLoader;
 };
 
-namespace mozilla::loader {
-
-// Automatically allocate and initialize a sync module loader for given
-// non-shared global, and override the module loader for the global with sync
-// module loader.
-//
-// This is not re-entrant, and the consumer must check IsActive method before
-// allocating this on the stack.
-//
-// The consumer should ensure the target global's module loader has no
-// ongoing fetching modules (ModuleLoaderBase::HasFetchingModules).
-// If there's any fetching modules, the consumer should wait for them before
-// allocating this class on the stack.
-//
-// The consumer should also verify that the target global has module loader,
-// as a part of the above step.
-//
-// The loader returned by ActiveLoader can be reused only when
-// ActiveLoader's global matches the global the consumer wants to use.
-class MOZ_STACK_CLASS NonSharedGlobalSyncModuleLoaderScope {
- public:
-  NonSharedGlobalSyncModuleLoaderScope(JSContext* aCx,
-                                       nsIGlobalObject* aGlobal);
-  ~NonSharedGlobalSyncModuleLoaderScope();
-
-  // After successfully importing a module graph, move all imported modules to
-  // the target global's module loader.
-  void Finish();
-
-  // Returns true if another instance of NonSharedGlobalSyncModuleLoaderScope
-  // is on stack.
-  static bool IsActive();
-
-  static mozJSModuleLoader* ActiveLoader();
-
-  static void InitStatics();
-
- private:
-  RefPtr<mozJSModuleLoader> mLoader;
-
-  // Reference to thread-local module loader on the stack.
-  // This is used by another sync module load during a sync module load is
-  // ongoing.
-  static MOZ_THREAD_LOCAL(mozJSModuleLoader*) sTlsActiveLoader;
-
-  // The module loader of the target global.
-  RefPtr<JS::loader::ModuleLoaderBase> mAsyncModuleLoader;
-
-  mozilla::Maybe<JS::loader::AutoOverrideModuleLoader> mMaybeOverride;
-};
-
-}  // namespace mozilla::loader
-
-#endif  // mozJSModuleLoader_h
+#endif
