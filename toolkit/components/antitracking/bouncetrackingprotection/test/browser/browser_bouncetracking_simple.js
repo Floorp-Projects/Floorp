@@ -25,12 +25,12 @@ add_task(async function test_server_bounce_simple() {
 // Tests a chained redirect consisting of a server and a client redirect.
 add_task(async function test_bounce_chain() {
   Assert.equal(
-    bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}).length,
+    bounceTrackingProtection.bounceTrackerCandidateHosts.length,
     0,
     "No bounce tracker hosts initially."
   );
   Assert.equal(
-    bounceTrackingProtection.testGetUserActivationHosts({}).length,
+    bounceTrackingProtection.userActivationHosts.length,
     0,
     "No user activation hosts initially."
   );
@@ -73,17 +73,17 @@ add_task(async function test_bounce_chain() {
       await promiseRecordBounces;
 
       Assert.deepEqual(
-        bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}).sort(),
+        bounceTrackingProtection.bounceTrackerCandidateHosts.sort(),
         [SITE_TRACKER_B, SITE_TRACKER].sort(),
         `Identified all bounce trackers in the redirect chain.`
       );
       Assert.deepEqual(
-        bounceTrackingProtection.testGetUserActivationHosts({}).sort(),
+        bounceTrackingProtection.userActivationHosts.sort(),
         [SITE_A, SITE_B].sort(),
         "Should only have user activation for sites where we clicked links."
       );
 
-      bounceTrackingProtection.clearAll();
+      bounceTrackingProtection.reset();
     }
   );
 });

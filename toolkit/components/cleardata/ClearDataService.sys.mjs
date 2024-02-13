@@ -31,19 +31,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/browser/identity-credential-storage-service;1",
   "nsIIdentityCredentialStorageService"
 );
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "bounceTrackingProtection",
-  "@mozilla.org/bounce-tracking-protection;1",
-  "nsIBounceTrackingProtection"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isBounceTrackingProtectionEnabled",
-  "privacy.bounceTrackingProtection.enabled",
-  false
-);
 
 /**
  * Test if host, OriginAttributes or principal belong to a baseDomain. Also
@@ -93,36 +80,6 @@ function hasBaseDomain(
   return ChromeUtils.originAttributesMatchPattern(originAttributes, {
     partitionKeyPattern: { baseDomain: aBaseDomain },
   });
-}
-
-/**
- * Compute the base domain from a given host. This is a wrapper around
- * Services.eTLD.getBaseDomainFromHost which also supports IP addresses and
- * hosts such as "localhost" which are considered valid base domains for
- * principals and data storage.
- * @param {string} aDomainOrHost - Domain or host to be converted. May already
- * be a valid base domain.
- * @returns {string} Base domain of the given host. Returns aDomainOrHost if
- * already a base domain.
- */
-function getBaseDomainWithFallback(aDomainOrHost) {
-  let result = aDomainOrHost;
-  try {
-    result = Services.eTLD.getBaseDomainFromHost(aDomainOrHost);
-  } catch (e) {
-    if (
-      e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
-      e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
-    ) {
-      // For these 2 expected errors, just take the host as the result.
-      // - NS_ERROR_HOST_IS_IP_ADDRESS: the host is in ipv4/ipv6.
-      // - NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: not enough domain parts to extract.
-      result = aDomainOrHost;
-    } else {
-      throw e;
-    }
-  }
-  return result;
 }
 
 // Here is a list of methods cleaners may implement. These methods must return a
@@ -1690,57 +1647,6 @@ const IdentityCredentialStorageCleaner = {
   },
 };
 
-const BounceTrackingProtectionStateCleaner = {
-  async deleteAll() {
-    if (!lazy.isBounceTrackingProtectionEnabled) {
-      return;
-    }
-    await lazy.bounceTrackingProtection.clearAll();
-  },
-
-  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
-    if (!lazy.isBounceTrackingProtectionEnabled) {
-      return;
-    }
-    let { baseDomain, originAttributes } = aPrincipal;
-    await lazy.bounceTrackingProtection.clearBySiteHostAndOA(
-      baseDomain,
-      originAttributes
-    );
-  },
-
-  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
-    if (!lazy.isBounceTrackingProtectionEnabled) {
-      return;
-    }
-    await lazy.bounceTrackingProtection.clearBySiteHost(aBaseDomain);
-  },
-
-  async deleteByRange(aFrom, aTo) {
-    if (!lazy.isBounceTrackingProtectionEnabled) {
-      return;
-    }
-    await lazy.bounceTrackingProtection.clearByTimeRange(aFrom, aTo);
-  },
-
-  async deleteByHost(aHost, aOriginAttributes) {
-    if (!lazy.isBounceTrackingProtectionEnabled) {
-      return;
-    }
-    let baseDomain = getBaseDomainWithFallback(aHost);
-    await lazy.bounceTrackingProtection.clearBySiteHost(baseDomain);
-  },
-
-  async deleteByOriginAttributes(aOriginAttributesPatternString) {
-    if (!lazy.isBounceTrackingProtectionEnabled) {
-      return;
-    }
-    await lazy.bounceTrackingProtection.clearByOriginAttributesPattern(
-      aOriginAttributesPatternString
-    );
-  },
-};
-
 // Here the map of Flags-Cleaners.
 const FLAGS_MAP = [
   {
@@ -1870,11 +1776,6 @@ const FLAGS_MAP = [
     flag: Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE,
     cleaners: [FingerprintingProtectionStateCleaner],
   },
-
-  {
-    flag: Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE,
-    cleaners: [BounceTrackingProtectionStateCleaner],
-  },
 ];
 
 export function ClearDataService() {
@@ -1932,6 +1833,36 @@ ClearDataService.prototype = Object.freeze({
     });
   },
 
+  /**
+   * Compute the base domain from a given host. This is a wrapper around
+   * Services.eTLD.getBaseDomainFromHost which also supports IP addresses and
+   * hosts such as "localhost" which are considered valid base domains for
+   * principals and data storage.
+   * @param {string} aDomainOrHost - Domain or host to be converted. May already
+   * be a valid base domain.
+   * @returns {string} Base domain of the given host. Returns aDomainOrHost if
+   * already a base domain.
+   */
+  _getBaseDomainWithFallback(aDomainOrHost) {
+    let result = aDomainOrHost;
+    try {
+      result = Services.eTLD.getBaseDomainFromHost(aDomainOrHost);
+    } catch (e) {
+      if (
+        e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
+        e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+      ) {
+        // For these 2 expected errors, just take the host as the result.
+        // - NS_ERROR_HOST_IS_IP_ADDRESS: the host is in ipv4/ipv6.
+        // - NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS: not enough domain parts to extract.
+        result = aDomainOrHost;
+      } else {
+        throw e;
+      }
+    }
+    return result;
+  },
+
   deleteDataFromBaseDomain(aDomainOrHost, aIsUserRequest, aFlags, aCallback) {
     if (!aDomainOrHost || !aCallback) {
       return Cr.NS_ERROR_INVALID_ARG;
@@ -1940,7 +1871,7 @@ ClearDataService.prototype = Object.freeze({
     let baseDomain;
 
     try {
-      baseDomain = getBaseDomainWithFallback(aDomainOrHost);
+      baseDomain = this._getBaseDomainWithFallback(aDomainOrHost);
     } catch (e) {
       return Cr.NS_ERROR_FAILURE;
     }

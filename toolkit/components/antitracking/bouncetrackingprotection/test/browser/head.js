@@ -145,12 +145,6 @@ async function waitForRecordBounces(browser) {
  * identified as a bounce tracker (candidate).
  * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to have
  * its storage purged.
- * @param {OriginAttributes} [options.originAttributes={}] - Origin attributes
- * to use for the test. This determines whether the test is run in normal
- * browsing, a private window or a container tab. By default the test is run
- * in normal browsing.
- * @param {function} [options.postBounceCallback] - Optional function to run after the
- * bounce has completed.
  */
 async function runTestBounce(options = {}) {
   let {
@@ -158,118 +152,68 @@ async function runTestBounce(options = {}) {
     setState = null,
     expectCandidate = true,
     expectPurge = true,
-    originAttributes = {},
-    postBounceCallback = () => {},
   } = options;
   info(`runTestBounce ${JSON.stringify(options)}`);
 
   Assert.equal(
-    bounceTrackingProtection.testGetBounceTrackerCandidateHosts(
-      originAttributes
-    ).length,
+    bounceTrackingProtection.bounceTrackerCandidateHosts.length,
     0,
     "No bounce tracker hosts initially."
   );
   Assert.equal(
-    bounceTrackingProtection.testGetUserActivationHosts(originAttributes)
-      .length,
+    bounceTrackingProtection.userActivationHosts.length,
     0,
     "No user activation hosts initially."
   );
 
-  let win = window;
-  let { privateBrowsingId, userContextId } = originAttributes;
-  let usePrivateWindow =
-    privateBrowsingId != null &&
-    privateBrowsingId !=
-      Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID;
-  if (userContextId != null && userContextId > 0 && usePrivateWindow) {
-    throw new Error("userContextId is not supported in private windows");
-  }
+  await BrowserTestUtils.withNewTab(
+    getBaseUrl(ORIGIN_A) + "file_start.html",
+    async browser => {
+      let promiseRecordBounces = waitForRecordBounces(browser);
 
-  if (usePrivateWindow) {
-    win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-  }
+      // The final destination after the bounce.
+      let targetURL = new URL(getBaseUrl(ORIGIN_B) + "file_start.html");
 
-  let tab = win.gBrowser.addTab(getBaseUrl(ORIGIN_A) + "file_start.html", {
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    userContextId,
-  });
-  win.gBrowser.selectedTab = tab;
+      // Navigate through the bounce chain.
+      await navigateLinkClick(
+        browser,
+        getBounceURL({ bounceType, targetURL, setState })
+      );
 
-  let browser = tab.linkedBrowser;
-  await BrowserTestUtils.browserLoaded(browser);
+      // Wait for the final site to be loaded which complete the BounceTrackingRecord.
+      await BrowserTestUtils.browserLoaded(browser, false, targetURL);
 
-  let promiseRecordBounces = waitForRecordBounces(browser);
+      // Navigate again with user gesture which triggers
+      // BounceTrackingProtection::RecordStatefulBounces. We could rely on the
+      // timeout (mClientBounceDetectionTimeout) here but that can cause races
+      // in debug where the load is quite slow.
+      await navigateLinkClick(
+        browser,
+        new URL(getBaseUrl(ORIGIN_C) + "file_start.html")
+      );
 
-  // The final destination after the bounce.
-  let targetURL = new URL(getBaseUrl(ORIGIN_B) + "file_start.html");
+      await promiseRecordBounces;
 
-  // Navigate through the bounce chain.
-  await navigateLinkClick(
-    browser,
-    getBounceURL({ bounceType, targetURL, setState })
+      Assert.deepEqual(
+        bounceTrackingProtection.bounceTrackerCandidateHosts,
+        expectCandidate ? [SITE_TRACKER] : [],
+        `Should ${
+          expectCandidate ? "" : "not "
+        }have identified ${SITE_TRACKER} as a bounce tracker.`
+      );
+      Assert.deepEqual(
+        bounceTrackingProtection.userActivationHosts.sort(),
+        [SITE_A, SITE_B].sort(),
+        "Should only have user activation for sites where we clicked links."
+      );
+
+      Assert.deepEqual(
+        await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+        expectPurge ? [SITE_TRACKER] : [],
+        `Should ${expectPurge ? "" : "not "}purge state for ${SITE_TRACKER}.`
+      );
+
+      bounceTrackingProtection.reset();
+    }
   );
-
-  // Wait for the final site to be loaded which complete the BounceTrackingRecord.
-  await BrowserTestUtils.browserLoaded(browser, false, targetURL);
-
-  // Navigate again with user gesture which triggers
-  // BounceTrackingProtection::RecordStatefulBounces. We could rely on the
-  // timeout (mClientBounceDetectionTimeout) here but that can cause races
-  // in debug where the load is quite slow.
-  await navigateLinkClick(
-    browser,
-    new URL(getBaseUrl(ORIGIN_C) + "file_start.html")
-  );
-
-  await promiseRecordBounces;
-
-  Assert.deepEqual(
-    bounceTrackingProtection.testGetBounceTrackerCandidateHosts(
-      originAttributes
-    ),
-    expectCandidate ? [SITE_TRACKER] : [],
-    `Should ${
-      expectCandidate ? "" : "not "
-    }have identified ${SITE_TRACKER} as a bounce tracker.`
-  );
-  Assert.deepEqual(
-    bounceTrackingProtection
-      .testGetUserActivationHosts(originAttributes)
-      .sort(),
-    [SITE_A, SITE_B].sort(),
-    "Should only have user activation for sites where we clicked links."
-  );
-
-  // If the caller specified a function to run after the bounce, run it now.
-  await postBounceCallback();
-
-  Assert.deepEqual(
-    await bounceTrackingProtection.testRunPurgeBounceTrackers(),
-    expectPurge ? [SITE_TRACKER] : [],
-    `Should ${expectPurge ? "" : "not "}purge state for ${SITE_TRACKER}.`
-  );
-
-  // Clean up
-  BrowserTestUtils.removeTab(tab);
-  if (usePrivateWindow) {
-    await BrowserTestUtils.closeWindow(win);
-
-    info(
-      "Closing the last PBM window should trigger a purge of all PBM state."
-    );
-    Assert.ok(
-      !bounceTrackingProtection.testGetBounceTrackerCandidateHosts(
-        originAttributes
-      ).length,
-      "No bounce tracker hosts after closing private window."
-    );
-    Assert.ok(
-      !bounceTrackingProtection.testGetUserActivationHosts(originAttributes)
-        .length,
-      "No user activation hosts after closing private window."
-    );
-  }
-  bounceTrackingProtection.clearAll();
 }
