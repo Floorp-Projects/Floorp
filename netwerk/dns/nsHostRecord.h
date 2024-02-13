@@ -179,6 +179,9 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
   virtual void ResolveComplete() = 0;
 
+  // true if pending and on the queue (not yet given to getaddrinfo())
+  bool onQueue() { return LoadNative() && isInList(); }
+
   // When the record began being valid. Used mainly for bookkeeping.
   mozilla::TimeStamp mValidStart;
 
@@ -320,9 +323,6 @@ class AddrHostRecord final : public nsHostRecord {
   void NotifyRetryingTrr();
 
   static DnsPriority GetPriority(nsIDNSService::DNSFlags aFlags);
-
-  // true if pending and on the queue (not yet given to getaddrinfo())
-  bool onQueue() { return LoadNative() && isInList(); }
 
   virtual void Reset() override {
     nsHostRecord::Reset();

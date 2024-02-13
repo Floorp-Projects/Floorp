@@ -620,10 +620,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
 
       rec->mCallbacks.insertBack(callback);
 
-      // Only A/AAAA records are place in a queue. The queues are for
-      // the native resolver, therefore by-type request are never put
-      // into a queue.
-      if (addrRec && addrRec->onQueue()) {
+      if (rec && rec->onQueue()) {
         Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                               METHOD_NETWORK_SHARED);
 
@@ -1259,14 +1256,12 @@ bool nsHostResolver::GetHostToLookup(nsHostRecord** result) {
 
     if (mActiveAnyThreadCount < MaxResolverThreadsAnyPriority()) {
       rec = mQueue.Dequeue(false, lock);
-      RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
-      if (addrRec) {
-        MOZ_ASSERT(IsMediumPriority(addrRec->flags) ||
-                   IsLowPriority(addrRec->flags));
+      if (rec) {
+        MOZ_ASSERT(IsMediumPriority(rec->flags) || IsLowPriority(rec->flags));
         mActiveAnyThreadCount++;
-        addrRec->StoreUsingAnyThread(true);
-        SET_GET_TTL(addrRec, true);
-        addrRec.forget(result);
+        rec->StoreUsingAnyThread(true);
+        SET_GET_TTL(rec, true);
+        rec.forget(result);
         return true;
       }
     }
