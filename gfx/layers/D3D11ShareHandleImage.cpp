@@ -329,7 +329,8 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
       mUsableSurfaceFormat, aColorSpace, aColorRange, aSize, allocFlags,
       mDevice, layers::TextureFlags::DEFAULT);
 
-  RefPtr<TextureClient> textureClient = CreateOrRecycle(helper);
+  RefPtr<TextureClient> textureClient =
+      CreateOrRecycle(helper).unwrapOr(nullptr);
   return textureClient.forget();
 }
 

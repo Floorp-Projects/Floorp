@@ -48,7 +48,7 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   {
     DXGIYCbCrTextureAllocationHelper helper(aData, TextureFlags::DEFAULT,
                                             device);
-    mTextureClient = allocator->CreateOrRecycle(helper);
+    mTextureClient = allocator->CreateOrRecycle(helper).unwrapOr(nullptr);
   }
 
   if (!mTextureClient) {
