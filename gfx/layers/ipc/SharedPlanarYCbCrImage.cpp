@@ -124,7 +124,12 @@ nsresult SharedPlanarYCbCrImage::CreateEmptyBuffer(
       mCompositable ? mCompositable->GetTextureFlags() : TextureFlags::DEFAULT;
   {
     YCbCrTextureClientAllocationHelper helper(aData, aYSize, aCbCrSize, flags);
-    mTextureClient = RecycleAllocator()->CreateOrRecycle(helper);
+    Result<already_AddRefed<TextureClient>, nsresult> result =
+        RecycleAllocator()->CreateOrRecycle(helper);
+    if (result.isErr()) {
+      return Err(result.unwrapErr());
+    }
+    mTextureClient = result.unwrap();
   }
 
   if (!mTextureClient) {

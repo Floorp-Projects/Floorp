@@ -119,7 +119,7 @@ TextureClient* IMFYCbCrImage::GetD3D11TextureClient(
   {
     DXGIYCbCrTextureAllocationHelper helper(mData, TextureFlags::DEFAULT,
                                             device);
-    mTextureClient = mAllocator->CreateOrRecycle(helper);
+    mTextureClient = mAllocator->CreateOrRecycle(helper).unwrapOr(nullptr);
   }
 
   if (!mTextureClient) {

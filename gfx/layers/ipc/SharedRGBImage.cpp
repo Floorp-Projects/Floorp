@@ -90,7 +90,8 @@ bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   {
     TextureClientForRawBufferAccessAllocationHelper helper(aFormat, aSize,
                                                            flags);
-    mTextureClient = RecycleAllocator()->CreateOrRecycle(helper);
+    mTextureClient =
+        RecycleAllocator()->CreateOrRecycle(helper).unwrapOr(nullptr);
   }
 
   return !!mTextureClient;
