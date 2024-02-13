@@ -4,6 +4,8 @@ support-files = ""
 
 ["test_basic.js"]
 
+["test_console_shouldLog.js"]
+
 ["test_failing_console_listener.js"]
 
 ["test_formatting.js"]
