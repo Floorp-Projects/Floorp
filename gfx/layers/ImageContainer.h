@@ -817,9 +817,6 @@ class PlanarYCbCrImage : public Image {
                                  const gfx::IntSize& aCbCrSize) {
     return false;
   }
-  bool CreateEmptyBuffer(const Data& aData) {
-    return CreateEmptyBuffer(aData, aData.YDataSize(), aData.CbCrDataSize());
-  }
 
   /**
    * Grab the original YUV data. This is optional.
