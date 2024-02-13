@@ -226,6 +226,7 @@ object AppAndSystemHelper {
      * @return Boolean value that helps us know if the current activity supports custom tabs or PWAs.
      */
     fun isExternalAppBrowserActivityInCurrentTask(): Boolean {
+        Log.i(TAG, "Trying to verify that the latest activity of the application is used for custom tabs or PWAs")
         val activityManager = TestHelper.appContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
 
         mDevice.waitForIdle(TestAssetHelper.waitingTimeShort)

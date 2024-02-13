@@ -18,9 +18,7 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 class PwaRobot {
     fun verifyCustomTabToolbarIsNotDisplayed() = assertUIObjectExists(itemWithResId("$packageName:id/toolbar"), exists = false)
     fun verifyPwaActivityInCurrentTask() {
-        Log.i(TAG, "Trying to verify that the latest activity of the application is used for custom tabs or PWAs")
-        assertTrue(isExternalAppBrowserActivityInCurrentTask())
-        Log.i(TAG, "Verified that the latest activity of the application is used for custom tabs or PWAs")
+        assertTrue("$TAG: The latest activity of the application is not used for custom tabs or PWAs", isExternalAppBrowserActivityInCurrentTask())
     }
 
     class Transition
