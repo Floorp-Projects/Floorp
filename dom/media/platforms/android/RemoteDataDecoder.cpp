@@ -414,10 +414,14 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
 
     if (ok && (size > 0 || presentationTimeUs >= 0)) {
       // On certain devices SMPTE 432 color primaries are rendered incorrectly,
-      // so we force BT709 to be used instead. The magic number 10 comes from
+      // so we force BT709 to be used instead.
+      // Color space 10 comes from the video in bug 1866020 and corresponds to
       // libstagefright's kColorStandardDCI_P3.
+      // 65800 comes from the video in bug 1879720 and is vendor-specific.
       static bool isSmpte432Buggy = areSmpte432ColorPrimariesBuggy();
-      bool forceBT709ColorSpace = isSmpte432Buggy && mColorSpace == Some(10);
+      bool forceBT709ColorSpace =
+          isSmpte432Buggy &&
+          (mColorSpace == Some(10) || mColorSpace == Some(65800));
 
       RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
           mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
