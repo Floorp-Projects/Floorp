@@ -838,9 +838,8 @@ pub struct RenderPassTimestampWrites<'a> {
 
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
-    encoder_id: id::CommandEncoderId,
     desc: &RenderPassDescriptor,
-) -> *mut wgc::command::RenderPass {
+) -> *mut crate::command::RecordedRenderPass {
     let &RenderPassDescriptor {
         label,
         color_attachments,
@@ -873,30 +872,27 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
         .iter()
         .map(|format| Some(format.clone()))
         .collect();
-    let pass = wgc::command::RenderPass::new(
-        encoder_id,
-        &wgc::command::RenderPassDescriptor {
-            label,
-            color_attachments: Cow::Owned(color_attachments),
-            depth_stencil_attachment: depth_stencil_attachment.as_ref(),
-            timestamp_writes,
-            occlusion_query_set,
-        },
-    );
+    let pass = crate::command::RecordedRenderPass::new(&wgc::command::RenderPassDescriptor {
+        label,
+        color_attachments: Cow::Owned(color_attachments),
+        depth_stencil_attachment: depth_stencil_attachment.as_ref(),
+        timestamp_writes,
+        occlusion_query_set,
+    });
     Box::into_raw(Box::new(pass))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_render_pass_finish(
-    pass: *mut wgc::command::RenderPass,
+    pass: *mut crate::command::RecordedRenderPass,
     output: &mut ByteBuf,
 ) {
-    let command = Box::from_raw(pass).into_command();
+    let command = Box::from_raw(pass);
     *output = make_byte_buf(&command);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wgpu_render_pass_destroy(pass: *mut wgc::command::RenderPass) {
+pub unsafe extern "C" fn wgpu_render_pass_destroy(pass: *mut crate::command::RecordedRenderPass) {
     let _ = Box::from_raw(pass);
 }
 
