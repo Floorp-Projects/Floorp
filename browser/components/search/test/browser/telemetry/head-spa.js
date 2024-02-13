@@ -115,6 +115,15 @@ class SinglePageAppUtils {
     await waitForIdle();
   }
 
+  static async clickSearchboxAndType(tab, str = "hello world") {
+    await SinglePageAppUtils.clickSearchbox(tab);
+    info(`Type ${str} in searchbox.`);
+    for (let char of str) {
+      await BrowserTestUtils.sendChar(char, tab.linkedBrowser);
+    }
+    await waitForIdle();
+  }
+
   static async clickSuggestion(tab) {
     info("Clicking the first suggestion.");
     let adsPromise = TestUtils.topicObserved(

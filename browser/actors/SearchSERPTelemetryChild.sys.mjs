@@ -833,27 +833,27 @@ class SearchAdImpression {
 
     for (let element of elements) {
       let clickCallback = () => {
+        if (clickAction == "submitted") {
+          documentToSubmitMap.set(document, true);
+        }
         callback({
           type,
           url,
           action: clickAction,
         });
-        if (clickAction == "submitted") {
-          documentToSubmitMap.set(document, true);
-        }
       };
       element.addEventListener("click", clickCallback);
 
       let keydownCallback = event => {
         if (event.key == "Enter") {
+          if (keydownEnterAction == "submitted") {
+            documentToSubmitMap.set(document, true);
+          }
           callback({
             type,
             url,
             action: keydownEnterAction,
           });
-        }
-        if (keydownEnterAction == "submitted") {
-          documentToSubmitMap.set(document, true);
         }
       };
       element.addEventListener("keydown", keydownCallback);

@@ -23,6 +23,152 @@ add_setup(async function () {
   });
 });
 
+add_task(async function test_content_process_type_search_click_suggestion() {
+  resetTelemetry();
+
+  let tab = await SinglePageAppUtils.createTabAndLoadURL();
+  await SinglePageAppUtils.clickSearchboxAndType(tab);
+  await SinglePageAppUtils.clickSuggestion(tab);
+
+  await assertSearchSourcesTelemetry(
+    {},
+    {
+      "browser.search.content.unknown": {
+        "example1:tagged:ff": 2,
+      },
+      "browser.search.withads.unknown": {
+        "example1:tagged": 2,
+      },
+    }
+  );
+
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.SUBMITTED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example1",
+        tagged: "true",
+        partner_code: "ff",
+        source: "follow_on_from_refine_on_incontent_search",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+      },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
+    },
+  ]);
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(
+  async function test_content_process_type_search_click_related_search() {
+    resetTelemetry();
+
+    let tab = await SinglePageAppUtils.createTabAndLoadURL();
+    await SinglePageAppUtils.clickSearchboxAndType(tab);
+    await SinglePageAppUtils.visitRelatedSearch(tab);
+
+    await assertSearchSourcesTelemetry(
+      {},
+      {
+        "browser.search.content.unknown": {
+          "example1:tagged:ff": 2,
+        },
+        "browser.search.withads.unknown": {
+          "example1:tagged": 2,
+        },
+      }
+    );
+
+    assertSERPTelemetry([
+      {
+        impression: {
+          provider: "example1",
+          tagged: "true",
+          partner_code: "ff",
+          source: "unknown",
+          is_shopping_page: "false",
+          is_private: "false",
+          shopping_tab_displayed: "false",
+        },
+        engagements: [
+          {
+            action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+            target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+          },
+          {
+            action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+            target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+          },
+        ],
+        adImpressions: [
+          {
+            component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+            ads_loaded: "2",
+            ads_visible: "2",
+            ads_hidden: "0",
+          },
+        ],
+      },
+      {
+        impression: {
+          provider: "example1",
+          tagged: "true",
+          partner_code: "ff",
+          source: "unknown",
+          is_shopping_page: "false",
+          is_private: "false",
+          shopping_tab_displayed: "false",
+        },
+        adImpressions: [
+          {
+            component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+            ads_loaded: "2",
+            ads_visible: "2",
+            ads_hidden: "0",
+          },
+        ],
+      },
+    ]);
+    await BrowserTestUtils.removeTab(tab);
+  }
+);
+
 add_task(async function test_content_process_engagement() {
   resetTelemetry();
 
