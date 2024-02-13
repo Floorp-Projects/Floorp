@@ -39,3 +39,7 @@ fxa-menu-send-tab-to-device-description = Send a tab instantly to any device you
 
 fxa-menu-sign-out =
     .label = Sign out…
+
+
+fxa-menu-sync-title = Sync
+fxa-menu-sync-description = Access your web anywhere

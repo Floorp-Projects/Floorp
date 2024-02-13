@@ -607,7 +607,7 @@ add_task(async function test_experiment_ui_state_unconfigured() {
   checkFxAAvatar("not_configured");
 
   let expectedLabel = gSync.fluentStrings.formatValueSync(
-    "appmenuitem-moz-accounts-sign-in"
+    "appmenuitem-sign-in-account"
   );
 
   await openMainPanel();
