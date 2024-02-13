@@ -30,7 +30,8 @@ RenderDXGITextureHost::RenderDXGITextureHost(
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
     gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
     gfx::IntSize aSize, bool aHasKeyedMutex, gfx::FenceInfo& aAcquireFenceInfo,
-    Maybe<layers::GpuProcessQueryId>& aGpuProcessQueryId)
+    Maybe<layers::GpuProcessQueryId>& aGpuProcessQueryId,
+    bool aUseCompositorDevice)
     : mHandle(aHandle),
       mGpuProcessTextureId(aGpuProcessTextureId),
       mGpuProcessQueryId(aGpuProcessQueryId),
@@ -44,6 +45,7 @@ RenderDXGITextureHost::RenderDXGITextureHost(
       mSize(aSize),
       mHasKeyedMutex(aHasKeyedMutex),
       mAcquireFenceInfo(aAcquireFenceInfo),
+      mUseCompositorDevice(aUseCompositorDevice),
       mLocked(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   MOZ_ASSERT((mFormat != gfx::SurfaceFormat::NV12 &&
@@ -488,7 +490,7 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
 
 bool RenderDXGITextureHost::SyncObjectNeeded() {
   return mGpuProcessTextureId.isNothing() && !mHasKeyedMutex &&
-         !mAcquireFenceInfo.mFenceHandle;
+         !mAcquireFenceInfo.mFenceHandle && !mUseCompositorDevice;
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
