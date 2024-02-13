@@ -986,6 +986,8 @@ class nsWindow final : public nsBaseWidget {
 
   void EmulateResizeDrag(GdkEventMotion* aEvent);
 
+  void RequestRepaint(LayoutDeviceIntRegion& aRepaintRegion);
+
 #ifdef MOZ_X11
   typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
                 GTK_WIDGET_COMPOSIDED_DISABLED = 1,
