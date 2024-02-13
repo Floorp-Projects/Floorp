@@ -38,7 +38,8 @@ const ClearFlags = [
     Ci.nsIClearDataService.CLEAR_COOKIES |
       Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
       Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
-      Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE,
+      Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
+      Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE,
   ],
   [
     // NETWORK_CACHE
@@ -63,7 +64,8 @@ const ClearFlags = [
       Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
       Ci.nsIClearDataService.CLEAR_REPORTS |
       Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
-      Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE,
+      Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
+      Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE,
   ],
   [
     // AUTH_SESSIONS
