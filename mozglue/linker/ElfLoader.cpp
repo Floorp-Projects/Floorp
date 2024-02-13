@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <dlfcn.h>
+#include <optional>
 #include <unistd.h>
 #include <errno.h>
 #include <algorithm>
@@ -18,6 +19,7 @@
 #include "Logging.h"
 #include "Utils.h"
 #include <inttypes.h>
+#include "mozilla/ScopeExit.h"
 
 // From Utils.h
 mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gPageSize;
@@ -152,8 +154,8 @@ class DlIteratePhdrHelper {
   DlIteratePhdrHelper() {
     int pipefd[2];
     valid_pipe = (pipe(pipefd) == 0);
-    read_fd.reset(pipefd[0]);
-    write_fd.reset(pipefd[1]);
+    read_fd.emplace(pipefd[0]);
+    write_fd.emplace(pipefd[1]);
   }
 
   int fill_and_call(dl_phdr_cb callback, const void* l_addr, const char* l_name,
@@ -161,8 +163,8 @@ class DlIteratePhdrHelper {
 
  private:
   bool valid_pipe;
-  AutoCloseFD read_fd;
-  AutoCloseFD write_fd;
+  std::optional<AutoCloseFD> read_fd;
+  std::optional<AutoCloseFD> write_fd;
 };
 
 // This function is called for each shared library iterated over by
@@ -199,7 +201,7 @@ int DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
     static_assert(sizeof(raw_ehdr) < PIPE_BUF, "PIPE_BUF is too small");
     do {
       // writes are atomic when smaller than PIPE_BUF, per POSIX.1-2008.
-      ret = write(write_fd, l_addr, sizeof(raw_ehdr));
+      ret = write(*write_fd, l_addr, sizeof(raw_ehdr));
     } while (ret == -1 && errno == EINTR);
     if (ret != sizeof(raw_ehdr)) {
       if (ret == -1 && errno == EFAULT) {
@@ -212,7 +214,7 @@ int DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
       do {
         // Per POSIX.1-2008, interrupted reads can return a length smaller
         // than the given one instead of failing with errno EINTR.
-        ret = read(read_fd, raw_ehdr + nbytes, sizeof(raw_ehdr) - nbytes);
+        ret = read(*read_fd, raw_ehdr + nbytes, sizeof(raw_ehdr) - nbytes);
         if (ret > 0) nbytes += ret;
       } while ((nbytes != sizeof(raw_ehdr) && ret > 0) ||
                (ret == -1 && errno == EINTR));
@@ -834,7 +836,10 @@ class EnsureWritable {
     /* The interesting part of the /proc/self/maps format looks like:
      * startAddr-endAddr rwxp */
     int result = 0;
-    AutoCloseFILE f(fopen("/proc/self/maps", "r"));
+    FILE* const f = fopen("/proc/self/maps", "r");
+    const auto cleanup = mozilla::MakeScopeExit([&]() {
+      if (f) fclose(f);
+    });
     while (f) {
       unsigned long long startAddr, endAddr;
       char perms[5];

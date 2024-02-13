@@ -5,6 +5,7 @@
 #ifndef Mappable_h
 #define Mappable_h
 
+#include <optional>
 #include "mozilla/RefCounted.h"
 #include "Utils.h"
 
@@ -48,7 +49,7 @@ class Mappable : public mozilla::RefCounted<Mappable> {
 
  private:
   /* File descriptor */
-  AutoCloseFD fd;
+  std::optional<AutoCloseFD> fd;
 };
 
 #endif /* Mappable_h */
