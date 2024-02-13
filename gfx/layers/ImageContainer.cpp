@@ -849,11 +849,11 @@ gfxImageFormat PlanarYCbCrImage::GetOffscreenFormat() const {
                                                     : mOffscreenFormat;
 }
 
-bool PlanarYCbCrImage::AdoptData(const Data& aData) {
+nsresult PlanarYCbCrImage::AdoptData(const Data& aData) {
   mData = aData;
   mSize = aData.mPictureRect.Size();
   mOrigin = aData.mPictureRect.TopLeft();
-  return true;
+  return NS_OK;
 }
 
 already_AddRefed<gfx::SourceSurface> PlanarYCbCrImage::GetAsSourceSurface() {
