@@ -324,7 +324,7 @@ RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
     return nullptr;
   }
 
-  GdkWindow* gdkWindow = gtk_widget_get_window(sourceWindow->GetGtkWidget());
+  GdkWindow* gdkWindow = sourceWindow->GetToplevelGdkWindow();
   if (!gdkWindow) {
     return nullptr;
   }

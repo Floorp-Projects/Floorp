@@ -2108,8 +2108,10 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   if (!window) {
     return;
   }
-  GdkWindow* gdkWindow =
-      gtk_widget_get_window(GTK_WIDGET(window->GetMozContainer()));
+  GdkWindow* gdkWindow = window->GetGdkWindow();
+  if (!gdkWindow) {
+    return;
+  }
 
   int parentWidth = gdk_window_get_width(gdkWindow);
   int popupWidth = size.width;
@@ -2156,7 +2158,6 @@ bool nsWindow::WaylandPopupFitsToplevelWindow(bool aMove) {
     parent = tmp;
   }
   GdkWindow* toplevelGdkWindow = gtk_widget_get_window(GTK_WIDGET(parent));
-
   if (!toplevelGdkWindow) {
     NS_WARNING("Toplevel widget without GdkWindow?");
     return false;
@@ -3322,7 +3323,7 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
 }
 
 void nsWindow::SetCursor(const Cursor& aCursor) {
-  if (mWidgetCursorLocked) {
+  if (mWidgetCursorLocked || !mGdkWindow) {
     return;
   }
 
@@ -3351,11 +3352,9 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
     }
   });
 
-  gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)),
-                        nonImageCursor);
+  gdk_window_set_cursor(mGdkWindow, nonImageCursor);
   if (imageCursor) {
-    gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)),
-                          imageCursor);
+    gdk_window_set_cursor(mGdkWindow, imageCursor);
   }
 }
 
@@ -5775,6 +5774,9 @@ nsCString nsWindow::GetPopupTypeName() {
 static void GtkWidgetDisableUpdates(GtkWidget* aWidget) {
   // Clear exposure mask - it disabled synthesized events.
   GdkWindow* window = gtk_widget_get_window(aWidget);
+  if (!window) {
+    return;
+  }
   gdk_window_set_events(window, (GdkEventMask)(gdk_window_get_events(window) &
                                                (~GDK_EXPOSURE_MASK)));
 
@@ -7333,13 +7335,15 @@ nsWindow* nsWindow::GetContainerWindow() const {
 
 void nsWindow::SetUrgencyHint(GtkWidget* top_window, bool state) {
   LOG("  nsWindow::SetUrgencyHint widget %p\n", top_window);
-
   if (!top_window) {
     return;
   }
-
+  GdkWindow* window = gtk_widget_get_window(top_window);
+  if (!window) {
+    return;
+  }
   // TODO: Use xdg-activation on Wayland?
-  gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
+  gdk_window_set_urgency_hint(window, state);
 }
 
 void nsWindow::SetDefaultIcon(void) { SetIcon(u"default"_ns); }
@@ -7640,9 +7644,9 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
     return false;
   }
 
-  auto* currentPopup =
+  auto* rollupWindow =
       (GdkWindow*)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!aAlwaysRollup && is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
+  if (!aAlwaysRollup && is_mouse_in_window(rollupWindow, aMouseX, aMouseY)) {
     return false;
   }
   bool retVal = false;
@@ -9685,7 +9689,7 @@ void nsWindow::LockNativePointer() {
   MOZ_ASSERT(pointer);
 
   wl_surface* surface =
-      gdk_wayland_window_get_wl_surface(gtk_widget_get_window(GetGtkWidget()));
+      gdk_wayland_window_get_wl_surface(GetToplevelGdkWindow());
   if (!surface) {
     /* Can be null when the window is hidden.
      * Though it's unlikely that a lock request comes in that case, be
