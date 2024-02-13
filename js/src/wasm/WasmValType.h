@@ -421,6 +421,7 @@ class RefType {
   inline bool isFuncHierarchy() const;
   inline bool isExternHierarchy() const;
   inline bool isAnyHierarchy() const;
+  inline bool isExnHierarchy() const;
   static bool isSubTypeOf(RefType subType, RefType superType);
   static bool castPossible(RefType sourceType, RefType destType);
 

@@ -3988,11 +3988,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
       wasm::RefType type);
   static bool needScratch2ForBranchWasmRefIsSubtypeFunc(wasm::RefType type);
 
-  // Perform a subtype check that `ref` is a subtype of `type`, branching to
+  // Perform a subtype check that `ref` is a subtype of `destType`, branching to
   // `label` depending on `onSuccess`. `type` must be in the `extern` hierarchy.
   void branchWasmRefIsSubtypeExtern(Register ref, wasm::RefType sourceType,
                                     wasm::RefType destType, Label* label,
                                     bool onSuccess);
+
+  // Perform a subtype check that `ref` is a subtype of `destType`, branching to
+  // `label` depending on `onSuccess`. `type` must be in the `exn` hierarchy.
+  void branchWasmRefIsSubtypeExn(Register ref, wasm::RefType sourceType,
+                                 wasm::RefType destType, Label* label,
+                                 bool onSuccess);
 
   // Perform a subtype check that `subSTV` is a subtype of `superSTV`, branching
   // to `label` depending on `onSuccess`. This method is a specialization of the

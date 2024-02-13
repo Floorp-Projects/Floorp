@@ -6420,6 +6420,30 @@ void MacroAssembler::branchWasmRefIsSubtypeExtern(Register ref,
   bind(&fallthrough);
 }
 
+void MacroAssembler::branchWasmRefIsSubtypeExn(Register ref,
+                                               wasm::RefType sourceType,
+                                               wasm::RefType destType,
+                                               Label* label, bool onSuccess) {
+  MOZ_ASSERT(sourceType.isValid());
+  MOZ_ASSERT(destType.isValid());
+  MOZ_ASSERT(sourceType.isExnHierarchy());
+  MOZ_ASSERT(destType.isExnHierarchy());
+
+  Label fallthrough;
+  Label* successLabel = onSuccess ? label : &fallthrough;
+  Label* failLabel = onSuccess ? &fallthrough : label;
+  Label* nullLabel = destType.isNullable() ? successLabel : failLabel;
+
+  // Check for null.
+  if (sourceType.isNullable()) {
+    branchTestPtr(Assembler::Zero, ref, ref, nullLabel);
+  }
+
+  // There are no other possible types except exnref, so succeed!
+  jump(successLabel);
+  bind(&fallthrough);
+}
+
 void MacroAssembler::branchWasmSTVIsSubtype(Register subSTV, Register superSTV,
                                             Register scratch,
                                             uint32_t superDepth, Label* label,

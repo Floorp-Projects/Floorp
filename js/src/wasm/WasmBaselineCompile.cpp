@@ -8372,64 +8372,72 @@ void BaseCompiler::emitRefCastCommon(RefType sourceType, RefType destType) {
 void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
                                       RefType destType, Label* label,
                                       bool onSuccess) {
-  if (destType.isAnyHierarchy()) {
-    RegPtr superSTV;
-    if (MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(destType)) {
-      uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-      superSTV = loadSuperTypeVector(typeIndex);
-    }
-    RegI32 scratch1 =
-        MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(destType)
-            ? needI32()
-            : RegI32::Invalid();
-    RegI32 scratch2 =
-        MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(destType)
-            ? needI32()
-            : RegI32::Invalid();
+  switch (destType.hierarchy()) {
+    case wasm::RefTypeHierarchy::Any: {
+      RegPtr superSTV;
+      if (MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(destType)) {
+        uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
+        superSTV = loadSuperTypeVector(typeIndex);
+      }
+      RegI32 scratch1 =
+          MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(destType)
+              ? needI32()
+              : RegI32::Invalid();
+      RegI32 scratch2 =
+          MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(destType)
+              ? needI32()
+              : RegI32::Invalid();
 
-    masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label, onSuccess,
-                                   superSTV, scratch1, scratch2);
+      masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label,
+                                     onSuccess, superSTV, scratch1, scratch2);
 
-    if (scratch2.isValid()) {
-      freeI32(scratch2);
-    }
-    if (scratch1.isValid()) {
-      freeI32(scratch1);
-    }
-    if (superSTV.isValid()) {
-      freePtr(superSTV);
-    }
-  } else if (destType.isFuncHierarchy()) {
-    RegPtr superSTV;
-    RegI32 scratch1;
-    if (MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-            destType)) {
-      uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-      superSTV = loadSuperTypeVector(typeIndex);
-      scratch1 = needI32();
-    }
-    RegI32 scratch2 =
-        MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(destType)
-            ? needI32()
-            : RegI32::Invalid();
+      if (scratch2.isValid()) {
+        freeI32(scratch2);
+      }
+      if (scratch1.isValid()) {
+        freeI32(scratch1);
+      }
+      if (superSTV.isValid()) {
+        freePtr(superSTV);
+      }
+    } break;
+    case wasm::RefTypeHierarchy::Func: {
+      RegPtr superSTV;
+      RegI32 scratch1;
+      if (MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
+              destType)) {
+        uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
+        superSTV = loadSuperTypeVector(typeIndex);
+        scratch1 = needI32();
+      }
+      RegI32 scratch2 =
+          MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(destType)
+              ? needI32()
+              : RegI32::Invalid();
 
-    masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label, onSuccess,
-                                    superSTV, scratch1, scratch2);
+      masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label,
+                                      onSuccess, superSTV, scratch1, scratch2);
 
-    if (scratch2.isValid()) {
-      freeI32(scratch2);
-    }
-    if (scratch1.isValid()) {
-      freeI32(scratch1);
-    }
-    if (superSTV.isValid()) {
-      freePtr(superSTV);
-    }
-  } else if (destType.isExternHierarchy()) {
-    masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
-                                      onSuccess);
-  } else {
-    MOZ_CRASH("unknown type hierarchy in cast");
+      if (scratch2.isValid()) {
+        freeI32(scratch2);
+      }
+      if (scratch1.isValid()) {
+        freeI32(scratch1);
+      }
+      if (superSTV.isValid()) {
+        freePtr(superSTV);
+      }
+    } break;
+    case wasm::RefTypeHierarchy::Extern: {
+      masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
+                                        onSuccess);
+    } break;
+    case wasm::RefTypeHierarchy::Exn: {
+      masm.branchWasmRefIsSubtypeExn(ref, sourceType, destType, label,
+                                     onSuccess);
+    } break;
+    default:
+      MOZ_CRASH("unknown type hierarchy in cast");
   }
 }
 
