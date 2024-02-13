@@ -96,8 +96,6 @@ class ConsoleInstance final : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT
   void Clear(JSContext* aCx);
 
-  bool ShouldLog(ConsoleLogLevel aLevel);
-
   // For testing only.
   void ReportForServiceWorkerScope(const nsAString& aScope,
                                    const nsAString& aMessage,
@@ -108,12 +106,6 @@ class ConsoleInstance final : public nsISupports, public nsWrapperCache {
  private:
   ~ConsoleInstance();
 
-  void SetLogLevel();
-  static void MaxLogLevelPrefChangedCallback(const char* /* aPrefName */,
-                                             void* /* aClosure */);
-
-  ConsoleLogLevel mMaxLogLevel;
-  nsCString mMaxLogLevelPref;
   RefPtr<Console> mConsole;
 };
 
