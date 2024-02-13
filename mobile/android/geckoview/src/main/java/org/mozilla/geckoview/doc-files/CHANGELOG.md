@@ -20,11 +20,13 @@ exclude: true
 - Added [`GeckoRuntimeSettings#setLargeKeepaliveFactor`][124.3] to increase the keepalive timeout used for a connection ([bug 1591533]({{bugzilla}}1591533)).
 - Added [`PanZoomController.onDragEvent`][124.4] to support drag and drop.
   ([bug 1586471]({{bugzilla}}1586471))
+- Added [`WebExtension.MetaData.incognito`][124.5] property. ([bug 1875229]({{bugzilla}}1875229))
 
 [124.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverMode-int-
 [124.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverUri-java.lang.String-
 [124.3]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLargeKeepaliveFactor-int-
 [124.4]: {{javadoc_uri}}/PanZoomController.html#onDragEvent(android.view.DragEvent)
+[124.5]: {{javadoc_uri}}/WebExtension.MetaData.html#incognito
 
 ## v123
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
@@ -1517,4 +1519,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6ba1de66c7ab46b0ac52910c9fb76f94c2bcc5b9
+[api-version]: ff5a513251f19534bbf4ebe0084909665d00a227
