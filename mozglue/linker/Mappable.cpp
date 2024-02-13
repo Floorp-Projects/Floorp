@@ -15,20 +15,20 @@ Mappable* Mappable::Create(const char* path) {
 
 MemoryRange Mappable::mmap(const void* addr, size_t length, int prot, int flags,
                            off_t offset) {
-  MOZ_ASSERT(fd != -1);
+  MOZ_ASSERT(fd && *fd != -1);
   MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
 
-  return MemoryRange::mmap(const_cast<void*>(addr), length, prot, flags, fd,
+  return MemoryRange::mmap(const_cast<void*>(addr), length, prot, flags, *fd,
                            offset);
 }
 
 void Mappable::finalize() {
   /* Close file ; equivalent to close(fd.forget()) */
-  fd = -1;
+  fd.emplace(-1);
 }
 
 size_t Mappable::GetLength() const {
   struct stat st;
-  return fstat(fd, &st) ? 0 : st.st_size;
+  return fstat(*fd, &st) ? 0 : st.st_size;
 }
