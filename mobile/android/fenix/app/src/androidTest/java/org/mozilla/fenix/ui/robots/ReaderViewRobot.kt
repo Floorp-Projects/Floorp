@@ -25,31 +25,67 @@ import org.mozilla.fenix.helpers.click
 class ReaderViewRobot {
 
     fun verifyAppearanceFontGroup(visible: Boolean = false): ViewInteraction =
-        assertAppearanceFontGroup(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_font_group),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceFontSansSerif(visible: Boolean = false): ViewInteraction =
-        assertAppearanceFontSansSerif(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_font_sans_serif),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceFontSerif(visible: Boolean = false): ViewInteraction =
-        assertAppearanceFontSerif(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_font_serif),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceFontDecrease(visible: Boolean = false): ViewInteraction =
-        assertAppearanceFontDecrease(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_font_size_decrease),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceFontIncrease(visible: Boolean = false): ViewInteraction =
-        assertAppearanceFontIncrease(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_font_size_increase),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceColorGroup(visible: Boolean = false): ViewInteraction =
-        assertAppearanceColorGroup(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_color_scheme_group),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceColorSepia(visible: Boolean = false): ViewInteraction =
-        assertAppearanceColorSepia(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_color_sepia),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceColorDark(visible: Boolean = false): ViewInteraction =
-        assertAppearanceColorDark(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_color_dark),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceColorLight(visible: Boolean = false): ViewInteraction =
-        assertAppearanceColorLight(visible)
+        onView(
+            withId(R.id.mozac_feature_readerview_color_light),
+        ).check(
+            matches(withEffectiveVisibility(visibleOrGone(visible))),
+        )
 
     fun verifyAppearanceFontIsActive(fontType: String) {
         val fontTypeKey: String = "mozac-readerview-fonttype"
@@ -188,69 +224,6 @@ fun readerViewRobot(interact: ReaderViewRobot.() -> Unit): ReaderViewRobot.Trans
     ReaderViewRobot().interact()
     return ReaderViewRobot.Transition()
 }
-
-private fun assertAppearanceFontGroup(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_font_group),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceFontSansSerif(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_font_sans_serif),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceFontSerif(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_font_serif),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceFontDecrease(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_font_size_decrease),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceFontIncrease(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_font_size_increase),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceColorDark(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_color_dark),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceColorLight(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_color_light),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceColorSepia(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_color_sepia),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
-
-private fun assertAppearanceColorGroup(visible: Boolean) =
-    onView(
-        withId(R.id.mozac_feature_readerview_color_scheme_group),
-    ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible))),
-    )
 
 private fun visibleOrGone(visibility: Boolean) =
     if (visibility) ViewMatchers.Visibility.VISIBLE else ViewMatchers.Visibility.GONE
