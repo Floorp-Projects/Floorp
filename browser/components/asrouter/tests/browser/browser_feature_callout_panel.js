@@ -90,6 +90,7 @@ async function testCalloutHiddenIf(
   message = getTestMessage()
 ) {
   const win = await BrowserTestUtils.openNewBrowserWindow();
+  win.focus();
   const doc = win.document;
   const browser = win.gBrowser.selectedBrowser;
   const { featureCallout, showing, closed } = await showFeatureCallout(
@@ -348,6 +349,81 @@ add_task(async function feature_callout_split_dismiss_button() {
 
       submenu.querySelector(`menuitem[value="item1"]`).click();
     },
+    null,
+    message
+  );
+});
+
+add_task(async function feature_callout_tab_order() {
+  let message = getTestMessage();
+  message.content.screens[0].content.secondary_button = {
+    label: { raw: "Dismiss" },
+    action: { dismiss: true },
+  };
+  message.content.screens[0].content.primary_button = {
+    label: { raw: "Advance" },
+    action: { navigate: true },
+  };
+
+  await testCalloutHiddenIf(
+    async (win, calloutContainer) => {
+      // Test that feature callout initially focuses the primary button.
+      let primaryButton = calloutContainer.querySelector(
+        `#${calloutId} .primary`
+      );
+      await BrowserTestUtils.waitForCondition(
+        () => win.document.activeElement === primaryButton,
+        "Primary button should be focused"
+      );
+
+      // Test that pressing Tab loops through the primary button, secondary
+      // button, and dismiss button.
+      let secondaryButton = calloutContainer.querySelector(
+        `#${calloutId} .secondary`
+      );
+      let onFocused2 = BrowserTestUtils.waitForEvent(secondaryButton, "focus");
+      EventUtils.synthesizeKey("KEY_Tab", {}, win);
+      await onFocused2;
+      is(
+        win.document.activeElement,
+        secondaryButton,
+        "Secondary button should be focused"
+      );
+
+      let dismissButton = calloutContainer.querySelector(
+        `#${calloutId} .dismiss-button`
+      );
+      let onFocused3 = BrowserTestUtils.waitForEvent(dismissButton, "focus");
+      EventUtils.synthesizeKey("KEY_Tab", {}, win);
+      await onFocused3;
+      is(
+        win.document.activeElement,
+        dismissButton,
+        "Dismiss button should be focused"
+      );
+
+      let onFocused4 = BrowserTestUtils.waitForEvent(primaryButton, "focus");
+      EventUtils.synthesizeKey("KEY_Tab", {}, win);
+      await onFocused4;
+      is(
+        win.document.activeElement,
+        primaryButton,
+        "Primary button should be focused"
+      );
+
+      // Test that pressing Shift+Tab loops back to the dismiss button.
+      let onFocused5 = BrowserTestUtils.waitForEvent(dismissButton, "focus");
+      EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true }, win);
+      await onFocused5;
+      is(
+        win.document.activeElement,
+        dismissButton,
+        "Dismiss button should be focused"
+      );
+
+      EventUtils.synthesizeKey("VK_SPACE", {}, win);
+    },
+
     null,
     message
   );

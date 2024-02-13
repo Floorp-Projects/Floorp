@@ -525,6 +525,7 @@ export class ProtonScreen extends React.PureComponent {
             />
           ) : null}
           {includeNoodles ? this.renderNoodles() : null}
+          {content.dismiss_button ? this.renderDismissButton() : null}
           <div
             className={`main-content ${hideStepsIndicator ? "no-steps" : ""}`}
             style={{
@@ -605,7 +606,6 @@ export class ProtonScreen extends React.PureComponent {
               ? this.renderStepsIndicator()
               : null}
           </div>
-          {content.dismiss_button ? this.renderDismissButton() : null}
         </div>
         <Localized text={content.info_text}>
           <span className="info-text" />
