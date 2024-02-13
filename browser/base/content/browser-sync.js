@@ -385,8 +385,6 @@ var gSync = {
         "browser/appmenu.ftl",
         "browser/sync.ftl",
         "toolkit/branding/accounts.ftl",
-        // untranslated FTL
-        "preview/appmenu.ftl",
       ],
       true
     ));
@@ -925,7 +923,7 @@ var gSync = {
     syncSetupButtonEl.removeAttribute("hidden");
 
     let headerTitleL10nId = this.PXI_TOOLBAR_ENABLED
-      ? "appmenuitem-moz-accounts-sign-in"
+      ? "appmenuitem-sign-in-account"
       : "appmenuitem-fxa-sign-in";
     let headerDescription;
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {

@@ -303,3 +303,14 @@ appmenu-developer-tools-extensions =
     .label = Extensions for developers
 appmenuitem-report-broken-site =
   .label = Report broken site
+
+## Panel for privacy and security products
+
+appmenuitem-sign-in-account = Sign in to your account
+
+appmenuitem-monitor-title = { -monitor-brand-short-name }
+appmenuitem-monitor-description = Get data breach alerts
+appmenuitem-relay-title = { -relay-brand-short-name }
+appmenuitem-relay-description = Mask your real email and phone
+appmenuitem-vpn-title = { -mozilla-vpn-brand-name }
+appmenuitem-vpn-description = Protect your online activity
