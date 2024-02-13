@@ -7,7 +7,6 @@
 UNIFIED_SOURCES += [
     "AutoMemMap.cpp",
     "ChromeScriptLoader.cpp",
-    "ComponentModuleLoader.cpp",
     "JSMEnvironmentProxy.cpp",
     "ModuleEnvironmentProxy.cpp",
     "mozJSLoaderUtils.cpp",
@@ -15,6 +14,7 @@ UNIFIED_SOURCES += [
     "nsImportModule.cpp",
     "ScriptCacheActors.cpp",
     "ScriptPreloader.cpp",
+    "SyncModuleLoader.cpp",
     "URLPreloader.cpp",
 ]
 
@@ -43,9 +43,9 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.loader += [
     "AutoMemMap.h",
-    "ComponentModuleLoader.h",
     "ScriptCacheActors.h",
     "SkipCheckForBrokenURLOrZeroSized.h",
+    "SyncModuleLoader.h",
 ]
 
 EXTRA_JS_MODULES += [
