@@ -520,10 +520,11 @@ class VideoData : public MediaData {
 
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
-  static bool SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
-                                  const VideoInfo& aInfo,
-                                  const YCbCrBuffer& aBuffer,
-                                  const IntRect& aPicture, bool aCopyData);
+  static MediaResult SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
+                                         const VideoInfo& aInfo,
+                                         const YCbCrBuffer& aBuffer,
+                                         const IntRect& aPicture,
+                                         bool aCopyData);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
