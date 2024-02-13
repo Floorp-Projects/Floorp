@@ -2702,7 +2702,7 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
 #ifdef JS_GC_ZEAL
     if (hasZealMode(ZealMode::YieldBeforeRootMarking)) {
       for (auto kind : AllAllocKinds()) {
-        for (ArenaIter arena(zone, kind); !arena.done(); arena.next()) {
+        for (ArenaIterInGC arena(zone, kind); !arena.done(); arena.next()) {
           arena->checkNoMarkedCells();
         }
       }
