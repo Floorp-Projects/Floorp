@@ -79,6 +79,7 @@ ${work_dir}/python/bin/python3 -m pip install -r ${GECKO_PATH}/build/psutil_requ
 
 case `uname -s` in
     Darwin)
+
         cp /usr/local/opt/openssl/lib/libssl*.dylib ${work_dir}/python/lib/
         cp /usr/local/opt/openssl/lib/libcrypto*.dylib ${work_dir}/python/lib/
         cp ${xz_prefix}/lib/liblzma.dylib ${work_dir}/python/lib/
@@ -99,6 +100,9 @@ case `uname -s` in
         # sanity check
         ${work_dir}/python/bin/python3 -c "import ssl"
         ${work_dir}/python/bin/python3 -c "import lzma"
+
+        # We may not have access to system certificate on OSX
+        ${work_dir}/python/bin/python3 -m pip install certifi==2024.2.2
         ;;
     Linux)
         cp /usr/lib/x86_64-linux-gnu/libffi.so.* ${work_dir}/python/lib/
