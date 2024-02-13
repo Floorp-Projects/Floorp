@@ -131,7 +131,11 @@ function getRawClipboardData(flavor) {
   );
   xferable.init(null);
   xferable.addDataFlavor(flavor);
-  Services.clipboard.getData(xferable, whichClipboard);
+  Services.clipboard.getData(
+    xferable,
+    whichClipboard,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
   let data = {};
   try {
     xferable.getTransferData(flavor, data);

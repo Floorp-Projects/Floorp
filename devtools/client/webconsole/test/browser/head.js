@@ -1838,7 +1838,11 @@ async function getImageSizeFromClipboard() {
   trans.init(null);
   trans.addDataFlavor(flavor);
 
-  clip.getData(trans, clipid.kGlobalClipboard);
+  clip.getData(
+    trans,
+    clipid.kGlobalClipboard,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
   const data = {};
   trans.getTransferData(flavor, data);
 

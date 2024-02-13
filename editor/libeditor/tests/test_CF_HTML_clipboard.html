@@ -52,7 +52,7 @@ function copyCF_HTML(cfhtml, success, failure) {
                 createInstance(Ci.nsITransferable);
     trans.init(getLoadContext());
     trans.addDataFlavor(CF_HTML);
-    cb.getData(trans, cb.kGlobalClipboard);
+    cb.getData(trans, cb.kGlobalClipboard, SpecialPowers.wrap(window).browsingContext.currentWindowContext);
     var data = SpecialPowers.createBlankObject();
     try {
       trans.getTransferData(CF_HTML, data);

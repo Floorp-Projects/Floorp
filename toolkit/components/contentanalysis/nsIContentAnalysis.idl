@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
 webidl WindowGlobalParent;
 
 [scriptable, uuid(06e6a60f-3a2b-41fa-a63b-fea7a7f71649)]
@@ -132,7 +133,7 @@ interface nsIContentAnalysisRequest : nsISupports
 
   // The URL containing the file download/upload or to which web content is
   // being uploaded.
-  readonly attribute AString url;
+  readonly attribute nsIURI url;
 
   // Sha256 digest of file. Callers may pass in an empty string to have the
   // content analysis code calculate this.
@@ -172,7 +173,7 @@ interface nsIContentAnalysis : nsISupports
    * True if content analysis should be consulted. Must only be accessed from
    * the parent process's main thread.
    */
-  readonly attribute bool isActive;
+  readonly attribute boolean isActive;
 
   /**
    * True if content analysis might be active, and False if content analysis

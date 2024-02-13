@@ -31,7 +31,11 @@ function getTransferableFromClipboard(asHTML) {
   } else {
     trans.addDataFlavor("text/plain");
   }
-  Services.clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+  Services.clipboard.getData(
+    trans,
+    Ci.nsIClipboard.kGlobalClipboard,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
   return trans;
 }
 
