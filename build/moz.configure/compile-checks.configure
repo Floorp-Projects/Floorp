@@ -401,7 +401,12 @@ def asm_flags():
 @template
 def check_and_add_asm_flag(flag, when=None, check=True):
     return check_and_add_flags(
-        flag, asm_flags, [flag], when=when, check=check, mode="assemble",
+        flag,
+        asm_flags,
+        [flag],
+        when=when,
+        check=check,
+        mode="assemble",
     )
 
 
@@ -422,7 +427,12 @@ def linker_flags():
 @template
 def check_and_add_linker_flag(flag, compiler=None, when=None, check=True):
     return check_and_add_flags(
-        flag, linker_flags, [flag], when=when, check=check, mode="link",
+        flag,
+        linker_flags,
+        [flag],
+        when=when,
+        check=check,
+        mode="link",
     )
 
 
