@@ -447,8 +447,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             var maxDurationReached = false
             val delay = FxNimbus.features.splashScreen.value().maximumDurationMs.toLong()
             splashScreen.setKeepOnScreenCondition {
-                val dataFetched = components.settings.utmParamsKnown &&
-                    components.settings.nimbusExperimentsFetched
+                val dataFetched = components.settings.nimbusExperimentsFetched
+
                 val keepOnScreen = !maxDurationReached && !dataFetched
                 if (!keepOnScreen) {
                     SplashScreen.firstLaunchExtended.record(
