@@ -63,7 +63,7 @@ function readFromClipboard()
     return "";
   trans.init(getLoadContext());
   trans.addDataFlavor('text/html');
-  clip.getData(trans,clipid.kGlobalClipboard);
+  clip.getData(trans, clipid.kGlobalClipboard, SpecialPowers.wrap(window).browsingContext.currentWindowContext);
   var str = {};
   trans.getTransferData("text/html",str);
   if (str)

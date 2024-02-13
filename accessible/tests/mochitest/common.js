@@ -848,7 +848,11 @@ function getTextFromClipboard() {
   }
 
   trans.addDataFlavor("text/plain");
-  Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
+  Services.clipboard.getData(
+    trans,
+    Services.clipboard.kGlobalClipboard,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
 
   var str = {};
   trans.getTransferData("text/plain", str);

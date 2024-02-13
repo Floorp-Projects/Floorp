@@ -54,7 +54,7 @@ function runImageClipboardTests(aCBSvc, aImageType)
                .createInstance(Ci.nsITransferable);
   xfer.init(getLoadContext());
   xfer.addDataFlavor(aImageType);
-  aCBSvc.getData(xfer, knsIClipboard.kGlobalClipboard);
+  aCBSvc.getData(xfer, knsIClipboard.kGlobalClipboard, SpecialPowers.wrap(window).browsingContext.currentWindowContext);
 
   var typeObj = {}, dataObj = {};
   xfer.getAnyTransferData(typeObj, dataObj);

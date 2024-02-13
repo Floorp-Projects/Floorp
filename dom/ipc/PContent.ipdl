@@ -1220,7 +1220,10 @@ parent:
 
     // Given a list of supported types, returns the clipboard data for the
     // first type that matches.
-    sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard)
+    // aRequestingWindowContext is the window that is requesting the clipboard,
+    // which is used for content analysis.
+    sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard,
+                      MaybeDiscardedWindowContext aRequestingWindowContext)
         returns (IPCTransferableData transferableData);
 
     // Returns a list of formats supported by the clipboard

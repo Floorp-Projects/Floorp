@@ -63,7 +63,7 @@ async function runTest() {
       trans.addDataFlavor("text/plain");
     }
     var clip = SpecialPowers.Services.clipboard;
-    clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+    clip.getData(trans, Ci.nsIClipboard.kGlobalClipboard, SpecialPowers.wrap(window).browsingContext.currentWindowContext);
     return trans;
   }
 

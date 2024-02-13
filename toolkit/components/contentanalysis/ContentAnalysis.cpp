@@ -128,8 +128,9 @@ ContentAnalysisRequest::GetFilePath(nsAString& aFilePath) {
 }
 
 NS_IMETHODIMP
-ContentAnalysisRequest::GetUrl(nsAString& aUrl) {
-  aUrl = mUrl;
+ContentAnalysisRequest::GetUrl(nsIURI** aUrl) {
+  NS_ENSURE_ARG_POINTER(aUrl);
+  NS_IF_ADDREF(*aUrl = mUrl);
   return NS_OK;
 }
 
@@ -196,8 +197,8 @@ nsresult ContentAnalysis::CreateContentAnalysisClient(nsCString&& aPipePathName,
 
 ContentAnalysisRequest::ContentAnalysisRequest(
     AnalysisType aAnalysisType, nsString aString, bool aStringIsFilePath,
-    nsCString aSha256Digest, nsString aUrl, OperationType aOperationType,
-    dom::WindowGlobalParent* aWindowGlobalParent)
+    nsCString aSha256Digest, nsCOMPtr<nsIURI> aUrl,
+    OperationType aOperationType, dom::WindowGlobalParent* aWindowGlobalParent)
     : mAnalysisType(aAnalysisType),
       mUrl(std::move(aUrl)),
       mSha256Digest(std::move(aSha256Digest)),
@@ -296,11 +297,14 @@ static nsresult ConvertToProtobuf(
 
   auto* requestData = aOut->mutable_request_data();
 
-  nsString url;
-  rv = aIn->GetUrl(url);
+  nsCOMPtr<nsIURI> url;
+  rv = aIn->GetUrl(getter_AddRefs(url));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!url.IsEmpty()) {
-    requestData->set_url(NS_ConvertUTF16toUTF8(url).get());
+  nsCString urlString;
+  rv = url->GetSpec(urlString);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!urlString.IsEmpty()) {
+    requestData->set_url(urlString.get());
   }
 
   nsString email;
@@ -635,9 +639,12 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
     bool* aShouldAllowContent) {
   if (mValue.is<NoContentAnalysisResult>()) {
     NoContentAnalysisResult result = mValue.as<NoContentAnalysisResult>();
+    // Note that we allow content if we're unable to get it (for example, if
+    // there's clipboard content that is not text or file)
     *aShouldAllowContent =
         result == NoContentAnalysisResult::AGENT_NOT_PRESENT ||
-        result == NoContentAnalysisResult::NO_PARENT_BROWSER;
+        result == NoContentAnalysisResult::NO_PARENT_BROWSER ||
+        result == NoContentAnalysisResult::ERROR_COULD_NOT_GET_DATA;
   } else {
     *aShouldAllowContent =
         ShouldAllowAction(mValue.as<nsIContentAnalysisResponse::Action>());
@@ -997,8 +1004,7 @@ ContentAnalysis::AnalyzeContentRequestCallback(
       mozilla::services::GetObserverService();
   obsServ->NotifyObservers(aRequest, "dlp-request-made", nullptr);
 
-  rv = RunAnalyzeRequestTask(aRequest, aAutoAcknowledge, aCallback);
-  return rv;
+  return RunAnalyzeRequestTask(aRequest, aAutoAcknowledge, aCallback);
 }
 
 NS_IMETHODIMP
