@@ -1018,9 +1018,11 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
   mozilla::Result<already_AddRefed<VideoData>, MediaResult> r =
       VideoData::CreateAndCopyData(
           mVideoInfo, mImageContainer, mLastStreamOffset,
-          media::TimeUnit::FromMicroseconds(aFrame.mTimestamp()),
-          media::TimeUnit::FromMicroseconds(aFrame.mDuration()), b, false,
-          media::TimeUnit::FromMicroseconds(-1), pictureRegion,
+          media::TimeUnit::FromMicroseconds(
+              CheckedInt64(aFrame.mTimestamp()).value()),
+          media::TimeUnit::FromMicroseconds(
+              CheckedInt64(aFrame.mDuration()).value()),
+          b, false, media::TimeUnit::FromMicroseconds(-1), pictureRegion,
           mKnowsCompositor);
   RefPtr<VideoData> v = r.unwrapOr(nullptr);
 
