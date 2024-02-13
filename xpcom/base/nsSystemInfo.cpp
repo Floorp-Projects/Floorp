@@ -57,6 +57,7 @@
 #  include <unistd.h>
 #  include <fstream>
 #  include "mozilla/Tokenizer.h"
+#  include "mozilla/widget/LSBUtils.h"
 #  include "nsCharSeparatedTokenizer.h"
 
 #  include <map>
@@ -1137,6 +1138,14 @@ nsresult nsSystemInfo::Init() {
   AndroidSystemInfo info;
   GetAndroidSystemInfo(&info);
   SetupAndroidInfo(info);
+#endif
+
+#if defined(XP_LINUX) && !defined(ANDROID)
+  nsCString dist, desc, release, codename;
+  if (widget::lsb::GetLSBRelease(dist, desc, release, codename)) {
+    SetPropertyAsACString(u"distro"_ns, dist);
+    SetPropertyAsACString(u"distroVersion"_ns, release);
+  }
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)

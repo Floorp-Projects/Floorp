@@ -464,7 +464,7 @@ void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
   uint32_t sizeUsed = 0, pipes = 0, transferables = 0;
   SerializedComplexity(aMaxSize, &sizeUsed, &pipes, &transferables);
   if (pipes > 0 && transferables == 0) {
-    InputStreamHelper::SerializeInputStreamAsPipe(mInputStream, aParams);
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams);
     return;
   }
 

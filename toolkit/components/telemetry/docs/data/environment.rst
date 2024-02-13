@@ -160,7 +160,9 @@ Structure:
             installYear: <number>, // windows only or null on failure
             locale: <string>, // "en" or null on failure
             hasPrefetch: <bool>, // windows only, or null on failure
-            hasSuperfetch: <bool>, // windows only, or nul on failure
+            hasSuperfetch: <bool>, // windows only, or null on failure
+            distro: <string>, // linux only, or null on failure
+            distroVersion: <string>, // linux only, or null on failure
         },
         hdd: {
           profile: { // hdd where the profile folder is located

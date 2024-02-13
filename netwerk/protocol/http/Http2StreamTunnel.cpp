@@ -302,7 +302,7 @@ Http2StreamTunnel::GetStatus(nsresult* aStatus) {
 
 already_AddRefed<nsHttpConnection> Http2StreamTunnel::CreateHttpConnection(
     nsAHttpTransaction* httpTransaction, nsIInterfaceRequestor* aCallbacks,
-    PRIntervalTime aRtt) {
+    PRIntervalTime aRtt, bool aIsWebSocket) {
   mInput = new InputStreamTunnel(this);
   mOutput = new OutputStreamTunnel(this);
   RefPtr<nsHttpConnection> conn = new nsHttpConnection();
@@ -311,7 +311,7 @@ already_AddRefed<nsHttpConnection> Http2StreamTunnel::CreateHttpConnection(
   nsresult rv =
       conn->Init(httpTransaction->ConnectionInfo(),
                  gHttpHandler->ConnMgr()->MaxRequestDelay(), this, mInput,
-                 mOutput, true, NS_OK, aCallbacks, aRtt, false);
+                 mOutput, true, NS_OK, aCallbacks, aRtt, aIsWebSocket);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   mTransaction = httpTransaction;
   return conn.forget();

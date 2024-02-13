@@ -64,12 +64,23 @@ const NEW_PREFERENCES_TESTS = [
           Value: 11,
           Status: "user",
         },
+        "browser.policies.test.default.number.implicit": {
+          Value: 0,
+          Status: "default",
+        },
+        "browser.policies.test.default.number.explicit": {
+          Value: 0,
+          Status: "default",
+          Type: "number",
+        },
       },
     },
     defaultPrefs: {
       "browser.policies.test.default.boolean": true,
       "browser.policies.test.default.string": "string",
       "browser.policies.test.default.number": 11,
+      "browser.policies.test.default.number.implicit": false,
+      "browser.policies.test.default.number.explicit": 0,
     },
     lockedPrefs: {
       "browser.policies.test.locked.boolean": true,

@@ -1439,7 +1439,7 @@ bool DocumentLoadListener::ResumeSuspendedChannel(
     streamListenerFunctions.Clear();
   }
 
-  ForwardStreamListenerFunctions(streamListenerFunctions, aListener);
+  ForwardStreamListenerFunctions(std::move(streamListenerFunctions), aListener);
 
   // We don't expect to get new stream listener functions added
   // via re-entrancy. If this ever happens, we should understand
@@ -2642,7 +2642,7 @@ DocumentLoadListener::OnDataAvailable(nsIRequest* aRequest,
 
   mStreamListenerFunctions.AppendElement(StreamListenerFunction{
       VariantIndex<1>{},
-      OnDataAvailableParams{aRequest, data, aOffset, aCount}});
+      OnDataAvailableParams{aRequest, std::move(data), aOffset, aCount}});
 
   return NS_OK;
 }

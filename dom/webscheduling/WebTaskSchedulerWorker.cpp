@@ -36,6 +36,9 @@ bool WebTaskWorkerRunnable::WorkerRun(JSContext* aCx,
 
 nsresult WebTaskSchedulerWorker::SetTimeoutForDelayedTask(WebTask* aTask,
                                                           uint64_t aDelay) {
+  if (!mWorkerPrivate) {
+    return NS_ERROR_UNEXPECTED;
+  }
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (!cx) {
     return NS_ERROR_UNEXPECTED;
@@ -52,8 +55,18 @@ nsresult WebTaskSchedulerWorker::SetTimeoutForDelayedTask(WebTask* aTask,
 }
 
 bool WebTaskSchedulerWorker::DispatchEventLoopRunnable() {
+  if (!mWorkerPrivate) {
+    return false;
+  }
   RefPtr<WebTaskWorkerRunnable> runnable =
       new WebTaskWorkerRunnable(mWorkerPrivate, this);
   return runnable->Dispatch();
+}
+
+void WebTaskSchedulerWorker::Disconnect() {
+  if (mWorkerPrivate) {
+    mWorkerPrivate = nullptr;
+  }
+  WebTaskScheduler::Disconnect();
 }
 }  // namespace mozilla::dom

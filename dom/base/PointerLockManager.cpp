@@ -265,7 +265,7 @@ bool PointerLockManager::SetPointerLock(Element* aElement, Document* aDocument,
     }
     return false;
   }
-  nsPresContext* presContext = presShell->GetPresContext();
+  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   if (!presContext) {
     NS_WARNING("SetPointerLock(): Unable to get PresContext");
     return false;
@@ -288,7 +288,7 @@ bool PointerLockManager::SetPointerLock(Element* aElement, Document* aDocument,
   // Hide the cursor and set pointer lock for future mouse events
   RefPtr<EventStateManager> esm = presContext->EventStateManager();
   esm->SetCursor(aCursorStyle, nullptr, {}, Nothing(), widget, true);
-  EventStateManager::SetPointerLock(widget, aElement);
+  EventStateManager::SetPointerLock(widget, presContext);
 
   return true;
 }

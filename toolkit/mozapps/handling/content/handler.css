@@ -32,6 +32,10 @@ label, description {
   margin: 0 4px 16px;
 }
 
+#chooser img:is(:-moz-broken, :not([src])) {
+  visibility: hidden;
+}
+
 /* avoid double inline margins when #description is nested: */
 #description-box > #description {
   margin-inline: 0;

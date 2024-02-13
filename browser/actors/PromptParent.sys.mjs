@@ -132,7 +132,7 @@ export class PromptParent extends JSWindowActorParent {
 
     switch (message.name) {
       case "Prompt:Open":
-        if (!this.windowContext.isCurrentGlobal) {
+        if (!this.windowContext.isActiveInTab) {
           return undefined;
         }
 

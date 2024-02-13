@@ -116,20 +116,17 @@ async function test_h1_ws_with_h2_proxy() {
 
 // ws h2 with insecure h1.1 proxy
 async function test_h2_ws_with_insecure_h1_proxy() {
-  // disabled until bug 1800533 complete
-  // await spinup_and_check(NodeHTTPProxyServer, NodeWebSocketHttp2Server);
+  await spinup_and_check(NodeHTTPProxyServer, NodeWebSocketHttp2Server);
 }
 
 // ws h2 with secure h1 proxy
 async function test_h2_ws_with_secure_h1_proxy() {
-  // disabled until bug 1800533 complete
-  // await spinup_and_check(NodeHTTPSProxyServer, NodeWebSocketHttp2Server);
+  await spinup_and_check(NodeHTTPSProxyServer, NodeWebSocketHttp2Server);
 }
 
 // ws h2 with secure h2 proxy
 async function test_h2_ws_with_h2_proxy() {
-  // disabled until bug 1800533 complete
-  // await spinup_and_check(NodeHTTP2ProxyServer, NodeWebSocketHttp2Server);
+  await spinup_and_check(NodeHTTP2ProxyServer, NodeWebSocketHttp2Server);
 }
 
 add_task(test_h1_websocket_direct);

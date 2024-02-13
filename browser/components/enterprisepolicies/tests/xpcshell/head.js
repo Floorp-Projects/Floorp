@@ -132,6 +132,11 @@ function checkDefaultPref(prefName, prefValue) {
     Services.prefs.PREF_INVALID,
     `Pref ${prefName} is set on the default branch`
   );
+  strictEqual(
+    Preferences.get(prefName),
+    prefValue,
+    `Pref ${prefName} has the correct value`
+  );
 }
 
 function checkUnsetPref(prefName) {

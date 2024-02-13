@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import imp
 import json
 import os
 
 import mozunit
 import pytest
+from mozfile import load_source
 from tryselect.tasks import build, resolve_tests_by_suite
 
 MOZHARNESS_SCRIPTS = {
@@ -55,10 +55,10 @@ uses).
 
 
 def get_mozharness_test_paths(name):
-    scriptdir = os.path.join(build.topsrcdir, "testing", "mozharness", "scripts")
-
-    files = imp.find_module(name, [scriptdir])
-    mod = imp.load_module("scripts.{}".format(name), *files)
+    scriptdir = os.path.join(build.topsrcdir, "testing", "mozharness")
+    mod = load_source(
+        "scripts." + name, os.path.join(scriptdir, "scripts", name + ".py")
+    )
 
     class_name = MOZHARNESS_SCRIPTS[name]["class_name"]
     cls = getattr(mod, class_name)
@@ -82,13 +82,15 @@ def all_suites():
 
 
 def generate_suites_from_config(path):
-    configdir = os.path.join(build.topsrcdir, "testing", "mozharness", "configs")
-
     parent, name = os.path.split(path)
     name = os.path.splitext(name)[0]
 
-    files = imp.find_module("{}".format(name), [os.path.join(configdir, parent)])
-    mod = imp.load_module("config.{}".format(name), *files)
+    configdir = os.path.join(
+        build.topsrcdir, "testing", "mozharness", "configs", parent
+    )
+
+    mod = load_source(name, os.path.join(configdir, name + ".py"))
+
     config = mod.config
 
     for category in sorted(config["suite_definitions"]):

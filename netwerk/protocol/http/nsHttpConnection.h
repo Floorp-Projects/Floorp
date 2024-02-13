@@ -362,6 +362,9 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   nsCOMPtr<nsISocketTransport> mSocketTransport;
 
+  // This flag indicates if the connection is used for WebSocket.
+  // - When true and mInSpdyTunnel is also true: WebSocket over HTTP/2.
+  // - When true and mInSpdyTunnel is false: WebSocket over HTTP/1.1.
   bool mForWebSocket{false};
 
   std::function<void()> mContinueHandshakeDone{nullptr};

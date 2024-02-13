@@ -746,7 +746,16 @@ talos-xperf:
             default: []
     mozharness:
         extra-options:
-            - --suite=xperf
+            by-test-platform:
+                windows.*:
+                    - --suite=xperf
+                    # Disable the GPU process due to bug 1868737. There are
+                    # sandbox related issues with using the GPU process when
+                    # running xperf as an administrator which cause us to fail
+                    # due to generating minidumps.
+                    - --setpref=layers.gpu-process.enabled=false
+                default:
+                    - --suite=xperf
         config:
             by-test-platform:
                 windows.*:

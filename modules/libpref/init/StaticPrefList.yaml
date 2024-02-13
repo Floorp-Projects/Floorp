@@ -9063,6 +9063,11 @@
   value: 32
   mirror: always
 
+- name: layout.cursor.disable-for-popups
+  type: bool
+  value: true
+  mirror: always
+
 - name: layout.display-list.build-twice
   type: RelaxedAtomicBool
   value: false
@@ -11431,6 +11436,12 @@
 # last accessed time that is in the future will be fixed and the
 # timestamps will be set to the current time.
 - name: network.cookie.fixup_on_db_load
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# If true content types of multipart/x-mixed-replace cannot set a cookie
+- name: network.cookie.prevent_set_cookie_from_multipart
   type: RelaxedAtomicBool
   value: true
   mirror: always

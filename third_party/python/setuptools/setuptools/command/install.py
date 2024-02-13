@@ -1,11 +1,11 @@
 from distutils.errors import DistutilsArgError
 import inspect
 import glob
-import warnings
 import platform
 import distutils.command.install as orig
 
 import setuptools
+from ..warnings import SetuptoolsDeprecationWarning, SetuptoolsWarning
 
 # Prior to numpy 1.9, NumPy relies on the '_install' name, so provide it for
 # now. See https://github.com/pypa/setuptools/issues/199/
@@ -30,6 +30,19 @@ class install(orig.install):
     _nc = dict(new_commands)
 
     def initialize_options(self):
+        SetuptoolsDeprecationWarning.emit(
+            "setup.py install is deprecated.",
+            """
+            Please avoid running ``setup.py`` directly.
+            Instead, use pypa/build, pypa/installer or other
+            standards-based tools.
+            """,
+            see_url="https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html",
+            # TODO: Document how to bootstrap setuptools without install
+            #       (e.g. by unziping the wheel file)
+            #       and then add a due_date to this warning.
+        )
+
         orig.install.initialize_options(self)
         self.old_and_unmanageable = None
         self.single_version_externally_managed = None
@@ -79,19 +92,26 @@ class install(orig.install):
         """
         if run_frame is None:
             msg = "Call stack not available. bdist_* commands may fail."
-            warnings.warn(msg)
+            SetuptoolsWarning.emit(msg)
             if platform.python_implementation() == 'IronPython':
                 msg = "For best results, pass -X:Frames to enable call stack."
-                warnings.warn(msg)
+                SetuptoolsWarning.emit(msg)
             return True
-        res = inspect.getouterframes(run_frame)[2]
-        caller, = res[:1]
-        info = inspect.getframeinfo(caller)
-        caller_module = caller.f_globals.get('__name__', '')
-        return (
-            caller_module == 'distutils.dist'
-            and info.function == 'run_commands'
-        )
+
+        frames = inspect.getouterframes(run_frame)
+        for frame in frames[2:4]:
+            caller, = frame[:1]
+            info = inspect.getframeinfo(caller)
+            caller_module = caller.f_globals.get('__name__', '')
+
+            if caller_module == "setuptools.dist" and info.function == "run_command":
+                # Starting from v61.0.0 setuptools overwrites dist.run_command
+                continue
+
+            return (
+                caller_module == 'distutils.dist'
+                and info.function == 'run_commands'
+            )
 
     def do_egg_install(self):
 

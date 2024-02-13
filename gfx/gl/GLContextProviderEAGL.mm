@@ -90,6 +90,8 @@ bool GLContextEAGL::RecreateRB() {
 
 bool GLContextEAGL::MakeCurrentImpl() const {
   if (mContext) {
+    GLContext::ResetTLSCurrentContext();
+
     if (![EAGLContext setCurrentContext:mContext]) {
       return false;
     }
