@@ -39,17 +39,17 @@ class NotificationRobot {
     }
 
     fun clearNotifications() {
-        if (clearButton.exists()) {
+        if (clearButton().exists()) {
             Log.i(TAG, "clearNotifications:The clear notifications button exists")
             Log.i(TAG, "clearNotifications: Trying to click the clear notifications button")
-            clearButton.click()
+            clearButton().click()
             Log.i(TAG, "clearNotifications: Clicked the clear notifications button")
         } else {
             scrollToEnd()
-            if (clearButton.exists()) {
+            if (clearButton().exists()) {
                 Log.i(TAG, "clearNotifications:The clear notifications button exists")
                 Log.i(TAG, "clearNotifications: Trying to click the clear notifications button")
-                clearButton.click()
+                clearButton().click()
                 Log.i(TAG, "clearNotifications: Clicked the clear notifications button")
             } else if (notificationTray().exists()) {
                 Log.i(TAG, "clearNotifications: The notifications tray is still displayed")
@@ -117,16 +117,16 @@ class NotificationRobot {
         assertUIObjectExists(mediaSystemNotificationButton(action))
 
     fun expandNotificationMessage() {
-        while (!notificationHeader.exists()) {
+        while (!notificationHeader().exists()) {
             Log.i(TAG, "expandNotificationMessage: Waiting for $appName notification to exist")
             scrollToEnd()
         }
 
-        if (notificationHeader.exists()) {
+        if (notificationHeader().exists()) {
             Log.i(TAG, "expandNotificationMessage: $appName notification exists")
             // expand the notification
             Log.i(TAG, "expandNotificationMessage: Trying to click $appName notification")
-            notificationHeader.click()
+            notificationHeader().click()
             Log.i(TAG, "expandNotificationMessage: Clicked $appName notification")
 
             // double check if notification actions are viewable by checking for action existence; otherwise scroll again
@@ -274,7 +274,7 @@ private fun notificationTray() = UiScrollable(
     UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"),
 ).setAsVerticalList()
 
-private val notificationHeader =
+private fun notificationHeader() =
     mDevice.findObject(
         UiSelector()
             .resourceId("android:id/app_name_text")
@@ -287,7 +287,7 @@ private fun scrollToEnd() {
     Log.i(TAG, "scrollToEnd: Performed scroll to the end of the notification tray action")
 }
 
-private val clearButton = mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/dismiss_text"))
+private fun clearButton() = mDevice.findObject(UiSelector().resourceId("com.android.systemui:id/dismiss_text"))
 
 private fun cancelAll() {
     val notificationManager: NotificationManager =
