@@ -968,13 +968,6 @@ def main(args):
                     moz_python_bindir = moz_python_home + '/bin'
 
 
-                # just a sanity check
-                candidate = os.path.join(moz_python_bindir, f'python3{ext}')
-                if not os.path.exists(candidate):
-                    raise RuntimeError("Inconsistent Python installation: "
-                                       "archive found, but no python3 binary "
-                                       "detected")
-
                 new = os.environ['PATH'] = os.pathsep.join([moz_python_bindir]
                                                            + prev)
 
@@ -982,6 +975,25 @@ def main(args):
                 # this conflicts with system python (e.g. used by hg) so we
                 # maintain a small patch to use MOZPYTHONHOME instead.
                 os.environ['MOZPYTHONHOME'] = moz_python_home
+
+                pyinterp = os.path.join(moz_python_bindir, f'python3{ext}')
+                # just a sanity check
+                if not os.path.exists(pyinterp):
+                    raise RuntimeError("Inconsistent Python installation: "
+                                       "archive found, but no python3 binary "
+                                       "detected")
+
+                if IS_MACOSX:
+                    # On OSX, we may not have access to the system certificate,
+                    # so use the certifi ones.
+                    certifi_cert_file = subprocess.check_output(
+                    [pyinterp, '-c',
+                     'import certifi; print(certifi.where())'],
+                    text=True
+                    )
+                    os.environ['SSL_CERT_FILE'] = certifi_cert_file.strip()
+                    print_line(b'setup',
+                               b'patching ssl certificate\n')
 
                 print_line(b'setup',
                            b'updated PATH with python artifact: '
