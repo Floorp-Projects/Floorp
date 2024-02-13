@@ -346,7 +346,7 @@ function getAdHocFrontOrPrimitiveGrip(packet, parentFront) {
   // - it's a highlightRegistryEntry (the preview.value properties can hold actors)
   // - or it is already a front (happens when we are using the legacy listeners in the ResourceCommand)
   const isPacketAnObject = packet && typeof packet === "object";
-  const isFront = !!packet.typeName;
+  const isFront = !!packet?.typeName;
   if (
     !isPacketAnObject ||
     packet.type == "symbol" ||

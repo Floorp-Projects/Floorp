@@ -385,6 +385,10 @@ function transformTraceResource(traceResource) {
     columnNumber,
     args,
     sourceId,
+
+    returnedValue,
+    relatedTraceId,
+    why,
   } = traceResource;
 
   const frame = {
@@ -404,6 +408,11 @@ function transformTraceResource(traceResource) {
     parameters: args
       ? args.map(p => (p ? getAdHocFrontOrPrimitiveGrip(p, targetFront) : p))
       : null,
+    returnedValue: why
+      ? getAdHocFrontOrPrimitiveGrip(returnedValue, targetFront)
+      : null,
+    relatedTraceId,
+    why,
     messageText: null,
     timeStamp,
     prefix,

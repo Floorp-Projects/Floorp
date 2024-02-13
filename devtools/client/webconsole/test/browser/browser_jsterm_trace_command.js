@@ -72,7 +72,8 @@ add_task(async function testBasicRecord() {
 
   // Assert that we also see the custom prefix, as well as function arguments
   await waitFor(
-    () => !!findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length
+    () =>
+      !!findTracerMessages(hud, `foo: ⟶ interpreter λ main("arg", 2)`).length
   );
   is(
     findTracerMessages(hud, `someNoise`).length,
@@ -85,7 +86,7 @@ add_task(async function testBasicRecord() {
     content.wrappedJSObject.someNoise();
   });
   await waitFor(
-    () => !!findTracerMessages(hud, `foo: interpreter⟶λ someNoise()`).length
+    () => !!findTracerMessages(hud, `foo: ⟶ interpreter λ someNoise()`).length
   );
 
   info("Test toggling the tracer OFF");
@@ -95,7 +96,7 @@ add_task(async function testBasicRecord() {
   info("Clear past traces");
   hud.ui.clearOutput();
   await waitFor(
-    () => !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length
+    () => !findTracerMessages(hud, `foo: ⟶ interpreter λ main("arg", 2)`).length
   );
   ok("Console was cleared");
 
@@ -108,7 +109,7 @@ add_task(async function testBasicRecord() {
   await wait(1000);
 
   ok(
-    !findTracerMessages(hud, `foo: interpreter⟶λ main("arg", 2)`).length,
+    !findTracerMessages(hud, `foo: ⟶ interpreter λ main("arg", 2)`).length,
     "We really stopped recording traces, and no trace appear in the console"
   );
 });

@@ -244,6 +244,12 @@ export function toggleJavascriptTracingOnNextInteraction() {
   };
 }
 
+export function toggleJavascriptTracingFunctionReturn() {
+  return {
+    type: "TOGGLE_JAVASCRIPT_TRACING_FUNCTION_RETURN",
+  };
+}
+
 export function toggleJavascriptTracingOnNextLoad() {
   return {
     type: "TOGGLE_JAVASCRIPT_TRACING_ON_NEXT_LOAD",
