@@ -33,25 +33,49 @@ add_setup(async function () {
 });
 
 add_task(async function basic() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "RaMeN iN tOkYo",
-  });
+  for (let topPick of [true, false]) {
+    info("Setting yelpPriority: " + topPick);
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.quicksuggest.yelpPriority", topPick]],
+    });
 
-  Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "RaMeN iN tOkYo",
+    });
 
-  const { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  Assert.equal(
-    result.providerName,
-    UrlbarProviderQuickSuggest.name,
-    "The result should be from the expected provider"
-  );
-  Assert.equal(result.payload.provider, "Yelp");
-  Assert.equal(
-    result.payload.url,
-    "https://www.yelp.com/search?find_desc=RaMeN&find_loc=tOkYo&utm_medium=partner&utm_source=mozilla"
-  );
-  Assert.equal(result.payload.title, "RaMeN iN tOkYo");
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    const { result } = details;
+    Assert.equal(
+      result.providerName,
+      UrlbarProviderQuickSuggest.name,
+      "The result should be from the expected provider"
+    );
+    Assert.equal(result.payload.provider, "Yelp");
+    Assert.equal(
+      result.payload.url,
+      "https://www.yelp.com/search?find_desc=RaMeN&find_loc=tOkYo&utm_medium=partner&utm_source=mozilla"
+    );
+    Assert.equal(result.payload.title, "RaMeN iN tOkYo");
+
+    const { row } = details.element;
+    const bottom = row.querySelector(".urlbarView-row-body-bottom");
+    Assert.ok(bottom, "Bottom text element should exist");
+    Assert.ok(
+      BrowserTestUtils.isVisible(bottom),
+      "Bottom text element should be visible"
+    );
+    Assert.equal(
+      bottom.textContent,
+      "Yelp · Sponsored",
+      "Bottom text is correct"
+    );
+
+    await UrlbarTestUtils.promisePopupClose(window);
+    await SpecialPowers.popPrefEnv();
+  }
 });
 
 // Tests the "Show less frequently" result menu command.

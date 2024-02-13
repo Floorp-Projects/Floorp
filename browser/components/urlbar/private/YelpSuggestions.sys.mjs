@@ -84,13 +84,14 @@ export class YelpSuggestions extends BaseFeature {
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           url: url.toString(),
-          title,
+          title: [title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
           shouldShowUrl: true,
           bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
         })
       ),
       {
-        richSuggestionIconSize: 24,
+        isRichSuggestion: true,
+        richSuggestionIconSize: suggestion.is_top_pick ? 38 : 24,
         showFeedbackMenu: true,
       }
     );

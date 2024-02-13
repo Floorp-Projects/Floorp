@@ -89,14 +89,18 @@
 .urlbarView-row {
   --urlbarView-second-line-indent: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-icon-margin-end) + var(--urlbarView-favicon-width));
 
-  /* Align the favicons and titles of rows with standard 16px icons with those
-     of rich suggestions. */
+  /* Align icons that are smaller than the default rich suggestion icon size
+    (28px) with default-size rich suggestion icons. */
   /* stylelint-disable-next-line media-query-no-invalid */
   @media (-moz-bool-pref: "browser.urlbar.richSuggestions.featureGate") {
     &:not([rich-suggestion]),
     &[rich-suggestion][icon-size="16"] {
       --urlbarView-icon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2);
       --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline) + ((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2));
+    }
+    &[rich-suggestion][icon-size="24"] {
+      --urlbarView-icon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - 24px) / 2);
+      --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline) + ((var(--urlbarView-rich-suggestion-default-icon-size) - 24px) / 2));
     }
   }
 
@@ -766,6 +770,12 @@
     flex-basis: 24px;
   }
 
+  &[icon-size="38"] {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
   &[icon-size="52"] {
     width: 52px;
     height: 52px;
@@ -847,6 +857,16 @@
 
 .urlbarView-row:is([type$=_amo], [type$=_pocket])[icon-size="24"]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {
   background-color: var(--urlbarView-result-button-selected-background-color);
+}
+
+.urlbarView-row[type$=_yelp][icon-size="38"] > .urlbarView-row-inner > .urlbarView-favicon {
+  padding: calc((52px - 38px) / 2);
+  border: 1px solid var(--urlbar-box-focus-bgcolor);
+  border-radius: 2px;
+}
+
+.urlbarView-row[type$=_yelp][icon-size="38"]:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-favicon {
+  border-color: var(--urlbarView-result-button-selected-background-color);
 }
 
 /* Search one-offs */
