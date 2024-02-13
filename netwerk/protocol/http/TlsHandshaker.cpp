@@ -31,6 +31,24 @@ TlsHandshaker::TlsHandshaker(nsHttpConnectionInfo* aInfo,
 TlsHandshaker::~TlsHandshaker() { LOG(("TlsHandshaker dtor %p", this)); }
 
 NS_IMETHODIMP
+TlsHandshaker::CertVerificationDone() {
+  LOG(("TlsHandshaker::CertVerificationDone mOwner=%p", mOwner.get()));
+  if (mOwner) {
+    Unused << mOwner->ResumeSend();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TlsHandshaker::ClientAuthCertificateSelected() {
+  LOG(("TlsHandshaker::ClientAuthCertificateSelected mOwner=%p", mOwner.get()));
+  if (mOwner) {
+    Unused << mOwner->ResumeSend();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TlsHandshaker::HandshakeDone() {
   LOG(("TlsHandshaker::HandshakeDone mOwner=%p", mOwner.get()));
   if (mOwner) {

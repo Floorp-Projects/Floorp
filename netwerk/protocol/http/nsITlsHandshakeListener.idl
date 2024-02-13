@@ -9,4 +9,6 @@
 [uuid(b4bbe824-ec4c-48be-9a40-6a7339347f40)]
 interface nsITlsHandshakeCallbackListener : nsISupports {
     [noscript] void handshakeDone();
+    [noscript] void certVerificationDone();
+    [noscript] void clientAuthCertificateSelected();
 };
