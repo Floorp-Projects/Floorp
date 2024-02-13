@@ -156,12 +156,12 @@ async function runTestBounce(options = {}) {
   info(`runTestBounce ${JSON.stringify(options)}`);
 
   Assert.equal(
-    bounceTrackingProtection.bounceTrackerCandidateHosts.length,
+    bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}).length,
     0,
     "No bounce tracker hosts initially."
   );
   Assert.equal(
-    bounceTrackingProtection.userActivationHosts.length,
+    bounceTrackingProtection.testGetUserActivationHosts({}).length,
     0,
     "No user activation hosts initially."
   );
@@ -195,14 +195,14 @@ async function runTestBounce(options = {}) {
       await promiseRecordBounces;
 
       Assert.deepEqual(
-        bounceTrackingProtection.bounceTrackerCandidateHosts,
+        bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}),
         expectCandidate ? [SITE_TRACKER] : [],
         `Should ${
           expectCandidate ? "" : "not "
         }have identified ${SITE_TRACKER} as a bounce tracker.`
       );
       Assert.deepEqual(
-        bounceTrackingProtection.userActivationHosts.sort(),
+        bounceTrackingProtection.testGetUserActivationHosts({}).sort(),
         [SITE_A, SITE_B].sort(),
         "Should only have user activation for sites where we clicked links."
       );
