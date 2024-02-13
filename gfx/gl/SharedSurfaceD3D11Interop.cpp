@@ -415,12 +415,13 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop() {
   }
 }
 
-bool SharedSurface_D3D11Interop::ProducerAcquireImpl() {
+void SharedSurface_D3D11Interop::ProducerAcquireImpl() {
   MOZ_ASSERT(!mLockedForGL);
 
   // Now we have the mutex, we can lock for GL.
-  mLockedForGL = mData.interop->LockObject(mData.lockHandle);
-  return mLockedForGL;
+  MOZ_ALWAYS_TRUE(mData.interop->LockObject(mData.lockHandle));
+
+  mLockedForGL = true;
 }
 
 void SharedSurface_D3D11Interop::ProducerReleaseImpl() {

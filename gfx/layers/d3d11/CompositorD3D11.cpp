@@ -985,23 +985,31 @@ void CompositorD3D11::Present() {
 
     params.pDirtyRects = params.DirtyRectsCount ? rects.data() : nullptr;
 
-    AutoTextureLock lock("CompositorD3D11::Present", mutex, hr, 2000);
-    if (NS_WARN_IF(!lock.Succeeded())) {
-      return;
+    if (mutex) {
+      hr = mutex->AcquireSync(0, 2000);
+      NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
     }
 
     chain->Present1(
         presentInterval,
         mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0,
         &params);
+
+    if (mutex) {
+      mutex->ReleaseSync(0);
+    }
   } else {
-    AutoTextureLock lock("CompositorD3D11::Present", mutex, hr, 2000);
-    if (NS_WARN_IF(!lock.Succeeded())) {
-      return;
+    if (mutex) {
+      hr = mutex->AcquireSync(0, 2000);
+      NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
     }
 
     hr = mSwapChain->Present(
         0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+
+    if (mutex) {
+      mutex->ReleaseSync(0);
+    }
 
     if (FAILED(hr)) {
       gfxCriticalNote << "D3D11 swap chain preset failed " << hexa(hr);

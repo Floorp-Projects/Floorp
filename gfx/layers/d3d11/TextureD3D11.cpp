@@ -133,23 +133,21 @@ static IntRect GetTileRectD3D11(uint32_t aID, IntSize aSize,
       verticalTile < (verticalTiles - 1) ? aMaxSize : aSize.height % aMaxSize);
 }
 
-AutoTextureLock::AutoTextureLock(const char* aCaller, IDXGIKeyedMutex* aMutex,
-                                 HRESULT& aResult, uint32_t aTimeout)
-    : mCaller(aCaller), mMutex(aMutex) {
+AutoTextureLock::AutoTextureLock(IDXGIKeyedMutex* aMutex, HRESULT& aResult,
+                                 uint32_t aTimeout) {
+  mMutex = aMutex;
   if (mMutex) {
-    aResult = mMutex->AcquireSync(0, aTimeout);
-    mSuccess = D3D11Checks::DidAcquireSyncSucceed(mCaller, aResult);
+    mResult = mMutex->AcquireSync(0, aTimeout);
+    aResult = mResult;
   } else {
-    mSuccess = true;
+    aResult = E_INVALIDARG;
   }
 }
 
 AutoTextureLock::~AutoTextureLock() {
-  if (mMutex && mSuccess) {
-    HRESULT hr = mMutex->ReleaseSync(0);
-    if (NS_WARN_IF(FAILED(hr))) {
-      gfxCriticalNote << mCaller << " ReleaseSync failed " << gfx::hexa(hr);
-    }
+  if (mMutex && !FAILED(mResult) && mResult != WAIT_TIMEOUT &&
+      mResult != WAIT_ABANDONED) {
+    mMutex->ReleaseSync(0);
   }
 }
 
@@ -249,14 +247,12 @@ static bool LockD3DTexture(
         gfxDevCrash(LogReason::D3DLockTimeout)
             << "D3D lock mutex timeout - device not removed";
       }
-      return false;
     } else if (hr == WAIT_ABANDONED) {
       gfxCriticalNote << "GFX: D3D11 lock mutex abandoned";
-      return false;
     }
 
     if (FAILED(hr)) {
-      gfxCriticalNote << "GFX: D3D11 lock failed " << gfx::hexa(hr);
+      NS_WARNING("Failed to lock the texture");
       return false;
     }
   }
@@ -1539,31 +1535,30 @@ bool SyncObjectD3D11Host::Init() {
 SyncHandle SyncObjectD3D11Host::GetSyncHandle() { return mSyncHandle; }
 
 bool SyncObjectD3D11Host::Synchronize(bool aFallible) {
-  MOZ_DIAGNOSTIC_ASSERT(mKeyedMutex);
+  HRESULT hr;
+  AutoTextureLock lock(mKeyedMutex, hr, 10000);
 
-  if (mKeyedMutex) {
-    HRESULT hr;
-    AutoTextureLock lock("SyncObjectD3D11Host::Synchronize", mKeyedMutex, hr,
-                         10000);
-    if (lock.Succeeded()) {
-      return true;
+  if (hr == WAIT_TIMEOUT) {
+    hr = mDevice->GetDeviceRemovedReason();
+    if (hr != S_OK) {
+      // Since the timeout is related to the driver-removed. Return false for
+      // error handling.
+      gfxCriticalNote << "GFX: D3D11 timeout with device-removed:"
+                      << gfx::hexa(hr);
+    } else if (aFallible) {
+      gfxCriticalNote << "GFX: D3D11 timeout on the D3D11 sync lock.";
+    } else {
+      // There is no driver-removed event. Crash with this timeout.
+      MOZ_CRASH("GFX: D3D11 normal status timeout");
     }
+
+    return false;
+  }
+  if (hr == WAIT_ABANDONED) {
+    gfxCriticalNote << "GFX: AL_D3D11 abandoned sync";
   }
 
-  HRESULT removedReason = mDevice->GetDeviceRemovedReason();
-  if (removedReason != S_OK) {
-    // Since the timeout is related to the driver-removed. Return false for
-    // error handling.
-    gfxCriticalNote << "GFX: D3D11 sync failure with device-removed:"
-                    << gfx::hexa(removedReason);
-  } else if (aFallible) {
-    gfxCriticalNote << "GFX: D3D11 failure on the D3D11 sync lock.";
-  } else {
-    // There is no driver-removed event. Crash with this timeout.
-    MOZ_CRASH("GFX: D3D11 normal status timeout");
-  }
-
-  return false;
+  return true;
 }
 
 SyncObjectD3D11Client::SyncObjectD3D11Client(SyncHandle aSyncHandle,
@@ -1657,30 +1652,19 @@ bool SyncObjectD3D11Client::SynchronizeInternal(ID3D11Device* aDevice,
                                                 bool aFallible) {
   mSyncLock.AssertCurrentThreadOwns();
 
-  MOZ_DIAGNOSTIC_ASSERT(mKeyedMutex);
-  if (NS_WARN_IF(!mKeyedMutex)) {
-    if (aFallible) {
-      gfxWarning() << "Missing D3D11 sync lock.";
-    } else {
-      gfxDevCrash(LogReason::D3D11SyncLock) << "Missing D3D11 sync lock.";
-    }
-    return false;
-  }
-
   HRESULT hr;
-  AutoTextureLock lock("SyncObjectD3D11Client::SynchronizeInternal",
-                       mKeyedMutex, hr, 20000);
+  AutoTextureLock lock(mKeyedMutex, hr, 20000);
 
-  if (NS_WARN_IF(!lock.Succeeded())) {
+  if (hr == WAIT_TIMEOUT) {
     if (DeviceManagerDx::Get()->HasDeviceReset()) {
-      gfxWarning() << "AcquireSync failed because of device reset.";
+      gfxWarning() << "AcquireSync timed out because of device reset.";
       return false;
     }
     if (aFallible) {
-      gfxWarning() << "Failure on the D3D11 sync lock.";
+      gfxWarning() << "Timeout on the D3D11 sync lock.";
     } else {
       gfxDevCrash(LogReason::D3D11SyncLock)
-          << "Failure on the D3D11 sync lock.";
+          << "Timeout on the D3D11 sync lock.";
     }
     return false;
   }
@@ -1709,29 +1693,25 @@ uint32_t GetMaxTextureSizeFromDevice(ID3D11Device* aDevice) {
 AutoLockD3D11Texture::AutoLockD3D11Texture(ID3D11Texture2D* aTexture) {
   aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
   if (!mMutex) {
-    mSuccess = true;
     return;
   }
-
   HRESULT hr = mMutex->AcquireSync(0, 10000);
   if (hr == WAIT_TIMEOUT) {
     MOZ_CRASH("GFX: IMFYCbCrImage timeout");
-  } else if (hr == WAIT_ABANDONED) {
-    gfxCriticalNote << "AutoLockD3D11Texture abandoned";
-  } else if (NS_WARN_IF(FAILED(hr))) {
-    gfxCriticalNote << "AutoLockD3D11Texture failed " << gfx::hexa(hr);
-  } else {
-    mSuccess = true;
+  }
+
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to lock the texture");
   }
 }
 
 AutoLockD3D11Texture::~AutoLockD3D11Texture() {
-  if (!mMutex || !mSuccess) {
+  if (!mMutex) {
     return;
   }
   HRESULT hr = mMutex->ReleaseSync(0);
-  if (NS_WARN_IF(FAILED(hr))) {
-    gfxCriticalNote << "~AutoLockD3D11Texture failed " << gfx::hexa(hr);
+  if (FAILED(hr)) {
+    NS_WARNING("Failed to unlock the texture");
   }
 }
 
