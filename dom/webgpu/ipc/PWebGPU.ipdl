@@ -45,6 +45,7 @@ parent:
   async TextureAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async RenderPass(RawId selfId, RawId aDeviceId, ByteBuf buf);
+  async ComputePass(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
   async DeviceCreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, UnsafeSharedMemoryHandle shm);
