@@ -296,7 +296,19 @@ def filter_out_shippable(task):
 
 def _try_task_config(full_task_graph, parameters, graph_config):
     requested_tasks = parameters["try_task_config"]["tasks"]
-    return list(set(requested_tasks) & full_task_graph.graph.nodes)
+    pattern_tasks = [x for x in requested_tasks if x.endswith("-*")]
+    tasks = list(set(requested_tasks) - set(pattern_tasks))
+    matched_tasks = []
+    for pattern in pattern_tasks:
+        matched_tasks.extend(
+            [
+                t
+                for t in full_task_graph.graph.nodes
+                if t.split(pattern.replace("*", ""))[-1].isnumeric()
+            ]
+        )
+
+    return list(set(tasks) | set(matched_tasks))
 
 
 def _try_option_syntax(full_task_graph, parameters, graph_config):

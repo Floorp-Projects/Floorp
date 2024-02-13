@@ -84,10 +84,14 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
 
     def add_chunk_patterns(tg):
         for task_name, task in tg.tasks.items():
+            chunk_index = -1
+            if task_name.endswith("-cf"):
+                chunk_index = -2
+
             chunks = task.task.get("extra", {}).get("chunks", {})
             if isinstance(chunks, int):
                 task.chunk_pattern = "{}-*/{}".format(
-                    "-".join(task_name.split("-")[:-1]), chunks
+                    "-".join(task_name.split("-")[:chunk_index]), chunks
                 )
             else:
                 assert isinstance(chunks, dict)
@@ -95,7 +99,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
                     task.chunk_pattern = task_name
                 else:
                     task.chunk_pattern = "{}-*".format(
-                        "-".join(task_name.split("-")[:-1])
+                        "-".join(task_name.split("-")[:chunk_index])
                     )
         return tg
 

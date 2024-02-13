@@ -10,3 +10,5 @@ subsuite = "ci"
 ["test_mach_try_auto.py"]
 
 ["test_mozilla_central.py"]
+
+["test_new_config.py"]

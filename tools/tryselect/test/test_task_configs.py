@@ -96,6 +96,10 @@ TASK_CONFIG_TESTS = {
             SystemExit,
         ),
     ],
+    "new-test-config": [
+        ([], None),
+        (["--new-test-config"], {"try_task_config": {"new-test-config": True}}),
+    ],
 }
 
 

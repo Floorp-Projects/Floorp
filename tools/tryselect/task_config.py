@@ -356,7 +356,11 @@ class Rebuild(TryConfig):
         if not rebuild:
             return
 
-        if kwargs.get("full") and rebuild > 3:
+        if (
+            not kwargs.get("new_test_config", False)
+            and kwargs.get("full")
+            and rebuild > 3
+        ):
             print(
                 "warning: limiting --rebuild to 3 when using --full. "
                 "Use custom push actions to add more."
@@ -530,6 +534,24 @@ class DisablePgo(TryConfig):
             }
 
 
+class NewConfig(TryConfig):
+    arguments = [
+        [
+            ["--new-test-config"],
+            {
+                "action": "store_true",
+                "help": "When a test fails (mochitest only) restart the browser and start from the next test",
+            },
+        ],
+    ]
+
+    def try_config(self, new_test_config, **kwargs):
+        if new_test_config:
+            return {
+                "new-test-config": True,
+            }
+
+
 class WorkerOverrides(TryConfig):
     arguments = [
         [
@@ -611,6 +633,7 @@ all_task_configs = {
     "env": Environment,
     "existing-tasks": ExistingTasks,
     "gecko-profile": GeckoProfile,
+    "new-test-config": NewConfig,
     "path": Path,
     "pernosco": Pernosco,
     "rebuild": Rebuild,
