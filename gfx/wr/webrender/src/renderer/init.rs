@@ -689,7 +689,7 @@ pub fn create_webrender_instance(
     let debug_method = if !options.enable_gpu_markers {
         // The GPU markers are disabled.
         GpuDebugMethod::None
-    } else if device.supports_extension("GL_KHR_debug") {
+    } else if device.get_capabilities().supports_khr_debug {
         GpuDebugMethod::KHR
     } else if device.supports_extension("GL_EXT_debug_marker") {
         GpuDebugMethod::MarkerEXT
