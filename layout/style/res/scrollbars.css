@@ -21,6 +21,7 @@
     -moz-control-character-visibility: initial;
     -moz-min-font-size-ratio: initial;
     -moz-box-collapse: initial;
+    -moz-theme: initial;
 
     /* We don't want zoom on our ancestors to affect our styles. */
     zoom: document;
