@@ -546,9 +546,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             )
 
         for requirements_file in requirements_files:
-            self.register_virtualenv_module(
-                requirements=[requirements_file], two_pass=True
-            )
+            self.register_virtualenv_module(requirements=[requirements_file])
 
         _python_interp = self.query_exe("python")
         if "win" in self.platform_name() and os.path.exists(_python_interp):
