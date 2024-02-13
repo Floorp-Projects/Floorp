@@ -1466,7 +1466,7 @@ class MediaPipelineReceiveVideo::PipelineListener
       yuvData.mChromaSubsampling =
           gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
-      if (!yuvImage->CopyData(yuvData)) {
+      if (NS_FAILED(yuvImage->CopyData(yuvData))) {
         MOZ_ASSERT(false);
         return;
       }

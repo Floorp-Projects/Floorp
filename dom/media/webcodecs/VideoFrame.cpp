@@ -811,7 +811,7 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
 
     RefPtr<layers::PlanarYCbCrImage> image =
         new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
-    if (!image->CopyData(data)) {
+    if (NS_FAILED(image->CopyData(data))) {
       return Err(nsPrintfCString(
           "Failed to create I420%s image",
           (aFormat.PixelFormat() == VideoPixelFormat::I420A ? "A" : "")));

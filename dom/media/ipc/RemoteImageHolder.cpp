@@ -93,7 +93,7 @@ already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
   // images coming from AOMDecoder are RecyclingPlanarYCbCrImages.
   RefPtr<RecyclingPlanarYCbCrImage> image =
       new RecyclingPlanarYCbCrImage(aBufferRecycleBin);
-  bool setData = image->CopyData(pData);
+  bool setData = NS_SUCCEEDED(image->CopyData(pData));
   MOZ_ASSERT(setData);
 
   switch (memOrShmem.type()) {

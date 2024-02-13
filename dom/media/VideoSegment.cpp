@@ -77,7 +77,7 @@ already_AddRefed<Image> VideoFrame::CreateBlackImage(
   data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
 
   // Copies data, so we can free data.
-  if (!image->CopyData(data)) {
+  if (NS_FAILED(image->CopyData(data))) {
     return nullptr;
   }
 

@@ -80,27 +80,29 @@ SharedPlanarYCbCrImage::GetAsSourceSurface() {
   return PlanarYCbCrImage::GetAsSourceSurface();
 }
 
-bool SharedPlanarYCbCrImage::CopyData(const PlanarYCbCrData& aData) {
+nsresult SharedPlanarYCbCrImage::CopyData(const PlanarYCbCrData& aData) {
   // If mTextureClient has not already been allocated by CreateEmptyBuffer,
   // allocate it. This code path is slower than the one used when
   // CreateEmptyBuffer has been called since it will trigger a full copy.
   if (!mTextureClient &&
       !CreateEmptyBuffer(aData, aData.YDataSize(), aData.CbCrDataSize())) {
-    return false;
+    // TODO: PlanarYCbCrImage::CreateEmptyBuffer may return false on non
+    // out-of-memory failures.
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   TextureClientAutoLock autoLock(mTextureClient, OpenMode::OPEN_WRITE_ONLY);
   if (!autoLock.Succeeded()) {
     MOZ_ASSERT(false, "Failed to lock the texture.");
-    return false;
+    return NS_ERROR_UNEXPECTED;
   }
 
   if (!UpdateYCbCrTextureClient(mTextureClient, aData)) {
     MOZ_ASSERT(false, "Failed to copy YCbCr data into the TextureClient");
-    return false;
+    return NS_ERROR_UNEXPECTED;
   }
   mTextureClient->MarkImmutable();
-  return true;
+  return NS_OK;
 }
 
 nsresult SharedPlanarYCbCrImage::AdoptData(const Data& aData) {
