@@ -129,6 +129,11 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   void AttachSurface() { mDetached = false; }
   void DetachSurface() { mDetached = true; }
 
+  already_AddRefed<gfx::SourceSurface> ExtractSubrect(
+      const gfx::IntRect& aRect) final {
+    return mRecordedSurface->ExtractSubrect(aRect);
+  }
+
  private:
   void EnsureDataSurfaceOnMainThread() {
     // The data can only be retrieved on the main thread.

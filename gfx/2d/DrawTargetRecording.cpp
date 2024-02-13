@@ -101,6 +101,8 @@ class SourceSurfaceRecording : public SourceSurface {
     return nullptr;
   }
 
+  already_AddRefed<SourceSurface> ExtractSubrect(const IntRect& aRect) override;
+
   IntSize mSize;
   SurfaceFormat mFormat;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
@@ -491,6 +493,18 @@ already_AddRefed<SourceSurface> DrawTargetRecording::IntoLuminanceSource(
       this, RecordedIntoLuminanceSource(retSurf, aLuminanceType, aOpacity));
 
   return retSurf.forget();
+}
+
+already_AddRefed<SourceSurface> SourceSurfaceRecording::ExtractSubrect(
+    const IntRect& aRect) {
+  if (aRect.IsEmpty() || !GetRect().Contains(aRect)) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurface> subSurf =
+      new SourceSurfaceRecording(aRect.Size(), mFormat, mRecorder);
+  mRecorder->RecordEvent(RecordedExtractSubrect(subSurf, this, aRect));
+  return subSurf.forget();
 }
 
 void DrawTargetRecording::Flush() {

@@ -1342,6 +1342,35 @@ class RecordedIntoLuminanceSource
   MOZ_IMPLICIT RecordedIntoLuminanceSource(S& aStream);
 };
 
+class RecordedExtractSubrect
+    : public RecordedEventDerived<RecordedExtractSubrect> {
+ public:
+  RecordedExtractSubrect(ReferencePtr aRefPtr, ReferencePtr aSourceSurface,
+                         const IntRect& aSubrect)
+      : RecordedEventDerived(EXTRACTSUBRECT),
+        mRefPtr(aRefPtr),
+        mSourceSurface(aSourceSurface),
+        mSubrect(aSubrect) {}
+
+  bool PlayEvent(Translator* aTranslator) const override;
+
+  template <class S>
+  void Record(S& aStream) const;
+  void OutputSimpleEventInfo(std::stringstream& aStringStream) const override;
+
+  std::string GetName() const override { return "ExtractSubrect"; }
+
+ private:
+  friend class RecordedEvent;
+
+  ReferencePtr mRefPtr;
+  ReferencePtr mSourceSurface;
+  IntRect mSubrect;
+
+  template <class S>
+  MOZ_IMPLICIT RecordedExtractSubrect(S& aStream);
+};
+
 class RecordedFontData : public RecordedEventDerived<RecordedFontData> {
  public:
   static void FontDataProc(const uint8_t* aData, uint32_t aSize,
@@ -3662,6 +3691,50 @@ inline void RecordedIntoLuminanceSource::OutputSimpleEventInfo(
   aStringStream << "[" << mRefPtr << "] Into Luminance Source";
 }
 
+inline bool RecordedExtractSubrect::PlayEvent(Translator* aTranslator) const {
+  SourceSurface* sourceSurf = aTranslator->LookupSourceSurface(mSourceSurface);
+  if (!sourceSurf) {
+    return false;
+  }
+
+  RefPtr<SourceSurface> subSurf = sourceSurf->ExtractSubrect(mSubrect);
+  if (!subSurf) {
+    RefPtr<DrawTarget> dt =
+        aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(
+            mSubrect.Size(), sourceSurf->GetFormat());
+    if (dt) {
+      dt->CopySurface(sourceSurf, mSubrect, IntPoint());
+      subSurf = dt->Snapshot();
+    }
+  }
+  if (!subSurf) {
+    return false;
+  }
+
+  aTranslator->AddSourceSurface(mRefPtr, subSurf);
+  return true;
+}
+
+template <class S>
+void RecordedExtractSubrect::Record(S& aStream) const {
+  WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mSourceSurface);
+  WriteElement(aStream, mSubrect);
+}
+
+template <class S>
+RecordedExtractSubrect::RecordedExtractSubrect(S& aStream)
+    : RecordedEventDerived(EXTRACTSUBRECT) {
+  ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mSourceSurface);
+  ReadElement(aStream, mSubrect);
+}
+
+inline void RecordedExtractSubrect::OutputSimpleEventInfo(
+    std::stringstream& aStringStream) const {
+  aStringStream << "[" << mRefPtr << "] Exract Subrect";
+}
+
 inline bool RecordedFlush::PlayEvent(Translator* aTranslator) const {
   DrawTarget* dt = aTranslator->GetCurrentDrawTarget();
   if (!dt) {
@@ -4335,6 +4408,7 @@ inline void RecordedDestination::OutputSimpleEventInfo(
   f(UNSCALEDFONTCREATION, RecordedUnscaledFontCreation);           \
   f(UNSCALEDFONTDESTRUCTION, RecordedUnscaledFontDestruction);     \
   f(INTOLUMINANCE, RecordedIntoLuminanceSource);                   \
+  f(EXTRACTSUBRECT, RecordedExtractSubrect);                       \
   f(EXTERNALSURFACECREATION, RecordedExternalSurfaceCreation);     \
   f(FLUSH, RecordedFlush);                                         \
   f(DETACHALLSNAPSHOTS, RecordedDetachAllSnapshots);               \
