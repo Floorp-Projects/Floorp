@@ -5042,7 +5042,9 @@ void nsTableFrame::CalcBCBorders() {
   BCCellBorders lastBlockDirBorders(damageArea.ColCount() + 1,
                                     damageArea.StartCol());
   if (!lastBlockDirBorders.borders) ABORT0();
-  BCCellBorder lastBStartBorder, lastBEndBorder;
+  // Only used for calculating block-start border
+  Maybe<BCCellBorder> firstRowBStartEdgeBorder;
+  BCCellBorder lastBEndBorder;
   // inline-dir borders indexed in inline-direction (cols)
   BCCellBorders lastBEndBorders(damageArea.ColCount() + 1,
                                 damageArea.StartCol());
@@ -5059,16 +5061,18 @@ void nsTableFrame::CalcBCBorders() {
 
   BCMapCellIterator iter(this, damageArea);
   for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
-    // see if lastBStartBorder, lastBEndBorder need to be reset
+    // see if firstRowBStartEdgeBorder, lastBEndBorder need to be reset
     if (iter.IsNewRow()) {
-      lastBStartBorder.Reset(info.mRowIndex, info.mRowSpan);
+      if (info.mRowIndex == 0) {
+        BCCellBorder border;
+        border.Reset(info.mRowIndex, info.mRowSpan);
+        firstRowBStartEdgeBorder = Some(border);
+      } else {
+        firstRowBStartEdgeBorder = Nothing{};
+      }
       lastBEndBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
     } else if (info.mColIndex > damageArea.StartCol()) {
       lastBEndBorder = lastBEndBorders[info.mColIndex - 1];
-      if (info.mRowIndex > (lastBEndBorder.rowIndex - lastBEndBorder.rowSpan)) {
-        // the bStart border's iStart edge butts against the middle of a rowspan
-        lastBStartBorder.Reset(info.mRowIndex, info.mRowSpan);
-      }
       if (lastBEndBorder.rowIndex > (info.GetCellEndRowIndex() + 1)) {
         // the bEnd border's iStart edge butts against the middle of a rowspan
         lastBEndBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
@@ -5101,9 +5105,13 @@ void nsTableFrame::CalcBCBorders() {
         }
         bStartCorners[colIdx + 1].Set(eLogicalSideIStart,
                                       currentBorder);  // bStart-iEnd
-        // update lastBStartBorder and see if a new segment starts
-        startSeg =
-            SetInlineDirBorder(currentBorder, tlCorner, lastBStartBorder);
+        MOZ_ASSERT(firstRowBStartEdgeBorder,
+                   "Inline start border tracking not set?");
+        // update firstRowBStartEdgeBorder and see if a new segment starts
+        startSeg = firstRowBStartEdgeBorder
+                       ? SetInlineDirBorder(currentBorder, tlCorner,
+                                            firstRowBStartEdgeBorder.ref())
+                       : true;
         // store the border segment in the cell map
         tableCellMap->SetBCBorderEdge(eLogicalSideBStart, *iter.mCellMap, 0, 0,
                                       colIdx, 1, currentBorder.owner,
