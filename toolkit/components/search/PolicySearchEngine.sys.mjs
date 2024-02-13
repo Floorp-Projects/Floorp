@@ -6,12 +6,6 @@
 
 import { SearchEngine } from "resource://gre/modules/SearchEngine.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-});
-
 /**
  * PolicySearchEngine represents a search engine defined by an enterprise
  * policy.
@@ -23,13 +17,14 @@ export class PolicySearchEngine extends SearchEngine {
    * @param {object} options
    *   The options for this search engine.
    * @param {object} [options.details]
-   *   An object with the details for this search engine. See
-   *   nsISearchService.addPolicyEngine for more details.
+   *   An object that matches the `SearchEngines` policy schema.
    * @param {object} [options.json]
    *   An object that represents the saved JSON settings for the engine.
+   *
+   * @see browser/components/enterprisepolicies/schemas/policies-schema.json
    */
   constructor(options = {}) {
-    let id = "policy-" + (options.details?.name ?? options.json._name);
+    let id = "policy-" + (options.details?.Name ?? options.json._name);
 
     super({
       loadPath: "[policy]",
@@ -37,7 +32,24 @@ export class PolicySearchEngine extends SearchEngine {
     });
 
     if (options.details) {
-      this._initWithDetails(options.details);
+      // Map the data to look like a WebExtension manifest, as that is what
+      // _initWithDetails requires.
+      let details = {
+        description: options.details.Description,
+        iconURL: options.details.IconURL ? options.details.IconURL.href : null,
+        name: options.details.Name,
+        // If the encoding is not specified or is falsy, we will fall back to
+        // the default encoding.
+        encoding: options.details.Encoding,
+        search_url: encodeURI(options.details.URLTemplate),
+        keyword: options.details.Alias,
+        search_url_post_params:
+          options.details.Method == "POST"
+            ? options.details.PostData
+            : undefined,
+        suggest_url: options.details.SuggestURLTemplate,
+      };
+      this._initWithDetails(details);
     } else {
       this._initWithJSON(options.json);
     }
@@ -65,22 +77,6 @@ export class PolicySearchEngine extends SearchEngine {
    */
   get telemetryId() {
     return `other-${this.name}`;
-  }
-
-  /**
-   * Updates a search engine that is specified from enterprise policies.
-   *
-   * @param {object} details
-   *   An object that simulates the manifest object from a WebExtension. See
-   *   nsISearchService.updatePolicyEngine for more details.
-   */
-  update(details) {
-    this._urls = [];
-    this._iconMapObj = null;
-
-    this._initWithDetails(details);
-
-    lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 
   /**

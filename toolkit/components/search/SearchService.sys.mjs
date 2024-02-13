@@ -583,8 +583,8 @@ export class SearchService {
    * Adds a search engine that is specified from enterprise policies.
    *
    * @param {object} details
-   *   An object that simulates the manifest object from a WebExtension. See
-   *   the idl for more details.
+   *   An object that matches the `SearchEngines` policy schema.
+   * @see browser/components/enterprisepolicies/schemas/policies-schema.json
    */
   async #addPolicyEngine(details) {
     let newEngine = new lazy.PolicySearchEngine({ details });
@@ -1614,38 +1614,9 @@ export class SearchService {
       await lazy.AddonManager.readyPromise;
     }
 
-    let newEngines = await this.#loadEnginesFromConfig(engines);
-    for (let engine of newEngines) {
-      this.#addEngineToStore(engine);
-    }
+    await this.#loadEnginesFromConfig(engines);
 
-    if (
-      this.#startupExtensions.size &&
-      lazy.SearchUtils.newSearchConfigEnabled
-    ) {
-      await lazy.AddonManager.readyPromise;
-    }
-
-    lazy.logConsole.debug(
-      "#loadEngines: loading",
-      this.#startupExtensions.size,
-      "engines reported by AddonManager startup"
-    );
-    for (let extension of this.#startupExtensions) {
-      try {
-        await this.#installExtensionEngine(
-          extension,
-          [lazy.SearchUtils.DEFAULT_TAG],
-          true
-        );
-      } catch (ex) {
-        lazy.logConsole.error(
-          `#installExtensionEngine failed for ${extension.id}`,
-          ex
-        );
-      }
-    }
-    this.#startupExtensions.clear();
+    await this.#loadStartupEngines();
 
     this.#loadEnginesFromPolicies();
 
@@ -1777,17 +1748,13 @@ export class SearchService {
    *
    * @param {Array} engineConfigs
    *   An array of engines configurations based on the schema.
-   * @returns {Array.<nsISearchEngine>}
-   *   Returns an array of the loaded search engines. This may be
-   *   smaller than the original list if not all engines can be loaded.
    */
   async #loadEnginesFromConfig(engineConfigs) {
     lazy.logConsole.debug("#loadEnginesFromConfig");
-    let engines = [];
     for (let config of engineConfigs) {
       try {
         let engine = await this._makeEngineFromConfig(config);
-        engines.push(engine);
+        this.#addEngineToStore(engine);
       } catch (ex) {
         console.error(
           `Could not load engine ${
@@ -1796,7 +1763,40 @@ export class SearchService {
         );
       }
     }
-    return engines;
+  }
+
+  /**
+   * Loads any engines that have been received from the AddonManager during
+   * startup and before we have finished initialising.
+   */
+  async #loadStartupEngines() {
+    if (
+      this.#startupExtensions.size &&
+      lazy.SearchUtils.newSearchConfigEnabled
+    ) {
+      await lazy.AddonManager.readyPromise;
+    }
+
+    lazy.logConsole.debug(
+      "#loadEngines: loading",
+      this.#startupExtensions.size,
+      "engines reported by AddonManager startup"
+    );
+    for (let extension of this.#startupExtensions) {
+      try {
+        await this.#installExtensionEngine(
+          extension,
+          [lazy.SearchUtils.DEFAULT_TAG],
+          true
+        );
+      } catch (ex) {
+        lazy.logConsole.error(
+          `#installExtensionEngine failed for ${extension.id}`,
+          ex
+        );
+      }
+    }
+    this.#startupExtensions.clear();
   }
 
   /**
@@ -2186,20 +2186,7 @@ export class SearchService {
       return;
     }
     for (let engineDetails of activePolicies.SearchEngines.Add ?? []) {
-      let details = {
-        description: engineDetails.Description,
-        iconURL: engineDetails.IconURL ? engineDetails.IconURL.href : null,
-        name: engineDetails.Name,
-        // If the encoding is not specified or is falsy, we will fall back to
-        // the default encoding.
-        encoding: engineDetails.Encoding,
-        search_url: encodeURI(engineDetails.URLTemplate),
-        keyword: engineDetails.Alias,
-        search_url_post_params:
-          engineDetails.Method == "POST" ? engineDetails.PostData : undefined,
-        suggest_url: engineDetails.SuggestURLTemplate,
-      };
-      this.#addPolicyEngine(details);
+      this.#addPolicyEngine(engineDetails);
     }
   }
 
