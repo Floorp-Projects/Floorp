@@ -5,7 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Range.h"
+#include "mozilla/Range.h"  // mozilla::Range
+#include "mozilla/Span.h"   // mozilla::Span
+#include "mozilla/Utf8.h"   // mozilla::ConvertUtf8toUtf16
 
 #include "js/CharacterEncoding.h"
 #include "jsapi-tests/tests.h"
@@ -45,3 +47,185 @@ BEGIN_TEST(testUTF8_badSurrogate) {
   return true;
 }
 END_TEST(testUTF8_badSurrogate)
+
+BEGIN_TEST(testUTF8_LossyConversion) {
+  // Maximal subparts of an ill-formed subsequence should be replaced with
+  // single REPLACEMENT CHARACTER.
+
+  // Input ends with partial sequence.
+  // clang-format off
+  const char* inputs1[] = {
+    "\xC2",
+    "\xDF",
+    "\xE0",
+    "\xE0\xA0",
+    "\xF0",
+    "\xF0\x90",
+    "\xF0\x90\x80",
+  };
+  // clang-format on
+
+  char16_t outputBuf[8];
+  mozilla::Span output(outputBuf, 8);
+
+  for (const char* input : inputs1) {
+    size_t len;
+    JS::TwoByteCharsZ utf16 = JS::LossyUTF8CharsToNewTwoByteCharsZ(
+        cx, JS::UTF8Chars(input, js_strlen(input)), &len,
+        js::StringBufferArena);
+    CHECK(utf16);
+    CHECK(len == 1);
+    CHECK(utf16[0] == 0xFFFD);
+
+    // Make sure the behavior matches to encoding_rs.
+    len = mozilla::ConvertUtf8toUtf16(mozilla::Span(input, js_strlen(input)),
+                                      output);
+    CHECK(len == 1);
+    CHECK(outputBuf[0] == 0xFFFD);
+  }
+
+  // Partial sequence followed by ASCII range.
+  // clang-format off
+  const char* inputs2[] = {
+    "\xC2 ",
+    "\xDF ",
+    "\xE0 ",
+    "\xE0\xA0 ",
+    "\xF0 ",
+    "\xF0\x90 ",
+    "\xF0\x90\x80 ",
+  };
+  // clang-format on
+
+  for (const char* input : inputs2) {
+    size_t len;
+    JS::TwoByteCharsZ utf16 = JS::LossyUTF8CharsToNewTwoByteCharsZ(
+        cx, JS::UTF8Chars(input, js_strlen(input)), &len,
+        js::StringBufferArena);
+    CHECK(utf16);
+    CHECK(len == 2);
+    CHECK(utf16[0] == 0xFFFD);
+    CHECK(utf16[1] == 0x20);
+
+    len = mozilla::ConvertUtf8toUtf16(mozilla::Span(input, js_strlen(input)),
+                                      output);
+    CHECK(len == 2);
+    CHECK(outputBuf[0] == 0xFFFD);
+    CHECK(outputBuf[1] == 0x20);
+  }
+
+  // Partial sequence followed by other first code unit.
+  // clang-format off
+  const char* inputs3[] = {
+    "\xC2\xC2\x80",
+    "\xDF\xC2\x80",
+    "\xE0\xC2\x80",
+    "\xE0\xA0\xC2\x80",
+    "\xF0\xC2\x80",
+    "\xF0\x90\xC2\x80",
+    "\xF0\x90\x80\xC2\x80",
+  };
+  // clang-format on
+
+  for (const char* input : inputs3) {
+    size_t len;
+    JS::TwoByteCharsZ utf16 = JS::LossyUTF8CharsToNewTwoByteCharsZ(
+        cx, JS::UTF8Chars(input, js_strlen(input)), &len,
+        js::StringBufferArena);
+    CHECK(utf16);
+    CHECK(len == 2);
+    CHECK(utf16[0] == 0xFFFD);
+    CHECK(utf16[1] == 0x80);
+
+    len = mozilla::ConvertUtf8toUtf16(mozilla::Span(input, js_strlen(input)),
+                                      output);
+    CHECK(len == 2);
+    CHECK(outputBuf[0] == 0xFFFD);
+    CHECK(outputBuf[1] == 0x80);
+  }
+
+  // Invalid second byte.
+  // clang-format off
+  const char* inputs4[] = {
+    "\xE0\x9F\x80\x80",
+    "\xED\xA0\x80\x80",
+    "\xF0\x80\x80\x80",
+    "\xF4\x90\x80\x80",
+  };
+  // clang-format on
+
+  for (const char* input : inputs4) {
+    size_t len;
+    JS::TwoByteCharsZ utf16 = JS::LossyUTF8CharsToNewTwoByteCharsZ(
+        cx, JS::UTF8Chars(input, js_strlen(input)), &len,
+        js::StringBufferArena);
+    CHECK(utf16);
+    CHECK(len == 4);
+    CHECK(utf16[0] == 0xFFFD);
+    CHECK(utf16[1] == 0xFFFD);
+    CHECK(utf16[2] == 0xFFFD);
+    CHECK(utf16[3] == 0xFFFD);
+
+    len = mozilla::ConvertUtf8toUtf16(mozilla::Span(input, js_strlen(input)),
+                                      output);
+    CHECK(len == 4);
+    CHECK(outputBuf[0] == 0xFFFD);
+    CHECK(outputBuf[1] == 0xFFFD);
+    CHECK(outputBuf[2] == 0xFFFD);
+    CHECK(outputBuf[3] == 0xFFFD);
+  }
+
+  // Invalid second byte, with not sufficient number of units.
+  // clang-format off
+  const char* inputs5[] = {
+    "\xE0\x9F\x80",
+    "\xED\xA0\x80",
+    "\xF0\x80\x80",
+    "\xF4\x90\x80",
+  };
+  const char* inputs6[] = {
+    "\xE0\x9F",
+    "\xED\xA0",
+    "\xF0\x80",
+    "\xF4\x90",
+  };
+  // clang-format on
+
+  for (const char* input : inputs5) {
+    size_t len;
+    JS::TwoByteCharsZ utf16 = JS::LossyUTF8CharsToNewTwoByteCharsZ(
+        cx, JS::UTF8Chars(input, js_strlen(input)), &len,
+        js::StringBufferArena);
+    CHECK(utf16);
+    CHECK(len == 3);
+    CHECK(utf16[0] == 0xFFFD);
+    CHECK(utf16[1] == 0xFFFD);
+    CHECK(utf16[2] == 0xFFFD);
+
+    len = mozilla::ConvertUtf8toUtf16(mozilla::Span(input, js_strlen(input)),
+                                      output);
+    CHECK(len == 3);
+    CHECK(outputBuf[0] == 0xFFFD);
+    CHECK(outputBuf[1] == 0xFFFD);
+    CHECK(outputBuf[2] == 0xFFFD);
+  }
+
+  for (const char* input : inputs6) {
+    size_t len;
+    JS::TwoByteCharsZ utf16 = JS::LossyUTF8CharsToNewTwoByteCharsZ(
+        cx, JS::UTF8Chars(input, js_strlen(input)), &len,
+        js::StringBufferArena);
+    CHECK(utf16);
+    CHECK(len == 2);
+    CHECK(utf16[0] == 0xFFFD);
+    CHECK(utf16[1] == 0xFFFD);
+
+    len = mozilla::ConvertUtf8toUtf16(mozilla::Span(input, js_strlen(input)),
+                                      output);
+    CHECK(len == 2);
+    CHECK(outputBuf[0] == 0xFFFD);
+    CHECK(outputBuf[1] == 0xFFFD);
+  }
+  return true;
+}
+END_TEST(testUTF8_LossyConversion)

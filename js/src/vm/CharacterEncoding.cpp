@@ -259,6 +259,17 @@ enum class OnUTF8Error {
   Crash,
 };
 
+inline bool IsInvalidSecondByte(uint32_t first, uint8_t second) {
+  // Perform an extra check aginst the second byte.
+  // From Unicode Standard v6.2, Table 3-7 Well-Formed UTF-8 Byte Sequences.
+  //
+  // The consumer should perform a followup check for second & 0xC0 == 0x80.
+  return (first == 0xE0 && (second & 0xE0) != 0xA0) ||  // E0 A0~BF
+         (first == 0xED && (second & 0xE0) != 0x80) ||  // ED 80~9F
+         (first == 0xF0 && (second & 0xF0) == 0x80) ||  // F0 90~BF
+         (first == 0xF4 && (second & 0xF0) != 0x80);    // F4 80~8F
+}
+
 // Scan UTF-8 input and (internally, at least) convert it to a series of UTF-16
 // code units. But you can also do odd things like pass an empty lambda for
 // `dst`, in which case the output is discarded entirely--the only effect of
@@ -311,16 +322,34 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars& src,
 
       // Check that |src| is large enough to hold an n-byte code unit.
       if (i + n > srclen) {
-        INVALID(ReportBufferTooSmall, /* dummy = */ 0, 1);
+        // Check the second and continuation bytes, to replace maximal subparts
+        // of an ill-formed subsequence with single U+FFFD.
+        if (i + 2 > srclen) {
+          INVALID(ReportBufferTooSmall, /* dummy = */ 0, 1);
+        }
+
+        if (IsInvalidSecondByte(v, (uint8_t)src[i + 1])) {
+          INVALID(ReportInvalidCharacter, i, 1);
+        }
+
+        if ((src[i + 1] & 0xC0) != 0x80) {
+          INVALID(ReportInvalidCharacter, i, 1);
+        }
+
+        if (n == 3) {
+          INVALID(ReportInvalidCharacter, i, 2);
+        } else {
+          if (i + 3 > srclen) {
+            INVALID(ReportBufferTooSmall, /* dummy = */ 0, 2);
+          }
+          if ((src[i + 2] & 0xC0) != 0x80) {
+            INVALID(ReportInvalidCharacter, i, 2);
+          }
+          INVALID(ReportInvalidCharacter, i, 3);
+        }
       }
 
-      // Check the second byte.  From Unicode Standard v6.2, Table 3-7
-      // Well-Formed UTF-8 Byte Sequences.
-      if ((v == 0xE0 && ((uint8_t)src[i + 1] & 0xE0) != 0xA0) ||  // E0 A0~BF
-          (v == 0xED && ((uint8_t)src[i + 1] & 0xE0) != 0x80) ||  // ED 80~9F
-          (v == 0xF0 && ((uint8_t)src[i + 1] & 0xF0) == 0x80) ||  // F0 90~BF
-          (v == 0xF4 && ((uint8_t)src[i + 1] & 0xF0) != 0x80))    // F4 80~8F
-      {
+      if (IsInvalidSecondByte(v, (uint8_t)src[i + 1])) {
         INVALID(ReportInvalidCharacter, i, 1);
       }
 
