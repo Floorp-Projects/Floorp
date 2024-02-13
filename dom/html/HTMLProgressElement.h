@@ -37,7 +37,10 @@ class HTMLProgressElement final : public nsGenericHTMLElement {
   }
   double Max() const;
   void SetMax(double aValue, ErrorResult& aRv) {
-    SetDoubleAttr(nsGkAtoms::max, aValue, aRv);
+    // https://html.spec.whatwg.org/multipage/form-elements.html#dom-progress-max
+    // The max IDL attribute must reflect the content attribute of the same
+    // name, limited to only positive numbers.
+    SetDoubleAttr<Reflection::OnlyPositive>(nsGkAtoms::max, aValue, aRv);
   }
   double Position() const;
 
