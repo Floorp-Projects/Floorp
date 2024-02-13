@@ -190,7 +190,6 @@ static gboolean expose_event_cb(GtkWidget* widget, cairo_t* cr);
 static gboolean configure_event_cb(GtkWidget* widget, GdkEventConfigure* event);
 static void widget_map_cb(GtkWidget* widget);
 static void widget_unmap_cb(GtkWidget* widget);
-static void widget_unrealize_cb(GtkWidget* widget);
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation);
 static void toplevel_window_size_allocate_cb(GtkWidget* widget,
                                              GtkAllocation* allocation);
@@ -4137,15 +4136,6 @@ void nsWindow::OnUnmap() {
   }
 }
 
-void nsWindow::OnUnrealize() {
-  // The GdkWindows are about to be destroyed (but not deleted), so remove
-  // their references back to their container widget while the GdkWindow
-  // hierarchy is still available.
-  // This call means we *don't* have X11 (or Wayland) window we can render to.
-  LOG("nsWindow::OnUnrealize GdkWindow %p", mGdkWindow);
-  ReleaseGdkWindow();
-}
-
 void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   LOG("nsWindow::OnSizeAllocate %d,%d -> %d x %d\n", aAllocation->x,
       aAllocation->y, aAllocation->width, aAllocation->height);
@@ -5921,23 +5911,6 @@ void nsWindow::ConfigureGdkWindow() {
   LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow, GetX11Window());
 }
 
-void nsWindow::ReleaseGdkWindow() {
-  LOG("nsWindow::ReleaseGdkWindow()");
-
-  DestroyChildWindows();
-
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-  }
-
-  if (mGdkWindow) {
-    g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
-    mGdkWindow = nullptr;
-  }
-
-  mSurfaceProvider.CleanupResources();
-}
-
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
                           widget::InitData* aInitData) {
@@ -6366,8 +6339,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // Widget signals
   g_signal_connect(mContainer, "map", G_CALLBACK(widget_map_cb), nullptr);
   g_signal_connect(mContainer, "unmap", G_CALLBACK(widget_unmap_cb), nullptr);
-  g_signal_connect(mContainer, "unrealize", G_CALLBACK(widget_unrealize_cb),
-                   nullptr);
   g_signal_connect_after(mContainer, "size_allocate",
                          G_CALLBACK(size_allocate_cb), nullptr);
   g_signal_connect(mContainer, "hierarchy-changed",
@@ -8099,14 +8070,6 @@ static void widget_unmap_cb(GtkWidget* widget) {
     return;
   }
   window->OnUnmap();
-}
-
-static void widget_unrealize_cb(GtkWidget* widget) {
-  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) {
-    return;
-  }
-  window->OnUnrealize();
 }
 
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation) {
@@ -9934,7 +9897,15 @@ void nsWindow::ClearRenderingQueue() {
 
 void nsWindow::DisableRendering() {
   LOG("nsWindow::DisableRendering()");
+
   DestroyLayerManager();
+
+  if (mGdkWindow) {
+    g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
+    mGdkWindow = nullptr;
+  }
+
+  mSurfaceProvider.CleanupResources();
 }
 
 // Apply workaround for Mutter compositor bug (mzbz#1777269).
