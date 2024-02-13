@@ -17,7 +17,7 @@ class WorkletLoadContext;
 }  // namespace mozilla::dom
 
 namespace mozilla::loader {
-class ComponentLoadContext;
+class SyncLoadContext;
 }
 
 namespace JS::loader {
@@ -32,7 +32,7 @@ class ScriptLoadRequest;
  *
  */
 
-enum class ContextKind { Window, Component, Worker, Worklet };
+enum class ContextKind { Window, Sync, Worker, Worklet };
 
 class LoadContextBase : public nsISupports {
  private:
@@ -56,8 +56,8 @@ class LoadContextBase : public nsISupports {
   bool IsWindowContext() const { return mKind == ContextKind::Window; }
   mozilla::dom::ScriptLoadContext* AsWindowContext();
 
-  bool IsComponentContext() const { return mKind == ContextKind::Component; }
-  mozilla::loader::ComponentLoadContext* AsComponentContext();
+  bool IsSyncContext() const { return mKind == ContextKind::Sync; }
+  mozilla::loader::SyncLoadContext* AsSyncContext();
 
   bool IsWorkerContext() const { return mKind == ContextKind::Worker; }
   mozilla::dom::WorkerLoadContext* AsWorkerContext();

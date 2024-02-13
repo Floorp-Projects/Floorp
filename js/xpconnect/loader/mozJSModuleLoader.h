@@ -7,7 +7,7 @@
 #ifndef mozJSModuleLoader_h
 #define mozJSModuleLoader_h
 
-#include "ComponentModuleLoader.h"
+#include "SyncModuleLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
@@ -117,10 +117,10 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
   bool IsDevToolsLoader() const { return this == sDevToolsLoader; }
 
-  // Public methods for use from ComponentModuleLoader.
+  // Public methods for use from SyncModuleLoader.
   static bool IsTrustedScheme(nsIURI* aURI);
   static nsresult LoadSingleModuleScript(
-      mozilla::loader::ComponentModuleLoader* aModuleLoader, JSContext* aCx,
+      mozilla::loader::SyncModuleLoader* aModuleLoader, JSContext* aCx,
       JS::loader::ModuleLoadRequest* aRequest,
       JS::MutableHandleScript aScriptOut);
 
@@ -258,7 +258,7 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   JS::PersistentRooted<JSObject*> mLoaderGlobal;
   JS::PersistentRooted<JSObject*> mServicesObj;
 
-  RefPtr<mozilla::loader::ComponentModuleLoader> mModuleLoader;
+  RefPtr<mozilla::loader::SyncModuleLoader> mModuleLoader;
 };
 
 #endif

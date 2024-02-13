@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_loader_ComponentModuleLoader_h
-#define mozilla_loader_ComponentModuleLoader_h
+#ifndef mozilla_loader_SyncModuleLoader_h
+#define mozilla_loader_SyncModuleLoader_h
 
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ModuleLoaderBase.h"
@@ -17,12 +17,12 @@ class mozJSModuleLoader;
 namespace mozilla {
 namespace loader {
 
-class ComponentScriptLoader : public JS::loader::ScriptLoaderInterface {
+class SyncScriptLoader : public JS::loader::ScriptLoaderInterface {
  public:
   NS_DECL_ISUPPORTS
 
  private:
-  ~ComponentScriptLoader() = default;
+  ~SyncScriptLoader() = default;
 
   nsIURI* GetBaseURI() const override;
 
@@ -38,21 +38,21 @@ class ComponentScriptLoader : public JS::loader::ScriptLoaderInterface {
       JS::MutableHandle<JSScript*> aIntroductionScript) override;
 };
 
-class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
+class SyncModuleLoader : public JS::loader::ModuleLoaderBase {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ComponentModuleLoader,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SyncModuleLoader,
                                            JS::loader::ModuleLoaderBase)
 
-  ComponentModuleLoader(ComponentScriptLoader* aScriptLoader,
-                        nsIGlobalObject* aGlobalObject);
+  SyncModuleLoader(SyncScriptLoader* aScriptLoader,
+                   nsIGlobalObject* aGlobalObject);
 
   [[nodiscard]] nsresult ProcessRequests();
 
   void MaybeReportLoadError(JSContext* aCx);
 
  private:
-  ~ComponentModuleLoader();
+  ~SyncModuleLoader();
 
   already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) override;
@@ -82,12 +82,11 @@ class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
   JS::PersistentRooted<JS::Value> mLoadException;
 };
 
-// Data specific to ComponentModuleLoader that is associated with each load
+// Data specific to SyncModuleLoader that is associated with each load
 // request.
-class ComponentLoadContext : public JS::loader::LoadContextBase {
+class SyncLoadContext : public JS::loader::LoadContextBase {
  public:
-  ComponentLoadContext()
-      : LoadContextBase(JS::loader::ContextKind::Component) {}
+  SyncLoadContext() : LoadContextBase(JS::loader::ContextKind::Sync) {}
 
  public:
   // The result of compiling a module script. These fields are used temporarily
@@ -106,4 +105,4 @@ class ComponentLoadContext : public JS::loader::LoadContextBase {
 }  // namespace loader
 }  // namespace mozilla
 
-#endif  // mozilla_loader_ComponentModuleLoader_h
+#endif  // mozilla_loader_SyncModuleLoader_h
