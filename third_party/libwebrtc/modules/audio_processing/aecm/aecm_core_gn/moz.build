@@ -203,12 +203,6 @@ if CONFIG["TARGET_CPU"] == "ppc64":
         "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
     ]
 
-if CONFIG["TARGET_CPU"] == "riscv64":
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
 if CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -269,6 +263,12 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
     DEFINES["_GNU_SOURCE"] = True
+
+    SOURCES += [
+        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
+    ]
+
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "riscv64":
 
     SOURCES += [
         "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
