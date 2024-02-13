@@ -119,6 +119,7 @@ UNIFIED_SOURCES += [
     "testSetProperty.cpp",
     "testSetPropertyIgnoringNamedGetter.cpp",
     "testSharedImmutableStringsCache.cpp",
+    "testSinglyLinkedList.cpp",
     "testSliceBudget.cpp",
     "testSlowScript.cpp",
     "testSourcePolicy.cpp",
