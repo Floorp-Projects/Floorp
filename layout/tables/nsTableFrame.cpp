@@ -3940,9 +3940,11 @@ class BCMapCellIterator {
   int32_t mRowIndex;
   uint32_t mNumTableCols;
   int32_t mColIndex;
-  nsPoint mAreaStart;  // These are not really points in the usual
-  nsPoint mAreaEnd;    // sense; they're column/row coordinates
-                       // in the cell map.
+  // We don't necessarily want to traverse all areas
+  // of the table - mArea(Start|End) specify the area to traverse.
+  // TODO(dshin): Should be not abuse `nsPoint` for this - See bug 1879847.
+  nsPoint mAreaStart;
+  nsPoint mAreaEnd;
 };
 
 BCMapCellIterator::BCMapCellIterator(nsTableFrame* aTableFrame,
@@ -4489,8 +4491,6 @@ static bool Perpendicular(mozilla::LogicalSide aSide1,
 // Initial value indicating that BCCornerInfo's ownerStyle hasn't been set yet.
 #define BORDER_STYLE_UNSET static_cast<StyleBorderStyle>(255)
 
-// XXX allocate this as number-of-cols+1 instead of number-of-cols+1 *
-// number-of-rows+1
 struct BCCornerInfo {
   BCCornerInfo() {
     ownerColor = 0;
@@ -4525,6 +4525,7 @@ struct BCCornerInfo {
   // 7 bits are unused
 };
 
+// Start a new border at this corner, going in the direction of a given side.
 void BCCornerInfo::Set(mozilla::LogicalSide aSide, BCCellBorder aBorder) {
   // FIXME bug 1508921: We mask 4-bit BCBorderOwner enum to 3 bits to preserve
   // buggy behavior found by the frame_above_rules_all.html mochitest.
@@ -4549,6 +4550,8 @@ void BCCornerInfo::Set(mozilla::LogicalSide aSide, BCCellBorder aBorder) {
   subStyle = StyleBorderStyle::Solid;
 }
 
+// Add a new border going in the direction of a given side, and update the
+// dominant border.
 void BCCornerInfo::Update(mozilla::LogicalSide aSide, BCCellBorder aBorder) {
   if (ownerStyle == BORDER_STYLE_UNSET) {
     Set(aSide, aBorder);
@@ -4955,65 +4958,62 @@ BCCellBorder BCMapCellInfo::GetBStartInternalBorder() {
                         mTableWM, eLogicalSideBStart, !ADJACENT);
 }
 
-/* XXX This comment is still written in physical (horizontal-tb) terms.
-
-   Here is the order for storing border edges in the cell map as a cell is
-   processed. There are n=colspan top and bottom border edges per cell and
-   n=rowspan left and right border edges per cell.
-
-   1) On the top edge of the table, store the top edge. Never store the top edge
-      otherwise, since a bottom edge from a cell above will take care of it.
-
-   2) On the left edge of the table, store the left edge. Never store the left
-      edge othewise, since a right edge from a cell to the left will take care
-      of it.
-
-   3) Store the right edge (or edges if a row span)
-
-   4) Store the bottom edge (or edges if a col span)
-
-   Since corners are computed with only an array of BCCornerInfo indexed by the
-   number-of-cols, corner calculations are somewhat complicated. Using an array
-   with number-of-rows * number-of-col entries would simplify this, but at an
-   extra in memory cost of nearly 12 bytes per cell map entry. Collapsing
-   borders already have about an extra 8 byte per cell map entry overhead (this
-   could be reduced to 4 bytes if we are willing to not store border widths in
-   nsTableCellFrame), Here are the rules in priority order for storing cornes in
-   the cell map as a cell is processed. top-left means the left endpoint of the
-   border edge on the top of the cell. There are n=colspan top and bottom border
-   edges per cell and n=rowspan left and right border edges per cell.
-
-   1) On the top edge of the table, store the top-left corner, unless on the
-      left edge of the table. Never store the top-right corner, since it will
-      get stored as a right-top corner.
-
-   2) On the left edge of the table, store the left-top corner. Never store the
-      left-bottom corner, since it will get stored as a bottom-left corner.
-
-   3) Store the right-top corner if (a) it is the top right corner of the table
-      or (b) it is not on the top edge of the table. Never store the
-      right-bottom corner since it will get stored as a bottom-right corner.
-
-   4) Store the bottom-right corner, if it is the bottom right corner of the
-      table. Never store it otherwise, since it will get stored as either a
-      right-top corner by a cell below or a bottom-left corner from a cell to
-      the right.
-
-   5) Store the bottom-left corner, if (a) on the bottom edge of the table or
-      (b) if the left edge hits the top side of a colspan in its interior.
-      Never store the corner otherwise, since it will get stored as a right-top
-      corner by a cell from below.
-
-   XXX the BC-RTL hack - The correct fix would be a rewrite as described in bug
-   203686. In order to draw borders in rtl conditions somehow correct, the
-   existing structure which relies heavily on the assumption that the next cell
-   sibling will be on the right side, has been modified. We flip the border
-   during painting and during style lookup. Look for tableIsLTR for places where
-   the flipping is done.
- */
-
-// Calc the dominant border at every cell edge and corner within the current
-// damage area
+//  Calculate border information for border-collapsed tables.
+//  Because borders of table/row/cell, etc merge into one, we need to
+//  determine which border dominates at each cell. In addition, corner-specific
+//  information, e.g. bevelling, is computed as well.
+//
+//  Here is the order for storing border edges in the cell map as a cell is
+//  processed.
+//
+//  For each cell, at least 4 edges are processed:
+//  * There are colspan * N block-start and block-end edges.
+//  * There are rowspan * N inline-start and inline-end edges.
+//
+//  1) If the cell being processed is at the block-start of the table, store the
+//     block-start edge.
+//  2) If the cell being processed is at the inline-start of the table, store
+//  the
+//     inline-start edge.
+//  3) Store the inline-end edge.
+//  4) Store the block-end edge.
+//
+//  These steps are traced by calls to `SetBCBorderEdge`.
+//
+//  Corners are indexed by columns only, to avoid allocating a full row * col
+//  array of `BCCornerInfo`. This trades off memory allocation versus moving
+//  previous corner information around.
+//
+//  For each cell:
+//  1) If the cell is at the block-start of the table, but not at the
+//  inline-start of the table, store its block-start inline-start corner.
+//
+//  2) If the cell is at the inline-start of the table, store the block-start
+//  inline-start corner.
+//
+//  3) If the cell is at the block-start inline-end of the table, or not at the
+//  block-start of the table, store the block-start inline-end corner.
+//
+//  4) If the cell is at the block-end inline-end of the table, store the
+//  block-end inline-end corner.
+//
+//  5) If the cell is at the block-end of the table, store the block-end
+//  inline-start.
+//
+//  Visually, it looks like this:
+//
+//  2--1--1--1--1--1--3
+//  |  |  |  |  |  |  |
+//  2--3--3--3--3--3--3
+//  |  |  |  |  |  |  |
+//  2--3--3--3--3--3--3
+//  |  |  |  |  |  |  |
+//  5--5--5--5--5--5--4
+//
+//  For rowspan/colspan cells, the latest border information is propagated
+//  along its "corners".
+//
+//  These steps are traced by calls to `SetBCBorderCorner`.
 void nsTableFrame::CalcBCBorders() {
   NS_ASSERTION(IsBorderCollapse(),
                "calling CalcBCBorders on separated-border table");
@@ -5027,33 +5027,42 @@ void nsTableFrame::CalcBCBorders() {
   TableBCData* propData = GetTableBCData();
   if (!propData) ABORT0();
 
-  // calculate an expanded damage area
   TableArea damageArea(propData->mDamageArea);
+  // See documentation for why we do this.
   ExpandBCDamageArea(damageArea);
 
-  // segments that are on the table border edges need
-  // to be initialized only once
+  // We accumulate border widths as we process the cells, so we need
+  // to reset it once in the beginning.
   bool tableBorderReset[4];
   for (uint32_t sideX = 0; sideX < ArrayLength(tableBorderReset); sideX++) {
     tableBorderReset[sideX] = false;
   }
 
-  // block-dir borders indexed in inline-direction (cols)
+  // Storage for block-direction borders from the previous row, indexed by
+  // columns.
   BCCellBorders lastBlockDirBorders(damageArea.ColCount() + 1,
                                     damageArea.StartCol());
   if (!lastBlockDirBorders.borders) ABORT0();
-  // Only used for calculating block-start border
+  // Inline direction border at block start of the table, computed by the
+  // previous cell. Unused afterwards.
   Maybe<BCCellBorder> firstRowBStartEdgeBorder;
   BCCellBorder lastBEndBorder;
-  // inline-dir borders indexed in inline-direction (cols)
+  // Storage for inline-direction borders from previous cells, indexed by
+  // columns.
+  // TODO(dshin): Why ColCount + 1? Number of inline segments should match
+  // column count exactly, unlike block direction segments...
   BCCellBorders lastBEndBorders(damageArea.ColCount() + 1,
                                 damageArea.StartCol());
   if (!lastBEndBorders.borders) ABORT0();
 
   BCMapCellInfo info(this);
 
+  // Block-start corners of the cell being traversed, indexed by columns.
   BCCorners bStartCorners(damageArea.ColCount() + 1, damageArea.StartCol());
   if (!bStartCorners.corners) ABORT0();
+  // Block-end corners of the cell being traversed, indexed by columns.
+  // Note that when a new row starts, they become block-start corners and used
+  // as such, until cleared with `Set`.
   BCCorners bEndCorners(damageArea.ColCount() + 1, damageArea.StartCol());
   if (!bEndCorners.corners) ABORT0();
 
@@ -5089,10 +5098,9 @@ void nsTableFrame::CalcBCBorders() {
            colIdx++) {
         info.SetColumn(colIdx);
         BCCellBorder currentBorder = info.GetBStartEdgeBorder();
-        // update/store the bStart-iStart & bStart-iEnd corners of the seg
         BCCornerInfo& bStartIStartCorner = bStartCorners[colIdx];
+        // Mark inline-end direction border from this corner.
         if (0 == colIdx) {
-          // we are on the iEnd side of the corner
           bStartIStartCorner.Set(eLogicalSideIEnd, currentBorder);
         } else {
           bStartIStartCorner.Update(eLogicalSideIEnd, currentBorder);
@@ -5101,8 +5109,10 @@ void nsTableFrame::CalcBCBorders() {
               LogicalSide(bStartIStartCorner.ownerSide),
               bStartIStartCorner.subWidth, bStartIStartCorner.bevel);
         }
-        bStartCorners[colIdx + 1].Set(eLogicalSideIStart,
-                                      currentBorder);  // bStart-iEnd
+        // Above, we set the corner `colIndex` column as having a border towards
+        // inline-end, heading towards the next column. Vice versa is also true,
+        // where the next column has a border heading towards this column.
+        bStartCorners[colIdx + 1].Set(eLogicalSideIStart, currentBorder);
         MOZ_ASSERT(firstRowBStartEdgeBorder,
                    "Inline start border tracking not set?");
         // update firstRowBStartEdgeBorder and see if a new segment starts
@@ -5116,6 +5126,8 @@ void nsTableFrame::CalcBCBorders() {
                                       colIdx, 1, currentBorder.owner,
                                       currentBorder.width, startSeg);
 
+        // Set border width at block-start (table-wide and for the cell), but
+        // only if it's the largest we've encountered.
         info.SetTableBStartBorderWidth(currentBorder.width);
         info.SetBStartBorderWidths(currentBorder.width);
       }
@@ -5155,7 +5167,7 @@ void nsTableFrame::CalcBCBorders() {
             eLogicalCornerBStartIStart, *iter.mCellMap, iter.mRowGroupStart,
             rowB, 0, LogicalSide(bStartIStartCorner.ownerSide),
             bStartIStartCorner.subWidth, bStartIStartCorner.bevel);
-        bEndCorners[0].Set(eLogicalSideBStart, currentBorder);  // bEnd-iStart
+        bEndCorners[0].Set(eLogicalSideBStart, currentBorder);
 
         // update lastBlockDirBorders and see if a new segment starts
         bool startSeg = SetBorder(currentBorder, lastBlockDirBorders[0]);
@@ -5164,6 +5176,8 @@ void nsTableFrame::CalcBCBorders() {
                                       iter.mRowGroupStart, rowB, info.mColIndex,
                                       1, currentBorder.owner,
                                       currentBorder.width, startSeg);
+        // Set border width at inline-start (table-wide and for the cell), but
+        // only if it's the largest we've encountered.
         info.SetTableIStartBorderWidth(rowB, currentBorder.width);
         info.SetIStartBorderWidths(currentBorder.width);
       }
@@ -5182,19 +5196,19 @@ void nsTableFrame::CalcBCBorders() {
            rowB++) {
         info.IncrementRow(rowB == info.mRowIndex);
         BCCellBorder currentBorder = info.GetIEndEdgeBorder();
-        // update/store the bStart-iEnd & bEnd-iEnd corners
+        // Update/store the bStart-iEnd & bEnd-iEnd corners. Note that we
+        // overwrite all corner information to the end of the column span.
         BCCornerInfo& bStartIEndCorner =
             (0 == rowB) ? bStartCorners[info.GetCellEndColIndex() + 1]
                         : bEndCorners[info.GetCellEndColIndex() + 1];
-        bStartIEndCorner.Update(eLogicalSideBEnd,
-                                currentBorder);  // bStart-iEnd
+        bStartIEndCorner.Update(eLogicalSideBEnd, currentBorder);
         tableCellMap->SetBCBorderCorner(
             eLogicalCornerBStartIEnd, *iter.mCellMap, iter.mRowGroupStart, rowB,
             info.GetCellEndColIndex(), LogicalSide(bStartIEndCorner.ownerSide),
             bStartIEndCorner.subWidth, bStartIEndCorner.bevel);
         BCCornerInfo& bEndIEndCorner =
             bEndCorners[info.GetCellEndColIndex() + 1];
-        bEndIEndCorner.Set(eLogicalSideBStart, currentBorder);  // bEnd-iEnd
+        bEndIEndCorner.Set(eLogicalSideBStart, currentBorder);
         tableCellMap->SetBCBorderCorner(
             eLogicalCornerBEndIEnd, *iter.mCellMap, iter.mRowGroupStart, rowB,
             info.GetCellEndColIndex(), LogicalSide(bEndIEndCorner.ownerSide),
@@ -5207,15 +5221,19 @@ void nsTableFrame::CalcBCBorders() {
             eLogicalSideIEnd, *iter.mCellMap, iter.mRowGroupStart, rowB,
             info.GetCellEndColIndex(), 1, currentBorder.owner,
             currentBorder.width, startSeg);
+        // Set border width at inline-end (table-wide and for the cell), but
+        // only if it's the largest we've encountered.
         info.SetTableIEndBorderWidth(rowB, currentBorder.width);
         info.SetIEndBorderWidths(currentBorder.width);
       }
     } else {
+      // Cell entries, but not on the block-end side of the entire table.
       int32_t segLength = 0;
       BCMapCellInfo ajaInfo(this);
       BCMapCellInfo priorAjaInfo(this);
       for (int32_t rowB = info.mRowIndex; rowB <= info.GetCellEndRowIndex();
            rowB += segLength) {
+        // Grab the cell adjacent to our inline-end.
         iter.PeekIEnd(info, rowB, ajaInfo);
         BCCellBorder currentBorder = info.GetIEndInternalBorder();
         BCCellBorder adjacentBorder = ajaInfo.GetIStartInternalBorder();
@@ -5238,16 +5256,30 @@ void nsTableFrame::CalcBCBorders() {
           info.SetIEndBorderWidths(currentBorder.width);
           ajaInfo.SetIStartBorderWidths(currentBorder.width);
         }
-        // update the bStart-iEnd corner
+        // Does the block-start inline-end corner hit the inline-end adjacent
+        // cell that wouldn't have an inline border? e.g.
+        //
+        // o-----------o---------------o
+        // |           |               |
+        // o-----------x Adjacent cell o
+        // | This Cell |   (rowspan)   |
+        // o-----------o---------------o
         bool hitsSpanOnIEnd = (rowB > ajaInfo.mRowIndex) &&
                               (rowB < ajaInfo.mRowIndex + ajaInfo.mRowSpan);
         BCCornerInfo* bStartIEndCorner =
             ((0 == rowB) || hitsSpanOnIEnd)
                 ? &bStartCorners[info.GetCellEndColIndex() + 1]
-                : &bEndCorners[info.GetCellEndColIndex() + 1];
+                : &bEndCorners[info.GetCellEndColIndex() +
+                               1];  // From previous row.
         bStartIEndCorner->Update(eLogicalSideBEnd, currentBorder);
-        // if this is not the first time through,
-        // consider the segment to the iEnd side
+        // If this is a rowspan, need to consider if this "corner" is generating
+        // an inline segment for the adjacent cell. e.g.
+        //
+        // o--------------o----o
+        // |              |    |
+        // o              x----o
+        // | (This "row") |    |
+        // o--------------o----o
         if (rowB != info.mRowIndex) {
           currentBorder = priorAjaInfo.GetBEndInternalBorder();
           BCCellBorder adjacentBorder = ajaInfo.GetBStartInternalBorder();
@@ -5255,17 +5287,18 @@ void nsTableFrame::CalcBCBorders() {
                                          adjacentBorder, INLINE_DIR);
           bStartIEndCorner->Update(eLogicalSideIEnd, currentBorder);
         }
-        // store the bStart-iEnd corner in the cell map
+        // Check that the spanned area is inside of the invalidation area
         if (info.GetCellEndColIndex() < damageArea.EndCol() &&
             rowB >= damageArea.StartRow()) {
           if (0 != rowB) {
+            // Ok, actually store the information
             tableCellMap->SetBCBorderCorner(
                 eLogicalCornerBStartIEnd, *iter.mCellMap, iter.mRowGroupStart,
                 rowB, info.GetCellEndColIndex(),
                 LogicalSide(bStartIEndCorner->ownerSide),
                 bStartIEndCorner->subWidth, bStartIEndCorner->bevel);
           }
-          // store any corners this cell spans together with the aja cell
+          // Propagate this segment down the rowspan
           for (int32_t rX = rowB + 1; rX < rowB + segLength; rX++) {
             tableCellMap->SetBCBorderCorner(
                 eLogicalCornerBEndIEnd, *iter.mCellMap, iter.mRowGroupStart, rX,
@@ -5274,7 +5307,6 @@ void nsTableFrame::CalcBCBorders() {
                 bStartIEndCorner->subWidth, false);
           }
         }
-        // update bEnd-iEnd corner, bStartCorners, bEndCorners
         hitsSpanOnIEnd =
             (rowB + segLength < ajaInfo.mRowIndex + ajaInfo.mRowSpan);
         BCCornerInfo& bEndIEndCorner =
@@ -5301,7 +5333,6 @@ void nsTableFrame::CalcBCBorders() {
            colIdx++) {
         info.SetColumn(colIdx);
         BCCellBorder currentBorder = info.GetBEndEdgeBorder();
-        // update/store the bEnd-iStart & bEnd-IEnd corners
         BCCornerInfo& bEndIStartCorner = bEndCorners[colIdx];
         bEndIStartCorner.Update(eLogicalSideIEnd, currentBorder);
         tableCellMap->SetBCBorderCorner(
@@ -5309,10 +5340,11 @@ void nsTableFrame::CalcBCBorders() {
             info.GetCellEndRowIndex(), colIdx,
             LogicalSide(bEndIStartCorner.ownerSide), bEndIStartCorner.subWidth,
             bEndIStartCorner.bevel);
-        BCCornerInfo& bEndIEndCorner = bEndCorners[colIdx + 1];  // bEnd-iEnd
+        BCCornerInfo& bEndIEndCorner = bEndCorners[colIdx + 1];
         bEndIEndCorner.Update(eLogicalSideIStart, currentBorder);
-        if (info.mNumTableCols ==
-            colIdx + 1) {  // bEnd-IEnd corner of the table
+        // Store the block-end inline-end corner if it also is the block-end
+        // inline-end of the overall table.
+        if (info.mNumTableCols == colIdx + 1) {
           tableCellMap->SetBCBorderCorner(
               eLogicalCornerBEndIEnd, *iter.mCellMap, iter.mRowGroupStart,
               info.GetCellEndRowIndex(), colIdx,
@@ -5340,6 +5372,8 @@ void nsTableFrame::CalcBCBorders() {
         lastBEndBorder.rowSpan = info.mRowSpan;
         lastBEndBorders[colIdx] = lastBEndBorder;
 
+        // Set border width at block-end (table-wide and for the cell), but
+        // only if it's the largest we've encountered.
         info.SetBEndBorderWidths(currentBorder.width);
         info.SetTableBEndBorderWidth(currentBorder.width);
       }
@@ -5348,6 +5382,7 @@ void nsTableFrame::CalcBCBorders() {
       BCMapCellInfo ajaInfo(this);
       for (int32_t colIdx = info.mColIndex; colIdx <= info.GetCellEndColIndex();
            colIdx += segLength) {
+        // Grab the cell adjacent to our block-end.
         iter.PeekBEnd(info, colIdx, ajaInfo);
         BCCellBorder currentBorder = info.GetBEndInternalBorder();
         BCCellBorder adjacentBorder = ajaInfo.GetBStartInternalBorder();
@@ -5357,8 +5392,13 @@ void nsTableFrame::CalcBCBorders() {
         segLength =
             std::min(segLength, info.mColIndex + info.mColSpan - colIdx);
 
-        // update, store the bEnd-iStart corner
         BCCornerInfo& bEndIStartCorner = bEndCorners[colIdx];
+        // e.g.
+        // o--o----------o
+        // |  | This col |
+        // o--x----------o
+        // |  Adjacent   |
+        // o--o----------o
         bool hitsSpanBelow = (colIdx > ajaInfo.mColIndex) &&
                              (colIdx < ajaInfo.mColIndex + ajaInfo.mColSpan);
         bool update = true;
@@ -5378,6 +5418,7 @@ void nsTableFrame::CalcBCBorders() {
         if (update) {
           bEndIStartCorner.Update(eLogicalSideIEnd, currentBorder);
         }
+        // Check that the spanned area is inside of the invalidation area
         if (info.GetCellEndRowIndex() < damageArea.EndRow() &&
             colIdx >= damageArea.StartCol()) {
           if (hitsSpanBelow) {
@@ -5387,7 +5428,7 @@ void nsTableFrame::CalcBCBorders() {
                 LogicalSide(bEndIStartCorner.ownerSide),
                 bEndIStartCorner.subWidth, bEndIStartCorner.bevel);
           }
-          // store any corners this cell spans together with the aja cell
+          // Propagate this segment down the colspan
           for (int32_t c = colIdx + 1; c < colIdx + segLength; c++) {
             BCCornerInfo& corner = bEndCorners[c];
             corner.Set(eLogicalSideIEnd, currentBorder);
@@ -5428,10 +5469,15 @@ void nsTableFrame::CalcBCBorders() {
         bEndIEndCorner.Update(eLogicalSideIStart, currentBorder);
       }
     }
-    // In the function, we try to join two cells' BEnd.
-    // We normally do this work when processing the cell on the iEnd side,
-    // but when the cell on the iEnd side has a rowspan, the cell on the
-    // iStart side gets processed later (now), so we have to do this work now.
+    // o------o------o
+    // |  c1  |      |
+    // o------o  c2  o
+    // |  c3  |      |
+    // o--e1--o--e2--o
+    // We normally join edges of successive block-end inline segments by
+    // consulting the previous segment; however, cell c2's block-end inline
+    // segment e2 is processed before e1, so we need to process such joins
+    // out-of-band here, when we're processing c3.
     const auto nextColIndex = info.GetCellEndColIndex() + 1;
     if ((info.mNumTableCols != nextColIndex) &&
         (lastBEndBorders[nextColIndex].rowSpan > 1) &&
