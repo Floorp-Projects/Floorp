@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.58"
+rust-version = "1.66"
 name = "rkv"
-version = "0.18.4"
+version = "0.19.0"
 authors = [
     "Richard Newman <rnewman@twinql.com>",
     "Nan Jiang <najiang@mozilla.com>",
@@ -63,7 +63,8 @@ version = "0.3"
 version = "1.0"
 
 [dependencies.bitflags]
-version = "1.2"
+version = "2.4.1"
+features = ["serde"]
 
 [dependencies.byteorder]
 version = "1"
@@ -79,7 +80,7 @@ version = "0.14"
 optional = true
 
 [dependencies.log]
-version = "0.4.4"
+version = "0.4.20"
 
 [dependencies.ordered-float]
 version = "3.0.0"

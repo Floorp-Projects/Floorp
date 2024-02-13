@@ -83,7 +83,7 @@ const MAGIC: [u8; 4] = [0xDE, 0xC0, 0xEF, 0xBE];
 pub type MigrateResult<T> = Result<T, MigrateError>;
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Default, PartialEq, Eq, Debug, Clone, Copy)]
     struct PageFlags: u16 {
         const BRANCH = 0x01;
         const LEAF = 0x02;
@@ -98,7 +98,7 @@ bitflags! {
 }
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Default, PartialEq, Eq, Debug, Clone, Copy)]
     struct NodeFlags: u16 {
         const BIGDATA = 0x01;
         const SUBDATA = 0x02;

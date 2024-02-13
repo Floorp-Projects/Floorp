@@ -84,6 +84,14 @@ impl EventMetric {
                 }
             }
         });
+
+        let id = self.meta().base_identifier();
+        crate::launch_with_glean(move |_| {
+            let event_listeners = crate::event_listeners().lock().unwrap();
+            event_listeners
+                .iter()
+                .for_each(|(_, listener)| listener.on_event_recorded(id.clone()));
+        });
     }
 
     /// Validate that extras are empty or all extra keys are allowed.

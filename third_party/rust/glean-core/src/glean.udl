@@ -33,7 +33,18 @@ namespace glean {
     RecordedExperiment? glean_test_get_experiment_data(string experiment_id);
 
     // Experimentation ID API
+    void glean_set_experimentation_id(string experimentation_id);
     string? glean_test_get_experimentation_id();
+
+    // EXPERIMENTAL: Register a listener to receive notification of event recordings
+    //
+    // tag: String value used later to unregister the listener
+    // listener: An object which implements the GleanEventListener interface
+    void glean_register_event_listener(string tag, GleanEventListener listener);
+    // EXPERIMENTAL: Unregister a previously registered event listener
+    //
+    // tag: The tag used when registering the listener
+    void glean_unregister_event_listener(string tag);
 
     // Server Knobs API
     void glean_set_metrics_enabled_config(string json);
@@ -161,6 +172,12 @@ callback interface OnGleanEvents {
     //   * Shutdown waits for a maximum of 30 seconds.
     [Throws=CallbackError]
     void shutdown();
+};
+
+// A callback handler that receives the IDs of recorded events
+callback interface GleanEventListener {
+    // Called when an event is recorded, indicating the id of the event
+    void on_event_recorded(string id);
 };
 
 // Deserialized experiment data.
