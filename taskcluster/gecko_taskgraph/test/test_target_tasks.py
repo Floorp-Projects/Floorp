@@ -132,8 +132,29 @@ class TestTargetTasks(unittest.TestCase):
             "c": Task(
                 kind=None, label="c", attributes={"run_on_projects": ["try"]}, task={}
             ),
+            "ddd-1": Task(kind="test", label="ddd-1", attributes={}, task={}),
+            "ddd-2": Task(kind="test", label="ddd-2", attributes={}, task={}),
+            "ddd-1-cf": Task(kind="test", label="ddd-1-cf", attributes={}, task={}),
+            "ddd-2-cf": Task(kind="test", label="ddd-2-cf", attributes={}, task={}),
+            "ddd-var-1": Task(kind="test", label="ddd-var-1", attributes={}, task={}),
+            "ddd-var-2": Task(kind="test", label="ddd-var-2", attributes={}, task={}),
         }
-        graph = Graph(nodes=set("abc"), edges=set())
+        graph = Graph(
+            nodes=set(
+                [
+                    "a",
+                    "b",
+                    "c",
+                    "ddd-1",
+                    "ddd-2",
+                    "ddd-1-cf",
+                    "ddd-2-cf",
+                    "ddd-var-1",
+                    "ddd-var-2",
+                ]
+            ),
+            edges=set(),
+        )
         return TaskGraph(tasks, graph)
 
     @contextlib.contextmanager
@@ -177,6 +198,42 @@ class TestTargetTasks(unittest.TestCase):
             "try_task_config": {"tasks": ["a"]},
         }
         self.assertEqual(method(tg, params, {}), ["a"])
+
+    def test_try_task_config_regex(self):
+        "try_mode = try_task_config uses the try config with regex instead of chunk numbers"
+        tg = self.make_task_graph()
+        method = target_tasks.get_method("try_tasks")
+        params = {
+            "try_mode": "try_task_config",
+            "try_task_config": {"new-test-config": True, "tasks": ["ddd-*"]},
+            "project": "try",
+        }
+        self.assertEqual(sorted(method(tg, params, {})), ["ddd-1", "ddd-2"])
+
+    def test_try_task_config_absolute(self):
+        "try_mode = try_task_config uses the try config with full task labels"
+        tg = self.make_task_graph()
+        method = target_tasks.get_method("try_tasks")
+        params = {
+            "try_mode": "try_task_config",
+            "try_task_config": {
+                "new-test-config": True,
+                "tasks": ["ddd-var-2", "ddd-1"],
+            },
+            "project": "try",
+        }
+        self.assertEqual(sorted(method(tg, params, {})), ["ddd-1", "ddd-var-2"])
+
+    def test_try_task_config_regex_var(self):
+        "try_mode = try_task_config uses the try config with regex instead of chunk numbers and a test variant"
+        tg = self.make_task_graph()
+        method = target_tasks.get_method("try_tasks")
+        params = {
+            "try_mode": "try_task_config",
+            "try_task_config": {"new-test-config": True, "tasks": ["ddd-var-*"]},
+            "project": "try",
+        }
+        self.assertEqual(sorted(method(tg, params, {})), ["ddd-var-1", "ddd-var-2"])
 
 
 # tests for specific filters

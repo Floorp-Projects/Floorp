@@ -141,7 +141,11 @@ function getClipboardData(aFlavor, aClipboardType) {
   );
   trans.init(null);
   trans.addDataFlavor(aFlavor);
-  clipboard.getData(trans, aClipboardType);
+  clipboard.getData(
+    trans,
+    aClipboardType,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
 
   try {
     var data = SpecialPowers.createBlankObject();

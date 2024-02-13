@@ -21,6 +21,7 @@
 #include "imgIContainer.h"
 #include "imgITools.h"
 #include "nsComponentManagerUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIClipboard.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -172,7 +173,15 @@ void DataTransferItem::FillInExternalData() {
         return;
       }
 
-      nsresult rv = clipboard->GetData(trans, mDataTransfer->ClipboardType());
+      nsCOMPtr<nsIGlobalObject> global = mDataTransfer->GetGlobal();
+      WindowContext* windowContext = nullptr;
+      if (global) {
+        const auto* innerWindow = global->GetAsInnerWindow();
+        windowContext = innerWindow ? innerWindow->GetWindowContext() : nullptr;
+      }
+      MOZ_ASSERT(windowContext);
+      nsresult rv = clipboard->GetData(trans, mDataTransfer->ClipboardType(),
+                                       windowContext);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return;
       }

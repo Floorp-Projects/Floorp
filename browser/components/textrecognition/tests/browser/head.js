@@ -20,7 +20,11 @@ function getTextFromClipboard() {
   );
   transferable.init(window.docShell.QueryInterface(Ci.nsILoadContext));
   transferable.addDataFlavor("text/plain");
-  Services.clipboard.getData(transferable, Services.clipboard.kGlobalClipboard);
+  Services.clipboard.getData(
+    transferable,
+    Services.clipboard.kGlobalClipboard,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
 
   const results = {};
   transferable.getTransferData("text/plain", results);

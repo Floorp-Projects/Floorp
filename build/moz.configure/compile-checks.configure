@@ -204,7 +204,7 @@ def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: No
 #   when the warning flag is wanted.
 # - `check`, when not set, skips checking whether the flag is supported and
 #   adds it to the list of flags unconditionally.
-# - `link`, when set, also perform a linking step.
+# - `mode`, can be "compile", "link" or "assemble"
 @template
 def check_and_add_flags(
     flag,
@@ -213,11 +213,13 @@ def check_and_add_flags(
     compiler=None,
     when=None,
     check=True,
-    link=False,
+    mode="compile",
 ):
+    assert mode in ("compile", "link", "assemble")
+
     if compiler is not None:
         compilers = (compiler,)
-    elif link:
+    elif mode in ("link", "assemble"):
         compilers = (c_compiler,)
     else:
         compilers = (c_compiler, cxx_compiler)
@@ -234,19 +236,24 @@ def check_and_add_flags(
 
     for c in compilers:
         assert c in {c_compiler, cxx_compiler, host_c_compiler, host_cxx_compiler}
-        if link:
-            lang, list_of_flags = {
-                c_compiler: ("C", flags_collection.ldflags),
-                cxx_compiler: ("C++", flags_collection.ldflags),
-                host_c_compiler: ("host C", flags_collection.host_ldflags),
-                host_cxx_compiler: ("host C++", flags_collection.host_ldflags),
-            }[c]
-        else:
+        if mode == "compile":
             lang, list_of_flags = {
                 c_compiler: ("C", flags_collection.cflags),
                 cxx_compiler: ("C++", flags_collection.cxxflags),
                 host_c_compiler: ("host C", flags_collection.host_cflags),
                 host_cxx_compiler: ("host C++", flags_collection.host_cxxflags),
+            }[c]
+        elif mode == "assemble":
+            lang, list_of_flags = {
+                c_compiler: ("C", flags_collection.asflags),
+                host_c_compiler: ("host C", flags_collection.host_asflags),
+            }[c]
+        elif mode == "link":
+            lang, list_of_flags = {
+                c_compiler: ("C", flags_collection.ldflags),
+                cxx_compiler: ("C++", flags_collection.ldflags),
+                host_c_compiler: ("host C", flags_collection.host_ldflags),
+                host_cxx_compiler: ("host C++", flags_collection.host_ldflags),
             }[c]
 
         result = when
@@ -261,7 +268,7 @@ def check_and_add_flags(
 
                 return flags
 
-            if link:
+            if mode == "link":
 
                 def runner(*args, **kwargs):
                     if c in (c_compiler, cxx_compiler):
@@ -377,6 +384,32 @@ def add_flag(warning, compiler=None, when=None):
     check_and_add_flag(warning, compiler, when, check=False)
 
 
+# Like the compilation checks above, but for asm flags.
+@dependable
+def asm_flags():
+    return namespace(asflags=[], host_asflags=[])
+
+
+# Tests the given assembler flag is supported; if the flag
+# is supported, add it to the list of compilation flags for the build.
+# - `flag` is the flag to test
+# - `when` (optional) is a @depends function or option name conditioning
+#   when the warning flag is wanted.
+# - `check`, when not set, skips checking whether the flag is supported and
+#   adds it to the list of flags unconditionally. This is only meant for
+#   add_flag().
+@template
+def check_and_add_asm_flag(flag, when=None, check=True):
+    return check_and_add_flags(
+        flag,
+        asm_flags,
+        [flag],
+        when=when,
+        check=check,
+        mode="assemble",
+    )
+
+
 # Like the compilation checks above, but for linker flags.
 @dependable
 def linker_flags():
@@ -394,7 +427,12 @@ def linker_flags():
 @template
 def check_and_add_linker_flag(flag, compiler=None, when=None, check=True):
     return check_and_add_flags(
-        flag, linker_flags, [flag], when=when, check=check, link=True
+        flag,
+        linker_flags,
+        [flag],
+        when=when,
+        check=check,
+        mode="link",
     )
 
 

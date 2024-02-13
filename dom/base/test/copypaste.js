@@ -99,7 +99,11 @@ async function testCopyPaste(isXHTML) {
     ].createInstance(SpecialPowers.Ci.nsITransferable);
     transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
-    clipboard.getData(transferable, 1);
+    clipboard.getData(
+      transferable,
+      1,
+      SpecialPowers.wrap(window).browsingContext.currentWindowContext
+    );
     var data = SpecialPowers.createBlankObject();
     transferable.getTransferData(mime, data);
     return data;

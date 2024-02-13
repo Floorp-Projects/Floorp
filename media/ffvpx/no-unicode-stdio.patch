@@ -1,0 +1,22 @@
+diff --git a/media/ffvpx/libavutil/tx.c b/media/ffvpx/libavutil/tx.c
+--- a/media/ffvpx/libavutil/tx.c
++++ b/media/ffvpx/libavutil/tx.c
+@@ -603,17 +603,17 @@ static void print_cd_info(const FFTXCode
+     print_type(&bp, cd->type);
+ 
+     av_bprintf(&bp, ", len: ");
+     if (!len) {
+         if (cd->min_len != cd->max_len)
+             av_bprintf(&bp, "[%i, ", cd->min_len);
+ 
+         if (cd->max_len == TX_LEN_UNLIMITED)
+-            av_bprintf(&bp, "∞");
++            av_bprintf(&bp, "unlimited");
+         else
+             av_bprintf(&bp, "%i", cd->max_len);
+     } else {
+         av_bprintf(&bp, "%i", len);
+     }
+ 
+     if (cd->factors[1]) {
+         av_bprintf(&bp, "%s, factors", !len && cd->min_len != cd->max_len ? "]" : "");

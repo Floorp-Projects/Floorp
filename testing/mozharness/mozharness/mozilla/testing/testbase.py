@@ -129,6 +129,15 @@ testing_config_options = (
                 "help": "Download and extract crash reporter symbols.",
             },
         ],
+        [
+            ["--restartAfterFailure"],
+            {
+                "action": "store_true",
+                "default": False,
+                "dest": "restartAfterFailure",
+                "help": "Instruct the test harness to terminate on failure and restart where it left off",
+            },
+        ],
     ]
     + copy.deepcopy(virtualenv_config_options)
     + copy.deepcopy(try_config_options)

@@ -240,6 +240,17 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
 
       if (!CacheStorageService::IsRunning()) return NS_ERROR_NOT_INITIALIZED;
 
+      // Count the entries to allocate the array memory all at once.
+      size_t numEntries = 0;
+      for (const auto& entries : sGlobalEntryTables->Values()) {
+        if (entries->Type() != CacheEntryTable::MEMORY_ONLY) {
+          continue;
+        }
+        numEntries += entries->Values().Count();
+      }
+      mEntryArray.SetCapacity(numEntries);
+
+      // Collect the entries.
       for (const auto& entries : sGlobalEntryTables->Values()) {
         if (entries->Type() != CacheEntryTable::MEMORY_ONLY) {
           continue;
@@ -279,17 +290,14 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
         LOG(("  entry [left=%zu, canceled=%d]", mEntryArray.Length(),
              (bool)mCancel));
 
-        // Third, notify each entry until depleted or canceled
-        if (!mEntryArray.Length() || mCancel) {
+        // Third, notify each entry until depleted or canceled.
+        if (mNextEntryIdx >= mEntryArray.Length() || mCancel) {
           mCallback->OnCacheEntryVisitCompleted();
           return NS_OK;  // done
         }
 
-        // Grab the next entry
-        // TODO: RemoveElementAt(0) will memcpy the tail on each call.
-        // See bug 1879800 on how to improve.
-        RefPtr<CacheEntry> entry = mEntryArray[0];
-        mEntryArray.RemoveElementAt(0);
+        // Grab the next entry.
+        RefPtr<CacheEntry> entry = std::move(mEntryArray[mNextEntryIdx++]);
 
         // Invokes this->OnEntryInfo, that calls the callback with all
         // information of the entry.
@@ -335,6 +343,7 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
  private:
   nsCString mContextKey;
   nsTArray<RefPtr<CacheEntry>> mEntryArray;
+  size_t mNextEntryIdx{0};
 };
 
 // WalkDiskCacheRunnable

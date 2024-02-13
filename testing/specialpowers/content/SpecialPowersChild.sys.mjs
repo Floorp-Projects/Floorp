@@ -1748,7 +1748,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
     );
     xferable.init(this.docShell);
     xferable.addDataFlavor(flavor);
-    Services.clipboard.getData(xferable, whichClipboard);
+    Services.clipboard.getData(
+      xferable,
+      whichClipboard,
+      this.browsingContext.currentWindowContext
+    );
     var data = {};
     try {
       xferable.getTransferData(flavor, data);

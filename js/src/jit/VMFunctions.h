@@ -463,8 +463,8 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 
 ArrayObject* NewArrayObjectEnsureDenseInitLength(JSContext* cx, int32_t count);
 
-JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
-                            HandleObject res);
+ArrayObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
+                               Handle<ArrayObject*> arrRes);
 
 [[nodiscard]] bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame,
                                    const uint8_t* retAddr);

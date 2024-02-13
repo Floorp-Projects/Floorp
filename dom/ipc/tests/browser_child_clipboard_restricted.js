@@ -48,7 +48,11 @@ add_task(async function () {
     );
     trans.init(null);
     trans.addDataFlavor(flavor);
-    Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
+    Services.clipboard.getData(
+      trans,
+      Services.clipboard.kGlobalClipboard,
+      SpecialPowers.wrap(window).browsingContext.currentWindowContext
+    );
 
     let data = {};
     trans.getTransferData(flavor, data);

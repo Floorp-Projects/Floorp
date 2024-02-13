@@ -131,7 +131,7 @@
     }
 
     // Check whether the clipboard data can be read, and simulatenously trigger mData -> mCacheFD.
-    Services.clipboard.getData(Transfer2, Services.clipboard.kGlobalClipboard);
+    Services.clipboard.getData(Transfer2, Services.clipboard.kGlobalClipboard, SpecialPowers.wrap(window).browsingContext.currentWindowContext);
     checkTransferableText(Transfer2, BIG_STRING, "transferable after retrieving from clipboard");
     if (isFDCountingSupported()) {
       is(getClipboardCacheFDCount(), initialFdCount + 1, "should use a file for BIG_STRING (read from clipboard).");

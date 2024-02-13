@@ -50,6 +50,11 @@ gecko_parameters_schema = {
         Optional("gecko-profile-features"): str,
         Optional("gecko-profile-threads"): str,
         Optional(
+            "new-test-config",
+            description="adjust parameters, chunks, etc. to speed up the process "
+            "of greening up a new test config.",
+        ): bool,
+        Optional(
             "perftest-options",
             description="Options passed from `mach perftest` to try.",
         ): object,

@@ -211,17 +211,22 @@ function addThread(state, thread) {
   if (!threadItem) {
     threadItem = createThreadTreeItem(threadActorID);
     state.threadItems = [...state.threadItems];
+    threadItem.thread = thread;
     addSortedItem(state.threadItems, threadItem, sortThreadItems);
   } else {
     // We force updating the list to trigger mapStateToProps
     // as the getSourcesTreeSources selector is awaiting for the `thread` attribute
     // which we will set here.
     state.threadItems = [...state.threadItems];
+
+    // Inject the reducer thread object on Thread Tree Items
+    // (this is handy shortcut to have access to from React components)
+    // (this is also used by sortThreadItems to sort the thread as a Tree in the Browser Toolbox)
+    threadItem.thread = thread;
+
+    // We have to re-sort all threads because of the new `thread` attribute on current thread item
+    state.threadItems.sort(sortThreadItems);
   }
-  // Inject the reducer thread object on Thread Tree Items
-  // (this is handy shortcut to have access to from React components)
-  // (this is also used by sortThreadItems to sort the thread as a Tree in the Browser Toolbox)
-  threadItem.thread = thread;
 }
 
 function updateBlackbox(state, sources, shouldBlackBox) {

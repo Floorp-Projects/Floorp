@@ -608,7 +608,7 @@ static void print_cd_info(const FFTXCodelet *cd, int prio, int len, int print_pr
             av_bprintf(&bp, "[%i, ", cd->min_len);
 
         if (cd->max_len == TX_LEN_UNLIMITED)
-            av_bprintf(&bp, "∞");
+            av_bprintf(&bp, "unlimited");
         else
             av_bprintf(&bp, "%i", cd->max_len);
     } else {
