@@ -17,6 +17,7 @@
 #include "jit/CompileWrappers.h"
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
+#include "js/Prefs.h"
 #include "util/DifferentialTesting.h"
 #include "vm/BigIntType.h"
 #include "vm/JSObject.h"
@@ -543,7 +544,7 @@ void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
   MOZ_ASSERT(objReg != scratch);
 
   Label done;
-  if (JitOptions.useHasSeenEmulatesUndefinedFuse) {
+  if (JS::Prefs::use_emulates_undefined_fuse()) {
     loadPtr(AbsoluteAddress(
                 runtime()->addressOfHasSeenObjectEmulateUndefinedFuse()),
             scratch);

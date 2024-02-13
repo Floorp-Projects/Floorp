@@ -8,6 +8,7 @@
 #define jit_CodeGenerator_h
 
 #include "jit/PerfSpewer.h"
+#include "js/Prefs.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 
 #if defined(JS_CODEGEN_X86)
@@ -457,7 +458,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   // Return true if the fuse is intact, andd if the fuse is intact note the
   // dependency
   bool hasSeenObjectEmulateUndefinedFuseIntactAndDependencyNoted() {
-    if (!JitOptions.useHasSeenEmulatesUndefinedFuse) {
+    if (!JS::Prefs::use_emulates_undefined_fuse()) {
       // if we're not active, simply pretend the fuse is popped.
       return false;
     }
