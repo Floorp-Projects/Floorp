@@ -4,6 +4,7 @@ firefox-appdir = "browser"
 skip-if = [
   "os == 'win' && socketprocess_networking && fission", # Bug 1759035
   "os == 'mac' && socketprocess_networking && fission", # Bug 1759035
+  "os == 'mac' && debug", # Bug 1814779
 ]
 # I would put linux here, but debug has too many chunks and only runs this manifest, so I need 1 test to pass
 dupe-manifest = ""
