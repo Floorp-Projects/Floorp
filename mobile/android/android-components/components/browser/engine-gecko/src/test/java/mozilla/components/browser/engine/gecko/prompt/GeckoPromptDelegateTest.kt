@@ -1853,9 +1853,7 @@ class GeckoPromptDelegateTest {
 
         val address = Address(
             guid = "1",
-            givenName = "Firefox",
-            additionalName = "-",
-            familyName = "-",
+            name = "Firefox",
             organization = "-",
             streetAddress = "street",
             addressLevel3 = "address3",

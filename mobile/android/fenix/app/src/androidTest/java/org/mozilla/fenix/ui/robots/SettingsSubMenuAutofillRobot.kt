@@ -153,12 +153,10 @@ class SettingsSubMenuAutofillRobot {
             addAddressToolbarTitle(),
             navigateBackButton(),
             toolbarCheckmarkButton(),
-            firstNameTextInput(),
-            middleNameTextInput(),
+            nameTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_street_address))
         assertUIObjectExists(
-            lastNameTextInput(),
             streetAddressTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
@@ -215,12 +213,10 @@ class SettingsSubMenuAutofillRobot {
             navigateBackButton(),
             toolbarDeleteAddressButton(),
             toolbarCheckmarkButton(),
-            firstNameTextInput(),
-            middleNameTextInput(),
+            nameTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_street_address))
         assertUIObjectExists(
-            lastNameTextInput(),
             streetAddressTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
@@ -257,10 +253,10 @@ class SettingsSubMenuAutofillRobot {
         manageAddressesButton().click()
         Log.i(TAG, "clickManageAddressesButton: Clicked the \"Manage addresses\" button")
     }
-    fun clickSavedAddress(firstName: String) {
-        Log.i(TAG, "clickSavedAddress: Trying to click the $firstName saved address and and wait for $waitingTime ms for a new window")
-        savedAddress(firstName).clickAndWaitForNewWindow(waitingTime)
-        Log.i(TAG, "clickSavedAddress: Clicked the $firstName saved address and and waited for $waitingTime ms for a new window")
+    fun clickSavedAddress(name: String) {
+        Log.i(TAG, "clickSavedAddress: Trying to click the $name saved address and and wait for $waitingTime ms for a new window")
+        savedAddress(name).clickAndWaitForNewWindow(waitingTime)
+        Log.i(TAG, "clickSavedAddress: Clicked the $name saved address and and waited for $waitingTime ms for a new window")
     }
     fun clickDeleteAddressButton() {
         Log.i(TAG, "clickDeleteAddressButton: Waiting for $waitingTime ms for the delete address toolbar button to exist")
@@ -307,9 +303,7 @@ class SettingsSubMenuAutofillRobot {
         navigateToAutofillSettings: Boolean,
         isAddressAutofillEnabled: Boolean = true,
         userHasSavedAddress: Boolean = false,
-        firstName: String,
-        middleName: String,
-        lastName: String,
+        name: String,
         streetAddress: String,
         city: String,
         state: String,
@@ -327,21 +321,15 @@ class SettingsSubMenuAutofillRobot {
                 clickAddAddressButton()
             }
         }
-        Log.i(TAG, "fillAndSaveAddress: Waiting for $waitingTime ms for \"First Name\" text field to exist")
-        firstNameTextInput().waitForExists(waitingTime)
-        Log.i(TAG, "fillAndSaveAddress: Waited for $waitingTime ms for \"First Name\" text field to exist")
+        Log.i(TAG, "fillAndSaveAddress: Waiting for $waitingTime ms for \"Name\" text field to exist")
+        nameTextInput().waitForExists(waitingTime)
+        Log.i(TAG, "fillAndSaveAddress: Waited for $waitingTime ms for \"Name\" text field to exist")
         Log.i(TAG, "fillAndSaveAddress: Trying to click device back button to dismiss keyboard using device back button")
         mDevice.pressBack()
         Log.i(TAG, "fillAndSaveAddress: Clicked device back button to dismiss keyboard using device back button")
-        Log.i(TAG, "fillAndSaveAddress: Trying to set \"First Name\" to $firstName")
-        firstNameTextInput().setText(firstName)
-        Log.i(TAG, "fillAndSaveAddress: \"First Name\" was set to $firstName")
-        Log.i(TAG, "fillAndSaveAddress: Trying to set \"Middle Name\" to $middleName")
-        middleNameTextInput().setText(middleName)
-        Log.i(TAG, "fillAndSaveAddress: \"Middle Name\" was set to $middleName")
-        Log.i(TAG, "fillAndSaveAddress: Trying to set \"Last Name\" to $lastName")
-        lastNameTextInput().setText(lastName)
-        Log.i(TAG, "fillAndSaveAddress: \"Last Name\" was set to $lastName")
+        Log.i(TAG, "fillAndSaveAddress: Trying to set \"Name\" to $name")
+        nameTextInput().setText(name)
+        Log.i(TAG, "fillAndSaveAddress: \"Name\" was set to $name")
         Log.i(TAG, "fillAndSaveAddress: Trying to set \"Street Address\" to $streetAddress")
         streetAddressTextInput().setText(streetAddress)
         Log.i(TAG, "fillAndSaveAddress: \"Street Address\" was set to $streetAddress")
@@ -616,13 +604,12 @@ private fun manageAddressesButton() =
             .resourceId("android:id/title")
             .text(getStringResource(R.string.preferences_addresses_manage_addresses)),
     )
+
 private fun addAddressToolbarTitle() = itemContainingText(getStringResource(R.string.addresses_add_address))
 private fun editAddressToolbarTitle() = itemContainingText(getStringResource(R.string.addresses_edit_address))
 private fun toolbarCheckmarkButton() = itemWithResId("$packageName:id/save_address_button")
 private fun navigateBackButton() = itemWithDescription(getStringResource(R.string.action_bar_up_description))
-private fun firstNameTextInput() = itemWithResId("$packageName:id/first_name_input")
-private fun middleNameTextInput() = itemWithResId("$packageName:id/middle_name_input")
-private fun lastNameTextInput() = itemWithResId("$packageName:id/last_name_input")
+private fun nameTextInput() = itemWithResId("$packageName:id/name_input")
 private fun streetAddressTextInput() = itemWithResId("$packageName:id/street_address_input")
 private fun cityTextInput() = itemWithResId("$packageName:id/city_input")
 private fun subRegionDropDown() = itemWithResId("$packageName:id/subregion_drop_down")
@@ -657,7 +644,7 @@ private fun confirmDeleteCreditCardButton() = onView(withId(android.R.id.button1
 private fun cancelDeleteCreditCardButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
 private fun securedCreditCardsLaterButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
 
-private fun savedAddress(firstName: String) = mDevice.findObject(UiSelector().textContains(firstName))
+private fun savedAddress(name: String) = mDevice.findObject(UiSelector().textContains(name))
 private fun subRegionOption(subRegion: String) = mDevice.findObject(UiSelector().textContains(subRegion))
 private fun countryOption(country: String) = mDevice.findObject(UiSelector().textContains(country))
 

@@ -21,9 +21,7 @@ class AddressAdapterTest {
 
     private val address = Address(
         guid = "1",
-        givenName = "Location",
-        additionalName = "Location",
-        familyName = "Location",
+        name = "Jane Marie Doe",
         organization = "Mozilla",
         streetAddress = "1230 Main st",
         addressLevel3 = "Location3",

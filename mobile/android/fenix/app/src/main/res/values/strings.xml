@@ -1844,11 +1844,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Manage addresses</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">First Name</string>
+    <string name="addresses_first_name" moz:removedIn="124" tools:ignore="UnusedResources">First Name</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Middle Name</string>
+    <string name="addresses_middle_name" moz:removedIn="124" tools:ignore="UnusedResources">Middle Name</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Last Name</string>
+    <string name="addresses_last_name" moz:removedIn="124" tools:ignore="UnusedResources">Last Name</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Name</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Street Address</string>
     <!-- The header for the city of an address -->

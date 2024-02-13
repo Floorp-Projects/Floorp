@@ -8,15 +8,6 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.storage.Address
 
 /**
- * Generate a label item text for an [Address]. The combination of names is based on desktop code
- * found here:
- * https://searchfox.org/mozilla-central/rev/d989c65584ded72c2de85cb40bede7ac2f176387/toolkit/components/formautofill/FormAutofillNameUtils.jsm#400
- */
-fun Address.getFullName(): String = listOf(givenName, additionalName, familyName)
-    .filter { it.isNotEmpty() }
-    .joinToString(" ")
-
-/**
  * Generate a description item text for an [Address]. The element ordering is based on the
  * priorities defined by the desktop code found here:
  * https://searchfox.org/mozilla-central/rev/d989c65584ded72c2de85cb40bede7ac2f176387/toolkit/components/formautofill/FormAutofillUtils.jsm#323

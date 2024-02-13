@@ -224,9 +224,7 @@ class AutofillCreditCardsAddressesStorageTest {
     @Test
     fun `add address`() = runTest {
         val addressFields = UpdatableAddressFields(
-            givenName = "John",
-            additionalName = "",
-            familyName = "Smith",
+            name = "John Smith",
             organization = "Mozilla",
             streetAddress = "123 Sesame Street",
             addressLevel3 = "",
@@ -241,9 +239,7 @@ class AutofillCreditCardsAddressesStorageTest {
 
         assertNotNull(address)
 
-        assertEquals(addressFields.givenName, address.givenName)
-        assertEquals(addressFields.additionalName, address.additionalName)
-        assertEquals(addressFields.familyName, address.familyName)
+        assertEquals(addressFields.name, address.name)
         assertEquals(addressFields.organization, address.organization)
         assertEquals(addressFields.streetAddress, address.streetAddress)
         assertEquals(addressFields.addressLevel3, address.addressLevel3)
@@ -258,9 +254,7 @@ class AutofillCreditCardsAddressesStorageTest {
     @Test
     fun `get address`() = runTest {
         val addressFields = UpdatableAddressFields(
-            givenName = "John",
-            additionalName = "",
-            familyName = "Smith",
+            name = "John Smith",
             organization = "Mozilla",
             streetAddress = "123 Sesame Street",
             addressLevel3 = "",
@@ -284,9 +278,7 @@ class AutofillCreditCardsAddressesStorageTest {
     @Test
     fun `get all addresses`() = runTest {
         val addressFields1 = UpdatableAddressFields(
-            givenName = "John",
-            additionalName = "",
-            familyName = "Smith",
+            name = "John Smith",
             organization = "Mozilla",
             streetAddress = "123 Sesame Street",
             addressLevel3 = "",
@@ -298,9 +290,7 @@ class AutofillCreditCardsAddressesStorageTest {
             email = "foo@bar.com",
         )
         val addressFields2 = UpdatableAddressFields(
-            givenName = "Mary",
-            additionalName = "",
-            familyName = "Sue",
+            name = "Mary Sue",
             organization = "",
             streetAddress = "1 New St",
             addressLevel3 = "",
@@ -312,9 +302,7 @@ class AutofillCreditCardsAddressesStorageTest {
             email = "mary@example.com",
         )
         val addressFields3 = UpdatableAddressFields(
-            givenName = "Timothy",
-            additionalName = "João",
-            familyName = "Berners-Lee",
+            name = "Timothy João Berners-Lee",
             organization = "World Wide Web Consortium",
             streetAddress = "Rua Adalberto Pajuaba, 404",
             addressLevel3 = "Campos Elísios",
@@ -342,9 +330,7 @@ class AutofillCreditCardsAddressesStorageTest {
     @Test
     fun `update address`() = runTest {
         val addressFields = UpdatableAddressFields(
-            givenName = "John",
-            additionalName = "",
-            familyName = "Smith",
+            name = "John Smith",
             organization = "Mozilla",
             streetAddress = "123 Sesame Street",
             addressLevel3 = "",
@@ -359,9 +345,7 @@ class AutofillCreditCardsAddressesStorageTest {
         var address = storage.addAddress(addressFields)
 
         val newAddressFields = UpdatableAddressFields(
-            givenName = "Mary",
-            additionalName = "",
-            familyName = "Sue",
+            name = "Mary Sue",
             organization = "",
             streetAddress = "1 New St",
             addressLevel3 = "",
@@ -377,9 +361,7 @@ class AutofillCreditCardsAddressesStorageTest {
 
         address = storage.getAddress(address.guid)!!
 
-        assertEquals(newAddressFields.givenName, address.givenName)
-        assertEquals(newAddressFields.additionalName, address.additionalName)
-        assertEquals(newAddressFields.familyName, address.familyName)
+        assertEquals(newAddressFields.name, address.name)
         assertEquals(newAddressFields.organization, address.organization)
         assertEquals(newAddressFields.streetAddress, address.streetAddress)
         assertEquals(newAddressFields.addressLevel3, address.addressLevel3)
@@ -394,9 +376,7 @@ class AutofillCreditCardsAddressesStorageTest {
     @Test
     fun `delete address`() = runTest {
         val addressFields = UpdatableAddressFields(
-            givenName = "John",
-            additionalName = "",
-            familyName = "Smith",
+            name = "John Smith",
             organization = "Mozilla",
             streetAddress = "123 Sesame Street",
             addressLevel3 = "",

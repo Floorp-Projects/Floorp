@@ -12,9 +12,7 @@ import org.mozilla.geckoview.Autocomplete
  */
 fun Autocomplete.Address.toAddress() = Address(
     guid = guid ?: "",
-    givenName = givenName,
-    additionalName = additionalName,
-    familyName = familyName,
+    name = name,
     organization = organization,
     streetAddress = streetAddress,
     addressLevel3 = addressLevel3,
@@ -31,10 +29,7 @@ fun Autocomplete.Address.toAddress() = Address(
  */
 fun Address.toAutocompleteAddress() = Autocomplete.Address.Builder()
     .guid(guid)
-    .name(fullName)
-    .givenName(givenName)
-    .additionalName(additionalName)
-    .familyName(familyName)
+    .name(name)
     .organization(organization)
     .streetAddress(streetAddress)
     .addressLevel3(addressLevel3)

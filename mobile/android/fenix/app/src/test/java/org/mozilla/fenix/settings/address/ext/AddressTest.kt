@@ -9,41 +9,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class AddressTest {
-    @Test
-    fun `WHEN all names are populated THEN label includes all names`() {
-        val addr = generateAddress()
-
-        val label = addr.getFullName()
-
-        assertEquals("${addr.givenName} ${addr.additionalName} ${addr.familyName}", label)
-    }
-
-    @Test
-    fun `WHEN middle name is missing THEN label is given and family combined`() {
-        val addr = generateAddress(additionalName = "")
-
-        val label = addr.getFullName()
-
-        assertEquals("${addr.givenName} ${addr.familyName}", label)
-    }
-
-    @Test
-    fun `WHEN only family and middle name are available THEN label is middle and family combined`() {
-        val addr = generateAddress(givenName = "")
-
-        val label = addr.getFullName()
-
-        assertEquals("${addr.additionalName} ${addr.familyName}", label)
-    }
-
-    @Test
-    fun `WHEN only family name is available THEN label is family name`() {
-        val addr = generateAddress(givenName = "", additionalName = "")
-
-        val label = addr.getFullName()
-
-        assertEquals(addr.familyName, label)
-    }
 
     @Test
     fun `WHEN all properties are present THEN all properties present in description`() {
@@ -76,9 +41,7 @@ class AddressTest {
     @Test
     fun `WHEN everything is missing THEN description is empty`() {
         val addr = generateAddress(
-            givenName = "",
-            additionalName = "",
-            familyName = "",
+            name = "",
             organization = "",
             streetAddress = "",
             addressLevel3 = "",
@@ -109,9 +72,7 @@ class AddressTest {
     }
 
     private fun generateAddress(
-        givenName: String = "Firefox",
-        additionalName: String = "The",
-        familyName: String = "Browser",
+        name: String = "Firefox The Browser",
         organization: String = "Mozilla",
         streetAddress: String = "street",
         addressLevel3: String = "3",
@@ -123,9 +84,7 @@ class AddressTest {
         email: String = "email",
     ) = Address(
         guid = "",
-        givenName = givenName,
-        additionalName = additionalName,
-        familyName = familyName,
+        name = name,
         organization = organization,
         streetAddress = streetAddress,
         addressLevel3 = addressLevel3,
