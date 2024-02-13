@@ -61,7 +61,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @readonly
  * @enum {BytesValueType}
  */
-const BytesValueType = {
+export const BytesValueType = {
   Base64: "base64",
   String: "string",
 };
