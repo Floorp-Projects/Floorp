@@ -146,10 +146,10 @@ class ArenaList {
  * A class that is used to sort arenas of a single AllocKind into increasing
  * order of free space.
  *
- * It works by adding arenas to a segment corresponding to the number of free
- * things in the arena. Each segment is an independent linked list.
+ * It works by adding arenas to a bucket corresponding to the number of free
+ * things in the arena. Each bucket is an independent linked list.
  *
- * The segments can be linked up to form a sorted ArenaList.
+ * The buckets can be linked up to form a sorted ArenaList.
  */
 class SortedArenaList {
  public:
@@ -165,15 +165,15 @@ class SortedArenaList {
   static const size_t MaxThingsPerArena =
       (ArenaSize - ArenaHeaderSize) / MinCellSize;
 
-  // The number of segments required: one full arenas, one for empty arenas and
+  // The number of buckets required: one full arenas, one for empty arenas and
   // half the number of remaining size classes.
-  static const size_t SegmentCount = HowMany(MaxThingsPerArena - 1, 2) + 2;
+  static const size_t BucketCount = HowMany(MaxThingsPerArena - 1, 2) + 2;
 
  private:
-  using Segment = SinglyLinkedList<Arena>;
+  using Bucket = SinglyLinkedList<Arena>;
 
   const size_t thingsPerArena_;
-  Segment segments[SegmentCount];
+  Bucket buckets[BucketCount];
 
 #ifdef DEBUG
   AllocKind allocKind_;
@@ -185,7 +185,7 @@ class SortedArenaList {
 
   size_t thingsPerArena() const { return thingsPerArena_; }
 
-  // Inserts an arena, which has room for |nfree| more things, in its segment.
+  // Inserts an arena, which has room for |nfree| more things, in its bucket.
   inline void insertAt(Arena* arena, size_t nfree);
 
   // Remove any empty arenas and prepend them to the list pointed to by
@@ -193,19 +193,19 @@ class SortedArenaList {
   inline void extractEmptyTo(Arena** destListHeadPtr);
 
   // Converts the contents of this data structure to a single list, by linking
-  // up the tail of each non-empty segment to the head of the next non-empty
-  // segment.
+  // up the tail of each non-empty bucket to the head of the next non-empty
+  // bucket.
   //
-  // Optionally saves internal state to |maybeSegmentLastOut| so that it can be
+  // Optionally saves internal state to |maybeBucketLastOut| so that it can be
   // restored later by calling restoreFromArenaList. It is not valid to use this
   // class in the meantime.
   inline ArenaList convertToArenaList(
-      Arena* maybeSegmentLastOut[SegmentCount] = nullptr);
+      Arena* maybeBucketLastOut[BucketCount] = nullptr);
 
   // Restore the internal state of this class following conversion to an
   // ArenaList by the previous method.
   inline void restoreFromArenaList(ArenaList& list,
-                                   Arena* segmentLast[SegmentCount]);
+                                   Arena* bucketLast[BucketCount]);
 
 #ifdef DEBUG
   AllocKind allocKind() const { return allocKind_; }
@@ -214,7 +214,7 @@ class SortedArenaList {
  private:
   inline size_t index(size_t nfree, bool* frontOut) const;
   inline size_t emptyIndex() const;
-  inline size_t segmentsUsed() const;
+  inline size_t bucketsUsed() const;
 
   inline void check() const;
 };
@@ -224,7 +224,7 @@ class MOZ_RAII AutoGatherSweptArenas {
   SortedArenaList* sortedList = nullptr;
 
   // Internal state from SortedArenaList so we can restore it later.
-  Arena* segmentLastPointers[SortedArenaList::SegmentCount];
+  Arena* bucketLastPointers[SortedArenaList::BucketCount];
 
   // Single result list.
   ArenaList linked;
