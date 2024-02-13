@@ -212,7 +212,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    CXXFLAGS += ["-Werror=implicit-int-conversion"]
+    CXXFLAGS += ["-Werror=implicit-int-conversion", "-Wno-shorten-64-to-32"]
     CXXFLAGS += ["-Werror=switch"]
 
 if CONFIG["CC_TYPE"] == "gcc":
