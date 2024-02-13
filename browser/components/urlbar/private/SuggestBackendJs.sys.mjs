@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
 const RS_COLLECTION = "quicksuggest";
@@ -252,7 +253,7 @@ export class SuggestBackendJs extends BaseFeature {
    *   The config object.
    */
   #setConfig(config) {
-    config ??= {};
+    config = lazy.UrlbarUtils.copySnakeKeysToCamel(config ?? {});
     this.logger.debug("Setting config: " + JSON.stringify(config));
     this.#config = config;
     this.#emitter.emit("config-set");

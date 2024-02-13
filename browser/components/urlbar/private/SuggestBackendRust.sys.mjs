@@ -69,8 +69,13 @@ const gSuggestionTypesByCtor = new WeakMap();
  * [6] https://searchfox.org/mozilla-central/source/toolkit/components/uniffi-bindgen-gecko-js/config.toml
  */
 export class SuggestBackendRust extends BaseFeature {
-  get shouldEnable() {
-    return lazy.UrlbarPrefs.get("quickSuggestRustEnabled");
+  /**
+   * @returns {object}
+   *   The global Suggest config from the Rust component as returned from
+   *   `SuggestStore.fetchGlobalConfig()`.
+   */
+  get config() {
+    return this.#config || {};
   }
 
   /**
@@ -80,6 +85,10 @@ export class SuggestBackendRust extends BaseFeature {
    */
   get ingestPromise() {
     return this.#ingestPromise;
+  }
+
+  get shouldEnable() {
+    return lazy.UrlbarPrefs.get("quickSuggestRustEnabled");
   }
 
   enable(enabled) {
@@ -99,23 +108,19 @@ export class SuggestBackendRust extends BaseFeature {
       return [];
     }
 
-    // Build the list of Rust providers to query. Each provider is identified by
-    // an integer value defined on the `SuggestionProvider` object. Here we
-    // convert the Rust suggestion types of our registered features to their
-    // corresponding provider integer values.
-    let providers = [];
-    for (let [type, feature] of lazy.QuickSuggest
-      .featuresByRustSuggestionType) {
-      if (feature.isEnabled && feature.isRustSuggestionTypeEnabled(type)) {
-        let key = type.toUpperCase();
-        this.logger.debug("Adding provider to query: " + key);
-        if (!lazy.SuggestionProvider.hasOwnProperty(key)) {
-          this.logger.error(`SuggestionProvider["${key}"] is not defined!`);
-          continue;
+    // Build the list of enabled Rust providers to query.
+    let providers = this.#rustProviders.reduce(
+      (memo, { type, feature, provider }) => {
+        if (feature.isEnabled && feature.isRustSuggestionTypeEnabled(type)) {
+          this.logger.debug(
+            `Adding provider to query: '${type}' (${provider})`
+          );
+          memo.push(provider);
         }
-        providers.push(lazy.SuggestionProvider[key]);
-      }
-    }
+        return memo;
+      },
+      []
+    );
 
     let suggestions = await this.#store.query(
       new lazy.SuggestionQuery({ keyword: searchString, providers })
@@ -151,6 +156,20 @@ export class SuggestBackendRust extends BaseFeature {
   }
 
   /**
+   * Returns suggestion-type-specific configuration data set by the Rust
+   * backend.
+   *
+   * @param {string} type
+   *   A Rust suggestion type name as defined in `suggest.udl`, e.g., "Amp",
+   *   "Wikipedia", "Mdn", etc. See also `BaseFeature.rustSuggestionTypes`.
+   * @returns {object} config
+   *   The config data for the type.
+   */
+  getConfigForSuggestionType(type) {
+    return this.#configsBySuggestionType.get(type);
+  }
+
+  /**
    * nsITimerCallback
    */
   notify() {
@@ -163,6 +182,37 @@ export class SuggestBackendRust extends BaseFeature {
       Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
       SUGGEST_STORE_BASENAME
     );
+  }
+
+  /**
+   * @returns {Array}
+   *   Each item in this array contains metadata related to a Rust suggestion
+   *   type, the `BaseFeature` that manages the type, and the corresponding
+   *   suggestion provider as defined by Rust. Items look like this:
+   *   `{ type, feature, provider }`
+   *
+   *   {string} type
+   *     The Rust suggestion type name (the same type of string values that are
+   *     defined in `BaseFeature.rustSuggestionTypes`).
+   *   {BaseFeature} feature
+   *     The feature that manages the suggestion type.
+   *   {number} provider
+   *     An integer value defined on the `SuggestionProvider` object in
+   *     `RustSuggest.sys.mjs` that identifies the suggestion provider to
+   *     Rust.
+   */
+  get #rustProviders() {
+    let items = [];
+    for (let [type, feature] of lazy.QuickSuggest
+      .featuresByRustSuggestionType) {
+      let key = type.toUpperCase();
+      if (!lazy.SuggestionProvider.hasOwnProperty(key)) {
+        this.logger.error(`SuggestionProvider["${key}"] is not defined!`);
+        continue;
+      }
+      items.push({ type, feature, provider: lazy.SuggestionProvider[key] });
+    }
+    return items;
   }
 
   #init() {
@@ -216,11 +266,15 @@ export class SuggestBackendRust extends BaseFeature {
 
   #uninit() {
     this.#store = null;
+    this.#configsBySuggestionType.clear();
     lazy.timerManager.unregisterTimer(INGEST_TIMER_ID);
   }
 
   async #ingest() {
-    this.logger.info("Starting ingest");
+    this.logger.info("Starting ingest and configs fetch");
+
+    // Do the ingest.
+    this.logger.debug("Starting ingest");
     this.#ingestPromise = this.#store.ingest(
       new lazy.SuggestIngestionConstraints()
     );
@@ -232,7 +286,29 @@ export class SuggestBackendRust extends BaseFeature {
       // with remote settings data in tests in particular.
       this.logger.error("Ingest error: " + (error.reason ?? error));
     }
-    this.logger.info("Finished ingest");
+    this.logger.debug("Finished ingest");
+
+    // Fetch the global config.
+    this.logger.debug("Fetching global config");
+    this.#config = await this.#store.fetchGlobalConfig();
+    this.logger.debug("Got global config: " + JSON.stringify(this.#config));
+
+    // Fetch all provider configs. We do this for all features, even ones that
+    // are currently disabled, because they may become enabled before the next
+    // ingest.
+    this.logger.debug("Fetching provider configs");
+    await Promise.all(
+      this.#rustProviders.map(async ({ type, provider }) => {
+        let config = await this.#store.fetchProviderConfig(provider);
+        this.logger.debug(
+          `Got '${type}' provider config: ` + JSON.stringify(config)
+        );
+        this.#configsBySuggestionType.set(type, config);
+      })
+    );
+    this.logger.debug("Finished fetching provider configs");
+
+    this.logger.info("Finished ingest and configs fetch");
   }
 
   async _test_ingest() {
@@ -241,6 +317,13 @@ export class SuggestBackendRust extends BaseFeature {
 
   // The `SuggestStore` instance.
   #store;
+
+  // Global Suggest config as returned from `SuggestStore.fetchGlobalConfig()`.
+  #config = {};
+
+  // Maps from suggestion type to provider config as returned from
+  // `SuggestStore.fetchProviderConfig()`.
+  #configsBySuggestionType = new Map();
 
   #ingestPromise;
 }

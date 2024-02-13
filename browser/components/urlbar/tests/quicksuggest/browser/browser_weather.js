@@ -79,8 +79,7 @@ add_tasks_with_rust(async function test_weather_result_selection() {
 
 // Does a search, clicks the "Show less frequently" result menu command, and
 // repeats both steps until the min keyword length cap is reached.
-// TODO bug 1878444: Use add_tasks_with_rust()
-add_task(async function showLessFrequentlyCapReached_manySearches() {
+add_tasks_with_rust(async function showLessFrequentlyCapReached_manySearches() {
   // Set up a min keyword length and cap.
   await QuickSuggestTestUtils.setRemoteSettingsRecords([
     {
@@ -88,7 +87,12 @@ add_task(async function showLessFrequentlyCapReached_manySearches() {
       weather: {
         keywords: ["weather"],
         min_keyword_length: 3,
-        min_keyword_length_cap: 4,
+      },
+    },
+    {
+      type: "configuration",
+      configuration: {
+        show_less_frequently_cap: 1,
       },
     },
   ]);
@@ -171,8 +175,7 @@ add_task(async function showLessFrequentlyCapReached_manySearches() {
 
 // Repeatedly clicks the "Show less frequently" result menu command after doing
 // a single search until the min keyword length cap is reached.
-// TODO bug 1878444: Use add_tasks_with_rust()
-add_task(async function showLessFrequentlyCapReached_oneSearch() {
+add_tasks_with_rust(async function showLessFrequentlyCapReached_oneSearch() {
   // Set up a min keyword length and cap.
   await QuickSuggestTestUtils.setRemoteSettingsRecords([
     {
@@ -180,7 +183,12 @@ add_task(async function showLessFrequentlyCapReached_oneSearch() {
       weather: {
         keywords: ["weather"],
         min_keyword_length: 3,
-        min_keyword_length_cap: 6,
+      },
+    },
+    {
+      type: "configuration",
+      configuration: {
+        show_less_frequently_cap: 3,
       },
     },
   ]);

@@ -193,7 +193,9 @@ export class Weather extends BaseFeature {
   /**
    * @returns {Set}
    *   The set of keywords that should trigger the weather suggestion. This will
-   *   be null when no config is defined.
+   *   be null when the Rust backend is enabled and keywords are not defined by
+   *   Nimbus because in that case Rust manages the keywords. Otherwise, it will
+   *   also be null when no config is defined.
    */
   get keywords() {
     return this.#keywords;
@@ -211,13 +213,14 @@ export class Weather extends BaseFeature {
    *   1. The `weather.minKeywordLength` pref, which is set when the user
    *      increments the min length
    *   2. `weatherKeywordsMinimumLength` in Nimbus
-   *   3. `min_keyword_length` in remote settings
+   *   3. `min_keyword_length` in the weather record in remote settings (i.e.,
+   *      the weather config)
    */
   get minKeywordLength() {
     let minLength =
       lazy.UrlbarPrefs.get("weather.minKeywordLength") ||
       lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength") ||
-      this.#rsData?.min_keyword_length ||
+      this.#config.minKeywordLength ||
       0;
     return Math.max(minLength, 0);
   }
@@ -228,11 +231,25 @@ export class Weather extends BaseFeature {
    *   length can be set in remote settings and Nimbus.
    */
   get canIncrementMinKeywordLength() {
-    let cap =
-      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLengthCap") ||
-      this.#rsData?.min_keyword_length_cap ||
-      0;
-    return !cap || this.minKeywordLength < cap;
+    let nimbusMax =
+      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLengthCap") || 0;
+
+    let maxKeywordLength;
+    if (nimbusMax) {
+      // In Nimbus, the cap is the max keyword length.
+      maxKeywordLength = nimbusMax;
+    } else {
+      // In the RS config, the cap is the max number of times the user can click
+      // "Show less frequently". The max keyword length is therefore the initial
+      // min length plus the cap.
+      let min = this.#config.minKeywordLength;
+      let cap = lazy.QuickSuggest.backend.config?.showLessFrequentlyCap;
+      if (min && cap) {
+        maxKeywordLength = min + cap;
+      }
+    }
+
+    return !maxKeywordLength || this.minKeywordLength < maxKeywordLength;
   }
 
   update() {
@@ -242,11 +259,12 @@ export class Weather extends BaseFeature {
     // This method is called by `QuickSuggest` in a
     // `NimbusFeatures.urlbar.onUpdate()` callback, when a change occurs to a
     // Nimbus variable or to a pref that's a fallback for a Nimbus variable. A
-    // config-related variable or pref may have changed, so update it, but only
-    // if the feature was already enabled because if it wasn't, `enable(true)`
-    // was just called, which calls `#init()`, which calls `#updateConfig()`.
+    // config-related variable or pref may have changed, so update keywords, but
+    // only if the feature was already enabled because if it wasn't,
+    // `enable(true)` was just called, which calls `#init()`, which calls
+    // `#updateKeywords()`.
     if (wasEnabled && this.isEnabled) {
-      this.#updateConfig();
+      this.#updateKeywords();
     }
   }
 
@@ -295,13 +313,17 @@ export class Weather extends BaseFeature {
     }
 
     this.logger.debug("Got weather records: " + JSON.stringify(records));
-    this.#rsData = records?.[0]?.weather;
-    this.#updateConfig();
+    this.#rsConfig = lazy.UrlbarUtils.copySnakeKeysToCamel(
+      records?.[0]?.weather || {}
+    );
+    this.#updateKeywords();
   }
 
   makeResult(queryContext, suggestion, searchString) {
     // The Rust component doesn't enforce a minimum keyword length, so discard
-    // the suggestion if the search string isn't long enough.
+    // the suggestion if the search string isn't long enough. This conditional
+    // will always be false for the JS backend since in that case keywords are
+    // never shorter than `minKeywordLength`.
     if (searchString.length < this.minKeywordLength) {
       return null;
     }
@@ -515,6 +537,14 @@ export class Weather extends BaseFeature {
     }
   }
 
+  get #config() {
+    let { rustBackend } = lazy.QuickSuggest;
+    let config = rustBackend.isEnabled
+      ? rustBackend.getConfigForSuggestionType(this.rustSuggestionTypes[0])
+      : this.#rsConfig;
+    return config || {};
+  }
+
   get #vpnDetected() {
     if (lazy.UrlbarPrefs.get("weather.ignoreVPN")) {
       return false;
@@ -538,10 +568,10 @@ export class Weather extends BaseFeature {
   }
 
   #init() {
-    // On feature init, we only update the config and listen for changes that
-    // affect the config. Suggestion fetches will not start until a config has
-    // been either synced from remote settings or set by Nimbus.
-    this.#updateConfig();
+    // On feature init, we only update keywords and listen for changes that
+    // affect keywords. Suggestion fetches will not start until either keywords
+    // exist or Rust is enabled.
+    this.#updateKeywords();
     lazy.UrlbarPrefs.addObserver(this);
     lazy.QuickSuggest.jsBackend.register(this);
   }
@@ -717,8 +747,8 @@ export class Weather extends BaseFeature {
     this.#restartFetchTimer(remainingIntervalMs);
   }
 
-  #updateConfig() {
-    this.logger.debug("Starting config update");
+  #updateKeywords() {
+    this.logger.debug("Starting keywords update");
 
     let nimbusKeywords = lazy.UrlbarPrefs.get("weatherKeywords");
 
@@ -727,7 +757,7 @@ export class Weather extends BaseFeature {
     if (lazy.UrlbarPrefs.get("quickSuggestRustEnabled") && !nimbusKeywords) {
       this.logger.debug(
         "Rust enabled, no keywords in Nimbus. " +
-          "Starting fetch and deferring to Rust."
+          "Starting fetches and deferring to Rust."
       );
       this.#keywords = null;
       this.#startFetching();
@@ -738,19 +768,19 @@ export class Weather extends BaseFeature {
     // possibly serve a weather suggestion.
     if (
       !lazy.UrlbarPrefs.get("quickSuggestRustEnabled") &&
-      !this.#rsData?.keywords &&
+      !this.#config.keywords &&
       !nimbusKeywords
     ) {
       this.logger.debug(
-        "Rust disabled, no keywords in RS or Nimbus. Stopping fetch."
+        "Rust disabled, no keywords in RS or Nimbus. Stopping fetches."
       );
       this.#keywords = null;
       this.#stopFetching();
       return;
     }
 
-    // At this point, this feature will manage the keywords.
-    let fullKeywords = nimbusKeywords || this.#rsData?.keywords;
+    // At this point, keywords exist and this feature will manage them.
+    let fullKeywords = nimbusKeywords || this.#config.keywords;
     let minLength = this.minKeywordLength;
     this.logger.debug(
       "Updating keywords: " + JSON.stringify({ fullKeywords, minLength })
@@ -775,7 +805,7 @@ export class Weather extends BaseFeature {
 
   onPrefChanged(pref) {
     if (pref == "weather.minKeywordLength") {
-      this.#updateConfig();
+      this.#updateKeywords();
     }
   }
 
@@ -859,7 +889,7 @@ export class Weather extends BaseFeature {
   #lastFetchTimeMs = 0;
   #merino = null;
   #pendingFetchCount = 0;
-  #rsData = null;
+  #rsConfig = null;
   #suggestion = null;
   #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;
