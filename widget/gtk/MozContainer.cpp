@@ -246,6 +246,10 @@ void moz_container_unrealize(GtkWidget* widget) {
                 (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)),
                 (void*)window));
 
+  if (gtk_widget_get_mapped(widget)) {
+    gtk_widget_unmap(widget);
+  }
+
   gtk_widget_unregister_window(widget, window);
   gtk_widget_set_window(widget, nullptr);
   gdk_window_destroy(window);
