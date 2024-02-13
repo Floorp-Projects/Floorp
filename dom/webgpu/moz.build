@@ -80,7 +80,7 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
     ]
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
-    CXXFLAGS += ["-Werror=implicit-int-conversion"]
+    CXXFLAGS += ["-Werror=implicit-int-conversion", "-Wno-shorten-64-to-32"]
     CXXFLAGS += ["-Werror=switch"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
