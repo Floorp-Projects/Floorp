@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ConsoleInstance.h"
+#include "Console.h"
 #include "mozilla/dom/ConsoleBinding.h"
 #include "mozilla/Preferences.h"
 #include "ConsoleCommon.h"
@@ -241,6 +242,11 @@ void ConsoleInstance::Clear(JSContext* aCx) {
   const Sequence<JS::Value> data;
   RefPtr<Console> console(mConsole);
   console->MethodInternal(aCx, Console::MethodClear, u"clear"_ns, data);
+}
+
+bool ConsoleInstance::ShouldLog(ConsoleLogLevel aLevel) {
+  return mConsole->mCurrentLogLevel <=
+         mConsole->WebIDLLogLevelToInteger(aLevel);
 }
 
 void ConsoleInstance::ReportForServiceWorkerScope(const nsAString& aScope,
