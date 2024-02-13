@@ -351,6 +351,21 @@ class ModuleLoaderBase : public nsISupports {
 
   void ResetOverride();
 
+  // Copy fetched modules to `aDest`.
+  // `this` shouldn't have any fetching.
+  // `aDest` shouldn't have any fetching or fetched modules.
+  //
+  // This is used when starting sync module load, to replicate the module cache
+  // in the sync module loader pointed by `aDest`.
+  void CopyModulesTo(ModuleLoaderBase* aDest);
+
+  // Move all fetched modules to `aDest`.
+  // Both `this` and `aDest` shouldn't have any fetching.
+  //
+  // This is used when finishing sync module load, to reflect the loaded modules
+  // to the async module loader pointed by `aDest`.
+  void MoveModulesTo(ModuleLoaderBase* aDest);
+
   // Internal methods.
 
  private:
