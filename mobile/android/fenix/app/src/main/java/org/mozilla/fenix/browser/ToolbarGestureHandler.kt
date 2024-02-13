@@ -40,7 +40,7 @@ import kotlin.math.min
  * Handles intercepting touch events on the toolbar for swipe gestures and executes the
  * necessary animations.
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 class ToolbarGestureHandler(
     private val activity: Activity,
     private val contentLayout: View,
@@ -48,6 +48,7 @@ class ToolbarGestureHandler(
     private val toolbarLayout: View,
     private val store: BrowserStore,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
+    private val onSwipeStarted: () -> Unit,
 ) : SwipeGestureListener {
 
     private enum class GestureDirection {
@@ -87,6 +88,7 @@ class ToolbarGestureHandler(
             abs(dy) < abs(dx)
         ) {
             preparePreview(getDestination())
+            onSwipeStarted.invoke()
             true
         } else {
             false
