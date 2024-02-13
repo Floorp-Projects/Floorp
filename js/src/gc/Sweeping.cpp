@@ -1760,14 +1760,11 @@ bool GCRuntime::foregroundFinalize(JS::GCContext* gcx, Zone* zone,
   // GCRuntime::sweepBackgroundThings for more details).
   if (!FinalizeArenas(gcx, lists.collectingArenaList(thingKind), sweepList,
                       thingKind, sliceBudget)) {
-    // Copy the current contents of sweepList so that ArenaIter can find them.
-    lists.setIncrementalSweptArenas(thingKind, sweepList);
     return false;
   }
 
   sweepList.extractEmpty(&lists.savedEmptyArenas.ref());
   lists.mergeFinalizedArenas(thingKind, sweepList);
-  lists.clearIncrementalSweptArenas();
 
   return true;
 }
@@ -1952,21 +1949,44 @@ IncrementalProgress GCRuntime::finalizeAllocKind(JS::GCContext* gcx,
                                                  SliceBudget& budget) {
   MOZ_ASSERT(sweepZone->isGCSweeping());
 
-  // Set the number of things per arena for this AllocKind.
   size_t thingsPerArena = Arena::thingsPerArena(sweepAllocKind);
-  auto& sweepList = incrementalSweepList.ref();
-  sweepList.setThingsPerArena(thingsPerArena);
+  auto& finalizedArenas = foregroundFinalizedArenas.ref();
+  if (!finalizedArenas) {
+    finalizedArenas.emplace(thingsPerArena);
+    foregroundFinalizedZone = sweepZone;
+    foregroundFinalizedAllocKind = sweepAllocKind;
+  } else {
+    MOZ_ASSERT(finalizedArenas->thingsPerArena() == thingsPerArena);
+    MOZ_ASSERT(foregroundFinalizedZone == sweepZone);
+    MOZ_ASSERT(foregroundFinalizedAllocKind == sweepAllocKind);
+  }
 
   AutoSetThreadIsFinalizing threadIsFinalizing(gcx);
-
-  if (!foregroundFinalize(gcx, sweepZone, sweepAllocKind, budget, sweepList)) {
+  if (!foregroundFinalize(gcx, sweepZone, sweepAllocKind, budget,
+                          finalizedArenas.ref())) {
     return NotFinished;
   }
 
-  // Reset the slots of the sweep list that we used.
-  sweepList.reset(thingsPerArena);
+  finalizedArenas.reset();
+  foregroundFinalizedZone = nullptr;
+  foregroundFinalizedAllocKind = AllocKind::LIMIT;
 
   return Finished;
+}
+
+SortedArenaList* GCRuntime::maybeGetForegroundFinalizedArenas(Zone* zone,
+                                                              AllocKind kind) {
+  MOZ_ASSERT(zone);
+  MOZ_ASSERT(IsValidAllocKind(kind));
+
+  auto& finalizedArenas = foregroundFinalizedArenas.ref();
+
+  if (finalizedArenas.isNothing() || zone != foregroundFinalizedZone ||
+      kind != foregroundFinalizedAllocKind) {
+    return nullptr;
+  }
+
+  return finalizedArenas.ptr();
 }
 
 IncrementalProgress GCRuntime::sweepPropMapTree(JS::GCContext* gcx,

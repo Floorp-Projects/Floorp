@@ -3252,6 +3252,8 @@ void GCRuntime::checkGCStateNotInUse() {
 
   MOZ_ASSERT(!lastMarkSlice);
 
+  MOZ_ASSERT(foregroundFinalizedArenas.ref().isNothing());
+
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (zone->wasCollected()) {
       zone->arenas.checkGCStateNotInUse();

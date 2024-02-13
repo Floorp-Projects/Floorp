@@ -3245,6 +3245,10 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
     Invalidate(cx, invalid);
   }
 
+  for (size_t i = 0; i < scripts.length(); i++) {
+    MOZ_ASSERT(!scripts[i]->jitScript()->icScript()->active());
+  }
+
   // Code below this point must be infallible to ensure the active bit of
   // BaselineScripts is in a consistent state.
   //

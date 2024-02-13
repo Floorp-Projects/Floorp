@@ -185,6 +185,21 @@ Arena* ArenaList::removeRemainingArenas(Arena** arenap) {
   return remainingArenas;
 }
 
+AutoGatherSweptArenas::AutoGatherSweptArenas(JS::Zone* zone, AllocKind kind) {
+  GCRuntime& gc = zone->runtimeFromMainThread()->gc;
+  SortedArenaList* list = gc.maybeGetForegroundFinalizedArenas(zone, kind);
+  if (!list) {
+    return;
+  }
+
+  // Link individual sorted arena lists together for iteration.
+  linked = list->toArenaList();
+}
+
+AutoGatherSweptArenas::~AutoGatherSweptArenas() { linked.clear(); }
+
+Arena* AutoGatherSweptArenas::sweptArenas() const { return linked.head(); }
+
 FreeLists::FreeLists() {
   for (auto i : AllAllocKinds()) {
     freeLists_[i] = &emptySentinel;
@@ -193,7 +208,6 @@ FreeLists::FreeLists() {
 
 ArenaLists::ArenaLists(Zone* zone)
     : zone_(zone),
-      incrementalSweptArenaKind(AllocKind::LIMIT),
       gcCompactPropMapArenasToUpdate(nullptr),
       gcNormalPropMapArenasToUpdate(nullptr),
       savedEmptyArenas(nullptr) {
@@ -217,6 +231,8 @@ void ReleaseArenaList(JSRuntime* rt, ArenaList& arenaList,
 }
 
 ArenaLists::~ArenaLists() {
+  MOZ_ASSERT(runtime()->gc.foregroundFinalizedArenas.ref().isNothing());
+
   AutoLockGC lock(runtime());
 
   for (auto i : AllAllocKinds()) {
@@ -227,7 +243,6 @@ ArenaLists::~ArenaLists() {
     MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
     ReleaseArenaList(runtime(), arenaList(i), lock);
   }
-  ReleaseArenaList(runtime(), incrementalSweptArenas.ref(), lock);
 
   ReleaseArenas(runtime(), savedEmptyArenas, lock);
 }
@@ -255,18 +270,6 @@ Arena* ArenaLists::takeSweptEmptyArenas() {
   return arenas;
 }
 
-void ArenaLists::setIncrementalSweptArenas(AllocKind kind,
-                                           SortedArenaList& arenas) {
-  incrementalSweptArenaKind = kind;
-  incrementalSweptArenas.ref().clear();
-  incrementalSweptArenas = arenas.toArenaList();
-}
-
-void ArenaLists::clearIncrementalSweptArenas() {
-  incrementalSweptArenaKind = AllocKind::LIMIT;
-  incrementalSweptArenas.ref().clear();
-}
-
 void ArenaLists::checkGCStateNotInUse() {
   // Called before and after collection to check the state is as expected.
 #ifdef DEBUG
@@ -280,8 +283,6 @@ void ArenaLists::checkGCStateNotInUse() {
 void ArenaLists::checkSweepStateNotInUse() {
 #ifdef DEBUG
   checkNoArenasToUpdate();
-  MOZ_ASSERT(incrementalSweptArenaKind == AllocKind::LIMIT);
-  MOZ_ASSERT(incrementalSweptArenas.ref().isEmpty());
   MOZ_ASSERT(!savedEmptyArenas);
   for (auto i : AllAllocKinds()) {
     MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
