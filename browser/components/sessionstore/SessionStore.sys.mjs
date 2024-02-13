@@ -222,7 +222,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
-  PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.sys.mjs",
   RunState: "resource:///modules/sessionstore/RunState.sys.mjs",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.sys.mjs",
   SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
@@ -2320,8 +2319,6 @@ var SessionStoreInternal = {
       // 3) When the flush is complete, revisit our decision to store the window
       //    in _closedWindows, and add/remove as necessary.
       if (!winData.isPrivate) {
-        // Remove any open private tabs the window may contain.
-        lazy.PrivacyFilter.filterPrivateTabs(winData);
         this.maybeSaveClosedWindow(winData, isLastWindow);
       }
 
@@ -2343,9 +2340,6 @@ var SessionStoreInternal = {
         // Save non-private windows if they have at
         // least one saveable tab or are the last window.
         if (!winData.isPrivate) {
-          // It's possible that a tab switched its privacy state at some point
-          // before our flush, so we need to filter again.
-          lazy.PrivacyFilter.filterPrivateTabs(winData);
           this.maybeSaveClosedWindow(winData, isLastWindow, true);
 
           if (!isLastWindow && winData.closedId > -1) {
