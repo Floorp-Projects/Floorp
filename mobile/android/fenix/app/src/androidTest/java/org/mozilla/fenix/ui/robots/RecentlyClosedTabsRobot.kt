@@ -87,21 +87,21 @@ class RecentlyClosedTabsRobot {
         }
 
         fun clickOpenInNewTab(testRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            openInNewTabOption.click()
+            openInNewTabOption().click()
 
             ComposeTabDrawerRobot(testRule).interact()
             return ComposeTabDrawerRobot.Transition(testRule)
         }
 
         fun clickOpenInPrivateTab(testRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
-            openInPrivateTabOption.click()
+            openInPrivateTabOption().click()
 
             ComposeTabDrawerRobot(testRule).interact()
             return ComposeTabDrawerRobot.Transition(testRule)
         }
 
         fun clickShare(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
-            multipleSelectionShareButton.click()
+            multipleSelectionShareButton().click()
 
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
@@ -132,8 +132,8 @@ private fun recentlyClosedTabDeleteButton() =
         ),
     )
 
-private val openInNewTabOption = onView(withText("Open in new tab"))
+private fun openInNewTabOption() = onView(withText("Open in new tab"))
 
-private val openInPrivateTabOption = onView(withText("Open in private tab"))
+private fun openInPrivateTabOption() = onView(withText("Open in private tab"))
 
-private val multipleSelectionShareButton = onView(withId(R.id.share_history_multi_select))
+private fun multipleSelectionShareButton() = onView(withId(R.id.share_history_multi_select))
