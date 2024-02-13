@@ -187,16 +187,22 @@ Arena* ArenaList::removeRemainingArenas(Arena** arenap) {
 
 AutoGatherSweptArenas::AutoGatherSweptArenas(JS::Zone* zone, AllocKind kind) {
   GCRuntime& gc = zone->runtimeFromMainThread()->gc;
-  SortedArenaList* list = gc.maybeGetForegroundFinalizedArenas(zone, kind);
-  if (!list) {
+  sortedList = gc.maybeGetForegroundFinalizedArenas(zone, kind);
+  if (!sortedList) {
     return;
   }
 
-  // Link individual sorted arena lists together for iteration.
-  linked = list->toArenaList();
+  // Link individual sorted arena lists together for iteration, saving the
+  // internal state so we can restore it later.
+  linked = sortedList->convertToArenaList(segmentLastPointers);
 }
 
-AutoGatherSweptArenas::~AutoGatherSweptArenas() { linked.clear(); }
+AutoGatherSweptArenas::~AutoGatherSweptArenas() {
+  if (sortedList) {
+    sortedList->restoreFromArenaList(linked, segmentLastPointers);
+  }
+  linked.clear();
+}
 
 Arena* AutoGatherSweptArenas::sweptArenas() const { return linked.head(); }
 

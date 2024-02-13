@@ -11,6 +11,7 @@
 #ifndef gc_ArenaList_h
 #define gc_ArenaList_h
 
+#include "ds/SinglyLinkedList.h"
 #include "gc/AllocKind.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
@@ -37,45 +38,23 @@ class TenuredCell;
 class TenuringTracer;
 
 /*
- * A single segment of a SortedArenaList. Each segment has a head and a tail,
- * which track the start and end of a segment for O(1) append and concatenation.
- */
-struct SortedArenaListSegment {
-  Arena* head;
-  Arena** tailp;
-
-  void clear() {
-    head = nullptr;
-    tailp = &head;
-  }
-
-  bool isEmpty() const { return tailp == &head; }
-
-  // Appends |arena| to this segment.
-  inline void append(Arena* arena);
-
-  // Points the tail of this segment at |arena|, which may be null. Note
-  // that this does not change the tail itself, but merely which arena
-  // follows it. This essentially turns the tail into a cursor (see also the
-  // description of ArenaList), but from the perspective of a SortedArenaList
-  // this makes no difference.
-  void linkTo(Arena* arena) { *tailp = arena; }
-};
-
-/*
  * Arena lists contain a singly linked lists of arenas starting from a head
  * pointer.
  *
  * They also have a cursor, which conceptually lies on arena boundaries,
  * i.e. before the first arena, between two arenas, or after the last arena.
  *
- * Arenas are usually sorted in order of increasing free space, with the cursor
- * following the Arena currently being allocated from. This ordering should not
- * be treated as an invariant, however, as the free lists may be cleared,
- * leaving arenas previously used for allocation partially full. Sorting order
- * is restored during sweeping.
+ * Arenas are sorted in order of increasing free space, with the cursor before
+ * the first arena with any free space. This provides a convenient way of
+ * getting the next arena with free space when allocating. The cursor is updated
+ * when this happens to point to the following arena.
  *
- * Arenas following the cursor should not be full.
+ * The ordering is chosen to try and fill up arenas as much as possible and
+ * leave more empty arenas to be reclaimed when their contents die.
+ *
+ * The ordering should not be treated as an invariant, however, as the free
+ * lists may be cleared, leaving arenas previously used for allocation partially
+ * full. Sorting order is restored during sweeping.
  */
 class ArenaList {
   // The cursor is implemented via an indirect pointer, |cursorp_|, to allow
@@ -118,7 +97,7 @@ class ArenaList {
   ArenaList(const ArenaList& other) = delete;
   ArenaList& operator=(const ArenaList& other) = delete;
 
-  inline explicit ArenaList(const SortedArenaListSegment& segment);
+  inline ArenaList(Arena* head, Arena* arenaBeforeCursor);
 
   inline void check() const;
 
@@ -164,9 +143,13 @@ class ArenaList {
 };
 
 /*
- * A class that holds arenas in sorted order by appending arenas to specific
- * segments. Each segment has a head and a tail, which can be linked up to
- * other segments to create a contiguous ArenaList.
+ * A class that is used to sort arenas of a single AllocKind into increasing
+ * order of free space.
+ *
+ * It works by adding arenas to a segment corresponding to the number of free
+ * things in the arena. Each segment is an independent linked list.
+ *
+ * The segments can be linked up to form a sorted ArenaList.
  */
 class SortedArenaList {
  public:
@@ -181,18 +164,23 @@ class SortedArenaList {
                 "When decreasing the minimum thing size, please consider"
                 " how this will affect the size of a SortedArenaList.");
 
- private:
   // The maximum number of GC things that an arena can hold.
   static const size_t MaxThingsPerArena =
       (ArenaSize - ArenaHeaderSize) / MinThingSize;
+
+  // The number of segments required, one for each possible number of free
+  // things in an arena plus one for full arenas.
   static const size_t SegmentCount = MaxThingsPerArena + 1;
 
-  const size_t thingsPerArena_;
-  SortedArenaListSegment segments[SegmentCount];
+ private:
+  using Segment = SinglyLinkedList<Arena>;
 
-  // Convenience functions to get the nth head and tail.
-  Arena* headAt(size_t n) { return segments[n].head; }
-  Arena** tailAt(size_t n) { return segments[n].tailp; }
+  const size_t thingsPerArena_;
+  Segment segments[SegmentCount];
+
+#ifdef DEBUG
+  bool isConvertedToArenaList = false;
+#endif
 
  public:
   inline explicit SortedArenaList(size_t thingsPerArena = MaxThingsPerArena);
@@ -202,23 +190,37 @@ class SortedArenaList {
   // Inserts an arena, which has room for |nfree| more things, in its segment.
   inline void insertAt(Arena* arena, size_t nfree);
 
-  // Remove all empty arenas, inserting them as a linked list.
-  inline void extractEmpty(Arena** empty);
+  // Remove any empty arenas and prepend them to the list pointed to by
+  // |destListHeadPtr|.
+  inline void extractEmptyTo(Arena** destListHeadPtr);
 
-  // Links up the tail of each non-empty segment to the head of the next
-  // non-empty segment, creating a contiguous list that is returned as an
-  // ArenaList. This is not a destructive operation: neither the head nor tail
-  // of any segment is modified. However, note that the Arenas in the
-  // resulting ArenaList should be treated as read-only unless the
-  // SortedArenaList is no longer needed: inserting or removing arenas would
-  // invalidate the SortedArenaList.
-  inline ArenaList toArenaList();
+  // Converts the contents of this data structure to a single list, by linking
+  // up the tail of each non-empty segment to the head of the next non-empty
+  // segment.
+  //
+  // Optionally saves internal state to |maybeSegmentLastOut| so that it can be
+  // restored later by calling restoreFromArenaList. It is not valid to use this
+  // class in the meantime.
+  inline ArenaList convertToArenaList(
+      Arena* maybeSegmentLastOut[SegmentCount] = nullptr);
 
-  friend class AutoGatherSweptArenas;
+  // Restore the internal state of this class following conversion to an
+  // ArenaList by the previous method.
+  inline void restoreFromArenaList(ArenaList& list,
+                                   Arena* segmentLast[SegmentCount]);
+
+ private:
+  inline void check() const;
 };
 
 // Gather together any swept arenas for the given zone and alloc kind.
 class MOZ_RAII AutoGatherSweptArenas {
+  SortedArenaList* sortedList = nullptr;
+
+  // Internal state from SortedArenaList so we can restore it later.
+  Arena* segmentLastPointers[SortedArenaList::SegmentCount];
+
+  // Single result list.
   ArenaList linked;
 
  public:
