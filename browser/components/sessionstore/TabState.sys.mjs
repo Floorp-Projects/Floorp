@@ -119,9 +119,6 @@ var TabStateInternal = {
 
     // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
-    if (tabData.floorpDisableHistory) {
-      return undefined;
-    }
 
     // Site Specific Browser
     tabData.floorpSSB = tab.getAttribute("floorpSSB");

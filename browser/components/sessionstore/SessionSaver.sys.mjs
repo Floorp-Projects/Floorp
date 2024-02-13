@@ -254,12 +254,12 @@ var SessionSaverInternal = {
     // Floorp Injections
     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
   
-    function shouldUpdateLastSaveTime(ssbEnabled, windows) {
-      return ssbEnabled && windows.length === 1;
+    function shouldUpdateLastSaveTime(enabled, windows) {
+      return enabled && windows.length === 1;
     }
   
-    function shouldRemoveWindow(ssbEnabled) {
-      return ssbEnabled;
+    function shouldRemoveWindow(enabled) {
+      return enabled;
     }
   
     function removeWindowFromState(windowKey) {

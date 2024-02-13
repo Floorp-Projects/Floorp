@@ -585,9 +585,9 @@ export var SessionStore = {
       // Floorp injections
       // Remove SSB window state.
       // SSB windows should be not restored, so we don't need to keep their state.
-      if (win.tabs[0]) {
-        if (win.tabs[0].floorpSSB) {
-          aState.windows.splice(i, 1);
+      for(let j = 0; j < win.tabs.length; j++) {
+        if(win.tabs[j].floorpSSB) {
+          win.tabs.splice(j, 1);
           if (aState.selectedWindow > i) {
             aState.selectedWindow--;
           }
@@ -876,6 +876,14 @@ var SessionStoreInternal = {
             1
           );
         } else {
+          if (state && state.windows) {
+            for (let win of state.windows) {
+              if(win.isWebpanelWindow) {
+                state.windows.splice(state.windows.indexOf(win), 1);
+              }
+            }
+          }
+
           // Get the last deferred session in case the user still wants to
           // restore it
           LastSession.setState(state.lastSessionState);
@@ -4059,12 +4067,18 @@ var SessionStoreInternal = {
       winData.sizemodeBeforeMinimized = winData.sizemode;
     }
 
+    // Floorp Injections
     let windowUuid = aWindow.gWorkspaces._windowId;
     if (windowUuid) {
       winData.windowUuid = windowUuid;
     } else {
       delete winData.windowUuid;
     }
+
+    let isWebpanelWindow = aWindow.IsWebpanelWindow;
+    winData.isWebpanelWindow = !!isWebpanelWindow;
+
+    // Floorp Injections end
 
     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function (aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
@@ -4761,6 +4775,10 @@ var SessionStoreInternal = {
 
     if (TAB_STATE_FOR_BROWSER.has(browser)) {
       console.error("Must reset tab before calling restoreTab.");
+      return;
+    }
+
+    if (tabData.floorpDisableHistory || tabData.floorpWebpanel) {
       return;
     }
 
