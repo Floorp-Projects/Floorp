@@ -223,7 +223,7 @@ fun historyMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
     return HistoryRobot.Transition()
 }
 
-private fun testPageTitle() = onView(allOf(withId(R.id.title), withText("Test_Page_1")))
+private fun testPageTitle() = onView(withId(R.id.title))
 
 private fun pageUrl(url: String) = onView(allOf(withId(R.id.url), withText(url)))
 

@@ -5,19 +5,13 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.AppAndSystemHelper.resetSystemLocaleToEnUS
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import java.util.Locale
 
@@ -31,10 +25,7 @@ import java.util.Locale
  *  - Find in page
  */
 
-class ComposeNavigationToolbarTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
-
+class ComposeNavigationToolbarTest : TestSetup() {
     @get:Rule
     val composeTestRule =
         AndroidComposeTestRule(
@@ -42,21 +33,6 @@ class ComposeNavigationToolbarTest {
                 tabsTrayRewriteEnabled = true,
             ),
         ) { it.activity }
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-        resetSystemLocaleToEnUS()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/987326
     // Swipes the nav bar left/right to switch between tabs
