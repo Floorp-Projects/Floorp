@@ -240,16 +240,14 @@ Result<already_AddRefed<VideoData>, MediaResult> DAV1DDecoder::GetPicture() {
     return Err(r);
   }
 
-  RefPtr<VideoData> v = ConstructImage(*picture);
-  if (!v) {
-    LOG("Image allocation error: %ux%u"
-        " display %ux%u picture %ux%u",
+  Result<already_AddRefed<VideoData>, MediaResult> r = ConstructImage(*picture);
+  return r.mapErr([&](const MediaResult& aResult) {
+    LOG("ConstructImage (%ux%u display %ux%u picture %ux%u ) error - %s: %s",
         (*picture).p.w, (*picture).p.h, mInfo.mDisplay.width,
-        mInfo.mDisplay.height, mInfo.mImage.width, mInfo.mImage.height);
-    // TODO: ConstructImage may return NULL on non out-of-memory failures.
-    return Err(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-  }
-  return v.forget();
+        mInfo.mDisplay.height, mInfo.mImage.width, mInfo.mImage.height,
+        aResult.ErrorName().get(), aResult.Message().get());
+    return aResult;
+  });
 }
 
 /* static */
@@ -277,7 +275,7 @@ Maybe<gfx::ColorSpace2> DAV1DDecoder::GetColorPrimaries(
       static_cast<gfx::CICP::ColourPrimaries>(aPicture.seq_hdr->pri), aLogger);
 }
 
-already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
+Result<already_AddRefed<VideoData>, MediaResult> DAV1DDecoder::ConstructImage(
     const Dav1dPicture& aPicture) {
   VideoData::YCbCrBuffer b;
   if (aPicture.p.bpc == 10) {
@@ -356,9 +354,15 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
     aStage.SetColorDepth(b.mColorDepth);
   });
 
-  return VideoData::CreateAndCopyData(
+  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
       mInfo, mImageContainer, offset, timecode, duration, b, keyframe, timecode,
       mInfo.ScaledImageRect(aPicture.p.w, aPicture.p.h), mImageAllocator);
+  if (!v) {
+    // TODO: VideoData::CreateAndCopyData may return NULL on non out-of-memory
+    // failures.
+    return Err(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+  }
+  return v.forget();
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Drain() {
