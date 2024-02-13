@@ -48,6 +48,20 @@ void JSONPrinter::propertyName(const char* name) {
   first_ = false;
 }
 
+GenericPrinter& JSONPrinter::beginStringPropertyName() {
+  beforeValue();
+  out_.printf("\"");
+
+  return out_;
+}
+
+void JSONPrinter::endStringPropertyName() {
+  out_.printf("\":");
+  if (indent_) {
+    out_.put(" ");
+  }
+}
+
 void JSONPrinter::beginObject() {
   beforeValue();
   out_.putChar('{');
