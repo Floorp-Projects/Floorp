@@ -750,8 +750,10 @@ def main():
                 target_cpus.append("arm")
             if target_os in ("android", "linux", "win"):
                 target_cpus.append("x86")
+            if target_os in ("linux", "openbsd"):
+                target_cpus.append("riscv64")
             if target_os == "linux":
-                target_cpus.extend(["ppc64", "riscv64", "mipsel", "mips64el"])
+                target_cpus.extend(["ppc64", "mipsel", "mips64el"])
             for target_cpu in target_cpus:
                 vars = {
                     "host_cpu": "x64",
