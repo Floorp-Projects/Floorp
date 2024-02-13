@@ -226,10 +226,13 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
 
     RefPtr<VideoData> v;
     if (!img_alpha) {
-      v = VideoData::CreateAndCopyData(
-          mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
-          aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
-          mInfo.ScaledImageRect(img->d_w, img->d_h), mImageAllocator);
+      Result<already_AddRefed<VideoData>, MediaResult> r =
+          VideoData::CreateAndCopyData(
+              mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
+              aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
+              mInfo.ScaledImageRect(img->d_w, img->d_h), mImageAllocator);
+      // TODO: Reject DecodePromise below with r's error return.
+      v = r.unwrapOr(nullptr);
     } else {
       VideoData::YCbCrBuffer::Plane alpha_plane;
       alpha_plane.mData = img_alpha->planes[0];

@@ -475,11 +475,14 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     gfx::IntRect visible = gfx::IntRect(0, 0, mPictureWidth, mPictureHeight);
 
     // Copy the image data into our own format.
-    data = VideoData::CreateAndCopyData(
-        info, mImageContainer, aFrameRef.byte_offset,
-        aFrameRef.composition_timestamp, aFrameRef.duration, buffer,
-        aFrameRef.is_sync_point, aFrameRef.decode_timestamp, visible,
-        mKnowsCompositor);
+    Result<already_AddRefed<VideoData>, MediaResult> result =
+        VideoData::CreateAndCopyData(
+            info, mImageContainer, aFrameRef.byte_offset,
+            aFrameRef.composition_timestamp, aFrameRef.duration, buffer,
+            aFrameRef.is_sync_point, aFrameRef.decode_timestamp, visible,
+            mKnowsCompositor);
+    // TODO: Reject mPromise below with result's error return.
+    data = result.unwrapOr(nullptr);
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {

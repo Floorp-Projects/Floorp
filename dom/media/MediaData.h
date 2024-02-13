@@ -9,12 +9,14 @@
 #  include "AudioConfig.h"
 #  include "AudioSampleFormat.h"
 #  include "ImageTypes.h"
+#  include "MediaResult.h"
 #  include "SharedBuffer.h"
 #  include "TimeUnits.h"
 #  include "mozilla/CheckedInt.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/PodOperations.h"
 #  include "mozilla/RefPtr.h"
+#  include "mozilla/Result.h"
 #  include "mozilla/Span.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/UniquePtrExtensions.h"
@@ -497,7 +499,7 @@ class VideoData : public MediaData {
 
   // Creates a new VideoData containing a deep copy of aBuffer. May use
   // aContainer to allocate an Image to hold the copied data.
-  static already_AddRefed<VideoData> CreateAndCopyData(
+  static Result<already_AddRefed<VideoData>, MediaResult> CreateAndCopyData(
       const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,
       const media::TimeUnit& aTime, const media::TimeUnit& aDuration,
       const YCbCrBuffer& aBuffer, bool aKeyframe,

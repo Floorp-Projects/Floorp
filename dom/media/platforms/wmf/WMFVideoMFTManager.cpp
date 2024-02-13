@@ -674,9 +674,11 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
 
   if (colorDepth != gfx::ColorDepth::COLOR_8 || !mKnowsCompositor ||
       !mKnowsCompositor->SupportsD3D11() || !mIMFUsable) {
-    RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-        mVideoInfo, mImageContainer, aStreamOffset, pts, duration, b, false,
-        TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
+    Result<already_AddRefed<VideoData>, MediaResult> r =
+        VideoData::CreateAndCopyData(
+            mVideoInfo, mImageContainer, aStreamOffset, pts, duration, b, false,
+            TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
+    RefPtr<VideoData> v = r.unwrapOr(nullptr);
     if (twoDBuffer) {
       twoDBuffer->Unlock2D();
     } else {

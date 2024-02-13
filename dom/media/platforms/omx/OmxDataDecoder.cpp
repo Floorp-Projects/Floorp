@@ -980,21 +980,26 @@ already_AddRefed<VideoData> MediaDataHelper::CreateYUV420VideoData(
   }
   b.mColorPrimaries = *maybeColorPrimaries;
 
-  RefPtr<VideoData> data = VideoData::CreateAndCopyData(
-      info, mImageContainer,
-      0,                                     // Filled later by caller.
-      media::TimeUnit::Zero(),               // Filled later by caller.
-      media::TimeUnit::FromMicroseconds(1),  // We don't know the duration.
-      b,
-      false,  // Filled later by caller.
-      media::TimeUnit::FromMicroseconds(-1), info.ImageRect(), nullptr);
+  Result<already_AddRefed<VideoData>, MediaResult> result =
+      VideoData::CreateAndCopyData(
+          info, mImageContainer,
+          0,                                     // Filled later by caller.
+          media::TimeUnit::Zero(),               // Filled later by caller.
+          media::TimeUnit::FromMicroseconds(1),  // We don't know the duration.
+          b,
+          false,  // Filled later by caller.
+          media::TimeUnit::FromMicroseconds(-1), info.ImageRect(), nullptr);
 
-  if (!data) {
+  if (result.isErr()) {
+    MediaResult r = result.unwrapErr();
     MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug,
-            ("Failed to create a YUV420 VideoData"));
+            ("Failed to create a YUV420 VideoData - %s: %s",
+             r.ErrorName().get(), r.Message().get()));
     return nullptr;
   }
 
+  RefPtr<VideoData> data = result.unwrap();
+  MOZ_ASSERT(data);
   MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug,
           ("YUV420 VideoData: disp width %d, height %d, pic width %d, height "
            "%d, time %lld",

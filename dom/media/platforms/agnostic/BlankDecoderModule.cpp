@@ -71,10 +71,12 @@ already_AddRefed<MediaData> BlankVideoDataCreator::Create(
   buffer.mYUVColorSpace = gfx::YUVColorSpace::BT601;
   buffer.mColorPrimaries = gfx::ColorSpace2::BT709;
 
-  return VideoData::CreateAndCopyData(mInfo, mImageContainer, aSample->mOffset,
-                                      aSample->mTime, aSample->mDuration,
-                                      buffer, aSample->mKeyframe,
-                                      aSample->mTime, mPicture, nullptr);
+  Result<already_AddRefed<VideoData>, MediaResult> result =
+      VideoData::CreateAndCopyData(mInfo, mImageContainer, aSample->mOffset,
+                                   aSample->mTime, aSample->mDuration, buffer,
+                                   aSample->mKeyframe, aSample->mTime, mPicture,
+                                   nullptr);
+  return result.unwrapOr(nullptr);
 }
 
 BlankAudioDataCreator::BlankAudioDataCreator(uint32_t aChannelCount,

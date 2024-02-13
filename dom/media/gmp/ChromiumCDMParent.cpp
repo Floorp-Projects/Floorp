@@ -1014,11 +1014,15 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
       DefaultColorSpace({aFrame.mImageWidth(), aFrame.mImageHeight()});
 
   gfx::IntRect pictureRegion(0, 0, aFrame.mImageWidth(), aFrame.mImageHeight());
-  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-      mVideoInfo, mImageContainer, mLastStreamOffset,
-      media::TimeUnit::FromMicroseconds(aFrame.mTimestamp()),
-      media::TimeUnit::FromMicroseconds(aFrame.mDuration()), b, false,
-      media::TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
+
+  mozilla::Result<already_AddRefed<VideoData>, MediaResult> r =
+      VideoData::CreateAndCopyData(
+          mVideoInfo, mImageContainer, mLastStreamOffset,
+          media::TimeUnit::FromMicroseconds(aFrame.mTimestamp()),
+          media::TimeUnit::FromMicroseconds(aFrame.mDuration()), b, false,
+          media::TimeUnit::FromMicroseconds(-1), pictureRegion,
+          mKnowsCompositor);
+  RefPtr<VideoData> v = r.unwrapOr(nullptr);
 
   if (!v || !v->mImage) {
     NS_WARNING("Failed to decode video frame.");
