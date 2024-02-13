@@ -513,6 +513,7 @@ partial namespace ChromeUtils {
    * 'aResourceURI'.
    *
    * @param aResourceURI A resource:// URI string to load the module from.
+   * @param aOption An option to specify where to load the module into.
    * @returns the module's namespace object.
    *
    * The implementation maintains a hash of aResourceURI->global obj.
@@ -520,7 +521,8 @@ partial namespace ChromeUtils {
    * the same file will not cause the module to be re-evaluated.
    */
   [Throws]
-  object importESModule(DOMString aResourceURI, optional ImportESModuleOptionsDictionary options = {});
+  object importESModule(DOMString aResourceURI,
+                        optional ImportESModuleOptionsDictionary aOptions = {});
 
   /**
    * Defines a property on the given target which lazily imports a JavaScript
@@ -983,6 +985,40 @@ dictionary CompileScriptOptionsDictionary {
   boolean hasReturnValue = false;
 };
 
+/**
+ * Where the modules are loaded into with importESModule.
+ */
+enum ImportESModuleTargetGlobal {
+  /**
+   * Load into the shared system global.
+   * This is the default value.
+   */
+  "shared",
+
+  /**
+   * Load into a distinct system global for DevTools, so that the DevTools can
+   * load a distinct set of modules and do not interfere with its debuggee.
+   */
+  "devtools",
+
+  /**
+   * If the current global is DevTools' distinct system global, load into the
+   * DevTools' distinct system global.
+   * Otherwise load into the shared system global.
+   *
+   * This is a temporary workaround until DevTools modules are ESMified.
+   */
+  "contextual",
+
+  /**
+   * Load into current global.
+   *
+   * This can be used for any global.  If this is used for shared global or
+   * devtools global, this has the same effect as "shared" or "devtools".
+   */
+  "current",
+};
+
 dictionary ImportESModuleOptionsDictionary {
   /**
    * If true, a distinct module loader will be used, in the system principal,
@@ -990,6 +1026,8 @@ dictionary ImportESModuleOptionsDictionary {
    * of modules and do not interfere with its debuggee.
    */
   boolean loadInDevToolsLoader;
+
+  ImportESModuleTargetGlobal global;
 };
 
 /**
