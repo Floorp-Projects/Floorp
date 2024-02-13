@@ -9855,6 +9855,89 @@ static bool PrintHelp(JSContext* cx, HandleObject obj) {
   return PrintHelpString(cx, usage) && PrintHelpString(cx, help);
 }
 
+struct ExtraGlobalBindingWithHelp {
+  const char* name;
+  const char* help;
+};
+
+// clang-format off
+static ExtraGlobalBindingWithHelp extraGlobalBindingsWithHelp[] = {
+// Defined in BindScriptArgs.
+    {
+"scriptArgs",
+"  An array containing the command line arguments passed after the path\n"
+"  to a JS script."},
+    {
+"scriptPath",
+"  The path to the JS script passed to JS shell.  This does not reflect\n"
+"  modules evaluated via -m option."},
+
+// Defined in DefineConsole.
+    {
+"console",
+"  An object with console.log() which aliases print()."},
+
+// Defined in NewGlobalObject.
+    {
+"performance",
+"  An object with the following properties:\n"
+"    performance.now()\n"
+"      See help(performance.now)\n"
+"    performance.mozMemory.gc\n"
+"      An object that represents GC statistics with the following properties:\n"
+"        gcBytes\n"
+"        gcMaxBytes\n"
+"        mallocBytes\n"
+"        gcIsHighFrequencyMode\n"
+"        gcNumber\n"
+"        majorGCCount\n"
+"        minorGCCount\n"
+"        sliceCount\n"
+"        compartmentCount\n"
+"        lastStartReason\n"
+"        zone.gcBytes\n"
+"        zone.gcTriggerBytes\n"
+"        zone.gcAllocTrigger\n"
+"        zone.mallocBytes\n"
+"        zone.mallocTriggerBytes\n"
+"        zone.gcNumber"},
+    {
+"new FakeDOMObject()",
+"  A constructor to test IonMonkey DOM optimizations in JS shell.\n"
+"  The prototype object has the following properties:\n"
+"    FakeDOMObject.prototype.x\n"
+"      Generic getter/setter with JSJitInfo\n"
+"    FakeDOMObject.prototype.slot\n"
+"      Getter with JSJitInfo.slotIndex\n"
+"    FakeDOMObject.prototype.global\n"
+"      Getter/setter with JSJitInfo::AliasEverything\n"
+"    FakeDOMObject.prototype.doFoo()\n"
+"      Method with JSJitInfo"},
+};
+// clang-format on
+
+static bool MatchPattern(JSContext* cx, JS::Handle<RegExpObject*> regex,
+                         JS::Handle<JSString*> inputStr, bool* result) {
+  JS::Rooted<JSString*> linearInputStr(cx, inputStr);
+  if (!linearInputStr->ensureLinear(cx)) {
+    return false;
+  }
+
+  // Execute the regular expression in |regex|'s compartment.
+  JSAutoRealm ar(cx, regex);
+  if (!cx->compartment()->wrap(cx, &linearInputStr)) {
+    return false;
+  }
+  JS::Rooted<JSLinearString*> input(cx, &linearInputStr->asLinear());
+  size_t ignored = 0;
+  JS::Rooted<JS::Value> v(cx);
+  if (!ExecuteRegExpLegacy(cx, nullptr, regex, input, &ignored, true, &v)) {
+    return false;
+  }
+  *result = !v.isNull();
+  return true;
+}
+
 static bool PrintEnumeratedHelp(JSContext* cx, HandleObject obj,
                                 HandleObject pattern, bool brief) {
   RootedIdVector idv(cx);
@@ -9903,21 +9986,11 @@ static bool PrintEnumeratedHelp(JSContext* cx, HandleObject obj,
       }
 
       Rooted<JSString*> inputStr(cx, v.toString());
-      if (!inputStr->ensureLinear(cx)) {
+      bool result = false;
+      if (!MatchPattern(cx, regex, inputStr, &result)) {
         return false;
       }
-
-      // Execute the regular expression in |regex|'s compartment.
-      AutoRealm ar(cx, regex);
-      if (!cx->compartment()->wrap(cx, &inputStr)) {
-        return false;
-      }
-      Rooted<JSLinearString*> input(cx, &inputStr->asLinear());
-      size_t ignored = 0;
-      if (!ExecuteRegExpLegacy(cx, nullptr, regex, input, &ignored, true, &v)) {
-        return false;
-      }
-      if (v.isNull()) {
+      if (!result) {
         continue;
       }
     }
@@ -9925,6 +9998,35 @@ static bool PrintEnumeratedHelp(JSContext* cx, HandleObject obj,
     if (!PrintHelp(cx, funcObj)) {
       return false;
     }
+  }
+
+  return true;
+}
+
+static bool PrintExtraGlobalEnumeratedHelp(JSContext* cx, HandleObject pattern,
+                                           bool brief) {
+  Rooted<RegExpObject*> regex(cx);
+  if (pattern) {
+    regex = &UncheckedUnwrap(pattern)->as<RegExpObject>();
+  }
+
+  for (const auto& item : extraGlobalBindingsWithHelp) {
+    if (regex) {
+      JS::Rooted<JSString*> name(cx, JS_NewStringCopyZ(cx, item.name));
+      if (!name) {
+        return false;
+      }
+
+      bool result = false;
+      if (!MatchPattern(cx, regex, name, &result)) {
+        return false;
+      }
+      if (!result) {
+        continue;
+      }
+    }
+    fprintf(gOutFile->fp, "%s\n", item.name);
+    fprintf(gOutFile->fp, "%s\n", item.help);
   }
 
   return true;
@@ -9946,6 +10048,9 @@ static bool Help(JSContext* cx, unsigned argc, Value* vp) {
     fprintf(gOutFile->fp, "%s\n", JS_GetImplementationVersion());
 
     if (!PrintEnumeratedHelp(cx, global, nullptr, false)) {
+      return false;
+    }
+    if (!PrintExtraGlobalEnumeratedHelp(cx, nullptr, false)) {
       return false;
     }
     return true;
@@ -9970,7 +10075,13 @@ static bool Help(JSContext* cx, unsigned argc, Value* vp) {
 
   if (isRegexp) {
     // help(/pattern/)
-    return PrintEnumeratedHelp(cx, global, obj, false);
+    if (!PrintEnumeratedHelp(cx, global, obj, false)) {
+      return false;
+    }
+    if (!PrintExtraGlobalEnumeratedHelp(cx, obj, false)) {
+      return false;
+    }
+    return true;
   }
 
   // help(function)
