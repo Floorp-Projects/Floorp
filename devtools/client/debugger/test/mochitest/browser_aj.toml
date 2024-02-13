@@ -273,3 +273,28 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 skip-if = [
   "tsan", # Bug 1832135
 ]
+
+["browser_dbg-javascript-tracer-function-returns.js"]
+skip-if = [
+  "tsan", # Bug 1832135
+]
+
+["browser_dbg-javascript-tracer-next-interation.js"]
+skip-if = [
+  "tsan", # Bug 1832135
+]
+
+["browser_dbg-javascript-tracer-next-load.js"]
+skip-if = [
+  "tsan", # Bug 1832135
+]
+
+["browser_dbg-javascript-tracer-values.js"]
+skip-if = [
+  "tsan", # Bug 1832135
+]
+
+["browser_dbg-javascript-tracer-worker.js"]
+skip-if = [
+  "tsan", # Bug 1832135
+]
