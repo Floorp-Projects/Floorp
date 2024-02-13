@@ -29,6 +29,7 @@ struct Statistics;
 namespace gc {
 
 class Arena;
+class AutoGatherSweptArenas;
 class BackgroundUnmarkTask;
 struct FinalizePhase;
 class FreeSpan;
@@ -184,9 +185,10 @@ class SortedArenaList {
   // The maximum number of GC things that an arena can hold.
   static const size_t MaxThingsPerArena =
       (ArenaSize - ArenaHeaderSize) / MinThingSize;
+  static const size_t SegmentCount = MaxThingsPerArena + 1;
 
-  size_t thingsPerArena_;
-  SortedArenaListSegment segments[MaxThingsPerArena + 1];
+  const size_t thingsPerArena_;
+  SortedArenaListSegment segments[SegmentCount];
 
   // Convenience functions to get the nth head and tail.
   Arena* headAt(size_t n) { return segments[n].head; }
@@ -195,10 +197,7 @@ class SortedArenaList {
  public:
   inline explicit SortedArenaList(size_t thingsPerArena = MaxThingsPerArena);
 
-  inline void setThingsPerArena(size_t thingsPerArena);
-
-  // Resets the first |thingsPerArena| segments of this list for further use.
-  inline void reset(size_t thingsPerArena = MaxThingsPerArena);
+  size_t thingsPerArena() const { return thingsPerArena_; }
 
   // Inserts an arena, which has room for |nfree| more things, in its segment.
   inline void insertAt(Arena* arena, size_t nfree);
@@ -214,6 +213,19 @@ class SortedArenaList {
   // SortedArenaList is no longer needed: inserting or removing arenas would
   // invalidate the SortedArenaList.
   inline ArenaList toArenaList();
+
+  friend class AutoGatherSweptArenas;
+};
+
+// Gather together any swept arenas for the given zone and alloc kind.
+class MOZ_RAII AutoGatherSweptArenas {
+  ArenaList linked;
+
+ public:
+  AutoGatherSweptArenas(JS::Zone* zone, AllocKind kind);
+  ~AutoGatherSweptArenas();
+
+  Arena* sweptArenas() const;
 };
 
 enum class ShouldCheckThresholds {
@@ -279,10 +291,6 @@ class ArenaLists {
    */
   MainThreadOrGCTaskData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
 
-  /* During incremental sweeping, a list of the arenas already swept. */
-  MainThreadOrGCTaskData<AllocKind> incrementalSweptArenaKind;
-  MainThreadOrGCTaskData<ArenaList> incrementalSweptArenas;
-
   // Arena lists which have yet to be swept, but need additional foreground
   // processing before they are swept.
   MainThreadData<Arena*> gcCompactPropMapArenasToUpdate;
@@ -305,7 +313,6 @@ class ArenaLists {
 
   inline Arena* getFirstArena(AllocKind thingKind) const;
   inline Arena* getFirstCollectingArena(AllocKind thingKind) const;
-  inline Arena* getFirstSweptArena(AllocKind thingKind) const;
   inline Arena* getArenaAfterCursor(AllocKind thingKind) const;
 
   inline bool arenaListsAreEmpty() const;
@@ -333,9 +340,6 @@ class ArenaLists {
   void queueForegroundThingsForSweep();
 
   Arena* takeSweptEmptyArenas();
-
-  void setIncrementalSweptArenas(AllocKind kind, SortedArenaList& arenas);
-  void clearIncrementalSweptArenas();
 
   void mergeFinalizedArenas(AllocKind thingKind,
                             SortedArenaList& finalizedArenas);

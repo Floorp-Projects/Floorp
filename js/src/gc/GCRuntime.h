@@ -616,6 +616,13 @@ class GCRuntime {
   bool hasDelayedMarking() const;
   void markAllDelayedChildren(ShouldReportMarkTime reportTime);
 
+  // If we have yielded to the mutator while foreground finalizing arenas from
+  // zone |zone| with kind |kind| then return a list of the arenas finalized so
+  // far. These will have been removed from the main arena lists at this
+  // point. Otherwise return nullptr.
+  SortedArenaList* maybeGetForegroundFinalizedArenas(Zone* zone,
+                                                     AllocKind kind);
+
   /*
    * Concurrent sweep infrastructure.
    */
@@ -1207,6 +1214,15 @@ class GCRuntime {
   MainThreadData<bool> abortSweepAfterCurrentGroup;
   MainThreadOrGCTaskData<IncrementalProgress> sweepMarkResult;
 
+  /*
+   * During incremental foreground finalization, we may have a list of arenas of
+   * the current AllocKind and Zone whose contents have been finalized but which
+   * have not yet been merged back into the main arena lists.
+   */
+  MainThreadOrGCTaskData<JS::Zone*> foregroundFinalizedZone;
+  MainThreadOrGCTaskData<AllocKind> foregroundFinalizedAllocKind;
+  MainThreadData<mozilla::Maybe<SortedArenaList>> foregroundFinalizedArenas;
+
 #ifdef DEBUG
   /*
    * List of objects to mark at the beginning of a GC for testing purposes. May
@@ -1383,12 +1399,6 @@ class GCRuntime {
   BackgroundSweepTask sweepTask;
   BackgroundFreeTask freeTask;
   BackgroundDecommitTask decommitTask;
-
-  /*
-   * During incremental sweeping, this field temporarily holds the arenas of
-   * the current AllocKind being swept in order of increasing free space.
-   */
-  MainThreadData<SortedArenaList> incrementalSweepList;
 
   MainThreadData<Nursery> nursery_;
 

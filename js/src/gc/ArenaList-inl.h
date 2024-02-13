@@ -157,17 +157,9 @@ js::gc::Arena* js::gc::ArenaList::takeFirstArena() {
   return arena;
 }
 
-js::gc::SortedArenaList::SortedArenaList(size_t thingsPerArena) {
-  reset(thingsPerArena);
-}
-
-void js::gc::SortedArenaList::setThingsPerArena(size_t thingsPerArena) {
-  MOZ_ASSERT(thingsPerArena && thingsPerArena <= MaxThingsPerArena);
-  thingsPerArena_ = thingsPerArena;
-}
-
-void js::gc::SortedArenaList::reset(size_t thingsPerArena) {
-  setThingsPerArena(thingsPerArena);
+js::gc::SortedArenaList::SortedArenaList(size_t thingsPerArena)
+    : thingsPerArena_(thingsPerArena) {
+  MOZ_ASSERT(thingsPerArena < SegmentCount);
   // Initialize the segments.
   for (size_t i = 0; i <= thingsPerArena; ++i) {
     segments[i].clear();
@@ -260,14 +252,6 @@ js::gc::Arena* js::gc::ArenaLists::getFirstArena(AllocKind thingKind) const {
 js::gc::Arena* js::gc::ArenaLists::getFirstCollectingArena(
     AllocKind thingKind) const {
   return collectingArenaList(thingKind).head();
-}
-
-js::gc::Arena* js::gc::ArenaLists::getFirstSweptArena(
-    AllocKind thingKind) const {
-  if (thingKind != incrementalSweptArenaKind.ref()) {
-    return nullptr;
-  }
-  return incrementalSweptArenas.ref().head();
 }
 
 js::gc::Arena* js::gc::ArenaLists::getArenaAfterCursor(
