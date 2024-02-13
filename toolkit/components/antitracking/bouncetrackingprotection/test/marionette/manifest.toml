@@ -1,0 +1,7 @@
+[DEFAULT]
+prefs = [
+  "privacy.bounceTrackingProtection.enabled=true",
+  "privacy.bounceTrackingProtection.enableTestMode=true",
+]
+
+["test_bouncetracking_storage_persistence.py"]
