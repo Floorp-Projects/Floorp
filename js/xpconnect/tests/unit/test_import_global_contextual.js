@@ -36,3 +36,17 @@ add_task(async function testInShared() {
   Assert.equal(ns1, ns2);
   Assert.equal(ns1.obj, ns2.obj);
 });
+
+add_task(async function testInWorker() {
+  const worker = new ChromeWorker("resource://test/contextual_worker.js");
+  const { promise, resolve } = Promise.withResolvers();
+  worker.onmessage = event => {
+    resolve(event.data);
+  };
+  worker.postMessage("");
+
+  const result = await promise;
+
+  Assert.ok(result.equal1);
+  Assert.ok(result.equal2);
+});

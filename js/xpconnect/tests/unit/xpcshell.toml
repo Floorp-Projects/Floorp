@@ -88,6 +88,10 @@ support-files = [
   "non_shared_nest_import_non_shared_3.mjs",
   "non_shared_nest_import_non_shared_target_3.mjs",
   "contextual.sys.mjs",
+  "non_shared_worker_1.js",
+  "import_shared_in_worker.js",
+  "contextual_worker.js",
+  "sync_and_async_in_worker.js",
 ]
 
 ["test_ComponentEnvironment.js"]
