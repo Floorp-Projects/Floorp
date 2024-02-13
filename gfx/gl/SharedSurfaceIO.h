@@ -33,7 +33,7 @@ class SharedSurface_IOSurface final : public SharedSurface {
   virtual void LockProdImpl() override {}
   virtual void UnlockProdImpl() override {}
 
-  virtual bool ProducerAcquireImpl() override { return true; }
+  virtual void ProducerAcquireImpl() override {}
   virtual void ProducerReleaseImpl() override;
 
   virtual bool NeedsIndirectReads() const override { return true; }

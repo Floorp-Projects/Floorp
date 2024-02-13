@@ -111,27 +111,27 @@ class SharedSurface {
   virtual void LockProdImpl(){};
   virtual void UnlockProdImpl(){};
 
-  virtual bool ProducerAcquireImpl() { return true; };
+  virtual void ProducerAcquireImpl(){};
   virtual void ProducerReleaseImpl(){};
 
-  virtual bool ProducerReadAcquireImpl() { return ProducerAcquireImpl(); }
+  virtual void ProducerReadAcquireImpl() { ProducerAcquireImpl(); }
   virtual void ProducerReadReleaseImpl() { ProducerReleaseImpl(); }
 
  public:
-  bool ProducerAcquire() {
+  void ProducerAcquire() {
     MOZ_ASSERT(!mIsProducerAcquired);
-    mIsProducerAcquired = ProducerAcquireImpl();
-    return mIsProducerAcquired;
+    ProducerAcquireImpl();
+    mIsProducerAcquired = true;
   }
   void ProducerRelease() {
     MOZ_ASSERT(mIsProducerAcquired);
     ProducerReleaseImpl();
     mIsProducerAcquired = false;
   }
-  bool ProducerReadAcquire() {
+  void ProducerReadAcquire() {
     MOZ_ASSERT(!mIsProducerAcquired);
-    mIsProducerAcquired = ProducerReadAcquireImpl();
-    return mIsProducerAcquired;
+    ProducerReadAcquireImpl();
+    mIsProducerAcquired = true;
   }
   void ProducerReadRelease() {
     MOZ_ASSERT(mIsProducerAcquired);
