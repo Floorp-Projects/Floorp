@@ -16,43 +16,35 @@ export class PolicySearchEngine extends SearchEngine {
    *
    * @param {object} options
    *   The options for this search engine.
-   * @param {object} [options.details]
+   * @param {object} options.details
    *   An object that matches the `SearchEngines` policy schema.
-   * @param {object} [options.json]
-   *   An object that represents the saved JSON settings for the engine.
    *
    * @see browser/components/enterprisepolicies/schemas/policies-schema.json
    */
   constructor(options = {}) {
-    let id = "policy-" + (options.details?.Name ?? options.json._name);
+    let id = "policy-" + options.details.Name;
 
     super({
       loadPath: "[policy]",
       id,
     });
 
-    if (options.details) {
-      // Map the data to look like a WebExtension manifest, as that is what
-      // _initWithDetails requires.
-      let details = {
-        description: options.details.Description,
-        iconURL: options.details.IconURL ? options.details.IconURL.href : null,
-        name: options.details.Name,
-        // If the encoding is not specified or is falsy, we will fall back to
-        // the default encoding.
-        encoding: options.details.Encoding,
-        search_url: encodeURI(options.details.URLTemplate),
-        keyword: options.details.Alias,
-        search_url_post_params:
-          options.details.Method == "POST"
-            ? options.details.PostData
-            : undefined,
-        suggest_url: options.details.SuggestURLTemplate,
-      };
-      this._initWithDetails(details);
-    } else {
-      this._initWithJSON(options.json);
-    }
+    // Map the data to look like a WebExtension manifest, as that is what
+    // _initWithDetails requires.
+    let details = {
+      description: options.details.Description,
+      iconURL: options.details.IconURL ? options.details.IconURL.href : null,
+      name: options.details.Name,
+      // If the encoding is not specified or is falsy, we will fall back to
+      // the default encoding.
+      encoding: options.details.Encoding,
+      search_url: encodeURI(options.details.URLTemplate),
+      keyword: options.details.Alias,
+      search_url_post_params:
+        options.details.Method == "POST" ? options.details.PostData : undefined,
+      suggest_url: options.details.SuggestURLTemplate,
+    };
+    this._initWithDetails(details);
   }
 
   /**
