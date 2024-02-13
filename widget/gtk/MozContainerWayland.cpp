@@ -323,6 +323,11 @@ static void moz_gdk_wayland_window_remove_frame_callback_surface_locked(
 }
 
 void moz_container_wayland_unmap(GtkWidget* widget) {
+  g_return_if_fail(IS_MOZ_CONTAINER(widget));
+
+  // Unmap MozContainer first so we can remove our resources
+  moz_container_unmap(widget);
+
   MozContainer* container = MOZ_CONTAINER(widget);
   MozContainerWayland* wl_container = &container->data.wl_container;
   MutexAutoLock lock(wl_container->container_lock);
