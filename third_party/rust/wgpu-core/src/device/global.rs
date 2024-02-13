@@ -26,7 +26,9 @@ use wgt::{BufferAddress, TextureFormat};
 
 use std::{
     borrow::Cow,
-    iter, ptr,
+    iter,
+    ops::Range,
+    ptr,
     sync::{atomic::Ordering, Arc},
 };
 
@@ -2334,18 +2336,15 @@ impl Global {
     pub fn buffer_map_async<A: HalApi>(
         &self,
         buffer_id: id::BufferId,
-        offset: BufferAddress,
-        size: Option<BufferAddress>,
+        range: Range<BufferAddress>,
         op: BufferMapOperation,
     ) -> BufferAccessResult {
-        api_log!("Buffer::map_async {buffer_id:?} offset {offset:?} size {size:?} op: {op:?}");
+        api_log!("Buffer::map_async {buffer_id:?} range {range:?} op: {op:?}");
 
         // User callbacks must not be called while holding buffer_map_async_inner's locks, so we
         // defer the error callback if it needs to be called immediately (typically when running
         // into errors).
-        if let Err((mut operation, err)) =
-            self.buffer_map_async_inner::<A>(buffer_id, offset, size, op)
-        {
+        if let Err((mut operation, err)) = self.buffer_map_async_inner::<A>(buffer_id, range, op) {
             if let Some(callback) = operation.callback.take() {
                 callback.call(Err(err.clone()));
             }
@@ -2361,8 +2360,7 @@ impl Global {
     fn buffer_map_async_inner<A: HalApi>(
         &self,
         buffer_id: id::BufferId,
-        offset: BufferAddress,
-        size: Option<BufferAddress>,
+        range: Range<BufferAddress>,
         op: BufferMapOperation,
     ) -> Result<(), (BufferMapOperation, BufferAccessError)> {
         profiling::scope!("Buffer::map_async");
@@ -2374,43 +2372,22 @@ impl Global {
             HostMap::Write => (wgt::BufferUsages::MAP_WRITE, hal::BufferUses::MAP_WRITE),
         };
 
+        if range.start % wgt::MAP_ALIGNMENT != 0 || range.end % wgt::COPY_BUFFER_ALIGNMENT != 0 {
+            return Err((op, BufferAccessError::UnalignedRange));
+        }
+
         let buffer = {
-            let buffer = hub.buffers.get(buffer_id);
+            let buffer = hub
+                .buffers
+                .get(buffer_id)
+                .map_err(|_| BufferAccessError::Invalid);
 
             let buffer = match buffer {
                 Ok(b) => b,
-                Err(_) => {
-                    return Err((op, BufferAccessError::Invalid));
+                Err(e) => {
+                    return Err((op, e));
                 }
             };
-            {
-                let snatch_guard = buffer.device.snatchable_lock.read();
-                if buffer.is_destroyed(&snatch_guard) {
-                    return Err((op, BufferAccessError::Destroyed));
-                }
-            }
-
-            let range_size = if let Some(size) = size {
-                size
-            } else if offset > buffer.size {
-                0
-            } else {
-                buffer.size - offset
-            };
-
-            if offset % wgt::MAP_ALIGNMENT != 0 {
-                return Err((op, BufferAccessError::UnalignedOffset { offset }));
-            }
-            if range_size % wgt::COPY_BUFFER_ALIGNMENT != 0 {
-                return Err((op, BufferAccessError::UnalignedRangeSize { range_size }));
-            }
-
-            let range = offset..(offset + range_size);
-
-            if range.start % wgt::MAP_ALIGNMENT != 0 || range.end % wgt::COPY_BUFFER_ALIGNMENT != 0
-            {
-                return Err((op, BufferAccessError::UnalignedRange));
-            }
 
             let device = &buffer.device;
             if !device.is_valid() {
@@ -2440,6 +2417,11 @@ impl Global {
                 ));
             }
 
+            let snatch_guard = device.snatchable_lock.read();
+            if buffer.is_destroyed(&snatch_guard) {
+                return Err((op, BufferAccessError::Destroyed));
+            }
+
             {
                 let map_state = &mut *buffer.map_state.lock();
                 *map_state = match *map_state {
@@ -2459,8 +2441,6 @@ impl Global {
                     }
                 };
             }
-
-            let snatch_guard = buffer.device.snatchable_lock.read();
 
             {
                 let mut trackers = buffer.device.as_ref().trackers.lock();

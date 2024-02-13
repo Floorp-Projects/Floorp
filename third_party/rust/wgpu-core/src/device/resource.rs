@@ -30,9 +30,7 @@ use crate::{
     snatch::{SnatchGuard, SnatchLock, Snatchable},
     storage::Storage,
     track::{BindGroupStates, TextureSelector, Tracker},
-    validation::{
-        self, check_buffer_usage, check_texture_usage, validate_color_attachment_bytes_per_sample,
-    },
+    validation::{self, check_buffer_usage, check_texture_usage},
     FastHashMap, LabelHelpers as _, SubmissionIndex,
 };
 
@@ -2751,12 +2749,11 @@ impl<A: HalApi> Device<A> {
         let mut shader_binding_sizes = FastHashMap::default();
 
         let num_attachments = desc.fragment.as_ref().map(|f| f.targets.len()).unwrap_or(0);
-        let max_attachments = self.limits.max_color_attachments as usize;
-        if num_attachments > max_attachments {
+        if num_attachments > hal::MAX_COLOR_ATTACHMENTS {
             return Err(pipeline::CreateRenderPipelineError::ColorAttachment(
                 command::ColorAttachmentError::TooMany {
                     given: num_attachments,
-                    limit: max_attachments,
+                    limit: hal::MAX_COLOR_ATTACHMENTS,
                 },
             ));
         }
@@ -2962,23 +2959,12 @@ impl<A: HalApi> Device<A> {
                             }
                         }
                     }
-
                     break None;
                 };
                 if let Some(e) = error {
                     return Err(pipeline::CreateRenderPipelineError::ColorState(i as u8, e));
                 }
             }
-        }
-
-        let limit = self.limits.max_color_attachment_bytes_per_sample;
-        let formats = color_targets
-            .iter()
-            .map(|cs| cs.as_ref().map(|cs| cs.format));
-        if let Err(total) = validate_color_attachment_bytes_per_sample(formats, limit) {
-            return Err(pipeline::CreateRenderPipelineError::ColorAttachment(
-                command::ColorAttachmentError::TooManyBytesPerSample { total, limit },
-            ));
         }
 
         if let Some(ds) = depth_stencil_state {
