@@ -35,11 +35,11 @@ class SharedSurface_DMABUF final : public SharedSurface {
   virtual void UnlockProdImpl() override {}
 
   // Non-exclusive Content/WebGL lock/unlock of surface for write
-  virtual bool ProducerAcquireImpl() override { return true; }
+  virtual void ProducerAcquireImpl() override {}
   virtual void ProducerReleaseImpl() override;
 
   // Non-exclusive Content/WebGL lock/unlock for read from surface
-  virtual bool ProducerReadAcquireImpl() override { return true; }
+  virtual void ProducerReadAcquireImpl() override {}
   virtual void ProducerReadReleaseImpl() override {}
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;

@@ -52,7 +52,7 @@ class SharedSurface_D3D11Interop final : public SharedSurface {
   void LockProdImpl() override {}
   void UnlockProdImpl() override {}
 
-  bool ProducerAcquireImpl() override;
+  void ProducerAcquireImpl() override;
   void ProducerReleaseImpl() override;
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
