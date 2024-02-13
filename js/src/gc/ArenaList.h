@@ -176,11 +176,12 @@ class SortedArenaList {
   Segment segments[SegmentCount];
 
 #ifdef DEBUG
+  AllocKind allocKind_;
   bool isConvertedToArenaList = false;
 #endif
 
  public:
-  inline explicit SortedArenaList(size_t thingsPerArena = MaxThingsPerArena);
+  inline explicit SortedArenaList(AllocKind allocKind);
 
   size_t thingsPerArena() const { return thingsPerArena_; }
 
@@ -205,6 +206,10 @@ class SortedArenaList {
   // ArenaList by the previous method.
   inline void restoreFromArenaList(ArenaList& list,
                                    Arena* segmentLast[SegmentCount]);
+
+#ifdef DEBUG
+  AllocKind allocKind() const { return allocKind_; }
+#endif
 
  private:
   inline void check() const;
