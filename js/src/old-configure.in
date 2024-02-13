@@ -194,14 +194,6 @@ if test "$GNU_CC"; then
         ASFLAGS="$ASFLAGS -fPIC"
     fi
 
-    AC_MSG_CHECKING([for --noexecstack option to as])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS -Wa,--noexecstack"
-    AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
-                     [ASFLAGS="$ASFLAGS -Wa,--noexecstack"],
-                     AC_MSG_RESULT([no]))
-    CFLAGS=$_SAVE_CFLAGS
-
     _DEFINES_CFLAGS="-include $jsconfdefs -DMOZILLA_CLIENT"
 fi
 
@@ -912,6 +904,10 @@ CFLAGS=`echo \
 CXXFLAGS=`echo \
 	$_COMPILATION_CXXFLAGS \
 	$CXXFLAGS`
+
+ASFLAGS=`echo \
+    $_COMPILATION_ASFLAGS \
+    $ASFLAGS`
 
 COMPILE_CFLAGS=`echo \
     $_DEFINES_CFLAGS \
