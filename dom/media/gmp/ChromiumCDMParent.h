@@ -184,7 +184,7 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   VideoInfo mVideoInfo;
-  uint64_t mLastStreamOffset = 0;
+  int64_t mLastStreamOffset = 0;
 
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushDecoderPromise;
 
