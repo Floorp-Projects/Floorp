@@ -584,12 +584,10 @@ export class SearchService {
    *
    * @param {object} details
    *   An object that matches the `SearchEngines` policy schema.
-   * @param {object[]} [enginesSettings]
-   *   The saved settings for the search engines.
    * @see browser/components/enterprisepolicies/schemas/policies-schema.json
    */
-  async #addPolicyEngine(details, enginesSettings) {
-    let newEngine = new lazy.PolicySearchEngine({ details, enginesSettings });
+  async #addPolicyEngine(details) {
+    let newEngine = new lazy.PolicySearchEngine({ details });
     lazy.logConsole.debug("Adding Policy Engine:", newEngine.name);
     this.#addEngineToStore(newEngine);
   }
@@ -1616,18 +1614,19 @@ export class SearchService {
       await lazy.AddonManager.readyPromise;
     }
 
-    await this.#loadEnginesFromConfig(engines, settings.engines);
+    await this.#loadEnginesFromConfig(engines);
 
-    await this.#loadStartupEngines(settings.engines);
+    await this.#loadStartupEngines();
 
-    this.#loadEnginesFromPolicies(settings.engines);
+    this.#loadEnginesFromPolicies();
 
-    // `loadEnginesFromSettings` loads the engines and their settings together.
     this.#loadEnginesFromSettings(settings.engines);
 
     // Settings file version 6 and below will need a migration to store the
     // engine ids rather than engine names.
     this._settings.migrateEngineIds(settings);
+
+    this.#loadEnginesMetadataFromSettings(settings.engines);
 
     lazy.logConsole.debug("#loadEngines: done");
 
@@ -1749,14 +1748,12 @@ export class SearchService {
    *
    * @param {Array} engineConfigs
    *   An array of engines configurations based on the schema.
-   * @param {object[]} [enginesSettings]
-   *   The saved settings for the search engines.
    */
-  async #loadEnginesFromConfig(engineConfigs, enginesSettings) {
+  async #loadEnginesFromConfig(engineConfigs) {
     lazy.logConsole.debug("#loadEnginesFromConfig");
     for (let config of engineConfigs) {
       try {
-        let engine = await this._makeEngineFromConfig(config, enginesSettings);
+        let engine = await this._makeEngineFromConfig(config);
         this.#addEngineToStore(engine);
       } catch (ex) {
         console.error(
@@ -1771,11 +1768,8 @@ export class SearchService {
   /**
    * Loads any engines that have been received from the AddonManager during
    * startup and before we have finished initialising.
-   *
-   * @param {object[]} [enginesSettings]
-   *   The saved settings for the search engines.
    */
-  async #loadStartupEngines(enginesSettings) {
+  async #loadStartupEngines() {
     if (
       this.#startupExtensions.size &&
       lazy.SearchUtils.newSearchConfigEnabled
@@ -1793,7 +1787,6 @@ export class SearchService {
         await this.#installExtensionEngine(
           extension,
           [lazy.SearchUtils.DEFAULT_TAG],
-          enginesSettings,
           true
         );
       } catch (ex) {
@@ -1951,10 +1944,7 @@ export class SearchService {
     // Any remaining configuration engines are ones that we need to add.
     for (let engine of configEngines) {
       try {
-        let newEngine = await this._makeEngineFromConfig(
-          engine,
-          settings.engines
-        );
+        let newEngine = await this._makeEngineFromConfig(engine);
         this.#addEngineToStore(newEngine, true);
       } catch (ex) {
         lazy.logConsole.warn(
@@ -1964,6 +1954,7 @@ export class SearchService {
         );
       }
     }
+    this.#loadEnginesMetadataFromSettings(settings.engines);
 
     // Now set the sort out the default engines and notify as appropriate.
 
@@ -2160,13 +2151,32 @@ export class SearchService {
     engine._engineAddedToStore = true;
   }
 
-  /**
-   * Loads any search engines specified by enterprise policies.
-   *
-   * @param {object[]} [enginesSettings]
-   *   The saved settings for the search engines.
-   */
-  #loadEnginesFromPolicies(enginesSettings) {
+  #loadEnginesMetadataFromSettings(engineSettings) {
+    if (!engineSettings) {
+      return;
+    }
+
+    for (let engineSetting of engineSettings) {
+      let eng = this.#getEngineByName(engineSetting._name);
+      if (eng) {
+        lazy.logConsole.debug(
+          "#loadEnginesMetadataFromSettings, transfering metadata for",
+          engineSetting._name,
+          engineSetting._metaData
+        );
+
+        // We used to store the alias in metadata.alias, in 1621892 that was
+        // changed to only store the user set alias in metadata.alias, remove
+        // it from metadata if it was previously set to the internal value.
+        if (eng._alias === engineSetting?._metaData?.alias) {
+          delete engineSetting._metaData.alias;
+        }
+        eng._metaData = engineSetting._metaData || {};
+      }
+    }
+  }
+
+  #loadEnginesFromPolicies() {
     if (Services.policies?.status != Ci.nsIEnterprisePolicies.ACTIVE) {
       return;
     }
@@ -2176,7 +2186,7 @@ export class SearchService {
       return;
     }
     for (let engineDetails of activePolicies.SearchEngines.Add ?? []) {
-      this.#addPolicyEngine(engineDetails, enginesSettings);
+      this.#addPolicyEngine(engineDetails);
     }
   }
 
@@ -2603,15 +2613,12 @@ export class SearchService {
    * @param {string} [options.locale]
    *   The locale to use within the WebExtension. Defaults to the WebExtension's
    *   default locale.
-   * @param {object[]} [options.enginesSettings]
-   *   The saved settings for the search engines.
    * @param {initEngine} [options.initEngine]
    *   Set to true if this engine is being loaded during initialization.
    */
   async _createAndAddEngine({
     extension,
     locale = lazy.SearchUtils.DEFAULT_TAG,
-    enginesSettings,
     initEngine = false,
   }) {
     // If we're in the startup cycle, and we've already loaded this engine,
@@ -2660,7 +2667,6 @@ export class SearchService {
       },
     });
     await newEngine.init({
-      enginesSettings,
       extension,
       locale,
     });
@@ -2719,21 +2725,11 @@ export class SearchService {
     return extensionEngines;
   }
 
-  async #installExtensionEngine(
-    extension,
-    locales,
-    enginesSettings,
-    initEngine = false
-  ) {
+  async #installExtensionEngine(extension, locales, initEngine = false) {
     lazy.logConsole.debug("installExtensionEngine:", extension.id);
 
     let installLocale = async locale => {
-      return this._createAndAddEngine({
-        extension,
-        locale,
-        enginesSettings,
-        initEngine,
-      });
+      return this._createAndAddEngine({ extension, locale, initEngine });
     };
 
     let engines = [];
@@ -3513,12 +3509,10 @@ export class SearchService {
    * @param {object} config
    *   The configuration object that defines the details of the engine
    *   webExtensionId etc.
-   * @param {object[]} [enginesSettings]
-   *   The saved settings for the search engines.
    * @returns {nsISearchEngine}
    *   Returns the search engine object.
    */
-  async _makeEngineFromConfig(config, enginesSettings) {
+  async _makeEngineFromConfig(config) {
     lazy.logConsole.debug("_makeEngineFromConfig:", config);
 
     if (!lazy.SearchUtils.newSearchConfigEnabled) {
@@ -3535,14 +3529,13 @@ export class SearchService {
         },
       });
       await engine.init({
-        enginesSettings,
         locale,
         config,
       });
       return engine;
     }
 
-    return new lazy.AppProvidedSearchEngine({ config, enginesSettings });
+    return new lazy.AppProvidedSearchEngine(config);
   }
 
   /**
