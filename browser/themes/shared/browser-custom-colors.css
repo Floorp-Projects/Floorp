@@ -65,6 +65,7 @@
 
     --toolbarbutton-icon-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
     --toolbarbutton-icon-fill-attention: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
+    --toolbarbutton-icon-fill-attention-text: light-dark(rgb(240, 240, 244), rgb(28, 27, 34));
 
     --toolbar-field-border-color: transparent;
     --toolbar-field-background-color: light-dark(rgb(240, 240, 244), rgb(28, 27, 34));
