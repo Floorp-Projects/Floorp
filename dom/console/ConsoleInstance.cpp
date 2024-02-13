@@ -44,7 +44,8 @@ ConsoleUtils::Level WebIDLevelToConsoleUtilsLevel(ConsoleLevel aLevel) {
 
 ConsoleInstance::ConsoleInstance(JSContext* aCx,
                                  const ConsoleInstanceOptions& aOptions)
-    : mConsole(new Console(aCx, nullptr, 0, 0)) {
+    : mMaxLogLevel(ConsoleLogLevel::All),
+      mConsole(new Console(aCx, nullptr, 0, 0)) {
   mConsole->mConsoleID = aOptions.mConsoleID;
   mConsole->mPassedInnerID = aOptions.mInnerID;
 
@@ -58,27 +59,81 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
   mConsole->mChromeInstance = true;
 
   if (aOptions.mMaxLogLevel.WasPassed()) {
-    mConsole->mMaxLogLevel = aOptions.mMaxLogLevel.Value();
+    mMaxLogLevel = aOptions.mMaxLogLevel.Value();
   }
 
   if (!aOptions.mMaxLogLevelPref.IsEmpty()) {
-    mConsole->mMaxLogLevelPref = aOptions.mMaxLogLevelPref;
-    NS_ConvertUTF16toUTF8 pref(aOptions.mMaxLogLevelPref);
-    nsAutoCString value;
-    nsresult rv = Preferences::GetCString(pref.get(), value);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      nsString message;
-      message.AssignLiteral(
-          "Console.maxLogLevelPref used with a non-existing pref: ");
-      message.Append(aOptions.mMaxLogLevelPref);
-
-      nsContentUtils::LogSimpleConsoleError(message, "chrome"_ns, false,
-                                            true /* from chrome context*/);
+    if (!NS_IsMainThread()) {
+      NS_WARNING("Console.maxLogLevelPref is not supported on workers!");
+      // Set the log level based on what we have.
+      SetLogLevel();
+      return;
     }
+
+    CopyUTF16toUTF8(aOptions.mMaxLogLevelPref, mMaxLogLevelPref);
+
+    Preferences::RegisterCallback(MaxLogLevelPrefChangedCallback,
+                                  mMaxLogLevelPref, this);
   }
+  SetLogLevel();
 }
 
-ConsoleInstance::~ConsoleInstance() = default;
+ConsoleInstance::~ConsoleInstance() {
+  AssertIsOnMainThread();
+  if (!mMaxLogLevelPref.IsEmpty()) {
+    Preferences::UnregisterCallback(MaxLogLevelPrefChangedCallback,
+                                    mMaxLogLevelPref, this);
+  }
+};
+
+ConsoleLogLevel PrefToValue(const nsACString& aPref,
+                            const ConsoleLogLevel aLevel) {
+  if (aPref.IsEmpty()) {
+    return aLevel;
+  }
+
+  nsAutoCString value;
+  nsresult rv = Preferences::GetCString(PromiseFlatCString(aPref).get(), value);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    nsString message;
+    message.AssignLiteral(
+        "Console.maxLogLevelPref used with a non-existing pref: ");
+    message.Append(NS_ConvertUTF8toUTF16(aPref));
+
+    nsContentUtils::LogSimpleConsoleError(message, "chrome"_ns, false,
+                                          true /* from chrome context*/);
+    return aLevel;
+  }
+
+  int index = FindEnumStringIndexImpl(value.get(), value.Length(),
+                                      ConsoleLogLevelValues::strings);
+  if (NS_WARN_IF(index < 0)) {
+    nsString message;
+    message.AssignLiteral("Invalid Console.maxLogLevelPref value: ");
+    message.Append(NS_ConvertUTF8toUTF16(value));
+
+    nsContentUtils::LogSimpleConsoleError(message, "chrome"_ns, false,
+                                          true /* from chrome context*/);
+    return aLevel;
+  }
+
+  MOZ_ASSERT(index < (int)ConsoleLogLevelValues::Count);
+  return static_cast<ConsoleLogLevel>(index);
+}
+
+void ConsoleInstance::SetLogLevel() {
+  mConsole->mCurrentLogLevel = mConsole->WebIDLLogLevelToInteger(
+      PrefToValue(mMaxLogLevelPref, mMaxLogLevel));
+}
+
+// static
+void ConsoleInstance::MaxLogLevelPrefChangedCallback(
+    const char* /* aPrefName */, void* aSelf) {
+  AssertIsOnMainThread();
+  if (RefPtr console = static_cast<ConsoleInstance*>(aSelf)) {
+    console->SetLogLevel();
+  }
+}
 
 JSObject* ConsoleInstance::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
