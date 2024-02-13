@@ -190,16 +190,6 @@ add_task(async function navigate_around() {
     },
   };
 
-  if (Services.prefs.getBoolPref("browser.translations.enable")) {
-    // The translations pref logs the translation decision on each DOMContentLoaded,
-    // and only shows the log by the preferences set in the console.createInstance.
-    // See Bug 1835693. This means that it is invoked on each page load.
-    knownProblematicPrefs["browser.translations.logLevel"] = {
-      min: 50,
-      max: 150,
-    };
-  }
-
   if (SpecialPowers.useRemoteSubframes) {
     // We access this when considering starting a new content process.
     // Because there is no complete list of content process types,
