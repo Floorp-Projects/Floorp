@@ -452,8 +452,7 @@ SharedSurface_D3D11Interop::ToSurfaceDescriptor() {
       mData.dxgiHandle, /* gpuProcessTextureId */ Nothing(),
       /* arrayIndex */ 0, format, mDesc.size, mDesc.colorSpace,
       gfx::ColorRange::FULL, /* hasKeyedMutex */ true,
-      /* fenceInfo */ Nothing(), /* gpuProcessQueryId */ Nothing(),
-      /* useCompositorDevice */ false));
+      /* fenceInfo */ Nothing(), /* gpuProcessQueryId */ Nothing()));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

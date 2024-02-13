@@ -47,7 +47,6 @@ namespace layers {
   bool hasKeyedMutex;
   FenceInfo? fenceInfo;
   GpuProcessQueryId? gpuProcessQueryId;
-  bool useCompositorDevice;
 };
 
 [Comparable] struct SurfaceDescriptorDXGIYCbCr {

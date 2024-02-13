@@ -292,11 +292,9 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
                                    RefPtr<gfx::FileHandleWrapper> aSharedHandle,
                                    gfx::IntSize aSize,
                                    gfx::SurfaceFormat aFormat,
-                                   TextureAllocationFlags aFlags,
-                                   bool aUseCompositorDevice)
+                                   TextureAllocationFlags aFlags)
     : mSize(aSize),
       mFormat(aFormat),
-      mUseCompositorDevice(aUseCompositorDevice),
       mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
       mHasKeyedMutex(HasKeyedMutex(aTexture)),
       mTexture(aTexture),
@@ -413,7 +411,7 @@ bool D3D11TextureData::SerializeSpecific(
   *aOutDesc = SurfaceDescriptorD3D10(
       mSharedHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mSize,
       mColorSpace, mColorRange, /* hasKeyedMutex */ mHasKeyedMutex,
-      /* fenceInfo */ Nothing(), mGpuProcessQueryId, mUseCompositorDevice);
+      /* fenceInfo */ Nothing(), mGpuProcessQueryId);
   return true;
 }
 
@@ -439,10 +437,9 @@ already_AddRefed<TextureClient> D3D11TextureData::CreateTextureClient(
     gfx::SurfaceFormat aFormat, gfx::ColorSpace2 aColorSpace,
     gfx::ColorRange aColorRange, KnowsCompositor* aKnowsCompositor,
     RefPtr<IMFSampleUsageInfo> aUsageInfo) {
-  D3D11TextureData* data =
-      new D3D11TextureData(aTexture, aIndex, nullptr, aSize, aFormat,
-                           TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION,
-                           /* aUseCompositorDevice */ true);
+  D3D11TextureData* data = new D3D11TextureData(
+      aTexture, aIndex, nullptr, aSize, aFormat,
+      TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION);
   data->mColorSpace = aColorSpace;
   data->SetColorRange(aColorRange);
 
@@ -610,11 +607,8 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   RefPtr<gfx::FileHandleWrapper> handle =
       new gfx::FileHandleWrapper(UniqueFileHandle(sharedHandle));
 
-  bool useCompositorDevice =
-      device == DeviceManagerDx::Get()->GetCompositorDevice();
-
   return new D3D11TextureData(texture11, 0, std::move(handle), aSize, aFormat,
-                              aFlags, useCompositorDevice);
+                              aFlags);
 }
 
 void D3D11TextureData::Deallocate(LayersIPCChannel* aAllocator) {
@@ -827,7 +821,6 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mAcquireFenceInfo(aDescriptor.fenceInfo().isSome()
                             ? aDescriptor.fenceInfo().ref()
                             : gfx::FenceInfo()),
-      mUseCompositorDevice(aDescriptor.useCompositorDevice()),
       mColorSpace(aDescriptor.colorSpace()),
       mColorRange(aDescriptor.colorRange()),
       mIsLocked(false) {}
@@ -986,8 +979,8 @@ void DXGITextureHostD3D11::CreateRenderTexture(
 
   RefPtr<wr::RenderDXGITextureHost> texture = new wr::RenderDXGITextureHost(
       mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mColorSpace,
-      mColorRange, mSize, mHasKeyedMutex, mAcquireFenceInfo, mGpuProcessQueryId,
-      mUseCompositorDevice);
+      mColorRange, mSize, mHasKeyedMutex, mAcquireFenceInfo,
+      mGpuProcessQueryId);
   if (mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) {
     texture->SetIsSoftwareDecodedVideo();
   }
