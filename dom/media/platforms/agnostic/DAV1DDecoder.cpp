@@ -219,8 +219,11 @@ int DAV1DDecoder::GetPicture(DecodedData& aData, MediaResult& aResult) {
 
   int res = dav1d_get_picture(mContext, &picture);
   if (res < 0) {
-    LOG("Decode error: %d", res);
-    aResult = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
+    LOG("dav1d_get_picture: %d", res);
+    aResult = MediaResult(res == DAV1D_ERR(EAGAIN)
+                              ? NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA
+                              : NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                          __func__);
     return res;
   }
 
