@@ -270,7 +270,7 @@ void GCRuntime::backgroundFinalize(JS::GCContext* gcx, Zone* zone,
   FinalizeArenas(gcx, arenas, finalizedSorted, kind, unlimited);
   MOZ_ASSERT(arenas.isEmpty());
 
-  finalizedSorted.extractEmpty(empty);
+  finalizedSorted.extractEmptyTo(empty);
 
   // When marking begins, all arenas are moved from arenaLists to
   // collectingArenaLists. When the mutator runs, new arenas are allocated in
@@ -310,7 +310,7 @@ void ArenaLists::mergeFinalizedArenas(AllocKind kind,
   ArenaList& arenas = arenaList(kind);
 
   ArenaList allocatedDuringCollection = std::move(arenas);
-  arenas = finalizedArenas.toArenaList();
+  arenas = finalizedArenas.convertToArenaList();
   arenas.insertListWithCursorAtEnd(allocatedDuringCollection);
 
   collectingArenaList(kind).clear();
@@ -1763,7 +1763,7 @@ bool GCRuntime::foregroundFinalize(JS::GCContext* gcx, Zone* zone,
     return false;
   }
 
-  sweepList.extractEmpty(&lists.savedEmptyArenas.ref());
+  sweepList.extractEmptyTo(&lists.savedEmptyArenas.ref());
   lists.mergeFinalizedArenas(thingKind, sweepList);
 
   return true;
