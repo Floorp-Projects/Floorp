@@ -4,6 +4,7 @@
 #ifndef mozilla_BounceTrackingProtectionStorage_h__
 #define mozilla_BounceTrackingProtectionStorage_h__
 
+#include "mozIStorageFunction.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ThreadSafety.h"
@@ -29,6 +30,8 @@ extern LazyLogModule gBounceTrackingProtectionLog;
 class BounceTrackingProtectionStorage final : public nsIObserver,
                                               public nsIAsyncShutdownBlocker,
                                               public SupportsWeakPtr {
+  friend class BounceTrackingStateGlobal;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
@@ -39,7 +42,7 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
         mPendingWrites(0){};
 
   // Initialises the storage including the on-disk database.
-  nsresult Init();
+  [[nodiscard]] nsresult Init();
 
   // Getters for mStateGlobal.
   BounceTrackingStateGlobal* GetOrCreateStateGlobal(
@@ -59,23 +62,20 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
   // migration.
   enum class EntryType : uint8_t { BounceTracker = 0, UserActivation = 1 };
 
-  // Updates or inserts a DB entry keyed by OA + site host.
-  nsresult UpdateEntry(const OriginAttributes& aOriginAttributes,
-                       const nsACString& aSiteHost, EntryType aEntryType,
-                       PRTime aTimeStamp);
+  // Clear all state for a given site host. If aOriginAttributes is passed, only
+  // entries for that OA will be deleted.
+  [[nodiscard]] nsresult ClearBySiteHost(const nsACString& aSiteHost,
+                                         OriginAttributes* aOriginAttributes);
 
-  // Deletes a DB entry keyed by OA + site host.
-  nsresult DeleteEntry(const OriginAttributes& aOriginAttributes,
-                       const nsACString& aSiteHost);
+  // Clear all state within a given time range.
+  [[nodiscard]] nsresult ClearByTimeRange(PRTime aFrom, PRTime aTo);
 
-  // Delete all DB entries before a given time.
-  // If aEntryType is passed only entries of that type will be deleted.
-  nsresult DeleteEntriesBefore(const OriginAttributes& aOriginAttributes,
-                               PRTime aTime,
-                               Maybe<EntryType> aEntryType = Nothing{});
+  // Clear all state for a given OriginAttributesPattern.
+  [[nodiscard]] nsresult ClearByOriginAttributesPattern(
+      const OriginAttributesPattern& aOriginAttributesPattern);
 
   // Clear all state.
-  nsresult Clear();
+  [[nodiscard]] nsresult Clear();
 
  private:
   ~BounceTrackingProtectionStorage() = default;
@@ -90,7 +90,7 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
 
   // Wait (non-blocking) until the service is fully initialized. We may be
   // waiting for that async work started by Init().
-  nsresult WaitForInitialization();
+  [[nodiscard]] nsresult WaitForInitialization();
 
   // Called to indicate to the async shutdown service that we are all wrapped
   // up. This also spins down the worker thread, since it is called after all
@@ -102,10 +102,10 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
   already_AddRefed<nsIAsyncShutdownClient> GetAsyncShutdownBarrier() const;
 
   // Initialises the DB connection on the worker thread.
-  nsresult CreateDatabaseConnection();
+  [[nodiscard]] nsresult CreateDatabaseConnection();
 
   // Creates amd initialises the database table if needed. Worker thread only.
-  nsresult EnsureTable();
+  [[nodiscard]] nsresult EnsureTable();
 
   // Temporary data structure used to import db data into memory.
   struct ImportEntry {
@@ -116,7 +116,7 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
   };
 
   // Imports state from the database on disk into memory.
-  nsresult LoadMemoryStateFromDisk();
+  [[nodiscard]] nsresult LoadMemoryStateFromDisk();
 
   // Used to (thread-safely) track how many operations have been launched to the
   // worker thread so that we can wait for it to hit zero before close the disk
@@ -125,24 +125,33 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
   void DecrementPendingWrites();
 
   // Update or create database entry. Worker thread only.
-  static nsresult UpsertData(mozIStorageConnection* aDatabaseConnection,
-                             const OriginAttributes& aOriginAttributes,
-                             const nsACString& aSiteHost, EntryType aEntryType,
-                             PRTime aTimeStamp);
+  [[nodiscard]] static nsresult UpsertData(
+      mozIStorageConnection* aDatabaseConnection,
+      const OriginAttributes& aOriginAttributes, const nsACString& aSiteHost,
+      EntryType aEntryType, PRTime aTimeStamp);
 
-  // Delete database entry. Worker thread only.
-  static nsresult DeleteData(mozIStorageConnection* aDatabaseConnection,
-                             const OriginAttributes& aOriginAttributes,
-                             const nsACString& aSiteHost);
+  // Delete database entries. Worker thread only.
+  [[nodiscard]] static nsresult DeleteData(
+      mozIStorageConnection* aDatabaseConnection,
+      Maybe<OriginAttributes> aOriginAttributes, const nsACString& aSiteHost);
 
   // Delete all entries before a given time. Worker thread only.
   // If aEntryType is passed only entries of that type will be deleted.
-  static nsresult DeleteDataBefore(
-      mozIStorageConnection* aDatabaseConnection, PRTime aTime,
+  [[nodiscard]] static nsresult DeleteDataInTimeRange(
+      mozIStorageConnection* aDatabaseConnection,
+      Maybe<OriginAttributes> aOriginAttributes, PRTime aFrom,
+      Maybe<PRTime> aTo,
       Maybe<BounceTrackingProtectionStorage::EntryType> aEntryType = Nothing{});
 
+  // Delete all entries matching the given OriginAttributesPattern. Worker
+  // thread only.
+  [[nodiscard]] static nsresult DeleteDataByOriginAttributesPattern(
+      mozIStorageConnection* aDatabaseConnection,
+      const OriginAttributesPattern& aOriginAttributesPattern);
+
   // Clear all entries from the database.
-  static nsresult ClearData(mozIStorageConnection* aDatabaseConnection);
+  [[nodiscard]] static nsresult ClearData(
+      mozIStorageConnection* aDatabaseConnection);
 
   // Service state management. We protect these variables with a monitor. This
   // monitor is also used to signal the completion of initialization and
@@ -164,7 +173,48 @@ class BounceTrackingProtectionStorage final : public nsIObserver,
   // bounce tracking state per OA, e.g. to separate private browsing from normal
   // browsing.
   StateGlobalMap mStateGlobal{};
+
+  // Helpers used to sync updates to BounceTrackingStateGlobal with the
+  // database.
+
+  // Updates or inserts a DB entry keyed by OA + site host.
+  [[nodiscard]] nsresult UpdateDBEntry(
+      const OriginAttributes& aOriginAttributes, const nsACString& aSiteHost,
+      EntryType aEntryType, PRTime aTimeStamp);
+
+  // Deletes a DB entry keyed by OA + site host. If only aSiteHost is passed,
+  // all entries for that host will be deleted across OriginAttributes.
+  [[nodiscard]] nsresult DeleteDBEntries(OriginAttributes* aOriginAttributes,
+                                         const nsACString& aSiteHost);
+
+  // Delete all DB entries before a given time.
+  // If aEntryType is passed only entries of that type will be deleted.
+  [[nodiscard]] nsresult DeleteDBEntriesInTimeRange(
+      OriginAttributes* aOriginAttributes, PRTime aFrom,
+      Maybe<PRTime> aTo = Nothing{}, Maybe<EntryType> aEntryType = Nothing{});
+
+  // Deletes all DB entries matching the given OriginAttributesPattern.
+  [[nodiscard]] nsresult DeleteDBEntriesByOriginAttributesPattern(
+      const OriginAttributesPattern& aOriginAttributesPattern);
 };
+
+// A SQL function to match DB entries by OriginAttributesPattern.
+class OriginAttrsPatternMatchOASuffixSQLFunction final
+    : public mozIStorageFunction {
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  explicit OriginAttrsPatternMatchOASuffixSQLFunction(
+      OriginAttributesPattern const& aPattern)
+      : mPattern(aPattern) {}
+  OriginAttrsPatternMatchOASuffixSQLFunction() = delete;
+
+ private:
+  ~OriginAttrsPatternMatchOASuffixSQLFunction() = default;
+
+  OriginAttributesPattern mPattern;
+};
+
 }  // namespace mozilla
 
 #endif  // mozilla_BounceTrackingProtectionStorage_h__

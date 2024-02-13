@@ -22,7 +22,7 @@ add_setup(async function () {
  */
 
 function initBounceTrackerState() {
-  bounceTrackingProtection.reset();
+  bounceTrackingProtection.clearAll();
 
   // Bounce time of 1 is out of the grace period which means we should purge.
   bounceTrackingProtection.testAddBounceTrackerCandidate({}, "example.com", 1);
@@ -62,7 +62,7 @@ add_task(async function test_purging_skip_open_foreground_tab() {
     "example.com should have been purged now that it no longer has an open tab."
   );
 
-  bounceTrackingProtection.reset();
+  bounceTrackingProtection.clearAll();
 });
 
 add_task(async function test_purging_skip_open_background_tab() {
@@ -87,7 +87,7 @@ add_task(async function test_purging_skip_open_background_tab() {
     "example.com should have been purged now that it no longer has an open tab."
   );
 
-  bounceTrackingProtection.reset();
+  bounceTrackingProtection.clearAll();
 });
 
 add_task(async function test_purging_skip_open_tab_extra_window() {
@@ -117,5 +117,5 @@ add_task(async function test_purging_skip_open_tab_extra_window() {
     "example.com should have been purged now that it no longer has an open tab."
   );
 
-  bounceTrackingProtection.reset();
+  bounceTrackingProtection.clearAll();
 });
