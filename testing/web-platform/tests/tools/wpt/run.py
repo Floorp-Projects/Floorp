@@ -731,27 +731,6 @@ class EdgeChromium(BrowserSetup):
             kwargs["binary_args"].append("--no-sandbox")
 
 
-class InternetExplorer(BrowserSetup):
-    name = "ie"
-    browser_cls = browser.InternetExplorer
-
-    def install(self, channel=None):
-        raise NotImplementedError
-
-    def setup_kwargs(self, kwargs):
-        if kwargs["webdriver_binary"] is None:
-            webdriver_binary = self.browser.find_webdriver()
-
-            if webdriver_binary is None:
-                raise WptrunError("""Unable to find WebDriver and we aren't yet clever enough to work out which
-version to download. Please go to the following URL and install the driver for Internet Explorer
-somewhere on the %PATH%:
-
-https://selenium-release.storage.googleapis.com/index.html
-""")
-            kwargs["webdriver_binary"] = webdriver_binary
-
-
 class Safari(BrowserSetup):
     name = "safari"
     browser_cls = browser.Safari
@@ -903,7 +882,6 @@ product_setup = {
     "chromium": Chromium,
     "content_shell": ContentShell,
     "edgechromium": EdgeChromium,
-    "ie": InternetExplorer,
     "safari": Safari,
     "servo": Servo,
     "servodriver": ServoWebDriver,
