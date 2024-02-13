@@ -8,6 +8,8 @@
 #define mozilla_BounceTrackingState_h
 
 #include "mozilla/WeakPtr.h"
+#include "mozilla/OriginAttributes.h"
+#include "nsIPrincipal.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsStringFwd.h"
 #include "nsIWebProgressListener.h"
@@ -88,6 +90,8 @@ class BounceTrackingState : public nsIWebProgressListener,
 
   uint64_t GetBrowserId() { return mBrowserId; }
 
+  const OriginAttributes& OriginAttributesRef();
+
   // Create a string that describes this object. Used for logging.
   nsCString Describe();
 
@@ -96,6 +100,9 @@ class BounceTrackingState : public nsIWebProgressListener,
   virtual ~BounceTrackingState();
 
   uint64_t mBrowserId{};
+
+  // OriginAttributes associated with the browser this state is attached to.
+  OriginAttributes mOriginAttributes;
 
   // Reference to the BounceTrackingProtection singleton.
   RefPtr<BounceTrackingProtection> mBounceTrackingProtection;
