@@ -103,9 +103,9 @@ bool SharedPlanarYCbCrImage::CopyData(const PlanarYCbCrData& aData) {
   return true;
 }
 
-bool SharedPlanarYCbCrImage::AdoptData(const Data& aData) {
+nsresult SharedPlanarYCbCrImage::AdoptData(const Data& aData) {
   MOZ_ASSERT(false, "This shouldn't be used.");
-  return false;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 bool SharedPlanarYCbCrImage::IsValid() const {

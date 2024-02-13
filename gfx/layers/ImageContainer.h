@@ -808,7 +808,7 @@ class PlanarYCbCrImage : public Image {
   /**
    * This doesn't make a copy of the data buffers.
    */
-  virtual bool AdoptData(const Data& aData);
+  virtual nsresult AdoptData(const Data& aData);
 
   /**
    * This will create an empty data buffers according to the input data's size.
