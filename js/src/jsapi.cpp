@@ -4430,9 +4430,7 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_WASM_JIT_OPTIMIZING:
       JS::ContextOptionsRef(cx).setWasmIon(!!value);
       break;
-    case JSJITCOMPILER_USE_EMULATES_UNDEFINED_FUSE:
-      jit::JitOptions.useHasSeenEmulatesUndefinedFuse = !!value;
-      break;
+
 #ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:
       jit::JitOptions.fullDebugChecks = !!value;
@@ -4518,9 +4516,6 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_WASM_JIT_OPTIMIZING:
       *valueOut = JS::ContextOptionsRef(cx).wasmIon() ? 1 : 0;
-      break;
-    case JSJITCOMPILER_USE_EMULATES_UNDEFINED_FUSE:
-      *valueOut = jit::JitOptions.useHasSeenEmulatesUndefinedFuse;
       break;
 #  ifdef DEBUG
     case JSJITCOMPILER_FULL_DEBUG_CHECKS:

@@ -7407,6 +7407,7 @@
   value: false
   mirror: always
   do_not_use_directly: true
+  set_spidermonkey_pref: startup
 
 - name: javascript.options.compact_on_user_inactive
   type: bool
