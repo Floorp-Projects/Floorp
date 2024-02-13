@@ -229,7 +229,6 @@ class nsWindow final : public nsBaseWidget {
   gboolean OnConfigureEvent(GtkWidget* aWidget, GdkEventConfigure* aEvent);
   void OnMap();
   void OnUnmap();
-  void OnUnrealize();
   void OnSizeAllocate(GtkAllocation* aAllocation);
   void OnDeleteEvent();
   void OnEnterNotifyEvent(GdkEventCrossing* aEvent);
@@ -646,7 +645,7 @@ class nsWindow final : public nsBaseWidget {
   // it is visible (mIsShown == true).
   bool mNeedsShow : 1;
   // This track real window visibility from OS perspective.
-  // It's set by OnMap/OnUnrealize which is based on Gtk events.
+  // It's set by OnMap/OnUnmap which is based on Gtk events.
   bool mIsMapped : 1;
   // is this widget enabled?
   bool mEnabled : 1;
