@@ -11904,6 +11904,17 @@
   value: false
   mirror: always
 
+# When true, the HTTPS query will actually call the native
+# platform API. When false it will return before the call
+# to the platform API
+# This pref is necessary because having a HTTPS record
+# could cause channels to connect to a different port,
+# which is not desirable in automation.
+- name: network.dns.native_https_query_in_automation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # When resolving a native HTTPS query with native APIs
 # the Android implementation has a max timeout
 - name: network.dns.native_https_timeout_android
