@@ -116,6 +116,7 @@ class FuzzyParser(BaseTryParser):
         "env",
         "existing-tasks",
         "gecko-profile",
+        "new-test-config",
         "path",
         "pernosco",
         "rebuild",
@@ -142,6 +143,7 @@ def run(
     disable_target_task_filter=False,
     push_to_lando=False,
     show_chunk_numbers=False,
+    new_test_config=False,
 ):
     fzf = fzf_bootstrap(update)
 
@@ -261,13 +263,6 @@ def run(
 
     if save_query:
         return queries
-
-    if not show_chunk_numbers:
-        selected = set(
-            task_name
-            for task_name, task in all_tasks.items()
-            if task.chunk_pattern in selected
-        )
 
     # build commit message
     msg = "Fuzzy"

@@ -667,6 +667,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             elif c["useHttp2Server"]:
                 base_cmd.append("--use-http2-server")
 
+            if c["restartAfterFailure"]:
+                base_cmd.append("--restart-after-failure")
+
             # Ignore chunking if we have user specified test paths
             if not (self.verify_enabled or self.per_test_coverage):
                 test_paths = self._get_mozharness_test_paths(suite_category, suite)

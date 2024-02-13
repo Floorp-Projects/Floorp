@@ -163,6 +163,7 @@ def check_build_id_sha1(developer_options):
 check_and_add_linker_flag("-Wl,--build-id=uuid", when=check_build_id_uuid)
 check_and_add_linker_flag("-Wl,--build-id=sha1", when=check_build_id_sha1)
 
+check_and_add_asm_flag("-Wa,--noexecstack", when=is_gnu_cc)
 check_and_add_linker_flag("-Wl,-z,noexecstack", when=is_gnu_cc)
 check_and_add_linker_flag("-Wl,-z,text", when=is_gnu_cc)
 check_and_add_linker_flag("-Wl,-z,relro", when=is_gnu_cc)
@@ -184,5 +185,7 @@ def check_Bsymbolic(enable_asan, is_gnu_cc):
 check_and_add_linker_flag("-Wl,-Bsymbolic", when=check_Bsymbolic)
 
 # Please keep these last in this file.
+add_old_configure_assignment("_COMPILATION_ASFLAGS", asm_flags.asflags)
+add_old_configure_assignment("_COMPILATION_HOST_ASFLAGS", asm_flags.host_asflags)
 add_old_configure_assignment("_COMPILATION_LDFLAGS", linker_flags.ldflags)
 add_old_configure_assignment("_COMPILATION_HOST_LDFLAGS", linker_flags.host_ldflags)

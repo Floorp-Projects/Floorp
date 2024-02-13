@@ -16,7 +16,11 @@ function paste(clipboard) {
   );
   trans.init(getLoadContext());
   trans.addDataFlavor("text/plain");
-  clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
+  clipboard.getData(
+    trans,
+    Ci.nsIClipboard.kGlobalClipboard,
+    SpecialPowers.wrap(window).browsingContext.currentWindowContext
+  );
   let str = SpecialPowers.createBlankObject();
   try {
     trans.getTransferData("text/plain", str);

@@ -2593,7 +2593,7 @@
   result_type: WordSized
   operands:
     numActuals: WordSized
-  num_temps: 3
+  num_temps: 4
   call_instruction: true
   mir_op: true
 

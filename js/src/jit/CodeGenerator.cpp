@@ -14821,11 +14821,13 @@ void CodeGenerator::visitRest(LRest* lir) {
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
   Register temp2 = ToRegister(lir->temp2());
+  Register temp3 = ToRegister(lir->temp3());
   unsigned numFormals = lir->mir()->numFormals();
+
+  constexpr uint32_t arrayCapacity = 2;
 
   if (Shape* shape = lir->mir()->shape()) {
     uint32_t arrayLength = 0;
-    uint32_t arrayCapacity = 2;
     gc::AllocKind allocKind = GuessArrayGCKind(arrayCapacity);
     MOZ_ASSERT(CanChangeToBackgroundAllocKind(allocKind, &ArrayObject::class_));
     allocKind = ForegroundToBackgroundAllocKind(allocKind);
@@ -14884,12 +14886,60 @@ void CodeGenerator::visitRest(LRest* lir) {
     lengthReg = numActuals;
   }
 
+  // Try to initialize the array elements.
+  Label vmCall, done;
+  if (lir->mir()->shape()) {
+    // Call into C++ if we failed to allocate an array or there are more than
+    // |arrayCapacity| elements.
+    masm.branchTestPtr(Assembler::Zero, temp2, temp2, &vmCall);
+    masm.branch32(Assembler::Above, lengthReg, Imm32(arrayCapacity), &vmCall);
+
+    // The array must be nursery allocated so no post barrier is needed.
+#ifdef DEBUG
+    Label ok;
+    masm.branchPtrInNurseryChunk(Assembler::Equal, temp2, temp3, &ok);
+    masm.assumeUnreachable("Unexpected tenured object for LRest");
+    masm.bind(&ok);
+#endif
+
+    Label initialized;
+    masm.branch32(Assembler::Equal, lengthReg, Imm32(0), &initialized);
+
+    // Store length and initializedLength.
+    Register elements = temp3;
+    masm.loadPtr(Address(temp2, NativeObject::offsetOfElements()), elements);
+    Address lengthAddr(elements, ObjectElements::offsetOfLength());
+    Address initLengthAddr(elements,
+                           ObjectElements::offsetOfInitializedLength());
+    masm.store32(lengthReg, lengthAddr);
+    masm.store32(lengthReg, initLengthAddr);
+
+    // Store either one or two elements. This may clobber lengthReg (temp0).
+    static_assert(arrayCapacity == 2, "code handles 1 or 2 elements");
+    Label storeFirst;
+    masm.branch32(Assembler::Equal, lengthReg, Imm32(1), &storeFirst);
+    masm.storeValue(Address(temp1, sizeof(Value)),
+                    Address(elements, sizeof(Value)), temp0);
+    masm.bind(&storeFirst);
+    masm.storeValue(Address(temp1, 0), Address(elements, 0), temp0);
+
+    // Done.
+    masm.bind(&initialized);
+    masm.movePtr(temp2, ReturnReg);
+    masm.jump(&done);
+  }
+
+  masm.bind(&vmCall);
+
   pushArg(temp2);
   pushArg(temp1);
   pushArg(lengthReg);
 
-  using Fn = JSObject* (*)(JSContext*, uint32_t, Value*, HandleObject);
+  using Fn =
+      ArrayObject* (*)(JSContext*, uint32_t, Value*, Handle<ArrayObject*>);
   callVM<Fn, InitRestParameter>(lir);
+
+  masm.bind(&done);
 }
 
 // Create a stackmap from the given safepoint, with the structure:

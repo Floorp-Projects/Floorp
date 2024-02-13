@@ -5495,9 +5495,10 @@ void LIRGenerator::visitNewTarget(MNewTarget* ins) {
 void LIRGenerator::visitRest(MRest* ins) {
   MOZ_ASSERT(ins->numActuals()->type() == MIRType::Int32);
 
-  LRest* lir = new (alloc())
-      LRest(useRegisterAtStart(ins->numActuals()), tempFixed(CallTempReg0),
-            tempFixed(CallTempReg1), tempFixed(CallTempReg2));
+  LRest* lir =
+      new (alloc()) LRest(useRegisterAtStart(ins->numActuals()),
+                          tempFixed(CallTempReg0), tempFixed(CallTempReg1),
+                          tempFixed(CallTempReg2), tempFixed(CallTempReg3));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

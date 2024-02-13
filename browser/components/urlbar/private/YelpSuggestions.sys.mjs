@@ -7,6 +7,7 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
@@ -17,6 +18,7 @@ const RESULT_MENU_COMMAND = {
   HELP: "help",
   INACCURATE_LOCATION: "inaccurate_location",
   NOT_INTERESTED: "not_interested",
+  NOT_RELEVANT: "not_relevant",
   SHOW_LESS_FREQUENTLY: "show_less_frequentry",
 };
 
@@ -115,10 +117,23 @@ export class YelpSuggestions extends BaseFeature {
 
     commands.push(
       {
-        name: RESULT_MENU_COMMAND.NOT_INTERESTED,
         l10n: {
           id: "firefox-suggest-command-dont-show-this",
         },
+        children: [
+          {
+            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
+            l10n: {
+              id: "firefox-suggest-command-not-relevant",
+            },
+          },
+          {
+            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
+            l10n: {
+              id: "firefox-suggest-command-not-interested",
+            },
+          },
+        ],
       },
       { name: "separator" },
       {
@@ -144,15 +159,22 @@ export class YelpSuggestions extends BaseFeature {
         // `inaccurate_location`.
         view.acknowledgeFeedback(result);
         break;
-      case RESULT_MENU_COMMAND.NOT_INTERESTED:
-        lazy.UrlbarPrefs.set("suggest.yelp", false);
+      // selType == "dismiss" when the user presses the dismiss key shortcut.
+      case "dismiss":
+      case RESULT_MENU_COMMAND.NOT_RELEVANT:
+        lazy.QuickSuggest.blockedSuggestions.add(result.payload.url);
         result.acknowledgeDismissalL10n = {
-          id: "firefox-suggest-dismissal-acknowledgment-all",
+          id: "firefox-suggest-dismissal-acknowledgment-one-yelp",
         };
         view.controller.removeResult(result);
         break;
-      // selType == "dismiss" when the user presses the dismiss key shortcut.
-      case "dismiss":
+      case RESULT_MENU_COMMAND.NOT_INTERESTED:
+        lazy.UrlbarPrefs.set("suggest.yelp", false);
+        result.acknowledgeDismissalL10n = {
+          id: "firefox-suggest-dismissal-acknowledgment-all-yelp",
+        };
+        view.controller.removeResult(result);
+        break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         view.acknowledgeFeedback(result);
         this.#incrementShowLessFrequentlyCount();

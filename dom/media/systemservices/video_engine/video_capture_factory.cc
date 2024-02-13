@@ -52,7 +52,7 @@ VideoCaptureFactory::CreateDeviceInfo(
     // Special case when PipeWire is not initialized yet and we need to insert
     // a camera device placeholder based on camera device availability we get
     // from the camera portal
-    if (!mCameraBackendInitialized) {
+    if (!mCameraBackendInitialized && mVideoCaptureOptions->allow_pipewire()) {
       MOZ_ASSERT(mCameraAvailability != Unknown);
       deviceInfo.reset(
           new PlaceholderDeviceInfo(mCameraAvailability == Available));
@@ -106,6 +106,28 @@ auto VideoCaptureFactory::InitCameraBackend()
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
     MOZ_ASSERT(mVideoCaptureOptions);
     mVideoCaptureOptions->Init(this);
+    mPromise = mPromise->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [this, self = RefPtr(this)](
+            const CameraBackendInitPromise::ResolveOrRejectValue& aValue) {
+          if (aValue.IsReject() &&
+              aValue.RejectValue() != NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR) {
+            // Fallback to V4L2 in case of PipeWire or camera portal failure.
+            // There is nothing we need to do in order to initialize V4L2 so
+            // consider the backend initialized and ready to be used.
+            mVideoCaptureOptions->set_allow_pipewire(false);
+            mCameraBackendInitialized = true;
+
+            return CameraBackendInitPromise::CreateAndResolve(
+                NS_OK,
+                "VideoCaptureFactory::InitCameraBackend Resolve with "
+                "fallback to V4L2");
+          }
+
+          return CameraBackendInitPromise::CreateAndResolveOrReject(
+              aValue,
+              "VideoCaptureFactory::InitCameraBackend Resolve or Reject");
+        });
 #else
     mCameraBackendInitialized = true;
     mPromiseHolder.Resolve(NS_OK,
@@ -156,7 +178,7 @@ auto VideoCaptureFactory::HasCameraDevice()
   }
 #endif
   return HasCameraDevicePromise::CreateAndReject(
-      NS_ERROR_NOT_IMPLEMENTED, "VideoCaptureFactory::HasCameraDevice Resolve");
+      NS_ERROR_NOT_IMPLEMENTED, "VideoCaptureFactory::HasCameraDevice Reject");
 }
 
 auto VideoCaptureFactory::UpdateCameraAvailability()
@@ -173,7 +195,11 @@ auto VideoCaptureFactory::UpdateCameraAvailability()
               "VideoCaptureFactory::UpdateCameraAvailability Resolve");
         }
 
-        mCameraAvailability = Unknown;
+        // We want to fallback to V4L2 at this point, therefore make sure a
+        // camera device is announced so we can proceed with a gUM request,
+        // where we can fallback to V4L2 backend.
+        mCameraAvailability = Available;
+
         return HasCameraDevicePromise::CreateAndReject(
             aValue.RejectValue(),
             "VideoCaptureFactory::UpdateCameraAvailability Reject");
