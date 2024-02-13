@@ -414,8 +414,8 @@ bool SharedArrayBufferObject::grow(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif
 
-// ES2017 draft rev 6390c2f1b34b309895d31d8c0512eac8660a0210
-// 24.2.2.1 SharedArrayBuffer( length )
+// ES2024 draft rev 3a773fc9fae58be023228b13dbbd402ac18eeb6b
+// 25.2.3.1 SharedArrayBuffer ( length [ , options ] )
 bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
                                                 Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -431,9 +431,9 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     return false;
   }
 
+  // Step 3.
   mozilla::Maybe<uint64_t> maxByteLength;
 #ifdef NIGHTLY_BUILD
-  // SharedArrayBuffer ( length [ , options ] ), step 3.
   if (JS::Prefs::experimental_sharedarraybuffer_growable()) {
     // Inline call to GetArrayBufferMaxByteLengthOption.
     if (args.get(1).isObject()) {
@@ -449,7 +449,7 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
           return false;
         }
 
-        // AllocateSharedArrayBuffer, step 2.
+        // 25.2.2.1 AllocateSharedArrayBuffer, step 3.a.
         if (byteLength > maxByteLengthInt) {
           JS_ReportErrorNumberASCII(
               cx, GetErrorMessage, nullptr,
@@ -462,23 +462,27 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   }
 #endif
 
-  // Step 3 (Inlined 24.2.1.1 AllocateSharedArrayBuffer).
-  // 24.2.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
+  // Step 4 (Inlined 25.2.2.1 AllocateSharedArrayBuffer).
+  // 25.2.2.1, step 5 (Inlined 10.1.13 OrdinaryCreateFromConstructor, step 2).
   RootedObject proto(cx);
   if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_SharedArrayBuffer,
                                           &proto)) {
     return false;
   }
 
-  // 24.2.1.1, step 3 (Inlined 6.2.7.2 CreateSharedByteDataBlock, step 2).
+  // 25.2.2.1, step 6.
+  uint64_t allocLength = maxByteLength.valueOr(byteLength);
+
+  // 25.2.2.1, step 7 (Inlined 6.2.9.2 CreateSharedByteDataBlock, step 1).
   // Refuse to allocate too large buffers.
-  if (byteLength > ArrayBufferObject::ByteLengthLimit) {
+  if (allocLength > ArrayBufferObject::ByteLengthLimit) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_SHARED_ARRAY_BAD_LENGTH);
     return false;
   }
 
   if (maxByteLength) {
+    // 25.2.2.1, remaining steps.
     auto* bufobj = NewGrowable(cx, byteLength, *maxByteLength, proto);
     if (!bufobj) {
       return false;
@@ -487,7 +491,7 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
     return true;
   }
 
-  // 24.2.1.1, steps 1 and 4-6.
+  // 25.2.2.1, remaining steps.
   JSObject* bufobj = New(cx, byteLength, proto);
   if (!bufobj) {
     return false;
