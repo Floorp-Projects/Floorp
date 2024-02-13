@@ -2949,9 +2949,13 @@ void JSObject::dumpFields(js::JSONPrinter& json) const {
             continue;
           }
 
-          map->dumpPropertyNameAt(json, j);
+          JS::UniqueChars propChars = map->getPropertyNameAt(j);
+          if (!propChars) {
+            json.property("error", "*oom in PropMap::getPropertyNameAt*");
+            continue;
+          }
 
-          js::GenericPrinter& out = json.beginString();
+          js::GenericPrinter& out = json.beginStringProperty(propChars.get());
 
           PropertyInfoWithKey prop = map->getPropertyInfoWithKey(j);
           if (prop.isDataProperty()) {
@@ -2967,7 +2971,7 @@ void JSObject::dumpFields(js::JSONPrinter& json) const {
           map->dumpDescriptorStringContentAt(out, j);
           out.put(")");
 
-          json.endString();
+          json.endStringProperty();
         }
       }
     }

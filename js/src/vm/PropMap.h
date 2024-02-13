@@ -11,6 +11,7 @@
 #include "gc/Cell.h"
 #include "js/TypeDecls.h"
 #include "js/UbiNode.h"
+#include "js/Utility.h"  // JS::UniqueChars
 #include "vm/ObjectFlags.h"
 #include "vm/PropertyInfo.h"
 #include "vm/PropertyKey.h"
@@ -521,7 +522,7 @@ class PropMap : public gc::TenuredCellWithFlags {
   void dumpFieldsAt(js::JSONPrinter& json, uint32_t index) const;
   void dumpDescriptorStringContentAt(js::GenericPrinter& out,
                                      uint32_t index) const;
-  void dumpPropertyNameAt(js::JSONPrinter& json, uint32_t index) const;
+  JS::UniqueChars getPropertyNameAt(uint32_t index) const;
 #endif
 
 #ifdef DEBUG
