@@ -106,6 +106,12 @@ class ConsoleInstance final : public nsISupports, public nsWrapperCache {
  private:
   ~ConsoleInstance();
 
+  void SetLogLevel();
+  static void MaxLogLevelPrefChangedCallback(const char* /* aPrefName */,
+                                             void* /* aClosure */);
+
+  ConsoleLogLevel mMaxLogLevel;
+  nsCString mMaxLogLevelPref;
   RefPtr<Console> mConsole;
 };
 
