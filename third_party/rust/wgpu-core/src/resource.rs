@@ -31,7 +31,7 @@ use std::{
     ops::Range,
     ptr::NonNull,
     sync::{
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
         Arc, Weak,
     },
 };
@@ -717,6 +717,7 @@ pub(crate) enum TextureInner<A: HalApi> {
     Surface {
         raw: Option<A::SurfaceTexture>,
         parent_id: SurfaceId,
+        has_work: AtomicBool,
     },
 }
 
