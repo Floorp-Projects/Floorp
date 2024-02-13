@@ -1393,6 +1393,9 @@ inline bool RefType::isExternHierarchy() const {
 inline bool RefType::isAnyHierarchy() const {
   return hierarchy() == RefTypeHierarchy::Any;
 }
+inline bool RefType::isExnHierarchy() const {
+  return hierarchy() == RefTypeHierarchy::Exn;
+}
 
 /* static */
 inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {

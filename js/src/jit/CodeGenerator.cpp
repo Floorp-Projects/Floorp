@@ -18803,19 +18803,27 @@ static void BranchWasmRefIsSubtype(MacroAssembler& masm, Register ref,
                                    const wasm::RefType& destType, Label* label,
                                    Register superSTV, Register scratch1,
                                    Register scratch2) {
-  if (destType.isAnyHierarchy()) {
-    masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label,
-                                   /*onSuccess=*/true, superSTV, scratch1,
-                                   scratch2);
-  } else if (destType.isFuncHierarchy()) {
-    masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label,
-                                    /*onSuccess=*/true, superSTV, scratch1,
-                                    scratch2);
-  } else if (destType.isExternHierarchy()) {
-    masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
-                                      /*onSuccess=*/true);
-  } else {
-    MOZ_CRASH("could not generate casting code for unknown type hierarchy");
+  switch (destType.hierarchy()) {
+    case wasm::RefTypeHierarchy::Any: {
+      masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label,
+                                     /*onSuccess=*/true, superSTV, scratch1,
+                                     scratch2);
+    } break;
+    case wasm::RefTypeHierarchy::Func: {
+      masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label,
+                                      /*onSuccess=*/true, superSTV, scratch1,
+                                      scratch2);
+    } break;
+    case wasm::RefTypeHierarchy::Extern: {
+      masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
+                                        /*onSuccess=*/true);
+    } break;
+    case wasm::RefTypeHierarchy::Exn: {
+      masm.branchWasmRefIsSubtypeExn(ref, sourceType, destType, label,
+                                     /*onSuccess=*/true);
+    } break;
+    default:
+      MOZ_CRASH("could not generate casting code for unknown type hierarchy");
   }
 }
 

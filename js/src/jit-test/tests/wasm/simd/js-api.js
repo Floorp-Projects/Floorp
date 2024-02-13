@@ -42,10 +42,10 @@ function call_v128_result() { ins.exports.v128_result(); }
 for ( let i = 0 ; i < 100; i++ ) {
     assertErrorMessage(call_v128_param,
                        TypeError,
-                       /cannot pass.*v128.*to or from JS/);
+                       /cannot pass.*value.*to or from JS/);
     assertErrorMessage(call_v128_result,
                        TypeError,
-                       /cannot pass.*v128.*to or from JS/);
+                       /cannot pass.*value.*to or from JS/);
 }
 
 // RULE: v128 cannot cross the JS/wasm boundary as a function parameter.
@@ -72,10 +72,10 @@ function call_v128_result2() { ins2.exports.v128_result(); }
 for ( let i = 0 ; i < 100; i++ ) {
     assertErrorMessage(call_v128_param2,
                        TypeError,
-                       /cannot pass.*v128.*to or from JS/);
+                       /cannot pass.*value.*to or from JS/);
     assertErrorMessage(call_v128_result2,
                        TypeError,
-                       /cannot pass.*v128.*to or from JS/);
+                       /cannot pass.*value.*to or from JS/);
 }
 
 // RULE: The rules about v128 passing into or out of a function apply even when
@@ -89,7 +89,7 @@ var ins = wasmEvalText(`
                                    {m:{fn: newfn}});
 assertErrorMessage(() => ins.exports.newfn(3),
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 
 // RULE: WebAssembly.Global of type v128 is constructable from JS with a default
 // value.
@@ -100,13 +100,13 @@ assertErrorMessage(() => ins.exports.newfn(3),
 
 assertErrorMessage(() => new WebAssembly.Global({value: "v128"}, 37),
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 assertErrorMessage(() => new WebAssembly.Global({value: "v128"}),
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 assertErrorMessage(() => new WebAssembly.Global({value: "v128", mutable: true}),
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 
 // RULE: WebAssembly.Global of type v128 have getters and setters that throw
 // TypeError when called from JS.
@@ -119,12 +119,12 @@ let {gi, gm} = wasmEvalText(`
 
 assertErrorMessage(() => gi.value,
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 assertErrorMessage(() => gi.valueOf(),
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 assertErrorMessage(() => gm.value = 0,
                    TypeError,
-                   /cannot pass.*v128.*to or from JS/);
+                   /cannot pass.*value.*to or from JS/);
 
 
