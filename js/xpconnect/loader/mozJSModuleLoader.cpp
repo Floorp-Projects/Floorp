@@ -46,6 +46,7 @@
 #include "nsIFileURL.h"
 #include "nsIJARURI.h"
 #include "nsIChannel.h"
+#include "nsIStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsJSUtils.h"
 #include "xpcprivate.h"
@@ -71,6 +72,9 @@
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerCommon.h"  // dom::GetWorkerPrivateFromContext
+#include "mozilla/dom/WorkerPrivate.h"  // dom::WorkerPrivate, dom::AutoSyncLoopHolder
+#include "mozilla/dom/WorkerRunnable.h"  // dom::MainThreadStopSyncLoopRunnable
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -700,6 +704,185 @@ JSObject* mozJSModuleLoader::GetSharedGlobal(JSContext* aCx) {
   return mLoaderGlobal;
 }
 
+// Read script file on the main thread and pass it back to worker.
+class ScriptReaderRunnable final : public nsIRunnable,
+                                   public nsINamed,
+                                   public nsIStreamListener {
+ public:
+  ScriptReaderRunnable(dom::WorkerPrivate* aWorkerPrivate,
+                       nsIEventTarget* aSyncLoopTarget,
+                       const nsCString& aLocation)
+      : mLocation(aLocation),
+        mRv(NS_ERROR_FAILURE),
+        mWorkerPrivate(aWorkerPrivate),
+        mSyncLoopTarget(aSyncLoopTarget) {}
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  nsCString& Data() { return mData; }
+
+  nsresult Result() const { return mRv; }
+
+  // nsIRunnable
+
+  NS_IMETHOD
+  Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsresult rv = StartReadScriptFromLocation();
+    if (NS_FAILED(rv)) {
+      OnComplete(rv);
+    }
+
+    return NS_OK;
+  }
+
+  // nsINamed
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override {
+    aName.AssignLiteral("ScriptReaderRunnable");
+    return NS_OK;
+  }
+
+  // nsIStreamListener
+
+  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
+                             uint64_t aOffset, uint32_t aCount) override {
+    uint32_t read = 0;
+    return aInputStream->ReadSegments(AppendSegmentToData, this, aCount, &read);
+  }
+
+  // nsIRequestObserver
+
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override { return NS_OK; }
+
+  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
+                           nsresult aStatusCode) override {
+    OnComplete(aStatusCode);
+    return NS_OK;
+  }
+
+ private:
+  ~ScriptReaderRunnable() = default;
+
+  static nsresult AppendSegmentToData(nsIInputStream* aInputStream,
+                                      void* aClosure, const char* aRawSegment,
+                                      uint32_t aToOffset, uint32_t aCount,
+                                      uint32_t* outWrittenCount) {
+    auto* self = static_cast<ScriptReaderRunnable*>(aClosure);
+    self->mData.Append(aRawSegment, aCount);
+    *outWrittenCount = aCount;
+    return NS_OK;
+  }
+
+  void OnComplete(nsresult aRv) {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRv = aRv;
+
+    RefPtr<dom::MainThreadStopSyncLoopRunnable> runnable =
+        new dom::MainThreadStopSyncLoopRunnable(
+            mWorkerPrivate, std::move(mSyncLoopTarget), mRv);
+    MOZ_ALWAYS_TRUE(runnable->Dispatch());
+
+    mWorkerPrivate = nullptr;
+    mSyncLoopTarget = nullptr;
+  }
+
+  nsresult StartReadScriptFromLocation() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ModuleLoaderInfo info(mLocation);
+    nsresult rv = info.EnsureScriptChannel();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return info.ScriptChannel()->AsyncOpen(this);
+  }
+
+ private:
+  nsAutoCString mLocation;
+  nsCString mData;
+  nsresult mRv;
+
+  // This pointer is guaranteed to be alive until OnComplete, given
+  // the worker thread is synchronously waiting with AutoSyncLoopHolder::Run
+  // until the corresponding WorkerPrivate::StopSyncLoop is called by
+  // MainThreadStopSyncLoopRunnable, which is dispatched from OnComplete.
+  dom::WorkerPrivate* mWorkerPrivate;
+
+  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+};
+
+NS_IMPL_ISUPPORTS(ScriptReaderRunnable, nsIRunnable, nsINamed,
+                  nsIStreamListener)
+
+/* static */
+nsresult mozJSModuleLoader::ReadScriptOnMainThread(JSContext* aCx,
+                                                   const nsCString& aLocation,
+                                                   nsCString& aData) {
+  dom::WorkerPrivate* workerPrivate = dom::GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+
+  dom::AutoSyncLoopHolder syncLoop(workerPrivate, dom::WorkerStatus::Canceling);
+  nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
+      syncLoop.GetSerialEventTarget();
+  if (!syncLoopTarget) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  RefPtr<ScriptReaderRunnable> runnable =
+      new ScriptReaderRunnable(workerPrivate, syncLoopTarget, aLocation);
+
+  if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  syncLoop.Run();
+
+  if (NS_FAILED(runnable->Result())) {
+    return runnable->Result();
+  }
+
+  aData = std::move(runnable->Data());
+
+  return NS_OK;
+}
+
+/* static */
+nsresult mozJSModuleLoader::LoadSingleModuleScriptOnWorker(
+    SyncModuleLoader* aModuleLoader, JSContext* aCx,
+    JS::loader::ModuleLoadRequest* aRequest, MutableHandleScript aScriptOut) {
+  nsAutoCString location;
+  nsresult rv = aRequest->mURI->GetSpec(location);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString data;
+  rv = ReadScriptOnMainThread(aCx, location, data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CompileOptions options(aCx);
+  ScriptPreloader::FillCompileOptionsForCachedStencil(options);
+  options.setFileAndLine(location.BeginReading(), 1);
+  SetModuleOptions(options);
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  if (!srcBuf.init(aCx, data.get(), data.Length(),
+                   JS::SourceOwnership::Borrowed)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<JS::Stencil> stencil =
+      CompileStencil(aCx, options, srcBuf, /* aIsModule = */ true);
+  if (!stencil) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aScriptOut.set(InstantiateStencil(aCx, stencil, /* aIsModule = */ true));
+
+  return NS_OK;
+}
+
 /* static */
 nsresult mozJSModuleLoader::LoadSingleModuleScript(
     SyncModuleLoader* aModuleLoader, JSContext* aCx,
@@ -709,6 +892,11 @@ nsresult mozJSModuleLoader::LoadSingleModuleScript(
       MarkerOptions(MarkerStack::Capture(),
                     MarkerInnerWindowIdFromJSContext(aCx)),
       nsContentUtils::TruncatedURLForDisplay(aRequest->mURI));
+
+  if (!NS_IsMainThread()) {
+    return LoadSingleModuleScriptOnWorker(aModuleLoader, aCx, aRequest,
+                                          aScriptOut);
+  }
 
   ModuleLoaderInfo info(aRequest);
   nsresult rv = info.EnsureResolvedURI();
@@ -928,6 +1116,17 @@ nsresult mozJSModuleLoader::ObjectForLocation(
 }
 
 /* static */
+void mozJSModuleLoader::SetModuleOptions(CompileOptions& aOptions) {
+  aOptions.setModule();
+
+  // Top level await is not supported in synchronously loaded modules.
+  aOptions.topLevelAwait = false;
+
+  // Make all top-level `vars` available in `ModuleEnvironmentObject`.
+  aOptions.deoptimizeModuleGlobalVars = true;
+}
+
+/* static */
 nsresult mozJSModuleLoader::GetScriptForLocation(
     JSContext* aCx, ModuleLoaderInfo& aInfo, nsIFile* aModuleFile,
     bool aUseMemMap, MutableHandleScript aScriptOut, char** aLocationOut) {
@@ -987,12 +1186,7 @@ nsresult mozJSModuleLoader::GetScriptForLocation(
     ScriptPreloader::FillCompileOptionsForCachedStencil(options);
     options.setFileAndLine(nativePath.get(), 1);
     if (aInfo.IsModule()) {
-      options.setModule();
-      // Top level await is not supported in synchronously loaded modules.
-      options.topLevelAwait = false;
-
-      // Make all top-level `vars` available in `ModuleEnvironmentObject`.
-      options.deoptimizeModuleGlobalVars = true;
+      SetModuleOptions(options);
     } else {
       options.setForceStrictMode();
       options.setNonSyntacticScope(true);
@@ -1826,7 +2020,8 @@ nsresult mozJSModuleLoader::ImportESModule(
 
   RootedObject globalObj(aCx, GetSharedGlobal(aCx));
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
-  MOZ_ASSERT(xpc::Scriptability::Get(globalObj).Allowed());
+  MOZ_ASSERT_IF(NS_IsMainThread(),
+                xpc::Scriptability::Get(globalObj).Allowed());
 
   // The module loader should be instantiated when fetching the shared global
   MOZ_ASSERT(mModuleLoader);
