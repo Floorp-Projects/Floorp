@@ -303,9 +303,7 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
                                     const VideoInfo& aInfo,
                                     const YCbCrBuffer& aBuffer,
                                     const IntRect& aPicture, bool aCopyData) {
-  if (!aVideoImage) {
-    return false;
-  }
+  MOZ_ASSERT(aVideoImage);
 
   PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
 
