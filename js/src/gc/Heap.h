@@ -34,13 +34,6 @@ class TenuredCell;
 // Cells are aligned to CellAlignShift, so the largest tagged null pointer is:
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellAlignShift) - 1;
 
-/*
- * The minimum cell size ends up as twice the cell alignment because the mark
- * bitmap contains one bit per CellBytesPerMarkBit bytes (which is equal to
- * CellAlignBytes) and we need two mark bits per cell.
- */
-const size_t MinCellSize = CellBytesPerMarkBit * MarkBitsPerCell;
-
 static_assert(ArenaSize % CellAlignBytes == 0,
               "Arena size must be a multiple of cell alignment");
 

@@ -153,20 +153,17 @@ class ArenaList {
  */
 class SortedArenaList {
  public:
-  // The minimum size, in bytes, of a GC thing.
-  static const size_t MinThingSize = 16;
-
   static_assert(ArenaSize <= 4096,
                 "When increasing the Arena size, please consider how"
                 " this will affect the size of a SortedArenaList.");
 
-  static_assert(MinThingSize >= 16,
+  static_assert(MinCellSize >= 16,
                 "When decreasing the minimum thing size, please consider"
                 " how this will affect the size of a SortedArenaList.");
 
   // The maximum number of GC things that an arena can hold.
   static const size_t MaxThingsPerArena =
-      (ArenaSize - ArenaHeaderSize) / MinThingSize;
+      (ArenaSize - ArenaHeaderSize) / MinCellSize;
 
   // The number of segments required, one for each possible number of free
   // things in an arena plus one for full arenas.

@@ -67,6 +67,13 @@ const size_t CellBytesPerMarkBit = CellAlignBytes;
 const size_t MarkBitsPerCell = 2;
 
 /*
+ * The minimum cell size ends up as twice the cell alignment because the mark
+ * bitmap contains one bit per CellBytesPerMarkBit bytes (which is equal to
+ * CellAlignBytes) and we need two mark bits per cell.
+ */
+const size_t MinCellSize = CellBytesPerMarkBit * MarkBitsPerCell;
+
+/*
  * The mark bitmap has one bit per each possible cell start position. This
  * wastes some space for larger GC things but allows us to avoid division by the
  * cell's size when accessing the bitmap.

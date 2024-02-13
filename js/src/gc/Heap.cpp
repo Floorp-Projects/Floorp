@@ -49,8 +49,6 @@ static_assert(js::ScopeDataAlignBytes >= MinFirstWordAlignment,
 
 #define CHECK_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal,       \
                          nursery, compact)                                     \
-  static_assert(sizeof(sizedType) >= SortedArenaList::MinThingSize,            \
-                #sizedType " is smaller than SortedArenaList::MinThingSize!"); \
   static_assert(sizeof(sizedType) >= sizeof(FreeSpan),                         \
                 #sizedType " is smaller than FreeSpan");                       \
   static_assert(sizeof(sizedType) % CellAlignBytes == 0,                       \
