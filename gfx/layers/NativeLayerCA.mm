@@ -1866,6 +1866,14 @@ bool NativeLayerCA::Representation::ApplyChanges(
 
     IOSurfaceRef surface = aFrontSurface.get();
     if (aSpecializeVideo) {
+      // If we just rebuilt our layer, ensure the first frame is visible by
+      // forcing the layer contents to display that frame. Our call to
+      // enqueueSampleBuffer will handle future async updates to the layer;
+      // buffers queued with enqueueSampleBuffer overwrite the layer contents.
+      if (layerNeedsInitialization) {
+        mContentCALayer.contents = (id)surface;
+      }
+
       // Attempt to enqueue this as a video frame. If we fail, we'll rebuild
       // our video layer in the next update.
       bool isEnqueued = EnqueueSurface(surface);
