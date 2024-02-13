@@ -1168,6 +1168,7 @@ class Raptor(
             )
         self.register_virtualenv_module(
             requirements=[mozbase_requirements],
+            two_pass=True,
             editable=True,
         )
 
