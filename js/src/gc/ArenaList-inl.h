@@ -152,9 +152,12 @@ js::gc::Arena* js::gc::ArenaList::takeFirstArena() {
   return arena;
 }
 
-js::gc::SortedArenaList::SortedArenaList(size_t thingsPerArena)
-    : thingsPerArena_(thingsPerArena) {
-  MOZ_ASSERT(thingsPerArena < SegmentCount);
+js::gc::SortedArenaList::SortedArenaList(js::gc::AllocKind allocKind)
+    : thingsPerArena_(Arena::thingsPerArena(allocKind)) {
+#ifdef DEBUG
+  MOZ_ASSERT(thingsPerArena_ < SegmentCount);
+  allocKind_ = allocKind;
+#endif
 }
 
 void js::gc::SortedArenaList::insertAt(Arena* arena, size_t nfree) {
@@ -231,18 +234,13 @@ void js::gc::SortedArenaList::restoreFromArenaList(
 
 void js::gc::SortedArenaList::check() const {
 #ifdef DEBUG
-  AllocKind kind = AllocKind::LIMIT;
   for (size_t i = 0; i < SegmentCount; i++) {
     const auto& segment = segments[i];
-    if (kind == AllocKind::LIMIT && !segment.isEmpty()) {
-      kind = segment.first()->getAllocKind();
-      MOZ_ASSERT(thingsPerArena_ == Arena::thingsPerArena(kind));
-    }
     if (i > thingsPerArena_) {
       MOZ_ASSERT(segment.isEmpty());
     }
     for (auto arena = segment.iter(); !arena.done(); arena.next()) {
-      MOZ_ASSERT(arena->getAllocKind() == kind);
+      MOZ_ASSERT(arena->getAllocKind() == allocKind());
       MOZ_ASSERT(arena->countFreeCells() == i);
     }
   }

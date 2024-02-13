@@ -264,7 +264,7 @@ void GCRuntime::backgroundFinalize(JS::GCContext* gcx, Zone* zone,
     return;
   }
 
-  SortedArenaList finalizedSorted(Arena::thingsPerArena(kind));
+  SortedArenaList finalizedSorted(kind);
 
   auto unlimited = SliceBudget::unlimited();
   FinalizeArenas(gcx, arenas, finalizedSorted, kind, unlimited);
@@ -1949,14 +1949,13 @@ IncrementalProgress GCRuntime::finalizeAllocKind(JS::GCContext* gcx,
                                                  SliceBudget& budget) {
   MOZ_ASSERT(sweepZone->isGCSweeping());
 
-  size_t thingsPerArena = Arena::thingsPerArena(sweepAllocKind);
   auto& finalizedArenas = foregroundFinalizedArenas.ref();
   if (!finalizedArenas) {
-    finalizedArenas.emplace(thingsPerArena);
+    finalizedArenas.emplace(sweepAllocKind);
     foregroundFinalizedZone = sweepZone;
     foregroundFinalizedAllocKind = sweepAllocKind;
   } else {
-    MOZ_ASSERT(finalizedArenas->thingsPerArena() == thingsPerArena);
+    MOZ_ASSERT(finalizedArenas->allocKind() == sweepAllocKind);
     MOZ_ASSERT(foregroundFinalizedZone == sweepZone);
     MOZ_ASSERT(foregroundFinalizedAllocKind == sweepAllocKind);
   }
