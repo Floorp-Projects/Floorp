@@ -32,7 +32,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ScrollingMetrics.h"
 #include "mozilla/SharedStyleSheetCache.h"
-#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
@@ -619,149 +618,21 @@ static mozJSModuleLoader* GetContextualESLoader(
   return mozJSModuleLoader::Get();
 }
 
-static mozJSModuleLoader* GetModuleLoaderForCurrentGlobal(
-    JSContext* aCx, const GlobalObject& aGlobal,
-    Maybe<loader::NonSharedGlobalSyncModuleLoaderScope>&
-        aMaybeSyncLoaderScope) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-
-  if (mozJSModuleLoader::IsSharedSystemGlobal(global)) {
-    return mozJSModuleLoader::Get();
-  }
-  if (mozJSModuleLoader::IsDevToolsLoaderGlobal(global)) {
-    return mozJSModuleLoader::GetOrCreateDevToolsLoader();
-  }
-
-  if (loader::NonSharedGlobalSyncModuleLoaderScope::IsActive()) {
-    mozJSModuleLoader* moduleloader =
-        loader::NonSharedGlobalSyncModuleLoaderScope::ActiveLoader();
-
-    if (!moduleloader->IsLoaderGlobal(global->GetGlobalJSObject())) {
-      JS_ReportErrorASCII(aCx,
-                          "global: \"current\" option cannot be used for "
-                          "different global while other importESModule "
-                          "with global: \"current\" is on the stack");
-      return nullptr;
-    }
-
-    return moduleloader;
-  }
-
-  RefPtr targetModuleLoader = global->GetModuleLoader(aCx);
-  if (!targetModuleLoader) {
-    // Sandbox without associated window returns nullptr for GetModuleLoader.
-    JS_ReportErrorASCII(aCx, "No ModuleLoader found for the current context");
-    return nullptr;
-  }
-
-  if (targetModuleLoader->HasFetchingModules()) {
-    if (!NS_IsMainThread()) {
-      JS_ReportErrorASCII(aCx,
-                          "ChromeUtils.importESModule cannot be used in worker "
-                          "when there is ongoing dynamic import");
-      return nullptr;
-    }
-
-    if (!mozilla::SpinEventLoopUntil(
-            "importESModule for current global"_ns, [&]() -> bool {
-              return !targetModuleLoader->HasFetchingModules();
-            })) {
-      JS_ReportErrorASCII(aCx, "Failed to wait for ongoing module requests");
-      return nullptr;
-    }
-  }
-
-  aMaybeSyncLoaderScope.emplace(aCx, global);
-  return aMaybeSyncLoaderScope->ActiveLoader();
-}
-
-static mozJSModuleLoader* GetModuleLoaderForOptions(
-    JSContext* aCx, const GlobalObject& aGlobal,
-    const ImportESModuleOptionsDictionary& aOptions,
-    Maybe<loader::NonSharedGlobalSyncModuleLoaderScope>&
-        aMaybeSyncLoaderScope) {
-  if (!aOptions.mGlobal.WasPassed()) {
-    return GetContextualESLoader(aOptions.mLoadInDevToolsLoader, aGlobal.Get());
-  }
-
-  switch (aOptions.mGlobal.Value()) {
-    case ImportESModuleTargetGlobal::Shared:
-      return mozJSModuleLoader::Get();
-
-    case ImportESModuleTargetGlobal::Devtools:
-      return mozJSModuleLoader::GetOrCreateDevToolsLoader();
-
-    case ImportESModuleTargetGlobal::Contextual: {
-      if (!NS_IsMainThread()) {
-        return GetModuleLoaderForCurrentGlobal(aCx, aGlobal,
-                                               aMaybeSyncLoaderScope);
-      }
-
-      RefPtr devToolsModuleloader = mozJSModuleLoader::GetDevToolsLoader();
-      if (devToolsModuleloader &&
-          devToolsModuleloader->IsLoaderGlobal(aGlobal.Get())) {
-        return mozJSModuleLoader::GetOrCreateDevToolsLoader();
-      }
-      return mozJSModuleLoader::Get();
-    }
-
-    case ImportESModuleTargetGlobal::Current:
-      return GetModuleLoaderForCurrentGlobal(aCx, aGlobal,
-                                             aMaybeSyncLoaderScope);
-
-    default:
-      MOZ_CRASH("Unknown ImportESModuleTargetGlobal");
-  }
-}
-
-static bool ValidateImportOptions(
-    JSContext* aCx, const ImportESModuleOptionsDictionary& aOptions) {
-  if (!NS_IsMainThread() &&
-      (!aOptions.mGlobal.WasPassed() ||
-       (aOptions.mGlobal.Value() != ImportESModuleTargetGlobal::Current &&
-        aOptions.mGlobal.Value() != ImportESModuleTargetGlobal::Contextual))) {
-    JS_ReportErrorASCII(aCx,
-                        "ChromeUtils.importESModule: Only { global: "
-                        "\"current\" } and { global: \"contextual\" } options "
-                        "are supported on worker");
-    return false;
-  }
-
-  if (aOptions.mGlobal.WasPassed() &&
-      aOptions.mLoadInDevToolsLoader.WasPassed()) {
-    JS_ReportErrorASCII(aCx,
-                        "global option and loadInDevToolsLoader option "
-                        "cannot be used at the same time");
-    return false;
-  }
-
-  return true;
-}
-
 /* static */
 void ChromeUtils::ImportESModule(
     const GlobalObject& aGlobal, const nsAString& aResourceURI,
     const ImportESModuleOptionsDictionary& aOptions,
     JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv) {
-  JSContext* cx = aGlobal.Context();
-
-  if (!ValidateImportOptions(cx, aOptions)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  Maybe<loader::NonSharedGlobalSyncModuleLoaderScope> maybeSyncLoaderScope;
-  RefPtr<mozJSModuleLoader> moduleloader =
-      GetModuleLoaderForOptions(cx, aGlobal, aOptions, maybeSyncLoaderScope);
-  if (!moduleloader) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+  RefPtr moduleloader =
+      GetContextualESLoader(aOptions.mLoadInDevToolsLoader, aGlobal.Get());
+  MOZ_ASSERT(moduleloader);
 
   NS_ConvertUTF16toUTF8 registryLocation(aResourceURI);
 
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
       "ChromeUtils::ImportESModule", OTHER, registryLocation);
+
+  JSContext* cx = aGlobal.Context();
 
   JS::Rooted<JSObject*> moduleNamespace(cx);
   nsresult rv =
@@ -778,10 +649,6 @@ void ChromeUtils::ImportESModule(
     return;
   }
   aRetval.set(moduleNamespace);
-
-  if (maybeSyncLoaderScope) {
-    maybeSyncLoaderScope->Finish();
-  }
 }
 
 namespace lazy_getter {
