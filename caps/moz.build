@@ -34,6 +34,7 @@ EXPORTS.mozilla = [
     "ExpandedPrincipal.h",
     "NullPrincipal.h",
     "OriginAttributes.h",
+    "OriginAttributesHashKey.h",
     "PrincipalHashKey.h",
     "SystemPrincipal.h",
 ]
