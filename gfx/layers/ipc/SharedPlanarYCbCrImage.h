@@ -38,8 +38,8 @@ class SharedPlanarYCbCrImage : public PlanarYCbCrImage {
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
   nsresult CopyData(const PlanarYCbCrData& aData) override;
   nsresult AdoptData(const Data& aData) override;
-  bool CreateEmptyBuffer(const Data& aData, const gfx::IntSize& aYSize,
-                         const gfx::IntSize& aCbCrSize) override;
+  nsresult CreateEmptyBuffer(const Data& aData, const gfx::IntSize& aYSize,
+                             const gfx::IntSize& aCbCrSize) override;
 
   void SetIsDRM(bool aIsDRM) override;
   bool IsValid() const override;
