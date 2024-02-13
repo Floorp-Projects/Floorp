@@ -17,7 +17,7 @@ use crate::backend::{
 };
 
 bitflags! {
-    #[derive(Default, Serialize, Deserialize)]
+    #[derive(Default, Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
     pub struct EnvironmentFlagsImpl: u32 {
         const NIL = 0b0000_0000;
     }
@@ -54,7 +54,7 @@ impl Into<EnvironmentFlagsImpl> for EnvironmentFlags {
 }
 
 bitflags! {
-    #[derive(Default, Serialize, Deserialize)]
+    #[derive(Default, Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
     pub struct DatabaseFlagsImpl: u32 {
         const NIL = 0b0000_0000;
         #[cfg(feature = "db-dup-sort")]
@@ -93,7 +93,7 @@ impl Into<DatabaseFlagsImpl> for DatabaseFlags {
 }
 
 bitflags! {
-    #[derive(Default, Serialize, Deserialize)]
+    #[derive(Default, Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
     pub struct WriteFlagsImpl: u32 {
         const NIL = 0b0000_0000;
     }

@@ -172,6 +172,12 @@ pub fn set_experiment_inactive(experiment_id: String) {
     glean_core::glean_set_experiment_inactive(experiment_id)
 }
 
+/// Dynamically set the experimentation identifier, as opposed to setting it through the configuration
+/// during initialization.
+pub fn set_experimentation_id(experimentation_id: String) {
+    glean_core::glean_set_experimentation_id(experimentation_id);
+}
+
 /// TEST ONLY FUNCTION.
 /// Gets stored experimentation id.
 pub fn test_get_experimentation_id() -> Option<String> {

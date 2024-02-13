@@ -226,16 +226,30 @@ who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
 user-id = 48 # Jan-Erik Rediger (badboy)
 start = "2020-11-10"
-end = "2024-02-24"
+end = "2025-02-12"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
+
+[[wildcard-audits.glean]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 66068 # Travis Long (travis79)
+start = "2024-02-12"
+end = "2025-02-13"
 
 [[wildcard-audits.glean-core]]
 who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
 user-id = 48 # Jan-Erik Rediger (badboy)
 start = "2019-09-24"
-end = "2024-02-24"
+end = "2025-02-12"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
+
+[[wildcard-audits.glean-core]]
+who = "Travis Long <tlong@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 66068 # Travis Long (travis79)
+start = "2020-07-10"
+end = "2025-02-13"
 
 [[wildcard-audits.glslopt]]
 who = "Jamie Nicol <jnicol@mozilla.com>"

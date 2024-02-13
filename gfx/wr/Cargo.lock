@@ -180,9 +180,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.4.0"
+version = "2.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4682ae6287fcf752ecaabbfcc7b6f9b72aa33933dc23a554d853aea8eea8635"
+checksum = "ed570934406eb16438a4e976b1b4500774099c13b8cb96eec99f620f05090ddf"
 dependencies = [
  "serde",
 ]
@@ -996,9 +996,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "56.1.0"
+version = "57.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e12e51799c1e40ba51f24e0ff232d35ea321403920bea31dc11de1afaeb541ef"
+checksum = "ae5847ad58b7f925c984de7f4dffcad67d7d0befa59a5a888cf93741b5ef1e6a"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -1016,9 +1016,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "56.1.0"
+version = "57.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f7570206325e7a20c45b60bf63f1f5b69c2ce0ee79ca0dc774e7c39eaab19aa"
+checksum = "6831cadd28b625bc296732d71dc7c978f208ba27911cad072785f87f23b1e634"
 dependencies = [
  "android_logger",
  "bincode",
@@ -1556,12 +1556,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.16"
+version = "0.4.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6389c490849ff5bc16be905ae24bc913a9c8892e19b2341dbc175e14c341c2b8"
-dependencies = [
- "cfg-if 1.0.0",
-]
+checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "malloc_buf"
@@ -2262,13 +2259,13 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "rkv"
-version = "0.18.4"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f0ea3af1393b22f8fe25615b6fa5d13072b7b622e66acffc8b12b2baa0342b1"
+checksum = "2c6d906922d99c677624d2042a93f89b2b7df0f6411032237d5d99a602c2487c"
 dependencies = [
  "arrayref",
  "bincode",
- "bitflags 1.3.2",
+ "bitflags 2.4.2",
  "byteorder",
  "id-arena",
  "lazy_static",
@@ -3072,7 +3069,7 @@ name = "webrender"
 version = "0.62.0"
 dependencies = [
  "bincode",
- "bitflags 2.4.0",
+ "bitflags 2.4.2",
  "build-parallel",
  "byteorder",
  "derive_more",
@@ -3127,7 +3124,7 @@ name = "webrender_api"
 version = "0.62.0"
 dependencies = [
  "app_units",
- "bitflags 2.4.0",
+ "bitflags 2.4.2",
  "byteorder",
  "crossbeam-channel",
  "euclid",
@@ -3144,7 +3141,7 @@ dependencies = [
 name = "webrender_build"
 version = "0.0.2"
 dependencies = [
- "bitflags 2.4.0",
+ "bitflags 2.4.2",
  "lazy_static",
  "serde",
 ]

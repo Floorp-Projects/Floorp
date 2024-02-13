@@ -2291,9 +2291,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "56.1.0"
+version = "57.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e12e51799c1e40ba51f24e0ff232d35ea321403920bea31dc11de1afaeb541ef"
+checksum = "ae5847ad58b7f925c984de7f4dffcad67d7d0befa59a5a888cf93741b5ef1e6a"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -2311,9 +2311,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "56.1.0"
+version = "57.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f7570206325e7a20c45b60bf63f1f5b69c2ce0ee79ca0dc774e7c39eaab19aa"
+checksum = "6831cadd28b625bc296732d71dc7c978f208ba27911cad072785f87f23b1e634"
 dependencies = [
  "android_logger",
  "bincode",
@@ -3304,12 +3304,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.17"
+version = "0.4.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
-dependencies = [
- "cfg-if 1.0.0",
-]
+checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "mach"
@@ -4748,13 +4745,13 @@ dependencies = [
 
 [[package]]
 name = "rkv"
-version = "0.18.4"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f0ea3af1393b22f8fe25615b6fa5d13072b7b622e66acffc8b12b2baa0342b1"
+checksum = "2c6d906922d99c677624d2042a93f89b2b7df0f6411032237d5d99a602c2487c"
 dependencies = [
  "arrayref",
  "bincode",
- "bitflags 1.999.999",
+ "bitflags 2.4.1",
  "byteorder",
  "id-arena",
  "lazy_static",

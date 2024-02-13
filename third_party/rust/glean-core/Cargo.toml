@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.66"
 name = "glean-core"
-version = "56.1.0"
+version = "57.0.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -62,7 +62,7 @@ version = "0.4.8"
 version = "1.18.0"
 
 [dependencies.rkv]
-version = "0.18.4"
+version = "0.19.0"
 features = ["lmdb"]
 default-features = false
 

@@ -24,9 +24,11 @@ use super::{
     database::Database, DatabaseFlagsImpl, DatabaseImpl, EnvironmentFlagsImpl, ErrorImpl, InfoImpl,
     RoTransactionImpl, RwTransactionImpl, StatImpl,
 };
+use crate::backend::common::RecoveryStrategy;
 use crate::backend::traits::{BackendEnvironment, BackendEnvironmentBuilder};
 
 const DEFAULT_DB_FILENAME: &str = "data.safe.bin";
+const DEFAULT_CORRUPT_DB_EXTENSION: &str = "bin.corrupt";
 
 type DatabaseArena = Arena<Database>;
 type DatabaseNameMap = HashMap<Option<String>, DatabaseImpl>;
@@ -38,7 +40,7 @@ pub struct EnvironmentBuilderImpl {
     max_dbs: Option<usize>,
     map_size: Option<usize>,
     make_dir_if_needed: bool,
-    discard_if_corrupted: bool,
+    corruption_recovery_strategy: RecoveryStrategy,
 }
 
 impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
@@ -53,7 +55,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
             max_dbs: None,
             map_size: None,
             make_dir_if_needed: false,
-            discard_if_corrupted: false,
+            corruption_recovery_strategy: RecoveryStrategy::Error,
         }
     }
 
@@ -85,8 +87,8 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
         self
     }
 
-    fn set_discard_if_corrupted(&mut self, discard_if_corrupted: bool) -> &mut Self {
-        self.discard_if_corrupted = discard_if_corrupted;
+    fn set_corruption_recovery_strategy(&mut self, strategy: RecoveryStrategy) -> &mut Self {
+        self.corruption_recovery_strategy = strategy;
         self
     }
 
@@ -106,7 +108,7 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
             self.max_dbs,
             self.map_size,
         )?;
-        env.read_from_disk(self.discard_if_corrupted)?;
+        env.read_from_disk(self.corruption_recovery_strategy)?;
         Ok(env)
     }
 }
@@ -152,16 +154,32 @@ impl EnvironmentImpl {
         Ok(bincode::serialize(&data)?)
     }
 
-    fn deserialize(
-        bytes: &[u8],
-        discard_if_corrupted: bool,
+    fn load(
+        path: &Path,
+        strategy: RecoveryStrategy,
     ) -> Result<(DatabaseArena, DatabaseNameMap), ErrorImpl> {
+        let bytes = fs::read(path)?;
+
+        match Self::deserialize(&bytes) {
+            Ok((arena, name_map)) => Ok((arena, name_map)),
+            Err(err) => match strategy {
+                RecoveryStrategy::Error => Err(err),
+                RecoveryStrategy::Discard => Ok((DatabaseArena::new(), HashMap::new())),
+                RecoveryStrategy::Rename => {
+                    let corrupted_path = path.with_extension(DEFAULT_CORRUPT_DB_EXTENSION);
+                    fs::rename(path, corrupted_path)?;
+
+                    Ok((DatabaseArena::new(), HashMap::new()))
+                }
+            },
+        }
+    }
+
+    fn deserialize(bytes: &[u8]) -> Result<(DatabaseArena, DatabaseNameMap), ErrorImpl> {
         let mut arena = DatabaseArena::new();
         let mut name_map = HashMap::new();
-        let data: HashMap<_, _> = match bincode::deserialize(bytes) {
-            Err(_) if discard_if_corrupted => Ok(HashMap::new()),
-            result => result,
-        }?;
+        let data: HashMap<_, _> = bincode::deserialize(bytes)?;
+
         for (name, db) in data {
             name_map.insert(name, DatabaseImpl(arena.alloc(db)));
         }
@@ -199,7 +217,7 @@ impl EnvironmentImpl {
         })
     }
 
-    pub(crate) fn read_from_disk(&mut self, discard_if_corrupted: bool) -> Result<(), ErrorImpl> {
+    pub(crate) fn read_from_disk(&mut self, strategy: RecoveryStrategy) -> Result<(), ErrorImpl> {
         let mut path = Cow::from(&self.path);
         if fs::metadata(&path)?.is_dir() {
             path.to_mut().push(DEFAULT_DB_FILENAME);
@@ -207,7 +225,7 @@ impl EnvironmentImpl {
         if fs::metadata(&path).is_err() {
             return Ok(());
         };
-        let (arena, name_map) = Self::deserialize(&fs::read(&path)?, discard_if_corrupted)?;
+        let (arena, name_map) = Self::load(&path, strategy)?;
         self.dbs = RwLock::new(EnvironmentDbs { arena, name_map });
         Ok(())
     }
@@ -272,7 +290,8 @@ impl<'e> BackendEnvironment<'e> for EnvironmentImpl {
         // TOOD: don't reallocate `name`.
         let key = name.map(String::from);
         let mut dbs = self.dbs.write().map_err(|_| ErrorImpl::EnvPoisonError)?;
-        if dbs.name_map.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs && name.is_some() {
+        if dbs.name_map.keys().filter_map(|k| k.as_ref()).count() >= self.max_dbs && name.is_some()
+        {
             return Err(ErrorImpl::DbsFull);
         }
         let parts = EnvironmentDbsRefMut::from(dbs.deref_mut());

@@ -19,6 +19,7 @@ use super::{
     DatabaseFlagsImpl, DatabaseImpl, EnvironmentFlagsImpl, ErrorImpl, InfoImpl, RoTransactionImpl,
     RwTransactionImpl, StatImpl,
 };
+use crate::backend::common::RecoveryStrategy;
 use crate::backend::traits::{
     BackendEnvironment, BackendEnvironmentBuilder, BackendInfo, BackendIter, BackendRoCursor,
     BackendRoCursorTransaction, BackendStat,
@@ -86,7 +87,8 @@ impl<'b> BackendEnvironmentBuilder<'b> for EnvironmentBuilderImpl {
         self
     }
 
-    fn set_discard_if_corrupted(&mut self, _discard_if_corrupted: bool) -> &mut Self {
+    /// **UNIMPLEMENTED.** Will panic at runtime.
+    fn set_corruption_recovery_strategy(&mut self, _strategy: RecoveryStrategy) -> &mut Self {
         // Unfortunately, when opening a database, LMDB doesn't handle all the ways it could have
         // been corrupted. Prefer using the `SafeMode` backend if this is important.
         unimplemented!();

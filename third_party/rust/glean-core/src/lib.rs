@@ -229,6 +229,25 @@ fn setup_state(state: State) {
     }
 }
 
+/// A global singleton that stores listener callbacks registered with Glean
+/// to receive event recording notifications.
+static EVENT_LISTENERS: OnceCell<Mutex<HashMap<String, Box<dyn GleanEventListener>>>> =
+    OnceCell::new();
+
+fn event_listeners() -> &'static Mutex<HashMap<String, Box<dyn GleanEventListener>>> {
+    EVENT_LISTENERS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn register_event_listener(tag: String, listener: Box<dyn GleanEventListener>) {
+    let mut lock = event_listeners().lock().unwrap();
+    lock.insert(tag, listener);
+}
+
+fn unregister_event_listener(tag: String) {
+    let mut lock = event_listeners().lock().unwrap();
+    lock.remove(&tag);
+}
+
 /// An error returned from callbacks.
 #[derive(Debug)]
 pub enum CallbackError {
@@ -283,6 +302,13 @@ pub trait OnGleanEvents: Send {
         // empty by default
         Ok(())
     }
+}
+
+/// A callback handler that receives the base identifier of recorded events
+/// The identifier is in the format: <category>.<name>
+pub trait GleanEventListener: Send {
+    /// Called when an event is recorded, indicating the id of the event
+    fn on_event_recorded(&self, id: String);
 }
 
 /// Initializes Glean.
@@ -869,6 +895,18 @@ pub fn glean_test_get_experiment_data(experiment_id: String) -> Option<RecordedE
     core::with_glean(|glean| glean.test_get_experiment_data(experiment_id.to_owned()))
 }
 
+/// Set an experimentation identifier dynamically.
+///
+/// Note: it's probably a good idea to unenroll from any experiments when identifiers change.
+pub fn glean_set_experimentation_id(experimentation_id: String) {
+    launch_with_glean(move |glean| {
+        glean
+            .additional_metrics
+            .experimentation_id
+            .set(experimentation_id);
+    });
+}
+
 /// TEST ONLY FUNCTION.
 /// Gets stored experimentation id annotation.
 pub fn glean_test_get_experimentation_id() -> Option<String> {
@@ -1052,6 +1090,27 @@ pub fn glean_submit_ping_by_name_sync(ping_name: String, reason: Option<String>)
     }
 
     core::with_glean(|glean| glean.submit_ping_by_name(&ping_name, reason.as_deref()))
+}
+
+/// EXPERIMENTAL: Register a listener object to recieve notifications of event recordings.
+///
+/// # Arguments
+///
+/// * `tag` - A string identifier used to later unregister the listener
+/// * `listener` - Implements the `GleanEventListener` trait
+pub fn glean_register_event_listener(tag: String, listener: Box<dyn GleanEventListener>) {
+    register_event_listener(tag, listener);
+}
+
+/// Unregister an event listener from recieving notifications.
+///
+/// Does not panic if the listener doesn't exist.
+///
+/// # Arguments
+///
+/// * `tag` - The tag used when registering the listener to be unregistered
+pub fn glean_unregister_event_listener(tag: String) {
+    unregister_event_listener(tag);
 }
 
 /// **TEST-ONLY Method**

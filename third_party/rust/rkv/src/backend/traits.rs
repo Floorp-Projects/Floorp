@@ -14,7 +14,7 @@ use std::{
 };
 
 use crate::{
-    backend::common::{DatabaseFlags, EnvironmentFlags, WriteFlags},
+    backend::common::{DatabaseFlags, EnvironmentFlags, RecoveryStrategy, WriteFlags},
     error::StoreError,
 };
 
@@ -83,7 +83,8 @@ pub trait BackendEnvironmentBuilder<'b>: Debug + Eq + PartialEq + Copy + Clone {
 
     fn set_make_dir_if_needed(&mut self, make_dir_if_needed: bool) -> &mut Self;
 
-    fn set_discard_if_corrupted(&mut self, discard_if_corrupted: bool) -> &mut Self;
+    /// Set the corruption recovery strategy. See [`RecoveryStrategy`] for details.
+    fn set_corruption_recovery_strategy(&mut self, strategy: RecoveryStrategy) -> &mut Self;
 
     fn open(&self, path: &Path) -> Result<Self::Environment, Self::Error>;
 }
