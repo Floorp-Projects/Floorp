@@ -588,13 +588,6 @@ export class SearchService {
    */
   async #addPolicyEngine(details) {
     let newEngine = new lazy.PolicySearchEngine({ details });
-    let existingEngine = this.#getEngineByName(newEngine.name);
-    if (existingEngine) {
-      throw Components.Exception(
-        "An engine with that name already exists!",
-        Cr.NS_ERROR_FILE_ALREADY_EXISTS
-      );
-    }
     lazy.logConsole.debug("Adding Policy Engine:", newEngine.name);
     this.#addEngineToStore(newEngine);
   }
@@ -615,13 +608,6 @@ export class SearchService {
     let newEngine = new lazy.UserSearchEngine({
       details: { name, url, alias },
     });
-    let existingEngine = this.#getEngineByName(newEngine.name);
-    if (existingEngine) {
-      throw Components.Exception(
-        "An engine with that name already exists!",
-        Cr.NS_ERROR_FILE_ALREADY_EXISTS
-      );
-    }
     lazy.logConsole.debug(`Adding ${newEngine.name}`);
     this.#addEngineToStore(newEngine);
   }
@@ -2143,10 +2129,10 @@ export class SearchService {
 
     // See if there is an existing engine with the same name.
     if (!skipDuplicateCheck && this.#getEngineByName(engine.name)) {
-      lazy.logConsole.debug(
-        "#addEngineToStore: Duplicate engine found, aborting!"
+      throw Components.Exception(
+        `#addEngineToStore: An engine called ${engine.name} already exists!`,
+        Cr.NS_ERROR_FILE_ALREADY_EXISTS
       );
-      return;
     }
 
     // Not an update, just add the new engine.
@@ -2697,14 +2683,6 @@ export class SearchService {
       extension,
       locale,
     });
-
-    let existingEngine = this.#getEngineByName(newEngine.name);
-    if (existingEngine) {
-      throw Components.Exception(
-        `An engine called ${newEngine.name} already exists!`,
-        Cr.NS_ERROR_FILE_ALREADY_EXISTS
-      );
-    }
 
     this.#addEngineToStore(newEngine);
     if (isCurrent) {
