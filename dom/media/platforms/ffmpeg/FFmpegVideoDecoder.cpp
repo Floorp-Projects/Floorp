@@ -1457,17 +1457,19 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   }
 #endif
   if (!v) {
-    v = VideoData::CreateAndCopyData(
-        mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
-        TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
-        TimeUnit::FromMicroseconds(-1),
-        mInfo.ScaledImageRect(mFrame->width, mFrame->height), mImageAllocator);
+    Result<already_AddRefed<VideoData>, MediaResult> r =
+        VideoData::CreateAndCopyData(
+            mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
+            TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
+            TimeUnit::FromMicroseconds(-1),
+            mInfo.ScaledImageRect(mFrame->width, mFrame->height),
+            mImageAllocator);
+    if (r.isErr()) {
+      return r.unwrapErr();
+    }
+    v = r.unwrap();
   }
-
-  if (!v) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                       RESULT_DETAIL("image allocation error"));
-  }
+  MOZ_ASSERT(v);
   aResults.AppendElement(std::move(v));
   return NS_OK;
 }

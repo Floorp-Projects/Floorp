@@ -354,15 +354,9 @@ Result<already_AddRefed<VideoData>, MediaResult> DAV1DDecoder::ConstructImage(
     aStage.SetColorDepth(b.mColorDepth);
   });
 
-  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
+  return VideoData::CreateAndCopyData(
       mInfo, mImageContainer, offset, timecode, duration, b, keyframe, timecode,
       mInfo.ScaledImageRect(aPicture.p.w, aPicture.p.h), mImageAllocator);
-  if (!v) {
-    // TODO: VideoData::CreateAndCopyData may return NULL on non out-of-memory
-    // failures.
-    return Err(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-  }
-  return v.forget();
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> DAV1DDecoder::Drain() {

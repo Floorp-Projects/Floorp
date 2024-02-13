@@ -97,43 +97,44 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
   gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(),
                              decodedFrame->Height());
-  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-      mConfig, mImageContainer, sampleData->mOffset,
-      media::TimeUnit::FromMicroseconds(decodedFrame->UpdatedTimestamp()),
-      media::TimeUnit::FromMicroseconds(decodedFrame->Duration()), b,
-      sampleData->mKeyframe, media::TimeUnit::FromMicroseconds(-1),
-      pictureRegion, mKnowsCompositor);
-  if (v) {
-    mPerformanceRecorder.Record(static_cast<int64_t>(decodedFrame->Timestamp()),
-                                [&](DecodeStage& aStage) {
-                                  aStage.SetImageFormat(DecodeStage::YUV420P);
-                                  aStage.SetResolution(decodedFrame->Width(),
-                                                       decodedFrame->Height());
-                                  aStage.SetYUVColorSpace(b.mYUVColorSpace);
-                                  aStage.SetColorDepth(b.mColorDepth);
-                                  aStage.SetColorRange(b.mColorRange);
-                                });
+  Result<already_AddRefed<VideoData>, MediaResult> r =
+      VideoData::CreateAndCopyData(
+          mConfig, mImageContainer, sampleData->mOffset,
+          media::TimeUnit::FromMicroseconds(decodedFrame->UpdatedTimestamp()),
+          media::TimeUnit::FromMicroseconds(decodedFrame->Duration()), b,
+          sampleData->mKeyframe, media::TimeUnit::FromMicroseconds(-1),
+          pictureRegion, mKnowsCompositor);
+  if (r.isErr()) {
+    mReorderQueue.Clear();
+    mUnorderedData.Clear();
+    mSamples.Clear();
+    mDecodePromise.RejectIfExists(r.unwrapErr(), __func__);
+    return;
+  }
 
-    if (mReorderFrames) {
-      mReorderQueue.Push(std::move(v));
-    } else {
-      mUnorderedData.AppendElement(std::move(v));
-    }
+  RefPtr<VideoData> v = r.unwrap();
+  MOZ_ASSERT(v);
+  mPerformanceRecorder.Record(static_cast<int64_t>(decodedFrame->Timestamp()),
+                              [&](DecodeStage& aStage) {
+                                aStage.SetImageFormat(DecodeStage::YUV420P);
+                                aStage.SetResolution(decodedFrame->Width(),
+                                                     decodedFrame->Height());
+                                aStage.SetYUVColorSpace(b.mYUVColorSpace);
+                                aStage.SetColorDepth(b.mColorDepth);
+                                aStage.SetColorRange(b.mColorRange);
+                              });
+
+  if (mReorderFrames) {
+    mReorderQueue.Push(std::move(v));
+  } else {
+    mUnorderedData.AppendElement(std::move(v));
+  }
 
     if (mSamples.IsEmpty()) {
       // If we have no remaining samples in the table, then we have processed
       // all outstanding decode requests.
       ProcessReorderQueue(mDecodePromise, __func__);
     }
-  } else {
-    mReorderQueue.Clear();
-    mUnorderedData.Clear();
-    mSamples.Clear();
-    mDecodePromise.RejectIfExists(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("CallBack::CreateAndCopyData")),
-        __func__);
-  }
 }
 
 void GMPVideoDecoder::ReceivedDecodedReferenceFrame(const uint64_t aPictureId) {

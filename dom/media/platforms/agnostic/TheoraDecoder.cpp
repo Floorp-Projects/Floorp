@@ -198,22 +198,23 @@ RefPtr<MediaDataDecoder::DecodePromise> TheoraDecoder::ProcessDecode(
 
     VideoInfo info;
     info.mDisplay = mInfo.mDisplay;
-    RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-        info, mImageContainer, aSample->mOffset, aSample->mTime,
-        aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
-        mInfo.ScaledImageRect(mTheoraInfo.frame_width,
-                              mTheoraInfo.frame_height),
-        mImageAllocator);
-    if (!v) {
+    Result<already_AddRefed<VideoData>, MediaResult> r =
+        VideoData::CreateAndCopyData(
+            info, mImageContainer, aSample->mOffset, aSample->mTime,
+            aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
+            mInfo.ScaledImageRect(mTheoraInfo.frame_width,
+                                  mTheoraInfo.frame_height),
+            mImageAllocator);
+    if (r.isErr()) {
       LOG("Image allocation error source %ux%u display %ux%u picture %ux%u",
           mTheoraInfo.frame_width, mTheoraInfo.frame_height,
           mInfo.mDisplay.width, mInfo.mDisplay.height, mInfo.mImage.width,
           mInfo.mImage.height);
-      return DecodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                      RESULT_DETAIL("Insufficient memory")),
-          __func__);
+      return DecodePromise::CreateAndReject(r.unwrapErr(), __func__);
     }
+
+    RefPtr<VideoData> v = r.unwrap();
+    MOZ_ASSERT(v);
 
     rec.apply([&](auto& aRec) {
       aRec.Record([&](DecodeStage& aStage) {

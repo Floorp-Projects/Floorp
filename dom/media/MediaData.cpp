@@ -318,7 +318,7 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 }
 
 /* static */
-already_AddRefed<VideoData> VideoData::CreateAndCopyData(
+Result<already_AddRefed<VideoData>, MediaResult> VideoData::CreateAndCopyData(
     const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,
     const TimeUnit& aTime, const TimeUnit& aDuration,
     const YCbCrBuffer& aBuffer, bool aKeyframe, const TimeUnit& aTimecode,
@@ -332,7 +332,8 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   }
 
   if (!ValidateBufferAndPicture(aBuffer, aPicture)) {
-    return nullptr;
+    // TODO: Let ValidateBufferAndPicture return MediaResult.
+    return Err(MediaResult(NS_ERROR_INVALID_ARG, "Invalid buffer or picture"));
   }
 
   PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::CopyDecodedVideo,
@@ -360,7 +361,10 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   }
 
   if (!v->mImage) {
-    return nullptr;
+    // TODO: Should other error like NS_ERROR_UNEXPECTED be used here to
+    // distinguish this error from the NS_ERROR_OUT_OF_MEMORY below?
+    return Err(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                           "Failed to create a PlanarYCbCrImage"));
   }
   NS_ASSERTION(v->mImage->GetFormat() == ImageFormat::PLANAR_YCBCR,
                "Wrong format?");
@@ -369,7 +373,10 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
 
   if (!VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
                                       true /* aCopyData */)) {
-    return nullptr;
+    // TODO: VideoData::SetVideoDataToImage may return NULL on non out-of-memory
+    // failures.
+    return Err(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                           "Failed to create a PlanarYCbCrImage"));
   }
 
   perfRecorder.Record();
