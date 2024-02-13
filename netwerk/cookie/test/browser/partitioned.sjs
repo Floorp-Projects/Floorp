@@ -13,12 +13,20 @@ function handleRequest(aRequest, aResponse) {
     aResponse.setStatusLine(aRequest.httpVersion, 200);
   }
 
-  if (!params.has("nocookie")) {
-    aResponse.setHeader("Set-Cookie", "a=1; SameSite=None; Secure", true);
-    aResponse.setHeader(
-      "Set-Cookie",
-      "b=2; Partitioned; SameSite=None; Secure",
-      true
-    );
+  if (params.has("nocookie")) {
+    return;
   }
+
+  if (params.has("nosecure")) {
+    aResponse.setHeader("Set-Cookie", "c=3; Partitioned;", true);
+
+    return;
+  }
+
+  aResponse.setHeader("Set-Cookie", "a=1; SameSite=None; Secure", true);
+  aResponse.setHeader(
+    "Set-Cookie",
+    "b=2; Partitioned; SameSite=None; Secure",
+    true
+  );
 }
