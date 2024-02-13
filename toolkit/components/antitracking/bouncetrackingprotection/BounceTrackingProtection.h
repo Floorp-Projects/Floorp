@@ -7,8 +7,12 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
 #include "nsIBounceTrackingProtection.h"
+#include "BounceTrackingStateGlobal.h"
 #include "nsIClearDataService.h"
 #include "nsTHashMap.h"
+
+#include "mozilla/OriginAttributes.h"
+#include "mozilla/OriginAttributesHashKey.h"
 
 class nsIPrincipal;
 class nsITimer;
@@ -40,16 +44,18 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   BounceTrackingProtection();
   ~BounceTrackingProtection() = default;
 
-  // Map of site hosts to moments. The moments represent the most recent wall
-  // clock time at which the user activated a top-level document on the
-  // associated site host.
-  nsTHashMap<nsCStringHashKey, PRTime> mUserActivation{};
+  // Map of origin attributes to global state object. This enables us to track
+  // bounce tracking state per OA, e.g. to separate private browsing from normal
+  // browsing.
+  nsTHashMap<OriginAttributesHashKey, RefPtr<BounceTrackingStateGlobal>>
+      mStateGlobal{};
 
-  // Map of site hosts to moments. The moments represent the first wall clock
-  // time since the last execution of the bounce tracking timer at which a page
-  // on the given site host performed an action that could indicate stateful
-  // bounce tracking took place.
-  nsTHashMap<nsCStringHashKey, PRTime> mBounceTrackers{};
+  // Getters for mStateGlobal.
+  BounceTrackingStateGlobal* GetOrCreateStateGlobal(
+      const OriginAttributes& aOriginAttributes);
+  BounceTrackingStateGlobal* GetOrCreateStateGlobal(nsIPrincipal* aPrincipal);
+  BounceTrackingStateGlobal* GetOrCreateStateGlobal(
+      BounceTrackingState* aBounceTrackingState);
 
   // Timer which periodically runs PurgeBounceTrackers.
   nsCOMPtr<nsITimer> mBounceTrackingPurgeTimer;
@@ -58,6 +64,10 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   using PurgeBounceTrackersMozPromise =
       MozPromise<nsTArray<nsCString>, nsresult, true>;
   RefPtr<PurgeBounceTrackersMozPromise> PurgeBounceTrackers();
+
+  nsresult PurgeBounceTrackersForStateGlobal(
+      BounceTrackingStateGlobal* aStateGlobal,
+      const OriginAttributes& aOriginAttributes);
 
   // Pending clear operations are stored as ClearDataMozPromise, one per host.
   using ClearDataMozPromise = MozPromise<nsCString, uint32_t, true>;
