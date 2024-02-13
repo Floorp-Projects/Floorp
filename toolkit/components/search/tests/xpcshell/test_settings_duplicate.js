@@ -103,6 +103,8 @@ add_setup(async function () {
     new TextEncoder().encode(JSON.stringify(enginesSettings)),
     { compress: true }
   );
+
+  consoleAllowList.push("Failed to load");
 });
 
 add_task(async function test_cached_duplicate() {
