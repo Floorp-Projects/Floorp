@@ -507,6 +507,17 @@ nodejs-16-macosx64:
         strip-components: 1
         add-prefix: node/
 
+nodejs-18-macosx64:
+    description: nodejs 18 for x64 macOS
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v18.19.0/node-v18.19.0-darwin-x64.tar.xz
+        sha256: 4f60b40071c6a67482b99d22a5265839177b8706a2b13b493396f368f0b42b00
+        size: 22496376
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
 nodejs-16-macosx64-arm64:
     description: nodejs 16 for arm64 macOS
     fetch:
@@ -514,6 +525,17 @@ nodejs-16-macosx64-arm64:
         url: https://nodejs.org/dist/v16.19.0/node-v16.19.0-darwin-arm64.tar.xz
         sha256: 7313c9db5f5140ece847a97f366032a10bddb6d87fa28a361ada918addcd5c73
         size: 19363804
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
+nodejs-18-macosx64-arm64:
+    description: nodejs 18 for arm64 macOS
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v18.19.0/node-v18.19.0-darwin-arm64.tar.xz
+        sha256: 857885257c586fb13c93d33d326ca82056ba8b7445ce27cf34dd406add04158e
+        size: 20768464
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
@@ -529,6 +551,17 @@ nodejs-16-win32:
         strip-components: 1
         add-prefix: node/
 
+nodejs-18-win32:
+    description: nodejs 18 for x86 Windows
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v18.19.0/node-v18.19.0-win-x86.zip
+        sha256: 3171148f735954bdca8adccb2200379e61142e0f5a2bdb4ca6432afb0d9951df
+        size: 27504941
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
 nodejs-16-win64:
     description: nodejs 16 for x64 Windows
     fetch:
@@ -536,6 +569,28 @@ nodejs-16-win64:
         url: https://nodejs.org/dist/v16.19.0/node-v16.19.0-win-x64.zip
         sha256: 534ca7a24e999c81cec847a498cc43d47e2bb158f6edf639e5297f2718350e96
         size: 27072850
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
+nodejs-18-win64:
+    description: nodejs 18 for x64 Windows
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v18.19.0/node-v18.19.0-win-x64.zip
+        sha256: 5311913d45e1fcc3643c58d1e3926eb85437b180f025fe5857413c9f02403645
+        size: 29332158
+        artifact-name: nodejs.tar.zst
+        strip-components: 1
+        add-prefix: node/
+
+nodejs-18-source:
+    description: nodejs 18 source
+    fetch:
+        type: static-url
+        url: https://nodejs.org/dist/v18.19.0/node-v18.19.0.tar.xz
+        sha256: f52b41af20596a9abd8ed75241837ec43945468221448bbf841361e2091819b6
+        size: 41248748
         artifact-name: nodejs.tar.zst
         strip-components: 1
         add-prefix: node/
