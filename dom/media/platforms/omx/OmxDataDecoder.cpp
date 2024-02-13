@@ -986,7 +986,7 @@ already_AddRefed<VideoData> MediaDataHelper::CreateYUV420VideoData(
       media::TimeUnit::Zero(),               // Filled later by caller.
       media::TimeUnit::FromMicroseconds(1),  // We don't know the duration.
       b,
-      0,  // Filled later by caller.
+      false,  // Filled later by caller.
       media::TimeUnit::FromMicroseconds(-1), info.ImageRect(), nullptr);
 
   if (!data) {
