@@ -237,13 +237,13 @@ class ShoppingMessageBar extends MozLitElement {
       <moz-button-group slot="actions">
         <button
           id="no-thanks-button"
-          class="small-button"
+          class="small-button shopping-button"
           data-l10n-id="shopping-message-bar-keep-closed-dismiss-button"
           @click=${this.handleNoThanksClick}
         ></button>
         <button
           id="yes-keep-closed-button"
-          class="primary small-button"
+          class="primary small-button shopping-button"
           data-l10n-id="shopping-message-bar-keep-closed-accept-button"
           @click=${this.handleKeepClosedClick}
         ></button>
