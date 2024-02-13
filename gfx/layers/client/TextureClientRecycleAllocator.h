@@ -9,11 +9,12 @@
 
 #include <map>
 #include <stack>
-#include "mozilla/gfx/Types.h"
-#include "mozilla/layers/TextureForwarder.h"
-#include "mozilla/RefPtr.h"
+
 #include "TextureClient.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/layers/TextureForwarder.h"
 
 namespace mozilla {
 namespace layers {
