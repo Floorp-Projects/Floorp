@@ -9,6 +9,7 @@
 #  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
 #  include "dav1d/dav1d.h"
+#  include "mozilla/Result.h"
 #  include "nsRefPtrHashtable.h"
 
 namespace mozilla {
@@ -46,7 +47,7 @@ class DAV1DDecoder final : public MediaDataDecoder,
  private:
   virtual ~DAV1DDecoder();
   RefPtr<DecodePromise> InvokeDecode(MediaRawData* aSample);
-  int GetPicture(DecodedData& aData, MediaResult& aResult);
+  Result<already_AddRefed<VideoData>, MediaResult> GetPicture();
   already_AddRefed<VideoData> ConstructImage(const Dav1dPicture& aPicture);
 
   Dav1dContext* mContext = nullptr;
