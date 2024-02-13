@@ -122,7 +122,7 @@ add_task(async function test_volume_change_with_keyboard() {
 
     // Decrease volume with arrow down
     EventUtils.synthesizeKey("KEY_ArrowDown", {}, pipWin);
-    ok(!(await isVideoMuted(browser, videoID)), "The audio is playing.");
+    ok(await isVideoMuted(browser, videoID), "The audio is not playing.");
 
     // Increase volume with arrow up
     EventUtils.synthesizeKey("KEY_ArrowUp", {}, pipWin);

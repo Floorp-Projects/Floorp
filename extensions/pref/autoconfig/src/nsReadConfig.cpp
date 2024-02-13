@@ -147,21 +147,6 @@ nsresult nsReadConfig::readConfigFile() {
   mozilla::Unused << defaultPrefBranch->GetBoolPref(
       "general.config.sandbox_enabled", &sandboxEnabled);
 
-  rv = defaultPrefBranch->GetCharPref("general.config.filename", lockFileName);
-
-  if (NS_FAILED(rv)) return rv;
-
-  MOZ_LOG(MCD, LogLevel::Debug,
-          ("general.config.filename = %s\n", lockFileName.get()));
-
-  for (size_t index = 0, len = mozilla::ArrayLength(gBlockedConfigs);
-       index < len; ++index) {
-    if (lockFileName == gBlockedConfigs[index]) {
-      // This is NS_OK because we don't want to show an error to the user
-      return rv;
-    }
-  }
-
   // This needs to be read only once.
   //
   if (!mRead) {
@@ -174,7 +159,28 @@ nsresult nsReadConfig::readConfigFile() {
     rv = openAndEvaluateJSFile("prefcalls.js", 0, false, false);
     if (NS_FAILED(rv)) return rv;
 
+    rv = openAndEvaluateJSFile("legacy_component.js", 0, false, false);
+    if (NS_FAILED(rv)) return rv;
+
+    // 読み込む内臓autoconfigを増やすことができます。
+    // rv = openAndEvaluateJSFile("[ファイル名]", 0, false, false);
+    // if (NS_FAILED(rv)) return rv;
+
     mRead = true;
+  }
+  rv = defaultPrefBranch->GetCharPref("general.config.filename", lockFileName);
+
+  if (NS_FAILED(rv)) return NS_OK;
+
+  MOZ_LOG(MCD, LogLevel::Debug,
+          ("general.config.filename = %s\n", lockFileName.get()));
+
+  for (size_t index = 0, len = mozilla::ArrayLength(gBlockedConfigs);
+       index < len; ++index) {
+    if (lockFileName == gBlockedConfigs[index]) {
+      // This is NS_OK because we don't want to show an error to the user
+      return rv;
+    }
   }
   // If the lockFileName is nullptr return ok, because no lockFile will be used
 

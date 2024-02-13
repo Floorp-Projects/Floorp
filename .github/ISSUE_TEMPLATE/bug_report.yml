@@ -1,0 +1,93 @@
+name: "\U0001F41B Bug report"
+description: Create a report to help us improve the browser experience.
+title: "[Bug]: "
+labels: [bug]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Friendly Reminder
+        As a team with very limited development time, we require that all issues be described accurately and concisely.
+        Failure to adhere to these guidelines will result in your issue being closed without response.
+  
+        **Feature Requests:** Do not submit them here. Use [Discussions](https://github.com/Floorp-Projects/Floorp/discussions/new?category=feature-request).
+        
+        For Japanese: 日本人の場合は、日本語で書いても構いません。
+  
+        ## Disclaimer
+        **Please note:**
+        - No support for operating systems below Windows 10.
+        - DRM content is not supported. Do not report DRM-related issues.
+
+  - type: checkboxes
+    attributes:
+      label: Pre-Submission Checklist
+      description: Please go through the checklist below before submitting your issue.
+      options:
+        - label: I have checked the existing/closed issues to ensure this issue has not already been reported.
+        - label: I am using the latest supported version of the browser.
+        - label: I have tried disabling all browser extensions/add-ons to rule out interference from these.
+        - label: I have tried clearing the browser cache and cookies.
+        - label: I have tried to create a new profile and the issue still occurs.
+        - label: I have provided detailed step-by-step instructions on how to reproduce the issue.
+        - label: I have included relevant screenshots or console outputs.
+        - label: I have checked this problem is not ocurring in the latest version of Firefox ESR.
+        - label: This issue is specific to this browser and does not occur in other browsers.
+
+  - type: textarea
+    attributes:
+      label: Bug Summary
+      description: Provide a clear, concise description of the bug.
+      placeholder: Brief bug description...
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      description: List the steps to reproduce the behavior.
+      placeholder: "1.\n2.\n3.\n4."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+      description: A clear and concise description of what actually happened. Include screenshots if applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Add screenshots to help explain your problem.
+      placeholder: Drag or paste images or videos to upload (Video is recommended).
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Browser Version
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Operating System
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here, such as specific web pages affected, frequency of the issue, etc.

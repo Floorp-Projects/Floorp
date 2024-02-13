@@ -61,7 +61,8 @@ body {
 #categories {
   display: flex;
   flex-direction: column;
-  padding-inline-end: 4px; /* Leave space for the button focus styles. */
+  padding-inline-end: 4px; 
+  margin-top: 1em;
 }
 
 .category {
@@ -70,13 +71,15 @@ body {
   margin-block: 0;
   align-items: center;
   font-weight: normal;
+  margin-bottom: 10px;
+  margin-left: 12px !important;
 }
 
 .category[badge-count]::after {
   display: inline-block;
   min-width: 20px;
   background-color: var(--in-content-accent-color);
-  color: var(--in-content-primary-button-text-color);
+  color: #fff;
   font-weight: bold;
   /* Use a large border-radius to get semi-circles on the sides. */
   border-radius: 1000px;
@@ -94,7 +97,7 @@ body {
   background-image: url("chrome://mozapps/skin/extensions/category-languages.svg");
 }
 .category[name="extension"] {
-  background-image: url("chrome://mozapps/skin/extensions/category-extensions.svg");
+  background-image: url("chrome://browser/skin/addons.svg");
 }
 .category[name="theme"] {
   background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
@@ -763,6 +766,187 @@ section:not(:empty) ~ #empty-addons-message {
   }
 }
 
+/* Colorways Section */
+
+.monochromatic-addon-list section {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+}
+
+.monochromatic-addon-list .header-name,
+.monochromatic-addon-list .list-section-subheading {
+  flex-basis: 100%;
+}
+
+.monochromatic-addon-list addon-card .card {
+  box-sizing: border-box;
+  height: calc(100% - 16px);
+  overflow: clip;
+  width: calc((var(--section-width) / 3) - 16px);
+}
+
+.monochromatic-addon-list addon-card .card .card-contents {
+  white-space: normal;
+}
+
+/* Remove disabled add-on fade */
+.monochromatic-addon-list addon-card:not([expanded]) > .addon.card[active="false"] {
+  opacity: unset;
+}
+
+.monochromatic-addon-list .addon-name-container {
+  align-items: start;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 3em 1fr;
+  row-gap: 16px;
+}
+
+.monochromatic-addon-list .addon-name-container .addon-name {
+  grid-column-end: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.monochromatic-addon-list .addon-name-container .spacer {
+  display: none;
+}
+
 .permission-header > .addon-sitepermissions-host {
   font-weight: bolder;
+}
+
+.back-button {
+  margin-left: -20px;
+}
+
+  :root {
+    --in-content-page-color: #333333 !important;
+    --in-content-page-background: #f7f7f7 !important;
+    --in-content-deemphasized-text: rgb(105, 105, 105) !important;
+    --in-content-box-background: #fff !important;
+    --in-content-box-background-odd: rgba(0, 0, 0, 0.05) !important;
+    --in-content-box-info-background: #f7f7f7 !important;
+    --in-content-icon-color: #666 !important;
+    --in-content-accent-color: #006CBE !important;
+    --in-content-accent-color-active: #1683D8 !important;
+    --in-content-border-hover: rgba(0, 0, 0, 0.5) !important;
+    --in-content-border-invalid: var(--red-50) !important;
+    --in-content-border-color: #bebebe !important;
+    --in-content-error-text-color: #FF848A !important;
+    --in-content-link-color: #0078D4 !important;
+    --in-content-link-color-hover: #006CBE !important;
+    --in-content-link-color-active: #0749AC !important;
+    --in-content-link-color-visited: #0078D4 !important;
+    --in-content-button-text-color: var(--in-content-text-color) !important;
+    --in-content-button-text-color-hover: var(--in-content-text-color) !important;
+    --in-content-button-text-color-active: var(--in-content-button-text-color-hover) !important;
+    --in-content-button-background: #EDEDED !important;
+    --in-content-button-background-hover: #e5e5e5 !important;
+    --in-content-button-background-active: #d5d5d5 !important;
+    --in-content-primary-button-text-color: #fff !important;
+    --in-content-primary-button-background: #0061e0 !important;
+    --in-content-primary-button-background-hover: #0250bb !important;
+    --in-content-primary-button-background-active: #053e94 !important;
+    --in-content-danger-button-background: #DF4951 !important;
+    --in-content-danger-button-background-hover: #EA656C !important;
+    --in-content-danger-button-background-active: #BB353C !important;
+    --in-content-focus-outline-color: color-mix(in srgb, #0055D7 50%, transparent) !important;
+    --in-content-table-background: #f7f7f7 !important;
+    --in-content-text-color: var(--in-content-page-color) !important;
+    scrollbar-color: rgba(37, 37, 37, 0.4) #f7f7f7 !important;
+  }
+   #sidebar{
+     border-right: solid 0.05px gray;
+  }
+
+  .category {
+    width: 13em;
+  }
+
+  .main-search::before {
+    content: "Extensions";
+    font-size: 23px;
+    font-weight: 600;
+    position: absolute !important;
+    min-height: 34px;
+    top: 23px;
+    left: 10px;
+  }
+
+  #floorp-top{
+    position: absolute;
+    left: 10px;
+  }
+
+  .main-search{
+    border-bottom: solid 0.1px gray;
+    margin-bottom: 15px;
+  }
+
+  .sticky-container{
+    margin-left: 20px;
+    max-width: 700px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --in-content-page-background: #333333 !important;
+      --in-content-page-color: #fff !important;
+      --in-content-deemphasized-text: #bbb !important;
+      --in-content-box-background: rgb(58, 57, 57) !important;
+      --in-content-box-background-odd: rgba(255, 255, 255, 0.05) !important;
+      --in-content-box-info-background: rgba(255, 255, 255, 0.15) !important;
+      --in-content-border-color: rgba(255, 255, 255, 0.2) !important;
+      --in-content-border-hover: rgba(255, 255, 255, 0.3) !important;
+      --in-content-border-invalid: rgb(255, 132, 139) !important;
+      --in-content-error-text-color: #FF9AA2 !important;
+      --in-content-button-background: #3B3B3B !important;
+      --in-content-button-background-hover: #545454 !important;
+      --in-content-button-background-active: #606060 !important;
+      --in-content-icon-color: #fff !important;
+      --in-content-primary-button-text-color: #fff !important;
+      --in-content-primary-button-background: #1977be !important;
+      --in-content-primary-button-background-hover: #2273dd !important;
+      --in-content-primary-button-background-active: #217bc0 !important;
+      --in-content-danger-button-background: #E12424 !important;
+      --in-content-danger-button-background-hover: #F94343 !important;
+      --in-content-danger-button-background-active: #AA1E1E !important;
+      --in-content-focus-outline-color: #63ADE5 !important;
+      --in-content-table-background: #333333 !important;
+      --in-content-accent-color: #75B6E8 !important;
+      --in-content-accent-color-active: #4C98D1 !important;
+      --in-content-link-color: #75B6E8 !important;
+      --in-content-link-color-hover: #63ADE5 !important;
+      --in-content-link-color-active: #4C98D1 !important;
+      --in-content-link-color-visited: var(--in-content-link-color) !important;
+      --card-outline-color: #555 !important;
+      --dialog-warning-text-color: var(--red-40) !important;
+      scrollbar-color: rgba(255, 255, 255, .4) #333333 !important;
+    }
+  }
+
+  .sidebar-footer-link{
+    margin-left: -15px;
+    margin-right: 19px;
+     margin-top: 6px;
+}
+
+.header-name{
+  position: relative;
+  right: 0.6em;
+}
+
+.category[selected]::before {
+  content: "";
+  position: absolute !important;
+  left: 12px;
+  border-left: 3px solid;
+  position: inherit;
+  height: 20px;
+  color: var(--in-content-accent-color) !important;
 }

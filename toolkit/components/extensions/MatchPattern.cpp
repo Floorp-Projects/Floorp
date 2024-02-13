@@ -206,7 +206,7 @@ const nsCString& CookieInfo::RawHost() const {
     return atomSet.forget();                         \
   }
 
-DEFINE_STATIC_ATOM_SET(PermittedSchemes, nsGkAtoms::http, nsGkAtoms::https,
+DEFINE_STATIC_ATOM_SET(PermittedSchemes, nsGkAtoms::http, nsGkAtoms::https, nsGkAtoms::about,
                        nsGkAtoms::ws, nsGkAtoms::wss, nsGkAtoms::file,
                        nsGkAtoms::ftp, nsGkAtoms::data);
 

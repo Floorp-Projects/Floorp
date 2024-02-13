@@ -282,31 +282,13 @@ var SidebarUI = {
    */
   setPosition() {
     // First reset all ordinals to match DOM ordering.
-    let browser = document.getElementById("browser");
-    [...browser.children].forEach((node, i) => {
-      node.style.order = i + 1;
-    });
-
-    if (!this._positionStart) {
-      // DOM ordering is:     |  sidebar-box  | splitter |   appcontent  |
-      // Want to display as:  |   appcontent  | splitter |  sidebar-box  |
-      // So we just swap box and appcontent ordering
-      let appcontent = document.getElementById("appcontent");
-      let boxOrdinal = this._box.style.order;
-      this._box.style.order = appcontent.style.order;
-      appcontent.style.order = boxOrdinal;
-      // Indicate we've switched ordering to the box
-      this._box.setAttribute("positionend", true);
-    } else {
-      this._box.removeAttribute("positionend");
-    }
-
+    this._box.removeAttribute("positionend");
     this.hideSwitcherPanel();
-
+  
     let content = SidebarUI.browser.contentWindow;
-    if (content && content.updatePosition) {
-      content.updatePosition();
-    }
+   if (content && content.updatePosition) {
+     content.updatePosition();
+   }
   },
 
   /**

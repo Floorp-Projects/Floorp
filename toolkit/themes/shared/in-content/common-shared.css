@@ -12,6 +12,7 @@
   --in-content-page-color: rgb(21, 20, 26);
   --in-content-page-background: #fff;
   --in-content-text-color: var(--in-content-page-color);
+  --in-content-deemphasized-text: rgb(91, 91, 102);
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
@@ -21,43 +22,37 @@
   --in-content-item-selected: var(--in-content-primary-button-background);
   --in-content-item-selected-text: var(--in-content-primary-button-text-color);
   --in-content-icon-color: rgb(91,91,102);
-  --in-content-accent-color: var(--in-content-primary-button-background);
-  --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
+  --in-content-accent-color: #0a84ff;
+  --in-content-accent-color-active: #0060df;
   --in-content-border-hover: var(--grey-90-a50);
   --in-content-border-invalid: var(--red-50);
   --in-content-border-color: #d7d7db;
   --in-content-error-text-color: #c50042;
-  --in-content-success-icon-color: #2ac3a2;
-  --in-content-link-color: var(--in-content-primary-button-background);
-  --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-  --in-content-link-color-active: var(--in-content-primary-button-background-active);
-  --in-content-link-color-visited: var(--in-content-link-color);
+  --in-content-link-color: var(--blue-60);
+  --in-content-link-color-hover: var(--blue-70);
+  --in-content-link-color-active: var(--blue-80);
+  --in-content-link-color-visited: var(--blue-60);
+   /* button background states are also used for checkboxes and radiobuttons */
   --in-content-button-text-color: var(--in-content-text-color);
   --in-content-button-text-color-hover: var(--in-content-text-color);
   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-   /* button background states are also used for checkboxes and radiobuttons */
-  --in-content-button-background: color-mix(in srgb, currentColor 7%, transparent);
-  --in-content-button-background-hover: color-mix(in srgb, currentColor 14%, transparent);
-  --in-content-button-background-active: color-mix(in srgb, currentColor 21%, transparent);
+  --in-content-button-background: rgba(207,207,216,.33);
+  --in-content-button-background-hover: rgba(207,207,216,.66);
+  --in-content-button-background-active: rgb(207,207,216);
   --in-content-button-border-color: transparent;
   --in-content-button-border-color-hover: transparent;
   --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
   --in-content-primary-button-text-color: rgb(251,251,254);
   --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-text-color-active: var(--in-content-primary-button-text-color);
-  --in-content-primary-button-background: #0061e0;
+  --in-content-primary-button-background: #0050fc;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
   --in-content-primary-button-border-color: transparent;
   --in-content-primary-button-border-hover: transparent;
-  --in-content-primary-button-border-active: transparent;
   --in-content-danger-button-background: #e22850;
   --in-content-danger-button-background-hover: #c50042;
   --in-content-danger-button-background-active: #810220;
-  --in-content-focus-outline-color: var(--focus-outline-color);
-  --in-content-focus-outline-width: var(--focus-outline-width);
-  --in-content-focus-outline-offset: var(--focus-outline-offset);
-  --in-content-focus-outline-inset: var(--focus-outline-inset);
+  --in-content-focus-outline-color: var(--in-content-primary-button-background);
   --in-content-focus-outline: var(--focus-outline);
 
   --in-content-table-background: #f8f8fa;
@@ -81,6 +76,8 @@
   --blue-40: #45a1ff;
   --blue-50: #0a84ff;
   --blue-60: #0060df;
+  --blue-70: #003eaa;
+  --blue-80: #002275;
   --grey-30: #d7d7db;
   --grey-60: #4a4a4f;
   --grey-90-a10: rgba(12, 12, 13, 0.1);
@@ -132,10 +129,12 @@
      * just replace most of these for system colors and remove all this
      * duplication (assuming we honor the preferred color scheme for
      * in-content privileged pages and plain-text documents). */
-    --in-content-page-background: rgb(28,27,34);
+    --in-content-page-background:#333333;
     --in-content-page-color: rgb(251,251,254);
+    --in-content-deemphasized-text: rgb(191,191,201);
+    --in-content-primary-button-text-color-active: rgb(59, 59, 59);
 
-    --in-content-box-background: rgb(35, 34, 43);
+    --in-content-box-background: rgb(53, 53, 53);
     --in-content-box-background-odd: rgba(249,249,250,0.05);
     --in-content-box-info-background: rgba(249,249,250,0.15);
 
@@ -146,10 +145,13 @@
     --in-content-error-text-color: #FF9AA2;
     --in-content-success-icon-color: #54FFBD;
 
+    --in-content-button-background: rgb(77, 77, 77);
+    --in-content-button-background-hover: rgb(82,82,94);
+    --in-content-button-background-active: rgb(91,91,102);
     --in-content-icon-color: rgb(251,251,254);
 
     --in-content-primary-button-text-color: rgb(43,42,51);
-    --in-content-primary-button-background: rgb(0,221,255);
+    --in-content-primary-button-background: #58c1ff;
     --in-content-primary-button-background-hover: rgb(128,235,255);
     --in-content-primary-button-background-active: rgb(170,242,255);
 
@@ -157,7 +159,14 @@
     --in-content-danger-button-background-hover: #ffbdc5;
     --in-content-danger-button-background-active: #ffdfe7;
 
-    --in-content-table-background: rgb(35, 34, 43);
+    --in-content-table-background: rgb(45,45,45);
+
+    --in-content-accent-color: var(--in-content-primary-button-background);
+    --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
+    --in-content-link-color: var(--in-content-primary-button-background);
+    --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
+    --in-content-link-color-active: var(--in-content-primary-button-background-active);
+    --in-content-link-color-visited: var(--in-content-link-color);
 
     --card-outline-color: var(--grey-60);
 
@@ -174,7 +183,7 @@
     /* Also need this on dialog :hosts, or the rule above will override the
      * value for this custom property again in the shadow DOM. */
     :host(dialog) {
-      --in-content-page-background: #42414d;
+      --in-content-page-background:#333333;
     }
   }
 }
@@ -1137,7 +1146,7 @@ xul|treechildren::-moz-tree-row(selected) {
 @media not (prefers-contrast) {
   xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
     /* Ensure buttons/menulists inside richlistitems (containers, applications) look OK */
-    --in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
+    --in-content-button-background: rgb(77,77,77);
     --in-content-button-background-hover: color-mix(in srgb, currentColor 30%, transparent);
     --in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
     --in-content-button-text-color: var(--in-content-item-selected-text);

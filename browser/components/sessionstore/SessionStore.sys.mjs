@@ -581,6 +581,18 @@ export var SessionStore = {
           aState.selectedWindow--;
         }
       }
+
+      // Floorp injections
+      // Remove SSB window state.
+      // SSB windows should be not restored, so we don't need to keep their state.
+      for(let j = 0; j < win.tabs.length; j++) {
+        if(win.tabs[j].floorpSSB) {
+          win.tabs.splice(j, 1);
+          if (aState.selectedWindow > i) {
+            aState.selectedWindow--;
+          }
+        }
+      }
     }
   },
 
@@ -864,6 +876,14 @@ var SessionStoreInternal = {
             1
           );
         } else {
+          if (state && state.windows) {
+            for (let win of state.windows) {
+              if(win.isWebpanelWindow) {
+                state.windows.splice(state.windows.indexOf(win), 1);
+              }
+            }
+          }
+
           // Get the last deferred session in case the user still wants to
           // restore it
           LastSession.setState(state.lastSessionState);
@@ -1908,6 +1928,14 @@ var SessionStoreInternal = {
    */
   onClose: function ssi_onClose(aWindow) {
     let completionPromise = Promise.resolve();
+
+    // Floorp Injections
+    if (
+      aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
+      "true"
+    ) {
+      return completionPromise;
+    }
     // this window was about to be restored - conserve its original data, if any
     let isFullyLoaded = this._isWindowLoaded(aWindow);
     if (!isFullyLoaded) {
@@ -4039,6 +4067,19 @@ var SessionStoreInternal = {
       winData.sizemodeBeforeMinimized = winData.sizemode;
     }
 
+    // Floorp Injections
+    let windowUuid = aWindow.gWorkspaces._windowId;
+    if (windowUuid) {
+      winData.windowUuid = windowUuid;
+    } else {
+      delete winData.windowUuid;
+    }
+
+    let isWebpanelWindow = aWindow.IsWebpanelWindow;
+    winData.isWebpanelWindow = !!isWebpanelWindow;
+
+    // Floorp Injections end
+
     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function (aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
     });
@@ -4737,6 +4778,10 @@ var SessionStoreInternal = {
       return;
     }
 
+    if (tabData.floorpDisableHistory || tabData.floorpWebpanel) {
+      return;
+    }
+
     let loadArguments = options.loadArguments;
     let window = tab.ownerGlobal;
     let tabbrowser = window.gBrowser;
@@ -5084,7 +5129,8 @@ var SessionStoreInternal = {
         "screenY" in aWinData ? +aWinData.screenY : NaN,
         aWinData.sizemode || "",
         aWinData.sizemodeBeforeMinimized || "",
-        aWinData.sidebar || ""
+        aWinData.sidebar || "",
+        aWinData.windowUuid || ""
       );
     }, 0);
   },
@@ -5114,7 +5160,8 @@ var SessionStoreInternal = {
     aTop,
     aSizeMode,
     aSizeModeBeforeMinimized,
-    aSidebar
+    aSidebar,
+    aWindowId
   ) {
     var win = aWindow;
     var _this = this;
@@ -5264,6 +5311,18 @@ var SessionStoreInternal = {
       ) {
         aWindow.SidebarUI.showInitially(aSidebar);
       }
+
+      let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
+        "resource:///modules/WorkspacesService.sys.mjs"
+      );
+
+      // workspaces Window Id
+      if (aWindowId) {
+        aWindow.gWorkspaces._windowId = aWindowId;
+      } else {
+        aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
+      }
+
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window
       if (this.windowToFocus) {

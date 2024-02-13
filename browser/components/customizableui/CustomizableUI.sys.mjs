@@ -1825,7 +1825,8 @@ var CustomizableUIInternal = {
   },
 
   buildWidget(aDocument, aWidget) {
-    if (aDocument.documentURI != kExpectedWindowURL) {
+    // Floorp Injections
+    if (!aDocument.documentURI.startsWith(kExpectedWindowURL)) {
       throw new Error("buildWidget was called for a non-browser window!");
     }
     if (typeof aWidget == "string") {
@@ -3255,7 +3256,7 @@ var CustomizableUIInternal = {
     Services.prefs.clearUserPref(kPrefUIDensity);
     Services.prefs.clearUserPref(kPrefAutoTouchMode);
     Services.prefs.clearUserPref(kPrefAutoHideDownloadsButton);
-    gDefaultTheme.enable();
+    // gDefaultTheme.enable();
     gNewElementCount = 0;
     lazy.log.debug("State reset");
 

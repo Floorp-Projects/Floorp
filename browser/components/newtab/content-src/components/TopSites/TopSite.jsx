@@ -338,6 +338,7 @@ export class TopSiteLink extends React.PureComponent {
         onDragLeave={this.onDragEvent}
         {...draggableProps}
       >
+        <div className="background" />
         <div className="top-site-inner">
           {/* We don't yet support an accessible drag-and-drop implementation, see Bug 1552005 */}
           {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}

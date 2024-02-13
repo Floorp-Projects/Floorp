@@ -49,12 +49,6 @@ Preferences.addAll([
   { id: "browser.startup.page", type: "int" },
   { id: "browser.privatebrowsing.autostart", type: "bool" },
 
-  // Downloads
-  { id: "browser.download.useDownloadDir", type: "bool", inverted: true },
-  { id: "browser.download.always_ask_before_handling_new_types", type: "bool" },
-  { id: "browser.download.folderList", type: "int" },
-  { id: "browser.download.dir", type: "file" },
-
   /* Tab preferences
   Preferences:
 
@@ -137,9 +131,6 @@ Preferences.addAll([
   { id: "dom.ipc.processCount", type: "int" },
   { id: "dom.ipc.processCount.web", type: "int" },
   { id: "layers.acceleration.disabled", type: "bool", inverted: true },
-
-  // Files and Applications
-  { id: "pref.downloads.disable_button.edit_actions", type: "bool" },
 
   // DRM content
   { id: "media.eme.enabled", type: "bool" },
@@ -461,7 +452,6 @@ var gMainPane = {
       gMainPane._rebuildFonts.bind(gMainPane)
     );
     setEventListener("advancedFonts", "command", gMainPane.configureFonts);
-    setEventListener("colors", "command", gMainPane.configureColors);
     Preferences.get("layers.acceleration.disabled").on(
       "change",
       gMainPane.updateHardwareAcceleration.bind(gMainPane)
@@ -683,7 +673,7 @@ var gMainPane = {
           );
           wrk.open(
             wrk.ROOT_KEY_LOCAL_MACHINE,
-            "SOFTWARE\\Mozilla\\MaintenanceService",
+            "SOFTWARE\\Ablaze\\MaintenanceService",
             wrk.ACCESS_READ | wrk.WOW64_64
           );
           installed = wrk.readIntValue("Installed");
@@ -702,36 +692,8 @@ var gMainPane = {
     Services.obs.addObserver(this, AUTO_UPDATE_CHANGED_TOPIC);
     Services.obs.addObserver(this, BACKGROUND_UPDATE_CHANGED_TOPIC);
 
-    setEventListener("filter", "command", gMainPane.filter);
-    setEventListener("typeColumn", "click", gMainPane.sort);
-    setEventListener("actionColumn", "click", gMainPane.sort);
-    setEventListener("chooseFolder", "command", gMainPane.chooseFolder);
-    Preferences.get("browser.download.folderList").on(
-      "change",
-      gMainPane.displayDownloadDirPref.bind(gMainPane)
-    );
-    Preferences.get("browser.download.dir").on(
-      "change",
-      gMainPane.displayDownloadDirPref.bind(gMainPane)
-    );
-    gMainPane.displayDownloadDirPref();
-
     // Listen for window unload so we can remove our preference observers.
     window.addEventListener("unload", this);
-
-    // Figure out how we should be sorting the list.  We persist sort settings
-    // across sessions, so we can't assume the default sort column/direction.
-    // XXX should we be using the XUL sort service instead?
-    if (document.getElementById("actionColumn").hasAttribute("sortDirection")) {
-      this._sortColumn = document.getElementById("actionColumn");
-      // The typeColumn element always has a sortDirection attribute,
-      // either because it was persisted or because the default value
-      // from the xul file was used.  If we are sorting on the other
-      // column, we should remove it.
-      document.getElementById("typeColumn").removeAttribute("sortDirection");
-    } else {
-      this._sortColumn = document.getElementById("typeColumn");
-    }
 
     let browserBundle = document.getElementById("browserBundle");
     appendSearchKeywords("browserContainersSettings", [
@@ -740,8 +702,6 @@ var gMainPane = {
       browserBundle.getString("userContextBanking.label"),
       browserBundle.getString("userContextShopping.label"),
     ]);
-
-    AppearanceChooser.init();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "main-pane-loaded");
@@ -767,10 +727,6 @@ var gMainPane = {
       () => this.writeCheckSpelling()
     );
     Preferences.addSyncFromPrefListener(
-      document.getElementById("alwaysAsk"),
-      () => this.readUseDownloadDir()
-    );
-    Preferences.addSyncFromPrefListener(
       document.getElementById("linkTargeting"),
       () => this.readLinkTarget()
     );
@@ -786,7 +742,7 @@ var gMainPane = {
     this.setInitialized();
   },
 
-  preInit() {
+  preInit() {/*
     promiseLoadHandlersList = new Promise((resolve, reject) => {
       // Load the data and build the list of handlers for applications pane.
       // By doing this after pageshow, we ensure it doesn't delay painting
@@ -808,7 +764,7 @@ var gMainPane = {
         },
         { once: true }
       );
-    });
+    });*/
   },
 
   handleSubcategory(subcategory) {

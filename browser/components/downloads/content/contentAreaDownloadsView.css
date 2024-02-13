@@ -6,3 +6,25 @@
 #downloadsListBox:empty {
   display: none;
 }
+
+
+#contentAreaDownloadsView {
+  background: var(--toolbar-bgcolor);
+}
+
+#downloadsListBox {
+  border: none;
+  background: none;
+}
+
+#contentAreaDownloadsView {
+  padding: 5px;
+}
+
+.downloadContainer {
+  max-width: 65vw;
+}
+
+.downloadContainer > * {
+  width: inherit;
+}

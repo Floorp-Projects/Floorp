@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * www.kucharkaprodceru.cz - Scrolling up triggers pull-refresh
+ * Bug #1849388 - https://bugzilla.mozilla.org/show_bug.cgi?id=1849388
+ * WebCompat issue #123452 - https://github.com/webcompat/web-bugs/issues/123452
+ *
+ * The site uses older version of jquery.nicescroll.js which adds
+ * overflow-y: auto to the body element only in Firefox. Resetting
+ * makes the scrolling work as expected
+ */
+
+body {
+  overflow-y: auto !important;
+}

@@ -72,6 +72,26 @@ var UAHelpers = {
       .replace(`Firefox/${ver[1]}`, "Firefox/99.0")
       .replace(`rv:${ver[1]}`, "rv:99.0");
   },
+  capRvTo109(originalUA) {
+    const ver = originalUA.match(/rv:(\d+\.\d+)/);
+    if (!ver || parseFloat(ver[1]) <= 109) {
+      return originalUA;
+    }
+    return originalUA.replace(`rv:${ver[1]}`, "rv:109.0");
+  },
+  capVersionToNumber(originalUA, cap = 120) {
+    const ver = originalUA.match(/Firefox\/(\d+\.\d+)/);
+    if (!ver || parseFloat(ver[1]) <= cap) {
+      return originalUA;
+    }
+    const capped = `Firefox/${cap}.0`;
+    return originalUA.replace(`Firefox/${ver[1]}`, capped);
+  },
+  getWindowsUA(originalUA) {
+    const rv = originalUA.match("rv:[0-9]+.[0-9]+")[0];
+    const ver = originalUA.match("Firefox/[0-9]+.[0-9]+")[0];
+    return `Mozilla/5.0 (Windows NT 10.0; Win64; x64; ${rv}) Gecko/20100101 ${ver}`;
+  },
 };
 
 if (typeof module !== "undefined") {
