@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"  // RefPtr, mozilla::StaticRefPtr
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ThreadLocal.h"  // MOZ_THREAD_LOCAL
 #include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 #include "nsIURI.h"
@@ -315,13 +316,15 @@ class MOZ_STACK_CLASS NonSharedGlobalSyncModuleLoaderScope {
 
   static mozJSModuleLoader* ActiveLoader();
 
+  static void InitStatics();
+
  private:
   RefPtr<mozJSModuleLoader> mLoader;
 
-  // The module loader on the stack.
+  // Reference to thread-local module loader on the stack.
   // This is used by another sync module load during a sync module load is
   // ongoing.
-  static mozJSModuleLoader* sActiveLoader;
+  static MOZ_THREAD_LOCAL(mozJSModuleLoader*) sTlsActiveLoader;
 
   // The module loader of the target global.
   RefPtr<JS::loader::ModuleLoaderBase> mAsyncModuleLoader;
