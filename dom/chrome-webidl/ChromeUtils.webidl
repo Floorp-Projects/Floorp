@@ -314,6 +314,25 @@ namespace ChromeUtils {
   Promise<sequence<CDMInformation>> getGMPContentDecryptionModuleInformation();
 
   /**
+   * Synchronously loads and evaluates the JS module source located at
+   * 'aResourceURI'.
+   *
+   * @param aResourceURI A resource:// URI string to load the module from.
+   * @param aOption An option to specify where to load the module into.
+   * @returns the module's namespace object.
+   *
+   * The implementation maintains a hash of aResourceURI->global obj.
+   * Subsequent invocations of import with 'aResourceURI' pointing to
+   * the same file will not cause the module to be re-evaluated.
+   *
+   * In worker threads, aOption is required and only { global: "current" } and
+   * { global: "contextual" } are supported.
+   */
+  [Throws]
+  object importESModule(DOMString aResourceURI,
+                        optional ImportESModuleOptionsDictionary aOptions = {});
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };
@@ -507,22 +526,6 @@ partial namespace ChromeUtils {
    */
   [Throws]
   object import(UTF8String aResourceURI, optional object aTargetObj);
-
-  /**
-   * Synchronously loads and evaluates the JS module source located at
-   * 'aResourceURI'.
-   *
-   * @param aResourceURI A resource:// URI string to load the module from.
-   * @param aOption An option to specify where to load the module into.
-   * @returns the module's namespace object.
-   *
-   * The implementation maintains a hash of aResourceURI->global obj.
-   * Subsequent invocations of import with 'aResourceURI' pointing to
-   * the same file will not cause the module to be re-evaluated.
-   */
-  [Throws]
-  object importESModule(DOMString aResourceURI,
-                        optional ImportESModuleOptionsDictionary aOptions = {});
 
   /**
    * Defines a property on the given target which lazily imports a JavaScript
@@ -1004,6 +1007,7 @@ enum ImportESModuleTargetGlobal {
   /**
    * If the current global is DevTools' distinct system global, load into the
    * DevTools' distinct system global.
+   * If the current thread is worker thread, load into the current global.
    * Otherwise load into the shared system global.
    *
    * This is a temporary workaround until DevTools modules are ESMified.
