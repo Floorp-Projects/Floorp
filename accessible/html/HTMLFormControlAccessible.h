@@ -117,7 +117,7 @@ class HTMLTextFieldAccessible : public HyperTextAccessible {
   virtual ~HTMLTextFieldAccessible() {}
 
   // LocalAccessible
-  virtual ENameValueFlag NativeName(nsString& aName) const override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
 
   virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                    int32_t aModType,
