@@ -8160,6 +8160,8 @@ static bool GetDefaultLocale(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars locale = JS_GetDefaultLocale(cx);
   if (!locale) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_DEFAULT_LOCALE_ERROR);
     return false;
   }
 
