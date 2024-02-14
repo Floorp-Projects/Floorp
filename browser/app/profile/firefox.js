@@ -498,7 +498,7 @@ pref("browser.urlbar.quicksuggest.enabled", false);
 
 // Whether Firefox Suggest will use the new Rust backend instead of the original
 // JS backend.
-pref("browser.urlbar.quicksuggest.rustEnabled", false);
+pref("browser.urlbar.quicksuggest.rustEnabled", true);
 
 // Whether to show the QuickSuggest onboarding dialog.
 pref("browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true);

@@ -89,32 +89,37 @@ add_tasks_with_rust(async function () {
 //
 // JS backend only. The Rust component expects settings data to contain
 // min_keyword_length.
-add_task(async function () {
-  await doKeywordsTest({
-    desc: "Settings only, keywords only",
-    settingsData: {
-      keywords: ["weather", "forecast"],
-    },
-    tests: {
-      "": false,
-      w: false,
-      we: false,
-      wea: false,
-      weat: false,
-      weath: false,
-      weathe: false,
-      weather: true,
-      f: false,
-      fo: false,
-      for: false,
-      fore: false,
-      forec: false,
-      foreca: false,
-      forecas: false,
-      forecast: true,
-    },
-  });
-});
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function () {
+    await doKeywordsTest({
+      desc: "Settings only, keywords only",
+      settingsData: {
+        keywords: ["weather", "forecast"],
+      },
+      tests: {
+        "": false,
+        w: false,
+        we: false,
+        wea: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        weather: true,
+        f: false,
+        fo: false,
+        for: false,
+        fore: false,
+        forec: false,
+        foreca: false,
+        forecas: false,
+        forecast: true,
+      },
+    });
+  }
+);
 
 // * Settings data: keywords and min keyword length = 0
 // * Nimbus values: none
@@ -123,33 +128,38 @@ add_task(async function () {
 //
 // JS backend only. The Rust component doesn't treat minKeywordLength == 0 as a
 // special case.
-add_task(async function () {
-  await doKeywordsTest({
-    desc: "Settings only, min keyword length = 0",
-    settingsData: {
-      keywords: ["weather", "forecast"],
-      min_keyword_length: 0,
-    },
-    tests: {
-      "": false,
-      w: false,
-      we: false,
-      wea: false,
-      weat: false,
-      weath: false,
-      weathe: false,
-      weather: true,
-      f: false,
-      fo: false,
-      for: false,
-      fore: false,
-      forec: false,
-      foreca: false,
-      forecas: false,
-      forecast: true,
-    },
-  });
-});
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function () {
+    await doKeywordsTest({
+      desc: "Settings only, min keyword length = 0",
+      settingsData: {
+        keywords: ["weather", "forecast"],
+        min_keyword_length: 0,
+      },
+      tests: {
+        "": false,
+        w: false,
+        we: false,
+        wea: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        weather: true,
+        f: false,
+        fo: false,
+        for: false,
+        fore: false,
+        forec: false,
+        foreca: false,
+        forecas: false,
+        forecast: true,
+      },
+    });
+  }
+);
 
 // * Settings data: keywords and min keyword length > 0
 // * Nimbus values: none
@@ -286,35 +296,40 @@ add_tasks_with_rust(async function () {
 //
 // JS backend only. The Rust component expects settings data to contain
 // min_keyword_length.
-add_task(async function () {
-  await doKeywordsTest({
-    desc: "Settings: keywords; Nimbus: keywords",
-    settingsData: {
-      keywords: ["weather"],
-    },
-    nimbusValues: {
-      weatherKeywords: ["forecast"],
-    },
-    tests: {
-      "": false,
-      w: false,
-      we: false,
-      wea: false,
-      weat: false,
-      weath: false,
-      weathe: false,
-      weather: false,
-      f: false,
-      fo: false,
-      for: false,
-      fore: false,
-      forec: false,
-      foreca: false,
-      forecas: false,
-      forecast: true,
-    },
-  });
-});
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function () {
+    await doKeywordsTest({
+      desc: "Settings: keywords; Nimbus: keywords",
+      settingsData: {
+        keywords: ["weather"],
+      },
+      nimbusValues: {
+        weatherKeywords: ["forecast"],
+      },
+      tests: {
+        "": false,
+        w: false,
+        we: false,
+        wea: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        weather: false,
+        f: false,
+        fo: false,
+        for: false,
+        fore: false,
+        forec: false,
+        foreca: false,
+        forecas: false,
+        forecast: true,
+      },
+    });
+  }
+);
 
 // * Settings data: keywords and min keyword length = 0
 // * Nimbus values: keywords only
@@ -323,36 +338,41 @@ add_task(async function () {
 //
 // JS backend only. The Rust component doesn't treat minKeywordLength == 0 as a
 // special case.
-add_task(async function () {
-  await doKeywordsTest({
-    desc: "Settings: keywords, min keyword length = 0; Nimbus: keywords",
-    settingsData: {
-      keywords: ["weather"],
-      min_keyword_length: 0,
-    },
-    nimbusValues: {
-      weatherKeywords: ["forecast"],
-    },
-    tests: {
-      "": false,
-      w: false,
-      we: false,
-      wea: false,
-      weat: false,
-      weath: false,
-      weathe: false,
-      weather: false,
-      f: false,
-      fo: false,
-      for: false,
-      fore: false,
-      forec: false,
-      foreca: false,
-      forecas: false,
-      forecast: true,
-    },
-  });
-});
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function () {
+    await doKeywordsTest({
+      desc: "Settings: keywords, min keyword length = 0; Nimbus: keywords",
+      settingsData: {
+        keywords: ["weather"],
+        min_keyword_length: 0,
+      },
+      nimbusValues: {
+        weatherKeywords: ["forecast"],
+      },
+      tests: {
+        "": false,
+        w: false,
+        we: false,
+        wea: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        weather: false,
+        f: false,
+        fo: false,
+        for: false,
+        fore: false,
+        forec: false,
+        foreca: false,
+        forecas: false,
+        forecast: true,
+      },
+    });
+  }
+);
 
 // * Settings data: keywords and min keyword length > 0
 // * Nimbus values: keywords only
@@ -558,32 +578,37 @@ add_tasks_with_rust(async function () {
 // TODO bug 1879209: This doesn't work with the Rust backend because if
 // min_keyword_length isn't specified on ingest, the Rust database will retain
 // the last known good min_keyword_length, which interferes with this task.
-add_task(async function () {
-  await doKeywordsTest({
-    desc: "Settings: none; Nimbus: keywords",
-    nimbusValues: {
-      weatherKeywords: ["weather", "forecast"],
-    },
-    tests: {
-      "": false,
-      w: false,
-      we: false,
-      wea: false,
-      weat: false,
-      weath: false,
-      weathe: false,
-      weather: true,
-      f: false,
-      fo: false,
-      for: false,
-      fore: false,
-      forec: false,
-      foreca: false,
-      forecas: false,
-      forecast: true,
-    },
-  });
-});
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function () {
+    await doKeywordsTest({
+      desc: "Settings: none; Nimbus: keywords",
+      nimbusValues: {
+        weatherKeywords: ["weather", "forecast"],
+      },
+      tests: {
+        "": false,
+        w: false,
+        we: false,
+        wea: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        weather: true,
+        f: false,
+        fo: false,
+        for: false,
+        fore: false,
+        forec: false,
+        foreca: false,
+        forecas: false,
+        forecast: true,
+      },
+    });
+  }
+);
 
 // * Settings data: none
 // * Nimbus values: keywords and min keyword length = 0
@@ -593,33 +618,38 @@ add_task(async function () {
 // TODO bug 1879209: This doesn't work with the Rust backend because if
 // min_keyword_length isn't specified on ingest, the Rust database will retain
 // the last known good min_keyword_length, which interferes with this task.
-add_task(async function () {
-  await doKeywordsTest({
-    desc: "Settings: none; Nimbus: keywords, min keyword length = 0",
-    nimbusValues: {
-      weatherKeywords: ["weather", "forecast"],
-      weatherKeywordsMinimumLength: 0,
-    },
-    tests: {
-      "": false,
-      w: false,
-      we: false,
-      wea: false,
-      weat: false,
-      weath: false,
-      weathe: false,
-      weather: true,
-      f: false,
-      fo: false,
-      for: false,
-      fore: false,
-      forec: false,
-      foreca: false,
-      forecas: false,
-      forecast: true,
-    },
-  });
-});
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function () {
+    await doKeywordsTest({
+      desc: "Settings: none; Nimbus: keywords, min keyword length = 0",
+      nimbusValues: {
+        weatherKeywords: ["weather", "forecast"],
+        weatherKeywordsMinimumLength: 0,
+      },
+      tests: {
+        "": false,
+        w: false,
+        we: false,
+        wea: false,
+        weat: false,
+        weath: false,
+        weathe: false,
+        weather: true,
+        f: false,
+        fo: false,
+        for: false,
+        fore: false,
+        forec: false,
+        foreca: false,
+        forecas: false,
+        forecast: true,
+      },
+    });
+  }
+);
 
 // * Settings data: none
 // * Nimbus values: keywords and min keyword length > 0

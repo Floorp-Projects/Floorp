@@ -59,7 +59,7 @@ export class PocketSuggestions extends BaseFeature {
   get canShowLessFrequently() {
     let cap =
       lazy.UrlbarPrefs.get("pocketShowLessFrequentlyCap") ||
-      lazy.QuickSuggest.jsBackend.config.show_less_frequently_cap ||
+      lazy.QuickSuggest.backend.config?.showLessFrequentlyCap ||
       0;
     return !cap || this.showLessFrequentlyCount < cap;
   }

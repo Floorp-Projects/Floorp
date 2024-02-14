@@ -14,47 +14,59 @@ add_setup(async function () {
 add_task(async function exposureSponsoredOnEngagement() {
   await doExposureTest({
     prefs: [
-      ["browser.urlbar.exposureResults", "rs_adm_sponsored"],
+      ["browser.urlbar.exposureResults", suggestResultType("adm_sponsored")],
       ["browser.urlbar.showExposureResults", true],
     ],
     query: SPONSORED_QUERY,
     trigger: () => doClick(),
-    assert: () => assertExposureTelemetry([{ results: "rs_adm_sponsored" }]),
+    assert: () =>
+      assertExposureTelemetry([
+        { results: suggestResultType("adm_sponsored") },
+      ]),
   });
 });
 
 add_task(async function exposureSponsoredOnAbandonment() {
   await doExposureTest({
     prefs: [
-      ["browser.urlbar.exposureResults", "rs_adm_sponsored"],
+      ["browser.urlbar.exposureResults", suggestResultType("adm_sponsored")],
       ["browser.urlbar.showExposureResults", true],
     ],
     query: SPONSORED_QUERY,
     trigger: () => doBlur(),
-    assert: () => assertExposureTelemetry([{ results: "rs_adm_sponsored" }]),
+    assert: () =>
+      assertExposureTelemetry([
+        { results: suggestResultType("adm_sponsored") },
+      ]),
   });
 });
 
 add_task(async function exposureFilter() {
   await doExposureTest({
     prefs: [
-      ["browser.urlbar.exposureResults", "rs_adm_sponsored"],
+      ["browser.urlbar.exposureResults", suggestResultType("adm_sponsored")],
       ["browser.urlbar.showExposureResults", false],
     ],
     query: SPONSORED_QUERY,
     select: async () => {
       // assert that the urlbar has no results
-      Assert.equal(await getResultByType("rs_adm_sponsored"), null);
+      Assert.equal(
+        await getResultByType(suggestResultType("adm_sponsored")),
+        null
+      );
     },
     trigger: () => doBlur(),
-    assert: () => assertExposureTelemetry([{ results: "rs_adm_sponsored" }]),
+    assert: () =>
+      assertExposureTelemetry([
+        { results: suggestResultType("adm_sponsored") },
+      ]),
   });
 });
 
 add_task(async function innerQueryExposure() {
   await doExposureTest({
     prefs: [
-      ["browser.urlbar.exposureResults", "rs_adm_sponsored"],
+      ["browser.urlbar.exposureResults", suggestResultType("adm_sponsored")],
       ["browser.urlbar.showExposureResults", true],
     ],
     query: NONSPONSORED_QUERY,
@@ -67,14 +79,17 @@ add_task(async function innerQueryExposure() {
       await defaultSelect(SPONSORED_QUERY);
       await doClick();
     },
-    assert: () => assertExposureTelemetry([{ results: "rs_adm_sponsored" }]),
+    assert: () =>
+      assertExposureTelemetry([
+        { results: suggestResultType("adm_sponsored") },
+      ]),
   });
 });
 
 add_task(async function innerQueryInvertedExposure() {
   await doExposureTest({
     prefs: [
-      ["browser.urlbar.exposureResults", "rs_adm_sponsored"],
+      ["browser.urlbar.exposureResults", suggestResultType("adm_sponsored")],
       ["browser.urlbar.showExposureResults", true],
     ],
     query: SPONSORED_QUERY,
@@ -87,7 +102,10 @@ add_task(async function innerQueryInvertedExposure() {
       await defaultSelect(SPONSORED_QUERY);
       await doClick();
     },
-    assert: () => assertExposureTelemetry([{ results: "rs_adm_sponsored" }]),
+    assert: () =>
+      assertExposureTelemetry([
+        { results: suggestResultType("adm_sponsored") },
+      ]),
   });
 });
 
@@ -96,12 +114,23 @@ add_task(async function multipleProviders() {
     prefs: [
       [
         "browser.urlbar.exposureResults",
-        "rs_adm_sponsored,rs_adm_nonsponsored",
+        [
+          suggestResultType("adm_sponsored"),
+          suggestResultType("adm_nonsponsored"),
+        ].join(","),
       ],
       ["browser.urlbar.showExposureResults", true],
     ],
     query: NONSPONSORED_QUERY,
     trigger: () => doClick(),
-    assert: () => assertExposureTelemetry([{ results: "rs_adm_nonsponsored" }]),
+    assert: () =>
+      assertExposureTelemetry([
+        { results: suggestResultType("adm_nonsponsored") },
+      ]),
   });
 });
+
+function suggestResultType(typeWithoutSource) {
+  let source = UrlbarPrefs.get("quickSuggestRustEnabled") ? "rust" : "rs";
+  return `${source}_${typeWithoutSource}`;
+}

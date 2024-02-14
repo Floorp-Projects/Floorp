@@ -536,7 +536,9 @@ add_task(async function selected_result_site_specific_contextual_search() {
 });
 
 add_task(async function selected_result_rs_adm_sponsored() {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    prefs: [["quicksuggest.rustEnabled", false]],
+  });
 
   await doTest(async browser => {
     await openPopup("sponsored");
@@ -558,7 +560,9 @@ add_task(async function selected_result_rs_adm_sponsored() {
 });
 
 add_task(async function selected_result_rs_adm_nonsponsored() {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    prefs: [["quicksuggest.rustEnabled", false]],
+  });
 
   await doTest(async browser => {
     await openPopup("nonsponsored");
@@ -611,9 +615,12 @@ add_task(async function selected_result_weather() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
   await MerinoTestUtils.initWeather();
 
+  let provider = UrlbarPrefs.get("quickSuggestRustEnabled")
+    ? "UrlbarProviderQuickSuggest"
+    : "Weather";
   await doTest(async browser => {
     await openPopup(MerinoTestUtils.WEATHER_KEYWORD);
-    await selectRowByProvider("Weather");
+    await selectRowByProvider(provider);
     await doEnter();
 
     assertEngagementTelemetry([
@@ -621,7 +628,7 @@ add_task(async function selected_result_weather() {
         selected_result: "weather",
         selected_result_subtype: "",
         selected_position: 2,
-        provider: "Weather",
+        provider,
         results: "search_engine,weather",
       },
     ]);

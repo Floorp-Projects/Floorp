@@ -22,25 +22,12 @@ const NON_SPONSORED_SEARCH_STRING = "nonspon";
 const TEST_URL = "http://example.com/quicksuggest";
 
 const REMOTE_SETTINGS_RESULTS = [
-  {
-    id: 1,
-    url: `${TEST_URL}?q=${SPONSORED_SEARCH_STRING}`,
-    title: "frabbits",
+  QuickSuggestTestUtils.ampRemoteSettings({
     keywords: [SPONSORED_SEARCH_STRING],
-    click_url: "http://click.reporting.test.com/",
-    impression_url: "http://impression.reporting.test.com/",
-    advertiser: "TestAdvertiser",
-  },
-  {
-    id: 2,
-    url: `${TEST_URL}?q=${NON_SPONSORED_SEARCH_STRING}`,
-    title: "Non-Sponsored",
+  }),
+  QuickSuggestTestUtils.wikipediaRemoteSettings({
     keywords: [NON_SPONSORED_SEARCH_STRING],
-    click_url: "http://click.reporting.test.com/nonsponsored",
-    impression_url: "http://impression.reporting.test.com/nonsponsored",
-    advertiser: "TestAdvertiserNonSponsored",
-    iab_category: "5 - Education",
-  },
+  }),
 ];
 
 // Trying to avoid timeouts.
@@ -310,8 +297,8 @@ async function doTest({
     isSponsored,
     index: expectedIndex,
     url: isSponsored
-      ? `${TEST_URL}?q=${SPONSORED_SEARCH_STRING}`
-      : `${TEST_URL}?q=${NON_SPONSORED_SEARCH_STRING}`,
+      ? REMOTE_SETTINGS_RESULTS[0].url
+      : REMOTE_SETTINGS_RESULTS[1].url,
   });
 
   await UrlbarTestUtils.promisePopupClose(window);

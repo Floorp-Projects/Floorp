@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-disable mozilla/valid-lazy */
+/* eslint-disable jsdoc/require-param */
 
 const lazy = {};
 
@@ -180,9 +181,7 @@ class _QuickSuggestTestUtils {
   } = {}) {
     prefs.push(["quicksuggest.enabled", true]);
 
-    // Set up the local remote settings server. We do this even for tests that
-    // aren't specifically related to remote settings so Suggest doesn't hit the
-    // real remote settings server during testing.
+    // Set up the local remote settings server.
     this.#log(
       "ensureQuickSuggestInit",
       "Started, preparing remote settings server"
@@ -199,6 +198,7 @@ class _QuickSuggestTestUtils {
     });
     this.#log("ensureQuickSuggestInit", "Starting remote settings server");
     await this.#remoteSettingsServer.start();
+    this.#log("ensureQuickSuggestInit", "Remote settings server started");
 
     // Get the cached `RemoteSettings` client used by the JS backend and tell it
     // to ignore signatures and to always force sync. Otherwise it won't sync if
@@ -212,14 +212,6 @@ class _QuickSuggestTestUtils {
       rs.get = get;
     };
 
-    // Tell the Rust backend to use the local remote setting server.
-    lazy.SuggestBackendRust._test_remoteSettingsConfig =
-      new lazy.RemoteSettingsConfig({
-        collectionName: "quicksuggest",
-        bucketName: "main",
-        serverUrl: this.#remoteSettingsServer.url.toString(),
-      });
-
     // Finally, init Suggest and set prefs. Do this after setting up remote
     // settings because the current backend will immediately try to sync.
     this.#log(
@@ -230,6 +222,15 @@ class _QuickSuggestTestUtils {
     for (let [name, value] of prefs) {
       lazy.UrlbarPrefs.set(name, value);
     }
+
+    // Tell the Rust backend to use the local remote setting server.
+    await lazy.QuickSuggest.rustBackend._test_setRemoteSettingsConfig(
+      new lazy.RemoteSettingsConfig({
+        collectionName: "quicksuggest",
+        bucketName: "main",
+        serverUrl: this.#remoteSettingsServer.url.toString(),
+      })
+    );
 
     // Wait for the current backend to finish syncing.
     await this.forceSync();
@@ -360,6 +361,86 @@ class _QuickSuggestTestUtils {
     await this.setConfig(config);
     await callback();
     await this.setConfig(original);
+  }
+
+  /**
+   * Returns an AMP (sponsored) suggestion suitable for storing in a remote
+   * settings attachment.
+   *
+   * @returns {object}
+   *   An AMP suggestion for storing in remote settings.
+   */
+  ampRemoteSettings({
+    keywords = ["amp"],
+    url = "http://example.com/amp",
+    title = "Amp Suggestion",
+    score = 0.3,
+  }) {
+    return {
+      keywords,
+      url,
+      title,
+      score,
+      id: 1,
+      click_url: "http://example.com/amp-click",
+      impression_url: "http://example.com/amp-impression",
+      advertiser: "Amp",
+      iab_category: "22 - Shopping",
+      icon: "1234",
+    };
+  }
+
+  /**
+   * Returns a Wikipedia (non-sponsored) suggestion suitable for storing in a
+   * remote settings attachment.
+   *
+   * @returns {object}
+   *   A Wikipedia suggestion for storing in remote settings.
+   */
+  wikipediaRemoteSettings({
+    keywords = ["wikipedia"],
+    url = "http://example.com/wikipedia",
+    title = "Wikipedia Suggestion",
+    score = 0.2,
+  }) {
+    return {
+      keywords,
+      url,
+      title,
+      score,
+      id: 2,
+      click_url: "http://example.com/wikipedia-click",
+      impression_url: "http://example.com/wikipedia-impression",
+      advertiser: "Wikipedia",
+      iab_category: "5 - Education",
+      icon: "1234",
+    };
+  }
+
+  /**
+   * Returns an AMO (addons) suggestion suitable for storing in a remote
+   * settings attachment.
+   *
+   * @returns {object}
+   *   An AMO suggestion for storing in remote settings.
+   */
+  amoRemoteSettings({
+    keywords = ["amo"],
+    url = "http://example.com/amo",
+    title = "Amo Suggestion",
+    score = 0.2,
+  }) {
+    return {
+      keywords,
+      url,
+      title,
+      score,
+      guid: "amo-suggestion@example.com",
+      icon: "https://example.com/addon.svg",
+      rating: "4.7",
+      description: "Addon with score",
+      number_of_ratings: 1256,
+    };
   }
 
   /**
