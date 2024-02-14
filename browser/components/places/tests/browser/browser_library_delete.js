@@ -5,6 +5,10 @@
  *  Tests that Library correctly handles deletes.
  */
 
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 const TEST_URL = "http://www.batch.delete.me/";
 
 var gLibrary;
@@ -113,4 +117,41 @@ add_task(async function test_ensure_correct_selection_and_functionality() {
     2,
     "Right pane was correctly updated"
   );
+});
+
+add_task(async function test_repeated_remove_bookmark() {
+  // Select and open the left pane "History" query.
+  let PO = gLibrary.PlacesOrganizer;
+  PO.selectLeftPaneBuiltIn("UnfiledBookmarks");
+
+  gLibrary.document.getElementById("placesList").focus();
+  let unsortedNode = PlacesUtils.asContainer(PO._places.selectedNode);
+  Assert.equal(unsortedNode.childCount, 1, "Unsorted node has 1 child");
+  let folderNode = unsortedNode.getChild(0);
+  Assert.equal(
+    folderNode.title,
+    "keepme",
+    "Folder found in unsorted bookmarks"
+  );
+  PO._places.selectNode(folderNode);
+
+  Assert.ok(
+    PO._places.controller.isCommandEnabled("cmd_delete"),
+    "Delete command is enabled"
+  );
+  registerCleanupFunction(sinon.restore);
+  let spy = sinon.spy(PO._places.controller, "remove");
+  let stub = sinon
+    .stub(PO._places.controller, "_removeRowsFromBookmarks")
+    .resolves();
+  PO._places.controller.doCommand("cmd_delete");
+  PO._places.controller.doCommand("cmd_delete");
+  PO._places.controller.doCommand("cmd_delete");
+  Assert.equal(spy.callCount, 3, "Should have been invoked thrice");
+  Assert.equal(stub.callCount, 1, "Should have been invoked once");
+  // Executing another command allows delete to go through again.
+  PO._places.controller.doCommand("cmd_cut");
+  PO._places.controller.doCommand("cmd_delete");
+  Assert.equal(spy.callCount, 4, "Should have been invoked again");
+  Assert.equal(stub.callCount, 2, "Should have been invoked again");
 });
