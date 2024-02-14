@@ -130,10 +130,9 @@ mozilla::dom::ScriptLoadContext* ScriptLoadRequest::GetScriptLoadContext() {
   return mLoadContext->AsWindowContext();
 }
 
-mozilla::loader::ComponentLoadContext*
-ScriptLoadRequest::GetComponentLoadContext() {
+mozilla::loader::SyncLoadContext* ScriptLoadRequest::GetSyncLoadContext() {
   MOZ_ASSERT(mLoadContext);
-  return mLoadContext->AsComponentContext();
+  return mLoadContext->AsSyncContext();
 }
 
 mozilla::dom::WorkerLoadContext* ScriptLoadRequest::GetWorkerLoadContext() {

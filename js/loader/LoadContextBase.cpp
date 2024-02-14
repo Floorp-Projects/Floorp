@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ScriptLoadContext.h"
-#include "mozilla/loader/ComponentModuleLoader.h"
+#include "mozilla/loader/SyncModuleLoader.h"
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/worklet/WorkletModuleLoader.h"  // WorkletLoadContext
 #include "js/loader/LoadContextBase.h"
@@ -42,9 +42,9 @@ mozilla::dom::ScriptLoadContext* LoadContextBase::AsWindowContext() {
   return static_cast<mozilla::dom::ScriptLoadContext*>(this);
 }
 
-mozilla::loader::ComponentLoadContext* LoadContextBase::AsComponentContext() {
-  MOZ_ASSERT(IsComponentContext());
-  return static_cast<mozilla::loader::ComponentLoadContext*>(this);
+mozilla::loader::SyncLoadContext* LoadContextBase::AsSyncContext() {
+  MOZ_ASSERT(IsSyncContext());
+  return static_cast<mozilla::loader::SyncLoadContext*>(this);
 }
 
 mozilla::dom::WorkerLoadContext* LoadContextBase::AsWorkerContext() {
