@@ -146,6 +146,11 @@ set_config("MOZ_FILE_PREFIX_MAP_FLAGS", file_prefix_map_flags)
 
 
 @depends(c_compiler)
+def is_gcc(c_compiler):
+    return c_compiler.type == "gcc"
+
+
+@depends(c_compiler)
 def is_gnu_cc(c_compiler):
     return c_compiler.type != "clang-cl"
 
@@ -159,6 +164,8 @@ def check_build_id_uuid(developer_options):
 def check_build_id_sha1(developer_options):
     return not developer_options
 
+
+check_and_add_flag("-pipe", when=is_gcc)
 
 check_and_add_linker_flag("-Wl,--build-id=uuid", when=check_build_id_uuid)
 check_and_add_linker_flag("-Wl,--build-id=sha1", when=check_build_id_sha1)

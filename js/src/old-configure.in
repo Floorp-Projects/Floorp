@@ -860,23 +860,6 @@ if test -n "$COMPILE_ENVIRONMENT"; then
 MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
 
-if test -z "$SKIP_COMPILER_CHECKS"; then
-
-dnl ========================================================
-dnl Check for gcc -pipe support
-dnl ========================================================
-AC_MSG_CHECKING([for -pipe support])
-if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
-    dnl Any gcc that supports firefox supports -pipe.
-    CFLAGS="$CFLAGS -pipe"
-    CXXFLAGS="$CXXFLAGS -pipe"
-    AC_MSG_RESULT([yes])
-else
-    AC_MSG_RESULT([no])
-fi
-
-fi # ! SKIP_COMPILER_CHECKS
-
 MOZ_EXPAND_LIBS
 
 dnl ========================================================
