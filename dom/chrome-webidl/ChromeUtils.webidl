@@ -568,9 +568,11 @@ partial namespace ChromeUtils {
    * @param modules An object with a property for each module property to be
    *                imported, where the property name is the name of the
    *                imported symbol and the value is the module URI.
+   * @param option An option to specify where to load the module into.
    */
   [Throws]
-  undefined defineESModuleGetters(object target, object modules);
+  undefined defineESModuleGetters(object target, object modules,
+                                  optional ImportESModuleOptionsDictionary options = {});
 
   /**
    * Returns the scripted location of the first ancestor stack frame with a
@@ -989,7 +991,8 @@ dictionary CompileScriptOptionsDictionary {
 };
 
 /**
- * Where the modules are loaded into with importESModule.
+ * Where the modules are loaded into with importESModule and
+ * defineESModuleGetters.
  */
 enum ImportESModuleTargetGlobal {
   /**
