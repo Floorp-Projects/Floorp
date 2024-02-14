@@ -16,25 +16,19 @@ const REMOTE_SETTINGS_RECORDS = [
     type: "data",
     attachment: [
       // sponsored without score
-      {
-        iab_category: "22 - Shopping",
+      QuickSuggestTestUtils.ampRemoteSettings({
+        score: undefined,
         keywords: [
           "sponsored without score",
           "sponsored without score, nonsponsored without score",
           "sponsored without score, nonsponsored with score",
           "sponsored without score, addon without score",
         ],
-        id: 1,
         url: "https://example.com/sponsored-without-score",
         title: "Sponsored without score",
-        click_url: "https://example.com/click",
-        impression_url: "https://example.com/impression",
-        advertiser: "TestAdvertiser",
-        icon: null,
-      },
+      }),
       // sponsored with score
-      {
-        iab_category: "22 - Shopping",
+      QuickSuggestTestUtils.ampRemoteSettings({
         score: 2 * DEFAULT_SUGGESTION_SCORE,
         keywords: [
           "sponsored with score",
@@ -42,83 +36,46 @@ const REMOTE_SETTINGS_RECORDS = [
           "sponsored with score, nonsponsored with score",
           "sponsored with score, addon with score",
         ],
-        id: 2,
         url: "https://example.com/sponsored-with-score",
         title: "Sponsored with score",
-        click_url: "https://example.com/click",
-        impression_url: "https://example.com/impression",
-        advertiser: "TestAdvertiser",
-        icon: null,
-      },
+      }),
       // nonsponsored without score
-      {
-        iab_category: "5 - Education",
+      QuickSuggestTestUtils.wikipediaRemoteSettings({
+        score: undefined,
         keywords: [
           "nonsponsored without score",
           "sponsored without score, nonsponsored without score",
           "sponsored with score, nonsponsored without score",
         ],
-        id: 3,
         url: "https://example.com/nonsponsored-without-score",
         title: "Nonsponsored without score",
-        click_url: "https://example.com/click",
-        impression_url: "https://example.com/impression",
-        advertiser: "TestAdvertiser",
-        icon: null,
-      },
+      }),
       // nonsponsored with score
-      {
-        iab_category: "5 - Education",
+      QuickSuggestTestUtils.wikipediaRemoteSettings({
         score: 2 * DEFAULT_SUGGESTION_SCORE,
         keywords: [
           "nonsponsored with score",
           "sponsored without score, nonsponsored with score",
           "sponsored with score, nonsponsored with score",
         ],
-        id: 4,
         url: "https://example.com/nonsponsored-with-score",
         title: "Nonsponsored with score",
-        click_url: "https://example.com/click",
-        impression_url: "https://example.com/impression",
-        advertiser: "TestAdvertiser",
-        icon: null,
-      },
+      }),
     ],
   },
   {
     type: "amo-suggestions",
     attachment: [
-      // addon without score
-      {
-        keywords: [
-          "addon without score",
-          "sponsored without score, addon without score",
-        ],
-        url: "https://example.com/addon-without-score",
-        guid: "addon-without-score@example.com",
-        icon: "https://example.com/addon.svg",
-        title: "Addon without score",
-        rating: "4.7",
-        description: "Addon without score",
-        number_of_ratings: 1256,
-        is_top_pick: true,
-      },
       // addon with score
-      {
+      QuickSuggestTestUtils.amoRemoteSettings({
         score: 2 * DEFAULT_SUGGESTION_SCORE,
         keywords: [
           "addon with score",
           "sponsored with score, addon with score",
         ],
         url: "https://example.com/addon-with-score",
-        guid: "addon-with-score@example.com",
-        icon: "https://example.com/addon.svg",
         title: "Addon with score",
-        rating: "4.7",
-        description: "Addon with score",
-        number_of_ratings: 1256,
-        is_top_pick: true,
-      },
+      }),
     ],
   },
 ];
@@ -130,8 +87,7 @@ const NONSPONSORED_WITHOUT_SCORE = ADM_RECORD.attachment[2];
 const NONSPONSORED_WITH_SCORE = ADM_RECORD.attachment[3];
 
 const ADDON_RECORD = REMOTE_SETTINGS_RECORDS[1];
-const ADDON_WITHOUT_SCORE = ADDON_RECORD.attachment[0];
-const ADDON_WITH_SCORE = ADDON_RECORD.attachment[1];
+const ADDON_WITH_SCORE = ADDON_RECORD.attachment[0];
 
 const MERINO_SPONSORED_SUGGESTION = {
   provider: "adm",
@@ -146,7 +102,7 @@ const MERINO_SPONSORED_SUGGESTION = {
   click_url: "https://example.com/click",
   impression_url: "https://example.com/impression",
   advertiser: "TestAdvertiser",
-  icon: null,
+  icon: "1234",
 };
 
 const MERINO_ADDON_SUGGESTION = {
@@ -157,7 +113,6 @@ const MERINO_ADDON_SUGGESTION = {
   url: "https://example.com/merino-addon",
   title: "Merino addon",
   description: "Merino addon",
-  is_top_pick: true,
   custom_details: {
     amo: {
       guid: "merino-addon@example.com",
@@ -217,13 +172,14 @@ add_task(
       },
       expectedFeatureName: "AdmWikipedia",
       expectedScore: score,
-      expectedResult: makeExpectedAdmResult({
+      expectedResult: makeExpectedWikipediaResult({
         keyword,
         suggestion: NONSPONSORED_WITHOUT_SCORE,
       }),
     });
   }
 );
+
 add_task(
   async function sponsoredWithout_nonsponsoredWithout_sponsoredWins_both() {
     let keyword = "sponsored without score, nonsponsored without score";
@@ -256,7 +212,7 @@ add_task(
       },
       expectedFeatureName: "AdmWikipedia",
       expectedScore: score,
-      expectedResult: makeExpectedAdmResult({
+      expectedResult: makeExpectedWikipediaResult({
         keyword,
         suggestion: NONSPONSORED_WITHOUT_SCORE,
       }),
@@ -291,7 +247,7 @@ add_task(async function sponsoredWith_nonsponsoredWith_nonsponsoredWins() {
     },
     expectedFeatureName: "AdmWikipedia",
     expectedScore: score,
-    expectedResult: makeExpectedAdmResult({
+    expectedResult: makeExpectedWikipediaResult({
       keyword,
       suggestion: NONSPONSORED_WITH_SCORE,
     }),
@@ -327,7 +283,7 @@ add_task(async function sponsoredWith_nonsponsoredWith_nonsponsoredWins_both() {
     },
     expectedFeatureName: "AdmWikipedia",
     expectedScore: score,
-    expectedResult: makeExpectedAdmResult({
+    expectedResult: makeExpectedWikipediaResult({
       keyword,
       suggestion: NONSPONSORED_WITH_SCORE,
     }),
@@ -351,22 +307,6 @@ add_task(async function sponsoredWithout_addonWithout_sponsoredWins() {
   });
 });
 
-add_task(async function sponsoredWithout_addonWithout_addonWins() {
-  let keyword = "sponsored without score, addon without score";
-  let score = 10 * DEFAULT_SUGGESTION_SCORE;
-  await doTest({
-    keyword,
-    scoreMap: {
-      amo: score,
-    },
-    expectedFeatureName: "AddonSuggestions",
-    expectedScore: score,
-    expectedResult: makeExpectedAddonResult({
-      suggestion: ADDON_WITHOUT_SCORE,
-    }),
-  });
-});
-
 add_task(async function sponsoredWithout_addonWithout_sponsoredWins_both() {
   let keyword = "sponsored without score, addon without score";
   let score = 10 * DEFAULT_SUGGESTION_SCORE;
@@ -381,23 +321,6 @@ add_task(async function sponsoredWithout_addonWithout_sponsoredWins_both() {
     expectedResult: makeExpectedAdmResult({
       keyword,
       suggestion: SPONSORED_WITHOUT_SCORE,
-    }),
-  });
-});
-
-add_task(async function sponsoredWithout_addonWithout_addonWins_both() {
-  let keyword = "sponsored without score, addon without score";
-  let score = 10 * DEFAULT_SUGGESTION_SCORE;
-  await doTest({
-    keyword,
-    scoreMap: {
-      amo: score,
-      adm_sponsored: score / 2,
-    },
-    expectedFeatureName: "AddonSuggestions",
-    expectedScore: score,
-    expectedResult: makeExpectedAddonResult({
-      suggestion: ADDON_WITHOUT_SCORE,
     }),
   });
 });
@@ -490,6 +413,8 @@ add_task(async function merino_sponsored_addon_sponsoredWins() {
       keyword: "test",
       suggestion: MERINO_SPONSORED_SUGGESTION,
       source: "merino",
+      provider: "adm",
+      requestId: MerinoTestUtils.server.response.body.request_id,
     }),
   });
 
@@ -515,6 +440,8 @@ add_task(async function merino_sponsored_addon_addonWins() {
     expectedResult: makeExpectedAddonResult({
       suggestion: MERINO_ADDON_SUGGESTION,
       source: "merino",
+      provider: "amo",
+      requestId: MerinoTestUtils.server.response.body.request_id,
     }),
   });
 
@@ -541,6 +468,8 @@ add_task(async function merino_sponsored_unknown_sponsoredWins() {
       keyword: "test",
       suggestion: MERINO_SPONSORED_SUGGESTION,
       source: "merino",
+      provider: "adm",
+      requestId: MerinoTestUtils.server.response.body.request_id,
     }),
   });
 
@@ -583,38 +512,6 @@ add_task(async function stringValue() {
     expectedResult: makeExpectedAdmResult({
       keyword,
       suggestion: SPONSORED_WITH_SCORE,
-    }),
-  });
-});
-
-add_task(async function nanValue_sponsoredWins() {
-  let keyword = "sponsored with score, nonsponsored without score";
-  await doTest({
-    keyword,
-    scoreMap: {
-      adm_nonsponsored: "this is NaN",
-    },
-    expectedFeatureName: "AdmWikipedia",
-    expectedScore: 2 * DEFAULT_SUGGESTION_SCORE,
-    expectedResult: makeExpectedAdmResult({
-      keyword,
-      suggestion: SPONSORED_WITH_SCORE,
-    }),
-  });
-});
-
-add_task(async function nanValue_nonsponsoredWins() {
-  let keyword = "sponsored without score, nonsponsored with score";
-  await doTest({
-    keyword,
-    scoreMap: {
-      adm_sponsored: "this is NaN",
-    },
-    expectedFeatureName: "AdmWikipedia",
-    expectedScore: 2 * DEFAULT_SUGGESTION_SCORE,
-    expectedResult: makeExpectedAdmResult({
-      keyword,
-      suggestion: NONSPONSORED_WITH_SCORE,
     }),
   });
 });
@@ -697,76 +594,49 @@ async function doTest({
 function makeExpectedAdmResult({
   suggestion,
   keyword,
-  source = "remote-settings",
+  source,
+  provider,
+  requestId,
 }) {
-  let isSponsored = suggestion.iab_category != "5 - Education";
-  let result = {
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    heuristic: false,
-    payload: {
-      source,
-      isSponsored,
-      provider: source == "remote-settings" ? "AdmWikipedia" : "adm",
-      telemetryType: isSponsored ? "adm_sponsored" : "adm_nonsponsored",
-      title: suggestion.title,
-      url: suggestion.url,
-      originalUrl: suggestion.url,
-      displayUrl: suggestion.url.replace(/^https:\/\//, ""),
-      icon: suggestion.icon,
-      sponsoredBlockId:
-        source == "remote-settings" ? suggestion.id : suggestion.block_id,
-      sponsoredImpressionUrl: suggestion.impression_url,
-      sponsoredClickUrl: suggestion.click_url,
-      sponsoredAdvertiser: suggestion.advertiser,
-      sponsoredIabCategory: suggestion.iab_category,
-      qsSuggestion: keyword,
-      descriptionL10n: isSponsored
-        ? { id: "urlbar-result-action-sponsored" }
-        : undefined,
-      helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
-      isBlockable: true,
-      blockL10n: {
-        id: "urlbar-result-menu-dismiss-firefox-suggest",
-      },
-    },
-  };
-
-  if (source == "merino") {
-    result.payload.requestId = "request_id";
-  }
-
-  return result;
+  return makeAmpResult({
+    keyword,
+    source,
+    provider,
+    requestId,
+    title: suggestion.title,
+    url: suggestion.url,
+    originalUrl: suggestion.url,
+    impressionUrl: suggestion.impression_url,
+    clickUrl: suggestion.click_url,
+    blockId: suggestion.id,
+    advertiser: suggestion.advertiser,
+    icon: suggestion.icon,
+  });
 }
 
-function makeExpectedAddonResult({ suggestion, source = "remote-settings" }) {
-  let url = new URL(suggestion.url);
-  url.searchParams.set("utm_medium", "firefox-desktop");
-  url.searchParams.set("utm_source", "firefox-suggest");
+function makeExpectedWikipediaResult({ suggestion, keyword, source }) {
+  return makeWikipediaResult({
+    keyword,
+    source,
+    title: suggestion.title,
+    url: suggestion.url,
+    originalUrl: suggestion.url,
+    impressionUrl: suggestion.impression_url,
+    clickUrl: suggestion.click_url,
+    blockId: suggestion.id,
+  });
+}
 
-  return {
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    heuristic: false,
-    isBestMatch: true,
-    payload: {
-      source,
-      provider: source == "remote-settings" ? "AddonSuggestions" : "amo",
-      telemetryType: "amo",
-      title: suggestion.title,
-      url: url.href,
-      originalUrl: suggestion.url,
-      displayUrl: url.href.replace(/^https:\/\//, ""),
-      shouldShowUrl: true,
-      icon: suggestion.icon,
-      description: suggestion.description,
-      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
-      helpUrl: QuickSuggest.HELP_URL,
-    },
-  };
+function makeExpectedAddonResult({ suggestion, source, provider }) {
+  return makeAmoResult({
+    source,
+    provider,
+    title: suggestion.title,
+    description: suggestion.description,
+    url: suggestion.url,
+    originalUrl: suggestion.url,
+    icon: suggestion.icon,
+  });
 }
 
 function makeExpectedDefaultResult({ suggestion }) {

@@ -545,35 +545,14 @@ function makeExpectedResult({ suggestion, source, setUtmParams = true }) {
       break;
   }
 
-  let url;
-  if (setUtmParams) {
-    url = new URL(suggestion.url);
-    url.searchParams.set("utm_medium", "firefox-desktop");
-    url.searchParams.set("utm_source", "firefox-suggest");
-    url = url.href;
-  } else {
-    url = suggestion.url;
-  }
-
-  return {
-    isBestMatch: true,
-    suggestedIndex: 1,
-    type: UrlbarUtils.RESULT_TYPE.URL,
-    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    heuristic: false,
-    payload: {
-      telemetryType: "amo",
-      title: suggestion.title,
-      url,
-      originalUrl: suggestion.url,
-      displayUrl: url.replace(/^https:\/\//, ""),
-      shouldShowUrl: true,
-      icon: suggestion.icon,
-      description: suggestion.description,
-      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
-      helpUrl: QuickSuggest.HELP_URL,
-      source,
-      provider,
-    },
-  };
+  return makeAmoResult({
+    source,
+    provider,
+    setUtmParams,
+    title: suggestion.title,
+    description: suggestion.description,
+    url: suggestion.url,
+    originalUrl: suggestion.url,
+    icon: suggestion.icon,
+  });
 }

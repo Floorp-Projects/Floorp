@@ -14,79 +14,20 @@ const SEARCH_STRING = "frab";
 const { DEFAULT_SUGGESTION_SCORE } = UrlbarProviderQuickSuggest;
 
 const REMOTE_SETTINGS_RESULTS = [
-  {
-    id: 1,
-    url: "http://test.com/q=frabbits",
-    title: "frabbits",
+  QuickSuggestTestUtils.ampRemoteSettings({
     keywords: [SEARCH_STRING],
-    click_url: "http://click.reporting.test.com/",
-    impression_url: "http://impression.reporting.test.com/",
-    advertiser: "TestAdvertiser",
-  },
+  }),
 ];
 
-const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
-  type: UrlbarUtils.RESULT_TYPE.URL,
-  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-  heuristic: false,
-  payload: {
-    telemetryType: "adm_sponsored",
-    qsSuggestion: SEARCH_STRING,
-    title: "frabbits",
-    url: "http://test.com/q=frabbits",
-    originalUrl: "http://test.com/q=frabbits",
-    icon: null,
-    sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-    sponsoredClickUrl: "http://click.reporting.test.com/",
-    sponsoredBlockId: 1,
-    sponsoredAdvertiser: "TestAdvertiser",
-    isSponsored: true,
-    descriptionL10n: { id: "urlbar-result-action-sponsored" },
-    helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: {
-      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-    },
-    isBlockable: true,
-    blockL10n: {
-      id: "urlbar-result-menu-dismiss-firefox-suggest",
-    },
-    displayUrl: "http://test.com/q=frabbits",
-    source: "remote-settings",
-    provider: "AdmWikipedia",
-  },
-};
+const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = makeAmpResult({
+  keyword: SEARCH_STRING,
+});
 
-const EXPECTED_MERINO_URLBAR_RESULT = {
-  type: UrlbarUtils.RESULT_TYPE.URL,
-  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-  heuristic: false,
-  payload: {
-    telemetryType: "adm_sponsored",
-    qsSuggestion: "full_keyword",
-    title: "title",
-    url: "http://example.com/amp",
-    originalUrl: "http://example.com/amp",
-    icon: null,
-    sponsoredImpressionUrl: "http://example.com/amp-impression",
-    sponsoredClickUrl: "http://example.com/amp-click",
-    sponsoredBlockId: 1,
-    sponsoredAdvertiser: "amp",
-    isSponsored: true,
-    descriptionL10n: { id: "urlbar-result-action-sponsored" },
-    helpUrl: QuickSuggest.HELP_URL,
-    helpL10n: {
-      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-    },
-    isBlockable: true,
-    blockL10n: {
-      id: "urlbar-result-menu-dismiss-firefox-suggest",
-    },
-    displayUrl: "http://example.com/amp",
-    requestId: "request_id",
-    source: "merino",
-    provider: "adm",
-  },
-};
+const EXPECTED_MERINO_URLBAR_RESULT = makeAmpResult({
+  source: "merino",
+  provider: "adm",
+  requestId: "request_id",
+});
 
 // `UrlbarProviderQuickSuggest.#merino` is lazily created on the first Merino
 // fetch, so it's easiest to create `gClient` lazily too.
@@ -385,6 +326,7 @@ add_task(async function multipleMerinoSuggestions() {
       click_url: "multipleMerinoSuggestions 0 click_url",
       block_id: 0,
       advertiser: "multipleMerinoSuggestions 0 advertiser",
+      iab_category: "22 - Shopping",
       is_sponsored: true,
       score: 0.1,
     },
@@ -398,6 +340,7 @@ add_task(async function multipleMerinoSuggestions() {
       click_url: "multipleMerinoSuggestions 1 click_url",
       block_id: 1,
       advertiser: "multipleMerinoSuggestions 1 advertiser",
+      iab_category: "22 - Shopping",
       is_sponsored: true,
       score: 1,
     },
@@ -411,6 +354,7 @@ add_task(async function multipleMerinoSuggestions() {
       click_url: "multipleMerinoSuggestions 2 click_url",
       block_id: 2,
       advertiser: "multipleMerinoSuggestions 2 advertiser",
+      iab_category: "22 - Shopping",
       is_sponsored: true,
       score: 0.2,
     },
@@ -423,37 +367,20 @@ add_task(async function multipleMerinoSuggestions() {
   await check_results({
     context,
     matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          telemetryType: "adm_sponsored",
-          qsSuggestion: "multipleMerinoSuggestions 1 full_keyword",
-          title: "multipleMerinoSuggestions 1 title",
-          url: "multipleMerinoSuggestions 1 url",
-          originalUrl: "multipleMerinoSuggestions 1 url",
-          icon: "multipleMerinoSuggestions 1 icon",
-          sponsoredImpressionUrl: "multipleMerinoSuggestions 1 impression_url",
-          sponsoredClickUrl: "multipleMerinoSuggestions 1 click_url",
-          sponsoredBlockId: 1,
-          sponsoredAdvertiser: "multipleMerinoSuggestions 1 advertiser",
-          isSponsored: true,
-          descriptionL10n: { id: "urlbar-result-action-sponsored" },
-          helpUrl: QuickSuggest.HELP_URL,
-          helpL10n: {
-            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-          },
-          isBlockable: true,
-          blockL10n: {
-            id: "urlbar-result-menu-dismiss-firefox-suggest",
-          },
-          displayUrl: "multipleMerinoSuggestions 1 url",
-          requestId: "request_id",
-          source: "merino",
-          provider: "adm",
-        },
-      },
+      makeAmpResult({
+        keyword: "multipleMerinoSuggestions 1 full_keyword",
+        title: "multipleMerinoSuggestions 1 title",
+        url: "multipleMerinoSuggestions 1 url",
+        originalUrl: "multipleMerinoSuggestions 1 url",
+        icon: "multipleMerinoSuggestions 1 icon",
+        impressionUrl: "multipleMerinoSuggestions 1 impression_url",
+        clickUrl: "multipleMerinoSuggestions 1 click_url",
+        blockId: 1,
+        advertiser: "multipleMerinoSuggestions 1 advertiser",
+        requestId: "request_id",
+        source: "merino",
+        provider: "adm",
+      }),
     ],
   });
 
@@ -562,7 +489,12 @@ add_task(async function suggestedDisabled_dataCollectionEnabled() {
 add_task(async function block() {
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
-  for (const suggestion of MerinoTestUtils.server.response.body.suggestions) {
+  // Make sure the Merino suggestions have different URLs from the remote
+  // settings suggestion.
+  let { suggestions } = MerinoTestUtils.server.response.body;
+  for (let i = 0; i < suggestions.length; i++) {
+    let suggestion = suggestions[i];
+    suggestion.url = "https://example.com/merino-url-" + i;
     await QuickSuggest.blockedSuggestions.add(suggestion.url);
   }
 

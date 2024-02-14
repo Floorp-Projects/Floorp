@@ -126,74 +126,79 @@ async function doBasicDisableAndEnableTest(pref) {
 
 // This task is only appropriate for the JS backend, not Rust, since fetching is
 // always active with Rust.
-add_task(async function keywordsNotDefined() {
-  // Sanity check initial state.
-  assertEnabled({
-    message: "Sanity check initial state",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
+add_task(
+  {
+    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+  },
+  async function keywordsNotDefined() {
+    // Sanity check initial state.
+    assertEnabled({
+      message: "Sanity check initial state",
+      hasSuggestion: true,
+      pendingFetchCount: 0,
+    });
 
-  // Set RS data without any keywords. Fetching should immediately stop.
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
-    {
-      type: "weather",
-      weather: {},
-    },
-  ]);
-  assertDisabled({
-    message: "After setting RS data without keywords",
-    pendingFetchCount: 0,
-  });
+    // Set RS data without any keywords. Fetching should immediately stop.
+    await QuickSuggestTestUtils.setRemoteSettingsRecords([
+      {
+        type: "weather",
+        weather: {},
+      },
+    ]);
+    assertDisabled({
+      message: "After setting RS data without keywords",
+      pendingFetchCount: 0,
+    });
 
-  // No suggestion should be returned for a search.
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-    providers: [UrlbarProviderWeather.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [],
-  });
+    // No suggestion should be returned for a search.
+    let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      matches: [],
+    });
 
-  // Set keywords. Fetching should immediately start.
-  info("Setting keywords");
-  let fetchPromise = QuickSuggest.weather.waitForFetches();
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
-    {
-      type: "weather",
-      weather: MerinoTestUtils.WEATHER_RS_DATA,
-    },
-  ]);
-  assertEnabled({
-    message: "Immediately after setting keywords",
-    hasSuggestion: false,
-    pendingFetchCount: 1,
-  });
+    // Set keywords. Fetching should immediately start.
+    info("Setting keywords");
+    let fetchPromise = QuickSuggest.weather.waitForFetches();
+    await QuickSuggestTestUtils.setRemoteSettingsRecords([
+      {
+        type: "weather",
+        weather: MerinoTestUtils.WEATHER_RS_DATA,
+      },
+    ]);
+    assertEnabled({
+      message: "Immediately after setting keywords",
+      hasSuggestion: false,
+      pendingFetchCount: 1,
+    });
 
-  await fetchPromise;
-  assertEnabled({
-    message: "After awaiting fetch",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
+    await fetchPromise;
+    assertEnabled({
+      message: "After awaiting fetch",
+      hasSuggestion: true,
+      pendingFetchCount: 0,
+    });
 
-  Assert.equal(
-    QuickSuggest.weather._test_merino.lastFetchStatus,
-    "success",
-    "The request successfully finished"
-  );
+    Assert.equal(
+      QuickSuggest.weather._test_merino.lastFetchStatus,
+      "success",
+      "The request successfully finished"
+    );
 
-  // The suggestion should be returned for a search.
-  context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-    providers: [UrlbarProviderWeather.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [makeWeatherResult()],
-  });
-});
+    // The suggestion should be returned for a search.
+    context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      matches: [makeWeatherResult()],
+    });
+  }
+);
 
 // Disables and re-enables the feature without waiting for any intermediate
 // fetches to complete, using the following steps:

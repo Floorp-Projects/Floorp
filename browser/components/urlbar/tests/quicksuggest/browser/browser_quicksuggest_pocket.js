@@ -24,6 +24,7 @@ const REMOTE_SETTINGS_DATA = [
         description: "Pocket description",
         lowConfidenceKeywords: ["pocket suggestion"],
         highConfidenceKeywords: ["high"],
+        score: 0.25,
       },
     ],
   },

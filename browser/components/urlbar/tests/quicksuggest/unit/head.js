@@ -168,7 +168,7 @@ function makeAmpResult({
   source,
   provider,
   keyword = "amp",
-  title = "AMP Suggestion",
+  title = "Amp Suggestion",
   url = "http://example.com/amp",
   originalUrl = "http://example.com/amp",
   icon = null,
@@ -180,6 +180,7 @@ function makeAmpResult({
   iabCategory = "22 - Shopping",
   suggestedIndex = -1,
   isSuggestedIndexRelativeToGroup = true,
+  requestId = undefined,
 } = {}) {
   let result = {
     suggestedIndex,
@@ -191,6 +192,7 @@ function makeAmpResult({
       title,
       url,
       originalUrl,
+      requestId,
       displayUrl: url.replace(/^https:\/\//, ""),
       isSponsored: true,
       qsSuggestion: keyword,
@@ -215,7 +217,11 @@ function makeAmpResult({
   if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
     result.payload.source = source || "rust";
     result.payload.provider = provider || "Amp";
-    result.payload.iconBlob = iconBlob;
+    if (result.payload.source == "rust") {
+      result.payload.iconBlob = iconBlob;
+    } else {
+      result.payload.icon = icon;
+    }
   } else {
     result.payload.source = source || "remote-settings";
     result.payload.provider = provider || "AdmWikipedia";
@@ -272,6 +278,70 @@ function makeMdnResult({ url, title, description }) {
   return result;
 }
 
+/**
+ * Returns an expected AMO (addons) result that can be passed to
+ * `check_results()` regardless of whether the Rust backend is enabled.
+ *
+ * @returns {object}
+ *   An object that can be passed to `check_results()`.
+ */
+function makeAmoResult({
+  source,
+  provider,
+  title = "Amo Suggestion",
+  description = "Amo description",
+  url = "http://example.com/amo",
+  originalUrl = "http://example.com/amo",
+  icon = null,
+  setUtmParams = true,
+}) {
+  if (setUtmParams) {
+    url = new URL(url);
+    url.searchParams.set("utm_medium", "firefox-desktop");
+    url.searchParams.set("utm_source", "firefox-suggest");
+    url = url.href;
+  }
+
+  let result = {
+    isBestMatch: true,
+    suggestedIndex: 1,
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    payload: {
+      source,
+      provider,
+      title,
+      description,
+      url,
+      originalUrl,
+      icon,
+      displayUrl: url.replace(/^https:\/\//, ""),
+      shouldShowUrl: true,
+      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
+      helpUrl: QuickSuggest.HELP_URL,
+      telemetryType: "amo",
+    },
+  };
+
+  if (UrlbarPrefs.get("quickSuggestRustEnabled")) {
+    result.payload.source = source || "rust";
+    result.payload.provider = provider || "Amo";
+  } else {
+    result.payload.source = source || "remote-settings";
+    result.payload.provider = provider || "AddonSuggestions";
+  }
+
+  return result;
+}
+
+/**
+ * Returns an expected weather result that can be passed to `check_results()`
+ * regardless of whether the Rust backend is enabled.
+ *
+ * @returns {object}
+ *   An object that can be passed to `check_results()`.
+ */
 function makeWeatherResult({
   source,
   provider,

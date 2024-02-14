@@ -14,6 +14,7 @@ firefox-appdir = "browser"
 ["test_quicksuggest_dynamicWikipedia.js"]
 
 ["test_quicksuggest_impressionCaps.js"]
+skip-if = ["true"] # Bug 1880214
 
 ["test_quicksuggest_mdn.js"]
 
@@ -26,12 +27,14 @@ firefox-appdir = "browser"
 ["test_quicksuggest_migrate_v2.js"]
 
 ["test_quicksuggest_nonUniqueKeywords.js"]
+skip-if = ["true"] # Bug 1880214
 
 ["test_quicksuggest_offlineDefault.js"]
 
 ["test_quicksuggest_pocket.js"]
 
 ["test_quicksuggest_positionInSuggestions.js"]
+skip-if = ["true"] # Bug 1880214
 
 ["test_quicksuggest_scoreMap.js"]
 

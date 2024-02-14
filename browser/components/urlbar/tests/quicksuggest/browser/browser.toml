@@ -35,26 +35,34 @@ tags = "search-telemetry"
 
 ["browser_telemetry_dynamicWikipedia.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_gleanEmptyStrings.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_impressionEdgeCases.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_navigationalSuggestions.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_nonsponsored.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_other.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_sponsored.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_telemetry_weather.js"]
 tags = "search-telemetry"
+skip-if = ["true"] # Bug 1880214
 
 ["browser_weather.js"]

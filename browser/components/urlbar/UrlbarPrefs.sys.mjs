@@ -371,7 +371,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether Firefox Suggest will use the new Rust backend instead of the
   // original JS backend.
-  ["quicksuggest.rustEnabled", false],
+  ["quicksuggest.rustEnabled", true],
 
   // The Suggest Rust backend will ingest remote settings every N seconds as
   // defined by this pref. Ingestion uses nsIUpdateTimerManager so the interval

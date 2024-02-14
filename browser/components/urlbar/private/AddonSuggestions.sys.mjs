@@ -270,7 +270,7 @@ export class AddonSuggestions extends BaseFeature {
   get canShowLessFrequently() {
     const cap =
       lazy.UrlbarPrefs.get("addonsShowLessFrequentlyCap") ||
-      lazy.QuickSuggest.jsBackend.config.show_less_frequently_cap ||
+      lazy.QuickSuggest.backend.config?.showLessFrequentlyCap ||
       0;
     return !cap || this.showLessFrequentlyCount < cap;
   }

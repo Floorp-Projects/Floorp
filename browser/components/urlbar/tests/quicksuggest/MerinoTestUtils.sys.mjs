@@ -545,14 +545,15 @@ class MockMerinoServer {
         suggestions: [
           {
             provider: "adm",
-            full_keyword: "full_keyword",
-            title: "title",
+            full_keyword: "amp",
+            title: "Amp Suggestion",
             url: "http://example.com/amp",
             icon: null,
             impression_url: "http://example.com/amp-impression",
             click_url: "http://example.com/amp-click",
             block_id: 1,
-            advertiser: "amp",
+            advertiser: "Amp",
+            iab_category: "22 - Shopping",
             is_sponsored: true,
             score: 1,
           },
