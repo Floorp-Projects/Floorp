@@ -939,6 +939,16 @@ sealed class TranslationsAction : BrowserAction() {
     ) : TranslationsAction(), ActionWithTab
 
     /**
+     * Indicates an app level translations error occurred and to set the [TranslationError] on
+     * [BrowserState.translationEngine].
+     *
+     * @property error The [TranslationError] that occurred.
+     */
+    data class EngineExceptionAction(
+        val error: TranslationError,
+    ) : TranslationsAction()
+
+    /**
      * Indicates that the given [operation] data should be fetched for the given [tabId].
      *
      * @property tabId The ID of the tab the [EngineSession] should be linked to.
@@ -948,6 +958,16 @@ sealed class TranslationsAction : BrowserAction() {
         override val tabId: String,
         val operation: TranslationOperation,
     ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Sets whether the device architecture supports translations or not on
+     * [BrowserState.translationEngine].
+     *
+     * @property isEngineSupported If the engine supports translations on this device.
+     */
+    data class SetEngineSupportedAction(
+        val isEngineSupported: Boolean,
+    ) : TranslationsAction()
 
     /**
      * Sets the languages that are supported by the translations engine.

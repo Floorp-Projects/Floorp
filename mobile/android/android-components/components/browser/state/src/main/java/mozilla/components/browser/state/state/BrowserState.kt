@@ -35,6 +35,7 @@ import java.util.Locale
  * on application startup e.g. as an indicator that tabs have been restored.
  * @property locale The current locale of the app. Will be null when following the system default.
  * @property awesomeBarState Holds state for interactions with the [AwesomeBar].
+ * @property translationEngine Holds translation state that applies to the browser.
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
@@ -54,4 +55,5 @@ data class BrowserState(
     val showExtensionsProcessDisabledPrompt: Boolean = false,
     val extensionsProcessDisabled: Boolean = false,
     val awesomeBarState: AwesomeBarState = AwesomeBarState(),
+    val translationEngine: TranslationsBrowserState = TranslationsBrowserState(),
 ) : State

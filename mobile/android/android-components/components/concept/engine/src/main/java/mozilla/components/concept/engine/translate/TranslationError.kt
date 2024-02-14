@@ -49,6 +49,14 @@ sealed class TranslationError(
         TranslationError(errorName = "engine-not-supported", displayError = false, cause = cause)
 
     /**
+     * Could not determine if the translations engine works on the device architecture.
+     *
+     * @param cause The original [Throwable] before it was converted into this error state.
+     */
+    class UnknownEngineSupportError(override val cause: Throwable?) :
+        TranslationError(errorName = "unknown-engine-support", displayError = false, cause = cause)
+
+    /**
      * Generic could not compete a translation error.
      *
      * @param cause The original throwable before it was converted into this error state.

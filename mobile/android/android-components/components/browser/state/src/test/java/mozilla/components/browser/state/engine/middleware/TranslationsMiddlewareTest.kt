@@ -6,6 +6,7 @@ package mozilla.components.browser.state.engine.middleware
 
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
@@ -36,6 +37,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -436,6 +438,53 @@ class TranslationsMiddlewareTest {
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN InitAction is dispatched THEN SetEngineSupportAction is dispatched`() = runTest {
+        // Send Action
+        // Note: Will cause a double InitAction
+        translationsMiddleware.invoke(context, {}, InitAction)
+        waitForIdle()
+
+        // Check expectations
+        val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = engineSupportedCallback.capture(),
+            onError = any(),
+        )
+        engineSupportedCallback.value.invoke(true)
+        waitForIdle()
+
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetEngineSupportedAction(
+                isEngineSupported = true,
+            ),
+        )
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN InitAction is dispatched AND has an issue THEN TranslateExceptionAction is dispatched`() = runTest() {
+        // Send Action
+        // Note: Will cause a double InitAction
+        translationsMiddleware.invoke(context, {}, InitAction)
+        waitForIdle()
+
+        // Check expectations
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = any(),
+            onError = errorCallback.capture(),
+        )
+        errorCallback.value.invoke(IllegalStateException())
+        waitForIdle()
+
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.EngineExceptionAction(
+                error = TranslationError.UnknownEngineSupportError(any()),
             ),
         )
     }

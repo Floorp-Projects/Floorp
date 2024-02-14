@@ -518,4 +518,36 @@ class TranslationsActionTest {
         assertTrue(tabState().translationsState.pageSettings?.neverTranslateLanguage!!)
         assertTrue(tabState().translationsState.pageSettings?.neverTranslateSite!!)
     }
+
+    fun `WHEN a SetEngineSupportAction is dispatched THEN the browser store is updated to match`() {
+        // Initial state
+        assertNull(store.state.translationEngine.isEngineSupported)
+
+        // Dispatch
+        store.dispatch(
+            TranslationsAction.SetEngineSupportedAction(
+                isEngineSupported = true,
+            ),
+        ).joinBlocking()
+
+        // Final state
+        assertTrue(store.state.translationEngine.isEngineSupported!!)
+    }
+
+    @Test
+    fun `WHEN an EngineExceptionAction is dispatched THEN the browser store is updated to match`() {
+        // Initial state
+        assertNull(store.state.translationEngine.engineError)
+
+        // Dispatch
+        val error = TranslationError.UnknownError(Throwable())
+        store.dispatch(
+            TranslationsAction.EngineExceptionAction(
+                error = error,
+            ),
+        ).joinBlocking()
+
+        // Final state
+        assertEquals(store.state.translationEngine.engineError!!, error)
+    }
 }

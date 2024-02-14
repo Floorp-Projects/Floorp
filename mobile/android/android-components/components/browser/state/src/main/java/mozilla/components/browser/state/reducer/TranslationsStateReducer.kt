@@ -7,6 +7,7 @@ package mozilla.components.browser.state.reducer
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
@@ -14,6 +15,9 @@ import mozilla.components.concept.engine.translate.TranslationPageSettings
 
 internal object TranslationsStateReducer {
 
+    /**
+     * Reducer for [BrowserState.translationEngine] and [SessionState.translationsState]
+     */
     @Suppress("LongMethod")
     fun reduce(state: BrowserState, action: TranslationsAction): BrowserState = when (action) {
         is TranslationsAction.TranslateExpectedAction -> {
@@ -170,6 +174,10 @@ internal object TranslationsStateReducer {
             }
         }
 
+        is TranslationsAction.EngineExceptionAction -> {
+            state.copy(translationEngine = state.translationEngine.copy(engineError = action.error))
+        }
+
         is TranslationsAction.SetSupportedLanguagesAction ->
             state.copyWithTranslationsState(action.tabId) {
                 it.copy(
@@ -277,6 +285,15 @@ internal object TranslationsStateReducer {
                     }
                 }
             }
+        }
+
+        is TranslationsAction.SetEngineSupportedAction -> {
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    isEngineSupported = action.isEngineSupported,
+                    engineError = null,
+                ),
+            )
         }
     }
 

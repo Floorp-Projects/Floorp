@@ -7,6 +7,7 @@ package mozilla.components.browser.state.engine.middleware
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
@@ -40,6 +41,11 @@ class TranslationsMiddleware(
     ) {
         // Pre process actions
         when (action) {
+            is InitAction ->
+                scope.launch {
+                    requestEngineSupport(context)
+                }
+
             is TranslationsAction.OperationRequestedAction -> {
                 when (action.operation) {
                     TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
@@ -115,6 +121,35 @@ class TranslationsMiddleware(
 
         // Continue to post process actions
         next(action)
+    }
+
+    /**
+     * Checks if the translations engine supports the device architecture and updates the state.
+     *
+     * @param context Context to use to dispatch to the store.
+     */
+    private fun requestEngineSupport(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+    ) {
+        engine.isTranslationsEngineSupported(
+            onSuccess = { isEngineSupported ->
+                context.store.dispatch(
+                    TranslationsAction.SetEngineSupportedAction(
+                        isEngineSupported = isEngineSupported,
+                    ),
+                )
+                logger.info("Success requesting engine support.")
+            },
+
+            onError = { error ->
+                context.store.dispatch(
+                    TranslationsAction.EngineExceptionAction(
+                        error = TranslationError.UnknownEngineSupportError(error),
+                    ),
+                )
+                logger.error("Error requesting engine support: ", error)
+            },
+        )
     }
 
     /**
