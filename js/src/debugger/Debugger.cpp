@@ -4635,13 +4635,14 @@ bool Debugger::CallData::addAllGlobalsAsDebuggees() {
       if (r->creationOptions().invisibleToDebugger()) {
         continue;
       }
+      if (!r->hasInitializedGlobal()) {
+        continue;
+      }
       r->compartment()->gcState.scheduledForDestruction = false;
-      GlobalObject* global = r->maybeGlobal();
-      if (global) {
-        Rooted<GlobalObject*> rg(cx, global);
-        if (!dbg->addDebuggeeGlobal(cx, rg)) {
-          return false;
-        }
+      Rooted<GlobalObject*> global(cx, r->maybeGlobal());
+      MOZ_ASSERT(global);
+      if (!dbg->addDebuggeeGlobal(cx, global)) {
+        return false;
       }
     }
   }
