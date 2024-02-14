@@ -2639,7 +2639,8 @@ namespace {
 class CancelRunnable final : public MainThreadWorkerRunnable {
  public:
   CancelRunnable(ThreadSafeWorkerRef* aWorkerRef, WebSocketImpl* aImpl)
-      : MainThreadWorkerRunnable(aWorkerRef->Private()), mImpl(aImpl) {}
+      : MainThreadWorkerRunnable(aWorkerRef->Private(), "CancelRunnable"),
+        mImpl(aImpl) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();

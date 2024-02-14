@@ -19,7 +19,8 @@ namespace {
 class WorkerCSPEventRunnable final : public MainThreadWorkerRunnable {
  public:
   WorkerCSPEventRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aJSON)
-      : MainThreadWorkerRunnable(aWorkerPrivate), mJSON(aJSON) {}
+      : MainThreadWorkerRunnable(aWorkerPrivate, "WorkerCSPEventRunnable"),
+        mJSON(aJSON) {}
 
  private:
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {

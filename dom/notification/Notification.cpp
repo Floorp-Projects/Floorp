@@ -307,8 +307,10 @@ nsresult CheckScope(nsIPrincipal* aPrincipal, const nsACString& aScope,
 // thread.
 class NotificationWorkerRunnable : public MainThreadWorkerRunnable {
  protected:
-  explicit NotificationWorkerRunnable(WorkerPrivate* aWorkerPrivate)
-      : MainThreadWorkerRunnable(aWorkerPrivate) {}
+  explicit NotificationWorkerRunnable(
+      WorkerPrivate* aWorkerPrivate,
+      const char* aName = "NotificationWorkerRunnable")
+      : MainThreadWorkerRunnable(aWorkerPrivate, aName) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -336,7 +338,8 @@ class NotificationEventWorkerRunnable final
  public:
   NotificationEventWorkerRunnable(Notification* aNotification,
                                   const nsString& aEventName)
-      : NotificationWorkerRunnable(aNotification->mWorkerPrivate),
+      : NotificationWorkerRunnable(aNotification->mWorkerPrivate,
+                                   "NotificationEventWorkerRunnable"),
         mNotification(aNotification),
         mEventName(aEventName) {}
 
@@ -350,7 +353,8 @@ class ReleaseNotificationRunnable final : public NotificationWorkerRunnable {
 
  public:
   explicit ReleaseNotificationRunnable(Notification* aNotification)
-      : NotificationWorkerRunnable(aNotification->mWorkerPrivate),
+      : NotificationWorkerRunnable(aNotification->mWorkerPrivate,
+                                   "ReleaseNotificationRunnable"),
         mNotification(aNotification) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -1052,7 +1056,8 @@ class NotificationClickWorkerRunnable final
   NotificationClickWorkerRunnable(
       Notification* aNotification,
       const nsMainThreadPtrHandle<nsPIDOMWindowInner>& aWindow)
-      : NotificationWorkerRunnable(aNotification->mWorkerPrivate),
+      : NotificationWorkerRunnable(aNotification->mWorkerPrivate,
+                                   "NotificationClickWorkerRunnable"),
         mNotification(aNotification),
         mWindow(aWindow) {
     MOZ_ASSERT_IF(mWorkerPrivate->IsServiceWorker(), !mWindow);
@@ -1695,7 +1700,7 @@ class WorkerGetResultRunnable final : public NotificationWorkerRunnable {
   WorkerGetResultRunnable(WorkerPrivate* aWorkerPrivate,
                           PromiseWorkerProxy* aPromiseProxy,
                           nsTArray<NotificationStrings>&& aStrings)
-      : NotificationWorkerRunnable(aWorkerPrivate),
+      : NotificationWorkerRunnable(aWorkerPrivate, "WorkerGetResultRunnable"),
         mPromiseProxy(aPromiseProxy),
         mStrings(std::move(aStrings)) {}
 
