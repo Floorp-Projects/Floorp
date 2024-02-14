@@ -32,25 +32,6 @@ namespace base {
 
 namespace {
 
-// Used by ReplaceStringPlaceholders to track the position in the string of
-// replaced parameters.
-struct ReplacementOffset {
-  ReplacementOffset(uintptr_t parameter, size_t offset)
-      : parameter(parameter),
-        offset(offset) {}
-
-  // Index of the parameter.
-  uintptr_t parameter;
-
-  // Starting position in the string.
-  size_t offset;
-};
-
-static bool CompareParameter(const ReplacementOffset& elem1,
-                             const ReplacementOffset& elem2) {
-  return elem1.parameter < elem2.parameter;
-}
-
 // Overloaded function to append one string onto the end of another. Having a
 // separate overload for |source| as both string and StringPiece allows for more
 // efficient usage from functions templated to work with either type (avoiding a
@@ -1010,87 +991,6 @@ std::string JoinString(std::initializer_list<StringPiece> parts,
 string16 JoinString(std::initializer_list<StringPiece16> parts,
                     StringPiece16 separator) {
   return JoinStringT(parts, separator);
-}
-
-template<class FormatStringType, class OutStringType>
-OutStringType DoReplaceStringPlaceholders(
-    const FormatStringType& format_string,
-    const std::vector<OutStringType>& subst,
-    std::vector<size_t>* offsets) {
-  size_t substitutions = subst.size();
-  DCHECK_LT(substitutions, 10U);
-
-  size_t sub_length = 0;
-  for (const auto& cur : subst)
-    sub_length += cur.length();
-
-  OutStringType formatted;
-  formatted.reserve(format_string.length() + sub_length);
-
-  std::vector<ReplacementOffset> r_offsets;
-  for (auto i = format_string.begin(); i != format_string.end(); ++i) {
-    if ('$' == *i) {
-      if (i + 1 != format_string.end()) {
-        ++i;
-        if ('$' == *i) {
-          while (i != format_string.end() && '$' == *i) {
-            formatted.push_back('$');
-            ++i;
-          }
-          --i;
-        } else {
-          if (*i < '1' || *i > '9') {
-            DLOG(ERROR) << "Invalid placeholder: $" << *i;
-            continue;
-          }
-          uintptr_t index = *i - '1';
-          if (offsets) {
-            ReplacementOffset r_offset(index,
-                                       static_cast<int>(formatted.size()));
-            r_offsets.insert(
-                std::upper_bound(r_offsets.begin(), r_offsets.end(), r_offset,
-                                 &CompareParameter),
-                r_offset);
-          }
-          if (index < substitutions)
-            formatted.append(subst.at(index));
-        }
-      }
-    } else {
-      formatted.push_back(*i);
-    }
-  }
-  if (offsets) {
-    for (const auto& cur : r_offsets)
-      offsets->push_back(cur.offset);
-  }
-  return formatted;
-}
-
-string16 ReplaceStringPlaceholders(const string16& format_string,
-                                   const std::vector<string16>& subst,
-                                   std::vector<size_t>* offsets) {
-  return DoReplaceStringPlaceholders(format_string, subst, offsets);
-}
-
-std::string ReplaceStringPlaceholders(StringPiece format_string,
-                                      const std::vector<std::string>& subst,
-                                      std::vector<size_t>* offsets) {
-  return DoReplaceStringPlaceholders(format_string, subst, offsets);
-}
-
-string16 ReplaceStringPlaceholders(const string16& format_string,
-                                   const string16& a,
-                                   size_t* offset) {
-  std::vector<size_t> offsets;
-  std::vector<string16> subst;
-  subst.push_back(a);
-  string16 result = ReplaceStringPlaceholders(format_string, subst, &offsets);
-
-  DCHECK_EQ(1U, offsets.size());
-  if (offset)
-    *offset = offsets[0];
-  return result;
 }
 
 #if defined(OS_WIN) && defined(BASE_STRING16_IS_STD_U16STRING)
