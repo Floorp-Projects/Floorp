@@ -1068,6 +1068,7 @@ const BASE_MESSAGES = () => [
       id: "FOX_DOODLE_SET_DEFAULT",
       screens: [
         {
+          id: "FOX_DOODLE_SET_DEFAULT_SCREEN",
           content: {
             logo: {
               height: "125px",
