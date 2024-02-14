@@ -248,6 +248,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Tawichinaj ri ruxaq atikirib\'al</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Rutikirib\'al ruwäch</string>
@@ -255,6 +256,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Titzalq\'omïx ruxaq</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Xcha\' ch\'ab\'äl</string>
@@ -266,8 +270,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tiwachib\'ëx</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Kanob\'äl</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Runuk\'ulem kanob\'äl</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -322,23 +324,26 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Ri taq rutzijol yatkito\' richin nasamajij  ch\'aqa\' chik pa %s</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Ri taq rutzijol yatkito\' richin nasamajij  ch\'aqa\' chik pa %s</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Ke\'axima\' ri taq ruwi\' chi kikojol ri taq okisaxel, ke\'anuk\'samajij taq qasanïk, ke\'ak\'ulu\' taq na\'oj chi rij rub\'eyal nawïl ri rutzil ruchajixik richinanem %s chuqa\' ch\'aqa\' chik.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Ke\'axima\' ri taq ruwi\' chi kikojol ri taq okisaxel, ke\'anuk\'samajij taq qasanïk, ke\'ak\'ulu\' taq na\'oj chi rij rub\'eyal nawïl ri rutzil ruchajixik richinanem %s chuqa\' ch\'aqa\' chik.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Titikïr chik el</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Titikïr chik el</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Wakami mani</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Wakami mani</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox ichinan rutzijol</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Niqa chi qawäch chi atqajikib\'an</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Ri qokik\'amaya\'l majun ch\'akoj rojqan, yatruto\' chi ri ajk\'ayij taq moloj yatkitzeqelb\'ej pa ewan pa ajk\'amaya\'l.\n\nCh\'aqa\' chik taq na\'oj pa ri rutzijol ichinanem.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Ri qokik\'amaya\'l majun ch\'akoj rojqan, yatruto\' chi ri ajk\'ayij taq moloj yatkitzeqelb\'ej pa ewan pa ajk\'amaya\'l.\n\nCh\'aqa\' chik taq na\'oj pa ri rutzijol ichinanem.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ichinan na\'oj</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">ichinan na\'oj</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Tiya\' kan achi\'el kanob\'äl k\'o wi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -435,20 +440,10 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-Only B\'anikil</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Kech\'utinirisäx kitzijol kuki</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Kiq\'atöy kitzijol cookie</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Ruq\'atöy kitzijol taq cookie pan ichinan okem</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Kech\'utinär ri taq kib\'aner koki</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Tichup</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Titzij</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s nutojtob\'ej yeruxutuj ruyonil ri kik\'utuxik kuki pa ri taq kinimawuj kuki.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Chupül pa re ruxaq re\'</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -467,32 +462,13 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Wakami man koch\'el ta re ruxaq re\'</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">¿La nitzij ri kich\'utinisaxik rutzijol kuki richin %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">¿La nitzij ri kiq\'atik taq kitzijol cookie richin %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">¿La nichup ri kich\'utinisaxik rutzijol kuki richin %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">¿La nichup ri ruq\'atoj kitzijol taq cookie richin %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2"> Man yeruq\'ät ta ri %1$s pa ruyonil ri taq kik\'utuj taq cookie pa re ruxaq re\'. Yatikïr natäq un k\'utuj richin nito\' re ruxaq re\' ri chwa\'q kab\'ij.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s xkeruyüj ri taq rukuki re ruxaq chuqa\' xtuk\'ëx re ruxaq. Xkeruyüj ronojel ri taq kuki, nitikïr nutz\'apij ri molojri\'ïl o yerujäm ri taq ruch\'ich\' loq\'oj.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s nitikïr nutojtob\'ej yeruxutuj pa ruyonil ronojel ri kik\'utuxik taq kuki pa koch\'el taq ruxaq.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Toq nitzij, ri %1$s xtutojtob\'ej xkeruxutuj pa ruyonil ri taq kitzijol taq cookie pa re ruxaq re\'.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">¿La niya\' q\'ij chi %1$s yeruxutuj ri kik\'utuxik taq kuki? </string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s nitikïr yeruxutuj pa ruyonil k\'ïy kik\'utuxik taq kuki.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Wakami mani</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Xtatz\'ët jub\'a kik\'utuxik kuki</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Tiya\' q\'ij</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s k\'a b\'a\' keruxutuj taq cookie</string>
@@ -702,6 +678,8 @@
     <string name="preferences_sync_bookmarks">Taq yaketal</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Ketikirisäx molojri\'ïl</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Ewan taq tzij</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Kejaq ruwi\'</string>
     <!-- Preference for signing out -->
@@ -729,6 +707,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Rutarjeta\' kre\'ito\'</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Rub\'eyal tojïk</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Taq ochochib\'äl</string>
 
@@ -1269,8 +1249,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Tewäx</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Man tikirel ta xtz\'ajb\'äx</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">Man tikirel ta nitz\'ajb\'äx re ruxaq re\'</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Titz\'ajb\'äx</string>
@@ -1316,6 +1294,10 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Ketz\'apïx ichinan taq ruwi\'</string>
+
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">La yetz\'apïx ichinan taq ruwi\'?</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Markentin</string>
 
@@ -1658,8 +1640,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Kitikirisaxik molojri\'ïl chuqa\' ewan taq tzij</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Ewan taq tzij</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Keyak kitikirisaxik molojri\'ïl chuqa\' ewan taq tzij</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Keyak ewan taq tzij</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Tik\'utüx chi niyak</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1672,16 +1658,25 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Tatz\'aqatisaj rutikirib\'al molojri\'ïl</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Titz\'aqatisäx ewan tzij</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync tikirisanïk molojri\'ïl</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Kexim ewan taq tzij</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sync rutikirib\'al molojri\'ïl rik\'in okisaxel</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Xeyak kitikirisaxik mojojri\'ïl</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Xeyak ewan taq tzij</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Wawe\' xkeq\'alajin ri taq tikirisanïk molojri\'ïl xke\'ayäk o xke\'axïm rik\'in %s.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Tawetamaj ch\'aqa\' chik chi rij ri Sync.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Tawetamaj ch\'aqa\' chik chi rij ri sync</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Taq man relik ta</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
@@ -1692,6 +1687,8 @@
     <string name="preferences_passwords_exceptions_remove_all">Tiyuj ronojel man relik ta</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Kekanöx tikirib\'äl taq molojri\'ïl</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Kekanöx ewan taq tzij</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Ruxaq k\'amaya\'l</string>
     <!-- The header for the username for a login -->
@@ -1721,10 +1718,14 @@
     <string name="saved_login_hide_password">Tewäx ewan tzij</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Man tiq\'at chik richin ye\'atz\'ët ri tikirib\'äl amolojri\'ïl e\'ayakon</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Man tiq\'at chik richin ye\'atz\'ët ri ewan taq tzij e\'ayakon</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Ke\'ajikib\'a\' kitikirisaxik amolojri\'ïl chuqa\' ewan taq atzij</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Tab\'ana\' runuk\'ulem jun retal ruq\'atoj okisab\'äl, jun PIN o jun ewan tzij richin nachajij ri kitikirib\'al amolojri\'ïl chuqa\' ewan taq atzij e\'ayakon we xa ta k\'o xtichapo ri awokisab\'al.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Tab\'ana\' runuk\'ulem jun retal ruq\'atoj okisab\'äl, jun PIN o jun ewan tzij richin nachajij ri ewan taq atzij e\'ayakon we xa ta k\'o xtichapo ri awokisab\'al.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Jub\'a\' chik na</string>
 
@@ -1753,6 +1754,8 @@
     <string name="preferences_addresses">Taq ochochib\'äl</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Rutarjeta\' kre\'ito\'</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Rub\'eyal tojïk</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Keyak chuqa\' ruyon kenojisäx ri tarjeta\'</string>
 
@@ -1765,15 +1768,22 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Titz\'aqatisäx rutarjeta\' kre\'ito\'</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Titz\'aqatisäx tarjeta\'</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Kenuk\'samajïx yakon taq tarjeta\'</string>
 
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kenuk\'samajïx taq tarjeta\'</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Titz\'aqatisäx ochochib\'äl</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Kenuk\'samajïx taq ochochib\'äl</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Keyak chuqa\' ruyon kenojisäx ri ochochib\'äl</string>
+
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Keyak chuqa\' kenojisäx ri ochochib\'äl</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Titz\'aqatisäx tarjeta\'</string>
@@ -1795,6 +1805,8 @@
     <string name="credit_cards_menu_delete_card">Tiyuj tarjeta\'</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Tiyuj tarjeta\'</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">La niyuj tarjeta\'?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Tiyuj</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1811,6 +1823,8 @@
 
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">Tanojisaj re k\'ojlem re\'</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Titz\'aqatisäx jun b\'i\'aj</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Man tiq\'at chik richin ye\'atz\'ët ri tarjeta\' e\'ayakon</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1959,16 +1973,28 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="saved_login_username_description">Ruk\'ojlem nuk\'el rutz\'ib\'axik rub\'i\' winäq pa ri rutikirib\'al molojri\'ïl.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Ruk\'ojlem nuk\'el rutz\'ib\'axik ewan tzij pa ri rutikirib\'al molojri\'ïl.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Ruk\'ojlem nuk\'el rutz\'ib\'axik ewan tzij.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Keyaj taq jaloj richin ri rutikirib\'al molojri\'ïl.</string>
+    <!--  The button description to save changes to an edited password. -->
+    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Keyak taq jaloj.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Tinuk\'</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2" tools:ignore="UnusedResources">Tinuk\' ewan tzij</string>
     <!--  The page title for adding new login. -->
     <string name="add_login">Titz\'aqatisäx k\'ak\'a\' rub\'i\' taqoya\'l</string>
+    <!--  The page title for adding new password. -->
+    <string name="add_login_2" tools:ignore="UnusedResources">Titz\'aqatisäx ewan tzij</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Najowäx ewan tzij</string>
+    <!--  Error text displayed underneath the password field when it is in an error case. -->
+    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Titz\'ib\'äx jun ewan tzij</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">Najowäx rub\'i\' okisanel</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Titz\'ib\'äx jun ewan rutzij okisaxel</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Najowäx rub\'i\' ruk\'u\'x k\'amb\'ey</string>
     <!-- Voice search button content description  -->
@@ -2052,7 +2078,7 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Tikanöx pa %s</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Nub\'än kinuk\'ulem ximonel ajk\'amaya\'l taq ruxaq, taq taqoya\'l chuqa\' taq rutzijol richin yejaq pa ruyonil pa Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2072,6 +2098,8 @@ Achi\'el: \nhttps://www.google.com/search?q=%s</string>
     <string name="pocket_stories_header_1">B\'anob\'äl richin yach\'ob\'on</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Tilitäj ch\'aqa\' chik</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">B\'anon ruma %s.</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Tetamäx ch\'aqa\' chik</string>
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->

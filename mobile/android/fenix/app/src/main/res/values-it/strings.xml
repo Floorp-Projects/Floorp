@@ -2295,13 +2295,13 @@
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Impostazioni</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
-    <string name="review_quality_check_settings_recommended_products">Mostra annunci nella verifica recensioni</string>
+    <string name="review_quality_check_settings_recommended_products">Mostra annunci in Verifica recensioni</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Verranno visualizzati annunci occasionali per prodotti pertinenti. Promuoviamo solo prodotti con recensioni affidabili. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Ulteriori informazioni</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
-    <string name="review_quality_check_settings_turn_off">Disattiva verifica recensioni</string>
+    <string name="review_quality_check_settings_turn_off">Disattiva Verifica recensioni</string>
     <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
     <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Altri prodotti da valutare</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
@@ -2395,17 +2395,17 @@
     <!-- Text for the first CFR presenting the review quality check feature. -->
     <string name="review_quality_check_first_cfr_message">Prima di acquistare, scopri se puoi fidarti delle recensioni di questo prodotto.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
-    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Prova verifica recensioni</string>
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Prova Verifica recensioni</string>
     <!-- Text for the second CFR presenting the review quality check feature. -->
     <string name="review_quality_check_second_cfr_message">Queste recensioni sono affidabili? Controlla ora per vedere la valutazione rettificata.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
-    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Apri verifica recensioni</string>
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Apri Verifica recensioni</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_open_handle_content_description">Apri verifica recensioni</string>
+    <string name="review_quality_check_open_handle_content_description">Apri Verifica recensioni</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_close_handle_content_description">Chiudi verifica recensioni</string>
+    <string name="review_quality_check_close_handle_content_description">Chiudi Verifica recensioni</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s su 5 stelle</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

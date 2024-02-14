@@ -652,8 +652,39 @@
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">سون باخیلان‌لار</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">دوشوندوروجو ناغیل‌لار</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">%sطرفیندن گوج آلینان مقاله‌لر</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">اسپانسرلی ناغیل‌لار</string>
+
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">دال پرده‌لر</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">دال پرده: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">دال پرده گونجللندی!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">گؤستر</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">دال پرده یئندیریلنمه‌دی</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">گئنه چالیش</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">دال پرده دگیشیله بیلمه‌دی</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">آرتیق بیلین</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">کلاسیک %s</string>
+
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">هونرمند سئری‌سی</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">باغیْمسیز سس‌لر مجموعه‌سی. %s</string>
 
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ایندی دؤنگل‌لندیر</string>
@@ -662,12 +693,31 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">بوُکمارک‌لار</string>
 
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">گیریش‌لر</string>
     <!-- Preference for syncing passwords -->
     <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">رمز‌لر</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">آچیْق تاغ‌لار</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">چیخیش</string>
+
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">جهاز آدی</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">جهاز آدیْ بوْش اوْلمالیدیر</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">دؤنگل‌لنیر...</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">دؤنگل خطا وئردی. سوْن باشاریْ: %s</string>
+
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">دؤنگل خطا وئردی. سوْن دؤنگل: یوْخدور</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">سوْن دؤنگل: %s</string>
+
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">سوْن دؤنگل: هئچ</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
