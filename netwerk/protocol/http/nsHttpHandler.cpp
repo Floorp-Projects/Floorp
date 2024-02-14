@@ -1868,6 +1868,11 @@ nsHttpHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
   NS_ENSURE_ARG_POINTER(uri);
   NS_ENSURE_ARG_POINTER(result);
 
+  if (MOZ_UNLIKELY(
+          AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown))) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   // Verify that we have been given a valid scheme
   if (!uri->SchemeIs("http") && !uri->SchemeIs("https")) {
     NS_WARNING("Invalid URI scheme");

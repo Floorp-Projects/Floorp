@@ -907,6 +907,12 @@ nsIOService::GetProtocolHandler(const char* scheme,
   AssertIsOnMainThread();
   NS_ENSURE_ARG_POINTER(scheme);
 
+  // Don't create a HTTP protocol handler during shutdown.
+  if (MOZ_UNLIKELY(AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) &&
+      (!strcmp(scheme, "https") || !strcmp(scheme, "http"))) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   *result = LookupProtocolHandler(nsDependentCString(scheme)).Handler().take();
   return *result ? NS_OK : NS_ERROR_UNKNOWN_PROTOCOL;
 }
