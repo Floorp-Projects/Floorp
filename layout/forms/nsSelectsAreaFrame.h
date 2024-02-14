@@ -21,15 +21,15 @@ class nsSelectsAreaFrame final : public nsBlockFrame {
   friend nsContainerFrame* NS_NewSelectsAreaFrame(mozilla::PresShell* aShell,
                                                   ComputedStyle* aStyle);
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   void BuildDisplayListInternal(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists);
 
-  virtual void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
   nscoord BSizeOfARow() const { return mBSizeOfARow; }
 
