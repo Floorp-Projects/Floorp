@@ -1,4 +1,6 @@
-# Outdated Content.
+# Content blocking
+
+## Outdated Content.
 Focus is using the same technology as Firefox for desktop, all the content blocking is happening inside of the Gecko engine web engine. content blocking list can be seen here https://github.com/mozilla-services/shavar-prod-lists.
 
 ## Tracking protection: lists and general overview

@@ -1,3 +1,5 @@
+# Homescreen Tips
+
 ## Homescreen Tips Explained 💡
 
 Homescreen tips launched in Firefox Focus 7.0 in October 2018. They allow users to get more information about the product without having to research on their own or dig around in settings. Tips also enable users to _quickly_ access portions of the settings menu they may not know how to navigate otherwise. All tips have either a deep link to settings or a link to their corresponding SUMO article (if available).

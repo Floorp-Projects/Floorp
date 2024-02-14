@@ -1,3 +1,5 @@
+# Recommended pre-push hook
+
 If you want to reduce your PR turn-around time, I'd recommend adding a
 pre-push hook: this script will stop a push if the unit tests or linters
 fail, finding the failures before it hits TaskCluster (which takes

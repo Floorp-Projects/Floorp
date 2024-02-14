@@ -1,4 +1,6 @@
-### Creating a new Release Branch
+# Release Process
+
+## Creating a new Release Branch
 
 1. Create a branch name with the format `releases_v[version]` (for example: `releases_v87.0`).
 2. Pin the Android Components version to the final release version with the format `[version].0.0`.
@@ -19,7 +21,7 @@
 
 Automation should take over after you land your PR into the upstream `releases_v[version]` branch. You can verify by clicking on the branch in the UI, and looking for the green/yellow dot that will list links to the running build tasks.
 
-### After the Beta release
+## After the Beta release
 
    Update the `versionName` from `build.gradle(Module:focus-android.app)` to the next Focus beta release version.This should be the `[version + 1]`.
    For example, if the release cut was for `90`, we're looking to prepare the latest nightly for `91`.
@@ -29,7 +31,7 @@ Automation should take over after you land your PR into the upstream `releases_v
    |--------------------|--------------------|-----------------|
    | build.gradle       | 90                 | 91              |
 
-### Renew telemetry
+## Renew telemetry
 
 After the Beta cut, another task is to renew/remove all soon to expire telemetry probes. What we're looking for is to create a list of telemetry that will expire in `[release_version add 2]`.  See [Firefox Release Calendar](https://wiki.mozilla.org/Release_Management/Calendar) for the current Release version.  There is a script that will help with finding these soon to expire telemetry.
 
@@ -47,7 +49,7 @@ After the Beta cut, another task is to renew/remove all soon to expire telemetry
  - Why was the initial period of collection insufficient?
 
 
-### Ask for Help
+## Ask for Help
 
 If you run into any problems, please ask any questions on Slack in #releaseduty-mobile.
 

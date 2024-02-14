@@ -1,3 +1,5 @@
+# Multisession Architecture
+
 To support multiple simultaneous browsing sessions the architecture of Focus has been refactored to strictly separate sessions (and associated data) from the UI that displays this data.
 
 Sessions are managed by a global `SessionManager` instance. UI components display data hold by `Session` objects.

@@ -1,3 +1,5 @@
+# Battery Debugging
+
 Android Performance Profiling can be quite tricky in spite of the wealth of good tools available. This doc is to explain how to track down battery and performance issues.
 
 ## Battery Historian
