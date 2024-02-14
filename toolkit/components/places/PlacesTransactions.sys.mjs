@@ -357,7 +357,9 @@ export var PlacesTransactions = {
           // skip most of the work for functions depending on previous results.
           // Moreover in both cases we should notify the user about the problem.
           accumulatedResults.push(undefined);
-          console.error(ex);
+          // Using console.error() here sometimes fails, due to unknown XPC
+          // wrappers reasons, so just use our logger.
+          lazy.logger.error(`Failed to execute batched transaction: ${ex}`);
         }
       }
       return accumulatedResults;
