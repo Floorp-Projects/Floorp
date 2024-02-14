@@ -72,7 +72,7 @@ add_setup(function () {
   );
 
   // Reset global bounce tracking state.
-  btp.reset();
+  btp.clearAll();
 
   bounceTrackingGracePeriodSec = Services.prefs.getIntPref(
     "privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec"
@@ -299,7 +299,7 @@ add_task(async function test_purge() {
   }
 
   info("Reset bounce tracking state.");
-  btp.reset();
+  btp.clearAll();
   assertEmpty();
 
   info("Clean up site data.");

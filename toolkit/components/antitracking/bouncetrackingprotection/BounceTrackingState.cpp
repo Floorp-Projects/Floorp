@@ -10,6 +10,7 @@
 
 #include "BounceTrackingStorageObserver.h"
 #include "ErrorList.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -98,20 +99,19 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
   return bounceTrackingState.forget();
 };
 
-void BounceTrackingState::ResetAll() {
-  if (!sBounceTrackingStates) {
-    return;
-  }
-  for (const RefPtr<BounceTrackingState>& bounceTrackingState :
-       sBounceTrackingStates->Values()) {
-    if (bounceTrackingState->mClientBounceDetectionTimeout) {
-      MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
-              ("%s: mClientBounceDetectionTimeout->Cancel()", __FUNCTION__));
-      bounceTrackingState->mClientBounceDetectionTimeout->Cancel();
-      bounceTrackingState->mClientBounceDetectionTimeout = nullptr;
-    }
-    bounceTrackingState->ResetBounceTrackingRecord();
-  }
+// static
+void BounceTrackingState::ResetAll() { Reset(nullptr, nullptr); }
+
+// static
+void BounceTrackingState::ResetAllForOriginAttributes(
+    const OriginAttributes& aOriginAttributes) {
+  Reset(&aOriginAttributes, nullptr);
+}
+
+// static
+void BounceTrackingState::ResetAllForOriginAttributesPattern(
+    const OriginAttributesPattern& aPattern) {
+  Reset(nullptr, &aPattern);
 }
 
 nsresult BounceTrackingState::Init(
@@ -158,6 +158,35 @@ nsCString BounceTrackingState::Describe() {
       "{ mBounceTrackingRecord: %s, mOriginAttributes: %s }",
       mBounceTrackingRecord ? mBounceTrackingRecord->Describe().get() : "null",
       oaSuffix.get());
+}
+
+// static
+void BounceTrackingState::Reset(const OriginAttributes* aOriginAttributes,
+                                const OriginAttributesPattern* aPattern) {
+  if (aOriginAttributes || aPattern) {
+    MOZ_ASSERT((aOriginAttributes != nullptr) != (aPattern != nullptr),
+               "Must not pass both aOriginAttributes and aPattern.");
+  }
+
+  if (!sBounceTrackingStates) {
+    return;
+  }
+  for (const RefPtr<BounceTrackingState>& bounceTrackingState :
+       sBounceTrackingStates->Values()) {
+    if ((aOriginAttributes &&
+         *aOriginAttributes != bounceTrackingState->OriginAttributesRef()) ||
+        (aPattern &&
+         !aPattern->Matches(bounceTrackingState->OriginAttributesRef()))) {
+      continue;
+    }
+    if (bounceTrackingState->mClientBounceDetectionTimeout) {
+      MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+              ("%s: mClientBounceDetectionTimeout->Cancel()", __FUNCTION__));
+      bounceTrackingState->mClientBounceDetectionTimeout->Cancel();
+      bounceTrackingState->mClientBounceDetectionTimeout = nullptr;
+    }
+    bounceTrackingState->ResetBounceTrackingRecord();
+  }
 }
 
 // static

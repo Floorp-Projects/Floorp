@@ -83,7 +83,7 @@ add_task(async function test_bounce_chain() {
         "Should only have user activation for sites where we clicked links."
       );
 
-      bounceTrackingProtection.reset();
+      bounceTrackingProtection.clearAll();
     }
   );
 });

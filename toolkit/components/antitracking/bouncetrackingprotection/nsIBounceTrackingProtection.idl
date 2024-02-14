@@ -8,7 +8,20 @@
 interface nsIBounceTrackingProtection : nsISupports {
     // Reset the global bounce tracking state, including the maps for tracking
     // bounce tracker candidates and user activation.
-    void reset();
+    void clearAll();
+
+    // Clear bounce tracking state for a specific site host and OriginAttributes pair.
+    [implicit_jscontext]
+    void clearBySiteHostAndOA(in ACString aSiteHost, in jsval originAttributes);
+
+    // Clear bounce tracking state for a specific site host for all OriginAttributes.
+    void clearBySiteHost(in ACString aSiteHost);
+
+    // Clear bounce tracking state for a specific time range.
+    void clearByTimeRange(in PRTime aFrom, in PRTime aTo);
+
+    // Clear bounce tracking state for the given origin attributes.
+    void clearByOriginAttributesPattern(in AString aPattern);
 
     // Trigger the bounce tracking timer algorithm that clears state for
     // classified bounce trackers.

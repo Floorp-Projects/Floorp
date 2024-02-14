@@ -63,6 +63,14 @@ class BounceTrackingStateGlobal final {
   [[nodiscard]] nsresult RemoveBounceTrackers(
       const nsTArray<nsCString>& aSiteHosts);
 
+  [[nodiscard]] nsresult ClearSiteHost(const nsACString& aSiteHost,
+                                       bool aSkipStorage = false);
+
+  [[nodiscard]] nsresult ClearByTimeRange(
+      PRTime aFrom, Maybe<PRTime> aTo = Nothing(),
+      Maybe<BounceTrackingProtectionStorage::EntryType> aEntryType = Nothing(),
+      bool aSkipStorage = false);
+
   const nsTHashMap<nsCStringHashKey, PRTime>& UserActivationMapRef() {
     return mUserActivation;
   }

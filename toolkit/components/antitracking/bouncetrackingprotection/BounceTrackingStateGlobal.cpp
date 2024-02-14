@@ -7,6 +7,7 @@
 #include "BounceTrackingStateGlobal.h"
 #include "BounceTrackingProtectionStorage.h"
 #include "ErrorList.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "nsIPrincipal.h"
 
@@ -49,7 +50,7 @@ nsresult BounceTrackingStateGlobal::RecordUserActivation(
 
   // Write the change to storage.
   NS_ENSURE_TRUE(mStorage, NS_ERROR_FAILURE);
-  return mStorage->UpdateEntry(
+  return mStorage->UpdateDBEntry(
       mOriginAttributes, aSiteHost,
       BounceTrackingProtectionStorage::EntryType::UserActivation, aTime);
 }
@@ -70,30 +71,79 @@ nsresult BounceTrackingStateGlobal::TestRemoveUserActivation(
 
   // Write the change to storage.
   NS_ENSURE_TRUE(mStorage, NS_ERROR_FAILURE);
-  return mStorage->DeleteEntry(mOriginAttributes, aSiteHost);
+  return mStorage->DeleteDBEntries(&mOriginAttributes, aSiteHost);
 }
 
 nsresult BounceTrackingStateGlobal::ClearUserActivationBefore(PRTime aTime) {
-  NS_ENSURE_TRUE(aTime > 0, NS_ERROR_INVALID_ARG);
+  return ClearByTimeRange(
+      0, Some(aTime),
+      Some(BounceTrackingProtectionStorage::EntryType::UserActivation));
+}
 
-  for (auto iter = mUserActivation.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.Data() < aTime) {
-      iter.Remove();
-      MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
-              ("%s: Remove user activation for %s", __FUNCTION__,
-               PromiseFlatCString(iter.Key()).get()));
+nsresult BounceTrackingStateGlobal::ClearSiteHost(const nsACString& aSiteHost,
+                                                  bool aSkipStorage) {
+  NS_ENSURE_TRUE(aSiteHost.Length(), NS_ERROR_INVALID_ARG);
+
+  bool removedUserActivation = mUserActivation.Remove(aSiteHost);
+  bool removedBounceTracker = mBounceTrackers.Remove(aSiteHost);
+  if (removedUserActivation || removedBounceTracker) {
+    MOZ_ASSERT(removedUserActivation != removedBounceTracker,
+               "A site must only be in one of the maps at a time.");
+  }
+
+  if (aSkipStorage || !ShouldPersistToDisk()) {
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(mStorage, NS_ERROR_FAILURE);
+  return mStorage->DeleteDBEntries(&mOriginAttributes, aSiteHost);
+}
+
+nsresult BounceTrackingStateGlobal::ClearByTimeRange(
+    PRTime aFrom, Maybe<PRTime> aTo,
+    Maybe<BounceTrackingProtectionStorage::EntryType> aEntryType,
+    bool aSkipStorage) {
+  NS_ENSURE_ARG_MIN(aFrom, 0);
+  NS_ENSURE_TRUE(!aTo || aTo.value() > aFrom, NS_ERROR_INVALID_ARG);
+
+  // Clear in memory user activation data.
+  if (aEntryType.isNothing() ||
+      aEntryType.value() ==
+          BounceTrackingProtectionStorage::EntryType::UserActivation) {
+    for (auto iter = mUserActivation.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.Data() >= aFrom &&
+          (aTo.isNothing() || iter.Data() <= aTo.value())) {
+        iter.Remove();
+        MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+                ("%s: Remove user activation for %s", __FUNCTION__,
+                 PromiseFlatCString(iter.Key()).get()));
+      }
     }
   }
 
-  if (!ShouldPersistToDisk()) {
+  // Clear in memory bounce tracker data.
+  if (aEntryType.isNothing() ||
+      aEntryType.value() ==
+          BounceTrackingProtectionStorage::EntryType::BounceTracker) {
+    for (auto iter = mBounceTrackers.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.Data() >= aFrom &&
+          (aTo.isNothing() || iter.Data() <= aTo.value())) {
+        iter.Remove();
+        MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+                ("%s: Remove bouncer tracker for %s", __FUNCTION__,
+                 PromiseFlatCString(iter.Key()).get()));
+      }
+    }
+  }
+
+  if (aSkipStorage || !ShouldPersistToDisk()) {
     return NS_OK;
   }
 
   // Write the change to storage.
   NS_ENSURE_TRUE(mStorage, NS_ERROR_FAILURE);
-  return mStorage->DeleteEntriesBefore(
-      mOriginAttributes, aTime,
-      Some(BounceTrackingProtectionStorage::EntryType::UserActivation));
+  return mStorage->DeleteDBEntriesInTimeRange(&mOriginAttributes, aFrom, aTo,
+                                              aEntryType);
 }
 
 bool BounceTrackingStateGlobal::HasBounceTracker(
@@ -116,7 +166,7 @@ nsresult BounceTrackingStateGlobal::RecordBounceTracker(
 
   // Write the change to storage.
   NS_ENSURE_TRUE(mStorage, NS_ERROR_FAILURE);
-  return mStorage->UpdateEntry(
+  return mStorage->UpdateDBEntry(
       mOriginAttributes, aSiteHost,
       BounceTrackingProtectionStorage::EntryType::BounceTracker, aTime);
 }
@@ -129,7 +179,8 @@ nsresult BounceTrackingStateGlobal::RemoveBounceTrackers(
     // TODO: Create a bulk delete query.
     if (ShouldPersistToDisk()) {
       NS_ENSURE_TRUE(mStorage, NS_ERROR_FAILURE);
-      mStorage->DeleteEntry(mOriginAttributes, siteHost);
+      nsresult rv = mStorage->DeleteDBEntries(&mOriginAttributes, siteHost);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
