@@ -2138,7 +2138,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         mainSession.waitUntilCalled(object : NavigationDelegate, ProgressDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
                 assertThat(
                     "Url should load example.com first",
                     url,
@@ -2160,7 +2160,7 @@ class WebExtensionTest : BaseSessionTest() {
         val pageStop = GeckoResult<Boolean>()
 
         mainSession.delegateUntilTestEnd(object : NavigationDelegate, ProgressDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
                 page = url
             }
 
