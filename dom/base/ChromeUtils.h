@@ -223,10 +223,10 @@ class ChromeUtils {
                                  const nsAString& resourceURI,
                                  ErrorResult& aRv);
 
-  static void DefineESModuleGetters(const GlobalObject& global,
-                                    JS::Handle<JSObject*> target,
-                                    JS::Handle<JSObject*> modules,
-                                    ErrorResult& aRv);
+  static void DefineESModuleGetters(
+      const GlobalObject& global, JS::Handle<JSObject*> target,
+      JS::Handle<JSObject*> modules,
+      const ImportESModuleOptionsDictionary& aOptions, ErrorResult& aRv);
 
 #ifdef XP_UNIX
   static void GetLibcConstants(const GlobalObject&, LibcConstants& aConsts);
