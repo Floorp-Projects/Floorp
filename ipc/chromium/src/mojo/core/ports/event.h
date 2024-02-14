@@ -61,6 +61,9 @@ class Event {
 
     // Used to acknowledge read messages to the conjugate.
     kUserMessageReadAck,
+
+    // Used to update the previous node and port name of a port.
+    kUpdatePreviousPeer,
   };
 
 #pragma pack(push, 1)
@@ -95,8 +98,17 @@ class Event {
   void Serialize(void* buffer) const;
   virtual ScopedEvent CloneForBroadcast() const;
 
+  const PortName& from_port() const { return from_port_; }
+  void set_from_port(const PortName& from_port) { from_port_ = from_port; }
+
+  uint64_t control_sequence_num() const { return control_sequence_num_; }
+  void set_control_sequence_num(uint64_t control_sequence_num) {
+    control_sequence_num_ = control_sequence_num;
+  }
+
  protected:
-  Event(Type type, const PortName& port_name);
+  Event(Type type, const PortName& port_name, const PortName& from_port,
+        uint64_t control_sequence_num);
 
   virtual size_t GetSerializedDataSize() const = 0;
   virtual void SerializeData(void* buffer) const = 0;
@@ -104,6 +116,8 @@ class Event {
  private:
   const Type type_;
   PortName port_name_;
+  PortName from_port_;
+  uint64_t control_sequence_num_;
 
   DISALLOW_COPY_AND_ASSIGN(Event);
 };
@@ -147,13 +161,16 @@ class UserMessageEvent : public Event {
   PortDescriptor* port_descriptors() { return port_descriptors_.data(); }
   PortName* ports() { return ports_.data(); }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
   size_t GetSizeIfSerialized() const;
 
  private:
-  UserMessageEvent(const PortName& port_name, uint64_t sequence_num);
+  UserMessageEvent(const PortName& port_name, const PortName& from_port,
+                   uint64_t control_sequence_num, uint64_t sequence_num);
 
   size_t GetSerializedDataSize() const override;
   void SerializeData(void* buffer) const override;
@@ -168,11 +185,14 @@ class UserMessageEvent : public Event {
 
 class PortAcceptedEvent : public Event {
  public:
-  explicit PortAcceptedEvent(const PortName& port_name);
+  PortAcceptedEvent(const PortName& port_name, const PortName& from_port,
+                    uint64_t control_sequence_num);
   ~PortAcceptedEvent() override;
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
@@ -183,7 +203,9 @@ class PortAcceptedEvent : public Event {
 
 class ObserveProxyEvent : public Event {
  public:
-  ObserveProxyEvent(const PortName& port_name, const NodeName& proxy_node_name,
+  ObserveProxyEvent(const PortName& port_name, const PortName& from_port,
+                    uint64_t control_sequence_num,
+                    const NodeName& proxy_node_name,
                     const PortName& proxy_port_name,
                     const NodeName& proxy_target_node_name,
                     const PortName& proxy_target_port_name);
@@ -198,8 +220,10 @@ class ObserveProxyEvent : public Event {
     return proxy_target_port_name_;
   }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
@@ -216,13 +240,17 @@ class ObserveProxyEvent : public Event {
 
 class ObserveProxyAckEvent : public Event {
  public:
-  ObserveProxyAckEvent(const PortName& port_name, uint64_t last_sequence_num);
+  ObserveProxyAckEvent(const PortName& port_name, const PortName& from_port,
+                       uint64_t control_sequence_num,
+                       uint64_t last_sequence_num);
   ~ObserveProxyAckEvent() override;
 
   uint64_t last_sequence_num() const { return last_sequence_num_; }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
@@ -235,7 +263,9 @@ class ObserveProxyAckEvent : public Event {
 
 class ObserveClosureEvent : public Event {
  public:
-  ObserveClosureEvent(const PortName& port_name, uint64_t last_sequence_num);
+  ObserveClosureEvent(const PortName& port_name, const PortName& from_port,
+                      uint64_t control_sequence_num,
+                      uint64_t last_sequence_num);
   ~ObserveClosureEvent() override;
 
   uint64_t last_sequence_num() const { return last_sequence_num_; }
@@ -243,8 +273,10 @@ class ObserveClosureEvent : public Event {
     last_sequence_num_ = last_sequence_num;
   }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
@@ -257,7 +289,8 @@ class ObserveClosureEvent : public Event {
 
 class MergePortEvent : public Event {
  public:
-  MergePortEvent(const PortName& port_name, const PortName& new_port_name,
+  MergePortEvent(const PortName& port_name, const PortName& from_port,
+                 uint64_t control_sequence_num, const PortName& new_port_name,
                  const PortDescriptor& new_port_descriptor);
   ~MergePortEvent() override;
 
@@ -266,8 +299,10 @@ class MergePortEvent : public Event {
     return new_port_descriptor_;
   }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
@@ -282,6 +317,8 @@ class MergePortEvent : public Event {
 class UserMessageReadAckRequestEvent : public Event {
  public:
   UserMessageReadAckRequestEvent(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
                                  uint64_t sequence_num_to_acknowledge);
   ~UserMessageReadAckRequestEvent() override;
 
@@ -289,8 +326,10 @@ class UserMessageReadAckRequestEvent : public Event {
     return sequence_num_to_acknowledge_;
   }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
@@ -301,7 +340,8 @@ class UserMessageReadAckRequestEvent : public Event {
 
 class UserMessageReadAckEvent : public Event {
  public:
-  UserMessageReadAckEvent(const PortName& port_name,
+  UserMessageReadAckEvent(const PortName& port_name, const PortName& from_port,
+                          uint64_t control_sequence_num,
                           uint64_t sequence_num_acknowledged);
   ~UserMessageReadAckEvent() override;
 
@@ -309,14 +349,41 @@ class UserMessageReadAckEvent : public Event {
     return sequence_num_acknowledged_;
   }
 
-  static ScopedEvent Deserialize(const PortName& port_name, const void* buffer,
-                                 size_t num_bytes);
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
 
  private:
   size_t GetSerializedDataSize() const override;
   void SerializeData(void* buffer) const override;
 
   uint64_t sequence_num_acknowledged_;
+};
+
+class UpdatePreviousPeerEvent : public Event {
+ public:
+  UpdatePreviousPeerEvent(const PortName& port_name, const PortName& from_port,
+                          uint64_t control_sequence_num,
+                          const NodeName& new_node_name,
+                          const PortName& new_port_name);
+  ~UpdatePreviousPeerEvent() override;
+
+  const NodeName& new_node_name() const { return new_node_name_; }
+
+  const PortName& new_port_name() const { return new_port_name_; }
+
+  static ScopedEvent Deserialize(const PortName& port_name,
+                                 const PortName& from_port,
+                                 uint64_t control_sequence_num,
+                                 const void* buffer, size_t num_bytes);
+
+ private:
+  size_t GetSerializedDataSize() const override;
+  void SerializeData(void* buffer) const override;
+
+  const NodeName new_node_name_;
+  const PortName new_port_name_;
 };
 
 }  // namespace ports

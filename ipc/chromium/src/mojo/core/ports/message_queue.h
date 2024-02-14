@@ -46,6 +46,9 @@ class MessageQueue {
   void GetNextMessage(mozilla::UniquePtr<UserMessageEvent>* message,
                       MessageFilter* filter);
 
+  // Mark the message from |GetNextMessage| as processed.
+  void MessageProcessed();
+
   // Takes ownership of the message. Note: Messages are ordered, so while we
   // have added a message to the queue, we may still be waiting on a message
   // ahead of this one before we can let any of the messages be returned by
