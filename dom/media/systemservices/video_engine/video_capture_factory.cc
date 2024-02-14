@@ -106,6 +106,7 @@ auto VideoCaptureFactory::InitCameraBackend()
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
     MOZ_ASSERT(mVideoCaptureOptions);
     mVideoCaptureOptions->Init(this);
+#  if defined(WEBRTC_USE_PIPEWIRE)
     mPromise = mPromise->Then(
         GetCurrentSerialEventTarget(), __func__,
         [this, self = RefPtr(this)](
@@ -128,6 +129,7 @@ auto VideoCaptureFactory::InitCameraBackend()
               aValue,
               "VideoCaptureFactory::InitCameraBackend Resolve or Reject");
         });
+#  endif
 #else
     mCameraBackendInitialized = true;
     mPromiseHolder.Resolve(NS_OK,
