@@ -96,7 +96,7 @@ PER_PROJECT_PARAMETERS = {
         "release_type": "esr115",
     },
     "pine": {
-        "target_tasks_method": "default",
+        "target_tasks_method": "pine_tasks",
         "release_type": "nightly-pine",
     },
     "larch": {

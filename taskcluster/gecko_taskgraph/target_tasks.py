@@ -704,23 +704,18 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
 
 @_target_task("pine_tasks")
 def target_tasks_pine(full_task_graph, parameters, graph_config):
-    """Bug 1339179 - no mobile automation needed on pine"""
+    """Bug 1879960 - no reftests or wpt needed"""
+    filtered_for_project = target_tasks_default(
+        full_task_graph, parameters, graph_config
+    )
 
     def filter(task):
-        platform = task.attributes.get("build_platform")
-        # disable mobile jobs
-        if str(platform).startswith("android"):
+        suite = task.attributes.get("unittest_suite", "")
+        if "reftest" in suite or "web-platform" in suite:
             return False
-        # disable asan
-        if platform == "linux64-asan":
-            return False
-        # disable non-pine and tasks with a shipping phase
-        if standard_filter(task, parameters) or filter_out_shipping_phase(
-            task, parameters
-        ):
-            return True
+        return True
 
-    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
 
 
 @_target_task("larch_tasks")
