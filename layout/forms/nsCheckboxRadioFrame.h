@@ -14,8 +14,6 @@
 
 /**
  * nsCheckboxRadioFrame is used for radio buttons and checkboxes.
- * It also has a static method (GetUsableScreenRect) that is used by
- * other form controls.
  */
 class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
                                    public nsIFormControlFrame {
