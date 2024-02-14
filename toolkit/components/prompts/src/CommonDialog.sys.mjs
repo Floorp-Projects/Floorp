@@ -142,14 +142,18 @@ CommonDialog.prototype = {
     // This assumes that button0 defaults to a visible "ok" button, and
     // button1 defaults to a visible "cancel" button. The other 2 buttons
     // have no default labels (and are hidden).
+    this.ui.button3.disabled = true;
+    this.ui.button2.disabled = true;
     switch (this.numButtons) {
       case 4:
         this.setLabelForNode(this.ui.button3, this.args.button3Label);
         this.ui.button3.hidden = false;
+        this.ui.button3.disabled = false;
       // fall through
       case 3:
         this.setLabelForNode(this.ui.button2, this.args.button2Label);
         this.ui.button2.hidden = false;
+        this.ui.button2.disabled = false;
       // fall through
       case 2:
         // Defaults to a visible "cancel" button
@@ -160,6 +164,7 @@ CommonDialog.prototype = {
 
       case 1:
         this.ui.button1.hidden = true;
+        this.ui.button1.disabled = true;
         break;
     }
     // Defaults to a visible "ok" button
