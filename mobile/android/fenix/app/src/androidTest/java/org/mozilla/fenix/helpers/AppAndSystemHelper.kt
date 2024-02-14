@@ -178,11 +178,12 @@ object AppAndSystemHelper {
     }
 
     fun isPackageInstalled(packageName: String): Boolean {
+        Log.i(TAG, "isPackageInstalled: Trying to verify that $packageName is installed")
         return try {
             val packageManager = InstrumentationRegistry.getInstrumentation().context.packageManager
             packageManager.getApplicationInfo(packageName, 0).enabled
         } catch (e: PackageManager.NameNotFoundException) {
-            Log.i(TAG, "isPackageInstalled: Catch block - ${e.message}")
+            Log.i(TAG, "isPackageInstalled: $packageName is not installed - ${e.message}")
             false
         }
     }
