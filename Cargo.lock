@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "aa-stroke"
 version = "0.1.0"
-source = "git+https://github.com/FirefoxGraphics/aa-stroke?rev=ed4206ea11703580cd1d4fc63371a527b29d8252#ed4206ea11703580cd1d4fc63371a527b29d8252"
+source = "git+https://github.com/FirefoxGraphics/aa-stroke?rev=96e66f91bb8e8efb80ff144eabd668002aa89650#96e66f91bb8e8efb80ff144eabd668002aa89650"
 dependencies = [
  "euclid",
 ]

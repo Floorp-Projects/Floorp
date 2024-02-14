@@ -1,4 +1,4 @@
-use crate::{Stroker, StrokeStyle, Point};
+use crate::{filled_circle_with_path_builder, PathBuilder, Point, StrokeStyle, Stroker};
 
 type OutputVertex = crate::Vertex;
 
@@ -90,6 +90,31 @@ pub unsafe extern "C" fn aa_stroke_release(s: *mut Stroker) {
     drop(Box::from_raw(s));
 }
 
+#[no_mangle]
+pub extern "C" fn aa_stroke_filled_circle(
+    cx: f32, cy: f32, radius: f32, output_ptr: *mut OutputVertex, output_capacity: usize
+) -> VertexBuffer {
+    let mut path_builder = PathBuilder::new(1.);
+    if output_ptr != std::ptr::null_mut() {
+        let slice = unsafe { std::slice::from_raw_parts_mut(output_ptr, output_capacity) };
+        path_builder.set_output_buffer(slice);
+    }
+
+    filled_circle_with_path_builder(&mut path_builder, Point::new(cx, cy), radius);
+
+    if let Some(output_buffer_size) = path_builder.get_output_buffer_size() {
+        VertexBuffer {
+            data: std::ptr::null(),
+            len: output_buffer_size,
+        }
+    } else {
+        let result = path_builder.finish();
+        let len = result.len();
+        let vb = VertexBuffer { data: Box::leak(result).as_ptr(), len };
+        vb
+    }
+}
+
 
 #[test]
 fn simple() {
@@ -118,5 +143,27 @@ fn output_buffer() {
     assert_eq!(vb.data, std::ptr::null());
     aa_stroke_vertex_buffer_release(vb);
     unsafe { aa_stroke_release(s) } ;
+}
+
+#[test]
+fn filled_circle_output_buffer() {
+    use crate::Vertex;
+    let mut output = Vec::new();
+    output.resize_with(1000, || OutputVertex{x: 0., y: 0., coverage: 0.});
+    let center = Point::new(100., 100.);
+    let radius = 33.;
+
+    let vb = aa_stroke_filled_circle(center.x, center.y, radius, output.as_mut_ptr(), output.len());
+    assert_ne!(vb.len, 0);
+    assert_eq!(vb.data, std::ptr::null());
+    let result = &output[0..vb.len];
+    let min_x  = result.iter().map(|v: &Vertex| v.x).reduce(|a, b| a.min(b)).unwrap();
+    let max_x  = result.iter().map(|v: &Vertex| v.x).reduce(|a, b| a.max(b)).unwrap();
+    let min_y  = result.iter().map(|v: &Vertex| v.y).reduce(|a, b| a.min(b)).unwrap();
+    let max_y  = result.iter().map(|v: &Vertex| v.y).reduce(|a, b| a.max(b)).unwrap();
+    assert_eq!(min_x, center.x - (radius + 0.5));
+    assert_eq!(max_x, center.x + (radius + 0.5));
+    assert_eq!(min_y, center.y - (radius + 0.5));
+    assert_eq!(max_y, center.y + (radius + 0.5));
 }
 
