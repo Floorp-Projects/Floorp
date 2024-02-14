@@ -153,7 +153,7 @@ class Node {
                                     uint64_t sequence_num_acknowledge_interval);
 
   // Corresponding to NodeDelegate::ForwardEvent.
-  int AcceptEvent(ScopedEvent event);
+  int AcceptEvent(const NodeName& from_node, ScopedEvent event);
 
   // Called to merge two ports with each other. If you have two independent
   // port pairs A <=> B and C <=> D, the net result of merging B and C is a
@@ -206,7 +206,8 @@ class Node {
     NodeDelegate* const delegate_;
   };
 
-  int OnUserMessage(mozilla::UniquePtr<UserMessageEvent> message);
+  int OnUserMessage(const NodeName& from_node,
+                    mozilla::UniquePtr<UserMessageEvent> message);
   int OnPortAccepted(mozilla::UniquePtr<PortAcceptedEvent> event);
   int OnObserveProxy(mozilla::UniquePtr<ObserveProxyEvent> event);
   int OnObserveProxyAck(mozilla::UniquePtr<ObserveProxyAckEvent> event);

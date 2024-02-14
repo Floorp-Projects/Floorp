@@ -184,13 +184,13 @@ class TestNode : public NodeDelegate {
     return true;
   }
 
-  void EnqueueEvent(ScopedEvent event) {
+  void EnqueueEvent(const NodeName& from_node, ScopedEvent event) {
     idle_event_.Reset();
 
     // NOTE: This may be called from ForwardMessage and thus must not reenter
     // |node_|.
     mozilla::MutexAutoLock lock(lock_);
-    incoming_events_.emplace(std::move(event));
+    incoming_events_.push({from_node, std::move(event)});
     events_available_event_.Signal();
   }
 
@@ -271,20 +271,21 @@ class TestNode : public NodeDelegate {
       dispatching_ = true;
       while (!incoming_events_.empty()) {
         if (block_on_event_ &&
-            incoming_events_.front()->type() == blocked_event_type_) {
+            incoming_events_.front().second->type() == blocked_event_type_) {
           blocked_ = true;
           // Go idle if we hit a blocked event type.
           break;
         }
         blocked_ = false;
 
-        ScopedEvent event = std::move(incoming_events_.front());
+        auto node_event_pair = std::move(incoming_events_.front());
         incoming_events_.pop();
 
         // NOTE: AcceptMessage() can re-enter this object to call any of the
         // NodeDelegate interface methods.
         mozilla::MutexAutoUnlock unlock(lock_);
-        node_.AcceptEvent(std::move(event));
+        node_.AcceptEvent(node_event_pair.first,
+                          std::move(node_event_pair.second));
       }
 
       dispatching_ = false;
@@ -311,7 +312,7 @@ class TestNode : public NodeDelegate {
   bool blocked_ = false;
   bool block_on_event_ = false;
   Event::Type blocked_event_type_{};
-  std::queue<ScopedEvent> incoming_events_;
+  std::queue<std::pair<NodeName, ScopedEvent>> incoming_events_;
   std::queue<ScopedMessage> saved_messages_;
 };
 
@@ -417,7 +418,7 @@ class PortsTest : public testing::Test, public MessageRouter {
           message_event->GetMessage<TestMessage>()->payload()));
     }
 
-    it->second->EnqueueEvent(std::move(event));
+    it->second->EnqueueEvent(from_node->name(), std::move(event));
   }
 
   void BroadcastEvent(TestNode* from_node, ScopedEvent event) override {
@@ -435,7 +436,7 @@ class PortsTest : public testing::Test, public MessageRouter {
       if (node == from_node) {
         continue;
       }
-      node->EnqueueEvent(event->CloneForBroadcast());
+      node->EnqueueEvent(from_node->name(), event->CloneForBroadcast());
     }
   }
 

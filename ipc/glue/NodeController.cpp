@@ -309,7 +309,7 @@ void NodeController::DropPeer(NodeName aNodeName) {
 void NodeController::ForwardEvent(const NodeName& aNode,
                                   UniquePtr<Event> aEvent) {
   if (aNode == mName) {
-    (void)mNode->AcceptEvent(std::move(aEvent));
+    (void)mNode->AcceptEvent(mName, std::move(aEvent));
   } else {
     // On Windows and macOS, messages holding HANDLEs or mach ports must be
     // relayed via the broker process so it can transfer ownership.
@@ -543,7 +543,7 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
     }
   }
 
-  (void)mNode->AcceptEvent(std::move(event));
+  (void)mNode->AcceptEvent(fromNode, std::move(event));
 }
 
 void NodeController::OnBroadcast(const NodeName& aFromNode,
