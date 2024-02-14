@@ -9356,7 +9356,7 @@
 # Whether table cells can generate scroll boxes.
 - name: layout.tables.scrollable-cells
   type: bool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to disable layer pixel alignment in scroll related stuff.
