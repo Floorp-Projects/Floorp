@@ -216,13 +216,21 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
   );
   await extension.awaitStartup();
 
+  let engine = Services.search.getEngineById(
+    "simpleengine@tests.mozilla.orgdefault"
+  );
+
   await Services.search.setDefault(
-    Services.search.getEngineById("simpleengine@tests.mozilla.orgdefault"),
+    engine,
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
 
+  // Set a user defined alias.
+  engine.alias = "star";
+
   await assertEngineCorrectlySet({
     expectedId: "simpleengine@tests.mozilla.orgdefault",
+    expectedAlias: "star",
     appEngineOverriden: false,
   });
 
@@ -230,6 +238,7 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
 
   await assertEngineCorrectlySet({
     expectedId: "simple@search.mozilla.orgdefault",
+    expectedAlias: "star",
     appEngineOverriden: true,
   });
   Assert.ok(
@@ -255,6 +264,7 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
   );
   await assertEngineCorrectlySet({
     expectedId: "simple@search.mozilla.orgdefault",
+    expectedAlias: "star",
     appEngineOverriden: true,
   });
 }
@@ -277,6 +287,7 @@ async function assertCorrectlySwitchedWhenRemoved(changeFn) {
 
   await assertEngineCorrectlySet({
     expectedId: "simpleengine@tests.mozilla.orgdefault",
+    expectedAlias: "star",
     appEngineOverriden: false,
   });
 
@@ -295,13 +306,18 @@ async function assertCorrectlySwitchedWhenRemoved(changeFn) {
 
   await assertEngineCorrectlySet({
     expectedId: "simpleengine@tests.mozilla.orgdefault",
+    expectedAlias: "star",
     appEngineOverriden: false,
   });
 
   await extension.unload();
 }
 
-async function assertEngineCorrectlySet({ expectedId, appEngineOverriden }) {
+async function assertEngineCorrectlySet({
+  expectedAlias = "",
+  expectedId,
+  appEngineOverriden,
+}) {
   let engines = await Services.search.getEngines();
   Assert.equal(
     engines.filter(e => e.name == ENGINE_NAME).length,
@@ -331,4 +347,6 @@ async function assertEngineCorrectlySet({ expectedId, appEngineOverriden }) {
     appEngineOverriden ? "simple-addon" : "other-Simple Engine",
     "Should set the correct telemetry Id"
   );
+
+  Assert.equal(engine.alias, expectedAlias, "Should have the correct alias");
 }

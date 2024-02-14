@@ -60,6 +60,10 @@ var OS_UNSUPPORTED_PARAMS = [
   [OS_PARAM_START_PAGE, OS_PARAM_START_PAGE_DEF],
 ];
 
+// An array of attributes that are saved in the engines `_metaData` object.
+// Attributes not in this array are considered as system attributes.
+const USER_ATTRIBUTES = ["alias", "order", "hideOneOffButton"];
+
 /**
  * Truncates big blobs of (data-)URIs to console-friendly sizes
  *
@@ -1060,6 +1064,9 @@ export class SearchEngine {
       searchForm: this.#cachedSearchForm,
     };
     if (engine) {
+      // Copy any saved user data (alias, order etc).
+      this.copyUserSettingsFrom(engine);
+
       this._urls = engine._urls;
       this.setAttr("overriddenBy", engine._extensionID);
     } else {
@@ -1094,6 +1101,21 @@ export class SearchEngine {
         this,
         lazy.SearchUtils.MODIFIED_TYPE.CHANGED
       );
+    }
+  }
+
+  /**
+   * Copies settings from the supplied search engine. Typically used for
+   * restoring settings when removing an override.
+   *
+   * @param {SearchEngine} engine
+   *   The engine to copy the settings from.
+   */
+  copyUserSettingsFrom(engine) {
+    for (let attribute of USER_ATTRIBUTES) {
+      if (attribute in engine._metaData) {
+        this._metaData[attribute] = engine._metaData[attribute];
+      }
     }
   }
 

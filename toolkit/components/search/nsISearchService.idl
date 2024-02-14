@@ -116,8 +116,8 @@ interface nsISearchEngine : nsISupports
   void speculativeConnect(in jsval options);
 
   /**
-   * An optional shortcut alias for the engine.
-   * When not an empty string, this is a unique identifier.
+   * A user defined alias for the engine.
+   * When not an empty string, this should be a unique identifier.
    */
   attribute AString alias;
 

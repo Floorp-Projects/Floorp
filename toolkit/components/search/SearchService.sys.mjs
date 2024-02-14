@@ -2053,6 +2053,7 @@ export class SearchService {
           },
         });
         await engine.init({ locale: lazy.SearchUtils.DEFAULT_TAG });
+        engine.copyUserSettingsFrom(prevCurrentEngine);
         this.#addEngineToStore(engine, true);
 
         // Now set it back to default.
