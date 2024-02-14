@@ -1,3 +1,5 @@
+# l10n Screenshot Generation
+
 This wiki describes the steps to generate l10n screenshots on a device.
 
 ## Prerequisites

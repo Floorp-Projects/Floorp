@@ -1,9 +1,11 @@
-# High-Level Steps
+# Feature & Issue workflow
+
+## High-Level Steps
 
 | Issue opened| ➡️ |Triaged| ➡️ |Ready in/for Backlog| ➡️ | Ready for UX | ➡️ | Ready for Eng| ➡️ |Eng done| ➡️ |Ready for review| ➡️ |Ready for QA| ➡️ |Done
 |------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------
 
-# Details
+## Details
 
 **Issue opened**
 - Issue is created (by anybody)

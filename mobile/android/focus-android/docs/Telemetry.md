@@ -1,15 +1,15 @@
 # Telemetry
 For clients that have "send anonymous usage data" enabled Focus sends a "core" ping and an "event" ping to Mozilla's telemetry service. Sending telemetry can be disabled in the app's settings. Builds of "Focus for Android" have telemetry enabled by default ("opt-out") while builds of "Klar for Android" have telemetry disabled by default.
 
-# Core ping
+## Core ping
 
 Focus for Android creates and tries to send a "core" ping whenever the app goes to the background. This core ping uses the same format as Firefox for Android and is [documented on firefox-source-docs.mozilla.org](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/core-ping.html).
 
-# Event ping
+## Event ping
 
 In addition to the core ping an event ping for UI telemetry is generated and sent as soon as the app is sent to the background.
 
-## Settings
+### Settings
 
 As part of the event ping the most recent state of the user's setting is sent (default values in **bold**):
 
@@ -35,18 +35,18 @@ As part of the event ping the most recent state of the user's setting is sent (d
 
 (***) An **empty string** value indicates "System Default" locale is selected.
 
-## Events
+### Events
 
 The event ping contains a list of events ([see event format on readthedocs.io](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/events.html)) for the following actions:
 
-### Sessions
+#### Sessions
 
 | Event                                    | category | method     | object | value  |
 |------------------------------------------|----------|------------|--------|--------|
 | Start session (App is in the foreground) | action   | foreground | app    |        |
 | Stop session (App is in the background)  | action   | background | app    |        |
 
-### Browsing
+#### Browsing
 
 | Event                                  | category | method                | object     | value  | extras.    |
 |----------------------------------------|----------|-----------------------|------------|--------|------------|
@@ -61,7 +61,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | Autofill performed                     | action   | click                 | autofill   |        |            |
 | Enable Search Suggestion from prompt                            | action   | click              | search_suggestion_prompt |    true/false    |  |
 
-### Custom Tabs
+#### Custom Tabs
 
 | Event                     | category | method            | object               | value      | extra      |
 |---------------------------|----------|-------------------|----------------------|------------|------------|
@@ -81,7 +81,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 }
 ```
 
-### Context Menu
+#### Context Menu
 
 | Event                                  | category | method | object              | value      |
 |----------------------------------------|----------|--------|---------------------|------------|
@@ -98,7 +98,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 
 
 
-### Erasing session
+#### Erasing session
 
 | Event                                  | category | method      | object              | value      | extras  |
 |----------------------------------------|----------|-------------|---------------------|------------|---------|
@@ -120,7 +120,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 }
 ```
 
-### Menu
+#### Menu
 
 | Event                                       | category | method   | object          | value        | extras  |
 |---------------------------------------------|----------|----------|-----------------|--------------|----------|
@@ -145,7 +145,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 }
 ```
 
-### Notification
+#### Notification
 
 | Event                                 | category | method   | object              | value      | extras  |
 |---------------------------------------|----------|----------|---------------------|------------|---------|
@@ -161,7 +161,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
   "total": "5"     // Total number of open tabs
 }
 ```
-### Page Load Time Histogram
+#### Page Load Time Histogram
 
 
 | Event                    | category | method     | object | extras|
@@ -176,7 +176,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 {"19900", "4"}
 ```
 
-### URI Count
+#### URI Count
 
 | Event                                       | category | method   | object              | extra           |
 |---------------------------------------------|----------|----------|---------------------|-----------------|
@@ -184,21 +184,21 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | The count of the unique domains visited in a subsession, after the session has been restored. Subdomains under eTLD are aggregated after the first level (i.e. test.example.com and other.example.com are only counted once). This does not include background page requests and domains from embedded pages or private browsing.         | action   | open    | browser            | `{"unique_domains_count": num }`         |
 
 
-### Downloads
+#### Downloads
 
 | Event                                       | category | method   | object              | value           |
 |---------------------------------------------|----------|----------|---------------------|-----------------|
 | Clicked "Download"                          | action   | click    | download_dialog     | download        |
 | Clicked "Cancel"                            | action   | click    | download_dialog     | cancel          |
 
-### Open Focus From Icon
+#### Open Focus From Icon
 
 | Event                                       | category | method   | object              | value           |
 |---------------------------------------------|----------|----------|---------------------|-----------------|
 | Launched Focus From Icon                    | action   | click    | app_icon            | open            |
 | Resume Focus From Icon                      | action   | click    | app_icon            | resume          |
 
-### Add to Home screen
+#### Add to Home screen
 
 | Event                                   | category | method   | object                   | value             |
 |-----------------------------------------|----------|----------|--------------------------|-------------------|
@@ -206,14 +206,14 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | Clicked "Cancel" in dialog              | action   | click    | add_to_homescreen_dialog | cancel            |
 | Open Focus from Home screen shortcut    | action   | click    | homescreen_shortcut      | open              |
 
-### Share to Focus Event
+#### Share to Focus Event
 
 | Event                                       | category | method   | object              | value           |
 |---------------------------------------------|----------|----------|---------------------|-----------------|
 | Shared URL to Focus                         | action   | share_intent  | app            | url             |
 | Shared Search Terms to Focus                | action   | share_intent  | app            | search          |
 
-### Settings
+#### Settings
 
 | Event                          | category | method   | object                  | value | extras               |
 |--------------------------------|----------|----------|-------------------------|-------|--------------------------
@@ -251,7 +251,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 
 (*) `bool` true if successfully saved, false if validation error
 
-### Firstrun
+#### Firstrun
 
 | Event                                       | category | method   | object              | value        |
 |---------------------------------------------|----------|----------|---------------------|--------------|
@@ -261,7 +261,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 
 (*) Page numbers start at 0. Initially when the firstrun tour is shown an event for the first page (0) is fired.
 
-### Multitasking / Tabs
+#### Multitasking / Tabs
 
 | Event                                      | category | method   | object              | value | extras  |
 |--------------------------------------------|----------|----------|---------------------|-------|---------|
@@ -280,7 +280,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 }
 ```
 
-### Homescreen Tips
+#### Homescreen Tips
 
 | Event                                    | category | method     | object | value  |
 |------------------------------------------|----------|------------|--------|--------|
@@ -303,7 +303,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | Survey (fr) tip displayed | action   | show | tip | survey_tip_fr    |        |
 | Survey (fr) tip tapped | action   | click | tip | survey_tip_fr    |        |
 
-### SSL Errors
+#### SSL Errors
 
 | Event                                      | category | method   | object  | extras  |
 |--------------------------------------------|----------|----------|---------|---------|
@@ -328,13 +328,13 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 |SSL_INVALID           |
 |Undefined SSL Error   |
 
-## Limits
+### Limits
 
 * An event ping will contain up to but no more than 500 events
 * No more than 40 pings per type (core/event) are stored on disk for upload at a later time
 * No more than 100 pings are sent per day
 
-# Implementation notes
+## Implementation notes
 
 * Event pings are generated (and stored on disk) whenever the onStop() callback of the main activity is triggered. This happens whenever the main screen of the app is no longer visible (The app is in the background or another screen is displayed on top of the app).
 

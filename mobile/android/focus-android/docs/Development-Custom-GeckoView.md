@@ -1,3 +1,5 @@
+# Development with Custom GeckoView
+
 If you are an engineer working on Gecko(View) then you might be interested in building Focus/Klar with your own build of GeckoView.
 
 For this you will need to:
@@ -7,7 +9,7 @@ For this you will need to:
 * Package a GeckoView [AAR](https://developer.android.com/studio/projects/android-library.html)
 * Modify your Focus gradle configuration to use your custom GeckoView AAR.
 
-# Setup build system
+## Setup build system
 
 Follow the [Build instructions](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_for_Android_build) to setup a Firefox for Android build (ARM or x86).
 
@@ -44,7 +46,7 @@ $ ls <your-output-directory>/gradle/build/mobile/android/geckoview/outputs/aar
 geckoview-official-withGeckoBinaries-noMinApi-release.aar
 ```
 
-# Point your Focus/Klar build to your AAR
+## Point your Focus/Klar build to your AAR
 
 In your Focus/Klar checkout open `app/build.gradle` (__not__ the build.gradle file in the root directory!) and locate the `repositories` block. This block defines where gradle will look for dependencies. Add the absolute path to your AAR as follows:
 

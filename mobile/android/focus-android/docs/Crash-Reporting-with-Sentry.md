@@ -1,3 +1,5 @@
+# Crash Reporting with Sentry
+
 > **If there is anything in this document that is not clear, is incorrect, or that requires more detail, please file a request through a [Github](https://github.com/mozilla-mobile/focus-android/issues).**
 
 Focus Android uses [Sentry](https://sentry.io) for crash and exception reporting. This kind of reporting gives Mozilla invaluable insight as to why Focus crashes or incorrectly behaves. It is one of the key methods we use to improve the product in terms of stability.

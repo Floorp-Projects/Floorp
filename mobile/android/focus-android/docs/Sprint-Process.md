@@ -1,3 +1,5 @@
+# Sprint Process
+
 Focus follows a 2-week sprint cycle with 6-week milestone releases. Dot-releases with bugfixes are released every two weeks. Our upcoming train schedule is [here](https://wiki.mozilla.org/Mobile/Focus/Android/Train_Schedule).
 
 ## Issue naming and labels

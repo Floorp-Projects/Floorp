@@ -1,3 +1,5 @@
+# Adjust Usage
+
 > **If there is anything in this document that is not clear, is incorrect, or that requires more detail, please file a request through a [Github](https://github.com/mozilla-mobile/focus-android/issues) or [Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Focus&component=General). Also feel free to submit corrections or additional information.**
 
 Firefox Focus (but not Firefox Klar) tracks certain types of installs using a third-party install tracking framework called Adjust. The intention is to determine the origin of Firefox Focus installs by answering the question, “Did this user on this device install Firefox Focus in response to a specific advertising campaign performed by Mozilla?”

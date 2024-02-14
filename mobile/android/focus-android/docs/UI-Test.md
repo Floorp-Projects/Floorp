@@ -1,3 +1,5 @@
+# UI Test
+
 To run automated tests on firefox focus, you will need a few things to get started.
 1. Working installation of git and a local clone of the this Focus repository. You can do:
 
