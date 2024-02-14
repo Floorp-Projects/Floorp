@@ -107,8 +107,6 @@ class UIEvent : public Event {
   nsIntPoint mLayerPoint;
   CSSIntPoint mPagePoint;
   nsIntPoint mMovementPoint;
-  bool mIsPointerLocked;
-  CSSIntPoint mLastClientPoint;
 
   static Modifiers ComputeModifierState(const nsAString& aModifiersList);
   bool GetModifierStateInternal(const nsAString& aKey);
