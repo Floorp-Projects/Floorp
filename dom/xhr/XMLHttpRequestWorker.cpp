@@ -286,8 +286,10 @@ class MainThreadProxyRunnable : public MainThreadWorkerSyncRunnable {
  protected:
   RefPtr<Proxy> mProxy;
 
-  MainThreadProxyRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy)
-      : MainThreadWorkerSyncRunnable(aWorkerPrivate, aProxy->GetEventTarget()),
+  MainThreadProxyRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
+                          const char* aName = "MainThreadProxyRunnable")
+      : MainThreadWorkerSyncRunnable(aWorkerPrivate, aProxy->GetEventTarget(),
+                                     aName),
         mProxy(aProxy) {
     MOZ_ASSERT(aProxy);
   }
@@ -333,7 +335,8 @@ class LoadStartDetectionRunnable final : public Runnable,
    public:
     ProxyCompleteRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
                           uint32_t aChannelId)
-        : MainThreadProxyRunnable(aWorkerPrivate, aProxy),
+        : MainThreadProxyRunnable(aWorkerPrivate, aProxy,
+                                  "ProxyCompleteRunnable"),
           mChannelId(aChannelId) {}
 
    private:
@@ -416,7 +419,8 @@ class EventRunnable final : public MainThreadProxyRunnable {
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const EventType& aType,
                 bool aLengthComputable, uint64_t aLoaded, uint64_t aTotal,
                 JS::Handle<JSObject*> aScopeObj)
-      : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
+      : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy,
+                                "EventRunnable"),
         mType(aType),
         mResponseData(new XMLHttpRequestWorker::ResponseData()),
         mLoaded(aLoaded),
@@ -433,7 +437,8 @@ class EventRunnable final : public MainThreadProxyRunnable {
 
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const EventType& aType,
                 JS::Handle<JSObject*> aScopeObj)
-      : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
+      : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy,
+                                "EventRunnable"),
         mType(aType),
         mResponseData(new XMLHttpRequestWorker::ResponseData()),
         mLoaded(0),

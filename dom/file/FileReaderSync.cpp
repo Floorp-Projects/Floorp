@@ -315,7 +315,8 @@ class ReadReadyRunnable final : public WorkerSyncRunnable {
  public:
   ReadReadyRunnable(WorkerPrivate* aWorkerPrivate,
                     nsIEventTarget* aSyncLoopTarget)
-      : WorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget) {}
+      : WorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget,
+                           "ReadReadyRunnable") {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();

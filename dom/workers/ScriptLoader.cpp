@@ -1653,7 +1653,8 @@ ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader* aScriptLoader, WorkerPrivate* aWorkerPrivate,
     nsISerialEventTarget* aSyncLoopTarget,
     Span<RefPtr<ThreadSafeRequestHandle>> aLoadedRequests)
-    : MainThreadWorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget),
+    : MainThreadWorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget,
+                                   "ScriptExecutorRunnable"),
       mScriptLoader(aScriptLoader),
       mLoadedRequests(aLoadedRequests) {}
 
