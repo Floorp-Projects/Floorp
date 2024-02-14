@@ -4251,7 +4251,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
+        - ✅
         - ✅
         - ❌
         - ❌
@@ -4309,7 +4309,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
+        - ✅
         - ✅
         - ❌
         - ❌
@@ -4430,7 +4430,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
+        - ✅
         - ✅
         - ❌
         - ❌
@@ -4642,7 +4642,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
+        - ✅
         - ✅
         - ❌
         - ❌
@@ -4700,7 +4700,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
+        - ✅
         - ✅
         - ❌
         - ❌
@@ -4821,7 +4821,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-firefox-speedometer3**
-        - ❌
+        - ✅
         - ✅
         - ❌
         - ❌
