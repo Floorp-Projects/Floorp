@@ -4,9 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-
-use lazy_static::lazy_static;
+use std::{convert::TryFrom, sync::OnceLock};
 
 use crate::huffman_table::HUFFMAN_TABLE;
 
@@ -15,8 +13,9 @@ pub struct HuffmanDecoderNode {
     pub value: Option<u16>,
 }
 
-lazy_static! {
-    pub static ref HUFFMAN_DECODE_ROOT: HuffmanDecoderNode = make_huffman_tree(0, 0);
+pub fn huffman_decoder_root() -> &'static HuffmanDecoderNode {
+    static ROOT: OnceLock<HuffmanDecoderNode> = OnceLock::new();
+    ROOT.get_or_init(|| make_huffman_tree(0, 0))
 }
 
 fn make_huffman_tree(prefix: u32, len: u8) -> HuffmanDecoderNode {
