@@ -831,8 +831,7 @@ public class GeckoSessionTestRule implements TestRule {
     public void onLocationChange(
         @NonNull GeckoSession session,
         @Nullable String url,
-        @NonNull List<ContentPermission> perms,
-        @NonNull Boolean hasUserGesture) {}
+        @NonNull List<ContentPermission> perms) {}
 
     @Override
     public void onShutdown() {}

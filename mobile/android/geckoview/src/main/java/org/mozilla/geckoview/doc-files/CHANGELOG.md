@@ -21,19 +21,12 @@ exclude: true
 - Added [`PanZoomController.onDragEvent`][124.4] to support drag and drop.
   ([bug 1586471]({{bugzilla}}1586471))
 - Added [`WebExtension.MetaData.incognito`][124.5] property. ([bug 1875229]({{bugzilla}}1875229))
-- ⚠️ Deprecated [`GeckoSession.NavigationDelegate.onLocationChange`][124.6], to be removed in v126.
-([bug 1837601]({{bugzilla}}1837601))
-- Added [`GeckoSession.NavigationDelegate.onLocationChange#hasUserGesture`][124.7]. This indicates if a location change was requested
-while a user gesture was active (e.g., a tap).
-([bug 1837601]({{bugzilla}}1837601))
 
 [124.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverMode-int-
 [124.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverUri-java.lang.String-
 [124.3]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLargeKeepaliveFactor-int-
 [124.4]: {{javadoc_uri}}/PanZoomController.html#onDragEvent(android.view.DragEvent)
 [124.5]: {{javadoc_uri}}/WebExtension.MetaData.html#incognito
-[124.6]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
-[124.7]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List,boolean)
 
 ## v123
 - For Translations, added [`checkPairDownloadSize`][123.1] and [`TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED`][123.2] as an error state.
@@ -43,7 +36,7 @@ while a user gesture was active (e.g., a tap).
 
 [123.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html#checkPairDownloadSize(java.lang.String,java.lang.String)
 [123.2]: {{javadoc_uri}}/TranslationsController.TranslationsException.html#ERROR_MODEL_LANGUAGE_REQUIRED
-[123.3]: {{javadoc_uri}}/GeckoSession.html#sendPlacementAttributionEvent(String)
+[121.3]: {{javadoc_uri}}/GeckoSession.html#sendPlacementAttributionEvent(String)
 
 ## v122
 - ⚠️ Removed [`onGetNimbusFeature`][115.5], please use `ExperimentDelegate.onGetExperimentFeature` instead.
@@ -1526,4 +1519,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9e16ee537828d8ec6328730844e607ef1d54feb6
+[api-version]: ff5a513251f19534bbf4ebe0084909665d00a227

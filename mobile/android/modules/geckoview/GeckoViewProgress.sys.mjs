@@ -608,7 +608,6 @@ export class GeckoViewProgress extends GeckoViewModule {
       canGoBack: false,
       canGoForward: false,
       isTopLevel: true,
-      hasUserGesture: false,
     });
     this.eventDispatcher.sendRequest({
       type: "GeckoView:PageStop",

@@ -163,10 +163,7 @@ public class TestRunnerActivity extends Activity {
       new GeckoSession.NavigationDelegate() {
         @Override
         public void onLocationChange(
-            final GeckoSession session,
-            final String url,
-            final List<ContentPermission> perms,
-            final Boolean hasUserGesture) {
+            final GeckoSession session, final String url, final List<ContentPermission> perms) {
           getActionBar().setSubtitle(url);
         }
 
