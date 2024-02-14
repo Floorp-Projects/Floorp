@@ -630,7 +630,8 @@ export var ScreenshotsUtils = {
       !anchor.isConnected ||
       !window.isElementVisible(anchor.parentNode)
     ) {
-      anchor = browser.ownerDocument.getElementById("navigator-toolbox");
+      // Use the hamburger button if the screenshots button isn't available
+      anchor = browser.ownerDocument.getElementById("PanelUI-menu-button");
     }
     return anchor;
   },
