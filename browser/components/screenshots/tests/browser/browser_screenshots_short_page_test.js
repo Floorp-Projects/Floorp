@@ -58,20 +58,7 @@ add_task(async function test_window_resize() {
       const BIG_WINDOW_SIZE = 920;
       const SMALL_WINDOW_SIZE = 620;
 
-      window.resizeTo(SMALL_WINDOW_SIZE, SMALL_WINDOW_SIZE);
-      await TestUtils.waitForCondition(() => {
-        info(
-          `Got ${window.outerWidth}x${
-            window.outerHeight
-          }. Expecting ${SMALL_WINDOW_SIZE}. ${
-            window.outerHeight === SMALL_WINDOW_SIZE
-          } ${window.outerWidth === SMALL_WINDOW_SIZE}`
-        );
-        return (
-          window.outerHeight === SMALL_WINDOW_SIZE &&
-          window.outerWidth === SMALL_WINDOW_SIZE
-        );
-      }, "Waiting for window to resize");
+      await helper.resizeContentWindow(SMALL_WINDOW_SIZE, SMALL_WINDOW_SIZE);
 
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
@@ -81,13 +68,7 @@ add_task(async function test_window_resize() {
       let oldWidth = dimensions.scrollWidth;
       let oldHeight = dimensions.scrollHeight;
 
-      window.resizeTo(BIG_WINDOW_SIZE, BIG_WINDOW_SIZE);
-      await TestUtils.waitForCondition(
-        () =>
-          window.outerHeight === BIG_WINDOW_SIZE &&
-          window.outerWidth === BIG_WINDOW_SIZE,
-        "Waiting for window to resize"
-      );
+      await helper.resizeContentWindow(BIG_WINDOW_SIZE, BIG_WINDOW_SIZE);
       await helper.waitForSelectionLayerDimensionChange(oldWidth, oldHeight);
 
       contentInfo = await helper.getContentDimensions();
@@ -106,13 +87,7 @@ add_task(async function test_window_resize() {
       oldWidth = dimensions.scrollWidth;
       oldHeight = dimensions.scrollHeight;
 
-      window.resizeTo(SMALL_WINDOW_SIZE, SMALL_WINDOW_SIZE);
-      await TestUtils.waitForCondition(
-        () =>
-          window.outerHeight === SMALL_WINDOW_SIZE &&
-          window.outerWidth === SMALL_WINDOW_SIZE,
-        "Waiting for window to resize"
-      );
+      await helper.resizeContentWindow(SMALL_WINDOW_SIZE, SMALL_WINDOW_SIZE);
       await helper.waitForSelectionLayerDimensionChange(oldWidth, oldHeight);
 
       contentInfo = await helper.getContentDimensions();
@@ -139,12 +114,9 @@ add_task(async function test_window_resize() {
         "Screenshots overlay is smaller than the big window height"
       );
 
-      window.resizeTo(originalWindowWidth, originalWindowHeight);
-      await TestUtils.waitForCondition(
-        () =>
-          window.outerHeight === originalWindowHeight &&
-          window.outerWidth === originalWindowWidth,
-        "Waiting for window to resize"
+      await helper.resizeContentWindow(
+        originalWindowWidth,
+        originalWindowHeight
       );
     }
   );
