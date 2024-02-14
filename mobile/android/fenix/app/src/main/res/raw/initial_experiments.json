@@ -232,7 +232,7 @@
       "channel": "release",
       "userFacingName": "Fx 122 Android set to default notifications timing experiment",
       "userFacingDescription": "Timing test for the set to default message on Firefox for Android (Fenix).",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
