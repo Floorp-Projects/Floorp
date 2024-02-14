@@ -1135,6 +1135,12 @@
 #endif
   mirror: always
 
+# DLP agent name, for display in the browser
+- name: browser.contentanalysis.agent_name
+  type: String
+  value: "A DLP agent"
+  mirror: never
+
 # Content analysis by external applications, e.g. data-loss prevention apps
 - name: browser.contentanalysis.enabled
   type: bool
