@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>internal priority of SVG's &lt;image&gt; element</title>
+  </head>
+  <body>
+    <svg width="25" height="25">
+      <image href="../resources/square_25px_x_25px.png?1"
+             width="25" height="25" fetchpriority="low"/>
+    </svg>
+    <svg width="25" height="25">
+      <image href="../resources/square_25px_x_25px.png?2"
+             width="25" height="25" fetchpriority="high"/>
+    </svg>
+    <svg width="25" height="25">
+      <image href="../resources/square_25px_x_25px.png?3"
+             width="25" height="25" fetchpriority="auto"/>
+    </svg>
+    <svg width="25" height="25">
+      <image href="../resources/square_25px_x_25px.png?4"
+             width="25" height="25"/>
+    </svg>
+    <script>
+      onload = function() {
+          opener.postMessage("ChildLoaded", "*");
+      }
+    </script>
+  </body>
+</html>
