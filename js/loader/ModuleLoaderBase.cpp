@@ -1385,6 +1385,42 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
   mImportMap = std::move(aImportMap);
 }
 
+void ModuleLoaderBase::CopyModulesTo(ModuleLoaderBase* aDest) {
+  MOZ_ASSERT(aDest->mFetchingModules.IsEmpty());
+  MOZ_ASSERT(aDest->mFetchedModules.IsEmpty());
+  MOZ_ASSERT(mFetchingModules.IsEmpty());
+
+  for (const auto& entry : mFetchedModules) {
+    RefPtr<ModuleScript> moduleScript = entry.GetData();
+    if (!moduleScript) {
+      continue;
+    }
+    aDest->mFetchedModules.InsertOrUpdate(entry.GetKey(), moduleScript);
+  }
+}
+
+void ModuleLoaderBase::MoveModulesTo(ModuleLoaderBase* aDest) {
+  MOZ_ASSERT(mFetchingModules.IsEmpty());
+  MOZ_ASSERT(aDest->mFetchingModules.IsEmpty());
+
+  for (const auto& entry : mFetchedModules) {
+    RefPtr<ModuleScript> moduleScript = entry.GetData();
+    if (!moduleScript) {
+      continue;
+    }
+
+#ifdef DEBUG
+    if (auto existingEntry = aDest->mFetchedModules.Lookup(entry.GetKey())) {
+      MOZ_ASSERT(moduleScript == existingEntry.Data());
+    }
+#endif
+
+    aDest->mFetchedModules.InsertOrUpdate(entry.GetKey(), moduleScript);
+  }
+
+  mFetchedModules.Clear();
+}
+
 #undef LOG
 #undef LOG_ENABLED
 
