@@ -33,6 +33,12 @@ class nsSelectsAreaFrame final : public nsBlockFrame {
 
   nscoord BSizeOfARow() const { return mBSizeOfARow; }
 
+#ifdef DEBUG_FRAME_DUMP
+  nsresult GetFrameName(nsAString& aResult) const override {
+    return MakeFrameName(u"SelectsArea"_ns, aResult);
+  }
+#endif
+
  protected:
   explicit nsSelectsAreaFrame(ComputedStyle* aStyle,
                               nsPresContext* aPresContext)

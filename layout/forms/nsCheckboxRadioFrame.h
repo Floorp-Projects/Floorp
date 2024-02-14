@@ -73,6 +73,12 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
   // nsIFormControlFrame
   nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
 
+#ifdef DEBUG_FRAME_DUMP
+  nsresult GetFrameName(nsAString& aResult) const override {
+    return MakeFrameName(u"CheckboxRadio"_ns, aResult);
+  }
+#endif
+
  protected:
   virtual ~nsCheckboxRadioFrame();
 
