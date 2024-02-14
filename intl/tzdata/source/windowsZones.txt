@@ -126,12 +126,11 @@ windowsZones:table(nofallback){
             ZZ{"Etc/GMT+6"}
         }
         "Central Asia Standard Time"{
-            001{"Asia/Almaty"}
+            001{"Asia/Bishkek"}
             AQ{"Antarctica/Vostok"}
             CN{"Asia/Urumqi"}
             IO{"Indian/Chagos"}
             KG{"Asia/Bishkek"}
-            KZ{"Asia/Almaty Asia/Qostanay"}
             ZZ{"Etc/GMT-6"}
         }
         "Central Brazilian Standard Time"{
@@ -173,10 +172,7 @@ windowsZones:table(nofallback){
         }
         "Central Standard Time"{
             001{"America/Chicago"}
-            CA{
-                "America/Winnipeg America/Rainy_River America/Rankin_Inlet America/Re"
-                "solute"
-            }
+            CA{"America/Winnipeg America/Rankin_Inlet America/Resolute"}
             MX{"America/Matamoros America/Ojinaga"}
             US{
                 "America/Chicago America/Indiana/Knox America/Indiana/Tell_City Ameri"
@@ -241,10 +237,7 @@ windowsZones:table(nofallback){
         "Eastern Standard Time"{
             001{"America/New_York"}
             BS{"America/Nassau"}
-            CA{
-                "America/Toronto America/Iqaluit America/Montreal America/Nipigon Ame"
-                "rica/Pangnirtung America/Thunder_Bay"
-            }
+            CA{"America/Toronto America/Iqaluit"}
             US{
                 "America/New_York America/Detroit America/Indiana/Petersburg America/"
                 "Indiana/Vincennes America/Indiana/Winamac America/Kentucky/Monticell"
@@ -268,7 +261,7 @@ windowsZones:table(nofallback){
             FI{"Europe/Helsinki"}
             LT{"Europe/Vilnius"}
             LV{"Europe/Riga"}
-            UA{"Europe/Kiev Europe/Uzhgorod Europe/Zaporozhye"}
+            UA{"Europe/Kiev"}
         }
         "Fiji Standard Time"{
             001{"Pacific/Fiji"}
@@ -325,7 +318,6 @@ windowsZones:table(nofallback){
             001{"Pacific/Honolulu"}
             CK{"Pacific/Rarotonga"}
             PF{"Pacific/Tahiti"}
-            UM{"Pacific/Johnston"}
             US{"Pacific/Honolulu"}
             ZZ{"Etc/GMT+10"}
         }
@@ -403,10 +395,7 @@ windowsZones:table(nofallback){
         }
         "Mountain Standard Time"{
             001{"America/Denver"}
-            CA{
-                "America/Edmonton America/Cambridge_Bay America/Inuvik America/Yellow"
-                "knife"
-            }
+            CA{"America/Edmonton America/Cambridge_Bay America/Inuvik"}
             MX{"America/Ciudad_Juarez"}
             US{"America/Denver America/Boise"}
             ZZ{"MST7MDT"}
@@ -463,7 +452,7 @@ windowsZones:table(nofallback){
         }
         "Pacific Standard Time (Mexico)"{
             001{"America/Tijuana"}
-            MX{"America/Tijuana America/Santa_Isabel"}
+            MX{"America/Tijuana"}
         }
         "Pacific Standard Time"{
             001{"America/Los_Angeles"}
@@ -638,7 +627,7 @@ windowsZones:table(nofallback){
         }
         "Tasmania Standard Time"{
             001{"Australia/Hobart"}
-            AU{"Australia/Hobart Australia/Currie Antarctica/Macquarie"}
+            AU{"Australia/Hobart Antarctica/Macquarie"}
         }
         "Tocantins Standard Time"{
             001{"America/Araguaina"}
@@ -789,7 +778,10 @@ windowsZones:table(nofallback){
         "West Asia Standard Time"{
             001{"Asia/Tashkent"}
             AQ{"Antarctica/Mawson"}
-            KZ{"Asia/Oral Asia/Aqtau Asia/Aqtobe Asia/Atyrau"}
+            KZ{
+                "Asia/Oral Asia/Almaty Asia/Aqtau Asia/Aqtobe Asia/Atyrau Asia/Qostan"
+                "ay"
+            }
             MV{"Indian/Maldives"}
             TF{"Indian/Kerguelen"}
             TJ{"Asia/Dushanbe"}
