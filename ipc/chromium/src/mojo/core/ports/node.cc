@@ -1856,9 +1856,7 @@ void Node::DestroyAllPortsWithPeer(const NodeName& node_name,
   std::vector<PortRef> ports_to_notify;
   std::vector<PortName> dead_proxies_to_broadcast;
   std::vector<mozilla::UniquePtr<UserMessageEvent>> undelivered_messages;
-
-  ScopedEvent closure_event;
-  NodeName closure_event_target_node;
+  std::vector<std::pair<NodeName, ScopedEvent>> closure_events;
 
   {
     PortLocker::AssertNoPortsLockedOnCurrentThread();
@@ -1900,11 +1898,12 @@ void Node::DestroyAllPortsWithPeer(const NodeName& node_name,
         if (port_name != kInvalidPortName) {
           // If this is a targeted observe dead proxy event, send out an
           // ObserveClosure to acknowledge it.
-          closure_event_target_node = port->peer_node_name;
-          closure_event = mozilla::MakeUnique<ObserveClosureEvent>(
-              port->peer_port_name, local_port_ref.name(),
-              port->next_control_sequence_num_to_send++,
-              port->last_sequence_num_to_receive);
+          closure_events.push_back(
+              std::pair{port->peer_node_name,
+                        mozilla::MakeUnique<ObserveClosureEvent>(
+                            port->peer_port_name, local_port_ref.name(),
+                            port->next_control_sequence_num_to_send++,
+                            port->last_sequence_num_to_receive)});
         }
 
         if (!port->peer_closed) {
@@ -1939,7 +1938,7 @@ void Node::DestroyAllPortsWithPeer(const NodeName& node_name,
     }
   }
 
-  if (closure_event) {
+  for (auto& [closure_event_target_node, closure_event] : closure_events) {
     delegate_->ForwardEvent(closure_event_target_node,
                             std::move(closure_event));
   }
