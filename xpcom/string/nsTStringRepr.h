@@ -240,6 +240,18 @@ class nsTStringRepr {
    */
   bool EqualsIgnoreCase(const std::string_view& aString) const;
 
+#ifdef __cpp_char8_t
+  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
+  bool NS_FASTCALL Equals(const char8_t* aData) const {
+    return Equals(reinterpret_cast<const char*>(aData));
+  }
+
+  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
+  bool NS_FASTCALL Equals(const char8_t* aData, comparator_type aComp) const {
+    return Equals(reinterpret_cast<const char*>(aData), aComp);
+  }
+#endif
+
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = Char16OnlyT<Q>>
   bool NS_FASTCALL Equals(char16ptr_t aData) const {
