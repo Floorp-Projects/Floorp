@@ -7,7 +7,6 @@
 
 #include <map>
 #include <memory>
-#include <queue>
 #include <utility>
 #include <vector>
 
@@ -203,7 +202,7 @@ class Port {
   MessageQueue message_queue;
 
   // Buffer outgoing control messages while this port is in kBuffering state.
-  std::queue<std::pair<NodeName, ScopedEvent>> control_message_queue;
+  std::vector<std::pair<NodeName, ScopedEvent>> control_message_queue;
 
   // In some edge cases, a Node may need to remember to route a single special
   // event upon destruction of this (proxying) Port. That event is stashed here
