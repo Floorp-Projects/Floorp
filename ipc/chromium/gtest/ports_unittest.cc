@@ -435,7 +435,7 @@ class PortsTest : public testing::Test, public MessageRouter {
       if (node == from_node) {
         continue;
       }
-      node->EnqueueEvent(event->Clone());
+      node->EnqueueEvent(event->CloneForBroadcast());
     }
   }
 
