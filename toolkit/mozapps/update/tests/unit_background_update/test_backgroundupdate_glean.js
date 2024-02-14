@@ -169,7 +169,9 @@ add_task(async function test_targeting_exists() {
     profileAgeCreated: ASRouterTargeting.Environment.profileAgeCreated,
     firefoxVersion: ASRouterTargeting.Environment.firefoxVersion,
   };
-  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
 
   await do_readTargeting(JSON.stringify(targetSnapshot), reason => {
     Assert.equal(true, Glean.backgroundUpdate.targetingExists.testGetValue());

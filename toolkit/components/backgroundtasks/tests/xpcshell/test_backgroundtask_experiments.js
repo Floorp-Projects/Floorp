@@ -277,7 +277,9 @@ add_task(async function test_backgroundtask_Nimbus_targeting() {
     currentDate: ASRouterTargeting.Environment.currentDate,
     firefoxVersion: ASRouterTargeting.Environment.firefoxVersion,
   };
-  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
 
   for (let [targeting, expectedLength] of TARGETING_LIST) {
     // Start fresh each time.
@@ -331,7 +333,9 @@ add_task(async function test_backgroundtask_Messaging_targeting() {
     currentDate: ASRouterTargeting.Environment.currentDate,
     firefoxVersion: ASRouterTargeting.Environment.firefoxVersion,
   };
-  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
 
   for (let [targeting, expectedLength] of TARGETING_LIST) {
     // Start fresh each time.

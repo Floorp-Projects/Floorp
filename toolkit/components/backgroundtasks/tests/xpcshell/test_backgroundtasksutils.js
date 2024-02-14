@@ -178,7 +178,9 @@ add_task(
       ),
       firefoxVersion: lazy.ASRouterTargeting.Environment.firefoxVersion,
     };
-    let expected = await lazy.ASRouterTargeting.getEnvironmentSnapshot(target);
+    let expected = await lazy.ASRouterTargeting.getEnvironmentSnapshot({
+      targets: [target],
+    });
 
     let snapshotFile = profile.rootDir.clone();
     snapshotFile.append("targeting.snapshot.json");

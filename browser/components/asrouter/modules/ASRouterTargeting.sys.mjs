@@ -1061,11 +1061,17 @@ export const ASRouterTargeting = {
    * Asynchronous getters are handled.  Getters that throw or reject
    * are ignored.
    *
-   * @param {object} target - the environment to snapshot.
-   * @return {object} snapshot of target with `environment` object and `version`
-   * integer.
+   * Leftward (earlier) targets supercede rightward (later) targets, just like
+   * `TargetingContext.combineContexts`.
+   *
+   * @param {object} options - object containing:
+   * @param {Array<object>|null} options.targets -
+   *        targeting environments to snapshot; (default: `[ASRouterTargeting.Environment]`)
+   * @return {object} snapshot of target with `environment` object and `version` integer.
    */
-  async getEnvironmentSnapshot(target = ASRouterTargeting.Environment) {
+  async getEnvironmentSnapshot({
+    targets = [ASRouterTargeting.Environment],
+  } = {}) {
     async function resolve(object) {
       if (typeof object === "object" && object !== null) {
         if (Array.isArray(object)) {
@@ -1105,7 +1111,13 @@ export const ASRouterTargeting = {
       return object;
     }
 
-    const environment = await resolve(target);
+    // We would like to use `TargetingContext.combineContexts`, but `Proxy`
+    // instances complicate iterating with `Object.keys`.  Instead, merge by
+    // hand after resolving.
+    const environment = {};
+    for (let target of targets.toReversed()) {
+      Object.assign(environment, await resolve(target));
+    }
 
     // Should we need to migrate in the future.
     const snapshot = { environment, version: 1 };
