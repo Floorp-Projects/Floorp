@@ -52,6 +52,7 @@ namespace {
 const char* kIsDLPEnabledPref = "browser.contentanalysis.enabled";
 const char* kIsPerUserPref = "browser.contentanalysis.is_per_user";
 const char* kPipePathNamePref = "browser.contentanalysis.pipe_path_name";
+const char* kDefaultAllowPref = "browser.contentanalysis.default_allow";
 
 static constexpr uint32_t kAnalysisTimeoutSecs = 30;  // 30 sec
 
@@ -639,12 +640,17 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
     bool* aShouldAllowContent) {
   if (mValue.is<NoContentAnalysisResult>()) {
     NoContentAnalysisResult result = mValue.as<NoContentAnalysisResult>();
-    // Note that we allow content if we're unable to get it (for example, if
-    // there's clipboard content that is not text or file)
-    *aShouldAllowContent =
-        result == NoContentAnalysisResult::AGENT_NOT_PRESENT ||
-        result == NoContentAnalysisResult::NO_PARENT_BROWSER ||
-        result == NoContentAnalysisResult::ERROR_COULD_NOT_GET_DATA;
+    if (Preferences::GetBool(kDefaultAllowPref)) {
+      *aShouldAllowContent = result != NoContentAnalysisResult::CANCELED;
+    } else {
+      // Note that we allow content if we're unable to get it (for example, if
+      // there's clipboard content that is not text or file)
+      *aShouldAllowContent =
+          result == NoContentAnalysisResult::CONTENT_ANALYSIS_NOT_ACTIVE ||
+          result ==
+              NoContentAnalysisResult::CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS ||
+          result == NoContentAnalysisResult::ERROR_COULD_NOT_GET_DATA;
+    }
   } else {
     *aShouldAllowContent =
         ShouldAllowAction(mValue.as<nsIContentAnalysisResponse::Action>());
@@ -742,9 +748,13 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
         }
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
+        bool allow = Preferences::GetBool(kDefaultAllowPref);
         RefPtr<ContentAnalysisResponse> response =
             ContentAnalysisResponse::FromAction(
-                nsIContentAnalysisResponse::Action::eCanceled, aRequestToken);
+                allow ? nsIContentAnalysisResponse::Action::eAllow
+                      : nsIContentAnalysisResponse::Action::eCanceled,
+                aRequestToken);
+        response->SetOwner(owner);
         obsServ->NotifyObservers(response, "dlp-response", nullptr);
         nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder;
         {
@@ -755,7 +765,11 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
           }
         }
         if (callbackHolder) {
-          callbackHolder->Error(aResult);
+          if (allow) {
+            callbackHolder->ContentResult(response);
+          } else {
+            callbackHolder->Error(aResult);
+          }
         }
       }));
 }
