@@ -303,6 +303,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_FINGERPRINTING_PROTECTION_STATE = 1 << 27;
 
   /**
+   * Clear the bounce tracking protection state.
+   */
+  const uint32_t CLEAR_BOUNCE_TRACKING_PROTECTION_STATE = 1 << 28;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFFFF;
