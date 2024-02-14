@@ -19,7 +19,9 @@ add_task(async function should_ignore_rejections() {
     },
   };
 
-  let snapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  let snapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
   Assert.deepEqual(snapshot, { environment: { foo: 1 }, version: 1 });
 });
 
@@ -51,7 +53,9 @@ add_task(async function nested_objects() {
     },
   };
 
-  const snapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  const snapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
   Assert.deepEqual(
     snapshot,
     {
@@ -85,7 +89,9 @@ add_task(async function arrays() {
     }),
   };
 
-  const snapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  const snapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
   Assert.deepEqual(
     snapshot,
     {
@@ -100,6 +106,32 @@ add_task(async function arrays() {
     },
     "getEnvironmentSnapshot should resolve arrays correctly"
   );
+});
+
+add_task(async function target_order() {
+  let target1 = {
+    foo: 1,
+    bar: 1,
+    baz: 1,
+  };
+
+  let target2 = {
+    foo: 2,
+    bar: 2,
+  };
+
+  let target3 = {
+    foo: 3,
+  };
+
+  // target3 supercedes target2; both supercede target1.
+  let snapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target3, target2, target1],
+  });
+  Assert.deepEqual(snapshot, {
+    environment: { foo: 3, bar: 2, baz: 1 },
+    version: 1,
+  });
 });
 
 /*
@@ -132,7 +164,9 @@ add_task(async function should_ignore_rejections() {
     },
   };
 
-  let snapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+  let snapshot = await ASRouterTargeting.getEnvironmentSnapshot({
+    targets: [target],
+  });
   // `baz` is dropped since we're shutting down by the time it's processed.
   Assert.deepEqual(snapshot, { environment: { foo: 1, bar: 2 }, version: 1 });
 });
