@@ -510,9 +510,13 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            waitForPageToLoad()
             setPageObjectText(itemWithResId("username"), "mozilla")
+            waitForAppWindowToBeUpdated()
             setPageObjectText(itemWithResId("password"), "firefox")
+            waitForAppWindowToBeUpdated()
             clickPageObject(itemWithResId("submit"))
+            waitForPageToLoad()
             verifySaveLoginPromptIsDisplayed()
             clickPageObject(itemWithText("Save"))
         }.openTabDrawer {
@@ -521,6 +525,8 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            waitForPageToLoad()
+            clickPageObject(itemWithResId("togglePassword"))
             verifyPrefilledLoginCredentials("mozilla", "firefox", true)
         }.openTabDrawer {
             closeTab()
