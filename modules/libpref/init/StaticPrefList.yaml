@@ -1141,6 +1141,13 @@
   value: false
   mirror: never
 
+# Whether content analysis should allow content if there is a problem communicating
+# with the agent.
+- name: browser.contentanalysis.default_allow
+  type: bool
+  value: false
+  mirror: never
+
 # Is the IPC pipe to the DLP tool specific to the user or to the system?
 - name: browser.contentanalysis.is_per_user
   type: bool

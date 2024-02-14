@@ -463,7 +463,7 @@ static void CheckClipboardContentAnalysis(
   if (!aWindow || aWindow->GetBrowsingContext()->IsChrome() ||
       aWindow->IsInProcess()) {
     aResolver->Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::NO_PARENT_BROWSER));
+        NoContentAnalysisResult::CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS));
     return;
   }
   nsCOMPtr<nsIContentAnalysis> contentAnalysis =
@@ -478,7 +478,7 @@ static void CheckClipboardContentAnalysis(
   nsresult rv = contentAnalysis->GetIsActive(&contentAnalysisIsActive);
   if (MOZ_LIKELY(NS_FAILED(rv) || !contentAnalysisIsActive)) {
     aResolver->Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::AGENT_NOT_PRESENT));
+        NoContentAnalysisResult::CONTENT_ANALYSIS_NOT_ACTIVE));
     return;
   }
 
