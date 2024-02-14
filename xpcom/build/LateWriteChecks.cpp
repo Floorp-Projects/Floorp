@@ -10,7 +10,6 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/SHA1.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
