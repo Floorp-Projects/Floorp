@@ -17,9 +17,10 @@ use crate::{
     },
     err::{Error, Res},
     p11::{
-        random, Item, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE,
+        Item, PK11Origin, PK11SymKey, PK11_ImportDataKey, Slot, SymKey, CKA_DERIVE,
         CKM_HKDF_DERIVE, CK_ATTRIBUTE_TYPE, CK_MECHANISM_TYPE,
     },
+    random,
 };
 
 experimental_api!(SSL_HkdfExtract(
@@ -40,24 +41,32 @@ experimental_api!(SSL_HkdfExpandLabel(
     secret: *mut *mut PK11SymKey,
 ));
 
-fn key_size(version: Version, cipher: Cipher) -> Res<usize> {
+const MAX_KEY_SIZE: usize = 48;
+const fn key_size(version: Version, cipher: Cipher) -> Res<usize> {
     if version != TLS_VERSION_1_3 {
         return Err(Error::UnsupportedVersion);
     }
-    Ok(match cipher {
+    let size = match cipher {
         TLS_AES_128_GCM_SHA256 | TLS_CHACHA20_POLY1305_SHA256 => 32,
         TLS_AES_256_GCM_SHA384 => 48,
         _ => return Err(Error::UnsupportedCipher),
-    })
+    };
+    debug_assert!(size <= MAX_KEY_SIZE);
+    Ok(size)
 }
 
 /// Generate a random key of the right size for the given suite.
 ///
 /// # Errors
 ///
-/// Only if NSS fails.
+/// If the ciphersuite or protocol version is not supported.
 pub fn generate_key(version: Version, cipher: Cipher) -> Res<SymKey> {
-    import_key(version, &random(key_size(version, cipher)?))
+    // With generic_const_expr, this becomes:
+    //   import_key(version, &random::<{ key_size(version, cipher) }>())
+    import_key(
+        version,
+        &random::<MAX_KEY_SIZE>()[0..key_size(version, cipher)?],
+    )
 }
 
 /// Import a symmetric key for use with HKDF.
@@ -70,7 +79,6 @@ pub fn import_key(version: Version, buf: &[u8]) -> Res<SymKey> {
         return Err(Error::UnsupportedVersion);
     }
     let slot = Slot::internal()?;
-    #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
     let key_ptr = unsafe {
         PK11_ImportDataKey(
             *slot,

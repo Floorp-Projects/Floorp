@@ -15,7 +15,7 @@ use neqo_http3::{
 };
 use neqo_transport::{StreamId, StreamType};
 use test_fixture::{
-    addr, anti_replay, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ALPN_H3,
+    anti_replay, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
     DEFAULT_KEYS, DEFAULT_SERVER_NAME,
 };
 
@@ -24,8 +24,8 @@ fn connect() -> (Http3Client, Http3Server) {
     let mut client = Http3Client::new(
         DEFAULT_SERVER_NAME,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        addr(),
-        addr(),
+        DEFAULT_ADDR,
+        DEFAULT_ADDR,
         Http3Parameters::default().webtransport(true),
         now(),
     )

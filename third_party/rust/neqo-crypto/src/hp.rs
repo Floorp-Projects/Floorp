@@ -76,7 +76,6 @@ impl HpKey {
         let l = label.as_bytes();
         let mut secret: *mut PK11SymKey = null_mut();
 
-        #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
         let (mech, key_size) = match cipher {
             TLS_AES_128_GCM_SHA256 => (CK_MECHANISM_TYPE::from(CKM_AES_ECB), 16),
             TLS_AES_256_GCM_SHA384 => (CK_MECHANISM_TYPE::from(CKM_AES_ECB), 32),
@@ -104,8 +103,6 @@ impl HpKey {
 
         let res = match cipher {
             TLS_AES_128_GCM_SHA256 | TLS_AES_256_GCM_SHA384 => {
-                // TODO: Remove when we bump the MSRV to 1.74.0.
-                #[allow(clippy::useless_conversion)]
                 let context_ptr = unsafe {
                     PK11_CreateContextBySymKey(
                         mech,
@@ -181,8 +178,6 @@ impl HpKey {
                 };
                 let mut output_len: c_uint = 0;
                 let mut param_item = Item::wrap_struct(&params);
-                // TODO: Remove when we bump the MSRV to 1.74.0.
-                #[allow(clippy::useless_conversion)]
                 secstatus_to_res(unsafe {
                     PK11_Encrypt(
                         **key,

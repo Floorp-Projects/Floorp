@@ -20,7 +20,7 @@ use neqo_common::{hex, hex_with_len, qtrace};
 use crate::{
     constants::{ContentType, Epoch},
     err::{nspr, Error, PR_SetError, Res},
-    prio, ssl,
+    null_safe_slice, prio, ssl,
 };
 
 // Alias common types.
@@ -100,7 +100,7 @@ impl RecordList {
     ) -> ssl::SECStatus {
         let records = arg.cast::<Self>().as_mut().unwrap();
 
-        let slice = std::slice::from_raw_parts(data, len as usize);
+        let slice = null_safe_slice(data, len);
         records.append(epoch, ContentType::try_from(ct).unwrap(), slice);
         ssl::SECSuccess
     }
@@ -178,6 +178,7 @@ impl AgentIoInput {
             return Err(Error::NoDataAvailable);
         }
 
+        #[allow(clippy::disallowed_methods)] // We just checked if this was empty.
         let src = unsafe { std::slice::from_raw_parts(self.input, amount) };
         qtrace!([self], "read {}", hex(src));
         let dst = unsafe { std::slice::from_raw_parts_mut(buf, amount) };
@@ -232,7 +233,7 @@ impl AgentIo {
 
     // Stage output from TLS into the output buffer.
     fn save_output(&mut self, buf: *const u8, count: usize) {
-        let slice = unsafe { std::slice::from_raw_parts(buf, count) };
+        let slice = unsafe { null_safe_slice(buf, count) };
         qtrace!([self], "save output {}", hex(slice));
         self.output.extend_from_slice(slice);
     }
