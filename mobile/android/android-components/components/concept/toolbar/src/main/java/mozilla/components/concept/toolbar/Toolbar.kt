@@ -279,26 +279,46 @@ interface Toolbar : ScrollableToolbar {
         private val longClickListener: (() -> Unit)? = null,
         private val listener: () -> Unit,
     ) : Action {
+        private var view: WeakReference<AppCompatImageButton>? = null
 
-        override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also { imageButton ->
-            imageButton.setImageDrawable(imageDrawable)
-            imageButton.contentDescription = contentDescription
-            imageButton.setTintResource(iconTintColorResource)
-            imageButton.setOnClickListener { listener.invoke() }
-            imageButton.setOnLongClickListener {
-                longClickListener?.invoke()
-                true
+        override fun createView(parent: ViewGroup): View =
+            AppCompatImageButton(parent.context).also { imageButton ->
+                view = WeakReference(imageButton)
+
+                imageButton.setImageDrawable(imageDrawable)
+                imageButton.contentDescription = contentDescription
+                imageButton.setTintResource(iconTintColorResource)
+                imageButton.setOnClickListener { listener.invoke() }
+                imageButton.setOnLongClickListener {
+                    longClickListener?.invoke()
+                    true
+                }
+                imageButton.isLongClickable = longClickListener != null
+
+                val backgroundResource = if (background == 0) {
+                    parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
+                } else {
+                    background
+                }
+
+                imageButton.setBackgroundResource(backgroundResource)
+                padding?.let { imageButton.setPadding(it) }
             }
-            imageButton.isLongClickable = longClickListener != null
 
-            val backgroundResource = if (background == 0) {
-                parent.context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
-            } else {
-                background
+        /**
+         * Changes the content description and the tint colour of the view.
+         *
+         * @param contentDescription The content description to use.
+         * @param tintColorResource ID of color resource to tint the icon.
+         */
+        fun updateView(
+            contentDescription: String? = null,
+            @ColorRes tintColorResource: Int = ViewGroup.NO_ID,
+        ) {
+            view?.get()?.let {
+                it.contentDescription = contentDescription
+                it.setTintResource(tintColorResource)
             }
-
-            imageButton.setBackgroundResource(backgroundResource)
-            padding?.let { imageButton.setPadding(it) }
         }
 
         override fun bind(view: View) = Unit

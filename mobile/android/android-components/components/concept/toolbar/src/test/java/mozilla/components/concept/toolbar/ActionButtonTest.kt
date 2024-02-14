@@ -54,4 +54,15 @@ class ActionButtonTest {
         val buttonVisibility = Toolbar.ActionButton(mock(), "image") {}
         assertEquals(true, buttonVisibility.visible())
     }
+
+    @Test
+    fun `set contentDescription`() {
+        val button = Toolbar.ActionButton(mock(), "image") { }
+        val linearLayout = LinearLayout(testContext)
+        val view = button.createView(linearLayout)
+
+        button.updateView("contentDescription")
+
+        assertEquals("contentDescription", view.contentDescription)
+    }
 }

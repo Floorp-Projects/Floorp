@@ -25,6 +25,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -67,6 +68,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val standardSnackbarErrorBinding =
         ViewBoundFeatureWrapper<StandardSnackbarErrorBinding>()
     private val reviewQualityCheckFeature = ViewBoundFeatureWrapper<ReviewQualityCheckFeature>()
+    private val translationsBinding = ViewBoundFeatureWrapper<TranslationsBinding>()
 
     private var readerModeAvailable = false
     private var reviewQualityCheckAvailable = false
@@ -150,7 +152,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         browserToolbarView.view.addPageAction(readerModeAction)
 
-        initTranslationsAction(context)
+        initTranslationsAction(context, view)
         initReviewQualityCheck(context, view)
 
         thumbnailsFeature.set(
@@ -236,32 +238,58 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         }
     }
 
-    private fun initTranslationsAction(context: Context) {
+    private fun initTranslationsAction(context: Context, view: View) {
         if (!context.settings().enableTranslations) {
             return
         }
 
-        val translationsAction =
-            BrowserToolbar.ToggleButton(
-                image = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_translate_24,
-                )!!.apply {
-                    setTint(ContextCompat.getColor(context, R.color.fx_mobile_text_color_primary))
-                },
-                imageSelected = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.mozac_ic_translate_24,
-                )!!,
-                contentDescription = context.getString(R.string.browser_toolbar_translate),
-                contentDescriptionSelected = "",
-                visible = {
-                    translationsAvailable || context.settings().enableTranslations
-                },
-                listener = { browserToolbarInteractor.onTranslationsButtonClicked() },
-            )
-
+        val translationsAction = Toolbar.ActionButton(
+            AppCompatResources.getDrawable(
+                context,
+                R.drawable.mozac_ic_translate_24,
+            )!!.apply {
+                setTint(ContextCompat.getColor(context, R.color.fx_mobile_text_color_primary))
+            },
+            contentDescription = context.getString(R.string.browser_toolbar_translate),
+            visible = { translationsAvailable },
+            listener = {
+                browserToolbarInteractor.onTranslationsButtonClicked()
+            },
+        )
         browserToolbarView.view.addPageAction(translationsAction)
+
+        getCurrentTab()?.let {
+            translationsBinding.set(
+                feature = TranslationsBinding(
+                    browserStore = context.components.core.store,
+                    sessionId = it.id,
+                    onStateUpdated = { isVisible, isTranslated, fromSelectedLanguage, toSelectedLanguage ->
+                        translationsAvailable = isVisible
+
+                        translationsAction.updateView(
+                            tintColorResource = if (isTranslated) {
+                                R.color.fx_mobile_icon_color_accent_violet
+                            } else {
+                                R.color.fx_mobile_text_color_primary
+                            },
+                            contentDescription = if (isTranslated) {
+                                context.getString(
+                                    R.string.browser_toolbar_translated_successfully,
+                                    fromSelectedLanguage?.localizedDisplayName,
+                                    toSelectedLanguage?.localizedDisplayName,
+                                )
+                            } else {
+                                context.getString(R.string.browser_toolbar_translate)
+                            },
+                        )
+
+                        safeInvalidateBrowserToolbarView()
+                    },
+                ),
+                owner = this,
+                view = view,
+            )
+        }
     }
 
     private fun initReviewQualityCheck(context: Context, view: View) {
