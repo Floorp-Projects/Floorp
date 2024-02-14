@@ -52,11 +52,15 @@ async function hasStateForHost(host) {
  */
 function assertEmpty() {
   Assert.equal(
-    btp.bounceTrackerCandidateHosts.length,
+    btp.testGetBounceTrackerCandidateHosts({}).length,
     0,
     "No tracker candidates."
   );
-  Assert.equal(btp.userActivationHosts.length, 0, "No user activation hosts.");
+  Assert.equal(
+    btp.testGetUserActivationHosts({}).length,
+    0,
+    "No user activation hosts."
+  );
 }
 
 add_setup(function () {
@@ -200,7 +204,7 @@ add_task(async function test_purge() {
       if (bounceTime != null) {
         if (userActivationTime != null) {
           throw new Error(
-            "Attempting to construct invalid map state. bounceTrackerCandidateHosts and userActivationHosts must be disjoint."
+            "Attempting to construct invalid map state. testGetBounceTrackerCandidateHosts({}) and testGetUserActivationHosts({}) must be disjoint."
           );
         }
 
@@ -210,13 +214,13 @@ add_task(async function test_purge() {
         info(
           `Adding bounce. siteHost: ${siteHost}, bounceTime: ${bounceTime} ms`
         );
-        btp.testAddBounceTrackerCandidate(siteHost, bounceTime * 1000);
+        btp.testAddBounceTrackerCandidate({}, siteHost, bounceTime * 1000);
       }
 
       if (userActivationTime != null) {
         if (bounceTime != null) {
           throw new Error(
-            "Attempting to construct invalid map state. bounceTrackerCandidateHosts and userActivationHosts must be disjoint."
+            "Attempting to construct invalid map state. testGetBounceTrackerCandidateHosts({}) and testGetUserActivationHosts({}) must be disjoint."
           );
         }
 
@@ -232,7 +236,7 @@ add_task(async function test_purge() {
         info(
           `Adding user interaction. siteHost: ${siteHost}, userActivationTime: ${userActivationTime} ms`
         );
-        btp.testAddUserActivation(siteHost, userActivationTime * 1000);
+        btp.testAddUserActivation({}, siteHost, userActivationTime * 1000);
       }
 
       if (shouldPurge) {
@@ -246,12 +250,12 @@ add_task(async function test_purge() {
     "Check that bounce and user activation data has been correctly recorded."
   );
   Assert.deepEqual(
-    btp.bounceTrackerCandidateHosts.sort(),
+    btp.testGetBounceTrackerCandidateHosts({}).sort(),
     expectedBounceTrackerHosts.sort(),
     "Has added bounce tracker hosts."
   );
   Assert.deepEqual(
-    btp.userActivationHosts.sort(),
+    btp.testGetUserActivationHosts({}).sort(),
     expectedUserActivationHosts.sort(),
     "Has added user activation hosts."
   );
@@ -269,13 +273,13 @@ add_task(async function test_purge() {
     .filter(host => !expectedPurgedHosts.includes(host))
     .sort();
   Assert.deepEqual(
-    btp.bounceTrackerCandidateHosts.sort(),
+    btp.testGetBounceTrackerCandidateHosts({}).sort(),
     expectedBounceTrackerHostsAfterPurge.sort(),
     "After purge the bounce tracker candidate host set should be updated correctly."
   );
 
   Assert.deepEqual(
-    btp.userActivationHosts.sort(),
+    btp.testGetUserActivationHosts({}).sort(),
     expiredUserActivationHosts.sort(),
     "After purge any expired user activation records should have been removed"
   );
