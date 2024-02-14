@@ -16,8 +16,8 @@ use std::{
 };
 
 use neqo_common::{hex, hex_with_len, qinfo, Decoder, Encoder};
-use neqo_crypto::{random, randomize};
-use smallvec::{smallvec, SmallVec};
+use neqo_crypto::random;
+use smallvec::SmallVec;
 
 use crate::{
     frame::FRAME_TYPE_NEW_CONNECTION_ID, packet::PacketBuilder, recovery::RecoveryToken,
@@ -41,16 +41,14 @@ pub struct ConnectionId {
 impl ConnectionId {
     pub fn generate(len: usize) -> Self {
         assert!(matches!(len, 0..=MAX_CONNECTION_ID_LEN));
-        let mut cid = smallvec![0; len];
-        randomize(&mut cid);
-        Self { cid }
+        Self::from(random(len))
     }
 
     // Apply a wee bit of greasing here in picking a length between 8 and 20 bytes long.
     pub fn generate_initial() -> Self {
-        let v = random::<1>()[0];
+        let v = random(1);
         // Bias selection toward picking 8 (>50% of the time).
-        let len: usize = max(8, 5 + (v & (v >> 4))).into();
+        let len: usize = max(8, 5 + (v[0] & (v[0] >> 4))).into();
         Self::generate(len)
     }
 
@@ -74,6 +72,12 @@ impl Borrow<[u8]> for ConnectionId {
 impl From<SmallVec<[u8; MAX_CONNECTION_ID_LEN]>> for ConnectionId {
     fn from(cid: SmallVec<[u8; MAX_CONNECTION_ID_LEN]>) -> Self {
         Self { cid }
+    }
+}
+
+impl From<Vec<u8>> for ConnectionId {
+    fn from(cid: Vec<u8>) -> Self {
+        Self::from(SmallVec::from(cid))
     }
 }
 
@@ -218,9 +222,7 @@ impl ConnectionIdDecoder for RandomConnectionIdGenerator {
 
 impl ConnectionIdGenerator for RandomConnectionIdGenerator {
     fn generate_cid(&mut self) -> Option<ConnectionId> {
-        let mut buf = smallvec![0; self.len];
-        randomize(&mut buf);
-        Some(ConnectionId::from(buf))
+        Some(ConnectionId::from(&random(self.len)))
     }
 
     fn as_decoder(&self) -> &dyn ConnectionIdDecoder {
@@ -248,8 +250,8 @@ pub struct ConnectionIdEntry<SRT: Clone + PartialEq> {
 impl ConnectionIdEntry<[u8; 16]> {
     /// Create a random stateless reset token so that it is hard to guess the correct
     /// value and reset the connection.
-    pub fn random_srt() -> [u8; 16] {
-        random::<16>()
+    fn random_srt() -> [u8; 16] {
+        <[u8; 16]>::try_from(&random(16)[..]).unwrap()
     }
 
     /// Create the first entry, which won't have a stateless reset token.
@@ -474,7 +476,7 @@ impl ConnectionIdManager {
                 .add_local(ConnectionIdEntry::new(self.next_seqno, cid.clone(), ()));
             self.next_seqno += 1;
 
-            let srt = ConnectionIdEntry::random_srt();
+            let srt = <[u8; 16]>::try_from(&random(16)[..]).unwrap();
             Ok((cid, srt))
         } else {
             Err(Error::ConnectionIdsExhausted)
@@ -563,7 +565,7 @@ impl ConnectionIdManager {
             if let Some(cid) = maybe_cid {
                 assert_ne!(cid.len(), 0);
                 // TODO: generate the stateless reset tokens from the connection ID and a key.
-                let srt = ConnectionIdEntry::random_srt();
+                let srt = <[u8; 16]>::try_from(&random(16)[..]).unwrap();
 
                 let seqno = self.next_seqno;
                 self.next_seqno += 1;
@@ -571,7 +573,7 @@ impl ConnectionIdManager {
                     .add_local(ConnectionIdEntry::new(seqno, cid.clone(), ()));
 
                 let entry = ConnectionIdEntry::new(seqno, cid, srt);
-                self.write_entry(&entry, builder, stats)?;
+                debug_assert!(self.write_entry(&entry, builder, stats)?);
                 tokens.push(RecoveryToken::NewConnectionId(entry));
             }
         }

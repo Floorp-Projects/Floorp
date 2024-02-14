@@ -3127,7 +3127,8 @@ delta = "0.9.0 -> 0.11.0"
 [[audits.qlog]]
 who = "Kershaw Chang <kershaw@mozilla.com>"
 criteria = "safe-to-deploy"
-delta = "0.11.0 -> 0.12.0"
+delta = "0.11.0 -> 0.11.0@git:09ea4b244096a013071cfe2175bbf2945fb7f8d1"
+importable = false
 
 [[audits.quote]]
 who = "Nika Layzell <nika@thelayzells.com>"

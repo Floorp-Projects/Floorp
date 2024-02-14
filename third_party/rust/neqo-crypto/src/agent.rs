@@ -33,7 +33,6 @@ use crate::{
     ech,
     err::{is_blocked, secstatus_to_res, Error, PRErrorCode, Res},
     ext::{ExtensionHandler, ExtensionTracker},
-    null_safe_slice,
     p11::{self, PrivateKey, PublicKey},
     prio,
     replay::AntiReplay,
@@ -898,7 +897,7 @@ impl Client {
         let resumption = arg.cast::<Vec<ResumptionToken>>().as_mut().unwrap();
         let len = usize::try_from(len).unwrap();
         let mut v = Vec::with_capacity(len);
-        v.extend_from_slice(null_safe_slice(token, len));
+        v.extend_from_slice(std::slice::from_raw_parts(token, len));
         qinfo!(
             [format!("{fd:p}")],
             "Got resumption token {}",
@@ -1106,7 +1105,11 @@ impl Server {
         }
 
         let check_state = arg.cast::<ZeroRttCheckState>().as_mut().unwrap();
-        let token = null_safe_slice(client_token, usize::try_from(client_token_len).unwrap());
+        let token = if client_token.is_null() {
+            &[]
+        } else {
+            std::slice::from_raw_parts(client_token, usize::try_from(client_token_len).unwrap())
+        };
         match check_state.checker.check(token) {
             ZeroRttCheckResult::Accept => ssl::SSLHelloRetryRequestAction::ssl_hello_retry_accept,
             ZeroRttCheckResult::Fail => ssl::SSLHelloRetryRequestAction::ssl_hello_retry_fail,
