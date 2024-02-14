@@ -333,6 +333,23 @@ namespace ChromeUtils {
                         optional ImportESModuleOptionsDictionary aOptions = {});
 
   /**
+   * Defines propertys on the given target which lazily imports a ES module
+   * when accessed.
+   *
+   * @param aTarget The target object on which to define the property.
+   * @param aModules An object with a property for each module property to be
+   *                 imported, where the property name is the name of the
+   *                 imported symbol and the value is the module URI.
+   * @param aOption An option to specify where to load the module into.
+   *
+   * In worker threads, aOption is required and only { global: "current" } and
+   * { global: "contextual" } are supported.
+   */
+  [Throws]
+  undefined defineESModuleGetters(object aTarget, object aModules,
+                                  optional ImportESModuleOptionsDictionary aOptions = {});
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };
@@ -559,20 +576,6 @@ partial namespace ChromeUtils {
    */
   [Throws]
   undefined defineModuleGetter(object target, DOMString id, DOMString resourceURI);
-
-  /**
-   * Defines propertys on the given target which lazily imports a ES module
-   * when accessed.
-   *
-   * @param target The target object on which to define the property.
-   * @param modules An object with a property for each module property to be
-   *                imported, where the property name is the name of the
-   *                imported symbol and the value is the module URI.
-   * @param option An option to specify where to load the module into.
-   */
-  [Throws]
-  undefined defineESModuleGetters(object target, object modules,
-                                  optional ImportESModuleOptionsDictionary options = {});
 
   /**
    * Returns the scripted location of the first ancestor stack frame with a
