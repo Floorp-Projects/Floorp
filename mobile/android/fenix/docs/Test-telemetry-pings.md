@@ -1,3 +1,5 @@
+# Test Telemetry Pings
+
 Watch a step by step [video](https://user-images.githubusercontent.com/6579541/170517089-7266b93e-7ff8-4ebb-ae01-4f2a7e558c66.mp4)
 
 1. To send data by default. apply this patch:

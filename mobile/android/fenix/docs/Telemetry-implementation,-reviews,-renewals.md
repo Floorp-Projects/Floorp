@@ -1,3 +1,5 @@
+# Telemetry - Implementation, Reviews, Renewals
+
 See https://github.com/mozilla-mobile/fenix/wiki/Telemetry-Checklist for the steps to implement new probes.
 
 # Creating Glean Annotations

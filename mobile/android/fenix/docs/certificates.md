@@ -3,7 +3,7 @@
 The certificates for the official Fenix builds (`nightly`, `beta` and `production`)
 can be accessed from the `certificates` folder in the root of this repository
 
-# Fingerprints
+## Fingerprints
 
 Note: we currently only have the Fenix nightly deployed, and it's using the
 production key at the moment.

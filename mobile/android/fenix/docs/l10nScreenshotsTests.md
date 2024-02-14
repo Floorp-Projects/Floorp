@@ -1,3 +1,5 @@
+# l10n Screenshots Test
+
 ### Screenshtos Tests
 We are using [`screengrab`](https://docs.fastlane.tools/getting-started/android/screenshots/) which works with fastlane to automate the process of capturing screenshots.
 All the l10n screenshots are generated through the ui tests. These particular tests run as part of the screenshots package (`app/src/androidTest/mozilla/fenix/ui/screenshots`)

@@ -1,3 +1,5 @@
+# List of Fenix Threads
+
 To profile background threads using the Firefox Profiler, you need to specify their names. It uses a case-insensitive substring match, e.g. specifying `default` will match all threads in the kotlin default dispatcher which have a name like, `DefaultDispatcher-worker-*`. This document is a list of the threads in fenix (via `ThreadGroup.list()` as of Mar 2022) to make using this functionality easier:
 ```
 AutoSave-thread-1

@@ -1,3 +1,5 @@
+# Crash Monitoring
+
 ## Important
 * The main goal here is not to file an issue for every single distinct crash report, but to find regressions of new problems that need to be addressed.
 * Once you're familiar with the process this should not take more than 10 mins in the morning.

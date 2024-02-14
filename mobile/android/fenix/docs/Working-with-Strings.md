@@ -1,3 +1,5 @@
+# Working with Strings
+
 ## Marking an unused string to be removed
 
 Removing strings manually could cause crashes in **Beta** and **Release** versions 💥 , as the removed strings could be [uplifted to release branches](https://github.com/mozilla-mobile/fenix/pull/20364) by mistake, where strings are still needed. For this reason, we need a special process to remove them.

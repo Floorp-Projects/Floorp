@@ -1,3 +1,5 @@
+# Architecture Decisions
+
 For an overview of our current architecture, please see [this document](https://github.com/mozilla-mobile/fenix/blob/master/docs/architecture-overview.md)
 
 ---
@@ -6,13 +8,13 @@ These are some of the major architecture decisions we've made so far in Fenix. [
 
 ---
 
-# Overview
+## Overview
 
 Several apps have suffered from insufficient attention to appropriate Android application architecture. This leads to spaghetti code, God objects, and leaky abstractions that make testing and maintaining our apps significantly more costly and challenging.
 
 ---
 
-# Goals
+## Goals
 
 Our architecture should:
 
@@ -25,19 +27,19 @@ Our architecture should:
 
 ---
 
-# Special Concerns
+## Special Concerns
 
 As a browser, Fenix will need to interface with the Android Components and the GeckoView rendering engine. This means any architecture we choose must not require that all components of the app are implemented similarly. Also, our application state will need to synchronize with the engine’s state as the two will not always be in perfect sync due to hidden internals.
 
 ---
 
-# Component Architecture
+## Component Architecture
 
-## Context
+### Context
 
 A/B testing of layout and UX is a fundamental necessity of Fenix. We have a lot of hypotheses needing validation and actual usage data about what might make a browser better to acquire and retain more users. A lot of questionable decisions have been made in older mobile browsers that do not seem ideal for mobile devices, but we need data to tell us if our assumptions are correct.
 
-## Decision
+### Decision
 
 We did a review of modern app architectures used by companies throughout the tech industry and came across the Netflix "componentization" architecture. Netflix had a special desire to A/B test a lot of different layouts for their app's user interface and built their architecture for this express purpose.
 
@@ -55,7 +57,7 @@ Here's a [sample repository](https://github.com/julianomoraes/componentizationAr
 
 The goal of software architecture is to minimize the cost of change. This decision is possibly the biggest factor for reducing the cost of changes to Fenix. It also plays well with the Android Components project, which provides so many of the components that will make up this project.
 
-## Consequences
+### Consequences
 
 We will package the UI into components which are reusable and can be remixed for A/B layout tests.
 
@@ -65,13 +67,13 @@ One downside of this is the extra cost of getting contributors to avoid making U
 
 ---
 
-# Localized, MVI (Model-View-Intent) Unidirectional Architecture
+## Localized, MVI (Model-View-Intent) Unidirectional Architecture
 
-## Context
+### Context
 
 Race conditions are the bane of Android apps everywhere. They often happen because multiple systems cannot agree about state.
 
-## Decision
+### Decision
 
 The best solution is to have all state changes flow in a functional, reactive manner out from a single source of truth with careful thread locking as required. This solution will be familiar to anyone who has worked with Redux or Flux.
 
@@ -83,7 +85,7 @@ However, unlike some MVI architectures, we will not focus on keeping a global Vi
 
 Here's a [state diagram of the MVI architecture](https://staltz.com/img/mvi-unidir-ui-arch.jpg).
 
-## Consequences
+### Consequences
 
 We will experiment with writing new components using MVI unidirectional principles. We will need to take care when passing data between components that we do not override a more authoritative source of truth.
 

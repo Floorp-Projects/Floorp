@@ -1,3 +1,5 @@
+# Metric Feature Tags
+
 To help find metrics in the [Glean Dictionary] and other tools, metrics should contain tag metadata corresponding to the
 feature area(s) that they belong to. In the case of Firefox for Android, tag information is based off of the GitHub feature labels for this repository:
 
