@@ -31,13 +31,14 @@ namespace mozilla::dom {
 
 namespace {
 
-class DebuggerMessageEventRunnable : public WorkerDebuggerRunnable {
+class DebuggerMessageEventRunnable final : public WorkerDebuggerRunnable {
   nsString mMessage;
 
  public:
   DebuggerMessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                const nsAString& aMessage)
-      : WorkerDebuggerRunnable(aWorkerPrivate), mMessage(aMessage) {}
+      : WorkerDebuggerRunnable(aWorkerPrivate, "DebuggerMessageEventRunnable"),
+        mMessage(aMessage) {}
 
  private:
   virtual bool WorkerRun(JSContext* aCx,
@@ -73,7 +74,7 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
   CompileDebuggerScriptRunnable(WorkerPrivate* aWorkerPrivate,
                                 const nsAString& aScriptURL,
                                 const mozilla::Encoding* aDocumentEncoding)
-      : WorkerDebuggerRunnable(aWorkerPrivate),
+      : WorkerDebuggerRunnable(aWorkerPrivate, "CompileDebuggerScriptRunnable"),
         mScriptURL(aScriptURL),
         mDocumentEncoding(aDocumentEncoding) {}
 

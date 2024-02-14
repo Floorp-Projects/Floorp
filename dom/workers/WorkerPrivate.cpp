@@ -337,7 +337,8 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
                                  UniquePtr<SerializedStackHolder> aOriginStack,
                                  const nsAString& aScriptURL,
                                  const mozilla::Encoding* aDocumentEncoding)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThread),
+      : WorkerDebuggeeRunnable(aWorkerPrivate, "CompileScriptRunnable",
+                               WorkerThread),
         mScriptURL(aScriptURL),
         mDocumentEncoding(aDocumentEncoding),
         mOriginStack(aOriginStack.release()) {}
@@ -861,7 +862,8 @@ PRThread* PRThreadFromThread(nsIThread* aThread) {
 class CancelingOnParentRunnable final : public WorkerDebuggeeRunnable {
  public:
   explicit CancelingOnParentRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, ParentThread) {}
+      : WorkerDebuggeeRunnable(aWorkerPrivate, "CancelingOnParentRunnable",
+                               ParentThread) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->Cancel();

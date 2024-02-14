@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                            Target aTarget)
-    : WorkerDebuggeeRunnable(aWorkerPrivate, aTarget),
+    : WorkerDebuggeeRunnable(aWorkerPrivate, "MessageEventRunnable", aTarget),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 

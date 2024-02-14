@@ -473,8 +473,9 @@ class MainThreadStopSyncLoopRunnable : public WorkerSyncRunnable {
 class WorkerDebuggeeRunnable : public WorkerRunnable {
  protected:
   WorkerDebuggeeRunnable(WorkerPrivate* aWorkerPrivate,
+                         const char* aName = "WorkerDebuggeeRunnable",
                          Target aTarget = ParentThread)
-      : WorkerRunnable(aWorkerPrivate, "WorkerDebuggeeRunnable", aTarget) {}
+      : WorkerRunnable(aWorkerPrivate, aName, aTarget) {}
 
   bool PreDispatch(WorkerPrivate* aWorkerPrivate) override;
 
