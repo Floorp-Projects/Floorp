@@ -9,7 +9,9 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -38,8 +40,16 @@ class SettingsSubMenuAutofillRobot {
         Log.i(TAG, "verifyAutofillToolbarTitle: Verified \"Autofill\" toolbar title exists")
     }
     fun verifyManageAddressesToolbarTitle() {
-        assertUIObjectExists(manageAddressesToolbarTitle)
-        Log.i(TAG, "verifyManageAddressesToolbarTitle: Verified \"Manage addresses\" toolbar title exists")
+        Log.i(TAG, "verifyManageAddressesToolbarTitle: Trying to verify the \"Manage addresses\" toolbar title is displayed")
+        onView(
+            allOf(
+                withId(R.id.navigationToolbar),
+                withChild(
+                    withText(R.string.preferences_addresses_manage_addresses),
+                ),
+            ),
+        ).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyManageAddressesToolbarTitle: Verified the \"Manage addresses\" toolbar title is displayed")
     }
 
     fun verifyAddressAutofillSection(isAddressAutofillEnabled: Boolean, userHasSavedAddress: Boolean) {
