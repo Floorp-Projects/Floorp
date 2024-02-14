@@ -310,6 +310,11 @@ onboarding-new-user-time-based-survey-title = How long have you been using { -br
 onboarding-new-user-familiarity-based-survey-title = How familiar are you with { -brand-short-name }?
 
 onboarding-new-user-survey-subtitle = Your feedback helps make { -brand-short-name } even better.
+
+# When translating "next" it means the next screen in onboarding.
+onboarding-new-user-survey-next-button-label = Next
+onboarding-new-user-survey-legal-link-label = By selecting “{ onboarding-new-user-survey-next-button-label },” you agree to { -brand-product-name }’s <a data-l10n-name="privacy_notice">Privacy Notice</a>
+
 # When translating "brand new" it means completely new.
 onboarding-new-user-survey-time-based-option-1 = I’m brand new
 onboarding-new-user-survey-time-based-option-2 = Less than 1 month
