@@ -88,6 +88,10 @@ support-files = [
   "non_shared_nest_import_non_shared_3.mjs",
   "non_shared_nest_import_non_shared_target_3.mjs",
   "contextual.sys.mjs",
+  "non_shared_worker_1.js",
+  "import_shared_in_worker.js",
+  "contextual_worker.js",
+  "sync_and_async_in_worker.js",
 ]
 
 ["test_ComponentEnvironment.js"]
@@ -258,9 +262,18 @@ skip-if = ["os == 'android' && processor == 'x86_64'"]
 
 ["test_import_global.js"]
 
+["test_import_global_worker.js"]
+skip-if = ["os == 'android'"]
+
 ["test_import_global_contextual.js"]
 
+["test_import_global_contextual_worker.js"]
+skip-if = ["os == 'android'"]
+
 ["test_import_global_current.js"]
+
+["test_import_global_current_worker.js"]
+skip-if = ["os == 'android'"]
 
 ["test_import_shim.js"]
 
