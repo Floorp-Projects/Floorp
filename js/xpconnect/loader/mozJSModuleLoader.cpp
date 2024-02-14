@@ -302,7 +302,7 @@ class MOZ_STACK_CLASS ModuleLoaderInfo {
       : mLocation(nullptr),
         mURI(aRequest->mURI),
         mIsModule(true),
-        mSkipCheck(aRequest->GetComponentLoadContext()->mSkipCheck) {}
+        mSkipCheck(aRequest->GetSyncLoadContext()->mSkipCheck) {}
 
   SkipCheckForBrokenURLOrZeroSized getSkipCheckForBrokenURLOrZeroSized() const {
     return mSkipCheck;
@@ -639,8 +639,8 @@ void mozJSModuleLoader::CreateLoaderGlobal(JSContext* aCx,
   xpc::SetLocationForGlobal(global, aLocation);
 
   MOZ_ASSERT(!mModuleLoader);
-  RefPtr<ComponentScriptLoader> scriptLoader = new ComponentScriptLoader;
-  mModuleLoader = new ComponentModuleLoader(scriptLoader, backstagePass);
+  RefPtr<SyncScriptLoader> scriptLoader = new SyncScriptLoader;
+  mModuleLoader = new SyncModuleLoader(scriptLoader, backstagePass);
   backstagePass->InitModuleLoader(mModuleLoader);
 
   aGlobal.set(global);
@@ -670,7 +670,7 @@ JSObject* mozJSModuleLoader::GetSharedGlobal(JSContext* aCx) {
 
 /* static */
 nsresult mozJSModuleLoader::LoadSingleModuleScript(
-    ComponentModuleLoader* aModuleLoader, JSContext* aCx,
+    SyncModuleLoader* aModuleLoader, JSContext* aCx,
     JS::loader::ModuleLoadRequest* aRequest, MutableHandleScript aScriptOut) {
   AUTO_PROFILER_MARKER_TEXT(
       "ChromeUtils.importESModule static import", JS,
@@ -1811,7 +1811,7 @@ nsresult mozJSModuleLoader::ImportESModule(
       CORS_NONE, /* aNonce = */ u""_ns, dom::RequestPriority::Auto,
       ParserMetadata::NotParserInserted, principal);
 
-  RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
+  RefPtr<SyncLoadContext> context = new SyncLoadContext();
   context->mSkipCheck = aSkipCheck;
 
   RefPtr<VisitedURLSet> visitedSet =
