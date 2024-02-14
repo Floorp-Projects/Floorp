@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * Tests to ensure that when a user installs or uninstalls an add-on,
+ * we correctly handle the overriding of default and/or parameters
+ * according to the allowlist.
+ */
+
 "use strict";
 
 const kBaseURL = "https://example.com/";
