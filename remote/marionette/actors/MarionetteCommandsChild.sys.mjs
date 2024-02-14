@@ -287,6 +287,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       return null;
     }
 
+    // If name is null (absent), expose the empty string.
+    if (accessible.name === null) {
+      return "";
+    }
+
     return accessible.name;
   }
 
