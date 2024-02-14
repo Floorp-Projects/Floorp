@@ -1044,20 +1044,31 @@ export class SearchEngine {
    * third party modifications and means that we can verify the WebExtension is
    * still in the allow list.
    *
-   * @param {string} extensionID
-   *   The WebExtension ID. For Policy engines, this is currently "set-via-policy".
-   * @param {object} manifest
-   *   An object representing the WebExtensions' manifest.
+   * @param {string} options
+   *   The options for this function.
+   * @param {AddonSearchEngine} [options.engine]
+   *   The search engine to override with this engine. If not specified, `manifest`
+   *   must be provided.
+   * @param {object} [options.extension]
+   *   An object representing the WebExtensions. If not specified,
+   *   `engine` must be provided
    */
-  overrideWithExtension(extensionID, manifest) {
+  overrideWithExtension({ engine, extension }) {
     this._overriddenData = {
       urls: this._urls,
       queryCharset: this._queryCharset,
       searchForm: this.#cachedSearchForm,
     };
-    this._urls = [];
-    this.setAttr("overriddenBy", extensionID);
-    this._setUrls(manifest.chrome_settings_overrides.search_provider);
+    if (engine) {
+      this._urls = engine._urls;
+      this.setAttr("overriddenBy", engine._extensionID);
+    } else {
+      this._urls = [];
+      this.setAttr("overriddenBy", extension.id);
+      this._setUrls(
+        extension.manifest.chrome_settings_overrides.search_provider
+      );
+    }
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 

@@ -215,6 +215,8 @@ support-files = [
 
 ["test_override_allowlist.js"]
 
+["test_override_allowlist_switch.js"]
+
 ["test_parseSubmissionURL.js"]
 
 ["test_policyEngine.js"]
