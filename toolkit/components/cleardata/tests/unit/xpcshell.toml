@@ -4,8 +4,15 @@ firefox-appdir = "browser"
 head = "head.js"
 skip-if = ["os == 'android'"]
 support-files = ""
+prefs = [
+  "privacy.bounceTrackingProtection.enabled=true",
+  "privacy.bounceTrackingProtection.enableTestMode=true",
+  "privacy.bounceTrackingProtection.bounceTrackingPurgeTimerPeriodSec=0",
+]
 
 ["test_basic.js"]
+
+["test_bounce_tracking_protection.js"]
 
 ["test_certs.js"]
 
