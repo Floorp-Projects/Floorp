@@ -28,6 +28,7 @@ export const PdfJsDefaultPreferences = Object.freeze({
   enablePermissions: false,
   enablePrintAutoRotate: true,
   enableScripting: true,
+  enableStampEditor: true,
   externalLinkTarget: 0,
   highlightEditorColors: "yellow=#FFFF98,green=#53FFBC,blue=#80EBFF,pink=#FFCBE6,red=#FF4F5F",
   historyUpdateUrl: false,
