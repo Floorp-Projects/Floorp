@@ -259,7 +259,7 @@ if CONFIG["OS_ARCH"] == "Linux":
                 "-fno-integrated-as",
             ]
 
-if CONFIG["OS_ARCH"] == "Linux" and CONFIG["TARGET_CPU"] == "riscv64":
+if CONFIG["OS_ARCH"] in ("Linux", "OpenBSD") and CONFIG["TARGET_CPU"] == "riscv64":
     SOURCES += [
         "xptcinvoke_asm_riscv64.S",
         "xptcinvoke_riscv64.cpp",
