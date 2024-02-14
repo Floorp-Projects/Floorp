@@ -38,12 +38,26 @@ const kExpectedRequestsOfDynamicLoad = kExpectedRequestsOfInitialLoad;
 
 const kExpectedRequestsOfDynamicLoadDisabled = kExpectedRequestsOfInitialLoadDisabled;
 
+const kExpectedRequestsShapeOutsideImage = [
+    {   fileNameAndSuffix: "square_25px_x_25px.png?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "square_25px_x_25px.png?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+];
+
+const kExpectedRequestsShapeOutsideImageDisabled = kExpectedRequestsShapeOutsideImage;
+
 export const kTestData = [
     {   testFileName: "image-initial-load.h2.html",
         expectedRequests: kExpectedRequestsOfInitialLoad
     },
     {   testFileName: "image-dynamic-load.h2.html",
         expectedRequests: kExpectedRequestsOfDynamicLoad
+    },
+    {   testFileName: "shape-outside-image.h2.html",
+        expectedRequests: kExpectedRequestsShapeOutsideImage
     },
 ];
 
@@ -53,5 +67,8 @@ export const kTestDataDisabled = [
     },
     {   testFileName: "image-dynamic-load.h2.html",
         expectedRequests: kExpectedRequestsOfDynamicLoadDisabled
+    },
+    {   testFileName: "shape-outside-image.h2.html",
+        expectedRequests: kExpectedRequestsShapeOutsideImageDisabled
     },
 ];

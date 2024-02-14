@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>internal priority of shape-outside image</title>
+  <style>
+    .floated-box {
+      border: solid;
+      width: 150px;
+      height: 150px;
+      float: right;
+      shape-outside: url("../resources/square_25px_x_25px.png?1");
+    }
+    </style>
+</head>
+<body>
+<!-- The url for the src and `shape-outside` may differ per spec
+  (https://drafts.csswg.org/css-shapes/#shape-outside-property) . !-->
+<img class=floated-box src="../resources/square_25px_x_25px.png?2" alt="img with shape-outside image"></img>
+
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+<script>
+  onload = function() {
+    opener.postMessage("ChildLoaded")
+  }
+</script>
+</body>
+</html>
