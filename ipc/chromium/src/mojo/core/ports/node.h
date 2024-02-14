@@ -8,7 +8,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <queue>
 #include <unordered_map>
 
 #include "mojo/core/ports/event.h"

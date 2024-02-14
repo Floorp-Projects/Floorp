@@ -816,7 +816,8 @@ int Node::OnObserveProxy(const PortRef& port_ref,
       event->set_control_sequence_num(
           port->next_control_sequence_num_to_send++);
       if (port->state == Port::kBuffering) {
-        port->control_message_queue.push({event_target_node, std::move(event)});
+        port->control_message_queue.push_back(
+            {event_target_node, std::move(event)});
       } else {
         event_to_forward = std::move(event);
       }
@@ -961,7 +962,7 @@ int Node::OnObserveClosure(const PortRef& port_ref,
     peer_node_name = port->peer_node_name;
 
     if (port->state == Port::kBuffering) {
-      port->control_message_queue.push({peer_node_name, std::move(event)});
+      port->control_message_queue.push_back({peer_node_name, std::move(event)});
     }
   }
 
@@ -1074,7 +1075,7 @@ int Node::OnUserMessageReadAckRequest(
             port->next_control_sequence_num_to_send++, current_sequence_num);
 
         if (port->state == Port::kBuffering) {
-          port->control_message_queue.push(
+          port->control_message_queue.push_back(
               {peer_node_name, std::move(event_to_send)});
         }
 
@@ -1519,7 +1520,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
                                       UserMessageEvent* message,
                                       NodeName* forward_to_node) {
   bool target_is_remote = false;
-  std::queue<PendingUpdatePreviousPeer> peer_update_events;
+  std::vector<PendingUpdatePreviousPeer> peer_update_events;
 
   for (;;) {
     NodeName target_node_name;
@@ -1628,7 +1629,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
               .from_port = attached_port_refs[i].name()};
           ConvertToProxy(port, target_node_name, message->ports() + i,
                          port_descriptors + i, &update_event);
-          peer_update_events.push(update_event);
+          peer_update_events.push_back(update_event);
         }
       }
     }
@@ -1648,9 +1649,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
     break;
   }
 
-  while (!peer_update_events.empty()) {
-    auto pending_update_event = peer_update_events.front();
-    peer_update_events.pop();
+  for (auto& pending_update_event : peer_update_events) {
     delegate_->ForwardEvent(
         pending_update_event.receiver,
         mozilla::MakeUnique<UpdatePreviousPeerEvent>(
@@ -1679,7 +1678,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
 }
 
 int Node::BeginProxying(const PortRef& port_ref) {
-  std::queue<std::pair<NodeName, ScopedEvent>> control_message_queue;
+  std::vector<std::pair<NodeName, ScopedEvent>> control_message_queue;
   {
     SinglePortLocker locker(&port_ref);
     auto* port = locker.port();
@@ -1690,12 +1689,12 @@ int Node::BeginProxying(const PortRef& port_ref) {
     std::swap(port->control_message_queue, control_message_queue);
   }
 
-  while (!control_message_queue.empty()) {
-    auto node_event_pair = std::move(control_message_queue.front());
-    control_message_queue.pop();
-    delegate_->ForwardEvent(node_event_pair.first,
-                            std::move(node_event_pair.second));
+  for (auto& [control_message_node_name, control_message_event] :
+       control_message_queue) {
+    delegate_->ForwardEvent(control_message_node_name,
+                            std::move(control_message_event));
   }
+  control_message_queue.clear();
 
   int rv = ForwardUserMessagesFromProxy(port_ref);
   if (rv != OK) {
