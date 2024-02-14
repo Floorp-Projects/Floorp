@@ -377,9 +377,6 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
 
   // Shuffle input into place.
   moveRegPair(lhsOutput, rhs, eax, regForRhs);
-  if (oom()) {
-    return;
-  }
 
   // Sign extend eax into edx to make (edx:eax): idiv/udiv are 64-bit.
   if (isUnsigned) {
@@ -391,9 +388,6 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
   }
 
   moveRegPair(eax, edx, lhsOutput, remOutput);
-  if (oom()) {
-    return;
-  }
 
   PopRegsInMask(preserve);
 }
