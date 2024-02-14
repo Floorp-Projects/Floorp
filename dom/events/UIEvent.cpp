@@ -33,9 +33,7 @@ UIEvent::UIEvent(EventTarget* aOwner, nsPresContext* aPresContext,
       mDefaultClientPoint(0, 0),
       mLayerPoint(0, 0),
       mPagePoint(0, 0),
-      mMovementPoint(0, 0),
-      mIsPointerLocked(PointerLockManager::IsLocked()),
-      mLastClientPoint(EventStateManager::sLastClientPoint) {
+      mMovementPoint(0, 0) {
   if (aEvent) {
     mEventIsInternal = false;
   } else {

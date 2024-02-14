@@ -25,7 +25,6 @@
 #include "AudioSegment.h"
 #include "MediaTrackGraph.h"
 
-#include "MediaEngineWrapper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
 // Camera Access via IPC

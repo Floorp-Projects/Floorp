@@ -11,7 +11,6 @@
 #include "HelpersCairo.h"
 #include "BorrowedContext.h"
 #include "FilterNodeSoftware.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -50,10 +49,6 @@
 #define CAIRO_COORD_MAX (Float(0x7fffff))
 
 namespace mozilla {
-
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCairoSurface, cairo_surface_t,
-                                          cairo_surface_destroy);
-
 namespace gfx {
 
 cairo_surface_t* DrawTargetCairo::mDummySurface;

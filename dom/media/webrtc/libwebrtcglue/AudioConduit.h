@@ -12,7 +12,6 @@
 #include "mozilla/TimeStamp.h"
 
 #include "MediaConduitInterface.h"
-#include "common/MediaEngineWrapper.h"
 
 /**
  * This file hosts several structures identifying different aspects of a RTP

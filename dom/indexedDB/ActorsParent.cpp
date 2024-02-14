@@ -82,7 +82,6 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
