@@ -648,6 +648,8 @@ export class GeckoViewNavigation extends GeckoViewModule {
       canGoForward: this.browser.canGoForward,
       isTopLevel: aWebProgress.isTopLevel,
       permissions,
+      hasUserGesture:
+        this.window.document.hasValidTransientUserGestureActivation,
     };
     lazy.TranslationsParent.onLocationChange(this.browser);
     this.eventDispatcher.sendRequest(message);
