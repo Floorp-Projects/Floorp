@@ -58,6 +58,15 @@ dialog[insecureauth] {
   flex: 1;
 }
 
+#spinnerContainer {
+  align-items: center;
+}
+
+#spinnerContainer > img {
+  width: 16px;
+  height: 16px;
+}
+
 #loginLabel, #password1Label {
   text-align: start;
 }
