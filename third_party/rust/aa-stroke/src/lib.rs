@@ -904,6 +904,33 @@ impl<'z> Stroker<'z> {
     }
 }
 
+fn filled_circle_with_path_builder(mut path_builder: &mut PathBuilder, center: Point, radius: f32) {
+    arc(&mut path_builder, center.x, center.y, radius, Vector::new(1., 0.), Vector::new(-1., 0.));
+    arc(&mut path_builder, center.x, center.y, radius, Vector::new(-1., 0.), Vector::new(1., 0.));
+}
+
+/// Returns an anti-aliased triangle mesh for a filled circle.
+pub fn filled_circle(center: Point, radius: f32) -> Box<[Vertex]> {
+    let mut path_builder = PathBuilder::new(1.);
+    filled_circle_with_path_builder(&mut path_builder, center, radius);
+    path_builder.finish()
+}
+
+#[test]
+fn filled_circle_test() {
+    let center = Point::new(100., 100.);
+    let radius = 33.;
+    let result = filled_circle(center, radius);
+    let min_x  = result.iter().map(|v: &Vertex| v.x).reduce(|a, b| a.min(b)).unwrap();
+    let max_x  = result.iter().map(|v: &Vertex| v.x).reduce(|a, b| a.max(b)).unwrap();
+    let min_y  = result.iter().map(|v: &Vertex| v.y).reduce(|a, b| a.min(b)).unwrap();
+    let max_y  = result.iter().map(|v: &Vertex| v.y).reduce(|a, b| a.max(b)).unwrap();
+    assert_eq!(min_x, center.x - (radius + 0.5));
+    assert_eq!(max_x, center.x + (radius + 0.5));
+    assert_eq!(min_y, center.y - (radius + 0.5));
+    assert_eq!(max_y, center.y + (radius + 0.5));
+}
+
 #[test]
 fn simple() {
     let mut stroker = Stroker::new(&StrokeStyle{
