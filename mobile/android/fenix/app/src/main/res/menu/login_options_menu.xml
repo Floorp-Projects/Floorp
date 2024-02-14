@@ -7,8 +7,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/loginOptionsEditDelete"
-    android:contentDescription="@string/login_options_menu"
-    android:title="@string/login_options_menu"
+    android:contentDescription="@string/login_options_menu_2"
+    android:title="@string/login_options_menu_2"
     app:showAsAction="never" >
 
     <item

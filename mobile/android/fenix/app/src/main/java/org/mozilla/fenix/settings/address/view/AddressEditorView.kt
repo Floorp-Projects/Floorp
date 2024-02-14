@@ -107,7 +107,7 @@ class AddressEditorView(
 
     internal fun showConfirmDeleteAddressDialog(context: Context, guid: String) {
         AlertDialog.Builder(context).apply {
-            setMessage(R.string.addressess_confirm_dialog_message)
+            setMessage(R.string.addressess_confirm_dialog_message_2)
             setNegativeButton(R.string.addressess_confirm_dialog_cancel_button) { dialog: DialogInterface, _ ->
                 dialog.cancel()
             }

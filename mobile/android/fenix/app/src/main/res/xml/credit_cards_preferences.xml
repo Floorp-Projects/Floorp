@@ -7,8 +7,8 @@
     <SwitchPreference
         android:defaultValue="true"
         android:key="@string/pref_key_credit_cards_save_and_autofill_cards"
-        android:summary="@string/preferences_credit_cards_save_and_autofill_cards_summary"
-        android:title="@string/preferences_credit_cards_save_and_autofill_cards" />
+        android:summary="@string/preferences_credit_cards_save_and_autofill_cards_summary_2"
+        android:title="@string/preferences_credit_cards_save_and_autofill_cards_2" />
     <org.mozilla.fenix.settings.SyncPreference
         android:key="@string/pref_key_credit_cards_sync_cards_across_devices"
         android:title="@string/preferences_credit_cards_sync_cards_across_devices"
@@ -16,6 +16,6 @@
         app:allowDividerBelow="true" />
     <Preference
         android:key="@string/pref_key_credit_cards_manage_cards"
-        android:title="@string/preferences_credit_cards_manage_saved_cards"
+        android:title="@string/preferences_credit_cards_manage_saved_cards_2"
         app:allowDividerAbove="true" />
 </PreferenceScreen>

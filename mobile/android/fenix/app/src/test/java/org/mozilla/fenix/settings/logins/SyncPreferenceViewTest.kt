@@ -64,8 +64,8 @@ class SyncPreferenceViewTest {
             every { getString(R.string.preferences_credit_cards_sync_cards) } returns "Sync cards"
 
             every { getString(R.string.pref_key_sync_logins) } returns "pref_key_sync_logins"
-            every { getString(R.string.preferences_passwords_sync_logins) } returns "Sync logins"
-            every { getString(R.string.preferences_passwords_sync_logins_across_devices) } returns "Sync logins across devices"
+            every { getString(R.string.preferences_passwords_sync_logins_2) } returns "Sync passwords"
+            every { getString(R.string.preferences_passwords_sync_logins_across_devices_2) } returns "Sync passwords across devices"
         }
 
         syncPreference = mockk {
@@ -204,7 +204,7 @@ class SyncPreferenceViewTest {
     )
 
     companion object {
-        const val notLoggedInTitle: String = "Sync logins across devices"
-        const val loggedInTitle: String = "Sync logins"
+        const val notLoggedInTitle: String = "Sync passwords across devices"
+        const val loggedInTitle: String = "Sync passwords"
     }
 }

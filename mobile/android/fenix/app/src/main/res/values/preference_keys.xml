@@ -207,7 +207,7 @@
     <string name="pref_key_credit_cards_save_and_autofill_cards" translatable="false">pref_key_credit_cards_save_and_autofill_cards</string>
     <!-- Key for the "Sync cards across devices" preference in the "Autofill" fragment -->
     <string name="pref_key_credit_cards_sync_cards_across_devices" translatable="false">pref_key_credit_cards_sync_cards_across_devices</string>
-    <!-- Key for the "Manage saved cards" preference in the "Autofill" fragment -->
+    <!-- Key for the "Manage cards" preference in the "Autofill" fragment -->
     <string name="pref_key_credit_cards_manage_cards" translatable="false">pref_key_credit_cards_manage_cards</string>
     <!-- Key for the "Manage addresses" preference in the "Autofill" fragment -->
     <string name="pref_key_addresses_manage_addresses" translatable="false">pref_key_addresses_manage_addresses</string>

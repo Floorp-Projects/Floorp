@@ -24,7 +24,7 @@ interface CreditCardsManagementInteractor {
 
     /**
      * Navigates to the credit card editor to add a new credit card. Called when a user
-     * taps on 'Add credit card' button.
+     * taps on 'Add card' button.
      */
     fun onAddCreditCardClick()
 }

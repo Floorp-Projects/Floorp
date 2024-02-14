@@ -18,7 +18,7 @@ class LoginExceptionsAdapter(
 ) : ExceptionsAdapter<LoginException>(interactor, DiffCallback) {
 
     override val deleteButtonLayoutId = R.layout.delete_logins_exceptions_button
-    override val headerDescriptionResource = R.string.preferences_passwords_exceptions_description
+    override val headerDescriptionResource = R.string.preferences_passwords_exceptions_description_2
 
     override fun wrapAdapterItem(item: LoginException) =
         LoginAdapterItem(item)

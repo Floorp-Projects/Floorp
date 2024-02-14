@@ -36,7 +36,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                android:text="@string/preferences_passwords_saved_logins_description_empty_text"
+                android:text="@string/preferences_passwords_saved_logins_description_empty_text_2"
                 android:textColor="?attr/textSecondary"
                 android:textSize="16sp"
                 app:layout_constraintTop_toTopOf="parent"
@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                android:text="@string/preferences_passwords_saved_logins_description_empty_learn_more_link"
+                android:text="@string/preferences_passwords_saved_logins_description_empty_learn_more_link_2"
                 android:textColor="?attr/textSecondary"
                 android:textSize="16sp"
                 app:layout_constraintTop_toBottomOf="@id/saved_passwords_empty_message" />

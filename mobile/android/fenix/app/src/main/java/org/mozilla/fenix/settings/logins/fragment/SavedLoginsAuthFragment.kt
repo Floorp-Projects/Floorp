@@ -156,9 +156,9 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
             accountManager = requireComponents.backgroundServices.accountManager,
             syncEngine = SyncEngine.Passwords,
             loggedOffTitle = requireContext()
-                .getString(R.string.preferences_passwords_sync_logins_across_devices),
+                .getString(R.string.preferences_passwords_sync_logins_across_devices_2),
             loggedInTitle = requireContext()
-                .getString(R.string.preferences_passwords_sync_logins),
+                .getString(R.string.preferences_passwords_sync_logins_2),
             onSyncSignInClicked = {
                 val directions =
                     SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment(
@@ -183,7 +183,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         if (BiometricPromptFeature.canUseFeature(context)) {
             togglePrefsEnabledWhileAuthenticating(false)
             biometricPromptFeature.get()
-                ?.requestAuthentication(getString(R.string.logins_biometric_prompt_message))
+                ?.requestAuthentication(getString(R.string.logins_biometric_prompt_message_2))
             return
         }
 
@@ -203,9 +203,9 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
 
     private fun showPinDialogWarning(context: Context) {
         AlertDialog.Builder(context).apply {
-            setTitle(getString(R.string.logins_warning_dialog_title))
+            setTitle(getString(R.string.logins_warning_dialog_title_2))
             setMessage(
-                getString(R.string.logins_warning_dialog_message),
+                getString(R.string.logins_warning_dialog_message_2),
             )
 
             setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->

@@ -38,7 +38,7 @@ class LoginExceptionsViewTest {
     @Test
     fun `sets empty message text`() {
         assertEquals(
-            "Logins and passwords that are not saved will be shown here.",
+            "Firefox Fenix won’t save passwords for sites listed here.",
             view.binding.exceptionsEmptyMessage.text,
         )
         assertTrue(view.binding.exceptionsList.adapter is LoginExceptionsAdapter)

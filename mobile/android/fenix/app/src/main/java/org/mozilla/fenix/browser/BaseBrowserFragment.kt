@@ -1039,7 +1039,7 @@ abstract class BaseBrowserFragment :
     private fun showBiometricPrompt(context: Context) {
         if (BiometricPromptFeature.canUseFeature(context)) {
             biometricPromptFeature.get()
-                ?.requestAuthentication(getString(R.string.credit_cards_biometric_prompt_unlock_message))
+                ?.requestAuthentication(getString(R.string.credit_cards_biometric_prompt_unlock_message_2))
             return
         }
 
@@ -1064,7 +1064,7 @@ abstract class BaseBrowserFragment :
     private fun showPinVerification(manager: KeyguardManager) {
         val intent = manager.createConfirmDeviceCredentialIntent(
             getString(R.string.credit_cards_biometric_prompt_message_pin),
-            getString(R.string.credit_cards_biometric_prompt_unlock_message),
+            getString(R.string.credit_cards_biometric_prompt_unlock_message_2),
         )
 
         startForResult.launch(intent)
@@ -1075,8 +1075,8 @@ abstract class BaseBrowserFragment :
      */
     private fun showPinDialogWarning(context: Context) {
         AlertDialog.Builder(context).apply {
-            setTitle(getString(R.string.credit_cards_warning_dialog_title))
-            setMessage(getString(R.string.credit_cards_warning_dialog_message))
+            setTitle(getString(R.string.credit_cards_warning_dialog_title_2))
+            setMessage(getString(R.string.credit_cards_warning_dialog_message_3))
 
             setNegativeButton(getString(R.string.credit_cards_warning_dialog_later)) { _: DialogInterface, _ ->
                 promptsFeature.get()?.onBiometricResult(isAuthenticated = false)

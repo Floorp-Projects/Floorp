@@ -44,28 +44,28 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun verifySecurityPromptForLogins() {
-        Log.i(TAG, "verifySecurityPromptForLogins: Trying to verify that the \"Secure your logins and passwords\" dialog is visible")
-        onView(withText("Secure your logins and passwords")).check(
+        Log.i(TAG, "verifySecurityPromptForLogins: Trying to verify that the \"Secure your saved passwords\" dialog is visible")
+        onView(withText("Secure your saved passwords")).check(
             matches(
                 withEffectiveVisibility(
                     ViewMatchers.Visibility.VISIBLE,
                 ),
             ),
         )
-        Log.i(TAG, "verifySecurityPromptForLogins: Verified that the \"Secure your logins and passwords\" dialog is visible")
+        Log.i(TAG, "verifySecurityPromptForLogins: Verified that the \"Secure your saved passwords\" dialog is visible")
     }
 
     fun verifyEmptySavedLoginsListView() {
         Log.i(TAG, "verifyEmptySavedLoginsListView: Trying to verify that the saved logins section description is displayed")
-        onView(withText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text)))
+        onView(withText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text_2)))
             .check(matches(isDisplayed()))
         Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the saved logins section description is displayed")
         Log.i(TAG, "verifyEmptySavedLoginsListView: Trying to verify that the \"Learn more about Sync\" link is displayed")
-        onView(withText(R.string.preferences_passwords_saved_logins_description_empty_learn_more_link))
+        onView(withText(R.string.preferences_passwords_saved_logins_description_empty_learn_more_link_2))
             .check(matches(isDisplayed()))
         Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the \"Learn more about Sync\" link is displayed")
         Log.i(TAG, "verifyEmptySavedLoginsListView: Trying to verify that the \"Add login\" button is displayed")
-        onView(withText(R.string.preferences_logins_add_login))
+        onView(withText(R.string.preferences_logins_add_login_2))
             .check(matches(isDisplayed()))
         Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the \"Add login\" button is displayed")
     }
@@ -88,7 +88,7 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun clickAddLoginButton() {
         Log.i(TAG, "clickAddLoginButton: Trying to click the \"Add login\" button")
-        itemContainingText(getStringResource(R.string.preferences_logins_add_login)).click()
+        itemContainingText(getStringResource(R.string.preferences_logins_add_login_2)).click()
         Log.i(TAG, "clickAddLoginButton: Clicked the \"Add login\" button")
     }
 
@@ -117,7 +117,7 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         assertUIObjectExists(itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_2)))
 
     fun verifyPasswordErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_password_required)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_password_required_2)))
 
     fun verifyPasswordClearButtonEnabled() =
         assertItemIsEnabledAndVisible(itemWithResId("$packageName:id/clearPasswordTextButton"))
@@ -208,7 +208,7 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     }
 
     fun verifyLoginDeletionPrompt() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.login_deletion_confirmation)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.login_deletion_confirmation_2)))
 
     fun clickConfirmDeleteLogin() {
         Log.i(TAG, "clickConfirmDeleteLogin: Trying to click the \"Delete\" dialog button")
@@ -271,10 +271,10 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     }
 
     fun verifyUserNameRequiredErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_username_required)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_username_required_2)))
 
     fun verifyPasswordRequiredErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_password_required)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_password_required_2)))
 
     fun clickGoBackButton() = goBackButton().click()
 

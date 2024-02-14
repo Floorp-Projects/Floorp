@@ -20,7 +20,10 @@ class LoginExceptionsView(
     init {
         binding.exceptionsLearnMore.isVisible = false
         binding.exceptionsEmptyMessage.text =
-            containerView.context.getString(R.string.preferences_passwords_exceptions_description_empty)
+            containerView.context.getString(
+                R.string.preferences_passwords_exceptions_description_empty_2,
+                containerView.context.getString(R.string.app_name),
+            )
         binding.exceptionsList.apply {
             adapter = exceptionsAdapter
         }

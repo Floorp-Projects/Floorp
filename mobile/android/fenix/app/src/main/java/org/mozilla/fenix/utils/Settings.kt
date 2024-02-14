@@ -1602,7 +1602,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Storing the user choice from the "Credit cards" settings for whether save and autofill cards
+     * Storing the user choice from the "Payment methods" settings for whether save and autofill cards
      * should be enabled or not.
      * If set to `true` when the user focuses on credit card fields in the webpage an Android prompt letting her
      * select the card details to be automatically filled will appear.

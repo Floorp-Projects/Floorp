@@ -110,7 +110,7 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyAddressesAutofillToggle(enabled: Boolean) {
         Log.i(TAG, "verifyAddressesAutofillToggle: Trying to verify that the \"Save and autofill addresses\" toggle is checked: $enabled")
-        onView(withText(R.string.preferences_addresses_save_and_autofill_addresses))
+        onView(withText(R.string.preferences_addresses_save_and_autofill_addresses_2))
             .check(
                 matches(
                     hasCousin(
@@ -130,7 +130,7 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifySaveAndAutofillCreditCardsToggle(enabled: Boolean) {
         Log.i(TAG, "verifySaveAndAutofillCreditCardsToggle: Trying to verify that the \"Save and autofill cards\" toggle is checked: $enabled")
-        onView(withText(R.string.preferences_credit_cards_save_and_autofill_cards))
+        onView(withText(R.string.preferences_credit_cards_save_and_autofill_cards_2))
             .check(
                 matches(
                     hasCousin(
@@ -229,9 +229,9 @@ class SettingsSubMenuAutofillRobot {
     }
 
     fun clickSaveAndAutofillAddressesOption() {
-        Log.i(TAG, "clickSaveAndAutofillAddressesOption: Trying to click the \"Save and autofill addresses\" button")
+        Log.i(TAG, "clickSaveAndAutofillAddressesOption: Trying to click the \"Save and fill addresses\" button")
         saveAndAutofillAddressesOption().click()
-        Log.i(TAG, "clickSaveAndAutofillAddressesOption: Clicked the \"Save and autofill addresses\" button")
+        Log.i(TAG, "clickSaveAndAutofillAddressesOption: Clicked the \"Save and fill addresses\" button")
     }
     fun clickAddAddressButton() {
         Log.i(TAG, "clickAddAddressButton: Trying to click the \"Add address\" button")
@@ -527,10 +527,10 @@ class SettingsSubMenuAutofillRobot {
     fun verifyEditCreditCardToolbarTitle() = assertUIObjectExists(editCreditCardToolbarTitle())
 
     fun verifyCreditCardNumberErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.credit_cards_number_validation_error_message)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.credit_cards_number_validation_error_message_2)))
 
     fun verifyNameOnCreditCardErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.credit_cards_name_on_card_validation_error_message)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.credit_cards_name_on_card_validation_error_message_2)))
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -585,8 +585,8 @@ private fun manageAddressesToolbarTitle() =
             .childSelector(UiSelector().text(getStringResource(R.string.addresses_manage_addresses))),
     )
 
-private fun saveAndAutofillAddressesOption() = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses))
-private fun saveAndAutofillAddressesSummary() = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_summary))
+private fun saveAndAutofillAddressesOption() = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_2))
+private fun saveAndAutofillAddressesSummary() = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_summary_2))
 private fun addAddressButton() = itemContainingText(getStringResource(R.string.preferences_addresses_add_address))
 private fun manageAddressesButton() =
     mDevice.findObject(
@@ -614,14 +614,14 @@ private fun toolbarDeleteAddressButton() = itemWithResId("$packageName:id/delete
 private fun cancelDeleteAddressButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
 private fun confirmDeleteAddressButton() = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
 
-private fun creditCardsSectionTitle() = itemContainingText(getStringResource(R.string.preferences_credit_cards))
-private fun saveAndAutofillCreditCardsOption() = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards))
-private fun saveAndAutofillCreditCardsSummary() = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards_summary))
+private fun creditCardsSectionTitle() = itemContainingText(getStringResource(R.string.preferences_credit_cards_2))
+private fun saveAndAutofillCreditCardsOption() = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards_2))
+private fun saveAndAutofillCreditCardsSummary() = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards_summary_2))
 private fun syncCreditCardsAcrossDevicesButton() = itemContainingText(getStringResource(R.string.preferences_credit_cards_sync_cards_across_devices))
-private fun addCreditCardButton() = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_add_credit_card)))
+private fun addCreditCardButton() = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_add_credit_card_2)))
 private fun savedCreditCardsToolbarTitle() = itemContainingText(getStringResource(R.string.credit_cards_saved_cards))
 private fun editCreditCardToolbarTitle() = itemContainingText(getStringResource(R.string.credit_cards_edit_card))
-private fun manageSavedCreditCardsButton() = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_manage_saved_cards)))
+private fun manageSavedCreditCardsButton() = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_manage_saved_cards_2)))
 private fun creditCardNumberTextInput() = mDevice.findObject(UiSelector().resourceId("$packageName:id/card_number_input"))
 private fun nameOnCreditCardTextInput() = mDevice.findObject(UiSelector().resourceId("$packageName:id/name_on_card_input"))
 private fun expiryMonthDropDown() = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_month_drop_down"))

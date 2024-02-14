@@ -127,7 +127,7 @@ class CreditCardEditorView(
             isValid = false
 
             binding.cardNumberLayout.error =
-                binding.root.context.getString(R.string.credit_cards_number_validation_error_message)
+                binding.root.context.getString(R.string.credit_cards_number_validation_error_message_2)
             binding.cardNumberTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.textWarning))
         }
 
@@ -138,7 +138,7 @@ class CreditCardEditorView(
             isValid = false
 
             binding.nameOnCardLayout.error =
-                binding.root.context.getString(R.string.credit_cards_name_on_card_validation_error_message)
+                binding.root.context.getString(R.string.credit_cards_name_on_card_validation_error_message_2)
             binding.nameOnCardTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.textWarning))
         }
 

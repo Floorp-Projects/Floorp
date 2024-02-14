@@ -28,7 +28,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/credit_cards_saved_cards_item_margin_start"
-        android:text="@string/preferences_credit_cards_add_credit_card"
+        android:text="@string/preferences_credit_cards_add_credit_card_2"
         style="@style/Body16TextStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

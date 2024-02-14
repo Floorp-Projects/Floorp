@@ -414,7 +414,7 @@
     <fragment
         android:id="@+id/savedLoginsAuthFragment"
         android:name="org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragment"
-        android:label="@string/preferences_passwords_logins_and_passwords">
+        android:label="@string/preferences_passwords_logins_and_passwords_2">
         <action
             android:id="@+id/action_savedLoginsAuthFragment_to_loginsListFragment"
             app:destination="@id/savedLogins"
@@ -1276,7 +1276,7 @@
         <fragment
             android:id="@+id/autofillSettingFragment"
             android:name="org.mozilla.fenix.settings.autofill.AutofillSettingFragment"
-            android:label="@string/preferences_credit_cards">
+            android:label="@string/preferences_credit_cards_2">
             <action
                 android:id="@+id/action_autofillSettingFragment_to_creditCardEditorFragment"
                 app:destination="@id/creditCardEditorFragment"
@@ -1375,7 +1375,7 @@
         <fragment
             android:id="@+id/addLoginFragment"
             android:name="org.mozilla.fenix.settings.logins.fragment.AddLoginFragment"
-            android:label="@string/add_login"
+            android:label="@string/add_login_2"
             tools:layout="@layout/fragment_add_login">
             <action
                 android:id="@+id/action_addLoginFragment_to_loginDetailFragment"
@@ -1400,7 +1400,7 @@
         <fragment
             android:id="@+id/editLoginFragment"
             android:name="org.mozilla.fenix.settings.logins.fragment.EditLoginFragment"
-            android:label="@string/edit"
+            android:label="@string/edit_2"
             tools:layout="@layout/fragment_edit_login">
             <argument
                 android:name="savedLoginItem"

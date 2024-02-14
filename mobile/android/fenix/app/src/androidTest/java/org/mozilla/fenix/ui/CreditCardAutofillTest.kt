@@ -60,7 +60,7 @@ class CreditCardAutofillTest : TestSetup() {
                 MockCreditCard1.MOCK_EXPIRATION_MONTH,
                 MockCreditCard1.MOCK_EXPIRATION_YEAR,
             )
-            // Opening Manage saved cards to dismiss here the Secure your credit prompt
+            // Opening Manage cards to dismiss here the Secure your credit prompt
             clickManageSavedCreditCardsButton()
             clickSecuredCreditCardsLaterButton()
         }.goBackToAutofillSettings {
@@ -470,7 +470,7 @@ class CreditCardAutofillTest : TestSetup() {
                 MockCreditCard2.MOCK_EXPIRATION_MONTH,
                 MockCreditCard2.MOCK_EXPIRATION_YEAR,
             )
-            // Opening Manage saved cards to dismiss here the Secure your credit prompt
+            // Opening Manage cards to dismiss here the Secure your credit prompt
             clickManageSavedCreditCardsButton()
             clickSecuredCreditCardsLaterButton()
         }
@@ -521,7 +521,7 @@ class CreditCardAutofillTest : TestSetup() {
                 MockCreditCard2.MOCK_EXPIRATION_MONTH,
                 MockCreditCard2.MOCK_EXPIRATION_YEAR,
             )
-            // Opening Manage saved cards to dismiss here the Secure your credit prompt
+            // Opening Manage cards to dismiss here the Secure your credit prompt
             clickManageSavedCreditCardsButton()
             clickSecuredCreditCardsLaterButton()
         }

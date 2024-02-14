@@ -236,7 +236,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         autofillPreference.title = if (settings.addressFeature) {
             getString(R.string.preferences_autofill)
         } else {
-            getString(R.string.preferences_credit_cards)
+            getString(R.string.preferences_credit_cards_2)
         }
 
         val openLinksInAppsSettingsPreference =

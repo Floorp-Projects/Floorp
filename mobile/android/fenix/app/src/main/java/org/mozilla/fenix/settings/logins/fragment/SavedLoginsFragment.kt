@@ -146,7 +146,7 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
         val searchItem = menu.findItem(R.id.search)
         val searchView: SearchView = searchItem.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.queryHint = getString(R.string.preferences_passwords_saved_logins_search)
+        searchView.queryHint = getString(R.string.preferences_passwords_saved_logins_search_2)
         searchView.maxWidth = Int.MAX_VALUE
 
         if (searchQuery?.searchedForText?.isNotEmpty() == true) {
@@ -225,7 +225,7 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
 
     private fun initToolbar() {
         requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-        showToolbar(getString(R.string.preferences_passwords_saved_logins))
+        showToolbar(getString(R.string.preferences_passwords_saved_logins_2))
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary()
             .setDisplayShowTitleEnabled(false)
         toolbarChildContainer = initChildContainerFromToolbar()

@@ -17,7 +17,11 @@ class ExceptionsHeaderViewHolder(
 
     init {
         view.findViewById<TextView>(R.id.exceptions_description).text =
-            view.context.getString(description)
+            if (description == R.string.preferences_passwords_exceptions_description_2) {
+                view.context.getString(description, view.context.getString(R.string.app_name))
+            } else {
+                view.context.getString(description)
+            }
     }
 
     companion object {

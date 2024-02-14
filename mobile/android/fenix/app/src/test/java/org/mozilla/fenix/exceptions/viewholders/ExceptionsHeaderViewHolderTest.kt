@@ -24,14 +24,17 @@ class ExceptionsHeaderViewHolderTest {
         view = mockk {
             every { findViewById<TextView>(R.id.exceptions_description) } returns description
             every {
-                context.getString(R.string.preferences_passwords_exceptions_description)
-            } returns "Logins and passwords will not be saved for these sites."
+                context.getString(eq(R.string.preferences_passwords_exceptions_description_2), any())
+            } returns "Firefox fenix won’t save passwords for these sites."
+            every {
+                context.getString(R.string.app_name)
+            } returns "Firefox fenix"
         }
     }
 
     @Test
     fun `sets description text`() {
-        ExceptionsHeaderViewHolder(view, R.string.preferences_passwords_exceptions_description)
-        verify { description.text = "Logins and passwords will not be saved for these sites." }
+        ExceptionsHeaderViewHolder(view, R.string.preferences_passwords_exceptions_description_2)
+        verify { description.text = "Firefox fenix won’t save passwords for these sites." }
     }
 }

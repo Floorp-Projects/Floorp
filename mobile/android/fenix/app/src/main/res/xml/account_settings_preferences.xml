@@ -38,7 +38,7 @@
             android:defaultValue="true"
             android:key="@string/pref_key_sync_credit_cards"
             android:layout="@layout/checkbox_left_preference"
-            android:title="@string/preferences_sync_credit_cards" />
+            android:title="@string/preferences_sync_credit_cards_2" />
 
         <CheckBoxPreference
             android:defaultValue="true"
@@ -50,7 +50,7 @@
             android:defaultValue="true"
             android:key="@string/pref_key_sync_logins"
             android:layout="@layout/checkbox_left_preference"
-            android:title="@string/preferences_sync_logins" />
+            android:title="@string/preferences_sync_logins_2" />
 
         <CheckBoxPreference
             android:defaultValue="true"

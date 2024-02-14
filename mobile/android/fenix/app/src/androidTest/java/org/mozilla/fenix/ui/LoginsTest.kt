@@ -56,14 +56,14 @@ class LoginsTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2092713
-    // Tests the Logins and passwords menu items and default values
+    // Tests the Passwords menu items and default values
     @Test
     fun loginsAndPasswordsSettingsItemsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
             // Necessary to scroll a little bit for all screen sizes
-            scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Passwords")
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
             verifyAutofillInFirefoxToggle(true)
@@ -80,7 +80,7 @@ class LoginsTest : TestSetup() {
         }.openThreeDotMenu {
         }.openSettings {
             // Necessary to scroll a little bit for all screen sizes
-            scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Passwords")
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
         }.openSavedLogins {
@@ -98,7 +98,7 @@ class LoginsTest : TestSetup() {
         }.openThreeDotMenu {
         }.openSettings {
             // Necessary to scroll a little bit for all screen sizes
-            scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Passwords")
         }.openLoginsAndPasswordSubMenu {
         }.openSyncLogins {
             verifyReadyToScanOption()
@@ -132,7 +132,7 @@ class LoginsTest : TestSetup() {
         browserScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Passwords")
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
         }.openSavedLogins {
@@ -222,7 +222,7 @@ class LoginsTest : TestSetup() {
             clickPageObject(itemWithText("Update"))
         }.openThreeDotMenu {
         }.openSettings {
-            scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Passwords")
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             verifySecurityPromptForLogins()

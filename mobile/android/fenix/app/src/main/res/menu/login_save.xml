@@ -9,6 +9,6 @@
         android:id="@+id/save_login_button"
         android:icon="@drawable/mozac_ic_checkmark_24"
         app:iconTint="@color/save_enabled_ic_color"
-        android:title="@string/save_changes_to_login"
+        android:title="@string/save_changes_to_login_2"
         app:showAsAction="always" />
 </menu>

@@ -133,7 +133,7 @@ class SyncIntegrationTest {
             verifySavedLoginsAfterSync()
         }.goBack {
             // After checking the synced logins
-            // on Logins and Passwords menu the Sync logins option is set to On
+            // on Logins and Passwords menu the Sync passwords option is set to On
             verifyDefaultViewAfterSync()
         }
     }

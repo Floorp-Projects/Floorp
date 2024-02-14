@@ -60,9 +60,9 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the list of credit cards is not empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Manage saved cards'`() = runTestOnMain {
+    fun `GIVEN the list of credit cards is not empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Manage cards'`() = runTestOnMain {
         val preferenceTitle =
-            testContext.getString(R.string.preferences_credit_cards_manage_saved_cards)
+            testContext.getString(R.string.preferences_credit_cards_manage_saved_cards_2)
         val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_credit_cards_manage_cards),
         )
@@ -84,7 +84,7 @@ class AutofillSettingFragmentTest {
     @Test
     fun `GIVEN the list of credit cards is empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Add card'`() = runTestOnMain {
         val preferenceTitle =
-            testContext.getString(R.string.preferences_credit_cards_add_credit_card)
+            testContext.getString(R.string.preferences_credit_cards_add_credit_card_2)
         val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_credit_cards_manage_cards),
         )

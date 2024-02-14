@@ -6,9 +6,9 @@
     <item
         android:id="@+id/search"
         android:icon="@drawable/ic_search"
-        android:title="@string/preferences_passwords_saved_logins_search"
+        android:title="@string/preferences_passwords_saved_logins_search_2"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:iconTint="?attr/textPrimary"
-        android:contentDescription="@string/preferences_passwords_saved_logins_search"
+        android:contentDescription="@string/preferences_passwords_saved_logins_search_2"
         app:showAsAction="collapseActionView|always" />
 </menu>

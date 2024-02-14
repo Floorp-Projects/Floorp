@@ -38,10 +38,10 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class SettingsSubMenuLoginsAndPasswordRobot {
 
     fun verifyDefaultView() {
-        mDevice.waitNotNull(Until.findObjects(By.text("Save logins and passwords")), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObjects(By.text("Save passwords")), TestAssetHelper.waitingTime)
         Log.i(TAG, "verifyDefaultView: Trying to verify that the \"Save logins and passwords\" button is displayed")
         saveLoginsAndPasswordButton().check(matches(isDisplayed()))
-        Log.i(TAG, "verifyDefaultView: Verified that the \"Save logins and passwords\" button is displayed")
+        Log.i(TAG, "verifyDefaultView: Verified that the \"Save passwords\" button is displayed")
         Log.i(TAG, "verifyDefaultView: Trying to verify that the Autofill in Firefox option is displayed")
         autofillInFirefoxOption().check(matches(isDisplayed()))
         Log.i(TAG, "verifyDefaultView: Verified that the Autofill in Firefox option is displayed")
@@ -179,11 +179,11 @@ fun settingsSubMenuLoginsAndPassword(interact: SettingsSubMenuLoginsAndPasswordR
     return SettingsSubMenuLoginsAndPasswordRobot.Transition()
 }
 
-private fun saveLoginsAndPasswordButton() = onView(withText("Save logins and passwords"))
+private fun saveLoginsAndPasswordButton() = onView(withText("Save passwords"))
 
-private fun savedLoginsButton() = onView(withText("Saved logins"))
+private fun savedLoginsButton() = onView(withText("Saved passwords"))
 
-private fun syncLoginsButton() = onView(withText("Sync logins across devices"))
+private fun syncLoginsButton() = onView(withText("Sync passwords across devices"))
 
 private fun loginExceptionsButton() = onView(withText("Exceptions"))
 

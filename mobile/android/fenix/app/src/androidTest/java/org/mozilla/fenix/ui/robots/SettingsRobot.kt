@@ -201,9 +201,9 @@ class SettingsRobot {
         Log.i(TAG, "verifyEnhancedTrackingProtectionButton: Verified that the \"Enhanced Tracking Protection\" button is visible")
     }
     fun verifyLoginsAndPasswordsButton() {
-        scrollToElementByText("Logins and passwords")
+        scrollToElementByText("Passwords")
         Log.i(TAG, "verifyLoginsAndPasswordsButton: Trying to verify that the \"Logins and passwords\" button is visible")
-        onView(withText(R.string.preferences_passwords_logins_and_passwords))
+        onView(withText(R.string.preferences_passwords_logins_and_passwords_2))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         Log.i(TAG, "verifyLoginsAndPasswordsButton: Verified that the \"Logins and passwords\" button is visible")
     }
@@ -625,9 +625,9 @@ class SettingsRobot {
         }
 
         fun openLoginsAndPasswordSubMenu(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
-            scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Passwords")
             Log.i(TAG, "openLoginsAndPasswordSubMenu: Trying to click the \"Logins and passwords\" button")
-            onView(withText("Logins and passwords")).click()
+            onView(withText("Passwords")).click()
             Log.i(TAG, "openLoginsAndPasswordSubMenu: Clicked the \"Logins and passwords\" button")
 
             SettingsSubMenuLoginsAndPasswordRobot().interact()

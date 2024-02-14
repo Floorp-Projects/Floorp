@@ -278,9 +278,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     private fun showPinDialogWarning(syncEngine: SyncEngine, newValue: Boolean) {
         context?.let {
             AlertDialog.Builder(it).apply {
-                setTitle(getString(R.string.logins_warning_dialog_title))
+                setTitle(getString(R.string.logins_warning_dialog_title_2))
                 setMessage(
-                    getString(R.string.logins_warning_dialog_message),
+                    getString(R.string.logins_warning_dialog_message_2),
                 )
 
                 setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->

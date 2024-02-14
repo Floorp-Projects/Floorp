@@ -161,7 +161,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                             validUsername = false
                             binding.clearUsernameTextButton.isVisible = false
                             setLayoutError(
-                                context?.getString(R.string.saved_login_username_required),
+                                context?.getString(R.string.saved_login_username_required_2),
                                 binding.inputLayoutUsername,
                             )
                         }
@@ -204,7 +204,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                             binding.revealPasswordButton.isVisible = false
                             binding.clearPasswordTextButton.isVisible = false
                             setLayoutError(
-                                context?.getString(R.string.saved_login_password_required),
+                                context?.getString(R.string.saved_login_password_required_2),
                                 binding.inputLayoutPassword,
                             )
                         }

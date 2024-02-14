@@ -131,6 +131,9 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        requirePreference<SwitchPreference>(R.string.pref_key_credit_cards_save_and_autofill_cards).summary =
+            getString(R.string.preferences_credit_cards_save_and_autofill_cards_summary_2, getString(R.string.app_name))
+
         consumeFrom(store) { state ->
             if (requireComponents.settings.addressFeature) {
                 updateAddressPreference(state.addresses.isNotEmpty(), findNavController())
@@ -152,7 +155,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
         if (requireComponents.settings.addressFeature) {
             showToolbar(getString(R.string.preferences_autofill))
         } else {
-            showToolbar(getString(R.string.preferences_credit_cards))
+            showToolbar(getString(R.string.preferences_credit_cards_2))
         }
 
         SyncPreferenceView(
@@ -231,11 +234,11 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
         if (hasCreditCards) {
             manageSavedCardsPreference.icon = null
             manageSavedCardsPreference.title =
-                getString(R.string.preferences_credit_cards_manage_saved_cards)
+                getString(R.string.preferences_credit_cards_manage_saved_cards_2)
         } else {
             manageSavedCardsPreference.setIcon(R.drawable.ic_new)
             manageSavedCardsPreference.title =
-                getString(R.string.preferences_credit_cards_add_credit_card)
+                getString(R.string.preferences_credit_cards_add_credit_card_2)
         }
 
         manageSavedCardsPreference.setOnPreferenceClickListener {
@@ -279,8 +282,8 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
      */
     override fun showPinDialogWarning(context: Context) {
         AlertDialog.Builder(context).apply {
-            setTitle(getString(R.string.credit_cards_warning_dialog_title))
-            setMessage(getString(R.string.credit_cards_warning_dialog_message))
+            setTitle(getString(R.string.credit_cards_warning_dialog_title_2))
+            setMessage(getString(R.string.credit_cards_warning_dialog_message_3))
 
             setNegativeButton(getString(R.string.credit_cards_warning_dialog_later)) { _: DialogInterface, _ ->
                 navigateToCreditCardManagementFragment()
