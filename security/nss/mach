@@ -122,10 +122,9 @@ class cfAction(argparse.Action):
         return
 
     def setDockerCommand(self, args):
-        from distutils.spawn import find_executable
         if platform.system() == "Linux":
-            self.restorecon = find_executable("restorecon")
-        dcmd = find_executable("docker")
+            self.restorecon = shutil.which("restorecon")
+        dcmd = shutil.which("docker")
         if dcmd is not None:
             self.docker_command = [dcmd]
             if not args.noroot:

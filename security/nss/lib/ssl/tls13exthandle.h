@@ -123,4 +123,13 @@ SECStatus tls13_SendGreaseXtn(const sslSocket *ss,
                               TLSExtensionData *xtnData,
                               sslBuffer *buf, PRBool *added);
 
+const char *ssl3_mapCertificateCompressionAlgorithmToName(const sslSocket *ss,
+                                                          SSLCertificateCompressionAlgorithmID alg);
+
+SECStatus ssl3_SendCertificateCompressionXtn(const sslSocket *ss,
+                                             TLSExtensionData *xtnData,
+                                             sslBuffer *buf, PRBool *added);
+SECStatus ssl3_HandleCertificateCompressionXtn(const sslSocket *ss,
+                                               TLSExtensionData *xtnData,
+                                               SECItem *data);
 #endif

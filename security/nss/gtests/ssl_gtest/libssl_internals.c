@@ -554,3 +554,43 @@ SECStatus SSLInt_SetRawEchConfigForRetry(PRFileDesc *fd, const uint8_t *buf,
 }
 
 PRBool SSLInt_IsIp(PRUint8 *s, unsigned int len) { return tls13_IsIp(s, len); }
+
+SECStatus SSLInt_GetCertificateCompressionAlgorithm(
+    PRFileDesc *fd, SSLCertificateCompressionAlgorithm *alg) {
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure; /* Code already set. */
+  }
+
+  PRBool algFound = PR_FALSE;
+
+  if (!ssl_HaveXmitBufLock(ss)) {
+    ssl_GetSSL3HandshakeLock(ss);
+  }
+
+  if (!ss->xtnData.compressionAlg) {
+    if (!ssl_HaveXmitBufLock(ss)) {
+      ssl_ReleaseSSL3HandshakeLock(ss);
+    }
+
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+  }
+  for (int i = 0; i < ss->ssl3.supportedCertCompressionAlgorithmsCount; i++) {
+    if (ss->ssl3.supportedCertCompressionAlgorithms[i].id ==
+        ss->xtnData.compressionAlg) {
+      *alg = ss->ssl3.supportedCertCompressionAlgorithms[i];
+      algFound = PR_TRUE;
+      break;
+    }
+  }
+
+  if (!ssl_HaveXmitBufLock(ss)) {
+    ssl_ReleaseSSL3HandshakeLock(ss);
+  }
+
+  if (algFound) {
+    return SECSuccess;
+  }
+  return SECFailure;
+}
