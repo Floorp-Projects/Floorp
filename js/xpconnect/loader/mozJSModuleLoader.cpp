@@ -450,6 +450,7 @@ void mozJSModuleLoader::InitStatics() {
   MOZ_ASSERT(!sSelf);
   sSelf = new mozJSModuleLoader();
   RegisterWeakMemoryReporter(sSelf);
+  NonSharedGlobalSyncModuleLoaderScope::InitStatics();
 }
 
 void mozJSModuleLoader::UnloadLoaders() {
@@ -1961,15 +1962,19 @@ size_t mozJSModuleLoader::ModuleEntry::SizeOfIncludingThis(
 //----------------------------------------------------------------------
 
 /* static */
-mozJSModuleLoader* NonSharedGlobalSyncModuleLoaderScope::sActiveLoader =
-    nullptr;
+MOZ_THREAD_LOCAL(mozJSModuleLoader*)
+NonSharedGlobalSyncModuleLoaderScope::sTlsActiveLoader;
+
+void NonSharedGlobalSyncModuleLoaderScope::InitStatics() {
+  sTlsActiveLoader.infallibleInit();
+}
 
 NonSharedGlobalSyncModuleLoaderScope::NonSharedGlobalSyncModuleLoaderScope(
     JSContext* aCx, nsIGlobalObject* aGlobal) {
-  // Only the main thread is supported for now.
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mozJSModuleLoader::IsSharedSystemGlobal(aGlobal));
-  MOZ_ASSERT(!mozJSModuleLoader::IsDevToolsLoaderGlobal(aGlobal));
+  MOZ_ASSERT_IF(NS_IsMainThread(),
+                !mozJSModuleLoader::IsSharedSystemGlobal(aGlobal));
+  MOZ_ASSERT_IF(NS_IsMainThread(),
+                !mozJSModuleLoader::IsDevToolsLoaderGlobal(aGlobal));
 
   mAsyncModuleLoader = aGlobal->GetModuleLoader(aCx);
   MOZ_ASSERT(mAsyncModuleLoader,
@@ -1984,13 +1989,13 @@ NonSharedGlobalSyncModuleLoaderScope::NonSharedGlobalSyncModuleLoaderScope(
 
   mMaybeOverride.emplace(mAsyncModuleLoader, mLoader->mModuleLoader);
 
-  MOZ_ASSERT(!sActiveLoader);
-  sActiveLoader = mLoader;
+  MOZ_ASSERT(!sTlsActiveLoader.get());
+  sTlsActiveLoader.set(mLoader);
 }
 
 NonSharedGlobalSyncModuleLoaderScope::~NonSharedGlobalSyncModuleLoaderScope() {
-  MOZ_ASSERT(sActiveLoader == mLoader);
-  sActiveLoader = nullptr;
+  MOZ_ASSERT(sTlsActiveLoader.get() == mLoader);
+  sTlsActiveLoader.set(nullptr);
 
   mLoader->DisconnectSyncModuleLoaderFromGlobal();
   UnregisterWeakMemoryReporter(mLoader);
@@ -2002,12 +2007,12 @@ void NonSharedGlobalSyncModuleLoaderScope::Finish() {
 
 /* static */
 bool NonSharedGlobalSyncModuleLoaderScope::IsActive() {
-  return !!sActiveLoader;
+  return !!sTlsActiveLoader.get();
 }
 
-/* static */
+/*static */
 mozJSModuleLoader* NonSharedGlobalSyncModuleLoaderScope::ActiveLoader() {
-  return sActiveLoader;
+  return sTlsActiveLoader.get();
 }
 
 //----------------------------------------------------------------------
