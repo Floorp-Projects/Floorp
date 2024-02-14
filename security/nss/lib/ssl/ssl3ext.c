@@ -57,6 +57,7 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_cookie_xtn, &tls13_ServerHandleCookieXtn },
     { ssl_tls13_post_handshake_auth_xtn, &tls13_ServerHandlePostHandshakeAuthXtn },
     { ssl_record_size_limit_xtn, &ssl_HandleRecordSizeLimitXtn },
+    { ssl_certificate_compression_xtn, &ssl3_HandleCertificateCompressionXtn },
     { 0, NULL }
 };
 
@@ -110,6 +111,7 @@ static const ssl3ExtensionHandler certificateRequestHandlers[] = {
     { ssl_signature_algorithms_xtn, &ssl3_HandleSigAlgsXtn },
     { ssl_tls13_certificate_authorities_xtn,
       &tls13_ClientHandleCertAuthoritiesXtn },
+    { ssl_certificate_compression_xtn, &ssl3_HandleCertificateCompressionXtn },
     { 0, NULL }
 };
 
@@ -149,6 +151,7 @@ static const sslExtensionBuilder clientHelloSendersTLS[] = {
     { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ClientSendPskModesXtn },
     { ssl_tls13_post_handshake_auth_xtn, &tls13_ClientSendPostHandshakeAuthXtn },
     { ssl_record_size_limit_xtn, &ssl_SendRecordSizeLimitXtn },
+    { ssl_certificate_compression_xtn, &ssl3_SendCertificateCompressionXtn },
     /* TLS 1.3 GREASE extensions - 1 zero byte. */
     { ssl_tls13_grease_xtn, &tls13_SendGreaseXtn },
     /* The pre_shared_key extension MUST be last. */
@@ -166,6 +169,7 @@ static const sslExtensionBuilder tls13_cert_req_senders[] = {
     { ssl_tls13_certificate_authorities_xtn, &tls13_SendCertAuthoritiesXtn },
     /* TLS 1.3 GREASE extension. */
     { ssl_tls13_grease_xtn, &tls13_SendEmptyGreaseXtn },
+    { ssl_certificate_compression_xtn, &ssl3_SendCertificateCompressionXtn },
     { 0, NULL }
 };
 
@@ -203,6 +207,7 @@ static const struct {
     { ssl_tls13_certificate_authorities_xtn, ssl_ext_native },
     { ssl_renegotiation_info_xtn, ssl_ext_native },
     { ssl_tls13_encrypted_client_hello_xtn, ssl_ext_native_only },
+    { ssl_certificate_compression_xtn, ssl_ext_native },
 };
 
 static SSLExtensionSupport

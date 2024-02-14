@@ -432,3 +432,9 @@ ssl3_MaybeUpdateHashWithSavedRecord(sslSocket *ss)
     ss->ssl3.hs.dtls13ClientMessageBuffer.len = 0;
     return SECSuccess;
 }
+
+SECStatus
+ssl3_CopyToSECItem(sslBuffer *buf, SECItem *i)
+{
+    return SECITEM_MakeItem(NULL, i, buf->buf, buf->len);
+}

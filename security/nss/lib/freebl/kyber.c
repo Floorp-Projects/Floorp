@@ -132,7 +132,7 @@ Kyber_NewKey(KyberParams params, const SECItem *keypair_seed, SECItem *privkey, 
         }
         coins = randbuf;
     }
-
+    NSS_CLASSIFY(coins, KYBER_KEYPAIR_COIN_BYTES);
     if (params == params_kyber768_round3 || params == params_kyber768_round3_test_mode) {
         pqcrystals_kyber768_ref_keypair_derand(pubkey->data, privkey->data, coins);
     } else {
@@ -140,7 +140,7 @@ Kyber_NewKey(KyberParams params, const SECItem *keypair_seed, SECItem *privkey, 
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-
+    NSS_DECLASSIFY(pubkey->data, pubkey->len);
     return SECSuccess;
 }
 
@@ -168,7 +168,7 @@ Kyber_Encapsulate(KyberParams params, const SECItem *enc_seed, const SECItem *pu
         }
         coins = randbuf;
     }
-
+    NSS_CLASSIFY(coins, KYBER_ENC_COIN_BYTES);
     if (params == params_kyber768_round3 || params == params_kyber768_round3_test_mode) {
         pqcrystals_kyber768_ref_enc_derand(ciphertext->data, secret->data, pubkey->data, coins);
     } else {

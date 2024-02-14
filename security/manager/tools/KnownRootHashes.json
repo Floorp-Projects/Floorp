@@ -1327,7 +1327,17 @@
       "label": "CommScope_Public_Trust_ECC_Root_01",
       "binNumber": 264,
       "sha256Fingerprint": "EUN82nu0XkE2X0WzmjiYaw3gDe80jgx7sIc2M4ALw4s="
+    },
+    {
+      "label": "Telekom_Security_TLS_RSA_Root_2023",
+      "binNumber": 265,
+      "sha256Fingerprint": "78ZcrbtZrbbv6E2iIxGzViS3GzseoNqLZlUXTsiXhkY="
+    },
+    {
+      "label": "Telekom_Security_TLS_ECC_Root_2020",
+      "binNumber": 266,
+      "sha256Fingerprint": "V4r03tCFP05ZmNtK6vnL6o2UX2C2IKONGjwTsrx7qOE="
     }
   ],
-  "maxBin": 264
+  "maxBin": 266
 }

@@ -498,6 +498,9 @@ ssl3_DecodeHandshakeType(int msgType)
         case ssl_hs_key_update:
             rv = "key_update   (24)";
             break;
+        case ssl_hs_compressed_certificate:
+            rv = "compressed certificate (25)";
+            break;
         default:
             snprintf(line, sizeof(line), "*UNKNOWN* handshake type! (%d)", msgType);
             rv = line;
@@ -13843,7 +13846,6 @@ ssl3_InitState(sslSocket *ss)
                 sizeof(ss->ssl3.hs.newSessionTicket));
 
     ss->ssl3.hs.zeroRttState = ssl_0rtt_none;
-
     return SECSuccess;
 }
 

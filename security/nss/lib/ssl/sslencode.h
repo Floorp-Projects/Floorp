@@ -71,6 +71,7 @@ SECStatus ssl3_AppendHandshakeVariable(sslSocket *ss, const PRUint8 *src,
 SECStatus ssl3_AppendBufferToHandshake(sslSocket *ss, sslBuffer *buf);
 SECStatus ssl3_AppendBufferToHandshakeVariable(sslSocket *ss, sslBuffer *buf,
                                                unsigned int lenSize);
+SECStatus ssl3_CopyToSECItem(sslBuffer *b, SECItem *i);
 
 typedef struct {
     const PRUint8 *buf;

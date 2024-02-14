@@ -9,6 +9,7 @@
 #include "pk11pub.h"
 
 #include "blapi.h"
+#include "secport.h"
 
 namespace nss_test {
 
@@ -111,8 +112,11 @@ TEST_F(Pkcs11KEMTest, KemConsistencyTest) {
   checkSymKeyAttributeValue(sharedSecret2, CKA_MODIFIABLE, &ckFalse);
   checkSymKeyAttributeValue(sharedSecret2, CKA_ENCRYPT, &ckTrue);
 
-  EXPECT_EQ(0, SECITEM_CompareItem(getRawKeyData(sharedSecret),
-                                   getRawKeyData(sharedSecret2)));
+  SECItem *item1 = getRawKeyData(sharedSecret);
+  SECItem *item2 = getRawKeyData(sharedSecret2);
+  NSS_DECLASSIFY(item1->data, item1->len);
+  NSS_DECLASSIFY(item2->data, item2->len);
+  EXPECT_EQ(0, SECITEM_CompareItem(item1, item2));
 }
 
 }  // namespace nss_test

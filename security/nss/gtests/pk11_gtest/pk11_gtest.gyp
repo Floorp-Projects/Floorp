@@ -76,6 +76,9 @@
             '<(DEPTH)/lib/ssl/ssl.gyp:ssl3',
           ],
         }],
+        ['ct_verif==1', {
+            'defines': ['CT_VERIF'],
+        }],
       ],
     }
   ],
