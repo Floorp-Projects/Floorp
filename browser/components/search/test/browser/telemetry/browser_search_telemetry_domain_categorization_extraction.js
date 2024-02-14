@@ -91,15 +91,59 @@ const TESTS = [
     expectedDomains: ["def.com"],
   },
   {
+    title:
+      "Extract domain from an href's query param value containing an href.",
+    extractorInfos: [
+      {
+        selectors: "#test7 a",
+        method: "href",
+        options: {
+          queryParamKey: "ad_domain",
+          queryParamValueIsHref: true,
+        },
+      },
+    ],
+    expectedDomains: ["def.com"],
+  },
+  {
+    title:
+      "The param value contains an invalid href while queryParamValueIsHref enabled.",
+    extractorInfos: [
+      {
+        selectors: "#test8 a",
+        method: "href",
+        options: {
+          queryParamKey: "ad_domain",
+          queryParamValueIsHref: true,
+        },
+      },
+    ],
+    expectedDomains: [],
+  },
+  {
+    title: "Param value is missing from the href.",
+    extractorInfos: [
+      {
+        selectors: "#test9 a",
+        method: "href",
+        options: {
+          queryParamKey: "ad_domain",
+          queryParamValueIsHref: true,
+        },
+      },
+    ],
+    expectedDomains: [],
+  },
+  {
     title: "Extraction preserves order of domains within the page.",
     extractorInfos: [
       {
         selectors:
-          '#test7 [data-layout="organic"] a[data-testid="result-title-a"]',
+          '#test10 [data-layout="organic"] a[data-testid="result-title-a"]',
         method: "href",
       },
       {
-        selectors: "#test7 [data-dtld]",
+        selectors: "#test10 [data-dtld]",
         method: "data-attribute",
         options: {
           dataAttributeKey: "dtld",
@@ -107,7 +151,7 @@ const TESTS = [
       },
       {
         selectors:
-          '#test7 .js-carousel-item-title, #test7 [data-layout="ad"] [data-testid="result-title-a"]',
+          '#test10 .js-carousel-item-title, #test7 [data-layout="ad"] [data-testid="result-title-a"]',
         method: "href",
         options: {
           queryParamKey: "ad_domain",
@@ -121,7 +165,7 @@ const TESTS = [
     extractorInfos: [
       {
         selectors:
-          '#test8 [data-layout="organic"] a[data-testid="result-title-a"]',
+          '#test11 [data-layout="organic"] a[data-testid="result-title-a"]',
         method: "href",
       },
     ],
@@ -131,7 +175,7 @@ const TESTS = [
     title: "Data attribute is present, but value is missing.",
     extractorInfos: [
       {
-        selectors: "#test9 [data-dtld]",
+        selectors: "#test12 [data-dtld]",
         method: "data-attribute",
         options: {
           dataAttributeKey: "dtld",
@@ -144,7 +188,7 @@ const TESTS = [
     title: "Query param is present, but value is missing.",
     extractorInfos: [
       {
-        selectors: '#test10 [data-layout="ad"] [data-testid="result-title-a"]',
+        selectors: '#test13 [data-layout="ad"] [data-testid="result-title-a"]',
         method: "href",
         options: {
           queryParamKey: "ad_domain",
@@ -158,7 +202,7 @@ const TESTS = [
     extractorInfos: [
       {
         selectors:
-          '#test11 [data-layout="organic"] a[data-testid="result-title-a"]',
+          '#test14 [data-layout="organic"] a[data-testid="result-title-a"]',
         method: "href",
       },
     ],
