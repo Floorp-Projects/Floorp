@@ -1851,15 +1851,12 @@ impl Parse for Overflow {
             "visible" => Self::Visible,
             "hidden" => Self::Hidden,
             "scroll" => Self::Scroll,
-            "auto" => Self::Auto,
+            "auto" | "overlay" => Self::Auto,
             #[cfg(feature = "gecko")]
             "clip" => Self::Clip,
             #[cfg(feature = "gecko")]
             "-moz-hidden-unscrollable" if static_prefs::pref!("layout.css.overflow-moz-hidden-unscrollable.enabled") => {
                 Overflow::Clip
-            },
-            "overlay" if static_prefs::pref!("layout.css.overflow-overlay.enabled") => {
-                Overflow::Auto
             },
         })
     }
