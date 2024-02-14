@@ -393,6 +393,8 @@ nsresult nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
 nsresult nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
                                              nsHtml5HtmlAttributes* aAttributes,
                                              nsHtml5DocumentBuilder* aBuilder) {
+  MOZ_ASSERT(aNode->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::html));
+
   Element* node = aNode->AsElement();
   nsHtml5OtherDocUpdate update(node->OwnerDoc(), aBuilder->GetDocument());
 
@@ -401,7 +403,8 @@ nsresult nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
     --i;
     nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
     int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
-    if (!node->HasAttr(nsuri, localName)) {
+    if (!node->HasAttr(nsuri, localName) &&
+        !(nsuri == kNameSpaceID_None && localName == nsGkAtoms::nonce)) {
       nsString value;  // Not Auto, because using it to hold nsStringBuffer*
       aAttributes->getValueNoBoundsCheck(i).ToString(value);
       node->SetAttr(nsuri, localName, aAttributes->getPrefixNoBoundsCheck(i),
