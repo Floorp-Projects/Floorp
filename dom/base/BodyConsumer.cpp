@@ -74,7 +74,7 @@ class ContinueConsumeBodyRunnable final : public MainThreadWorkerRunnable {
   ContinueConsumeBodyRunnable(BodyConsumer* aBodyConsumer,
                               WorkerPrivate* aWorkerPrivate, nsresult aStatus,
                               uint32_t aLength, uint8_t* aResult)
-      : MainThreadWorkerRunnable(aWorkerPrivate),
+      : MainThreadWorkerRunnable(aWorkerPrivate, "ContinueConsumeBodyRunnable"),
         mBodyConsumer(aBodyConsumer),
         mStatus(aStatus),
         mLength(aLength),
@@ -159,7 +159,8 @@ class ContinueConsumeBlobBodyRunnable final : public MainThreadWorkerRunnable {
   ContinueConsumeBlobBodyRunnable(BodyConsumer* aBodyConsumer,
                                   WorkerPrivate* aWorkerPrivate,
                                   BlobImpl* aBlobImpl)
-      : MainThreadWorkerRunnable(aWorkerPrivate),
+      : MainThreadWorkerRunnable(aWorkerPrivate,
+                                 "ContinueConsumeBlobBodyRunnable"),
         mBodyConsumer(aBodyConsumer),
         mBlobImpl(aBlobImpl) {
     MOZ_ASSERT(NS_IsMainThread());
