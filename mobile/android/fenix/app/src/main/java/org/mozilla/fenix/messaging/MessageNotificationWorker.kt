@@ -147,7 +147,7 @@ class MessageNotificationWorker(
                 // We want to keep any existing scheduled work, unless
                 // when we're under test.
                 if (messaging.isUnderTest()) {
-                    ExistingPeriodicWorkPolicy.REPLACE
+                    ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE
                 } else {
                     ExistingPeriodicWorkPolicy.KEEP
                 },

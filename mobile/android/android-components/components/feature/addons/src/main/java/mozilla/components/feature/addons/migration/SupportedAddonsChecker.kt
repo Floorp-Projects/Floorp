@@ -55,7 +55,7 @@ class DefaultSupportedAddonsChecker(
     override fun registerForChecks() {
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             CHECKER_UNIQUE_PERIODIC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.REPLACE,
+            ExistingPeriodicWorkPolicy.UPDATE,
             createPeriodicWorkerRequest(),
         )
         logger.info("Register check for new supported add-ons")

@@ -205,11 +205,11 @@ internal class WorkManagerSyncDispatcher(
      */
     override fun startPeriodicSync(unit: TimeUnit, period: Long, initialDelay: Long) {
         logger.debug("Starting periodic syncing, period = $period, time unit = $unit")
-        // Use the 'replace' policy as a simple way to upgrade periodic worker configurations across
+        // Use the 'update' policy as a simple way to upgrade periodic worker configurations across
         // application versions. We do this instead of versioning workers.
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             SyncWorkerName.Periodic.name,
-            ExistingPeriodicWorkPolicy.REPLACE,
+            ExistingPeriodicWorkPolicy.UPDATE,
             periodicSyncWorkRequest(unit, period, initialDelay),
         )
     }
