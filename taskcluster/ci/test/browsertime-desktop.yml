@@ -417,7 +417,7 @@ browsertime-benchmark:
                         by-test-platform:
                             windows.*-32.*: []
                             .*64.*shippable-qr/.*: [trunk]
-                            .*nightlyasrelease.*: [autoland]
+                            .*nightlyasrelease.*: [autoland, mozilla-central]
                             default: []
                     custom-car:
                         by-test-platform:
