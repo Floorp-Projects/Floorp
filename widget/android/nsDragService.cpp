@@ -257,10 +257,6 @@ void nsDragService::SetDropData(
   }
 
   nsString buffer(aDropData->Text()->ToString());
-  if (buffer.IsEmpty()) {
-    dragService->SetData(nullptr);
-    return;
-  }
   nsCOMPtr<nsISupports> wrapper;
   nsPrimitiveHelpers::CreatePrimitiveForData(
       mime, buffer.get(), buffer.Length() * 2, getter_AddRefs(wrapper));

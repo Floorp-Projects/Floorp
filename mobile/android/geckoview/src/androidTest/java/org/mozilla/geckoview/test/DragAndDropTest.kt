@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SdkSuppress
 import org.hamcrest.Matchers.equalTo
+import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
@@ -41,12 +42,14 @@ class DragAndDropTest : BaseSessionTest() {
             fieldY.set(dragEvent, y)
         }
 
+        val clipData = ClipData.newPlainText("label", "foo")
         if (action == DragEvent.ACTION_DROP) {
-            val clipData = ClipData.newPlainText("label", "foo")
             val fieldClipData = DragEvent::class.java.getDeclaredField("mClipData")
             fieldClipData.setAccessible(true)
             fieldClipData.set(dragEvent, clipData)
+        }
 
+        if (action != DragEvent.ACTION_DRAG_ENDED) {
             var clipDescription = clipData.getDescription()
             val fieldClipDescription = DragEvent::class.java.getDeclaredField("mClipDescription")
             fieldClipDescription.setAccessible(true)
@@ -54,6 +57,22 @@ class DragAndDropTest : BaseSessionTest() {
         }
 
         return dragEvent
+    }
+
+    fun sendDragEvent(startX: Float, startY: Float, endY: Float) {
+        // Android doesn't fire MotionEvent during drag and drop.
+        val dragStartEvent = createDragEvent(DragEvent.ACTION_DRAG_STARTED)
+        mainSession.panZoomController.onDragEvent(dragStartEvent)
+        val dragEnteredEvent = createDragEvent(DragEvent.ACTION_DRAG_ENTERED)
+        mainSession.panZoomController.onDragEvent(dragEnteredEvent)
+        listOf(startY, endY).forEach {
+            val dragLocationEvent = createDragEvent(DragEvent.ACTION_DRAG_LOCATION, startX, it)
+            mainSession.panZoomController.onDragEvent(dragLocationEvent)
+        }
+        val dropEvent = createDragEvent(DragEvent.ACTION_DROP, startX, endY)
+        mainSession.panZoomController.onDragEvent(dropEvent)
+        val dragEndedEvent = createDragEvent(DragEvent.ACTION_DRAG_ENDED)
+        mainSession.panZoomController.onDragEvent(dragEndedEvent)
     }
 
     @WithDisplay(width = 300, height = 300)
@@ -94,20 +113,42 @@ class DragAndDropTest : BaseSessionTest() {
             """.trimIndent(),
         )
 
-        // Android doesn't fire MotionEvent during drag and drop.
-        val dragStartEvent = createDragEvent(DragEvent.ACTION_DRAG_STARTED)
-        mainSession.panZoomController.onDragEvent(dragStartEvent)
-        val dragEnteredEvent = createDragEvent(DragEvent.ACTION_DRAG_ENTERED)
-        mainSession.panZoomController.onDragEvent(dragEnteredEvent)
-        listOf(150.0F, 250.0F).forEach {
-            val dragLocationEvent = createDragEvent(DragEvent.ACTION_DRAG_LOCATION, 100.0F, it)
-            mainSession.panZoomController.onDragEvent(dragLocationEvent)
-        }
-        val dropEvent = createDragEvent(DragEvent.ACTION_DROP, 100.0F, 250.0F)
-        mainSession.panZoomController.onDragEvent(dropEvent)
-        val dragEndedEvent = createDragEvent(DragEvent.ACTION_DRAG_ENDED)
-        mainSession.panZoomController.onDragEvent(dragEndedEvent)
+        sendDragEvent(100.0F, 150.0F, 250.0F)
 
         assertThat("drop event is fired correctly", promise.value as String, equalTo("foo"))
+    }
+
+    @WithDisplay(width = 300, height = 500)
+    @Test
+    fun dropFromExternalToTextControlTest() {
+        mainSession.loadTestPath(DND_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val promiseDragOver = mainSession.evaluatePromiseJS(
+            """
+          new Promise(
+              r => document.querySelector('textarea').addEventListener(
+                       'dragover',
+                       e => r({ types: e.dataTransfer.types, data: e.dataTransfer.getData('text/plain') }),
+                       { once: true }))
+            """.trimIndent(),
+        )
+
+        val promiseSetValue = mainSession.evaluatePromiseJS(
+            """
+          new Promise(
+              r => document.querySelector('textarea').addEventListener(
+                       'input',
+                       e => r(document.querySelector('textarea').value),
+                       { once: true }))
+            """.trimIndent(),
+        )
+
+        sendDragEvent(100.0F, 250.0F, 450.0F)
+
+        var value = promiseDragOver.value as JSONObject
+        assertThat("dataTransfer type is text/plain", value.getJSONArray("types").getString(0), equalTo("text/plain"))
+        assertThat("dataTransfer set empty string during dragover event", value.getString("data"), equalTo(""))
+        assertThat("input event is fired correctly", promiseSetValue.value as String, equalTo("foo"))
     }
 }
