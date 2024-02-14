@@ -446,6 +446,18 @@ subprojects { project ->
                 ktlint('0.49.1')
             }
         }
+    } else {
+        afterEvaluate {
+            // Set the source and target compatibility for non-GeckoView projects only.
+            if (it.hasProperty('android')) {
+                android {
+                    compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_17
+                        targetCompatibility JavaVersion.VERSION_17
+                    }
+                }
+            }
+        }
     }
 
     project.configurations.configureEach {
