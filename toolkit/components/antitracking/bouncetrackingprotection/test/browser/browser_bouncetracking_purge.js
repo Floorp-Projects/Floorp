@@ -25,13 +25,14 @@ function initBounceTrackerState() {
   bounceTrackingProtection.reset();
 
   // Bounce time of 1 is out of the grace period which means we should purge.
-  bounceTrackingProtection.testAddBounceTrackerCandidate("example.com", 1);
-  bounceTrackingProtection.testAddBounceTrackerCandidate("example.net", 1);
+  bounceTrackingProtection.testAddBounceTrackerCandidate({}, "example.com", 1);
+  bounceTrackingProtection.testAddBounceTrackerCandidate({}, "example.net", 1);
 
   // Should not purge because within grace period.
   let timestampWithinGracePeriod =
     Date.now() - (BOUNCE_TRACKING_GRACE_PERIOD_SEC * 1000) / 2;
   bounceTrackingProtection.testAddBounceTrackerCandidate(
+    {},
     "example.org",
     timestampWithinGracePeriod * 1000
   );
