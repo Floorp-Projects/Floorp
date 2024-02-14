@@ -15,7 +15,6 @@
 #include "nsITimer.h"
 
 #include "MediaConduitInterface.h"
-#include "common/MediaEngineWrapper.h"
 #include "RtpRtcpConfig.h"
 #include "RunningStat.h"
 #include "transport/runnable_utils.h"
