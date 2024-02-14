@@ -1,5 +1,5 @@
-commit a4248d02cdf8329364d86e317e34422a894ae2f5
+commit 6f877dbcd7930f92fe8f97929e2ca683e7d443a2
 Author: yumaoka <y.umaoka@gmail.com>
-Date:   Wed Mar 29 08:31:53 2023 -0400
+Date:   Thu Feb 8 15:05:36 2024 -0500
 
-    ICU-22339 Update tzdata to 2023c
+    ICU-22659 tzdata2024a updates in ICU Data repo
