@@ -385,11 +385,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     NotifyObservers(chan, NS_HTTP_ON_BEFORE_CONNECT_TOPIC);
   }
 
-  // Called before the channel dispatches the transaction
-  void OnDispatchingTransaction(nsIHttpChannel* chan) {
-    NotifyObservers(chan, NS_HTTP_ON_DISPATCHING_TRANSACTION);
-  }
-
   // Called by the channel once headers are available
   void OnExamineResponse(nsIHttpChannel* chan) {
     NotifyObservers(chan, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
