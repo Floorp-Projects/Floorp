@@ -449,14 +449,14 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
   }
 }
 
-MOZ_CAN_RUN_SCRIPT bool InterruptCallback(JSContext* aCx) {
+bool InterruptCallback(JSContext* aCx) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   MOZ_ASSERT(worker);
 
   // Now is a good time to turn on profiling if it's pending.
   PROFILER_JS_INTERRUPT_CALLBACK();
 
-  return MOZ_KnownLive(worker)->InterruptCallback(aCx);
+  return worker->InterruptCallback(aCx);
 }
 
 class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable {
