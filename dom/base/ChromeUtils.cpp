@@ -655,6 +655,13 @@ static mozJSModuleLoader* GetModuleLoaderForCurrentGlobal(
   }
 
   if (targetModuleLoader->HasFetchingModules()) {
+    if (!NS_IsMainThread()) {
+      JS_ReportErrorASCII(aCx,
+                          "ChromeUtils.importESModule cannot be used in worker "
+                          "when there is ongoing dynamic import");
+      return nullptr;
+    }
+
     if (!mozilla::SpinEventLoopUntil(
             "importESModule for current global"_ns, [&]() -> bool {
               return !targetModuleLoader->HasFetchingModules();
@@ -685,6 +692,11 @@ static mozJSModuleLoader* GetModuleLoaderForOptions(
       return mozJSModuleLoader::GetOrCreateDevToolsLoader();
 
     case ImportESModuleTargetGlobal::Contextual: {
+      if (!NS_IsMainThread()) {
+        return GetModuleLoaderForCurrentGlobal(aCx, aGlobal,
+                                               aMaybeSyncLoaderScope);
+      }
+
       RefPtr devToolsModuleloader = mozJSModuleLoader::GetDevToolsLoader();
       if (devToolsModuleloader &&
           devToolsModuleloader->IsLoaderGlobal(aGlobal.Get())) {
@@ -704,6 +716,17 @@ static mozJSModuleLoader* GetModuleLoaderForOptions(
 
 static bool ValidateImportOptions(
     JSContext* aCx, const ImportESModuleOptionsDictionary& aOptions) {
+  if (!NS_IsMainThread() &&
+      (!aOptions.mGlobal.WasPassed() ||
+       (aOptions.mGlobal.Value() != ImportESModuleTargetGlobal::Current &&
+        aOptions.mGlobal.Value() != ImportESModuleTargetGlobal::Contextual))) {
+    JS_ReportErrorASCII(aCx,
+                        "ChromeUtils.importESModule: Only { global: "
+                        "\"current\" } and { global: \"contextual\" } options "
+                        "are supported on worker");
+    return false;
+  }
+
   if (aOptions.mGlobal.WasPassed() &&
       aOptions.mLoadInDevToolsLoader.WasPassed()) {
     JS_ReportErrorASCII(aCx,
