@@ -322,14 +322,14 @@ android.libraryVariants.all { variant ->
         source = variant.sourceSets.collect({ it.java.srcDirs })
         exclude '**/R.java', '**/BuildConfig.java'
         include 'org/mozilla/geckoview/**.java'
-        options.addPathOption('sourcepath', ':').setValue(
+        options.addPathOption('sourcepath').setValue(
              variant.sourceSets.collect({ it.java.srcDirs }).flatten() +
              variant.generateBuildConfigProvider.get().sourceOutputDir.asFile.get() +
              variant.aidlCompileProvider.get().sourceOutputDir.asFile.get()
         )
         options.addStringOption("Xmaxwarns", "1000")
 
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath += files(android.getBootClasspath())
         classpath += variant.javaCompileProvider.get().classpath
 
         options.memberLevel = JavadocMemberLevel.PROTECTED
