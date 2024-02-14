@@ -115,7 +115,7 @@ class FxaDeviceConstellation(
                     AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                     throw e
                 } catch (e: FxaUnauthorizedException) {
-                    AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
+                    AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.EnsureCapabilitiesAuthError)
                     // Unless we've added a new capability, in practice 'ensureCapabilities' isn't
                     // actually expected to do any work: everything should have been done by initializeDevice.
                     // So if it did, and failed, let's report this so that we're aware of this!
