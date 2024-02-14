@@ -75,6 +75,19 @@ support-files = [
   "error_export.sys.mjs",
   "error_import.sys.mjs",
   "error_other.sys.mjs",
+  "non_shared_1.mjs",
+  "non_shared_2.mjs",
+  "import_non_shared_1.mjs",
+  "non_shared_nest_import_shared_1.mjs",
+  "non_shared_nest_import_shared_target_1.sys.mjs",
+  "non_shared_nest_import_shared_target_2.sys.mjs",
+  "non_shared_nest_import_non_shared_1.mjs",
+  "non_shared_nest_import_non_shared_target_1.mjs",
+  "non_shared_nest_import_non_shared_2.mjs",
+  "non_shared_nest_import_non_shared_target_2.mjs",
+  "non_shared_nest_import_non_shared_3.mjs",
+  "non_shared_nest_import_non_shared_target_3.mjs",
+  "contextual.sys.mjs",
 ]
 
 ["test_ComponentEnvironment.js"]
@@ -242,6 +255,12 @@ skip-if = ["os == 'android' && processor == 'x86_64'"]
 ["test_import_fail.js"]
 
 ["test_import_from_sandbox.js"]
+
+["test_import_global.js"]
+
+["test_import_global_contextual.js"]
+
+["test_import_global_current.js"]
 
 ["test_import_shim.js"]
 
