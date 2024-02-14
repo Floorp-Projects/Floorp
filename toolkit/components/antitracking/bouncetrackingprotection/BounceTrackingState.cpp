@@ -127,6 +127,11 @@ nsresult BounceTrackingState::Init(
   dom::BrowsingContext* browsingContext = aWebProgress->GetBrowsingContext();
   NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
   mBrowserId = browsingContext->BrowserId();
+  // Create a copy of the BC's OriginAttributes so we can use it later without
+  // having to hold a reference to the BC.
+  mOriginAttributes = browsingContext->OriginAttributesRef();
+  MOZ_ASSERT(mOriginAttributes.mPartitionKey.IsEmpty(),
+             "Top level BCs mus not have a partition key.");
 
   // Add a listener for window load. See BounceTrackingState::OnStateChange for
   // the listener code.
@@ -146,9 +151,13 @@ BounceTrackingRecord* BounceTrackingState::GetBounceTrackingRecord() {
 }
 
 nsCString BounceTrackingState::Describe() {
+  nsAutoCString oaSuffix;
+  OriginAttributesRef().CreateSuffix(oaSuffix);
+
   return nsPrintfCString(
-      "{ mBounceTrackingRecord: %s }",
-      mBounceTrackingRecord ? mBounceTrackingRecord->Describe().get() : "null");
+      "{ mBounceTrackingRecord: %s, mOriginAttributes: %s }",
+      mBounceTrackingRecord ? mBounceTrackingRecord->Describe().get() : "null",
+      oaSuffix.get());
 }
 
 // static
@@ -232,6 +241,10 @@ already_AddRefed<dom::BrowsingContext>
 BounceTrackingState::CurrentBrowsingContext() {
   MOZ_ASSERT(mBrowserId != 0);
   return dom::BrowsingContext::GetCurrentTopByBrowserId(mBrowserId);
+}
+
+const OriginAttributes& BounceTrackingState::OriginAttributesRef() {
+  return mOriginAttributes;
 }
 
 nsresult BounceTrackingState::OnDocumentStartRequest(nsIChannel* aChannel) {
