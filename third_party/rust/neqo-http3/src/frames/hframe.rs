@@ -74,7 +74,10 @@ impl HFrame {
             Self::MaxPushId { .. } => H3_FRAME_TYPE_MAX_PUSH_ID,
             Self::PriorityUpdateRequest { .. } => H3_FRAME_TYPE_PRIORITY_UPDATE_REQUEST,
             Self::PriorityUpdatePush { .. } => H3_FRAME_TYPE_PRIORITY_UPDATE_PUSH,
-            Self::Grease => Decoder::from(&random::<7>()).decode_uint(7).unwrap() * 0x1f + 0x21,
+            Self::Grease => {
+                let r = random(7);
+                Decoder::from(&r).decode_uint(7).unwrap() * 0x1f + 0x21
+            }
         }
     }
 
@@ -117,7 +120,7 @@ impl HFrame {
             }
             Self::Grease => {
                 // Encode some number of random bytes.
-                let r = random::<8>();
+                let r = random(8);
                 enc.encode_vvec(&r[1..usize::from(1 + (r[0] & 0x7))]);
             }
             Self::PriorityUpdateRequest {

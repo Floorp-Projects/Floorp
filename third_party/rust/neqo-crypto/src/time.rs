@@ -12,13 +12,13 @@ use std::{
     ops::Deref,
     os::raw::c_void,
     pin::Pin,
-    sync::OnceLock,
     time::{Duration, Instant},
 };
 
 use crate::{
     agentio::as_c_void,
     err::{Error, Res},
+    once::OnceResult,
     ssl::{PRFileDesc, SSLTimeFunc},
 };
 
@@ -67,13 +67,14 @@ impl TimeZero {
     }
 }
 
-static BASE_TIME: OnceLock<TimeZero> = OnceLock::new();
+static mut BASE_TIME: OnceResult<TimeZero> = OnceResult::new();
 
 fn get_base() -> &'static TimeZero {
-    BASE_TIME.get_or_init(|| TimeZero {
+    let f = || TimeZero {
         instant: Instant::now(),
         prtime: unsafe { PR_Now() },
-    })
+    };
+    unsafe { BASE_TIME.call_once(f) }
 }
 
 pub(crate) fn init() {
@@ -96,8 +97,9 @@ impl Deref for Time {
 impl From<Instant> for Time {
     /// Convert from an Instant into a Time.
     fn from(t: Instant) -> Self {
-        // Initialize `BASE_TIME` using `TimeZero::baseline(t)`.
-        BASE_TIME.get_or_init(|| TimeZero::baseline(t));
+        // Call `TimeZero::baseline(t)` so that time zero can be set.
+        let f = || TimeZero::baseline(t);
+        _ = unsafe { BASE_TIME.call_once(f) };
         Self { t }
     }
 }
@@ -106,17 +108,14 @@ impl TryFrom<PRTime> for Time {
     type Error = Error;
     fn try_from(prtime: PRTime) -> Res<Self> {
         let base = get_base();
-        let delta = prtime
-            .checked_sub(base.prtime)
-            .ok_or(Error::TimeTravelError)?;
-        let d = Duration::from_micros(u64::try_from(delta.abs())?);
-        let t = if delta >= 0 {
-            base.instant.checked_add(d)
+        if let Some(delta) = prtime.checked_sub(base.prtime) {
+            let d = Duration::from_micros(delta.try_into()?);
+            base.instant
+                .checked_add(d)
+                .map_or(Err(Error::TimeTravelError), |t| Ok(Self { t }))
         } else {
-            base.instant.checked_sub(d)
-        };
-        let t = t.ok_or(Error::TimeTravelError)?;
-        Ok(Self { t })
+            Err(Error::TimeTravelError)
+        }
     }
 }
 
@@ -124,21 +123,14 @@ impl TryInto<PRTime> for Time {
     type Error = Error;
     fn try_into(self) -> Res<PRTime> {
         let base = get_base();
-
-        if let Some(delta) = self.t.checked_duration_since(base.instant) {
-            if let Ok(d) = PRTime::try_from(delta.as_micros()) {
-                d.checked_add(base.prtime).ok_or(Error::TimeTravelError)
-            } else {
-                Err(Error::TimeTravelError)
-            }
+        let delta = self
+            .t
+            .checked_duration_since(base.instant)
+            .ok_or(Error::TimeTravelError)?;
+        if let Ok(d) = PRTime::try_from(delta.as_micros()) {
+            d.checked_add(base.prtime).ok_or(Error::TimeTravelError)
         } else {
-            // Try to go backwards from the base time.
-            let backwards = base.instant - self.t; // infallible
-            if let Ok(d) = PRTime::try_from(backwards.as_micros()) {
-                base.prtime.checked_sub(d).ok_or(Error::TimeTravelError)
-            } else {
-                Err(Error::TimeTravelError)
-            }
+            Err(Error::TimeTravelError)
         }
     }
 }
@@ -236,23 +228,16 @@ mod test {
     }
 
     #[test]
-    fn past_prtime() {
-        const DELTA: Duration = Duration::from_secs(1);
+    fn past_time() {
         init();
         let base = get_base();
-        let delta_micros = PRTime::try_from(DELTA.as_micros()).unwrap();
-        println!("{} - {}", base.prtime, delta_micros);
-        let t = Time::try_from(base.prtime - delta_micros).unwrap();
-        assert_eq!(Instant::from(t) + DELTA, base.instant);
+        assert!(Time::try_from(base.prtime - 1).is_err());
     }
 
     #[test]
-    fn past_instant() {
-        const DELTA: Duration = Duration::from_secs(1);
+    fn negative_time() {
         init();
-        let base = get_base();
-        let t = Time::from(base.instant.checked_sub(DELTA).unwrap());
-        assert_eq!(Instant::from(t) + DELTA, base.instant);
+        assert!(Time::try_from(-1).is_err());
     }
 
     #[test]
