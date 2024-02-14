@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
     "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   TaskScheduler: "resource://gre/modules/TaskScheduler.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -777,7 +778,12 @@ export var BackgroundUpdate = {
         // to restrict the targeting data collected, but it's hard to
         // distinguish expensive collection operations and the system loses
         // flexibility when restrictions of this type are added.
-        let latestData = await lazy.ASRouterTargeting.getEnvironmentSnapshot();
+        let latestData = await lazy.ASRouterTargeting.getEnvironmentSnapshot({
+          targets: [
+            lazy.ExperimentManager.createTargetingContext(),
+            lazy.ASRouterTargeting.Environment,
+          ],
+        });
         // We expect to always have data, but: belt-and-braces.
         if (snapshot?.data?.environment) {
           Object.assign(snapshot.data.environment, latestData.environment);
@@ -790,7 +796,10 @@ export var BackgroundUpdate = {
 
     // We don't `load`, since we don't care about reading existing (now stale)
     // data.
-    snapshot.data = await lazy.ASRouterTargeting.getEnvironmentSnapshot();
+    snapshot.data = await lazy.ASRouterTargeting.getEnvironmentSnapshot(
+      lazy.ASRouterTargeting.Environment,
+      lazy.ExperimentManager.createTargetingContext()
+    );
 
     // Persist.
     snapshot.saveSoon();
@@ -883,26 +892,74 @@ export var BackgroundUpdate = {
           defaultProfileTargetingSnapshot.version
         );
       }
-      if (defaultProfileTargetingSnapshot?.environment?.firefoxVersion) {
-        Glean.backgroundUpdate.targetingEnvFirefoxVersion.set(
-          defaultProfileTargetingSnapshot.environment.firefoxVersion
-        );
-      }
-      if (defaultProfileTargetingSnapshot?.environment?.currentDate) {
-        Glean.backgroundUpdate.targetingEnvCurrentDate.set(
-          // Glean date times are provided in nanoseconds, `getTime()` yields
-          // milliseconds (after the Unix epoch).
-          new Date(
-            defaultProfileTargetingSnapshot.environment.currentDate
-          ).getTime() * 1000
-        );
-      }
-      if (defaultProfileTargetingSnapshot?.environment?.profileAgeCreated) {
-        Glean.backgroundUpdate.targetingEnvProfileAge.set(
-          // Glean date times are provided in nanoseconds, `profileAgeCreated`
-          // is in milliseconds (after the Unix epoch).
-          defaultProfileTargetingSnapshot.environment.profileAgeCreated * 1000
-        );
+
+      let environment = defaultProfileTargetingSnapshot?.environment;
+      if (environment) {
+        if (environment.firefoxVersion) {
+          Glean.backgroundUpdate.targetingEnvFirefoxVersion.set(
+            environment.firefoxVersion
+          );
+        }
+        if (environment.currentDate) {
+          Glean.backgroundUpdate.targetingEnvCurrentDate.set(
+            // Glean date times are provided in nanoseconds, `getTime()` yields
+            // milliseconds (after the Unix epoch).
+            new Date(environment.currentDate).getTime() * 1000
+          );
+        }
+        if (environment.profileAgeCreated) {
+          Glean.backgroundUpdate.targetingEnvProfileAge.set(
+            // Glean date times are provided in nanoseconds, `profileAgeCreated`
+            // is in milliseconds (after the Unix epoch).
+            environment.profileAgeCreated * 1000
+          );
+        }
+
+        // Experiment details.
+        let activeExperiments = (
+          environment.activeExperiments || []
+        ).toSorted();
+        let activeRollouts = (environment.activeRollouts || []).toSorted();
+        let previousExperiments = (
+          environment.previousExperiments || []
+        ).toSorted();
+        let previousRollouts = (environment.previousRollouts || []).toSorted();
+
+        // Add default profile experiments to background task profile Glean experiments.
+        for (let slug of Object.keys(environment.enrollmentsMap || [])) {
+          let branch = environment.enrollmentsMap[slug];
+          let source = "defaultProfile";
+
+          // Experiments have type "nimbus-nimbus", rollouts type "nimbus-rollout".
+          let type;
+          if (
+            activeExperiments.includes(slug) ||
+            previousExperiments.includes(slug)
+          ) {
+            type = "nimbus-nimbus";
+          } else if (
+            activeRollouts.includes(slug) ||
+            previousRollouts.includes(slug)
+          ) {
+            type = "nimbus-rollout";
+          } else {
+            // This shouldn't happen, but it's not worth failing.
+            lazy.log.warn(
+              `${SLUG}: enrollment not recognized as experiment or rollout: '${slug}'`
+            );
+            type = "nimbus-unexpected";
+          }
+
+          let extras = { type, source };
+          Services.fog.setExperimentActive(slug, branch, extras);
+
+          if (
+            previousExperiments.includes(slug) ||
+            previousRollouts.includes(slug)
+          ) {
+            Services.fog.setExperimentInactive(slug, branch, extras);
+          }
+        }
       }
     } catch (f) {
       if (DOMException.isInstance(f) && f.name === "NotFoundError") {

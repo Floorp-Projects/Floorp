@@ -102,18 +102,21 @@ export class _ExperimentManager {
       },
     };
     Object.defineProperty(context, "activeExperiments", {
+      enumerable: true,
       get: async () => {
         await this.store.ready();
         return this.store.getAllActiveExperiments().map(exp => exp.slug);
       },
     });
     Object.defineProperty(context, "activeRollouts", {
+      enumerable: true,
       get: async () => {
         await this.store.ready();
         return this.store.getAllActiveRollouts().map(rollout => rollout.slug);
       },
     });
     Object.defineProperty(context, "previousExperiments", {
+      enumerable: true,
       get: async () => {
         await this.store.ready();
         return this.store
@@ -123,6 +126,7 @@ export class _ExperimentManager {
       },
     });
     Object.defineProperty(context, "previousRollouts", {
+      enumerable: true,
       get: async () => {
         await this.store.ready();
         return this.store
@@ -132,12 +136,14 @@ export class _ExperimentManager {
       },
     });
     Object.defineProperty(context, "enrollments", {
+      enumerable: true,
       get: async () => {
         await this.store.ready();
         return this.store.getAll().map(enrollment => enrollment.slug);
       },
     });
     Object.defineProperty(context, "enrollmentsMap", {
+      enumerable: true,
       get: async () => {
         await this.store.ready();
         return this.store.getAll().reduce((acc, enrollment) => {
