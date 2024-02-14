@@ -2039,6 +2039,27 @@ export class SearchService {
       duplicateEngine.pendingRemoval = true;
     }
 
+    if (prevCurrentEngine && prevCurrentEngine.pendingRemoval) {
+      let overriddenBy = prevCurrentEngine.getAttr("overriddenBy");
+      if (overriddenBy) {
+        // The previous application default engine is being removed, and it was
+        // overridden by another engine. We want to put the previous engine back,
+        // so that the user retains that engine as default.
+        let engine = new lazy.AddonSearchEngine({
+          isAppProvided: false,
+          details: {
+            extensionID: overriddenBy,
+            locale: lazy.SearchUtils.DEFAULT_TAG,
+          },
+        });
+        await engine.init({ locale: lazy.SearchUtils.DEFAULT_TAG });
+        this.#addEngineToStore(engine, true);
+
+        // Now set it back to default.
+        this.defaultEngine = engine;
+      }
+    }
+
     // If the defaultEngine has changed between the previous load and this one,
     // dispatch the appropriate notifications.
     if (prevCurrentEngine && this.defaultEngine !== prevCurrentEngine) {
