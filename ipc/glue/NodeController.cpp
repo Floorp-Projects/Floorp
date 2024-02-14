@@ -575,9 +575,9 @@ void NodeController::OnBroadcast(const NodeName& aFromNode,
     // NOTE: This `clone` operation is only supported for a limited number of
     // message types by the ports API, which provides some extra security by
     // only allowing those specific types of messages to be broadcasted.
-    // Messages which don't support `Clone` cannot be broadcast, and the ports
-    // library will not attempt to broadcast them.
-    auto clone = event->Clone();
+    // Messages which don't support `CloneForBroadcast` cannot be broadcast, and
+    // the ports library will not attempt to broadcast them.
+    auto clone = event->CloneForBroadcast();
     if (!clone) {
       NODECONTROLLER_WARNING("Attempt to broadcast unsupported message");
       break;
