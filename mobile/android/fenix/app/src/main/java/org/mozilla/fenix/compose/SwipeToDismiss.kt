@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION") // to be handled in https://bugzilla.mozilla.org/show_bug.cgi?id=1881735
+
 package org.mozilla.fenix.compose
 
 import androidx.compose.foundation.background
