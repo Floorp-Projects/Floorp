@@ -12,6 +12,8 @@ const { getAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
 );
 
+const DUPLICATE_ENGINE_ID = "f3094ab7-3302-4d5b-9f79-ea92c9a49f87";
+
 const enginesSettings = {
   version: SearchUtils.SETTINGS_VERSION,
   buildID: "TBD",
@@ -30,11 +32,13 @@ const enginesSettings = {
   },
   engines: [
     {
+      id: "engine1@search.mozilla.orgdefault",
       _metaData: { alias: null },
       _isAppProvided: true,
       _name: "engine1",
     },
     {
+      id: "engine2@search.mozilla.orgdefault",
       _metaData: { alias: null },
       _isAppProvided: true,
       _name: "engine2",
@@ -42,9 +46,10 @@ const enginesSettings = {
     // This is a user-installed engine - the only one that was listed due to the
     // original issue.
     {
+      id: DUPLICATE_ENGINE_ID,
       _name: "engine1",
       _shortName: "engine1",
-      _loadPath: "[test]oldduplicateversion",
+      _loadPath: "[https]oldduplicateversion",
       description: "An old near duplicate version of engine1",
       _iconURL:
         "data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAEAgQAhIOEAMjHyABIR0gA6ejpAGlqaQCpqKkAKCgoAPz9/AAZGBkAmJiYANjZ2ABXWFcAent6ALm6uQA8OjwAiIiIiIiIiIiIiI4oiL6IiIiIgzuIV4iIiIhndo53KIiIiB/WvXoYiIiIfEZfWBSIiIEGi/foqoiIgzuL84i9iIjpGIoMiEHoiMkos3FojmiLlUipYliEWIF+iDe0GoRa7D6GPbjcu1yIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -118,12 +123,17 @@ add_task(async function test_cached_duplicate() {
     "Should have successfully created the search service"
   );
 
-  let engine = await Services.search.getEngineByName("engine1");
+  let engine = Services.search.getEngineByName("engine1");
   let submission = engine.getSubmission("foo");
   Assert.equal(
     submission.uri.spec,
     "https://1.example.com/search?q=foo",
     "Should have not changed the app provided engine."
+  );
+
+  Assert.ok(
+    !(await Services.search.getEngineById(DUPLICATE_ENGINE_ID)),
+    "Should not have added the duplicate engine"
   );
 
   let engines = await Services.search.getEngines();
