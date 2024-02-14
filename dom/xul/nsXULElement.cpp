@@ -1283,6 +1283,12 @@ nsresult nsXULPrototypeElement::Deserialize(
     return NS_ERROR_UNEXPECTED;
   }
 
+  if (mNodeInfo->Equals(nsGkAtoms::parsererror) &&
+      mNodeInfo->NamespaceEquals(
+          nsDependentAtomString(nsGkAtoms::nsuri_parsererror))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // Read Attributes
   rv = aStream->Read32(&number);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
