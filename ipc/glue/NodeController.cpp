@@ -10,6 +10,7 @@
 #include "chrome/common/ipc_message.h"
 #include "mojo/core/ports/name.h"
 #include "mojo/core/ports/node.h"
+#include "mojo/core/ports/port_locker.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/StaticPtr.h"
@@ -796,6 +797,15 @@ ScopedPort NodeController::InitChildProcess(UniquePtr<IPC::Channel> aChannel,
 
   auto ports = gNodeController->CreatePortPair();
   PortRef toMerge = ports.second.Release();
+
+  // Mark the port as expecting a pending merge. This is a duplicate of the
+  // information tracked by `mPendingMerges`, and was added by upstream
+  // chromium.
+  // See https://chromium-review.googlesource.com/c/chromium/src/+/3289065
+  {
+    mojo::core::ports::SinglePortLocker locker(&toMerge);
+    locker.port()->pending_merge_peer = true;
+  }
 
   auto nodeChannel = MakeRefPtr<NodeChannel>(
       kBrokerNodeName, std::move(aChannel), gNodeController, aParentPid);
