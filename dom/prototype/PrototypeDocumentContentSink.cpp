@@ -669,7 +669,15 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
     nsXULPrototypeCache::GetInstance()->HasPrototype(mDocumentURI,
                                                      &isCachedOnDisk);
     if (!isCachedOnDisk) {
-      nsXULPrototypeCache::GetInstance()->WritePrototype(mCurrentPrototype);
+      if (!mDocument->GetDocumentElement() ||
+          (mDocument->GetDocumentElement()->NodeInfo()->Equals(
+               nsGkAtoms::parsererror) &&
+           mDocument->GetDocumentElement()->NodeInfo()->NamespaceEquals(
+               nsDependentAtomString(nsGkAtoms::nsuri_parsererror)))) {
+        nsXULPrototypeCache::GetInstance()->RemovePrototype(mDocumentURI);
+      } else {
+        nsXULPrototypeCache::GetInstance()->WritePrototype(mCurrentPrototype);
+      }
     }
   }
 

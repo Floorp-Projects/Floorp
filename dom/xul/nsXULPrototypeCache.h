@@ -59,6 +59,7 @@ class nsXULPrototypeCache : public nsIObserver {
 
   nsXULPrototypeDocument* GetPrototype(nsIURI* aURI);
   nsresult PutPrototype(nsXULPrototypeDocument* aDocument);
+  void RemovePrototype(nsIURI* aURI) { mPrototypeTable.Remove(aURI); }
 
   JS::Stencil* GetStencil(nsIURI* aURI);
   nsresult PutStencil(nsIURI* aURI, JS::Stencil* aStencil);
