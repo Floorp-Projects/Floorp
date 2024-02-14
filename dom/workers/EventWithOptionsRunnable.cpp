@@ -31,8 +31,9 @@
 #include "mozilla/dom/WorkerCommon.h"
 
 namespace mozilla::dom {
-EventWithOptionsRunnable::EventWithOptionsRunnable(Worker& aWorker)
-    : WorkerDebuggeeRunnable(aWorker.mWorkerPrivate,
+EventWithOptionsRunnable::EventWithOptionsRunnable(Worker& aWorker,
+                                                   const char* aName)
+    : WorkerDebuggeeRunnable(aWorker.mWorkerPrivate, aName,
                              WorkerRunnable::WorkerThread),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}

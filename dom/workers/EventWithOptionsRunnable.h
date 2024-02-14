@@ -27,7 +27,8 @@ class WorkerPrivate;
 class EventWithOptionsRunnable : public WorkerDebuggeeRunnable,
                                  public StructuredCloneHolder {
  public:
-  explicit EventWithOptionsRunnable(Worker& aWorker);
+  explicit EventWithOptionsRunnable(
+      Worker& aWorker, const char* aName = "EventWithOptionsRunnable");
   void InitOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions,
                    const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 

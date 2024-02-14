@@ -30,7 +30,8 @@ namespace mozilla::dom {
 
 RTCTransformEventRunnable::RTCTransformEventRunnable(
     Worker& aWorker, FrameTransformerProxy* aProxy)
-    : EventWithOptionsRunnable(aWorker), mProxy(aProxy) {}
+    : EventWithOptionsRunnable(aWorker, "RTCTransformEventRunnable"),
+      mProxy(aProxy) {}
 
 RTCTransformEventRunnable::~RTCTransformEventRunnable() = default;
 

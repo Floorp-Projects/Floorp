@@ -68,7 +68,8 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
  public:
   ReportErrorRunnable(WorkerPrivate* aWorkerPrivate,
                       UniquePtr<WorkerErrorReport> aReport)
-      : WorkerDebuggeeRunnable(aWorkerPrivate), mReport(std::move(aReport)) {}
+      : WorkerDebuggeeRunnable(aWorkerPrivate, "ReportErrorRunnable"),
+        mReport(std::move(aReport)) {}
 
  private:
   virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
@@ -150,7 +151,7 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
 
  private:
   explicit ReportGenericErrorRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate) {
+      : WorkerDebuggeeRunnable(aWorkerPrivate, "ReportGenericErrorRunnable") {
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
 
