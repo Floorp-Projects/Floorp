@@ -517,25 +517,6 @@ BASE_EXPORT std::string JoinString(std::initializer_list<StringPiece> parts,
 BASE_EXPORT string16 JoinString(std::initializer_list<StringPiece16> parts,
                                 StringPiece16 separator);
 
-// Replace $1-$2-$3..$9 in the format string with values from |subst|.
-// Additionally, any number of consecutive '$' characters is replaced by that
-// number less one. Eg $$->$, $$$->$$, etc. The offsets parameter here can be
-// NULL. This only allows you to use up to nine replacements.
-BASE_EXPORT string16 ReplaceStringPlaceholders(
-    const string16& format_string,
-    const std::vector<string16>& subst,
-    std::vector<size_t>* offsets);
-
-BASE_EXPORT std::string ReplaceStringPlaceholders(
-    StringPiece format_string,
-    const std::vector<std::string>& subst,
-    std::vector<size_t>* offsets);
-
-// Single-string shortcut for ReplaceStringHolders. |offset| may be NULL.
-BASE_EXPORT string16 ReplaceStringPlaceholders(const string16& format_string,
-                                               const string16& a,
-                                               size_t* offset);
-
 #if defined(OS_WIN) && defined(BASE_STRING16_IS_STD_U16STRING)
 BASE_EXPORT TrimPositions TrimWhitespace(WStringPiece input,
                                          TrimPositions positions,
