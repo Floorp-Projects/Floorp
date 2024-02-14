@@ -7,12 +7,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
 #include "nsIBounceTrackingProtection.h"
-#include "BounceTrackingStateGlobal.h"
 #include "nsIClearDataService.h"
-#include "nsTHashMap.h"
-
-#include "mozilla/OriginAttributes.h"
-#include "mozilla/OriginAttributesHashKey.h"
 
 class nsIPrincipal;
 class nsITimer;
@@ -20,6 +15,9 @@ class nsITimer;
 namespace mozilla {
 
 class BounceTrackingState;
+class BounceTrackingStateGlobal;
+class BounceTrackingProtectionStorage;
+class OriginAttributes;
 
 extern LazyLogModule gBounceTrackingProtectionLog;
 
@@ -44,21 +42,11 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   BounceTrackingProtection();
   ~BounceTrackingProtection() = default;
 
-  // Map of origin attributes to global state object. This enables us to track
-  // bounce tracking state per OA, e.g. to separate private browsing from normal
-  // browsing.
-  nsTHashMap<OriginAttributesHashKey, RefPtr<BounceTrackingStateGlobal>>
-      mStateGlobal{};
-
-  // Getters for mStateGlobal.
-  BounceTrackingStateGlobal* GetOrCreateStateGlobal(
-      const OriginAttributes& aOriginAttributes);
-  BounceTrackingStateGlobal* GetOrCreateStateGlobal(nsIPrincipal* aPrincipal);
-  BounceTrackingStateGlobal* GetOrCreateStateGlobal(
-      BounceTrackingState* aBounceTrackingState);
-
   // Timer which periodically runs PurgeBounceTrackers.
   nsCOMPtr<nsITimer> mBounceTrackingPurgeTimer;
+
+  // Storage for user agent globals.
+  RefPtr<BounceTrackingProtectionStorage> mStorage;
 
   // Clear state for classified bounce trackers. To be called on an interval.
   using PurgeBounceTrackersMozPromise =
