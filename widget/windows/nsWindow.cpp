@@ -1332,10 +1332,10 @@ DWORD nsWindow::WindowStyle() {
 
 // Return nsWindow extended styles
 DWORD nsWindow::WindowExStyle() {
+  MOZ_ASSERT_IF(mIsAlert, mWindowType == WindowType::Dialog);
   switch (mWindowType) {
     case WindowType::Child:
       return 0;
-
     case WindowType::Popup: {
       DWORD extendedStyle = WS_EX_TOOLWINDOW;
       if (mPopupLevel == PopupLevel::Top) {
@@ -1343,18 +1343,17 @@ DWORD nsWindow::WindowExStyle() {
       }
       return extendedStyle;
     }
-
+    case WindowType::Dialog: {
+      if (mIsAlert) {
+        return WS_EX_TOOLWINDOW;
+      }
+      return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
+    }
     case WindowType::Sheet:
       MOZ_FALLTHROUGH_ASSERT("Sheets are macOS specific");
-    case WindowType::Dialog:
     case WindowType::TopLevel:
     case WindowType::Invisible:
       break;
-  }
-  if (mIsAlert) {
-    MOZ_ASSERT(mWindowType == WindowType::Dialog,
-               "Expect alert windows to have type=dialog");
-    return WS_EX_TOOLWINDOW;
   }
   return WS_EX_WINDOWEDGE;
 }
