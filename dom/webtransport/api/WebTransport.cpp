@@ -445,8 +445,10 @@ void WebTransport::RejectWaitingConnection(nsresult aRv) {
   // these steps.
   if (mState == WebTransportState::CLOSED ||
       mState == WebTransportState::FAILED) {
-    mChild->Shutdown(true);
-    mChild = nullptr;
+    if (mChild) {
+      mChild->Shutdown(true);
+      mChild = nullptr;
+    }
     // Cleanup should have been called, which means Ready has been
     // rejected and pulls resolved
     return;
