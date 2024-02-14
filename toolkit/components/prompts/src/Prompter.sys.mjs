@@ -1474,8 +1474,7 @@ class ModalPrompter {
     }
 
     if (flags & Ci.nsIPrompt.SHOW_SPINNER) {
-      // When bug 1879550 is fixed, add a higher-res version here
-      args.headerIconURL = "chrome://global/skin/icons/loading.png";
+      args.showSpinner = true;
     }
 
     if (this.async) {
