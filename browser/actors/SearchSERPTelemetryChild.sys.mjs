@@ -906,6 +906,8 @@ class SearchAdImpression {
  *  The key name of the data attribute to lookup.
  * @property {string | null} options.queryParamKey
  *  The key name of the query param value to lookup.
+ * @property {boolean | null} options.queryParamValueIsHref
+ *  Whether the query param value is expected to contain an href.
  */
 
 /**
@@ -947,7 +949,8 @@ class DomainExtractor {
             elements,
             origin,
             extractedDomains,
-            extractorInfo.options?.queryParamKey
+            extractorInfo.options?.queryParamKey,
+            extractorInfo.options?.queryParamValueIsHref
           );
           break;
         }
@@ -980,12 +983,15 @@ class DomainExtractor {
    *  The result set of domains extracted from the page.
    * @param {string | null} queryParam
    *  An optional query param to search for in an element's href attribute.
+   * @param {boolean | null} queryParamValueIsHref
+   *  Whether the query param value is expected to contain an href.
    */
   #fromElementsConvertHrefsIntoDomains(
     elements,
     origin,
     extractedDomains,
-    queryParam
+    queryParam,
+    queryParamValueIsHref
   ) {
     for (let element of elements) {
       let href = element.getAttribute("href");
@@ -1002,9 +1008,20 @@ class DomainExtractor {
         continue;
       }
 
-      let domain = queryParam ? url.searchParams.get(queryParam) : url.hostname;
-      if (domain && !extractedDomains.has(domain)) {
-        extractedDomains.add(domain);
+      if (queryParam) {
+        let paramValue = url.searchParams.get(queryParam);
+        if (queryParamValueIsHref) {
+          try {
+            paramValue = new URL(paramValue).hostname;
+          } catch (e) {
+            continue;
+          }
+        }
+        if (paramValue && !extractedDomains.has(paramValue)) {
+          extractedDomains.add(paramValue);
+        }
+      } else if (url.hostname && !extractedDomains.has(url.hostname)) {
+        extractedDomains.add(url.hostname);
       }
     }
   }
