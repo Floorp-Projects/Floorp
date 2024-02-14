@@ -227,7 +227,7 @@ add_task(async function test_scrollingScreenshotsOpen() {
       is(dimensions.height, endY - startY, "The box height is now 90");
 
       // reset screenshots box
-      mouse.click(scrollX + startX, scrollY + endY);
+      await helper.escapeKeyInContent();
       await helper.assertStateChange("crosshairs");
 
       await helper.dragOverlay(
@@ -247,7 +247,7 @@ add_task(async function test_scrollingScreenshotsOpen() {
       is(dimensions.height, endY - startY, "The box height is now 90");
 
       // reset screenshots box
-      mouse.click(10, 10);
+      await helper.escapeKeyInContent();
       await helper.assertStateChange("crosshairs");
 
       await helper.dragOverlay(
@@ -380,11 +380,7 @@ add_task(async function test_scrollIfByEdge() {
           contentInfo
         )}\n`
       );
-      mouse.down(startX, startY);
-      await helper.assertStateChange("resizing");
-      mouse.move(endX, endY);
-      mouse.up(endX, endY);
-      await helper.assertStateChange("selected");
+      await helper.dragOverlay(startX, startY, endX, endY, "selected");
 
       windowX = 1000;
       windowY = 1000;
@@ -423,20 +419,12 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
 
       await helper.dragOverlay(1020, 1020, 1120, 1120);
 
-      await SpecialPowers.spawn(browser, [], async () => {
-        let screenshotsChild = content.windowGlobalChild.getActor(
-          "ScreenshotsComponent"
-        );
-
-        // Test moving each corner of the region
-        screenshotsChild.overlay.highlightEl.focus();
-
-        EventUtils.synthesizeKey("ArrowLeft", { shiftKey: true }, content);
-        EventUtils.synthesizeKey("ArrowLeft", {}, content);
-
-        EventUtils.synthesizeKey("ArrowUp", { shiftKey: true }, content);
-        EventUtils.synthesizeKey("ArrowUp", {}, content);
-      });
+      await helper.moveOverlayViaKeyboard("highlight", [
+        { key: "ArrowLeft", options: { shiftKey: true } },
+        { key: "ArrowLeft", options: {} },
+        { key: "ArrowUp", options: { shiftKey: true } },
+        { key: "ArrowUp", options: {} },
+      ]);
 
       windowX = 989;
       windowY = 989;
@@ -457,20 +445,12 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
         scrollY + clientHeight - 20
       );
 
-      await SpecialPowers.spawn(browser, [], async () => {
-        let screenshotsChild = content.windowGlobalChild.getActor(
-          "ScreenshotsComponent"
-        );
-
-        // Test moving each corner of the region
-        screenshotsChild.overlay.highlightEl.focus();
-
-        EventUtils.synthesizeKey("ArrowRight", { shiftKey: true }, content);
-        EventUtils.synthesizeKey("ArrowRight", {}, content);
-
-        EventUtils.synthesizeKey("ArrowDown", { shiftKey: true }, content);
-        EventUtils.synthesizeKey("ArrowDown", {}, content);
-      });
+      await helper.moveOverlayViaKeyboard("highlight", [
+        { key: "ArrowRight", options: { shiftKey: true } },
+        { key: "ArrowRight", options: {} },
+        { key: "ArrowDown", options: { shiftKey: true } },
+        { key: "ArrowDown", options: {} },
+      ]);
 
       windowX = 1000;
       windowY = 1000;

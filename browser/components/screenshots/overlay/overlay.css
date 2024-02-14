@@ -24,6 +24,12 @@
   &[dragging] {
     cursor: grabbing;
   }
+
+  &[resizing] {
+    position: fixed;
+    width: 100% !important;
+    height: 100% !important;
+  }
 }
 
 #selection-container {

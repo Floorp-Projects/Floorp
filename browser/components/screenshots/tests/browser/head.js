@@ -19,6 +19,7 @@ const TEST_PAGE = TEST_ROOT + "test-page.html";
 const SHORT_TEST_PAGE = TEST_ROOT + "short-test-page.html";
 const LARGE_TEST_PAGE = TEST_ROOT + "large-test-page.html";
 const IFRAME_TEST_PAGE = TEST_ROOT + "iframe-test-page.html";
+const RESIZE_TEST_PAGE = TEST_ROOT + "test-page-resize.html";
 
 const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
   "resource:///modules/ScreenshotsUtils.sys.mjs"
@@ -152,20 +153,19 @@ class ScreenshotsHelper {
     });
   }
 
-  async getOverlayState() {
-    return ContentTask.spawn(this.browser, null, async () => {
+  waitForStateChange(newState) {
+    return SpecialPowers.spawn(this.browser, [newState], async state => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
+
+      await ContentTaskUtils.waitForCondition(() => {
+        info(`got ${screenshotsChild.overlay.state}. expected ${state}`);
+        return screenshotsChild.overlay.state === state;
+      }, `Wait for overlay state to be ${state}`);
+
       return screenshotsChild.overlay.state;
     });
-  }
-
-  async waitForStateChange(newState) {
-    return BrowserTestUtils.waitForCondition(async () => {
-      let state = await this.getOverlayState();
-      return state === newState ? state : "";
-    }, `Waiting for state change to ${newState}`);
   }
 
   async assertStateChange(newState) {
@@ -285,17 +285,114 @@ class ScreenshotsHelper {
     this.endY = endY;
   }
 
+  async moveOverlayViaKeyboard(mover, events) {
+    await SpecialPowers.spawn(
+      this.browser,
+      [mover, events],
+      async (moverToFocus, eventsArr) => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
+
+        let overlay = screenshotsChild.overlay;
+
+        switch (moverToFocus) {
+          case "highlight":
+            overlay.highlightEl.focus({ focusVisible: true });
+            break;
+          case "mover-bottomLeft":
+            overlay.bottomLeftMover.focus({ focusVisible: true });
+            break;
+          case "mover-bottomRight":
+            overlay.bottomRightMover.focus({ focusVisible: true });
+            break;
+          case "mover-topLeft":
+            overlay.topLeftMover.focus({ focusVisible: true });
+            break;
+          case "mover-topRight":
+            overlay.topRightMover.focus({ focusVisible: true });
+            break;
+        }
+        screenshotsChild.overlay.highlightEl.focus();
+
+        for (let event of eventsArr) {
+          EventUtils.synthesizeKey(
+            event.key,
+            { type: "keydown", ...event.options },
+            content
+          );
+
+          await ContentTaskUtils.waitForCondition(
+            () => overlay.state === "resizing",
+            "Wait for overlay state to be resizing"
+          );
+
+          EventUtils.synthesizeKey(
+            event.key,
+            { type: "keyup", ...event.options },
+            content
+          );
+
+          await ContentTaskUtils.waitForCondition(
+            () => overlay.state === "selected",
+            "Wait for overlay state to be selected"
+          );
+        }
+      }
+    );
+  }
+
   async scrollContentWindow(x, y) {
     let promise = BrowserTestUtils.waitForContentEvent(this.browser, "scroll");
-    await ContentTask.spawn(this.browser, [x, y], async ([xPos, yPos]) => {
-      content.window.scroll(xPos, yPos);
+    let contentDims = await this.getContentDimensions();
+    await ContentTask.spawn(
+      this.browser,
+      [x, y, contentDims],
+      async ([xPos, yPos, cDims]) => {
+        content.window.scroll(xPos, yPos);
 
-      await ContentTaskUtils.waitForCondition(() => {
-        return (
-          content.window.scrollX === xPos && content.window.scrollY === yPos
+        info(JSON.stringify(cDims, null, 2));
+        const scrollbarHeight = {};
+        const scrollbarWidth = {};
+        content.window.windowUtils.getScrollbarSize(
+          false,
+          scrollbarWidth,
+          scrollbarHeight
         );
-      }, `Waiting for window to scroll to ${xPos}, ${yPos}`);
-    });
+
+        await ContentTaskUtils.waitForCondition(() => {
+          function isCloseEnough(a, b, diff) {
+            return Math.abs(a - b) <= diff;
+          }
+
+          info(
+            `scrollbarWidth: ${scrollbarWidth.value}, scrollbarHeight: ${scrollbarHeight.value}`
+          );
+          info(
+            `scrollX: ${content.window.scrollX}, scrollY: ${content.window.scrollY}, scrollMaxX: ${content.window.scrollMaxX}, scrollMaxY: ${content.window.scrollMaxY}`
+          );
+
+          // Sometimes (read intermittently) the scroll width/height will be
+          // off by the width/height of the scrollbar when we are expecting the
+          // page to be scrolled to the very end. To mitigate this, we check
+          // that the below differences are within the scrollbar width/height.
+          return (
+            (content.window.scrollX === xPos ||
+              isCloseEnough(
+                cDims.clientWidth + content.window.scrollX,
+                cDims.scrollWidth,
+                scrollbarWidth.value + 1
+              )) &&
+            (content.window.scrollY === yPos ||
+              isCloseEnough(
+                cDims.clientHeight + content.window.scrollY,
+                cDims.scrollHeight,
+                scrollbarHeight.value + 1
+              ))
+          );
+        }, `Waiting for window to scroll to ${xPos}, ${yPos}`);
+      }
+    );
     await promise;
   }
 
@@ -310,6 +407,14 @@ class ScreenshotsHelper {
         );
       }, `Waiting for window to scroll to ${xPos}, ${yPos}`);
     });
+  }
+
+  async resizeContentWindow(width, height) {
+    this.browser.ownerGlobal.resizeTo(width, height);
+    await TestUtils.waitForCondition(
+      () => window.outerHeight === height && window.outerWidth === width,
+      "Waiting for window to resize"
+    );
   }
 
   async clickDownloadButton() {
@@ -392,18 +497,25 @@ class ScreenshotsHelper {
     mouse.click(x, y);
   }
 
-  getTestPageElementRect() {
-    return ContentTask.spawn(this.browser, [], async () => {
-      let ele = content.document.getElementById("testPageElement");
+  escapeKeyInContent() {
+    return SpecialPowers.spawn(this.browser, [], () => {
+      EventUtils.synthesizeKey("KEY_Escape", {}, content);
+    });
+  }
+
+  getTestPageElementRect(elementId = "testPageElement") {
+    return ContentTask.spawn(this.browser, [elementId], async id => {
+      let ele = content.document.getElementById(id);
       return ele.getBoundingClientRect();
     });
   }
 
-  async clickTestPageElement() {
-    let rect = await this.getTestPageElementRect();
+  async clickTestPageElement(elementId = "testPageElement") {
+    let rect = await this.getTestPageElementRect(elementId);
+    let dims = await this.getContentDimensions();
 
-    let x = Math.floor(rect.x + rect.width / 2);
-    let y = Math.floor(rect.y + rect.height / 2);
+    let x = Math.floor(rect.x + dims.scrollX + rect.width / 2);
+    let y = Math.floor(rect.y + dims.scrollY + rect.height / 2);
 
     mouse.move(x, y);
     await this.waitForHoverElementRect(rect.width, rect.height);
@@ -414,12 +526,14 @@ class ScreenshotsHelper {
   }
 
   async zoomBrowser(zoom) {
+    let promise = BrowserTestUtils.waitForContentEvent(this.browser, "resize");
     await SpecialPowers.spawn(this.browser, [zoom], zoomLevel => {
       const { Layout } = ChromeUtils.importESModule(
         "chrome://mochitests/content/browser/accessible/tests/browser/Layout.sys.mjs"
       );
       Layout.zoomDocument(content.document, zoomLevel);
     });
+    await promise;
   }
 
   /**
@@ -528,17 +642,28 @@ class ScreenshotsHelper {
     });
   }
 
-  getScreenshotsOverlayDimensions() {
+  async getScreenshotsOverlayDimensions() {
     return ContentTask.spawn(this.browser, null, async () => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
       Assert.ok(screenshotsChild.overlay.initialized, "The overlay exists");
 
+      let screenshotsContainer = screenshotsChild.overlay.screenshotsContainer;
+
+      await ContentTaskUtils.waitForCondition(() => {
+        return !screenshotsContainer.hasAttribute("resizing");
+      }, "Waiting for overlay to be done resizing");
+
+      info(
+        `${screenshotsContainer.style.width} ${
+          screenshotsContainer.style.height
+        } ${screenshotsContainer.hasAttribute("resizing")}`
+      );
+
       return {
-        scrollWidth: screenshotsChild.overlay.screenshotsContainer.scrollWidth,
-        scrollHeight:
-          screenshotsChild.overlay.screenshotsContainer.scrollHeight,
+        scrollWidth: screenshotsContainer.scrollWidth,
+        scrollHeight: screenshotsContainer.scrollHeight,
       };
     });
   }
@@ -563,6 +688,41 @@ class ScreenshotsHelper {
             screenshotsContainer.scrollWidth !== prevWidth
           );
         }, "Wait for selection box width change");
+      }
+    );
+  }
+
+  waitForOverlaySizeChangeTo(width, height) {
+    return ContentTask.spawn(
+      this.browser,
+      [width, height],
+      async ([newWidth, newHeight]) => {
+        await ContentTaskUtils.waitForCondition(() => {
+          let {
+            innerHeight,
+            innerWidth,
+            scrollMaxY,
+            scrollMaxX,
+            scrollMinY,
+            scrollMinX,
+          } = content.window;
+          let scrollWidth = innerWidth + scrollMaxX - scrollMinX;
+          let scrollHeight = innerHeight + scrollMaxY - scrollMinY;
+
+          const scrollbarHeight = {};
+          const scrollbarWidth = {};
+          content.window.windowUtils.getScrollbarSize(
+            false,
+            scrollbarWidth,
+            scrollbarHeight
+          );
+          scrollWidth -= scrollbarWidth.value;
+          scrollHeight -= scrollbarHeight.value;
+          info(
+            `${scrollHeight}, ${newHeight}, ${scrollWidth}, ${newWidth}, ${content.window.scrollMaxX}`
+          );
+          return scrollHeight === newHeight && scrollWidth === newWidth;
+        }, "Wait for document size change");
       }
     );
   }
