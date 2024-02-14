@@ -92,6 +92,8 @@ support-files = [
   "import_shared_in_worker.js",
   "contextual_worker.js",
   "sync_and_async_in_worker.js",
+  "lazy_non_shared_in_worker.js",
+  "lazy_shared_in_worker.js",
 ]
 
 ["test_ComponentEnvironment.js"]
@@ -217,6 +219,11 @@ support-files = [
 ["test_deepFreezeClone.js"]
 
 ["test_defineESModuleGetters.js"]
+
+["test_defineESModuleGetters_options.js"]
+
+["test_defineESModuleGetters_options_worker.js"]
+skip-if = ["os == 'android'"]
 
 ["test_defineModuleGetter.js"]
 
