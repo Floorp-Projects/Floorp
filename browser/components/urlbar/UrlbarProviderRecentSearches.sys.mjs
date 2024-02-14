@@ -14,6 +14,7 @@ import {
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -22,12 +23,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
 // These prefs are relative to the `browser.urlbar` branch.
 const ENABLED_PREF = "recentsearches.featureGate";
 const SUGGEST_PREF = "suggest.recentsearches";
-const EXPIRATION_PREF = "recentsearches.expirationDays";
+const EXPIRATION_PREF = "recentsearches.expirationMs";
+const LASTDEFAULTCHANGED_PREF = "recentsearches.lastDefaultChanged";
 
 /**
  * A provider that returns the Recent Searches performed by the user.
  */
 class ProviderRecentSearches extends UrlbarProvider {
+  constructor(...args) {
+    super(...args);
+    Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
+  }
+
   get name() {
     return "RecentSearches";
   }
@@ -88,10 +95,22 @@ class ProviderRecentSearches extends UrlbarProvider {
       source: engine.name,
     });
 
-    let expiration =
-      1000 * 60 * 60 * 24 * lazy.UrlbarPrefs.get(EXPIRATION_PREF);
+    let expiration = parseInt(lazy.UrlbarPrefs.get(EXPIRATION_PREF), 10);
+    let lastDefaultChanged = parseInt(
+      lazy.UrlbarPrefs.get(LASTDEFAULTCHANGED_PREF),
+      10
+    );
+    let now = Date.now();
+
+    // We only want to show searches since the last engine change, if we
+    // havent changed the engine we expire the display of the searches
+    // after a period of time.
+    if (lastDefaultChanged != -1) {
+      expiration = Math.min(expiration, now - lastDefaultChanged);
+    }
+
     results = results.filter(
-      result => result.lastUsed / 1000 > Date.now() - expiration
+      result => now - Math.floor(result.lastUsed / 1000) < expiration
     );
     results.sort((a, b) => b.lastUsed - a.lastUsed);
 
@@ -114,6 +133,14 @@ class ProviderRecentSearches extends UrlbarProvider {
         }
       );
       addCallback(this, res);
+    }
+  }
+
+  observe(subject, topic, data) {
+    switch (data) {
+      case lazy.SearchUtils.MODIFIED_TYPE.DEFAULT:
+        lazy.UrlbarPrefs.set(LASTDEFAULTCHANGED_PREF, Date.now().toString());
+        break;
     }
   }
 }
