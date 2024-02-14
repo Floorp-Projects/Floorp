@@ -21,8 +21,12 @@ ChromeUtils.defineLazyGetter(lazy, "MOZ_ACTION_REGEX", () => {
   return /^moz-action:([^,]+),(.*)$/;
 });
 
-ChromeUtils.defineLazyGetter(lazy, "gCryptoHash", () => {
-  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+ChromeUtils.defineLazyGetter(lazy, "CryptoHash", () => {
+  return Components.Constructor(
+    "@mozilla.org/security/hash;1",
+    "nsICryptoHash",
+    "initWithString"
+  );
 });
 
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where
@@ -1828,25 +1832,50 @@ export var PlacesUtils = {
    * @param {string} [format] Which format of the hash to return:
    *   - "ascii" for ascii format.
    *   - "hex" for hex format.
-   * @returns {string} md5 hash of the input string in the required format.
+   * @returns {string} hash of the input string in the required format.
+   * @deprecated use sha256 instead.
    */
   md5(data, { format = "ascii" } = {}) {
-    lazy.gCryptoHash.init(lazy.gCryptoHash.MD5);
+    let hasher = new lazy.CryptoHash("md5");
 
-    // Convert the data to a byte array for hashing
-    lazy.gCryptoHash.update(
-      data.split("").map(c => c.charCodeAt(0)),
-      data.length
-    );
+    // Convert the data to a byte array for hashing.
+    data = new TextEncoder().encode(data);
+    hasher.update(data, data.length);
     switch (format) {
       case "hex":
-        let hash = lazy.gCryptoHash.finish(false);
+        let hash = hasher.finish(false);
         return Array.from(hash, (c, i) =>
           hash.charCodeAt(i).toString(16).padStart(2, "0")
         ).join("");
       case "ascii":
       default:
-        return lazy.gCryptoHash.finish(true);
+        return hasher.finish(true);
+    }
+  },
+
+  /**
+   * Run some text through SHA256 and return the hash.
+   * @param {string} data The string to hash.
+   * @param {string} [format] Which format of the hash to return:
+   *   - "ascii" for ascii format.
+   *   - "hex" for hex format.
+   * @returns {string} hash of the input string in the required format.
+   */
+  sha256(data, { format = "ascii" } = {}) {
+    let hasher = new lazy.CryptoHash("sha256");
+
+    // Convert the data to a byte array for hashing.
+    data = new TextEncoder().encode(data);
+    hasher.update(data, data.length);
+    switch (format) {
+      case "hex":
+        let hash = hasher.finish(false);
+        return Array.from(hash, (c, i) =>
+          hash.charCodeAt(i).toString(16).padStart(2, "0")
+        ).join("");
+      case "ascii":
+      default:
+        return hasher.finish(true);
     }
   },
 
