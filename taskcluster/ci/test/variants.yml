@@ -134,7 +134,7 @@ conditioned_profile:
 socketprocess:
     description: "{description} with socket process enabled"
     component: "Core::Networking"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "spi"
     mozinfo: "socketprocess_e10s"
     merge:
@@ -146,7 +146,7 @@ socketprocess:
 socketprocess_networking:
     description: "{description} with networking on socket process enabled"
     component: "Core::Networking"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "spi-nw"
     mozinfo: "socketprocess_networking"
     merge:
@@ -304,7 +304,7 @@ msix:
 http3:
     description: "{description} with http3 server"
     component: "Core::Networking"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "http3"
     mozinfo: "http3"
     merge:
@@ -315,7 +315,7 @@ http3:
 http2:
     description: "{description} with http2 server"
     component: "Core::Networking"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "http2"
     mozinfo: "http2"
     merge:
