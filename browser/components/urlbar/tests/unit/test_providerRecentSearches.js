@@ -4,12 +4,13 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  UrlbarProviderRecentSearches:
-    "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
-let RECENTSEARCHES_ENABLED_PREF = "browser.urlbar.recentsearches.featureGate";
-let RECENTSEARCHES_SUGGESTS_PREF = "browser.urlbar.suggest.recentsearches";
+let ENABLED_PREF = "recentsearches.featureGate";
+let EXPIRE_PREF = "recentsearches.expirationMs";
+let SUGGESTS_PREF = "suggest.recentsearches";
 
 let TEST_SEARCHES = ["Bob Vylan", "Glasgow Weather", "Joy Formidable"];
 let defaultEngine;
@@ -24,12 +25,15 @@ function makeRecentSearchResult(context, engine, suggestion) {
 }
 
 async function addSearches(searches = TEST_SEARCHES) {
-  await UrlbarTestUtils.formHistory.add(
-    searches.map(value => ({
-      value,
-      source: defaultEngine.name,
-    }))
-  );
+  // Add the searches sequentially so they get a new timestamp
+  // and we can order by the time added.
+  for (let search of searches) {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 10));
+    await UrlbarTestUtils.formHistory.add([
+      { value: search, source: defaultEngine.name },
+    ]);
+  }
 }
 
 add_setup(async () => {
@@ -43,14 +47,14 @@ add_setup(async () => {
 
   registerCleanupFunction(() => {
     Services.search.defaultEngine = oldCurrentEngine;
-    Services.prefs.clearUserPref(RECENTSEARCHES_ENABLED_PREF);
-    Services.prefs.clearUserPref(RECENTSEARCHES_SUGGESTS_PREF);
+    UrlbarPrefs.clear(ENABLED_PREF);
+    UrlbarPrefs.clear(SUGGESTS_PREF);
   });
 });
 
 add_task(async function test_enabled() {
-  Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, true);
-  Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, true);
+  UrlbarPrefs.set(ENABLED_PREF, true);
+  UrlbarPrefs.set(SUGGESTS_PREF, true);
   await addSearches();
   let context = createContext("", { isPrivate: false });
   await check_results({
@@ -64,8 +68,8 @@ add_task(async function test_enabled() {
 });
 
 add_task(async function test_disabled() {
-  Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, false);
-  Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, false);
+  UrlbarPrefs.set(ENABLED_PREF, false);
+  UrlbarPrefs.set(SUGGESTS_PREF, false);
   await addSearches();
   await check_results({
     context: createContext("", { isPrivate: false }),
@@ -74,8 +78,8 @@ add_task(async function test_disabled() {
 });
 
 add_task(async function test_most_recent_shown() {
-  Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, true);
-  Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, true);
+  UrlbarPrefs.set(ENABLED_PREF, true);
+  UrlbarPrefs.set(SUGGESTS_PREF, true);
 
   await addSearches(Array.from(Array(10).keys()).map(i => `Search ${i}`));
   let context = createContext("", { isPrivate: false });
@@ -93,8 +97,8 @@ add_task(async function test_most_recent_shown() {
 });
 
 add_task(async function test_per_engine() {
-  Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, true);
-  Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, true);
+  UrlbarPrefs.set(ENABLED_PREF, true);
+  UrlbarPrefs.set(SUGGESTS_PREF, true);
 
   let oldEngine = defaultEngine;
   await addSearches();
@@ -122,32 +126,26 @@ add_task(async function test_per_engine() {
     ],
   });
 
-  info("Delete one of the results");
-  UrlbarProviderRecentSearches.onEngagement(
-    null,
-    context,
-    { selType: "dismiss", result: context.results[0] },
-    { removeResult: () => {} }
-  );
-
-  info("The result should be deleted");
-  context = createContext("", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
-      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
-    ],
-  });
-
   defaultEngine = oldEngine;
   await Services.search.setDefault(
     defaultEngine,
     Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
   );
 
-  info("The same search term still exists on different engine");
+  info("We only show searches made since last default engine change");
   context = createContext("", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [],
+  });
+  await UrlbarTestUtils.formHistory.clear();
+});
+
+add_task(async function test_expiry() {
+  UrlbarPrefs.set(ENABLED_PREF, true);
+  UrlbarPrefs.set(SUGGESTS_PREF, true);
+  await addSearches();
+  let context = createContext("", { isPrivate: false });
   await check_results({
     context,
     matches: [
@@ -155,5 +153,15 @@ add_task(async function test_per_engine() {
       makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
       makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
     ],
+  });
+
+  let shortExpiration = 100;
+  UrlbarPrefs.set(EXPIRE_PREF, shortExpiration.toString());
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, shortExpiration * 2));
+
+  await check_results({
+    context: createContext("", { isPrivate: false }),
+    matches: [],
   });
 });

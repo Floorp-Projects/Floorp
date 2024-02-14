@@ -483,8 +483,14 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The maximum number of recent searches we will show.
   ["recentsearches.maxResults", 5],
 
-  // We only show recent searches within the past 31 days by default.
-  ["recentsearches.expirationDays", 31],
+  // We only show recent searches within the past 3 days by default.
+  // Stored as a string as some code handle timestamp sized int's.
+  ["recentsearches.expirationMs", (1000 * 60 * 60 * 24 * 3).toString()],
+
+  // Store the time the last default engine changed so we can only show
+  // recent searches since then.
+  // Stored as a string as some code handle timestamp sized int's.
+  ["recentsearches.lastDefaultChanged", "-1"],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([
