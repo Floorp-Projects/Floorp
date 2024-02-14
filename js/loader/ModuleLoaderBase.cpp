@@ -1047,6 +1047,10 @@ void ModuleLoaderBase::Shutdown() {
   mLoader = nullptr;
 }
 
+bool ModuleLoaderBase::HasFetchingModules() const {
+  return !mFetchingModules.IsEmpty();
+}
+
 bool ModuleLoaderBase::HasPendingDynamicImports() const {
   return !mDynamicImportRequests.isEmpty();
 }

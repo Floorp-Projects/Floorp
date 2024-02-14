@@ -8,9 +8,12 @@
 #define mozJSModuleLoader_h
 
 #include "SyncModuleLoader.h"
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FileLocation.h"
+#include "mozilla/Maybe.h"  // mozilla::Maybe
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"  // RefPtr, mozilla::StaticRefPtr
 #include "mozilla/StaticPtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsISupports.h"
@@ -36,6 +39,12 @@ class ModuleLoadRequest;
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
 #  define STARTUP_RECORDER_ENABLED
 #endif
+
+namespace mozilla::loader {
+
+class NonSharedGlobalSyncModuleLoaderScope;
+
+}  // namespace mozilla::loader
 
 class mozJSModuleLoader final : public nsIMemoryReporter {
  public:
@@ -67,6 +76,13 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
   JSObject* GetSharedGlobal(JSContext* aCx);
 
+ private:
+  void InitSyncModuleLoaderForGlobal(nsIGlobalObject* aGlobal);
+  void DisconnectSyncModuleLoaderFromGlobal();
+
+  friend class mozilla::loader::NonSharedGlobalSyncModuleLoaderScope;
+
+ public:
   static mozJSModuleLoader* GetDevToolsLoader() { return sDevToolsLoader; }
   static mozJSModuleLoader* GetOrCreateDevToolsLoader();
 
@@ -116,6 +132,9 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   nsresult IsESModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
   bool IsDevToolsLoader() const { return this == sDevToolsLoader; }
+
+  static bool IsSharedSystemGlobal(nsIGlobalObject* aGlobal);
+  static bool IsDevToolsLoaderGlobal(nsIGlobalObject* aGlobal);
 
   // Public methods for use from SyncModuleLoader.
   static bool IsTrustedScheme(nsIURI* aURI);
@@ -261,4 +280,55 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   RefPtr<mozilla::loader::SyncModuleLoader> mModuleLoader;
 };
 
-#endif
+namespace mozilla::loader {
+
+// Automatically allocate and initialize a sync module loader for given
+// non-shared global, and override the module loader for the global with sync
+// module loader.
+//
+// This is not re-entrant, and the consumer must check IsActive method before
+// allocating this on the stack.
+//
+// The consumer should ensure the target global's module loader has no
+// ongoing fetching modules (ModuleLoaderBase::HasFetchingModules).
+// If there's any fetching modules, the consumer should wait for them before
+// allocating this class on the stack.
+//
+// The consumer should also verify that the target global has module loader,
+// as a part of the above step.
+//
+// The loader returned by ActiveLoader can be reused only when
+// ActiveLoader's global matches the global the consumer wants to use.
+class MOZ_STACK_CLASS NonSharedGlobalSyncModuleLoaderScope {
+ public:
+  NonSharedGlobalSyncModuleLoaderScope(JSContext* aCx,
+                                       nsIGlobalObject* aGlobal);
+  ~NonSharedGlobalSyncModuleLoaderScope();
+
+  // After successfully importing a module graph, move all imported modules to
+  // the target global's module loader.
+  void Finish();
+
+  // Returns true if another instance of NonSharedGlobalSyncModuleLoaderScope
+  // is on stack.
+  static bool IsActive();
+
+  static mozJSModuleLoader* ActiveLoader();
+
+ private:
+  RefPtr<mozJSModuleLoader> mLoader;
+
+  // The module loader on the stack.
+  // This is used by another sync module load during a sync module load is
+  // ongoing.
+  static mozJSModuleLoader* sActiveLoader;
+
+  // The module loader of the target global.
+  RefPtr<JS::loader::ModuleLoaderBase> mAsyncModuleLoader;
+
+  mozilla::Maybe<JS::loader::AutoOverrideModuleLoader> mMaybeOverride;
+};
+
+}  // namespace mozilla::loader
+
+#endif  // mozJSModuleLoader_h
