@@ -31,7 +31,7 @@ class WorkManagerSyncManagerTest {
         mockTags = mock()
         mockTaskExecutor = mock()
         `when`(mockParam.taskExecutor).thenReturn(mockTaskExecutor)
-        `when`(mockTaskExecutor.backgroundExecutor).thenReturn(mock())
+        `when`(mockTaskExecutor.serialTaskExecutor).thenReturn(mock())
         `when`(mockParam.tags).thenReturn(mockTags)
     }
 
