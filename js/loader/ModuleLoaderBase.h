@@ -282,6 +282,8 @@ class ModuleLoaderBase : public nsISupports {
 
   nsIGlobalObject* GetGlobalObject() const { return mGlobalObject; }
 
+  bool HasFetchingModules() const;
+
   bool HasPendingDynamicImports() const;
   void CancelDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
 #ifdef DEBUG

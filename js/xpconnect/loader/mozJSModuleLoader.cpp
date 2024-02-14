@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadRequest.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
 #include "mozilla/Attributes.h"
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
+#include "mozilla/RefPtr.h"      // RefPtr, mozilla::StaticRefPtr
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <cstdarg>
@@ -488,6 +490,35 @@ mozJSModuleLoader* mozJSModuleLoader::GetOrCreateDevToolsLoader() {
   return sDevToolsLoader;
 }
 
+void mozJSModuleLoader::InitSyncModuleLoaderForGlobal(
+    nsIGlobalObject* aGlobal) {
+  MOZ_ASSERT(!mLoaderGlobal);
+  MOZ_ASSERT(!mModuleLoader);
+
+  RefPtr<SyncScriptLoader> scriptLoader = new SyncScriptLoader;
+  mModuleLoader = new SyncModuleLoader(scriptLoader, aGlobal);
+  mLoaderGlobal = aGlobal->GetGlobalJSObject();
+}
+
+void mozJSModuleLoader::DisconnectSyncModuleLoaderFromGlobal() {
+  MOZ_ASSERT(mLoaderGlobal);
+  MOZ_ASSERT(mModuleLoader);
+
+  mLoaderGlobal = nullptr;
+  Unload();
+}
+
+/* static */
+bool mozJSModuleLoader::IsSharedSystemGlobal(nsIGlobalObject* aGlobal) {
+  return sSelf->IsLoaderGlobal(aGlobal->GetGlobalJSObject());
+}
+
+/* static */
+bool mozJSModuleLoader::IsDevToolsLoaderGlobal(nsIGlobalObject* aGlobal) {
+  return sDevToolsLoader &&
+         sDevToolsLoader->IsLoaderGlobal(aGlobal->GetGlobalJSObject());
+}
+
 // This requires that the keys be strings and the values be pointers.
 template <class Key, class Data, class UserData, class Converter>
 static size_t SizeOfTableExcludingThis(
@@ -695,10 +726,12 @@ nsresult mozJSModuleLoader::LoadSingleModuleScript(
 #ifdef STARTUP_RECORDER_ENABLED
   if (aModuleLoader == sSelf->mModuleLoader) {
     sSelf->RecordImportStack(aCx, aRequest);
-  } else {
-    MOZ_ASSERT(sDevToolsLoader);
-    MOZ_ASSERT(aModuleLoader == sDevToolsLoader->mModuleLoader);
+  } else if (sDevToolsLoader &&
+             aModuleLoader == sDevToolsLoader->mModuleLoader) {
     sDevToolsLoader->RecordImportStack(aCx, aRequest);
+  } else {
+    // NOTE: Do not record import stack for non-shared globals, given the
+    //       loader is associated with the global only while importing.
   }
 #endif
 
@@ -1923,6 +1956,58 @@ size_t mozJSModuleLoader::ModuleEntry::SizeOfIncludingThis(
   n += aMallocSizeOf(location);
 
   return n;
+}
+
+//----------------------------------------------------------------------
+
+/* static */
+mozJSModuleLoader* NonSharedGlobalSyncModuleLoaderScope::sActiveLoader =
+    nullptr;
+
+NonSharedGlobalSyncModuleLoaderScope::NonSharedGlobalSyncModuleLoaderScope(
+    JSContext* aCx, nsIGlobalObject* aGlobal) {
+  // Only the main thread is supported for now.
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mozJSModuleLoader::IsSharedSystemGlobal(aGlobal));
+  MOZ_ASSERT(!mozJSModuleLoader::IsDevToolsLoaderGlobal(aGlobal));
+
+  mAsyncModuleLoader = aGlobal->GetModuleLoader(aCx);
+  MOZ_ASSERT(mAsyncModuleLoader,
+             "The consumer should guarantee the global returns non-null module "
+             "loader");
+
+  mLoader = new mozJSModuleLoader();
+  RegisterWeakMemoryReporter(mLoader);
+  mLoader->InitSyncModuleLoaderForGlobal(aGlobal);
+
+  mAsyncModuleLoader->CopyModulesTo(mLoader->mModuleLoader);
+
+  mMaybeOverride.emplace(mAsyncModuleLoader, mLoader->mModuleLoader);
+
+  MOZ_ASSERT(!sActiveLoader);
+  sActiveLoader = mLoader;
+}
+
+NonSharedGlobalSyncModuleLoaderScope::~NonSharedGlobalSyncModuleLoaderScope() {
+  MOZ_ASSERT(sActiveLoader == mLoader);
+  sActiveLoader = nullptr;
+
+  mLoader->DisconnectSyncModuleLoaderFromGlobal();
+  UnregisterWeakMemoryReporter(mLoader);
+}
+
+void NonSharedGlobalSyncModuleLoaderScope::Finish() {
+  mLoader->mModuleLoader->MoveModulesTo(mAsyncModuleLoader);
+}
+
+/* static */
+bool NonSharedGlobalSyncModuleLoaderScope::IsActive() {
+  return !!sActiveLoader;
+}
+
+/* static */
+mozJSModuleLoader* NonSharedGlobalSyncModuleLoaderScope::ActiveLoader() {
+  return sActiveLoader;
 }
 
 //----------------------------------------------------------------------
