@@ -102,6 +102,27 @@ sysroot-wasm32-wasi-clang-17:
             - linux64-clang-17-stage1
             - wasm32-wasi-compiler-rt-17
 
+sysroot-wasm32-wasi-clang-18:
+    description: "Sysroot for wasi"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(sysroot-wasi-18)
+    run:
+        script: build-sysroot-wasi.sh
+        arguments:
+            - wasi-sdk.patch
+        resources:
+            - taskcluster/scripts/misc/wasi-sdk.patch
+        toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
+    fetches:
+        fetch:
+            - clang-18
+            - wasi-sdk
+        toolchain:
+            - linux64-clang-18-stage1
+            - wasm32-wasi-compiler-rt-18
+
 sysroot-wasm32-wasi-clang-trunk:
     description: "Sysroot for wasi"
     attributes:
