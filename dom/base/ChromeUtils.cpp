@@ -784,85 +784,11 @@ void ChromeUtils::ImportESModule(
   }
 }
 
-// An integer encoding for ImportESModuleOptionsDictionary, to pass the value
-// to the lazy getters.
-class EncodedOptions {
- public:
-  explicit EncodedOptions(const ImportESModuleOptionsDictionary& aOptions) {
-    uint32_t globalFlag = 0;
-    if (aOptions.mGlobal.WasPassed()) {
-      globalFlag = uint32_t(aOptions.mGlobal.Value()) + 1;
-    }
-
-    uint32_t devtoolsFlag = 0;
-    if (aOptions.mLoadInDevToolsLoader.WasPassed()) {
-      if (aOptions.mLoadInDevToolsLoader.Value()) {
-        devtoolsFlag = DevToolsFlag_True;
-      } else {
-        devtoolsFlag = DevToolsFlag_False;
-      }
-    }
-
-    mValue = globalFlag | devtoolsFlag;
-  }
-
-  explicit EncodedOptions(uint32_t aValue) : mValue(aValue) {}
-
-  int32_t toInt32() const { return int32_t(mValue); }
-
-  void DecodeInto(ImportESModuleOptionsDictionary& aOptions) {
-    uint32_t globalFlag = mValue & GlobalFlag_Mask;
-    if (globalFlag == 0) {
-      aOptions.mGlobal.Reset();
-    } else {
-      aOptions.mGlobal.Construct(ImportESModuleTargetGlobal(globalFlag - 1));
-    }
-
-    uint32_t devtoolsFlag = mValue & DevToolsFlag_Mask;
-    switch (devtoolsFlag) {
-      case DevToolsFlag_NotPassed:
-        aOptions.mLoadInDevToolsLoader.Reset();
-        break;
-      case DevToolsFlag_False:
-        aOptions.mLoadInDevToolsLoader.Construct(false);
-        break;
-      case DevToolsFlag_True:
-        aOptions.mLoadInDevToolsLoader.Construct(true);
-        break;
-      default:
-        MOZ_CRASH("Unknown DevToolsFlag");
-    }
-  }
-
- private:
-  static constexpr uint32_t GlobalFlag_Mask = 0xF;
-
-  static constexpr uint32_t DevToolsFlag_NotPassed = 0x00;
-  static constexpr uint32_t DevToolsFlag_False = 0x10;
-  static constexpr uint32_t DevToolsFlag_True = 0x20;
-  static constexpr uint32_t DevToolsFlag_Mask = 0x0F0;
-
-  uint32_t mValue = 0;
-};
-
 namespace lazy_getter {
 
-// The property id of the getter.
-// Used by all lazy getters.
 static const size_t SLOT_ID = 0;
-
-// The URI of the module to import.
-// Used by ChromeUtils.defineModuleGetter and ChromeUtils.defineESModuleGetters.
 static const size_t SLOT_URI = 1;
-
-// An array object that contians values for PARAM_INDEX_TARGET and
-// PARAM_INDEX_LAMBDA.
-// Used by ChromeUtils.defineLazyGetter.
 static const size_t SLOT_PARAMS = 1;
-
-// The EncodedOptions value.
-// Used by ChromeUtils.defineESModuleGetters.
-static const size_t SLOT_OPTIONS = 2;
 
 static const size_t PARAM_INDEX_TARGET = 0;
 static const size_t PARAM_INDEX_LAMBDA = 1;
@@ -993,11 +919,16 @@ static bool ModuleGetterImpl(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   }
   nsDependentCString uri(bytes.get());
 
+  RefPtr moduleloader =
+      aType == ModuleType::JSM
+          ? mozJSModuleLoader::Get()
+          : GetContextualESLoader(
+                Optional<bool>(),
+                JS::GetNonCCWObjectGlobal(js::UncheckedUnwrap(thisObj)));
+  MOZ_ASSERT(moduleloader);
+
   JS::Rooted<JS::Value> value(aCx);
   if (aType == ModuleType::JSM) {
-    RefPtr moduleloader = mozJSModuleLoader::Get();
-    MOZ_ASSERT(moduleloader);
-
     JS::Rooted<JSObject*> moduleGlobal(aCx);
     JS::Rooted<JSObject*> moduleExports(aCx);
     nsresult rv = moduleloader->Import(aCx, uri, &moduleGlobal, &moduleExports);
@@ -1011,21 +942,6 @@ static bool ModuleGetterImpl(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
       return false;
     }
   } else {
-    EncodedOptions encodedOptions(
-        js::GetFunctionNativeReserved(callee, SLOT_OPTIONS).toInt32());
-
-    ImportESModuleOptionsDictionary options;
-    encodedOptions.DecodeInto(options);
-
-    GlobalObject global(aCx, callee);
-
-    Maybe<loader::NonSharedGlobalSyncModuleLoaderScope> maybeSyncLoaderScope;
-    RefPtr<mozJSModuleLoader> moduleloader =
-        GetModuleLoaderForOptions(aCx, global, options, maybeSyncLoaderScope);
-    if (!moduleloader) {
-      return false;
-    }
-
     JS::Rooted<JSObject*> moduleNamespace(aCx);
     nsresult rv = moduleloader->ImportESModule(aCx, uri, &moduleNamespace);
     if (NS_FAILED(rv)) {
@@ -1042,10 +958,6 @@ static bool ModuleGetterImpl(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     }
     if (!JS_WrapValue(aCx, &value)) {
       return false;
-    }
-
-    if (maybeSyncLoaderScope) {
-      maybeSyncLoaderScope->Finish();
     }
   }
 
@@ -1123,12 +1035,8 @@ static bool DefineJSModuleGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
 
 static bool DefineESModuleGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
                                  JS::Handle<JS::PropertyKey> aId,
-                                 JS::Handle<JS::Value> aResourceURI,
-                                 const EncodedOptions& encodedOptions) {
+                                 JS::Handle<JS::Value> aResourceURI) {
   JS::Rooted<JS::Value> idVal(aCx, JS::StringValue(aId.toString()));
-
-  JS::Rooted<JS::Value> optionsVal(aCx,
-                                   JS::Int32Value(encodedOptions.toInt32()));
 
   JS::Rooted<JSObject*> getter(
       aCx, JS_GetFunctionObject(js::NewFunctionByIdWithReserved(
@@ -1147,8 +1055,6 @@ static bool DefineESModuleGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   js::SetFunctionNativeReserved(setter, SLOT_ID, idVal);
 
   js::SetFunctionNativeReserved(getter, SLOT_URI, aResourceURI);
-
-  js::SetFunctionNativeReserved(getter, SLOT_OPTIONS, optionsVal);
 
   return JS_DefinePropertyById(aCx, aTarget, aId, getter, setter,
                                JSPROP_ENUMERATE);
@@ -1182,10 +1088,10 @@ void ChromeUtils::DefineModuleGetter(const GlobalObject& global,
 }
 
 /* static */
-void ChromeUtils::DefineESModuleGetters(
-    const GlobalObject& global, JS::Handle<JSObject*> target,
-    JS::Handle<JSObject*> modules,
-    const ImportESModuleOptionsDictionary& aOptions, ErrorResult& aRv) {
+void ChromeUtils::DefineESModuleGetters(const GlobalObject& global,
+                                        JS::Handle<JSObject*> target,
+                                        JS::Handle<JSObject*> modules,
+                                        ErrorResult& aRv) {
   JSContext* cx = global.Context();
 
   JS::Rooted<JS::IdVector> props(cx, JS::IdVector(cx));
@@ -1193,13 +1099,6 @@ void ChromeUtils::DefineESModuleGetters(
     aRv.NoteJSContextException(cx);
     return;
   }
-
-  if (!ValidateImportOptions(cx, aOptions)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  EncodedOptions encodedOptions(aOptions);
 
   JS::Rooted<JS::PropertyKey> prop(cx);
   JS::Rooted<JS::Value> resourceURIVal(cx);
@@ -1216,8 +1115,7 @@ void ChromeUtils::DefineESModuleGetters(
       return;
     }
 
-    if (!lazy_getter::DefineESModuleGetter(cx, target, prop, resourceURIVal,
-                                           encodedOptions)) {
+    if (!lazy_getter::DefineESModuleGetter(cx, target, prop, resourceURIVal)) {
       aRv.NoteJSContextException(cx);
       return;
     }
