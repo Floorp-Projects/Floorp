@@ -1,3 +1,5 @@
+# Implementing Telemetry
+
 ## Things to note before implementation:
 * Understand that telemetry is important, it is not just a checkmark for feature completion.
 * The consumer of the telemetry is the data science team.

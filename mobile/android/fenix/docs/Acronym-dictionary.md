@@ -1,3 +1,5 @@
+# Acronym Dictionary
+
 Explanations of common acronyms that are seen in the Fenix project boards and issues.
 
 **AC**: "[Android Components](https://github.com/mozilla-mobile/android-components)", the Mozilla team responsible for componentization.

@@ -1,3 +1,5 @@
+# Addressing a performance regression
+
 To keep Fenix in a good shape, the performance team weekly runs multiple performance tests to identify regressions. The results are kept and maintained [here](https://earthangel-b40313e5.influxcloud.net/d/s3AT6t7nk/fenix-startup-nightly-via-backfill-py?orgId=1).
 
 The main tests are:

@@ -1,6 +1,8 @@
+# Fennec Migration
+
 Project board: https://github.com/orgs/mozilla-mobile/projects/40
 
-# 📱 Testing
+## 📱 Testing
 
 ⚠️ **Warning**: Replacing a _Fennec_ (Firefox for Android) installation with _Fenix_ (Firefox Preview) can (and at the time of writing this definitely **will**) result in **DATA LOSS**. Do not replace an installation of Fennec (Firefox for Android) that contains data you do not want to risk losing (e.g. open tabs, history, bookmarks, top sites, ..).
 
@@ -31,7 +33,7 @@ The following links point to the latest *Fenix* (Firefox Preview) builds (Nightl
 * [x86_64 devices (64 bit; Android 5+)](https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.x86_64/artifacts/public/build/x86_64/target.apk)
 * [x86 devices (32 bit; Android 5+)](https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/mobile.v2.fenix.nightly.latest.x86/artifacts/public/build/x86/target.apk)
 
-# 📝 Changelog
+## 📝 Changelog
 
 The data migration work is tracked on the following project board:
 https://github.com/orgs/mozilla-mobile/projects/40
@@ -40,7 +42,7 @@ https://github.com/orgs/mozilla-mobile/projects/40
 * **2019-10-22** - First iteration of migration code to migrate history, bookmarks and open tabs landed in builds.
 * **2019-11-02** - Firefox Account users remain logged in after migrating to Fenix.
 
-# 💻 Development
+## 💻 Development
 
 When working on migration code it is helpful to have a local Fennec build and a local Fenix build that can replace the Fennec build. The following manual setup is needed to achieve that.
 

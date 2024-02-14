@@ -85,6 +85,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
 ]
 
 SPHINX_TREES["/mobile/android"] = "docs"
+SPHINX_TREES["/mobile/android/fenix"] = "fenix/docs"
 
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]

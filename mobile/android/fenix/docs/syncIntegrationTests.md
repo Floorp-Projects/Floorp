@@ -1,3 +1,5 @@
+# Sync Integration Tests
+
 ### Sync Integration Tests
 The aim of these tests is to check that the synchronization is working between Fenix and Desktop. The intention is to add tests for History, Bookmarks, Tabs and Logins.
 At this moment only tests for History and Bookmarks are defined.

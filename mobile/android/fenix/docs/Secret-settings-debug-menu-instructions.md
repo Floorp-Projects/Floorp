@@ -1,3 +1,5 @@
+# Debug settings menu instructions
+
 Instructions to enable the "secret settings" in the Settings menu for Firefox Nightly. This lets you access "Secret Settings" and "Secret Debug Info" in the Settings menu.
 
 1. Tap on three-dot menu in the toolbar
