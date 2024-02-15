@@ -13,6 +13,7 @@
 #include "nsIObserver.h"
 #include <gtk/gtk.h>
 #include "nsITimer.h"
+#include "GUniquePtr.h"
 
 class nsICookieJarSettings;
 class nsWindow;
@@ -168,6 +169,8 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // any D&D operation.
   uintptr_t mCachedDragContext;
 
+  nsTHashMap<nsCStringHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
+
   guint mPendingTime;
 
   // mTargetWindow and mTargetWindowPoint record the position of the last
@@ -199,6 +202,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // last data received and its length
   void* mTargetDragData;
   uint32_t mTargetDragDataLen;
+  mozilla::GUniquePtr<gchar*> mTargetDragUris;
   // is the current target drag context contain a list?
   bool IsTargetContextList(void);
   // this will get the native data from the last target given a
