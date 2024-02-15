@@ -24,7 +24,6 @@
       this.addEventListener("TabUnpinned", this);
       this.addEventListener("TabHoverStart", this);
       this.addEventListener("TabHoverEnd", this);
-      this.addEventListener("mouseleave", this);
       this.addEventListener("transitionend", this);
       this.addEventListener("dblclick", this);
       this.addEventListener("click", this);
@@ -1833,14 +1832,6 @@
               "tabbrowser-tab-preview"
             );
             previewContainer.tab = null;
-          }
-          break;
-        case "mouseleave":
-          if (this._showCardPreviews) {
-            const previewContainer = document.getElementById(
-              "tabbrowser-tab-preview"
-            );
-            previewContainer.resetDelay();
           }
           break;
         case "mouseout":
