@@ -39,7 +39,8 @@ const char* kHostZeroRttAlertUnexpected = "0rtt-alert-unexpected.example.com";
 const char* kHostZeroRttAlertDowngrade = "0rtt-alert-downgrade.example.com";
 
 const char* kHostXyberNetInterrupt = "xyber-net-interrupt.example.com";
-const char* kHostXyberAlertUnexpected = "xyber-alert-unexpected.example.com";
+const char* kHostXyberAlertAfterServerHello =
+    "xyber-alert-after-server-hello.example.com";
 
 const char* kCertWildcard = "default-ee";
 
@@ -55,7 +56,7 @@ const FaultyServerHost sFaultyServerHosts[]{
     {kHostZeroRttAlertUnexpected, kCertWildcard, ZeroRtt},
     {kHostZeroRttAlertDowngrade, kCertWildcard, ZeroRtt},
     {kHostXyberNetInterrupt, kCertWildcard, Xyber},
-    {kHostXyberAlertUnexpected, kCertWildcard, Xyber},
+    {kHostXyberAlertAfterServerHello, kCertWildcard, Xyber},
     {nullptr, nullptr},
 };
 
@@ -199,8 +200,8 @@ void SecretCallbackFailXyber(PRFileDesc* fd, PRUint16 epoch,
       // The client will see this as a PR_END_OF_FILE / NS_ERROR_NET_INTERRUPT
       // error.
       ss->recordWriteCallback = FailingWriteCallback;
-    } else if (!strcmp(host->mHostName, kHostXyberAlertUnexpected)) {
-      SSL3_SendAlert(ss, alert_fatal, no_alert);
+    } else if (!strcmp(host->mHostName, kHostXyberAlertAfterServerHello)) {
+      SSL3_SendAlert(ss, alert_fatal, close_notify);
     }
   }
 }
