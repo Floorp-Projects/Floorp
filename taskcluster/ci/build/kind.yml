@@ -67,7 +67,9 @@ job-defaults:
         # The MAR_CHANNEL_ID must not contain the following 3 characters: ",\t "
         mar-channel-id:
             by-release-type:
-                nightly.*: firefox-mozilla-central
+                nightly-larch: firefox-nightly-larch
+                nightly-oak: firefox-nightly-oak
+                nightly-pine: firefox-nightly-pine
                 beta:
                     by-shipping-product:
                         devedition: firefox-mozilla-aurora
@@ -77,7 +79,9 @@ job-defaults:
                 default: firefox-mozilla-central
         accepted-mar-channel-ids:
             by-release-type:
-                nightly.*: firefox-mozilla-central
+                nightly-larch: firefox-nightly-larch
+                nightly-oak: firefox-nightly-oak
+                nightly-pine: firefox-nightly-pine
                 beta:
                     by-shipping-product:
                         devedition: firefox-mozilla-aurora
