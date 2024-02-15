@@ -131,9 +131,13 @@ void ConsoleInstance::SetLogLevel() {
 void ConsoleInstance::MaxLogLevelPrefChangedCallback(
     const char* /* aPrefName */, void* aSelf) {
   AssertIsOnMainThread();
-  if (RefPtr console = static_cast<ConsoleInstance*>(aSelf)) {
-    console->SetLogLevel();
+  auto* instance = static_cast<ConsoleInstance*>(aSelf);
+  if (MOZ_UNLIKELY(!instance->mConsole)) {
+    // We've been unlinked already but not destroyed yet. Bail.
+    return;
   }
+  RefPtr pin{instance};
+  pin->SetLogLevel();
 }
 
 JSObject* ConsoleInstance::WrapObject(JSContext* aCx,
