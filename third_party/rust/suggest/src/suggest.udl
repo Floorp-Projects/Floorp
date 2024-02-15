@@ -30,6 +30,7 @@ enum SuggestionProvider {
     "Yelp",
     "Mdn",
     "Weather",
+    "AmpMobile",
 };
 
 [Enum]
@@ -73,7 +74,8 @@ interface Suggestion {
     Yelp(
         string url,
         string title,
-        boolean is_top_pick
+        boolean subject_exact_match,
+        sequence<u8>? icon
     );
     Mdn(
         string title,

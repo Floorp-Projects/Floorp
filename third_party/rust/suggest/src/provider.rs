@@ -19,6 +19,7 @@ pub enum SuggestionProvider {
     Yelp = 5,
     Mdn = 6,
     Weather = 7,
+    AmpMobile = 8,
 }
 
 impl FromSql for SuggestionProvider {
