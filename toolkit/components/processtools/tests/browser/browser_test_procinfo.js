@@ -15,12 +15,16 @@ const NS_PER_MS = 1000000;
 
 function checkProcessCpuTime(proc) {
   Assert.greater(proc.cpuTime, 0, "Got some cpu time");
+  Assert.greater(proc.threads.length, 0, "Got some threads");
+  Assert.ok(
+    proc.threads.some(thread => thread.cpuTime > 0),
+    "Got some cpu time in the threads"
+  );
 
   let cpuThreads = 0;
   for (let thread of proc.threads) {
     cpuThreads += Math.floor(thread.cpuTime / NS_PER_MS);
   }
-  Assert.greater(cpuThreads, 0, "Got some cpu time in the threads");
   let processCpuTime = Math.ceil(proc.cpuTime / NS_PER_MS);
   if (AppConstants.platform == "win" && processCpuTime < cpuThreads) {
     // On Windows, our test jobs likely run in VMs without constant TSC,
