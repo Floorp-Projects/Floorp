@@ -5,6 +5,7 @@
 package mozilla.components.feature.addons.ui
 
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -32,6 +33,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.any
+import org.mockito.Mockito.argThat
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
@@ -187,7 +189,7 @@ class AddonsManagerAdapterTest {
     fun `bind section`() {
         val titleView: TextView = mock()
         val divider: View = mock()
-        val addonViewHolder = CustomViewHolder.SectionViewHolder(View(testContext), titleView, divider)
+        val sectionViewHolder = CustomViewHolder.SectionViewHolder(View(testContext), titleView, divider)
         val position = 0
 
         whenever(titleView.context).thenReturn(testContext)
@@ -197,13 +199,28 @@ class AddonsManagerAdapterTest {
             sectionsTypeFace = mock(),
         )
         val adapter = AddonsManagerAdapter(mock(), emptyList(), style, emptyList(), mock())
+        // Force-add a Section item in the list.
+        adapter.submitList(null)
+        adapter.submitList(listOf(Section(R.string.mozac_feature_addons_disabled_section)))
+        // Make sure we have the Footer item in the list.
+        assertEquals(1, adapter.itemCount)
 
-        adapter.bindSection(addonViewHolder, Section(R.string.mozac_feature_addons_disabled_section), position)
+        // Use the "public" method to bind the section.
+        adapter.bindViewHolder(sectionViewHolder, position)
 
         verify(titleView).setText(R.string.mozac_feature_addons_disabled_section)
         verify(titleView).typeface = style.sectionsTypeFace
         verify(titleView).setTextColor(ContextCompat.getColor(testContext, style.sectionsTextColor!!))
         verify(divider).isVisible = style.visibleDividers && position != 0
+        assertNotNull(sectionViewHolder.itemView.accessibilityDelegate)
+
+        val nodeInfo: AccessibilityNodeInfo = mock()
+        sectionViewHolder.itemView.accessibilityDelegate.onInitializeAccessibilityNodeInfo(mock(), nodeInfo)
+        verify(nodeInfo).collectionItemInfo = argThat {
+            // We cannot verify `rowIndex` because we're using `bindingAdapterPosition`.
+            @Suppress("DEPRECATION")
+            it.rowSpan == 1 && it.columnIndex == 1 && it.columnSpan == 1 && it.isHeading
+        }
     }
 
     @Test
@@ -354,6 +371,10 @@ class AddonsManagerAdapterTest {
 
         assertEquals(addon.version, adapter.addonsMap[addon.id]!!.version)
         verify(adapter).submitList(any())
+
+        // Once the list is submitted, we should have the right item count on the adapter.
+        // In this case, we have 1 heading and 1 add-on.
+        assertEquals(2, adapter.itemCount)
     }
 
     @Test
@@ -476,13 +497,27 @@ class AddonsManagerAdapterTest {
     fun bindFooterButton() {
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val adapter = AddonsManagerAdapter(addonsManagerAdapterDelegate, emptyList(), mock(), emptyList(), mock())
-
         val view = View(testContext)
         val viewHolder = CustomViewHolder.FooterViewHolder(view)
-        adapter.bindFooterButton(viewHolder)
+        // Make sure we have the Footer item in the list.
+        adapter.submitList(null)
+        adapter.submitList(listOf(AddonsManagerAdapter.FooterSection))
+        assertEquals(1, adapter.itemCount)
+
+        // Use the "public" method to bind the footer.
+        adapter.onBindViewHolder(viewHolder, 0)
 
         viewHolder.itemView.performClick()
         verify(addonsManagerAdapterDelegate).onFindMoreAddonsButtonClicked()
+        assertNotNull(viewHolder.itemView.accessibilityDelegate)
+
+        val nodeInfo: AccessibilityNodeInfo = mock()
+        viewHolder.itemView.accessibilityDelegate.onInitializeAccessibilityNodeInfo(mock(), nodeInfo)
+        verify(nodeInfo).collectionItemInfo = argThat {
+            // We cannot verify `rowIndex` because we're using `bindingAdapterPosition`.
+            @Suppress("DEPRECATION")
+            it.rowSpan == 1 && it.columnIndex == 1 && it.columnSpan == 1 && !it.isHeading
+        }
     }
 
     @Test

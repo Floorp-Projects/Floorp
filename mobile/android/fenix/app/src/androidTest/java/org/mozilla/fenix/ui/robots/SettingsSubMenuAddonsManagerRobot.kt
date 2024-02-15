@@ -36,6 +36,7 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
@@ -43,7 +44,6 @@ import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.restartApp
-import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
@@ -120,7 +120,7 @@ class SettingsSubMenuAddonsManagerRobot {
                     homeScreen {
                     }.openThreeDotMenu {
                     }.openAddonsManagerMenu {
-                        scrollToElementByText(addonName)
+                        scrollToAddon(addonName)
                         clickInstallAddon(addonName)
                         verifyAddonPermissionPrompt(addonName)
                         acceptPermissionToInstallAddon()
@@ -152,7 +152,7 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     fun verifyAddonIsInstalled(addonName: String) {
-        scrollToElementByText(addonName)
+        scrollToAddon(addonName)
         Log.i(TAG, "verifyAddonIsInstalled: Trying to verify that the $addonName add-on was installed")
         onView(
             allOf(
@@ -199,7 +199,7 @@ class SettingsSubMenuAddonsManagerRobot {
         Log.i(TAG, "verifyAddonsItems: Verified that all uBlock Origin items are completely displayed")
     }
     fun verifyAddonCanBeInstalled(addonName: String) {
-        scrollToElementByText(addonName)
+        scrollToAddon(addonName)
         mDevice.waitNotNull(Until.findObject(By.text(addonName)), waitingTime)
         Log.i(TAG, "verifyAddonCanBeInstalled: Trying to verify that the install $addonName button is visible")
         onView(
@@ -250,7 +250,7 @@ class SettingsSubMenuAddonsManagerRobot {
             addonName: String,
             interact: SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.() -> Unit,
         ): SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.Transition {
-            scrollToElementByText(addonName)
+            scrollToAddon(addonName)
             Log.i(TAG, "openDetailedMenuForAddon: Trying to verify that the $addonName add-on is visible")
             addonItem(addonName).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
             Log.i(TAG, "openDetailedMenuForAddon: Verified that the $addonName add-on is visible")
@@ -295,6 +295,17 @@ class SettingsSubMenuAddonsManagerRobot {
 fun addonsMenu(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): SettingsSubMenuAddonsManagerRobot.Transition {
     SettingsSubMenuAddonsManagerRobot().interact()
     return SettingsSubMenuAddonsManagerRobot.Transition()
+}
+
+private fun scrollToAddon(addonName: String) {
+    Log.i(TAG, "scrollToAddon: Trying to scroll into view add-on: $addonName")
+    addonsList().scrollIntoView(
+        itemWithResIdContainingText(
+            resourceId = "$packageName:id/add_on_name",
+            text = addonName,
+        ),
+    )
+    Log.i(TAG, "scrollToAddon: Scrolled into view add-on: $addonName")
 }
 
 private fun addonItem(addonName: String) =

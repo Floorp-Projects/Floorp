@@ -6,9 +6,11 @@ package mozilla.components.feature.addons.ui
 
 import android.annotation.SuppressLint
 import android.graphics.Typeface
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
@@ -183,6 +185,32 @@ class AddonsManagerAdapter(
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         val item = getItem(position)
+
+        // Configure an accessibility delegate for each item.
+        holder.itemView.accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    info.collectionItemInfo = AccessibilityNodeInfo.CollectionItemInfo(
+                        holder.bindingAdapterPosition,
+                        1,
+                        1,
+                        1,
+                        holder is SectionViewHolder,
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    info.collectionItemInfo = AccessibilityNodeInfo.CollectionItemInfo.obtain(
+                        holder.bindingAdapterPosition,
+                        1,
+                        1,
+                        1,
+                        holder is SectionViewHolder,
+                    )
+                }
+            }
+        }
 
         when (holder) {
             is SectionViewHolder -> bindSection(holder, item as Section, position)

@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -115,6 +116,29 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                         binding?.addOnsEmptyMessage?.isVisible = false
 
                         recyclerView?.adapter = adapter
+                        recyclerView?.accessibilityDelegate = object : View.AccessibilityDelegate() {
+                            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                                super.onInitializeAccessibilityNodeInfo(host, info)
+
+                                adapter?.let {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                        info.collectionInfo = AccessibilityNodeInfo.CollectionInfo(
+                                            it.itemCount,
+                                            1,
+                                            false,
+                                        )
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        info.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
+                                            it.itemCount,
+                                            1,
+                                            false,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         if (shouldRefresh) {
                             adapter?.updateAddons(addons)
                         }
