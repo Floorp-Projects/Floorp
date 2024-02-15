@@ -26,6 +26,8 @@ const CookieFieldsMapping = {
   value: "value",
 };
 
+const MAX_COOKIE_EXPIRY = Number.MAX_SAFE_INTEGER;
+
 /**
  * Enum of possible partition types supported by the
  * storage.getCookies command.
@@ -157,6 +159,165 @@ class StorageModule extends Module {
     return { cookies, partitionKey };
   }
 
+  /**
+   * An object representation of the cookie which should be set.
+   *
+   * @typedef PartialCookie
+   *
+   * @property {string} domain
+   * @property {number=} expiry
+   * @property {boolean=} httpOnly
+   * @property {string} name
+   * @property {string=} path
+   * @property {SameSiteType=} sameSite
+   * @property {boolean=} secure
+   * @property {number=} size
+   * @property {Network.BytesValueType} value
+   */
+
+  /**
+   * Create a new cookie in a cookie store.
+   *
+   * @param {object=} options
+   * @param {PartialCookie} options.cookie
+   *     An object representation of the cookie which
+   *     should be set.
+   * @param {PartitionDescriptor=} options.partition
+   *     An object which holds the information which
+   *     should be used to build a partition key.
+   *
+   * @returns {PartitionKey}
+   *     An object with the partition key which was used to
+   *     add the cookie.
+   * @throws {InvalidArgumentError}
+   *     If the provided arguments are not valid.
+   * @throws {NoSuchFrameError}
+   *     If the provided browsing context cannot be found.
+   * @throws {UnableToSetCookieError}
+   *     If the cookie was not added.
+   * @throws {UnsupportedOperationError}
+   *     Raised when the command is called with `userContext` as
+   *     in `partition` argument.
+   */
+  async setCookie(options = {}) {
+    const { cookie: cookieSpec, partition: partitionSpec = null } = options;
+    lazy.assert.object(
+      cookieSpec,
+      `Expected "cookie" to be an object, got ${cookieSpec}`
+    );
+
+    const {
+      domain,
+      expiry = null,
+      httpOnly = null,
+      name,
+      path = null,
+      sameSite = null,
+      secure = null,
+      value,
+    } = cookieSpec;
+    this.#assertCookie({
+      domain,
+      expiry,
+      httpOnly,
+      name,
+      path,
+      sameSite,
+      secure,
+      value,
+    });
+    this.#assertPartition(partitionSpec);
+
+    const partitionKey = this.#expandStoragePartitionSpec(partitionSpec);
+
+    // The cookie store is defined by originAttributes.
+    const originAttributes = this.#getOriginAttributes(partitionKey);
+
+    const deserializedValue = this.#deserializeProtocolBytes(value);
+
+    // The XPCOM interface requires to be specified if a cookie is session.
+    const isSession = expiry === null;
+
+    let schemeType;
+    if (secure) {
+      schemeType = Ci.nsICookie.SCHEME_HTTPS;
+    } else {
+      schemeType = Ci.nsICookie.SCHEME_HTTP;
+    }
+
+    try {
+      Services.cookies.add(
+        domain,
+        path === null ? "/" : path,
+        name,
+        deserializedValue,
+        secure === null ? false : secure,
+        httpOnly === null ? false : httpOnly,
+        isSession,
+        // The XPCOM interface requires the expiry field even for session cookies.
+        expiry === null ? MAX_COOKIE_EXPIRY : expiry,
+        originAttributes,
+        this.#getSameSitePlatformProperty(sameSite),
+        schemeType
+      );
+    } catch (e) {
+      throw new lazy.error.UnableToSetCookieError(e);
+    }
+
+    // Bug 1875255. Exchange platform id for Webdriver BiDi id for the user context to return it to the client.
+    // For now we use platform user context id for returning cookies for a specific browsing context in the platform API,
+    // but we can not return it directly to the client, so for now we just remove it from the response.
+    delete partitionKey.userContext;
+
+    return { partitionKey };
+  }
+
+  #assertCookie(cookie) {
+    lazy.assert.object(
+      cookie,
+      `Expected "cookie" to be an object, got ${cookie}`
+    );
+
+    const { domain, expiry, httpOnly, name, path, sameSite, secure, value } =
+      cookie;
+
+    lazy.assert.string(
+      domain,
+      `Expected "domain" to be a string, got ${domain}`
+    );
+
+    lazy.assert.string(name, `Expected "name" to be a string, got ${name}`);
+
+    this.#assertValue(value);
+
+    if (expiry !== null) {
+      lazy.assert.positiveInteger(
+        expiry,
+        `Expected "expiry" to be a positive number, got ${expiry}`
+      );
+    }
+
+    if (httpOnly !== null) {
+      lazy.assert.boolean(
+        httpOnly,
+        `Expected "httpOnly" to be a boolean, got ${httpOnly}`
+      );
+    }
+
+    if (path !== null) {
+      lazy.assert.string(path, `Expected "path" to be a string, got ${path}`);
+    }
+
+    this.#assertSameSite(sameSite);
+
+    if (secure !== null) {
+      lazy.assert.boolean(
+        secure,
+        `Expected "secure" to be a boolean, got ${secure}`
+      );
+    }
+  }
+
   #assertGetCookieFilter(filter) {
     lazy.assert.object(
       filter,
@@ -210,17 +371,7 @@ class StorageModule extends Module {
       );
     }
 
-    if (sameSite !== null) {
-      lazy.assert.string(
-        sameSite,
-        `Expected "filter.sameSite" to be a string, got ${sameSite}`
-      );
-      const sameSiteTypeValue = Object.values(SameSiteType);
-      lazy.assert.that(
-        sameSite => sameSiteTypeValue.includes(sameSite),
-        `Expected "filter.sameSite" to be one of ${sameSiteTypeValue}, got ${sameSite}`
-      )(sameSite);
-    }
+    this.#assertSameSite(sameSite, "filter.sameSite");
 
     if (secure !== null) {
       lazy.assert.boolean(
@@ -237,27 +388,7 @@ class StorageModule extends Module {
     }
 
     if (value !== null) {
-      lazy.assert.object(
-        value,
-        `Expected "filter.value" to be an object, got ${value}`
-      );
-
-      const { type, value: protocolBytesValue } = value;
-
-      lazy.assert.string(
-        type,
-        `Expected "filter.value.type" to be string, got ${type}`
-      );
-      const bytesValueTypeValue = Object.values(lazy.BytesValueType);
-      lazy.assert.that(
-        type => bytesValueTypeValue.includes(type),
-        `Expected "filter.value.type" to be one of ${bytesValueTypeValue}, got ${type}`
-      )(type);
-
-      lazy.assert.string(
-        protocolBytesValue,
-        `Expected "filter.value.value" to be string, got ${protocolBytesValue}`
-      );
+      this.#assertValue(value, "filter.value");
     }
 
     return {
@@ -341,11 +472,43 @@ class StorageModule extends Module {
     }
   }
 
+  #assertSameSite(sameSite, fieldName = "sameSite") {
+    if (sameSite !== null) {
+      const sameSiteTypeValue = Object.values(SameSiteType);
+      lazy.assert.in(
+        sameSite,
+        sameSiteTypeValue,
+        `Expected "${fieldName}" to be one of ${sameSiteTypeValue}, got ${sameSite}`
+      );
+    }
+  }
+
+  #assertValue(value, fieldName = "value") {
+    lazy.assert.object(
+      value,
+      `Expected "${fieldName}" to be an object, got ${value}`
+    );
+
+    const { type, value: protocolBytesValue } = value;
+
+    const bytesValueTypeValue = Object.values(lazy.BytesValueType);
+    lazy.assert.in(
+      type,
+      bytesValueTypeValue,
+      `Expected "${fieldName}.type" to be one of ${bytesValueTypeValue}, got ${type}`
+    );
+
+    lazy.assert.string(
+      protocolBytesValue,
+      `Expected "${fieldName}.value" to be string, got ${protocolBytesValue}`
+    );
+  }
+
   /**
    * Deserialize the value to string, since platform API
    * returns cookie's value as a string.
    */
-  #deserializeCookieValue(cookieValue) {
+  #deserializeProtocolBytes(cookieValue) {
     const { type, value } = cookieValue;
 
     if (type === lazy.BytesValueType.String) {
@@ -460,6 +623,19 @@ class StorageModule extends Module {
     return originAttributes;
   }
 
+  #getSameSitePlatformProperty(sameSite) {
+    switch (sameSite) {
+      case "lax": {
+        return Ci.nsICookie.SAMESITE_LAX;
+      }
+      case "strict": {
+        return Ci.nsICookie.SAMESITE_STRICT;
+      }
+    }
+
+    return Ci.nsICookie.SAMESITE_NONE;
+  }
+
   /**
    * Return a cookie store of the storage partition for a given storage partition key.
    *
@@ -532,8 +708,8 @@ class StorageModule extends Module {
         let storedCookieValue = storedCookie[fieldName];
 
         if (fieldName === "value") {
-          value = this.#deserializeCookieValue(value);
-          storedCookieValue = this.#deserializeCookieValue(storedCookieValue);
+          value = this.#deserializeProtocolBytes(value);
+          storedCookieValue = this.#deserializeProtocolBytes(storedCookieValue);
         }
 
         if (storedCookieValue !== value) {
