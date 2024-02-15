@@ -25,7 +25,10 @@ function checkProcessCpuTime(proc) {
   for (let thread of proc.threads) {
     cpuThreads += Math.floor(thread.cpuTime / NS_PER_MS);
   }
-  let processCpuTime = Math.ceil(proc.cpuTime / NS_PER_MS);
+  // Add 1ms to the process CPU time because ProcInfo captures the CPU time for
+  // the whole process first and then for each of the threads, so the process
+  // CPU time might have increased slightly in the meantime.
+  let processCpuTime = Math.floor(proc.cpuTime / NS_PER_MS) + 1;
   if (AppConstants.platform == "win" && processCpuTime < cpuThreads) {
     // On Windows, our test jobs likely run in VMs without constant TSC,
     // so we might have low precision CPU time measurements.
