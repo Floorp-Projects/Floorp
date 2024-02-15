@@ -158,12 +158,6 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "lib/*.jsm": {
-              statements: 100,
-              lines: 100,
-              functions: 99,
-              branches: 84,
-            },
             "content-src/components/DiscoveryStreamComponents/**/*.jsx": {
               statements: 90.48,
               lines: 90.48,
@@ -221,7 +215,7 @@ module.exports = function (config) {
       },
       // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.sys.mjs"
       resolve: {
-        extensions: [".js", ".jsx", ".jsm"],
+        extensions: [".js", ".jsx"],
         modules: [PATHS.moduleResolveDirectory, "node_modules"],
         fallback: {
           stream: require.resolve("stream-browserify"),
@@ -233,8 +227,7 @@ module.exports = function (config) {
       },
       plugins: [
         // The ResourceUriPlugin handles translating resource URIs in import
-        // statements in .mjs files, in a similar way to what
-        // babel-jsm-to-commonjs does for jsm files.
+        // statements in .mjs files to paths on the filesystem.
         new ResourceUriPlugin({
           resourcePathRegExes: [
             [
@@ -256,29 +249,6 @@ module.exports = function (config) {
       },
       module: {
         rules: [
-          // This rule rewrites importing/exporting in .jsm files to be compatible with esmodules
-          {
-            test: /\.jsm$/,
-            exclude: [/node_modules/],
-            use: [
-              {
-                loader: "babel-loader", // require("babel-core")
-                options: {
-                  plugins: [
-                    // Converts .jsm files into common-js modules
-                    [
-                      "./tools/babel-jsm-to-commonjs.js",
-                      {
-                        basePaths: [[PATHS.resourcePathRegEx, ""]],
-                        removeOtherImports: true,
-                        replace: true,
-                      },
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
           {
             test: /\.js$/,
             exclude: [/node_modules\/(?!@fluent\/).*/, /test/],

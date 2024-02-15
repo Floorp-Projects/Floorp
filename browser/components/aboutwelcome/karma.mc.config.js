@@ -186,8 +186,7 @@ module.exports = function (config) {
       },
       plugins: [
         // The ResourceUriPlugin handles translating resource URIs in import
-        // statements in .mjs files, in a similar way to what
-        // babel-jsm-to-commonjs does for jsm files.
+        // statements in .mjs files to paths on the filesystem.
         new ResourceUriPlugin({
           resourcePathRegExes: [
             [
@@ -213,35 +212,6 @@ module.exports = function (config) {
       },
       module: {
         rules: [
-          // This rule rewrites importing/exporting in .jsm files to be compatible with esmodules
-          {
-            test: /\.jsm$/,
-            exclude: [/node_modules/],
-            use: [
-              {
-                loader: "babel-loader", // require("babel-core")
-                options: {
-                  plugins: [
-                    // Converts .jsm files into common-js modules
-                    [
-                      "../newtab/tools/babel-jsm-to-commonjs.js",
-                      {
-                        basePaths: [
-                          [PATHS.resourcePathRegEx, ""],
-                          [
-                            /^resource:\/\/\/modules\/asrouter\//,
-                            "asrouter/modules/",
-                          ],
-                        ],
-                        removeOtherImports: true,
-                        replace: true,
-                      },
-                    ],
-                  ],
-                },
-              },
-            ],
-          },
           {
             test: /\.js$/,
             exclude: [/node_modules\/(?!@fluent\/).*/, /tests/],
