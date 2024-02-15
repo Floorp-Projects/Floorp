@@ -272,6 +272,15 @@ export class SuggestBackendRust extends BaseFeature {
   }
 
   async #ingest() {
+    let instance = (this.#ingestInstance = {});
+    await this.#ingestPromise;
+    if (instance != this.#ingestInstance) {
+      return;
+    }
+    await (this.#ingestPromise = this.#ingestHelper());
+  }
+
+  async #ingestHelper() {
     if (!this.#store) {
       return;
     }
@@ -280,11 +289,8 @@ export class SuggestBackendRust extends BaseFeature {
 
     // Do the ingest.
     this.logger.debug("Starting ingest");
-    this.#ingestPromise = this.#store.ingest(
-      new lazy.SuggestIngestionConstraints()
-    );
     try {
-      await this.#ingestPromise;
+      await this.#store.ingest(new lazy.SuggestIngestionConstraints());
     } catch (error) {
       // Ingest can throw a `SuggestApiError` subclass called `Other` that has a
       // custom `reason` message, which is very helpful for diagnosing problems
@@ -352,6 +358,7 @@ export class SuggestBackendRust extends BaseFeature {
   #configsBySuggestionType = new Map();
 
   #ingestPromise;
+  #ingestInstance;
   #test_remoteSettingsConfig;
 }
 

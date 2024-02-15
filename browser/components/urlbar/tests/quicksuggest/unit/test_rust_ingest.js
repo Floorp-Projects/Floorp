@@ -68,8 +68,9 @@ add_task(async function firstRun() {
   info("Enabling the Rust backend");
   UrlbarPrefs.set("quicksuggest.rustEnabled", true);
   Assert.ok(QuickSuggest.rustBackend.isEnabled, "Rust backend is now enabled");
-  let { ingestPromise } = QuickSuggest.rustBackend;
-  Assert.ok(ingestPromise, "Ingest started");
+
+  // An ingest should start.
+  let { ingestPromise } = await waitForIngestStart(null);
 
   info("Awaiting ingest promise");
   await ingestPromise;
@@ -81,11 +82,7 @@ add_task(async function firstRun() {
   // immediately since this isn't the first time the backend has been enabled.
   UrlbarPrefs.set("quicksuggest.rustEnabled", false);
   UrlbarPrefs.set("quicksuggest.rustEnabled", true);
-  Assert.equal(
-    QuickSuggest.rustBackend.ingestPromise,
-    ingestPromise,
-    "No new ingest started"
-  );
+  await assertNoNewIngestStarted(ingestPromise);
 
   await checkSuggestions();
 
@@ -109,11 +106,7 @@ add_task(async function interval() {
   let intervalSecs = 1;
   UrlbarPrefs.set("quicksuggest.rustIngestIntervalSeconds", intervalSecs);
   UrlbarPrefs.set("quicksuggest.rustEnabled", true);
-  Assert.equal(
-    QuickSuggest.rustBackend.ingestPromise,
-    ingestPromise,
-    "No new ingest has started"
-  );
+  await assertNoNewIngestStarted(ingestPromise);
 
   // Wait for a few ingests to happen.
   for (let i = 0; i < 3; i++) {
@@ -178,7 +171,10 @@ async function waitForIngestStart(oldIngestPromise) {
   let newIngestPromise;
   await TestUtils.waitForCondition(() => {
     let { ingestPromise } = QuickSuggest.rustBackend;
-    if (ingestPromise != oldIngestPromise) {
+    if (
+      (oldIngestPromise && ingestPromise != oldIngestPromise) ||
+      (!oldIngestPromise && ingestPromise)
+    ) {
       newIngestPromise = ingestPromise;
       return true;
     }
@@ -195,6 +191,17 @@ async function waitForIngestStart(oldIngestPromise) {
   // to await that promise! We're simply trying to return the promise, which the
   // caller can later await.
   return { ingestPromise: newIngestPromise };
+}
+
+async function assertNoNewIngestStarted(oldIngestPromise) {
+  for (let i = 0; i < 3; i++) {
+    await TestUtils.waitForTick();
+  }
+  Assert.equal(
+    QuickSuggest.rustBackend.ingestPromise,
+    oldIngestPromise,
+    "No new ingest started"
+  );
 }
 
 async function checkSuggestions(expected = [REMOTE_SETTINGS_SUGGESTION]) {
