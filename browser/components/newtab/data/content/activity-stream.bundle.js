@@ -5222,465 +5222,6 @@ class SearchShortcutsForm extends (external_React_default()).PureComponent {
     })));
   }
 }
-;// CONCATENATED MODULE: ./common/Actions.sys.mjs
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const Actions_sys_MAIN_MESSAGE_TYPE = "ActivityStream:Main";
-const Actions_sys_CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
-const Actions_sys_PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
-const Actions_sys_UI_CODE = 1;
-const Actions_sys_BACKGROUND_PROCESS = 2;
-
-/**
- * globalImportContext - Are we in UI code (i.e. react, a dom) or some kind of background process?
- *                       Use this in action creators if you need different logic
- *                       for ui/background processes.
- */
-const Actions_sys_globalImportContext =
-  typeof Window === "undefined" ? Actions_sys_BACKGROUND_PROCESS : Actions_sys_UI_CODE;
-
-// Create an object that avoids accidental differing key/value pairs:
-// {
-//   INIT: "INIT",
-//   UNINIT: "UNINIT"
-// }
-const Actions_sys_actionTypes = {};
-
-for (const type of [
-  "ABOUT_SPONSORED_TOP_SITES",
-  "ADDONS_INFO_REQUEST",
-  "ADDONS_INFO_RESPONSE",
-  "ARCHIVE_FROM_POCKET",
-  "AS_ROUTER_INITIALIZED",
-  "AS_ROUTER_PREF_CHANGED",
-  "AS_ROUTER_TARGETING_UPDATE",
-  "AS_ROUTER_TELEMETRY_USER_EVENT",
-  "BLOCK_URL",
-  "BOOKMARK_URL",
-  "CLEAR_PREF",
-  "COPY_DOWNLOAD_LINK",
-  "DELETE_BOOKMARK_BY_ID",
-  "DELETE_FROM_POCKET",
-  "DELETE_HISTORY_URL",
-  "DIALOG_CANCEL",
-  "DIALOG_OPEN",
-  "DISABLE_SEARCH",
-  "DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE",
-  "DISCOVERY_STREAM_CONFIG_CHANGE",
-  "DISCOVERY_STREAM_CONFIG_RESET",
-  "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS",
-  "DISCOVERY_STREAM_CONFIG_SETUP",
-  "DISCOVERY_STREAM_CONFIG_SET_VALUE",
-  "DISCOVERY_STREAM_DEV_EXPIRE_CACHE",
-  "DISCOVERY_STREAM_DEV_IDLE_DAILY",
-  "DISCOVERY_STREAM_DEV_SYNC_RS",
-  "DISCOVERY_STREAM_DEV_SYSTEM_TICK",
-  "DISCOVERY_STREAM_EXPERIMENT_DATA",
-  "DISCOVERY_STREAM_FEEDS_UPDATE",
-  "DISCOVERY_STREAM_FEED_UPDATE",
-  "DISCOVERY_STREAM_IMPRESSION_STATS",
-  "DISCOVERY_STREAM_LAYOUT_RESET",
-  "DISCOVERY_STREAM_LAYOUT_UPDATE",
-  "DISCOVERY_STREAM_LINK_BLOCKED",
-  "DISCOVERY_STREAM_LOADED_CONTENT",
-  "DISCOVERY_STREAM_PERSONALIZATION_INIT",
-  "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED",
-  "DISCOVERY_STREAM_PERSONALIZATION_OVERRIDE",
-  "DISCOVERY_STREAM_PERSONALIZATION_RESET",
-  "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE",
-  "DISCOVERY_STREAM_PERSONALIZATION_UPDATED",
-  "DISCOVERY_STREAM_POCKET_STATE_INIT",
-  "DISCOVERY_STREAM_POCKET_STATE_SET",
-  "DISCOVERY_STREAM_PREFS_SETUP",
-  "DISCOVERY_STREAM_RECENT_SAVES",
-  "DISCOVERY_STREAM_RETRY_FEED",
-  "DISCOVERY_STREAM_SPOCS_CAPS",
-  "DISCOVERY_STREAM_SPOCS_ENDPOINT",
-  "DISCOVERY_STREAM_SPOCS_PLACEMENTS",
-  "DISCOVERY_STREAM_SPOCS_UPDATE",
-  "DISCOVERY_STREAM_SPOC_BLOCKED",
-  "DISCOVERY_STREAM_SPOC_IMPRESSION",
-  "DISCOVERY_STREAM_USER_EVENT",
-  "DOWNLOAD_CHANGED",
-  "FAKE_FOCUS_SEARCH",
-  "FILL_SEARCH_TERM",
-  "HANDOFF_SEARCH_TO_AWESOMEBAR",
-  "HIDE_PERSONALIZE",
-  "HIDE_PRIVACY_INFO",
-  "INIT",
-  "NEW_TAB_INIT",
-  "NEW_TAB_INITIAL_STATE",
-  "NEW_TAB_LOAD",
-  "NEW_TAB_REHYDRATED",
-  "NEW_TAB_STATE_REQUEST",
-  "NEW_TAB_UNLOAD",
-  "OPEN_DOWNLOAD_FILE",
-  "OPEN_LINK",
-  "OPEN_NEW_WINDOW",
-  "OPEN_PRIVATE_WINDOW",
-  "OPEN_WEBEXT_SETTINGS",
-  "PARTNER_LINK_ATTRIBUTION",
-  "PLACES_BOOKMARKS_REMOVED",
-  "PLACES_BOOKMARK_ADDED",
-  "PLACES_HISTORY_CLEARED",
-  "PLACES_LINKS_CHANGED",
-  "PLACES_LINKS_DELETED",
-  "PLACES_LINK_BLOCKED",
-  "PLACES_SAVED_TO_POCKET",
-  "POCKET_CTA",
-  "POCKET_LINK_DELETED_OR_ARCHIVED",
-  "POCKET_LOGGED_IN",
-  "POCKET_WAITING_FOR_SPOC",
-  "PREFS_INITIAL_VALUES",
-  "PREF_CHANGED",
-  "PREVIEW_REQUEST",
-  "PREVIEW_REQUEST_CANCEL",
-  "PREVIEW_RESPONSE",
-  "REMOVE_DOWNLOAD_FILE",
-  "RICH_ICON_MISSING",
-  "SAVE_SESSION_PERF_DATA",
-  "SAVE_TO_POCKET",
-  "SCREENSHOT_UPDATED",
-  "SECTION_DEREGISTER",
-  "SECTION_DISABLE",
-  "SECTION_ENABLE",
-  "SECTION_MOVE",
-  "SECTION_OPTIONS_CHANGED",
-  "SECTION_REGISTER",
-  "SECTION_UPDATE",
-  "SECTION_UPDATE_CARD",
-  "SETTINGS_CLOSE",
-  "SETTINGS_OPEN",
-  "SET_PREF",
-  "SHOW_DOWNLOAD_FILE",
-  "SHOW_FIREFOX_ACCOUNTS",
-  "SHOW_PERSONALIZE",
-  "SHOW_PRIVACY_INFO",
-  "SHOW_SEARCH",
-  "SKIPPED_SIGNIN",
-  "SOV_UPDATED",
-  "SUBMIT_EMAIL",
-  "SUBMIT_SIGNIN",
-  "SYSTEM_TICK",
-  "TELEMETRY_IMPRESSION_STATS",
-  "TELEMETRY_USER_EVENT",
-  "TOP_SITES_CANCEL_EDIT",
-  "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL",
-  "TOP_SITES_EDIT",
-  "TOP_SITES_INSERT",
-  "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL",
-  "TOP_SITES_ORGANIC_IMPRESSION_STATS",
-  "TOP_SITES_PIN",
-  "TOP_SITES_PREFS_UPDATED",
-  "TOP_SITES_SPONSORED_IMPRESSION_STATS",
-  "TOP_SITES_UNPIN",
-  "TOP_SITES_UPDATED",
-  "TOTAL_BOOKMARKS_REQUEST",
-  "TOTAL_BOOKMARKS_RESPONSE",
-  "UNINIT",
-  "UPDATE_PINNED_SEARCH_SHORTCUTS",
-  "UPDATE_SEARCH_SHORTCUTS",
-  "UPDATE_SECTION_PREFS",
-  "WEBEXT_CLICK",
-  "WEBEXT_DISMISS",
-]) {
-  Actions_sys_actionTypes[type] = type;
-}
-
-// Helper function for creating routed actions between content and main
-// Not intended to be used by consumers
-function Actions_sys_RouteMessage(action, options) {
-  const meta = action.meta ? { ...action.meta } : {};
-  if (!options || !options.from || !options.to) {
-    throw new Error(
-      "Routed Messages must have options as the second parameter, and must at least include a .from and .to property."
-    );
-  }
-  // For each of these fields, if they are passed as an option,
-  // add them to the action. If they are not defined, remove them.
-  ["from", "to", "toTarget", "fromTarget", "skipMain", "skipLocal"].forEach(
-    o => {
-      if (typeof options[o] !== "undefined") {
-        meta[o] = options[o];
-      } else if (meta[o]) {
-        delete meta[o];
-      }
-    }
-  );
-  return { ...action, meta };
-}
-
-/**
- * AlsoToMain - Creates a message that will be dispatched locally and also sent to the Main process.
- *
- * @param  {object} action Any redux action (required)
- * @param  {object} options
- * @param  {bool}   skipLocal Used by OnlyToMain to skip the main reducer
- * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
- * @return {object} An action with added .meta properties
- */
-function Actions_sys_AlsoToMain(action, fromTarget, skipLocal) {
-  return Actions_sys_RouteMessage(action, {
-    from: Actions_sys_CONTENT_MESSAGE_TYPE,
-    to: Actions_sys_MAIN_MESSAGE_TYPE,
-    fromTarget,
-    skipLocal,
-  });
-}
-
-/**
- * OnlyToMain - Creates a message that will be sent to the Main process and skip the local reducer.
- *
- * @param  {object} action Any redux action (required)
- * @param  {object} options
- * @param  {string} fromTarget The id of the content port from which the action originated. (optional)
- * @return {object} An action with added .meta properties
- */
-function Actions_sys_OnlyToMain(action, fromTarget) {
-  return Actions_sys_AlsoToMain(action, fromTarget, true);
-}
-
-/**
- * BroadcastToContent - Creates a message that will be dispatched to main and sent to ALL content processes.
- *
- * @param  {object} action Any redux action (required)
- * @return {object} An action with added .meta properties
- */
-function Actions_sys_BroadcastToContent(action) {
-  return Actions_sys_RouteMessage(action, {
-    from: Actions_sys_MAIN_MESSAGE_TYPE,
-    to: Actions_sys_CONTENT_MESSAGE_TYPE,
-  });
-}
-
-/**
- * AlsoToOneContent - Creates a message that will be will be dispatched to the main store
- *                    and also sent to a particular Content process.
- *
- * @param  {object} action Any redux action (required)
- * @param  {string} target The id of a content port
- * @param  {bool} skipMain Used by OnlyToOneContent to skip the main process
- * @return {object} An action with added .meta properties
- */
-function Actions_sys_AlsoToOneContent(action, target, skipMain) {
-  if (!target) {
-    throw new Error(
-      "You must provide a target ID as the second parameter of AlsoToOneContent. If you want to send to all content processes, use BroadcastToContent"
-    );
-  }
-  return Actions_sys_RouteMessage(action, {
-    from: Actions_sys_MAIN_MESSAGE_TYPE,
-    to: Actions_sys_CONTENT_MESSAGE_TYPE,
-    toTarget: target,
-    skipMain,
-  });
-}
-
-/**
- * OnlyToOneContent - Creates a message that will be sent to a particular Content process
- *                    and skip the main reducer.
- *
- * @param  {object} action Any redux action (required)
- * @param  {string} target The id of a content port
- * @return {object} An action with added .meta properties
- */
-function Actions_sys_OnlyToOneContent(action, target) {
-  return Actions_sys_AlsoToOneContent(action, target, true);
-}
-
-/**
- * AlsoToPreloaded - Creates a message that dispatched to the main reducer and also sent to the preloaded tab.
- *
- * @param  {object} action Any redux action (required)
- * @return {object} An action with added .meta properties
- */
-function Actions_sys_AlsoToPreloaded(action) {
-  return Actions_sys_RouteMessage(action, {
-    from: Actions_sys_MAIN_MESSAGE_TYPE,
-    to: Actions_sys_PRELOAD_MESSAGE_TYPE,
-  });
-}
-
-/**
- * UserEvent - A telemetry ping indicating a user action. This should only
- *                   be sent from the UI during a user session.
- *
- * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An AlsoToMain action
- */
-function Actions_sys_UserEvent(data) {
-  return Actions_sys_AlsoToMain({
-    type: Actions_sys_actionTypes.TELEMETRY_USER_EVENT,
-    data,
-  });
-}
-
-/**
- * DiscoveryStreamUserEvent - A telemetry ping indicating a user action from Discovery Stream. This should only
- *                     be sent from the UI during a user session.
- *
- * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An AlsoToMain action
- */
-function Actions_sys_DiscoveryStreamUserEvent(data) {
-  return Actions_sys_AlsoToMain({
-    type: Actions_sys_actionTypes.DISCOVERY_STREAM_USER_EVENT,
-    data,
-  });
-}
-
-/**
- * ASRouterUserEvent - A telemetry ping indicating a user action from AS router. This should only
- *                     be sent from the UI during a user session.
- *
- * @param  {object} data Fields to include in the ping (source, etc.)
- * @return {object} An AlsoToMain action
- */
-function Actions_sys_ASRouterUserEvent(data) {
-  return Actions_sys_AlsoToMain({
-    type: Actions_sys_actionTypes.AS_ROUTER_TELEMETRY_USER_EVENT,
-    data,
-  });
-}
-
-/**
- * ImpressionStats - A telemetry ping indicating an impression stats.
- *
- * @param  {object} data Fields to include in the ping
- * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a AlsoToMain action.
- */
-function Actions_sys_ImpressionStats(data, importContext = Actions_sys_globalImportContext) {
-  const action = {
-    type: Actions_sys_actionTypes.TELEMETRY_IMPRESSION_STATS,
-    data,
-  };
-  return importContext === Actions_sys_UI_CODE ? Actions_sys_AlsoToMain(action) : action;
-}
-
-/**
- * DiscoveryStreamImpressionStats - A telemetry ping indicating an impression stats in Discovery Stream.
- *
- * @param  {object} data Fields to include in the ping
- * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a AlsoToMain action.
- */
-function Actions_sys_DiscoveryStreamImpressionStats(
-  data,
-  importContext = Actions_sys_globalImportContext
-) {
-  const action = {
-    type: Actions_sys_actionTypes.DISCOVERY_STREAM_IMPRESSION_STATS,
-    data,
-  };
-  return importContext === Actions_sys_UI_CODE ? Actions_sys_AlsoToMain(action) : action;
-}
-
-/**
- * DiscoveryStreamLoadedContent - A telemetry ping indicating a content gets loaded in Discovery Stream.
- *
- * @param  {object} data Fields to include in the ping
- * @param  {int} importContext (For testing) Override the import context for testing.
- * #return {object} An action. For UI code, a AlsoToMain action.
- */
-function Actions_sys_DiscoveryStreamLoadedContent(
-  data,
-  importContext = Actions_sys_globalImportContext
-) {
-  const action = {
-    type: Actions_sys_actionTypes.DISCOVERY_STREAM_LOADED_CONTENT,
-    data,
-  };
-  return importContext === Actions_sys_UI_CODE ? Actions_sys_AlsoToMain(action) : action;
-}
-
-function Actions_sys_SetPref(name, value, importContext = Actions_sys_globalImportContext) {
-  const action = { type: Actions_sys_actionTypes.SET_PREF, data: { name, value } };
-  return importContext === Actions_sys_UI_CODE ? Actions_sys_AlsoToMain(action) : action;
-}
-
-function Actions_sys_WebExtEvent(type, data, importContext = Actions_sys_globalImportContext) {
-  if (!data || !data.source) {
-    throw new Error(
-      'WebExtEvent actions should include a property "source", the id of the webextension that should receive the event.'
-    );
-  }
-  const action = { type, data };
-  return importContext === Actions_sys_UI_CODE ? Actions_sys_AlsoToMain(action) : action;
-}
-
-const Actions_sys_actionCreators = {
-  BroadcastToContent: Actions_sys_BroadcastToContent,
-  UserEvent: Actions_sys_UserEvent,
-  DiscoveryStreamUserEvent: Actions_sys_DiscoveryStreamUserEvent,
-  ASRouterUserEvent: Actions_sys_ASRouterUserEvent,
-  ImpressionStats: Actions_sys_ImpressionStats,
-  AlsoToOneContent: Actions_sys_AlsoToOneContent,
-  OnlyToOneContent: Actions_sys_OnlyToOneContent,
-  AlsoToMain: Actions_sys_AlsoToMain,
-  OnlyToMain: Actions_sys_OnlyToMain,
-  AlsoToPreloaded: Actions_sys_AlsoToPreloaded,
-  SetPref: Actions_sys_SetPref,
-  WebExtEvent: Actions_sys_WebExtEvent,
-  DiscoveryStreamImpressionStats: Actions_sys_DiscoveryStreamImpressionStats,
-  DiscoveryStreamLoadedContent: Actions_sys_DiscoveryStreamLoadedContent,
-};
-
-// These are helpers to test for certain kinds of actions
-const Actions_sys_actionUtils = {
-  isSendToMain(action) {
-    if (!action.meta) {
-      return false;
-    }
-    return (
-      action.meta.to === Actions_sys_MAIN_MESSAGE_TYPE &&
-      action.meta.from === Actions_sys_CONTENT_MESSAGE_TYPE
-    );
-  },
-  isBroadcastToContent(action) {
-    if (!action.meta) {
-      return false;
-    }
-    if (action.meta.to === Actions_sys_CONTENT_MESSAGE_TYPE && !action.meta.toTarget) {
-      return true;
-    }
-    return false;
-  },
-  isSendToOneContent(action) {
-    if (!action.meta) {
-      return false;
-    }
-    if (action.meta.to === Actions_sys_CONTENT_MESSAGE_TYPE && action.meta.toTarget) {
-      return true;
-    }
-    return false;
-  },
-  isSendToPreloaded(action) {
-    if (!action.meta) {
-      return false;
-    }
-    return (
-      action.meta.to === Actions_sys_PRELOAD_MESSAGE_TYPE &&
-      action.meta.from === Actions_sys_MAIN_MESSAGE_TYPE
-    );
-  },
-  isFromMain(action) {
-    if (!action.meta) {
-      return false;
-    }
-    return (
-      action.meta.from === Actions_sys_MAIN_MESSAGE_TYPE &&
-      action.meta.to === Actions_sys_CONTENT_MESSAGE_TYPE
-    );
-  },
-  getPortIdOfSender(action) {
-    return (action.meta && action.meta.fromTarget) || null;
-  },
-  _RouteMessage: Actions_sys_RouteMessage,
-};
-
 ;// CONCATENATED MODULE: ./common/Dedupe.sys.mjs
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -5827,21 +5368,21 @@ const INITIAL_STATE = {
 
 function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
-    case Actions_sys_actionTypes.INIT:
+    case actionTypes.INIT:
       return Object.assign({}, prevState, action.data || {}, {
         initialized: true,
       });
-    case Actions_sys_actionTypes.TOP_SITES_UPDATED:
+    case actionTypes.TOP_SITES_UPDATED:
       // Toggle `isForStartupCache` when receiving the `TOP_SITES_UPDATE` action
       // so that sponsored tiles can be rendered as usual. See Bug 1826360.
       return Object.assign({}, prevState, action.data || {}, {
         isForStartupCache: false,
       });
-    case Actions_sys_actionTypes.SHOW_PERSONALIZE:
+    case actionTypes.SHOW_PERSONALIZE:
       return Object.assign({}, prevState, {
         customizeMenuVisible: true,
       });
-    case Actions_sys_actionTypes.HIDE_PERSONALIZE:
+    case actionTypes.HIDE_PERSONALIZE:
       return Object.assign({}, prevState, {
         customizeMenuVisible: false,
       });
@@ -5852,7 +5393,7 @@ function App(prevState = INITIAL_STATE.App, action) {
 
 function ASRouter(prevState = INITIAL_STATE.ASRouter, action) {
   switch (action.type) {
-    case Actions_sys_actionTypes.AS_ROUTER_INITIALIZED:
+    case actionTypes.AS_ROUTER_INITIALIZED:
       return { ...action.data, initialized: true };
     default:
       return prevState;
@@ -5900,7 +5441,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   let hasMatch;
   let newRows;
   switch (action.type) {
-    case Actions_sys_actionTypes.TOP_SITES_UPDATED:
+    case actionTypes.TOP_SITES_UPDATED:
       if (!action.data || !action.data.links) {
         return prevState;
       }
@@ -5910,22 +5451,22 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         { initialized: true, rows: action.data.links },
         action.data.pref ? { pref: action.data.pref } : {}
       );
-    case Actions_sys_actionTypes.TOP_SITES_PREFS_UPDATED:
+    case actionTypes.TOP_SITES_PREFS_UPDATED:
       return Object.assign({}, prevState, { pref: action.data.pref });
-    case Actions_sys_actionTypes.TOP_SITES_EDIT:
+    case actionTypes.TOP_SITES_EDIT:
       return Object.assign({}, prevState, {
         editForm: {
           index: action.data.index,
           previewResponse: null,
         },
       });
-    case Actions_sys_actionTypes.TOP_SITES_CANCEL_EDIT:
+    case actionTypes.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, { editForm: null });
-    case Actions_sys_actionTypes.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
+    case actionTypes.TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL:
       return Object.assign({}, prevState, { showSearchShortcutsForm: true });
-    case Actions_sys_actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
+    case actionTypes.TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL:
       return Object.assign({}, prevState, { showSearchShortcutsForm: false });
-    case Actions_sys_actionTypes.PREVIEW_RESPONSE:
+    case actionTypes.PREVIEW_RESPONSE:
       if (
         !prevState.editForm ||
         action.data.url !== prevState.editForm.previewUrl
@@ -5939,7 +5480,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
           previewUrl: action.data.url,
         },
       });
-    case Actions_sys_actionTypes.PREVIEW_REQUEST:
+    case actionTypes.PREVIEW_REQUEST:
       if (!prevState.editForm) {
         return prevState;
       }
@@ -5950,7 +5491,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
           previewUrl: action.data.url,
         },
       });
-    case Actions_sys_actionTypes.PREVIEW_REQUEST_CANCEL:
+    case actionTypes.PREVIEW_REQUEST_CANCEL:
       if (!prevState.editForm) {
         return prevState;
       }
@@ -5960,7 +5501,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
           previewResponse: null,
         },
       });
-    case Actions_sys_actionTypes.SCREENSHOT_UPDATED:
+    case actionTypes.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {
           hasMatch = true;
@@ -5971,7 +5512,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return hasMatch
         ? Object.assign({}, prevState, { rows: newRows })
         : prevState;
-    case Actions_sys_actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
       }
@@ -5987,7 +5528,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return site;
       });
       return Object.assign({}, prevState, { rows: newRows });
-    case Actions_sys_actionTypes.PLACES_BOOKMARKS_REMOVED:
+    case actionTypes.PLACES_BOOKMARKS_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -6002,7 +5543,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return site;
       });
       return Object.assign({}, prevState, { rows: newRows });
-    case Actions_sys_actionTypes.PLACES_LINKS_DELETED:
+    case actionTypes.PLACES_LINKS_DELETED:
       if (!action.data) {
         return prevState;
       }
@@ -6010,9 +5551,9 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         site => !action.data.urls.includes(site.url)
       );
       return Object.assign({}, prevState, { rows: newRows });
-    case Actions_sys_actionTypes.UPDATE_SEARCH_SHORTCUTS:
+    case actionTypes.UPDATE_SEARCH_SHORTCUTS:
       return { ...prevState, searchShortcuts: action.data.searchShortcuts };
-    case Actions_sys_actionTypes.SOV_UPDATED:
+    case actionTypes.SOV_UPDATED:
       const sov = {
         ready: action.data.ready,
         positions: action.data.positions,
@@ -6025,11 +5566,11 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
 
 function Dialog(prevState = INITIAL_STATE.Dialog, action) {
   switch (action.type) {
-    case Actions_sys_actionTypes.DIALOG_OPEN:
+    case actionTypes.DIALOG_OPEN:
       return Object.assign({}, prevState, { visible: true, data: action.data });
-    case Actions_sys_actionTypes.DIALOG_CANCEL:
+    case actionTypes.DIALOG_CANCEL:
       return Object.assign({}, prevState, { visible: false });
-    case Actions_sys_actionTypes.DELETE_HISTORY_URL:
+    case actionTypes.DELETE_HISTORY_URL:
       return Object.assign({}, INITIAL_STATE.Dialog);
     default:
       return prevState;
@@ -6039,12 +5580,12 @@ function Dialog(prevState = INITIAL_STATE.Dialog, action) {
 function Prefs(prevState = INITIAL_STATE.Prefs, action) {
   let newValues;
   switch (action.type) {
-    case Actions_sys_actionTypes.PREFS_INITIAL_VALUES:
+    case actionTypes.PREFS_INITIAL_VALUES:
       return Object.assign({}, prevState, {
         initialized: true,
         values: action.data,
       });
-    case Actions_sys_actionTypes.PREF_CHANGED:
+    case actionTypes.PREF_CHANGED:
       newValues = Object.assign({}, prevState.values);
       newValues[action.data.name] = action.data.value;
       return Object.assign({}, prevState, { values: newValues });
@@ -6057,9 +5598,9 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
   let hasMatch;
   let newState;
   switch (action.type) {
-    case Actions_sys_actionTypes.SECTION_DEREGISTER:
+    case actionTypes.SECTION_DEREGISTER:
       return prevState.filter(section => section.id !== action.data);
-    case Actions_sys_actionTypes.SECTION_REGISTER:
+    case actionTypes.SECTION_REGISTER:
       // If section exists in prevState, update it
       newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
@@ -6079,7 +5620,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         newState.push(section);
       }
       return newState;
-    case Actions_sys_actionTypes.SECTION_UPDATE:
+    case actionTypes.SECTION_UPDATE:
       newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
           // If the action is updating rows, we should consider initialized to be true.
@@ -6141,7 +5682,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       });
 
       return newState;
-    case Actions_sys_actionTypes.SECTION_UPDATE_CARD:
+    case actionTypes.SECTION_UPDATE_CARD:
       return prevState.map(section => {
         if (section && section.id === action.data.id && section.rows) {
           const newRows = section.rows.map(card => {
@@ -6154,7 +5695,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
-    case Actions_sys_actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
       }
@@ -6175,7 +5716,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           }),
         })
       );
-    case Actions_sys_actionTypes.PLACES_SAVED_TO_POCKET:
+    case actionTypes.PLACES_SAVED_TO_POCKET:
       if (!action.data) {
         return prevState;
       }
@@ -6194,7 +5735,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           }),
         })
       );
-    case Actions_sys_actionTypes.PLACES_BOOKMARKS_REMOVED:
+    case actionTypes.PLACES_BOOKMARKS_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -6216,7 +5757,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           }),
         })
       );
-    case Actions_sys_actionTypes.PLACES_LINKS_DELETED:
+    case actionTypes.PLACES_LINKS_DELETED:
       if (!action.data) {
         return prevState;
       }
@@ -6227,7 +5768,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           ),
         })
       );
-    case Actions_sys_actionTypes.PLACES_LINK_BLOCKED:
+    case actionTypes.PLACES_LINK_BLOCKED:
       if (!action.data) {
         return prevState;
       }
@@ -6236,8 +5777,8 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           rows: section.rows.filter(site => site.url !== action.data.url),
         })
       );
-    case Actions_sys_actionTypes.DELETE_FROM_POCKET:
-    case Actions_sys_actionTypes.ARCHIVE_FROM_POCKET:
+    case actionTypes.DELETE_FROM_POCKET:
+    case actionTypes.ARCHIVE_FROM_POCKET:
       return prevState.map(section =>
         Object.assign({}, section, {
           rows: section.rows.filter(
@@ -6252,11 +5793,11 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
 
 function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   switch (action.type) {
-    case Actions_sys_actionTypes.POCKET_WAITING_FOR_SPOC:
+    case actionTypes.POCKET_WAITING_FOR_SPOC:
       return { ...prevState, waitingForSpoc: action.data };
-    case Actions_sys_actionTypes.POCKET_LOGGED_IN:
+    case actionTypes.POCKET_LOGGED_IN:
       return { ...prevState, isUserLoggedIn: !!action.data };
-    case Actions_sys_actionTypes.POCKET_CTA:
+    case actionTypes.POCKET_CTA:
       return {
         ...prevState,
         pocketCta: {
@@ -6273,17 +5814,17 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
 
 function Reducers_sys_Personalization(prevState = INITIAL_STATE.Personalization, action) {
   switch (action.type) {
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
+    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
       return {
         ...prevState,
         lastUpdated: action.data.lastUpdated,
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_PERSONALIZATION_INIT:
+    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_INIT:
       return {
         ...prevState,
         initialized: true,
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_PERSONALIZATION_RESET:
+    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_RESET:
       return { ...INITIAL_STATE.Personalization };
     default:
       return prevState;
@@ -6351,23 +5892,23 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
   });
 
   switch (action.type) {
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE:
+    case actionTypes.DISCOVERY_STREAM_CONFIG_CHANGE:
     // Fall through to a separate action is so it doesn't trigger a listener update on init
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_CONFIG_SETUP:
+    case actionTypes.DISCOVERY_STREAM_CONFIG_SETUP:
       return { ...prevState, config: action.data || {} };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_EXPERIMENT_DATA:
+    case actionTypes.DISCOVERY_STREAM_EXPERIMENT_DATA:
       return { ...prevState, experimentData: action.data || {} };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_LAYOUT_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_LAYOUT_UPDATE:
       return {
         ...prevState,
         layout: action.data.layout || [],
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
+    case actionTypes.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE:
       return {
         ...prevState,
         isCollectionDismissible: action.data.value,
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_PREFS_SETUP:
+    case actionTypes.DISCOVERY_STREAM_PREFS_SETUP:
       return {
         ...prevState,
         recentSavesEnabled: action.data.recentSavesEnabled,
@@ -6381,29 +5922,29 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         descLines: action.data.descLines,
         readTime: action.data.readTime,
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_RECENT_SAVES:
+    case actionTypes.DISCOVERY_STREAM_RECENT_SAVES:
       return {
         ...prevState,
         recentSavesData: action.data.recentSaves,
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_POCKET_STATE_SET:
+    case actionTypes.DISCOVERY_STREAM_POCKET_STATE_SET:
       return {
         ...prevState,
         isUserLoggedIn: action.data.isUserLoggedIn,
       };
-    case Actions_sys_actionTypes.HIDE_PRIVACY_INFO:
+    case actionTypes.HIDE_PRIVACY_INFO:
       return {
         ...prevState,
         isPrivacyInfoModalVisible: false,
       };
-    case Actions_sys_actionTypes.SHOW_PRIVACY_INFO:
+    case actionTypes.SHOW_PRIVACY_INFO:
       return {
         ...prevState,
         isPrivacyInfoModalVisible: true,
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_LAYOUT_RESET:
+    case actionTypes.DISCOVERY_STREAM_LAYOUT_RESET:
       return { ...INITIAL_STATE.DiscoveryStream, config: prevState.config };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_FEEDS_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_FEEDS_UPDATE:
       return {
         ...prevState,
         feeds: {
@@ -6411,7 +5952,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           loaded: true,
         },
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_FEED_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_FEED_UPDATE:
       const newData = {};
       newData[action.data.url] = action.data.feed;
       return {
@@ -6424,7 +5965,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           },
         },
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_SPOCS_CAPS:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_CAPS:
       return {
         ...prevState,
         spocs: {
@@ -6432,7 +5973,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           frequency_caps: [...prevState.spocs.frequency_caps, ...action.data],
         },
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_SPOCS_ENDPOINT:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_ENDPOINT:
       return {
         ...prevState,
         spocs: {
@@ -6442,7 +5983,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
             INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint,
         },
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_PLACEMENTS:
       return {
         ...prevState,
         spocs: {
@@ -6452,7 +5993,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
             INITIAL_STATE.DiscoveryStream.spocs.placements,
         },
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_SPOCS_UPDATE:
+    case actionTypes.DISCOVERY_STREAM_SPOCS_UPDATE:
       if (action.data) {
         return {
           ...prevState,
@@ -6465,7 +6006,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         };
       }
       return prevState;
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_SPOC_BLOCKED:
+    case actionTypes.DISCOVERY_STREAM_SPOC_BLOCKED:
       return {
         ...prevState,
         spocs: {
@@ -6473,14 +6014,14 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           blocked: [...prevState.spocs.blocked, action.data.url],
         },
       };
-    case Actions_sys_actionTypes.DISCOVERY_STREAM_LINK_BLOCKED:
+    case actionTypes.DISCOVERY_STREAM_LINK_BLOCKED:
       return isNotReady()
         ? prevState
         : nextState(items =>
             items.filter(item => item.url !== action.data.url)
           );
 
-    case Actions_sys_actionTypes.PLACES_SAVED_TO_POCKET:
+    case actionTypes.PLACES_SAVED_TO_POCKET:
       const addPocketInfo = item => {
         if (item.url === action.data.url) {
           return Object.assign({}, item, {
@@ -6495,15 +6036,15 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ? prevState
         : nextState(items => items.map(addPocketInfo));
 
-    case Actions_sys_actionTypes.DELETE_FROM_POCKET:
-    case Actions_sys_actionTypes.ARCHIVE_FROM_POCKET:
+    case actionTypes.DELETE_FROM_POCKET:
+    case actionTypes.ARCHIVE_FROM_POCKET:
       return isNotReady()
         ? prevState
         : nextState(items =>
             items.filter(item => item.pocket_id !== action.data.pocket_id)
           );
 
-    case Actions_sys_actionTypes.PLACES_BOOKMARK_ADDED:
+    case actionTypes.PLACES_BOOKMARK_ADDED:
       const updateBookmarkInfo = item => {
         if (item.url === action.data.url) {
           const { bookmarkGuid, bookmarkTitle, dateAdded } = action.data;
@@ -6520,7 +6061,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ? prevState
         : nextState(items => items.map(updateBookmarkInfo));
 
-    case Actions_sys_actionTypes.PLACES_BOOKMARKS_REMOVED:
+    case actionTypes.PLACES_BOOKMARKS_REMOVED:
       const removeBookmarkInfo = item => {
         if (action.data.urls.includes(item.url)) {
           const newSite = Object.assign({}, item);
@@ -6537,7 +6078,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
       return isNotReady()
         ? prevState
         : nextState(items => items.map(removeBookmarkInfo));
-    case Actions_sys_actionTypes.PREF_CHANGED:
+    case actionTypes.PREF_CHANGED:
       if (action.data.name === PREF_COLLECTION_DISMISSIBLE) {
         return {
           ...prevState,
@@ -6552,11 +6093,11 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
 function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
-    case Actions_sys_actionTypes.DISABLE_SEARCH:
+    case actionTypes.DISABLE_SEARCH:
       return Object.assign({ ...prevState, disable: true });
-    case Actions_sys_actionTypes.FAKE_FOCUS_SEARCH:
+    case actionTypes.FAKE_FOCUS_SEARCH:
       return Object.assign({ ...prevState, fakeFocus: true });
-    case Actions_sys_actionTypes.SHOW_SEARCH:
+    case actionTypes.SHOW_SEARCH:
       return Object.assign({ ...prevState, disable: false, fakeFocus: false });
     default:
       return prevState;
