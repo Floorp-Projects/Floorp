@@ -4,23 +4,17 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -33,35 +27,13 @@ import org.mozilla.fenix.ui.robots.notificationShade
  *  - a media notification icon is displayed on the homescreen for the tab playing media content
  *  Note: this test only verifies media notifications, not media itself
  */
-class MediaNotificationTest {
-    private lateinit var mockWebServer: MockWebServer
-    private lateinit var mDevice: UiDevice
-
+class MediaNotificationTest : TestSetup() {
     @get:Rule
     val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
-    private lateinit var browserStore: BrowserStore
 
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    @Before
-    fun setUp() {
-        // Initializing this as part of class construction, below the rule would throw a NPE
-        // So we are initializing this here instead of in all tests.
-        browserStore = activityTestRule.activity.components.core.store
-
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1347033
     @SmokeTest

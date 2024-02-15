@@ -5,8 +5,6 @@
 package org.mozilla.fenix.ui
 
 import android.content.Context
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import kotlinx.coroutines.test.runTest
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.Messaging
@@ -20,6 +18,7 @@ import org.junit.Test
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestSetup
 
 /**
  * This test is to test the integrity of messages hardcoded in the FML.
@@ -27,10 +26,8 @@ import org.mozilla.fenix.helpers.TestHelper
  * It tests if the trigger expressions are valid, all the fields are complete
  * and a simple check if they are localized (don't contain `_`).
  */
-class NimbusMessagingMessageTest {
+class NimbusMessagingMessageTest : TestSetup() {
     private lateinit var feature: Messaging
-    private lateinit var mDevice: UiDevice
-
     private lateinit var context: Context
 
     private val messaging
@@ -41,9 +38,9 @@ class NimbusMessagingMessageTest {
         HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         context = TestHelper.appContext
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         feature = FxNimbusMessaging.features.messaging.value()
     }
 

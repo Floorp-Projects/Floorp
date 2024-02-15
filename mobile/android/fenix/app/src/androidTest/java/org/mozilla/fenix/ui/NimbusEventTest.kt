@@ -5,28 +5,20 @@
 package org.mozilla.fenix.ui
 
 import android.content.Intent
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import io.mockk.mockk
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FirefoxAccount
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.TelemetryAccountObserver
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Experimentation
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestSetup
 
-class NimbusEventTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
-
+class NimbusEventTest : TestSetup() {
     @get:Rule
     val homeActivityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
         .withIntent(
@@ -38,20 +30,6 @@ class NimbusEventTest {
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     @Test
     fun homeScreenNimbusEventsTest() {

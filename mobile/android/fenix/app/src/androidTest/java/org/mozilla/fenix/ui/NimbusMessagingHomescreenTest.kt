@@ -5,22 +5,18 @@
 package org.mozilla.fenix.ui
 
 import android.content.Intent
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.MessageData
 import mozilla.components.service.nimbus.messaging.Messaging
 import mozilla.components.service.nimbus.messaging.StyleData
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.experiments.nimbus.Res
 import org.mozilla.fenix.FenixApplication
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
 import org.mozilla.fenix.nimbus.Homescreen
@@ -32,10 +28,7 @@ import org.mozilla.fenix.ui.robots.homeScreen
  *  Verifies a message can be displayed with all of the correct components
 **/
 
-class NimbusMessagingHomescreenTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
-
+class NimbusMessagingHomescreenTest : TestSetup() {
     private var messageButtonLabel = "CLICK ME"
     private var messageText = "Some Nimbus Messaging text"
     private var messageTitle = "A Nimbus title"
@@ -54,7 +47,8 @@ class NimbusMessagingHomescreenTest {
     val retryTestRule = RetryTestRule(3)
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         // Set up nimbus message
         FxNimbusMessaging.features.messaging.withInitializer { _, _ ->
             // FML generated objects.
@@ -95,20 +89,9 @@ class NimbusMessagingHomescreenTest {
                 ),
             )
         }
-
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
         // refresh message store
         val application = (homeActivityTestRule.activity.application as FenixApplication)
         application.restoreMessaging()
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
     }
 
     @Test

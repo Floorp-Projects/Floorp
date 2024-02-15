@@ -6,10 +6,8 @@ package org.mozilla.fenix.ui
 
 import android.content.Context
 import android.os.Build
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.rule.GrantPermissionRule.grant
-import androidx.test.uiautomator.UiDevice
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import org.json.JSONObject
 import org.junit.Before
@@ -18,15 +16,15 @@ import org.junit.Test
 import org.mozilla.experiments.nimbus.HardcodedNimbusFeatures
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.ui.robots.notificationShade
 
 /**
  * A UI test for testing the notification surface for Nimbus Messaging.
  */
-class NimbusMessagingNotificationTest {
-    private lateinit var mDevice: UiDevice
-
+class NimbusMessagingNotificationTest : TestSetup() {
     private lateinit var context: Context
     private lateinit var hardcodedNimbus: HardcodedNimbusFeatures
 
@@ -43,9 +41,9 @@ class NimbusMessagingNotificationTest {
         }
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         context = TestHelper.appContext
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     }
 
     @Test

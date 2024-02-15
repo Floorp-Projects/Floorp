@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -14,6 +13,7 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.setNetworkEnabled
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.verifyUrl
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -23,16 +23,10 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 
-class NoNetworkAccessStartupTests {
+class NoNetworkAccessStartupTests : TestSetup() {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides(launchActivity = false)
-
-    @After
-    fun tearDown() {
-        // Restoring network connection
-        setNetworkEnabled(true)
-    }
 
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
