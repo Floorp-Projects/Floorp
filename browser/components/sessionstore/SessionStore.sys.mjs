@@ -1932,7 +1932,7 @@ var SessionStoreInternal = {
     // Floorp Injections
     if (
       aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
-      "true"
+      "true" || aWindow.IsWebpanelWindow
     ) {
       return completionPromise;
     }
@@ -4778,7 +4778,7 @@ var SessionStoreInternal = {
       return;
     }
 
-    if (tabData.floorpDisableHistory || tabData.floorpWebpanel) {
+    if (tabData.floorpDisableHistory) {
       return;
     }
 
