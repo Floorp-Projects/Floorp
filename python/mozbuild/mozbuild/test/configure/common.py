@@ -134,6 +134,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
         return ReadOnlyNamespace(
             CalledProcessError=subprocess.CalledProcessError,
             check_output=self.check_output,
+            run=self.subprocess_run,
             PIPE=subprocess.PIPE,
             STDOUT=subprocess.STDOUT,
             Popen=self.Popen,
@@ -193,7 +194,11 @@ class ConfigureTestSandbox(ConfigureSandbox):
             raise OSError(errno.ENOENT, "File not found")
 
         func = self._subprocess_paths.get(program)
-        retcode, stdout, stderr = func(stdin, args[1:])
+        cwd = kargs.get("cwd")
+        if cwd and func.__code__.co_argcount == 3:
+            retcode, stdout, stderr = func(stdin, args[1:], cwd)
+        else:
+            retcode, stdout, stderr = func(stdin, args[1:])
 
         class Process(object):
             def communicate(self, stdin=None):
@@ -211,6 +216,19 @@ class ConfigureTestSandbox(ConfigureSandbox):
         if retcode:
             raise subprocess.CalledProcessError(retcode, args, stdout)
         return stdout
+
+    def subprocess_run(self, args, **kwargs):
+        proc = self.Popen(args, **kwargs)
+        stdout, stderr = proc.communicate()
+        retcode = proc.wait()
+        if kwargs.get("check") and retcode:
+            raise subprocess.CalledProcessError(retcode, args, stdout)
+        return ReadOnlyNamespace(
+            args=args,
+            returncode=retcode,
+            stdout=stdout,
+            stderr=stderr,
+        )
 
     def shell(self, stdin, args):
         script = mozpath.abspath(args[0])
