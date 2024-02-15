@@ -159,15 +159,13 @@ html[dir="rtl"] .editor-mount {
   animation-name: fade-highlight-out;
   animation-duration: var(--highlight-line-duration);
   animation-timing-function: ease-out;
-  animation-direction: forwards;
+  animation-fill-mode: forwards;
 }
 
 @keyframes fade-highlight-out {
-  0% {
-    background-color: var(--theme-contrast-background);
-  }
-  30% {
-    background-color: var(--theme-contrast-background);
+  0%, 30% {
+    /* We want to use a color with some transparency so text selection is visible through it */
+    background-color: var(--theme-contrast-background-alpha);
   }
   100% {
     background-color: transparent;
