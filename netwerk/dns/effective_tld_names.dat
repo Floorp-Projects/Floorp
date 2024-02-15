@@ -12426,6 +12426,10 @@ feste-ip.net
 knx-server.net
 static-access.net
 
+// cPanel L.L.C. : https://www.cpanel.net/
+// Submitted by Dustin Scherer <public.suffix@cpanel.net>
+*.cprapid.com
+
 // Craynic, s.r.o. : http://www.craynic.com/
 // Submitted by Ales Krajnik <ales.krajnik@craynic.com>
 realm.cz
