@@ -848,6 +848,16 @@ pocketNewtab:
       setPref:
         branch: user
         pref: "browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear"
+    ctaButtonSponsors:
+      description: A CSV list of sponsors that should use a button CTA.
+      type: string
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.ctaButtonSponsors
+    ctaButtonVariant:
+      description: Specifies which veriant to use for any sponsors in ctaButtonSponsors
+      type: string
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.ctaButtonVariant
     regionStoriesConfig:
       description: A comma-separated list of region to get stories for.
       type: string

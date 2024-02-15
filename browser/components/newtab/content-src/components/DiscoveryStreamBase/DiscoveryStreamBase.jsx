@@ -194,6 +194,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             compactGrid={component.properties.compactGrid}
             essentialReadsHeader={component.properties.essentialReadsHeader}
             onboardingExperience={component.properties.onboardingExperience}
+            ctaButtonSponsors={component.properties.ctaButtonSponsors}
+            ctaButtonVariant={component.properties.ctaButtonVariant}
             editorsPicksHeader={component.properties.editorsPicksHeader}
             recentSavesEnabled={this.props.DiscoveryStream.recentSavesEnabled}
             hideDescriptions={this.props.DiscoveryStream.hideDescriptions}
