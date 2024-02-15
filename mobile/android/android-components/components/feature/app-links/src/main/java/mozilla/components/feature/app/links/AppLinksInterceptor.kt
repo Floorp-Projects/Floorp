@@ -102,8 +102,6 @@ class AppLinksInterceptor(
             (!interceptLinkClicks || !launchInApp()) && engineSupportsScheme -> true
             // Never go to an external app when scheme is in blocklist
             alwaysDeniedSchemes.contains(uriScheme) -> true
-            // always check this last
-            lastHasExternalAppTimestamp + APP_LINKS_DO_NOT_INTERCEPT_INTERVAL > SystemClock.elapsedRealtime() -> true
             else -> false
         }
 
@@ -115,7 +113,16 @@ class AppLinksInterceptor(
         val result = handleRedirect(redirect, uri, engineSupportedSchemes.contains(uriScheme))
 
         if (redirect.hasExternalApp()) {
-            lastHasExternalAppTimestamp = SystemClock.elapsedRealtime()
+            val packageName = redirect.appIntent?.component?.packageName
+
+            if (
+                lastApplinksPackageWithTimestamp.first == packageName && lastApplinksPackageWithTimestamp.second +
+                APP_LINKS_DO_NOT_INTERCEPT_INTERVAL > SystemClock.elapsedRealtime()
+            ) {
+                return null
+            }
+
+            lastApplinksPackageWithTimestamp = Pair(packageName, SystemClock.elapsedRealtime())
         }
 
         if (redirect.isRedirect()) {
@@ -190,9 +197,8 @@ class AppLinksInterceptor(
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         internal var userDoNotInterceptCache: MutableMap<Int, Long> = mutableMapOf()
 
-        // This should be improved.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1877323
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal var lastHasExternalAppTimestamp: Long = 0L
+        internal var lastApplinksPackageWithTimestamp: Pair<String?, Long> = Pair(null, 0L)
 
         @VisibleForTesting
         internal fun getCacheKey(url: String, appIntent: Intent?): Int? {
@@ -226,6 +232,6 @@ class AppLinksInterceptor(
         internal const val APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL = 60 * 60 * 1000L // 1 hour
 
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-        internal const val APP_LINKS_DO_NOT_INTERCEPT_INTERVAL = 500L // 1/2 second
+        internal const val APP_LINKS_DO_NOT_INTERCEPT_INTERVAL = 2000L // 2 second
     }
 }
