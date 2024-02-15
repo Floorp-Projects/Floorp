@@ -47,7 +47,6 @@
 
       this.addEventListener("mouseover", this);
       this.addEventListener("mouseout", this);
-      this.addEventListener("mouseleave", this);
       this.addEventListener("dragstart", this, true);
       this.addEventListener("dragstart", this);
       this.addEventListener("mousedown", this);
@@ -364,10 +363,6 @@
       this._mouseleave();
     }
 
-    on_mouseleave() {
-      this.dispatchEvent(new CustomEvent("TabHoverEnd", { bubbles: true }));
-    }
-
     on_dragstart(event) {
       // We use "failed" drag end events that weren't cancelled by the user
       // to detach tabs. Ensure that we do not show the drag image returning
@@ -568,6 +563,7 @@
         this.linkedBrowser.unselectedTabHover(false);
         this.cancelUnselectedTabHoverTimer();
       }
+      this.dispatchEvent(new CustomEvent("TabHoverEnd", { bubbles: true }));
     }
 
     setSecondaryTabTooltipLabel(l10nID, l10nArgs) {

@@ -13,26 +13,18 @@ async function openPreview(tab) {
       return e.detail.tab === tab;
     }
   );
-
-  // synthesize a mouseenter on the tab by starting on a different element
-  // and synthesizing mousemove on the tab element
-  EventUtils.synthesizeMouseAtCenter(document.getElementById("reload-button"), {
-    type: "mousemove",
-  });
-  EventUtils.synthesizeMouseAtCenter(tab, { type: "mousemove" });
+  EventUtils.synthesizeMouseAtCenter(tab, { type: "mouseover" });
   return previewShown;
 }
 
 async function closePreviews() {
+  const tabs = document.getElementById("tabbrowser-tabs");
   const previewHidden = BrowserTestUtils.waitForEvent(
     document.getElementById("tabbrowser-tab-preview"),
     "previewhidden"
   );
-
-  // we need to trigger a mouseleave on the tabstrip. EventUtils doesn't support mouseleave
-  // but moving the mouse to a different part of the window will trigger it.
-  EventUtils.synthesizeMouseAtCenter(document.getElementById("reload-button"), {
-    type: "mousemove",
+  EventUtils.synthesizeMouse(tabs, 0, tabs.outerHeight + 1, {
+    type: "mouseout",
   });
   return previewHidden;
 }
@@ -144,11 +136,13 @@ add_task(async () => {
 
   await openPreview(tab1);
 
+  const tabs = document.getElementById("tabbrowser-tabs");
   const previewHidden = BrowserTestUtils.waitForEvent(
     document.getElementById("tabbrowser-tab-preview"),
     "previewhidden"
   );
-  EventUtils.synthesizeWheel(tab1, 0, 0, {
+  EventUtils.synthesizeMouse(tabs, 0, tabs.outerHeight + 1, {
+    wheel: true,
     deltaY: -1,
     deltaMode: WheelEvent.DOM_DELTA_LINE,
   });
