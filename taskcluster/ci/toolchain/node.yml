@@ -42,7 +42,7 @@ linux64-node-18:
         fetch:
             - nodejs-18-source
         toolchain:
-            - linux64-clang-toolchain
+            - linux64-gcc-11
             - linux64-toolchain-sysroot
 
 macosx64-node-16:

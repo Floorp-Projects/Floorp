@@ -7,13 +7,14 @@ workspace=$HOME/workspace
 
 cd $MOZ_FETCHES_DIR/$project
 
-for compiler in clang clang++; do
-	echo "#!/bin/sh" > $compiler
-	echo "$MOZ_FETCHES_DIR/clang/bin/$compiler --sysroot=$MOZ_FETCHES_DIR/sysroot \"\$@\"" >> $compiler
-	chmod +x $compiler
-done
+gcc_major=8
+export CFLAGS=--sysroot=$MOZ_FETCHES_DIR/sysroot
+export CXXFLAGS"=--sysroot=$MOZ_FETCHES_DIR/sysroot  -isystem $MOZ_FETCHES_DIR/sysroot/usr/include/c++/$gcc_major -isystem $MOZ_FETCHES_DIR/sysroot/usr/include/x86_64-linux-gnu/c++/$gcc_major"
+export LDFLAGS="--sysroot=$MOZ_FETCHES_DIR/sysroot -L$MOZ_FETCHES_DIR/sysroot/lib/x86_64-linux-gnu -L$MOZ_FETCHES_DIR/sysroot/usr/lib/x86_64-linux-gnu -L$MOZ_FETCHES_DIR/sysroot/usr/lib/gcc/x86_64-linux-gnu/$gcc_major"
+export CC=$MOZ_FETCHES_DIR/gcc/bin/gcc
+export CXX=$MOZ_FETCHES_DIR/gcc/bin/g++
 
-CC=$PWD/clang CXX=$PWD/clang++ ./configure --verbose --prefix=/
+./configure --verbose --prefix=/
 make -j$(nproc) install DESTDIR=$workspace/$project
 
 tar -C $workspace -acvf $artifact $project
