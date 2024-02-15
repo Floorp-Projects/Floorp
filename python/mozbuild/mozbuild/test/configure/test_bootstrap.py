@@ -6,6 +6,7 @@ import os
 import sys
 from tempfile import TemporaryDirectory
 
+import mozpack.path as mozpath
 from buildconfig import topsrcdir
 from mozunit import MockedOpen, main
 
@@ -96,9 +97,9 @@ class TestBootstrap(BaseConfigureTest):
         sandbox._wrapped_importlib = ReadOnlyNamespace(import_module=self.import_module)
         for t, in_path, b, state in zip(toolchains, in_path, bootstrapped, states):
             if in_path == "append":
-                expected = ["dummy", os.path.join(tmp_dir.name, t)]
+                expected = ["dummy", mozpath.join(tmp_dir.name, t)]
             elif in_path:
-                expected = [os.path.join(tmp_dir.name, t), "dummy"]
+                expected = [mozpath.join(tmp_dir.name, t), "dummy"]
             else:
                 expected = ["dummy"]
             if state:
