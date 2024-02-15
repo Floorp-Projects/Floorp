@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
@@ -383,6 +384,76 @@ class TranslationsMiddlewareTest {
                 translationError = TranslationError.CouldNotLoadNeverTranslateSites(any()),
             ),
         )
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN FetchTranslationDownloadSize is requested AND succeeds THEN SetTranslationDownloadSize is dispatched`() = runTest {
+        val translationSize = TranslationDownloadSize(
+            fromLanguage = Language("en", "English"),
+            toLanguage = Language("fr", "French"),
+            size = 10000L,
+            error = null,
+        )
+
+        val action =
+            TranslationsAction.FetchTranslationDownloadSizeAction(
+                tabId = tab.id,
+                fromLanguage = translationSize.fromLanguage,
+                toLanguage = translationSize.toLanguage,
+            )
+        translationsMiddleware.invoke(context = context, next = {}, action = action)
+
+        val sizeCaptor = argumentCaptor<((Long) -> Unit)>()
+        verify(engine).getTranslationsPairDownloadSize(
+            fromLanguage = any(),
+            toLanguage = any(),
+            onSuccess = sizeCaptor.capture(),
+            onError = any(),
+        )
+        sizeCaptor.value.invoke(translationSize.size!!)
+
+        verify(context.store).dispatch(
+            TranslationsAction.SetTranslationDownloadSizeAction(
+                tabId = tab.id,
+                translationSize = translationSize,
+            ),
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN FetchTranslationDownloadSize is requested AND fails THEN SetTranslationDownloadSize is dispatched`() = runTest {
+        val action =
+            TranslationsAction.FetchTranslationDownloadSizeAction(
+                tabId = tab.id,
+                fromLanguage = Language("en", "English"),
+                toLanguage = Language("fr", "French"),
+            )
+        translationsMiddleware.invoke(context = context, next = {}, action = action)
+
+        val errorCaptor = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine).getTranslationsPairDownloadSize(
+            fromLanguage = any(),
+            toLanguage = any(),
+            onSuccess = any(),
+            onError = errorCaptor.capture(),
+        )
+        errorCaptor.value.invoke(TranslationError.CouldNotDetermineDownloadSizeError(cause = null))
+
+        verify(context.store).dispatch(
+            TranslationsAction.SetTranslationDownloadSizeAction(
+                tabId = tab.id,
+                translationSize = TranslationDownloadSize(
+                    fromLanguage = Language("en", "English"),
+                    toLanguage = Language("fr", "French"),
+                    size = null,
+                    error = any(),
+                ),
+            ),
+        )
+
         waitForIdle()
     }
 

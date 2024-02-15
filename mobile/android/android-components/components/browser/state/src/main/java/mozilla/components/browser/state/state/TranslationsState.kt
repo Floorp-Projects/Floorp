@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationPageSettings
@@ -19,6 +20,9 @@ import mozilla.components.concept.engine.translate.TranslationSupport
  * @property isTranslated The page is currently translated.
  * @property isTranslateProcessing The page is currently attempting a translation.
  * @property isRestoreProcessing The page is currently attempting a restoration.
+ * @property translationDownloadSize The download size for the given to/from translation pair. The
+ * translation engine requires the pair's ML models to be present on the device to complete a
+ * translation.
  * @property supportedLanguages Set of languages the translation engine supports.
  * @property pageSettings The translation engine settings that relate to the current page.
  * @property neverTranslateSites List of sites the user has opted to never translate.
@@ -33,6 +37,7 @@ data class TranslationsState(
     val isTranslated: Boolean = false,
     val isTranslateProcessing: Boolean = false,
     val isRestoreProcessing: Boolean = false,
+    val translationDownloadSize: TranslationDownloadSize? = null,
     val supportedLanguages: TranslationSupport? = null,
     val pageSettings: TranslationPageSettings? = null,
     val neverTranslateSites: List<String>? = null,

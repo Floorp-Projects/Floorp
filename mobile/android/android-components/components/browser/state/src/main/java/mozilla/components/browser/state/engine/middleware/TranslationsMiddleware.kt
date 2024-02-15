@@ -11,9 +11,12 @@ import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageSetting
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
@@ -34,6 +37,7 @@ class TranslationsMiddleware(
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("TranslationsMiddleware")
 
+    @Suppress("LongMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -68,6 +72,18 @@ class TranslationsMiddleware(
                     -> Unit
                 }
             }
+
+            is TranslationsAction.FetchTranslationDownloadSizeAction -> {
+                scope.launch {
+                    requestTranslationSize(
+                        context = context,
+                        tabId = action.tabId,
+                        fromLanguage = action.fromLanguage,
+                        toLanguage = action.toLanguage,
+                    )
+                }
+            }
+
             is TranslationsAction.RemoveNeverTranslateSiteAction -> {
                 scope.launch {
                     removeNeverTranslateSite(context, action.tabId, action.origin)
@@ -363,6 +379,58 @@ class TranslationsMiddleware(
                 },
             )
         }
+    }
+
+    /**
+     * Retrieves the download size and dispatches the result to the
+     * [SessionState.translationsState] on the [BrowserStore]
+     * via [TranslationsAction.SetTranslationDownloadSizeAction].
+     *
+     * @param context Context to use to dispatch to the store.
+     * @param tabId Tab ID associated with the request.
+     * @param fromLanguage The from language to request the translation download size for.
+     * @param toLanguage The to language to request the translation download size for.
+     */
+    private fun requestTranslationSize(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tabId: String,
+        fromLanguage: Language,
+        toLanguage: Language,
+    ) {
+        engine.getTranslationsPairDownloadSize(
+            fromLanguage = fromLanguage.code,
+            toLanguage = toLanguage.code,
+
+            onSuccess = { size ->
+                context.store.dispatch(
+                    TranslationsAction.SetTranslationDownloadSizeAction(
+                        tabId = tabId,
+                        translationSize = TranslationDownloadSize(
+                            fromLanguage = fromLanguage,
+                            toLanguage = toLanguage,
+                            size = size,
+                            error = null,
+                        ),
+                    ),
+                )
+                logger.info("Success requesting download size.")
+            },
+
+            onError = { error ->
+                context.store.dispatch(
+                    TranslationsAction.SetTranslationDownloadSizeAction(
+                        tabId = tabId,
+                        translationSize = TranslationDownloadSize(
+                            fromLanguage = fromLanguage,
+                            toLanguage = toLanguage,
+                            size = null,
+                            error = TranslationError.CouldNotDetermineDownloadSizeError(null),
+                        ),
+                    ),
+                )
+                logger.error("Error requesting download size: ", error)
+            },
+        )
     }
 
     /**

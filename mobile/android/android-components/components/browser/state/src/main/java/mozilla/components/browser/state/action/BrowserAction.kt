@@ -45,6 +45,8 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
+import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
@@ -910,6 +912,32 @@ sealed class TranslationsAction : BrowserAction() {
      */
     data class TranslateRestoreAction(
         override val tabId: String,
+    ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Fetch the translation download size for the given [tabId]. Will use the specified
+     * [fromLanguage] and [toLanguage] to query the download size.
+     *
+     * @property tabId The ID of the tab the [EngineSession] should set the state on.
+     * @property fromLanguage The from [Language] in the translation pair.
+     * @property toLanguage The to [Language] in the translation pair.
+     */
+    data class FetchTranslationDownloadSizeAction(
+        override val tabId: String,
+        val fromLanguage: Language,
+        val toLanguage: Language,
+    ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Set the [TranslationDownloadSize] for the given [tabId].
+     *
+     * @property tabId The ID of the tab the [EngineSession] should set the state on.
+     * @property translationSize The [TranslationDownloadSize] that contains a to/from translations
+     * pair and a download size.
+     */
+    data class SetTranslationDownloadSizeAction(
+        override val tabId: String,
+        val translationSize: TranslationDownloadSize,
     ) : TranslationsAction(), ActionWithTab
 
     /**

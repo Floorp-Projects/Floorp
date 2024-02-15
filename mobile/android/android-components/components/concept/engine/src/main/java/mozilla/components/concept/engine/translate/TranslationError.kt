@@ -73,6 +73,19 @@ sealed class TranslationError(
         TranslationError(errorName = "could-not-restore", displayError = false, cause = cause)
 
     /**
+     * Could not determine the translation download size between a given "to" and "from" language
+     * translation pair.
+     *
+     * @param cause The original [Throwable] before it was converted into this error state.
+     */
+    class CouldNotDetermineDownloadSizeError(override val cause: Throwable?) :
+        TranslationError(
+            errorName = "could-not-determine-translation-download-size",
+            displayError = false,
+            cause = cause,
+        )
+
+    /**
      * Could not load language options error.
      *
      * @param cause The original throwable before it was converted into this error state.

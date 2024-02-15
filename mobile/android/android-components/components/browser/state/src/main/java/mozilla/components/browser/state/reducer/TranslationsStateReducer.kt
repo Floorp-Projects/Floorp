@@ -295,6 +295,22 @@ internal object TranslationsStateReducer {
                 ),
             )
         }
+
+        is TranslationsAction.FetchTranslationDownloadSizeAction -> {
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    translationDownloadSize = null,
+                )
+            }
+        }
+
+        is TranslationsAction.SetTranslationDownloadSizeAction -> {
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    translationDownloadSize = action.translationSize,
+                )
+            }
+        }
     }
 
     private inline fun BrowserState.copyWithTranslationsState(

@@ -11,6 +11,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
@@ -347,6 +348,60 @@ class TranslationsActionTest {
 
         // Action success
         assertEquals(pageSettings, tabState().translationsState.pageSettings)
+    }
+
+    @Test
+    fun `WHEN a SetTranslationDownloadSize is dispatched THEN set translationSize is set`() {
+        // Initial
+        assertNull(tabState().translationsState.translationDownloadSize)
+
+        // Action started
+        val translationSize = TranslationDownloadSize(
+            fromLanguage = Language("en", "English"),
+            toLanguage = Language("fr", "French"),
+            size = 10000L,
+            error = null,
+        )
+        store.dispatch(
+            TranslationsAction.SetTranslationDownloadSizeAction(
+                tabId = tab.id,
+                translationSize = translationSize,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertEquals(translationSize, tabState().translationsState.translationDownloadSize)
+    }
+
+    @Test
+    fun `WHEN a FetchTranslationDownloadSize is dispatched THEN translationSize is cleared`() {
+        // Initial setting size for a more robust test
+        val translationSize = TranslationDownloadSize(
+            fromLanguage = Language("en", "English"),
+            toLanguage = Language("fr", "French"),
+            size = 10000L,
+            error = null,
+        )
+        store.dispatch(
+            TranslationsAction.SetTranslationDownloadSizeAction(
+                tabId = tab.id,
+                translationSize = translationSize,
+            ),
+        ).joinBlocking()
+
+        assertEquals(translationSize, tabState().translationsState.translationDownloadSize)
+
+        // Action started
+        store.dispatch(
+            TranslationsAction.FetchTranslationDownloadSizeAction(
+                tabId = tab.id,
+                fromLanguage = Language("en", "English"),
+                toLanguage = Language("fr", "French"),
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertNull(tabState().translationsState.translationDownloadSize)
     }
 
     @Test
