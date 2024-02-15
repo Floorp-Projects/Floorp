@@ -873,23 +873,27 @@ class ElementStyle {
    *                              value if the property is not defined)
    */
   getAllCustomProperties(pseudo = "") {
-    const customProperties = new Map();
-
-    const variables = this.variablesMap.get(pseudo);
-    if (variables) {
-      for (const [name, value] of variables) {
-        customProperties.set(name, value);
-      }
-    }
+    let customProperties = this.variablesMap.get(pseudo);
 
     const registeredPropertiesMap =
       this.ruleView.getRegisteredPropertiesForSelectedNodeTarget();
-    if (registeredPropertiesMap) {
-      for (const [name, propertyDefinition] of registeredPropertiesMap) {
-        // Only set the registered property if it's not defined (i.e. not in variablesMap)
-        if (!customProperties.has(name)) {
-          customProperties.set(name, propertyDefinition.initialValue);
+
+    // If there's no registered properties, we can return the Map as is
+    if (!registeredPropertiesMap || registeredPropertiesMap.size === 0) {
+      return customProperties;
+    }
+
+    let newMapCreated = false;
+    for (const [name, propertyDefinition] of registeredPropertiesMap) {
+      // Only set the registered property if it's not defined (i.e. not in this.variablesMap)
+      if (!customProperties.has(name)) {
+        // Since we want to return registered property, we need to create a new Map
+        // to not modify the one in this.variablesMap.
+        if (!newMapCreated) {
+          customProperties = new Map(customProperties);
+          newMapCreated = true;
         }
+        customProperties.set(name, propertyDefinition.initialValue);
       }
     }
 

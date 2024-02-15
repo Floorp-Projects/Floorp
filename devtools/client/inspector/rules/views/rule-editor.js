@@ -831,10 +831,9 @@ RuleEditor.prototype = {
       popup: this.ruleView.popup,
       cssProperties: this.rule.cssProperties,
       inputAriaLabel: NEW_PROPERTY_NAME_INPUT_LABEL,
-      cssVariables:
-        this.rule.elementStyle.getAllCustomProperties(
-          this.rule.pseudoElement
-        ) || new Map(),
+      cssVariables: this.rule.elementStyle.getAllCustomProperties(
+        this.rule.pseudoElement
+      ),
     });
 
     // Auto-close the input if multiple rules get pasted into new property.
