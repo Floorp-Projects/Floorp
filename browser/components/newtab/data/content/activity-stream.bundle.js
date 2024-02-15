@@ -14756,10 +14756,21 @@ const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => (
 ;// CONCATENATED MODULE: ./content-src/components/Background/Background.jsx
 
 const imgLength = 100;
+
+function setImgData(data, url, type, result) {
+  let blobURL = URL.createObjectURL(new Blob([data], {
+    type
+  }));
+  result({
+    "url": url,
+    "data": blobURL
+  });
+}
+
 function Background(props) {
   var _props$pref;
 
-  if (props.className == "random_image") {
+  if (props.className === "random_image") {
     let [imgSrc, setImgSrc] = (0,external_React_namespaceObject.useState)({
       "url": `chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`
     });
@@ -14779,17 +14790,17 @@ function Background(props) {
         "--background-url": `url(${imgSrc.url})`
       }
     }));
-  } else if (props.className == "selected_folder" && (_props$pref = props.pref) !== null && _props$pref !== void 0 && _props$pref.backgroundPaths) {
+  } else if (props.className === "selected_folder" && (_props$pref = props.pref) !== null && _props$pref !== void 0 && _props$pref.backgroundPaths) {
     const imageList = props.pref.backgroundPaths;
     let [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)({
-      "url": imageList.urls.length != 0 ? imageList.urls[Math.floor(Math.random() * imageList.urls.length)] : ""
+      "url": imageList.urls.length ? imageList.urls[Math.floor(Math.random() * imageList.urls.length)] : ""
     });
 
-    if (imageList.urls.length != 0) {
-      var _props$pref2, _props$pref3;
+    if (imageList.urls.length) {
+      var _props$pref$, _props$pref$2;
 
-      if (imageList.urls.indexOf(fileImgSrc.url) == -1 || ((_props$pref2 = props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url]) === null || _props$pref2 === void 0 ? void 0 : _props$pref2.data) === null) {
-        fileImgSrc.url = imageList.urls.length != 0 ? imageList.urls[Math.floor(Math.random() * imageList.urls.length)] : "";
+      if (imageList.urls.includes(fileImgSrc.url) || ((_props$pref$ = props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`]) === null || _props$pref$ === void 0 ? void 0 : _props$pref$.data) === null) {
+        fileImgSrc.url = imageList.urls.length ? imageList.urls[Math.floor(Math.random() * imageList.urls.length)] : "";
         setFileImgSrc({
           "url": fileImgSrc.url
         });
@@ -14805,8 +14816,8 @@ function Background(props) {
             "--background-url": `url(${fileImgSrc.data})`
           }
         }));
-      } else if ((_props$pref3 = props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url]) !== null && _props$pref3 !== void 0 && _props$pref3.data) {
-        setImgData(props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url].data, fileImgSrc.url, props.pref["floorpBackgroundPathsVal_" + fileImgSrc.url].type, setFileImgSrc);
+      } else if ((_props$pref$2 = props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`]) !== null && _props$pref$2 !== void 0 && _props$pref$2.data) {
+        setImgData(props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`].data, fileImgSrc.url, props.pref[`floorpBackgroundPathsVal_${fileImgSrc.url}`].type, setFileImgSrc);
       } else {
         props.getImg(fileImgSrc.url);
       }
@@ -14820,20 +14831,19 @@ function Background(props) {
           "--background-url": `url(${fileImgSrc.data})`
         }
       }));
-    } else if (fileImgSrc.url != "") {
+    } else if (fileImgSrc.url !== "") {
       setFileImgSrc({
         "url": ""
       });
     }
-  } else if (props.className == "selected_image" && props.pref.oneImageData) {
+  } else if (props.className === "selected_image" && props.pref.oneImageData) {
     const imgData = props.pref.oneImageData;
     let [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)({
       "url": imgData.url ?? ""
     });
-    console.log(fileImgSrc);
 
     if (imgData.url) {
-      if (imgData.url != fileImgSrc.url) {
+      if (imgData.url !== fileImgSrc.url) {
         fileImgSrc.url = imgData.url;
         setFileImgSrc({
           "url": imgData.url
@@ -14861,7 +14871,7 @@ function Background(props) {
           "--background-url": `url(${fileImgSrc.data})`
         }
       }));
-    } else if (fileImgSrc.url != "") {
+    } else if (fileImgSrc.url !== "") {
       setFileImgSrc({
         "url": ""
       });
@@ -14874,16 +14884,6 @@ function Background(props) {
   }, /*#__PURE__*/external_React_default().createElement("div", {
     id: "background"
   }));
-}
-
-async function setImgData(data, url, type, result) {
-  let blobURL = URL.createObjectURL(new Blob([data], {
-    type: type
-  }));
-  result({
-    "url": url,
-    "data": blobURL
-  });
 }
 ;// CONCATENATED MODULE: ./content-src/components/Base/Base.jsx
 function Base_extends() { Base_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Base_extends.apply(this, arguments); }
