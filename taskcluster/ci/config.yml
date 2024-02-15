@@ -227,6 +227,7 @@ treeherder:
         'rust': 'Rust checks'
         'Static-Analysis': 'Full tree static-analysis'
         'SS': 'Shadow scheduler'
+        'Sel': 'Selenium Snap tests'
         'Sentry': 'Sentry synchronization'
         'test-info': 'Test manifest skip/fail information'
         'condprof': 'Conditioned Profile Builder'

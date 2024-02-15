@@ -468,4 +468,9 @@ denotes which dependent kind is the `primary one`_.
 
 Typically this is set by the ``taskgraph.transforms.from_deps`` transforms.
 
+snap_test_type
+==============
+
+For Snap tests tasks, used to disambiguate task label
+
 .. _primary one: https://taskcluster-taskgraph.readthedocs.io/en/latest/reference/transforms/from_deps.html#primary-kind

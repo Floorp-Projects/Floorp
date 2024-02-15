@@ -19,6 +19,11 @@ transforms = TransformSequence()
 @transforms.add
 def fill_template(config, tasks):
     for task in tasks:
+        test_type = task.get("attributes")["snap_test_type"]
+
+        assert "-test-" in task.get("label")
+        task["label"] = task.get("label").replace("-test-", "-test-" + test_type + "-")
+
         dep = get_primary_dependency(config, task)
         assert dep
 
@@ -33,6 +38,7 @@ def fill_template(config, tasks):
         task["task"]["extra"]["treeherder"]["collection"] = {collection: True}
         task["task"]["extra"]["treeherder"]["machine"]["platform"] = platform
         task["task"]["extra"]["treeherder-platform"] = full_platform_collection
+        task["task"]["metadata"]["name"] = task["label"]
 
         timeout = 10
         if collection != "opt":

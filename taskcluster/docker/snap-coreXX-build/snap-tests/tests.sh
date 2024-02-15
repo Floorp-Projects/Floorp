@@ -4,6 +4,9 @@ set -ex
 
 pwd
 
+SUITE=${1:-basic}
+SUITE=${SUITE//--/}
+
 export ARTIFACT_DIR=$TASKCLUSTER_ROOT_DIR/builds/worker/artifacts/
 mkdir -p "$ARTIFACT_DIR"
 
@@ -49,5 +52,17 @@ RUNTIME_VERSION=$(snap run firefox --version | awk '{ print $3 }')
 
 python3 -m pip install --user -r requirements.txt
 
-sed -e "s/#RUNTIME_VERSION#/${RUNTIME_VERSION}/#" < basic_tests/expectations.json.in > basic_tests/expectations.json
-python3 basic_tests.py basic_tests/expectations.json
+# Required otherwise copy/paste does not work
+# Bug 1878643
+export TEST_NO_HEADLESS=1
+
+if [ -n "${MOZ_LOG}" ]; then
+  export MOZ_LOG_FILE="${ARTIFACT_DIR}/gecko-log"
+fi
+
+if [ "${SUITE}" = "basic" ]; then
+  sed -e "s/#RUNTIME_VERSION#/${RUNTIME_VERSION}/#" < basic_tests/expectations.json.in > basic_tests/expectations.json
+  python3 basic_tests.py basic_tests/expectations.json
+else
+  python3 "${SUITE}"_tests.py
+fi;
