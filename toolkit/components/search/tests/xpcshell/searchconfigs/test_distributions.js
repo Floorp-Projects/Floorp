@@ -56,7 +56,7 @@ tests.push({
   region: "CN",
   distribution: "MozillaOnline",
   test: engines =>
-    hasEnginesFirst(engines, ["百度", "Bing", "Google", "亚马逊", "维基百科"]),
+    hasEnginesFirst(engines, ["百度", "Bing", "Google", "维基百科"]),
 });
 
 tests.push({
