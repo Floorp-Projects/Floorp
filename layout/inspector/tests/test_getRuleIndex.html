@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test InspectorUtils.getRuleIndex</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    @property --color {
+      syntax: "*";
+      inherits: false;
+    }
+    html {
+      background: gold;
+
+      &:hover {
+        background: yellow;
+      }
+
+      & body {
+        color: tomato;
+
+        &:focus-visible {
+          outline: 1px solid cyan;
+        }
+      }
+    }
+    @keyframes anim {
+      0% {
+        color: blue;
+      }
+      100% {
+        color: green;
+      }
+    }
+  </style>
+</head>
+<body>
+<code>InspectorUtils.getRuleIndex</code>
+
+<script>
+"use strict";
+
+/** Test for InspectorUtils.getCSSRegisteredProperties **/
+
+const { Assert } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+const stylesheet = document.styleSheets[1];
+const stylesheetRules = stylesheet.cssRules;
+
+let rule = stylesheetRules[0];
+is(rule.name, "--color", "Expected @property rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [0]);
+
+rule = stylesheetRules[1];
+is(rule.selectorText, "html", "Expected htlm rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [1]);
+
+rule = stylesheetRules[1].cssRules[0];
+is(rule.selectorText, "&:hover", "Expected nested &:hover rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [1, 0]);
+
+rule = stylesheetRules[1].cssRules[1];
+is(rule.selectorText, "& body", "Expected nested & body rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [1, 1]);
+
+rule = stylesheetRules[1].cssRules[1].cssRules[0];
+is(rule.selectorText, "&:focus-visible", "Expected nested &:focus-visible rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [1, 1, 0]);
+
+rule = stylesheetRules[2];
+is(rule.name, "anim", "Expected @keyframes rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [2]);
+
+rule = stylesheetRules[2].cssRules[0];
+is(rule.keyText, "0%", "Expected 0% keyframe rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [2, 0]);
+
+rule = stylesheetRules[2].cssRules[1];
+is(rule.keyText, "100%", "Expected 100% keyframe rule");
+Assert.deepEqual(InspectorUtils.getRuleIndex(rule), [2, 1]);
+
+</script>
+</pre>
+</body>
+</html>

@@ -72,6 +72,9 @@ class InspectorUtils {
    */
   static uint32_t GetRelativeRuleLine(GlobalObject& aGlobal, css::Rule& aRule);
 
+  static void GetRuleIndex(GlobalObject& aGlobal, css::Rule& aRule,
+                           nsTArray<uint32_t>& aResult);
+
   static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
                                       StyleSheet& aSheet);
 

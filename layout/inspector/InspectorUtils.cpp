@@ -32,6 +32,7 @@
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/CSSStyleRule.h"
+#include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/HighlightRegistry.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
@@ -348,6 +349,50 @@ uint32_t InspectorUtils::GetRelativeRuleLine(GlobalObject& aGlobal,
                                              css::Rule& aRule) {
   // Rule lines are 0-based, but inspector wants 1-based.
   return aRule.GetLineNumber() + 1;
+}
+
+
+void InspectorUtils::GetRuleIndex(GlobalObject& aGlobal,
+                                  css::Rule& aRule,
+                                  nsTArray<uint32_t>& aResult) {
+  css::Rule* currentRule = &aRule;
+
+  do {
+    css::Rule* parentRule = currentRule->GetParentRule();
+    dom::CSSRuleList* ruleList = nullptr;
+
+    if (parentRule) {
+      if (parentRule->IsGroupRule()) {
+        ruleList = static_cast<css::GroupRule*>(parentRule)->CssRules();
+      } else if (parentRule->Type() == StyleCssRuleType::Keyframes) {
+        ruleList = static_cast<CSSKeyframesRule*>(parentRule)->CssRules();
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Unknown parent rule type?");
+      }
+    } else if (StyleSheet* sheet = currentRule->GetStyleSheet()) {
+      ruleList = sheet->GetCssRulesInternal();
+    }
+
+    if (!ruleList) {
+      return;
+    }
+
+    bool found = false;
+    for (uint32_t i = 0, len = ruleList->Length(); i < len; ++i) {
+      css::Rule* rule = ruleList->Item(i);
+      if (currentRule == rule) {
+        found = true;
+        aResult.InsertElementAt(0, i);
+        break;
+      }
+    }
+
+    if (!found) {
+      return;
+    }
+
+    currentRule = parentRule;
+  } while (currentRule);
 }
 
 /* static */

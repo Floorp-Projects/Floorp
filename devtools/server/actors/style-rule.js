@@ -611,35 +611,8 @@ class StyleRuleActor extends Actor {
    * nested rules.
    */
   _computeRuleIndex() {
-    let rule = this.rawRule;
-    const result = [];
-
-    while (rule) {
-      let cssRules = [];
-      if (rule.parentRule) {
-        cssRules = rule.parentRule.cssRules;
-      } else if (rule.parentStyleSheet) {
-        cssRules = rule.parentStyleSheet.cssRules;
-      }
-
-      let found = false;
-      for (let i = 0; i < cssRules.length; i++) {
-        if (rule === cssRules.item(i)) {
-          found = true;
-          result.unshift(i);
-          break;
-        }
-      }
-
-      if (!found) {
-        this._ruleIndex = null;
-        return;
-      }
-
-      rule = rule.parentRule;
-    }
-
-    this._ruleIndex = result;
+    const index = InspectorUtils.getRuleIndex(this.rawRule);
+    this._ruleIndex = index.length ? index : null;
   }
 
   /**
