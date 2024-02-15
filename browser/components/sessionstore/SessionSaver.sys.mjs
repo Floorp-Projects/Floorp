@@ -253,19 +253,22 @@ var SessionSaverInternal = {
 
     // Floorp Injections
     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
-  
-    for (let window of state.windows) {
-      if (window.isWebpanelWindow) {
-        // Remove webpanel windows from the session state.
-        state.windows.splice(state.windows.indexOf(window), 1);
-        continue;
-      }
 
-      for (let tab of window.tabs) {
-        let ssbEnabled = tab.floorpSSB === "true";
-        let webpanelTab = tab.floorpWebPanel === "true";
-        if (ssbEnabled || webpanelTab) {
-          state.windows.splice(state.windows.indexOf(window), 1);
+    for (let i = state.windows.length - 1; i >= 0; i--) {
+      let win = state.windows[i];
+      if (win.isWebpanelWindow) {
+        state.windows.splice(i, 1);
+
+        if (state.selectedWindow >= i) {
+          state.selectedWindow--;
+        }
+      } else {
+        for (let tab of win.tabs) {
+          let ssbEnabled = tab.floorpSSB === "true";
+          let webpanelTab = tab.floorpWebpanelTab;
+          if (ssbEnabled || webpanelTab) {
+            state.windows.splice(i, 1);
+          }
         }
       }
     }
