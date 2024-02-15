@@ -26,32 +26,38 @@ export var LayoutUtils = {
   },
 
   _rectToClientRect(win, rect) {
-    let x = rect.left;
-    let y = rect.top;
+    // We need to compensate the position for ancestor iframes in the same
+    // process that might shift things over. Those might have different CSS
+    // pixel scales, so we compute the position in device pixels and then go
+    // back to css pixels at the end.
+    let winDpr = win.devicePixelRatio;
+    let x = rect.left * winDpr;
+    let y = rect.top * winDpr;
 
-    // We need to compensate for ancestor iframes in the same process
-    // that might shift things over.
     let parentFrame = win.browsingContext?.embedderElement;
     while (parentFrame) {
       win = parentFrame.ownerGlobal;
       let cstyle = win.getComputedStyle(parentFrame);
 
       let framerect = parentFrame.getBoundingClientRect();
-      x +=
+      let xDelta =
         framerect.left +
         parseFloat(cstyle.borderLeftWidth) +
         parseFloat(cstyle.paddingLeft);
-      y +=
+      let yDelta =
         framerect.top +
         parseFloat(cstyle.borderTopWidth) +
         parseFloat(cstyle.paddingTop);
+
+      x += xDelta * win.devicePixelRatio;
+      y += yDelta * win.devicePixelRatio;
 
       parentFrame = win.browsingContext?.embedderElement;
     }
 
     return {
-      x,
-      y,
+      x: x / winDpr,
+      y: y / winDpr,
       width: rect.width,
       height: rect.height,
     };
