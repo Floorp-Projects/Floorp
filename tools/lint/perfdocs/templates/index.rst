@@ -55,7 +55,7 @@ Here are the active PerfTest components/modules and their respective owners:
         - Co-owner: Kash
         - Description: An http proxy used to run tests against third-party websites in a reliable and reproducible way
     * PerfCompare
-        - Owner: Kimberly
+        - Owner: Carla S.
         - Co-owner: Beatrice A.
         - Description: Performance comparison tool used to compare performance of different commits within a repository
     * PerfDocs
