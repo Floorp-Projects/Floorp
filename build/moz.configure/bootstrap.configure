@@ -316,15 +316,18 @@ def bootstrap_path(path, **kwargs):
 def bootstrap_search_path(path, paths=original_path, **kwargs):
     @depends(
         enable_bootstrap,
+        dependable(path),
         bootstrap_path(path, **kwargs),
         bootstrap_search_path_order,
         paths,
         original_path,
     )
-    def bootstrap_search_path(bootstrap, path, order, paths, original_path):
+    def bootstrap_search_path(
+        bootstrap, path, bootstrap_path, order, paths, original_path
+    ):
         if paths is None:
             paths = original_path
-        if not path:
+        if not bootstrap_path:
             return paths
         if order == "maybe-prepend":
             if bootstrap(path.split("/")[0]):
@@ -332,7 +335,7 @@ def bootstrap_search_path(path, paths=original_path, **kwargs):
             else:
                 order = "append"
         if order == "prepend":
-            return [path] + paths
-        return paths + [path]
+            return [bootstrap_path] + paths
+        return paths + [bootstrap_path]
 
     return bootstrap_search_path
