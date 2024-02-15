@@ -124,6 +124,17 @@ internal object TranslationsStateReducer {
                     }
                 }
 
+                TranslationOperation.FETCH_LANGUAGE_MODELS -> {
+                    // Reset the error state, and then generally expect
+                    // [TranslationsAction.SetLanguageModelsAction] to update state in the
+                    // success case.
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            translationError = null,
+                        )
+                    }
+                }
+
                 TranslationOperation.FETCH_PAGE_SETTINGS -> {
                     // Reset the error state, and then generally expect
                     // [TranslationsAction.SetPageSettingsAction] to update state in the
@@ -176,6 +187,14 @@ internal object TranslationsStateReducer {
                     }
                 }
 
+                TranslationOperation.FETCH_LANGUAGE_MODELS -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            translationError = action.translationError,
+                        )
+                    }
+                }
+
                 TranslationOperation.FETCH_PAGE_SETTINGS -> {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
@@ -204,6 +223,14 @@ internal object TranslationsStateReducer {
             state.copy(
                 translationEngine = state.translationEngine.copy(
                     supportedLanguages = action.supportedLanguages,
+                    engineError = null,
+                ),
+            )
+
+        is TranslationsAction.SetLanguageModelsAction ->
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    languageModels = action.languageModels,
                     engineError = null,
                 ),
             )
@@ -239,6 +266,13 @@ internal object TranslationsStateReducer {
                     state.copy(
                         translationEngine = state.translationEngine.copy(
                             supportedLanguages = null,
+                        ),
+                    )
+                }
+                TranslationOperation.FETCH_LANGUAGE_MODELS -> {
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
+                            languageModels = null,
                         ),
                     )
                 }

@@ -46,6 +46,7 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -1064,6 +1065,15 @@ sealed class TranslationsAction : BrowserAction() {
         override val tabId: String,
         val origin: String,
     ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Sets the list of language machine learning translation models the translation engine has available.
+     *
+     * @property languageModels The list of language machine learning translation models.
+     */
+    data class SetLanguageModelsAction(
+        val languageModels: List<LanguageModel>,
+    ) : TranslationsAction()
 }
 
 /**

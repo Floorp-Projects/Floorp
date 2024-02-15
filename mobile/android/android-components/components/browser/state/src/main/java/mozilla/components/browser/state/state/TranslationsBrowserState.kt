@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.state
 
+import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationSupport
 
@@ -12,11 +13,13 @@ import mozilla.components.concept.engine.translate.TranslationSupport
  *
  * @property isEngineSupported Whether the translations engine supports the device architecture.
  * @property supportedLanguages Set of languages the translation engine supports.
+ * @property languageModels Set of language machine learning translation models the translation engine has available.
  * @property engineError Holds the error state of the translations engine.
  * See [TranslationsState.translationError] for session level errors.
  */
 data class TranslationsBrowserState(
     val isEngineSupported: Boolean? = null,
     val supportedLanguages: TranslationSupport? = null,
+    val languageModels: List<LanguageModel>? = null,
     val engineError: TranslationError? = null,
 )

@@ -37,7 +37,7 @@ class TranslationsMiddleware(
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("TranslationsMiddleware")
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -62,6 +62,11 @@ class TranslationsMiddleware(
                     TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
                         scope.launch {
                             requestSupportedLanguages(context, action.tabId)
+                        }
+                    }
+                    TranslationOperation.FETCH_LANGUAGE_MODELS -> {
+                        scope.launch {
+                            requestLanguageModels(context, action.tabId)
                         }
                     }
                     TranslationOperation.FETCH_PAGE_SETTINGS -> {
@@ -136,7 +141,6 @@ class TranslationsMiddleware(
                         }
                 }
             }
-
             else -> {
                 // no-op
             }
@@ -152,6 +156,7 @@ class TranslationsMiddleware(
      *
      * This will populate:
      * Language Support - [requestSupportedLanguages]
+     * Language Models - [requestLanguageModels]
      *
      * @param context Context to use to dispatch to the store.
      */
@@ -159,6 +164,7 @@ class TranslationsMiddleware(
         context: MiddlewareContext<BrowserState, BrowserAction>,
     ) {
         requestSupportedLanguages(context)
+        requestLanguageModels(context)
     }
 
     /**
@@ -221,7 +227,6 @@ class TranslationsMiddleware(
         tabId: String? = null,
     ) {
         engine.getSupportedTranslationLanguages(
-
             onSuccess = {
                 context.store.dispatch(
                     TranslationsAction.SetSupportedLanguagesAction(
@@ -230,7 +235,6 @@ class TranslationsMiddleware(
                 )
                 logger.info("Success requesting supported languages.")
             },
-
             onError = {
                 context.store.dispatch(
                     TranslationsAction.EngineExceptionAction(
@@ -249,6 +253,61 @@ class TranslationsMiddleware(
                 }
 
                 logger.error("Error requesting supported languages: ", it)
+            },
+        )
+    }
+
+    /**
+     * Retrieves the list of language machine learning translation models the translation engine
+     * has available and dispatches the result to the [BrowserState.translationEngine]
+     * via [TranslationsAction.SetLanguageModelsAction] or else dispatches the failure.
+     *
+     * For failure dispatching:
+     * If a tab ID is not provided, then only [TranslationsAction.EngineExceptionAction] will be
+     * dispatched to set the error on the [BrowserState.translationEngine].
+     *
+     * If a tab ID is provided, then  [TranslationsAction.EngineExceptionAction]
+     * AND [TranslationsAction.TranslateExceptionAction] will be dispatched
+     * to set the error both on the [BrowserState.translationEngine] and
+     * [SessionState.translationsState].
+     *
+     * @param context Context to use to dispatch to the store.
+     * @param tabId If a Tab ID associated with the request for error handling.
+     * If null, this will only dispatch errors on the global translations browser state.
+     *
+     */
+    private fun requestLanguageModels(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tabId: String? = null,
+    ) {
+        engine.getTranslationsModelDownloadStates(
+            onSuccess = {
+                context.store.dispatch(
+                    TranslationsAction.SetLanguageModelsAction(
+                        languageModels = it,
+                    ),
+                )
+                logger.info("Success requesting language models.")
+            },
+
+            onError = { error ->
+                context.store.dispatch(
+                    TranslationsAction.EngineExceptionAction(
+                        error = TranslationError.ModelCouldNotRetrieveError(error),
+                    ),
+                )
+
+                if (tabId != null) {
+                    context.store.dispatch(
+                        TranslationsAction.TranslateExceptionAction(
+                            tabId = tabId,
+                            operation = TranslationOperation.FETCH_LANGUAGE_MODELS,
+                            translationError = TranslationError.ModelCouldNotRetrieveError(error),
+                        ),
+                    )
+                }
+
+                logger.error("Error requesting language models: ", error)
             },
         )
     }

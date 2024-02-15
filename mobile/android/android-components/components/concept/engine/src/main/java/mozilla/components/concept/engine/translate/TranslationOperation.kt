@@ -26,6 +26,11 @@ enum class TranslationOperation {
     FETCH_SUPPORTED_LANGUAGES,
 
     /**
+     * The list of available language machine learning translation models the translation engine should fetch.
+     */
+    FETCH_LANGUAGE_MODELS,
+
+    /**
      * The page related settings the translation engine should fetch.
      */
     FETCH_PAGE_SETTINGS,

@@ -11,6 +11,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.LanguageModel
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -721,5 +722,29 @@ class TranslationsActionTest {
 
         // Final state
         assertEquals(store.state.translationEngine.engineError!!, error)
+    }
+
+    @Test
+    fun `WHEN a SetLanguageModelsAction is dispatched and successful THEN the browser store is updated to match`() {
+        // Initial state
+        assertNull(store.state.translationEngine.languageModels)
+
+        val code = "es"
+        val localizedDisplayName = "Spanish"
+        val isDownloaded = true
+        val size: Long = 1234
+        val language = Language(code, localizedDisplayName)
+        val languageModel = LanguageModel(language, isDownloaded, size)
+        val languageModels = mutableListOf(languageModel)
+
+        // Dispatch
+        store.dispatch(
+            TranslationsAction.SetLanguageModelsAction(
+                languageModels = languageModels,
+            ),
+        ).joinBlocking()
+
+        // Final state
+        assertEquals(languageModels, store.state.translationEngine.languageModels)
     }
 }
