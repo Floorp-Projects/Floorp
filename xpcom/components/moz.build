@@ -69,6 +69,7 @@ LOCAL_INCLUDES += [
     "../ds",
     "/chrome",
     "/js/xpconnect/loader",
+    "/js/xpconnect/src",
     "/layout/build",
     "/modules/libjar",
 ]

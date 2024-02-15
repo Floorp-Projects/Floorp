@@ -58,6 +58,7 @@
 
 #include "mozilla/Logging.h"
 #include "LogModulePrefWatcher.h"
+#include "xpcpublic.h"
 
 #ifdef MOZ_MEMORY
 #  include "mozmemory.h"
@@ -356,6 +357,10 @@ nsresult nsComponentManagerImpl::Init() {
       }
     }
   }
+
+  // This needs to be initialized late enough, so that preferences service can
+  // be accessed but before the IO service, and we want it in all process types.
+  xpc::ReadOnlyPage::Init();
 
   bool loadChromeManifests;
   switch (XRE_GetProcessType()) {

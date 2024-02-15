@@ -153,7 +153,6 @@ void nsXPConnect::InitStatics() {
   // as possible to avoid missing any classes' creations.
   JS::SetLogCtorDtorFunctions(NS_LogCtor, NS_LogDtor);
 #endif
-  ReadOnlyPage::Init();
 
   gSelf = new nsXPConnect();
   gOnceAliveNowDead = false;
