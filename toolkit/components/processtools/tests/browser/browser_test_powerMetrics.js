@@ -211,25 +211,42 @@ add_task(async () => {
       );
     }
     if (beforeProcInfo.children.some(p => p.type == label)) {
-      Assert.greaterOrEqual(
-        cpuTimeByType[label],
-        Math.floor(
-          beforeProcInfo.children.find(p => p.type == label).cpuTime /
-            kNS_PER_MS
-        ),
-        "reported cpu time for " +
-          label +
-          " process should be at least what the first requestProcInfo returned."
-      );
-      Assert.lessOrEqual(
-        cpuTimeByType[label],
-        Math.ceil(
-          afterProcInfo.children.find(p => p.type == label).cpuTime / kNS_PER_MS
-        ),
-        "reported cpu time for " +
-          label +
-          " process should be at most what the second requestProcInfo returned."
-      );
+      function getCpuTime(procInfo) {
+        return (
+          procInfo.children.find(p => p.type == label).cpuTime / kNS_PER_MS
+        );
+      }
+      let beforeCpuTime = Math.floor(getCpuTime(beforeProcInfo));
+      let afterCpuTime = Math.ceil(getCpuTime(afterProcInfo));
+      let cpuTime = cpuTimeByType[label];
+      if (afterCpuTime == 0) {
+        Assert.equal(
+          cpuTime,
+          null,
+          "The " + label + " process used less than 1ms of CPU time."
+        );
+      } else if (beforeCpuTime == 0 && cpuTime === null) {
+        info(
+          "The " +
+            label +
+            " process might have used used less than 1ms of CPU time."
+        );
+      } else {
+        Assert.greaterOrEqual(
+          cpuTime,
+          beforeCpuTime,
+          "reported cpu time for " +
+            label +
+            " process should be at least what the first requestProcInfo returned."
+        );
+        Assert.lessOrEqual(
+          cpuTime,
+          afterCpuTime,
+          "reported cpu time for " +
+            label +
+            " process should be at most what the second requestProcInfo returned."
+        );
+      }
     } else {
       info(
         "no " +
