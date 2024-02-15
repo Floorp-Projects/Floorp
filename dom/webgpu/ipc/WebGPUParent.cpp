@@ -994,7 +994,9 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     ErrorBuffer getRangeError;
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
         req->mContext, bufferId, 0, bufferSize, getRangeError.ToFFI());
-    if (auto innerError = getRangeError.GetError()) {
+    if (req->mData->mParent) {
+      req->mData->mParent->ForwardError(data->mDeviceId, getRangeError);
+    } else if (auto innerError = getRangeError.GetError()) {
       // If an error occured in get_mapped_range, treat it as an internal error
       // and crash. The error handling story for something unexpected happening
       // during the present glue needs to befigured out in a more global way.
@@ -1027,7 +1029,9 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     }
     ErrorBuffer unmapError;
     wgpu_server_buffer_unmap(req->mContext, bufferId, unmapError.ToFFI());
-    if (auto innerError = unmapError.GetError()) {
+    if (req->mData->mParent) {
+      req->mData->mParent->ForwardError(data->mDeviceId, unmapError);
+    } else if (auto innerError = unmapError.GetError()) {
       MOZ_LOG(sLogger, LogLevel::Info,
               ("WebGPU present: buffer unmap failed: %s\n",
                innerError->message.get()));
