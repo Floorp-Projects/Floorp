@@ -1267,7 +1267,7 @@ var gSync = {
     this.emitFxaToolbarTelemetry("login", panel);
     let entryPoint = "fxa_discoverability_native";
     if (panel) {
-      entryPoint = "fxa_app_menu";
+      entryPoint = "fxa_toolbar_button";
     }
     this.openFxAEmailFirstPage(entryPoint, extraParams);
   },
@@ -1901,6 +1901,12 @@ var gSync = {
     if (this.isPanelInsideAppMenu(panel)) {
       entryPoint = "fxa_app_menu";
     }
+    this.openPrefs(entryPoint);
+  },
+
+  openPrefsFromFxaButton(type, panel) {
+    let entryPoint = "fxa_toolbar_button_sync";
+    this.emitFxaToolbarTelemetry(type, panel);
     this.openPrefs(entryPoint);
   },
 
