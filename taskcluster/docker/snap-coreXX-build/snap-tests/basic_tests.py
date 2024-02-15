@@ -4,17 +4,22 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
+import base64
+import io
 import json
 import os
 import sys
+import time
 import traceback
 
 from mozlog import formatters, handlers, structuredlog
+from PIL import Image, ImageChops
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -28,9 +33,15 @@ class SnapTestsBase:
             ),
         )
         options = Options()
+        if "TEST_GECKODRIVER_TRACE" in os.environ.keys():
+            options.log.level = "trace"
         options.binary_location = r"/snap/firefox/current/usr/lib/firefox/firefox"
         if not "TEST_NO_HEADLESS" in os.environ.keys():
             options.add_argument("--headless")
+        if "MOZ_AUTOMATION" in os.environ.keys():
+            os.environ["MOZ_LOG_FILE"] = os.path.join(
+                os.environ.get("ARTIFACT_DIR"), "gecko.log"
+            )
         self._driver = webdriver.Firefox(service=driver_service, options=options)
 
         self._logger = structuredlog.StructuredLogger(self.__class__.__name__)
@@ -51,7 +62,7 @@ class SnapTestsBase:
         assert self._dir is not None
 
         self._wait = WebDriverWait(self._driver, self.get_timeout())
-        self._longwait = WebDriverWait(self._driver, 20)
+        self._longwait = WebDriverWait(self._driver, 60)
 
         with open(exp, "r") as j:
             self._expectations = json.load(j)
@@ -63,10 +74,8 @@ class SnapTestsBase:
                 tabs_before = set(self._driver.window_handles)
                 self._driver.switch_to.window(first_tab)
                 self._logger.test_start(m)
-                self.save_screenshot("screenshot_{}_pre.png".format(m))
                 rv = getattr(self, m)(self._expectations[m])
                 self._driver.switch_to.parent_frame()
-                self.save_screenshot("screenshot_{}_post.png".format(m))
                 if rv:
                     self._logger.test_end(m, status="OK")
                 else:
@@ -78,20 +87,22 @@ class SnapTestsBase:
                     self._driver.switch_to.window(tab)
                     self._driver.close()
                 self._wait.until(EC.number_of_windows_to_be(len(tabs_before)))
-        except TimeoutException:
+        except Exception as ex:
             rv = False
-            self._logger.test_end(m, status="TIMEOUT", message=traceback.format_exc())
+            test_status = "ERROR"
+            if isinstance(ex, AssertionError):
+                test_status = "FAIL"
+            elif isinstance(ex, TimeoutException):
+                test_status = "TIMEOUT"
+
+            test_message = repr(ex)
+            self.save_screenshot("screenshot_{}.png".format(test_status.lower()))
             self._driver.switch_to.parent_frame()
-            self.save_screenshot("screenshot_timeout.png")
-        except AssertionError:
-            rv = False
-            self._logger.test_end(m, status="FAIL", message=traceback.format_exc())
-        except Exception:
-            rv = False
-            self._logger.test_end(m, status="ERROR", message=traceback.format_exc())
+            self.save_screenshot("screenshot_{}_parent.png".format(test_status.lower()))
+            self._logger.test_end(m, status=test_status, message=test_message)
+            traceback.print_exc()
         finally:
             self._driver.switch_to.window(first_tab)
-            self.save_screenshot("screenshot_final.png")
 
         if not "TEST_NO_QUIT" in os.environ.keys():
             self._driver.quit()
@@ -100,10 +111,14 @@ class SnapTestsBase:
         self._logger.suite_end()
         sys.exit(0 if rv is True else 1)
 
-    def save_screenshot(self, name):
+    def get_screenshot_destination(self, name):
         final_name = name
         if "MOZ_AUTOMATION" in os.environ.keys():
             final_name = os.path.join(os.environ.get("ARTIFACT_DIR"), name)
+        return final_name
+
+    def save_screenshot(self, name):
+        final_name = self.get_screenshot_destination(name)
         self._logger.info("Saving screenshot '{}' to '{}'".format(name, final_name))
         self._driver.save_screenshot(final_name)
 
@@ -124,6 +139,60 @@ class SnapTestsBase:
         self._driver.get(url)
 
         return self._driver.current_window_handle
+
+    def assert_rendering(self, exp, element_or_driver):
+        # wait a bit for things to settle down
+        time.sleep(0.5)
+
+        # Convert as RGB otherwise we cannot get difference
+        png_bytes = (
+            element_or_driver.screenshot_as_png
+            if isinstance(element_or_driver, WebElement)
+            else element_or_driver.get_screenshot_as_png()
+        )
+        svg_png = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+        svg_png_cropped = svg_png.crop((0, 0, svg_png.width - 20, svg_png.height - 20))
+
+        if self.maybe_collect_reference():
+            new_ref = "new_{}".format(exp["reference"])
+            new_ref_file = self.get_screenshot_destination(new_ref)
+            self._logger.info(
+                "Collecting new reference screenshot: {} => {}".format(
+                    new_ref, new_ref_file
+                )
+            )
+
+            with open(new_ref_file, "wb") as current_screenshot:
+                svg_png_cropped.save(current_screenshot)
+
+            return
+
+        svg_ref = Image.open(os.path.join(self._dir, exp["reference"])).convert("RGB")
+        diff = ImageChops.difference(svg_ref, svg_png_cropped)
+
+        if diff.getbbox() is not None:
+            buffered = io.BytesIO()
+            diff.save(buffered, format="PNG")
+
+            if "TEST_DUMP_DIFF" in os.environ.keys():
+                diff_b64 = base64.b64encode(buffered.getvalue())
+                self._logger.info(
+                    "data:image/png;base64,{}".format(diff_b64.decode("utf-8"))
+                )
+
+            with open(
+                self.get_screenshot_destination("differences.png"), "wb"
+            ) as diff_screenshot:
+                diff_screenshot.write(buffered.getvalue())
+
+            with open(
+                self.get_screenshot_destination("current_rendering.png"), "wb"
+            ) as current_screenshot:
+                svg_png_cropped.save(current_screenshot)
+
+            assert diff.getbbox() is None, "Mismatching screenshots for {}".format(
+                exp["reference"]
+            )
 
 
 class SnapTests(SnapTestsBase):
@@ -199,11 +268,20 @@ class SnapTests(SnapTestsBase):
         except TimeoutException:
             self._logger.info("Wait for consent form: timed out, maybe it is not here")
 
-        # Find first video and click it
-        self._logger.info("Wait for one video")
-        self._wait.until(
-            EC.visibility_of_element_located((By.ID, "video-title-link"))
-        ).click()
+        try:
+            # Find first video and click it
+            self._logger.info("Wait for one video")
+            self._wait.until(
+                EC.visibility_of_element_located((By.ID, "video-title-link"))
+            ).click()
+        except TimeoutException:
+            # We might have got the "try searching to get started"
+            # link to News channel
+            self._driver.get("https://www.youtube.com/channel/UCYfdidRxbB8Qhf0Nx7ioOYw")
+            self._logger.info("Wait again for one video")
+            self._wait.until(
+                EC.visibility_of_element_located((By.ID, "video-title-link"))
+            ).click()
 
         # Wait for duration to be set to something
         self._logger.info("Wait for video to start")

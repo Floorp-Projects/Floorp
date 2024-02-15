@@ -1,0 +1,98 @@
+{
+  "test_custom_fonts": {
+    "reference": "test_custom_fonts_ref.png"
+  },
+  "test_h264_mov": {},
+  "test_he_aac": {},
+  "test_flac": {},
+  "test_mp3": {},
+  "test_ogg": {},
+  "test_pdf_navigation": {
+    "base": {
+      "reference": "test_pdf_navigation_base.png"
+    },
+    "next": {
+      "reference": "test_pdf_navigation_next.png"
+    },
+    "previous": {
+      "reference": "test_pdf_navigation_previous.png"
+    },
+    "down": {
+      "reference": "test_pdf_navigation_down.png"
+    },
+    "up": {
+      "reference": "test_pdf_navigation_up.png"
+    },
+    "right": {
+      "reference": "test_pdf_navigation_right.png"
+    },
+    "left": {
+      "reference": "test_pdf_navigation_left.png"
+    },
+    "pagedown": {
+      "reference": "test_pdf_navigation_pagedown.png"
+    },
+    "pageup": {
+      "reference": "test_pdf_navigation_pageup.png"
+    },
+    "end": {
+      "reference": "test_pdf_navigation_end.png"
+    },
+    "home": {
+      "reference": "test_pdf_navigation_home.png"
+    },
+    "firstPage": {
+      "reference": "test_pdf_navigation_firstPage.png"
+    },
+    "lastPage": {
+      "reference": "test_pdf_navigation_lastPage.png"
+    },
+    "pageRotateCw": {
+      "reference": "test_pdf_navigation_pageRotateCw.png"
+    },
+    "pageRotateCcw": {
+      "reference": "test_pdf_navigation_pageRotateCcw.png"
+    },
+    "documentProperties": {
+      "reference": "test_pdf_navigation_documentProperties.png"
+    },
+    "select_text": {
+      "reference": "test_pdf_navigation_select_text.png"
+    },
+    "hand_tool": {
+      "reference": "test_pdf_navigation_hand_tool.png"
+    }
+  },
+  "test_pdf_zoom": {
+    "p1_50p": {
+      "reference": "test_pdf_zoom_p1_50p.png"
+    },
+    "p1_75p": {
+      "reference": "test_pdf_zoom_p1_75p.png"
+    },
+    "p1_100p": {
+      "reference": "test_pdf_zoom_p1_100p.png"
+    },
+    "p1_150p": {
+      "reference": "test_pdf_zoom_p1_150p.png"
+    },
+    "p1_400p": {
+      "reference": "test_pdf_zoom_p1_400p.png"
+    },
+    "p1_actual": {
+      "reference": "test_pdf_zoom_p1_actual.png"
+    },
+    "p1_fit": {
+      "reference": "test_pdf_zoom_p1_fit.png"
+    },
+    "p1_width": {
+      "reference": "test_pdf_zoom_p1_width.png"
+    }
+  },
+  "test_pdf_download": {
+    "reference": "test_pdf_download_base.png"
+  },
+  "test_copy_paste_image_text": {},
+  "test_download_folder_change": {},
+  "test_download_folder_removal": {}
+}
