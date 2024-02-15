@@ -32,17 +32,9 @@ static uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
   return usec.QuadPart * 100;
 }
 
-int GetCycleTimeFrequencyMHz() {
+int GetCpuFrequencyMHz() {
   static const int frequency = []() {
-    // Having a constant TSC is required to convert cycle time to actual time.
-    // In automation, having short CPU times reported as 0 is more of a problem
-    // than having an imprecise value. The fallback method can't report CPU
-    // times < 1/64s.
-    if (!mozilla::has_constant_tsc() && !xpc::IsInAutomation()) {
-      return 0;
-    }
-
-    // Now get the nominal CPU frequency.
+    // Get the nominal CPU frequency.
     HKEY key;
     static const WCHAR keyName[] =
         L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
@@ -59,6 +51,22 @@ int GetCycleTimeFrequencyMHz() {
     }
 
     return 0;
+  }();
+
+  return frequency;
+}
+
+int GetCycleTimeFrequencyMHz() {
+  static const int frequency = []() {
+    // Having a constant TSC is required to convert cycle time to actual time.
+    // In automation, having short CPU times reported as 0 is more of a problem
+    // than having an imprecise value. The fallback method can't report CPU
+    // times < 1/64s.
+    if (!mozilla::has_constant_tsc() && !xpc::IsInAutomation()) {
+      return 0;
+    }
+
+    return GetCpuFrequencyMHz();
   }();
 
   return frequency;

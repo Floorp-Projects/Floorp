@@ -7,6 +7,7 @@
 
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/GeckoArgs.h"
+#include "mozilla/ProcInfo.h"
 
 #if defined(XP_WIN)
 #  include "nsExceptionHandler.h"
@@ -89,6 +90,10 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // initialization when win32k is locked down. We need to load it before we
   // lower the sandbox in processes where the policy will prevent loading.
   LoadLibraryOrCrash(L"winmm.dll");
+
+  // Call this once before enabling the sandbox, it will cache its result
+  // in a static variable.
+  GetCpuFrequencyMHz();
 
   if (*sandboxingKind == SandboxingKind::GENERIC_UTILITY) {
     // Preload audio generic libraries required for ffmpeg only
