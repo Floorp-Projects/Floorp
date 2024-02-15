@@ -645,6 +645,9 @@ pref("browser.urlbar.suggest.addons", true);
 // mdn suggestions are turned on.
 pref("browser.urlbar.suggest.mdn", true);
 
+// Feature gate pref for Yelp suggestions in the urlbar.
+pref("browser.urlbar.yelp.featureGate", false);
+
 // If `browser.urlbar.yelp.featureGate` is true, this controls whether
 // Yelp suggestions are turned on.
 pref("browser.urlbar.suggest.yelp", true);

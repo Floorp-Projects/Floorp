@@ -110,7 +110,8 @@ add_task(async function resultMenu_show_less_frequently() {
       {
         input: "ramen",
         expected: {
-          hasSuggestion: false,
+          hasSuggestion: true,
+          hasShowLessItem: true,
         },
       },
     ],
@@ -348,7 +349,7 @@ add_task(async function rowLabel() {
 
   for (let { topPick, label } of tests) {
     await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.quicksuggest.yelpPriority", topPick]],
+      set: [["browser.urlbar.yelp.priority", topPick]],
     });
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({

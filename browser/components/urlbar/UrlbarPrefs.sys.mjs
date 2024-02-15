@@ -64,6 +64,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
+  // Feature gate pref for clipboard suggestions in the urlbar.
+  ["clipboard.featureGate", true],
+
   // Whether to show a link for using the search functionality provided by the
   // active view if the the view utilizes OpenSearch.
   ["contextualSearch.enabled", false],
@@ -128,16 +131,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Applies URL highlighting and other styling to the text in the urlbar input.
   ["formatting.enabled", true],
 
-  // Interval time until taking pause impression telemetry.
-  ["searchEngagementTelemetry.pauseImpressionIntervalMs", 1000],
-
-  // Boolean to determine if the providers defined in `exposureResults`
-  // should be displayed in search results. This can be set by a
-  // Nimbus variable and is expected to be set via nimbus experiment
-  // configuration. For the control branch of an experiment this would be
-  // false and true for the treatment.
-  ["showExposureResults", false],
-
   // Whether Firefox Suggest group labels are shown in the urlbar view in en-*
   // locales. Labels are not shown in other locales but likely will be in the
   // future.
@@ -183,135 +176,49 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // for Pocket suggestions.
   ["pocket.showLessFrequentlyCount", 0],
 
-  // When true, URLs in the user's history that look like search result pages
-  // are styled to look like search engine results instead of the usual history
-  // results.
-  ["restyleSearches", false],
-
-  // If true, we show tail suggestions when available.
-  ["richSuggestions.tail", true],
-
-  // Hidden pref. Disables checks that prevent search tips being shown, thus
-  // showing them every time the newtab page or the default search engine
-  // homepage is opened.
-  ["searchTips.test.ignoreShowLimits", false],
-
-  // Whether to show each local search shortcut button in the view.
-  ["shortcuts.bookmarks", true],
-  ["shortcuts.tabs", true],
-  ["shortcuts.history", true],
-  ["shortcuts.quickactions", false],
-
-  // Whether to show search suggestions before general results.
-  ["showSearchSuggestionsFirst", true],
-
-  // Global toggle for whether the show search terms feature
-  // can be used at all, and enabled/disabled by the user.
-  ["showSearchTerms.featureGate", false],
-
-  // If true, show the search term in the Urlbar while on
-  // a default search engine results page.
-  ["showSearchTerms.enabled", true],
-
-  // Whether speculative connections should be enabled.
-  ["speculativeConnect.enabled", true],
-
-  // Whether results will include the user's bookmarks.
-  ["suggest.bookmark", true],
-
-  // Whether results will include a calculator.
-  ["suggest.calculator", false],
-
-  // Whether results will include clipboard results.
-  ["suggest.clipboard", true],
-
-  // Whether results will include search engines (e.g. tab-to-search).
-  ["suggest.engines", true],
-
-  // Whether results will include the user's history.
-  ["suggest.history", true],
-
-  // Whether results will include switch-to-tab results.
-  ["suggest.openpage", true],
-
-  // If `pocket.featureGate` is true, this controls whether Pocket suggestions
-  // are turned on.
-  ["suggest.pocket", true],
-
-  // Whether results will include synced tab results. The syncing of open tabs
-  // must also be enabled, from Sync preferences.
-  ["suggest.remotetab", true],
-
-  // Whether results will include QuickActions in the default search mode.
-  ["suggest.quickactions", false],
-
-  // Controls whether searching for open tabs returns tabs from any container
-  // or only from the current container.
-  ["switchTabs.searchAllContainers", false],
-
   // If disabled, QuickActions will not be included in either the default search
   // mode or the QuickActions search mode.
   ["quickactions.enabled", false],
 
-  // Whether we show the Actions section in about:preferences.
-  ["quickactions.showPrefs", false],
-
   // Whether we will match QuickActions within a phrase and not only a prefix.
   ["quickactions.matchInPhrase", true],
-
-  // Show multiple actions in a random order.
-  ["quickactions.randomOrderActions", false],
 
   // The minumum amount of characters required for the user to input before
   // matching actions. Setting this to 0 will show the actions in the
   // zero prefix state.
   ["quickactions.minimumSearchString", 3],
 
-  // Whether results will include non-sponsored quick suggest suggestions.
-  ["suggest.quicksuggest.nonsponsored", false],
+  // Show multiple actions in a random order.
+  ["quickactions.randomOrderActions", false],
 
-  // Whether results will include sponsored quick suggest suggestions.
-  ["suggest.quicksuggest.sponsored", false],
+  // Whether we show the Actions section in about:preferences.
+  ["quickactions.showPrefs", false],
 
-  // If `browser.urlbar.addons.featureGate` is true, this controls whether
-  // addon suggestions are turned on.
-  ["suggest.addons", true],
-
-  // If `browser.urlbar.mdn.featureGate` is true, this controls whether
-  // mdn suggestions are turned on.
-  ["suggest.mdn", true],
-
-  // Whether results will include search suggestions.
-  ["suggest.searches", false],
-
-  // Whether results will include top sites and the view will open on focus.
-  ["suggest.topsites", true],
-
-  // If `browser.urlbar.weather.featureGate` is true, this controls whether
-  // weather suggestions are turned on.
-  ["suggest.weather", true],
-
-  // If `browser.urlbar.trending.featureGate` is true, this controls whether
-  // trending suggestions are turned on.
-  ["suggest.trending", true],
-
-  // If `browser.urlbar.recentsearches.featureGate` is true, this controls whether
-  // recentsearches are turned on.
-  ["suggest.recentsearches", true],
-
-  // If `browser.urlbar.yelp.featureGate` is true, this controls whether
-  // Yelp suggestions are turned on.
-  ["suggest.yelp", true],
-
-  // Feature gate pref for Yelp suggestions in the urlbar.
-  ["yelp.featureGate", false],
-
-  // The number of times the user has clicked the "Show less frequently" command
-  // for Yelp suggestions.
-  ["yelp.showLessFrequentlyCount", 0],
+  // Whether quick suggest results can be shown in position specified in the
+  // suggestions.
+  ["quicksuggest.allowPositionInSuggestions", true],
 
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
+
+  // Whether the Firefox Suggest data collection opt-in result is enabled. If
+  // true, this implicitly disables shouldShowOnboardingDialog.
+  ["quicksuggest.contextualOptIn", false],
+
+  // The last time (as ISO string) the user dismissed the Firefox Suggest
+  // contextual opt-in result.
+  ["quicksuggest.contextualOptIn.lastDismissed", ""],
+
+  // Controls which variant of the copy is used for the Firefox Suggest
+  // contextual opt-in result.
+  ["quicksuggest.contextualOptIn.sayHello", false],
+
+  // Controls whether the Firefox Suggest contextual opt-in result appears at
+  // the top of results or at the bottom, after one-off buttons.
+  ["quicksuggest.contextualOptIn.topPosition", true],
+
+  // Whether the user has opted in to data collection for quick suggest.
+  ["quicksuggest.dataCollection.enabled", false],
 
   // Global toggle for whether the quick suggest feature is enabled, i.e.,
   // sponsored and recommended results related to the user's search string.
@@ -330,25 +237,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // JSON'ed object of quick suggest impression stats. Used for implementing
   // impression frequency caps for quick suggest suggestions.
   ["quicksuggest.impressionCaps.stats", ""],
-
-  // The user's response to the Firefox Suggest online opt-in dialog.
-  ["quicksuggest.onboardingDialogChoice", ""],
-
-  // Whether the Firefox Suggest data collection opt-in result is enabled. If
-  // true, this implicitly disables shouldShowOnboardingDialog.
-  ["quicksuggest.contextualOptIn", false],
-
-  // Controls which variant of the copy is used for the Firefox Suggest
-  // contextual opt-in result.
-  ["quicksuggest.contextualOptIn.sayHello", false],
-
-  // Controls whether the Firefox Suggest contextual opt-in result appears at
-  // the top of results or at the bottom, after one-off buttons.
-  ["quicksuggest.contextualOptIn.topPosition", true],
-
-  // The last time (as ISO string) the user dismissed the Firefox Suggest
-  // contextual opt-in result.
-  ["quicksuggest.contextualOptIn.lastDismissed", ""],
 
   // If the user has gone through a quick suggest prefs migration, then this
   // pref will have a user-branch value that records the latest prefs version.
@@ -369,6 +257,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //    `suggest.quicksuggest.sponsored` are true. Previously they were false.
   ["quicksuggest.migrationVersion", 0],
 
+  // The user's response to the Firefox Suggest online opt-in dialog.
+  ["quicksuggest.onboardingDialogChoice", ""],
+
+  // The version of dialog user saw.
+  ["quicksuggest.onboardingDialogVersion", ""],
+
   // Whether Firefox Suggest will use the new Rust backend instead of the
   // original JS backend.
   ["quicksuggest.rustEnabled", true],
@@ -385,11 +279,8 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // "history", "offline", "online"
   ["quicksuggest.scenario", ""],
 
-  // Whether the user has opted in to data collection for quick suggest.
-  ["quicksuggest.dataCollection.enabled", false],
-
-  // The version of dialog user saw.
-  ["quicksuggest.onboardingDialogVersion", ""],
+  // Count the restarts before showing the onboarding dialog.
+  ["quicksuggest.seenRestarts", 0],
 
   // Whether to show the quick suggest onboarding dialog.
   ["quicksuggest.shouldShowOnboardingDialog", true],
@@ -397,19 +288,145 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the user has seen the onboarding dialog.
   ["quicksuggest.showedOnboardingDialog", false],
 
-  // Count the restarts before showing the onboarding dialog.
-  ["quicksuggest.seenRestarts", 0],
+  // We only show recent searches within the past 3 days by default.
+  // Stored as a string as some code handle timestamp sized int's.
+  ["recentsearches.expirationMs", (1000 * 60 * 60 * 24 * 3).toString()],
 
-  // Whether quick suggest results can be shown in position specified in the
-  // suggestions.
-  ["quicksuggest.allowPositionInSuggestions", true],
+  // Feature gate pref for recent searches being shown in the urlbar.
+  ["recentsearches.featureGate", false],
+
+  // Store the time the last default engine changed so we can only show
+  // recent searches since then.
+  // Stored as a string as some code handle timestamp sized int's.
+  ["recentsearches.lastDefaultChanged", "-1"],
+
+  // The maximum number of recent searches we will show.
+  ["recentsearches.maxResults", 5],
+
+  // When true, URLs in the user's history that look like search result pages
+  // are styled to look like search engine results instead of the usual history
+  // results.
+  ["restyleSearches", false],
 
   // Allow the result menu button to be reached with the Tab key.
   ["resultMenu.keyboardAccessible", true],
 
+  // Feature gate pref for rich suggestions being shown in the urlbar.
+  ["richSuggestions.featureGate", true],
+
+  // If true, we show tail suggestions when available.
+  ["richSuggestions.tail", true],
+
+  // Interval time until taking pause impression telemetry.
+  ["searchEngagementTelemetry.pauseImpressionIntervalMs", 1000],
+
+  // Hidden pref. Disables checks that prevent search tips being shown, thus
+  // showing them every time the newtab page or the default search engine
+  // homepage is opened.
+  ["searchTips.test.ignoreShowLimits", false],
+
+  // Whether to show each local search shortcut button in the view.
+  ["shortcuts.bookmarks", true],
+  ["shortcuts.tabs", true],
+  ["shortcuts.history", true],
+  ["shortcuts.quickactions", false],
+
+  // Boolean to determine if the providers defined in `exposureResults`
+  // should be displayed in search results. This can be set by a
+  // Nimbus variable and is expected to be set via nimbus experiment
+  // configuration. For the control branch of an experiment this would be
+  // false and true for the treatment.
+  ["showExposureResults", false],
+
+  // Whether to show search suggestions before general results.
+  ["showSearchSuggestionsFirst", true],
+
+  // If true, show the search term in the Urlbar while on
+  // a default search engine results page.
+  ["showSearchTerms.enabled", true],
+
+  // Global toggle for whether the show search terms feature
+  // can be used at all, and enabled/disabled by the user.
+  ["showSearchTerms.featureGate", false],
+
+  // Whether speculative connections should be enabled.
+  ["speculativeConnect.enabled", true],
+
+  // If true, top sites may include sponsored ones.
+  ["sponsoredTopSites", false],
+
+  // If `browser.urlbar.addons.featureGate` is true, this controls whether
+  // addon suggestions are turned on.
+  ["suggest.addons", true],
+
+  // Whether results will include the user's bookmarks.
+  ["suggest.bookmark", true],
+
+  // Whether results will include a calculator.
+  ["suggest.calculator", false],
+
+  // Whether results will include clipboard results.
+  ["suggest.clipboard", true],
+
+  // Whether results will include search engines (e.g. tab-to-search).
+  ["suggest.engines", true],
+
+  // Whether results will include the user's history.
+  ["suggest.history", true],
+
+  // If `browser.urlbar.mdn.featureGate` is true, this controls whether
+  // mdn suggestions are turned on.
+  ["suggest.mdn", true],
+
+  // Whether results will include switch-to-tab results.
+  ["suggest.openpage", true],
+
+  // If `pocket.featureGate` is true, this controls whether Pocket suggestions
+  // are turned on.
+  ["suggest.pocket", true],
+
+  // Whether results will include QuickActions in the default search mode.
+  ["suggest.quickactions", false],
+
+  // Whether results will include non-sponsored quick suggest suggestions.
+  ["suggest.quicksuggest.nonsponsored", false],
+
+  // Whether results will include sponsored quick suggest suggestions.
+  ["suggest.quicksuggest.sponsored", false],
+
+  // If `browser.urlbar.recentsearches.featureGate` is true, this controls whether
+  // recentsearches are turned on.
+  ["suggest.recentsearches", true],
+
+  // Whether results will include synced tab results. The syncing of open tabs
+  // must also be enabled, from Sync preferences.
+  ["suggest.remotetab", true],
+
+  // Whether results will include search suggestions.
+  ["suggest.searches", false],
+
+  // Whether results will include top sites and the view will open on focus.
+  ["suggest.topsites", true],
+
+  // If `browser.urlbar.trending.featureGate` is true, this controls whether
+  // trending suggestions are turned on.
+  ["suggest.trending", true],
+
+  // If `browser.urlbar.weather.featureGate` is true, this controls whether
+  // weather suggestions are turned on.
+  ["suggest.weather", true],
+
+  // If `browser.urlbar.yelp.featureGate` is true, this controls whether
+  // Yelp suggestions are turned on.
+  ["suggest.yelp", true],
+
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],
+
+  // Controls whether searching for open tabs returns tabs from any container
+  // or only from the current container.
+  ["switchTabs.searchAllContainers", false],
 
   // The number of remaining times the user can interact with tab-to-search
   // onboarding results before we stop showing them.
@@ -424,14 +441,25 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The number of times the user has been shown the redirect search tip.
   ["tipShownCount.searchTip_redirect", 0],
 
-  // Remove redundant portions from URLs.
-  ["trimURLs", true],
+  // Feature gate pref for trending suggestions in the urlbar.
+  ["trending.featureGate", false],
+
+  // The maximum number of trending results to show while not in search mode.
+  ["trending.maxResultsNoSearchMode", 10],
+
+  // The maximum number of trending results to show in search mode.
+  ["trending.maxResultsSearchMode", 10],
+
+  // Whether to only show trending results when the urlbar is in search
+  // mode or when the user initially opens the urlbar without selecting
+  // an engine.
+  ["trending.requireSearchMode", true],
 
   // Remove 'https://' from url when urlbar is focused.
   ["trimHttps", true],
 
-  // If true, top sites may include sponsored ones.
-  ["sponsoredTopSites", false],
+  // Remove redundant portions from URLs.
+  ["trimURLs", true],
 
   // Whether unit conversion is enabled.
   ["unitConversion.enabled", false],
@@ -457,40 +485,16 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // or remote settings.
   ["weather.minKeywordLength", 0],
 
-  // Feature gate pref for trending suggestions in the urlbar.
-  ["trending.featureGate", false],
+  // Feature gate pref for Yelp suggestions in the urlbar.
+  ["yelp.featureGate", false],
 
-  // Whether to only show trending results when the urlbar is in search
-  // mode or when the user initially opens the urlbar without selecting
-  // an engine.
-  ["trending.requireSearchMode", true],
+  // The minimum number of characters the user must type to trigger a Yelp
+  // suggestion (excluding full keywords that are shorter than this).
+  ["yelp.minKeywordLength", 5],
 
-  // The maximum number of trending results to show in search mode.
-  ["trending.maxResultsSearchMode", 10],
-
-  // The maximum number of trending results to show while not in search mode.
-  ["trending.maxResultsNoSearchMode", 10],
-
-  // Feature gate pref for rich suggestions being shown in the urlbar.
-  ["richSuggestions.featureGate", true],
-
-  // Feature gate pref for clipboard suggestions in the urlbar.
-  ["clipboard.featureGate", true],
-
-  // Feature gate pref for recent searches being shown in the urlbar.
-  ["recentsearches.featureGate", false],
-
-  // The maximum number of recent searches we will show.
-  ["recentsearches.maxResults", 5],
-
-  // We only show recent searches within the past 3 days by default.
-  // Stored as a string as some code handle timestamp sized int's.
-  ["recentsearches.expirationMs", (1000 * 60 * 60 * 24 * 3).toString()],
-
-  // Store the time the last default engine changed so we can only show
-  // recent searches since then.
-  // Stored as a string as some code handle timestamp sized int's.
-  ["recentsearches.lastDefaultChanged", "-1"],
+  // The number of times the user has clicked the "Show less frequently" command
+  // for Yelp suggestions.
+  ["yelp.showLessFrequentlyCount", 0],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([
@@ -515,8 +519,6 @@ const NIMBUS_DEFAULTS = {
   weatherKeywords: null,
   weatherKeywordsMinimumLength: 0,
   weatherKeywordsMinimumLengthCap: 0,
-  yelpMinKeywordLength: 0,
-  yelpShowLessFrequentlyCap: 0,
 };
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined

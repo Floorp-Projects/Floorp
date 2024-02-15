@@ -423,6 +423,7 @@ urlbar:
         any limit.
     yelpMinKeywordLength:
       type: int
+      fallbackPref: browser.urlbar.yelp.minKeywordLength
       description: >-
         If the length of user's query is less than this value plus
         "yelp.showLessFrequentlyCount", Yelp suggestion never be shown.
@@ -434,6 +435,7 @@ urlbar:
         feature are exposed to the user.
     yelpShowLessFrequentlyCap:
       type: int
+      fallbackPref: browser.urlbar.yelp.showLessFrequentlyCap
       description: >-
         If defined and non-zero, this is the maximum number of times the user
         will be able to click the "Show less frequently" command for Yelp
@@ -441,7 +443,7 @@ urlbar:
         command without any limit.
     yelpSuggestPriority:
       type: boolean
-      fallbackPref: browser.urlbar.quicksuggest.yelpPriority
+      fallbackPref: browser.urlbar.yelp.priority
       description: >-
         Whether or not showing yelp suggestion as priority.
         If this variable is true, the following things are processed.
