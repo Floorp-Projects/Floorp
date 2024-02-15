@@ -2383,7 +2383,9 @@ class DSContextFooter extends (external_React_default()).PureComponent {
       context,
       context_type,
       sponsor,
-      sponsored_by_override
+      sponsored_by_override,
+      cta_button_variant,
+      source
     } = this.props;
     const sponsorLabel = SponsorLabel({
       sponsored_by_override,
@@ -2394,6 +2396,21 @@ class DSContextFooter extends (external_React_default()).PureComponent {
       context,
       context_type
     });
+    if (cta_button_variant === "variant-a") {
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        className: "story-footer"
+      }, /*#__PURE__*/external_React_default().createElement("button", {
+        "aria-hidden": "true",
+        className: "story-cta-button"
+      }, "Shop Now"), sponsorLabel);
+    }
+    if (cta_button_variant === "variant-b") {
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        className: "story-footer"
+      }, sponsorLabel, /*#__PURE__*/external_React_default().createElement("span", {
+        className: "source clamp cta-footer-source"
+      }, source));
+    }
     if (sponsorLabel || dsMessageLabel) {
       return /*#__PURE__*/external_React_default().createElement("div", {
         className: "story-footer"
@@ -2500,12 +2517,13 @@ const DefaultMeta = ({
   sponsor,
   sponsored_by_override,
   saveToPocketCard,
-  isRecentSave
+  isRecentSave,
+  ctaButtonVariant
 }) => /*#__PURE__*/external_React_default().createElement("div", {
   className: "meta"
 }, /*#__PURE__*/external_React_default().createElement("div", {
   className: "info-wrap"
-}, /*#__PURE__*/external_React_default().createElement(DSSource, {
+}, ctaButtonVariant !== "variant-b" && /*#__PURE__*/external_React_default().createElement(DSSource, {
   source: source,
   timeToRead: timeToRead,
   newSponsoredLabel: newSponsoredLabel,
@@ -2521,7 +2539,9 @@ const DefaultMeta = ({
   context_type: context_type,
   context: context,
   sponsor: sponsor,
-  sponsored_by_override: sponsored_by_override
+  sponsored_by_override: sponsored_by_override,
+  cta_button_variant: ctaButtonVariant,
+  source: source
 }), newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSMessageFooter, {
   context_type: context_type,
   context: null,
@@ -2735,6 +2755,13 @@ class _DSCard extends (external_React_default()).PureComponent {
     if (displayReadTime) {
       timeToRead = this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
     }
+    const ctaButtonEnabled = this.props.ctaButtonSponsors?.includes(this.props.sponsor?.toLowerCase());
+    let ctaButtonVariant = "";
+    if (ctaButtonEnabled) {
+      ctaButtonVariant = this.props.ctaButtonVariant;
+    }
+    let ctaButtonVariantClassName = ctaButtonVariant;
+    const ctaButtonClassName = ctaButtonEnabled ? `ds-card-cta-button` : ``;
     const compactImagesClassName = compactImages ? `ds-card-compact-image` : ``;
     const imageGradientClassName = imageGradient ? `ds-card-image-gradient` : ``;
     const titleLinesName = `ds-card-title-lines-${titleLines}`;
@@ -2754,7 +2781,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       })));
     };
     return /*#__PURE__*/external_React_default().createElement("div", {
-      className: `ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`,
+      className: `ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName}`,
       ref: this.setContextMenuButtonHostRef
     }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       className: "ds-card-link",
@@ -2771,7 +2798,9 @@ class _DSCard extends (external_React_default()).PureComponent {
       url: this.props.url,
       title: this.props.title,
       isRecentSave: isRecentSave
-    })), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
+    })), ctaButtonVariant === "variant-b" && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "cta-header"
+    }, "Shop Now"), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
       source: source,
       title: this.props.title,
       excerpt: excerpt,
@@ -2781,7 +2810,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       context_type: this.props.context_type,
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override,
-      saveToPocketCard: saveToPocketCard
+      saveToPocketCard: saveToPocketCard,
+      ctaButtonVariant: ctaButtonVariant
     }), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: this.props.flightId,
       rows: [{
@@ -3377,6 +3407,8 @@ class _CardGrid extends (external_React_default()).PureComponent {
       essentialReadsHeader,
       editorsPicksHeader,
       onboardingExperience,
+      ctaButtonSponsors,
+      ctaButtonVariant,
       widgets,
       recentSavesEnabled,
       hideDescriptions,
@@ -3420,6 +3452,8 @@ class _CardGrid extends (external_React_default()).PureComponent {
         bookmarkGuid: rec.bookmarkGuid,
         is_collection: this.props.is_collection,
         saveToPocketCard: saveToPocketCard,
+        ctaButtonSponsors: ctaButtonSponsors,
+        ctaButtonVariant: ctaButtonVariant,
         recommendation_id: rec.recommendation_id
       }));
     }
@@ -8367,6 +8401,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           compactGrid: component.properties.compactGrid,
           essentialReadsHeader: component.properties.essentialReadsHeader,
           onboardingExperience: component.properties.onboardingExperience,
+          ctaButtonSponsors: component.properties.ctaButtonSponsors,
+          ctaButtonVariant: component.properties.ctaButtonVariant,
           editorsPicksHeader: component.properties.editorsPicksHeader,
           recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled,
           hideDescriptions: this.props.DiscoveryStream.hideDescriptions

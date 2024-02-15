@@ -594,6 +594,19 @@ export class DiscoveryStreamFeed {
       items = isBasicLayout ? 4 : 24;
     }
 
+    const ctaButtonSponsors = pocketConfig.ctaButtonSponsors
+      ?.split(",")
+      .map(s => s.trim().toLowerCase());
+    let ctaButtonVariant = "";
+    // We specifically against hard coded values, instead of applying whatever is in the pref.
+    // This is to ensure random class names from a user modified pref doesn't make it into the class list.
+    if (
+      pocketConfig.ctaButtonVariant === "variant-a" ||
+      pocketConfig.ctaButtonVariant === "variant-b"
+    ) {
+      ctaButtonVariant = pocketConfig.ctaButtonVariant;
+    }
+
     const prepConfArr = arr => {
       return arr
         ?.split(",")
@@ -665,6 +678,9 @@ export class DiscoveryStreamFeed {
       editorsPicksHeader:
         this.locale.startsWith("en-") && pocketConfig.editorsPicksHeader,
       onboardingExperience,
+      // For now button variants are for experimentation and English only.
+      ctaButtonSponsors: this.locale.startsWith("en-") ? ctaButtonSponsors : [],
+      ctaButtonVariant: this.locale.startsWith("en-") ? ctaButtonVariant : "",
     });
 
     sendUpdate({
@@ -2022,6 +2038,8 @@ export class DiscoveryStreamFeed {
      `essentialReadsHeader` Updates the Pocket section header and title to say "Today’s Essential Reads", moves the "Recommended by Pocket" header to the right side.
      `editorsPicksHeader` Updates the Pocket section header and title to say "Editor’s Picks", if used with essentialReadsHeader, creates a second section 2 rows down for editorsPicks.
      `onboardingExperience` Show new users some UI explaining Pocket above the Pocket section.
+     `ctaButtonSponsors` An array of sponsors we want to show a cta button on the card for.
+     `ctaButtonVariant` Sets the variant for the cta sponsor button.
 */
 getHardcodedLayout = ({
   spocsUrl = SPOCS_URL,
@@ -2043,6 +2061,8 @@ getHardcodedLayout = ({
   essentialReadsHeader = false,
   editorsPicksHeader = false,
   onboardingExperience = false,
+  ctaButtonSponsors = [],
+  ctaButtonVariant = "",
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -2140,6 +2160,8 @@ getHardcodedLayout = ({
             essentialReadsHeader,
             editorsPicksHeader,
             onboardingExperience,
+            ctaButtonSponsors,
+            ctaButtonVariant,
           },
           widgets: {
             positions: widgetPositions.map(position => {

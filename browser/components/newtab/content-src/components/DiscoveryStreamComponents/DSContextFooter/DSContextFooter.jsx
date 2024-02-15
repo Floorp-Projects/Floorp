@@ -75,8 +75,14 @@ export const SponsorLabel = ({
 
 export class DSContextFooter extends React.PureComponent {
   render() {
-    const { context, context_type, sponsor, sponsored_by_override } =
-      this.props;
+    const {
+      context,
+      context_type,
+      sponsor,
+      sponsored_by_override,
+      cta_button_variant,
+      source,
+    } = this.props;
 
     const sponsorLabel = SponsorLabel({
       sponsored_by_override,
@@ -87,6 +93,27 @@ export class DSContextFooter extends React.PureComponent {
       context,
       context_type,
     });
+
+    if (cta_button_variant === "variant-a") {
+      return (
+        <div className="story-footer">
+          {/* this button is decorative only */}
+          <button aria-hidden="true" className="story-cta-button">
+            Shop Now
+          </button>
+          {sponsorLabel}
+        </div>
+      );
+    }
+
+    if (cta_button_variant === "variant-b") {
+      return (
+        <div className="story-footer">
+          {sponsorLabel}
+          <span className="source clamp cta-footer-source">{source}</span>
+        </div>
+      );
+    }
 
     if (sponsorLabel || dsMessageLabel) {
       return (

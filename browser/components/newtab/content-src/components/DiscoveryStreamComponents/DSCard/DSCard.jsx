@@ -86,17 +86,20 @@ export const DefaultMeta = ({
   sponsored_by_override,
   saveToPocketCard,
   isRecentSave,
+  ctaButtonVariant,
 }) => (
   <div className="meta">
     <div className="info-wrap">
-      <DSSource
-        source={source}
-        timeToRead={timeToRead}
-        newSponsoredLabel={newSponsoredLabel}
-        context={context}
-        sponsor={sponsor}
-        sponsored_by_override={sponsored_by_override}
-      />
+      {ctaButtonVariant !== "variant-b" && (
+        <DSSource
+          source={source}
+          timeToRead={timeToRead}
+          newSponsoredLabel={newSponsoredLabel}
+          context={context}
+          sponsor={sponsor}
+          sponsored_by_override={sponsored_by_override}
+        />
+      )}
       <header title={title} className="title clamp">
         {title}
       </header>
@@ -108,6 +111,8 @@ export const DefaultMeta = ({
         context={context}
         sponsor={sponsor}
         sponsored_by_override={sponsored_by_override}
+        cta_button_variant={ctaButtonVariant}
+        source={source}
       />
     )}
     {/* Sponsored label is normally in the way of any message.
@@ -367,6 +372,16 @@ export class _DSCard extends React.PureComponent {
         this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
     }
 
+    const ctaButtonEnabled = this.props.ctaButtonSponsors?.includes(
+      this.props.sponsor?.toLowerCase()
+    );
+    let ctaButtonVariant = "";
+    if (ctaButtonEnabled) {
+      ctaButtonVariant = this.props.ctaButtonVariant;
+    }
+    let ctaButtonVariantClassName = ctaButtonVariant;
+
+    const ctaButtonClassName = ctaButtonEnabled ? `ds-card-cta-button` : ``;
     const compactImagesClassName = compactImages ? `ds-card-compact-image` : ``;
     const imageGradientClassName = imageGradient
       ? `ds-card-image-gradient`
@@ -394,7 +409,7 @@ export class _DSCard extends React.PureComponent {
 
     return (
       <div
-        className={`ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`}
+        className={`ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName}`}
         ref={this.setContextMenuButtonHostRef}
       >
         <SafeAnchor
@@ -414,6 +429,9 @@ export class _DSCard extends React.PureComponent {
               isRecentSave={isRecentSave}
             />
           </div>
+          {ctaButtonVariant === "variant-b" && (
+            <div className="cta-header">Shop Now</div>
+          )}
           <DefaultMeta
             source={source}
             title={this.props.title}
@@ -425,6 +443,7 @@ export class _DSCard extends React.PureComponent {
             sponsor={this.props.sponsor}
             sponsored_by_override={this.props.sponsored_by_override}
             saveToPocketCard={saveToPocketCard}
+            ctaButtonVariant={ctaButtonVariant}
           />
           <ImpressionStats
             flightId={this.props.flightId}

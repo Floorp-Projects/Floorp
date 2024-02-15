@@ -236,6 +236,58 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     }
   }
 
+  &.ds-card-cta-button.variant-a,
+  &.ds-card-cta-button.variant-b {
+    .img {
+      padding-top: 52.4%;
+    }
+
+    .story-sponsored-label {
+      margin: var(--space-small) 0;
+    }
+
+    .source {
+      text-decoration: underline;
+    }
+
+    .story-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      column-gap: var(--space-small);
+      margin-top: 0;
+    }
+
+    .story-cta-button {
+      cursor: inherit;
+      background: var(--button-background-color);
+      border-radius: var(--border-radius-small);
+      border: none;
+      padding: var(--space-xsmall) 16px;
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+      min-height: var(--size-item-large);
+      min-width: 97px;
+      color: var(--newtab-text-primary-color);
+      margin-top: var(--space-small);
+
+      &:hover {
+        background: var(--button-background-color-hover);
+      }
+    }
+
+    .cta-header {
+      background: var(--button-background-color);
+      font-size: var(--font-size-root);
+      font-weight: var(--font-weight-bold);
+      text-align: end;
+      padding: var(--space-xsmall) 16px;
+      color: var(--newtab-text-primary-color);
+      min-height: var(--size-item-large);
+    }
+  }
+
   header {
     line-height: $header-line-height * 1px;
     font-size: $header-font-size * 1px;

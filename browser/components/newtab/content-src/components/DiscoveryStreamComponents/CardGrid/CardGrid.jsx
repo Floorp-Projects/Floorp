@@ -328,6 +328,8 @@ export class _CardGrid extends React.PureComponent {
       essentialReadsHeader,
       editorsPicksHeader,
       onboardingExperience,
+      ctaButtonSponsors,
+      ctaButtonVariant,
       widgets,
       recentSavesEnabled,
       hideDescriptions,
@@ -374,6 +376,8 @@ export class _CardGrid extends React.PureComponent {
             bookmarkGuid={rec.bookmarkGuid}
             is_collection={this.props.is_collection}
             saveToPocketCard={saveToPocketCard}
+            ctaButtonSponsors={ctaButtonSponsors}
+            ctaButtonVariant={ctaButtonVariant}
             recommendation_id={rec.recommendation_id}
           />
         )

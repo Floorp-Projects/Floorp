@@ -24,11 +24,11 @@ skip-if = ["socketprocess_networking"] # Bug 1759035
 
 ["test_PlacesFeed.js"]
 
-["test_TopSitesFeed_glean.js"]
-
 ["test_Store.js"]
 
 ["test_TelemetryFeed.js"]
 support-files = ["../schemas/*.schema.json"]
 
 ["test_TopSitesFeed.js"]
+
+["test_TopSitesFeed_glean.js"]
