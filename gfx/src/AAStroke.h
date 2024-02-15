@@ -40,6 +40,9 @@ void aa_stroke_curve_to(Stroker* s, float c1x, float c1y, float c2x, float c2y,
                         float x, float y, bool end);
 void aa_stroke_close(Stroker* s);
 VertexBuffer aa_stroke_finish(Stroker* s);
+VertexBuffer aa_stroke_filled_circle(float cx, float cy, float radius,
+                                     OutputVertex* output_ptr = nullptr,
+                                     size_t output_capacity = 0);
 void aa_stroke_vertex_buffer_release(VertexBuffer vb);
 void aa_stroke_release(Stroker* s);
 };
