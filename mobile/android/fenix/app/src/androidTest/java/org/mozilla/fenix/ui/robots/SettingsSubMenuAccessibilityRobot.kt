@@ -50,17 +50,48 @@ class SettingsSubMenuAccessibilityRobot {
         const val TEXT_SIZE = 16f
     }
 
-    fun verifyAutomaticFontSizingMenuItems() = assertAutomaticFontSizingMenuItems()
-
     fun clickFontSizingSwitch() = toggleFontSizingSwitch()
 
-    fun verifyEnabledMenuItems() = assertEnabledMenuItems()
+    fun verifyEnabledMenuItems() {
+        val view = onView(withText("Font Size"))
+        view.check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+            .check(matches(isEnabled(true)))
 
-    fun verifyMenuItemsAreDisabled() = assertMenuItemsAreDisabled()
+        val strFont = "Make text on websites larger or smaller"
+        onView(withText(strFont))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+            .check(matches(isEnabled(true)))
+
+        onView(withId(org.mozilla.fenix.R.id.sampleText))
+            .check(matches(withText("This is sample text. It is here to show how text will appear when you increase or decrease the size with this setting.")))
+
+        onView(withId(org.mozilla.fenix.R.id.seekbar_value))
+            .check(matches(withText("100%")))
+
+        onView(withId(org.mozilla.fenix.R.id.seekbar))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
+
+    fun verifyMenuItemsAreDisabled() {
+        onView(withText("Font Size")).assertIsEnabled(false)
+
+        val strFont = "Make text on websites larger or smaller"
+
+        onView(withText(strFont)).assertIsEnabled(false)
+
+        onView(withId(org.mozilla.fenix.R.id.sampleText)).assertIsEnabled(false)
+
+        onView(withId(org.mozilla.fenix.R.id.seekbar_value)).assertIsEnabled(false)
+
+        onView(withId(org.mozilla.fenix.R.id.seekbar)).assertIsEnabled(false)
+    }
 
     fun changeTextSizeSlider(seekBarPercentage: Int) = adjustTextSizeSlider(seekBarPercentage)
 
-    fun verifyTextSizePercentage(textSize: Int) = assertTextSizePercentage(textSize)
+    fun verifyTextSizePercentage(textSize: Int) {
+        onView(withId(org.mozilla.fenix.R.id.sampleText))
+            .check(textSizePercentageEquals(textSize))
+    }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -73,14 +104,6 @@ class SettingsSubMenuAccessibilityRobot {
     }
 }
 
-private fun assertAutomaticFontSizingMenuItems() {
-    onView(withText("Automatic font sizing"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    val strFont = "Font size will match your Android settings. Disable to manage font size here."
-    onView(withText(strFont))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
 private fun toggleFontSizingSwitch() {
     // Toggle font size to off
     onView(withText("Automatic font sizing"))
@@ -88,54 +111,9 @@ private fun toggleFontSizingSwitch() {
         .perform(click())
 }
 
-private fun assertEnabledMenuItems() {
-    assertFontSize()
-    assertSliderBar()
-}
-
-private fun assertFontSize() {
-    val view = onView(withText("Font Size"))
-    view.check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-        .check(matches(isEnabled(true)))
-    val strFont = "Make text on websites larger or smaller"
-    onView(withText(strFont))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-        .check(matches(isEnabled(true)))
-}
-
-private fun assertSliderBar() {
-    onView(withId(org.mozilla.fenix.R.id.sampleText))
-        .check(matches(withText("This is sample text. It is here to show how text will appear when you increase or decrease the size with this setting.")))
-
-    onView(withId(org.mozilla.fenix.R.id.seekbar_value))
-        .check(matches(withText("100%")))
-
-    onView(withId(org.mozilla.fenix.R.id.seekbar))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
 private fun adjustTextSizeSlider(seekBarPercentage: Int) {
     onView(withId(org.mozilla.fenix.R.id.seekbar))
         .perform(SeekBarChangeProgressViewAction(seekBarPercentage))
-}
-
-private fun assertTextSizePercentage(textSize: Int) {
-    onView(withId(org.mozilla.fenix.R.id.sampleText))
-        .check(textSizePercentageEquals(textSize))
-}
-
-private fun assertMenuItemsAreDisabled() {
-    onView(withText("Font Size")).assertIsEnabled(false)
-
-    val strFont = "Make text on websites larger or smaller"
-
-    onView(withText(strFont)).assertIsEnabled(false)
-
-    onView(withId(org.mozilla.fenix.R.id.sampleText)).assertIsEnabled(false)
-
-    onView(withId(org.mozilla.fenix.R.id.seekbar_value)).assertIsEnabled(false)
-
-    onView(withId(org.mozilla.fenix.R.id.seekbar)).assertIsEnabled(false)
 }
 
 private fun goBackButton() =
