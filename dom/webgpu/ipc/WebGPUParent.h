@@ -168,6 +168,10 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
       const layers::RemoteTextureId aRemoteTextureId,
       const layers::RemoteTextureOwnerId aOwnerId);
 
+  bool ForwardError(const RawId aDeviceId, ErrorBuffer& aError) {
+    return ForwardError(Some(aDeviceId), aError);
+  }
+
  private:
   static void MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
                           uint8_t* aUserData);
@@ -182,9 +186,6 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
   void LoseDevice(const RawId aDeviceId, Maybe<uint8_t> aReason,
                   const nsACString& aMessage);
 
-  bool ForwardError(const RawId aDeviceId, ErrorBuffer& aError) {
-    return ForwardError(Some(aDeviceId), aError);
-  }
   bool ForwardError(Maybe<RawId> aDeviceId, ErrorBuffer& aError);
 
   void ReportError(Maybe<RawId> aDeviceId, GPUErrorFilter,
