@@ -21,6 +21,7 @@ namespace InspectorUtils {
   unsigned long getRuleLine(CSSRule rule);
   unsigned long getRuleColumn(CSSRule rule);
   unsigned long getRelativeRuleLine(CSSRule rule);
+  sequence<unsigned long> getRuleIndex(CSSRule rule);
   boolean hasRulesModifiedByCSSOM(CSSStyleSheet sheet);
   // Get a flat list of all rules (including nested ones) of a given stylesheet.
   // Useful for DevTools as this is faster than in JS where we'd have a lot of
