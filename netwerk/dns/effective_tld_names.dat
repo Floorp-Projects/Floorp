@@ -6710,7 +6710,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-01-24T15:14:29Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-02-08T15:13:14Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -7539,10 +7539,6 @@ college
 // cologne : dotKoeln GmbH
 // https://www.iana.org/domains/root/db/cologne.html
 cologne
-
-// comcast : Comcast IP Holdings I, LLC
-// https://www.iana.org/domains/root/db/comcast.html
-comcast
 
 // commbank : COMMONWEALTH BANK OF AUSTRALIA
 // https://www.iana.org/domains/root/db/commbank.html
@@ -10756,10 +10752,6 @@ xbox
 // https://www.iana.org/domains/root/db/xerox.html
 xerox
 
-// xfinity : Comcast IP Holdings I, LLC
-// https://www.iana.org/domains/root/db/xfinity.html
-xfinity
-
 // xihuan : Beijing Qihu Keji Co., Ltd.
 // https://www.iana.org/domains/root/db/xihuan.html
 xihuan
@@ -12433,6 +12425,10 @@ dynamic-dns.info
 feste-ip.net
 knx-server.net
 static-access.net
+
+// cPanel L.L.C. : https://www.cpanel.net/
+// Submitted by Dustin Scherer <public.suffix@cpanel.net>
+*.cprapid.com
 
 // Craynic, s.r.o. : http://www.craynic.com/
 // Submitted by Ales Krajnik <ales.krajnik@craynic.com>

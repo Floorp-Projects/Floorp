@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Chrome",
+      "schema": 1707350403569,
+      "status": "nightly",
+      "version": "123",
+      "browserid": "chrome",
+      "id": "66e79095-2721-4a9e-9139-1a5f1afe1311",
+      "last_modified": 1707754922004
+    },
+    {
+      "name": "Chrome",
+      "schema": 1707523507640,
+      "status": "planned",
+      "version": "124",
+      "browserid": "chrome",
+      "id": "f26cb7b0-cf29-4c33-8fb7-a2cc466a7e3c",
+      "last_modified": 1707754922001
+    },
+    {
       "name": "Deno",
       "schema": 1706659507818,
       "status": "current",
@@ -289,5 +307,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1706695152746
+  "timestamp": 1707754922004
 }
