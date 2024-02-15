@@ -43,11 +43,13 @@ jobs:
         worker-type: t-linux-wayland
         run:
             command: >-
-              export TASKCLUSTER_ROOT_DIR=$PWD && cd $MOZ_FETCHES_DIR/ && ./tests.sh
+              export TASKCLUSTER_ROOT_DIR=$PWD && cd $MOZ_FETCHES_DIR/ && ./tests.sh --basic
         fetches:
             snap-upstream-build:
                 - firefox.snap
                 - snap-tests.zip
         treeherder:
             platform: linux64/opt
-            symbol: Sel
+            symbol: Sel(basic)
+        attributes:
+            snap_test_type: basic
