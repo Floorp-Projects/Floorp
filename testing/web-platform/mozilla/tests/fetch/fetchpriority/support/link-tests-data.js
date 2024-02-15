@@ -149,25 +149,25 @@ const kExpectedRequestsOfLinkPreloadFetch = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: "dummy.txt?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.txt?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
 ];
 
 const kExpectedRequestsOfLinkPreloadFetchDisabled = [
     {   fileNameAndSuffix: "dummy.txt?1",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.txt?2",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.txt?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.txt?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
 ];
 
