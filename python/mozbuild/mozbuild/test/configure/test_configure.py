@@ -1975,10 +1975,6 @@ class TestConfigure(unittest.TestCase):
     def test_depends_getattr(self):
         with self.moz_configure(
             """
-            @imports(_from='mozbuild.util', _import='ReadOnlyNamespace')
-            def namespace(**kwargs):
-                return ReadOnlyNamespace(**kwargs)
-
             option('--foo', nargs=1, help='foo')
             @depends('--foo')
             def foo(value):
