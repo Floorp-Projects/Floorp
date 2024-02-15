@@ -35,7 +35,7 @@ export class YelpSuggestions extends BaseFeature {
   }
 
   get enablingPreferences() {
-    return ["suggest.yelp"];
+    return ["suggest.quicksuggest.sponsored", "suggest.yelp"];
   }
 
   get rustSuggestionTypes() {

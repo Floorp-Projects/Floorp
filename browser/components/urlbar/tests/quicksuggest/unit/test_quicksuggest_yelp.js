@@ -256,6 +256,10 @@ add_task(async function sponsoredDisabled() {
 
   // Now disable the pref.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+  Assert.ok(
+    !QuickSuggest.getFeature("YelpSuggestions").isEnabled,
+    "Yelp should be disabled"
+  );
   await check_results({
     context: createContext("ramen in tokyo", {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -267,6 +271,24 @@ add_task(async function sponsoredDisabled() {
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
   await QuickSuggestTestUtils.forceSync();
+
+  // Make sure Yelp is enabled again.
+  Assert.ok(
+    QuickSuggest.getFeature("YelpSuggestions").isEnabled,
+    "Yelp should be re-enabled"
+  );
+  await check_results({
+    context: createContext("ramen in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
+      }),
+    ],
+  });
 });
 
 // When Yelp-specific preferences are disabled, suggestions should not be
@@ -290,6 +312,10 @@ add_task(async function yelpSpecificPrefsDisabled() {
 
     // Now disable the pref.
     UrlbarPrefs.set(pref, false);
+    Assert.ok(
+      !QuickSuggest.getFeature("YelpSuggestions").isEnabled,
+      "Yelp should be disabled"
+    );
     await check_results({
       context: createContext("ramen in tokyo", {
         providers: [UrlbarProviderQuickSuggest.name],
@@ -301,6 +327,24 @@ add_task(async function yelpSpecificPrefsDisabled() {
     // Revert.
     UrlbarPrefs.set(pref, true);
     await QuickSuggestTestUtils.forceSync();
+
+    // Make sure Yelp is enabled again.
+    Assert.ok(
+      QuickSuggest.getFeature("YelpSuggestions").isEnabled,
+      "Yelp should be re-enabled"
+    );
+    await check_results({
+      context: createContext("ramen in tokyo", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [
+        makeExpectedResult({
+          url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+          title: "ramen in tokyo",
+        }),
+      ],
+    });
   }
 });
 
