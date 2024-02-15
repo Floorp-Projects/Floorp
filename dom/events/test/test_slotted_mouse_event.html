@@ -16,6 +16,9 @@ function runTests() {
   iframe.onload = () => frameLoaded(iframe);
   iframe.srcdoc = `
     <style>
+      body {
+        padding: 20px;
+      }
       #child-target {
         width: 80px;
         height: 80px;
@@ -49,6 +52,8 @@ function frameLoaded(iframe) {
     </style>
     <slot></slot>
   `;
+
+  synthesizeMouse(document.body, 10, 10, { type: "mousemove" });
 
   host.addEventListener("mouseenter", e => {
     if (finished)
