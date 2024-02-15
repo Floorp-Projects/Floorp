@@ -1,3 +1,2 @@
 mergedeep
-pygit2==1.6.1   # TODO Bump version once base image uses Python > 3.6
 pyyaml
