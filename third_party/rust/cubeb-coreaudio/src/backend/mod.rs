@@ -35,9 +35,9 @@ use self::utils::*;
 use atomic;
 use backend::ringbuf::RingBuffer;
 use cubeb_backend::{
-    ffi, ChannelLayout, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType,
-    Error, InputProcessingParams, Ops, Result, SampleFormat, State, Stream, StreamOps,
-    StreamParams, StreamParamsRef, StreamPrefs,
+    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Error,
+    InputProcessingParams, Ops, Result, SampleFormat, State, Stream, StreamOps, StreamParams,
+    StreamParamsRef, StreamPrefs,
 };
 use mach::mach_time::{mach_absolute_time, mach_timebase_info};
 use std::cmp;
@@ -311,7 +311,8 @@ fn set_input_processing_params(unit: AudioUnit, params: InputProcessingParams) -
     let aec = params.contains(InputProcessingParams::ECHO_CANCELLATION);
     let ns = params.contains(InputProcessingParams::NOISE_SUPPRESSION);
 
-    // See the comment in supported_input_processing_params on why we don't expose AGC to clients.
+    // We don't use AGC, but keep it here for reference.
+    // See the comment in supported_input_processing_params.
     let agc = params.contains(InputProcessingParams::AUTOMATIC_GAIN_CONTROL);
     assert!(!agc);
 
@@ -323,10 +324,7 @@ fn set_input_processing_params(unit: AudioUnit, params: InputProcessingParams) -
         return Err(Error::error());
     }
 
-    // Always use AGC to limit the signal, as it may be far out of bounds without AGC,
-    // resulting in clipping. This has been observed with an Apple Studio Display being
-    // used for both input and output.
-    let agc = u32::from(true);
+    let agc = u32::from(agc);
     let r = audio_unit_set_property(
         unit,
         kAUVoiceIOProperty_VoiceProcessingEnableAGC,
@@ -2242,7 +2240,7 @@ impl ContextOps for AudioUnitContext {
         // The VoiceProcessingIO AudioUnit has the
         // kAUVoiceIOProperty_VoiceProcessingEnableAGC property to enable AGC on
         // the input signal, but some simple manual tests on MacOS 14.0 suggest
-        // it doesn't amplify a weak signal.
+        // it doesn't have any effect.
         Ok(InputProcessingParams::ECHO_CANCELLATION | InputProcessingParams::NOISE_SUPPRESSION)
     }
     fn enumerate_devices(
@@ -2937,7 +2935,8 @@ impl<'ctx> CoreStreamData<'ctx> {
             let params = unsafe {
                 let mut p = *self.input_stream_params.as_ptr();
                 p.channels = if using_voice_processing_unit {
-                    // VPIO is always MONO.
+                    // With VPIO, stereo input devices configured for stereo have been observed to
+                    // spit out only a single mono channel.
                     1
                 } else {
                     input_hw_desc.mChannelsPerFrame
@@ -3055,6 +3054,9 @@ impl<'ctx> CoreStreamData<'ctx> {
                 out_dev_info
             );
 
+            let device_channel_count =
+                get_channel_count(self.output_device.id, DeviceType::OUTPUT).unwrap_or(0);
+
             cubeb_log!(
                 "({:p}) Opening output side: rate {}, channels {}, format {:?}, layout {:?}, prefs {:?}, latency in frames {}, voice processing {}.",
                 self.stm_ptr,
@@ -3091,10 +3093,9 @@ impl<'ctx> CoreStreamData<'ctx> {
                 output_hw_desc
             );
 
-            // In some cases with (other streams using) VPIO the stream format's mChannelsPerFrame
-            // is higher than expected. Use get_channel_count as source of truth.
-            output_hw_desc.mChannelsPerFrame =
-                get_channel_count(self.output_device.id, DeviceType::OUTPUT).unwrap_or(0);
+            // In some cases with VPIO the stream format's mChannelsPerFrame is higher than
+            // expected. Use get_channel_count as source of truth.
+            output_hw_desc.mChannelsPerFrame = device_channel_count;
 
             // This has been observed in the wild.
             if output_hw_desc.mChannelsPerFrame == 0 {
@@ -3111,12 +3112,7 @@ impl<'ctx> CoreStreamData<'ctx> {
             // channels will be appended at the end of the raw data given by the output callback.
             let params = unsafe {
                 let mut p = *self.output_stream_params.as_ptr();
-                p.channels = if using_voice_processing_unit {
-                    // VPIO is always MONO.
-                    1
-                } else {
-                    output_hw_desc.mChannelsPerFrame
-                };
+                p.channels = output_hw_desc.mChannelsPerFrame;
                 if using_voice_processing_unit {
                     // VPIO will always use the sample rate of the input hw for both input and output,
                     // as reported to us. (We can override it but we cannot improve quality this way).
@@ -3723,10 +3719,23 @@ impl<'ctx> CoreStreamData<'ctx> {
     fn get_output_channel_layout(&self) -> Result<Vec<mixer::Channel>> {
         self.debug_assert_is_on_stream_queue();
         assert!(!self.output_unit.is_null());
-        if self.using_voice_processing_unit() {
-            return Ok(get_channel_order(ChannelLayout::MONO));
+        if !self.using_voice_processing_unit() {
+            return get_channel_layout(self.output_unit);
         }
-        get_channel_layout(self.output_unit)
+
+        // The VoiceProcessingIO unit (as tried on MacOS 14) is known to not support
+        // kAudioUnitProperty_AudioChannelLayout queries, and to lie about
+        // kAudioDevicePropertyPreferredChannelLayout. If we're using
+        // VoiceProcessingIO, try standing up a regular AudioUnit and query that.
+        cubeb_log!(
+            "({:p}) get_output_channel_layout with a VoiceProcessingIO output unit. Trying a dedicated unit.",
+            self.stm_ptr
+        );
+        let mut dedicated_unit = create_audiounit(&self.output_device)?;
+        let res = get_channel_layout(dedicated_unit);
+        dispose_audio_unit(dedicated_unit);
+        dedicated_unit = ptr::null_mut();
+        res
     }
 }
 
