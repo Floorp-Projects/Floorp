@@ -235,8 +235,6 @@ void ReleaseArenaList(JSRuntime* rt, ArenaList& arenaList,
 }
 
 ArenaLists::~ArenaLists() {
-  MOZ_ASSERT(runtime()->gc.foregroundFinalizedArenas.ref().isNothing());
-
   AutoLockGC lock(runtime());
 
   for (auto i : AllAllocKinds()) {
