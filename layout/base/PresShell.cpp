@@ -6982,12 +6982,20 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
         RefPtr<PresShell> rootPresShell =
             mPresContext->IsRoot() ? this : GetRootPresShell();
         if (rootPresShell && rootPresShell->mSynthMouseMoveEvent.IsPending()) {
+          AutoWeakFrame frameForPresShellWeak(aFrameForPresShell);
           RefPtr<nsSynthMouseMoveEvent> synthMouseMoveEvent =
               rootPresShell->mSynthMouseMoveEvent.get();
           synthMouseMoveEvent->Run();
-        }
-        if (IsDestroying()) {
-          return NS_OK;
+          if (IsDestroying()) {
+            return NS_OK;
+          }
+          // XXX If the frame or "this" is reframed, it might be better to
+          // recompute the frame.  However, it could treat the user input on
+          // unexpected element.  Therefore, we should not do that until we'd
+          // get a bug report caused by that.
+          if (MOZ_UNLIKELY(!frameForPresShellWeak.IsAlive())) {
+            return NS_OK;
+          }
         }
         break;
       }
