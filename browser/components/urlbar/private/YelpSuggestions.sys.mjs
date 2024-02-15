@@ -53,9 +53,12 @@ export class YelpSuggestions extends BaseFeature {
   }
 
   async makeResult(queryContext, suggestion, searchString) {
+    // If the user clicked "Show less frequently" at least once or if the
+    // subject wasn't typed in full, then apply the min length threshold and
+    // return null if the entire search string is too short.
     if (
-      this.#showLessFrequentlyCount &&
-      searchString.length <=
+      (this.#showLessFrequentlyCount || !suggestion.subjectExactMatch) &&
+      searchString.length <
         this.#showLessFrequentlyCount + this.#minKeywordLength
     ) {
       return null;
