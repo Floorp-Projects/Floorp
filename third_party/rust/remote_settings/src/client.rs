@@ -155,7 +155,10 @@ impl Client {
         if resp.is_success() {
             Ok(resp)
         } else {
-            Err(RemoteSettingsError::ResponseError(resp.text().to_string()))
+            Err(RemoteSettingsError::ResponseError(format!(
+                "status code: {}",
+                resp.status
+            )))
         }
     }
 

@@ -1252,12 +1252,14 @@ Suggestion.Yelp = class extends Suggestion{
     constructor(
         url,
         title,
-        isTopPick
+        subjectExactMatch,
+        icon
         ) {
             super();
             this.url = url;
             this.title = title;
-            this.isTopPick = isTopPick;
+            this.subjectExactMatch = subjectExactMatch;
+            this.icon = icon;
         }
 }
 Suggestion.Mdn = class extends Suggestion{
@@ -1331,7 +1333,8 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
                 return new Suggestion.Yelp(
                     FfiConverterString.read(dataStream),
                     FfiConverterString.read(dataStream),
-                    FfiConverterBool.read(dataStream)
+                    FfiConverterBool.read(dataStream),
+                    FfiConverterOptionalSequenceu8.read(dataStream)
                     );
             case 6:
                 return new Suggestion.Mdn(
@@ -1398,7 +1401,8 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             dataStream.writeInt32(5);
             FfiConverterString.write(dataStream, value.url);
             FfiConverterString.write(dataStream, value.title);
-            FfiConverterBool.write(dataStream, value.isTopPick);
+            FfiConverterBool.write(dataStream, value.subjectExactMatch);
+            FfiConverterOptionalSequenceu8.write(dataStream, value.icon);
             return;
         }
         if (value instanceof Suggestion.Mdn) {
@@ -1463,7 +1467,8 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
         if (value instanceof Suggestion.Yelp) {
             totalSize += FfiConverterString.computeSize(value.url);
             totalSize += FfiConverterString.computeSize(value.title);
-            totalSize += FfiConverterBool.computeSize(value.isTopPick);
+            totalSize += FfiConverterBool.computeSize(value.subjectExactMatch);
+            totalSize += FfiConverterOptionalSequenceu8.computeSize(value.icon);
             return totalSize;
         }
         if (value instanceof Suggestion.Mdn) {
@@ -1497,6 +1502,7 @@ export const SuggestionProvider = {
     YELP: 5,
     MDN: 6,
     WEATHER: 7,
+    AMP_MOBILE: 8,
 };
 
 Object.freeze(SuggestionProvider);
@@ -1518,6 +1524,8 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
                 return SuggestionProvider.MDN
             case 7:
                 return SuggestionProvider.WEATHER
+            case 8:
+                return SuggestionProvider.AMP_MOBILE
             default:
                 return new Error("Unknown SuggestionProvider variant");
         }
@@ -1552,6 +1560,10 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
             dataStream.writeInt32(7);
             return;
         }
+        if (value === SuggestionProvider.AMP_MOBILE) {
+            dataStream.writeInt32(8);
+            return;
+        }
         return new Error("Unknown SuggestionProvider variant");
     }
 
@@ -1560,7 +1572,7 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
     }
 
     static checkType(value) {
-      if (!Number.isInteger(value) || value < 1 || value > 7) {
+      if (!Number.isInteger(value) || value < 1 || value > 8) {
           throw new UniFFITypeError(`${value} is not a valid value for SuggestionProvider`);
       }
     }

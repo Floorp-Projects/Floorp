@@ -6,8 +6,16 @@
 use rusqlite::{Connection, Transaction};
 use sql_support::open_database::{self, ConnectionInitializer};
 
-pub const VERSION: u32 = 12;
+/// The current database schema version.
+///
+/// For any changes to the schema [`SQL`], please make sure to:
+///
+///  1. Bump this version.
+///  2. Add a migration from the old version to the new version in
+///     [`SuggestConnectionInitializer::upgrade_from`].
+pub const VERSION: u32 = 13;
 
+/// The current Suggest database schema.
 pub const SQL: &str = "
     CREATE TABLE meta(
         key TEXT PRIMARY KEY,
@@ -92,6 +100,11 @@ pub const SQL: &str = "
         record_id TEXT NOT NULL
     ) WITHOUT ROWID;
 
+    CREATE TABLE yelp_custom_details(
+        icon_id TEXT PRIMARY KEY,
+        record_id TEXT NOT NULL
+    ) WITHOUT ROWID;
+
     CREATE TABLE mdn_custom_details(
         suggestion_id INTEGER PRIMARY KEY,
         description TEXT NOT NULL,
@@ -127,10 +140,10 @@ impl ConnectionInitializer for SuggestConnectionInitializer {
 
     fn upgrade_from(&self, _db: &Transaction<'_>, version: u32) -> open_database::Result<()> {
         match version {
-            1..=11 => {
-                // These schema versions were used during development, and never
-                // shipped in any applications. Treat these databases as
-                // corrupt, so that they'll be replaced.
+            1..=12 => {
+                // Treat databases with these older schema versions as corrupt,
+                // so that they'll be replaced by a fresh, empty database with
+                // the current schema.
                 Err(open_database::Error::Corrupt)
             }
             _ => Err(open_database::Error::IncompatibleVersion(version)),

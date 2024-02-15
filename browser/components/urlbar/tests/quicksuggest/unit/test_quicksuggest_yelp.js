@@ -15,6 +15,7 @@ const REMOTE_SETTINGS_RECORDS = [
       postModifiers: ["delivery"],
       locationSigns: [{ keyword: "in", needLocation: true }],
       yelpModifiers: [],
+      icon: "1234",
     },
   },
 ];
@@ -301,6 +302,7 @@ function makeExpectedResult(expected) {
       url,
       title: expected.title,
       displayUrl,
+      icon: null,
     },
   };
 }

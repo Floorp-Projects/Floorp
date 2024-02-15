@@ -47,8 +47,8 @@ const MAX_QUERY_LENGTH: usize = 150;
 /// "keyword=:modifier" (please see is_modifier()), define this how many words we should check.
 const MAX_MODIFIER_WORDS_NUMBER: usize = 2;
 
-/// The threshold that enables prefix-match.
-const PREFIX_MATCH_THRESHOLD: usize = 6;
+/// At least this many characters must be typed for a subject to be matched.
+const SUBJECT_PREFIX_MATCH_THRESHOLD: usize = 2;
 
 impl<'a> SuggestDao<'a> {
     /// Inserts the suggestions for Yelp attachment into the database.
@@ -116,6 +116,15 @@ impl<'a> SuggestDao<'a> {
             )?;
         }
 
+        self.scope.err_if_interrupted()?;
+        self.conn.execute_cached(
+            "INSERT INTO yelp_custom_details(record_id, icon_id) VALUES(:record_id, :icon_id)",
+            named_params! {
+                ":record_id": record_id.as_str(),
+                ":icon_id": suggestion.icon_id
+            },
+        )?;
+
         Ok(())
     }
 
@@ -134,6 +143,7 @@ impl<'a> SuggestDao<'a> {
             let Some((subject, subject_exact_match)) = self.find_subject(query_string)? else {
                 return Ok(vec![]);
             };
+            let icon = self.fetch_icon()?;
             let builder = SuggestionBuilder {
                 subject: &subject,
                 subject_exact_match,
@@ -142,14 +152,13 @@ impl<'a> SuggestDao<'a> {
                 location_sign: None,
                 location: None,
                 need_location: false,
-                pre_yelp_modifier: None,
-                post_yelp_modifier: None,
+                icon,
             };
             return Ok(vec![builder.into()]);
         }
 
         // Find the yelp keyword modifier and remove them from the query.
-        let (query_without_yelp_modifiers, pre_yelp_modifier, post_yelp_modifier) =
+        let (query_without_yelp_modifiers, _, _) =
             self.find_modifiers(query_string, Modifier::Yelp, Modifier::Yelp)?;
 
         // Find the location sign and the location.
@@ -173,6 +182,8 @@ impl<'a> SuggestDao<'a> {
         let Some((subject, subject_exact_match)) = self.find_subject(&subject_candidate)? else {
             return Ok(vec![]);
         };
+
+        let icon = self.fetch_icon()?;
         let builder = SuggestionBuilder {
             subject: &subject,
             subject_exact_match,
@@ -181,10 +192,34 @@ impl<'a> SuggestDao<'a> {
             location_sign,
             location,
             need_location,
-            pre_yelp_modifier,
-            post_yelp_modifier,
+            icon,
         };
         Ok(vec![builder.into()])
+    }
+
+    /// Fetch the icon for Yelp suggestions.
+    ///
+    /// Note that there should be only one record in `yelp_custom_details`
+    /// as all the Yelp assets are stored in the attachment of a single record
+    /// on Remote Settings. The following query will perform a table scan against
+    /// `yelp_custom_details` followed by an index search against `icons`, which
+    /// should be fine since there is only one record in the first table.
+    fn fetch_icon(&self) -> Result<Option<Vec<u8>>> {
+        Ok(self.conn.try_query_one(
+            r#"
+            SELECT
+              i.data
+            FROM
+              yelp_custom_details y
+            JOIN
+              icons i
+              ON y.icon_id = i.id
+            LIMIT
+              1
+            "#,
+            (),
+            true,
+        )?)
     }
 
     /// Find the location information from the given query string.
@@ -312,9 +347,9 @@ impl<'a> SuggestDao<'a> {
             return Ok(None);
         }
 
-        // If the length of subject candidate is less than PREFIX_MATCH_THRESHOLD,
-        // should exact match.
-        if candidate.len() < PREFIX_MATCH_THRESHOLD {
+        // If the length of subject candidate is less than
+        // SUBJECT_PREFIX_MATCH_THRESHOLD, should exact match.
+        if candidate.len() < SUBJECT_PREFIX_MATCH_THRESHOLD {
             return Ok(if self.is_subject(candidate)? {
                 Some((candidate.to_string(), true))
             } else {
@@ -325,7 +360,11 @@ impl<'a> SuggestDao<'a> {
         // Otherwise, apply prefix-match.
         Ok(
             match self.conn.query_row_and_then_cachable(
-                "SELECT keyword FROM yelp_subjects WHERE keyword BETWEEN :candidate AND :candidate || x'FFFF' ORDER BY LENGTH(keyword) ASC LIMIT 1",
+                "SELECT keyword
+                 FROM yelp_subjects
+                 WHERE keyword BETWEEN :candidate AND :candidate || x'FFFF'
+                 ORDER BY LENGTH(keyword) ASC, keyword ASC
+                 LIMIT 1",
                 named_params! {
                     ":candidate": candidate.to_lowercase(),
                 },
@@ -334,10 +373,13 @@ impl<'a> SuggestDao<'a> {
             ) {
                 Ok(keyword) => {
                     debug_assert!(candidate.len() <= keyword.len());
-                    Some((format!("{}{}", candidate, &keyword[candidate.len()..]), candidate.len() == keyword.len()))
-                },
-                Err(_) => None
-            }
+                    Some((
+                        format!("{}{}", candidate, &keyword[candidate.len()..]),
+                        candidate.len() == keyword.len(),
+                    ))
+                }
+                Err(_) => None,
+            },
         )
     }
 
@@ -385,8 +427,7 @@ struct SuggestionBuilder<'a> {
     location_sign: Option<String>,
     location: Option<String>,
     need_location: bool,
-    pre_yelp_modifier: Option<String>,
-    post_yelp_modifier: Option<String>,
+    icon: Option<Vec<u8>>,
 }
 
 impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
@@ -419,13 +460,11 @@ impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
         url.push_str(&parameters.finish());
 
         let title = [
-            builder.pre_yelp_modifier.as_deref(),
             builder.pre_modifier.as_deref(),
             Some(builder.subject),
             builder.post_modifier.as_deref(),
             builder.location_sign.as_deref(),
             builder.location.as_deref(),
-            builder.post_yelp_modifier.as_deref(),
         ]
         .iter()
         .flatten()
@@ -436,7 +475,8 @@ impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
         Suggestion::Yelp {
             url,
             title,
-            is_top_pick: builder.subject_exact_match,
+            subject_exact_match: builder.subject_exact_match,
+            icon: builder.icon,
         }
     }
 }
