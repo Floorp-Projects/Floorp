@@ -263,11 +263,13 @@ var SessionSaverInternal = {
 
       for (let tab of window.tabs) {
         let ssbEnabled = tab.floorpSSB === "true";
-        if (ssbEnabled) {
+        let webpanelTab = tab.floorpWebPanel === "true";
+        if (ssbEnabled || webpanelTab) {
           state.windows.splice(state.windows.indexOf(window), 1);
         }
       }
     }
+    console.log(state.windows);
 
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
