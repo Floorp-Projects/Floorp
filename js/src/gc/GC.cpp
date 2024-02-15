@@ -2207,6 +2207,7 @@ void Compartment::sweepRealms(JS::GCContext* gcx, bool keepAtleastOne,
 
 void GCRuntime::sweepZones(JS::GCContext* gcx, bool destroyingRuntime) {
   MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
+  MOZ_ASSERT(foregroundFinalizedArenas.ref().isNothing());
 
   if (numActiveZoneIters) {
     return;
