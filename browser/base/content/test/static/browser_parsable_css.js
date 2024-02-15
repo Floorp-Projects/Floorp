@@ -12,10 +12,6 @@
 let ignoreList = [
   // CodeMirror is imported as-is, see bug 1004423.
   { sourceName: /codemirror\.css$/i, isFromDevTools: true },
-  {
-    sourceName: /devtools\/content\/debugger\/src\/components\/([A-z\/]+).css/i,
-    isFromDevTools: true,
-  },
   // UA-only media features.
   {
     sourceName: /\b(autocomplete-item)\.css$/,
