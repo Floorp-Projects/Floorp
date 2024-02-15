@@ -312,3 +312,15 @@ once the leak stop reproducing, find the exact location where it is happening.
 
 See [this post](https://crisal.io/words/2019/11/13/shutdown-leak-hunting.html)
 for more advanced debugging techniques involving CC and GC logs.
+
+## How can I run accessibility tests (a11y-checks)?
+
+The accessibility tests could be run locally with the `--enable-a11y-checks` flag:
+
+```
+./mach mochitest --enable-a11y-checks somePath/someTestFile.html
+```
+
+On CI, a11y-checks only run on tier 2 Linux 18.04 x64 WebRender (Opt and Shippable) builds. If you'd like to run only a11y-checks on Try, you can run the ``./mach try fuzzy --full` command with the query `a11y-checks linux !wayland !tsan !asan !ccov !debug !devedition` for all checks. Alternatively, to exclude devtools chrome tests, pass the query `swr-a11y-checks` to `./mach try fuzzy --full`.
+
+If you have questions on the results of a11y-checks and the ways to remediate any issues, reach out to the Accessibility team the [#accessibility room on Matrix](https://matrix.to/#/#accessibility:mozilla.org).
