@@ -24,6 +24,7 @@ struct GFreeDeleter {
   void operator()(GError* aPtr) const { g_error_free(aPtr); }
   void operator()(void* aPtr) const { g_free(aPtr); }
   void operator()(GtkPaperSize* aPtr) const { gtk_paper_size_free(aPtr); }
+  void operator()(gchar** aPtr) const { g_strfreev(aPtr); }
 };
 
 template <typename T>
