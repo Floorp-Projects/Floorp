@@ -4,8 +4,6 @@
 
 include protocol PRemoteQuotaObject;
 
-using mozilla::ipc::Endpoint from "mozilla/ipc/Endpoint.h";
-
 namespace mozilla {
 namespace dom {
 namespace quota {

@@ -2482,6 +2482,7 @@ class _ComputeTypeDeps(TypeVisitor):
         if s in self.visited:
             return
         self.visited.add(s)
+        self.includeHeaders.add("mozilla/ipc/Endpoint.h")
         self.maybeTypedef("::mozilla::ipc::Endpoint", "Endpoint", ["FooSide"])
         self.visitActorType(s.actor)
 
@@ -2489,6 +2490,7 @@ class _ComputeTypeDeps(TypeVisitor):
         if s in self.visited:
             return
         self.visited.add(s)
+        self.includeHeaders.add("mozilla/ipc/Endpoint.h")
         self.maybeTypedef(
             "::mozilla::ipc::ManagedEndpoint", "ManagedEndpoint", ["FooSide"]
         )
