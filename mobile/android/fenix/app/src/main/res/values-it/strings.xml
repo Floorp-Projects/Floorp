@@ -98,7 +98,7 @@
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
-    <string name="tcp_cfr_message">La funzione per la protezione della privacy più potente che abbiamo mai realizzato isola gli elementi traccianti tra i siti.</string>
+    <string name="tcp_cfr_message">La funzione per la protezione della privacy più potente che abbiamo mai realizzato: isola gli elementi che ti tracciano attraverso siti diversi.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Ulteriori informazioni sulla Protezione totale per i cookie</string>
 

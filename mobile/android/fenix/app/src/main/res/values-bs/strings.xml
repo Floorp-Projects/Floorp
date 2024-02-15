@@ -2141,6 +2141,9 @@
     <string name="other_default_search_engine_suggestion_header">%s pretraga</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Promijenite svoj zadani pretraživač</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Postavi automatsko otvaranje linkova web stranica, e-maila i poruka u Firefoxu.</string>
 
     <!-- Content description for close button in collection placeholder. -->

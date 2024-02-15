@@ -544,7 +544,7 @@
     <string name="preferences_override_sync_tokenserver">اؤزل دؤنگل سرور</string>
 
     <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
-    <string name="toast_override_account_sync_server_done">موْزیلا حسابیْ/دؤنگل سروری دگیشدیریلدی. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیخیلیر...</string>
+    <string name="toast_override_account_sync_server_done">موْزیلا حسابیْ/دؤنگل سروری دگیشدیریلدی. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیخیلیر…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">حساب</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -614,7 +614,7 @@
     <!-- Preference for enabling gecko engine logs -->
     <string name="preferences_enable_gecko_logs">Gecko قیدلرینی گوجلندیر</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
-    <string name="quit_application">دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر...</string>
+    <string name="quit_application">دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">تاخیلان‌لار</string>
@@ -641,7 +641,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">مجموعه صاحیبی (قوللانیجیْ آیدی‌سی)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">تاخیْلان مجموعه‌‌سی ایصلاح اوْلدوُ. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر...</string>
+    <string name="toast_customize_addon_collection_done">تاخیْلان مجموعه‌‌سی ایصلاح اوْلدوُ. دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -661,6 +661,9 @@
 
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">دال پرده‌لر</string>
+
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">اسپانسرلی شوْرتکات‌لار</string>
 
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
@@ -686,6 +689,37 @@
     <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
     <string name="wallpaper_artist_series_description_with_learn_more">باغیْمسیز سس‌لر مجموعه‌سی. %s</string>
 
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">باغیْمسیز سس‌لر مجموعه‌سی.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">بیر رنگ سپمه‌سی ایمتیحان ائله‌یین</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">سیزینله دانیشان بیر دال پرده سئچین.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">داها چوْخ دال پرده‌لری آراشدیْرین</string>
+
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">ایندی یئنی تاخیْلان‌لار وار</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">فایرفاکسیْ اؤزوُنوز ائتمک ایمکانیْ وئرن 100 دن چوْخ یئنی اوُزانتیا باخیْن.</string>
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">تاخیلان‌لاریْ آراشدیْر</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">تاخیلان‌لار گئچیجی اوْلاراق گوُجدن سالیْنمیش.</string>
+
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">بیر و یا نئچه تاخیْلانین ایشی دایاندیریلدیْ، بوُدا سیستمیزی ثابیتسیز ائله‌دی. %1$s تاخیلانی(لاریْ) یئنی‌دن باشلاتماغا باشاریْسیز اوْلدو. \n\n تاخیلانلار ایندیکی اوتورومونوزدا یئنی‌دن ایشه سالیْنمیاجاق. \n\n تاخیلانی(لار)ین سیلینمه‌سی و یا ایشدن سالینماسیْ بو موُشکولو حل ائلیه بیلر.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">تاخیلان‌لاریْ یئنی‌دن باشلاتماغا چالیْشین</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">تاخیلان‌لاریْ گوُجسوز ائتمه‌گه ایدامه وئرین</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">حساب مودیریتی</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ایندی دؤنگل‌لندیر</string>
     <!-- Preference for syncing history -->
@@ -707,7 +741,7 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">جهاز آدیْ بوْش اوْلمالیدیر</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">دؤنگل‌لنیر...</string>
+    <string name="sync_syncing_in_progress">دؤنگل‌لنیر…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">دؤنگل خطا وئردی. سوْن باشاریْ: %s</string>
 

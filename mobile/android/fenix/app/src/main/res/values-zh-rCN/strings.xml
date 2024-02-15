@@ -2223,6 +2223,9 @@
     <string name="other_default_search_engine_suggestion_header">%s · 搜索</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">切换默认浏览器</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">将网站、电子邮件及聊天工具中的链接设为在 Firefox 中自动打开。</string>
 
     <!-- Content description for close button in collection placeholder. -->
