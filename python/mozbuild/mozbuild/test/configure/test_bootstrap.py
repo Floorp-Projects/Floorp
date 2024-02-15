@@ -4,12 +4,13 @@
 
 import os
 import sys
-from mozunit import MockedOpen, main
-from mozbuild.util import ReadOnlyNamespace
 from tempfile import TemporaryDirectory
+
 from buildconfig import topsrcdir
+from mozunit import MockedOpen, main
 
 from common import BaseConfigureTest
+from mozbuild.util import ReadOnlyNamespace
 
 
 class IndexSearch:
