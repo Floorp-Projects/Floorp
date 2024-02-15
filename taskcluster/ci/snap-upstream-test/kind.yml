@@ -18,12 +18,18 @@ kind-dependencies:
 
 job-defaults:
     attributes:
+        retrigger: true
         cron: true
     treeherder:
         kind: test
         tier: 2
+    run:
+        using: run-task
+        checkout: false
     worker:
         max-run-time: 900
+        env:
+            WAYLAND_DISPLAY: 'wayland-0'
         artifacts:
             - name: public/build
               type: directory
@@ -36,8 +42,6 @@ jobs:
         description: Runs basic tests on a Firefox Snap package
         worker-type: t-linux-wayland
         run:
-            using: run-task
-            checkout: false
             command: >-
               export TASKCLUSTER_ROOT_DIR=$PWD && cd $MOZ_FETCHES_DIR/ && ./tests.sh
         fetches:
