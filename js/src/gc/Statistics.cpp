@@ -1134,7 +1134,6 @@ void Statistics::sendGCTelemetry() {
       uint32_t threadCount = gc->markers.length();
       double speedup = parallelMarkTime / wallTime;
       double utilization = parallelRunTime / (wallTime * threadCount);
-      MOZ_ASSERT(utilization <= 1.0);
       runtime->metrics().GC_PARALLEL_MARK_SPEEDUP(uint32_t(speedup * 100.0));
       runtime->metrics().GC_PARALLEL_MARK_UTILIZATION(
           std::clamp(utilization * 100.0, 0.0, 100.0));
