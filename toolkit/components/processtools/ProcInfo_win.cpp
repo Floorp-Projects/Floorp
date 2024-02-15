@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include <winternl.h>
+#include <xpcpublic.h>
 
 #ifndef STATUS_INFO_LENGTH_MISMATCH
 #  define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
@@ -34,7 +35,10 @@ static uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
 int GetCycleTimeFrequencyMHz() {
   static const int frequency = []() {
     // Having a constant TSC is required to convert cycle time to actual time.
-    if (!mozilla::has_constant_tsc()) {
+    // In automation, having short CPU times reported as 0 is more of a problem
+    // than having an imprecise value. The fallback method can't report CPU
+    // times < 1/64s.
+    if (!mozilla::has_constant_tsc() && !xpc::IsInAutomation()) {
       return 0;
     }
 
