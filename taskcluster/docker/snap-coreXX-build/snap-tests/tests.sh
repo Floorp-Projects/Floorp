@@ -4,7 +4,7 @@ set -ex
 
 pwd
 
-ARTIFACT_DIR=$TASKCLUSTER_ROOT_DIR/builds/worker/artifacts/
+export ARTIFACT_DIR=$TASKCLUSTER_ROOT_DIR/builds/worker/artifacts/
 mkdir -p "$ARTIFACT_DIR"
 
 # There's a bug in snapd ~2.60.3-2.61 that will make "snap refresh" fail
@@ -49,8 +49,5 @@ RUNTIME_VERSION=$(snap run firefox --version | awk '{ print $3 }')
 
 python3 -m pip install --user -r requirements.txt
 
-sed -e "s/#RUNTIME_VERSION#/${RUNTIME_VERSION}/#" < expectations.json.in > expectations.json
-
-python3 basic_tests.py expectations.json
-
-cp ./*.png "$ARTIFACT_DIR/"
+sed -e "s/#RUNTIME_VERSION#/${RUNTIME_VERSION}/#" < basic_tests/expectations.json.in > basic_tests/expectations.json
+python3 basic_tests.py basic_tests/expectations.json
