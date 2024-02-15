@@ -446,7 +446,7 @@ bool retryDueToTLSIntolerance(PRErrorCode err, NSSSocketControl* socketInfo) {
   }
 
   if (!socketInfo->IsPreliminaryHandshakeDone() &&
-      socketInfo->SentXyberShare()) {
+      !socketInfo->HasTls13HandshakeSecrets() && socketInfo->SentXyberShare()) {
     nsAutoCString errorName;
     const char* prErrorName = PR_ErrorToName(err);
     if (prErrorName) {
@@ -1277,6 +1277,9 @@ static PRFileDesc* nsSSLIOLayerImportFD(PRFileDesc* fd,
   }
   if (SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject) !=
       SECSuccess) {
+    return nullptr;
+  }
+  if (SSL_SecretCallback(sslSock, SecretCallback, infoObject) != SECSuccess) {
     return nullptr;
   }
   if (SSL_SetCanFalseStartCallback(sslSock, CanFalseStartCallback,
