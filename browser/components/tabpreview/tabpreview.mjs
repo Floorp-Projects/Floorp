@@ -30,6 +30,7 @@ export default class TabPreview extends MozLitElement {
     _displayTitle: { type: String, state: true },
     _displayURI: { type: String, state: true },
     _displayImg: { type: Object, state: true },
+    _currentPreviewDelay: { type: Number, state: true },
   };
 
   constructor() {
@@ -46,6 +47,8 @@ export default class TabPreview extends MozLitElement {
       TAB_PREVIEW_USE_THUMBNAILS_PREF,
       false
     );
+
+    this.resetDelay();
   }
 
   // render this inside a <panel>
@@ -132,6 +135,14 @@ export default class TabPreview extends MozLitElement {
     });
   }
 
+  removeDelay() {
+    this._currentPreviewDelay = 0;
+  }
+
+  resetDelay() {
+    this._currentPreviewDelay = this._prefPreviewDelay;
+  }
+
   previewHidden() {
     window.removeEventListener("wheel", this, { capture: true, passive: true });
     window.removeEventListener("TabSelect", this);
@@ -175,7 +186,8 @@ export default class TabPreview extends MozLitElement {
           // so wait for the delay duration before showing
           this._previewDelayTimeout = setTimeout(() => {
             this._previewIsActive = true;
-          }, this._prefPreviewDelay);
+            this.removeDelay();
+          }, this._currentPreviewDelay);
         }
       }
     }
