@@ -1767,19 +1767,23 @@ Element* Element::GetAttrAssociatedElement(nsAtom* aAttr) const {
   return nullptr;
 }
 
+void Element::ClearExplicitlySetAttrElement(nsAtom* aAttr) {
+  if (auto* slots = GetExistingExtendedDOMSlots()) {
+    slots->mExplicitlySetAttrElements.Remove(aAttr);
+  }
+}
+
 void Element::ExplicitlySetAttrElement(nsAtom* aAttr, Element* aElement) {
   if (aElement) {
+    SetAttr(aAttr, EmptyString(), IgnoreErrors());
     nsExtendedDOMSlots* slots = ExtendedDOMSlots();
     slots->mExplicitlySetAttrElements.InsertOrUpdate(
         aAttr, do_GetWeakReference(aElement));
-    SetAttr(aAttr, EmptyString(), IgnoreErrors());
     return;
   }
 
-  if (auto* slots = GetExistingExtendedDOMSlots()) {
-    slots->mExplicitlySetAttrElements.Remove(aAttr);
-    UnsetAttr(aAttr, IgnoreErrors());
-  }
+  ClearExplicitlySetAttrElement(aAttr);
+  UnsetAttr(aAttr, IgnoreErrors());
 }
 
 void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
