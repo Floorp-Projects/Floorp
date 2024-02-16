@@ -146,6 +146,7 @@ class ToolbarViewTest {
         every { context.settings().showUnifiedSearchFeature } returns true
         every { context.settings().shouldShowHistorySuggestions } returns true
         every { context.settings().shouldShowBookmarkSuggestions } returns true
+        every { context.settings().isTabletAndTabStripEnabled } returns false
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -161,6 +162,7 @@ class ToolbarViewTest {
         every { context.settings().showUnifiedSearchFeature } returns true
         every { context.settings().shouldShowHistorySuggestions } returns true
         every { context.settings().shouldShowBookmarkSuggestions } returns true
+        every { context.settings().isTabletAndTabStripEnabled } returns false
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -446,6 +448,7 @@ class ToolbarViewTest {
     fun `GIVEN autocomplete disabled WHEN the toolbar view is initialized THEN create an autocomplete with disabled functionality`() {
         val settings: Settings = mockk {
             every { shouldAutocompleteInAwesomebar } returns false
+            every { isTabletAndTabStripEnabled } returns false
         }
         val toolbarView = buildToolbarView(true, settings)
 
@@ -458,6 +461,7 @@ class ToolbarViewTest {
     fun `GIVEN autocomplete enabled WHEN the toolbar view is initialized THEN create an autocomplete with enabled functionality`() {
         val settings: Settings = mockk {
             every { shouldAutocompleteInAwesomebar } returns true
+            every { isTabletAndTabStripEnabled } returns false
         }
         val toolbarView = buildToolbarView(true, settings)
 

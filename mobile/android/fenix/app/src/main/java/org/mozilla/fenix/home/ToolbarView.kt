@@ -66,7 +66,7 @@ class ToolbarView(
                     gravity = Gravity.TOP
                 }
 
-                val isTabletAndTabStripEnabled = context.resources.getBoolean(R.bool.tablet)
+                val isTabletAndTabStripEnabled = context.settings().isTabletAndTabStripEnabled
                 ConstraintSet().apply {
                     clone(binding.toolbarLayout)
                     clear(binding.bottomBar.id, ConstraintSet.BOTTOM)

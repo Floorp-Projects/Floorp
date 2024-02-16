@@ -579,7 +579,9 @@ class HomeFragment : Fragment() {
         )
 
         toolbarView?.build()
-        initTabStrip()
+        if (requireContext().settings().isTabletAndTabStripEnabled) {
+            initTabStrip()
+        }
 
         PrivateBrowsingButtonView(binding.privateBrowsingButton, browsingModeManager) { newMode ->
             sessionControlInteractor.onPrivateModeButtonClicked(newMode)
@@ -658,10 +660,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun initTabStrip() {
-        if (!resources.getBoolean(R.bool.tablet)) {
-            return
-        }
-
         binding.tabStripView.isVisible = true
         binding.tabStripView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)

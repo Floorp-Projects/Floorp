@@ -857,6 +857,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     private val isTablet: Boolean
         get() = appContext.resources.getBoolean(R.bool.tablet)
 
+    /**
+     * Indicates if the user has enabled the tab strip feature.
+     */
+    val isTabStripEnabled by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_tab_strip),
+        default = false,
+    )
+
+    val isTabletAndTabStripEnabled: Boolean
+        get() = isTablet && isTabStripEnabled
+
     var lastKnownMode: BrowsingMode = BrowsingMode.Normal
         get() {
             val lastKnownModeWasPrivate = preferences.getBoolean(
@@ -925,7 +936,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     val toolbarPosition: ToolbarPosition
-        get() = if (isTablet) {
+        get() = if (isTabletAndTabStripEnabled) {
             ToolbarPosition.TOP
         } else if (shouldUseBottomToolbar) {
             ToolbarPosition.BOTTOM

@@ -93,9 +93,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         val context = requireContext()
         val components = context.components
-        initTabStrip()
+        val isTabletAndTabStripEnabled = context.settings().isTabletAndTabStripEnabled
+        if (isTabletAndTabStripEnabled) {
+            initTabStrip()
+        }
 
-        if (context.settings().isSwipeToolbarToSwitchTabsEnabled) {
+        if (!isTabletAndTabStripEnabled && context.settings().isSwipeToolbarToSwitchTabsEnabled) {
             binding.gestureLayout.addGestureListener(
                 ToolbarGestureHandler(
                     activity = requireActivity(),
@@ -246,10 +249,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun initTabStrip() {
-        if (!resources.getBoolean(R.bool.tablet)) {
-            return
-        }
-
         binding.tabStripView.isVisible = true
         binding.tabStripView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)

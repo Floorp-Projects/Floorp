@@ -10,7 +10,9 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.AppTheme
@@ -51,8 +53,19 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         bindLightTheme()
         bindAutoBatteryTheme()
         setupRadioGroups()
-        setupToolbarCategory()
-        setupGesturesCategory()
+        val tabletAndTabStripEnabled = requireContext().settings().isTabletAndTabStripEnabled
+        if (tabletAndTabStripEnabled) {
+            val preferenceScreen: PreferenceScreen =
+                requirePreference(R.string.pref_key_customization_preference_screen)
+            val toolbarPrefCategory: PreferenceCategory =
+                requirePreference(R.string.pref_key_customization_category_toolbar)
+            preferenceScreen.removePreference(toolbarPrefCategory)
+        } else {
+            setupToolbarCategory()
+        }
+        // if tab strip is enabled, swipe toolbar to switch tabs should not be enabled so the
+        // preference is not shown
+        setupGesturesCategory(isSwipeToolbarToSwitchTabsVisible = !tabletAndTabStripEnabled)
     }
 
     private fun setupRadioGroups() {
@@ -140,7 +153,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         addToRadioGroup(topPreference, bottomPreference)
     }
 
-    private fun setupGesturesCategory() {
+    private fun setupGesturesCategory(isSwipeToolbarToSwitchTabsVisible: Boolean) {
         requirePreference<SwitchPreference>(R.string.pref_key_website_pull_to_refresh).apply {
             isVisible = FeatureFlags.pullToRefreshEnabled
             isChecked = context.settings().isPullToRefreshEnabledInBrowser
@@ -152,6 +165,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         }
         requirePreference<SwitchPreference>(R.string.pref_key_swipe_toolbar_switch_tabs).apply {
             isChecked = context.settings().isSwipeToolbarToSwitchTabsEnabled
+            isVisible = isSwipeToolbarToSwitchTabsVisible
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
