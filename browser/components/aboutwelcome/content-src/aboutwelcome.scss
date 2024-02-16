@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @use 'sass:math';
-@import 'chrome://global/skin/design-system/tokens-brand.css';
+
+// Don't import any styles that are not scoped to .onboardingContainer. This
+// stylesheet is loaded by FeatureCallout.sys.mjs into the browser chrome. To
+// add other stylesheets to about:welcome or spotlight, add them to
+// aboutwelcome.html or spotlight.html. Ideally, there should be no `@import`
+// statements in the built aboutwelcome.css file.
 @import '../../asrouter/content-src/styles/feature-callout';
 @import '../../asrouter/content-src/styles/shopping';
 
