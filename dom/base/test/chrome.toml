@@ -1,5 +1,6 @@
 [DEFAULT]
 skip-if = ["os == 'android'"]
+prefs = ["dom.domrequest.enabled=true"]
 support-files = [
   "file_empty.html",
   "file_blocking_image.html",

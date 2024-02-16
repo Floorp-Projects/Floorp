@@ -16,7 +16,7 @@ interface mixin DOMRequestShared {
   attribute EventHandler onerror;
 };
 
-[Exposed=(Window,Worker)]
+[Pref="dom.domrequest.enabled", Exposed=(Window,Worker)]
 interface DOMRequest : EventTarget {
   // The [TreatNonCallableAsNull] annotation is required since then() should do
   // nothing instead of throwing errors when non-callable arguments are passed.
