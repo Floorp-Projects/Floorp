@@ -1079,7 +1079,7 @@ bool BackgroundDatabaseChild::EnsureDOMObject() {
   auto& factory =
       static_cast<BackgroundFactoryChild*>(Manager())->GetDOMObject();
 
-  if (!factory.GetParentObject()) {
+  if (!factory.GetOwnerGlobal()) {
     // Already disconnected from global.
 
     // We need to clear mOpenRequestActor here, since that would otherwise be
