@@ -2440,13 +2440,6 @@ var gBrowserInit = {
         }
       }
 
-      
-      // Browser Manager Sidebar
-      let embedded = window.location.toString().split("?")[1];
-      if (embedded) {
-        window.IsWebpanelWindow = true;
-      }
-
       /******************************************************************************************************************/
 
       if (!uri || window.XULElement.isInstance(uri)) {

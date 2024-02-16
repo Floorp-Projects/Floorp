@@ -123,6 +123,10 @@ var TabStateInternal = {
     // Site Specific Browser
     tabData.floorpSSB = tab.getAttribute("floorpSSB");
 
+    // WebPanel
+    tabData.floorpWebPanel = tab.hasAttribute("BMS-webpanel-tab");
+    console.log("tabData.floorpWebPanel", tabData.floorpWebPanel, "url", tab.linkedBrowser.currentURI.spec);
+
     /*****Floorp Injections*****/
 
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);

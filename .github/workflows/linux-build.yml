@@ -169,11 +169,11 @@ jobs:
     - name: Copy l10n files if beta
       if: inputs.beta
       run: |
-          for dir in $(ls -l $PWD/floorp/browser/locales/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta
-            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.dtd
-            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.ftl
-            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.properties
+          for dir in $(find "$PWD/floorp/browser/locales/l10n-central" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | grep -v 'assets'); do
+            mkdir -p "$PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta"
+            cp ./browser/branding/beta/locales/en-US/brand.dtd "$PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.dtd"
+            cp ./browser/branding/beta/locales/en-US/brand.ftl "$PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.ftl"
+            cp ./browser/branding/beta/locales/en-US/brand.properties "$PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.properties"
           done
 
     - name: Change Release Note for Japanese

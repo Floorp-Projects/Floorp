@@ -585,8 +585,8 @@ export var SessionStore = {
       // Floorp injections
       // Remove SSB window state.
       // SSB windows should be not restored, so we don't need to keep their state.
-      for(let j = 0; j < win.tabs.length; j++) {
-        if(win.tabs[j].floorpSSB) {
+      for (let j = 0; j < win.tabs.length; j++) {
+        if (win.tabs[j].floorpSSB || win.tabs[j].floorpWebPanel) {
           win.tabs.splice(j, 1);
           if (aState.selectedWindow > i) {
             aState.selectedWindow--;
@@ -1932,7 +1932,7 @@ var SessionStoreInternal = {
     // Floorp Injections
     if (
       aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
-      "true"
+      "true" || aWindow.IsWebpanelWindow
     ) {
       return completionPromise;
     }
@@ -4778,7 +4778,7 @@ var SessionStoreInternal = {
       return;
     }
 
-    if (tabData.floorpDisableHistory || tabData.floorpWebpanel) {
+    if (tabData.floorpDisableHistory) {
       return;
     }
 
