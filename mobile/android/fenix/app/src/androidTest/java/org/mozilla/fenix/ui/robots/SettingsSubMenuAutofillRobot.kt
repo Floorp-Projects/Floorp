@@ -36,7 +36,7 @@ import org.mozilla.fenix.helpers.click
 class SettingsSubMenuAutofillRobot {
 
     fun verifyAutofillToolbarTitle() {
-        assertUIObjectExists(autofillToolbarTitle)
+        assertUIObjectExists(autofillToolbarTitle())
         Log.i(TAG, "verifyAutofillToolbarTitle: Verified \"Autofill\" toolbar title exists")
     }
     fun verifyManageAddressesToolbarTitle() {
@@ -54,16 +54,16 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyAddressAutofillSection(isAddressAutofillEnabled: Boolean, userHasSavedAddress: Boolean) {
         assertUIObjectExists(
-            autofillToolbarTitle,
-            addressesSectionTitle,
-            saveAndAutofillAddressesOption,
-            saveAndAutofillAddressesSummary,
+            autofillToolbarTitle(),
+            addressesSectionTitle(),
+            saveAndAutofillAddressesOption(),
+            saveAndAutofillAddressesSummary(),
         )
 
         if (userHasSavedAddress) {
-            assertUIObjectExists(manageAddressesButton)
+            assertUIObjectExists(manageAddressesButton())
         } else {
-            assertUIObjectExists(addAddressButton)
+            assertUIObjectExists(addAddressButton())
         }
 
         verifyAddressesAutofillToggle(isAddressAutofillEnabled)
@@ -71,18 +71,18 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyCreditCardsAutofillSection(isAddressAutofillEnabled: Boolean, userHasSavedCreditCard: Boolean) {
         assertUIObjectExists(
-            autofillToolbarTitle,
-            creditCardsSectionTitle,
-            saveAndAutofillCreditCardsOption,
-            saveAndAutofillCreditCardsSummary,
-            syncCreditCardsAcrossDevicesButton,
+            autofillToolbarTitle(),
+            creditCardsSectionTitle(),
+            saveAndAutofillCreditCardsOption(),
+            saveAndAutofillCreditCardsSummary(),
+            syncCreditCardsAcrossDevicesButton(),
 
         )
 
         if (userHasSavedCreditCard) {
-            assertUIObjectExists(manageSavedCreditCardsButton)
+            assertUIObjectExists(manageSavedCreditCardsButton())
         } else {
-            assertUIObjectExists(addCreditCardButton)
+            assertUIObjectExists(addCreditCardButton())
         }
 
         verifySaveAndAutofillCreditCardsToggle(isAddressAutofillEnabled)
@@ -90,9 +90,9 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyManageAddressesSection(vararg savedAddressDetails: String) {
         assertUIObjectExists(
-            navigateBackButton,
-            manageAddressesToolbarTitle,
-            addAddressButton,
+            navigateBackButton(),
+            manageAddressesToolbarTitle(),
+            addAddressButton(),
         )
         for (savedAddressDetail in savedAddressDetails) {
             assertUIObjectExists(itemContainingText(savedAddressDetail))
@@ -102,9 +102,9 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifySavedCreditCardsSection(creditCardLastDigits: String, creditCardExpiryDate: String) {
         assertUIObjectExists(
-            navigateBackButton,
-            savedCreditCardsToolbarTitle,
-            addCreditCardButton,
+            navigateBackButton(),
+            savedCreditCardsToolbarTitle(),
+            addCreditCardButton(),
             itemContainingText(creditCardLastDigits),
             itemContainingText(creditCardExpiryDate),
         )
@@ -148,35 +148,35 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyAddAddressView() {
         assertUIObjectExists(
-            addAddressToolbarTitle,
-            navigateBackButton,
-            toolbarCheckmarkButton,
-            firstNameTextInput,
-            middleNameTextInput,
+            addAddressToolbarTitle(),
+            navigateBackButton(),
+            toolbarCheckmarkButton(),
+            firstNameTextInput(),
+            middleNameTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_street_address))
         Log.i(TAG, "verifyAddAddressView: Scrolled to \"Street Address\" text input")
         assertUIObjectExists(
-            lastNameTextInput,
-            streetAddressTextInput,
+            lastNameTextInput(),
+            streetAddressTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
         Log.i(TAG, "verifyAddAddressView: Scrolled to \"Country or region\" dropdown")
         assertUIObjectExists(
-            cityTextInput,
-            subRegionDropDown,
-            zipCodeTextInput,
+            cityTextInput(),
+            subRegionDropDown(),
+            zipCodeTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_save_button))
         Log.i(TAG, "verifyAddAddressView: Scrolled to \"Save\" button")
         assertUIObjectExists(
-            countryDropDown,
-            phoneTextInput,
-            emailTextInput,
+            countryDropDown(),
+            phoneTextInput(),
+            emailTextInput(),
         )
         assertUIObjectExists(
-            saveButton,
-            cancelButton,
+            saveButton(),
+            cancelButton(),
         )
     }
 
@@ -193,7 +193,7 @@ class SettingsSubMenuAutofillRobot {
     }
 
     fun verifyCountryOptions(vararg countries: String) {
-        countryDropDown.click()
+        countryDropDown().click()
         Log.i(TAG, "verifyCountryOptions: Clicked \"Country or region\" dropdown")
         for (country in countries) {
             assertUIObjectExists(itemContainingText(country))
@@ -201,7 +201,7 @@ class SettingsSubMenuAutofillRobot {
     }
 
     fun selectCountry(country: String) {
-        countryDropDown.click()
+        countryDropDown().click()
         Log.i(TAG, "selectCountry: Clicked \"Country or region\" dropdown")
         countryOption(country).click()
         Log.i(TAG, "selectCountry: Selected $country dropdown option")
@@ -209,50 +209,50 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyEditAddressView() {
         assertUIObjectExists(
-            editAddressToolbarTitle,
-            navigateBackButton,
-            toolbarDeleteAddressButton,
-            toolbarCheckmarkButton,
-            firstNameTextInput,
-            middleNameTextInput,
+            editAddressToolbarTitle(),
+            navigateBackButton(),
+            toolbarDeleteAddressButton(),
+            toolbarCheckmarkButton(),
+            firstNameTextInput(),
+            middleNameTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_street_address))
         Log.i(TAG, "verifyEditAddressView: Scrolled to \"Street Address\" text input")
         assertUIObjectExists(
-            lastNameTextInput,
-            streetAddressTextInput,
+            lastNameTextInput(),
+            streetAddressTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
         Log.i(TAG, "verifyEditAddressView: Scrolled to \"Country or region\" dropdown")
         assertUIObjectExists(
-            cityTextInput,
-            subRegionDropDown,
-            zipCodeTextInput,
+            cityTextInput(),
+            subRegionDropDown(),
+            zipCodeTextInput(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_save_button))
         Log.i(TAG, "verifyEditAddressView: Scrolled to \"Save\" button")
         assertUIObjectExists(
-            countryDropDown,
-            phoneTextInput,
-            emailTextInput,
+            countryDropDown(),
+            phoneTextInput(),
+            emailTextInput(),
         )
         assertUIObjectExists(
-            saveButton,
-            cancelButton,
+            saveButton(),
+            cancelButton(),
         )
-        assertUIObjectExists(deleteAddressButton)
+        assertUIObjectExists(deleteAddressButton())
     }
 
     fun clickSaveAndAutofillAddressesOption() {
-        saveAndAutofillAddressesOption.click()
+        saveAndAutofillAddressesOption().click()
         Log.i(TAG, "clickSaveAndAutofillAddressesOption: Clicked \"Save and autofill addresses\" button")
     }
     fun clickAddAddressButton() {
-        addAddressButton.click()
+        addAddressButton().click()
         Log.i(TAG, "clickAddAddressButton: Clicked \"Add address\" button")
     }
     fun clickManageAddressesButton() {
-        manageAddressesButton.click()
+        manageAddressesButton().click()
         Log.i(TAG, "clickManageAddressesButton: Clicked \"Manage addresses\" button")
     }
     fun clickSavedAddress(firstName: String) {
@@ -261,17 +261,17 @@ class SettingsSubMenuAutofillRobot {
     }
     fun clickDeleteAddressButton() {
         Log.i(TAG, "clickDeleteAddressButton: Looking for delete address toolbar button")
-        toolbarDeleteAddressButton.waitForExists(waitingTime)
-        toolbarDeleteAddressButton.click()
+        toolbarDeleteAddressButton().waitForExists(waitingTime)
+        toolbarDeleteAddressButton().click()
         Log.i(TAG, "clickDeleteAddressButton: Clicked delete address toolbar button")
     }
     fun clickCancelDeleteAddressButton() {
-        cancelDeleteAddressButton.click()
+        cancelDeleteAddressButton().click()
         Log.i(TAG, "clickCancelDeleteAddressButton: Clicked \"CANCEL\" button from delete address dialog")
     }
 
     fun clickConfirmDeleteAddressButton() {
-        confirmDeleteAddressButton.click()
+        confirmDeleteAddressButton().click()
         Log.i(TAG, "clickConfirmDeleteAddressButton: Clicked \"DELETE\" button from delete address dialog")
     }
 
@@ -292,7 +292,7 @@ class SettingsSubMenuAutofillRobot {
         Log.i(TAG, "clickCountryOption: Clicked \"Country or region\" $country dropdown option")
     }
     fun verifyAddAddressButton() {
-        assertUIObjectExists(addAddressButton)
+        assertUIObjectExists(addAddressButton())
         Log.i(TAG, "verifyAddAddressButton: Verified \"Add address\" button exists")
     }
 
@@ -321,58 +321,58 @@ class SettingsSubMenuAutofillRobot {
             }
         }
         Log.i(TAG, "fillAndSaveAddress: Looking for \"First Name\" text input")
-        firstNameTextInput.waitForExists(waitingTime)
+        firstNameTextInput().waitForExists(waitingTime)
         mDevice.pressBack()
         Log.i(TAG, "fillAndSaveAddress: Dismissed keyboard using device back button")
-        firstNameTextInput.setText(firstName)
+        firstNameTextInput().setText(firstName)
         Log.i(TAG, "fillAndSaveAddress: \"First Name\" set to $firstName")
-        middleNameTextInput.setText(middleName)
+        middleNameTextInput().setText(middleName)
         Log.i(TAG, "fillAndSaveAddress: \"Middle Name\" set to $middleName")
-        lastNameTextInput.setText(lastName)
+        lastNameTextInput().setText(lastName)
         Log.i(TAG, "fillAndSaveAddress: \"Last Name\" set to $lastName")
-        streetAddressTextInput.setText(streetAddress)
+        streetAddressTextInput().setText(streetAddress)
         Log.i(TAG, "fillAndSaveAddress: \"Street Address\" set to $streetAddress")
-        cityTextInput.setText(city)
+        cityTextInput().setText(city)
         Log.i(TAG, "fillAndSaveAddress: \"City\" set to $city")
-        subRegionDropDown.click()
+        subRegionDropDown().click()
         Log.i(TAG, "fillAndSaveAddress: Clicked \"State\" dropdown button")
         clickSubRegionOption(state)
         Log.i(TAG, "fillAndSaveAddress: Selected $state as \"State\"")
-        zipCodeTextInput.setText(zipCode)
+        zipCodeTextInput().setText(zipCode)
         Log.i(TAG, "fillAndSaveAddress: \"Zip\" set to $zipCode")
-        countryDropDown.click()
+        countryDropDown().click()
         Log.i(TAG, "fillAndSaveAddress: Clicked \"Country or region\" dropdown button")
         clickCountryOption(country)
         Log.i(TAG, "fillAndSaveAddress: Selected $country as \"Country or region\"")
         scrollToElementByText(getStringResource(R.string.addresses_save_button))
         Log.i(TAG, "fillAndSaveAddress: Scrolled to \"Save\" button")
-        phoneTextInput.setText(phoneNumber)
+        phoneTextInput().setText(phoneNumber)
         Log.i(TAG, "fillAndSaveAddress: \"Phone\" set to $phoneNumber")
-        emailTextInput.setText(emailAddress)
+        emailTextInput().setText(emailAddress)
         Log.i(TAG, "fillAndSaveAddress: \"Email\" set to $emailAddress")
-        saveButton.click()
+        saveButton().click()
         Log.i(TAG, "fillAndSaveAddress: Clicked \"Save\" button")
         Log.i(TAG, "fillAndSaveAddress: Looking for \"Manage addressese\" button")
-        manageAddressesButton.waitForExists(waitingTime)
+        manageAddressesButton().waitForExists(waitingTime)
     }
 
-    fun clickAddCreditCardButton() = addCreditCardButton.click()
-    fun clickManageSavedCreditCardsButton() = manageSavedCreditCardsButton.click()
-    fun clickSecuredCreditCardsLaterButton() = securedCreditCardsLaterButton.click()
-    fun clickSavedCreditCard() = savedCreditCardNumber.clickAndWaitForNewWindow(waitingTime)
+    fun clickAddCreditCardButton() = addCreditCardButton().click()
+    fun clickManageSavedCreditCardsButton() = manageSavedCreditCardsButton().click()
+    fun clickSecuredCreditCardsLaterButton() = securedCreditCardsLaterButton().click()
+    fun clickSavedCreditCard() = savedCreditCardNumber().clickAndWaitForNewWindow(waitingTime)
     fun clickDeleteCreditCardToolbarButton() {
-        deleteCreditCardToolbarButton.waitForExists(waitingTime)
-        deleteCreditCardToolbarButton.click()
+        deleteCreditCardToolbarButton().waitForExists(waitingTime)
+        deleteCreditCardToolbarButton().click()
     }
     fun clickDeleteCreditCardMenuButton() {
-        deleteCreditCardMenuButton.waitForExists(waitingTime)
-        deleteCreditCardMenuButton.click()
+        deleteCreditCardMenuButton().waitForExists(waitingTime)
+        deleteCreditCardMenuButton().click()
     }
-    fun clickSaveAndAutofillCreditCardsOption() = saveAndAutofillCreditCardsOption.click()
+    fun clickSaveAndAutofillCreditCardsOption() = saveAndAutofillCreditCardsOption().click()
 
-    fun clickConfirmDeleteCreditCardButton() = confirmDeleteCreditCardButton.click()
+    fun clickConfirmDeleteCreditCardButton() = confirmDeleteCreditCardButton().click()
 
-    fun clickCancelDeleteCreditCardButton() = cancelDeleteCreditCardButton.click()
+    fun clickCancelDeleteCreditCardButton() = cancelDeleteCreditCardButton().click()
 
     fun clickExpiryMonthOption(expiryMonth: String) {
         expiryMonthOption(expiryMonth).waitForExists(waitingTime)
@@ -384,34 +384,34 @@ class SettingsSubMenuAutofillRobot {
         expiryYearOption(expiryYear).click()
     }
 
-    fun verifyAddCreditCardsButton() = assertUIObjectExists(addCreditCardButton)
+    fun verifyAddCreditCardsButton() = assertUIObjectExists(addCreditCardButton())
 
     fun fillAndSaveCreditCard(cardNumber: String, cardName: String, expiryMonth: String, expiryYear: String) {
-        creditCardNumberTextInput.waitForExists(waitingTime)
-        creditCardNumberTextInput.setText(cardNumber)
-        nameOnCreditCardTextInput.setText(cardName)
-        expiryMonthDropDown.click()
+        creditCardNumberTextInput().waitForExists(waitingTime)
+        creditCardNumberTextInput().setText(cardNumber)
+        nameOnCreditCardTextInput().setText(cardName)
+        expiryMonthDropDown().click()
         clickExpiryMonthOption(expiryMonth)
-        expiryYearDropDown.click()
+        expiryYearDropDown().click()
         clickExpiryYearOption(expiryYear)
 
-        saveButton.click()
-        manageSavedCreditCardsButton.waitForExists(waitingTime)
+        saveButton().click()
+        manageSavedCreditCardsButton().waitForExists(waitingTime)
     }
 
     fun clearCreditCardNumber() =
-        creditCardNumberTextInput.also {
+        creditCardNumberTextInput().also {
             it.waitForExists(waitingTime)
             it.clearTextField()
         }
 
     fun clearNameOnCreditCard() =
-        nameOnCreditCardTextInput.also {
+        nameOnCreditCardTextInput().also {
             it.waitForExists(waitingTime)
             it.clearTextField()
         }
 
-    fun clickSaveCreditCardToolbarButton() = saveCreditCardToolbarButton.click()
+    fun clickSaveCreditCardToolbarButton() = saveCreditCardToolbarButton().click()
 
     fun verifyEditCreditCardView(
         cardNumber: String,
@@ -420,19 +420,19 @@ class SettingsSubMenuAutofillRobot {
         expiryYear: String,
     ) {
         assertUIObjectExists(
-            editCreditCardToolbarTitle,
-            navigateBackButton,
-            deleteCreditCardToolbarButton,
-            saveCreditCardToolbarButton,
+            editCreditCardToolbarTitle(),
+            navigateBackButton(),
+            deleteCreditCardToolbarButton(),
+            saveCreditCardToolbarButton(),
         )
 
-        assertEquals(cardNumber, creditCardNumberTextInput.text)
-        assertEquals(cardName, nameOnCreditCardTextInput.text)
+        assertEquals(cardNumber, creditCardNumberTextInput().text)
+        assertEquals(cardName, nameOnCreditCardTextInput().text)
 
         // Can't get the text from the drop-down items, need to verify them individually
         assertUIObjectExists(
-            expiryYearDropDown,
-            expiryMonthDropDown,
+            expiryYearDropDown(),
+            expiryMonthDropDown(),
         )
 
         assertUIObjectExists(
@@ -441,14 +441,14 @@ class SettingsSubMenuAutofillRobot {
         )
 
         assertUIObjectExists(
-            saveButton,
-            cancelButton,
+            saveButton(),
+            cancelButton(),
         )
 
-        assertUIObjectExists(deleteCreditCardMenuButton)
+        assertUIObjectExists(deleteCreditCardMenuButton())
     }
 
-    fun verifyEditCreditCardToolbarTitle() = assertUIObjectExists(editCreditCardToolbarTitle)
+    fun verifyEditCreditCardToolbarTitle() = assertUIObjectExists(editCreditCardToolbarTitle())
 
     fun verifyCreditCardNumberErrorMessage() =
         assertUIObjectExists(itemContainingText(getStringResource(R.string.credit_cards_number_validation_error_message)))
@@ -465,7 +465,7 @@ class SettingsSubMenuAutofillRobot {
         }
 
         fun goBackToAutofillSettings(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
-            navigateBackButton.click()
+            navigateBackButton().click()
             Log.i(TAG, "goBackToAutofillSettings: Clicked \"Navigate back\" toolbar button")
 
             SettingsSubMenuAutofillRobot().interact()
@@ -473,7 +473,7 @@ class SettingsSubMenuAutofillRobot {
         }
 
         fun goBackToSavedCreditCards(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
-            navigateBackButton.click()
+            navigateBackButton().click()
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()
@@ -494,64 +494,64 @@ fun autofillScreen(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsS
     return SettingsSubMenuAutofillRobot.Transition()
 }
 
-private val autofillToolbarTitle = itemContainingText(getStringResource(R.string.preferences_autofill))
-private val addressesSectionTitle = itemContainingText(getStringResource(R.string.preferences_addresses))
-private val manageAddressesToolbarTitle =
+private fun autofillToolbarTitle() = itemContainingText(getStringResource(R.string.preferences_autofill))
+private fun addressesSectionTitle() = itemContainingText(getStringResource(R.string.preferences_addresses))
+private fun manageAddressesToolbarTitle() =
     mDevice.findObject(
         UiSelector()
             .resourceId("$packageName:id/navigationToolbar")
             .childSelector(UiSelector().text(getStringResource(R.string.addresses_manage_addresses))),
     )
 
-private val saveAndAutofillAddressesOption = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses))
-private val saveAndAutofillAddressesSummary = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_summary))
-private val addAddressButton = itemContainingText(getStringResource(R.string.preferences_addresses_add_address))
-private val manageAddressesButton =
+private fun saveAndAutofillAddressesOption() = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses))
+private fun saveAndAutofillAddressesSummary() = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_summary))
+private fun addAddressButton() = itemContainingText(getStringResource(R.string.preferences_addresses_add_address))
+private fun manageAddressesButton() =
     mDevice.findObject(
         UiSelector()
             .resourceId("android:id/title")
             .text(getStringResource(R.string.preferences_addresses_manage_addresses)),
     )
-private val addAddressToolbarTitle = itemContainingText(getStringResource(R.string.addresses_add_address))
-private val editAddressToolbarTitle = itemContainingText(getStringResource(R.string.addresses_edit_address))
-private val toolbarCheckmarkButton = itemWithResId("$packageName:id/save_address_button")
-private val navigateBackButton = itemWithDescription(getStringResource(R.string.action_bar_up_description))
-private val firstNameTextInput = itemWithResId("$packageName:id/first_name_input")
-private val middleNameTextInput = itemWithResId("$packageName:id/middle_name_input")
-private val lastNameTextInput = itemWithResId("$packageName:id/last_name_input")
-private val streetAddressTextInput = itemWithResId("$packageName:id/street_address_input")
-private val cityTextInput = itemWithResId("$packageName:id/city_input")
-private val subRegionDropDown = itemWithResId("$packageName:id/subregion_drop_down")
-private val zipCodeTextInput = itemWithResId("$packageName:id/zip_input")
-private val countryDropDown = itemWithResId("$packageName:id/country_drop_down")
-private val phoneTextInput = itemWithResId("$packageName:id/phone_input")
-private val emailTextInput = itemWithResId("$packageName:id/email_input")
-private val saveButton = itemWithResId("$packageName:id/save_button")
-private val cancelButton = itemWithResId("$packageName:id/cancel_button")
-private val deleteAddressButton = itemContainingText(getStringResource(R.string.addressess_delete_address_button))
-private val toolbarDeleteAddressButton = itemWithResId("$packageName:id/delete_address_button")
-private val cancelDeleteAddressButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
-private val confirmDeleteAddressButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
+private fun addAddressToolbarTitle() = itemContainingText(getStringResource(R.string.addresses_add_address))
+private fun editAddressToolbarTitle() = itemContainingText(getStringResource(R.string.addresses_edit_address))
+private fun toolbarCheckmarkButton() = itemWithResId("$packageName:id/save_address_button")
+private fun navigateBackButton() = itemWithDescription(getStringResource(R.string.action_bar_up_description))
+private fun firstNameTextInput() = itemWithResId("$packageName:id/first_name_input")
+private fun middleNameTextInput() = itemWithResId("$packageName:id/middle_name_input")
+private fun lastNameTextInput() = itemWithResId("$packageName:id/last_name_input")
+private fun streetAddressTextInput() = itemWithResId("$packageName:id/street_address_input")
+private fun cityTextInput() = itemWithResId("$packageName:id/city_input")
+private fun subRegionDropDown() = itemWithResId("$packageName:id/subregion_drop_down")
+private fun zipCodeTextInput() = itemWithResId("$packageName:id/zip_input")
+private fun countryDropDown() = itemWithResId("$packageName:id/country_drop_down")
+private fun phoneTextInput() = itemWithResId("$packageName:id/phone_input")
+private fun emailTextInput() = itemWithResId("$packageName:id/email_input")
+private fun saveButton() = itemWithResId("$packageName:id/save_button")
+private fun cancelButton() = itemWithResId("$packageName:id/cancel_button")
+private fun deleteAddressButton() = itemContainingText(getStringResource(R.string.addressess_delete_address_button))
+private fun toolbarDeleteAddressButton() = itemWithResId("$packageName:id/delete_address_button")
+private fun cancelDeleteAddressButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private fun confirmDeleteAddressButton() = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
 
-private val creditCardsSectionTitle = itemContainingText(getStringResource(R.string.preferences_credit_cards))
-private val saveAndAutofillCreditCardsOption = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards))
-private val saveAndAutofillCreditCardsSummary = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards_summary))
-private val syncCreditCardsAcrossDevicesButton = itemContainingText(getStringResource(R.string.preferences_credit_cards_sync_cards_across_devices))
-private val addCreditCardButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_add_credit_card)))
-private val savedCreditCardsToolbarTitle = itemContainingText(getStringResource(R.string.credit_cards_saved_cards))
-private val editCreditCardToolbarTitle = itemContainingText(getStringResource(R.string.credit_cards_edit_card))
-private val manageSavedCreditCardsButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_manage_saved_cards)))
-private val creditCardNumberTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/card_number_input"))
-private val nameOnCreditCardTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/name_on_card_input"))
-private val expiryMonthDropDown = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_month_drop_down"))
-private val expiryYearDropDown = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_year_drop_down"))
-private val savedCreditCardNumber = mDevice.findObject(UiSelector().resourceId("$packageName:id/credit_card_logo"))
-private val deleteCreditCardToolbarButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/delete_credit_card_button"))
-private val saveCreditCardToolbarButton = itemWithResId("$packageName:id/save_credit_card_button")
-private val deleteCreditCardMenuButton = itemContainingText(getStringResource(R.string.credit_cards_delete_card_button))
-private val confirmDeleteCreditCardButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
-private val cancelDeleteCreditCardButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
-private val securedCreditCardsLaterButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private fun creditCardsSectionTitle() = itemContainingText(getStringResource(R.string.preferences_credit_cards))
+private fun saveAndAutofillCreditCardsOption() = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards))
+private fun saveAndAutofillCreditCardsSummary() = itemContainingText(getStringResource(R.string.preferences_credit_cards_save_and_autofill_cards_summary))
+private fun syncCreditCardsAcrossDevicesButton() = itemContainingText(getStringResource(R.string.preferences_credit_cards_sync_cards_across_devices))
+private fun addCreditCardButton() = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_add_credit_card)))
+private fun savedCreditCardsToolbarTitle() = itemContainingText(getStringResource(R.string.credit_cards_saved_cards))
+private fun editCreditCardToolbarTitle() = itemContainingText(getStringResource(R.string.credit_cards_edit_card))
+private fun manageSavedCreditCardsButton() = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_manage_saved_cards)))
+private fun creditCardNumberTextInput() = mDevice.findObject(UiSelector().resourceId("$packageName:id/card_number_input"))
+private fun nameOnCreditCardTextInput() = mDevice.findObject(UiSelector().resourceId("$packageName:id/name_on_card_input"))
+private fun expiryMonthDropDown() = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_month_drop_down"))
+private fun expiryYearDropDown() = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_year_drop_down"))
+private fun savedCreditCardNumber() = mDevice.findObject(UiSelector().resourceId("$packageName:id/credit_card_logo"))
+private fun deleteCreditCardToolbarButton() = mDevice.findObject(UiSelector().resourceId("$packageName:id/delete_credit_card_button"))
+private fun saveCreditCardToolbarButton() = itemWithResId("$packageName:id/save_credit_card_button")
+private fun deleteCreditCardMenuButton() = itemContainingText(getStringResource(R.string.credit_cards_delete_card_button))
+private fun confirmDeleteCreditCardButton() = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
+private fun cancelDeleteCreditCardButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private fun securedCreditCardsLaterButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
 
 private fun savedAddress(firstName: String) = mDevice.findObject(UiSelector().textContains(firstName))
 private fun subRegionOption(subRegion: String) = mDevice.findObject(UiSelector().textContains(subRegion))
