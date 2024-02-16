@@ -173,7 +173,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "DOMRectReadOnly",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "DOMRequest",
+  { name: "DOMRequest", disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "DOMStringList",
   // IMPORTANT: Do not change this list without review from a DOM peer!

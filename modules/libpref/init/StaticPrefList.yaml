@@ -2324,6 +2324,11 @@
   value: false
   mirror: always
 
+- name: dom.domrequest.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Only intended for fuzzing purposes, this will break mozPrintCallback, etc.
 - name: dom.window_print.fuzzing.block_while_printing
   type: bool
