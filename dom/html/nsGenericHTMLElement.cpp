@@ -739,7 +739,10 @@ void nsGenericHTMLElement::AfterSetPopoverAttr() {
       // HidePopoverInternal above could have removed the popover from the top
       // layer.
       if (GetPopoverData()) {
-        OwnerDoc()->RemovePopoverFromTopLayer(*this);
+        if (auto* dialog = HTMLDialogElement::FromNode(this);
+            !dialog || !dialog->IsInTopLayer()) {
+          OwnerDoc()->RemovePopoverFromTopLayer(*this);
+        }
       }
       ClearPopoverData();
       RemoveStates(ElementState::POPOVER_OPEN);
