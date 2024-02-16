@@ -139,7 +139,13 @@ class SettingsSubMenuAddonsManagerRobot {
 
     fun verifyAddonIsInstalled(addonName: String) {
         scrollToElementByText(addonName)
-        assertAddonIsInstalled(addonName)
+        onView(
+            allOf(
+                withId(R.id.add_button),
+                isDescendantOfA(withId(R.id.add_on_item)),
+                hasSibling(hasDescendant(withText(addonName))),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.INVISIBLE)))
     }
 
     fun verifyEnabledTitleDisplayed() {
@@ -149,8 +155,46 @@ class SettingsSubMenuAddonsManagerRobot {
 
     fun cancelInstallAddon() = cancelInstall()
     fun acceptPermissionToInstallAddon() = allowPermissionToInstall()
-    fun verifyAddonsItems() = assertAddonsItems()
-    fun verifyAddonCanBeInstalled(addonName: String) = assertAddonCanBeInstalled(addonName)
+    fun verifyAddonsItems() {
+        onView(allOf(withId(R.id.title), withText("Recommended")))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        onView(
+            allOf(
+                isAssignableFrom(RelativeLayout::class.java),
+                withId(R.id.add_on_item),
+                hasDescendant(allOf(withId(R.id.add_on_icon), isCompletelyDisplayed())),
+                hasDescendant(
+                    allOf(
+                        withId(R.id.details_container),
+                        hasDescendant(withText("uBlock Origin")),
+                        hasDescendant(withText("Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.")),
+                        hasDescendant(withId(R.id.rating)),
+                        hasDescendant(withId(R.id.review_count)),
+                    ),
+                ),
+                hasDescendant(withId(R.id.add_button)),
+            ),
+        ).check(matches(isCompletelyDisplayed()))
+    }
+    fun verifyAddonCanBeInstalled(addonName: String) {
+        scrollToElementByText(addonName)
+        mDevice.waitNotNull(Until.findObject(By.text(addonName)), waitingTime)
+
+        onView(
+            allOf(
+                withId(R.id.add_button),
+                hasSibling(
+                    hasDescendant(
+                        allOf(
+                            withId(R.id.add_on_name),
+                            withText(addonName),
+                        ),
+                    ),
+                ),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
 
     fun selectAllowInPrivateBrowsing() {
         assertUIObjectExists(itemWithText("Allow in private browsing"), waitingTime = waitingTimeLong)
@@ -210,16 +254,6 @@ class SettingsSubMenuAddonsManagerRobot {
             ),
         )
 
-    private fun assertAddonIsInstalled(addonName: String) {
-        onView(
-            allOf(
-                withId(R.id.add_button),
-                isDescendantOfA(withId(R.id.add_on_item)),
-                hasSibling(hasDescendant(withText(addonName))),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.INVISIBLE)))
-    }
-
     private fun cancelInstall() {
         onView(allOf(withId(R.id.deny_button), withText("Cancel")))
             .check(matches(isCompletelyDisplayed()))
@@ -232,59 +266,6 @@ class SettingsSubMenuAddonsManagerRobot {
         onView(allOf(withId(R.id.allow_button), withText("Add")))
             .check(matches(isCompletelyDisplayed()))
             .perform(click())
-    }
-
-    private fun assertAddonsItems() {
-        assertRecommendedTitleDisplayed()
-        assertAddons()
-    }
-
-    private fun assertRecommendedTitleDisplayed() {
-        onView(allOf(withId(R.id.title), withText("Recommended")))
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    }
-
-    private fun assertAddons() {
-        assertAddonUblock()
-    }
-
-    private fun assertAddonUblock() {
-        onView(
-            allOf(
-                isAssignableFrom(RelativeLayout::class.java),
-                withId(R.id.add_on_item),
-                hasDescendant(allOf(withId(R.id.add_on_icon), isCompletelyDisplayed())),
-                hasDescendant(
-                    allOf(
-                        withId(R.id.details_container),
-                        hasDescendant(withText("uBlock Origin")),
-                        hasDescendant(withText("Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.")),
-                        hasDescendant(withId(R.id.rating)),
-                        hasDescendant(withId(R.id.review_count)),
-                    ),
-                ),
-                hasDescendant(withId(R.id.add_button)),
-            ),
-        ).check(matches(isCompletelyDisplayed()))
-    }
-
-    private fun assertAddonCanBeInstalled(addonName: String) {
-        scrollToElementByText(addonName)
-        mDevice.waitNotNull(Until.findObject(By.text(addonName)), waitingTime)
-
-        onView(
-            allOf(
-                withId(R.id.add_button),
-                hasSibling(
-                    hasDescendant(
-                        allOf(
-                            withId(R.id.add_on_name),
-                            withText(addonName),
-                        ),
-                    ),
-                ),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 }
 
