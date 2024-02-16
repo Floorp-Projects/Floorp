@@ -31,6 +31,10 @@ support-files = ["file_test_clipboard_asyncGetData.js"]
 ["test_clipboard_asyncSetData.html"]
 support-files = ["file_test_clipboard_asyncSetData.js"]
 
+["test_contextmenu_by_mouse_on_unix.html"]
+run-if = ["os == 'linux'"]
+skip-if = ["headless"] # headless widget doesn't dispatch contextmenu event by mouse event.
+
 ["test_keypress_event_with_alt_on_mac.html"]
 run-if = ["os == 'mac'"]
 
