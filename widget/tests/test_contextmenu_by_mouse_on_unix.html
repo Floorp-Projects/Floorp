@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test to fire contextmenu event by widget level</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpecialPowers.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<style>
+#target {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+}
+</style>
+<script>
+"use strict";
+add_task(async function test_fire_contextmenu_by_mousedown() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.context_menus.after_mouseup", false]],
+  });
+  await SimpleTest.promiseFocus();
+
+  // contextmenu event is fired by mouse down.
+  await process_contextmenu_event({ isMousedown: true, preventEvent: false });
+  // contextmenu event is fired by mouse down even if mouse handler calls preventDefault.
+  await process_contextmenu_event({ isMousedown: true, preventEvent: true });
+});
+
+add_task(async function test_fire_contextmenu_by_mouseup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.context_menus.after_mouseup", true]],
+  });
+  await SimpleTest.promiseFocus();
+
+  // contextmenu event is fired by mouse up.
+  await process_contextmenu_event({ isMousedown: false, preventEvent: false });
+  // contextmenu event is fired by mouse up even if mouse handler calls preventDefault.
+  await process_contextmenu_event({ isMousedown: false, preventEvent: true });
+});
+
+async function process_contextmenu_event({ isMousedown, preventEvent }) {
+  const target = document.getElementById("target");
+
+  let count = 0;
+
+  const promise = new Promise(resolve => {
+    target.addEventListener("mousedown", e => {
+      is(e.buttons, 2, "The right button down should be fired");
+      is(count++, 0, "The first event is mousedown");
+      if (isMousedown && preventEvent) {
+        e.preventDefault();
+      }
+    }, { once: true });
+
+    if (isMousedown) {
+      target.addEventListener("contextmenu", e => {
+        is(count++, 1, "The second event is contextmenu");
+        e.preventDefault();
+      }, { once: true });
+      target.addEventListener("mouseup", e => {
+        is(count++, 2, "The third event is mouseup");
+	resolve();
+      }, { once: true} );
+    } else {
+      target.addEventListener("mouseup", e => {
+        is(count++, 1, "The second event is mouseup");
+        if (preventEvent) {
+          e.preventDefault();
+        }
+      }, { once: true });
+      target.addEventListener("contextmenu", e => {
+        is(count++, 2, "The third event is contextmenu");
+        e.preventDefault();
+	resolve();
+      }, { once: true });
+    }
+  });
+
+  synthesizeNativeMouseEvent({
+    type: "mousedown",
+    target,
+    offsetX: 10,
+    offsetY: 10,
+    button: 2,
+  });
+
+  synthesizeNativeMouseEvent({
+    type: "mouseup",
+    target,
+    offsetX: 10,
+    offsetY: 10,
+    button: 2,
+  });
+
+  await promise;
+}
+</script>
+</head>
+<body>
+<div id="target"></div>
+</body>
+</html>
