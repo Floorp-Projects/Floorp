@@ -196,8 +196,8 @@ let runTests = t.step_func_done(function() {
   // TODO(emilio): This might be worth discussing in the spec. For now
   // hard-coding our implementation.
   testFindable(false, "find me", `
-    Do you find <span style="user-find: none">not findable</span> me?
-  `, "boundary-crossing user-find: none");
+    Do you find <span inert>not findable</span> me?
+  `, "boundary-crossing inert");
 });
 
 window.onload = function() {
