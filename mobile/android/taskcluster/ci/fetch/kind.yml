@@ -13,13 +13,13 @@ task-defaults:
     docker-image: {in-tree: base}
 
 tasks:
-    android-sdk-9477386:
+    android-sdk:
         description: Android SDK
         fetch:
             type: static-url
-            url: https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+            url: https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
             artifact-name: sdk-tools-linux.zip
-            sha256: bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a584f9bd2ba5646a0
-            size: 133507477
+            sha256: 2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258
+            size: 153607504
         artifact-prefix: mobile/android-sdk
         fetch-alias: android-sdk
