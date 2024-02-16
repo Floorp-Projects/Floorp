@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Разрешаване в поверителни раздели</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Работи в поверителни раздели</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Не е разрешено в поверителни прозорци</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Включени</string>
     <!-- Indicates the add-on is disabled. -->

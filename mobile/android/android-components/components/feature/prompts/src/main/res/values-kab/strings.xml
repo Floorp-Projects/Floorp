@@ -38,6 +38,8 @@
     <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Sekcem awal uffir</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">Ur yezmir ara ad isekles anekcum</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Ur sseklas ara awal uffir</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">Sekles anekcum-agi?</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->

@@ -720,8 +720,12 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">حساب مودیریتی</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">رمزینیزی دگیشدیرین، دیتا یئغمایی ایداره ائدین ویا حسابینیزی سیلین.</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ایندی دؤنگل‌لندیر</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">نه‌یین دؤنگل ائدیله‌جه‌گینی سئچین</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">گئچمیش</string>
     <!-- Preference for syncing bookmarks -->
@@ -753,6 +757,52 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">سوْن دؤنگل: هئچ</string>
 
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s - %2$s %3$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">اعتباری کارتلار</string>
+
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">اؤدمه آپاری‌ْلاری</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">آدرس‌لر</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">آلیْنان تاغ‌لار</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">آیریْ فایرفاکس جهازلاریندان آلینان تاغلارا اوچون بیلدیریش‌لر</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">تاغ آلیندیْ</string>
+
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s-دن آلینان تاغ</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">آیریْ توُتمالار</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">بوتون سایتلار اوچون آچیْن</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">آیری‌ْ توتمالار سئچیلمیش سایتلار اوچون ایزلنمه قوْروماسینیْ ایشدن سالماغا ایمکان وئریر.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">آرتیق بیلین</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">ایشه آلما و فنی دیتالار</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">بازارلاما دیتاسیْ</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">آراشدیرمالار</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">دیتالارینیزیْ دؤنگل ائدین و ساخلایین</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">حساب قالدیْر</string>
+
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
     <string name="preference_top_toolbar">اوست</string>
@@ -781,6 +831,10 @@
     <string name="library_bookmarks">بوُکمارک‌لار</string>
 
 
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">دستکتاپ بوکمارک‌لاریْ</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">بوکمارک منوسو</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">گئچمیش</string>
     <!-- Option in Library to open a new tab -->
@@ -790,21 +844,105 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">باغلا</string>
 
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">تاغ‌لاریْ آچ</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">لغو</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d صفحه</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d صفحه‌</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">سوْن باغلانان تاغ‌لار</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">بوتون گئچمیشی گؤستر</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d تاغ</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d تاغ</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">بو  یاخین زاماندا باغلانان تاغ یوخ</string>
+
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">تاغ‌لار</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">تاغ گؤروُنوشو</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">لیست</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">شبکه‌لی</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">تاغ‌لاریْ باغلا</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
     <string name="close_tabs_manually">هئچ زامان</string>
 
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">بیر گوندن سوْنرا</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">بیر هفته‌دن سوْنرا</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">بیر آیدان سوْنرا</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">آچیق تاغلاریْ اوْتوماتیک باغلا</string>
+
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">آنایارپاق</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">ال‌ ایله باغلاییْن</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">بیر گۆندن سوْنرا باغلایین</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">قالدیر</string>
 
+
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">سیل</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d سئچیلیدی</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">بوگون</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">دوُنن</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">سوْن 7 گون</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">سوْن 30 گون</string>
+
+
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">داها قدیمی</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">گئچمیش یوخدور</string>
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">یئندیرمه‌لر فالدیریلدیْ</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s قالدیریلدیْ</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">هئچ یئندیریلمیش فایل یوخدور</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d سئچیلیدی</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">قالدیر</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">باغیشلایین، %1$s بو صفحه‌نی دولدورا بیلمه‌دی.</string>
 
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">لغو</string>
