@@ -8823,13 +8823,6 @@
   mirror: always
   rust: true
 
-# Whether user-find CSS property is enabled.
-- name: layout.css.user-find.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-  rust: true
-
 # Should the :visited selector ever match (otherwise :link matches instead)?
 - name: layout.css.visited_links_enabled
   type: bool

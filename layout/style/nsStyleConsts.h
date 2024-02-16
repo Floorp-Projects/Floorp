@@ -153,12 +153,6 @@ enum class StyleUserInput : uint8_t {
   Auto,
 };
 
-// user-find
-enum class StyleUserFind : uint8_t {
-  Auto,
-  None,
-};
-
 // user-modify
 enum class StyleUserModify : uint8_t {
   ReadOnly,

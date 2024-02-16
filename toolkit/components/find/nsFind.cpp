@@ -151,7 +151,7 @@ static bool IsFindableNode(const nsINode* aNode) {
     return true;
   }
 
-  if (frame->StyleUI()->UserFind() == StyleUserFind::None ||
+  if (frame->StyleUI()->IsInert() ||
       frame->HidesContent(nsIFrame::IncludeContentVisibility::Hidden) ||
       frame->IsHiddenByContentVisibilityOnAnyAncestor(
           nsIFrame::IncludeContentVisibility::Hidden)) {
