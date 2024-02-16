@@ -5,6 +5,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -17,6 +18,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.helpers.click
 
@@ -28,8 +30,9 @@ class SettingsSubMenuAddonsManagerAddonDetailedMenuRobot {
 
     class Transition {
         fun goBack(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): SettingsSubMenuAddonsManagerRobot.Transition {
-            fun goBackButton() = onView(allOf(withContentDescription("Navigate up")))
-            goBackButton().click()
+            Log.i(TAG, "goBack: Trying to click the navigate up button")
+            onView(allOf(withContentDescription("Navigate up"))).click()
+            Log.i(TAG, "goBack: Clicked the navigate up button")
 
             SettingsSubMenuAddonsManagerRobot().interact()
             return SettingsSubMenuAddonsManagerRobot.Transition()
@@ -42,8 +45,12 @@ class SettingsSubMenuAddonsManagerAddonDetailedMenuRobot {
                     View.VISIBLE,
                 ),
             ) {
+                Log.i(TAG, "removeAddon: Trying to verify that the remove add-on button is visible")
                 removeAddonButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+                Log.i(TAG, "removeAddon: Verified that the remove add-on button is visible")
+                Log.i(TAG, "removeAddon: Trying to click the remove add-on button")
                 removeAddonButton().click()
+                Log.i(TAG, "removeAddon: Clicked the remove add-on button")
             }
 
             SettingsSubMenuAddonsManagerRobot().interact()
