@@ -205,7 +205,7 @@ export class ShoppingContainer extends MozLitElement {
     }
   }
 
-  getAnalysisDetailsTemplate() {
+  analysisDetailsTemplate() {
     /* At present, en is supported as the default language for reviews. As we support more sites,
      * update `lang` accordingly if highlights need to be displayed in other languages. */
     let lang;
@@ -233,7 +233,7 @@ export class ShoppingContainer extends MozLitElement {
     `;
   }
 
-  getContentTemplate() {
+  contentTemplate() {
     // The user requested an analysis which is not done yet.
     if (
       this.analysisEvent?.productUrl == this.productUrl &&
@@ -246,7 +246,7 @@ export class ShoppingContainer extends MozLitElement {
             : "analysis-in-progress"}
           progress=${this.analysisProgress}
         ></shopping-message-bar>
-        ${isReanalysis ? this.getAnalysisDetailsTemplate() : null}`;
+        ${isReanalysis ? this.analysisDetailsTemplate() : null}`;
     }
 
     if (this.data?.error) {
@@ -292,7 +292,7 @@ export class ShoppingContainer extends MozLitElement {
           type="stale"
           .productUrl=${this.productUrl}
         ></shopping-message-bar>
-        ${this.getAnalysisDetailsTemplate()}
+        ${this.analysisDetailsTemplate()}
       `;
     }
 
@@ -304,7 +304,7 @@ export class ShoppingContainer extends MozLitElement {
       ></shopping-message-bar>`;
     }
 
-    return this.getAnalysisDetailsTemplate();
+    return this.analysisDetailsTemplate();
   }
 
   recommendationTemplate() {
@@ -324,7 +324,7 @@ export class ShoppingContainer extends MozLitElement {
    *        There will be no animation for users who prefer reduced motion,
    *        irrespective of the value of this option.
    */
-  getLoadingTemplate({ animate = true } = {}) {
+  loadingTemplate({ animate = true } = {}) {
     /* Due to limitations with aria-busy for certain screen readers
      * (see Bug 1682063), mark loading container as a pseudo image and
      * use aria-label as a workaround. */
@@ -380,12 +380,12 @@ export class ShoppingContainer extends MozLitElement {
         <div id="content" aria-live="polite" aria-busy=${!this.data}>
           <slot name="multi-stage-message-slot"></slot>
           ${this.keepClosedMessageTemplate()}${sidebarContent}
-          ${!hideFooter ? this.getFooterTemplate() : null}
+          ${!hideFooter ? this.footerTemplate() : null}
         </div>
       </div>`;
   }
 
-  getFooterTemplate() {
+  footerTemplate() {
     let hostname = this.getHostnameFromProductUrl();
     return html`
       <analysis-explainer
@@ -424,7 +424,7 @@ export class ShoppingContainer extends MozLitElement {
       content = html``;
       hideFooter = true;
     } else if (this.isOffline) {
-      content = this.getLoadingTemplate({ animate: false });
+      content = this.loadingTemplate({ animate: false });
       hideFooter = true;
     } else if (!this.data) {
       if (this.isAnalysisInProgress) {
@@ -433,11 +433,11 @@ export class ShoppingContainer extends MozLitElement {
           progress=${this.analysisProgress}
         ></shopping-message-bar>`;
       } else {
-        content = this.getLoadingTemplate();
+        content = this.loadingTemplate();
         hideFooter = true;
       }
     } else {
-      content = this.getContentTemplate();
+      content = this.contentTemplate();
     }
     return this.renderContainer(content, hideFooter);
   }
