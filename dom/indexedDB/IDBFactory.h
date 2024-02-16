@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/GlobalTeardownObserver.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -48,7 +49,7 @@ class FactoryRequestParams;
 class LoggingInfo;
 }  // namespace indexedDB
 
-class IDBFactory final : public nsISupports, public nsWrapperCache {
+class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
   using PBackgroundChild = mozilla::ipc::PBackgroundChild;
   using PrincipalInfo = mozilla::ipc::PrincipalInfo;
 
@@ -121,7 +122,8 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
   // IDB operations in other window.
   void UpdateActiveDatabaseCount(int32_t aDelta);
 
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  // BindingUtils.h's FindAssociatedGlobalForNative needs this.
+  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
   BrowserChild* GetBrowserChild() const { return mBrowserChild; }
 
@@ -171,8 +173,6 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
       const IDBOpenDBOptions& aOptions, SystemCallerGuarantee,
       ErrorResult& aRv);
-
-  void DisconnectFromGlobal(nsIGlobalObject* aOldGlobal);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBFactory)

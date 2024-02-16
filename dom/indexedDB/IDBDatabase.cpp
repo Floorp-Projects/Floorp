@@ -187,8 +187,7 @@ RefPtr<IDBDatabase> IDBDatabase::Create(IDBOpenDBRequest* aRequest,
       new IDBDatabase(aRequest, aFactory.clonePtr(), aActor, std::move(aSpec));
 
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window =
-        do_QueryInterface(aFactory->GetParentObject());
+    nsCOMPtr<nsPIDOMWindowInner> window = aFactory->GetOwner();
     if (window) {
       uint64_t windowId = window->WindowID();
 
