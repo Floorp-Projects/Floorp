@@ -272,7 +272,6 @@ var SessionSaverInternal = {
         }
       }
     }
-    console.log(state.windows);
 
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
