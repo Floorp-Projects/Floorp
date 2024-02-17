@@ -792,16 +792,29 @@
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">ایشه آلما و فنی دیتالار</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">%1$s داها یاخچیْ ائتمک اوچون موُروچونوز حاقیندا ایشله‌ییش،ایشه آلما، دوْنانیم و اؤزللشدیرمه دیتالارینی موزیلا ایله پایلاشیر.</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">بازارلاما دیتاسیْ</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">اساس ایشه آلما بیلگی‌لرینی موبایل بازارلاما ایش اوْرتاغیمیز Adjust ایله پایلاشیر.</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">آراشدیرمالار</string>
+
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">موزیلایا آراشدیرمالار قوْشماغینا و ایجرا ائتمه‌سینه ایجازه وئریر.</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">دیتالارینیزیْ دؤنگل ائدین و ساخلایین</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">یئنی‌دن باغلانماق اوچون گیریش ائدین</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">حساب قالدیْر</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> آدرسینه گؤرونن QR کوْدونو اسکن ائله‌یین]]></string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -817,12 +830,20 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">باتری ساخلیان طرفیندن تنظیم‌لنیر</string>
 
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">جهاز تمینی نظره آل</string>
+
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">رفرش اوچون چک</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">آلت‌لر چوبوغونو گیزلتمک اوچون اسکرول ائله‌</string>
 
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">تاغ‌لاریْ دگیشدیرمک اوچون ادوات چوُبوغونو یانالار طرف چکین</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">تاغ‌لاریْ آچماق اوچون ادوات چوُبوغونو یوخاریا چکین</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -835,6 +856,10 @@
     <string name="library_desktop_bookmarks_root">دستکتاپ بوکمارک‌لاریْ</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">بوکمارک منوسو</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">بوکمارک‌لار ادوات چوبوغو</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">باشقا بوکمارک‌لار</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">گئچمیش</string>
     <!-- Option in Library to open a new tab -->
@@ -844,6 +869,12 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">باغلا</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">%d آچیلسین؟</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">چوْخلو تاغ‌لاریْن آچیلماسیْ صفحه‌لر دوْلورکن %s سوُرعتینی یاواشلاتا بیلر. ایدامه وئرمه‌گه آرخایینسیز؟</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">تاغ‌لاریْ آچ</string>
     <!-- Dialog button text for canceling open all tabs -->

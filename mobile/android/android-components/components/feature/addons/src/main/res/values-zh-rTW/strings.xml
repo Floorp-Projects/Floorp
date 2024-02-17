@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">允許在隱私瀏覽模式執行</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">在隱私瀏覽模式執行</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">不允許於隱私視窗運作</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">啟用</string>
     <!-- Indicates the add-on is disabled. -->

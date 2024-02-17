@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">사생활 보호 모드에서 허용</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">사생활 보호 모드에서 실행</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">사생활 보호 창에서 허용 안 됨</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">사용함</string>
     <!-- Indicates the add-on is disabled. -->
