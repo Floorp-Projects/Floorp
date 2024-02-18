@@ -1773,6 +1773,8 @@
     <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Ниҳонвожаҳои нигоҳдоштаро муҳофизат намоед</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">Барои муҳофизат кардани воридшавиҳо ва ниҳонвожаҳои худ аз дастрасии озод, агар касе дигар аз дастгоҳи шумо истифода барад, шаклвораи қулфи экран, рамзи PIN ё ниҳонвожаеро барои дастгоҳи худ танзим намоед.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Барои муҳофизат кардани ниҳонвожаҳои нигоҳдошташудаи худ аз дастрасии озод, агар касе дигар аз дастгоҳи шумо истифода барад, шаклвораи қулфи экран, рамзи PIN ё ниҳонвожаеро барои дастгоҳи худ танзим намоед.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Дертар</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

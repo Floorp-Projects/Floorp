@@ -83,10 +83,9 @@
          sharing an URL. -->
     <string name="share_dialog_title">Ndajeni përmes</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Të fshihet historik shfletimesh?</string>
+    <string name="notification_erase_text_android_14">Që të fshihet në mënyrë të siguruar historiku juaj i shfletimit, prekeni, ose spastrojeni këtë njoftim.</string>
+
     <string name="notification_erase_text">Fshini historik shfletimesh</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

@@ -242,6 +242,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Përshtatni faqe hyrëse</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Skena e kreut</string>
@@ -249,6 +250,9 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Fshi historik shfletimesh</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Përktheje faqen</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Gjuha e përzgjedhur</string>
@@ -1875,7 +1879,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kartat tuaja kreditit të ruajturar, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_2" tools:ignore="UnusedResources">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur prej hyrjes në to hollësitë e ruajtura për kartat tuaja, nëse pajisjen tuaj e ka dikush tjetër.</string>
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Ujdisni një rregullsi, PIN, ose fjalëkalim kyçjeje pajisjeje për të mbrojtur prej hyrjes në to hollësitë e ruajtura për metodat tuaja të pagesave, nëse pajisjen tuaj e ka dikush tjetër.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Ujdiseni tani</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2035,12 +2039,12 @@
     <string name="login_options_menu_2" tools:ignore="UnusedResources">Mundësi fjalëkalimesh</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Fusha e përpunueshme e teksteve për adresën web të kredencialeve të hyrjes.</string>
-    <!--  The editable text field for a password's website address. -->
-    <string name="saved_login_hostname_description_2" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për adresën web të fjalëkalimit.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për adresën e sajtit.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">Fusha e përpunueshme e teksteve për emrin e përdoruesit të kredencialeve të hyrjes.</string>
-    <!--  The editable text field for a password's username. -->
-    <string name="saved_login_username_description_2" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për emrin e përdoruesit të fjalëkalimit.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Fusha e përpunueshme e teksteve për emrin e përdoruesit.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Fusha e përpunueshme e teksteve për fjalëkalimin e kredencialeve të hyrjes.</string>
     <!--  The editable text field for a login's password. -->
@@ -2165,6 +2169,9 @@
     <string name="other_default_search_engine_suggestion_header">Kërkim me %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">Ndërroni shfletuesin tuaj parazgjedhje</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Caktoni lidhje prej sajtesh, email-esh dhe mesazhezh për hapje të automatizuar në Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2423,6 +2430,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Përkthim Në Kryerje e Sipër</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Zgjidhni një gjuhë</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Pati një problem me përkthimin. Ju lutemi, riprovoni.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
