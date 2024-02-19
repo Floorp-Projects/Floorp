@@ -1560,6 +1560,7 @@ abstract class BaseBrowserFragment :
             (view as? SwipeGestureLayout)?.isSwipeEnabled = false
             browserToolbarView.collapse()
             browserToolbarView.view.isVisible = false
+            binding.tabStripView.isVisible = false
             val browserEngine = binding.swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
             browserEngine.bottomMargin = 0
             browserEngine.topMargin = 0
@@ -1584,6 +1585,9 @@ abstract class BaseBrowserFragment :
                 val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
                 initializeEngineView(toolbarHeight)
                 browserToolbarView.expand()
+            }
+            if (requireContext().settings().isTabletAndTabStripEnabled) {
+                binding.tabStripView.isVisible = true
             }
         }
 
