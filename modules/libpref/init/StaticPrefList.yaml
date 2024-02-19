@@ -11891,6 +11891,60 @@
   value: 0
   mirror: always
 
+# Adjustments to apply to the internal priority of deferred style for
+# fetchpriority=low/high/auto> with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/LOW/LOW.
+- name: network.fetchpriority.adjustments.deferred-style.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.deferred-style.high
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.deferred-style.auto
+  type: int32_t
+  value: 10
+  mirror: always
+
+# Adjustments to apply to the internal priority of <link rel=preload as=style
+# fetchpriority=low/high/auto> with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to HIGHEST.
+# - When the flag is enabled, it respectively maps to HIGH/HIGHEST/HIGHEST.
+- name: network.fetchpriority.adjustments.link-preload-style.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.link-preload-style.high
+  type: int32_t
+  value: 0
+  mirror: always
+- name: network.fetchpriority.adjustments.link-preload-style.auto
+  type: int32_t
+  value: 0
+  mirror: always
+
+# Adjustments to apply to the internal priority of other non-deferred
+# stylesheet load for fetchpriority=low/high/auto with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to HIGH/HIGHEST/HIGHEST.
+- name: network.fetchpriority.adjustments.non-deferred-style.low
+  type: int32_t
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.non-deferred-style.high
+  type: int32_t
+  value: -20
+  mirror: always
+- name: network.fetchpriority.adjustments.non-deferred-style.auto
+  type: int32_t
+  value: -20
+  mirror: always
+
 # Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
 # handling.
 - name: network.preconnect
