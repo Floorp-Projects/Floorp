@@ -204,7 +204,7 @@ Version 0.97 [January, 1998]
   Added simple sRGB support (Glenn R-P)
   Easier conditional compiling, e.g.,
     define PNG_READ/WRITE_NOT_FULLY_SUPPORTED;
-    all configurable options can be selected from command-line instead
+    all configurable options can be selected from command line instead
     of having to edit pngconf.h (Glenn R-P)
   Fixed memory leak in pngwrite.c (free info_ptr->text) (Glenn R-P)
   Added more conditions for png_do_background, to avoid changing
@@ -942,7 +942,7 @@ Version 1.0.8 [July 24, 2000]
 Version 1.0.9beta1 [November 10, 2000]
   Fixed typo in scripts/makefile.hpux
   Updated makevms.com in scripts and contrib/* and contrib/* (Martin Zinser)
-  Fixed seqence-point bug in contrib/pngminus/png2pnm (Martin Zinser)
+  Fixed sequence-point bug in contrib/pngminus/png2pnm (Martin Zinser)
   Changed "cdrom.com" in documentation to "libpng.org"
   Revised pnggccrd.c to get it all working, and updated makefile.gcmmx (Greg).
   Changed type of "params" from voidp to png_voidp in png_read|write_png().
@@ -2295,7 +2295,7 @@ Version 1.4.0beta58 [May 14, 2009]
   Clarified usage of sig_bit versus sig_bit_p in example.c (Vincent Torri)
 
 Version 1.4.0beta59 [May 15, 2009]
-  Reformated sources in libpng style (3-space indentation, comment format)
+  Reformatted sources in libpng style (3-space indentation, comment format)
   Fixed typo in libpng docs (PNG_FILTER_AVE should be PNG_FILTER_AVG)
   Added sections about the git repository and our coding style to the
     documentation
@@ -2661,7 +2661,7 @@ Version 1.4.1beta06 [January 28, 2010]
 
 Version 1.4.1beta07 [February 6, 2010]
   Folded some long lines in the source files.
-  Added defineable PNG_USER_CHUNK_CACHE_MAX, PNG_USER_CHUNK_MALLOC_MAX,
+  Added definable PNG_USER_CHUNK_CACHE_MAX, PNG_USER_CHUNK_MALLOC_MAX,
     and a PNG_USER_LIMITS_SUPPORTED flag.
   Eliminated use of png_ptr->irowbytes and reused the slot in png_ptr as
     png_ptr->png_user_chunk_malloc_max.
@@ -3919,7 +3919,7 @@ Version 1.6.0beta08 [February 1, 2012]
     version checking to configure.ac
   Improved pngstest speed by not doing redundant tests and add const to
     the background parameter of png_image_finish_read. The --background
-    option is now done automagically only when required, so that commandline
+    option is now done automagically only when required, so that command-line
     option no longer exists.
   Cleaned up pngpriv.h to consistently declare all functions and data.
     Also eliminated PNG_CONST_DATA, which is apparently not needed but we
@@ -5927,7 +5927,7 @@ Version 1.6.32beta03 [August 2, 2017]
     (Bug report from the OSS-fuzz project).
 
 Version 1.6.32beta04 [August 2, 2017]
-  Replaced local eXIf_buf with info_ptr-eXIf_buf in png_handle_eXIf().
+  Replaced local eXIf_buf with info_ptr->eXIf_buf in png_handle_eXIf().
   Update libpng.3 and libpng-manual.txt about eXIf functions.
 
 Version 1.6.32beta05 [August 2, 2017]
@@ -6120,6 +6120,51 @@ Version 1.6.39 [November 20, 2022]
   Removed the support for "install" targets from the legacy makefiles;
     removed the obsolete makefile.cegcc.
   Cleaned up the code and updated the internal documentation.
+
+Version 1.6.40 [June 21, 2023]
+  Fixed the eXIf chunk multiplicity checks.
+  Fixed a memory leak in pCAL processing.
+  Corrected the validity report about tRNS inside png_get_valid().
+  Fixed various build issues on *BSD, Mac and Windows.
+  Updated the configurations and the scripts for continuous integration.
+  Cleaned up the code, the build scripts, and the documentation.
+
+Version 1.6.41 [January 24, 2024]
+  Added SIMD-optimized code for the Loongarch LSX hardware.
+    (Contributed by GuXiWei, JinBo and ZhangLixia)
+  Fixed the run-time discovery of MIPS MSA hardware.
+    (Contributed by Sui Jingfeng)
+  Fixed an off-by-one error in the function png_do_check_palette_indexes(),
+    which failed to recognize errors that might have existed in the first
+    column of a broken palette-encoded image. This was a benign regression
+    accidentally introduced in libpng-1.6.33. No pixel was harmed.
+    (Contributed by Adam Richter; reviewed by John Bowler)
+  Fixed, improved and modernized the contrib/pngminus programs, i.e.,
+    png2pnm.c and pnm2png.c
+  Removed old and peculiar portability hacks that were meant to silence
+    warnings issued by gcc version 7.1 alone.
+    (Contributed by John Bowler)
+  Fixed and modernized the CMake file, and raised the minimum required
+    CMake version from 3.1 to 3.6.
+    (Contributed by Clinton Ingram, Timothy Lyanguzov, Tyler Kropp, et al.)
+  Allowed the configure script to disable the building of auxiliary tools
+    and tests, thus catching up with the CMake file.
+    (Contributed by Carlo Bramini)
+  Fixed a build issue on Mac.
+    (Contributed by Zixu Wang)
+  Moved the Autoconf macro files to scripts/autoconf.
+  Moved the CMake files (except for the main CMakeLists.txt) to
+    scripts/cmake and moved the list of their contributing authors to
+    scripts/cmake/AUTHORS.md
+  Updated the CI configurations and scripts.
+  Relicensed the CI scripts to the MIT License.
+  Improved the test coverage.
+    (Contributed by John Bowler)
+
+Version 1.6.42 [January 29, 2024]
+  Fixed the implementation of the macro function png_check_sig().
+    This was an API regression, introduced in libpng-1.6.41.
+    (Reported by Matthieu Darbois)
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net.
 Subscription is required; visit
