@@ -895,14 +895,12 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
     uint8_t portIndex = controlData[0];
     uint8_t actorIndex = controlData[1];
     uint16_t typeOffset = *(uint16_t*)(&controlData[2]);
-    bool isSync = controlData[4] > 127;
     uint8_t portInstanceIndex = controlData[5];
 
     UniquePtr<IPC::Message> msg(new IPC::Message(ipcMsgData, ipcMsgLen));
 
     if (preserveHeader) {
       isConstructor = msg->is_constructor();
-      isSync = msg->is_sync();
       msgType = msg->header()->type;
 
       if (!msgType) {
@@ -941,7 +939,7 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
       msg->header()->flags.SetConstructor();
     }
 
-    if (!isConstructor && isSync) {
+    if (IPC::IPCMessageTypeIsSync(msgType)) {
       MOZ_FUZZING_NYX_DEBUG("INFO: Sending sync message...\n");
       msg->header()->flags.SetSync();
     }
