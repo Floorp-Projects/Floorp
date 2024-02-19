@@ -3180,10 +3180,11 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
 }
 
 LayoutDeviceIntRect nsWindow::GetScreenBounds() {
+  if (!mGdkWindow) {
+    return mBounds;
+  }
+
   const LayoutDeviceIntPoint origin = [&] {
-    if (mIsDestroyed || !mGdkWindow) {
-      return LayoutDeviceIntPoint(0, 0);
-    }
     gint x, y;
     gdk_window_get_root_origin(mGdkWindow, &x, &y);
 
