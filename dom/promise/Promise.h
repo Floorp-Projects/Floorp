@@ -255,13 +255,6 @@ class Promise : public SupportsWeakPtr {
       PropagateUserInteraction aPropagateUserInteraction =
           eDontPropagateUserInteraction);
 
-  void Then(JSContext* aCx,
-            // aCalleeGlobal may not be in the compartment of aCx, when called
-            // over Xrays.
-            JS::Handle<JSObject*> aCalleeGlobal, AnyCallback* aResolveCallback,
-            AnyCallback* aRejectCallback, JS::MutableHandle<JS::Value> aRetval,
-            ErrorResult& aRv);
-
   template <typename Callback, typename... Args>
   using IsHandlerCallback =
       std::is_same<already_AddRefed<Promise>,
