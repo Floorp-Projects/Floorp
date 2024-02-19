@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function ok(what, msg) {
   postMessage({ event: msg, test: "ok", a: what });
 }

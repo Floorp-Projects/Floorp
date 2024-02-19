@@ -121,7 +121,7 @@ async function checkResults() {
 
     // extras
     is(extra.host, expected.extra.host, "host is correct");
-    ok(extra.width > 0, "width is greater than 0");
+    Assert.greater(Number(extra.width), 0, "width is greater than 0");
     is(extra.panel_name, expected.extra.panel_name, "panel_name is correct");
     is(extra.next_panel, expected.extra.next_panel, "next_panel is correct");
     is(extra.reason, expected.extra.reason, "reason is correct");

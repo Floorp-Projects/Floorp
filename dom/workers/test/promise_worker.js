@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
   postMessage({ type: "status", status: !!a, msg: a + ": " + msg });

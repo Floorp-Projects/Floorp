@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 // testSteps is expected to be defined by the test using this file.
 /* global testSteps:false */
 

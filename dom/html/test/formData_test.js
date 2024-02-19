@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function testHas() {
   var f = new FormData();
   f.append("foo", "bar");

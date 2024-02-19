@@ -355,6 +355,7 @@ add_task(async function test_get_falls_back_sorts_results() {
     order: "-id",
   });
 
+  // eslint-disable-next-line mozilla/no-comparison-or-assignment-inside-ok
   ok(records[0].id > records[records.length - 1].id, "records are sorted");
 
   clientWithDump.db.getLastModified = backup;

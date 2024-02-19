@@ -111,6 +111,6 @@ async function checkResults() {
 
     // extras
     is(extra.host, expected.extra.host, "host is correct");
-    ok(extra.width > 0, "width is greater than 0");
+    Assert.greater(Number(extra.width), 0, "width is greater than 0");
   }
 }

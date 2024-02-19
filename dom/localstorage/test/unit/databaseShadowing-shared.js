@@ -1,5 +1,7 @@
 /* import-globals-from head.js */
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 const principalInfos = [
   { url: "http://example.com", attrs: {} },
 

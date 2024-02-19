@@ -140,7 +140,7 @@ add_task(async function () {
     await new Promise(resolve => requestAnimationFrame(resolve));
 
     frameCount = await SpecialPowers.spawn(iframe, [1000], observeFrameUpdate);
-    ok(frameCount > 0, "There should be frameUpdate(s)");
+    Assert.greater(frameCount, 0, "There should be frameUpdate(s)");
 
     await new Promise(resolve => requestAnimationFrame(resolve));
 

@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function ok(a, msg) {
   postMessage(JSON.stringify({ type: "status", what: !!a, msg }));
 }

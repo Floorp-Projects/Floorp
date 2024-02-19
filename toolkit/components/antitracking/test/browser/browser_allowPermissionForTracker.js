@@ -32,6 +32,8 @@ AntiTracking._createTask({
   allowList: false,
   callback: async _ => {
     document.cookie = "name=value";
+    // Assert isn't available in the webpage.
+    // eslint-disable-next-line mozilla/no-comparison-or-assignment-inside-ok
     ok(document.cookie != "", "Nothing is blocked");
 
     // requestStorageAccess should resolve

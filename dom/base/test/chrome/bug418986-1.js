@@ -1,4 +1,7 @@
 /* globals chromeWindow */
+
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 // The main test function.
 var test = function (isContent) {
   SimpleTest.waitForExplicitFinish();

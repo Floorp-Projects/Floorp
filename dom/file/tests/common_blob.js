@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 const RANGE_1 = 1;
 const RANGE_2 = 2;
 

@@ -56,6 +56,8 @@ add_task(async function testSourceTreeNamesForWebExtensions() {
   });
 
   await ToolboxTask.spawn(null, async () => {
+    // Disable autofixing to `Assert` methods which are not available here.
+    /* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
     try {
       /* global gToolbox */
       // Wait for the debugger to finish loading.

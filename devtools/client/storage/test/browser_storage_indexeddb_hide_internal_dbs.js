@@ -35,6 +35,8 @@ add_task(async function () {
     const browserToolboxDoc = gToolbox.getCurrentPanel().panelWindow.document;
 
     const browserToolboxHosts = getDBHostsInTree(browserToolboxDoc);
+    // In the spawn task, we don't have access to Assert:
+    // eslint-disable-next-line mozilla/no-comparison-or-assignment-inside-ok
     ok(browserToolboxHosts.length > 1, "There are more than 1 indexedDB hosts");
     ok(
       browserToolboxHosts.includes("about:devtools-toolbox"),

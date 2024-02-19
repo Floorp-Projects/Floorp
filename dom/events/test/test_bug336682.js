@@ -4,6 +4,8 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
  */
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 var gState = 0;
 /**
  * After all the on/offline handlers run,

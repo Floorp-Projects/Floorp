@@ -1,3 +1,6 @@
+// We're using custom message passing so don't have access to Assert.foo
+// everywhere. Disable the linter:
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
 AntiTracking.runTest(
   "Test whether we receive any persistent permissions in normal windows",
   // Blocking callback

@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// We test sorting of strings, which Assert.greater/less etc. don't do.
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 // Tests that the table widget api works fine
 
 "use strict";

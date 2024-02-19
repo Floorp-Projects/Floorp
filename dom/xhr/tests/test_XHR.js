@@ -1,4 +1,7 @@
 "use strict";
+
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 SimpleTest.waitForExplicitFinish();
 
 var gen = runTests();

@@ -27,7 +27,7 @@ function actOnMozImage(doc, id, func) {
 
 function assertPrefVal(name, val) {
   let boolValue = Services.prefs.getBoolPref(name);
-  ok(boolValue === val, `pref ${name} is set to ${val}`);
+  Assert.strictEqual(boolValue, val, `pref ${name} is set to ${val}`);
   if (boolValue !== val) {
     throw Error(`pref ${name} is not set to ${val}`);
   }
@@ -121,7 +121,7 @@ async function createMozIconInFile(ext, expectSuccess = true) {
     await waitLoad;
 
     const icon = content.document.getElementById(`moz-icon-${_ext}-${_kSize}`);
-    ok(icon !== null, `got a valid ${_ext} moz-icon`);
+    Assert.notStrictEqual(icon, null, `got a valid ${_ext} moz-icon`);
     is(icon.width, _kSize, `${_kSize} px width ${_ext} moz-icon`);
     is(icon.height, _kSize, `${_kSize} px height ${_ext} moz-icon`);
   };
