@@ -859,6 +859,8 @@ void GlobalHelperThreadState::finish(AutoLockHelperThreadState& lock) {
     return;
   }
 
+  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), gcParallelMarkingThreads == 0);
+
   finishThreads(lock);
 
   // Make sure there are no Ion free tasks left. We check this here because,

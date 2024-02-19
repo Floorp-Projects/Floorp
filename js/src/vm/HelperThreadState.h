@@ -122,6 +122,11 @@ class GlobalHelperThreadState {
   WriteOnceData<JS::RegisterThreadCallback> registerThread;
   WriteOnceData<JS::UnregisterThreadCallback> unregisterThread;
 
+  // Count of helper threads 'reserved' for parallel marking. This is used to
+  // prevent too many runtimes trying to mark in parallel at once. Does not stop
+  // threads from being used for other kinds of task, including GC tasks.
+  HelperThreadLockData<size_t> gcParallelMarkingThreads;
+
  private:
   // The lists below are all protected by |lock|.
 

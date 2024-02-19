@@ -2394,6 +2394,14 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 
   MOZ_ASSERT_IF(destroyingRuntime, !useBackgroundThreads);
 
+  // Release parallel marking threads for worker runtimes now we've finished
+  // marking. The main thread keeps the reservation as long as parallel marking
+  // is enabled.
+  if (!rt->isMainRuntime()) {
+    MOZ_ASSERT_IF(useParallelMarking, reservedMarkingThreads != 0);
+    releaseMarkingThreads();
+  }
+
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DESTROY);
 
