@@ -125,6 +125,8 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   void CancelImports();
   void CheckModuleDependenciesLoaded();
 
+  void ChildModuleUnlinked();
+
   void AssertAllImportsFinished() const;
   void AssertAllImportsCancelled() const;
 
