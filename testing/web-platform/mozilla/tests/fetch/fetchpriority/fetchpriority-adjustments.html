@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>fetchpriority: verify basic invariants for adjustments</title>
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1880528"/>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+  const fetchpriorities = ["auto", "low", "high"];
+  const prioritiesWhenFetchpriorityDisabled = {
+      "link-preload-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST,
+  };
+  for (const name in prioritiesWhenFetchpriorityDisabled) {
+      let adjustments = {};
+      for (const fetchpriority of fetchpriorities) {
+	  adjustments[fetchpriority] = SpecialPowers.getIntPref(`network.fetchpriority.adjustments.${name}.${fetchpriority}`);
+      }
+      test(() => {
+	  // Ensure adjustments set the right order for internal priorities.
+	  // The higher the internal priority, the smaller the integer value.
+	  assert_less_than_equal(adjustments.high, adjustments.auto, "Internal priority for high is at most the one for auto");
+	  assert_less_than_equal(adjustments.auto, adjustments.low, "Internal priority for auto is at most the one for low");
+
+	  // Ensure at least one of fetchpriority="high" or fetchpriority="low" would have any effect.
+	  assert_less_than(adjustments.high, adjustments.low, "Internal priority for high is less than the one for low");
+
+	  // Ensure that adjustments map to a value in the predefined set of priorities.
+	  const priority = prioritiesWhenFetchpriorityDisabled[name];
+	  const predefinedPriorities = [
+	      SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST,
+	      SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH,
+	      SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+	      SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW,
+	      SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOWEST
+	  ];
+	  for (const fetchpriority of fetchpriorities) {
+	      const adjustedPriority = priority + adjustments[fetchpriority];
+	      assert_true(predefinedPriorities.includes(adjustedPriority), `Internal priority for ${fetchpriority} is in the predefined set of priorities.`);
+	  }
+      }, `fetchpriority adjustments for ${name}`);
+  }
+</script>

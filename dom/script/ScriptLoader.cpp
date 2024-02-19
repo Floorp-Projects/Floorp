@@ -668,53 +668,35 @@ static void AdjustPriorityAndClassOfServiceForLinkPreloadScripts(
     nsIChannel* aChannel, ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->GetScriptLoadContext()->IsLinkPreloadScript());
 
-  if (!StaticPrefs::network_fetchpriority_enabled()) {
-    // Put it to the group that is not blocked by leaders and doesn't block
-    // follower at the same time.
-    // Giving it a much higher priority will make this request be processed
-    // ahead of other Unblocked requests, but with the same weight as
-    // Leaders. This will make us behave similar way for both http2 and http1.
-    ScriptLoadContext::PrioritizeAsPreload(aChannel);
-    return;
-  }
+  // Put it to the group that is not blocked by leaders and doesn't block
+  // follower at the same time.
+  // Giving it a much higher priority will make this request be processed
+  // ahead of other Unblocked requests, but with the same weight as
+  // Leaders. This will make us behave similar way for both http2 and http1.
+  ScriptLoadContext::PrioritizeAsPreload(aChannel);
 
-  if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(aChannel)) {
-    cos->AddClassFlags(nsIClassOfService::Unblocked);
+  if (!StaticPrefs::network_fetchpriority_enabled()) {
+    return;
   }
 
   if (nsCOMPtr<nsISupportsPriority> supportsPriority =
           do_QueryInterface(aChannel)) {
     LOG(("Is <link rel=[module]preload"));
 
-    const RequestPriority fetchPriority = aRequest->FetchPriority();
+    const auto fetchPriority = ToFetchPriority(aRequest->FetchPriority());
     // The spec defines the priority to be set in an implementation defined
     // manner (<https://fetch.spec.whatwg.org/#concept-fetch>, step 15 and
     // <https://html.spec.whatwg.org/#concept-script-fetch-options-fetch-priority>).
-    // For web-compatibility, the fetch priority mapping from
-    // <https://web.dev/articles/fetch-priority#browser_priority_and_fetchpriority>
-    // is taken.
-    const int32_t supportsPriorityValue = [&]() {
-      switch (fetchPriority) {
-        case RequestPriority::Auto: {
-          return nsISupportsPriority::PRIORITY_HIGH;
-        }
-        case RequestPriority::High: {
-          return nsISupportsPriority::PRIORITY_HIGH;
-        }
-        case RequestPriority::Low: {
-          return nsISupportsPriority::PRIORITY_LOW;
-        }
-        default: {
-          MOZ_ASSERT_UNREACHABLE();
-          return nsISupportsPriority::PRIORITY_NORMAL;
-        }
-      }
-    }();
-
-    LogPriorityMapping(ScriptLoader::gScriptLoaderLog,
-                       ToFetchPriority(fetchPriority), supportsPriorityValue);
-
-    supportsPriority->SetPriority(supportsPriorityValue);
+    // See corresponding preferences in StaticPrefList.yaml for more context.
+    const int32_t supportsPriorityDelta =
+        FETCH_PRIORITY_ADJUSTMENT_FOR(link_preload_script, fetchPriority);
+    supportsPriority->AdjustPriority(supportsPriorityDelta);
+#ifdef DEBUG
+    int32_t adjustedPriority;
+    supportsPriority->GetPriority(&adjustedPriority);
+    LogPriorityMapping(ScriptLoader::gScriptLoaderLog, fetchPriority,
+                       adjustedPriority);
+#endif
   }
 }
 
