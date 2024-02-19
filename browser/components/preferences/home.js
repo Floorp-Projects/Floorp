@@ -690,7 +690,7 @@ var gHomePane = {
     document
     .getElementById("newTabbackground")
     .addEventListener("command", this.syncToNewTabBackground.bind(this));
-    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.type",this.changeBackgroundType.bind(this))
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.type",this.syncFromNewTabBackground.bind(this))
     this.imagesFolderInputSet()
     Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.folder",this.imagesFolderInputSet.bind(this))
     Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.extensions",this.imagesFolderInputSet.bind(this))
@@ -773,16 +773,6 @@ var gHomePane = {
     this.watchHomeTabPrefChange();
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "home-pane-loaded");
-  },
-
-  async changeBackgroundType() {
-    this.syncFromNewTabBackground();
-    const newTabBackgroundType = Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type", 1);
-    if (newTabBackgroundType == 3 || newTabBackgroundType == 4) {
-      Services.prefs.setBoolPref("browser.startup.homepage.abouthome_cache.enabled", false)
-    } else {
-      Services.prefs.setBoolPref("browser.startup.homepage.abouthome_cache.enabled", true)
-    }
   },
 
   async syncToNewTabBackground() {
