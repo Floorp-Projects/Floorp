@@ -545,7 +545,6 @@ if CONFIG["TARGET_CPU"].startswith("ppc"):
 
 EXTRA_JS_MODULES += [
     "ContentAreaDropListener.sys.mjs",
-    "DOMRequestHelper.sys.mjs",
     "IndexedDBHelper.sys.mjs",
     "LocationHelper.sys.mjs",
     "ProcessSelector.sys.mjs",
