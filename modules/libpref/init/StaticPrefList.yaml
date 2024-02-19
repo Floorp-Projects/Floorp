@@ -14457,7 +14457,11 @@
 
 - name: security.tls.enable_kyber
   type: RelaxedAtomicBool
+#ifdef ANDROID
   value: false
+#else
+  value: @IS_NIGHTLY_BUILD@
+#endif
   mirror: always
 
 - name: security.ssl.treat_unsafe_negotiation_as_broken
