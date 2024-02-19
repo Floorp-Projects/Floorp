@@ -3156,14 +3156,14 @@ typedef struct AV1_COMP {
   FRAME_INDEX_SET frame_index_set;
 
   /*!
-   * Store the cm->width in the last call of alloc_compressor_data(). Help
+   * Stores the cm->width in the last call of alloc_compressor_data(). Helps
    * determine whether compressor data should be reallocated when cm->width
    * changes.
    */
   int data_alloc_width;
 
   /*!
-   * Store the cm->height in the last call of alloc_compressor_data(). Help
+   * Stores the cm->height in the last call of alloc_compressor_data(). Helps
    * determine whether compressor data should be reallocated when cm->height
    * changes.
    */

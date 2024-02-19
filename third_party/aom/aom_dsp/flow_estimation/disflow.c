@@ -25,7 +25,7 @@
 #include "config/aom_dsp_rtcd.h"
 
 // Amount to downsample the flow field by.
-// eg. DOWNSAMPLE_SHIFT = 2 (DOWNSAMPLE_FACTOR == 4) means we calculate
+// e.g., DOWNSAMPLE_SHIFT = 2 (DOWNSAMPLE_FACTOR == 4) means we calculate
 // one flow point for each 4x4 pixel region of the frame
 // Must be a power of 2
 #define DOWNSAMPLE_SHIFT 3
@@ -66,7 +66,7 @@ static double flow_upscale_filter[2][FLOW_UPSCALE_TAPS] = {
 static INLINE void get_cubic_kernel_dbl(double x, double kernel[4]) {
   // Check that the fractional position is in range.
   //
-  // Note: x is calculated from (eg.) `u_frac = u - floor(u)`.
+  // Note: x is calculated from, e.g., `u_frac = u - floor(u)`.
   // Mathematically, this implies that 0 <= x < 1. However, in practice it is
   // possible to have x == 1 due to floating point rounding. This is fine,
   // and we still interpolate correctly if we allow x = 1.

@@ -10,6 +10,7 @@
  */
 
 #include <tuple>
+#include <vector>
 
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
@@ -18,6 +19,7 @@
 
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/aom_timer.h"
+#include "aom_ports/sanitizer.h"
 #include "av1/common/blockd.h"
 #include "av1/common/pred_common.h"
 #include "av1/common/reconintra.h"
@@ -149,8 +151,6 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
  protected:
   static const int kMaxNumTests = 10000;
   static const int kIterations = 10;
-  static const int kDstStride = 64;
-  static const int kDstSize = kDstStride * kDstStride;
   static const int kOffset = 16;
   static const int kBufSize = ((2 * MAX_TX_SIZE) << 1) + 16;
 
@@ -161,9 +161,6 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
     start_angle_ = params_.start_angle;
     stop_angle_ = start_angle_ + 90;
 
-    dst_ref_ = &dst_ref_data_[0];
-    dst_tst_ = &dst_tst_data_[0];
-    dst_stride_ = kDstStride;
     above_ = &above_data_[kOffset];
     left_ = &left_data_[kOffset];
 
@@ -171,16 +168,12 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
       above_data_[i] = rng_.Rand8();
       left_data_[i] = rng_.Rand8();
     }
-
-    for (int i = 0; i < kDstSize; ++i) {
-      dst_ref_[i] = 0;
-      dst_tst_[i] = 0;
-    }
   }
 
   ~DrPredTest() override = default;
 
-  void Predict(bool speedtest, int tx) {
+  void Predict(bool speedtest, int tx, Pixel *dst_ref, Pixel *dst_tst,
+               int dst_stride) {
     const int kNumTests = speedtest ? kMaxNumTests : 1;
     aom_usec_timer timer;
     int tst_time = 0;
@@ -189,7 +182,7 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
 
     aom_usec_timer_start(&timer);
     for (int k = 0; k < kNumTests; ++k) {
-      params_.ref_fn(dst_ref_, dst_stride_, bw_, bh_, above_, left_,
+      params_.ref_fn(dst_ref, dst_stride, bw_, bh_, above_, left_,
                      upsample_above_, upsample_left_, dx_, dy_, bd_);
     }
     aom_usec_timer_mark(&timer);
@@ -198,15 +191,17 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
     if (params_.tst_fn) {
       aom_usec_timer_start(&timer);
       for (int k = 0; k < kNumTests; ++k) {
-        API_REGISTER_STATE_CHECK(params_.tst_fn(dst_tst_, dst_stride_, bw_, bh_,
+        API_REGISTER_STATE_CHECK(params_.tst_fn(dst_tst, dst_stride, bw_, bh_,
                                                 above_, left_, upsample_above_,
                                                 upsample_left_, dx_, dy_, bd_));
       }
       aom_usec_timer_mark(&timer);
       tst_time = static_cast<int>(aom_usec_timer_elapsed(&timer));
     } else {
-      for (int i = 0; i < kDstSize; ++i) {
-        dst_ref_[i] = dst_tst_[i];
+      for (int r = 0; r < bh_; ++r) {
+        for (int c = 0; c < bw_; ++c) {
+          dst_tst[r * dst_stride + c] = dst_ref[r * dst_stride + c];
+        }
       }
     }
 
@@ -222,18 +217,6 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
       }
     }
     for (int tx = 0; tx < TX_SIZES_ALL; ++tx) {
-      if (params_.tst_fn == nullptr) {
-        for (int i = 0; i < kDstSize; ++i) {
-          dst_tst_[i] = (1 << bd_) - 1;
-          dst_ref_[i] = (1 << bd_) - 1;
-        }
-      } else {
-        for (int i = 0; i < kDstSize; ++i) {
-          dst_ref_[i] = 0;
-          dst_tst_[i] = 0;
-        }
-      }
-
       bw_ = tx_size_wide[kTxSize[tx]];
       bh_ = tx_size_high[kTxSize[tx]];
 
@@ -246,12 +229,31 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
         upsample_above_ = upsample_left_ = 0;
       }
 
-      Predict(speedtest, tx);
+      // Add additional padding to allow detection of over reads/writes when
+      // the transform width is equal to MAX_TX_SIZE.
+      const int dst_stride = MAX_TX_SIZE + 16;
+      std::vector<Pixel> dst_ref(dst_stride * bh_);
+      std::vector<Pixel> dst_tst(dst_stride * bh_);
+
+      for (int r = 0; r < bh_; ++r) {
+        ASAN_POISON_MEMORY_REGION(&dst_ref[r * dst_stride + bw_],
+                                  (dst_stride - bw_) * sizeof(Pixel));
+        ASAN_POISON_MEMORY_REGION(&dst_tst[r * dst_stride + bw_],
+                                  (dst_stride - bw_) * sizeof(Pixel));
+      }
+
+      Predict(speedtest, tx, dst_ref.data(), dst_tst.data(), dst_stride);
+
+      for (int r = 0; r < bh_; ++r) {
+        ASAN_UNPOISON_MEMORY_REGION(&dst_ref[r * dst_stride + bw_],
+                                    (dst_stride - bw_) * sizeof(Pixel));
+        ASAN_UNPOISON_MEMORY_REGION(&dst_tst[r * dst_stride + bw_],
+                                    (dst_stride - bw_) * sizeof(Pixel));
+      }
 
       for (int r = 0; r < bh_; ++r) {
         for (int c = 0; c < bw_; ++c) {
-          ASSERT_EQ(dst_ref_[r * dst_stride_ + c],
-                    dst_tst_[r * dst_stride_ + c])
+          ASSERT_EQ(dst_ref[r * dst_stride + c], dst_tst[r * dst_stride + c])
               << bw_ << "x" << bh_ << " r: " << r << " c: " << c
               << " dx: " << dx_ << " dy: " << dy_
               << " upsample_above: " << upsample_above_
@@ -292,18 +294,12 @@ class DrPredTest : public ::testing::TestWithParam<DrPredFunc<FuncType> > {
     }
   }
 
-  Pixel dst_ref_data_[kDstSize];
-  Pixel dst_tst_data_[kDstSize];
-
   Pixel left_data_[kBufSize];
   Pixel dummy_data_[kBufSize];
   Pixel above_data_[kBufSize];
 
-  Pixel *dst_ref_;
-  Pixel *dst_tst_;
   Pixel *above_;
   Pixel *left_;
-  int dst_stride_;
 
   int enable_upsample_;
   int upsample_above_;

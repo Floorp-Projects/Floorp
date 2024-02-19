@@ -1352,16 +1352,19 @@ if (aom_config("CONFIG_AV1_ENCODER") eq "yes") {
       add_proto qw/unsigned int/, "aom_highbd_${bd}_mse8x16", "const uint8_t *src_ptr, int  source_stride, const uint8_t *ref_ptr, int  recon_stride, unsigned int *sse";
       add_proto qw/unsigned int/, "aom_highbd_${bd}_mse8x8", "const uint8_t *src_ptr, int  source_stride, const uint8_t *ref_ptr, int  recon_stride, unsigned int *sse";
 
-      specialize "aom_highbd_${bd}_mse16x16", qw/sse2 neon sve/;
-      specialize "aom_highbd_${bd}_mse16x8", qw/neon sve/;
-      specialize "aom_highbd_${bd}_mse8x16", qw/neon sve/;
-      specialize "aom_highbd_${bd}_mse8x8", qw/sse2 neon sve/;
-    }
+      if ($bd eq 8) {
+        specialize "aom_highbd_${bd}_mse16x16", qw/sse2 neon neon_dotprod/;
+        specialize "aom_highbd_${bd}_mse16x8", qw/neon neon_dotprod/;
+        specialize "aom_highbd_${bd}_mse8x16", qw/neon neon_dotprod/;
+        specialize "aom_highbd_${bd}_mse8x8", qw/sse2 neon neon_dotprod/;
+      } else {
+        specialize "aom_highbd_${bd}_mse16x16", qw/sse2 neon sve/;
+        specialize "aom_highbd_${bd}_mse16x8", qw/neon sve/;
+        specialize "aom_highbd_${bd}_mse8x16", qw/neon sve/;
+        specialize "aom_highbd_${bd}_mse8x8", qw/sse2 neon sve/;
+      }
 
-    specialize "aom_highbd_8_mse16x16", qw/neon_dotprod/;
-    specialize "aom_highbd_8_mse16x8", qw/neon_dotprod/;
-    specialize "aom_highbd_8_mse8x16", qw/neon_dotprod/;
-    specialize "aom_highbd_8_mse8x8", qw/neon_dotprod/;
+    }
   }
 
   #

@@ -1,3 +1,39 @@
+2024-01-17 v3.8.1
+  This release includes several bug fixes. This release is ABI
+  compatible with the last release. See
+  https://aomedia.googlesource.com/aom/+log/v3.8.0..v3.8.1 for all the
+  commits in this release.
+
+  - Bug Fixes
+    * aomedia:3520: get_cubic_kernel_dbl: Assertion `0 <= x && x < 1'
+      failed.
+    * aomedia:3526: alloc_compressor_data() is called during every
+      aom_codec_control() call on the encoder.
+    * aomedia:3527: aom/av1/encoder/mcomp.c:1810: av1_full_pixel_search:
+      Assertion `ms_params->ms_buffers.ref->width ==
+      ms_params->ms_buffers.src->width' failed.
+    * aomedia:3534: libaom encoder crashed by AOM_USAGE_ALL_INTRA and
+      AOM_EFLAG_NO_REF_LAST flags.
+    * b/310455204: Recreate workers if necessary.
+    * b/310548198: Update frame size in actual encoding.
+    * b/314858909: Do not use adaptive error estimate.
+    * Fix a hang of cmake on arm64 macOS with cmake 3.27.0 or later.
+
+2024-01-18 v3.7.2
+  This release includes three bug fixes. This release is ABI compatible
+  with the last release. See
+  https://aomedia.googlesource.com/aom/+log/v3.7.1..v3.7.2 for all the
+  commits in this release.
+
+  - Bug Fixes
+    * aomedia:3520: get_cubic_kernel_dbl: Assertion `0 <= x && x < 1'
+      failed.
+    * aomedia:3526: alloc_compressor_data() is called during every
+      aom_codec_control() call on the encoder. Note that this partially
+      reverts the fix for bug aomedia:3349.
+    * b/310457427 and b/310766628: Only use rec_sse in CBR mode.
+    * Fix a hang of cmake on arm64 macOS with cmake 3.27.0 or later.
+
 2023-11-30 v3.8.0
   This release includes new codec interfaces, compression efficiency and
   perceptual improvements, speedup and memory optimizations and many bug

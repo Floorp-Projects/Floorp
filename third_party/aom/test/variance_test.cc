@@ -2165,11 +2165,7 @@ INSTANTIATE_TEST_SUITE_P(
                       MseParams(4, 4, &aom_highbd_10_mse16x16_sve, 10),
                       MseParams(4, 3, &aom_highbd_10_mse16x8_sve, 10),
                       MseParams(3, 4, &aom_highbd_10_mse8x16_sve, 10),
-                      MseParams(3, 3, &aom_highbd_10_mse8x8_sve, 10),
-                      MseParams(4, 4, &aom_highbd_8_mse16x16_sve, 8),
-                      MseParams(4, 3, &aom_highbd_8_mse16x8_sve, 8),
-                      MseParams(3, 4, &aom_highbd_8_mse8x16_sve, 8),
-                      MseParams(3, 3, &aom_highbd_8_mse8x8_sve, 8)));
+                      MseParams(3, 3, &aom_highbd_10_mse8x8_sve, 10)));
 #endif  // HAVE_SVE
 
 const VarianceParams kArrayHBDVariance_c[] = {
