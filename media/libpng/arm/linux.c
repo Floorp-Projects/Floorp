@@ -1,5 +1,6 @@
 /* contrib/arm-neon/linux.c
  *
+ * Last changed in libpng 1.6.31 [July 27, 2017]
  * Copyright (c) 2014, 2017 Glenn Randers-Pehrson
  * Written by John Bowler, 2014, 2017.
  *
@@ -18,7 +19,6 @@
  * This code is strict ANSI-C and is probably moderately portable; it does
  * however use <stdio.h> and it assumes that /proc/cpuinfo is never localized.
  */
-
 #include <stdio.h>
 
 static int
