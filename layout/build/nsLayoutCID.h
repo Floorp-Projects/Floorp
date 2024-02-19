@@ -63,14 +63,6 @@
     }                                                \
   }
 
-// {3160e271-138d-4cc7-9d63-6429f16957c7}
-#define DOMREQUEST_SERVICE_CID                       \
-  {                                                  \
-    0x3160e271, 0x138d, 0x4cc7, {                    \
-      0x9d, 0x63, 0x64, 0x29, 0xf1, 0x69, 0x57, 0xc7 \
-    }                                                \
-  }
-
 // {5a75c25a-5e7e-4d90-8f7c-07eb15cc0aa8}
 #define QUOTAMANAGER_SERVICE_CID                     \
   {                                                  \

@@ -3,7 +3,6 @@ tags = "condprof"
 prefs = [
   "formhelper.autozoom.force-disable.test-only=true",
   "plugins.rewrite_youtube_embeds=true",
-  "dom.domrequest.enabled=true",
 ]
 support-files = [
   "audio.ogg",
@@ -1231,8 +1230,6 @@ skip-if = [
 ["test_domparser_null_char.html"]
 
 ["test_domparsing.html"]
-
-["test_domrequest.html"]
 
 ["test_domwindowutils.html"]
 skip-if = ["os == 'android'"] # Bug 1525959

@@ -39,7 +39,6 @@ class MediaDevices;
 struct MediaStreamConstraints;
 class ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams;
 class ServiceWorkerContainer;
-class DOMRequest;
 class CredentialsContainer;
 class Clipboard;
 class LockManager;

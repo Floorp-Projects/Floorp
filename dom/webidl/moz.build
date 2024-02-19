@@ -519,7 +519,6 @@ WEBIDL_FILES = [
     "DOMQuad.webidl",
     "DOMRect.webidl",
     "DOMRectList.webidl",
-    "DOMRequest.webidl",
     "DOMStringList.webidl",
     "DOMStringMap.webidl",
     "DOMTokenList.webidl",

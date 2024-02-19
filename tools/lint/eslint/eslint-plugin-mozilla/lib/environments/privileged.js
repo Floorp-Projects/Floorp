@@ -142,7 +142,6 @@ module.exports = {
     DOMRect: false,
     DOMRectList: false,
     DOMRectReadOnly: false,
-    DOMRequest: false,
     DOMStringList: false,
     DOMStringMap: false,
     DOMTokenList: false,
