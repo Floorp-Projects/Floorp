@@ -410,6 +410,12 @@ class TestWindowHandler(TestWrapperHandlerUsingServer):
         self.run_wrapper_test('foo.window.html',
                               'text/html', serve.WindowHandler)
 
+class TestWindowModulesHandler(TestWrapperHandlerUsingServer):
+    dummy_files = {'foo.any.js': b'// META: global=window-module\n'}
+
+    def test_any_window_module_html(self):
+        self.run_wrapper_test('foo.any.window-module.html',
+                              'text/html', serve.WindowModulesHandler)
 
 class TestAnyHtmlHandler(TestWrapperHandlerUsingServer):
     dummy_files = {'foo.any.js': b'',
