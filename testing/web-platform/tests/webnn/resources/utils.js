@@ -292,6 +292,7 @@ const PrecisionMetrics = {
   cast: {ULP: {float32: 1, float16: 1, int32: 0, uint32: 0, int64: 0, int8: 0, uint8: 0}},
   clamp: {ULP: {float32: 0, float16: 0}},
   concat: {ULP: {float32: 0, float16: 0}},
+  constant: {ULP: {float32: 2, float16: 2, int32: 0, uint32: 0, int64: 0, int8: 0, uint8: 0}},
   conv2d: {ULP: {float32: getConv2dPrecisionTolerance, float16: getConv2dPrecisionTolerance}},
   convTranspose2d: {ULP: {float32: getConv2dPrecisionTolerance, float16: getConv2dPrecisionTolerance}},
   // Begin Element-wise binary operations
@@ -632,6 +633,13 @@ const buildConcat = (operationName, builder, resources) => {
   }
   // invoke builder.concat()
   namedOutputOperand[resources.expected.name] = builder[operationName](inputOperands, resources.axis);
+  return namedOutputOperand;
+};
+
+const buildConstantRange = (operationName, builder, resources) => {
+  const namedOutputOperand = {};
+  // invoke builder.constant(start, step, outputShape, type)
+  namedOutputOperand[resources.expected.name] = builder[operationName](resources.inputs.start, resources.inputs.step, resources.outputShape, resources.type);
   return namedOutputOperand;
 };
 
