@@ -67,14 +67,14 @@ class SearchRobot {
         )
 
     fun verifyScanButtonVisibility(visible: Boolean = true) =
-        assertUIObjectExists(scanButton, exists = visible)
+        assertUIObjectExists(scanButton(), exists = visible)
 
     fun verifyVoiceSearchButtonVisibility(enabled: Boolean) =
-        assertUIObjectExists(voiceSearchButton, exists = enabled)
+        assertUIObjectExists(voiceSearchButton(), exists = enabled)
 
     // Device or AVD requires a Google Services Android OS installation
     fun startVoiceSearch() {
-        voiceSearchButton.click()
+        voiceSearchButton().click()
         grantSystemPermission()
 
         if (isPackageInstalled(Constants.PackageName.GOOGLE_QUICK_SEARCH)) {
@@ -170,11 +170,11 @@ class SearchRobot {
         ).click()
     }
 
-    fun verifySearchSelectorButton() = assertUIObjectExists(searchSelectorButton)
+    fun verifySearchSelectorButton() = assertUIObjectExists(searchSelectorButton())
 
     fun clickSearchSelectorButton() {
-        searchSelectorButton.waitForExists(waitingTime)
-        searchSelectorButton.click()
+        searchSelectorButton().waitForExists(waitingTime)
+        searchSelectorButton().click()
     }
 
     fun verifySearchEngineIcon(name: String) = assertUIObjectExists(itemWithDescription(name))
@@ -188,33 +188,33 @@ class SearchRobot {
         searchEngineName.forEach {
             if (shouldExist) {
                 assertUIObjectExists(
-                    searchShortcutList.getChild(UiSelector().text(it)),
+                    searchShortcutList().getChild(UiSelector().text(it)),
                 )
             } else {
-                assertUIObjectIsGone(searchShortcutList.getChild(UiSelector().text(it)))
+                assertUIObjectIsGone(searchShortcutList().getChild(UiSelector().text(it)))
             }
         }
     }
 
     // New unified search UI search selector.
     fun selectTemporarySearchMethod(searchEngineName: String) {
-        searchShortcutList.getChild(UiSelector().text(searchEngineName)).click()
+        searchShortcutList().getChild(UiSelector().text(searchEngineName)).click()
     }
 
     fun clickScanButton() =
-        scanButton.also {
+        scanButton().also {
             it.waitForExists(waitingTime)
             it.click()
         }
 
     fun clickDismissPermissionRequiredDialog() {
-        dismissPermissionButton.waitForExists(waitingTime)
-        dismissPermissionButton.click()
+        dismissPermissionButton().waitForExists(waitingTime)
+        dismissPermissionButton().click()
     }
 
     fun clickGoToPermissionsSettings() {
-        goToPermissionsSettingsButton.waitForExists(waitingTime)
-        goToPermissionsSettingsButton.click()
+        goToPermissionsSettingsButton().waitForExists(waitingTime)
+        goToPermissionsSettingsButton().click()
     }
 
     fun verifyScannerOpen() {
@@ -346,7 +346,7 @@ class SearchRobot {
         }
 
         fun clickSearchEngineSettings(interact: SettingsSubMenuSearchRobot.() -> Unit): SettingsSubMenuSearchRobot.Transition {
-            searchShortcutList.getChild(UiSelector().text("Search settings")).click()
+            searchShortcutList().getChild(UiSelector().text("Search settings")).click()
 
             SettingsSubMenuSearchRobot().interact()
             return SettingsSubMenuSearchRobot.Transition()
@@ -372,22 +372,22 @@ fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
 private fun browserToolbarEditView() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
-private val dismissPermissionButton =
+private fun dismissPermissionButton() =
     mDevice.findObject(UiSelector().text("DISMISS"))
 
-private val goToPermissionsSettingsButton =
+private fun goToPermissionsSettingsButton() =
     mDevice.findObject(UiSelector().text("GO TO SETTINGS"))
 
-private val scanButton = itemWithDescription("Scan")
+private fun scanButton() = itemWithDescription("Scan")
 
 private fun clearButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))
 
 private fun searchWrapper() = mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
 
-private val searchSelectorButton = itemWithResId("$packageName:id/search_selector")
+private fun searchSelectorButton() = itemWithResId("$packageName:id/search_selector")
 
-private val searchShortcutList =
+private fun searchShortcutList() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_menu_recyclerView"))
 
-private val voiceSearchButton = mDevice.findObject(UiSelector().description("Voice search"))
+private fun voiceSearchButton() = mDevice.findObject(UiSelector().description("Voice search"))
