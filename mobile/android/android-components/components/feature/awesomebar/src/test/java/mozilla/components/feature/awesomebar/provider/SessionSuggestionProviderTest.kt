@@ -416,4 +416,34 @@ class SessionSuggestionProviderTest {
         assertTrue(suggestions.map { it.title }.contains("http://www.mobile.mozilla.org"))
         assertTrue(suggestions.map { it.title }.contains("https://www.mozilla.org/vpn"))
     }
+
+    @Test
+    fun `GIVEN multiple tabs have the same url WHEN user inputs the same url THEN provider returns a single suggestion for the matching input`() = runTest {
+        val store = BrowserStore()
+
+        val url = "https://www.mozilla.org"
+        val tab1 = createTab(url)
+        val tab2 = createTab(url)
+        val tab3 = createTab(url)
+
+        val resources: Resources = mock()
+        `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
+
+        val provider = SessionSuggestionProvider(resources, store, mock())
+
+        run {
+            val suggestions = provider.onInputChanged("Mozilla")
+            assertTrue(suggestions.isEmpty())
+        }
+
+        store.dispatch(TabListAction.AddTabAction(tab1)).join()
+        store.dispatch(TabListAction.AddTabAction(tab2)).join()
+        store.dispatch(TabListAction.AddTabAction(tab3)).join()
+
+        run {
+            val suggestions = provider.onInputChanged("Mozilla")
+            assertEquals(1, suggestions.size)
+            assertEquals(tab1.id, suggestions[0].id)
+        }
+    }
 }

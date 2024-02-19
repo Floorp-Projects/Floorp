@@ -50,15 +50,15 @@ class SessionSuggestionProvider(
         }
 
         val state = store.state
-        val tabs = state.tabs
+        val distinctTabs = state.tabs.distinctBy { it.content.url }
 
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
-        val iconRequests: List<Deferred<Icon>?> = tabs.map {
+        val iconRequests: List<Deferred<Icon>?> = distinctTabs.map {
             icons?.loadIcon(IconRequest(url = it.content.url, waitOnNetworkLoad = false))
         }
 
         val searchWords = searchText.split(" ")
-        tabs.zip(iconRequests) { result, icon ->
+        distinctTabs.zip(iconRequests) { result, icon ->
             if (
                 resultsUriFilter?.invoke(result.content.url.toUri()) != false &&
                 searchWords.all { result.contains(it) } &&
