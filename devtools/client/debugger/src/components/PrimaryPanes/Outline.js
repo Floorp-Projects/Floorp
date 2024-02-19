@@ -82,6 +82,7 @@ export class Outline extends Component {
       selectedLocation: PropTypes.object.isRequired,
       getFunctionSymbols: PropTypes.func.isRequired,
       getClassSymbols: PropTypes.func.isRequired,
+      selectedSourceTextContent: PropTypes.object,
       canFetchSymbols: PropTypes.bool,
     };
   }
@@ -94,7 +95,8 @@ export class Outline extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { cursorPosition, selectedLocation, canFetchSymbols } = this.props;
+    const { cursorPosition, selectedSourceTextContent, canFetchSymbols } =
+      this.props;
     if (cursorPosition && cursorPosition !== prevProps.cursorPosition) {
       this.setFocus(cursorPosition);
     }
@@ -106,8 +108,11 @@ export class Outline extends Component {
       this.focusedElRef.scrollIntoView({ block: "center" });
     }
 
-    // Lets make sure the source text has been loaded and is different
-    if (canFetchSymbols && prevProps.selectedLocation !== selectedLocation) {
+    // Lets make sure the source text has been loaded and it is different
+    if (
+      canFetchSymbols &&
+      prevProps.selectedSourceTextContent !== selectedSourceTextContent
+    ) {
       this.getClassAndFunctionSymbols();
     }
   }
@@ -373,6 +378,7 @@ export class Outline extends Component {
 const mapStateToProps = state => {
   const selectedSourceTextContent = getSelectedSourceTextContent(state);
   return {
+    selectedSourceTextContent,
     selectedLocation: getSelectedLocation(state),
     canFetchSymbols:
       selectedSourceTextContent && isFulfilled(selectedSourceTextContent),
