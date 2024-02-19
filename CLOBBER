@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - turn off our 'fake' vpx build that only pointed to media/libvpx/libvpx
+Merge day clobber 2024-02-19
