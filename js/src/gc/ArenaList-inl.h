@@ -273,6 +273,7 @@ void js::gc::SortedArenaList::restoreFromArenaList(
       Arena* first = remaining;
       Arena* last = bucketLast[i];
       remaining = last->next;
+      last->next = nullptr;
       new (&buckets[i]) Bucket(first, last);
     }
   }
