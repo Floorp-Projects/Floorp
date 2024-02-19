@@ -4,8 +4,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { DOMRequestIpcHelper } from "resource://gre/modules/DOMRequestHelper.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -30,9 +28,8 @@ XPCOMUtils.defineLazyServiceGetter(
  * to the web application. The PushService running in the parent process is the
  * one actually performing all operations.
  */
-export class Push extends DOMRequestIpcHelper {
+export class Push {
   constructor() {
-    super();
     lazy.console.debug("Push()");
   }
 
@@ -56,8 +53,6 @@ export class Push extends DOMRequestIpcHelper {
     lazy.console.debug("init()");
 
     this._window = win;
-
-    this.initDOMRequestHelper(win);
 
     // Get the client principal from the window. This won't be null because the
     // service worker should be available when accessing the push manager.
@@ -85,7 +80,7 @@ export class Push extends DOMRequestIpcHelper {
     let hasValidTransientUserGestureActivation =
       this._window.document.hasValidTransientUserGestureActivation;
 
-    return this.createPromise((resolve, reject) => {
+    return new this._window.Promise((resolve, reject) => {
       // Test permission before requesting to support GeckoView:
       // * GeckoViewPermissionChild wants to return early when requested without user activation
       //   before doing actual permission check:
@@ -125,27 +120,30 @@ export class Push extends DOMRequestIpcHelper {
   subscribe(options) {
     lazy.console.debug("subscribe()", this._scope);
 
-    return this.askPermission().then(() =>
-      this.createPromise((resolve, reject) => {
-        let callback = new PushSubscriptionCallback(this, resolve, reject);
+    return this.askPermission().then(
+      () =>
+        new this._window.Promise((resolve, reject) => {
+          let callback = new PushSubscriptionCallback(this, resolve, reject);
 
-        if (!options || options.applicationServerKey === null) {
-          lazy.PushService.subscribe(this._scope, this._principal, callback);
-          return;
-        }
+          if (!options || options.applicationServerKey === null) {
+            lazy.PushService.subscribe(this._scope, this._principal, callback);
+            return;
+          }
 
-        let keyView = this.#normalizeAppServerKey(options.applicationServerKey);
-        if (keyView.byteLength === 0) {
-          callback.rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
-          return;
-        }
-        lazy.PushService.subscribeWithKey(
-          this._scope,
-          this._principal,
-          keyView,
-          callback
-        );
-      })
+          let keyView = this.#normalizeAppServerKey(
+            options.applicationServerKey
+          );
+          if (keyView.byteLength === 0) {
+            callback.rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
+            return;
+          }
+          lazy.PushService.subscribeWithKey(
+            this._scope,
+            this._principal,
+            keyView,
+            callback
+          );
+        })
     );
   }
 
@@ -177,7 +175,7 @@ export class Push extends DOMRequestIpcHelper {
   getSubscription() {
     lazy.console.debug("getSubscription()", this._scope);
 
-    return this.createPromise((resolve, reject) => {
+    return new this._window.Promise((resolve, reject) => {
       let callback = new PushSubscriptionCallback(this, resolve, reject);
       lazy.PushService.getSubscription(this._scope, this._principal, callback);
     });
@@ -186,7 +184,7 @@ export class Push extends DOMRequestIpcHelper {
   permissionState() {
     lazy.console.debug("permissionState()", this._scope);
 
-    return this.createPromise((resolve, reject) => {
+    return new this._window.Promise((resolve, reject) => {
       let permission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 
       try {
