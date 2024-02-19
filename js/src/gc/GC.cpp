@@ -930,6 +930,8 @@ void GCRuntime::finish() {
   }
 #endif
 
+  releaseMarkingThreads();
+
 #ifdef JS_GC_ZEAL
   // Free memory associated with GC verification.
   finishVerifier();
@@ -1064,9 +1066,8 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       compactingEnabled = value != 0;
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
-      // Not supported on workers.
-      parallelMarkingEnabled = rt->isMainRuntime() && value != 0;
-      return initOrDisableParallelMarking();
+      setParallelMarkingEnabled(value != 0);
+      break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
         marker->incrementalWeakMapMarkingEnabled = value != 0;
@@ -1151,8 +1152,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       compactingEnabled = TuningDefaults::CompactingEnabled;
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
-      parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
-      initOrDisableParallelMarking();
+      setParallelMarkingEnabled(TuningDefaults::ParallelMarkingEnabled);
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
@@ -1350,16 +1350,56 @@ void GCRuntime::assertNoMarkingWork() const {
 }
 #endif
 
+bool GCRuntime::setParallelMarkingEnabled(bool enabled) {
+  if (enabled == parallelMarkingEnabled) {
+    return true;
+  }
+
+  parallelMarkingEnabled = enabled;
+  return initOrDisableParallelMarking();
+}
+
 bool GCRuntime::initOrDisableParallelMarking() {
-  // Attempt to initialize parallel marking state or disable it on failure.
+  // Attempt to initialize parallel marking state or disable it on failure. This
+  // is called when parallel marking is enabled or disabled.
 
   MOZ_ASSERT(markers.length() != 0);
 
-  if (!updateMarkersVector()) {
-    parallelMarkingEnabled = false;
+  if (updateMarkersVector()) {
+    return true;
+  }
+
+  // Failed to initialize parallel marking so disable it instead.
+  MOZ_ASSERT(parallelMarkingEnabled);
+  parallelMarkingEnabled = false;
+  MOZ_ALWAYS_TRUE(updateMarkersVector());
+  return false;
+}
+
+void GCRuntime::releaseMarkingThreads() {
+  MOZ_ALWAYS_TRUE(reserveMarkingThreads(0));
+}
+
+bool GCRuntime::reserveMarkingThreads(size_t newCount) {
+  if (reservedMarkingThreads == newCount) {
+    return true;
+  }
+
+  // Update the helper thread system's global count by subtracting this
+  // runtime's current contribution |reservedMarkingThreads| and adding the new
+  // contribution |newCount|.
+
+  AutoLockHelperThreadState lock;
+  auto& globalCount = HelperThreadState().gcParallelMarkingThreads;
+  MOZ_ASSERT(globalCount >= reservedMarkingThreads);
+  size_t newGlobalCount = globalCount - reservedMarkingThreads + newCount;
+  if (newGlobalCount > HelperThreadState().threadCount) {
+    // Not enough total threads.
     return false;
   }
 
+  globalCount = newGlobalCount;
+  reservedMarkingThreads = newCount;
   return true;
 }
 
@@ -1377,6 +1417,16 @@ bool GCRuntime::updateMarkersVector() {
   // Limit worker count to number of GC parallel tasks that can run
   // concurrently, otherwise one thread can deadlock waiting on another.
   size_t targetCount = std::min(markingWorkerCount(), getMaxParallelThreads());
+
+  if (rt->isMainRuntime()) {
+    // For the main runtime, reserve helper threads as long as parallel marking
+    // is enabled. Worker runtimes may not mark in parallel if there are
+    // insufficient threads available at the time.
+    size_t threadsToReserve = targetCount > 1 ? targetCount : 0;
+    if (!reserveMarkingThreads(threadsToReserve)) {
+      return false;
+    }
+  }
 
   if (markers.length() > targetCount) {
     return markers.resize(targetCount);
@@ -2870,7 +2920,7 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   stats().measureInitialHeapSize();
 
   useParallelMarking = SingleThreadedMarking;
-  if (canMarkInParallel() && initParallelMarkers()) {
+  if (canMarkInParallel() && initParallelMarking()) {
     useParallelMarking = AllowParallelMarking;
   }
 
@@ -2989,8 +3039,18 @@ inline bool GCRuntime::canMarkInParallel() const {
                                      tunables.parallelMarkingThresholdBytes();
 }
 
-bool GCRuntime::initParallelMarkers() {
+bool GCRuntime::initParallelMarking() {
+  // This is called at the start of collection.
+
   MOZ_ASSERT(canMarkInParallel());
+
+  // Reserve/release helper threads for worker runtimes. These are released at
+  // the end of sweeping. If there are not enough helper threads because
+  // other runtimes are marking in parallel then parallel marking will not be
+  // used.
+  if (!rt->isMainRuntime() && !reserveMarkingThreads(markers.length())) {
+    return false;
+  }
 
   // Allocate stack for parallel markers. The first marker always has stack
   // allocated. Other markers have their stack freed in
