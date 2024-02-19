@@ -21,6 +21,17 @@ enum class FetchPriority : uint8_t { High, Low, Auto };
 
 FetchPriority ToFetchPriority(RequestPriority aRequestPriority);
 
+#define FETCH_PRIORITY_ADJUSTMENT_FOR(feature, fetchPriority)                  \
+  (fetchPriority == FetchPriority::Auto                                        \
+       ? StaticPrefs::network_fetchpriority_adjustments_##feature##_auto()     \
+       : (fetchPriority == FetchPriority::High                                 \
+              ? StaticPrefs::                                                  \
+                    network_fetchpriority_adjustments_##feature##_high()       \
+              : (fetchPriority == FetchPriority::Low                           \
+                     ? StaticPrefs::                                           \
+                           network_fetchpriority_adjustments_##feature##_low() \
+                     : 0)))
+
 // @param aSupportsPriority see <nsISupportsPriority.idl>.
 void LogPriorityMapping(LazyLogModule& aLazyLogModule,
                         FetchPriority aFetchPriority,
