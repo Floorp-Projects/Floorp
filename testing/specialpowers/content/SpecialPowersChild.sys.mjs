@@ -158,8 +158,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       this.nondeterministicGetWeakMapKeys,
       this.snapshotWindowWithOptions,
       this.snapshotWindow,
-      this.snapshotRect,
-      this.getDOMRequestService
+      this.snapshotRect
     );
   }
 
@@ -1464,26 +1463,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
     // FYI: Event.defaultPrevented returns false in content context if the
     //      event is consumed only by system group's event listeners.
     return event.defaultPrevented;
-  }
-
-  getDOMRequestService() {
-    var serv = Services.DOMRequest;
-    var res = {};
-    var props = [
-      "createRequest",
-      "createCursor",
-      "fireError",
-      "fireSuccess",
-      "fireDone",
-      "fireDetailedError",
-    ];
-    for (var i in props) {
-      let prop = props[i];
-      res[prop] = function () {
-        return serv[prop].apply(serv, arguments);
-      };
-    }
-    return Cu.cloneInto(res, this.contentWindow, { cloneFunctions: true });
   }
 
   addCategoryEntry(category, entry, value, persists, replace) {

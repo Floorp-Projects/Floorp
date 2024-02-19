@@ -22,7 +22,6 @@ include("/tools/fuzzing/libfuzzer-config.mozbuild")
 XPIDL_SOURCES += [
     "mozIDOMWindow.idl",
     "nsIContentPolicy.idl",
-    "nsIDOMRequestService.idl",
     "nsIDroppedLinkHandler.idl",
     "nsIEventSourceEventService.idl",
     "nsIImageLoadingContent.idl",
@@ -187,7 +186,6 @@ EXPORTS.mozilla.dom += [
     "DOMPoint.h",
     "DOMQuad.h",
     "DOMRect.h",
-    "DOMRequest.h",
     "DOMStringList.h",
     "DOMTokenListSupportedTokens.h",
     "Element.h",
@@ -345,7 +343,6 @@ UNIFIED_SOURCES += [
     "DOMPoint.cpp",
     "DOMQuad.cpp",
     "DOMRect.cpp",
-    "DOMRequest.cpp",
     "DOMStringList.cpp",
     "Element.cpp",
     "EventSource.cpp",

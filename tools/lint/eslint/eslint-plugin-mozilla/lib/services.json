@@ -16,7 +16,6 @@
   "nsICookieService": "cookies",
   "nsICrashReporter": "appinfo",
   "nsIDAPTelemetry": "DAPTelemetry",
-  "nsIDOMRequestService": "DOMRequest",
   "nsIDOMStorageManager": "domStorageManager",
   "nsIDNSService": "dns",
   "nsIDirectoryService": "dirsvc",

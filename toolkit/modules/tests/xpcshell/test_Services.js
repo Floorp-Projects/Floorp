@@ -28,7 +28,6 @@ function run_test() {
   checkService("cookies", Ci.nsICookieManager);
   checkService("dirsvc", Ci.nsIDirectoryService);
   checkService("dirsvc", Ci.nsIProperties);
-  checkService("DOMRequest", Ci.nsIDOMRequestService);
   checkService("domStorageManager", Ci.nsIDOMStorageManager);
   checkService("droppedLinkHandler", Ci.nsIDroppedLinkHandler);
   checkService("eTLD", Ci.nsIEffectiveTLDService);
