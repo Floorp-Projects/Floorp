@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Copyright (c) 2018-2022 Cosmin Truta
+ * Copyright (c) 2018-2024 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
  * Copyright (c) 1996-1997 Andreas Dilger
  * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
@@ -14,27 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_39 Your_png_h_is_not_version_1_6_39;
-
-#ifdef __GNUC__
-/* The version tests may need to be added to, but the problem warning has
- * consistently been fixed in GCC versions which obtain wide-spread release.
- * The problem is that many versions of GCC rearrange comparison expressions in
- * the optimizer in such a way that the results of the comparison will change
- * if signed integer overflow occurs.  Such comparisons are not permitted in
- * ANSI C90, however GCC isn't clever enough to work out that that do not occur
- * below in png_ascii_from_fp and png_muldiv, so it produces a warning with
- * -Wextra.  Unfortunately this is highly dependent on the optimizer and the
- * machine architecture so the warning comes and goes unpredictably and is
- * impossible to "fix", even were that a good idea.
- */
-#if __GNUC__ == 7 && __GNUC_MINOR__ == 1
-#define GCC_STRICT_OVERFLOW 1
-#endif /* GNU 7.1.x */
-#endif /* GNU */
-#ifndef GCC_STRICT_OVERFLOW
-#define GCC_STRICT_OVERFLOW 0
-#endif
+typedef png_libpng_version_1_6_42 Your_png_h_is_not_version_1_6_42;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -73,21 +53,21 @@ png_set_sig_bytes(png_structrp png_ptr, int num_bytes)
 int PNGAPI
 png_sig_cmp(png_const_bytep sig, size_t start, size_t num_to_check)
 {
-   png_byte png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+   static const png_byte png_signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
    if (num_to_check > 8)
       num_to_check = 8;
 
    else if (num_to_check < 1)
-      return (-1);
+      return -1;
 
    if (start > 7)
-      return (-1);
+      return -1;
 
    if (start + num_to_check > 8)
       num_to_check = 8 - start;
 
-   return ((int)(memcmp(&sig[start], &png_signature[start], num_to_check)));
+   return memcmp(&sig[start], &png_signature[start], num_to_check);
 }
 
 #endif /* READ */
@@ -447,7 +427,6 @@ png_info_init_3,(png_infopp ptr_ptr, size_t png_info_struct_size),
    memset(info_ptr, 0, (sizeof *info_ptr));
 }
 
-/* The following API is not called internally */
 void PNGAPI
 png_data_freer(png_const_structrp png_ptr, png_inforp info_ptr,
     int freer, png_uint_32 mask)
@@ -686,9 +665,9 @@ png_voidp PNGAPI
 png_get_io_ptr(png_const_structrp png_ptr)
 {
    if (png_ptr == NULL)
-      return (NULL);
+      return NULL;
 
-   return (png_ptr->io_ptr);
+   return png_ptr->io_ptr;
 }
 
 #if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
@@ -752,7 +731,7 @@ png_convert_to_rfc1123_buffer(char out[29], png_const_timep ptime)
 
    {
       size_t pos = 0;
-      char number_buf[5]; /* enough for a four-digit year */
+      char number_buf[5] = {0, 0, 0, 0, 0}; /* enough for a four-digit year */
 
 #     define APPEND_STRING(string) pos = png_safecat(out, 29, pos, (string))
 #     define APPEND_NUMBER(format, value)\
@@ -815,8 +794,8 @@ png_get_copyright(png_const_structrp png_ptr)
    return PNG_STRING_COPYRIGHT
 #else
    return PNG_STRING_NEWLINE \
-      "libpng version 1.6.39" PNG_STRING_NEWLINE \
-      "Copyright (c) 2018-2022 Cosmin Truta" PNG_STRING_NEWLINE \
+      "libpng version 1.6.42" PNG_STRING_NEWLINE \
+      "Copyright (c) 2018-2024 Cosmin Truta" PNG_STRING_NEWLINE \
       "Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson" \
       PNG_STRING_NEWLINE \
       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
@@ -977,7 +956,7 @@ png_reset_zstream(png_structrp png_ptr)
       return Z_STREAM_ERROR;
 
    /* WARNING: this resets the window bits to the maximum! */
-   return (inflateReset(&png_ptr->zstream));
+   return inflateReset(&png_ptr->zstream);
 }
 #endif /* READ */
 
@@ -986,7 +965,7 @@ png_uint_32 PNGAPI
 png_access_version_number(void)
 {
    /* Version of *.c files used when building libpng */
-   return((png_uint_32)PNG_LIBPNG_VER);
+   return (png_uint_32)PNG_LIBPNG_VER;
 }
 
 #if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
@@ -2891,14 +2870,6 @@ png_pow10(int power)
 /* Function to format a floating point value in ASCII with a given
  * precision.
  */
-#if GCC_STRICT_OVERFLOW
-#pragma GCC diagnostic push
-/* The problem arises below with exp_b10, which can never overflow because it
- * comes, originally, from frexp and is therefore limited to a range which is
- * typically +/-710 (log2(DBL_MAX)/log2(DBL_MIN)).
- */
-#pragma GCC diagnostic warning "-Wstrict-overflow=2"
-#endif /* GCC_STRICT_OVERFLOW */
 void /* PRIVATE */
 png_ascii_from_fp(png_const_structrp png_ptr, png_charp ascii, size_t size,
     double fp, unsigned int precision)
@@ -3220,10 +3191,6 @@ png_ascii_from_fp(png_const_structrp png_ptr, png_charp ascii, size_t size,
    /* Here on buffer too small. */
    png_error(png_ptr, "ASCII conversion buffer too small");
 }
-#if GCC_STRICT_OVERFLOW
-#pragma GCC diagnostic pop
-#endif /* GCC_STRICT_OVERFLOW */
-
 #  endif /* FLOATING_POINT */
 
 #  ifdef PNG_FIXED_POINT_SUPPORTED
@@ -3251,7 +3218,7 @@ png_ascii_from_fixed(png_const_structrp png_ptr, png_charp ascii,
       if (num <= 0x80000000) /* else overflowed */
       {
          unsigned int ndigits = 0, first = 16 /* flag value */;
-         char digits[10];
+         char digits[10] = {0};
 
          while (num)
          {
@@ -3336,15 +3303,6 @@ png_fixed(png_const_structrp png_ptr, double fp, png_const_charp text)
  * the nearest .00001).  Overflow and divide by zero are signalled in
  * the result, a boolean - true on success, false on overflow.
  */
-#if GCC_STRICT_OVERFLOW /* from above */
-/* It is not obvious which comparison below gets optimized in such a way that
- * signed overflow would change the result; looking through the code does not
- * reveal any tests which have the form GCC complains about, so presumably the
- * optimizer is moving an add or subtract into the 'if' somewhere.
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wstrict-overflow=2"
-#endif /* GCC_STRICT_OVERFLOW */
 int
 png_muldiv(png_fixed_point_p res, png_fixed_point a, png_int_32 times,
     png_int_32 divisor)
@@ -3459,9 +3417,6 @@ png_muldiv(png_fixed_point_p res, png_fixed_point a, png_int_32 times,
 
    return 0;
 }
-#if GCC_STRICT_OVERFLOW
-#pragma GCC diagnostic pop
-#endif /* GCC_STRICT_OVERFLOW */
 #endif /* READ_GAMMA || INCH_CONVERSIONS */
 
 #if defined(PNG_READ_GAMMA_SUPPORTED) || defined(PNG_INCH_CONVERSIONS_SUPPORTED)
