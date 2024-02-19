@@ -26,12 +26,13 @@ add_task(async function test_markers_parent_process() {
     );
     ok(domEventStart, "A start DOMEvent was generated");
     ok(domEventEnd, "An end DOMEvent was generated");
-    ok(
-      domEventEnd.data.latency > 0,
+    Assert.greater(
+      domEventEnd.data.latency,
+      0,
       "DOMEvent had a a latency value generated."
     );
-    ok(domEventEnd.data.type === "DOMEvent");
-    ok(domEventEnd.name === "DOMEvent");
+    Assert.strictEqual(domEventEnd.data.type, "DOMEvent");
+    Assert.strictEqual(domEventEnd.name, "DOMEvent");
   }
   // Add more marker tests.
 });

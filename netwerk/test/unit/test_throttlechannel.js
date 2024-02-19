@@ -38,7 +38,11 @@ function run_test() {
 
   channel.asyncOpen(
     new ChannelListener(() => {
-      ok(tq.bytesProcessed() > 0, "throttled queue processed some bytes");
+      Assert.greater(
+        tq.bytesProcessed(),
+        0,
+        "throttled queue processed some bytes"
+      );
 
       httpserver.stop(do_test_finished);
     })

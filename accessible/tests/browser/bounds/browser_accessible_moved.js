@@ -12,10 +12,10 @@ function assertBoundsNonZero(acc) {
   let width = {};
   let height = {};
   acc.getBounds(x, y, width, height);
-  ok(x.value > 0, "x is non-0");
-  ok(y.value > 0, "y is non-0");
-  ok(width.value > 0, "width is non-0");
-  ok(height.value > 0, "height is non-0");
+  Assert.greater(x.value, 0, "x is non-0");
+  Assert.greater(y.value, 0, "y is non-0");
+  Assert.greater(width.value, 0, "width is non-0");
+  Assert.greater(height.value, 0, "height is non-0");
 }
 
 /**

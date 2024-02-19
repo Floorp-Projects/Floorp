@@ -15,7 +15,11 @@ add_task(async () => {
   const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
     Ci.nsIMemoryReporterManager
   );
-  ok(utilityPid !== undefined, `Utility process is running as ${utilityPid}`);
+  Assert.notStrictEqual(
+    utilityPid,
+    undefined,
+    `Utility process is running as ${utilityPid}`
+  );
 
   var utilityReports = [];
 
@@ -56,13 +60,14 @@ add_task(async () => {
     `Collected ${utilityReports.length} reports from utility process ${utilityPid}`
   );
   ok(!!utilityReports.length, "Collected some reports");
-  ok(
-    utilityReports.filter(r => r.path === "vsize" && r.amount > 0).length === 1,
+  Assert.strictEqual(
+    utilityReports.filter(r => r.path === "vsize" && r.amount > 0).length,
+    1,
     "Collected vsize report"
   );
-  ok(
-    utilityReports.filter(r => r.path === "resident" && r.amount > 0).length ===
-      1,
+  Assert.strictEqual(
+    utilityReports.filter(r => r.path === "resident" && r.amount > 0).length,
+    1,
     "Collected resident report"
   );
   ok(

@@ -23,8 +23,9 @@ add_task(async function assertHtmlParam() {
   const duration = performance.now() - startTime;
 
   is(response.status, 200, "Response is a 200");
-  ok(
-    duration > delay,
+  Assert.greater(
+    duration,
+    delay,
     `The delay parameter works as expected (took ${duration}ms)`
   );
 

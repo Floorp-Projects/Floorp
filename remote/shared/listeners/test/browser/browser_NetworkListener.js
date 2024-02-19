@@ -32,22 +32,22 @@ add_task(async function test_beforeRequestSent() {
   listener.startListening();
 
   await fetch(tab1.linkedBrowser, "https://example.com/?1");
-  ok(events.length == 1, "One event was received");
+  Assert.equal(events.length, 1, "One event was received");
   assertNetworkEvent(events[0], contextId1, "https://example.com/?1");
 
   info("Check that events are no longer emitted after calling stopListening");
   listener.stopListening();
   await fetch(tab1.linkedBrowser, "https://example.com/?2");
-  ok(events.length == 1, "No new event was received");
+  Assert.equal(events.length, 1, "No new event was received");
 
   listener.startListening();
   await fetch(tab1.linkedBrowser, "https://example.com/?3");
-  ok(events.length == 2, "A new event was received");
+  Assert.equal(events.length, 2, "A new event was received");
   assertNetworkEvent(events[1], contextId1, "https://example.com/?3");
 
   info("Check network event from the new tab");
   await fetch(tab2.linkedBrowser, "https://example.com/?4");
-  ok(events.length == 3, "A new event was received");
+  Assert.equal(events.length, 3, "A new event was received");
   assertNetworkEvent(events[2], contextId2, "https://example.com/?4");
 
   gBrowser.removeTab(tab1);

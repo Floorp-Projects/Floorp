@@ -1351,7 +1351,7 @@ add_task(async function test_no_node_type() {
   await configureIdentity(null, server);
 
   await sync_and_validate_telem(ping => {
-    ok(ping.syncNodeType === undefined);
+    Assert.strictEqual(ping.syncNodeType, undefined);
   }, true);
   await promiseStopServer(server);
 });

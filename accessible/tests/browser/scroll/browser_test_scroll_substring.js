@@ -45,8 +45,9 @@ The only thing I found in the fridge was a dead dove in a bag.
       text.getCharacterExtents(7, {}, objY, {}, {}, COORDTYPE_SCREEN_RELATIVE);
       return objY.value;
     };
-    ok(
-      containerHeight < getCharY(),
+    Assert.less(
+      containerHeight,
+      getCharY(),
       "Character is outside of container bounds"
     );
     text.scrollSubstringTo(7, 8, SCROLL_TYPE_TOP_EDGE);

@@ -280,8 +280,9 @@ add_task(async function save_document() {
       fileIdx = filesSaved.indexOf(filename);
     }
 
-    ok(
-      fileIdx >= 0,
+    Assert.greaterOrEqual(
+      fileIdx,
+      0,
       "file i" +
         idx +
         " " +

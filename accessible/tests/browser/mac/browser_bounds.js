@@ -21,22 +21,26 @@ addAccessibleTask(
     // test them here instead of calling AXFrame directly.
     const [helloWidth, helloHeight] = hello.getAttributeValue("AXSize");
     const [worldWidth, worldHeight] = world.getAttributeValue("AXSize");
-    ok(helloWidth > 0, "Hello has a positive width");
-    ok(helloHeight > 0, "Hello has a positive height");
-    ok(worldWidth > 0, "World has a positive width");
-    ok(worldHeight > 0, "World has a positive height");
-    ok(helloHeight < worldHeight, "Hello has a smaller height than world");
-    ok(helloWidth < worldWidth, "Hello has a smaller width than world");
+    Assert.greater(helloWidth, 0, "Hello has a positive width");
+    Assert.greater(helloHeight, 0, "Hello has a positive height");
+    Assert.greater(worldWidth, 0, "World has a positive width");
+    Assert.greater(worldHeight, 0, "World has a positive height");
+    Assert.less(
+      helloHeight,
+      worldHeight,
+      "Hello has a smaller height than world"
+    );
+    Assert.less(helloWidth, worldWidth, "Hello has a smaller width than world");
 
     // Note: these are mac screen coords, so our origin is bottom left
     const [helloX, helloY] = hello.getAttributeValue("AXPosition");
     const [worldX, worldY] = world.getAttributeValue("AXPosition");
-    ok(helloX > 0, "Hello has a positive X");
-    ok(helloY > 0, "Hello has a positive Y");
-    ok(worldX > 0, "World has a positive X");
-    ok(worldY > 0, "World has a positive Y");
-    ok(helloY > worldY, "Hello has a larger Y than world");
-    ok(helloX == worldX, "Hello and world have the same X");
+    Assert.greater(helloX, 0, "Hello has a positive X");
+    Assert.greater(helloY, 0, "Hello has a positive Y");
+    Assert.greater(worldX, 0, "World has a positive X");
+    Assert.greater(worldY, 0, "World has a positive Y");
+    Assert.greater(helloY, worldY, "Hello has a larger Y than world");
+    Assert.equal(helloX, worldX, "Hello and world have the same X");
   }
 );
 
@@ -57,21 +61,25 @@ addAccessibleTask(
     // test them here instead of calling AXFrame directly.
     const [helloWidth, helloHeight] = hello.getAttributeValue("AXSize");
     const [worldWidth, worldHeight] = world.getAttributeValue("AXSize");
-    ok(helloWidth > 0, "Hello has a positive width");
-    ok(helloHeight > 0, "Hello has a positive height");
-    ok(worldWidth > 0, "World has a positive width");
-    ok(worldHeight > 0, "World has a positive height");
-    ok(helloHeight < worldHeight, "Hello has a smaller height than world");
-    ok(helloWidth < worldWidth, "Hello has a smaller width than world");
+    Assert.greater(helloWidth, 0, "Hello has a positive width");
+    Assert.greater(helloHeight, 0, "Hello has a positive height");
+    Assert.greater(worldWidth, 0, "World has a positive width");
+    Assert.greater(worldHeight, 0, "World has a positive height");
+    Assert.less(
+      helloHeight,
+      worldHeight,
+      "Hello has a smaller height than world"
+    );
+    Assert.less(helloWidth, worldWidth, "Hello has a smaller width than world");
 
     // Note: these are mac screen coords, so our origin is bottom left
     const [helloX, helloY] = hello.getAttributeValue("AXPosition");
     const [worldX, worldY] = world.getAttributeValue("AXPosition");
-    ok(helloX < 0, "Hello has a negative X");
-    ok(helloY > 0, "Hello has a positive Y");
-    ok(worldX < 0, "World has a negative X");
-    ok(worldY > 0, "World has a positive Y");
-    ok(helloY > worldY, "Hello has a larger Y than world");
-    ok(helloX == worldX, "Hello and world have the same X");
+    Assert.less(helloX, 0, "Hello has a negative X");
+    Assert.greater(helloY, 0, "Hello has a positive Y");
+    Assert.less(worldX, 0, "World has a negative X");
+    Assert.greater(worldY, 0, "World has a positive Y");
+    Assert.greater(helloY, worldY, "Hello has a larger Y than world");
+    Assert.equal(helloX, worldX, "Hello and world have the same X");
   }
 );

@@ -35,7 +35,11 @@ async function get_response(channel, fromCache) {
   return new Promise(resolve => {
     channel.asyncOpen(
       new ChannelListener((request, buffer, ctx, isFromCache) => {
-        ok(fromCache == isFromCache, `got response from cache = ${fromCache}`);
+        Assert.equal(
+          fromCache,
+          isFromCache,
+          `got response from cache = ${fromCache}`
+        );
         resolve();
       })
     );

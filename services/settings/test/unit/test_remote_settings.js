@@ -133,7 +133,11 @@ add_task(
     await clientWithDump.maybeSync(timestamp);
 
     const list = await clientWithDump.get();
-    ok(list.length > 20, `The dump was loaded (${list.length} records)`);
+    Assert.greater(
+      list.length,
+      20,
+      `The dump was loaded (${list.length} records)`
+    );
     equal(received.created[0].id, "xx", "Record from the sync come first.");
 
     const createdById = received.created.reduce((acc, r) => {
@@ -328,8 +332,9 @@ add_task(async function test_get_sorts_results_if_specified() {
   );
 
   const records = await client.get({ order: "field" });
-  ok(
-    records[0].field < records[records.length - 1].field,
+  Assert.less(
+    records[0].field,
+    records[records.length - 1].field,
     "records are sorted"
   );
 });

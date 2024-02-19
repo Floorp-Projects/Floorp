@@ -16,7 +16,11 @@ async function testContentBounds(browser, acc) {
   is(x, expectedX, "Wrong x coordinate of " + prettyAccName);
   is(y, expectedY, "Wrong y coordinate of " + prettyAccName);
   is(width, expectedWidth, "Wrong width of " + prettyAccName);
-  ok(height >= expectedHeight, "Wrong height of " + prettyAccName);
+  Assert.greaterOrEqual(
+    height,
+    expectedHeight,
+    "Wrong height of " + prettyAccName
+  );
 }
 
 async function runTests(browser, accDoc) {

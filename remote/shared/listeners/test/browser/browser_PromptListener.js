@@ -156,7 +156,7 @@ add_task(async function test_events_in_another_browser() {
   await createScriptNode(`setTimeout(() => window.confirm('test'))`);
   const dialogWin = await dialogPromise;
 
-  ok(events.length === 0, "No event was received");
+  Assert.strictEqual(events.length, 0, "No event was received");
 
   dialogWin.document.querySelector("dialog").acceptDialog();
 
@@ -166,7 +166,7 @@ add_task(async function test_events_in_another_browser() {
     setTimeout(resolve, 500);
   });
 
-  ok(events.length === 0, "No event was received");
+  Assert.strictEqual(events.length, 0, "No event was received");
 
   listener.destroy();
   await BrowserTestUtils.closeWindow(win);

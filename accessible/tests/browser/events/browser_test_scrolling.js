@@ -25,13 +25,15 @@ c</textarea>
     });
     let [scrollEvent1, scrollEndEvent1] = await onScrolling;
     scrollEvent1.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEvent1.maxScrollY >= scrollEvent1.scrollY,
+    Assert.greaterOrEqual(
+      scrollEvent1.maxScrollY,
+      scrollEvent1.scrollY,
       "scrollY is within max"
     );
     scrollEndEvent1.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEndEvent1.maxScrollY >= scrollEndEvent1.scrollY,
+    Assert.greaterOrEqual(
+      scrollEndEvent1.maxScrollY,
+      scrollEndEvent1.scrollY,
       "scrollY is within max"
     );
 
@@ -44,13 +46,15 @@ c</textarea>
     });
     let [scrollEvent2, scrollEndEvent2] = await onScrolling;
     scrollEvent2.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEvent2.scrollY > scrollEvent1.scrollY,
+    Assert.greater(
+      scrollEvent2.scrollY,
+      scrollEvent1.scrollY,
       `${scrollEvent2.scrollY} > ${scrollEvent1.scrollY}`
     );
     scrollEndEvent2.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEndEvent2.maxScrollY >= scrollEndEvent2.scrollY,
+    Assert.greaterOrEqual(
+      scrollEndEvent2.maxScrollY,
+      scrollEndEvent2.scrollY,
       "scrollY is within max"
     );
 
@@ -63,17 +67,20 @@ c</textarea>
     });
     let [scrollEvent3, scrollEndEvent3] = await onScrolling;
     scrollEvent3.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEvent3.maxScrollX >= scrollEvent3.scrollX,
+    Assert.greaterOrEqual(
+      scrollEvent3.maxScrollX,
+      scrollEvent3.scrollX,
       "scrollX is within max"
     );
     scrollEndEvent3.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEndEvent3.maxScrollX >= scrollEndEvent3.scrollX,
+    Assert.greaterOrEqual(
+      scrollEndEvent3.maxScrollX,
+      scrollEndEvent3.scrollX,
       "scrollY is within max"
     );
-    ok(
-      scrollEvent3.scrollX > scrollEvent2.scrollX,
+    Assert.greater(
+      scrollEvent3.scrollX,
+      scrollEvent2.scrollX,
       `${scrollEvent3.scrollX} > ${scrollEvent2.scrollX}`
     );
 
@@ -87,13 +94,15 @@ c</textarea>
     });
     let [scrollEvent4, scrollEndEvent4] = await onScrolling;
     scrollEvent4.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEvent4.maxScrollY >= scrollEvent4.scrollY,
+    Assert.greaterOrEqual(
+      scrollEvent4.maxScrollY,
+      scrollEvent4.scrollY,
       "scrollY is within max"
     );
     scrollEndEvent4.QueryInterface(nsIAccessibleScrollingEvent);
-    ok(
-      scrollEndEvent4.maxScrollY >= scrollEndEvent4.scrollY,
+    Assert.greaterOrEqual(
+      scrollEndEvent4.maxScrollY,
+      scrollEndEvent4.scrollY,
       "scrollY is within max"
     );
 

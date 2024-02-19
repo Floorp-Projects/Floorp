@@ -60,8 +60,9 @@ function testUTF8InField(field, replacementPrefix, certificateBytesToAlter) {
   let uniqueIssuerReplacement =
     "ALWAYS MAKE ME UNIQU" + String.fromCharCode(gUniqueIssuerCounter);
   bytes = bytes.replace("ALWAYS MAKE ME UNIQUE", uniqueIssuerReplacement);
-  ok(
-    gUniqueIssuerCounter < 127,
+  Assert.less(
+    gUniqueIssuerCounter,
+    127,
     "should have enough ASCII replacements to make a unique issuer DN"
   );
   gUniqueIssuerCounter++;

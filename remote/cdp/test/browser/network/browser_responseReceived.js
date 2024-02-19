@@ -74,8 +74,9 @@ add_task(async function documentNavigationWithResource({ client }) {
       "127.0.0.1",
       "Document response has the expected IP address"
     );
-    ok(
-      typeof docResponse.response.remotePort == "number",
+    Assert.equal(
+      typeof docResponse.response.remotePort,
+      "number",
       "Document response has a remotePort"
     );
   }
@@ -112,8 +113,9 @@ add_task(async function documentNavigationWithResource({ client }) {
       docResponse.response.remoteIPAddress,
       "Script response has same IP address as document response"
     );
-    ok(
-      typeof scriptResponse.response.remotePort == "number",
+    Assert.equal(
+      typeof scriptResponse.response.remotePort,
+      "number",
       "Script response has a remotePort"
     );
   }
@@ -166,8 +168,9 @@ add_task(async function documentNavigationWithResource({ client }) {
       "127.0.0.1",
       "Subdocument response has the expected IP address"
     );
-    ok(
-      typeof frameDocResponse.response.remotePort == "number",
+    Assert.equal(
+      typeof frameDocResponse.response.remotePort,
+      "number",
       "Subdocument response has a remotePort"
     );
   }
@@ -207,8 +210,9 @@ add_task(async function documentNavigationWithResource({ client }) {
       docResponse.response.remoteIPAddress,
       "Script response has same IP address as document response"
     );
-    ok(
-      typeof frameScriptResponse.response.remotePort == "number",
+    Assert.equal(
+      typeof frameScriptResponse.response.remotePort,
+      "number",
       "Script response has a remotePort"
     );
   }

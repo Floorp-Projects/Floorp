@@ -62,8 +62,9 @@ function openFileDialog() {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, "Test: browser_utility_filepicker_crashed.js", fp.modeOpen);
     fp.open(result => {
-      ok(
-        result == fp.returnCancel,
+      Assert.equal(
+        result,
+        fp.returnCancel,
         "filepicker should resolve to cancellation"
       );
       resolve();

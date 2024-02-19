@@ -138,9 +138,13 @@ async function testLineWithNonRenderedSpace(docAcc, browser, id, length) {
     const w = {};
     const h = {};
     acc.getCharacterExtents(offset, x, y, w, h, COORDTYPE_SCREEN_RELATIVE);
-    ok(x.value > prevX, `${id}: offset ${offset} x is larger (${x.value})`);
+    Assert.greater(
+      x.value,
+      prevX,
+      `${id}: offset ${offset} x is larger (${x.value})`
+    );
     prevX = x.value;
-    ok(w.value > 0, `${id}: offset ${offset} width > 0`);
+    Assert.greater(w.value, 0, `${id}: offset ${offset} width > 0`);
   }
 }
 
@@ -566,7 +570,11 @@ c</textarea>
       {},
       COORDTYPE_SCREEN_RELATIVE
     );
-    ok(newY.value < oldY.value, "y coordinate smaller after scrolling down");
+    Assert.less(
+      newY.value,
+      oldY.value,
+      "y coordinate smaller after scrolling down"
+    );
   },
   { chrome: true, topLevel: true, iframe: !true }
 );

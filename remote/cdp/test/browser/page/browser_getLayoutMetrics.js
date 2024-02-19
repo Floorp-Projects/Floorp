@@ -21,12 +21,14 @@ add_task(async function documentSmallerThanViewport({ client }) {
     layoutViewport.pageY,
     "Y position of content is equal to layout viewport"
   );
-  ok(
-    contentSize.width <= layoutViewport.clientWidth,
+  Assert.lessOrEqual(
+    contentSize.width,
+    layoutViewport.clientWidth,
     "Width of content is smaller than the layout viewport"
   );
-  ok(
-    contentSize.height <= layoutViewport.clientHeight,
+  Assert.lessOrEqual(
+    contentSize.height,
+    layoutViewport.clientHeight,
     "Height of content is smaller than the layout viewport"
   );
 });
@@ -49,12 +51,14 @@ add_task(async function documentLargerThanViewport({ client }) {
     layoutViewport.pageY,
     "Y position of content is equal to layout viewport"
   );
-  ok(
-    contentSize.width > layoutViewport.clientWidth,
+  Assert.greater(
+    contentSize.width,
+    layoutViewport.clientWidth,
     "Width of content is larger than the layout viewport"
   );
-  ok(
-    contentSize.height > layoutViewport.clientHeight,
+  Assert.greater(
+    contentSize.height,
+    layoutViewport.clientHeight,
     "Height of content is larger than the layout viewport"
   );
 });
@@ -81,12 +85,14 @@ add_task(async function documentLargerThanViewportScrolledXY({ client }) {
     contentSize.y + 100,
     "Y position of content is equal to layout viewport"
   );
-  ok(
-    contentSize.width > layoutViewport.clientWidth,
+  Assert.greater(
+    contentSize.width,
+    layoutViewport.clientWidth,
     "Width of content is larger than the layout viewport"
   );
-  ok(
-    contentSize.height > layoutViewport.clientHeight,
+  Assert.greater(
+    contentSize.height,
+    layoutViewport.clientHeight,
     "Height of content is larger than the layout viewport"
   );
 });

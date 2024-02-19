@@ -18,7 +18,7 @@ Services.scriptloader.loadSubScript(
 add_task(async function () {
   // Ensure that SNAP is there
   const snap = Services.env.get("SNAP");
-  ok(snap.length > 1, "SNAP is defined");
+  Assert.greater(snap.length, 1, "SNAP is defined");
 
   // If it is there, do actual testing
   sanityChecks();

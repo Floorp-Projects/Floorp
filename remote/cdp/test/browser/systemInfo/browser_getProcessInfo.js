@@ -51,9 +51,13 @@ function assertProcesses(processInfo, tabs) {
   ok(Array.isArray(processInfo), "Process info is an array");
 
   for (const info of processInfo) {
-    ok(typeof info.id === "number", "Info has a numeric id");
-    ok(typeof info.type === "string", "Info has a string type");
-    ok(typeof info.cpuTime === "number", "Info has a numeric cpuTime");
+    Assert.strictEqual(typeof info.id, "number", "Info has a numeric id");
+    Assert.strictEqual(typeof info.type, "string", "Info has a string type");
+    Assert.strictEqual(
+      typeof info.cpuTime,
+      "number",
+      "Info has a numeric cpuTime"
+    );
   }
 
   const getByType = type => processInfo.filter(info => info.type === type);

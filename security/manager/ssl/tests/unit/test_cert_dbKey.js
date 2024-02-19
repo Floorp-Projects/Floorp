@@ -34,8 +34,9 @@ function encodeCommonNameAsBytes(commonName) {
   // SEQUENCE must be 127. Everything not in the contents of the common name
   // will take up 11 bytes, so the value of the common name itself can be at
   // most 116 bytes.
-  ok(
-    commonName.length <= 116,
+  Assert.lessOrEqual(
+    commonName.length,
+    116,
     "test assumption: common name can't be longer than 116 bytes (makes " +
       "DER encoding easier)"
   );
@@ -88,13 +89,15 @@ function run_test() {
       "consists only of a common name"
   );
   let issuerBytes = encodeCommonNameAsBytes(cert.issuerCommonName);
-  ok(
-    issuerBytes.length < 256,
+  Assert.less(
+    issuerBytes.length,
+    256,
     "test assumption: length of encoded issuer is less than 256 bytes"
   );
   let serialNumberBytes = hexStringToBytes(cert.serialNumber);
-  ok(
-    serialNumberBytes.length < 256,
+  Assert.less(
+    serialNumberBytes.length,
+    256,
     "test assumption: length of encoded serial number is less than 256 bytes"
   );
   let dbKeyHeader = [
@@ -129,13 +132,15 @@ function run_test() {
     "nsIX509CertDB.findCertByDBKey should find the right certificate"
   );
 
-  ok(
-    expectedDbKey.length > 64,
+  Assert.greater(
+    expectedDbKey.length,
+    64,
     "test assumption: dbKey should be longer than 64 characters"
   );
   let expectedDbKeyWithCRLF = expectedDbKey.replace(/(.{64})/, "$1\r\n");
-  ok(
-    expectedDbKeyWithCRLF.indexOf("\r\n") == 64,
+  Assert.equal(
+    expectedDbKeyWithCRLF.indexOf("\r\n"),
+    64,
     "test self-check: adding CRLF to dbKey should succeed"
   );
   certFromDbKey = certDB.findCertByDBKey(expectedDbKeyWithCRLF);
@@ -145,8 +150,9 @@ function run_test() {
   );
 
   let expectedDbKeyWithSpaces = expectedDbKey.replace(/(.{64})/, "$1  ");
-  ok(
-    expectedDbKeyWithSpaces.indexOf("  ") == 64,
+  Assert.equal(
+    expectedDbKeyWithSpaces.indexOf("  "),
+    64,
     "test self-check: adding spaces to dbKey should succeed"
   );
   certFromDbKey = certDB.findCertByDBKey(expectedDbKeyWithSpaces);
