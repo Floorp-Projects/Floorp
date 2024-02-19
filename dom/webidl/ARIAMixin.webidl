@@ -4,13 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://rawgit.com/w3c/aria/master/#AriaAttributes
+ * https://w3c.github.io/aria/#ARIAMixin
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface mixin AriaAttributes {
+interface mixin ARIAMixin {
+  [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
+  attribute DOMString? role;
+
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
   attribute DOMString? ariaAtomic;
 
