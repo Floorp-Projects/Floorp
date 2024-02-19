@@ -2400,7 +2400,6 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
         rv = ProcessNormal();
       }
       break;
-    case 300:
     case 301:
     case 302:
     case 307:
@@ -9342,8 +9341,8 @@ nsresult nsHttpChannel::OnPush(uint32_t aPushedStreamId, const nsACString& aUrl,
 // static
 bool nsHttpChannel::IsRedirectStatus(uint32_t status) {
   // 305 disabled as a security measure (see bug 187996).
-  return status == 300 || status == 301 || status == 302 || status == 303 ||
-         status == 307 || status == 308;
+  return status == 301 || status == 302 || status == 303 || status == 307 ||
+         status == 308;
 }
 
 void nsHttpChannel::SetCouldBeSynthesized() {
