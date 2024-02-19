@@ -28,7 +28,7 @@ import org.mozilla.fenix.helpers.isChecked
  */
 class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
 
-    fun verifyNavigationToolBarHeader() =
+    fun verifyNavigationToolBarHeader() {
         onView(
             allOf(
                 withId(R.id.navigationToolbar),
@@ -36,9 +36,10 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
             ),
         )
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
 
     fun verifyDeleteBrowsingOnQuitEnabled(enabled: Boolean) =
-        deleteBrowsingOnQuitButton.assertIsChecked(enabled)
+        deleteBrowsingOnQuitButton().assertIsChecked(enabled)
 
     fun verifyDeleteBrowsingOnQuitButtonSummary() =
         onView(
@@ -48,25 +49,25 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
     fun clickDeleteBrowsingOnQuitButtonSwitch() = onView(withResourceName("switch_widget")).click()
 
     fun verifyAllTheCheckBoxesText() {
-        openTabsCheckbox
+        openTabsCheckbox()
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        browsingHistoryCheckbox
+        browsingHistoryCheckbox()
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        cookiesAndSiteDataCheckbox
+        cookiesAndSiteDataCheckbox()
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        cachedFilesCheckbox
+        cachedFilesCheckbox()
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         onView(withText(R.string.preferences_delete_browsing_data_cached_files_subtitle))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        sitePermissionsCheckbox
+        sitePermissionsCheckbox()
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 
@@ -91,7 +92,7 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            goBackButton.click()
+            goBackButton().click()
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -99,21 +100,21 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
     }
 }
 
-private val goBackButton = onView(withContentDescription("Navigate up"))
+private fun goBackButton() = onView(withContentDescription("Navigate up"))
 
-private val deleteBrowsingOnQuitButton =
+private fun deleteBrowsingOnQuitButton() =
     onView(withClassName(containsString("android.widget.Switch")))
 
-private val openTabsCheckbox =
+private fun openTabsCheckbox() =
     onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
 
-private val browsingHistoryCheckbox =
+private fun browsingHistoryCheckbox() =
     onView(withText(R.string.preferences_delete_browsing_data_browsing_history_title))
 
-private val cookiesAndSiteDataCheckbox = onView(withText(R.string.preferences_delete_browsing_data_cookies_and_site_data))
+private fun cookiesAndSiteDataCheckbox() = onView(withText(R.string.preferences_delete_browsing_data_cookies_and_site_data))
 
-private val cachedFilesCheckbox =
+private fun cachedFilesCheckbox() =
     onView(withText(R.string.preferences_delete_browsing_data_cached_files))
 
-private val sitePermissionsCheckbox =
+private fun sitePermissionsCheckbox() =
     onView(withText(R.string.preferences_delete_browsing_data_site_permissions))
