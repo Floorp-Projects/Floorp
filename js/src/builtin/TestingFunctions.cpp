@@ -7199,6 +7199,8 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   CompileOptions options(cx);
+  options.setFile("<compileToStencil>");
+
   RootedString displayURL(cx);
   RootedString sourceMapURL(cx);
   UniqueChars fileNameBytes;
@@ -7368,6 +7370,8 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   CompileOptions options(cx);
+  options.setFile("<compileToStencilXDR>");
+
   RootedString displayURL(cx);
   RootedString sourceMapURL(cx);
   UniqueChars fileNameBytes;

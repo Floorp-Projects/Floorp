@@ -85,6 +85,8 @@ bool basic_test(const CharT* chars) {
   CHECK(srcBuf.init(cx, chars, length, JS::SourceOwnership::Borrowed));
 
   JS::CompileOptions options(cx);
+  options.setFile("testStencil_Module");
+
   RefPtr<JS::Stencil> stencil =
       JS::CompileModuleScriptToStencil(cx, options, srcBuf);
   CHECK(stencil);
