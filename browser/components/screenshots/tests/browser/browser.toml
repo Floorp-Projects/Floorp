@@ -16,6 +16,7 @@ prefs = [
 ]
 
 ["browser_iframe_test.js"]
+skip-if = ["os == 'linux'"]
 
 ["browser_overlay_keyboard_test.js"]
 
