@@ -13,9 +13,9 @@ use std::{
 
 use neqo_common::{Datagram, Decoder};
 use test_fixture::{
-    self, addr, addr_v4,
+    self,
     assertions::{assert_v4_path, assert_v6_path},
-    fixture_init, new_neqo_qlog, now,
+    fixture_init, new_neqo_qlog, now, DEFAULT_ADDR, DEFAULT_ADDR_V4,
 };
 
 use super::{
@@ -94,8 +94,8 @@ fn rebinding_port() {
     server.stream_close_send(stream_id).unwrap();
     let dgram = server.process_output(now()).dgram();
     let dgram = dgram.unwrap();
-    assert_eq!(dgram.source(), addr());
-    assert_eq!(dgram.destination(), new_port(addr()));
+    assert_eq!(dgram.source(), DEFAULT_ADDR);
+    assert_eq!(dgram.destination(), new_port(DEFAULT_ADDR));
 }
 
 /// This simulates an attack where a valid packet is forwarded on
@@ -109,7 +109,7 @@ fn path_forwarding_attack() {
     let mut now = now();
 
     let dgram = send_something(&mut client, now);
-    let dgram = change_path(&dgram, addr_v4());
+    let dgram = change_path(&dgram, DEFAULT_ADDR_V4);
     server.process_input(&dgram, now);
 
     // The server now probes the new (primary) path.
@@ -188,7 +188,7 @@ fn migrate_immediate() {
     let now = now();
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
         .unwrap();
 
     let client1 = send_something(&mut client, now);
@@ -229,7 +229,7 @@ fn migrate_rtt() {
     let now = connect_rtt_idle(&mut client, &mut server, RTT);
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
         .unwrap();
     // The RTT might be increased for the new path, so allow a little flexibility.
     let rtt = client.paths.rtt();
@@ -245,7 +245,7 @@ fn migrate_immediate_fail() {
     let mut now = now();
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -293,7 +293,7 @@ fn migrate_same() {
     let now = now();
 
     client
-        .migrate(Some(addr()), Some(addr()), true, now)
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), true, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -320,7 +320,7 @@ fn migrate_same_fail() {
     let mut now = now();
 
     client
-        .migrate(Some(addr()), Some(addr()), true, now)
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), true, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -375,7 +375,7 @@ fn migration(mut client: Connection) {
     let now = now();
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), false, now)
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), false, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -449,8 +449,8 @@ fn migration_client_empty_cid() {
         test_fixture::DEFAULT_SERVER_NAME,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(EmptyConnectionIdGenerator::default())),
-        addr(),
-        addr(),
+        DEFAULT_ADDR,
+        DEFAULT_ADDR,
         ConnectionParameters::default(),
         now(),
     )
@@ -568,22 +568,22 @@ fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: So
 /// Migration works for a new port number.
 #[test]
 fn preferred_address_new_port() {
-    let a = addr();
+    let a = DEFAULT_ADDR;
     preferred_address(a, a, new_port(a));
 }
 
 /// Migration works for a new address too.
 #[test]
 fn preferred_address_new_address() {
-    let mut preferred = addr();
+    let mut preferred = DEFAULT_ADDR;
     preferred.set_ip(IpAddr::V6(Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2)));
-    preferred_address(addr(), addr(), preferred);
+    preferred_address(DEFAULT_ADDR, DEFAULT_ADDR, preferred);
 }
 
 /// Migration works for IPv4 addresses.
 #[test]
 fn preferred_address_new_port_v4() {
-    let a = addr_v4();
+    let a = DEFAULT_ADDR_V4;
     preferred_address(a, a, new_port(a));
 }
 
@@ -623,7 +623,7 @@ fn preferred_address_ignore_loopback() {
 /// A preferred address in the wrong address family is ignored.
 #[test]
 fn preferred_address_ignore_different_family() {
-    preferred_address_ignored(PreferredAddress::new_any(Some(addr_v4()), None));
+    preferred_address_ignored(PreferredAddress::new_any(Some(DEFAULT_ADDR_V4), None));
 }
 
 /// Disabling preferred addresses at the client means that it ignores a perfectly
@@ -631,7 +631,7 @@ fn preferred_address_ignore_different_family() {
 #[test]
 fn preferred_address_disabled_client() {
     let mut client = new_client(ConnectionParameters::default().disable_preferred_address());
-    let mut preferred = addr();
+    let mut preferred = DEFAULT_ADDR;
     preferred.set_ip(IpAddr::V6(Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2)));
     let spa = PreferredAddress::new_any(None, Some(preferred));
     let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
@@ -643,7 +643,7 @@ fn preferred_address_disabled_client() {
 fn preferred_address_empty_cid() {
     fixture_init();
 
-    let spa = PreferredAddress::new_any(None, Some(new_port(addr())));
+    let spa = PreferredAddress::new_any(None, Some(new_port(DEFAULT_ADDR)));
     let res = Connection::new_server(
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
@@ -706,33 +706,33 @@ fn preferred_address_client() {
 fn migration_invalid_state() {
     let mut client = default_client();
     assert!(client
-        .migrate(Some(addr()), Some(addr()), false, now())
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
         .is_err());
 
     let mut server = default_server();
     assert!(server
-        .migrate(Some(addr()), Some(addr()), false, now())
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
         .is_err());
     connect_force_idle(&mut client, &mut server);
 
     assert!(server
-        .migrate(Some(addr()), Some(addr()), false, now())
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
         .is_err());
 
     client.close(now(), 0, "closing");
     assert!(client
-        .migrate(Some(addr()), Some(addr()), false, now())
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
         .is_err());
     let close = client.process(None, now()).dgram();
 
     let dgram = server.process(close.as_ref(), now()).dgram();
     assert!(server
-        .migrate(Some(addr()), Some(addr()), false, now())
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
         .is_err());
 
     client.process_input(&dgram.unwrap(), now());
     assert!(client
-        .migrate(Some(addr()), Some(addr()), false, now())
+        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
         .is_err());
 }
 
@@ -753,32 +753,32 @@ fn migration_invalid_address() {
     cant_migrate(None, None);
 
     // Providing a zero port number isn't valid.
-    let mut zero_port = addr();
+    let mut zero_port = DEFAULT_ADDR;
     zero_port.set_port(0);
     cant_migrate(None, Some(zero_port));
     cant_migrate(Some(zero_port), None);
 
     // An unspecified remote address is bad.
-    let mut remote_unspecified = addr();
+    let mut remote_unspecified = DEFAULT_ADDR;
     remote_unspecified.set_ip(IpAddr::V6(Ipv6Addr::from(0)));
     cant_migrate(None, Some(remote_unspecified));
 
     // Mixed address families is bad.
-    cant_migrate(Some(addr()), Some(addr_v4()));
-    cant_migrate(Some(addr_v4()), Some(addr()));
+    cant_migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR_V4));
+    cant_migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR));
 
     // Loopback to non-loopback is bad.
-    cant_migrate(Some(addr()), Some(loopback()));
-    cant_migrate(Some(loopback()), Some(addr()));
+    cant_migrate(Some(DEFAULT_ADDR), Some(loopback()));
+    cant_migrate(Some(loopback()), Some(DEFAULT_ADDR));
     assert_eq!(
         client
-            .migrate(Some(addr()), Some(loopback()), true, now())
+            .migrate(Some(DEFAULT_ADDR), Some(loopback()), true, now())
             .unwrap_err(),
         Error::InvalidMigration
     );
     assert_eq!(
         client
-            .migrate(Some(loopback()), Some(addr()), true, now())
+            .migrate(Some(loopback()), Some(DEFAULT_ADDR), true, now())
             .unwrap_err(),
         Error::InvalidMigration
     );
@@ -864,7 +864,7 @@ fn retire_prior_to_migration_failure() {
     let original_cid = ConnectionId::from(get_cid(&send_something(&mut client, now())));
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), false, now())
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), false, now())
         .unwrap();
 
     // The client now probes the new path.
@@ -919,7 +919,7 @@ fn retire_prior_to_migration_success() {
     let original_cid = ConnectionId::from(get_cid(&send_something(&mut client, now())));
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), false, now())
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), false, now())
         .unwrap();
 
     // The client now probes the new path.

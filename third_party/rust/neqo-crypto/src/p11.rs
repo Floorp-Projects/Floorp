@@ -10,6 +10,7 @@
 #![allow(non_snake_case)]
 
 use std::{
+    cell::RefCell,
     convert::TryFrom,
     mem,
     ops::{Deref, DerefMut},
@@ -19,7 +20,10 @@ use std::{
 
 use neqo_common::hex_with_len;
 
-use crate::err::{secstatus_to_res, Error, Res};
+use crate::{
+    err::{secstatus_to_res, Error, Res},
+    null_safe_slice,
+};
 
 #[allow(clippy::upper_case_acronyms)]
 #[allow(clippy::unreadable_literal)]
@@ -139,7 +143,6 @@ impl PrivateKey {
     /// When the values are too large to fit.  So never.
     pub fn key_data(&self) -> Res<Vec<u8>> {
         let mut key_item = Item::make_empty();
-        #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
         secstatus_to_res(unsafe {
             PK11_ReadRawAttribute(
                 PK11ObjectType::PK11_TypePrivKey,
@@ -148,9 +151,7 @@ impl PrivateKey {
                 &mut key_item,
             )
         })?;
-        let slc = unsafe {
-            std::slice::from_raw_parts(key_item.data, usize::try_from(key_item.len).unwrap())
-        };
+        let slc = unsafe { null_safe_slice(key_item.data, key_item.len) };
         let key = Vec::from(slc);
         // The data that `key_item` refers to needs to be freed, but we can't
         // use the scoped `Item` implementation.  This is OK as long as nothing
@@ -206,7 +207,7 @@ impl SymKey {
         // This is accessing a value attached to the key, so we can treat this as a borrow.
         match unsafe { key_item.as_mut() } {
             None => Err(Error::InternalError),
-            Some(key) => Ok(unsafe { std::slice::from_raw_parts(key.data, key.len as usize) }),
+            Some(key) => Ok(unsafe { null_safe_slice(key.data, key.len) }),
         }
     }
 }
@@ -285,36 +286,112 @@ impl Item {
         let b = self.ptr.as_ref().unwrap();
         // Sanity check the type, as some types don't count bytes in `Item::len`.
         assert_eq!(b.type_, SECItemType::siBuffer);
-        let slc = std::slice::from_raw_parts(b.data, usize::try_from(b.len).unwrap());
+        let slc = null_safe_slice(b.data, b.len);
         Vec::from(slc)
     }
 }
 
-/// Generate a randomized buffer.
+/// Fill a buffer with randomness.
+///
+/// # Panics
+///
+/// When `size` is too large or NSS fails.
+pub fn randomize<B: AsMut<[u8]>>(mut buf: B) -> B {
+    let m_buf = buf.as_mut();
+    let len = c_int::try_from(m_buf.len()).unwrap();
+    secstatus_to_res(unsafe { PK11_GenerateRandom(m_buf.as_mut_ptr(), len) }).unwrap();
+    buf
+}
+
+struct RandomCache {
+    cache: [u8; Self::SIZE],
+    used: usize,
+}
+
+impl RandomCache {
+    const SIZE: usize = 256;
+    const CUTOFF: usize = 32;
+
+    fn new() -> Self {
+        RandomCache {
+            cache: [0; Self::SIZE],
+            used: Self::SIZE,
+        }
+    }
+
+    fn randomize<B: AsMut<[u8]>>(&mut self, mut buf: B) -> B {
+        let m_buf = buf.as_mut();
+        debug_assert!(m_buf.len() <= Self::CUTOFF);
+        let avail = Self::SIZE - self.used;
+        if m_buf.len() <= avail {
+            m_buf.copy_from_slice(&self.cache[self.used..self.used + m_buf.len()]);
+            self.used += m_buf.len();
+        } else {
+            if avail > 0 {
+                m_buf[..avail].copy_from_slice(&self.cache[self.used..]);
+            }
+            randomize(&mut self.cache[..]);
+            self.used = m_buf.len() - avail;
+            m_buf[avail..].copy_from_slice(&self.cache[..self.used]);
+        }
+        buf
+    }
+}
+
+/// Generate a randomized array.
 ///
 /// # Panics
 ///
 /// When `size` is too large or NSS fails.
 #[must_use]
-pub fn random(size: usize) -> Vec<u8> {
-    let mut buf = vec![0; size];
-    secstatus_to_res(unsafe {
-        PK11_GenerateRandom(buf.as_mut_ptr(), c_int::try_from(buf.len()).unwrap())
-    })
-    .unwrap();
-    buf
+pub fn random<const N: usize>() -> [u8; N] {
+    thread_local! { static CACHE: RefCell<RandomCache> = RefCell::new(RandomCache::new()) };
+
+    let buf = [0; N];
+    if N <= RandomCache::CUTOFF {
+        CACHE.with_borrow_mut(|c| c.randomize(buf))
+    } else {
+        randomize(buf)
+    }
 }
 
 #[cfg(test)]
 mod test {
     use test_fixture::fixture_init;
 
-    use super::random;
+    use super::RandomCache;
+    use crate::{random, randomize};
 
     #[test]
     fn randomness() {
         fixture_init();
-        // If this ever fails, there is either a bug, or it's time to buy a lottery ticket.
-        assert_ne!(random(16), random(16));
+        // If any of these ever fail, there is either a bug, or it's time to buy a lottery ticket.
+        assert_ne!(random::<16>(), randomize([0; 16]));
+        assert_ne!([0; 16], random::<16>());
+        assert_ne!([0; 64], random::<64>());
+    }
+
+    #[test]
+    fn cache_random_lengths() {
+        const ZERO: [u8; 256] = [0; 256];
+
+        fixture_init();
+        let mut cache = RandomCache::new();
+        let mut buf = [0; 256];
+        let bits = usize::BITS - (RandomCache::CUTOFF - 1).leading_zeros();
+        let mask = 0xff >> (u8::BITS - bits);
+
+        for _ in 0..100 {
+            let len = loop {
+                let len = usize::from(random::<1>()[0] & mask) + 1;
+                if len <= RandomCache::CUTOFF {
+                    break len;
+                }
+            };
+            buf.fill(0);
+            if len >= 16 {
+                assert_ne!(&cache.randomize(&mut buf[..len])[..len], &ZERO[..len]);
+            }
+        }
     }
 }

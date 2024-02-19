@@ -6,10 +6,13 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{io::Write, sync::Once, time::Instant};
+use std::{
+    io::Write,
+    sync::{Once, OnceLock},
+    time::{Duration, Instant},
+};
 
 use env_logger::Builder;
-use lazy_static::lazy_static;
 
 #[macro_export]
 macro_rules! do_log {
@@ -42,17 +45,17 @@ macro_rules! log_subject {
     }};
 }
 
-static INIT_ONCE: Once = Once::new();
-
-lazy_static! {
-    static ref START_TIME: Instant = Instant::now();
+fn since_start() -> Duration {
+    static START_TIME: OnceLock<Instant> = OnceLock::new();
+    START_TIME.get_or_init(Instant::now).elapsed()
 }
 
 pub fn init() {
+    static INIT_ONCE: Once = Once::new();
     INIT_ONCE.call_once(|| {
         let mut builder = Builder::from_env("RUST_LOG");
         builder.format(|buf, record| {
-            let elapsed = START_TIME.elapsed();
+            let elapsed = since_start();
             writeln!(
                 buf,
                 "{}s{:3}ms {} {}",

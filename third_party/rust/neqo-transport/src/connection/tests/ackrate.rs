@@ -6,7 +6,7 @@
 
 use std::{mem, time::Duration};
 
-use test_fixture::{addr_v4, assertions};
+use test_fixture::{assertions, DEFAULT_ADDR_V4};
 
 use super::{
     super::{ConnectionParameters, ACK_RATIO_SCALE},
@@ -164,7 +164,7 @@ fn migrate_ack_delay() {
     let mut now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
+        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
         .unwrap();
 
     let client1 = send_something(&mut client, now);

@@ -11,21 +11,23 @@
 
 [package]
 edition = "2018"
-rust-version = "1.70.0"
+rust-version = "1.74.0"
 name = "neqo-http3"
-version = "0.7.0"
-authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
+version = "0.7.1"
+authors = ["The Neqo Authors <necko@mozilla.com>"]
+homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/mozilla/neqo/"
 
 [dependencies]
-enumset = "1.1.2"
-lazy_static = "1.4"
-sfv = "0.9.3"
-smallvec = "1.11.1"
+enumset = "1.1"
+qlog = "0.12"
+sfv = "0.9"
+smallvec = "1.11"
 url = "2.5"
 
 [dependencies.log]
-version = "0.4.17"
+version = "0.4"
 default-features = false
 
 [dependencies.neqo-common]
@@ -39,10 +41,6 @@ path = "./../neqo-qpack"
 
 [dependencies.neqo-transport]
 path = "./../neqo-transport"
-
-[dependencies.qlog]
-git = "https://github.com/cloudflare/quiche"
-rev = "09ea4b244096a013071cfe2175bbf2945fb7f8d1"
 
 [dev-dependencies.test-fixture]
 path = "../test-fixture"

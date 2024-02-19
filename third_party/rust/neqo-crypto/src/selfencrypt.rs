@@ -82,7 +82,7 @@ impl SelfEncrypt {
         //   opaque aead_encrypted(plaintext)[length as expanded];
         // };
         // AAD covers the entire header, plus the value of the AAD parameter that is provided.
-        let salt = random(Self::SALT_LENGTH);
+        let salt = random::<{ Self::SALT_LENGTH }>();
         let cipher = self.make_aead(&self.key, &salt)?;
         let encoded_len = 2 + salt.len() + plaintext.len() + cipher.expansion();
 

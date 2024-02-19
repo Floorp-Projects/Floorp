@@ -271,7 +271,7 @@ impl PacketBuilder {
         let mask = if quic_bit { PACKET_BIT_FIXED_QUIC } else { 0 }
             | if self.is_long() { 0 } else { PACKET_BIT_SPIN };
         let first = self.header.start;
-        self.encoder.as_mut()[first] ^= random(1)[0] & mask;
+        self.encoder.as_mut()[first] ^= random::<1>()[0] & mask;
     }
 
     /// For an Initial packet, encode the token.
@@ -424,7 +424,7 @@ impl PacketBuilder {
             PACKET_BIT_LONG
                 | PACKET_BIT_FIXED_QUIC
                 | (PacketType::Retry.to_byte(version) << 4)
-                | (random(1)[0] & 0xf),
+                | (random::<1>()[0] & 0xf),
         );
         encoder.encode_uint(4, version.wire_version());
         encoder.encode_vec(1, dcid);
@@ -448,7 +448,7 @@ impl PacketBuilder {
         versions: &[Version],
     ) -> Vec<u8> {
         let mut encoder = Encoder::default();
-        let mut grease = random(4);
+        let mut grease = random::<4>();
         // This will not include the "QUIC bit" sometimes.  Intentionally.
         encoder.encode_byte(PACKET_BIT_LONG | (grease[3] & 0x7f));
         encoder.encode(&[0; 4]); // Zero version == VN.

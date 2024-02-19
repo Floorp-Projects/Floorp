@@ -438,7 +438,7 @@ impl TransportParameters {
 
     /// Set version information.
     pub fn set_versions(&mut self, role: Role, versions: &VersionConfig) {
-        let rbuf = random(4);
+        let rbuf = random::<4>();
         let mut other = Vec::with_capacity(versions.all().len() + 1);
         let mut dec = Decoder::new(&rbuf);
         let grease = (dec.decode_uint(4).unwrap() as u32) & 0xf0f0_f0f0 | 0x0a0a_0a0a;
