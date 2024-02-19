@@ -12,6 +12,8 @@
       "async-or-defer-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
       "script-in-head": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
       "other-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+      "link-preload-font": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH,
+      "link-preload-fetch": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
   };
   for (const name in prioritiesWhenFetchpriorityDisabled) {
       let adjustments = {};

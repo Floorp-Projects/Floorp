@@ -11855,6 +11855,42 @@
   value: 0
   mirror: always
 
+# Adjustments to apply to the internal priority of <link rel=preload as=font
+# fetchpriority=low/high/auto> with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to HIGH.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/HIGH.
+- name: network.fetchpriority.adjustments.link-preload-font.low
+  type: int32_t
+  value: 20
+  mirror: always
+- name: network.fetchpriority.adjustments.link-preload-font.high
+  type: int32_t
+  value: 0
+  mirror: always
+- name: network.fetchpriority.adjustments.link-preload-font.auto
+  type: int32_t
+  value: 0
+  mirror: always
+
+# Adjustments to apply to the internal priority of <link rel=preload as=fetch
+# fetchpriority=low/high/auto> with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/NORMAL.
+- name: network.fetchpriority.adjustments.link-preload-fetch.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.link-preload-fetch.high
+  type: int32_t
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.link-preload-fetch.auto
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
 # handling.
 - name: network.preconnect
