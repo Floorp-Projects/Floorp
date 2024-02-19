@@ -193,7 +193,7 @@ const getMatmulPrecisionTolerance = (resources, operationName) => {
 };
 
 /**
- * Get ULP tolerance of averagePool2d operation.
+ * Get ULP tolerance of averagePool2d or l2Pool2d operation.
  * @param {Object} resources - Resources used for building a graph
  * @param {String} operationName - An operation name
  * @returns {Number} A tolerance number
@@ -341,6 +341,7 @@ const PrecisionMetrics = {
   pad: {ULP: {float32: 0, float16: 0}},
   // Begin Pooling operations
   averagePool2d: {ULP: {float32: getAveragePool2dPrecisionTolerance, float16: getAveragePool2dPrecisionTolerance}},
+  l2Pool2d: {ULP: {float32: getAveragePool2dPrecisionTolerance, float16: getAveragePool2dPrecisionTolerance}},
   maxPool2d: {ULP: {float32: 0, float16: 0}},
   // End Pooling operations
   prelu: {ULP: {float32: 1, float16: 1}},
