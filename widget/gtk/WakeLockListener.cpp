@@ -137,6 +137,7 @@ class WakeLockTopic {
   bool UninhibitWaylandIdle();
 #endif
 
+  bool IsNativeWakeLock(int aWakeLockType);
   bool IsWakeLockTypeAvailable(int aWakeLockType);
   bool SwitchToNextWakeLockType();
 
@@ -779,8 +780,14 @@ nsresult WakeLockTopic::InhibitScreensaver() {
   mShouldInhibit = true;
 
   // Iterate through wake lock types in case of failure.
-  while (!SendInhibit() && SwitchToNextWakeLockType()) {
-    ;
+  while (!SendInhibit()) {
+    // We don't switch away from native locks. Just try again.
+    if (IsNativeWakeLock(sWakeLockType)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!SwitchToNextWakeLockType()) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   return (sWakeLockType != Unsupported) ? NS_OK : NS_ERROR_FAILURE;
@@ -843,6 +850,21 @@ bool WakeLockTopic::IsWakeLockTypeAvailable(int aWakeLockType) {
         WAKE_LOCK_LOG("  WaylandIdleInhibitSupport is missing!");
         return false;
       }
+      return true;
+#endif
+    default:
+      return false;
+  }
+}
+
+bool WakeLockTopic::IsNativeWakeLock(int aWakeLockType) {
+  switch (aWakeLockType) {
+#if defined(MOZ_X11)
+    case XScreenSaver:
+      return true;
+#endif
+#if defined(MOZ_WAYLAND)
+    case WaylandIdleInhibit:
       return true;
 #endif
     default:
