@@ -960,6 +960,7 @@ void ModuleObject::setAsyncEvaluating() {
 void ModuleObject::initScriptSlots(HandleScript script) {
   MOZ_ASSERT(script);
   MOZ_ASSERT(script->sourceObject());
+  MOZ_ASSERT(script->filename());
   initReservedSlot(ScriptSlot, PrivateGCThingValue(script));
   cyclicModuleFields()->scriptSourceObject = script->sourceObject();
 }
