@@ -17,10 +17,10 @@ const kExpectedRequestsForScriptsInHead = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: kFetchPriorityAutoRequestFileNameAndSuffix,
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: kNoFetchPriorityRequestFileNameAndSuffix,
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     }
 ];
 
@@ -104,10 +104,10 @@ const kExpectedRequestsForNonModuleAsyncAndDeferredScripts = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: "dummy.js?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.js?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
 ]
 
@@ -136,10 +136,10 @@ const kExpectedRequestsForModuleScripts = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: "dummy.js?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.js?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
 ]
 
