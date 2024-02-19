@@ -77,7 +77,11 @@ addAccessibleTask(
       NSRange(3, 8)
     );
 
-    ok(smallBounds.size[0] < largeBounds.size[0], "longer range is wider");
+    Assert.less(
+      smallBounds.size[0],
+      largeBounds.size[0],
+      "longer range is wider"
+    );
   },
   { chrome: true, iframe: true, remoteIframe: true }
 );

@@ -279,8 +279,9 @@ function testURL(
   }
   let inheritDisallowed = flags & ssm.DISALLOW_INHERIT_PRINCIPAL;
   let shouldThrow = inheritDisallowed ? !canLoadWithoutInherit : !canLoad;
-  ok(
-    threw == shouldThrow,
+  Assert.equal(
+    threw,
+    shouldThrow,
     "Should " +
       (shouldThrow ? "" : "not ") +
       "throw an error when loading " +

@@ -22,7 +22,7 @@ async function getAudioDecoderPid(expectation) {
 
 async function crashDecoder(expectation) {
   const audioPid = await getAudioDecoderPid(expectation);
-  ok(audioPid > 0, `Found an audio decoder ${audioPid}`);
+  Assert.greater(audioPid, 0, `Found an audio decoder ${audioPid}`);
   const actorIsAudioDecoder = actorNames => {
     return actorNames
       .split(",")

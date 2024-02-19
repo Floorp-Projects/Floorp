@@ -123,9 +123,9 @@ add_task(async () => {
   computedOpacity = window
     .getComputedStyle(gHistorySwipeAnimation._prevBox)
     .getPropertyValue("opacity");
-  ok(computedOpacity == 1, "computed opacity of prevbox is 1");
+  Assert.equal(computedOpacity, 1, "computed opacity of prevbox is 1");
   opacity = gHistorySwipeAnimation._prevBox.style.opacity;
-  ok(opacity == 0, "element.style opacity of prevbox 0");
+  Assert.equal(opacity, 0, "element.style opacity of prevbox 0");
 
   if (isTranslatingIcon) {
     // We don't have a transition for translate property so that we still have
@@ -232,9 +232,9 @@ add_task(async () => {
   computedOpacity = window
     .getComputedStyle(gHistorySwipeAnimation._prevBox)
     .getPropertyValue("opacity");
-  ok(computedOpacity == 1, "computed opacity of prevbox is 1");
+  Assert.equal(computedOpacity, 1, "computed opacity of prevbox is 1");
   opacity = gHistorySwipeAnimation._prevBox.style.opacity;
-  ok(opacity == 0, "element.style opacity of prevbox 0");
+  Assert.equal(opacity, 0, "element.style opacity of prevbox 0");
 
   // Make sure the gesture triggered going back to the previous page.
   await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
@@ -317,9 +317,9 @@ add_task(async () => {
     let computedOpacity = window
       .getComputedStyle(gHistorySwipeAnimation._prevBox)
       .getPropertyValue("opacity");
-    ok(computedOpacity == 1, "computed opacity of prevbox is 1");
+    Assert.equal(computedOpacity, 1, "computed opacity of prevbox is 1");
     let opacity = gHistorySwipeAnimation._prevBox.style.opacity;
-    ok(opacity == 0, "element.style opacity of prevbox 0");
+    Assert.equal(opacity, 0, "element.style opacity of prevbox 0");
 
     // Make sure the gesture triggered going back to the previous page.
     await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
@@ -343,7 +343,7 @@ add_task(async () => {
     }
     numTries--;
   }
-  ok(numTries > 0, "never ran the test");
+  Assert.greater(numTries, 0, "never ran the test");
   await SpecialPowers.popPrefEnv();
 });
 
@@ -576,7 +576,7 @@ add_task(async () => {
 
   await panLeftToRightBegin(tab.linkedBrowser, 100, 100, 100);
 
-  ok(gHistorySwipeAnimation._prevBox != null, "should have prevbox");
+  Assert.notEqual(gHistorySwipeAnimation._prevBox, null, "should have prevbox");
   let transitionCancelPromise = new Promise(resolve => {
     gHistorySwipeAnimation._prevBox.addEventListener(
       "transitioncancel",
@@ -635,7 +635,7 @@ add_task(async () => {
 
   await panRightToLeftBegin(tab.linkedBrowser, 100, 100, 100);
 
-  ok(gHistorySwipeAnimation._nextBox != null, "should have nextbox");
+  Assert.notEqual(gHistorySwipeAnimation._nextBox, null, "should have nextbox");
   transitionCancelPromise = new Promise(resolve => {
     gHistorySwipeAnimation._nextBox.addEventListener(
       "transitioncancel",

@@ -159,8 +159,9 @@ add_task(async function test_several_managers() {
     "manager2 has a valid id for the user context created by manager 1"
   );
 
-  ok(
-    contextId1 != contextId2,
+  Assert.notEqual(
+    contextId1,
+    contextId2,
     "manager1 and manager2 have different ids for the same internal context id"
   );
 

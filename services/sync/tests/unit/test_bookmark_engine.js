@@ -940,7 +940,7 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
     // Make sure it's within 24 hours of the right timestamp... This is a little
     // dodgey but we only really care that it's basically accurate and has the
     // right day.
-    ok(Math.abs(Date.now() - record3.dateAdded) < 24 * 60 * 60 * 1000);
+    Assert.less(Math.abs(Date.now() - record3.dateAdded), 24 * 60 * 60 * 1000);
 
     let record4 = await store.createRecord(item4GUID);
     equal(

@@ -37,12 +37,14 @@ async function testPdfFilePicker(mimeInfo) {
       let filePickerPromise = new Promise(resolve => {
         MockFilePicker.showCallback = fp => {
           ok(true, "filepicker should be visible");
-          ok(
-            fp.defaultExtension === "pdf",
+          Assert.strictEqual(
+            fp.defaultExtension,
+            "pdf",
             "Default extension in filepicker should be pdf"
           );
-          ok(
-            fp.defaultString === "file_pdf_application_pdf.pdf",
+          Assert.strictEqual(
+            fp.defaultString,
+            "file_pdf_application_pdf.pdf",
             "Default string name in filepicker should have the correct pdf file name"
           );
           setTimeout(resolve, 0);

@@ -65,7 +65,7 @@ add_task(async function test_no_overlong_path_building() {
   }
   let timeAfter = Date.now();
   let secondsElapsed = (timeAfter - timeBefore) / 1000;
-  ok(secondsElapsed < 120, "verifications shouldn't take too long");
+  Assert.less(secondsElapsed, 120, "verifications shouldn't take too long");
 });
 
 add_task(async function test_no_bad_signature() {

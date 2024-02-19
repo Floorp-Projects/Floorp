@@ -34,7 +34,7 @@ add_task(async function () {
   let pid2 = browser2.frameLoader.remoteTab.osPid;
 
   // Note, this might not be true once fission is implemented (Bug 1451850)
-  ok(pid1 != pid2, "We should have different processes here.");
+  Assert.notEqual(pid1, pid2, "We should have different processes here.");
 
   await SpecialPowers.spawn(browser1, [], async function () {
     is(content.document.cookie, "", "Expecting no cookies");

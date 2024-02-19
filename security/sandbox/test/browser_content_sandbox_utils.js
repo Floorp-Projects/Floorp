@@ -33,7 +33,7 @@ function sanityChecks() {
   }
 
   info(`security.sandbox.content.level=${level}`);
-  ok(level > 0, "content sandbox is enabled.");
+  Assert.greater(level, 0, "content sandbox is enabled.");
 
   let isFileIOSandboxed = isContentFileIOSandboxed(level);
 
@@ -391,8 +391,9 @@ function GetBrowserType(type) {
   }
 
   browserType = GetBrowserType[type];
-  ok(
-    browserType.remoteType === type,
+  Assert.strictEqual(
+    browserType.remoteType,
+    type,
     `GetBrowserType(${type}) returns a ${type} process`
   );
   return browserType;
@@ -445,8 +446,9 @@ async function runTestsList(tests) {
       test.func
     );
 
-    ok(
-      result.ok == test.ok,
+    Assert.equal(
+      result.ok,
+      test.ok,
       `reading ${test.desc} from a ${processType} process ` +
         `is ${okString} (${test.file.path})`
     );
@@ -454,7 +456,11 @@ async function runTestsList(tests) {
     // if the directory is not expected to be readable,
     // ensure the listing has zero entries
     if (test.func === readDir && !test.ok) {
-      ok(result.numEntries == 0, `directory list is empty (${test.file.path})`);
+      Assert.equal(
+        result.numEntries,
+        0,
+        `directory list is empty (${test.file.path})`
+      );
     }
 
     if (test.cleanup != undefined) {

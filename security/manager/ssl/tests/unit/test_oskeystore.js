@@ -51,8 +51,9 @@ async function encrypt_decrypt_test() {
   // Decrypting should give us the plaintext bytes again.
   try {
     let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-    ok(
-      plaintext.toString() == text.toString(),
+    Assert.equal(
+      plaintext.toString(),
+      text.toString(),
       "Decrypted plaintext should be the same as text."
     );
   } catch (e) {
@@ -102,8 +103,9 @@ add_task(async function () {
 
   await keystore.asyncRecoverSecret(LABELS[0], recoveryPhrase);
   let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-  ok(
-    plaintext.toString() == text.toString(),
+  Assert.equal(
+    plaintext.toString(),
+    text.toString(),
     "Decrypted plaintext should be the same as text."
   );
 
@@ -166,8 +168,9 @@ add_task(async function () {
 
   await keystore.asyncRecoverSecret(LABELS[0], recoveryPhrase);
   let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-  ok(
-    plaintext.toString() == text.toString(),
+  Assert.equal(
+    plaintext.toString(),
+    text.toString(),
     "Decrypted plaintext should be the same as text (once we have the original key again)."
   );
 
@@ -204,8 +207,9 @@ add_task(async function () {
 
   await keystore.asyncRecoverSecret(LABELS[0], newRecoveryPhrase);
   let plaintext = await keystore.asyncDecryptBytes(LABELS[0], ciphertext);
-  ok(
-    plaintext.toString() == text.toString(),
+  Assert.equal(
+    plaintext.toString(),
+    text.toString(),
     "Decrypted plaintext should be the same as text (once we have the new key again)."
   );
 

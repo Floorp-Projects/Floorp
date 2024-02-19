@@ -224,7 +224,7 @@ add_task(async function json_close_target({ CDP, client, tab }) {
     target => target.id === targetInfo.targetId
   );
 
-  ok(afterTarget == null, "New target is gone");
+  Assert.equal(afterTarget, null, "New target is gone");
 
   const invalidResponse = await requestJSON("/json/close/does-not-exist", {
     status: 404,

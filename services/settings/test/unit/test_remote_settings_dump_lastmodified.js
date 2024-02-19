@@ -14,7 +14,11 @@ async function getLocalDumpLastModified(bucket, collection) {
     return -1;
   }
   const { timestamp } = await res.json();
-  ok(timestamp >= 0, `${bucket}/${collection} dump has timestamp`);
+  Assert.greaterOrEqual(
+    timestamp,
+    0,
+    `${bucket}/${collection} dump has timestamp`
+  );
   return timestamp;
 }
 
@@ -51,5 +55,5 @@ add_task(async function lastModified_summary_is_correct() {
     equal(lastModified, actual, `last_modified should match collection`);
     checked++;
   }
-  ok(checked > 0, "At least one dump was packaged and checked.");
+  Assert.greater(checked, 0, "At least one dump was packaged and checked.");
 });

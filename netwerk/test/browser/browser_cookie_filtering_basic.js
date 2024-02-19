@@ -104,15 +104,17 @@ async function test_basic_suite_org_duplicate() {
   let parentpid = Services.appinfo.processID;
   let pid1 = testStruct1.browser.frameLoader.remoteTab.osPid;
   let pid3 = testStruct3.browser.frameLoader.remoteTab.osPid;
-  ok(
-    parentpid != pid1,
+  Assert.notEqual(
+    parentpid,
+    pid1,
     "Parent pid should differ from content process for 1st example.org"
   );
-  ok(
-    parentpid != pid3,
+  Assert.notEqual(
+    parentpid,
+    pid3,
     "Parent pid should differ from content process for 2nd example.org"
   );
-  ok(pid1 != pid3, "Content pids should differ from each other");
+  Assert.notEqual(pid1, pid3, "Content pids should differ from each other");
 
   await SpecialPowers.spawn(
     testStruct1.browser,

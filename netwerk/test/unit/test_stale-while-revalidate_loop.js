@@ -37,7 +37,7 @@ add_task(async function () {
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   let response = await get_response(make_channel(URI), false);
-  ok(response == "1", "got response ver 1");
+  Assert.equal(response, "1", "got response ver 1");
   response = await get_response(make_channel(URI), false);
-  ok(response == "1", "got response ver 1");
+  Assert.equal(response, "1", "got response ver 1");
 });

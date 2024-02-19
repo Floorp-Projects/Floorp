@@ -64,12 +64,14 @@ async function setupFilePicker() {
     MockFilePicker.displayDirectory = testDir;
     MockFilePicker.showCallback = fp => {
       ok(true, "filepicker should be visible");
-      ok(
-        fp.defaultExtension === "txt",
+      Assert.strictEqual(
+        fp.defaultExtension,
+        "txt",
         "Default extension in filepicker should be txt"
       );
-      ok(
-        fp.defaultString === "file_txt_attachment_test.txt",
+      Assert.strictEqual(
+        fp.defaultString,
+        "file_txt_attachment_test.txt",
         "Default string name in filepicker should have the correct file name"
       );
       const destFile = testDir.clone();

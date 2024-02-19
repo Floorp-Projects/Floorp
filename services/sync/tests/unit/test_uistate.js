@@ -292,7 +292,7 @@ add_task(async function test_syncFinished() {
 
   const newState = Object.assign({}, UIState.get());
   ok(!newState.syncing);
-  ok(new Date(newState.lastSync) > new Date(oldState.lastSync));
+  Assert.greater(new Date(newState.lastSync), new Date(oldState.lastSync));
 });
 
 add_task(async function test_syncError() {

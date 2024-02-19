@@ -239,7 +239,10 @@ add_task(function test_add() {
   equal("value", cookie.manager.cookies[0].value);
   equal(".domain", cookie.manager.cookies[0].host);
   equal("/", cookie.manager.cookies[0].path);
-  ok(cookie.manager.cookies[0].expiry > new Date(Date.now()).getTime() / 1000);
+  Assert.greater(
+    cookie.manager.cookies[0].expiry,
+    new Date(Date.now()).getTime() / 1000
+  );
 
   cookie.add({
     name: "name2",

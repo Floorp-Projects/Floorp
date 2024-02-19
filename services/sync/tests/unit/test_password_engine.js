@@ -434,8 +434,9 @@ add_task(async function test_sync_outgoing() {
     equal(deletedLogin.guid, guid, "deleted login guid");
     equal(deletedLogin.everSynced, true, "deleted login everSynced");
     equal(deletedLogin.syncCounter, 0, "deleted login syncCounter");
-    ok(
-      deletedLogin.timePasswordChanged > 0,
+    Assert.greater(
+      deletedLogin.timePasswordChanged,
+      0,
       "deleted login timePasswordChanged"
     );
   } finally {
@@ -525,7 +526,7 @@ add_task(async function test_sync_incoming() {
     checkFields.forEach(field => {
       equal(logins[0][field], details[field]);
     });
-    ok(logins[0].timePasswordChanged > details.timePasswordChanged);
+    Assert.greater(logins[0].timePasswordChanged, details.timePasswordChanged);
     equal(logins[0].syncCounter, 0);
     equal(logins[0].everSynced, true);
 
@@ -553,7 +554,7 @@ add_task(async function test_sync_incoming() {
     checkFields.forEach(field => {
       equal(logins[0][field], details[field]);
     });
-    ok(logins[0].timePasswordChanged > details.timePasswordChanged);
+    Assert.greater(logins[0].timePasswordChanged, details.timePasswordChanged);
     equal(logins[0].syncCounter, 0);
     equal(logins[0].everSynced, true);
 

@@ -135,12 +135,14 @@ add_task(async function asJPEGFormatAndQuality({ client }) {
   is(info10.height, (viewport.height - viewport.y) * scale);
 
   // Images of different quality result in different content sizes
-  ok(
-    info100.length > infoDefault.length,
+  Assert.greater(
+    info100.length,
+    infoDefault.length,
     "Size of quality 100 is larger than default"
   );
-  ok(
-    info10.length < infoDefault.length,
+  Assert.less(
+    info10.length,
+    infoDefault.length,
     "Size of quality 10 is smaller than default"
   );
 });

@@ -54,8 +54,16 @@ async function verifyTrackedItems(tracked) {
   let trackedIDs = new Set(Object.keys(changedIDs));
   for (let guid of tracked) {
     ok(guid in changedIDs, `${guid} should be tracked`);
-    ok(changedIDs[guid].modified > 0, `${guid} should have a modified time`);
-    ok(changedIDs[guid].counter >= -1, `${guid} should have a change counter`);
+    Assert.greater(
+      changedIDs[guid].modified,
+      0,
+      `${guid} should have a modified time`
+    );
+    Assert.greaterOrEqual(
+      changedIDs[guid].counter,
+      -1,
+      `${guid} should have a change counter`
+    );
     trackedIDs.delete(guid);
   }
   equal(

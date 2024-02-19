@@ -91,7 +91,7 @@ add_task(async function test_slow_upload() {
         });
         equal(req.status, Cr.NS_OK);
         equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
-        ok(buff == CONTENT, "Content must match");
+        Assert.equal(buff, CONTENT, "Content must match");
         ok(!!req.QueryInterface(Ci.nsIProxiedChannel).proxyInfo);
         greater(
           await server.execute(`global.data_count`),

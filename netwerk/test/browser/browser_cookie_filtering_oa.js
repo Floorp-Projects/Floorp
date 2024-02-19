@@ -119,9 +119,21 @@ async function test_private() {
   let parentpid = Services.appinfo.processID;
   let privatePid = testStruct5.browser.frameLoader.remoteTab.osPid;
   let pid = testStruct2.browser.frameLoader.remoteTab.osPid;
-  ok(parentpid != privatePid, "Parent and private processes are unique");
-  ok(parentpid != pid, "Parent and non-private processes are unique");
-  ok(privatePid != pid, "Private and non-private processes are unique");
+  Assert.notEqual(
+    parentpid,
+    privatePid,
+    "Parent and private processes are unique"
+  );
+  Assert.notEqual(
+    parentpid,
+    pid,
+    "Parent and non-private processes are unique"
+  );
+  Assert.notEqual(
+    privatePid,
+    pid,
+    "Private and non-private processes are unique"
+  );
 
   // example.com
   await SpecialPowers.spawn(

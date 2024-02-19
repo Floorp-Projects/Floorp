@@ -54,7 +54,11 @@ async function get_response(channel, fromCache) {
   return new Promise(resolve => {
     channel.asyncOpen(
       new ChannelListener((request, buffer, ctx, isFromCache) => {
-        ok(fromCache == isFromCache, `got response from cache = ${fromCache}`);
+        Assert.equal(
+          fromCache,
+          isFromCache,
+          `got response from cache = ${fromCache}`
+        );
         resolve(buffer);
       })
     );
@@ -91,7 +95,7 @@ add_task(async function () {
   version = 1;
   max_age = 0;
   response = await get_response(make_channel(URI), false);
-  ok(response == generate_response(1), "got response ver 1");
+  Assert.equal(response, generate_response(1), "got response ver 1");
 
   await sleep(2);
 
@@ -102,12 +106,12 @@ add_task(async function () {
   version = 2;
   max_age = 100;
   response = await get_response(make_channel(URI), true);
-  ok(response == generate_response(1), "got response ver 1");
+  Assert.equal(response, generate_response(1), "got response ver 1");
 
   await reval_done;
 
   response = await get_response(make_channel(URI), true);
-  ok(response == generate_response(2), "got response ver 2");
+  Assert.equal(response, generate_response(2), "got response ver 2");
 
   await stop_server(httpserver);
 });

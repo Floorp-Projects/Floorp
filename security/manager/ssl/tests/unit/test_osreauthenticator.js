@@ -13,14 +13,15 @@ add_task(async function test_asyncReauthenticateUser() {
   ].getService(Ci.nsIOSReauthenticator);
   ok(reauthenticator, "nsIOSReauthenticator should be available");
   const EXPECTED = false; // Change this variable to suit your needs while testing.
-  ok(
+  Assert.equal(
     (
       await reauthenticator.asyncReauthenticateUser(
         "this is the prompt string",
         "this is the caption string",
         null
       )
-    )[0] == EXPECTED,
+    )[0],
+    EXPECTED,
     "nsIOSReauthenticator.asyncReauthenticateUser should return a boolean array with the first item being the authentication result of: " +
       EXPECTED
   );
