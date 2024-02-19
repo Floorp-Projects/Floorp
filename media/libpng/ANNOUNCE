@@ -1,5 +1,5 @@
-libpng 1.6.42 - January 29, 2024
-================================
+libpng 1.6.39 - November 20, 2022
+=================================
 
 This is a public release of libpng, intended for use in production code.
 
@@ -9,13 +9,13 @@ Files available for download
 
 Source files with LF line endings (for Unix/Linux):
 
- * libpng-1.6.42.tar.xz (LZMA-compressed, recommended)
- * libpng-1.6.42.tar.gz (deflate-compressed)
+ * libpng-1.6.39.tar.xz (LZMA-compressed, recommended)
+ * libpng-1.6.39.tar.gz
 
 Source files with CRLF line endings (for Windows):
 
- * lpng1642.7z (LZMA-compressed, recommended)
- * lpng1642.zip (deflate-compressed)
+ * lpng1639.7z (LZMA-compressed, recommended)
+ * lpng1639.zip
 
 Other information:
 
@@ -25,47 +25,19 @@ Other information:
  * TRADEMARK.md
 
 
-Changes from version 1.6.41 to version 1.6.42
+Changes from version 1.6.38 to version 1.6.39
 ---------------------------------------------
 
- * Fixed the implementation of the macro function `png_check_sig`.
-   This was an API regression, introduced in libpng-1.6.41.
-   (Reported by Matthieu Darbois)
-
-
-Changes from version 1.6.40 to version 1.6.41
----------------------------------------------
-
- * Added SIMD-optimized code for the Loongarch LSX hardware.
-   (Contributed by GuXiWei, JinBo and ZhangLixia)
- * Fixed the run-time discovery of MIPS MSA hardware.
-   (Contributed by Sui Jingfeng)
- * Fixed an off-by-one error in the function `png_do_check_palette_indexes`,
-   which failed to recognize errors that might have existed in the first
-   column of a broken palette-encoded image. This was a benign regression
-   accidentally introduced in libpng-1.6.33. No pixel was harmed.
-   (Contributed by Adam Richter; reviewed by John Bowler)
- * Fixed, improved and modernized the contrib/pngminus programs, i.e.,
-   png2pnm.c and pnm2png.c
- * Removed old and peculiar portability hacks that were meant to silence
-   warnings issued by gcc version 7.1 alone.
-   (Contributed by John Bowler)
- * Fixed and modernized the CMake file, and raised the minimum required
-   CMake version from 3.1 to 3.6.
-   (Contributed by Clinton Ingram, Timothy Lyanguzov, Tyler Kropp, et al.)
- * Allowed the configure script to disable the building of auxiliary tools
-   and tests, thus catching up with the CMake file.
-   (Contributed by Carlo Bramini)
- * Fixed a build issue on Mac.
-   (Contributed by Zixu Wang)
- * Moved the Autoconf macro files to scripts/autoconf.
- * Moved the CMake files (except for the main CMakeLists.txt) to
-   scripts/cmake and moved the list of their contributing authors to
-   scripts/cmake/AUTHORS.md
- * Updated the CI configurations and scripts.
- * Relicensed the CI scripts to the MIT License.
- * Improved the test coverage.
-   (Contributed by John Bowler)
+ * Changed the error handler of oversized chunks (i.e. larger than
+   PNG_USER_CHUNK_MALLOC_MAX) from png_chunk_error to png_benign_error.
+ * Fixed a buffer overflow error in contrib/tools/pngfix.
+ * Fixed a memory leak (CVE-2019-6129) in contrib/tools/pngcp.
+ * Disabled the ARM Neon optimizations by default in the CMake file,
+   following the default behavior of the configure script.
+ * Allowed configure.ac to work with the trunk version of autoconf.
+ * Removed the support for "install" targets from the legacy makefiles;
+   removed the obsolete makefile.cegcc.
+ * Cleaned up the code and updated the internal documentation.
 
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net.
