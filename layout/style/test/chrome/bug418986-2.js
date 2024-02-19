@@ -1,5 +1,7 @@
 // # Bug 418986, part 2.
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 const is_chrome_window = window.location.protocol === "chrome:";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";

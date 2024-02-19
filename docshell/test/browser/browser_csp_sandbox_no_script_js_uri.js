@@ -20,8 +20,9 @@ add_task(async function test_csp_sandbox_no_script_js_uri() {
       let observerPromise = SpecialPowers.spawn(browser, [], () => {
         return new Promise(resolve => {
           SpecialPowers.addObserver(function obs(subject) {
-            ok(
-              subject == content,
+            Assert.equal(
+              subject,
+              content,
               "Should block script spawned via javascript uri"
             );
             SpecialPowers.removeObserver(

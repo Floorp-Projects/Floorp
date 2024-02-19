@@ -40,5 +40,6 @@ function getViewportInfo(aDisplayWidth, aDisplayHeight) {
 }
 
 function fuzzeq(a, b, msg) {
+  // eslint-disable-next-line mozilla/no-comparison-or-assignment-inside-ok
   ok(Math.abs(a - b) < 1e-6, msg);
 }

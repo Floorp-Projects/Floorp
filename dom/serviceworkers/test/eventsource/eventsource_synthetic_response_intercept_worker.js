@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 self.importScripts("eventsource_worker_helper.js");
 
 self.addEventListener("fetch", function (event) {

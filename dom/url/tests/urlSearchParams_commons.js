@@ -1,5 +1,9 @@
 /* import-globals-from urlSearchParams_worker.js */
 
+// This file gets included into a worker which doesn't have any
+// assertion methods besides `ok` and `is`.
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function testSimpleURLSearchParams() {
   var u = new URLSearchParams();
   ok(u, "URLSearchParams created");

@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function getType(a) {
   if (a === null || a === undefined) {
     return "null";

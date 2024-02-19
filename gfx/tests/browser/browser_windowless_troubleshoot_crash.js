@@ -45,8 +45,9 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
   );
   var data = await Troubleshoot.snapshot();
 
-  ok(
-    data.graphics.windowLayerManagerType !== "None",
+  Assert.notStrictEqual(
+    data.graphics.windowLayerManagerType,
+    "None",
     "windowless browser window should not set windowLayerManagerType to 'None'"
   );
 

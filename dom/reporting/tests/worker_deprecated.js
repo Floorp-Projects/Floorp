@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
 
 // eslint-disable-next-line no-unused-vars
 function ok(a, msg) {

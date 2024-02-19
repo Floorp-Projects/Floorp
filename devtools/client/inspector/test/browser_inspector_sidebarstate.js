@@ -122,8 +122,8 @@ function checkTelemetryResults() {
     const expected = TELEMETRY_DATA[i];
 
     // ignore timestamp
-    ok(timestamp > 0, "timestamp is greater than 0");
-    ok(extra.time_open > 0, "time_open is greater than 0");
+    Assert.greater(timestamp, 0, "timestamp is greater than 0");
+    Assert.greater(Number(extra.time_open), 0, "time_open is greater than 0");
     is(category, expected.category, "category is correct");
     is(method, expected.method, "method is correct");
     is(object, expected.object, "object is correct");

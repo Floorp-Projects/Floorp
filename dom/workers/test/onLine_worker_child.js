@@ -3,10 +3,7 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-/*
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/licenses/publicdomain/
- */
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
 
 function info(text) {
   dump("Test for Bug 925437: worker: " + text + "\n");

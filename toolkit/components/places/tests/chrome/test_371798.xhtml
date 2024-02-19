@@ -57,7 +57,7 @@ const TEST_URI = Services.io.newURI("http://foo.com");
     let node = rootNode.getChild(i);
     // test that bm1 does not have new title
     if (node.bookmarkGuid == bm1.guid)
-      ok(node.title != "foo",
+      isnot(node.title, "foo",
          "Changing a bookmark's title did not affect the title of other bookmarks with the same URI");
   }
   rootNode.containerOpen = false;

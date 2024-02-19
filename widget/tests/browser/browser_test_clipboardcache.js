@@ -103,6 +103,10 @@ async function testCopyPaste(isPrivate) {
     document.execCommand("paste");
     return pastePromise;
   });
+
+  // Don't use Assert.strictEqual here because the test starts timing out,
+  // because the logging creates lots of copies of this very huge string.
+  // eslint-disable-next-line mozilla/no-comparison-or-assignment-inside-ok
   ok(readStr === Ipsum, "Read what we pasted");
 
   if (isPrivate) {

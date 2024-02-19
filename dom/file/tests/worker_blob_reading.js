@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 importScripts("common_blob_reading.js");
 
 function info(message) {

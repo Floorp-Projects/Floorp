@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
 var gData1 = "TEST_DATA_1:ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var gData2 = "TEST_DATA_2:1234567890";
 var gPaddingChar = ".";

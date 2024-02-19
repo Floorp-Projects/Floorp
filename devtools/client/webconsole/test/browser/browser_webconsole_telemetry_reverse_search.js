@@ -166,6 +166,6 @@ function checkEventTelemetry(expectedData) {
       expected.extra.functionality,
       "'functionality' is correct"
     );
-    ok(extra.session_id > 0, "'session_id' is correct");
+    Assert.greater(Number(extra.session_id), 0, "'session_id' is correct");
   }
 }

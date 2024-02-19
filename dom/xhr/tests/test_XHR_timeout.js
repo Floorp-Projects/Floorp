@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 /* Notes:
    - All times are expressed in milliseconds in this test suite.
    - Test harness code is at the end of this file.

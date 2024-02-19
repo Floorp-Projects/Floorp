@@ -87,8 +87,9 @@ add_task(async () => {
       const nfrm_match = nfrm_line.exec(copiedText);
       if (nfrm_match) {
         const nfrm_mb = nfrm_match[1];
-        ok(
-          nfrm_mb < MB_EXCLUSIVE_MAX,
+        Assert.less(
+          nfrm_mb,
+          MB_EXCLUSIVE_MAX,
           `native-font-resource-mac ${nfrm_mb} MB should be less than ${MB_EXCLUSIVE_MAX} MB.`
         );
       } else {
@@ -102,8 +103,9 @@ add_task(async () => {
         const gfx_match = gfx_line.exec(copiedText);
         if (gfx_match && gfx_match.index < om_match.index) {
           const gfx_mb = gfx_match[1];
-          ok(
-            gfx_mb < MB_EXCLUSIVE_MAX,
+          Assert.less(
+            gfx_mb,
+            MB_EXCLUSIVE_MAX,
             `Explicit Allocations gfx ${gfx_mb} MB should be less than ${MB_EXCLUSIVE_MAX} MB.`
           );
         } else {

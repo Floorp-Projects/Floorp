@@ -35,7 +35,11 @@ add_task(async function () {
   let events = getObjectExpandedEventsExtra();
   is(events.length, 1, "There was 1 event logged");
   const [event] = events;
-  ok(event.session_id > 0, "There is a valid session_id in the logged event");
+  Assert.greater(
+    Number(event.session_id),
+    0,
+    "There is a valid session_id in the logged event"
+  );
 
   info("Click on the second arrow icon to expand the prototype node");
   const secondArrowIcon = message.querySelectorAll(".arrow")[1];

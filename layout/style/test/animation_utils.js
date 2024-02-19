@@ -4,6 +4,8 @@
 //
 //----------------------------------------------------------------------
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function advance_clock(milliseconds) {
   SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
 }

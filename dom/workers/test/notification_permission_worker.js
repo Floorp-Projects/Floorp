@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 function info(message) {
   dump("INFO: " + message + "\n");
 }

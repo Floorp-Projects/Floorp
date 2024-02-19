@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// This file is loaded in a `spawn` context sometimes which doesn't have,
+// `Assert`, so we can't use its comparison functions.
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 /**
  * Helper methods to drive with the debugger during mochitests. This file can be safely
  * required from other panel test files.

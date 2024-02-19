@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 importScripts("common_fileReader.js");
 
 function ok(a, msg) {

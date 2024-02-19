@@ -1,3 +1,5 @@
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 // Cross origin request
 var prefix = "http://example.com/tests/dom/serviceworkers/test/eventsource/";
 

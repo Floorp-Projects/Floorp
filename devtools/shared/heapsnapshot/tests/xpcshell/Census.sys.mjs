@@ -148,6 +148,7 @@ function ok(val) {
     throw new Error("Census mismatch: expected truthy, got " + val);
   }
 }
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
 
 // Return a walker that checks that the subject census has at least as many
 // items of each category as |basis|.

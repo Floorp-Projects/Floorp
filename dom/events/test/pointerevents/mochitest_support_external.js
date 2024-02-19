@@ -2,6 +2,8 @@
 // to tests on auto MochiTest system with minimum changes.
 // Author: Maksim Lebedev <alessarik@gmail.com>
 
+/* eslint-disable mozilla/no-comparison-or-assignment-inside-ok */
+
 // Function allows to prepare our tests after load document
 addEventListener(
   "load",

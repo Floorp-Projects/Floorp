@@ -178,7 +178,7 @@ add_task(async function () {
           }
 
           let topBrowserId = topBC.browserId;
-          ok(topBrowserId > 0, "Should have a browser ID.");
+          Assert.greater(topBrowserId, 0, "Should have a browser ID.");
           for (let [name, bc] of Object.entries({
             first,
             second,
@@ -193,7 +193,7 @@ add_task(async function () {
             );
           }
 
-          ok(sixth.browserId > 0, "sixth should have a browserId.");
+          Assert.greater(sixth.browserId, 0, "sixth should have a browserId.");
           isnot(
             sixth.browserId,
             topBrowserId,

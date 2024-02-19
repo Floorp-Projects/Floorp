@@ -57,7 +57,11 @@ function checkTelemetryEvent(expectedEvent) {
   const events = getFiltersChangedEventsExtra();
   is(events.length, 1, "There was only 1 event logged");
   const [event] = events;
-  ok(event.session_id > 0, "There is a valid session_id in the logged event");
+  Assert.greater(
+    Number(event.session_id),
+    0,
+    "There is a valid session_id in the logged event"
+  );
   const f = e => JSON.stringify(e, null, 2);
   is(
     f(event),
