@@ -185,7 +185,6 @@ if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "aarch64":
 if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "arm":
 
     OS_LIBS += [
-        "android_support",
         "unwind"
     ]
 
