@@ -13,10 +13,7 @@ with Files("APZTestData.webidl"):
 with Files("AccessibleNode.webidl"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
-with Files("AccessibilityRole.webidl"):
-    BUG_COMPONENT = ("Core", "Disability Access APIs")
-
-with Files("AriaAttributes.webidl"):
+with Files("ARIAMixin.webidl"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
 with Files("Addon*"):
@@ -402,7 +399,6 @@ WEBIDL_FILES = [
     "AbortSignal.webidl",
     "AbstractRange.webidl",
     "AbstractWorker.webidl",
-    "AccessibilityRole.webidl",
     "AddonManager.webidl",
     "AnalyserNode.webidl",
     "Animatable.webidl",
@@ -415,7 +411,7 @@ WEBIDL_FILES = [
     "AppInfo.webidl",
     "AppNotificationServiceOptions.webidl",
     "APZTestData.webidl",
-    "AriaAttributes.webidl",
+    "ARIAMixin.webidl",
     "Attr.webidl",
     "AudioBuffer.webidl",
     "AudioBufferSourceNode.webidl",
