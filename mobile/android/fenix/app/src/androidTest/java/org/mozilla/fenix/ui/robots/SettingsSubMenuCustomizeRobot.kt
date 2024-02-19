@@ -46,12 +46,12 @@ class SettingsSubMenuCustomizeRobot {
             .check(matches(hasSibling(allOf(withId(R.id.radio_button), isChecked()))))
     }
 
-    fun clickSwipeToolbarToSwitchTabToggle() = swipeToolbarToggle.click()
+    fun clickSwipeToolbarToSwitchTabToggle() = swipeToolbarToggle().click()
 
-    fun clickPullToRefreshToggle() = pullToRefreshToggle.click()
+    fun clickPullToRefreshToggle() = pullToRefreshToggle().click()
 
     fun verifySwipeToolbarGesturePrefState(isEnabled: Boolean) {
-        swipeToolbarToggle
+        swipeToolbarToggle()
             .check(
                 matches(
                     hasCousin(
@@ -69,7 +69,7 @@ class SettingsSubMenuCustomizeRobot {
     }
 
     fun verifyPullToRefreshGesturePrefState(isEnabled: Boolean) {
-        pullToRefreshToggle
+        pullToRefreshToggle()
             .check(
                 matches(
                     hasCousin(
@@ -120,10 +120,10 @@ private fun deviceModeToggle(): ViewInteraction {
     return onView(withText(followDeviceThemeText))
 }
 
-private val swipeToolbarToggle =
+private fun swipeToolbarToggle() =
     onView(withText(getStringResource(R.string.preference_gestures_swipe_toolbar_switch_tabs)))
 
-private val pullToRefreshToggle =
+private fun pullToRefreshToggle() =
     onView(withText(getStringResource(R.string.preference_gestures_website_pull_to_refresh)))
 
 private fun goBackButton() =
