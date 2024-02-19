@@ -53,6 +53,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
 if CONFIG['TARGET_CPU'] in ('mips32', 'mips64'):
     DEFINES['MOZ_PNG_USE_MIPS_MSA'] = True
     UNIFIED_SOURCES += [
+        'mips/filter_mmi_inline_assembly.c',
         'mips/filter_msa_intrinsics.c',
         'mips/mips_init.c'
     ]

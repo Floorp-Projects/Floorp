@@ -11,9 +11,9 @@ origin:
   url: "http://www.libpng.org/pub/png/libpng.html"
   license: libpng
 
-  release: commit v1.6.39 (2022-11-20T23:53:23+02:00).
+  release: v1.6.42 (2024-01-29T22:51:33+02:00).
 
-  revision: "v1.6.39"
+  revision: "v1.6.42"
 
   license-file: LICENSE
 
