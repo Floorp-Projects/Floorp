@@ -184,7 +184,7 @@ def android_lldb_server(target, host, ndk, lldb):
     if lldb:
         return lldb[0]
     else:
-        clang_format = "toolchains/llvm/prebuilt/%s-%s/lib/clang"
+        clang_format = "toolchains/llvm/prebuilt/%s-%s/lib64/clang"
         llvm_lib = "lib/linux"
 
         host_kernel = "windows" if host.kernel == "WINNT" else host.kernel.lower()
