@@ -11783,6 +11783,78 @@
   value: 10
   mirror: always
 
+# Adjustments to apply to the internal priority of <script type="module"
+# fetchpriority=low/high/auto> with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/HIGH.
+- name: network.fetchpriority.adjustments.module-script.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.module-script.high
+  type: int32_t
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.module-script.auto
+  type: int32_t
+  value: -10
+  mirror: always
+
+# Adjustments to apply to the internal priority of async or defer <script
+# fetchpriority=low/high/auto> with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/LOW.
+- name: network.fetchpriority.adjustments.async-or-defer-script.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.async-or-defer-script.high
+  type: int32_t
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.async-or-defer-script.auto
+  type: int32_t
+  value: 10
+  mirror: always
+
+# Adjustments to apply to the internal priority of <script
+# fetchpriority=low/high/auto> inside the <head>, with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/HIGH.
+- name: network.fetchpriority.adjustments.script-in-head.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.script-in-head.high
+  type: int32_t
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.script-in-head.auto
+  type: int32_t
+  value: -10
+  mirror: always
+
+# Adjustments to apply to the internal priority of <script
+# fetchpriority=low/high/auto> (other than the scripts handled above) with
+# respect to the case when network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/NORMAL.
+- name: network.fetchpriority.adjustments.other-script.low
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.other-script.high
+  type: int32_t
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.other-script.auto
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
 # handling.
 - name: network.preconnect

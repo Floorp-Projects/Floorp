@@ -711,50 +711,40 @@ void AdjustPriorityForNonLinkPreloadScripts(nsIChannel* aChannel,
   if (nsCOMPtr<nsISupportsPriority> supportsPriority =
           do_QueryInterface(aChannel)) {
     LOG(("Is not <link rel=[module]preload"));
-    const RequestPriority fetchPriority = aRequest->FetchPriority();
+    const auto fetchPriority = ToFetchPriority(aRequest->FetchPriority());
 
     // The spec defines the priority to be set in an implementation defined
     // manner (<https://fetch.spec.whatwg.org/#concept-fetch>, step 15 and
     // <https://html.spec.whatwg.org/#concept-script-fetch-options-fetch-priority>).
-    // <testing/web-platform/mozilla/tests/fetch/fetchpriority/support/script-tests-data.js>
-    // provides more context for the priority mapping.
-    const int32_t supportsPriorityValue = [&]() {
-      switch (fetchPriority) {
-        case RequestPriority::Auto: {
-          if (aRequest->IsModuleRequest()) {
-            return nsISupportsPriority::PRIORITY_HIGH;
-          }
-
-          const ScriptLoadContext* scriptLoadContext =
-              aRequest->GetScriptLoadContext();
-          if (scriptLoadContext->IsAsyncScript() ||
-              scriptLoadContext->IsDeferredScript()) {
-            return nsISupportsPriority::PRIORITY_LOW;
-          }
-
-          if (scriptLoadContext->mScriptFromHead) {
-            return nsISupportsPriority::PRIORITY_HIGH;
-          }
-
-          return nsISupportsPriority::PRIORITY_NORMAL;
-        }
-        case RequestPriority::Low: {
-          return nsISupportsPriority::PRIORITY_LOW;
-        }
-        case RequestPriority::High: {
-          return nsISupportsPriority::PRIORITY_HIGH;
-        }
-        default: {
-          MOZ_ASSERT_UNREACHABLE();
-          return nsISupportsPriority::PRIORITY_NORMAL;
-        }
+    // See corresponding preferences in StaticPrefList.yaml for more context.
+    const int32_t supportsPriorityDelta = [&]() {
+      const ScriptLoadContext* scriptLoadContext =
+          aRequest->GetScriptLoadContext();
+      if (aRequest->IsModuleRequest()) {
+        return FETCH_PRIORITY_ADJUSTMENT_FOR(module_script, fetchPriority);
       }
+
+      if (scriptLoadContext->IsAsyncScript() ||
+          scriptLoadContext->IsDeferredScript()) {
+        return FETCH_PRIORITY_ADJUSTMENT_FOR(async_or_defer_script,
+                                             fetchPriority);
+      }
+
+      if (scriptLoadContext->mScriptFromHead) {
+        return FETCH_PRIORITY_ADJUSTMENT_FOR(script_in_head, fetchPriority);
+      }
+
+      return FETCH_PRIORITY_ADJUSTMENT_FOR(other_script, fetchPriority);
     }();
 
-    if (supportsPriorityValue) {
-      LogPriorityMapping(ScriptLoader::gScriptLoaderLog,
-                         ToFetchPriority(fetchPriority), supportsPriorityValue);
-      supportsPriority->SetPriority(supportsPriorityValue);
+    if (supportsPriorityDelta) {
+      supportsPriority->AdjustPriority(supportsPriorityDelta);
+#ifdef DEBUG
+      int32_t adjustedPriority;
+      supportsPriority->GetPriority(&adjustedPriority);
+      LogPriorityMapping(ScriptLoader::gScriptLoaderLog, fetchPriority,
+                         adjustedPriority);
+#endif
     }
   }
 }
