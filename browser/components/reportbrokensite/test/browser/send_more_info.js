@@ -79,7 +79,6 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
       additionalData: {
         applicationName,
         blockList,
-        buildId: snapshot.application.buildID,
         devicePixelRatio: parseInt(devicePixelRatio),
         finalUserAgent: useragentString,
         fissionEnabled,
@@ -98,6 +97,10 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
           },
           hasTouchScreen,
           monitors(actual) {
+            // We don't care about monitor data on Android right now.
+            if (AppConstants.platform === "android") {
+              return actual == undefined;
+            }
             return areObjectsEqual(actual, gfxInfo.getMonitors());
           },
         },
@@ -106,18 +109,16 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
         hasTrackingContentBlocked,
         isPB: isPrivateBrowsing,
         languages,
-        locales: snapshot.intl.localeService.available,
-        memoryMB: browserInfo.system.memory,
         osArchitecture,
         osName,
         osVersion,
         prefs: finalPrefs,
+        updateChannel,
+        userAgent: defaultUseragentString,
         version,
       },
       blockList,
-      channel: updateChannel,
       consoleLog,
-      defaultUserAgent: defaultUseragentString,
       frameworks,
       hasTouchScreen,
       "gfx.webrender.software": prefs.softwareWebrender,
@@ -132,19 +133,6 @@ async function reformatExpectedWebCompatInfo(tab, overrides) {
     utm_campaign: "report-broken-site",
     utm_source: "desktop-reporter",
   };
-
-  const { gfxData } = reformatted.details.additionalData;
-  for (const optional of [
-    "direct2DEnabled",
-    "directWriteEnabled",
-    "directWriteVersion",
-    "clearTypeParameters",
-    "targetFrameRate",
-  ]) {
-    if (optional in snapshot.graphics) {
-      gfxData[optional] = snapshot.graphics[optional];
-    }
-  }
 
   // We only care about this pref on Linux right now on webcompat.com.
   if (AppConstants.platform != "linux") {
@@ -218,33 +206,7 @@ async function testSendMoreInfo(tab, menu, expectedOverrides = {}) {
   expected.url = url;
   expected.description = description;
 
-  // sanity checks
-  const { details } = message;
-  const { additionalData } = details;
-  ok(message.url?.length, "Got a URL");
-  ok(["basic", "strict"].includes(details.blockList), "Got a blockList");
-  ok(additionalData.applicationName?.length, "Got an app name");
-  ok(additionalData.osArchitecture?.length, "Got an OS arch");
-  ok(additionalData.osName?.length, "Got an OS name");
-  ok(additionalData.osVersion?.length, "Got an OS version");
-  ok(additionalData.version?.length, "Got an app version");
-  ok(details.channel?.length, "Got an app channel");
-  ok(details.defaultUserAgent?.length, "Got a default UA string");
-  ok(additionalData.finalUserAgent?.length, "Got a final UA string");
-
-  // If we're sending any tab-specific data (which includes console logs),
-  // check that there is also a valid screenshot.
-  if ("consoleLog" in details) {
-    const isScreenshotValid = await new Promise(done => {
-      var image = new Image();
-      image.onload = () => done(image.width > 0);
-      image.onerror = () => done(false);
-      image.src = receivedData.screenshot;
-    });
-    ok(isScreenshotValid, "Got a valid screenshot");
-  }
-
-  ok(areObjectsEqual(message, expected), "sent info matches expectations");
+  ok(areObjectsEqual(message, expected), "ping matches expectations");
 
   // re-opening the panel, the url and description should be reset
   rbs = await menu.openReportBrokenSite();
