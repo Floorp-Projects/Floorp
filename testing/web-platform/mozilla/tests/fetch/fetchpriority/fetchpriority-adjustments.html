@@ -8,6 +8,10 @@
   const fetchpriorities = ["auto", "low", "high"];
   const prioritiesWhenFetchpriorityDisabled = {
       "link-preload-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST,
+      "module-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+      "async-or-defer-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+      "script-in-head": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+      "other-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
   };
   for (const name in prioritiesWhenFetchpriorityDisabled) {
       let adjustments = {};
