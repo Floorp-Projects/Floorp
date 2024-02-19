@@ -25,29 +25,32 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPushService"
 );
 
-const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
-
 /**
  * The Push component runs in the child process and exposes the Push API
  * to the web application. The PushService running in the parent process is the
  * one actually performing all operations.
  */
-export function Push() {
-  lazy.console.debug("Push()");
-}
+export class Push extends DOMRequestIpcHelper {
+  constructor() {
+    super();
+    lazy.console.debug("Push()");
+  }
 
-Push.prototype = {
-  __proto__: DOMRequestIpcHelper.prototype,
+  get contractID() {
+    return "@mozilla.org/push/PushManager;1";
+  }
 
-  contractID: "@mozilla.org/push/PushManager;1",
+  get classID() {
+    return Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
+  }
 
-  classID: PUSH_CID,
-
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIDOMGlobalPropertyInitializer",
-    "nsISupportsWeakReference",
-    "nsIObserver",
-  ]),
+  get QueryInterface() {
+    return ChromeUtils.generateQI([
+      "nsIDOMGlobalPropertyInitializer",
+      "nsISupportsWeakReference",
+      "nsIObserver",
+    ]);
+  }
 
   init(win) {
     lazy.console.debug("init()");
@@ -70,11 +73,11 @@ Push.prototype = {
       // Accessing the top-level document might fails if cross-origin
       this._topLevelPrincipal = undefined;
     }
-  },
+  }
 
   __init(scope) {
     this._scope = scope;
-  },
+  }
 
   askPermission() {
     lazy.console.debug("askPermission()");
@@ -90,7 +93,7 @@ Push.prototype = {
       //   which is partly because:
       // * GeckoView test runner has no real permission check but just returns VALUE_ALLOW.
       //   https://searchfox.org/mozilla-central/rev/6e5b9a5a1edab13a1b2e2e90944b6e06b4d8149c/mobile/android/test_runner/src/main/java/org/mozilla/geckoview/test_runner/TestRunnerActivity.java#108-123
-      if (this._testPermission() === Ci.nsIPermissionManager.ALLOW_ACTION) {
+      if (this.#testPermission() === Ci.nsIPermissionManager.ALLOW_ACTION) {
         resolve();
         return;
       }
@@ -111,13 +114,13 @@ Push.prototype = {
         return;
       }
 
-      this._requestPermission(
+      this.#requestPermission(
         hasValidTransientUserGestureActivation,
         resolve,
         permissionDenied
       );
     });
-  },
+  }
 
   subscribe(options) {
     lazy.console.debug("subscribe()", this._scope);
@@ -131,9 +134,9 @@ Push.prototype = {
           return;
         }
 
-        let keyView = this._normalizeAppServerKey(options.applicationServerKey);
+        let keyView = this.#normalizeAppServerKey(options.applicationServerKey);
         if (keyView.byteLength === 0) {
-          callback._rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
+          callback.rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
           return;
         }
         lazy.PushService.subscribeWithKey(
@@ -144,9 +147,9 @@ Push.prototype = {
         );
       })
     );
-  },
+  }
 
-  _normalizeAppServerKey(appServerKey) {
+  #normalizeAppServerKey(appServerKey) {
     let key;
     if (typeof appServerKey == "string") {
       try {
@@ -169,7 +172,7 @@ Push.prototype = {
       key = appServerKey;
     }
     return new this._window.Uint8Array(key);
-  },
+  }
 
   getSubscription() {
     lazy.console.debug("getSubscription()", this._scope);
@@ -178,7 +181,7 @@ Push.prototype = {
       let callback = new PushSubscriptionCallback(this, resolve, reject);
       lazy.PushService.getSubscription(this._scope, this._principal, callback);
     });
-  },
+  }
 
   permissionState() {
     lazy.console.debug("permissionState()", this._scope);
@@ -187,7 +190,7 @@ Push.prototype = {
       let permission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
 
       try {
-        permission = this._testPermission();
+        permission = this.#testPermission();
       } catch (e) {
         reject();
         return;
@@ -201,9 +204,9 @@ Push.prototype = {
       }
       resolve(pushPermissionStatus);
     });
-  },
+  }
 
-  _testPermission() {
+  #testPermission() {
     let permission = Services.perms.testExactPermissionFromPrincipal(
       this._principal,
       "desktop-notification"
@@ -217,9 +220,9 @@ Push.prototype = {
       }
     } catch (e) {}
     return permission;
-  },
+  }
 
-  _requestPermission(
+  #requestPermission(
     hasValidTransientUserGestureActivation,
     allowCallback,
     cancelCallback
@@ -251,22 +254,24 @@ Push.prototype = {
     // remoting if needed.
     let windowUtils = this._window.windowUtils;
     windowUtils.askPermission(request);
-  },
-};
-
-function PushSubscriptionCallback(pushManager, resolve, reject) {
-  this.pushManager = pushManager;
-  this.resolve = resolve;
-  this.reject = reject;
+  }
 }
 
-PushSubscriptionCallback.prototype = {
-  QueryInterface: ChromeUtils.generateQI(["nsIPushSubscriptionCallback"]),
+class PushSubscriptionCallback {
+  constructor(pushManager, resolve, reject) {
+    this.pushManager = pushManager;
+    this.resolve = resolve;
+    this.reject = reject;
+  }
+
+  get QueryInterface() {
+    return ChromeUtils.generateQI(["nsIPushSubscriptionCallback"]);
+  }
 
   onPushSubscription(ok, subscription) {
     let { pushManager } = this;
     if (!Components.isSuccessCode(ok)) {
-      this._rejectWithError(ok);
+      this.rejectWithError(ok);
       return;
     }
 
@@ -275,24 +280,24 @@ PushSubscriptionCallback.prototype = {
       return;
     }
 
-    let p256dhKey = this._getKey(subscription, "p256dh");
-    let authSecret = this._getKey(subscription, "auth");
+    let p256dhKey = this.#getKey(subscription, "p256dh");
+    let authSecret = this.#getKey(subscription, "auth");
     let options = {
       endpoint: subscription.endpoint,
       scope: pushManager._scope,
       p256dhKey,
       authSecret,
     };
-    let appServerKey = this._getKey(subscription, "appServer");
+    let appServerKey = this.#getKey(subscription, "appServer");
     if (appServerKey) {
       // Avoid passing null keys to work around bug 1256449.
       options.appServerKey = appServerKey;
     }
     let sub = new pushManager._window.PushSubscription(options);
     this.resolve(sub);
-  },
+  }
 
-  _getKey(subscription, name) {
+  #getKey(subscription, name) {
     let rawKey = Cu.cloneInto(
       subscription.getKey(name),
       this.pushManager._window
@@ -305,9 +310,9 @@ PushSubscriptionCallback.prototype = {
     let keyView = new this.pushManager._window.Uint8Array(key);
     keyView.set(rawKey);
     return key;
-  },
+  }
 
-  _rejectWithError(result) {
+  rejectWithError(result) {
     let error;
     switch (result) {
       case Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR:
@@ -331,5 +336,5 @@ PushSubscriptionCallback.prototype = {
         );
     }
     this.reject(error);
-  },
-};
+  }
+}
