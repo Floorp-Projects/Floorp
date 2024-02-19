@@ -213,59 +213,6 @@ already_AddRefed<Promise> Promise::All(
   return CreateFromExisting(global, result, aPropagateUserInteraction);
 }
 
-void Promise::Then(JSContext* aCx,
-                   // aCalleeGlobal may not be in the compartment of aCx, when
-                   // called over Xrays.
-                   JS::Handle<JSObject*> aCalleeGlobal,
-                   AnyCallback* aResolveCallback, AnyCallback* aRejectCallback,
-                   JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv) {
-  NS_ASSERT_OWNINGTHREAD(Promise);
-
-  // Let's hope this does the right thing with Xrays...  Ensure everything is
-  // just in the caller compartment; that ought to do the trick.  In theory we
-  // should consider aCalleeGlobal, but in practice our only caller is
-  // DOMRequest::Then, which is not working with a Promise subclass, so things
-  // should be OK.
-  JS::Rooted<JSObject*> promise(aCx, PromiseObj());
-  if (!promise) {
-    // This promise is no-op, so do nothing.
-    return;
-  }
-
-  if (!JS_WrapObject(aCx, &promise)) {
-    aRv.NoteJSContextException(aCx);
-    return;
-  }
-
-  JS::Rooted<JSObject*> resolveCallback(aCx);
-  if (aResolveCallback) {
-    resolveCallback = aResolveCallback->CallbackOrNull();
-    if (!JS_WrapObject(aCx, &resolveCallback)) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-
-  JS::Rooted<JSObject*> rejectCallback(aCx);
-  if (aRejectCallback) {
-    rejectCallback = aRejectCallback->CallbackOrNull();
-    if (!JS_WrapObject(aCx, &rejectCallback)) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-
-  JS::Rooted<JSObject*> retval(aCx);
-  retval = JS::CallOriginalPromiseThen(aCx, promise, resolveCallback,
-                                       rejectCallback);
-  if (!retval) {
-    aRv.NoteJSContextException(aCx);
-    return;
-  }
-
-  aRetval.setObject(*retval);
-}
-
 static void SettlePromise(Promise* aSettlingPromise, Promise* aCallbackPromise,
                           ErrorResult& aRv) {
   if (!aSettlingPromise) {
