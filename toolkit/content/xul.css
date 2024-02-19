@@ -359,11 +359,6 @@ menubar > menu:empty {
 /********* menupopup, panel, & tooltip ***********/
 
 menupopup,
-panel {
-  flex-direction: column;
-}
-
-menupopup,
 panel,
 tooltip {
   position: fixed;
