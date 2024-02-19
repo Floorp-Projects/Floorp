@@ -2,28 +2,28 @@ export const kTestFolderName = "link-tests";
 
 const kExpectedRequestsOfLoadStylesheet = [
     {   fileNameAndSuffix: "dummy.css?1",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?2",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
     },
     {   fileNameAndSuffix: "dummy.css?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?5",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
     },
     {   fileNameAndSuffix: "dummy.css?6",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?7",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?8",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     // `media=print` doesn't match the environment
     // (https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#matches-the-environment)
@@ -32,13 +32,13 @@ const kExpectedRequestsOfLoadStylesheet = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
     },
     {   fileNameAndSuffix: "dummy.css?10",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?11",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?12",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
 ];
 
@@ -176,13 +176,13 @@ const kExpectedRequestsOfPreloadScript = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
     },
     {   fileNameAndSuffix: "dummy.js?2",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
     },
     {   fileNameAndSuffix: "dummy.js?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
     },
     {   fileNameAndSuffix: "dummy.js?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
     },
 ];
 
