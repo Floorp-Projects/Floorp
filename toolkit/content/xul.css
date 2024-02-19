@@ -365,6 +365,9 @@ tooltip {
   -moz-top-layer: top;
   width: fit-content;
   height: fit-content;
+  /* Make sure that popups are interactable when shown, since they escape the
+   * usual layering rules */
+  -moz-inert: none;
   /* Popups can't have overflow */
   contain: paint;
   z-index: 2147483647;
