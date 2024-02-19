@@ -311,8 +311,7 @@ Element includes NonDocumentTypeChildNode;
 Element includes ParentNode;
 Element includes Animatable;
 Element includes GeometryUtils;
-Element includes AccessibilityRole;
-Element includes AriaAttributes;
+Element includes ARIAMixin;
 
 // https://fullscreen.spec.whatwg.org/#api
 partial interface Element {
