@@ -333,7 +333,8 @@ struct Family {
 
   // Return the index of this family in the font-list's Families() or
   // AliasFamilies() list, and which of those it belongs to.
-  std::pair<uint32_t, bool> FindIndex(FontList* aList) const;
+  // Returns Nothing if the family cannot be found.
+  mozilla::Maybe<std::pair<uint32_t, bool>> FindIndex(FontList* aList) const;
 
  private:
   // Returns true if there are specifically-sized bitmap faces in the list,
