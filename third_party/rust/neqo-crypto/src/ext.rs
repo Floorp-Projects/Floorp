@@ -16,6 +16,7 @@ use crate::{
     agentio::as_c_void,
     constants::{Extension, HandshakeMessage, TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS},
     err::Res,
+    null_safe_slice,
     ssl::{
         PRBool, PRFileDesc, SECFailure, SECStatus, SECSuccess, SSLAlertDescription,
         SSLExtensionHandler, SSLExtensionWriter, SSLHandshakeType,
@@ -105,7 +106,7 @@ impl ExtensionTracker {
         alert: *mut SSLAlertDescription,
         arg: *mut c_void,
     ) -> SECStatus {
-        let d = std::slice::from_raw_parts(data, len as usize);
+        let d = null_safe_slice(data, len);
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         Self::wrap_handler_call(arg, |handler| {
             // Cast is safe here because the message type is always part of the enum

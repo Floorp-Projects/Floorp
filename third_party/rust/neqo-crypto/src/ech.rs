@@ -15,7 +15,7 @@ use neqo_common::qtrace;
 
 use crate::{
     err::{ssl::SSL_ERROR_ECH_RETRY_WITH_ECH, Error, Res},
-    experimental_api,
+    experimental_api, null_safe_slice,
     p11::{
         self, Item, PrivateKey, PublicKey, SECITEM_FreeItem, SECItem, SECKEYPrivateKey,
         SECKEYPublicKey, Slot,
@@ -76,7 +76,7 @@ pub fn convert_ech_error(fd: *mut PRFileDesc, err: Error) -> Error {
             return Error::InternalError;
         }
         let buf = unsafe {
-            let slc = std::slice::from_raw_parts(item.data, usize::try_from(item.len).unwrap());
+            let slc = null_safe_slice(item.data, item.len);
             let buf = Vec::from(slc);
             SECITEM_FreeItem(&mut item, PRBool::from(false));
             buf
@@ -101,8 +101,7 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
 
     let oid_data = unsafe { p11::SECOID_FindOIDByTag(p11::SECOidTag::SEC_OID_CURVE25519) };
     let oid = unsafe { oid_data.as_ref() }.ok_or(Error::InternalError)?;
-    let oid_slc =
-        unsafe { std::slice::from_raw_parts(oid.oid.data, usize::try_from(oid.oid.len).unwrap()) };
+    let oid_slc = unsafe { null_safe_slice(oid.oid.data, oid.oid.len) };
     let mut params: Vec<u8> = Vec::with_capacity(oid_slc.len() + 2);
     params.push(u8::try_from(p11::SEC_ASN1_OBJECT_ID).unwrap());
     params.push(u8::try_from(oid.oid.len).unwrap());
@@ -113,7 +112,6 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
 
     // If we have tracing on, try to ensure that key data can be read.
     let insensitive_secret_ptr = if log::log_enabled!(log::Level::Trace) {
-        #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
         unsafe {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,
@@ -131,7 +129,6 @@ pub fn generate_keys() -> Res<(PrivateKey, PublicKey)> {
     };
     assert_eq!(insensitive_secret_ptr.is_null(), public_ptr.is_null());
     let secret_ptr = if insensitive_secret_ptr.is_null() {
-        #[allow(clippy::useless_conversion)] // TODO: Remove when we bump the MSRV to 1.74.0.
         unsafe {
             p11::PK11_GenerateKeyPairWithOpFlags(
                 *slot,

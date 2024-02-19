@@ -11,15 +11,17 @@
 
 [package]
 edition = "2018"
-rust-version = "1.70.0"
+rust-version = "1.74.0"
 name = "neqo-crypto"
-version = "0.7.0"
-authors = ["Martin Thomson <mt@lowentropy.net>"]
+version = "0.7.1"
+authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
+homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/mozilla/neqo/"
 
 [dependencies.log]
-version = "~0.4.17"
+version = "0.4"
 default-features = false
 
 [dependencies.neqo-common]
@@ -29,12 +31,12 @@ path = "../neqo-common"
 path = "../test-fixture"
 
 [build-dependencies]
-serde = "1.0.195"
-serde_derive = "1.0.195"
-toml = "0.5.11"
+serde = "1.0"
+serde_derive = "1.0"
+toml = "0.5"
 
 [build-dependencies.bindgen]
-version = "0.69.1"
+version = "0.69"
 features = ["runtime"]
 default-features = false
 

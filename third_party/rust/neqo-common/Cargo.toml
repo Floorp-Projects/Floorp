@@ -11,16 +11,18 @@
 
 [package]
 edition = "2018"
-rust-version = "1.70.0"
+rust-version = "1.74.0"
 name = "neqo-common"
-version = "0.7.0"
-authors = ["Bobby Holley <bobbyholley@gmail.com>"]
+version = "0.7.1"
+authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
+homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/mozilla/neqo/"
 
 [dependencies]
 enum-map = "2.7"
-lazy_static = "1.4"
+qlog = "0.12"
 
 [dependencies.env_logger]
 version = "0.10"
@@ -30,12 +32,8 @@ default-features = false
 version = "0.4"
 default-features = false
 
-[dependencies.qlog]
-git = "https://github.com/cloudflare/quiche"
-rev = "09ea4b244096a013071cfe2175bbf2945fb7f8d1"
-
 [dependencies.time]
-version = "0.3.23"
+version = "0.3"
 features = ["formatting"]
 
 [dev-dependencies.test-fixture]

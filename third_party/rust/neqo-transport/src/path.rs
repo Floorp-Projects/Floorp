@@ -796,7 +796,7 @@ impl Path {
         // Send PATH_CHALLENGE.
         if let ProbeState::ProbeNeeded { probe_count } = self.state {
             qtrace!([self], "Initiating path challenge {}", probe_count);
-            let data = <[u8; 8]>::try_from(&random(8)[..]).unwrap();
+            let data = random::<8>();
             builder.encode_varint(FRAME_TYPE_PATH_CHALLENGE);
             builder.encode(&data);
 

@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 
 use crate::{
-    huffman_decode_helper::{HuffmanDecoderNode, HUFFMAN_DECODE_ROOT},
+    huffman_decode_helper::{huffman_decoder_root, HuffmanDecoderNode},
     huffman_table::HUFFMAN_TABLE,
     Error, Res,
 };
@@ -93,7 +93,7 @@ pub fn decode_huffman(input: &[u8]) -> Res<Vec<u8>> {
 }
 
 fn decode_character(reader: &mut BitReader) -> Res<Option<u16>> {
-    let mut node: &HuffmanDecoderNode = &HUFFMAN_DECODE_ROOT;
+    let mut node: &HuffmanDecoderNode = huffman_decoder_root();
     let mut i = 0;
     while node.value.is_none() {
         match reader.read_bit() {

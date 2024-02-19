@@ -3865,12 +3865,11 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.7.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
+version = "0.7.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
 dependencies = [
  "enum-map",
  "env_logger",
- "lazy_static",
  "log",
  "qlog",
  "time 0.3.23",
@@ -3879,8 +3878,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.7.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
+version = "0.7.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
 dependencies = [
  "bindgen 0.69.4",
  "log",
@@ -3893,11 +3892,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.7.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
+version = "0.7.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
 dependencies = [
  "enumset",
- "lazy_static",
  "log",
  "neqo-common",
  "neqo-crypto",
@@ -3911,10 +3909,9 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.7.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
+version = "0.7.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
 dependencies = [
- "lazy_static",
  "log",
  "neqo-common",
  "neqo-crypto",
@@ -3925,11 +3922,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.7.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.0#9489511f7c82786f55bc9c713cddbff825507ed7"
+version = "0.7.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
 dependencies = [
  "indexmap 1.9.3",
- "lazy_static",
  "log",
  "neqo-common",
  "neqo-crypto",
@@ -4572,8 +4568,9 @@ dependencies = [
 
 [[package]]
 name = "qlog"
-version = "0.11.0"
-source = "git+https://github.com/cloudflare/quiche?rev=09ea4b244096a013071cfe2175bbf2945fb7f8d1#09ea4b244096a013071cfe2175bbf2945fb7f8d1"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c0407438c69b3d99714a796a135cbfb2d60744e4747fb2b46a87acd1c1fcd0e"
 dependencies = [
  "serde",
  "serde_derive",

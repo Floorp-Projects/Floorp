@@ -30,6 +30,9 @@ pub mod recv_stream;
 #[cfg(not(feature = "bench"))]
 mod recv_stream;
 mod rtt;
+#[cfg(feature = "bench")]
+pub mod send_stream;
+#[cfg(not(feature = "bench"))]
 mod send_stream;
 mod sender;
 pub mod server;
