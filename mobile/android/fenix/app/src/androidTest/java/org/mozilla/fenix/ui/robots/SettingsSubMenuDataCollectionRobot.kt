@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
@@ -17,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.endsWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -54,7 +56,8 @@ class SettingsSubMenuDataCollectionRobot {
         )
     }
 
-    fun verifyUsageAndTechnicalDataToggle(enabled: Boolean) =
+    fun verifyUsageAndTechnicalDataToggle(enabled: Boolean) {
+        Log.i(TAG, "verifyUsageAndTechnicalDataToggle: Trying to verify that the \"Usage and technical data\" toggle is checked: $enabled")
         onView(withText(R.string.preference_usage_data))
             .check(
                 matches(
@@ -70,8 +73,11 @@ class SettingsSubMenuDataCollectionRobot {
                     ),
                 ),
             )
+        Log.i(TAG, "verifyUsageAndTechnicalDataToggle: Verified that the \"Usage and technical data\" toggle is checked: $enabled")
+    }
 
-    fun verifyMarketingDataToggle(enabled: Boolean) =
+    fun verifyMarketingDataToggle(enabled: Boolean) {
+        Log.i(TAG, "verifyMarketingDataToggle: Trying to verify that the \"Marketing data\" toggle is checked: $enabled")
         onView(withText(R.string.preferences_marketing_data))
             .check(
                 matches(
@@ -87,8 +93,11 @@ class SettingsSubMenuDataCollectionRobot {
                     ),
                 ),
             )
+        Log.i(TAG, "verifyMarketingDataToggle: Verified that the \"Marketing data\" toggle is checked: $enabled")
+    }
 
-    fun verifyStudiesToggle(enabled: Boolean) =
+    fun verifyStudiesToggle(enabled: Boolean) {
+        Log.i(TAG, "verifyStudiesToggle: Trying to verify that the \"Studies\" toggle is checked: $enabled")
         onView(withId(R.id.studies_switch))
             .check(
                 matches(
@@ -99,35 +108,63 @@ class SettingsSubMenuDataCollectionRobot {
                     },
                 ),
             )
+        Log.i(TAG, "verifyStudiesToggle: Verified that the \"Studies\" toggle is checked: $enabled")
+    }
 
-    fun clickUsageAndTechnicalDataToggle() =
+    fun clickUsageAndTechnicalDataToggle() {
+        Log.i(TAG, "clickUsageAndTechnicalDataToggle: Trying to click the \"Usage and technical data\" toggle")
         itemContainingText(getStringResource(R.string.preference_usage_data)).click()
+        Log.i(TAG, "clickUsageAndTechnicalDataToggle: Clicked the \"Usage and technical data\" toggle")
+    }
 
-    fun clickMarketingDataToggle() =
+    fun clickMarketingDataToggle() {
+        Log.i(TAG, "clickUsageAndTechnicalDataToggle: Trying to click the \"Marketing data\" toggle")
         itemContainingText(getStringResource(R.string.preferences_marketing_data)).click()
+        Log.i(TAG, "clickUsageAndTechnicalDataToggle: Clicked the \"Marketing data\" toggle")
+    }
 
-    fun clickStudiesOption() =
+    fun clickStudiesOption() {
+        Log.i(TAG, "clickStudiesOption: Trying to click the \"Studies\" option")
         itemContainingText(getStringResource(R.string.preference_experiments_2)).click()
+        Log.i(TAG, "clickStudiesOption: Clicked the \"Studies\" option")
+    }
 
-    fun clickStudiesToggle() =
+    fun clickStudiesToggle() {
+        Log.i(TAG, "clickStudiesToggle: Trying to click the \"Studies\" toggle")
         itemWithResId("$packageName:id/studies_switch").click()
+        Log.i(TAG, "clickStudiesToggle: Clicked the \"Studies\" toggle")
+    }
 
     fun verifyStudiesDialog() {
         assertUIObjectExists(
             itemWithResId("$packageName:id/alertTitle"),
             itemContainingText(getStringResource(R.string.studies_restart_app)),
         )
-        studiesDialogOkButton.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        studiesDialogCancelButton.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        Log.i(TAG, "verifyStudiesDialog: Trying to verify that the \"Studies\" dialog \"Ok\" button is visible")
+        studiesDialogOkButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        Log.i(TAG, "verifyStudiesDialog: Verified that the \"Studies\" dialog \"Ok\" button is visible")
+        Log.i(TAG, "verifyStudiesDialog: Trying to verify that the \"Studies\" dialog \"Cancel\" button is visible")
+        studiesDialogCancelButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        Log.i(TAG, "verifyStudiesDialog: Verified that the \"Studies\" dialog \"Cancel\" button is visible")
     }
 
-    fun clickStudiesDialogCancelButton() = studiesDialogCancelButton.click()
+    fun clickStudiesDialogCancelButton() {
+        Log.i(TAG, "clickStudiesDialogCancelButton: Trying to click the \"Studies\" dialog \"Cancel\" button")
+        studiesDialogCancelButton().click()
+        Log.i(TAG, "clickStudiesDialogCancelButton: Clicked the \"Studies\" dialog \"Cancel\" button")
+    }
 
-    fun clickStudiesDialogOkButton() = studiesDialogOkButton.click()
+    fun clickStudiesDialogOkButton() {
+        Log.i(TAG, "clickStudiesDialogOkButton: Trying to click the \"Studies\" dialog \"Ok\" button")
+        studiesDialogOkButton().click()
+        Log.i(TAG, "clickStudiesDialogOkButton: Clicked the \"Studies\" dialog \"Ok\" button")
+    }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            Log.i(TAG, "goBack: Trying to click the navigate up toolbar button")
             goBackButton().click()
+            Log.i(TAG, "goBack: Clicked the navigate up toolbar button")
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -136,5 +173,5 @@ class SettingsSubMenuDataCollectionRobot {
 }
 
 private fun goBackButton() = itemWithDescription("Navigate up")
-private val studiesDialogOkButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
-private val studiesDialogCancelButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private fun studiesDialogOkButton() = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
+private fun studiesDialogCancelButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
