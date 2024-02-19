@@ -170,6 +170,7 @@ void aom_internal_error(struct aom_internal_error_info *info,
 void aom_internal_error_copy(struct aom_internal_error_info *info,
                              const struct aom_internal_error_info *src) {
   assert(info != src);
+  assert(!src->setjmp);
 
   if (!src->has_detail) {
     aom_internal_error(info, src->error_code, NULL);

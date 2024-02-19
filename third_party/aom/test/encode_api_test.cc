@@ -654,6 +654,52 @@ TEST(EncodeAPI, AllIntraMode) {
   cfg.kf_max_dist = 1;
   EXPECT_EQ(AOM_CODEC_INVALID_PARAM, aom_codec_enc_init(&enc, iface, &cfg, 0));
 }
-#endif
+
+TEST(EncodeAPI, AllIntraAndUsePsnr) {
+  aom_codec_iface_t *iface = aom_codec_av1_cx();
+  aom_codec_enc_cfg_t cfg;
+  ASSERT_EQ(aom_codec_enc_config_default(iface, &cfg, AOM_USAGE_ALL_INTRA),
+            AOM_CODEC_OK);
+
+  aom_codec_ctx_t enc;
+  ASSERT_EQ(aom_codec_enc_init(&enc, iface, &cfg, AOM_CODEC_USE_PSNR),
+            AOM_CODEC_OK);
+
+  aom_image_t *image = CreateGrayImage(AOM_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+
+  ASSERT_EQ(aom_codec_encode(&enc, image, 0, 1, 0), AOM_CODEC_OK);
+  const aom_codec_cx_pkt_t *pkt;
+  aom_codec_iter_t iter = nullptr;
+  while ((pkt = aom_codec_get_cx_data(&enc, &iter)) != nullptr) {
+    if (pkt->kind != AOM_CODEC_CX_FRAME_PKT) {
+      ASSERT_EQ(pkt->kind, AOM_CODEC_PSNR_PKT);
+    }
+  }
+
+  aom_img_free(image);
+  ASSERT_EQ(aom_codec_destroy(&enc), AOM_CODEC_OK);
+}
+
+// A test that reproduces bug aomedia:3534.
+TEST(EncodeAPI, AllIntraAndNoRefLast) {
+  aom_codec_iface_t *iface = aom_codec_av1_cx();
+  aom_codec_enc_cfg_t cfg;
+  ASSERT_EQ(aom_codec_enc_config_default(iface, &cfg, AOM_USAGE_ALL_INTRA),
+            AOM_CODEC_OK);
+
+  aom_codec_ctx_t enc;
+  ASSERT_EQ(aom_codec_enc_init(&enc, iface, &cfg, 0), AOM_CODEC_OK);
+
+  aom_image_t *image = CreateGrayImage(AOM_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+
+  ASSERT_EQ(aom_codec_encode(&enc, image, 0, 1, AOM_EFLAG_NO_REF_LAST),
+            AOM_CODEC_OK);
+
+  aom_img_free(image);
+  ASSERT_EQ(aom_codec_destroy(&enc), AOM_CODEC_OK);
+}
+#endif  // !CONFIG_REALTIME_ONLY
 
 }  // namespace

@@ -224,7 +224,7 @@ bool av1_compute_global_motion_feature_match(
     *mem_alloc_failed = true;
     return false;
   }
-  if (!av1_compute_corner_list(src_pyramid, src_corners)) {
+  if (!av1_compute_corner_list(ref_pyramid, ref_corners)) {
     *mem_alloc_failed = true;
     return false;
   }
