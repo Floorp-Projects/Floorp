@@ -1,7 +1,7 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * Copyright (c) 2018-2019 Cosmin Truta
+ * Copyright (c) 2018-2024 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
  * Copyright (c) 1996-1997 Andreas Dilger
  * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
@@ -290,7 +290,7 @@ png_set_alpha_mode_fixed(png_structrp png_ptr, int mode,
    int compose = 0;
    png_fixed_point file_gamma;
 
-   png_debug(1, "in png_set_alpha_mode");
+   png_debug(1, "in png_set_alpha_mode_fixed");
 
    if (png_rtran_ok(png_ptr, 0) == 0)
       return;
@@ -970,7 +970,7 @@ void PNGFAPI
 png_set_rgb_to_gray_fixed(png_structrp png_ptr, int error_action,
     png_fixed_point red, png_fixed_point green)
 {
-   png_debug(1, "in png_set_rgb_to_gray");
+   png_debug(1, "in png_set_rgb_to_gray_fixed");
 
    /* Need the IHDR here because of the check on color_type below. */
    /* TODO: fix this */
