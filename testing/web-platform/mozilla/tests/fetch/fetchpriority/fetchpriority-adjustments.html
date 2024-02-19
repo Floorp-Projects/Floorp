@@ -14,6 +14,9 @@
       "other-script": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
       "link-preload-font": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH,
       "link-preload-fetch": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+      "deferred-style": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
+      "link-preload-style": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST,
+      "non-deferred-style": SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL,
   };
   for (const name in prioritiesWhenFetchpriorityDisabled) {
       let adjustments = {};
@@ -21,15 +24,16 @@
 	  adjustments[fetchpriority] = SpecialPowers.getIntPref(`network.fetchpriority.adjustments.${name}.${fetchpriority}`);
       }
       test(() => {
-	  // Ensure adjustments set the right order for internal priorities.
 	  // The higher the internal priority, the smaller the integer value.
 	  assert_less_than_equal(adjustments.high, adjustments.auto, "Internal priority for high is at most the one for auto");
 	  assert_less_than_equal(adjustments.auto, adjustments.low, "Internal priority for auto is at most the one for low");
+      }, `${name}: adjusted priorities for low/auto/high have proper ordering.`);
 
-	  // Ensure at least one of fetchpriority="high" or fetchpriority="low" would have any effect.
+      test(() => {
 	  assert_less_than(adjustments.high, adjustments.low, "Internal priority for high is less than the one for low");
+      }, `${name}: at least one of fetchpriority="high" or fetchpriority="low" has any effect.`);
 
-	  // Ensure that adjustments map to a value in the predefined set of priorities.
+      test(() => {
 	  const priority = prioritiesWhenFetchpriorityDisabled[name];
 	  const predefinedPriorities = [
 	      SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST,
@@ -42,6 +46,6 @@
 	      const adjustedPriority = priority + adjustments[fetchpriority];
 	      assert_true(predefinedPriorities.includes(adjustedPriority), `Internal priority for ${fetchpriority} is in the predefined set of priorities.`);
 	  }
-      }, `fetchpriority adjustments for ${name}`);
+      }, `${name}: adjusted priorities belong to the predefined set.`);
   }
 </script>
