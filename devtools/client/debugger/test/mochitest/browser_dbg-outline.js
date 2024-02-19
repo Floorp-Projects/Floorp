@@ -6,6 +6,41 @@
 
 "use strict";
 
+// Test that the outline panel updates correctly when a source is selected
+// This scenario covers the case where the outline panel always focused.
+add_task(async function () {
+  const dbg = await initDebugger("doc-scripts.html", "simple1.js");
+  openOutlinePanel(dbg, false);
+  is(
+    findAllElements(dbg, "outlineItems").length,
+    0,
+    " There are no outline items when no source is selected"
+  );
+
+  await selectSource(dbg, "simple1.js", 1);
+
+  info("Wait for all the outline list to load");
+  await waitForElementWithSelector(dbg, ".outline-list");
+
+  assertOutlineItems(dbg, [
+    "λmain()",
+    "λdoEval()",
+    "λevaledFunc()",
+    "λdoNamedEval()",
+    // evaledFunc is set twice
+    "λevaledFunc()",
+    "class MyClass",
+    "λconstructor(a, b)",
+    "λtest()",
+    "λ#privateFunc(a, b)",
+    "class Klass",
+    "λconstructor()",
+    "λtest()",
+  ]);
+});
+
+// Test that the outline panel updates correctly when a source is selected
+// This scenario covers the case where the outline panel gets un-selected and selected again
 add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 
@@ -73,7 +108,7 @@ add_task(async function () {
   ]);
 });
 
-// Test empty panel when source has not function or class symbols
+// Test empty panel when source has no function or class symbols
 add_task(async function () {
   const dbg = await initDebugger("doc-on-load.html", "top-level.js");
   await selectSource(dbg, "top-level.js", 1);

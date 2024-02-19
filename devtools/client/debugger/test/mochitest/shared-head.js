@@ -3076,6 +3076,7 @@ async function selectBlackBoxContextMenuItem(dbg, itemName) {
 }
 
 function openOutlinePanel(dbg, waitForOutlineList = true) {
+  info("Select the outline panel");
   const outlineTab = findElementWithSelector(dbg, ".outline-tab a");
   EventUtils.synthesizeMouseAtCenter(outlineTab, {}, outlineTab.ownerGlobal);
 
