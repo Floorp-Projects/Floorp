@@ -27,6 +27,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ModuleLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ModuleLoadRequest,
                                                 ScriptLoadRequest)
+  if (tmp->mWaitingParentRequest) {
+    tmp->mWaitingParentRequest->ChildModuleUnlinked();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoader, mRootModule, mModuleScript, mImports,
                                   mWaitingParentRequest,
                                   mDynamicReferencingScript)
@@ -228,6 +231,18 @@ void ModuleLoadRequest::LoadFinished() {
   }
 
   mLoader->OnModuleLoadComplete(request);
+}
+
+void ModuleLoadRequest::ChildModuleUnlinked() {
+  // This module was waiting for a child request, but the child reqeust
+  // got unlinked by CC and will never complete.
+  // It also means this module itself is also in the cycle, and will be
+  // unlinked or has already been unlinked, and will be collected.
+  // There's no need to normally finish the module request.
+  // Just reflect the awaiting imports count, so that the assertion in the
+  // destructor passes.
+  MOZ_ASSERT(mAwaitingImports > 0);
+  mAwaitingImports--;
 }
 
 void ModuleLoadRequest::SetDynamicImport(LoadedScript* aReferencingScript,

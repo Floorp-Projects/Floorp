@@ -969,7 +969,12 @@ void ModuleLoaderBase::FinishDynamicImport(
   LOG(("ScriptLoadRequest (%p): Finish dynamic import %x %d", aRequest,
        unsigned(aResult), JS_IsExceptionPending(aCx)));
 
-  MOZ_ASSERT(GetCurrentModuleLoader(aCx) == aRequest->mLoader);
+  MOZ_ASSERT_IF(NS_SUCCEEDED(aResult),
+                GetCurrentModuleLoader(aCx) == aRequest->mLoader);
+  // For failure case, aRequest may have already been unlinked by CC.
+  MOZ_ASSERT_IF(
+      NS_FAILED(aResult),
+      GetCurrentModuleLoader(aCx) == aRequest->mLoader || !aRequest->mLoader);
 
   // If aResult is a failed result, we don't have an EvaluationPromise. If it
   // succeeded, evaluationPromise may still be null, but in this case it will
@@ -1057,7 +1062,8 @@ bool ModuleLoaderBase::HasPendingDynamicImports() const {
 
 void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
                                            nsresult aResult) {
-  MOZ_ASSERT(aRequest->mLoader == this);
+  // aRequest may have already been unlinked by CC.
+  MOZ_ASSERT(aRequest->mLoader == this || !aRequest->mLoader);
 
   RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
   if (!aRequest->IsCanceled()) {
