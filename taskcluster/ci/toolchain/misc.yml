@@ -387,7 +387,7 @@ browsertime:
         toolchain-artifact: public/build/browsertime.tar.zst
     fetches:
         toolchain:
-            - linux64-node-16
+            - linux64-node
 
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
