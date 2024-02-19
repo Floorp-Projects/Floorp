@@ -246,6 +246,13 @@ user-id = 84794
 user-login = "jamienicol"
 user-name = "Jamie Nicol"
 
+[[publisher.glslopt]]
+version = "0.1.10"
+when = "2024-02-13"
+user-id = 84794
+user-login = "jamienicol"
+user-name = "Jamie Nicol"
+
 [[publisher.h2]]
 version = "0.3.22"
 when = "2023-11-15"
