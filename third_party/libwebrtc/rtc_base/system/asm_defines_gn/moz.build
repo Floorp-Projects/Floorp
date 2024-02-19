@@ -59,6 +59,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
 
     OS_LIBS += [
+        "android_support",
         "unwind"
     ]
 
