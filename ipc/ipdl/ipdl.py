@@ -9,6 +9,7 @@ from io import StringIO
 
 import ipdl
 
+from ipdl.ast import SYNC
 
 def log(minv, fmt, *args):
     if _verbosity >= minv:
@@ -96,6 +97,7 @@ log(2, 'Generated C++ headers will be generated relative to "%s"', headersdir)
 log(2, 'Generated C++ sources will be generated in "%s"', cppdir)
 
 allmessages = {}
+allsyncmessages = []
 allmessageprognames = []
 allprotocols = []
 
@@ -172,9 +174,13 @@ for f in files:
     if ast.protocol:
         allmessages[ast.protocol.name] = ipdl.genmsgenum(ast)
         allprotocols.append(ast.protocol.name)
+
         # e.g. PContent::RequestMemoryReport (not prefixed or suffixed.)
         for md in ast.protocol.messageDecls:
             allmessageprognames.append("%s::%s" % (md.namespace, md.decl.progname))
+
+            if md.sendSemantics is SYNC:
+                allsyncmessages.append("%s__%s" % (ast.protocol.name, md.prettyMsgName()))
 
 allprotocols.sort()
 
@@ -247,6 +253,23 @@ print(
 } // anonymous namespace
 
 namespace IPC {
+
+bool IPCMessageTypeIsSync(uint32_t aMessageType)
+{
+  switch (aMessageType) {
+""",
+    file=ipc_msgtype_name,
+)
+
+for msg in allsyncmessages:
+    print("  case %s:" % msg, file=ipc_msgtype_name)
+
+print(
+    """    return true;
+  default:
+    return false;
+  }
+}
 
 const char* StringFromIPCMessageType(uint32_t aMessageType)
 {
