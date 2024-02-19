@@ -181,10 +181,6 @@ if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
         "-msse2"
     ]
 
-    OS_LIBS += [
-        "android_support"
-    ]
-
 if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86_64":
 
     CXXFLAGS += [

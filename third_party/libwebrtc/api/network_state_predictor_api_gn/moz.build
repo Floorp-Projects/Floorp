@@ -176,14 +176,7 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "arm":
 
     OS_LIBS += [
-        "android_support",
         "unwind"
-    ]
-
-if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
-
-    OS_LIBS += [
-        "android_support"
     ]
 
 if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
