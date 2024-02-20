@@ -709,9 +709,9 @@ void RTCRtpReceiver::UpdateTransport() {
     // Add unique payload types as a last-ditch fallback
     auto uniquePts = GetJsepTransceiver()
                          .mRecvTrack.GetNegotiatedDetails()
-                         ->GetUniquePayloadTypes();
+                         ->GetUniqueReceivePayloadTypes();
     for (unsigned char& uniquePt : uniquePts) {
-      filter->AddUniquePT(uniquePt);
+      filter->AddUniqueReceivePT(uniquePt);
     }
   }
 

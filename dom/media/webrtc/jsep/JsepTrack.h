@@ -31,7 +31,7 @@ class JsepTrackNegotiatedDetails {
 
   JsepTrackNegotiatedDetails(const JsepTrackNegotiatedDetails& orig)
       : mExtmap(orig.mExtmap),
-        mUniquePayloadTypes(orig.mUniquePayloadTypes),
+        mUniqueReceivePayloadTypes(orig.mUniqueReceivePayloadTypes),
         mTias(orig.mTias),
         mRtpRtcpConf(orig.mRtpRtcpConf) {
     for (const auto& encoding : orig.mEncodings) {
@@ -71,8 +71,8 @@ class JsepTrackNegotiatedDetails {
     }
   }
 
-  std::vector<uint8_t> GetUniquePayloadTypes() const {
-    return mUniquePayloadTypes;
+  std::vector<uint8_t> GetUniqueReceivePayloadTypes() const {
+    return mUniqueReceivePayloadTypes;
   }
 
   uint32_t GetTias() const { return mTias; }
@@ -83,7 +83,7 @@ class JsepTrackNegotiatedDetails {
   friend class JsepTrack;
 
   std::map<std::string, SdpExtmapAttributeList::Extmap> mExtmap;
-  std::vector<uint8_t> mUniquePayloadTypes;
+  std::vector<uint8_t> mUniqueReceivePayloadTypes;
   std::vector<UniquePtr<JsepTrackEncoding>> mEncodings;
   uint32_t mTias;  // bits per second
   RtpRtcpConfig mRtpRtcpConf;
@@ -214,7 +214,7 @@ class JsepTrack {
   virtual nsresult Negotiate(const SdpMediaSection& answer,
                              const SdpMediaSection& remote,
                              const SdpMediaSection& local);
-  static void SetUniquePayloadTypes(std::vector<JsepTrack*>& tracks);
+  static void SetUniqueReceivePayloadTypes(std::vector<JsepTrack*>& tracks);
   virtual void GetNegotiatedPayloadTypes(
       std::vector<uint16_t>* payloadTypes) const;
 

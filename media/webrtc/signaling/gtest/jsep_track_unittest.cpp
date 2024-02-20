@@ -302,10 +302,11 @@ class JsepTrackTest : public JsepTrackTestBase {
       SanityCheckEncodings(a.GetEncoding(i), b.GetEncoding(i));
     }
 
-    ASSERT_EQ(a.GetUniquePayloadTypes().size(),
-              b.GetUniquePayloadTypes().size());
-    for (size_t i = 0; i < a.GetUniquePayloadTypes().size(); ++i) {
-      ASSERT_EQ(a.GetUniquePayloadTypes()[i], b.GetUniquePayloadTypes()[i]);
+    ASSERT_EQ(a.GetUniqueReceivePayloadTypes().size(),
+              b.GetUniqueReceivePayloadTypes().size());
+    for (size_t i = 0; i < a.GetUniqueReceivePayloadTypes().size(); ++i) {
+      ASSERT_EQ(a.GetUniqueReceivePayloadTypes()[i],
+                b.GetUniqueReceivePayloadTypes()[i]);
     }
   }
 
