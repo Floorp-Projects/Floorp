@@ -190,10 +190,10 @@ file-whitespace:
         - mobile/android/android-components/components/service/pocket/schemas/mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase/4.json
         - mobile/android/android-components/components/support/license/src/test/resources/robolectric.properties
         - mobile/android/android-components/components/support/remotesettings/src/test/java/mozilla/components/support/remotesettings/RemoteSettingsClientTest.kt
+        - mobile/android/android-components/docs/contribute/merge_day.md
+        - mobile/android/android-components/docs/rfcs/0004-top-sites-feature.md
+        - mobile/android/android-components/docs/rfcs/0011-decouple-home-activity-and-external-app-browser-activity.md
         - mobile/android/android-components/samples/browser/src/androidTest/assets/index.html
-        - mobile/android/docs/contribute/merge_day.md
-        - mobile/android/docs/rfcs/0004-top-sites-feature.md
-        - mobile/android/docs/rfcs/0011-decouple-home-activity-and-external-app-browser-activity.md
         - mobile/android/fenix/app/src/androidTest/assets/pages/passwordsubmit.html
         - mobile/android/fenix/docs/Acronym-dictionary.md
         - mobile/android/fenix/docs/Guide-to-merging-contributor-PRs.md
