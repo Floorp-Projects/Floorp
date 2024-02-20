@@ -114,40 +114,6 @@ USE_IS_ENUM_CASE(webgl::ProvokingVertex)
 // Custom QueueParamTraits
 
 template <typename T>
-struct QueueParamTraits<RawBuffer<T>> {
-  template <typename U>
-  static bool Write(ProducerView<U>& view, const RawBuffer<T>& in) {
-    const auto& elemCount = in.size();
-    auto status = view.WriteParam(elemCount);
-    if (!status) return status;
-
-    if (!elemCount) return status;
-    status = view.WriteFromRange(in.Data());
-
-    return status;
-  }
-
-  template <typename U>
-  static bool Read(ConsumerView<U>& view, RawBuffer<T>* const out) {
-    size_t elemCount = 0;
-    auto status = view.ReadParam(&elemCount);
-    if (!status) return status;
-
-    if (!elemCount) {
-      *out = {};
-      return true;
-    }
-
-    auto data = view.template ReadRange<T>(elemCount);
-    if (!data) return false;
-    *out = std::move(RawBuffer<T>{*data});
-    return true;
-  }
-};
-
-// -
-
-template <typename T>
 struct QueueParamTraits<Span<T>> {
   template <typename U>
   static bool Write(ProducerView<U>& view, const Span<T>& in) {
