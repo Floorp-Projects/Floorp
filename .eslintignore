@@ -215,7 +215,7 @@ mobile/android/fenix/app/src/androidTest/assets/
 mobile/android/fenix/app/src/androidTest/java/org/mozilla/fenix/syncintegration/
 mobile/android/fenix/app/src/main/assets/
 mobile/android/focus-android/app/src/androidTest/assets/
-mobile/android/docs/assets/js/icon-js.js
+mobile/android/android-components/docs/assets/js/icon-js.js
 
 # Pre-processed/pref files
 modules/libpref/greprefs.js

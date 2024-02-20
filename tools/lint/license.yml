@@ -81,7 +81,7 @@ license:
         - mobile/android/android-components/components/support/utils/src/main/res/
         - mobile/android/android-components/components/ui/tabcounter/src/main/res/
         - mobile/android/android-components/components/ui/widgets/src/main/res/
-        - mobile/android/docs/
+        - mobile/android/android-components/docs/
         - mobile/android/fenix/app/src/main/res/
         - mobile/android/fenix/benchmark/src/main/AndroidManifest.xml
         - mobile/android/focus-android/app/lint-baseline.xml
