@@ -1264,28 +1264,12 @@ RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
     MOZ_ASSERT(static_cast<uint32_t>(map.GetStride()) == stride);
 
     const auto desc = webgl::ReadPixelsDesc{{0, 0}, size};
-    const auto range = Range<uint8_t>(map.GetData(), stride * size.y);
-    if (!DoReadPixels(desc, range)) return nullptr;
+    const auto pixels = Span<uint8_t>(map.GetData(), stride * size.y);
+    if (!DoReadPixels(desc, pixels)) return nullptr;
 
-    const auto begin = range.begin().get();
-
-    std::vector<uint8_t> temp;
-    temp.resize(stride);
-    for (const auto i : IntegerRange(size.y / 2)) {
-      const auto top = begin + stride * i;
-      const auto bottom = begin + stride * (size.y - 1 - i);
-      memcpy(temp.data(), top, stride);
-      memcpy(top, bottom, stride);
-      gfxUtils::ConvertBGRAtoRGBA(top, stride);
-
-      memcpy(bottom, temp.data(), stride);
-      gfxUtils::ConvertBGRAtoRGBA(bottom, stride);
-    }
-
-    if (size.y % 2) {
-      const auto middle = begin + stride * (size.y / 2);
-      gfxUtils::ConvertBGRAtoRGBA(middle, stride);
-    }
+    // RGBA->BGRA and flip-y.
+    MOZ_RELEASE_ASSERT(gfx::SwizzleYFlipData(pixels.data(), stride, gfx::SurfaceFormat::R8G8B8A8,
+                               pixels.data(), stride, gfx::SurfaceFormat::B8G8R8A8, {size.x, size.y}));
   }
 
   return surf;
@@ -5091,7 +5075,7 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 }
 
 bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
-                                      const Range<uint8_t> dest) const {
+                                      const Span<uint8_t> dest) const {
   const auto notLost =
       mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
   if (!notLost) return false;
@@ -5103,7 +5087,7 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
   const auto& child = notLost->outOfProcess;
   child->FlushPendingCmds();
   webgl::ReadPixelsResultIpc res = {};
-  if (!child->SendReadPixels(desc, dest.length(), &res)) {
+  if (!child->SendReadPixels(desc, dest.size(), &res)) {
     res = {};
   }
   if (!res.byteStride || !res.shmem) return false;
@@ -5115,7 +5099,7 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
     return false;
   }
 
-  const auto& shmemBytes = shmem.ByteRange();
+  const auto& shmemBytes = Span{shmem.ByteRange()};
 
   const auto pii = webgl::PackingInfoInfo::For(desc.pi);
   if (!pii) {
@@ -5132,19 +5116,13 @@ bool ClientWebGLContext::DoReadPixels(const webgl::ReadPixelsDesc& desc,
   const auto xByteSize = bpp * static_cast<uint32_t>(subrect.width);
   const ptrdiff_t byteOffset = packRect.y * byteStride + packRect.x * bpp;
 
-  auto srcItr = shmemBytes.begin() + byteOffset;
-  auto destItr = dest.begin() + byteOffset;
+  const auto srcSubrect = shmemBytes.subspan(byteOffset);
+  const auto destSubrect = dest.subspan(byteOffset);
 
   for (const auto i : IntegerRange(subrect.height)) {
-    if (i) {
-      // Don't trigger an assert on the last loop by pushing a RangedPtr past
-      // its bounds.
-      srcItr += byteStride;
-      destItr += byteStride;
-      MOZ_RELEASE_ASSERT(srcItr + xByteSize <= shmemBytes.end());
-      MOZ_RELEASE_ASSERT(destItr + xByteSize <= dest.end());
-    }
-    Memcpy(destItr, srcItr, xByteSize);
+    const auto srcRow = srcSubrect.subspan(i * byteStride, xByteSize);
+    const auto destRow = destSubrect.subspan(i * byteStride, xByteSize);
+    Memcpy(&destRow, srcRow);
   }
 
   return true;

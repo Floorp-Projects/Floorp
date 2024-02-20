@@ -1087,7 +1087,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  private:
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
   [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
-                                  Range<uint8_t>) const;
+                                  Span<uint8_t>) const;
   uvec2 DrawingBufferSize();
 
   // -
