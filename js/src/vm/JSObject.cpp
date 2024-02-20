@@ -3147,37 +3147,43 @@ js::gc::AllocKind JSObject::allocKindForTenure(
 
   MOZ_ASSERT(IsInsideNursery(this));
 
-  if (canHaveFixedElements()) {
-    const NativeObject& nobj = as<NativeObject>();
-    MOZ_ASSERT(nobj.numFixedSlots() == 0);
+  if (is<NativeObject>()) {
+    if (canHaveFixedElements()) {
+      const NativeObject& nobj = as<NativeObject>();
+      MOZ_ASSERT(nobj.numFixedSlots() == 0);
 
-    /* Use minimal size object if we are just going to copy the pointer. */
-    if (!nursery.isInside(nobj.getUnshiftedElementsHeader())) {
-      return gc::AllocKind::OBJECT0_BACKGROUND;
+      /* Use minimal size object if we are just going to copy the pointer. */
+      if (!nursery.isInside(nobj.getUnshiftedElementsHeader())) {
+        return gc::AllocKind::OBJECT0_BACKGROUND;
+      }
+
+      size_t nelements = nobj.getDenseCapacity();
+      return ForegroundToBackgroundAllocKind(GetGCArrayKind(nelements));
     }
 
-    size_t nelements = nobj.getDenseCapacity();
-    return ForegroundToBackgroundAllocKind(GetGCArrayKind(nelements));
-  }
-
-  if (is<JSFunction>()) {
-    return as<JSFunction>().getAllocKind();
-  }
-
-  // Fixed length typed arrays in the nursery may have a lazily allocated
-  // buffer, make sure there is room for the array's fixed data when moving the
-  // array.
-  if (is<FixedLengthTypedArrayObject>() &&
-      !as<FixedLengthTypedArrayObject>().hasBuffer()) {
-    gc::AllocKind allocKind;
-    if (as<FixedLengthTypedArrayObject>().hasInlineElements()) {
-      size_t nbytes = as<FixedLengthTypedArrayObject>().byteLength();
-      allocKind = FixedLengthTypedArrayObject::AllocKindForLazyBuffer(nbytes);
-    } else {
-      allocKind = GetGCObjectKind(getClass());
+    if (is<JSFunction>()) {
+      return as<JSFunction>().getAllocKind();
     }
-    return ForegroundToBackgroundAllocKind(allocKind);
+
+    // Fixed length typed arrays in the nursery may have a lazily allocated
+    // buffer, make sure there is room for the array's fixed data when moving
+    // the array.
+    if (is<FixedLengthTypedArrayObject>() &&
+        !as<FixedLengthTypedArrayObject>().hasBuffer()) {
+      gc::AllocKind allocKind;
+      if (as<FixedLengthTypedArrayObject>().hasInlineElements()) {
+        size_t nbytes = as<FixedLengthTypedArrayObject>().byteLength();
+        allocKind = FixedLengthTypedArrayObject::AllocKindForLazyBuffer(nbytes);
+      } else {
+        allocKind = GetGCObjectKind(getClass());
+      }
+      return ForegroundToBackgroundAllocKind(allocKind);
+    }
+
+    return as<NativeObject>().allocKindForTenure();
   }
+
+  // Handle all non-native objects.
 
   // Proxies that are CrossCompartmentWrappers may be nursery allocated.
   if (is<ProxyObject>()) {
@@ -3194,13 +3200,9 @@ js::gc::AllocKind JSObject::allocKindForTenure(
 
   // WasmArrayObjects sometimes have a variable-length tail which contains the
   // data for small arrays. Make sure we copy it all over to the new object.
-  if (is<WasmArrayObject>()) {
-    gc::AllocKind allocKind = as<WasmArrayObject>().allocKind();
-    return allocKind;
-  }
-
-  // All nursery allocatable non-native objects are handled above.
-  return as<NativeObject>().allocKindForTenure();
+  MOZ_ASSERT(is<WasmArrayObject>());
+  gc::AllocKind allocKind = as<WasmArrayObject>().allocKind();
+  return allocKind;
 }
 
 void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
