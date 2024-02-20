@@ -28,7 +28,7 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
     PlacesBackups.filenamesRegex
   );
   Assert.equal(matches[2], nodeCount);
-  Assert.equal(matches[3].length, 24);
+  Assert.equal(matches[3].length, 44);
 
   // Clear all backups in our backups folder.
   await PlacesBackups.create(0);
@@ -44,7 +44,7 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
     PlacesBackups.filenamesRegex
   );
   Assert.equal(matches[2], nodeCount);
-  Assert.equal(matches[3].length, 24);
+  Assert.equal(matches[3].length, 44);
 
   // Cleanup
   await IOUtils.remove(backupFile);

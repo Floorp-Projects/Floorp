@@ -15,7 +15,7 @@ ChromeUtils.defineLazyGetter(
   lazy,
   "filenamesRegex",
   () =>
-    /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=+-]{24})){0,1}\.(json(lz4)?)$/i
+    /^bookmarks-([0-9-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=_+-]{24,})){0,1}\.(json(lz4)?)$/i
 );
 
 async function limitBackups(aMaxBackups, backupFiles) {
