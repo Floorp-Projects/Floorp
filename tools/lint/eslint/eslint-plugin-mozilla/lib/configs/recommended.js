@@ -18,6 +18,9 @@
  *   require-atomic-updates - bug 1551829.
  *     - This generates too many false positives that are not easy to work
  *       around, and false positives seem to be inherent in the rule.
+ *   no-inner-declarations - bug 1487642
+ *     - Would be interested if this could apply to just vars, but at the moment
+ *       it doesn't.
  */
 module.exports = {
   env: {
@@ -149,10 +152,6 @@ module.exports = {
     // Functions must always return something or nothing
     "consistent-return": "error",
 
-    // XXX This rule line should be removed to enable it. See bug 1487642.
-    // Require super() calls in constructors
-    "constructor-super": "off",
-
     // Require braces around blocks that start a new line
     curly: ["error", "all"],
 
@@ -234,6 +233,11 @@ module.exports = {
     // No empty statements
     "no-empty": ["error", { allowEmptyCatch: true }],
 
+    // Disallow empty static blocks.
+    // This rule will be a recommended rule in ESLint v9 so may be removed
+    // when we upgrade to that.
+    "no-empty-static-block": "error",
+
     // Disallow eval and setInteral/setTimeout with strings
     "no-eval": "error",
 
@@ -256,8 +260,7 @@ module.exports = {
     // Disallow eval and setInteral/setTimeout with strings
     "no-implied-eval": "error",
 
-    // This has been superseded since we're using ES6.
-    // Disallow variable or function declarations in nested blocks
+    // See explicit decisions at top of file.
     "no-inner-declarations": "off",
 
     // Disallow the use of the __iterator__ property
@@ -274,6 +277,11 @@ module.exports = {
 
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
+
+    // Disallow new operators with global non-constructor functions.
+    // This rule will be a recommended rule in ESLint v9 so may be removed
+    // when we upgrade to that.
+    "no-new-native-nonconstructor": "error",
 
     // Disallow use of new wrappers
     "no-new-wrappers": "error",
