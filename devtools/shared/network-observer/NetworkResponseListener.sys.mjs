@@ -77,13 +77,8 @@ export class NetworkResponseListener {
    *
    * @type {nsIInputStream}
    */
+  // eslint-disable-next-line no-unused-private-class-members
   #inputStream = null;
-  /**
-   * Explicit flag to check if this listener was already destroyed.
-   *
-   * @type {boolean}
-   */
-  #isDestroyed = false;
   /**
    * Internal promise used to hold the completion of #getSecurityInfo.
    *
@@ -553,8 +548,6 @@ export class NetworkResponseListener {
     this.#inputStream = null;
     this.#converter = null;
     this.#request = null;
-
-    this.#isDestroyed = true;
   }
 
   /**

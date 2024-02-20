@@ -411,20 +411,6 @@ export class AppUpdater {
     return Services.sysinfo.getProperty("isPackagedApp");
   }
 
-  // true when updating in background is enabled.
-  get #updateStagingEnabled() {
-    LOG(
-      "AppUpdater:#updateStagingEnabled" +
-        "canStageUpdates: " +
-        this.aus.canStageUpdates
-    );
-    return (
-      !this.aus.disabled &&
-      !this.#updateDisabledByPackage &&
-      this.aus.canStageUpdates
-    );
-  }
-
   /**
    * Downloads an update mar or connects to an in-progress download.
    * Doesn't resolve until the update is ready to install, or a failure state

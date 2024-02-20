@@ -30,9 +30,11 @@ add_task(async function () {
       }
 
       #privateProperty;
+      // eslint-disable-next-line no-unused-private-class-members
       #privateMethod() {
         return Math.random();
       }
+      // eslint-disable-next-line no-unused-private-class-members
       get #privateGetter() {
         return 42;
       }

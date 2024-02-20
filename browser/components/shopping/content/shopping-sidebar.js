@@ -10,7 +10,6 @@
   const SHOPPING_SIDEBAR_WIDTH_PREF =
     "browser.shopping.experience2023.sidebarWidth";
   class ShoppingSidebar extends MozXULElement {
-    #browser;
     #initialized;
 
     static get markup() {
@@ -46,7 +45,6 @@
       }
       this.resizeObserverFn = this.resizeObserverFn.bind(this);
       this.appendChild(this.constructor.fragment);
-      this.#browser = this.querySelector(".shopping-sidebar");
 
       let previousWidth = Services.prefs.getIntPref(
         SHOPPING_SIDEBAR_WIDTH_PREF,

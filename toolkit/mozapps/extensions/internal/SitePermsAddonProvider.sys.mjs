@@ -273,8 +273,6 @@ class SitePermsAddonWrapper {
 }
 
 class SitePermsAddonInstalling extends SitePermsAddonWrapper {
-  #install = null;
-
   /**
    * @param {string} siteOriginNoSuffix: The origin this addon is installed
    *                                     for, WITHOUT the suffix generated from
@@ -293,7 +291,6 @@ class SitePermsAddonInstalling extends SitePermsAddonWrapper {
     };
 
     super(siteOriginNoSuffix, [permission]);
-    this.#install = install;
   }
 
   get existingAddon() {

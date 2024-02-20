@@ -320,6 +320,11 @@ module.exports = {
     "no-unsanitized/method": "error",
     "no-unsanitized/property": "error",
 
+    // Disallow unused private class members.
+    // This rule will be a recommended rule in ESLint v9 so may be removed
+    // when we upgrade to that.
+    "no-unused-private-class-members": "error",
+
     // No declaring variables that are never used
     "no-unused-vars": [
       "error",

@@ -38,8 +38,6 @@ async function promiseAddonEnabled() {
 }
 
 class HelpMenuHelper {
-  #popup = null;
-
   async open() {
     this.popup = document.getElementById("menu_HelpPopup");
     ok(this.popup, "Help menu should exist");

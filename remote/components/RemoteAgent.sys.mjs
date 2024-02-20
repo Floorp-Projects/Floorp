@@ -484,12 +484,6 @@ class RemoteAgentParentProcess {
 }
 
 class RemoteAgentContentProcess {
-  #classID;
-
-  constructor() {
-    this.#classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
-  }
-
   get running() {
     let reply = Services.cpmm.sendSyncMessage("RemoteAgent:IsRunning");
     if (!reply.length) {
