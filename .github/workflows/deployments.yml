@@ -99,8 +99,23 @@ jobs:
 
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
-  Part1-win-x86-build-with-profdata-and-jarlog:
-    needs: [get-buildid]
+  Part1-win-x86-build-with-profgen-zstd:
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: true
+      aarch64: false
+      build32bit: true
+      zstd: true
+
+  Part2-win-x86-gen-profdata-and-jarlog:
+    needs: Part1-win-x86-build-with-profgen-zstd
+    uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
+    with:
+      browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
+      arch: x86
+    
+  Part3-win-x86-build-with-profdata-and-jarlog:
+    needs: [get-buildid, Part2-win-x86-gen-profdata-and-jarlog]
     uses: ./.github/workflows/windows-build.yml
     with:
       aarch64: false
