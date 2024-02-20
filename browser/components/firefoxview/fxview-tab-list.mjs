@@ -47,8 +47,6 @@ if (!window.IS_STORYBOOK) {
  * @property {number} maxTabsLength - The max number of tabs for the list
  * @property {Array} tabItems - Items to show in the tab list
  * @property {string} searchQuery - The query string to highlight, if provided.
- * @property {string} secondaryActionClass - The class used to style the secondary action element
- * @property {string} tertiaryActionClass - The class used to style the tertiary action element
  */
 export default class FxviewTabList extends MozLitElement {
   constructor() {
@@ -76,8 +74,6 @@ export default class FxviewTabList extends MozLitElement {
     tabItems: { type: Array },
     updatesPaused: { type: Boolean },
     searchQuery: { type: String },
-    secondaryActionClass: { type: String },
-    tertiaryActionClass: { type: String },
   };
 
   static queries = {
@@ -171,38 +167,6 @@ export default class FxviewTabList extends MozLitElement {
     );
   }
 
-  navigateRight(fxviewTabRow) {
-    if (
-      (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
-      this.currentActiveElementId === "fxview-tab-row-main"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-    } else if (
-      this.currentActiveElementId === "fxview-tab-row-media-button" ||
-      this.currentActiveElementId === "fxview-tab-row-main"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusSecondaryButton();
-    } else if (
-      fxviewTabRow.tertiaryButtonEl &&
-      this.currentActiveElementId === "fxview-tab-row-secondary-button"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusTertiaryButton();
-    }
-  }
-
-  navigateLeft(fxviewTabRow) {
-    if (this.currentActiveElementId === "fxview-tab-row-tertiary-button") {
-      this.currentActiveElementId = fxviewTabRow.focusSecondaryButton();
-    } else if (
-      (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
-      this.currentActiveElementId === "fxview-tab-row-secondary-button"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-    } else {
-      this.currentActiveElementId = fxviewTabRow.focusLink();
-    }
-  }
-
   /**
    * Focuses the expected element (either the link or button) within fxview-tab-row
    * The currently focused/active element ID within a row is stored in this.currentActiveElementId
@@ -222,18 +186,42 @@ export default class FxviewTabList extends MozLitElement {
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.navigateLeft(fxviewTabRow);
+        if (
+          (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+          this.currentActiveElementId === "fxview-tab-row-secondary-button"
+        ) {
+          this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+        } else {
+          this.currentActiveElementId = fxviewTabRow.focusLink();
+        }
+      } else if (
+        (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+        this.currentActiveElementId === "fxview-tab-row-main"
+      ) {
+        this.currentActiveElementId = fxviewTabRow.focusMediaButton();
       } else {
-        this.navigateRight(fxviewTabRow);
+        this.currentActiveElementId = fxviewTabRow.focusButton();
       }
     } else if (e.code == "ArrowLeft") {
       // Focus either the link or the button in the current row and
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.navigateRight(fxviewTabRow);
+        if (
+          (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+          this.currentActiveElementId === "fxview-tab-row-main"
+        ) {
+          this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+        } else {
+          this.currentActiveElementId = fxviewTabRow.focusButton();
+        }
+      } else if (
+        (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
+        this.currentActiveElementId === "fxview-tab-row-secondary-button"
+      ) {
+        this.currentActiveElementId = fxviewTabRow.focusMediaButton();
       } else {
-        this.navigateLeft(fxviewTabRow);
+        this.currentActiveElementId = fxviewTabRow.focusLink();
       }
     }
   }
@@ -313,10 +301,6 @@ export default class FxviewTabList extends MozLitElement {
         role="listitem"
         .secondaryL10nId=${tabItem.secondaryL10nId}
         .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
-        .tertiaryL10nId=${ifDefined(tabItem.tertiaryL10nId)}
-        .tertiaryL10nArgs=${ifDefined(tabItem.tertiaryL10nArgs)}
-        .secondaryActionClass=${this.secondaryActionClass}
-        .tertiaryActionClass=${ifDefined(this.tertiaryActionClass)}
         .attention=${ifDefined(tabItem.attention)}
         .soundPlaying=${ifDefined(tabItem.soundPlaying)}
         .sourceClosedId=${ifDefined(tabItem.sourceClosedId)}
@@ -389,7 +373,7 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {object} containerObj - Info about an open tab's container if within one
  * @property {string} currentActiveElementId - ID of currently focused element within each tab item
  * @property {string} dateTimeFormat - Expected format for date and/or time
- * @property {string} hasPopup - The aria-haspopup attribute for the secondary or tertiary action, if required
+ * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
  * @property {boolean} isBookmark - Whether an open tab is bookmarked
  * @property {number} closedId - The tab ID for when the tab item was closed.
  * @property {number} sourceClosedId - The closedId of the closed window its from if applicable
@@ -401,10 +385,6 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {string} primaryL10nArgs - The l10n args used for the primary action element
  * @property {string} secondaryL10nId - The l10n id used for the secondary action button
  * @property {string} secondaryL10nArgs - The l10n args used for the secondary action element
- * @property {string} secondaryActionClass - The class used to style the secondary action element
- * @property {string} tertiaryL10nId - The l10n id used for the tertiary action button
- * @property {string} tertiaryL10nArgs - The l10n args used for the tertiary action element
- * @property {string} tertiaryActionClass - The class used to style the tertiary action element
  * @property {boolean} attention - Whether to show a notification dot
  * @property {boolean} soundPlaying - Whether an open tab has soundPlaying
  * @property {object} tabElement - The MozTabbrowserTab element for the tab item.
@@ -437,10 +417,6 @@ export class FxviewTabRow extends MozLitElement {
     primaryL10nArgs: { type: String },
     secondaryL10nId: { type: String },
     secondaryL10nArgs: { type: String },
-    secondaryActionClass: { type: String },
-    tertiaryL10nId: { type: String },
-    tertiaryL10nArgs: { type: String },
-    tertiaryActionClass: { type: String },
     soundPlaying: { type: Boolean },
     closedId: { type: Number },
     sourceClosedId: { type: Number },
@@ -457,8 +433,7 @@ export class FxviewTabRow extends MozLitElement {
 
   static queries = {
     mainEl: ".fxview-tab-row-main",
-    secondaryButtonEl: "#fxview-tab-row-secondary-button",
-    tertiaryButtonEl: "#fxview-tab-row-tertiary-button",
+    buttonEl: "#fxview-tab-row-secondary-button:not([hidden])",
     mediaButtonEl: "#fxview-tab-row-media-button",
   };
 
@@ -474,14 +449,9 @@ export class FxviewTabRow extends MozLitElement {
     this.currentFocusable.focus();
   }
 
-  focusSecondaryButton() {
-    this.secondaryButtonEl.focus();
-    return this.secondaryButtonEl.id;
-  }
-
-  focusTertiaryButton() {
-    this.tertiaryButtonEl.focus();
-    return this.tertiaryButtonEl.id;
+  focusButton() {
+    this.buttonEl.focus();
+    return this.buttonEl.id;
   }
 
   focusMediaButton() {
@@ -607,23 +577,6 @@ export class FxviewTabRow extends MozLitElement {
     }
   }
 
-  tertiaryActionHandler(event) {
-    if (
-      (event.type == "click" && event.detail && !event.altKey) ||
-      // detail=0 is from keyboard
-      (event.type == "click" && !event.detail)
-    ) {
-      event.preventDefault();
-      this.dispatchEvent(
-        new CustomEvent("fxview-tab-list-tertiary-action", {
-          bubbles: true,
-          composed: true,
-          detail: { originalEvent: event, item: this },
-        })
-      );
-    }
-  }
-
   muteOrUnmuteTab() {
     this.tabElement.toggleMuteAudio();
     this.muted = !this.muted;
@@ -645,7 +598,6 @@ export class FxviewTabRow extends MozLitElement {
     const timeString = this.timeFluentId(this.dateTimeFormat);
     const time = this.time;
     const timeArgs = JSON.stringify({ time });
-
     return html`
       ${when(
         this.containerObj,
@@ -774,41 +726,15 @@ export class FxviewTabRow extends MozLitElement {
       ${when(
         this.secondaryL10nId && this.secondaryActionHandler,
         () => html`<button
-          class=${classMap({
-            "fxview-tab-row-button": true,
-            "ghost-button": true,
-            "icon-button": true,
-            "semi-transparent": true,
-            [this.secondaryActionClass]: this.secondaryActionClass,
-          })}
+          class="fxview-tab-row-button ghost-button icon-button semi-transparent"
           id="fxview-tab-row-secondary-button"
+          part="secondary-button"
           data-l10n-id=${this.secondaryL10nId}
           data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
           aria-haspopup=${ifDefined(this.hasPopup)}
           @click=${this.secondaryActionHandler}
           tabindex="${this.active &&
           this.currentActiveElementId === "fxview-tab-row-secondary-button"
-            ? "0"
-            : "-1"}"
-        ></button>`
-      )}
-      ${when(
-        this.tertiaryL10nId && this.tertiaryActionHandler,
-        () => html`<button
-          class=${classMap({
-            "fxview-tab-row-button": true,
-            "ghost-button": true,
-            "icon-button": true,
-            "semi-transparent": true,
-            [this.tertiaryActionClass]: this.tertiaryActionClass,
-          })}
-          id="fxview-tab-row-tertiary-button"
-          data-l10n-id=${this.tertiaryL10nId}
-          data-l10n-args=${ifDefined(this.tertiaryL10nArgs)}
-          aria-haspopup=${ifDefined(this.hasPopup)}
-          @click=${this.tertiaryActionHandler}
-          tabindex="${this.active &&
-          this.currentActiveElementId === "fxview-tab-row-tertiary-button"
             ? "0"
             : "-1"}"
         ></button>`
