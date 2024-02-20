@@ -18,7 +18,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -41,13 +40,20 @@ const val globalPrivacyControlSwitchText = "Tell websites not to share & sell da
  */
 class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
-    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
+    fun verifyEnhancedTrackingProtectionSummary() =
+        onView(withText("$appName protects you from many of the most common trackers that follow what you do online."))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyEnhancedTrackingProtectionSummary() = assertEnhancedTrackingProtectionSummary()
+    fun verifyLearnMoreText() = onView(withText("Learn more")).check(matches(isDisplayed()))
 
-    fun verifyLearnMoreText() = assertLearnMoreText()
-
-    fun verifyEnhancedTrackingProtectionTextWithSwitchWidget() = assertEnhancedTrackingProtectionTextWithSwitchWidget()
+    fun verifyEnhancedTrackingProtectionTextWithSwitchWidget() =
+        onView(
+            allOf(
+                withParentIndex(1),
+                withChild(withText("Enhanced Tracking Protection")),
+            ),
+        )
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     fun verifyEnhancedTrackingProtectionOptionsEnabled(enabled: Boolean = true) {
         onView(withText("Standard (default)"))
@@ -60,7 +66,14 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
             .check(matches(isEnabled(enabled)))
     }
 
-    fun verifyTrackingProtectionSwitchEnabled() = assertTrackingProtectionSwitchEnabled()
+    fun verifyTrackingProtectionSwitchEnabled() =
+        onView(withResourceName("checkbox")).check(
+            matches(
+                isChecked(
+                    true,
+                ),
+            ),
+        )
 
     fun switchEnhancedTrackingProtectionToggle() = onView(
         allOf(
@@ -199,46 +212,6 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
             return SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition()
         }
     }
-}
-
-private fun assertNavigationToolBarHeader() {
-    onView(
-        allOf(
-            withParent(withId(R.id.navigationToolbar)),
-            withText("Enhanced Tracking Protection"),
-        ),
-    )
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertEnhancedTrackingProtectionSummary() {
-    onView(withText("$appName protects you from many of the most common trackers that follow what you do online."))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertLearnMoreText() {
-    onView(withText("Learn more"))
-        .check(matches(isDisplayed()))
-}
-
-private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
-    onView(
-        allOf(
-            withParentIndex(1),
-            withChild(withText("Enhanced Tracking Protection")),
-        ),
-    )
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertTrackingProtectionSwitchEnabled() {
-    onView(withResourceName("checkbox")).check(
-        matches(
-            isChecked(
-                true,
-            ),
-        ),
-    )
 }
 
 fun settingsSubMenuEnhancedTrackingProtection(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
