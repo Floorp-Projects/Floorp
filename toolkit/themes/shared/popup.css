@@ -134,11 +134,12 @@ panel:where([type="arrow"]) {
 
 .animatable-menupopup,
 panel[type="arrow"] {
-  transition-duration: 0s, 0s;
   transition-timing-function: var(--animation-easing-function), ease-out;
 
   @media (-moz-panel-animations) and (prefers-reduced-motion: no-preference) {
-    transition-duration: 0.18s, 0.18s;
+    &:not([animate="false"]) {
+      transition-duration: 0.18s;
+    }
   }
 
   @media not (-moz-platform: macos) {
@@ -149,11 +150,6 @@ panel[type="arrow"] {
 
     &[side="bottom"] {
       transform: translateY(70px);
-    }
-
-    &[animate="cancel"] {
-      opacity: 0;
-      transform: none;
     }
   }
 
@@ -177,11 +173,11 @@ panel[type="arrow"] {
         -moz-window-transform: translateY(70px);
       }
     }
+  }
 
-    &[animate="cancel"] {
-      -moz-window-opacity: 0;
-      -moz-window-transform: none;
-    }
+  &[animate="cancel"] {
+    -moz-window-transform: none;
+    transform: none;
   }
 
   &:is([animate="false"], [animate="open"]) {
@@ -190,10 +186,6 @@ panel[type="arrow"] {
     -moz-window-opacity: 1;
     -moz-window-transform: none;
     transition-timing-function: var(--animation-easing-function), ease-in-out;
-  }
-
-  &[animate="false"] {
-    transition-duration: 0s, 0s;
   }
 
   &[animating] {
