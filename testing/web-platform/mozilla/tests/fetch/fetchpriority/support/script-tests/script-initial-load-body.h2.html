@@ -9,15 +9,23 @@
     <script src="../resources/dummy.js?2" fetchpriority="high"></script>
     <script src="../resources/dummy.js?3" fetchpriority="auto"></script>
     <script src="../resources/dummy.js?4"></script>
+    <svg><script href="../resources/dummy.js?5" fetchpriority="low"></script></svg>
+    <svg><script href="../resources/dummy.js?6" fetchpriority="high"></script></svg>
+    <svg><script href="../resources/dummy.js?7" fetchpriority="auto"></script></svg>
+    <svg><script href="../resources/dummy.js?8"></script></svg>
     <img src="../resources/square_25px_x_25px.png">
     <!-- The image makes the external in-body
     (https://html.spec.whatwg.org/#parsing-main-inbody) scripts considered "late"
     (https://web.dev/articles/fetch-priority#browser_priority_and_fetchpriority).
     -->
-    <script src="../resources/dummy.js?5" fetchpriority="low"></script>
-    <script src="../resources/dummy.js?6" fetchpriority="high"></script>
-    <script src="../resources/dummy.js?7" fetchpriority="auto"></script>
-    <script src="../resources/dummy.js?8"></script>
+    <script src="../resources/dummy.js?9" fetchpriority="low"></script>
+    <script src="../resources/dummy.js?10" fetchpriority="high"></script>
+    <script src="../resources/dummy.js?11" fetchpriority="auto"></script>
+    <script src="../resources/dummy.js?12"></script>
+    <svg><script href="../resources/dummy.js?13" fetchpriority="low"></script></svg>
+    <svg><script href="../resources/dummy.js?14" fetchpriority="high"></script></svg>
+    <svg><script href="../resources/dummy.js?15" fetchpriority="auto"></script></svg>
+    <svg><script href="../resources/dummy.js?16"></script></svg>
     <script>
     onload = function() {
         opener.postMessage("ChildLoaded");
