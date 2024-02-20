@@ -51,6 +51,13 @@ process-type-rdd = RDD
 
 # process used to run some IPC actor in their own sandbox
 process-type-utility = Sandboxed IPC Actor
+process-type-utility-actor-audio-decoder-generic = Utility Generic Audio Decoder
+process-type-utility-actor-audio-decoder-applemedia = Utility AppleMedia
+process-type-utility-actor-audio-decoder-wmf = Utility Windows Media Foundation
+process-type-utility-actor-mf-media-engine = Utility Media Foundation Engine
+process-type-utility-actor-js-oracle = Utility JavaScript Oracle
+process-type-utility-actor-windows-utils = Utility Windows Utils
+process-type-utility-actor-windows-file-dialog = Utility Windows File Dialog
 
 ##
 ## Other
