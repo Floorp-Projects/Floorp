@@ -36,18 +36,18 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
         assertUIObjectExists(
             itemWithText("Exceptions let you disable tracking protection for selected sites."),
         )
-        learnMoreLink.check(matches(isDisplayed()))
+        learnMoreLink().check(matches(isDisplayed()))
     }
 
-    fun openExceptionsLearnMoreLink() = learnMoreLink.click()
+    fun openExceptionsLearnMoreLink() = learnMoreLink().click()
 
     fun removeOneSiteException(siteHost: String) {
-        exceptionsList.waitForExists(waitingTime)
+        exceptionsList().waitForExists(waitingTime)
         removeSiteExceptionButton(siteHost).click()
     }
 
     fun verifySiteExceptionExists(siteUrl: String, shouldExist: Boolean) {
-        exceptionsList.waitForExists(waitingTime)
+        exceptionsList().waitForExists(waitingTime)
         assertUIObjectExists(itemContainingText(siteUrl), exists = shouldExist)
     }
 
@@ -76,7 +76,7 @@ private fun assertNavigationToolBarHeader() {
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 }
 
-private val learnMoreLink = onView(withText("Learn more"))
+private fun learnMoreLink() = onView(withText("Learn more"))
 
 private fun disableAllExceptionsButton() =
     onView(withId(R.id.removeAllExceptions)).click()
@@ -89,5 +89,5 @@ private fun removeSiteExceptionButton(siteHost: String) =
         ),
     )
 
-private val exceptionsList =
+private fun exceptionsList() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/exceptions_list"))
