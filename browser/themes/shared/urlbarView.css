@@ -549,11 +549,8 @@
 
 .urlbarView-userContext-icon {
   height: 14px;
-  background-image: var(--identity-icon);
+  width: 14px;
   -moz-context-properties: fill;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center center;
   vertical-align: top;
   margin-inline-start: 0.35em;
 }
