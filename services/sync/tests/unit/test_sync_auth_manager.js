@@ -37,8 +37,9 @@ const { TokenServerClient, TokenServerClientServerError } =
   ChromeUtils.importESModule(
     "resource://services-common/tokenserverclient.sys.mjs"
   );
-const { AccountState, ERROR_INVALID_ACCOUNT_STATE } =
-  ChromeUtils.importESModule("resource://gre/modules/FxAccounts.sys.mjs");
+const { AccountState } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
+);
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
@@ -191,11 +192,8 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
 
   await Assert.rejects(
     syncAuthManager._ensureValidToken(),
-    err => {
-      Assert.equal(err.message, ERROR_INVALID_ACCOUNT_STATE);
-      return true; // expected error
-    },
-    "should reject because the account was deleted"
+    AuthenticationError,
+    "should reject due to an auth error"
   );
 
   Assert.ok(accessTokenWithSessionTokenCalled);
