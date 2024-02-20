@@ -195,29 +195,13 @@ DevTools.prototype = {
    * Removes all tools that match the given |toolId|
    * Needed so that add-ons can remove themselves when they are deactivated
    *
-   * @param {string|object} tool
-   *        Definition or the id of the tool to unregister. Passing the
-   *        tool id should be avoided as it is a temporary measure.
+   * @param {string} toolId
+   *        The id of the tool to unregister.
    * @param {boolean} isQuitApplication
    *        true to indicate that the call is due to app quit, so we should not
    *        cause a cascade of costly events
    */
-  unregisterTool(tool, isQuitApplication) {
-    let toolId = null;
-    if (typeof tool == "string") {
-      toolId = tool;
-      tool = this._tools.get(tool);
-    } else {
-      const { Deprecated } = ChromeUtils.importESModule(
-        "resource://gre/modules/Deprecated.sys.mjs"
-      );
-      Deprecated.warning(
-        "Deprecation WARNING: gDevTools.unregisterTool(tool) is " +
-          "deprecated. You should unregister a tool using its toolId: " +
-          "gDevTools.unregisterTool(toolId)."
-      );
-      toolId = tool.id;
-    }
+  unregisterTool(toolId, isQuitApplication) {
     this._tools.delete(toolId);
 
     if (!isQuitApplication) {

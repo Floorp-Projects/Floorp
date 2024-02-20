@@ -45,7 +45,7 @@ Methods
 
   - ``toolDefinition {ToolDefinition}`` - An object that contains information about the tool. See :ref:`ToolDefinition <devtoolsapi-tool-definition>` for details.
 
-``unregisterTool(tool)``
+``unregisterTool(toolId)``
   Unregisters the given tool and removes it from all toolboxes.
 
   **Parameters:**

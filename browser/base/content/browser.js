@@ -29,7 +29,6 @@ ChromeUtils.defineESModuleGetters(this, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
-  Deprecated: "resource://gre/modules/Deprecated.sys.mjs",
   DevToolsSocketStatus:
     "resource://devtools/shared/security/DevToolsSocketStatus.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
@@ -3243,15 +3242,6 @@ function BrowserPageInfo(
   browsingContext,
   browser
 ) {
-  if (HTMLDocument.isInstance(documentURL)) {
-    Deprecated.warning(
-      "Please pass the location URL instead of the document " +
-        "to BrowserPageInfo() as the first argument.",
-      "https://bugzilla.mozilla.org/show_bug.cgi?id=1238180"
-    );
-    documentURL = documentURL.location;
-  }
-
   let args = { initialTab, imageElement, browsingContext, browser };
 
   documentURL = documentURL || window.gBrowser.selectedBrowser.currentURI.spec;
