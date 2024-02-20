@@ -141,7 +141,6 @@ this.PartitionedStorageHelper = {
       await SpecialPowers.pushPrefEnv({
         set: [
           ["dom.storage_access.enabled", true],
-          ["network.cookie.cookieBehavior.optInPartitioning", true],
           [
             "privacy.partition.always_partition_third_party_non_cookie_storage",
             true,
