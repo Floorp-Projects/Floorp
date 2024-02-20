@@ -81,7 +81,7 @@ add_task(function makeResultGroups_true() {
                       group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
                     },
                     {
-                      flex: 2,
+                      flex: 99,
                       group: UrlbarUtils.RESULT_GROUP.RECENT_SEARCH,
                     },
                     {
@@ -207,7 +207,7 @@ add_task(function makeResultGroups_false() {
                       group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
                     },
                     {
-                      flex: 2,
+                      flex: 99,
                       group: UrlbarUtils.RESULT_GROUP.RECENT_SEARCH,
                     },
                     {

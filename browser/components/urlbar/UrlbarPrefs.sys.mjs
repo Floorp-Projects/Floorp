@@ -618,10 +618,9 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
                 group: lazy.UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
               },
               {
-                flex: 2,
+                flex: 99,
                 group: lazy.UrlbarUtils.RESULT_GROUP.RECENT_SEARCH,
               },
-
               {
                 flex: 4,
                 group: lazy.UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,

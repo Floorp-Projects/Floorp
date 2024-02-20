@@ -399,6 +399,9 @@ https_first_disabled = true
 
 ["browser_revert.js"]
 
+["browser_search_continuation.js"]
+support-files = ["search-engines", "../../../search/test/browser/trendingSuggestionEngine.sjs"]
+
 ["browser_searchFunction.js"]
 
 ["browser_searchHistoryLimit.js"]

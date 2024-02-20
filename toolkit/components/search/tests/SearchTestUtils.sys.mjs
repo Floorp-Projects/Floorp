@@ -197,6 +197,35 @@ export var SearchTestUtils = {
   },
 
   /**
+   * Utility function for mochitests to configure a custom search engine
+   * directory and search configuration.
+   *
+   * @param {string} testDir
+   *   The test directory to use.
+   * @param {Array} searchConfig
+   *   The test search configuration to use.
+   */
+  async setupTestEngines(testDir, searchConfig) {
+    let searchExtensions = gTestScope.getChromeDir(
+      gTestScope.getResolvedURI(gTestScope.gTestPath)
+    );
+    searchExtensions.append(testDir);
+    await this.useMochitestEngines(searchExtensions);
+
+    this.useMockIdleService();
+
+    await this.updateRemoteSettingsConfig(searchConfig);
+
+    gTestScope.registerCleanupFunction(async () => {
+      let settingsWritten = SearchTestUtils.promiseSearchNotification(
+        "write-settings-to-disk-complete"
+      );
+      await SearchTestUtils.updateRemoteSettingsConfig();
+      await settingsWritten;
+    });
+  },
+
+  /**
    * Convert a list of engine configurations into engine objects.
    *
    * @param {Array} engineConfigurations
