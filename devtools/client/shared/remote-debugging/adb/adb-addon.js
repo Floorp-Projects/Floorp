@@ -7,7 +7,7 @@
 const { AddonManager } = ChromeUtils.importESModule(
   "resource://gre/modules/AddonManager.sys.mjs",
   // AddonManager is a singleton, never create two instances of it.
-  { loadInDevToolsLoader: false }
+  { global: "shared" }
 );
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 

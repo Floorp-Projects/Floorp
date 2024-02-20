@@ -4,12 +4,10 @@
 
 const { DevToolsLoader } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs",
-  {
-    // `loadInDevToolsLoader` will import the loader in a special priviledged
-    // global created for DevTools, which will be reused as the shared global
-    // to load additional modules for the "DistinctSystemPrincipalLoader".
-    loadInDevToolsLoader: true,
-  }
+  // `global: "devtools"` will import the loader in a special priviledged
+  // global created for DevTools, which will be reused as the shared global
+  // to load additional modules for the "DistinctSystemPrincipalLoader".
+  { global: "devtools" }
 );
 
 // When debugging system principal resources (JSMs, chrome documents, ...)

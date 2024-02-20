@@ -11,7 +11,7 @@ const {
 
 const { AddonManager } = ChromeUtils.importESModule(
   "resource://gre/modules/AddonManager.sys.mjs",
-  { loadInDevToolsLoader: false }
+  { global: "shared" }
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
@@ -43,12 +43,13 @@ class AddonsActor extends Actor {
     // so for now, there is no chance of calling this on Android.
     if (openDevTools) {
       // This module is typically loaded in the loader spawn by DevToolsStartup,
-      // in a distinct compartment thanks to useDistinctSystemPrincipalLoader and loadInDevToolsLoader flag.
+      // in a distinct compartment thanks to useDistinctSystemPrincipalLoader
+      // and global flag.
       // But here we want to reuse the shared module loader.
       // We do not want to load devtools.js in the server's distinct module loader.
       const loader = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs",
-        { loadInDevToolsLoader: false }
+        { global: "shared" }
       );
       const {
         gDevTools,
