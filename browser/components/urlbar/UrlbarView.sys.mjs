@@ -2681,7 +2681,6 @@ export class UrlbarView {
           if (identity.icon) {
             let userContextIcon = this.#createElement("img");
             userContextIcon.classList.add("urlbarView-userContext-icon");
-
             userContextIcon.classList.add("identity-icon-" + identity.icon);
             userContextIcon.setAttribute("alt", label);
             userContextIcon.src =
