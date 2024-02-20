@@ -106,6 +106,12 @@ skip-if = [
 ["browser_identity_UI.js"]
 https_first_disabled = true
 
+["browser_identity_web_controlled_blank.js"]
+support-files = [
+  "test_web_controlled_blank.html",
+  "dummy_page.html",
+]
+
 ["browser_iframe_navigation.js"]
 https_first_disabled = true
 support-files = ["iframe_navigation.html"]
