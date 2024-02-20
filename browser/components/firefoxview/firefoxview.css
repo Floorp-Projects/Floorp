@@ -108,14 +108,6 @@ fxview-category-button[name="history"]::part(icon) {
   background-image: url("chrome://browser/content/firefoxview/category-history.svg");
 }
 
-fxview-tab-list.with-dismiss-button::part(secondary-button) {
-  background-image: url("chrome://global/skin/icons/close.svg");
-}
-
-fxview-tab-list.with-context-menu::part(secondary-button) {
-  background-image: url("chrome://global/skin/icons/more.svg");
-}
-
 .sticky-container {
   position: sticky;
   top: 0;

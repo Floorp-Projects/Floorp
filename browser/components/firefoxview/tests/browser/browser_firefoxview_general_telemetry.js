@@ -198,7 +198,11 @@ add_task(async function test_context_menu_new_window_telemetry() {
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
     let panelList = historyComponent.panelList;
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(
+      firstItem.secondaryButtonEl,
+      {},
+      content
+    );
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
@@ -254,14 +258,22 @@ add_task(async function test_context_menu_private_window_telemetry() {
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
     let panelList = historyComponent.panelList;
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(
+      firstItem.secondaryButtonEl,
+      {},
+      content
+    );
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
       panelItem => panelItem.nodeName === "PANEL-ITEM"
     );
 
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(
+      firstItem.secondaryButtonEl,
+      {},
+      content
+    );
     info("Context menu button clicked.");
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     info("Context menu shown.");
@@ -323,14 +335,22 @@ add_task(async function test_context_menu_delete_from_history_telemetry() {
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
     let panelList = historyComponent.panelList;
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(
+      firstItem.secondaryButtonEl,
+      {},
+      content
+    );
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
       panelItem => panelItem.nodeName === "PANEL-ITEM"
     );
 
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(
+      firstItem.secondaryButtonEl,
+      {},
+      content
+    );
     info("Context menu button clicked.");
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     info("Context menu shown.");

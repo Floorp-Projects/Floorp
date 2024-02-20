@@ -418,7 +418,7 @@ class HistoryInView extends ViewPage {
             ></h3>
             <fxview-tab-list
               slot="main"
-              class="with-context-menu"
+              secondaryActionClass="options-button"
               dateTimeFormat=${historyItem.l10nId.includes("prev-month")
                 ? "dateTime"
                 : "time"}
