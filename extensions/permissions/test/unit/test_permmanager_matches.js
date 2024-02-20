@@ -63,14 +63,6 @@ function run_test() {
   let uri4_n = secMan.createContentPrincipal(uri4, {});
   let uri5_n = secMan.createContentPrincipal(uri5, {});
 
-  attrs = { inIsolatedMozBrowser: true };
-  let uri0_y_ = secMan.createContentPrincipal(uri0, attrs);
-  let uri1_y_ = secMan.createContentPrincipal(uri1, attrs);
-  let uri2_y_ = secMan.createContentPrincipal(uri2, attrs);
-  let uri3_y_ = secMan.createContentPrincipal(uri3, attrs);
-  let uri4_y_ = secMan.createContentPrincipal(uri4, attrs);
-  let uri5_y_ = secMan.createContentPrincipal(uri5, attrs);
-
   attrs = { userContextId: 1 };
   let uri0_1 = secMan.createContentPrincipal(uri0, attrs);
   let uri1_1 = secMan.createContentPrincipal(uri1, attrs);
@@ -89,8 +81,6 @@ function run_test() {
 
   pm.addFromPrincipal(uri0_n, "test/matches", pm.ALLOW_ACTION);
   let perm_n = pm.getPermissionObject(uri0_n, "test/matches", true);
-  pm.addFromPrincipal(uri0_y_, "test/matches", pm.ALLOW_ACTION);
-  let perm_y_ = pm.getPermissionObject(uri0_y_, "test/matches", true);
   pm.addFromPrincipal(uri0_1, "test/matches", pm.ALLOW_ACTION);
   let perm_1 = pm.getPermissionObject(uri0_n, "test/matches", true);
   pm.addFromPrincipal(uri0_cnn, "test/matches", pm.ALLOW_ACTION);
@@ -103,39 +93,6 @@ function run_test() {
     uri3_n,
     uri4_n,
     uri5_n,
-    uri0_y_,
-    uri1_y_,
-    uri2_y_,
-    uri3_y_,
-    uri4_y_,
-    uri5_y_,
-    uri2_1,
-    uri3_1,
-    uri4_1,
-    uri5_1,
-    uri0_cnn,
-    uri1_cnn,
-    uri2_cnn,
-    uri3_cnn,
-    uri4_cnn,
-    uri5_cnn,
-  ]);
-
-  matches_always(perm_y_, [uri0_y_]);
-  matches_weak(perm_y_, [uri1_y_]);
-  matches_never(perm_y_, [
-    uri2_y_,
-    uri3_y_,
-    uri4_y_,
-    uri5_y_,
-    uri0_n,
-    uri1_n,
-    uri2_n,
-    uri3_n,
-    uri4_n,
-    uri5_n,
-    uri0_1,
-    uri1_1,
     uri2_1,
     uri3_1,
     uri4_1,
@@ -155,12 +112,6 @@ function run_test() {
     uri3_n,
     uri4_n,
     uri5_n,
-    uri0_y_,
-    uri1_y_,
-    uri2_y_,
-    uri3_y_,
-    uri4_y_,
-    uri5_y_,
     uri2_1,
     uri3_1,
     uri4_1,
@@ -180,12 +131,6 @@ function run_test() {
     uri3_n,
     uri4_n,
     uri5_n,
-    uri0_y_,
-    uri1_y_,
-    uri2_y_,
-    uri3_y_,
-    uri4_y_,
-    uri5_y_,
     uri2_1,
     uri3_1,
     uri4_1,
