@@ -77,7 +77,6 @@ if CONFIG["TARGET_CPU"] == "arm":
     DEFINES["WEBRTC_HAS_NEON"] = True
 
     OS_LIBS += [
-        "android_support",
         "unwind"
     ]
 
@@ -88,10 +87,6 @@ if CONFIG["TARGET_CPU"] == "x86":
     ]
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
-
-    OS_LIBS += [
-        "android_support"
-    ]
 
 if CONFIG["TARGET_CPU"] == "x86_64":
 
