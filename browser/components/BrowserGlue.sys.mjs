@@ -2096,6 +2096,7 @@ BrowserGlue.prototype = {
 
       () => lazy.BrowserUsageTelemetry.uninit(),
       () => lazy.SearchSERPTelemetry.uninit(),
+      () => lazy.SearchSERPDomainToCategoriesMap.uninit(),
       () => lazy.Interactions.uninit(),
       () => lazy.PageDataService.uninit(),
       () => lazy.PageThumbs.uninit(),

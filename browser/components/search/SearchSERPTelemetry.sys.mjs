@@ -7,6 +7,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -429,8 +430,8 @@ class TelemetryHandler {
     this._contentHandler._reportPageWithAdImpressions(info, browser);
   }
 
-  reportPageDomains(info, browser) {
-    this._contentHandler._reportPageDomains(info, browser);
+  async reportPageDomains(info, browser) {
+    await this._contentHandler._reportPageDomains(info, browser);
   }
 
   reportPageImpression(info, browser) {
@@ -1712,23 +1713,23 @@ class ContentHandler {
   }
 
   /**
-   * Initiates the categorization and reporting of domains extracted from
-   * SERPs.
-   *
-   * @param {object} info
-   *   The search provider infomation for the page.
-   * @param {Set} info.nonAdDomains
-       The non-ad domains extracted from the page.
-   * @param {Set} info.adDomains
-       The ad domains extracted from the page.
-   * @param {object} browser
-   *   The browser associated with the page.
-   */
-  _reportPageDomains(info, browser) {
+  * Initiates the categorization and reporting of domains extracted from
+  * SERPs.
+  *
+  * @param {object} info
+  *   The search provider infomation for the page.
+  * @param {Set} info.nonAdDomains
+      The non-ad domains extracted from the page.
+  * @param {Set} info.adDomains
+      The ad domains extracted from the page.
+  * @param {object} browser
+  *   The browser associated with the page.
+  */
+  async _reportPageDomains(info, browser) {
     let item = this._findItemForBrowser(browser);
     let telemetryState = item.browserTelemetryStateMap.get(browser);
     if (lazy.serpEventTelemetryCategorization && telemetryState) {
-      let result = SearchSERPCategorization.maybeCategorizeSERP(
+      let result = await SearchSERPCategorization.maybeCategorizeSERP(
         info.nonAdDomains,
         info.adDomains,
         item.info.provider
@@ -1813,7 +1814,7 @@ class SERPCategorizer {
    * @returns {CategorizationResult | null}
    *   The final categorization result. Returns null if the map was empty.
    */
-  maybeCategorizeSERP(nonAdDomains, adDomains, provider) {
+  async maybeCategorizeSERP(nonAdDomains, adDomains, provider) {
     // Per DS, if the map was empty (e.g. because of a technical issue
     // downloading the data), we shouldn't report telemetry.
     // Thus, there is no point attempting to categorize the SERP.
@@ -1823,14 +1824,14 @@ class SERPCategorizer {
     let resultsToReport = {};
 
     let processedDomains = this.processDomains(nonAdDomains, provider);
-    let results = this.applyCategorizationLogic(processedDomains);
+    let results = await this.applyCategorizationLogic(processedDomains);
     resultsToReport.organic_category = results.category;
     resultsToReport.organic_num_domains = results.num_domains;
     resultsToReport.organic_num_unknown = results.num_unknown;
     resultsToReport.organic_num_inconclusive = results.num_inconclusive;
 
     processedDomains = this.processDomains(adDomains, provider);
-    results = this.applyCategorizationLogic(processedDomains);
+    results = await this.applyCategorizationLogic(processedDomains);
     resultsToReport.sponsored_category = results.category;
     resultsToReport.sponsored_num_domains = results.num_domains;
     resultsToReport.sponsored_num_unknown = results.num_unknown;
@@ -1851,7 +1852,7 @@ class SERPCategorizer {
    *   The final categorization results. Keys are: "category", "num_domains",
    *   "num_unknown" and "num_inconclusive".
    */
-  applyCategorizationLogic(domains) {
+  async applyCategorizationLogic(domains) {
     let domainInfo = {};
     let domainsCount = 0;
     let unknownsCount = 0;
@@ -1866,7 +1867,9 @@ class SERPCategorizer {
     for (let domain of domains) {
       domainsCount++;
 
-      let categoryCandidates = SearchSERPDomainToCategoriesMap.get(domain);
+      let categoryCandidates = await SearchSERPDomainToCategoriesMap.get(
+        domain
+      );
 
       if (!categoryCandidates.length) {
         unknownsCount++;
@@ -2167,16 +2170,12 @@ class CategorizationRecorder {
  */
 
 /**
- * Maps domain to categories, with data synced with Remote Settings.
+ * Maps domain to categories, with its data synced using Remote Settings. The
+ * data is downloaded from Remote Settings and stored in a map in a worker
+ * thread to avoid processing the data from the attachments from occupying
+ * the main thread.
  */
 class DomainToCategoriesMap {
-  /**
-   * Contains the domain to category scores.
-   *
-   * @type {Object<string, Array<DomainCategoryScore>> | null}
-   */
-  #map = null;
-
   /**
    * Latest version number of the attachments.
    *
@@ -2222,6 +2221,17 @@ class DomainToCategoriesMap {
   #downloadRetries = 0;
 
   /**
+   * Whether the mappings are empty.
+   */
+  #empty = true;
+
+  /**
+   * @type {BasePromiseWorker|null} Worker used to access the raw domain
+   * to categories map data.
+   */
+  #worker = null;
+
+  /**
    * Runs at application startup with startup idle tasks. If the SERP
    * categorization preference is enabled, it creates a Remote Settings
    * client to listen to updates, and populates the map.
@@ -2231,14 +2241,18 @@ class DomainToCategoriesMap {
       return;
     }
     lazy.logConsole.debug("Initializing domain-to-categories map.");
-    this.#setupClientAndMap();
+    this.#worker = new lazy.BasePromiseWorker(
+      "resource:///modules/DomainToCategoriesMap.worker.mjs",
+      { type: "module" }
+    );
+    await this.#setupClientAndMap();
     this.#init = true;
   }
 
   uninit() {
     if (this.#init) {
       lazy.logConsole.debug("Un-initializing domain-to-categories map.");
-      this.#clearClientAndMap();
+      this.#clearClientAndWorker();
       this.#cancelAndNullifyTimer();
       this.#init = false;
     }
@@ -2252,7 +2266,7 @@ class DomainToCategoriesMap {
    *  An array containing categories and their respective score. If no record
    *  for the domain is available, return an empty array.
    */
-  get(domain) {
+  async get(domain) {
     if (this.empty) {
       return [];
     }
@@ -2260,8 +2274,8 @@ class DomainToCategoriesMap {
     let bytes = new TextEncoder().encode(domain);
     lazy.gCryptoHash.update(bytes, domain.length);
     let hash = lazy.gCryptoHash.finish(true);
-    let rawValues = this.#map[hash] ?? [];
-    if (rawValues.length) {
+    let rawValues = await this.#worker.post("getScores", [hash]);
+    if (rawValues?.length) {
       let output = [];
       // Transform data into a more readable format.
       // [x, y] => { category: x, score: y }
@@ -2292,7 +2306,7 @@ class DomainToCategoriesMap {
    * @returns {boolean}
    */
   get empty() {
-    return !this.#map;
+    return this.#empty;
   }
 
   /**
@@ -2303,8 +2317,11 @@ class DomainToCategoriesMap {
    *   An object where the key is a hashed domain and the value is an array
    *   containing an arbitrary number of DomainCategoryScores.
    */
-  overrideMapForTests(domainToCategoriesMap) {
-    this.#map = domainToCategoriesMap;
+  async overrideMapForTests(domainToCategoriesMap) {
+    let hasResults = await this.#worker.post("overrideMapForTests", [
+      domainToCategoriesMap,
+    ]);
+    this.#empty = !hasResults;
   }
 
   async #setupClientAndMap() {
@@ -2321,7 +2338,7 @@ class DomainToCategoriesMap {
     await this.#clearAndPopulateMap(records);
   }
 
-  #clearClientAndMap() {
+  #clearClientAndWorker() {
     if (this.#client) {
       lazy.logConsole.debug("Removing Remote Settings client.");
       this.#client.off("sync", this.#onSettingsSync);
@@ -2330,10 +2347,15 @@ class DomainToCategoriesMap {
       this.#downloadRetries = 0;
     }
 
-    if (this.#map) {
+    if (!this.#empty) {
       lazy.logConsole.debug("Clearing domain-to-categories map.");
-      this.#map = null;
+      this.#empty = true;
       this.#version = null;
+    }
+
+    if (this.#worker) {
+      this.#worker.terminate();
+      this.#worker = null;
     }
   }
 
@@ -2394,11 +2416,11 @@ class DomainToCategoriesMap {
    *
    */
   async #clearAndPopulateMap(records) {
-    // Set map to null so that if there are errors in the downloads, consumers
-    // will be able to know whether the map has information. Once we've
-    // successfully downloaded attachments and are parsing them, a non-null
-    // object will be created.
-    this.#map = null;
+    // Empty map so that if there are errors in the download process, callers
+    // querying the map won't use information we know is already outdated.
+    await this.#worker.post("emptyMap");
+
+    this.#empty = true;
     this.#version = null;
     this.#cancelAndNullifyTimer();
 
@@ -2408,6 +2430,7 @@ class DomainToCategoriesMap {
     }
 
     let fileContents = [];
+    let start = Cu.now();
     for (let record of records) {
       let result;
       // Downloading attachments can fail.
@@ -2420,10 +2443,13 @@ class DomainToCategoriesMap {
       }
       fileContents.push(result.buffer);
     }
+    ChromeUtils.addProfilerMarker(
+      "SearchSERPTelemetry.#clearAndPopulateMap",
+      start,
+      "Download attachments."
+    );
 
-    // All attachments should have the same version number. If for whatever
-    // reason they don't, we should only use the attachments with the latest
-    // version.
+    // Attachments should have a version number.
     this.#version = this.#retrieveLatestVersion(records);
 
     if (!this.#version) {
@@ -2431,37 +2457,28 @@ class DomainToCategoriesMap {
       return;
     }
 
-    // Queue the series of assignments.
-    for (let i = 0; i < fileContents.length; ++i) {
-      let buffer = fileContents[i];
-      Services.tm.idleDispatchToMainThread(() => {
-        let start = Cu.now();
-        let json;
-        try {
-          json = JSON.parse(new TextDecoder().decode(buffer));
-        } catch (ex) {
-          // TODO: If there was an error decoding the buffer, we may want to
-          // dispatch an error in telemetry or try again.
-          return;
-        }
-        ChromeUtils.addProfilerMarker(
-          "SearchSERPTelemetry.#clearAndPopulateMap",
-          start,
-          "Convert buffer to JSON."
-        );
-        if (!this.#map) {
-          this.#map = {};
-        }
-        Object.assign(this.#map, json);
-        lazy.logConsole.debug("Updated domain-to-categories map.");
-        if (i == fileContents.length - 1) {
-          Services.obs.notifyObservers(
-            null,
-            "domain-to-categories-map-update-complete"
-          );
-        }
-      });
-    }
+    Services.tm.idleDispatchToMainThread(async () => {
+      start = Cu.now();
+      let hasResults;
+      try {
+        hasResults = await this.#worker.post("populateMap", [fileContents]);
+      } catch (ex) {
+        console.error(ex);
+      }
+
+      this.#empty = !hasResults;
+
+      ChromeUtils.addProfilerMarker(
+        "SearchSERPTelemetry.#clearAndPopulateMap",
+        start,
+        "Convert contents to JSON."
+      );
+      lazy.logConsole.debug("Updated domain-to-categories map.");
+      Services.obs.notifyObservers(
+        null,
+        "domain-to-categories-map-update-complete"
+      );
+    });
   }
 
   #cancelAndNullifyTimer() {
