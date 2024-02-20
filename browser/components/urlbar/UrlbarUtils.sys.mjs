@@ -12,7 +12,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
-  Log: "resource://gre/modules/Log.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -1051,31 +1050,27 @@ export var UrlbarUtils = {
   },
 
   /**
-   * Creates a logger.
-   * Logging level can be controlled through browser.urlbar.loglevel.
+   * Creates a console logger.
+   * Logging level can be controlled through the `browser.urlbar.loglevel`
+   * preference.
    *
-   * @param {string} [prefix] Prefix to use for the logged messages, "::" will
-   *                 be appended automatically to the prefix.
-   * @returns {object} The logger.
+   * @param {object} [options] Options for the logger.
+   * @param {string} [options.prefix] Prefix to use for the logged messages.
+   * @returns {ConsoleInstance} The console logger.
    */
   getLogger({ prefix = "" } = {}) {
-    if (!this._logger) {
-      this._logger = lazy.Log.repository.getLogger("urlbar");
-      this._logger.manageLevelFromPref("browser.urlbar.loglevel");
-      this._logger.addAppender(
-        new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter())
-      );
+    if (!this._loggers) {
+      this._loggers = new Map();
     }
-    if (prefix) {
-      // This is not an early return because it is necessary to invoke getLogger
-      // at least once before getLoggerWithMessagePrefix; it replaces a
-      // method of the original logger, rather than using an actual Proxy.
-      return lazy.Log.repository.getLoggerWithMessagePrefix(
-        "urlbar",
-        prefix + " :: "
-      );
+    let logger = this._loggers.get(prefix);
+    if (!logger) {
+      logger = console.createInstance({
+        prefix: `URLBar${prefix ? " - " + prefix : ""}`,
+        maxLogLevelPref: "browser.urlbar.loglevel",
+      });
+      this._loggers.set(prefix, logger);
     }
-    return this._logger;
+    return logger;
   },
 
   /**

@@ -241,7 +241,6 @@ module.exports = {
         "browser/components/shell/ShellService.sys.mjs",
         "browser/components/syncedtabs/TabListComponent.sys.mjs",
         "browser/components/uitour/UITour.sys.mjs",
-        "browser/components/urlbar/**",
         "browser/tools/mozscreenshots/mozscreenshots/extension/Screenshot.sys.mjs",
         "devtools/client/webconsole/test/**",
         "devtools/shared/tests/xpcshell/test_console_filtering.js",
