@@ -620,6 +620,10 @@ html|textarea {
   min-height: var(--input-text-min-height);
 }
 
+html|textarea {
+  min-height: auto
+}
+
 html|input:where([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
 html|textarea:focus,
 xul|search-textbox[focused],
