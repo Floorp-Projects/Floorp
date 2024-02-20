@@ -80,7 +80,11 @@ You'll need to pass along some of the following properties:
         * `primaryL10nId` (**Optional**) - The l10n id to be used for the primary action element. This fluent string should ONLY define a `.title` attribute to describe the link element in each row.
         * `primaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the primary action element
         * `secondaryL10nId` (**Optional**) -  The l10n id to be used for the secondary action button. This fluent string should ONLY define a `.title` attribute to describe the secondary button in each row.
+        * `tertiaryL10nId` (**Optional**) -  The l10n id to be used for the tertiary action button. This fluent string should ONLY define a `.title` attribute to describe the secondary button in each row.
         * `secondaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the secondary action button
+        * `tertiaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the tertiary action button
+        * `secondaryActionClass` (**Optional**) - The class used to style the secondary action button. `options-button` or `dismiss-button`
+        * `tertiaryActionClass` (**Optional**) - The class used to style the tertiary action button. `options-button` or `dismiss-button`
         * `tabElement` (**Optional**) - The MozTabbrowserTab element for the tab item.
         * `sourceClosedId` (**Optional**) - The closedId of the closed window the tab is from if applicable.
         * `sourceWindowId` (**Optional**) - The SessionStore id of the window the tab is from if applicable.
