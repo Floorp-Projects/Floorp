@@ -6,6 +6,8 @@
 // and translating the uri into a relative filesytem path where the file may be
 // found when running within the Karma / Mocha test framework.
 
+const path = require("path");
+
 module.exports = {
   ResourceUriPlugin: class ResourceUriPlugin {
     /**
@@ -48,7 +50,12 @@ module.exports = {
                 if (!url.href.match(regex)) {
                   continue;
                 }
-                const pathname = url.href.replace(regex, replacement);
+                // path.join() is necessary to normalize the path on Windows.
+                // Without it, the path may contain backslashes, resulting in
+                // different build output on Windows than on Unix systems.
+                const pathname = path.join(
+                  url.href.replace(regex, replacement)
+                );
                 resourceData.path = pathname;
                 resourceData.query = url.search;
                 resourceData.fragment = url.hash;
