@@ -64,9 +64,14 @@ static inline void UpdateAllocSiteOnTenure(Cell* cell) {
 
 void TenuringTracer::onObjectEdge(JSObject** objp, const char* name) {
   JSObject* obj = *objp;
-  if (!IsInsideNursery(obj)) {
-    return;
+  if (IsInsideNursery(obj)) {
+    onNurseryObjectEdge(objp);
   }
+}
+
+void TenuringTracer::onNurseryObjectEdge(JSObject** objp) {
+  JSObject* obj = *objp;
+  MOZ_ASSERT(IsInsideNursery(obj));
 
   if (obj->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(obj);
@@ -88,9 +93,14 @@ void TenuringTracer::onObjectEdge(JSObject** objp, const char* name) {
 
 void TenuringTracer::onStringEdge(JSString** strp, const char* name) {
   JSString* str = *strp;
-  if (!IsInsideNursery(str)) {
-    return;
+  if (IsInsideNursery(str)) {
+    onNurseryStringEdge(strp);
   }
+}
+
+void TenuringTracer::onNurseryStringEdge(JSString** strp) {
+  JSString* str = *strp;
+  MOZ_ASSERT(IsInsideNursery(str));
 
   if (str->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(str);
@@ -105,9 +115,14 @@ void TenuringTracer::onStringEdge(JSString** strp, const char* name) {
 
 void TenuringTracer::onBigIntEdge(JS::BigInt** bip, const char* name) {
   JS::BigInt* bi = *bip;
-  if (!IsInsideNursery(bi)) {
-    return;
+  if (IsInsideNursery(bi)) {
+    onNurseryBigIntEdge(bip);
   }
+}
+
+void TenuringTracer::onNurseryBigIntEdge(JS::BigInt** bip) {
+  JS::BigInt* bi = *bip;
+  MOZ_ASSERT(IsInsideNursery(bi));
 
   if (bi->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(bi);
@@ -137,37 +152,40 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   Value value = *thingp;
   CheckTracedThing(this, value);
 
-  // We only care about a few kinds of GC thing here and this generates much
-  // tighter code than using MapGCThingTyped.
-  Value post;
-  if (value.isObject()) {
-    JSObject* obj = &value.toObject();
-    onObjectEdge(&obj, "value");
-    post = JS::ObjectValue(*obj);
-  }
-#ifdef ENABLE_RECORD_TUPLE
-  else if (value.isExtendedPrimitive()) {
-    JSObject* obj = &value.toExtendedPrimitive();
-    onObjectEdge(&obj, "value");
-    post = JS::ExtendedPrimitiveValue(*obj);
-  }
-#endif
-  else if (value.isString()) {
-    JSString* str = value.toString();
-    onStringEdge(&str, "value");
-    post = JS::StringValue(str);
-  } else if (value.isBigInt()) {
-    JS::BigInt* bi = value.toBigInt();
-    onBigIntEdge(&bi, "value");
-    post = JS::BigIntValue(bi);
-  } else {
-    MOZ_ASSERT_IF(value.isGCThing(), !IsInsideNursery(value.toGCThing()));
+  if (!value.isGCThing() || !IsInsideNursery(value.toGCThing())) {
     return;
   }
 
-  if (post != value) {
-    *thingp = post;
+  // We only care about a few kinds of GC thing here and this generates much
+  // tighter code than using MapGCThingTyped.
+  if (value.isObject()) {
+    JSObject* obj = &value.toObject();
+    onNurseryObjectEdge(&obj);
+    MOZ_ASSERT(obj != &value.toObject());
+    *thingp = JS::ObjectValue(*obj);
+    return;
   }
+#ifdef ENABLE_RECORD_TUPLE
+  if (value.isExtendedPrimitive()) {
+    JSObject* obj = &value.toExtendedPrimitive();
+    onNurseryObjectEdge(&obj);
+    MOZ_ASSERT(obj != &value.toExtendedPrimitive());
+    *thingp = JS::ExtendedPrimitiveValue(*obj);
+    return;
+  }
+#endif
+  if (value.isString()) {
+    JSString* str = value.toString();
+    onNurseryStringEdge(&str);
+    MOZ_ASSERT(str != value.toString());
+    *thingp = JS::StringValue(str);
+    return;
+  }
+  MOZ_ASSERT(value.isBigInt());
+  JS::BigInt* bi = value.toBigInt();
+  onNurseryBigIntEdge(&bi);
+  MOZ_ASSERT(bi != value.toBigInt());
+  *thingp = JS::BigIntValue(bi);
 }
 
 void TenuringTracer::traverse(wasm::AnyRef* thingp) {
