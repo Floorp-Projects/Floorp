@@ -101,7 +101,7 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
   // PT, payload type, last ditch effort filtering
   //
 
-  if (payload_type_set_.count(header.payloadType)) {
+  if (receive_payload_type_set_.count(header.payloadType)) {
     DEBUG_LOG(
         ("MediaPipelineFilter payload-type: %u matched %zu"
          " unique payload type. learning ssrc. passing packet",
@@ -114,7 +114,7 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
   DEBUG_LOG(
       ("MediaPipelineFilter payload-type: %u did not match any of %zu"
        " unique payload-types.",
-       header.payloadType, payload_type_set_.size()));
+       header.payloadType, receive_payload_type_set_.size()));
   DEBUG_LOG(
       ("MediaPipelineFilter packet failed to match any criteria."
        " ignoring packet"));
@@ -125,8 +125,8 @@ void MediaPipelineFilter::AddRemoteSSRC(uint32_t ssrc) {
   remote_ssrc_set_.insert(ssrc);
 }
 
-void MediaPipelineFilter::AddUniquePT(uint8_t payload_type) {
-  payload_type_set_.insert(payload_type);
+void MediaPipelineFilter::AddUniqueReceivePT(uint8_t payload_type) {
+  receive_payload_type_set_.insert(payload_type);
 }
 
 void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
@@ -143,7 +143,7 @@ void MediaPipelineFilter::Update(const MediaPipelineFilter& filter_update) {
     mRemoteMid = filter_update.mRemoteMid;
     mRemoteMidBindings = filter_update.mRemoteMidBindings;
   }
-  payload_type_set_ = filter_update.payload_type_set_;
+  receive_payload_type_set_ = filter_update.receive_payload_type_set_;
 
   // Use extmapping from new filter
   mExtMap = filter_update.mExtMap;

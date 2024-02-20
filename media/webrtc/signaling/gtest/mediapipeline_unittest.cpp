@@ -627,7 +627,7 @@ TEST_F(MediaPipelineFilterTest, TestMidFilter) {
 
 TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilter) {
   MediaPipelineFilter filter;
-  filter.AddUniquePT(110);
+  filter.AddUniqueReceivePT(110);
   EXPECT_TRUE(Filter(filter, 555, 110));
   EXPECT_FALSE(Filter(filter, 556, 111));
 }
@@ -651,7 +651,7 @@ TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
   MediaPipelineFilter filter;
   const auto mid = Some(std::string("mid0"));
   filter.SetRemoteMediaStreamId(mid);
-  filter.AddUniquePT(111);
+  filter.AddUniqueReceivePT(111);
   EXPECT_TRUE(Filter(filter, 555, 110, mid));
   EXPECT_TRUE(Filter(filter, 555, 110));
 
