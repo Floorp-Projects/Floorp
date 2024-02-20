@@ -1,7 +1,7 @@
 PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "HTTP Cookies",
   async (win3rdParty, win1stParty, allowed) => {
-    await win3rdParty.fetch("cookies.sjs?3rd;Partitioned").then(r => r.text());
+    await win3rdParty.fetch("cookies.sjs?3rd").then(r => r.text());
     await win3rdParty
       .fetch("cookies.sjs")
       .then(r => r.text())
@@ -49,7 +49,7 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
 PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "DOM Cookies",
   async (win3rdParty, win1stParty, allowed) => {
-    win3rdParty.document.cookie = "foo=3rd;Partitioned";
+    win3rdParty.document.cookie = "foo=3rd";
     is(win3rdParty.document.cookie, "foo=3rd", "3rd party cookie set");
 
     win1stParty.document.cookie = "foo=first";
@@ -90,7 +90,7 @@ PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
 
   // addDataCallback
   async (win, value) => {
-    win.document.cookie = value + ";Partitioned";
+    win.document.cookie = value;
     return true;
   },
 
@@ -121,9 +121,7 @@ PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
 
   // addDataCallback
   async (win, value) => {
-    await win
-      .fetch("cookies.sjs?" + value + ";Partitioned")
-      .then(r => r.text());
+    await win.fetch("cookies.sjs?" + value).then(r => r.text());
     return true;
   },
 
