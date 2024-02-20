@@ -308,12 +308,12 @@
     );
     await arrowRight();
     ok(
-      isActiveElement(tabItems[0].secondaryButtonEl),
+      isActiveElement(tabItems[0].buttonEl),
       "Focus should be on the first row's context menu button element of the list"
     );
     await arrowDown();
     ok(
-      isActiveElement(tabItems[1].secondaryButtonEl),
+      isActiveElement(tabItems[1].buttonEl),
       "Focus should be on the second row's context menu button element of the list"
     );
     await arrowLeft();
