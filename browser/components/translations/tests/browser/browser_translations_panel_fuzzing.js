@@ -131,7 +131,7 @@ add_task(async function test_translations_panel_fuzzing() {
         hasVerifiedMutation
       ) {
         reportOperation("destroyEngineProcess");
-        await EngineProcess.destroyTranslationsEngine();
+        await TranslationsParent.destroyEngineProcess();
         isEngineMaybeDestroyed = true;
       }
       return true;
