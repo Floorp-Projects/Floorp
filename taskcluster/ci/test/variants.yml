@@ -227,7 +227,7 @@ webrender-dcomp-compositing:
 webrender-sw:
     description: "{description} with software webrender enabled"
     component: "Core::Graphics: WebRender"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "swr"
     mozinfo: "swgl"
     merge:
