@@ -115,13 +115,13 @@ add_task(async function test_initial_import() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [{ category: 1, score: 100 }],
     "Return value from lookup of example.com should be the same."
   );
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.org"),
+    await SearchSERPDomainToCategoriesMap.get("example.org"),
     [{ category: 2, score: 90 }],
     "Return value from lookup of example.org should be the same."
   );
@@ -167,13 +167,13 @@ add_task(async function test_update_records() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [{ category: 1, score: 80 }],
     "Return value from lookup of example.com should have changed."
   );
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.org"),
+    await SearchSERPDomainToCategoriesMap.get("example.org"),
     [
       { category: 2, score: 50 },
       { category: 4, score: 80 },
@@ -224,13 +224,13 @@ add_task(async function test_delayed_initial_import() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [{ category: 1, score: 100 }],
     "Return value from lookup of example.com should be the same."
   );
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.org"),
+    await SearchSERPDomainToCategoriesMap.get("example.org"),
     [{ category: 2, score: 90 }],
     "Return value from lookup of example.org should be the same."
   );
@@ -264,7 +264,7 @@ add_task(async function test_remove_record() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [{ category: 1, score: 80 }],
     "Initialized properly."
   );
@@ -283,13 +283,13 @@ add_task(async function test_remove_record() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [{ category: 1, score: 80 }],
     "Return value from lookup of example.com should remain unchanged."
   );
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.org"),
+    await SearchSERPDomainToCategoriesMap.get("example.org"),
     [],
     "Return value from lookup of example.org should be empty."
   );
@@ -323,7 +323,7 @@ add_task(async function test_different_versions_coexisting() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [
       {
         category: 1,
@@ -334,7 +334,7 @@ add_task(async function test_different_versions_coexisting() {
   );
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.org"),
+    await SearchSERPDomainToCategoriesMap.get("example.org"),
     [
       { category: 2, score: 50 },
       { category: 4, score: 80 },
@@ -367,7 +367,7 @@ add_task(async function test_download_error() {
   await promise;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [
       {
         category: 1,
@@ -406,7 +406,7 @@ add_task(async function test_download_error() {
   await observeDownloadError;
 
   Assert.deepEqual(
-    SearchSERPDomainToCategoriesMap.get("example.com"),
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
     [],
     "Domain should not exist in store."
   );

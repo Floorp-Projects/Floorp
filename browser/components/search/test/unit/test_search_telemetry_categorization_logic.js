@@ -91,14 +91,16 @@ const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2 = {
 };
 
 add_setup(async () => {
+  do_get_profile();
   Services.prefs.setBoolPref(
     "browser.search.serpEventTelemetryCategorization.enabled",
     true
   );
+  await SearchSERPDomainToCategoriesMap.init();
 });
 
 add_task(async function test_categorization_simple() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_SIMPLE
   );
 
@@ -115,8 +117,9 @@ add_task(async function test_categorization_simple() {
     "test10.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
@@ -126,7 +129,7 @@ add_task(async function test_categorization_simple() {
 });
 
 add_task(async function test_categorization_inconclusive() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_INCONCLUSIVE
   );
 
@@ -143,8 +146,9 @@ add_task(async function test_categorization_inconclusive() {
     "test20.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
@@ -161,7 +165,7 @@ add_task(async function test_categorization_inconclusive() {
 add_task(async function test_categorization_unknown() {
   // Reusing TEST_DOMAIN_TO_CATEGORIES_MAP_SIMPLE since none of this task's
   // domains will be keys within it.
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_SIMPLE
   );
 
@@ -178,8 +182,9 @@ add_task(async function test_categorization_unknown() {
     "test30.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
@@ -194,7 +199,7 @@ add_task(async function test_categorization_unknown() {
 });
 
 add_task(async function test_categorization_unknown_and_inconclusive() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_UNKNOWN_AND_INCONCLUSIVE
   );
 
@@ -211,8 +216,9 @@ add_task(async function test_categorization_unknown_and_inconclusive() {
     "test40.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
@@ -228,7 +234,7 @@ add_task(async function test_categorization_unknown_and_inconclusive() {
 
 // Tests a mixture of categorized, inconclusive and unknown domains.
 add_task(async function test_categorization_all_types() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_ALL_TYPES
   );
 
@@ -247,8 +253,9 @@ add_task(async function test_categorization_all_types() {
     "test60.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
@@ -263,7 +270,7 @@ add_task(async function test_categorization_all_types() {
 });
 
 add_task(async function test_categorization_tie() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_TIE
   );
 
@@ -280,8 +287,9 @@ add_task(async function test_categorization_tie() {
     "test50.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.equal(
     [1, 2].includes(resultsToReport.category),
@@ -301,7 +309,7 @@ add_task(async function test_categorization_tie() {
 });
 
 add_task(async function test_rank_penalization_equal_scores() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_1
   );
 
@@ -318,8 +326,9 @@ add_task(async function test_rank_penalization_equal_scores() {
     "test60.com",
   ]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
@@ -329,14 +338,15 @@ add_task(async function test_rank_penalization_equal_scores() {
 });
 
 add_task(async function test_rank_penalization_highest_score_lower_on_page() {
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
+  await SearchSERPDomainToCategoriesMap.overrideMapForTests(
     TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2
   );
 
   let domains = new Set(["test61.com", "test62.com"]);
 
-  let resultsToReport =
-    SearchSERPCategorization.applyCategorizationLogic(domains);
+  let resultsToReport = await SearchSERPCategorization.applyCategorizationLogic(
+    domains
+  );
 
   Assert.deepEqual(
     resultsToReport,
