@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 124.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v123..main)
+# 125.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v124..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 124.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v123..releases_v124)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v124/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v124/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v124/android-components/.config.yml)
 
 * **feature-prompts**:
   * Added `FileUploadsDirCleaner` deletes temporary stale uploaded files, see [Bug 1860472](https://bugzilla.mozilla.org/show_bug.cgi?id=1860472).
