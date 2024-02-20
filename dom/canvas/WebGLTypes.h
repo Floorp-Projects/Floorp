@@ -1097,7 +1097,7 @@ struct TexUnpackBlobDesc final {
   uvec3 size;
   gfxAlphaType srcAlphaType = gfxAlphaType::NonPremult;
 
-  Maybe<RawBuffer<>> cpuData;
+  Maybe<Span<const uint8_t>> cpuData;
   Maybe<uint64_t> pboOffset;
 
   Maybe<uvec2> structuredSrcSize;
