@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * @typedef {object} Lazy
+ * @property {typeof console} console
+ * @property {typeof import("../content/EngineProcess.sys.mjs").EngineProcess} EngineProcess
+ * @property {typeof import("../../../../services/settings/remote-settings.sys.mjs").RemoteSettings} RemoteSettings
+ * @property {typeof import("../../translations/actors/TranslationsParent.sys.mjs").TranslationsParent} TranslationsParent
+ */
+
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -12,6 +21,7 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  EngineProcess: "chrome://global/content/ml/EngineProcess.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
 });
@@ -84,17 +94,21 @@ export class MLEngineParent extends JSWindowActorParent {
   async receiveMessage({ name, data }) {
     switch (name) {
       case "MLEngine:Ready":
-        if (lazy.TranslationsParent.resolveEngine) {
-          // TODO(next patch) - This will be centralized into the EngineProcess component.
-          lazy.TranslationsParent.resolveEngine(this);
+        if (lazy.EngineProcess.resolveMLEngineParent) {
+          lazy.EngineProcess.resolveMLEngineParent(this);
         } else {
           lazy.console.error(
-            "Expected #resolveEngine to exist when then ML Engine is ready."
+            "Expected #resolveMLEngineParent to exist when then ML Engine is ready."
           );
         }
         break;
       case "MLEngine:GetWasmArrayBuffer":
         return MLEngineParent.getWasmArrayBuffer();
+      case "MLEngine:DestroyEngineProcess":
+        lazy.EngineProcess.destroyMLEngine().catch(error =>
+          console.error(error)
+        );
+        break;
     }
   }
 
@@ -203,6 +217,14 @@ export class MLEngineParent extends JSWindowActorParent {
     });
 
     return client;
+  }
+
+  /**
+   * Send a message to gracefully shutdown all of the ML engines in the engine process.
+   * This mostly exists for testing the shutdown paths of the code.
+   */
+  forceShutdown() {
+    return this.sendQuery("MLEngine:ForceShutdown");
   }
 }
 

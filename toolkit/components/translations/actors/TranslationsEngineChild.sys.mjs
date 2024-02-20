@@ -199,7 +199,7 @@ export class TranslationsEngineChild extends JSWindowActorChild {
   }
 
   /**
-   * No engines are still alive, destroy the process.
+   * No engines are still alive, signal that the process can be destroyed.
    */
   TE_destroyEngineProcess() {
     this.sendAsyncMessage("TranslationsEngine:DestroyEngineProcess");
