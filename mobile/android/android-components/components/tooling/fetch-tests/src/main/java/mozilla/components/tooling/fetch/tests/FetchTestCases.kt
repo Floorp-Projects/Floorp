@@ -4,6 +4,7 @@
 
 package mozilla.components.tooling.fetch.tests
 
+import android.annotation.SuppressLint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
@@ -88,7 +89,7 @@ abstract class FetchTestCases {
                         .set("Connection", "keep-alive")
                         .set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:65.0) Gecko/20100101 Firefox/65.0"),
                 ),
-            )
+            ).also { it.close() }
             assertEquals(200, response.status)
 
             val request = takeRequest()
@@ -140,7 +141,7 @@ abstract class FetchTestCases {
                     method = Request.Method.POST,
                     body = Request.Body.fromString("Hello World"),
                 ),
-            )
+            ).also { it.close() }
             assertEquals(200, response.status)
 
             val request = takeRequest()
@@ -196,11 +197,12 @@ abstract class FetchTestCases {
                     redirect = Request.Redirect.MANUAL,
                     cookiePolicy = Request.CookiePolicy.OMIT,
                 ),
-            )
+            ).also { it.close() }
             assertEquals(302, response.status)
         }
     }
 
+    @SuppressLint("FetchResponseClose") // intentional failure
     @Test
     open fun get200WithReadTimeout() {
         withServerResponding(
@@ -295,6 +297,8 @@ abstract class FetchTestCases {
 
             assertEquals("no-store", response.headers.get("Cache-Control"))
             assertEquals("16", response.headers.get("Content-Length"))
+
+            response.close()
         }
     }
 
@@ -311,7 +315,7 @@ abstract class FetchTestCases {
                         "Cache-Control" to "no-store",
                     ),
                 ),
-            )
+            ).also { it.close() }
 
             assertEquals(200, response.status)
 
@@ -354,7 +358,7 @@ abstract class FetchTestCases {
                         "Connection" to "close",
                     ),
                 ),
-            )
+            ).also { it.close() }
 
             assertEquals(200, response.status)
 
@@ -377,7 +381,7 @@ abstract class FetchTestCases {
         MockResponse(),
     ) { client ->
 
-        val responseWithCookies = client.fetch(Request(rootUrl()))
+        val responseWithCookies = client.fetch(Request(rootUrl())).also { it.close() }
         assertEquals(200, responseWithCookies.status)
         assertEquals("name=value", responseWithCookies.headers["Set-Cookie"])
         assertNull(takeRequest().getHeader("Cookie"))
@@ -386,7 +390,7 @@ abstract class FetchTestCases {
         // include the cookie set by the previous response.
         val response1 = client.fetch(
             Request(url = rootUrl(), cookiePolicy = Request.CookiePolicy.INCLUDE),
-        )
+        ).also { it.close() }
 
         assertEquals(200, response1.status)
         assertEquals("name=value", takeRequest().getHeader("Cookie"))
@@ -395,7 +399,7 @@ abstract class FetchTestCases {
         // NOT include the cookie.
         val response2 = client.fetch(
             Request(url = rootUrl(), cookiePolicy = Request.CookiePolicy.OMIT),
-        )
+        ).also { it.close() }
 
         assertEquals(200, response2.status)
         assertNull(takeRequest().getHeader("Cookie"))
@@ -446,6 +450,7 @@ abstract class FetchTestCases {
         assertEquals("Could've cached this!", response2.body.string())
     }
 
+    @SuppressLint("FetchResponseClose") // intentional failure
     @Test
     open fun getThrowsIOExceptionWhenHostNotReachable() {
         try {
