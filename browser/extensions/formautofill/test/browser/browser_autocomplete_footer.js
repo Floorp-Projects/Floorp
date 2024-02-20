@@ -2,12 +2,57 @@
 
 const URL = BASE_URL + "autocomplete_basic.html";
 
+const l10n = new Localization(["toolkit/formautofill/formAutofill.ftl"], true);
+
 add_setup(async function setup_storage() {
   await setStorage(
     TEST_ADDRESS_2,
     TEST_ADDRESS_3,
     TEST_ADDRESS_4,
-    TEST_ADDRESS_5
+    TEST_ADDRESS_5,
+    TEST_CREDIT_CARD_1
+  );
+});
+
+add_task(async function test_footer_has_correct_button_text_on_address() {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      const {
+        autoCompletePopup: { richlistbox: itemsBox },
+      } = browser;
+
+      await openPopupOn(browser, "#organization");
+      const footer = itemsBox.querySelector(
+        ".autofill-footer-row.autofill-button"
+      );
+      Assert.equal(
+        footer.innerText,
+        l10n.formatValueSync("autofill-manage-addresses-label")
+      );
+      await closePopup(browser);
+    }
+  );
+});
+
+add_task(async function test_footer_has_correct_button_text_on_credit_card() {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function (browser) {
+      const {
+        autoCompletePopup: { richlistbox: itemsBox },
+      } = browser;
+
+      await openPopupOn(browser, "#cc-number");
+      const footer = itemsBox.querySelector(
+        ".autofill-footer-row.autofill-button"
+      );
+      Assert.equal(
+        footer.innerText,
+        l10n.formatValueSync("autofill-manage-payment-methods-label")
+      );
+      await closePopup(browser);
+    }
   );
 });
 
