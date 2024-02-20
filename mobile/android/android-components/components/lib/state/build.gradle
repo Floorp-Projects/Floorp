@@ -41,6 +41,7 @@ tasks.withType(KotlinCompile).configureEach {
 }
 
 dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
     implementation ComponentsDependencies.kotlin_coroutines
     implementation ComponentsDependencies.androidx_fragment
     implementation ComponentsDependencies.androidx_compose_ui
@@ -49,6 +50,7 @@ dependencies {
     implementation project(':support-base')
     implementation project(':support-ktx')
 
+    testImplementation platform(ComponentsDependencies.androidx_compose_bom)
     testImplementation project(':support-test')
 
     testImplementation ComponentsDependencies.androidx_test_core

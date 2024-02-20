@@ -39,6 +39,7 @@ tasks.withType(KotlinCompile).configureEach {
 }
 
 dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
     implementation project(":concept-awesomebar")
     implementation project(":browser-state")
     implementation project(":support-base")

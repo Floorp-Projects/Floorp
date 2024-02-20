@@ -50,6 +50,7 @@ tasks.withType(KotlinCompile).configureEach {
 dependencies {
     api project(':lib-state')
 
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
     implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
     implementation project(':concept-storage')

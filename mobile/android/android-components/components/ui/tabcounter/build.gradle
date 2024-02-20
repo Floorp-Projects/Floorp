@@ -28,6 +28,7 @@ android {
 }
 
 dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
     implementation project(':support-ktx')
     implementation project(':support-utils')
 

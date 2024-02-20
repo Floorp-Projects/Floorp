@@ -52,7 +52,6 @@ object Versions {
 
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
-    const val compose_version = "1.5.4"
     const val compose_compiler = "1.5.9"
 
     object AndroidX {
@@ -63,7 +62,7 @@ object Versions {
         const val browser = "1.7.0"
         const val biometric = "1.1.0"
         const val cardview = "1.0.0"
-        const val compose = compose_version
+        const val compose_bom = "2023.10.01"
         const val constraintlayout = "2.1.4"
         const val coordinatorlayout = "1.2.0"
         const val core = "1.12.0"
@@ -119,16 +118,19 @@ object ComponentsDependencies {
     const val androidx_biometric = "androidx.biometric:biometric:${Versions.AndroidX.biometric}"
     const val androidx_browser = "androidx.browser:browser:${Versions.AndroidX.browser}"
     const val androidx_cardview = "androidx.cardview:cardview:${Versions.AndroidX.cardview}"
-    const val androidx_compose_animation = "androidx.compose.animation:animation:${Versions.AndroidX.compose}"
-    const val androidx_compose_ui = "androidx.compose.ui:ui:${Versions.AndroidX.compose}"
-    const val androidx_compose_ui_graphics = "androidx.compose.ui:ui-graphics:${Versions.AndroidX.compose}"
-    const val androidx_compose_ui_test = "androidx.compose.ui:ui-test-junit4:${Versions.AndroidX.compose}"
-    const val androidx_compose_ui_test_manifest = "androidx.compose.ui:ui-test-manifest:${Versions.AndroidX.compose}"
-    const val androidx_compose_ui_tooling = "androidx.compose.ui:ui-tooling:${Versions.AndroidX.compose}"
-    const val androidx_compose_ui_tooling_preview = "androidx.compose.ui:ui-tooling-preview:${Versions.AndroidX.compose}"
-    const val androidx_compose_foundation = "androidx.compose.foundation:foundation:${Versions.AndroidX.compose}"
-    const val androidx_compose_material = "androidx.compose.material:material:${Versions.AndroidX.compose}"
-    const val androidx_compose_runtime_livedata = "androidx.compose.runtime:runtime-livedata:${Versions.AndroidX.compose}"
+
+    const val androidx_compose_bom = "androidx.compose:compose-bom:${Versions.AndroidX.compose_bom}"
+    const val androidx_compose_animation = "androidx.compose.animation:animation"
+    const val androidx_compose_ui = "androidx.compose.ui:ui"
+    const val androidx_compose_ui_graphics = "androidx.compose.ui:ui-graphics"
+    const val androidx_compose_ui_test = "androidx.compose.ui:ui-test-junit4"
+    const val androidx_compose_ui_test_manifest = "androidx.compose.ui:ui-test-manifest"
+    const val androidx_compose_ui_tooling = "androidx.compose.ui:ui-tooling"
+    const val androidx_compose_ui_tooling_preview = "androidx.compose.ui:ui-tooling-preview"
+    const val androidx_compose_foundation = "androidx.compose.foundation:foundation"
+    const val androidx_compose_material = "androidx.compose.material:material"
+    const val androidx_compose_runtime_livedata = "androidx.compose.runtime:runtime-livedata"
+
     const val androidx_safeargs = "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.AndroidX.navigation}"
     const val androidx_navigation_fragment = "androidx.navigation:navigation-fragment-ktx:${Versions.AndroidX.navigation}"
     const val androidx_navigation_ui = "androidx.navigation:navigation-ui:$${Versions.AndroidX.navigation}"

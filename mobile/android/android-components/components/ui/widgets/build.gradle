@@ -25,6 +25,7 @@ android {
 }
 
 dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
     implementation project(':concept-base')
     implementation project(':concept-engine')
     implementation project(':ui-colors')

@@ -47,6 +47,7 @@ tasks.register("updateTestExtensionVersion", Copy) { task ->
 }
 
 dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
     implementation project(':concept-engine')
     implementation project(':concept-awesomebar')
     implementation project(':concept-tabstray')

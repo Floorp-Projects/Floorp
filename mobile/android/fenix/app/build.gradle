@@ -523,6 +523,9 @@ tasks.withType(KotlinCompile).configureEach {
 }
 
 dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
+    androidTestImplementation platform(ComponentsDependencies.androidx_compose_bom)
+
     implementation project(':browser-engine-gecko')
 
     implementation ComponentsDependencies.kotlin_coroutines
