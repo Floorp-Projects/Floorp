@@ -10,8 +10,8 @@
 #include <set>
 
 #include "lib/jxl/base/common.h"
-#include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/transform/enc_transform.h"
@@ -34,7 +34,8 @@ float ColorDistance(const std::vector<float> &JXL_RESTRICT a,
   if (a.size() >= 3) {
     ave3 = (a[0] + b[0] + a[1] + b[1] + a[2] + b[2]) * (1.21f / 3.0f);
   }
-  float sum_a = 0, sum_b = 0;
+  float sum_a = 0;
+  float sum_b = 0;
   for (size_t c = 0; c < a.size(); ++c) {
     const float difference =
         static_cast<float>(a[c]) - static_cast<float>(b[c]);
@@ -174,7 +175,8 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
     // Channel palette special case
     if (nb_colors == 0) return false;
     std::vector<pixel_type> lookup;
-    pixel_type minval, maxval;
+    pixel_type minval;
+    pixel_type maxval;
     compute_minmax(input.channel[begin_c], &minval, &maxval);
     size_t lookup_table_size =
         static_cast<int64_t>(maxval) - static_cast<int64_t>(minval) + 1;
@@ -194,7 +196,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
         }
       }
       JXL_DEBUG_V(6, "Channel %i uses only %i colors.", begin_c, idx);
-      Channel pch(idx, 1);
+      JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(idx, 1));
       pch.hshift = -1;
       pch.vshift = -1;
       nb_colors = idx;
@@ -231,7 +233,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
       }
     }
     JXL_DEBUG_V(6, "Channel %i uses only %i colors.", begin_c, idx);
-    Channel pch(idx, 1);
+    JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(idx, 1));
     pch.hshift = -1;
     pch.vshift = -1;
     nb_colors = idx;
@@ -256,7 +258,8 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
 
   Image quantized_input;
   if (lossy) {
-    quantized_input = Image(w, h, input.bitdepth, nb);
+    JXL_ASSIGN_OR_RETURN(quantized_input,
+                         Image::Create(w, h, input.bitdepth, nb));
     for (size_t c = 0; c < nb; c++) {
       CopyImageTo(input.channel[begin_c + c].plane,
                   &quantized_input.channel[c].plane);
@@ -337,7 +340,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
   JXL_DEBUG_V(6, "Channels %i-%i can be represented using a %i-color palette.",
               begin_c, end_c, nb_colors);
 
-  Channel pch(nb_colors, nb);
+  JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(nb_colors, nb));
   pch.hshift = -1;
   pch.vshift = -1;
   pixel_type *JXL_RESTRICT p_palette = pch.Row(0);
@@ -361,7 +364,8 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
     std::sort(candidate_palette_imageorder.begin(),
               candidate_palette_imageorder.end(),
               [](std::vector<pixel_type> ap, std::vector<pixel_type> bp) {
-                float ay, by;
+                float ay;
+                float by;
                 ay = (0.299f * ap[0] + 0.587f * ap[1] + 0.114f * ap[2] + 0.1f);
                 if (ap.size() > 3) ay *= 1.f + ap[3];
                 by = (0.299f * bp[0] + 0.587f * bp[1] + 0.114f * bp[2] + 0.1f);

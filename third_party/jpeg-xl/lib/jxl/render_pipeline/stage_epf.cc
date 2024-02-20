@@ -8,7 +8,6 @@
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/common.h"  // JXL_HIGH_PRECISION
 #include "lib/jxl/epf.h"
-#include "lib/jxl/sanitizers.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_epf.cc"
@@ -67,9 +66,9 @@ class EPF0Stage : public RenderPipelineStage {
     *B = MulAdd(weight, cb, *B);
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     DF df;
 
     using V = decltype(Zero(df));
@@ -163,6 +162,7 @@ class EPF0Stage : public RenderPipelineStage {
       StoreU(Mul(Y, inv_w), df, GetOutputRow(output_rows, 1, 0) + x);
       StoreU(Mul(B, inv_w), df, GetOutputRow(output_rows, 2, 0) + x);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -207,9 +207,9 @@ class EPF1Stage : public RenderPipelineStage {
     *B = MulAdd(weight, cb, *B);
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     DF df;
     xextra = RoundUpTo(xextra, Lanes(df));
     const float* JXL_RESTRICT row_sigma =
@@ -343,6 +343,7 @@ class EPF1Stage : public RenderPipelineStage {
       Store(Mul(Y, inv_w), df, GetOutputRow(output_rows, 1, 0) + x);
       Store(Mul(B, inv_w), df, GetOutputRow(output_rows, 2, 0) + x);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -392,9 +393,9 @@ class EPF2Stage : public RenderPipelineStage {
     *B = MulAdd(weight, cb, *B);
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     DF df;
     xextra = RoundUpTo(xextra, Lanes(df));
     const float* JXL_RESTRICT row_sigma =
@@ -465,6 +466,7 @@ class EPF2Stage : public RenderPipelineStage {
       Store(Mul(Y, inv_w), df, GetOutputRow(output_rows, 1, 0) + x);
       Store(Mul(B, inv_w), df, GetOutputRow(output_rows, 2, 0) + x);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

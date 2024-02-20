@@ -813,6 +813,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
             have_cicp = true;
             have_color = true;
             ppf->icc.clear();
+            ppf->primary_color_representation =
+                PackedPixelFile::kColorEncodingIsPrimary;
           }
         } else if (!have_cicp && id == kId_iCCP) {
           if (processing_data(png_ptr, info_ptr, chunk.data(), chunk.size())) {
@@ -830,6 +832,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                                  &profile, &proflen);
           if (ok && proflen) {
             ppf->icc.assign(profile, profile + proflen);
+            ppf->primary_color_representation = PackedPixelFile::kIccIsPrimary;
             have_color = true;
             have_iccp = true;
           } else {

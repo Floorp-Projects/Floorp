@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/sanitizer_definitions.h"
 
@@ -442,12 +443,24 @@ class JXL_MUST_USE_RESULT StatusOr {
 
 #define JXL_ASSIGN_OR_RETURN(lhs, statusor) \
   PRIVATE_JXL_ASSIGN_OR_RETURN_IMPL(        \
-      assign_or_return_temporary_variable##__LINE__, lhs, statusor)
+      JXL_JOIN(assign_or_return_temporary_variable, __LINE__), lhs, statusor)
 
 // NOLINTBEGIN(bugprone-macro-parentheses)
 #define PRIVATE_JXL_ASSIGN_OR_RETURN_IMPL(name, lhs, statusor) \
   auto name = statusor;                                        \
   JXL_RETURN_IF_ERROR(name.status());                          \
+  lhs = std::move(name).value();
+// NOLINTEND(bugprone-macro-parentheses)
+
+// NB: do not use outside of tests / tools!!!
+#define JXL_ASSIGN_OR_DIE(lhs, statusor) \
+  PRIVATE_JXL_ASSIGN_OR_DIE_IMPL(        \
+      JXL_JOIN(assign_or_die_temporary_variable, __LINE__), lhs, statusor)
+
+// NOLINTBEGIN(bugprone-macro-parentheses)
+#define PRIVATE_JXL_ASSIGN_OR_DIE_IMPL(name, lhs, statusor) \
+  auto name = statusor;                                     \
+  if (!name.ok()) jxl::Abort();                             \
   lhs = std::move(name).value();
 // NOLINTEND(bugprone-macro-parentheses)
 

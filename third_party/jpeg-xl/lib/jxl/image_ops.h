@@ -9,15 +9,22 @@
 // Operations on images.
 
 #include <algorithm>
-#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
-#include <vector>
 
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
+
+// Works for mixed image-like argument types.
+template <class Image1, class Image2>
+bool SameSize(const Image1& image1, const Image2& image2) {
+  return image1.xsize() == image2.xsize() && image1.ysize() == image2.ysize();
+}
 
 template <typename T>
 void CopyImageTo(const Plane<T>& from, Plane<T>* JXL_RESTRICT to) {
@@ -102,76 +109,15 @@ void CopyImageToWithPadding(const Rect& from_rect, const T& from,
                      to);
 }
 
-template <class ImageIn, class ImageOut>
-void Subtract(const ImageIn& image1, const ImageIn& image2, ImageOut* out) {
-  using T = typename ImageIn::T;
-  const size_t xsize = image1.xsize();
-  const size_t ysize = image1.ysize();
-  JXL_CHECK(xsize == image2.xsize());
-  JXL_CHECK(ysize == image2.ysize());
-
-  for (size_t y = 0; y < ysize; ++y) {
-    const T* const JXL_RESTRICT row1 = image1.Row(y);
-    const T* const JXL_RESTRICT row2 = image2.Row(y);
-    T* const JXL_RESTRICT row_out = out->Row(y);
-    for (size_t x = 0; x < xsize; ++x) {
-      row_out[x] = row1[x] - row2[x];
-    }
-  }
-}
-
-// In-place.
-template <typename Tin, typename Tout>
-void SubtractFrom(const Plane<Tin>& what, Plane<Tout>* to) {
-  const size_t xsize = what.xsize();
-  const size_t ysize = what.ysize();
-  for (size_t y = 0; y < ysize; ++y) {
-    const Tin* JXL_RESTRICT row_what = what.ConstRow(y);
-    Tout* JXL_RESTRICT row_to = to->Row(y);
-    for (size_t x = 0; x < xsize; ++x) {
-      row_to[x] -= row_what[x];
-    }
-  }
-}
-
-// In-place.
-template <typename Tin, typename Tout>
-void AddTo(const Plane<Tin>& what, Plane<Tout>* to) {
-  const size_t xsize = what.xsize();
-  const size_t ysize = what.ysize();
-  for (size_t y = 0; y < ysize; ++y) {
-    const Tin* JXL_RESTRICT row_what = what.ConstRow(y);
-    Tout* JXL_RESTRICT row_to = to->Row(y);
-    for (size_t x = 0; x < xsize; ++x) {
-      row_to[x] += row_what[x];
-    }
-  }
-}
-
-template <typename Tin, typename Tout>
-void AddTo(Rect rectFrom, const Plane<Tin>& what, Rect rectTo,
-           Plane<Tout>* to) {
-  JXL_ASSERT(SameSize(rectFrom, rectTo));
-  const size_t xsize = rectTo.xsize();
-  const size_t ysize = rectTo.ysize();
-  for (size_t y = 0; y < ysize; ++y) {
-    const Tin* JXL_RESTRICT row_what = rectFrom.ConstRow(what, y);
-    Tout* JXL_RESTRICT row_to = rectTo.Row(to, y);
-    for (size_t x = 0; x < xsize; ++x) {
-      row_to[x] += row_what[x];
-    }
-  }
-}
-
 // Returns linear combination of two grayscale images.
 template <typename T>
-Plane<T> LinComb(const T lambda1, const Plane<T>& image1, const T lambda2,
-                 const Plane<T>& image2) {
+StatusOr<Plane<T>> LinComb(const T lambda1, const Plane<T>& image1,
+                           const T lambda2, const Plane<T>& image2) {
   const size_t xsize = image1.xsize();
   const size_t ysize = image1.ysize();
   JXL_CHECK(xsize == image2.xsize());
   JXL_CHECK(ysize == image2.ysize());
-  Plane<T> out(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(Plane<T> out, Plane<T>::Create(xsize, ysize));
   for (size_t y = 0; y < ysize; ++y) {
     const T* const JXL_RESTRICT row1 = image1.Row(y);
     const T* const JXL_RESTRICT row2 = image2.Row(y);
@@ -291,35 +237,6 @@ struct WrapRowUnchanged {
   }
 };
 
-// Sets "thickness" pixels on each border to "value". This is faster than
-// initializing the entire image and overwriting valid/interior pixels.
-template <typename T>
-void SetBorder(const size_t thickness, const T value, Plane<T>* image) {
-  const size_t xsize = image->xsize();
-  const size_t ysize = image->ysize();
-  // Top: fill entire row
-  for (size_t y = 0; y < std::min(thickness, ysize); ++y) {
-    T* const JXL_RESTRICT row = image->Row(y);
-    std::fill(row, row + xsize, value);
-  }
-
-  // Bottom: fill entire row
-  for (size_t y = ysize - thickness; y < ysize; ++y) {
-    T* const JXL_RESTRICT row = image->Row(y);
-    std::fill(row, row + xsize, value);
-  }
-
-  // Left/right: fill the 'columns' on either side, but only if the image is
-  // big enough that they don't already belong to the top/bottom rows.
-  if (ysize >= 2 * thickness) {
-    for (size_t y = thickness; y < ysize - thickness; ++y) {
-      T* const JXL_RESTRICT row = image->Row(y);
-      std::fill(row, row + thickness, value);
-      std::fill(row + xsize - thickness, row + xsize, value);
-    }
-  }
-}
-
 // Computes the minimum and maximum pixel value.
 template <typename T>
 void ImageMinMax(const Plane<T>& image, T* const JXL_RESTRICT min,
@@ -335,48 +252,6 @@ void ImageMinMax(const Plane<T>& image, T* const JXL_RESTRICT min,
   }
 }
 
-template <typename T>
-Plane<T> ImageFromPacked(const std::vector<T>& packed, const size_t xsize,
-                         const size_t ysize) {
-  Plane<T> out(xsize, ysize);
-  for (size_t y = 0; y < ysize; ++y) {
-    T* const JXL_RESTRICT row = out.Row(y);
-    const T* const JXL_RESTRICT packed_row = &packed[y * xsize];
-    memcpy(row, packed_row, xsize * sizeof(T));
-  }
-  return out;
-}
-
-template <typename T>
-void Image3Max(const Image3<T>& image, std::array<T, 3>* out_max) {
-  for (size_t c = 0; c < 3; ++c) {
-    T max = std::numeric_limits<T>::min();
-    for (size_t y = 0; y < image.ysize(); ++y) {
-      const T* JXL_RESTRICT row = image.ConstPlaneRow(c, y);
-      for (size_t x = 0; x < image.xsize(); ++x) {
-        max = std::max(max, row[x]);
-      }
-    }
-    (*out_max)[c] = max;
-  }
-}
-
-template <typename T>
-std::vector<T> PackedFromImage(const Plane<T>& image, const Rect& rect) {
-  const size_t xsize = rect.xsize();
-  const size_t ysize = rect.ysize();
-  std::vector<T> packed(xsize * ysize);
-  for (size_t y = 0; y < rect.ysize(); ++y) {
-    memcpy(&packed[y * xsize], rect.ConstRow(image, y), xsize * sizeof(T));
-  }
-  return packed;
-}
-
-template <typename T>
-std::vector<T> PackedFromImage(const Plane<T>& image) {
-  return PackedFromImage(image, Rect(image));
-}
-
 // Initializes all planes to the same "value".
 template <typename T>
 void FillImage(const T value, Image3<T>* image) {
@@ -384,28 +259,6 @@ void FillImage(const T value, Image3<T>* image) {
     for (size_t y = 0; y < image->ysize(); ++y) {
       T* JXL_RESTRICT row = image->PlaneRow(c, y);
       for (size_t x = 0; x < image->xsize(); ++x) {
-        row[x] = value;
-      }
-    }
-  }
-}
-
-template <typename T>
-void FillPlane(const T value, Plane<T>* image) {
-  for (size_t y = 0; y < image->ysize(); ++y) {
-    T* JXL_RESTRICT row = image->Row(y);
-    for (size_t x = 0; x < image->xsize(); ++x) {
-      row[x] = value;
-    }
-  }
-}
-
-template <typename T>
-void FillImage(const T value, Image3<T>* image, Rect rect) {
-  for (size_t c = 0; c < 3; ++c) {
-    for (size_t y = 0; y < rect.ysize(); ++y) {
-      T* JXL_RESTRICT row = rect.PlaneRow(image, c, y);
-      for (size_t x = 0; x < rect.xsize(); ++x) {
         row[x] = value;
       }
     }
@@ -432,22 +285,14 @@ void ZeroFillImage(Image3<T>* image) {
   }
 }
 
-template <typename T>
-void ZeroFillPlane(Plane<T>* image, Rect rect) {
-  for (size_t y = 0; y < rect.ysize(); ++y) {
-    T* JXL_RESTRICT row = rect.Row(image, y);
-    memset(row, 0, rect.xsize() * sizeof(T));
-  }
-}
-
 // Same as above, but operates in-place. Assumes that the `in` image was
 // allocated large enough.
 void PadImageToBlockMultipleInPlace(Image3F* JXL_RESTRICT in,
                                     size_t block_dim = kBlockDim);
 
 // Downsamples an image by a given factor.
-void DownsampleImage(Image3F* opsin, size_t factor);
-void DownsampleImage(ImageF* image, size_t factor);
+StatusOr<Image3F> DownsampleImage(const Image3F& opsin, size_t factor);
+StatusOr<ImageF> DownsampleImage(const ImageF& image, size_t factor);
 
 }  // namespace jxl
 

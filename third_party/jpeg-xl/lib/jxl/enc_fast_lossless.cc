@@ -3735,10 +3735,13 @@ JxlFastLosslessFrameState* LLPrepare(JxlChunkedFrameInputSource input,
     const void* buffer =
         input.get_color_channel_data_at(input.opaque, x0, y0, xs, ys, &stride);
     auto rgba = reinterpret_cast<const unsigned char*>(buffer);
-    int y_begin = std::max<int>(0, ys - 2 * effort) / 2;
-    int y_count = std::min<int>(num_rows, y0 + ys - y_begin - 1);
+    int y_begin_group =
+        std::max<ssize_t>(
+            0, static_cast<ssize_t>(ys) - static_cast<ssize_t>(num_rows)) /
+        2;
+    int y_count = std::min<int>(num_rows, ys - y_begin_group);
     int x_max = xs / kChunkSize * kChunkSize;
-    CollectSamples(rgba, 0, y_begin, x_max, stride, y_count, raw_counts,
+    CollectSamples(rgba, 0, y_begin_group, x_max, stride, y_count, raw_counts,
                    lz77_counts, onegroup, !collided, bitdepth, nb_chans,
                    big_endian, lookup.data());
     input.release_buffer(input.opaque, buffer);

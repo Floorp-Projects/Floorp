@@ -8,16 +8,16 @@
 
 // Linear algebra.
 
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/image.h"
+#include <array>
 
 namespace jxl {
 
-using ImageD = Plane<double>;
+typedef std::array<double, 2> Vector2;
+// NB: matrix2x2[row][column]
+typedef std::array<Vector2, 2> Matrix2x2;
 
 // A is symmetric, U is orthogonal, and A = U * Diagonal(diag) * Transpose(U).
-void ConvertToDiagonal(const ImageD& A, ImageD* JXL_RESTRICT diag,
-                       ImageD* JXL_RESTRICT U);
+void ConvertToDiagonal(const Matrix2x2& A, Vector2& diag, Matrix2x2& U);
 
 }  // namespace jxl
 

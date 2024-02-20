@@ -8,42 +8,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <utility>
+#include <cstring>
 
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/random.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/cache_aligned.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
-
-template <typename T>
-void TestPacked(const size_t xsize, const size_t ysize) {
-  Plane<T> image1(xsize, ysize);
-  RandomFillImage(&image1);
-  const std::vector<T>& packed = PackedFromImage(image1);
-  const Plane<T>& image2 = ImageFromPacked(packed, xsize, ysize);
-  JXL_EXPECT_OK(SamePixels(image1, image2, _));
-}
-
-TEST(ImageTest, TestPacked) {
-  TestPacked<uint8_t>(1, 1);
-  TestPacked<uint8_t>(7, 1);
-  TestPacked<uint8_t>(1, 7);
-
-  TestPacked<int16_t>(1, 1);
-  TestPacked<int16_t>(7, 1);
-  TestPacked<int16_t>(1, 7);
-
-  TestPacked<uint16_t>(1, 1);
-  TestPacked<uint16_t>(7, 1);
-  TestPacked<uint16_t>(1, 7);
-
-  TestPacked<float>(1, 1);
-  TestPacked<float>(7, 1);
-  TestPacked<float>(1, 7);
-}
 
 // Ensure entire payload is readable/writable for various size/offset combos.
 TEST(ImageTest, TestAllocator) {
@@ -108,12 +84,8 @@ template <typename T>
 void TestFillT() {
   for (uint32_t xsize : {0, 1, 15, 16, 31, 32}) {
     for (uint32_t ysize : {0, 1, 15, 16, 31, 32}) {
-      Image3<T> image(xsize, ysize);
+      JXL_ASSIGN_OR_DIE(Image3<T> image, Image3<T>::Create(xsize, ysize));
       TestFillImpl(&image, "size ctor");
-
-      Image3<T> planar(Plane<T>(xsize, ysize), Plane<T>(xsize, ysize),
-                       Plane<T>(xsize, ysize));
-      TestFillImpl(&planar, "planar");
     }
   }
 }
@@ -127,7 +99,7 @@ TEST(ImageTest, TestFill) {
 }
 
 TEST(ImageTest, CopyImageToWithPaddingTest) {
-  Plane<uint32_t> src(100, 61);
+  JXL_ASSIGN_OR_DIE(Plane<uint32_t> src, Plane<uint32_t>::Create(100, 61));
   for (size_t y = 0; y < src.ysize(); y++) {
     for (size_t x = 0; x < src.xsize(); x++) {
       src.Row(y)[x] = x * 1000 + y;
@@ -136,7 +108,7 @@ TEST(ImageTest, CopyImageToWithPaddingTest) {
   Rect src_rect(10, 20, 30, 40);
   EXPECT_TRUE(src_rect.IsInside(src));
 
-  Plane<uint32_t> dst(60, 50);
+  JXL_ASSIGN_OR_DIE(Plane<uint32_t> dst, Plane<uint32_t>::Create(60, 50));
   FillImage(0u, &dst);
   Rect dst_rect(20, 5, 30, 40);
   EXPECT_TRUE(dst_rect.IsInside(dst));

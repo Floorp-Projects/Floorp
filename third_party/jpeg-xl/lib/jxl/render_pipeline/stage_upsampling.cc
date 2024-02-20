@@ -46,9 +46,9 @@ class UpsamplingStage : public RenderPipelineStage {
     }
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     static HWY_FULL(float) df;
     size_t shift = settings_.shift_x;
     size_t N = 1 << shift;
@@ -74,6 +74,7 @@ class UpsamplingStage : public RenderPipelineStage {
       msan::PoisonMemory(dst_row + xsize * N,
                          sizeof(float) * (xsize_v - xsize) * N);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

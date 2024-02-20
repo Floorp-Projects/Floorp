@@ -17,7 +17,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/span.h"
-#include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -27,6 +26,7 @@
 
 namespace jxl {
 
+using test::ButteraugliDistance;
 using test::ReadTestData;
 using test::Roundtrip;
 using test::ThreadPoolForTests;
@@ -256,7 +256,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io_orig, &pool));
   Rect rect(0, 0, io_orig.xsize(), 128);
   // need 2 DC groups for the DC frame to actually be progressive.
-  Image3F large(4242, rect.ysize());
+  JXL_ASSIGN_OR_DIE(Image3F large, Image3F::Create(4242, rect.ysize()));
   ZeroFillImage(&large);
   CopyImageTo(rect, *io_orig.Main().color(), rect, &large);
   CodecInOut io;
@@ -300,7 +300,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
   ASSERT_TRUE(SetFromBytes(Bytes(orig), &io_orig, &pool));
   Rect rect(0, 0, io_orig.xsize(), 128);
   // need 2 DC groups for the DC frame to actually be progressive.
-  Image3F large(4242, rect.ysize());
+  JXL_ASSIGN_OR_DIE(Image3F large, Image3F::Create(4242, rect.ysize()));
   ZeroFillImage(&large);
   CopyImageTo(rect, *io_orig.Main().color(), rect, &large);
   CodecInOut io;

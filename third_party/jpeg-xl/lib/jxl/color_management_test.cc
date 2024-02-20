@@ -49,9 +49,9 @@ using ::testing::ElementsAre;
 using ::testing::FloatNear;
 
 // Small enough to be fast. If changed, must update Generate*.
-static constexpr size_t kWidth = 16;
+constexpr size_t kWidth = 16;
 
-static constexpr size_t kNumThreads = 1;  // only have a single row.
+constexpr size_t kNumThreads = 1;  // only have a single row.
 
 MATCHER_P(HasSameFieldsAs, expected, "") {
   if (arg.GetRenderingIntent() != expected.GetRenderingIntent()) {
@@ -106,15 +106,15 @@ struct Globals {
   Globals() {
     in_gray = GenerateGray();
     in_color = GenerateColor();
-    out_gray = ImageF(kWidth, 1);
-    out_color = ImageF(kWidth * 3, 1);
+    JXL_ASSIGN_OR_DIE(out_gray, ImageF::Create(kWidth, 1));
+    JXL_ASSIGN_OR_DIE(out_color, ImageF::Create(kWidth * 3, 1));
 
     c_native = ColorEncoding::LinearSRGB(/*is_gray=*/false);
     c_gray = ColorEncoding::LinearSRGB(/*is_gray=*/true);
   }
 
   static ImageF GenerateGray() {
-    ImageF gray(kWidth, 1);
+    JXL_ASSIGN_OR_DIE(ImageF gray, ImageF::Create(kWidth, 1));
     float* JXL_RESTRICT row = gray.Row(0);
     // Increasing left to right
     for (uint32_t x = 0; x < kWidth; ++x) {
@@ -124,7 +124,7 @@ struct Globals {
   }
 
   static ImageF GenerateColor() {
-    ImageF image(kWidth * 3, 1);
+    JXL_ASSIGN_OR_DIE(ImageF image, ImageF::Create(kWidth * 3, 1));
     float* JXL_RESTRICT interleaved = image.Row(0);
     std::fill(interleaved, interleaved + kWidth * 3, 0.0f);
 
@@ -373,7 +373,7 @@ TEST_F(ColorManagementTest, XYBProfile) {
   ImageMetadata metadata;
   metadata.color_encoding = c_native;
   ImageBundle ib(&metadata);
-  Image3F native(kNumColors, 1);
+  JXL_ASSIGN_OR_DIE(Image3F native, Image3F::Create(kNumColors, 1));
   float mul = 1.0f / (kGridDim - 1);
   for (size_t ir = 0, x = 0; ir < kGridDim; ++ir) {
     for (size_t ig = 0; ig < kGridDim; ++ig) {
@@ -386,10 +386,10 @@ TEST_F(ColorManagementTest, XYBProfile) {
   }
   ib.SetFromImage(std::move(native), c_native);
   const Image3F& in = *ib.color();
-  Image3F opsin(kNumColors, 1);
-  ToXYB(ib, nullptr, &opsin, cms, nullptr);
+  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(kNumColors, 1));
+  JXL_CHECK(ToXYB(ib, nullptr, &opsin, cms, nullptr));
 
-  Image3F opsin2(kNumColors, 1);
+  JXL_ASSIGN_OR_DIE(Image3F opsin2, Image3F::Create(kNumColors, 1));
   CopyImageTo(opsin, &opsin2);
   ScaleXYB(&opsin2);
 
@@ -403,7 +403,7 @@ TEST_F(ColorManagementTest, XYBProfile) {
   float* dst = xform.BufDst(0);
   ASSERT_TRUE(xform.Run(0, src, dst));
 
-  Image3F out(kNumColors, 1);
+  JXL_ASSIGN_OR_DIE(Image3F out, Image3F::Create(kNumColors, 1));
   for (size_t i = 0; i < kNumColors; ++i) {
     for (size_t c = 0; c < 3; ++c) {
       out.PlaneRow(c, 0)[i] = dst[3 * i + c];

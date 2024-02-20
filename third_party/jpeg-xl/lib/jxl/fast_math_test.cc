@@ -167,7 +167,8 @@ HWY_NOINLINE void TestFastXYB() {
   for (int cr = 0; cr < n; cr += kChunk) {
     for (int cg = 0; cg < n; cg += kChunk) {
       for (int cb = 0; cb < n; cb += kChunk) {
-        Image3F chunk(kChunk * kChunk, kChunk);
+        JXL_ASSIGN_OR_DIE(Image3F chunk,
+                          Image3F::Create(kChunk * kChunk, kChunk));
         for (int ir = 0; ir < kChunk; ir++) {
           for (int ig = 0; ig < kChunk; ig++) {
             for (int ib = 0; ib < kChunk; ib++) {
@@ -181,9 +182,10 @@ HWY_NOINLINE void TestFastXYB() {
           }
         }
         ib.SetFromImage(std::move(chunk), ColorEncoding::SRGB());
-        Image3F xyb(kChunk * kChunk, kChunk);
+        JXL_ASSIGN_OR_DIE(Image3F xyb,
+                          Image3F::Create(kChunk * kChunk, kChunk));
         std::vector<uint8_t> roundtrip(kChunk * kChunk * kChunk * 3);
-        ToXYB(ib, nullptr, &xyb, *JxlGetDefaultCms());
+        JXL_CHECK(ToXYB(ib, nullptr, &xyb, *JxlGetDefaultCms()));
         for (int y = 0; y < kChunk; y++) {
           const float* xyba[4] = {xyb.PlaneRow(0, y), xyb.PlaneRow(1, y),
                                   xyb.PlaneRow(2, y), nullptr};

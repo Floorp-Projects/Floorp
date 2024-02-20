@@ -161,7 +161,7 @@ set(JPEGXL_ENABLE_AVX512_SPR false CACHE BOOL
 set(JPEGXL_ENABLE_AVX512_ZEN4 false CACHE BOOL
 "Build with Zen4-optimized AVX512 support (faster on CPUs that support it, but larger binary size).")
 set(JPEGXL_ENABLE_WASM_TRHEADS true CACHE BOOL
-    "Builds WASM modules with threads suppurt")
+    "Builds WASM modules with threads support")
 
 # Force system dependencies.
 set(JPEGXL_FORCE_SYSTEM_BROTLI false CACHE BOOL

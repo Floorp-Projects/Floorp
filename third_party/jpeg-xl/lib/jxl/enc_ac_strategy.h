@@ -58,14 +58,15 @@ struct ACSConfig {
 };
 
 struct AcStrategyHeuristics {
-  AcStrategyHeuristics(const CompressParams& cparams) : cparams(cparams) {}
+  explicit AcStrategyHeuristics(const CompressParams& cparams)
+      : cparams(cparams) {}
   void Init(const Image3F& src, const Rect& rect_in, const ImageF& quant_field,
             const ImageF& mask, const ImageF& mask1x1,
             DequantMatrices* matrices);
   void ProcessRect(const Rect& rect, const ColorCorrelationMap& cmap,
                    AcStrategyImage* ac_strategy);
-  void Finalize(const FrameDimensions& frame_dim,
-                const AcStrategyImage& ac_strategy, AuxOut* aux_out);
+  Status Finalize(const FrameDimensions& frame_dim,
+                  const AcStrategyImage& ac_strategy, AuxOut* aux_out);
   const CompressParams& cparams;
   ACSConfig config;
 };

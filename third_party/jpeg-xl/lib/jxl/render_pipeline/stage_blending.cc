@@ -109,7 +109,7 @@ class BlendingStage : public RenderPipelineStage {
         }
       }
     };
-    make_blending(info_, &blending_info_[0]);
+    make_blending(info_, blending_info_.data());
     for (size_t i = 0; i < ec_info.size(); i++) {
       make_blending(ec_info[i], &blending_info_[1 + i]);
     }
@@ -117,9 +117,9 @@ class BlendingStage : public RenderPipelineStage {
 
   Status IsInitialized() const override { return initialized_; }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     JXL_ASSERT(initialized_);
     const FrameOrigin& frame_origin = frame_header_.frame_origin;
     ssize_t bg_xpos = frame_origin.x0 + static_cast<ssize_t>(xpos);
@@ -128,7 +128,8 @@ class BlendingStage : public RenderPipelineStage {
     if (bg_xpos + static_cast<ssize_t>(xsize) <= 0 ||
         frame_origin.x0 >= static_cast<ssize_t>(image_xsize_) || bg_ypos < 0 ||
         bg_ypos >= static_cast<ssize_t>(image_ysize_)) {
-      return;
+      // TODO(eustas): or fail?
+      return true;
     }
     if (bg_xpos < 0) {
       offset -= bg_xpos;
@@ -160,9 +161,9 @@ class BlendingStage : public RenderPipelineStage {
                 : zeroes_.data();
       }
     }
-    PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
-                    fg_row_ptrs_.data(), 0, xsize, blending_info_[0],
-                    blending_info_.data() + 1, *extra_channel_info_);
+    return PerformBlending(bg_row_ptrs_.data(), fg_row_ptrs_.data(),
+                           fg_row_ptrs_.data(), 0, xsize, blending_info_[0],
+                           blending_info_.data() + 1, *extra_channel_info_);
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

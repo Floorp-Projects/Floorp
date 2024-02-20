@@ -18,7 +18,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_ops.h"
 
 namespace jxl {
 
@@ -36,11 +35,15 @@ class Channel {
   jxl::Plane<pixel_type> plane;
   size_t w, h;
   int hshift, vshift;  // w ~= image.w >> hshift;  h ~= image.h >> vshift
-  Channel(size_t iw, size_t ih, int hsh = 0, int vsh = 0)
-      : plane(iw, ih), w(iw), h(ih), hshift(hsh), vshift(vsh) {}
-
   Channel(const Channel& other) = delete;
   Channel& operator=(const Channel& other) = delete;
+
+  static StatusOr<Channel> Create(size_t iw, size_t ih, int hsh = 0,
+                                  int vsh = 0) {
+    JXL_ASSIGN_OR_RETURN(Plane<pixel_type> plane,
+                         Plane<pixel_type>::Create(iw, ih));
+    return Channel(std::move(plane), iw, ih, hsh, vsh);
+  }
 
   // Move assignment
   Channel& operator=(Channel&& other) noexcept {
@@ -55,21 +58,25 @@ class Channel {
   // Move constructor
   Channel(Channel&& other) noexcept = default;
 
-  void shrink() {
-    if (plane.xsize() == w && plane.ysize() == h) return;
-    jxl::Plane<pixel_type> resizedplane(w, h);
-    plane = std::move(resizedplane);
+  Status shrink() {
+    if (plane.xsize() == w && plane.ysize() == h) return true;
+    JXL_ASSIGN_OR_RETURN(plane, Plane<pixel_type>::Create(w, h));
+    return true;
   }
-  void shrink(int nw, int nh) {
+  Status shrink(int nw, int nh) {
     w = nw;
     h = nh;
-    shrink();
+    return shrink();
   }
 
   JXL_INLINE pixel_type* Row(const size_t y) { return plane.Row(y); }
   JXL_INLINE const pixel_type* Row(const size_t y) const {
     return plane.Row(y);
   }
+
+ private:
+  Channel(jxl::Plane<pixel_type>&& p, size_t iw, size_t ih, int hsh, int vsh)
+      : plane(std::move(p)), w(iw), h(ih), hshift(hsh), vshift(vsh) {}
 };
 
 class Transform;
@@ -88,7 +95,6 @@ class Image {
   size_t nb_meta_channels;  // first few channels might contain palette(s)
   bool error;               // true if a fatal error occurred, false otherwise
 
-  Image(size_t iw, size_t ih, int bitdepth, int nb_chans);
   Image();
 
   Image(const Image& other) = delete;
@@ -97,6 +103,9 @@ class Image {
   Image& operator=(Image&& other) noexcept;
   Image(Image&& other) noexcept = default;
 
+  static StatusOr<Image> Create(size_t iw, size_t ih, int bitdepth,
+                                int nb_chans);
+
   bool empty() const {
     for (const auto& ch : channel) {
       if (ch.w && ch.h) return false;
@@ -104,12 +113,15 @@ class Image {
     return true;
   }
 
-  Image clone();
+  static StatusOr<Image> Clone(const Image& that);
 
   void undo_transforms(const weighted::Header& wp_header,
                        jxl::ThreadPool* pool = nullptr);
 
   std::string DebugString() const;
+
+ private:
+  Image(size_t iw, size_t ih, int bitdepth);
 };
 
 }  // namespace jxl

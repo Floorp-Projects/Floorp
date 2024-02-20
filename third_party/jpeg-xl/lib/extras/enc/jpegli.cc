@@ -34,6 +34,7 @@
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
+#include "lib/jxl/simd_util.h"
 
 namespace jxl {
 namespace extras {
@@ -71,7 +72,7 @@ Status VerifyInput(const PackedPixelFile& ppf) {
 
 Status GetColorEncoding(const PackedPixelFile& ppf,
                         ColorEncoding* color_encoding) {
-  if (!ppf.icc.empty()) {
+  if (ppf.primary_color_representation == PackedPixelFile::kIccIsPrimary) {
     IccBytes icc = ppf.icc;
     JXL_RETURN_IF_ERROR(
         color_encoding->SetICC(std::move(icc), JxlGetDefaultCms()));
@@ -374,11 +375,11 @@ Status EncodeJpeg(const PackedPixelFile& ppf, const JpegSettings& jpeg_settings,
   unsigned char* output_buffer = nullptr;
   unsigned long output_size = 0;
   std::vector<uint8_t> row_bytes;
-  size_t rowlen = RoundUpTo(ppf.info.xsize, VectorSize());
+  size_t rowlen = RoundUpTo(ppf.info.xsize, MaxVectorSize());
   hwy::AlignedFreeUniquePtr<float[]> xyb_tmp =
       hwy::AllocateAligned<float>(6 * rowlen);
   hwy::AlignedFreeUniquePtr<float[]> premul_absorb =
-      hwy::AllocateAligned<float>(VectorSize() * 12);
+      hwy::AllocateAligned<float>(MaxVectorSize() * 12);
   ComputePremulAbsorb(255.0f, premul_absorb.get());
 
   jpeg_compress_struct cinfo;

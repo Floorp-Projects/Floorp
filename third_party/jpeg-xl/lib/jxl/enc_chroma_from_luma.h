@@ -29,7 +29,7 @@ void ColorCorrelationMapEncodeDC(const ColorCorrelationMap& map,
                                  AuxOut* aux_out);
 
 struct CfLHeuristics {
-  void Init(const Rect& rect);
+  Status Init(const Rect& rect);
 
   void PrepareForThreads(size_t num_threads) {
     mem = hwy::AllocateAligned<float>(num_threads * ItemsPerThread());

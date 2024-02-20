@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -26,8 +27,6 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/cms/opsin_params.h"
-#include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_group.h"
@@ -102,12 +101,12 @@ V ComputeMask(const D d, const V out_val) {
 }
 
 // mul and mul2 represent a scaling difference between jxl and butteraugli.
-static const float kSGmul = 226.77216153508914f;
-static const float kSGmul2 = 1.0f / 73.377132366608819f;
-static const float kLog2 = 0.693147181f;
+const float kSGmul = 226.77216153508914f;
+const float kSGmul2 = 1.0f / 73.377132366608819f;
+const float kLog2 = 0.693147181f;
 // Includes correction factor for std::log -> log2.
-static const float kSGRetMul = kSGmul2 * 18.6580932135f * kLog2;
-static const float kSGVOffset = 7.7825991679894591f;
+const float kSGRetMul = kSGmul2 * 18.6580932135f * kLog2;
+const float kSGVOffset = 7.7825991679894591f;
 
 template <bool invert, typename D, typename V>
 V RatioOfDerivativesOfCubicRootToSimpleGamma(const D d, V v) {
@@ -131,7 +130,7 @@ V RatioOfDerivativesOfCubicRootToSimpleGamma(const D d, V v) {
 }
 
 template <bool invert = false>
-static float RatioOfDerivativesOfCubicRootToSimpleGamma(float v) {
+float RatioOfDerivativesOfCubicRootToSimpleGamma(float v) {
   using DScalar = HWY_CAPPED(float, 1);
   auto vscalar = Load(DScalar(), &v);
   return GetLane(
@@ -396,12 +395,16 @@ void FuzzyErosion(const float butteraugli_target, const Rect& from_rect,
 }
 
 struct AdaptiveQuantizationImpl {
-  void PrepareBuffers(size_t num_threads) {
-    diff_buffer = ImageF(kEncTileDim + 8, num_threads);
+  Status PrepareBuffers(size_t num_threads) {
+    JXL_ASSIGN_OR_RETURN(diff_buffer,
+                         ImageF::Create(kEncTileDim + 8, num_threads));
     for (size_t i = pre_erosion.size(); i < num_threads; i++) {
-      pre_erosion.emplace_back(kEncTileDimInBlocks * 2 + 2,
-                               kEncTileDimInBlocks * 2 + 2);
+      JXL_ASSIGN_OR_RETURN(ImageF tmp,
+                           ImageF::Create(kEncTileDimInBlocks * 2 + 2,
+                                          kEncTileDimInBlocks * 2 + 2));
+      pre_erosion.emplace_back(std::move(tmp));
     }
+    return true;
   }
 
   void ComputeTile(float butteraugli_target, float scale, const Image3F& xyb,
@@ -568,8 +571,7 @@ struct AdaptiveQuantizationImpl {
   ImageF diff_buffer;
 };
 
-static void Blur1x1Masking(ThreadPool* pool, ImageF* mask1x1,
-                           const Rect& rect) {
+Status Blur1x1Masking(ThreadPool* pool, ImageF* mask1x1, const Rect& rect) {
   // Blur the mask1x1 to obtain the masking image.
   // Before blurring it contains an image of absolute value of the
   // Laplacian of the intensity channel.
@@ -595,30 +597,30 @@ static void Blur1x1Masking(ThreadPool* pool, ImageF* mask1x1,
                         {HWY_REP4(normalize_mul * kFilterMask1x1[1])},
                         {HWY_REP4(normalize_mul * kFilterMask1x1[4])},
                         {HWY_REP4(normalize_mul * kFilterMask1x1[3])}};
-  ImageF temp(rect.xsize(), rect.ysize());
+  JXL_ASSIGN_OR_RETURN(ImageF temp, ImageF::Create(rect.xsize(), rect.ysize()));
   Symmetric5(*mask1x1, rect, weights, pool, &temp);
   *mask1x1 = std::move(temp);
+  return true;
 }
 
-ImageF AdaptiveQuantizationMap(const float butteraugli_target,
-                               const Image3F& xyb, const Rect& rect,
-                               float scale, ThreadPool* pool, ImageF* mask,
-                               ImageF* mask1x1) {
+StatusOr<ImageF> AdaptiveQuantizationMap(const float butteraugli_target,
+                                         const Image3F& xyb, const Rect& rect,
+                                         float scale, ThreadPool* pool,
+                                         ImageF* mask, ImageF* mask1x1) {
   JXL_DASSERT(rect.xsize() % kBlockDim == 0);
   JXL_DASSERT(rect.ysize() % kBlockDim == 0);
   AdaptiveQuantizationImpl impl;
   const size_t xsize_blocks = rect.xsize() / kBlockDim;
   const size_t ysize_blocks = rect.ysize() / kBlockDim;
-  impl.aq_map = ImageF(xsize_blocks, ysize_blocks);
-  *mask = ImageF(xsize_blocks, ysize_blocks);
-  *mask1x1 = ImageF(xyb.xsize(), xyb.ysize());
+  JXL_ASSIGN_OR_RETURN(impl.aq_map, ImageF::Create(xsize_blocks, ysize_blocks));
+  JXL_ASSIGN_OR_RETURN(*mask, ImageF::Create(xsize_blocks, ysize_blocks));
+  JXL_ASSIGN_OR_RETURN(*mask1x1, ImageF::Create(xyb.xsize(), xyb.ysize()));
   JXL_CHECK(RunOnPool(
       pool, 0,
       DivCeil(xsize_blocks, kEncTileDimInBlocks) *
           DivCeil(ysize_blocks, kEncTileDimInBlocks),
       [&](const size_t num_threads) {
-        impl.PrepareBuffers(num_threads);
-        return true;
+        return !!impl.PrepareBuffers(num_threads);
       },
       [&](const uint32_t tid, const size_t thread) {
         size_t n_enc_tiles = DivCeil(xsize_blocks, kEncTileDimInBlocks);
@@ -634,7 +636,7 @@ ImageF AdaptiveQuantizationMap(const float butteraugli_target,
       },
       "AQ DiffPrecompute"));
 
-  Blur1x1Masking(pool, mask1x1, rect);
+  JXL_RETURN_IF_ERROR(Blur1x1Masking(pool, mask1x1, rect));
   return std::move(impl).aq_map;
 }
 
@@ -654,24 +656,28 @@ namespace {
 // If true, prints the quantization maps at each iteration.
 constexpr bool FLAGS_dump_quant_state = false;
 
-void DumpHeatmap(const CompressParams& cparams, const AuxOut* aux_out,
-                 const std::string& label, const ImageF& image,
-                 float good_threshold, float bad_threshold) {
+Status DumpHeatmap(const CompressParams& cparams, const AuxOut* aux_out,
+                   const std::string& label, const ImageF& image,
+                   float good_threshold, float bad_threshold) {
   if (JXL_DEBUG_ADAPTIVE_QUANTIZATION) {
-    Image3F heatmap = CreateHeatMapImage(image, good_threshold, bad_threshold);
+    JXL_ASSIGN_OR_RETURN(
+        Image3F heatmap,
+        CreateHeatMapImage(image, good_threshold, bad_threshold));
     char filename[200];
     snprintf(filename, sizeof(filename), "%s%05d", label.c_str(),
              aux_out->num_butteraugli_iters);
-    DumpImage(cparams, filename, heatmap);
+    JXL_RETURN_IF_ERROR(DumpImage(cparams, filename, heatmap));
   }
+  return true;
 }
 
-void DumpHeatmaps(const CompressParams& cparams, const AuxOut* aux_out,
-                  float ba_target, const ImageF& quant_field,
-                  const ImageF& tile_heatmap, const ImageF& bt_diffmap) {
+Status DumpHeatmaps(const CompressParams& cparams, const AuxOut* aux_out,
+                    float ba_target, const ImageF& quant_field,
+                    const ImageF& tile_heatmap, const ImageF& bt_diffmap) {
   if (JXL_DEBUG_ADAPTIVE_QUANTIZATION) {
-    if (!WantDebugOutput(cparams)) return;
-    ImageF inv_qmap(quant_field.xsize(), quant_field.ysize());
+    if (!WantDebugOutput(cparams)) return true;
+    JXL_ASSIGN_OR_RETURN(ImageF inv_qmap, ImageF::Create(quant_field.xsize(),
+                                                         quant_field.ysize()));
     for (size_t y = 0; y < quant_field.ysize(); ++y) {
       const float* JXL_RESTRICT row_q = quant_field.ConstRow(y);
       float* JXL_RESTRICT row_inv_q = inv_qmap.Row(y);
@@ -679,21 +685,24 @@ void DumpHeatmaps(const CompressParams& cparams, const AuxOut* aux_out,
         row_inv_q[x] = 1.0f / row_q[x];  // never zero
       }
     }
-    DumpHeatmap(cparams, aux_out, "quant_heatmap", inv_qmap, 4.0f * ba_target,
-                6.0f * ba_target);
-    DumpHeatmap(cparams, aux_out, "tile_heatmap", tile_heatmap, ba_target,
-                1.5f * ba_target);
+    JXL_RETURN_IF_ERROR(DumpHeatmap(cparams, aux_out, "quant_heatmap", inv_qmap,
+                                    4.0f * ba_target, 6.0f * ba_target));
+    JXL_RETURN_IF_ERROR(DumpHeatmap(cparams, aux_out, "tile_heatmap",
+                                    tile_heatmap, ba_target, 1.5f * ba_target));
     // matches heat maps produced by the command line tool.
-    DumpHeatmap(cparams, aux_out, "bt_diffmap", bt_diffmap,
-                ButteraugliFuzzyInverse(1.5), ButteraugliFuzzyInverse(0.5));
+    JXL_RETURN_IF_ERROR(DumpHeatmap(cparams, aux_out, "bt_diffmap", bt_diffmap,
+                                    ButteraugliFuzzyInverse(1.5),
+                                    ButteraugliFuzzyInverse(0.5)));
   }
+  return true;
 }
 
-ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
-                   const AcStrategyImage& ac_strategy) {
+StatusOr<ImageF> TileDistMap(const ImageF& distmap, int tile_size, int margin,
+                             const AcStrategyImage& ac_strategy) {
   const int tile_xsize = (distmap.xsize() + tile_size - 1) / tile_size;
   const int tile_ysize = (distmap.ysize() + tile_size - 1) / tile_size;
-  ImageF tile_distmap(tile_xsize, tile_ysize);
+  JXL_ASSIGN_OR_RETURN(ImageF tile_distmap,
+                       ImageF::Create(tile_xsize, tile_ysize));
   size_t distmap_stride = tile_distmap.PixelsPerRow();
   for (int tile_y = 0; tile_y < tile_ysize; ++tile_y) {
     AcStrategyRow ac_strategy_row = ac_strategy.ConstRow(tile_y);
@@ -754,14 +763,16 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
   return tile_distmap;
 }
 
-static const float kDcQuantPow = 0.83f;
-static const float kDcQuant = 1.095924047623553f;
-static const float kAcQuant = 0.7381485255235064f;
+const float kDcQuantPow = 0.83f;
+const float kDcQuant = 1.095924047623553f;
+const float kAcQuant = 0.7381485255235064f;
 
 // Computes the decoded image for a given set of compression parameters.
-ImageBundle RoundtripImage(const FrameHeader& frame_header,
-                           const Image3F& opsin, PassesEncoderState* enc_state,
-                           const JxlCmsInterface& cms, ThreadPool* pool) {
+StatusOr<ImageBundle> RoundtripImage(const FrameHeader& frame_header,
+                                     const Image3F& opsin,
+                                     PassesEncoderState* enc_state,
+                                     const JxlCmsInterface& cms,
+                                     ThreadPool* pool) {
   std::unique_ptr<PassesDecoderState> dec_state =
       jxl::make_unique<PassesDecoderState>();
   JXL_CHECK(dec_state->output_encoding_info.SetFromMetadata(
@@ -775,7 +786,8 @@ ImageBundle RoundtripImage(const FrameHeader& frame_header,
 
   size_t num_special_frames = enc_state->special_frames.size();
   size_t num_passes = enc_state->progressive_splitter.GetNumPasses();
-  ModularFrameEncoder modular_frame_encoder(frame_header, enc_state->cparams);
+  ModularFrameEncoder modular_frame_encoder(frame_header, enc_state->cparams,
+                                            false);
   JXL_CHECK(InitializePassesEncoder(frame_header, opsin, Rect(opsin), cms, pool,
                                     enc_state, &modular_frame_encoder,
                                     nullptr));
@@ -784,7 +796,9 @@ ImageBundle RoundtripImage(const FrameHeader& frame_header,
 
   ImageBundle decoded(&enc_state->shared.metadata->m);
   decoded.origin = frame_header.frame_origin;
-  decoded.SetFromImage(Image3F(opsin.xsize(), opsin.ysize()),
+  JXL_ASSIGN_OR_RETURN(Image3F tmp,
+                       Image3F::Create(opsin.xsize(), opsin.ysize()));
+  decoded.SetFromImage(std::move(tmp),
                        dec_state->output_encoding_info.color_encoding);
 
   PassesDecoderState::PipelineOptions options;
@@ -806,8 +820,10 @@ ImageBundle RoundtripImage(const FrameHeader& frame_header,
     group_dec_caches = hwy::MakeUniqueAlignedArray<GroupDecCache>(num_threads);
     return true;
   };
+  std::atomic<bool> has_error{false};
   const auto process_group = [&](const uint32_t group_index,
                                  const size_t thread) {
+    if (has_error) return;
     if (frame_header.loop_filter.epf_iters > 0) {
       ComputeSigma(frame_header.loop_filter,
                    dec_state->shared->frame_dim.BlockGroupRect(group_index),
@@ -822,10 +838,14 @@ ImageBundle RoundtripImage(const FrameHeader& frame_header,
       std::pair<ImageF*, Rect> ri = input.GetBuffer(3 + c);
       FillPlane(0.0f, ri.first, ri.second);
     }
-    input.Done();
+    if (!input.Done()) {
+      has_error = true;
+      return;
+    }
   };
   JXL_CHECK(RunOnPool(pool, 0, num_groups, allocate_storage, process_group,
                       "AQ loop"));
+  if (has_error) return JXL_FAILURE("AQ loop failure");
 
   // Ensure we don't create any new special frames.
   enc_state->special_frames.resize(num_special_frames);
@@ -835,18 +855,18 @@ ImageBundle RoundtripImage(const FrameHeader& frame_header,
 
 constexpr int kMaxButteraugliIters = 4;
 
-void FindBestQuantization(const FrameHeader& frame_header,
-                          const Image3F& linear, const Image3F& opsin,
-                          ImageF& quant_field, PassesEncoderState* enc_state,
-                          const JxlCmsInterface& cms, ThreadPool* pool,
-                          AuxOut* aux_out) {
+Status FindBestQuantization(const FrameHeader& frame_header,
+                            const Image3F& linear, const Image3F& opsin,
+                            ImageF& quant_field, PassesEncoderState* enc_state,
+                            const JxlCmsInterface& cms, ThreadPool* pool,
+                            AuxOut* aux_out) {
   const CompressParams& cparams = enc_state->cparams;
   if (cparams.resampling > 1 &&
       cparams.original_butteraugli_distance <= 4.0 * cparams.resampling) {
     // For downsampled opsin image, the butteraugli based adaptive quantization
     // loop would only make the size bigger without improving the distance much,
     // so in this case we enable it only for very high butteraugli targets.
-    return;
+    return true;
   }
   Quantizer& quantizer = enc_state->shared.quantizer;
   ImageI& raw_quant_field = enc_state->shared.raw_quant_field;
@@ -863,10 +883,13 @@ void FindBestQuantization(const FrameHeader& frame_header,
   AdjustQuantField(enc_state->shared.ac_strategy, Rect(quant_field),
                    original_butteraugli, &quant_field);
   ImageF tile_distmap;
-  ImageF initial_quant_field(quant_field.xsize(), quant_field.ysize());
+  JXL_ASSIGN_OR_RETURN(
+      ImageF initial_quant_field,
+      ImageF::Create(quant_field.xsize(), quant_field.ysize()));
   CopyImageTo(quant_field, &initial_quant_field);
 
-  float initial_qf_min, initial_qf_max;
+  float initial_qf_min;
+  float initial_qf_max;
   ImageMinMax(initial_quant_field, &initial_qf_min, &initial_qf_max);
   float initial_qf_ratio = initial_qf_max / initial_qf_min;
   float qf_max_deviation_low = std::sqrt(250 / initial_qf_ratio);
@@ -893,8 +916,9 @@ void FindBestQuantization(const FrameHeader& frame_header,
       }
     }
     quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
-    ImageBundle dec_linear =
-        RoundtripImage(frame_header, opsin, enc_state, cms, pool);
+    JXL_ASSIGN_OR_RETURN(
+        ImageBundle dec_linear,
+        RoundtripImage(frame_header, opsin, enc_state, cms, pool));
     float score;
     ImageF diffmap;
     JXL_CHECK(comparator.CompareWith(dec_linear, &diffmap, &score));
@@ -902,16 +926,19 @@ void FindBestQuantization(const FrameHeader& frame_header,
       score = -score;
       ScaleImage(-1.0f, &diffmap);
     }
-    tile_distmap = TileDistMap(diffmap, 8 * cparams.resampling, 0,
-                               enc_state->shared.ac_strategy);
+    JXL_ASSIGN_OR_RETURN(tile_distmap,
+                         TileDistMap(diffmap, 8 * cparams.resampling, 0,
+                                     enc_state->shared.ac_strategy));
     if (JXL_DEBUG_ADAPTIVE_QUANTIZATION && WantDebugOutput(cparams)) {
-      DumpImage(cparams, ("dec" + ToString(i)).c_str(), *dec_linear.color());
-      DumpHeatmaps(cparams, aux_out, butteraugli_target, quant_field,
-                   tile_distmap, diffmap);
+      JXL_RETURN_IF_ERROR(DumpImage(cparams, ("dec" + ToString(i)).c_str(),
+                                    *dec_linear.color()));
+      JXL_RETURN_IF_ERROR(DumpHeatmaps(cparams, aux_out, butteraugli_target,
+                                       quant_field, tile_distmap, diffmap));
     }
     if (aux_out != nullptr) ++aux_out->num_butteraugli_iters;
     if (JXL_DEBUG_ADAPTIVE_QUANTIZATION) {
-      float minval, maxval;
+      float minval;
+      float maxval;
       ImageMinMax(quant_field, &minval, &maxval);
       printf("\nButteraugli iter: %d/%d\n", i, kMaxButteraugliIters);
       printf("Butteraugli distance: %f  (target = %f)\n", score,
@@ -1001,13 +1028,14 @@ void FindBestQuantization(const FrameHeader& frame_header,
     }
   }
   quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
+  return true;
 }
 
-void FindBestQuantizationMaxError(const FrameHeader& frame_header,
-                                  const Image3F& opsin, ImageF& quant_field,
-                                  PassesEncoderState* enc_state,
-                                  const JxlCmsInterface& cms, ThreadPool* pool,
-                                  AuxOut* aux_out) {
+Status FindBestQuantizationMaxError(const FrameHeader& frame_header,
+                                    const Image3F& opsin, ImageF& quant_field,
+                                    PassesEncoderState* enc_state,
+                                    const JxlCmsInterface& cms,
+                                    ThreadPool* pool, AuxOut* aux_out) {
   // TODO(szabadka): Make this work for non-opsin color spaces.
   const CompressParams& cparams = enc_state->cparams;
   Quantizer& quantizer = enc_state->shared.quantizer;
@@ -1026,12 +1054,15 @@ void FindBestQuantizationMaxError(const FrameHeader& frame_header,
   for (int i = 0; i < kMaxButteraugliIters + 1; ++i) {
     quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
     if (JXL_DEBUG_ADAPTIVE_QUANTIZATION && aux_out) {
-      DumpXybImage(cparams, ("ops" + ToString(i)).c_str(), opsin);
+      JXL_RETURN_IF_ERROR(
+          DumpXybImage(cparams, ("ops" + ToString(i)).c_str(), opsin));
     }
-    ImageBundle decoded =
-        RoundtripImage(frame_header, opsin, enc_state, cms, pool);
+    JXL_ASSIGN_OR_RETURN(
+        ImageBundle decoded,
+        RoundtripImage(frame_header, opsin, enc_state, cms, pool));
     if (JXL_DEBUG_ADAPTIVE_QUANTIZATION && aux_out) {
-      DumpXybImage(cparams, ("dec" + ToString(i)).c_str(), *decoded.color());
+      JXL_RETURN_IF_ERROR(DumpXybImage(cparams, ("dec" + ToString(i)).c_str(),
+                                       *decoded.color()));
     }
     for (size_t by = 0; by < enc_state->shared.frame_dim.ysize_blocks; by++) {
       AcStrategyRow ac_strategy_row =
@@ -1073,6 +1104,7 @@ void FindBestQuantizationMaxError(const FrameHeader& frame_header,
     }
   }
   quantizer.SetQuantField(initial_quant_dc, quant_field, &raw_quant_field);
+  return true;
 }
 
 }  // namespace
@@ -1142,28 +1174,31 @@ float InitialQuantDC(float butteraugli_target) {
   return std::min(kDcQuant / butteraugli_target_dc, 50.f);
 }
 
-ImageF InitialQuantField(const float butteraugli_target, const Image3F& opsin,
-                         const Rect& rect, ThreadPool* pool, float rescale,
-                         ImageF* mask, ImageF* mask1x1) {
+StatusOr<ImageF> InitialQuantField(const float butteraugli_target,
+                                   const Image3F& opsin, const Rect& rect,
+                                   ThreadPool* pool, float rescale,
+                                   ImageF* mask, ImageF* mask1x1) {
   const float quant_ac = kAcQuant / butteraugli_target;
   return HWY_DYNAMIC_DISPATCH(AdaptiveQuantizationMap)(
       butteraugli_target, opsin, rect, quant_ac * rescale, pool, mask, mask1x1);
 }
 
-void FindBestQuantizer(const FrameHeader& frame_header, const Image3F* linear,
-                       const Image3F& opsin, ImageF& quant_field,
-                       PassesEncoderState* enc_state,
-                       const JxlCmsInterface& cms, ThreadPool* pool,
-                       AuxOut* aux_out, double rescale) {
+Status FindBestQuantizer(const FrameHeader& frame_header, const Image3F* linear,
+                         const Image3F& opsin, ImageF& quant_field,
+                         PassesEncoderState* enc_state,
+                         const JxlCmsInterface& cms, ThreadPool* pool,
+                         AuxOut* aux_out, double rescale) {
   const CompressParams& cparams = enc_state->cparams;
   if (cparams.max_error_mode) {
-    FindBestQuantizationMaxError(frame_header, opsin, quant_field, enc_state,
-                                 cms, pool, aux_out);
+    JXL_RETURN_IF_ERROR(FindBestQuantizationMaxError(
+        frame_header, opsin, quant_field, enc_state, cms, pool, aux_out));
   } else if (linear && cparams.speed_tier <= SpeedTier::kKitten) {
     // Normal encoding to a butteraugli score.
-    FindBestQuantization(frame_header, *linear, opsin, quant_field, enc_state,
-                         cms, pool, aux_out);
+    JXL_RETURN_IF_ERROR(FindBestQuantization(frame_header, *linear, opsin,
+                                             quant_field, enc_state, cms, pool,
+                                             aux_out));
   }
+  return true;
 }
 
 }  // namespace jxl

@@ -14,6 +14,8 @@
 #include "lib/jxl/base/scope_guard.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/frame_dimensions.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/pack_signed.h"
@@ -376,7 +378,9 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
     MATreeLookup tree_lookup(tree);
     Properties properties = Properties(num_props);
     const intptr_t onerow = channel.plane.PixelsPerRow();
-    Channel references(properties.size() - kNumNonrefProperties, channel.w);
+    JXL_ASSIGN_OR_RETURN(
+        Channel references,
+        Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
     for (size_t y = 0; y < channel.h; y++) {
       pixel_type *JXL_RESTRICT p = channel.Row(y);
       PrecomputeReferences(channel, y, *image, chan, &references);
@@ -422,7 +426,9 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
     MATreeLookup tree_lookup(tree);
     Properties properties = Properties(num_props);
     const intptr_t onerow = channel.plane.PixelsPerRow();
-    Channel references(properties.size() - kNumNonrefProperties, channel.w);
+    JXL_ASSIGN_OR_RETURN(
+        Channel references,
+        Channel::Create(properties.size() - kNumNonrefProperties, channel.w));
     weighted::State wp_state(wp_header, channel.w, channel.h);
     for (size_t y = 0; y < channel.h; y++) {
       pixel_type *JXL_RESTRICT p = channel.Row(y);

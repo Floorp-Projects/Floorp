@@ -40,8 +40,10 @@ TEST(BlendingTest, Crops) {
         jxl::test::ReadTestData(filename.str());
     extras::PackedPixelFile decoded_frame_ppf;
     decoded_frame_ppf.info = decoded.info;
-    decoded_frame_ppf.icc = decoded.icc;
+    decoded_frame_ppf.primary_color_representation =
+        decoded.primary_color_representation;
     decoded_frame_ppf.color_encoding = decoded.color_encoding;
+    decoded_frame_ppf.icc = decoded.icc;
     decoded_frame_ppf.extra_channels_info = decoded.extra_channels_info;
     decoded_frame_ppf.frames.emplace_back(std::move(decoded_frame));
     extras::PackedPixelFile expected_frame_ppf;

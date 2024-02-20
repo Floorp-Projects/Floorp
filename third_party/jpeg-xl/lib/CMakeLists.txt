@@ -149,6 +149,16 @@ else()
     set(PKGCONFIG_TARGET_LIBS "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
 endif()
 
+include(CheckCXXSymbolExists)
+set(PKGCONFIG_CXX_LIB "")
+check_cxx_symbol_exists(__GLIBCXX__ iostream LIBSTDCXX)
+check_cxx_symbol_exists(_LIBCPP_VERSION iostream LIBCXX)
+if(LIBSTDCXX)
+  set(PKGCONFIG_CXX_LIB "-lstdc++")
+elseif(LIBCXX)
+  set(PKGCONFIG_CXX_LIB "-lc++")
+endif()
+
 # The jxl_cms library definition.
 include(jxl_cms.cmake)
 # The jxl library definition.

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "lib/jxl/ans_params.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/enc_ans_params.h"
 
 namespace jxl {

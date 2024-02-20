@@ -351,23 +351,25 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
       }
       size_t icc_size = 0;
       JxlColorProfileTarget target = JXL_COLOR_PROFILE_TARGET_DATA;
-      ppf->color_encoding.color_space = JXL_COLOR_SPACE_UNKNOWN;
-      if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsEncodedProfile(
-                                 dec, target, &ppf->color_encoding) ||
-          dparams.need_icc) {
-        // only get ICC if it is not an Enum color encoding
-        if (JXL_DEC_SUCCESS !=
-            JxlDecoderGetICCProfileSize(dec, target, &icc_size)) {
-          fprintf(stderr, "JxlDecoderGetICCProfileSize failed\n");
+      if (JXL_DEC_SUCCESS !=
+          JxlDecoderGetICCProfileSize(dec, target, &icc_size)) {
+        fprintf(stderr, "JxlDecoderGetICCProfileSize failed\n");
+      }
+      if (icc_size != 0) {
+        ppf->primary_color_representation = PackedPixelFile::kIccIsPrimary;
+        ppf->icc.resize(icc_size);
+        if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(
+                                   dec, target, ppf->icc.data(), icc_size)) {
+          fprintf(stderr, "JxlDecoderGetColorAsICCProfile failed\n");
+          return false;
         }
-        if (icc_size != 0) {
-          ppf->icc.resize(icc_size);
-          if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(
-                                     dec, target, ppf->icc.data(), icc_size)) {
-            fprintf(stderr, "JxlDecoderGetColorAsICCProfile failed\n");
-            return false;
-          }
-        }
+      }
+      if (JXL_DEC_SUCCESS == JxlDecoderGetColorAsEncodedProfile(
+                                 dec, target, &ppf->color_encoding)) {
+        ppf->primary_color_representation =
+            PackedPixelFile::kColorEncodingIsPrimary;
+      } else {
+        ppf->color_encoding.color_space = JXL_COLOR_SPACE_UNKNOWN;
       }
       icc_size = 0;
       target = JXL_COLOR_PROFILE_TARGET_ORIGINAL;

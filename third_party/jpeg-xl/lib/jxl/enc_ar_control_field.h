@@ -21,11 +21,15 @@ struct PassesEncoderState;
 
 struct ArControlFieldHeuristics {
   struct TempImages {
-    void InitOnce() {
-      if (laplacian_sqrsum.xsize() != 0) return;
-      laplacian_sqrsum = ImageF(kEncTileDim + 4, kEncTileDim + 4);
-      sqrsum_00 = ImageF(kEncTileDim / 4, kEncTileDim / 4);
-      sqrsum_22 = ImageF(kEncTileDim / 4 + 1, kEncTileDim / 4 + 1);
+    Status InitOnce() {
+      if (laplacian_sqrsum.xsize() != 0) return true;
+      JXL_ASSIGN_OR_RETURN(laplacian_sqrsum,
+                           ImageF::Create(kEncTileDim + 4, kEncTileDim + 4));
+      JXL_ASSIGN_OR_RETURN(sqrsum_00,
+                           ImageF::Create(kEncTileDim / 4, kEncTileDim / 4));
+      JXL_ASSIGN_OR_RETURN(
+          sqrsum_22, ImageF::Create(kEncTileDim / 4 + 1, kEncTileDim / 4 + 1));
+      return true;
     }
 
     ImageF laplacian_sqrsum;
@@ -37,11 +41,11 @@ struct ArControlFieldHeuristics {
     temp_images.resize(num_threads);
   }
 
-  void RunRect(const CompressParams& cparams, const FrameHeader& frame_header,
-               const Rect& block_rect, const Image3F& opsin,
-               const Rect& opsin_rect, const ImageF& quant_field,
-               const AcStrategyImage& ac_strategy, ImageB* epf_sharpness,
-               size_t thread);
+  Status RunRect(const CompressParams& cparams, const FrameHeader& frame_header,
+                 const Rect& block_rect, const Image3F& opsin,
+                 const Rect& opsin_rect, const ImageF& quant_field,
+                 const AcStrategyImage& ac_strategy, ImageB* epf_sharpness,
+                 size_t thread);
 
   std::vector<TempImages> temp_images;
 };

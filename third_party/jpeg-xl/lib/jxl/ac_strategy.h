@@ -191,7 +191,8 @@ class AcStrategyRow {
 class AcStrategyImage {
  public:
   AcStrategyImage() = default;
-  AcStrategyImage(size_t xsize, size_t ysize);
+  static StatusOr<AcStrategyImage> Create(size_t xsize, size_t ysize);
+
   AcStrategyImage(AcStrategyImage&&) = default;
   AcStrategyImage& operator=(AcStrategyImage&&) = default;
 

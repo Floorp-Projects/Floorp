@@ -1436,7 +1436,7 @@ JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
   }
   opts->values.cparams.level = enc->codestream_level;
   opts->values.cparams.ec_distance.resize(enc->metadata.m.num_extra_channels,
-                                          -1);
+                                          0);
 
   JxlEncoderFrameSettings* ret = opts.get();
   enc->encoder_options.emplace_back(std::move(opts));
@@ -1489,7 +1489,7 @@ JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
     // This can only happen if JxlEncoderFrameSettingsCreate() was called before
     // JxlEncoderSetBasicInfo().
     frame_settings->values.cparams.ec_distance.resize(
-        frame_settings->enc->metadata.m.num_extra_channels, -1);
+        frame_settings->enc->metadata.m.num_extra_channels, 0);
   }
 
   frame_settings->values.cparams.ec_distance[index] = distance;
@@ -1537,14 +1537,14 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
   switch (option) {
     case JXL_ENC_FRAME_SETTING_EFFORT:
       if (frame_settings->enc->allow_expert_options) {
+        if (value < 1 || value > 11) {
+          return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
+                               "Encode effort has to be in [1..11]");
+        }
+      } else {
         if (value < 1 || value > 10) {
           return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                                "Encode effort has to be in [1..10]");
-        }
-      } else {
-        if (value < 1 || value > 9) {
-          return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
-                               "Encode effort has to be in [1..9]");
         }
       }
       frame_settings->values.cparams.speed_tier =
@@ -1747,9 +1747,9 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       frame_settings->values.cparams.jpeg_compress_boxes = value;
       break;
     case JXL_ENC_FRAME_SETTING_BUFFERING:
-      if (value < 0 || value > 3) {
+      if (value < -1 || value > 3) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
-                             "Buffering has to be in [0..3]");
+                             "Buffering has to be in [-1..3]");
       }
       frame_settings->values.cparams.buffering = value;
       break;

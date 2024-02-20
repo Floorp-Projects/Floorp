@@ -9,17 +9,12 @@
 #include <string.h>
 
 #include <array>
-#include <utility>
 
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/dec_xyb.h"
-#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_detect_dots.h"
 #include "lib/jxl/enc_params.h"
-#include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
@@ -39,10 +34,9 @@ const std::array<double, 3> kEllipseMaxIntensity{{0.05, 1.0, 0.4}};
 const std::array<size_t, 3> kEllipseIntensityQ{{10, 36, 10}};
 }  // namespace
 
-std::vector<PatchInfo> FindDotDictionary(const CompressParams& cparams,
-                                         const Image3F& opsin,
-                                         const ColorCorrelationMap& cmap,
-                                         ThreadPool* pool) {
+StatusOr<std::vector<PatchInfo>> FindDotDictionary(
+    const CompressParams& cparams, const Image3F& opsin,
+    const ColorCorrelationMap& cmap, ThreadPool* pool) {
   if (ApplyOverride(cparams.dots,
                     cparams.butteraugli_distance >= kMinButteraugliForDots)) {
     GaussianDetectParams ellipse_params;
@@ -66,6 +60,7 @@ std::vector<PatchInfo> FindDotDictionary(const CompressParams& cparams,
 
     return DetectGaussianEllipses(opsin, ellipse_params, qParams, pool);
   }
-  return {};
+  std::vector<PatchInfo> nothing;
+  return nothing;
 }
 }  // namespace jxl

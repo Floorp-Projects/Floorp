@@ -12,13 +12,13 @@
 #include <array>
 #include <atomic>
 #include <cmath>
-#include <limits>
+#include <memory>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
@@ -31,7 +31,6 @@
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/common.h"  // kMaxNumPasses
-#include "lib/jxl/compressed_dc.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_ac_strategy.h"
@@ -47,7 +46,6 @@
 #include "lib/jxl/enc_entropy_coder.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_fields.h"
-#include "lib/jxl/enc_gaborish.h"
 #include "lib/jxl/enc_group.h"
 #include "lib/jxl/enc_heuristics.h"
 #include "lib/jxl/enc_modular.h"
@@ -285,7 +283,8 @@ Status LoopFilterFromParams(const CompressParams& cparams, bool streaming_mode,
   if (frame_header->encoding == FrameEncoding::kModular &&
       !cparams.IsLossless()) {
     // TODO(veluca): this formula is nonsense.
-    loop_filter->epf_sigma_for_modular = cparams.butteraugli_distance;
+    loop_filter->epf_sigma_for_modular =
+        std::max(cparams.butteraugli_distance, 1.0f);
   }
   if (frame_header->encoding == FrameEncoding::kModular &&
       cparams.lossy_palette) {
@@ -539,7 +538,7 @@ struct PixelStatsForChromacityAdjustment {
   float dx = 0;
   float db = 0;
   float exposed_blue = 0;
-  float CalcPlane(const ImageF* JXL_RESTRICT plane, const Rect& rect) const {
+  static float CalcPlane(const ImageF* JXL_RESTRICT plane, const Rect& rect) {
     float xmax = 0;
     float ymax = 0;
     for (size_t ty = 1; ty < rect.ysize(); ++ty) {
@@ -583,7 +582,7 @@ struct PixelStatsForChromacityAdjustment {
     dx = CalcPlane(&opsin->Plane(0), rect);
     CalcExposedBlue(&opsin->Plane(1), &opsin->Plane(2), rect);
   }
-  int HowMuchIsXChannelPixelized() {
+  int HowMuchIsXChannelPixelized() const {
     if (dx >= 0.03) {
       return 2;
     }
@@ -592,7 +591,7 @@ struct PixelStatsForChromacityAdjustment {
     }
     return 0;
   }
-  int HowMuchIsBChannelPixelized() {
+  int HowMuchIsBChannelPixelized() const {
     int add = exposed_blue >= 0.13 ? 1 : 0;
     if (db > 0.38) {
       return 2 + add;
@@ -682,12 +681,12 @@ void ComputeNoiseParams(const CompressParams& cparams, bool streaming_mode,
   }
 }
 
-void DownsampleColorChannels(const CompressParams& cparams,
-                             const FrameHeader& frame_header,
-                             bool color_is_jpeg, Image3F* opsin) {
+Status DownsampleColorChannels(const CompressParams& cparams,
+                               const FrameHeader& frame_header,
+                               bool color_is_jpeg, Image3F* opsin) {
   if (color_is_jpeg || frame_header.upsampling == 1 ||
       cparams.already_downsampled) {
-    return;
+    return true;
   }
   if (frame_header.encoding == FrameEncoding::kVarDCT &&
       frame_header.upsampling == 2) {
@@ -698,16 +697,18 @@ void DownsampleColorChannels(const CompressParams& cparams,
       // TODO(lode): DownsampleImage2_Iterative is currently too slow to
       // be used for squirrel, make it faster, and / or enable it only for
       // kitten.
-      DownsampleImage2_Iterative(opsin);
+      JXL_RETURN_IF_ERROR(DownsampleImage2_Iterative(opsin));
     } else {
-      DownsampleImage2_Sharper(opsin);
+      JXL_RETURN_IF_ERROR(DownsampleImage2_Sharper(opsin));
     }
   } else {
-    DownsampleImage(opsin, frame_header.upsampling);
+    JXL_ASSIGN_OR_RETURN(*opsin,
+                         DownsampleImage(*opsin, frame_header.upsampling));
   }
   if (frame_header.encoding == FrameEncoding::kVarDCT) {
     PadImageToBlockMultipleInPlace(opsin);
   }
+  return true;
 }
 
 template <typename V, typename R>
@@ -741,14 +742,17 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
   const size_t ysize_blocks = frame_dim.ysize_blocks;
 
   // no-op chroma from luma
-  shared.cmap = ColorCorrelationMap(xsize, ysize, false);
+  JXL_ASSIGN_OR_RETURN(shared.cmap,
+                       ColorCorrelationMap::Create(xsize, ysize, false));
   shared.ac_strategy.FillDCT8();
   FillImage(uint8_t(0), &shared.epf_sharpness);
 
   enc_state->coeffs.clear();
   while (enc_state->coeffs.size() < enc_state->passes.size()) {
-    enc_state->coeffs.emplace_back(make_unique<ACImageT<int32_t>>(
-        kGroupDim * kGroupDim, frame_dim.num_groups));
+    JXL_ASSIGN_OR_RETURN(
+        std::unique_ptr<ACImageT<int32_t>> coeffs,
+        ACImageT<int32_t>::Make(kGroupDim * kGroupDim, frame_dim.num_groups));
+    enc_state->coeffs.emplace_back(std::move(coeffs));
   }
 
   // convert JPEG quantization table to a Quantizer object
@@ -779,7 +783,8 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
                                1.0f / dcquantization[2]};
 
   qe[AcStrategy::Type::DCT] = QuantEncoding::RAW(qt);
-  DequantMatricesSetCustom(&shared.matrices, qe, enc_modular);
+  JXL_RETURN_IF_ERROR(
+      DequantMatricesSetCustom(&shared.matrices, qe, enc_modular));
 
   // Ensure that InvGlobalScale() is 1.
   shared.quantizer = Quantizer(&shared.matrices, 1, kGlobalScaleDenom);
@@ -844,7 +849,8 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
                     kScale * row_s[x * kDCTBlockSize + coeffpos] +
                     (kOffset - kBase * kScale) * scaled_m;
                 if (std::abs(scaled_m) > 1e-8f) {
-                  float from, to;
+                  float from;
+                  float to;
                   if (scaled_m > 0) {
                     from = (scaled_s - kZeroThresh) / scaled_m;
                     to = (scaled_s + kZeroThresh) / scaled_m;
@@ -889,7 +895,7 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
     }
   }
 
-  Image3F dc = Image3F(xsize_blocks, ysize_blocks);
+  JXL_ASSIGN_OR_RETURN(Image3F dc, Image3F::Create(xsize_blocks, ysize_blocks));
   if (!frame_header.chroma_subsampling.Is444()) {
     ZeroFillImage(&dc);
     for (auto& coeff : enc_state->coeffs) {
@@ -1024,18 +1030,27 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
       *std::max_element(ctx_map.begin(), ctx_map.end()) + 1;
 
   // disable DC frame for now
+  std::atomic<bool> has_error{false};
   auto compute_dc_coeffs = [&](const uint32_t group_index,
                                size_t /* thread */) {
+    if (has_error) return;
     const Rect r = enc_state->shared.frame_dim.DCGroupRect(group_index);
-    enc_modular->AddVarDCTDC(frame_header, dc, r, group_index,
-                             /*nl_dc=*/false, enc_state,
-                             /*jpeg_transcode=*/true);
-    enc_modular->AddACMetadata(r, group_index, /*jpeg_transcode=*/true,
-                               enc_state);
+    if (!enc_modular->AddVarDCTDC(frame_header, dc, r, group_index,
+                                  /*nl_dc=*/false, enc_state,
+                                  /*jpeg_transcode=*/true)) {
+      has_error = true;
+      return;
+    }
+    if (!enc_modular->AddACMetadata(r, group_index, /*jpeg_transcode=*/true,
+                                    enc_state)) {
+      has_error = true;
+      return;
+    }
   };
   JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, shared.frame_dim.num_dc_groups,
                                 ThreadPool::NoInit, compute_dc_coeffs,
                                 "Compute DC coeffs"));
+  if (has_error) return JXL_FAILURE("Compute DC coeffs failed");
 
   return true;
 }
@@ -1077,10 +1092,12 @@ void ComputeAllCoeffOrders(PassesEncoderState& enc_state,
 // Working area for TokenizeCoefficients (per-group!)
 struct EncCache {
   // Allocates memory when first called.
-  void InitOnce() {
+  Status InitOnce() {
     if (num_nzeroes.xsize() == 0) {
-      num_nzeroes = Image3I(kGroupDimInBlocks, kGroupDimInBlocks);
+      JXL_ASSIGN_OR_RETURN(
+          num_nzeroes, Image3I::Create(kGroupDimInBlocks, kGroupDimInBlocks));
     }
+    return true;
   }
   // TokenizeCoefficients
   Image3I num_nzeroes;
@@ -1095,8 +1112,10 @@ Status TokenizeAllCoefficients(const FrameHeader& frame_header,
     group_caches.resize(num_threads);
     return true;
   };
+  std::atomic<bool> has_error{false};
   const auto tokenize_group = [&](const uint32_t group_index,
                                   const size_t thread) {
+    if (has_error) return;
     // Tokenize coefficients.
     const Rect rect = shared.frame_dim.BlockGroupRect(group_index);
     for (size_t idx_pass = 0; idx_pass < enc_state->passes.size(); idx_pass++) {
@@ -1107,7 +1126,10 @@ Status TokenizeAllCoefficients(const FrameHeader& frame_header,
           enc_state->coeffs[idx_pass]->PlaneRow(2, group_index, 0).ptr32,
       };
       // Ensure group cache is initialized.
-      group_caches[thread].InitOnce();
+      if (!group_caches[thread].InitOnce()) {
+        has_error = true;
+        return;
+      }
       TokenizeCoefficients(
           &shared.coeff_orders[idx_pass * shared.coeff_order_size], rect,
           ac_rows, shared.ac_strategy, frame_header.chroma_subsampling,
@@ -1116,8 +1138,11 @@ Status TokenizeAllCoefficients(const FrameHeader& frame_header,
           shared.raw_quant_field, shared.block_ctx_map);
     }
   };
-  return RunOnPool(pool, 0, shared.frame_dim.num_groups, tokenize_group_init,
-                   tokenize_group, "TokenizeGroup");
+  JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, shared.frame_dim.num_groups,
+                                tokenize_group_init, tokenize_group,
+                                "TokenizeGroup"));
+  if (has_error) return JXL_FAILURE("TokenizeGroup failed");
+  return true;
 }
 
 Status EncodeGlobalDCInfo(const PassesSharedState& shared, BitWriter* writer,
@@ -1308,35 +1333,43 @@ Status EncodeGroups(const FrameHeader& frame_header,
         enc_state, get_output(global_ac_index), enc_modular, aux_out));
   }
 
-  std::atomic<int> num_errors{0};
+  std::atomic<bool> has_error{false};
   const auto process_group = [&](const uint32_t group_index,
                                  const size_t thread) {
+    if (has_error) return;
     AuxOut* my_aux_out = aux_outs[thread].get();
 
+    size_t ac_group_id =
+        enc_state->streaming_mode
+            ? enc_modular->ComputeStreamingAbsoluteAcGroupId(
+                  enc_state->dc_group_index, group_index, shared.frame_dim)
+            : group_index;
+
     for (size_t i = 0; i < num_passes; i++) {
+      JXL_DEBUG_V(2, "Encoding AC group %u [abs %" PRIuS "] pass %" PRIuS,
+                  group_index, ac_group_id, i);
       if (frame_header.encoding == FrameEncoding::kVarDCT) {
         if (!EncodeGroupTokenizedCoefficients(
                 group_index, i, enc_state->histogram_idx[group_index],
                 *enc_state, ac_group_code(i, group_index), my_aux_out)) {
-          num_errors.fetch_add(1, std::memory_order_relaxed);
+          has_error = true;
           return;
         }
       }
       // Write all modular encoded data (color?, alpha, depth, extra channels)
       if (!enc_modular->EncodeStream(
               ac_group_code(i, group_index), my_aux_out, kLayerModularAcGroup,
-              ModularStreamId::ModularAC(group_index, i))) {
-        num_errors.fetch_add(1, std::memory_order_relaxed);
+              ModularStreamId::ModularAC(ac_group_id, i))) {
+        has_error = true;
         return;
       }
     }
   };
   JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, num_groups, resize_aux_outs,
                                 process_group, "EncodeGroupCoefficients"));
-
+  if (has_error) return JXL_FAILURE("EncodeGroupCoefficients failed");
   // Resizing aux_outs to 0 also Assimilates the array.
   static_cast<void>(resize_aux_outs(0));
-  JXL_RETURN_IF_ERROR(num_errors.load(std::memory_order_relaxed) == 0);
 
   for (BitWriter& bw : *group_codes) {
     BitWriter::Allotment allotment(&bw, 8);
@@ -1360,29 +1393,39 @@ Status ComputeEncodingData(
   PassesSharedState& shared = enc_state.shared;
   shared.metadata = metadata;
   if (enc_state.streaming_mode) {
-    shared.frame_dim.Set(xsize, ysize, /*group_size_shift=*/1,
-                         /*maxhshift=*/0, /*maxvshift=*/0,
-                         /*modular_mode=*/false, /*upsampling=*/1);
+    shared.frame_dim.Set(
+        xsize, ysize, frame_header.group_size_shift,
+        /*max_hshift=*/0, /*max_vshift=*/0,
+        mutable_frame_header.encoding == FrameEncoding::kModular,
+        /*upsampling=*/1);
   } else {
     shared.frame_dim = frame_header.ToFrameDimensions();
   }
 
   shared.image_features.patches.SetPassesSharedState(&shared);
   const FrameDimensions& frame_dim = shared.frame_dim;
-  shared.ac_strategy =
-      AcStrategyImage(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  shared.raw_quant_field =
-      ImageI(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  shared.epf_sharpness = ImageB(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  shared.cmap = ColorCorrelationMap(frame_dim.xsize, frame_dim.ysize);
+  JXL_ASSIGN_OR_RETURN(
+      shared.ac_strategy,
+      AcStrategyImage::Create(frame_dim.xsize_blocks, frame_dim.ysize_blocks));
+  JXL_ASSIGN_OR_RETURN(
+      shared.raw_quant_field,
+      ImageI::Create(frame_dim.xsize_blocks, frame_dim.ysize_blocks));
+  JXL_ASSIGN_OR_RETURN(
+      shared.epf_sharpness,
+      ImageB::Create(frame_dim.xsize_blocks, frame_dim.ysize_blocks));
+  JXL_ASSIGN_OR_RETURN(shared.cmap, ColorCorrelationMap::Create(
+                                        frame_dim.xsize, frame_dim.ysize));
   shared.coeff_order_size = kCoeffOrderMaxSize;
   if (frame_header.encoding == FrameEncoding::kVarDCT) {
     shared.coeff_orders.resize(frame_header.passes.num_passes *
                                kCoeffOrderMaxSize);
   }
 
-  shared.quant_dc = ImageB(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-  shared.dc_storage = Image3F(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
+  JXL_ASSIGN_OR_RETURN(shared.quant_dc, ImageB::Create(frame_dim.xsize_blocks,
+                                                       frame_dim.ysize_blocks));
+  JXL_ASSIGN_OR_RETURN(
+      shared.dc_storage,
+      Image3F::Create(frame_dim.xsize_blocks, frame_dim.ysize_blocks));
   shared.dc = &shared.dc_storage;
 
   const size_t num_extra_channels = metadata->m.num_extra_channels;
@@ -1397,16 +1440,19 @@ Status ComputeEncodingData(
   // computing inverse Gaborish and adaptive quantization map.
   int max_border = enc_state.streaming_mode ? kBlockDim : 0;
   Rect frame_rect(0, 0, frame_data.xsize, frame_data.ysize);
-  Rect patch_rect = Rect(x0, y0, xsize, ysize).Extend(max_border, frame_rect);
+  Rect frame_area_rect = Rect(x0, y0, xsize, ysize);
+  Rect patch_rect = frame_area_rect.Extend(max_border, frame_rect);
   JXL_ASSERT(patch_rect.IsInside(frame_rect));
 
   // Allocating a large enough image avoids a copy when padding.
-  Image3F color(RoundUpToBlockDim(patch_rect.xsize()),
-                RoundUpToBlockDim(patch_rect.ysize()));
+  JXL_ASSIGN_OR_RETURN(Image3F color,
+                       Image3F::Create(RoundUpToBlockDim(patch_rect.xsize()),
+                                       RoundUpToBlockDim(patch_rect.ysize())));
   color.ShrinkTo(patch_rect.xsize(), patch_rect.ysize());
   std::vector<ImageF> extra_channels(num_extra_channels);
   for (auto& extra_channel : extra_channels) {
-    extra_channel = jxl::ImageF(patch_rect.xsize(), patch_rect.ysize());
+    JXL_ASSIGN_OR_RETURN(
+        extra_channel, ImageF::Create(patch_rect.xsize(), patch_rect.ysize()));
   }
   ImageF* alpha = alpha_eci ? &extra_channels[alpha_idx] : nullptr;
   ImageF* black = black_eci ? &extra_channels[black_idx] : nullptr;
@@ -1432,7 +1478,9 @@ Status ComputeEncodingData(
         frame_info.ib_needs_color_transform) {
       if (frame_header.encoding == FrameEncoding::kVarDCT &&
           cparams.speed_tier <= SpeedTier::kKitten) {
-        linear_storage = Image3F(patch_rect.xsize(), patch_rect.ysize());
+        JXL_ASSIGN_OR_RETURN(
+            linear_storage,
+            Image3F::Create(patch_rect.xsize(), patch_rect.ysize()));
         linear = &linear_storage;
       }
       ToXYB(c_enc, metadata->m.IntensityTarget(), black, pool, &color, cms,
@@ -1446,7 +1494,7 @@ Status ComputeEncodingData(
     bool lossless = cparams.IsLossless();
     if (alpha && !alpha_eci->alpha_associated &&
         frame_header.frame_type == FrameType::kRegularFrame &&
-        !ApplyOverride(cparams.keep_invisible, lossless) &&
+        !ApplyOverride(cparams.keep_invisible, true) &&
         cparams.ec_resampling == cparams.resampling) {
       // simplify invisible pixels
       SimplifyInvisible(&color, *alpha, lossless);
@@ -1467,15 +1515,17 @@ Status ComputeEncodingData(
                                  &mutable_frame_header);
   }
 
-  ComputeNoiseParams(cparams, enc_state.streaming_mode, !!jpeg_data, color,
+  bool has_jpeg_data = (jpeg_data != nullptr);
+  ComputeNoiseParams(cparams, enc_state.streaming_mode, has_jpeg_data, color,
                      frame_dim, &mutable_frame_header,
                      &shared.image_features.noise_params);
 
-  DownsampleColorChannels(cparams, frame_header, !!jpeg_data, &color);
+  JXL_RETURN_IF_ERROR(
+      DownsampleColorChannels(cparams, frame_header, has_jpeg_data, &color));
 
   if (cparams.ec_resampling != 1 && !cparams.already_downsampled) {
     for (ImageF& ec : extra_channels) {
-      DownsampleImage(&ec, cparams.ec_resampling);
+      JXL_ASSIGN_OR_RETURN(ec, DownsampleImage(ec, cparams.ec_resampling));
     }
   }
 
@@ -1505,15 +1555,21 @@ Status ComputeEncodingData(
         TokenizeAllCoefficients(frame_header, pool, &enc_state));
   }
 
-  if (!enc_state.streaming_mode) {
-    if (cparams.modular_mode || !extra_channels.empty()) {
-      JXL_RETURN_IF_ERROR(enc_modular.ComputeEncodingData(
-          frame_header, metadata->m, &color, extra_channels, &enc_state, cms,
-          pool, aux_out, /*do_color=*/cparams.modular_mode));
-    }
-    JXL_RETURN_IF_ERROR(enc_modular.ComputeTree(pool));
-    JXL_RETURN_IF_ERROR(enc_modular.ComputeTokens(pool));
+  if (cparams.modular_mode || !extra_channels.empty()) {
+    JXL_RETURN_IF_ERROR(enc_modular.ComputeEncodingData(
+        frame_header, metadata->m, &color, extra_channels, group_rect,
+        frame_dim, frame_area_rect, &enc_state, cms, pool, aux_out,
+        /*do_color=*/cparams.modular_mode));
+  }
 
+  if (!enc_state.streaming_mode) {
+    if (cparams.speed_tier < SpeedTier::kTortoise ||
+        !cparams.ModularPartIsLossless() || cparams.responsive ||
+        !cparams.custom_fixed_tree.empty()) {
+      // Use local trees if doing lossless modular, unless at very slow speeds.
+      JXL_RETURN_IF_ERROR(enc_modular.ComputeTree(pool));
+      JXL_RETURN_IF_ERROR(enc_modular.ComputeTokens(pool));
+    }
     mutable_frame_header.UpdateFlag(shared.image_features.patches.HasAny(),
                                     FrameHeader::kPatches);
     mutable_frame_header.UpdateFlag(shared.image_features.splines.HasAny(),
@@ -1526,6 +1582,7 @@ Status ComputeEncodingData(
     const size_t group_index = enc_state.dc_group_index;
     enc_modular.ClearStreamData(ModularStreamId::VarDCTDC(group_index));
     enc_modular.ClearStreamData(ModularStreamId::ACMetadata(group_index));
+    enc_modular.ClearModularStreamData();
   }
   return true;
 }
@@ -1614,6 +1671,25 @@ bool CanDoStreamingEncoding(const CompressParams& cparams,
                             const FrameInfo& frame_info,
                             const CodecMetadata& metadata,
                             const JxlEncoderChunkedFrameAdapter& frame_data) {
+  if (cparams.buffering == 0) {
+    return false;
+  }
+  if (cparams.buffering == -1) {
+    if (cparams.speed_tier < SpeedTier::kTortoise) return false;
+    if (cparams.speed_tier < SpeedTier::kSquirrel &&
+        cparams.butteraugli_distance > 0.5f) {
+      return false;
+    }
+    if (cparams.speed_tier == SpeedTier::kSquirrel &&
+        cparams.butteraugli_distance >= 3.f) {
+      return false;
+    }
+  }
+
+  // TODO(veluca): handle different values of `buffering`.
+  if (frame_data.xsize <= 2048 && frame_data.ysize <= 2048) {
+    return false;
+  }
   if (frame_data.IsJPEG()) {
     return false;
   }
@@ -1629,34 +1705,24 @@ bool CanDoStreamingEncoding(const CompressParams& cparams,
   if (cparams.max_error_mode) {
     return false;
   }
-  if (cparams.color_transform != ColorTransform::kXYB) {
-    return false;
+  if (!cparams.ModularPartIsLossless() || cparams.responsive > 0) {
+    if (metadata.m.num_extra_channels > 0 || cparams.modular_mode) {
+      return false;
+    }
   }
-  if (cparams.modular_mode) {
-    return false;
-  }
-  if (metadata.m.num_extra_channels > 0) {
-    return false;
-  }
-  if (cparams.buffering == 0) {
-    return false;
-  }
-  if (cparams.buffering == 1 && frame_data.xsize <= 2048 &&
-      frame_data.ysize <= 2048) {
-    return false;
-  }
-  if (frame_data.xsize <= 256 && frame_data.ysize <= 256) {
+  ColorTransform ok_color_transform =
+      cparams.modular_mode ? ColorTransform::kNone : ColorTransform::kXYB;
+  if (cparams.color_transform != ok_color_transform) {
     return false;
   }
   return true;
 }
 
 void ComputePermutationForStreaming(size_t xsize, size_t ysize,
-                                    size_t num_passes,
+                                    size_t group_size, size_t num_passes,
                                     std::vector<coeff_order_t>& permutation,
                                     std::vector<size_t>& dc_group_order) {
   // This is only valid in VarDCT mode, otherwise there can be group shift.
-  const size_t group_size = 256;
   const size_t dc_group_size = group_size * kBlockDim;
   const size_t group_xsize = DivCeil(xsize, group_size);
   const size_t group_ysize = DivCeil(ysize, group_size);
@@ -1864,14 +1930,13 @@ Status EncodeFrameStreaming(const CompressParams& cparams,
                                       frame_info, jpeg_data.get(), true,
                                       &frame_header));
   const size_t num_passes = enc_state.progressive_splitter.GetNumPasses();
-  ModularFrameEncoder enc_modular(frame_header, cparams);
+  ModularFrameEncoder enc_modular(frame_header, cparams, true);
   std::vector<coeff_order_t> permutation;
   std::vector<size_t> dc_group_order;
-  ComputePermutationForStreaming(frame_data.xsize, frame_data.ysize, num_passes,
-                                 permutation, dc_group_order);
+  size_t group_size = frame_header.ToFrameDimensions().group_dim;
+  ComputePermutationForStreaming(frame_data.xsize, frame_data.ysize, group_size,
+                                 num_passes, permutation, dc_group_order);
   enc_state.shared.num_histograms = dc_group_order.size();
-  // This is only valid in VarDCT mode, otherwise there can be group shift.
-  size_t group_size = 256;
   size_t dc_group_size = group_size * kBlockDim;
   size_t dc_group_xsize = DivCeil(frame_data.xsize, dc_group_size);
   size_t min_dc_global_size = 0;
@@ -1931,9 +1996,13 @@ Status EncodeFrameStreaming(const CompressParams& cparams,
     JXL_RETURN_IF_ERROR(
         OutputGroups(std::move(group_codes), &group_sizes, output_processor));
   }
-  JXL_RETURN_IF_ERROR(OutputAcGlobal(enc_state,
-                                     frame_header.ToFrameDimensions(),
-                                     &group_sizes, output_processor, aux_out));
+  if (frame_header.encoding == FrameEncoding::kVarDCT) {
+    JXL_RETURN_IF_ERROR(
+        OutputAcGlobal(enc_state, frame_header.ToFrameDimensions(),
+                       &group_sizes, output_processor, aux_out));
+  } else {
+    group_sizes.push_back(0);
+  }
   JXL_ASSERT(group_sizes.size() == permutation.size());
   size_t end_pos = output_processor->CurrentPosition();
   output_processor->Seek(start_pos);
@@ -1975,7 +2044,7 @@ Status EncodeFrameOneShot(const CompressParams& cparams,
                                       frame_info, jpeg_data.get(), false,
                                       &frame_header));
   const size_t num_passes = enc_state.progressive_splitter.GetNumPasses();
-  ModularFrameEncoder enc_modular(frame_header, cparams);
+  ModularFrameEncoder enc_modular(frame_header, cparams, false);
   JXL_RETURN_IF_ERROR(ComputeEncodingData(
       cparams, frame_info, metadata, frame_data, jpeg_data.get(), 0, 0,
       frame_data.xsize, frame_data.ysize, cms, pool, frame_header, enc_modular,
@@ -2008,15 +2077,21 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                    JxlEncoderOutputProcessorWrapper* output_processor,
                    AuxOut* aux_out) {
   CompressParams cparams = cparams_orig;
-  if (cparams.speed_tier == SpeedTier::kGlacier && !cparams.IsLossless()) {
-    cparams.speed_tier = SpeedTier::kTortoise;
+  if (cparams.speed_tier == SpeedTier::kTectonicPlate &&
+      !cparams.IsLossless()) {
+    cparams.speed_tier = SpeedTier::kGlacier;
   }
-  if (cparams.speed_tier == SpeedTier::kGlacier) {
+  // Lightning mode is handled externally, so switch to Thunder mode to handle
+  // potentially weird cases.
+  if (cparams.speed_tier == SpeedTier::kLightning) {
+    cparams.speed_tier = SpeedTier::kThunder;
+  }
+  if (cparams.speed_tier == SpeedTier::kTectonicPlate) {
     std::vector<CompressParams> all_params;
     std::vector<size_t> size;
 
     CompressParams cparams_attempt = cparams_orig;
-    cparams_attempt.speed_tier = SpeedTier::kTortoise;
+    cparams_attempt.speed_tier = SpeedTier::kGlacier;
     cparams_attempt.options.max_properties = 4;
 
     for (float x : {0.0f, 80.f}) {
@@ -2054,11 +2129,12 @@ Status EncodeFrame(const CompressParams& cparams_orig,
 
     size.resize(all_params.size());
 
-    std::atomic<int> num_errors{0};
+    std::atomic<bool> has_error{false};
 
     JXL_RETURN_IF_ERROR(RunOnPool(
         pool, 0, all_params.size(), ThreadPool::NoInit,
         [&](size_t task, size_t) {
+          if (has_error) return;
           std::vector<uint8_t> output(64);
           uint8_t* next_out = output.data();
           size_t avail_out = output.size();
@@ -2066,13 +2142,13 @@ Status EncodeFrame(const CompressParams& cparams_orig,
           local_output.SetAvailOut(&next_out, &avail_out);
           if (!EncodeFrame(all_params[task], frame_info, metadata, frame_data,
                            cms, nullptr, &local_output, aux_out)) {
-            num_errors.fetch_add(1, std::memory_order_relaxed);
+            has_error = true;
             return;
           }
           size[task] = local_output.CurrentPosition();
         },
-        "Compress kGlacier"));
-    JXL_RETURN_IF_ERROR(num_errors.load(std::memory_order_relaxed) == 0);
+        "Compress kTectonicPlate"));
+    if (has_error) return JXL_FAILURE("Compress kTectonicPlate failed");
 
     size_t best_idx = 0;
     for (size_t i = 1; i < all_params.size(); i++) {
@@ -2156,7 +2232,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     size_t stride = ib.xsize() * num_channels * 4;
     color.resize(ib.ysize() * stride);
     JXL_RETURN_IF_ERROR(ConvertToExternal(
-        ib, /*bites_per_sample=*/32, /*float_out=*/true, num_channels,
+        ib, /*bits_per_sample=*/32, /*float_out=*/true, num_channels,
         JXL_NATIVE_ENDIAN, stride, pool, color.data(), color.size(),
         /*out_callback=*/{}, Orientation::kIdentity));
     JxlPixelFormat format{num_channels, JXL_TYPE_FLOAT, JXL_NATIVE_ENDIAN, 0};
@@ -2169,7 +2245,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     const ImageF* channel = &ib.extra_channels()[ec];
     JXL_RETURN_IF_ERROR(ConvertChannelsToExternal(
         &channel, 1,
-        /*bites_per_sample=*/32,
+        /*bits_per_sample=*/32,
         /*float_out=*/true, JXL_NATIVE_ENDIAN, ec_stride, pool, ec_data.data(),
         ec_data.size(), /*out_callback=*/{}, Orientation::kIdentity));
     frame_data.SetFromBuffer(1 + ec, ec_data.data(), ec_data.size(), ec_format);

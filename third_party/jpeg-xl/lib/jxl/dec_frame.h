@@ -242,14 +242,14 @@ class FrameDecoder {
  private:
   Status ProcessDCGlobal(BitReader* br);
   Status ProcessDCGroup(size_t dc_group_id, BitReader* br);
-  void FinalizeDC();
+  Status FinalizeDC();
   Status AllocateOutput();
   Status ProcessACGlobal(BitReader* br);
   Status ProcessACGroup(size_t ac_group_id, BitReader* JXL_RESTRICT* br,
                         size_t num_passes, size_t thread, bool force_draw,
                         bool dc_only);
   void MarkSections(const SectionInfo* sections, size_t num,
-                    SectionStatus* section_status);
+                    const SectionStatus* section_status);
 
   // Allocates storage for parallel decoding using up to `num_threads` threads
   // of up to `num_tasks` tasks. The value of `thread` passed to
@@ -272,7 +272,7 @@ class FrameDecoder {
     return true;
   }
 
-  size_t GetStorageLocation(size_t thread, size_t task) {
+  size_t GetStorageLocation(size_t thread, size_t task) const {
     if (use_task_id_) return task;
     return thread;
   }

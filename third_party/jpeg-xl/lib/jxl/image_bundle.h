@@ -42,14 +42,16 @@ class ImageBundle {
   ImageBundle(ImageBundle&&) = default;
   ImageBundle& operator=(ImageBundle&&) = default;
 
-  ImageBundle Copy() const {
+  StatusOr<ImageBundle> Copy() const {
     ImageBundle copy(metadata_);
-    copy.color_ = Image3F(color_.xsize(), color_.ysize());
+    JXL_ASSIGN_OR_RETURN(copy.color_,
+                         Image3F::Create(color_.xsize(), color_.ysize()));
     CopyImageTo(color_, &copy.color_);
     copy.c_current_ = c_current_;
     copy.extra_channels_.reserve(extra_channels_.size());
     for (const ImageF& plane : extra_channels_) {
-      ImageF ec(plane.xsize(), plane.ysize());
+      JXL_ASSIGN_OR_RETURN(ImageF ec,
+                           ImageF::Create(plane.xsize(), plane.ysize()));
       CopyImageTo(plane, &ec);
       copy.extra_channels_.emplace_back(std::move(ec));
     }

@@ -16,11 +16,11 @@ namespace jxl {
 
 bool NeedsBlending(const FrameHeader& frame_header);
 
-void PerformBlending(const float* const* bg, const float* const* fg,
-                     float* const* out, size_t x0, size_t xsize,
-                     const PatchBlending& color_blending,
-                     const PatchBlending* ec_blending,
-                     const std::vector<ExtraChannelInfo>& extra_channel_info);
+Status PerformBlending(const float* const* bg, const float* const* fg,
+                       float* const* out, size_t x0, size_t xsize,
+                       const PatchBlending& color_blending,
+                       const PatchBlending* ec_blending,
+                       const std::vector<ExtraChannelInfo>& extra_channel_info);
 
 }  // namespace jxl
 

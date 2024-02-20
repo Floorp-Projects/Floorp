@@ -47,7 +47,6 @@
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_aux_out.h"
-#include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_frame.h"
@@ -113,23 +112,23 @@ enum CodeStreamBoxFormat {
 };
 
 // Unknown boxes for testing
-static const char* unk1_box_type = "unk1";
-static const char* unk1_box_contents = "abcdefghijklmnopqrstuvwxyz";
-static const size_t unk1_box_size = strlen(unk1_box_contents);
-static const char* unk2_box_type = "unk2";
-static const char* unk2_box_contents = "0123456789";
-static const size_t unk2_box_size = strlen(unk2_box_contents);
-static const char* unk3_box_type = "unk3";
-static const char* unk3_box_contents = "ABCDEF123456";
-static const size_t unk3_box_size = strlen(unk3_box_contents);
+const char* unk1_box_type = "unk1";
+const char* unk1_box_contents = "abcdefghijklmnopqrstuvwxyz";
+const size_t unk1_box_size = strlen(unk1_box_contents);
+const char* unk2_box_type = "unk2";
+const char* unk2_box_contents = "0123456789";
+const size_t unk2_box_size = strlen(unk2_box_contents);
+const char* unk3_box_type = "unk3";
+const char* unk3_box_contents = "ABCDEF123456";
+const size_t unk3_box_size = strlen(unk3_box_contents);
 // Box with brob-compressed exif, including header
-static const uint8_t* box_brob_exif = reinterpret_cast<const uint8_t*>(
+const uint8_t* box_brob_exif = reinterpret_cast<const uint8_t*>(
     "\0\0\0@brobExif\241\350\2\300\177\244v\2525\304\360\27=?\267{"
     "\33\37\314\332\214QX17PT\"\256\0\0\202s\214\313t\333\310\320k\20\276\30"
     "\204\277l$\326c#\1\b");
 size_t box_brob_exif_size = 64;
 // The uncompressed Exif data from the brob box
-static const uint8_t* exif_uncompressed = reinterpret_cast<const uint8_t*>(
+const uint8_t* exif_uncompressed = reinterpret_cast<const uint8_t*>(
     "\0\0\0\0MM\0*"
     "\0\0\0\b\0\5\1\22\0\3\0\0\0\1\0\5\0\0\1\32\0\5\0\0\0\1\0\0\0J\1\33\0\5\0\0"
     "\0\1\0\0\0R\1("
@@ -214,13 +213,15 @@ void GeneratePreview(PreviewMode preview_mode, ImageBundle* ib) {
         }
       }
     };
-    Image3F preview(ib->xsize() * 7, ib->ysize() * 7);
+    JXL_ASSIGN_OR_DIE(Image3F preview,
+                      Image3F::Create(ib->xsize() * 7, ib->ysize() * 7));
     for (size_t c = 0; c < 3; ++c) {
       upsample7(ib->color()->Plane(c), &preview.Plane(c));
     }
     std::vector<ImageF> extra_channels;
     for (size_t i = 0; i < ib->extra_channels().size(); ++i) {
-      ImageF ec(ib->xsize() * 7, ib->ysize() * 7);
+      JXL_ASSIGN_OR_DIE(ImageF ec,
+                        ImageF::Create(ib->xsize() * 7, ib->ysize() * 7));
       upsample7(ib->extra_channels()[i], &ec);
       extra_channels.emplace_back(std::move(ec));
     }
@@ -321,7 +322,7 @@ std::vector<uint8_t> CreateTestJXLCodestream(
     }
   }
   if (params.preview_mode) {
-    io.preview_frame = io.Main().Copy();
+    JXL_ASSIGN_OR_DIE(io.preview_frame, io.Main().Copy());
     GeneratePreview(params.preview_mode, &io.preview_frame);
     io.metadata.m.have_preview = true;
     EXPECT_TRUE(io.metadata.m.preview_size.Set(io.preview_frame.xsize(),
@@ -621,6 +622,10 @@ std::vector<uint8_t> DecodeWithAPI(Span<const uint8_t> compressed,
 }  // namespace jxl
 
 ////////////////////////////////////////////////////////////////////////////////
+
+using jxl::Image3F;
+using jxl::ImageF;
+using jxl::test::ButteraugliDistance;
 
 TEST(DecodeTest, JxlSignatureCheckTest) {
   std::vector<std::pair<int, std::vector<uint8_t>>> tests = {
@@ -1420,7 +1425,7 @@ std::vector<PixelTestConfig> GeneratePixelTests() {
     c.add_intrinsic_size = intrinsic_size;
     c.xsize = xsize;
     c.ysize = ysize;
-    c.add_container = (CodeStreamBoxFormat)box;
+    c.add_container = box;
     c.output_channels = ch.output_channels;
     c.data_type = format.data_type;
     c.endianness = format.endianness;
@@ -1577,7 +1582,8 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(DecodeTest, DecodeTestParam,
 TEST(DecodeTest, PixelTestWithICCProfileLossless) {
   JxlDecoder* dec = JxlDecoderCreate(NULL);
 
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   size_t num_pixels = xsize * ysize;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   JxlPixelFormat format_orig = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
@@ -1644,7 +1650,8 @@ TEST(DecodeTest, PixelTestWithICCProfileLossless) {
 TEST(DecodeTest, PixelTestWithICCProfileLossy) {
   JxlDecoder* dec = JxlDecoderCreate(NULL);
 
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   size_t num_pixels = xsize * ysize;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   JxlPixelFormat format_orig = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
@@ -1753,7 +1760,8 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
     DecodeAllEncodingsTestInstantiation, DecodeAllEncodingsTest,
     ::testing::ValuesIn(jxl::test::AllEncodings()));
 TEST_P(DecodeAllEncodingsTest, PreserveOriginalProfileTest) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   int events = JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE;
@@ -1796,7 +1804,8 @@ namespace {
 void SetPreferredColorProfileTest(
     const jxl::test::ColorEncodingDescriptor& from, bool icc_dst,
     bool use_cms) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   int events = JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE;
   jxl::ColorEncoding c_in = jxl::test::ColorEncodingFromDescriptor(from);
   if (c_in.GetRenderingIntent() != jxl::RenderingIntent::kRelative) return;
@@ -1970,6 +1979,7 @@ void DecodeImageWithColorEncoding(const std::vector<uint8_t>& compressed,
   EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec, &info));
   EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec));
+  // TODO(eustas): why unused?
   std::string color_space_in = GetOrigProfile(dec);
   if (with_cms) {
     JxlDecoderSetCms(dec, *JxlGetDefaultCms());
@@ -2009,7 +2019,8 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
 TEST_P(DecodeAllEncodingsWithCMSTest, DecodeWithCMS) {
   auto all_encodings = jxl::test::AllEncodings();
   uint32_t num_channels = 3;
-  size_t xsize = 177, ysize = 123;
+  size_t xsize = 177;
+  size_t ysize = 123;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
   jxl::TestCodestreamParams params;
@@ -2047,7 +2058,8 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
   for (unsigned channels = 3; channels <= 4; channels++) {
     JxlDecoder* dec = JxlDecoderCreate(NULL);
 
-    size_t xsize = 123, ysize = 77;
+    size_t xsize = 123;
+    size_t ysize = 77;
     size_t num_pixels = xsize * ysize;
     std::vector<uint8_t> pixels =
         jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
@@ -2096,7 +2108,8 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
   for (unsigned channels = 3; channels <= 4; channels++) {
     JxlDecoder* dec = JxlDecoderCreate(NULL);
 
-    size_t xsize = 512, ysize = 300;
+    size_t xsize = 512;
+    size_t ysize = 300;
     size_t num_pixels = xsize * ysize;
     std::vector<uint8_t> pixels =
         jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
@@ -2142,7 +2155,8 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
 }
 
 TEST(DecodeTest, ProcessEmptyInputWithBoxes) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   jxl::CompressParams cparams;
   uint32_t channels = 3;
@@ -2175,7 +2189,8 @@ TEST(DecodeTest, ProcessEmptyInputWithBoxes) {
 }
 
 TEST(DecodeTest, ExtraBytesAfterCompressedStream) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   size_t num_pixels = xsize * ysize;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   jxl::CompressParams cparams;
@@ -2217,7 +2232,8 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStream) {
 }
 
 TEST(DecodeTest, ExtraBytesAfterCompressedStreamRequireBoxes) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   size_t num_pixels = xsize * ysize;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   jxl::CompressParams cparams;
@@ -2251,7 +2267,8 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStreamRequireBoxes) {
 }
 
 TEST(DecodeTest, ConcatenatedCompressedStreams) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   size_t num_pixels = xsize * ysize;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   jxl::CompressParams cparams;
@@ -2300,7 +2317,8 @@ TEST(DecodeTest, ConcatenatedCompressedStreams) {
 }
 
 void TestPartialStream(bool reconstructible_jpeg) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   uint32_t channels = 4;
   if (reconstructible_jpeg) {
     channels = 3;
@@ -2487,7 +2505,8 @@ TEST(DecodeTest, DCNotGettableTest) {
 }
 
 TEST(DecodeTest, PreviewTest) {
-  size_t xsize = 77, ysize = 120;
+  size_t xsize = 77;
+  size_t ysize = 120;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
   JxlPixelFormat format_orig = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   for (jxl::PreviewMode mode : {jxl::kSmallPreview, jxl::kBigPreview}) {
@@ -2561,7 +2580,8 @@ TEST(DecodeTest, PreviewTest) {
 }
 
 TEST(DecodeTest, AlignTest) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   JxlPixelFormat format_orig = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
@@ -2575,7 +2595,11 @@ TEST(DecodeTest, AlignTest) {
   size_t align = 17;
   JxlPixelFormat format = {3, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, align};
   // On purpose not using jxl::RoundUpTo to test it independently.
-  size_t expected_line_bytes = (1 * 3 * xsize + align - 1) / align * align;
+  size_t expected_line_size_last = 1 * 3 * xsize;
+  size_t expected_line_size =
+      ((expected_line_size_last + align - 1) / align) * align;
+  size_t expected_pixels_size =
+      expected_line_size * (ysize - 1) + expected_line_size_last;
 
   for (int use_callback = 0; use_callback <= 1; ++use_callback) {
     std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
@@ -2583,14 +2607,15 @@ TEST(DecodeTest, AlignTest) {
         /*set_buffer_early=*/false,
         /*use_resizable_runner=*/false, /*require_boxes=*/false,
         /*expect_success=*/true);
-    EXPECT_EQ(expected_line_bytes * ysize, pixels2.size());
+    EXPECT_EQ(expected_pixels_size, pixels2.size());
     EXPECT_EQ(0u, jxl::test::ComparePixels(pixels.data(), pixels2.data(), xsize,
                                            ysize, format_orig, format));
   }
 }
 
 TEST(DecodeTest, AnimationTest) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   static const size_t num_frames = 2;
   std::vector<uint8_t> frames[2];
   frames[0] = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
@@ -2690,7 +2715,8 @@ TEST(DecodeTest, AnimationTest) {
 }
 
 TEST(DecodeTest, AnimationTestStreaming) {
-  size_t xsize = 123, ysize = 77;
+  size_t xsize = 123;
+  size_t ysize = 77;
   static const size_t num_frames = 2;
   std::vector<uint8_t> frames[2];
   frames[0] = jxl::test::GetSomeTestImage(xsize, ysize, 3, 0);
@@ -2822,7 +2848,8 @@ TEST(DecodeTest, AnimationTestStreaming) {
 }
 
 TEST(DecodeTest, ExtraChannelTest) {
-  size_t xsize = 55, ysize = 257;
+  size_t xsize = 55;
+  size_t ysize = 257;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   JxlPixelFormat format_orig = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
 
@@ -2899,7 +2926,8 @@ TEST(DecodeTest, ExtraChannelTest) {
 }
 
 TEST(DecodeTest, SkipCurrentFrameTest) {
-  size_t xsize = 90, ysize = 120;
+  size_t xsize = 90;
+  size_t ysize = 120;
   constexpr size_t num_frames = 7;
   std::vector<uint8_t> frames[num_frames];
   for (size_t i = 0; i < num_frames; i++) {
@@ -3010,7 +3038,8 @@ TEST(DecodeTest, SkipCurrentFrameTest) {
 }
 
 TEST(DecodeTest, SkipFrameTest) {
-  size_t xsize = 90, ysize = 120;
+  size_t xsize = 90;
+  size_t ysize = 120;
   constexpr size_t num_frames = 16;
   std::vector<uint8_t> frames[num_frames];
   for (size_t i = 0; i < num_frames; i++) {
@@ -3146,7 +3175,8 @@ TEST(DecodeTest, SkipFrameTest) {
 }
 
 TEST(DecodeTest, SkipFrameWithBlendingTest) {
-  size_t xsize = 90, ysize = 120;
+  size_t xsize = 90;
+  size_t ysize = 120;
   constexpr size_t num_frames = 16;
   std::vector<uint8_t> frames[num_frames];
   JxlPixelFormat format = {3, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
@@ -3360,7 +3390,8 @@ TEST(DecodeTest, SkipFrameWithBlendingTest) {
 }
 
 TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
-  size_t xsize = 90, ysize = 120;
+  size_t xsize = 90;
+  size_t ysize = 120;
   constexpr size_t num_frames = 16;
   std::vector<uint8_t> frames[num_frames + 5];
   JxlPixelFormat format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
@@ -3376,7 +3407,10 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
 
   std::vector<uint32_t> frame_durations_c;
   std::vector<uint32_t> frame_durations_nc;
-  std::vector<uint32_t> frame_xsize, frame_ysize, frame_x0, frame_y0;
+  std::vector<uint32_t> frame_xsize;
+  std::vector<uint32_t> frame_ysize;
+  std::vector<uint32_t> frame_x0;
+  std::vector<uint32_t> frame_y0;
 
   for (size_t i = 0; i < num_frames; ++i) {
     size_t cropxsize = 1 + xsize * 2 / (i + 1);
@@ -3648,7 +3682,8 @@ TEST(DecodeTest, SkipFrameWithAlphaBlendingTest) {
 TEST(DecodeTest, OrientedCroppedFrameTest) {
   const auto test = [](bool keep_orientation, uint32_t orientation,
                        uint32_t resampling) {
-    size_t xsize = 90, ysize = 120;
+    size_t xsize = 90;
+    size_t ysize = 120;
     JxlPixelFormat format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
     size_t oxsize = (!keep_orientation && orientation > 4 ? ysize : xsize);
     size_t oysize = (!keep_orientation && orientation > 4 ? xsize : ysize);
@@ -3985,7 +4020,8 @@ void VerifyProgression(size_t xsize, size_t ysize, uint32_t num_channels,
 }
 
 TEST(DecodeTest, ProgressionTest) {
-  size_t xsize = 508, ysize = 470;
+  size_t xsize = 508;
+  size_t ysize = 470;
   uint32_t num_channels = 3;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4020,7 +4056,8 @@ TEST(DecodeTest, ProgressionTest) {
 }
 
 TEST(DecodeTest, ProgressionTestLosslessAlpha) {
-  size_t xsize = 508, ysize = 470;
+  size_t xsize = 508;
+  size_t ysize = 470;
   uint32_t num_channels = 4;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4063,7 +4100,8 @@ void VerifyFilePosition(size_t expected_pos, const std::vector<uint8_t>& data,
 }
 
 TEST(DecodeTest, InputHandlingTestOneShot) {
-  size_t xsize = 508, ysize = 470;
+  size_t xsize = 508;
+  size_t ysize = 470;
   uint32_t num_channels = 3;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4246,7 +4284,8 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(InputHandlingTestJPEGOneshot)) {
 }
 
 TEST(DecodeTest, InputHandlingTestStreaming) {
-  size_t xsize = 508, ysize = 470;
+  size_t xsize = 508;
+  size_t ysize = 470;
   uint32_t num_channels = 3;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4346,7 +4385,8 @@ TEST(DecodeTest, InputHandlingTestStreaming) {
 TEST(DecodeTest, FlushTest) {
   // Size large enough for multiple groups, required to have progressive
   // stages
-  size_t xsize = 333, ysize = 300;
+  size_t xsize = 333;
+  size_t ysize = 300;
   uint32_t num_channels = 3;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4421,7 +4461,8 @@ TEST(DecodeTest, FlushTest) {
 TEST(DecodeTest, FlushTestImageOutCallback) {
   // Size large enough for multiple groups, required to have progressive
   // stages
-  size_t xsize = 333, ysize = 300;
+  size_t xsize = 333;
+  size_t ysize = 300;
   uint32_t num_channels = 3;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4507,7 +4548,8 @@ TEST(DecodeTest, FlushTestImageOutCallback) {
 TEST(DecodeTest, FlushTestLossyProgressiveAlpha) {
   // Size large enough for multiple groups, required to have progressive
   // stages
-  size_t xsize = 333, ysize = 300;
+  size_t xsize = 333;
+  size_t ysize = 300;
   uint32_t num_channels = 4;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4577,7 +4619,8 @@ TEST(DecodeTest, FlushTestLossyProgressiveAlpha) {
   JxlDecoderDestroy(dec);
 }
 TEST(DecodeTest, FlushTestLossyProgressiveAlphaUpsampling) {
-  size_t xsize = 533, ysize = 401;
+  size_t xsize = 533;
+  size_t ysize = 401;
   uint32_t num_channels = 4;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4651,7 +4694,8 @@ TEST(DecodeTest, FlushTestLossyProgressiveAlphaUpsampling) {
 TEST(DecodeTest, FlushTestLosslessProgressiveAlpha) {
   // Size large enough for multiple groups, required to have progressive
   // stages
-  size_t xsize = 333, ysize = 300;
+  size_t xsize = 333;
+  size_t ysize = 300;
   uint32_t num_channels = 4;
   std::vector<uint8_t> pixels =
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
@@ -4741,7 +4785,8 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
     // intermediate flushes for complete DC and complete passes.
     // The test can be updated if more cases are expected to support it.
     bool expect_flush = (num_channels & 1) && !lossless;
-    size_t xsize, ysize;
+    size_t xsize;
+    size_t ysize;
     if (single_group) {
       // An image smaller than 256x256 ensures it contains only 1 group.
       xsize = 99;
@@ -4982,7 +5027,8 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionMetadataTest)) {
 }
 
 TEST(DecodeTest, ContinueFinalNonEssentialBoxTest) {
-  size_t xsize = 80, ysize = 90;
+  size_t xsize = 80;
+  size_t ysize = 90;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   jxl::TestCodestreamParams params;
   params.box_format = kCSBF_Multi_Other_Terminated;
@@ -5038,7 +5084,7 @@ TEST(DecodeTest, ContinueFinalNonEssentialBoxTest) {
 }
 
 namespace {
-bool BoxTypeEquals(const std::string& type_string, JxlBoxType type) {
+bool BoxTypeEquals(const std::string& type_string, const JxlBoxType type) {
   return type_string.size() == 4 && type_string[0] == type[0] &&
          type_string[1] == type[1] && type_string[2] == type[2] &&
          type_string[3] == type[3];
@@ -5054,28 +5100,38 @@ TEST(DecodeTest, ExtentedBoxSizeTest) {
 
   JxlBoxType type;
   uint64_t box_size;
+  uint64_t contents_size;
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetInput(dec, orig.data(), orig.size()));
   EXPECT_EQ(JXL_DEC_BOX, JxlDecoderProcessInput(dec));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxType(dec, type, JXL_FALSE));
   EXPECT_TRUE(BoxTypeEquals("JXL ", type));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxSizeRaw(dec, &box_size));
   EXPECT_EQ(12, box_size);
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxSizeContents(dec, &contents_size));
+  EXPECT_EQ(contents_size + 8, box_size);
   EXPECT_EQ(JXL_DEC_BOX, JxlDecoderProcessInput(dec));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxType(dec, type, JXL_FALSE));
   EXPECT_TRUE(BoxTypeEquals("ftyp", type));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxSizeRaw(dec, &box_size));
   EXPECT_EQ(20, box_size);
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxSizeContents(dec, &contents_size));
+  EXPECT_EQ(contents_size + 8, box_size);
   EXPECT_EQ(JXL_DEC_BOX, JxlDecoderProcessInput(dec));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxType(dec, type, JXL_FALSE));
   EXPECT_TRUE(BoxTypeEquals("jxlc", type));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxSizeRaw(dec, &box_size));
   EXPECT_EQ(72, box_size);
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBoxSizeContents(dec, &contents_size));
+  // This is an extended box, hence the difference between `box_size` and
+  // `contents_size` is 16.
+  EXPECT_EQ(contents_size + 8 + 8, box_size);
 
   JxlDecoderDestroy(dec);
 }
 
 TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
-  size_t xsize = 1, ysize = 1;
+  size_t xsize = 1;
+  size_t ysize = 1;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   jxl::TestCodestreamParams params;
   params.box_format = kCSBF_Multi_Other_Terminated;
@@ -5096,6 +5152,7 @@ TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
 
   JxlBoxType type;
   uint64_t box_size;
+  uint64_t contents_size;
   std::vector<uint8_t> contents(50);
   size_t expected_release_size = 0;
 
@@ -5113,6 +5170,9 @@ TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
     EXPECT_TRUE(BoxTypeEquals(expected_box_types[i], type));
     if (expected_box_sizes[i]) {
       EXPECT_EQ(expected_box_sizes[i], box_size);
+      EXPECT_EQ(JXL_DEC_SUCCESS,
+                JxlDecoderGetBoxSizeContents(dec, &contents_size));
+      EXPECT_EQ(contents_size + 8, box_size);
     }
 
     if (expected_release_size > 0) {
@@ -5147,7 +5207,8 @@ TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
 }
 
 TEST(DecodeTest, JXL_BOXES_TEST(ExifBrobBoxTest)) {
-  size_t xsize = 1, ysize = 1;
+  size_t xsize = 1;
+  size_t ysize = 1;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   jxl::TestCodestreamParams params;
   // Lossless to verify pixels exactly after roundtrip.
@@ -5328,7 +5389,8 @@ TEST(DecodeTest, JXL_BOXES_TEST(ExifBrobBoxTest)) {
 }
 
 TEST(DecodeTest, JXL_BOXES_TEST(PartialCodestreamBoxTest)) {
-  size_t xsize = 23, ysize = 81;
+  size_t xsize = 23;
+  size_t ysize = 81;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
   JxlPixelFormat format_orig = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   // Lossless to verify pixels exactly after roundtrip.
@@ -5482,10 +5544,11 @@ TEST(DecodeTest, JXL_BOXES_TEST(PartialCodestreamBoxTest)) {
 
 TEST(DecodeTest, SpotColorTest) {
   jxl::CodecInOut io;
-  size_t xsize = 55, ysize = 257;
+  size_t xsize = 55;
+  size_t ysize = 257;
   io.metadata.m.color_encoding = jxl::ColorEncoding::LinearSRGB();
-  jxl::Image3F main(xsize, ysize);
-  jxl::ImageF spot(xsize, ysize);
+  JXL_ASSIGN_OR_DIE(Image3F main, Image3F::Create(xsize, ysize));
+  JXL_ASSIGN_OR_DIE(ImageF spot, ImageF::Create(xsize, ysize));
   jxl::ZeroFillImage(&main);
   jxl::ZeroFillImage(&spot);
 
@@ -5508,7 +5571,7 @@ TEST(DecodeTest, SpotColorTest) {
   info.spot_color[3] = 0.5f;
 
   io.metadata.m.extra_channel_info.push_back(info);
-  std::vector<jxl::ImageF> ec;
+  std::vector<ImageF> ec;
   ec.push_back(std::move(spot));
   io.frames[0].SetExtraChannels(std::move(ec));
 

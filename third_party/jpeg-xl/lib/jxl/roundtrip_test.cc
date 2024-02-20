@@ -26,7 +26,6 @@
 #include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/image.h"
@@ -36,6 +35,9 @@
 #include "lib/jxl/testing.h"
 
 namespace {
+
+using jxl::ImageF;
+using jxl::test::ButteraugliDistance;
 
 // Converts a test image to a CodecInOut.
 // icc_profile can be empty to automatically deduce profile from the pixel
@@ -233,7 +235,7 @@ void VerifyRoundtripCompression(
     }
   }
   if (alpha_in_extra_channels_vector && !has_interleaved_alpha) {
-    jxl::ImageF alpha_channel(xsize, ysize);
+    JXL_ASSIGN_OR_DIE(ImageF alpha_channel, ImageF::Create(xsize, ysize));
     EXPECT_TRUE(jxl::ConvertFromExternal(
         extra_channel_bytes.data(), extra_channel_bytes.size(), xsize, ysize,
         basic_info.bits_per_sample, extra_channel_pixel_format, 0,
@@ -412,10 +414,10 @@ void VerifyRoundtripCompression(
 
   if (already_downsampled) {
     jxl::Image3F* color = decoded_io.Main().color();
-    jxl::DownsampleImage(color, resampling);
+    JXL_ASSIGN_OR_DIE(*color, jxl::DownsampleImage(*color, resampling));
     if (decoded_io.Main().HasAlpha()) {
-      jxl::ImageF* alpha = decoded_io.Main().alpha();
-      jxl::DownsampleImage(alpha, resampling);
+      ImageF* alpha = decoded_io.Main().alpha();
+      JXL_ASSIGN_OR_DIE(*alpha, jxl::DownsampleImage(*alpha, resampling));
     }
     decoded_io.SetSize(color->xsize(), color->ysize());
   }

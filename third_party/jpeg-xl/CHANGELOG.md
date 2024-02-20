@@ -8,10 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-
+ - decoder API: added `JxlDecoderGetBoxSizeContents` for getting the size of the
+   content of a box without the headers.
 ### Removed
 
 ### Changed / clarified
+
+## [0.9.2] - 2024-02-07
+
+### Fixed
+ - bugs in the gdk-pixbuf plugin
+ - some build issues
+
+## [0.9.1] - 2024-01-08
+
+### Fixed
+ - multiple build issues
 
 ## [0.9.0] - 2023-12-22
 
@@ -56,6 +68,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - changed the name of the cjxl flag `photon_noise` to `photon_noise_iso`
  - fixed how large boxes are decoded (#2958)
  - fixed encoding files with unreadable patches (#3042, #3046)
+
+## [0.8.2] - 2023-06-14
+
+### Changed
+ - Security: Fix an integer underflow bug in patch decoding (#2551- CVE-2023-35790).
+
+## [0.8.1] - 2023-02-03
+
+### Changed
+ - Allow fast-lossless for 16-bit float input (#2093)
+ - Fix bug in palette (#2120)
+ - Security: Fix OOB read in exif.h (#2101 - [CVE-2023-0645](https://www.cve.org/cverecord?id=CVE-2023-0645))
 
 ## [0.8.0] - 2023-01-18
 

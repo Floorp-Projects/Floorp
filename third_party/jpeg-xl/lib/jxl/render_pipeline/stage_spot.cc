@@ -15,9 +15,9 @@ class SpotColorStage : public RenderPipelineStage {
     JXL_ASSERT(spot_c_ >= 3);
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     // TODO(veluca): add SIMD.
     float scale = spot_color_[3];
     for (size_t c = 0; c < 3; c++) {
@@ -28,6 +28,7 @@ class SpotColorStage : public RenderPipelineStage {
         p[x] = mix * spot_color_[c] + (1.0f - mix) * p[x];
       }
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

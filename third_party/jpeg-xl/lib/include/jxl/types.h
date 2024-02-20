@@ -13,7 +13,6 @@
 #ifndef JXL_TYPES_H_
 #define JXL_TYPES_H_
 
-#include <jxl/jxl_export.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -32,7 +31,7 @@ extern "C" {
 #define JXL_TRUE 1
 /** Portable @c false replacement. */
 #define JXL_FALSE 0
-/** Converts of bool-like value to either JXL_TRUE or JXL_FALSE. */
+/** Converts of bool-like value to either ::JXL_TRUE or ::JXL_FALSE. */
 #define TO_JXL_BOOL(C) (!!(C) ? JXL_TRUE : JXL_FALSE)
 
 /** Data type for the sample values per channel per pixel.
@@ -40,7 +39,7 @@ extern "C" {
 typedef enum {
   /** Use 32-bit single-precision floating point values, with range 0.0-1.0
    * (within gamut, may go outside this range for wide color gamut). Floating
-   * point output, either JXL_TYPE_FLOAT or JXL_TYPE_FLOAT16, is recommended
+   * point output, either ::JXL_TYPE_FLOAT or ::JXL_TYPE_FLOAT16, is recommended
    * for HDR and wide gamut images when color profile conversion is required. */
   JXL_TYPE_FLOAT = 0,
 
@@ -92,8 +91,7 @@ typedef struct {
   JxlDataType data_type;
 
   /** Whether multi-byte data types are represented in big endian or little
-   * endian format. This applies to JXL_TYPE_UINT16, JXL_TYPE_UINT32
-   * and JXL_TYPE_FLOAT.
+   * endian format. This applies to ::JXL_TYPE_UINT16 and ::JXL_TYPE_FLOAT.
    */
   JxlEndianness endianness;
 

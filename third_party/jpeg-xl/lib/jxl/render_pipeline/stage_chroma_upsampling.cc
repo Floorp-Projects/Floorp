@@ -27,9 +27,9 @@ class HorizontalChromaUpsamplingStage : public RenderPipelineStage {
             /*shift=*/1, /*border=*/1)),
         c_(channel) {}
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     HWY_FULL(float) df;
     xextra = RoundUpTo(xextra, Lanes(df));
     auto threefour = Set(df, 0.75f);
@@ -45,6 +45,7 @@ class HorizontalChromaUpsamplingStage : public RenderPipelineStage {
       auto right = MulAdd(onefour, next, current);
       StoreInterleaved(df, left, right, row_out + x * 2);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -65,9 +66,9 @@ class VerticalChromaUpsamplingStage : public RenderPipelineStage {
             /*shift=*/1, /*border=*/1)),
         c_(channel) {}
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     HWY_FULL(float) df;
     xextra = RoundUpTo(xextra, Lanes(df));
     auto threefour = Set(df, 0.75f);
@@ -86,6 +87,7 @@ class VerticalChromaUpsamplingStage : public RenderPipelineStage {
       Store(MulAdd(it, onefour, im_scaled), df, row_out0 + x);
       Store(MulAdd(ib, onefour, im_scaled), df, row_out1 + x);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

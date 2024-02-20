@@ -43,28 +43,18 @@ static JXL_INLINE JXL_MAYBE_UNUSED void UnpoisonMemory(const volatile void* m,
   __msan_unpoison(m, size);
 }
 
-static JXL_INLINE JXL_MAYBE_UNUSED void UnpoisonCStr(const char* c) {
-  do {
-    UnpoisonMemory(c, 1);
-  } while (*c++);
-}
-
 static JXL_INLINE JXL_MAYBE_UNUSED void MemoryIsInitialized(
     const volatile void* m, size_t size) {
   __msan_check_mem_is_initialized(m, size);
 }
 
 // Mark all the bytes of an image (including padding) as poisoned bytes.
-static JXL_INLINE JXL_MAYBE_UNUSED void PoisonImage(const PlaneBase& im) {
+template <typename T>
+static JXL_INLINE JXL_MAYBE_UNUSED void PoisonImage(const Plane<T>& im) {
   PoisonMemory(im.bytes(), im.bytes_per_row() * im.ysize());
 }
 
-template <typename T>
-static JXL_INLINE JXL_MAYBE_UNUSED void PoisonImage(const Image3<T>& im) {
-  PoisonImage(im.Plane(0));
-  PoisonImage(im.Plane(1));
-  PoisonImage(im.Plane(2));
-}
+namespace {
 
 // Print the uninitialized regions of an image.
 template <typename T>
@@ -210,6 +200,8 @@ static JXL_INLINE JXL_MAYBE_UNUSED void CheckImageInitialized(
   }
 }
 
+}  // namespace
+
 #define JXL_CHECK_IMAGE_INITIALIZED(im, r) \
   ::jxl::msan::CheckImageInitialized(im, r, "im=" #im ", r=" #r);
 
@@ -221,13 +213,13 @@ static JXL_INLINE JXL_MAYBE_UNUSED void CheckImageInitialized(
 // In non-msan mode these functions don't use volatile since it is not needed
 // for the empty functions.
 
-static JXL_INLINE JXL_MAYBE_UNUSED void PoisonMemory(const void*, size_t) {}
-static JXL_INLINE JXL_MAYBE_UNUSED void UnpoisonMemory(const void*, size_t) {}
-static JXL_INLINE JXL_MAYBE_UNUSED void UnpoisonCStr(const char*) {}
-static JXL_INLINE JXL_MAYBE_UNUSED void MemoryIsInitialized(const void*,
-                                                            size_t) {}
+static JXL_INLINE JXL_MAYBE_UNUSED void PoisonMemory(const void* m,
+                                                     size_t size) {}
+static JXL_INLINE JXL_MAYBE_UNUSED void UnpoisonMemory(const void* m,
+                                                       size_t size) {}
+static JXL_INLINE JXL_MAYBE_UNUSED void MemoryIsInitialized(const void* m,
+                                                            size_t size) {}
 
-static JXL_INLINE JXL_MAYBE_UNUSED void PoisonImage(const PlaneBase& im) {}
 template <typename T>
 static JXL_INLINE JXL_MAYBE_UNUSED void PoisonImage(const Plane<T>& im) {}
 

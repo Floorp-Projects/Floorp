@@ -284,7 +284,7 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
   cinfo.input_components = info.num_color_channels;
   cinfo.in_color_space = info.num_color_channels == 1 ? JCS_GRAYSCALE : JCS_RGB;
   jpeg_set_defaults(&cinfo);
-  cinfo.optimize_coding = params.optimize_coding;
+  cinfo.optimize_coding = static_cast<boolean>(params.optimize_coding);
   if (cinfo.input_components == 3) {
     JXL_RETURN_IF_ERROR(
         SetChromaSubsampling(params.chroma_subsampling, &cinfo));

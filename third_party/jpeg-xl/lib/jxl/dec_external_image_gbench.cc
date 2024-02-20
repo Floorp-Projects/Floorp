@@ -20,10 +20,10 @@ void BM_DecExternalImage_ConvertImageRGBA(benchmark::State& state) {
   ImageMetadata im;
   im.SetAlphaBits(8);
   ImageBundle ib(&im);
-  Image3F color(xsize, ysize);
+  JXL_ASSIGN_OR_DIE(Image3F color, Image3F::Create(xsize, ysize));
   ZeroFillImage(&color);
   ib.SetFromImage(std::move(color), ColorEncoding::SRGB());
-  ImageF alpha(xsize, ysize);
+  JXL_ASSIGN_OR_DIE(ImageF alpha, ImageF::Create(xsize, ysize));
   ZeroFillImage(&alpha);
   ib.SetAlpha(std::move(alpha));
 

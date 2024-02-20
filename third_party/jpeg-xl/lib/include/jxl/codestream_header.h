@@ -71,7 +71,7 @@ typedef struct {
 } JxlPreviewHeader;
 
 /** The codestream animation header, optionally present in the beginning of
- * the codestream, and if it is it applies to all animation frames, unlike
+ * the codestream, and if it is it applies to all animation frames, unlike @ref
  * JxlFrameHeader which applies to an individual frame.
  */
 typedef struct {
@@ -166,12 +166,12 @@ typedef struct {
    * it to to the original color profile. The decoder also does not convert to
    * the target display color profile. To convert the pixel data produced by
    * the decoder to the original color profile, one of the JxlDecoderGetColor*
-   * functions needs to be called with @ref JXL_COLOR_PROFILE_TARGET_DATA to get
-   * the color profile of the decoder output, and then an external CMS can be
-   * used for conversion.
-   * Note that for lossy compression, this should be set to false for most use
-   * cases, and if needed, the image should be converted to the original color
-   * profile after decoding, as described above.
+   * functions needs to be called with
+   * ::JXL_COLOR_PROFILE_TARGET_DATA to get the color profile of the decoder
+   * output, and then an external CMS can be used for conversion. Note that for
+   * lossy compression, this should be set to false for most use cases, and if
+   * needed, the image should be converted to the original color profile after
+   * decoding, as described above.
    */
   JXL_BOOL uses_original_profile;
 
@@ -194,17 +194,19 @@ typedef struct {
    * grayscale data, or 3 for colored data. This count does not include
    * the alpha channel or other extra channels. To check presence of an alpha
    * channel, such as in the case of RGBA color, check alpha_bits != 0.
-   * If and only if this is 1, the JxlColorSpace in the JxlColorEncoding is
-   * JXL_COLOR_SPACE_GRAY.
+   * If and only if this is 1, the @ref JxlColorSpace in the @ref
+   * JxlColorEncoding is
+   * ::JXL_COLOR_SPACE_GRAY.
    */
   uint32_t num_color_channels;
 
   /** Number of additional image channels. This includes the main alpha channel,
    * but can also include additional channels such as depth, additional alpha
    * channels, spot colors, and so on. Information about the extra channels
-   * can be queried with JxlDecoderGetExtraChannelInfo. The main alpha channel,
-   * if it exists, also has its information available in the alpha_bits,
-   * alpha_exponent_bits and alpha_premultiplied fields in this JxlBasicInfo.
+   * can be queried with @ref JxlDecoderGetExtraChannelInfo. The main alpha
+   * channel, if it exists, also has its information available in the
+   * alpha_bits, alpha_exponent_bits and alpha_premultiplied fields in this @ref
+   * JxlBasicInfo.
    */
   uint32_t num_extra_channels;
 
@@ -388,7 +390,8 @@ typedef struct {
 /** The header of one displayed frame or non-coalesced layer. */
 typedef struct {
   /** How long to wait after rendering in ticks. The duration in seconds of a
-   * tick is given by tps_numerator and tps_denominator in JxlAnimationHeader.
+   * tick is given by tps_numerator and tps_denominator in @ref
+   * JxlAnimationHeader.
    */
   uint32_t duration;
 
@@ -396,9 +399,9 @@ typedef struct {
    * interpreted from most-significant to least-significant as hour, minute,
    * second, and frame. If timecode is nonzero, it is strictly larger than that
    * of a previous frame with nonzero duration. These values are only available
-   * if have_timecodes in JxlAnimationHeader is JXL_TRUE.
-   * This value is only used if have_timecodes in JxlAnimationHeader is
-   * JXL_TRUE.
+   * if have_timecodes in @ref JxlAnimationHeader is ::JXL_TRUE.
+   * This value is only used if have_timecodes in @ref JxlAnimationHeader is
+   * ::JXL_TRUE.
    */
   uint32_t timecode;
 

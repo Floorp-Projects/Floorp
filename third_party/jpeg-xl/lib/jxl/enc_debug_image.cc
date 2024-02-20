@@ -18,32 +18,29 @@ namespace jxl {
 
 namespace {
 template <typename From>
-Plane<float> ConvertToFloat(const Plane<From>& from) {
+StatusOr<Image3F> ConvertToFloat(const Image3<From>& from) {
   float factor = 1.0f / std::numeric_limits<From>::max();
   if (std::is_same<From, double>::value || std::is_same<From, float>::value) {
     factor = 1.0f;
   }
-  Plane<float> to(from.xsize(), from.ysize());
-  for (size_t y = 0; y < from.ysize(); ++y) {
-    const From* const JXL_RESTRICT row_from = from.Row(y);
-    float* const JXL_RESTRICT row_to = to.Row(y);
-    for (size_t x = 0; x < from.xsize(); ++x) {
-      row_to[x] = row_from[x] * factor;
+  JXL_ASSIGN_OR_RETURN(Image3F to, Image3F::Create(from.xsize(), from.ysize()));
+  for (size_t c = 0; c < 3; ++c) {
+    for (size_t y = 0; y < from.ysize(); ++y) {
+      const From* const JXL_RESTRICT row_from = from.ConstPlaneRow(c, y);
+      float* const JXL_RESTRICT row_to = to.PlaneRow(c, y);
+      for (size_t x = 0; x < from.xsize(); ++x) {
+        row_to[x] = row_from[x] * factor;
+      }
     }
   }
   return to;
 }
-template <typename From>
-Image3F ConvertToFloat(const Image3<From>& from) {
-  return Image3F(ConvertToFloat(from.Plane(0)), ConvertToFloat(from.Plane(1)),
-                 ConvertToFloat(from.Plane(2)));
-}
 
 template <typename T>
-void DumpImageT(const CompressParams& cparams, const char* label,
-                const ColorEncoding& color_encoding, const Image3<T>& image) {
-  if (!cparams.debug_image) return;
-  Image3F float_image = ConvertToFloat(image);
+Status DumpImageT(const CompressParams& cparams, const char* label,
+                  const ColorEncoding& color_encoding, const Image3<T>& image) {
+  if (!cparams.debug_image) return true;
+  JXL_ASSIGN_OR_RETURN(Image3F float_image, ConvertToFloat(image));
   JxlColorEncoding color = color_encoding.ToExternal();
   size_t num_pixels = 3 * image.xsize() * image.ysize();
   std::vector<uint16_t> pixels(num_pixels);
@@ -53,18 +50,20 @@ void DumpImageT(const CompressParams& cparams, const char* label,
   }
   JXL_CHECK(ConvertChannelsToExternal(
       channels, 3, 16, false, JXL_BIG_ENDIAN, 6 * image.xsize(), nullptr,
-      &pixels[0], 2 * num_pixels, PixelCallback(), Orientation::kIdentity));
+      pixels.data(), 2 * num_pixels, PixelCallback(), Orientation::kIdentity));
   (*cparams.debug_image)(cparams.debug_image_opaque, label, image.xsize(),
-                         image.ysize(), &color, &pixels[0]);
+                         image.ysize(), &color, pixels.data());
+  return true;
 }
 
 template <typename T>
-void DumpPlaneNormalizedT(const CompressParams& cparams, const char* label,
-                          const Plane<T>& image) {
+Status DumpPlaneNormalizedT(const CompressParams& cparams, const char* label,
+                            const Plane<T>& image) {
   T min;
   T max;
   ImageMinMax(image, &min, &max);
-  Image3B normalized(image.xsize(), image.ysize());
+  JXL_ASSIGN_OR_RETURN(Image3B normalized,
+                       Image3B::Create(image.xsize(), image.ysize()));
   for (size_t c = 0; c < 3; ++c) {
     float mul = min == max ? 0 : (255.0f / (max - min));
     for (size_t y = 0; y < image.ysize(); ++y) {
@@ -75,41 +74,42 @@ void DumpPlaneNormalizedT(const CompressParams& cparams, const char* label,
       }
     }
   }
-  DumpImageT(cparams, label, ColorEncoding::SRGB(), normalized);
+  return DumpImageT(cparams, label, ColorEncoding::SRGB(), normalized);
 }
 
 }  // namespace
 
-void DumpImage(const CompressParams& cparams, const char* label,
-               const Image3<float>& image) {
-  DumpImageT(cparams, label, ColorEncoding::SRGB(), image);
+Status DumpImage(const CompressParams& cparams, const char* label,
+                 const Image3<float>& image) {
+  return DumpImageT(cparams, label, ColorEncoding::SRGB(), image);
 }
 
-void DumpImage(const CompressParams& cparams, const char* label,
-               const Image3<uint8_t>& image) {
-  DumpImageT(cparams, label, ColorEncoding::SRGB(), image);
+Status DumpImage(const CompressParams& cparams, const char* label,
+                 const Image3<uint8_t>& image) {
+  return DumpImageT(cparams, label, ColorEncoding::SRGB(), image);
 }
 
-void DumpXybImage(const CompressParams& cparams, const char* label,
-                  const Image3F& image) {
-  if (!cparams.debug_image) return;
+Status DumpXybImage(const CompressParams& cparams, const char* label,
+                    const Image3F& image) {
+  if (!cparams.debug_image) return true;
 
-  Image3F linear(image.xsize(), image.ysize());
+  JXL_ASSIGN_OR_RETURN(Image3F linear,
+                       Image3F::Create(image.xsize(), image.ysize()));
   OpsinParams opsin_params;
   opsin_params.Init(kDefaultIntensityTarget);
   OpsinToLinear(image, Rect(linear), nullptr, &linear, opsin_params);
 
-  DumpImageT(cparams, label, ColorEncoding::LinearSRGB(), linear);
+  return DumpImageT(cparams, label, ColorEncoding::LinearSRGB(), linear);
 }
 
-void DumpPlaneNormalized(const CompressParams& cparams, const char* label,
-                         const Plane<float>& image) {
-  DumpPlaneNormalizedT(cparams, label, image);
+Status DumpPlaneNormalized(const CompressParams& cparams, const char* label,
+                           const Plane<float>& image) {
+  return DumpPlaneNormalizedT(cparams, label, image);
 }
 
-void DumpPlaneNormalized(const CompressParams& cparams, const char* label,
-                         const Plane<uint8_t>& image) {
-  DumpPlaneNormalizedT(cparams, label, image);
+Status DumpPlaneNormalized(const CompressParams& cparams, const char* label,
+                           const Plane<uint8_t>& image) {
+  return DumpPlaneNormalizedT(cparams, label, image);
 }
 
 }  // namespace jxl

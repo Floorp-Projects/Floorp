@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file.
 
 #include "benchmark/benchmark.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/splines.h"
 
 namespace jxl {
@@ -33,7 +34,7 @@ void BM_Splines(benchmark::State& state) {
   Splines splines(kQuantizationAdjustment, std::move(quantized_splines),
                   std::move(starting_points));
 
-  Image3F drawing_area(320, 320);
+  JXL_ASSIGN_OR_DIE(Image3F drawing_area, Image3F::Create(320, 320));
   ZeroFillImage(&drawing_area);
   for (auto _ : state) {
     for (size_t i = 0; i < n; ++i) {

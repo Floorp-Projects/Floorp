@@ -17,16 +17,10 @@
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/enc_adaptive_quantization.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
-#include "lib/jxl/quant_weights.h"
-#include "lib/jxl/quantizer.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -40,11 +34,12 @@ using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Sqrt;
 
-void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
-                 const Image3F& opsin, const Rect& opsin_rect,
-                 const ImageF& quant_field, const AcStrategyImage& ac_strategy,
-                 ImageB* epf_sharpness, const Rect& rect,
-                 ArControlFieldHeuristics::TempImages* temp_image) {
+Status ProcessTile(const CompressParams& cparams,
+                   const FrameHeader& frame_header, const Image3F& opsin,
+                   const Rect& opsin_rect, const ImageF& quant_field,
+                   const AcStrategyImage& ac_strategy, ImageB* epf_sharpness,
+                   const Rect& rect,
+                   ArControlFieldHeuristics::TempImages* temp_image) {
   JXL_ASSERT(opsin_rect.x0() % 8 == 0);
   JXL_ASSERT(opsin_rect.y0() % 8 == 0);
   JXL_ASSERT(opsin_rect.xsize() % 8 == 0);
@@ -54,7 +49,7 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
       cparams.speed_tier > SpeedTier::kWombat ||
       frame_header.loop_filter.epf_iters == 0) {
     FillPlane(static_cast<uint8_t>(4), epf_sharpness, rect);
-    return;
+    return true;
   }
 
   // Likely better to have a higher X weight, like:
@@ -70,7 +65,7 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
   size_t by1 = by0 + rect.ysize();
   size_t bx0 = opsin_rect.x0() / 8 + rect.x0();
   size_t bx1 = bx0 + rect.xsize();
-  temp_image->InitOnce();
+  JXL_RETURN_IF_ERROR(temp_image->InitOnce());
   ImageF& laplacian_sqrsum = temp_image->laplacian_sqrsum;
   // Calculate the L2 of the 3x3 Laplacian in an integral transform
   // (for example 32x32 dct). This relates to transforms ability
@@ -295,6 +290,7 @@ void ProcessTile(const CompressParams& cparams, const FrameHeader& frame_header,
       }
     }
   }
+  return true;
 }
 
 }  // namespace
@@ -307,14 +303,14 @@ HWY_AFTER_NAMESPACE();
 namespace jxl {
 HWY_EXPORT(ProcessTile);
 
-void ArControlFieldHeuristics::RunRect(
+Status ArControlFieldHeuristics::RunRect(
     const CompressParams& cparams, const FrameHeader& frame_header,
     const Rect& block_rect, const Image3F& opsin, const Rect& opsin_rect,
     const ImageF& quant_field, const AcStrategyImage& ac_strategy,
     ImageB* epf_sharpness, size_t thread) {
-  HWY_DYNAMIC_DISPATCH(ProcessTile)
-  (cparams, frame_header, opsin, opsin_rect, quant_field, ac_strategy,
-   epf_sharpness, block_rect, &temp_images[thread]);
+  return HWY_DYNAMIC_DISPATCH(ProcessTile)(
+      cparams, frame_header, opsin, opsin_rect, quant_field, ac_strategy,
+      epf_sharpness, block_rect, &temp_images[thread]);
 }
 
 }  // namespace jxl

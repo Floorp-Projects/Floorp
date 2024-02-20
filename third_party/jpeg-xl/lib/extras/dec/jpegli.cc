@@ -188,7 +188,11 @@ Status DecodeJpeg(const std::vector<uint8_t>& compressed,
     } else if (dparams.force_grayscale) {
       cinfo.out_color_space = JCS_GRAYSCALE;
     }
-    if (!ReadICCProfile(&cinfo, &ppf->icc)) {
+    if (ReadICCProfile(&cinfo, &ppf->icc)) {
+      ppf->primary_color_representation = PackedPixelFile::kIccIsPrimary;
+    } else {
+      ppf->primary_color_representation =
+          PackedPixelFile::kColorEncodingIsPrimary;
       ppf->icc.clear();
       // Default to SRGB
       ppf->color_encoding.color_space =
@@ -227,7 +231,7 @@ Status DecodeJpeg(const std::vector<uint8_t>& compressed,
     if (dparams.num_colors > 0) {
       cinfo.quantize_colors = TRUE;
       cinfo.desired_number_of_colors = dparams.num_colors;
-      cinfo.two_pass_quantize = dparams.two_pass_quant;
+      cinfo.two_pass_quantize = static_cast<boolean>(dparams.two_pass_quant);
       cinfo.dither_mode = (J_DITHER_MODE)dparams.dither_mode;
     }
 

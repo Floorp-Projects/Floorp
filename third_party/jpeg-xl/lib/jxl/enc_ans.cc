@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <numeric>
 #include <type_traits>
@@ -20,12 +21,15 @@
 #include "lib/jxl/ans_common.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/fast_math-inl.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_ans.h"
+#include "lib/jxl/enc_ans_params.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_cluster.h"
 #include "lib/jxl/enc_context_map.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_huffman.h"
+#include "lib/jxl/enc_params.h"
 #include "lib/jxl/fields.h"
 
 namespace jxl {
@@ -553,8 +557,7 @@ void ChooseUintConfigs(const HistogramParams& params,
                        std::vector<Histogram>* clustered_histograms,
                        EntropyEncodingData* codes, size_t* log_alpha_size) {
   codes->uint_config.resize(clustered_histograms->size());
-  if (params.streaming_mode ||
-      params.uint_method == HistogramParams::HybridUintMethod::kNone) {
+  if (params.uint_method == HistogramParams::HybridUintMethod::kNone) {
     return;
   }
   if (params.uint_method == HistogramParams::HybridUintMethod::k000) {
@@ -567,6 +570,12 @@ void ChooseUintConfigs(const HistogramParams& params,
     codes->uint_config.clear();
     codes->uint_config.resize(clustered_histograms->size(),
                               HybridUintConfig(2, 0, 1));
+    return;
+  }
+
+  // If the uint config is adaptive, just stick with the default in streaming
+  // mode.
+  if (params.streaming_mode) {
     return;
   }
 
@@ -1765,7 +1774,8 @@ void WriteTokens(const std::vector<Token>& tokens,
                  const EntropyEncodingData& codes,
                  const std::vector<uint8_t>& context_map, size_t context_offset,
                  BitWriter* writer, size_t layer, AuxOut* aux_out) {
-  BitWriter::Allotment allotment(writer, 32 * tokens.size() + 32 * 1024 * 4);
+  // Theoretically, we could have 15 prefix code bits + 31 extra bits.
+  BitWriter::Allotment allotment(writer, 46 * tokens.size() + 32 * 1024 * 4);
   size_t num_extra_bits =
       WriteTokens(tokens, codes, context_map, context_offset, writer);
   allotment.ReclaimAndCharge(writer, layer, aux_out);
@@ -1778,5 +1788,52 @@ void SetANSFuzzerFriendly(bool ans_fuzzer_friendly) {
 #if JXL_IS_DEBUG_BUILD  // Guard against accidental / malicious changes.
   ans_fuzzer_friendly_ = ans_fuzzer_friendly;
 #endif
+}
+
+HistogramParams HistogramParams::ForModular(
+    const CompressParams& cparams,
+    const std::vector<uint8_t>& extra_dc_precision, bool streaming_mode) {
+  HistogramParams params;
+  params.streaming_mode = streaming_mode;
+  if (cparams.speed_tier > SpeedTier::kKitten) {
+    params.clustering = HistogramParams::ClusteringType::kFast;
+    params.ans_histogram_strategy =
+        cparams.speed_tier > SpeedTier::kThunder
+            ? HistogramParams::ANSHistogramStrategy::kFast
+            : HistogramParams::ANSHistogramStrategy::kApproximate;
+    params.lz77_method =
+        cparams.decoding_speed_tier >= 3 && cparams.modular_mode
+            ? (cparams.speed_tier >= SpeedTier::kFalcon
+                   ? HistogramParams::LZ77Method::kRLE
+                   : HistogramParams::LZ77Method::kLZ77)
+            : HistogramParams::LZ77Method::kNone;
+    // Near-lossless DC, as well as modular mode, require choosing hybrid uint
+    // more carefully.
+    if ((!extra_dc_precision.empty() && extra_dc_precision[0] != 0) ||
+        (cparams.modular_mode && cparams.speed_tier < SpeedTier::kCheetah)) {
+      params.uint_method = HistogramParams::HybridUintMethod::kFast;
+    } else {
+      params.uint_method = HistogramParams::HybridUintMethod::kNone;
+    }
+  } else if (cparams.speed_tier <= SpeedTier::kTortoise) {
+    params.lz77_method = HistogramParams::LZ77Method::kOptimal;
+  } else {
+    params.lz77_method = HistogramParams::LZ77Method::kLZ77;
+  }
+  if (cparams.decoding_speed_tier >= 1) {
+    params.max_histograms = 12;
+  }
+  if (cparams.decoding_speed_tier >= 1 && cparams.responsive) {
+    params.lz77_method = cparams.speed_tier >= SpeedTier::kCheetah
+                             ? HistogramParams::LZ77Method::kRLE
+                         : cparams.speed_tier >= SpeedTier::kKitten
+                             ? HistogramParams::LZ77Method::kLZ77
+                             : HistogramParams::LZ77Method::kOptimal;
+  }
+  if (cparams.decoding_speed_tier >= 2 && cparams.responsive) {
+    params.uint_method = HistogramParams::HybridUintMethod::k000;
+    params.force_huffman = true;
+  }
+  return params;
 }
 }  // namespace jxl

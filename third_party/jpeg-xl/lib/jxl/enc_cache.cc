@@ -8,15 +8,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <type_traits>
+#include <memory>
 
-#include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/compressed_dc.h"
-#include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_frame.h"
 #include "lib/jxl/enc_aux_out.h"
@@ -50,8 +49,11 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
     for (size_t i = enc_state->coeffs.size();
          i < frame_header.passes.num_passes; i++) {
       // Allocate enough coefficients for each group on every row.
-      enc_state->coeffs.emplace_back(make_unique<ACImageT<int32_t>>(
-          kGroupDim * kGroupDim, shared.frame_dim.num_groups));
+      JXL_ASSIGN_OR_RETURN(
+          std::unique_ptr<ACImageT<int32_t>> coeffs,
+          ACImageT<int32_t>::Make(kGroupDim * kGroupDim,
+                                  shared.frame_dim.num_groups));
+      enc_state->coeffs.emplace_back(std::move(coeffs));
     }
   }
   while (enc_state->coeffs.size() > frame_header.passes.num_passes) {
@@ -65,7 +67,9 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
     shared.quantizer.RecomputeFromGlobalScale();
   }
 
-  Image3F dc(shared.frame_dim.xsize_blocks, shared.frame_dim.ysize_blocks);
+  JXL_ASSIGN_OR_RETURN(Image3F dc,
+                       Image3F::Create(shared.frame_dim.xsize_blocks,
+                                       shared.frame_dim.ysize_blocks));
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, shared.frame_dim.num_groups, ThreadPool::NoInit,
       [&](size_t group_idx, size_t _) {
@@ -120,7 +124,8 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
       std::vector<ImageF> extra_channels;
       extra_channels.reserve(ib.metadata()->extra_channel_info.size());
       for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
-        extra_channels.emplace_back(ib.xsize(), ib.ysize());
+        JXL_ASSIGN_OR_RETURN(ImageF ch, ImageF::Create(ib.xsize(), ib.ysize()));
+        extra_channels.emplace_back(std::move(ch));
         // Must initialize the image with data to not affect blending with
         // uninitialized memory.
         // TODO(lode): dc_level must copy and use the real extra channels
@@ -168,32 +173,41 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
     // outputs multiple frames, this assumption could be wrong.
     const Image3F& dc_frame =
         dec_state->shared->dc_frames[frame_header.dc_level];
-    shared.dc_storage = Image3F(dc_frame.xsize(), dc_frame.ysize());
+    JXL_ASSIGN_OR_RETURN(shared.dc_storage,
+                         Image3F::Create(dc_frame.xsize(), dc_frame.ysize()));
     CopyImageTo(dc_frame, &shared.dc_storage);
     ZeroFillImage(&shared.quant_dc);
     shared.dc = &shared.dc_storage;
     JXL_CHECK(encoded_size == 0);
   } else {
+    std::atomic<bool> has_error{false};
     auto compute_dc_coeffs = [&](int group_index, int /* thread */) {
+      if (has_error) return;
       const Rect r = enc_state->shared.frame_dim.DCGroupRect(group_index);
       int modular_group_index = group_index;
       if (enc_state->streaming_mode) {
         JXL_ASSERT(group_index == 0);
         modular_group_index = enc_state->dc_group_index;
       }
-      modular_frame_encoder->AddVarDCTDC(
-          frame_header, dc, r, modular_group_index,
-          enc_state->cparams.speed_tier < SpeedTier::kFalcon, enc_state,
-          /*jpeg_transcode=*/false);
+      if (!modular_frame_encoder->AddVarDCTDC(
+              frame_header, dc, r, modular_group_index,
+              enc_state->cparams.speed_tier < SpeedTier::kFalcon, enc_state,
+              /*jpeg_transcode=*/false)) {
+        has_error = true;
+        return;
+      }
     };
     JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, shared.frame_dim.num_dc_groups,
                                   ThreadPool::NoInit, compute_dc_coeffs,
                                   "Compute DC coeffs"));
+    if (has_error) return JXL_FAILURE("Compute DC coeffs failed");
     // TODO(veluca): this is only useful in tests and if inspection is enabled.
     if (!(frame_header.flags & FrameHeader::kSkipAdaptiveDCSmoothing)) {
-      AdaptiveDCSmoothing(shared.quantizer.MulDC(), &shared.dc_storage, pool);
+      JXL_RETURN_IF_ERROR(AdaptiveDCSmoothing(shared.quantizer.MulDC(),
+                                              &shared.dc_storage, pool));
     }
   }
+  std::atomic<bool> has_error{false};
   auto compute_ac_meta = [&](int group_index, int /* thread */) {
     const Rect r = enc_state->shared.frame_dim.DCGroupRect(group_index);
     int modular_group_index = group_index;
@@ -201,13 +215,17 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
       JXL_ASSERT(group_index == 0);
       modular_group_index = enc_state->dc_group_index;
     }
-    modular_frame_encoder->AddACMetadata(r, modular_group_index,
-                                         /*jpeg_transcode=*/false, enc_state);
+    if (!modular_frame_encoder->AddACMetadata(r, modular_group_index,
+                                              /*jpeg_transcode=*/false,
+                                              enc_state)) {
+      has_error = true;
+      return;
+    }
   };
   JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, shared.frame_dim.num_dc_groups,
                                 ThreadPool::NoInit, compute_ac_meta,
                                 "Compute AC Metadata"));
-
+  if (has_error) return JXL_FAILURE("Compute AC Metadata failed");
   return true;
 }
 

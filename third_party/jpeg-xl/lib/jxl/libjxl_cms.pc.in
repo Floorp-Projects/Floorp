@@ -7,7 +7,7 @@ Name: libjxl_cms
 Description: CMS support library for libjxl
 Version: @JPEGXL_LIBRARY_VERSION@
 @JPEGXL_REQUIRES_TYPE@: @JPEGXL_CMS_LIBRARY_REQUIRES@
-Libs: -L${libdir} -ljxl_cms
-Libs.private: -lm
+Libs: -L${libdir} -ljxl_cms @JPEGXL_CMS_PUBLIC_LIBS@
+Libs.private: @JPEGXL_CMS_PRIVATE_LIBS@
 Cflags: -I${includedir}
 Cflags.private: -DJXL_CMS_STATIC_DEFINE

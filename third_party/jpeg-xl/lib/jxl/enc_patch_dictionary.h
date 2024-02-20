@@ -12,13 +12,10 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include <tuple>
 #include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_patch_dictionary.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_cache.h"
@@ -92,15 +89,15 @@ class PatchDictionaryEncoder {
   static void SubtractFrom(const PatchDictionary& pdic, Image3F* opsin);
 };
 
-void FindBestPatchDictionary(const Image3F& opsin,
-                             PassesEncoderState* JXL_RESTRICT state,
-                             const JxlCmsInterface& cms, ThreadPool* pool,
-                             AuxOut* aux_out, bool is_xyb = true);
+Status FindBestPatchDictionary(const Image3F& opsin,
+                               PassesEncoderState* JXL_RESTRICT state,
+                               const JxlCmsInterface& cms, ThreadPool* pool,
+                               AuxOut* aux_out, bool is_xyb = true);
 
-void RoundtripPatchFrame(Image3F* reference_frame,
-                         PassesEncoderState* JXL_RESTRICT state, int idx,
-                         CompressParams& cparams, const JxlCmsInterface& cms,
-                         ThreadPool* pool, AuxOut* aux_out, bool subtract);
+Status RoundtripPatchFrame(Image3F* reference_frame,
+                           PassesEncoderState* JXL_RESTRICT state, int idx,
+                           CompressParams& cparams, const JxlCmsInterface& cms,
+                           ThreadPool* pool, AuxOut* aux_out, bool subtract);
 
 }  // namespace jxl
 

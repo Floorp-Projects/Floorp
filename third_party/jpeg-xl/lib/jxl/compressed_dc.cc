@@ -10,9 +10,6 @@
 #include <string.h>
 
 #include <algorithm>
-#include <array>
-#include <memory>
-#include <utility>
 #include <vector>
 
 #undef HWY_TARGET_INCLUDE
@@ -21,17 +18,9 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/ans_params.h"
-#include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/dec_ans.h"
-#include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/dec_cache.h"
-#include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/image.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -131,18 +120,18 @@ JXL_INLINE void ComputePixel(
   Store(out, d, out_rows[2] + x);
 }
 
-void AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
-                         ThreadPool* pool) {
+Status AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
+                           ThreadPool* pool) {
   const size_t xsize = dc->xsize();
   const size_t ysize = dc->ysize();
-  if (ysize <= 2 || xsize <= 2) return;
+  if (ysize <= 2 || xsize <= 2) return true;
 
   // TODO(veluca): use tile-based processing?
   // TODO(veluca): decide if changes to the y channel should be propagated to
   // the x and b channels through color correlation.
   JXL_ASSERT(w1 + w2 < 0.25f);
 
-  Image3F smoothed(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(Image3F smoothed, Image3F::Create(xsize, ysize));
   // Fill in borders that the loop below will not. First and last are unused.
   for (size_t c = 0; c < 3; c++) {
     for (size_t y : {size_t(0), ysize - 1}) {
@@ -197,12 +186,13 @@ void AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
   JXL_CHECK(RunOnPool(pool, 1, ysize - 1, ThreadPool::NoInit, process_row,
                       "DCSmoothingRow"));
   dc->Swap(smoothed);
+  return true;
 }
 
 // DC dequantization.
 void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,
                const float* dc_factors, float mul, const float* cfl_factors,
-               YCbCrChromaSubsampling chroma_subsampling,
+               const YCbCrChromaSubsampling& chroma_subsampling,
                const BlockCtxMap& bctx) {
   const HWY_FULL(float) df;
   const Rebind<pixel_type, HWY_FULL(float)> di;  // assumes pixel_type <= float
@@ -265,7 +255,9 @@ void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,
       const int32_t* quant_row_b =
           in.channel[2].plane.Row(y >> chroma_subsampling.VShift(2));
       for (size_t x = 0; x < r.xsize(); x++) {
-        int bucket_x = 0, bucket_y = 0, bucket_b = 0;
+        int bucket_x = 0;
+        int bucket_y = 0;
+        int bucket_b = 0;
         for (int t : bctx.dc_thresholds[0]) {
           if (quant_row_x[x >> chroma_subsampling.HShift(0)] > t) bucket_x++;
         }
@@ -296,14 +288,14 @@ namespace jxl {
 
 HWY_EXPORT(DequantDC);
 HWY_EXPORT(AdaptiveDCSmoothing);
-void AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
-                         ThreadPool* pool) {
+Status AdaptiveDCSmoothing(const float* dc_factors, Image3F* dc,
+                           ThreadPool* pool) {
   return HWY_DYNAMIC_DISPATCH(AdaptiveDCSmoothing)(dc_factors, dc, pool);
 }
 
 void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,
                const float* dc_factors, float mul, const float* cfl_factors,
-               YCbCrChromaSubsampling chroma_subsampling,
+               const YCbCrChromaSubsampling& chroma_subsampling,
                const BlockCtxMap& bctx) {
   return HWY_DYNAMIC_DISPATCH(DequantDC)(r, dc, quant_dc, in, dc_factors, mul,
                                          cfl_factors, chroma_subsampling, bctx);

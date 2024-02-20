@@ -27,13 +27,10 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/common.h"  // kMaxNumPasses
-#include "lib/jxl/convolve.h"
-#include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_transforms-inl.h"
 #include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/entropy_coder.h"
-#include "lib/jxl/epf.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/quantizer-inl.h"
 #include "lib/jxl/quantizer.h"
@@ -70,6 +67,11 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::AllFalse;
+using hwy::HWY_NAMESPACE::Gt;
+using hwy::HWY_NAMESPACE::Le;
+using hwy::HWY_NAMESPACE::MaskFromVec;
+using hwy::HWY_NAMESPACE::Or;
 using hwy::HWY_NAMESPACE::Rebind;
 using hwy::HWY_NAMESPACE::ShiftRight;
 
@@ -77,9 +79,11 @@ using D = HWY_FULL(float);
 using DU = HWY_FULL(uint32_t);
 using DI = HWY_FULL(int32_t);
 using DI16 = Rebind<int16_t, DI>;
+using DI16_FULL = HWY_CAPPED(int16_t, kDCTBlockSize);
 constexpr D d;
 constexpr DI di;
 constexpr DI16 di16;
+constexpr DI16_FULL di16_full;
 
 // TODO(veluca): consider SIMDfying.
 void Transpose8x8InPlace(int32_t* JXL_RESTRICT block) {
@@ -180,6 +184,9 @@ Status DecodeGroupImpl(const FrameHeader& frame_header,
   const float inv_global_scale = dec_state->shared->quantizer.InvGlobalScale();
 
   const YCbCrChromaSubsampling& cs = frame_header.chroma_subsampling;
+
+  const auto kJpegDctMin = Set(di16_full, -4095);
+  const auto kJpegDctMax = Set(di16_full, 4095);
 
   size_t idct_stride[3];
   for (size_t c = 0; c < 3; c++) {
@@ -355,7 +362,7 @@ Status DecodeGroupImpl(const FrameHeader& frame_header,
             int16_t* JXL_RESTRICT jpeg_pos =
                 jpeg_row[c] + sbx[c] * kDCTBlockSize;
             // JPEG XL is transposed, JPEG is not.
-            auto transposed_dct = qblock[c].ptr32;
+            auto* transposed_dct = qblock[c].ptr32;
             Transpose8x8InPlace(transposed_dct);
             // No CfL - no need to store the y block converted to integers.
             if (!cs.Is444() ||
@@ -391,6 +398,16 @@ Status DecodeGroupImpl(const FrameHeader& frame_header,
             }
             jpeg_pos[0] =
                 Clamp1<float>(dc_rows[c][sbx[c]] - dcoff[c], -2047, 2047);
+            auto overflow = MaskFromVec(Set(di16_full, 0));
+            auto underflow = MaskFromVec(Set(di16_full, 0));
+            for (int i = 0; i < 64; i += Lanes(di16_full)) {
+              auto in = LoadU(di16_full, jpeg_pos + i);
+              overflow = Or(overflow, Gt(in, kJpegDctMax));
+              underflow = Or(underflow, Lt(in, kJpegDctMin));
+            }
+            if (!AllFalse(di16_full, Or(overflow, underflow))) {
+              return JXL_FAILURE("JPEG DCT coefficients out of range");
+            }
           }
         } else {
           HWY_ALIGN float* const block = group_dec_cache->dec_group_block;
@@ -683,7 +700,7 @@ Status DecodeGroup(const FrameHeader& frame_header,
   }
 
   if (draw == kDraw && num_passes == 0 && first_pass == 0) {
-    group_dec_cache->InitDCBufferOnce();
+    JXL_RETURN_IF_ERROR(group_dec_cache->InitDCBufferOnce());
     const YCbCrChromaSubsampling& cs = frame_header.chroma_subsampling;
     for (size_t c : {0, 1, 2}) {
       size_t hs = cs.HShift(c);
@@ -736,9 +753,9 @@ Status DecodeGroup(const FrameHeader& frame_header,
               kRenderPipelineXOffset;
         }
         // Arguments set to 0/nullptr are not used.
-        dec_state->upsampler8x->ProcessRow(input_rows, output_rows,
-                                           /*xextra=*/0, src_rect.xsize(), 0, 0,
-                                           thread);
+        JXL_RETURN_IF_ERROR(dec_state->upsampler8x->ProcessRow(
+            input_rows, output_rows,
+            /*xextra=*/0, src_rect.xsize(), 0, 0, thread));
       }
     }
     return true;
@@ -780,9 +797,9 @@ Status DecodeGroupForRoundtrip(const FrameHeader& frame_header,
                                ImageBundle* JXL_RESTRICT decoded,
                                AuxOut* aux_out) {
   GetBlockFromEncoder get_block(ac, group_idx, frame_header.passes.shift);
-  group_dec_cache->InitOnce(
+  JXL_RETURN_IF_ERROR(group_dec_cache->InitOnce(
       /*num_passes=*/0,
-      /*used_acs=*/(1u << AcStrategy::kNumValidStrategies) - 1);
+      /*used_acs=*/(1u << AcStrategy::kNumValidStrategies) - 1));
 
   return HWY_DYNAMIC_DISPATCH(DecodeGroupImpl)(
       frame_header, &get_block, group_dec_cache, dec_state, thread, group_idx,

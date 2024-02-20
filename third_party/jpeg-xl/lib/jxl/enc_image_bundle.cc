@@ -8,13 +8,10 @@
 #include <jxl/cms_interface.h>
 
 #include <atomic>
-#include <limits>
 #include <utility>
 
-#include "lib/jxl/alpha.h"
-#include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
@@ -30,11 +27,11 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
   JXL_CHECK(c_current.IsGray() == c_desired.IsGray());
   bool is_gray = c_current.IsGray();
   if (out->xsize() < rect.xsize() || out->ysize() < rect.ysize()) {
-    *out = Image3F(rect.xsize(), rect.ysize());
+    JXL_ASSIGN_OR_RETURN(*out, Image3F::Create(rect.xsize(), rect.ysize()));
   } else {
     out->ShrinkTo(rect.xsize(), rect.ysize());
   }
-  std::atomic<bool> ok{true};
+  std::atomic<bool> has_error{false};
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, rect.ysize(),
       [&](const size_t num_threads) {
@@ -42,6 +39,7 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
                                 rect.xsize(), num_threads);
       },
       [&](const uint32_t y, const size_t thread) {
+        if (has_error) return;
         float* mutable_src_buf = c_transform.BufSrc(thread);
         const float* src_buf = mutable_src_buf;
         // Interleave input.
@@ -49,7 +47,7 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
           src_buf = rect.ConstPlaneRow(color, 0, y);
         } else if (c_current.IsCMYK()) {
           if (!black) {
-            ok.store(false);
+            has_error = true;
             return;
           }
           const float* JXL_RESTRICT row_in0 = rect.ConstPlaneRow(color, 0, y);
@@ -75,7 +73,7 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
         }
         float* JXL_RESTRICT dst_buf = c_transform.BufDst(thread);
         if (!c_transform.Run(thread, src_buf, dst_buf)) {
-          ok.store(false);
+          has_error = true;
           return;
         }
         float* JXL_RESTRICT row_out0 = out->PlaneRow(0, y);
@@ -97,7 +95,8 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
         }
       },
       "Colorspace transform"));
-  return ok.load();
+  if (has_error) return JXL_FAILURE("Colorspace transform failed");
+  return true;
 }
 
 namespace {
@@ -133,7 +132,8 @@ Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
   }
   // TODO(janwas): avoid copying via createExternal+copyBackToIO
   // instead of copy+createExternal+copyBackToIO
-  Image3F color(in.color().xsize(), in.color().ysize());
+  JXL_ASSIGN_OR_RETURN(Image3F color,
+                       Image3F::Create(in.color().xsize(), in.color().ysize()));
   CopyImageTo(in.color(), &color);
   store->SetFromImage(std::move(color), in.c_current());
 
@@ -141,7 +141,8 @@ Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
   if (in.HasExtraChannels()) {
     std::vector<ImageF> extra_channels;
     for (const ImageF& extra_channel : in.extra_channels()) {
-      ImageF ec(extra_channel.xsize(), extra_channel.ysize());
+      JXL_ASSIGN_OR_RETURN(ImageF ec, ImageF::Create(extra_channel.xsize(),
+                                                     extra_channel.ysize()));
       CopyImageTo(extra_channel, &ec);
       extra_channels.emplace_back(std::move(ec));
     }

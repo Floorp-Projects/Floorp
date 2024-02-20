@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "lib/jxl/fields.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/options.h"
 

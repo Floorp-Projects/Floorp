@@ -5,6 +5,7 @@
 
 #include "lib/jxl/dec_cache.h"
 
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/blending.h"
 #include "lib/jxl/common.h"  // JXL_HIGH_PRECISION
 #include "lib/jxl/render_pipeline/stage_blending.h"
@@ -257,7 +258,8 @@ Status PassesDecoderState::PreparePipeline(const FrameHeader& frame_header,
           decoded, output_encoding_info.color_encoding));
     }
   }
-  render_pipeline = std::move(builder).Finalize(shared->frame_dim);
+  JXL_ASSIGN_OR_RETURN(render_pipeline,
+                       std::move(builder).Finalize(shared->frame_dim));
   return render_pipeline->IsInitialized();
 }
 

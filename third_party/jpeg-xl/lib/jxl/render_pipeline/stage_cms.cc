@@ -7,10 +7,8 @@
 
 #include <memory>
 
-#include "jxl/cms_interface.h"
-#include "jxl/color_encoding.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_xyb.h"
 
 #undef HWY_TARGET_INCLUDE
@@ -19,7 +17,6 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/dec_xyb-inl.h"
-#include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -44,9 +41,9 @@ class CmsStage : public RenderPipelineStage {
            not_mixing_color_and_grey;
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     JXL_ASSERT(xsize == xsize_);
     // TODO(firsching): handle grey case seperately
     //  interleave
@@ -62,16 +59,15 @@ class CmsStage : public RenderPipelineStage {
     }
     const float* buf_src = mutable_buf_src;
     float* JXL_RESTRICT buf_dst = color_space_transform->BufDst(thread_id);
-    if (!color_space_transform->Run(thread_id, buf_src, buf_dst)) {
-      // TODO(firsching): somehow mark failing here?
-      return;
-    }
+    JXL_RETURN_IF_ERROR(
+        color_space_transform->Run(thread_id, buf_src, buf_dst));
     // de-interleave
     for (size_t x = 0; x < xsize; x++) {
       row0[x] = buf_dst[3 * x + 0];
       row1[x] = buf_dst[3 * x + 1];
       row2[x] = buf_dst[3 * x + 2];
     }
+    return true;
   }
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
     return c < 3 ? RenderPipelineChannelMode::kInPlace
@@ -86,7 +82,7 @@ class CmsStage : public RenderPipelineStage {
   std::unique_ptr<jxl::ColorSpaceTransform> color_space_transform;
   ColorEncoding c_src_;
 
-  void SetInputSizes(
+  Status SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
 #if JXL_ENABLE_ASSERT
     JXL_ASSERT(input_sizes.size() >= 3);
@@ -96,6 +92,7 @@ class CmsStage : public RenderPipelineStage {
     }
 #endif
     xsize_ = input_sizes[0].first;
+    return true;
   }
 
   Status PrepareForThreads(size_t num_threads) override {

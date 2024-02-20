@@ -8,7 +8,7 @@
 #include <brotli/encode.h>
 
 #include "lib/jxl/codec_in_out.h"
-#include "lib/jxl/enc_fields.h"
+#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/jpeg/enc_jpeg_data_reader.h"
 #include "lib/jxl/luminance.h"
@@ -76,7 +76,8 @@ bool GetMarkerPayload(const uint8_t* data, size_t size, ByteSpan* payload) {
 
 Status DetectBlobs(jpeg::JPEGData& jpeg_data) {
   JXL_DASSERT(jpeg_data.app_data.size() == jpeg_data.app_marker_type.size());
-  bool have_exif = false, have_xmp = false;
+  bool have_exif = false;
+  bool have_xmp = false;
   for (size_t i = 0; i < jpeg_data.app_data.size(); i++) {
     auto& marker = jpeg_data.app_data[i];
     if (marker.empty() || marker[0] != kApp1) {
@@ -173,7 +174,7 @@ Status ParseChunkedMarker(const jpeg::JPEGData& src, uint8_t marker_type,
 
 Status SetBlobsFromJpegData(const jpeg::JPEGData& jpeg_data, Blobs* blobs) {
   for (size_t i = 0; i < jpeg_data.app_data.size(); i++) {
-    auto& marker = jpeg_data.app_data[i];
+    const auto& marker = jpeg_data.app_data[i];
     if (marker.empty() || marker[0] != kApp1) {
       continue;
     }
@@ -210,7 +211,7 @@ Status SetBlobsFromJpegData(const jpeg::JPEGData& jpeg_data, Blobs* blobs) {
   return true;
 }
 
-static inline bool IsJPG(const Span<const uint8_t> bytes) {
+inline bool IsJPG(const Span<const uint8_t> bytes) {
   return bytes.size() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xD8;
 }
 
@@ -239,14 +240,16 @@ Status SetChromaSubsamplingFromJpegData(const JPEGData& jpg,
     return JXL_FAILURE("Cannot recompress JPEGs with neither 1 nor 3 channels");
   }
   if (nbcomp == 3) {
-    uint8_t hsample[3], vsample[3];
+    uint8_t hsample[3];
+    uint8_t vsample[3];
     for (size_t i = 0; i < nbcomp; i++) {
       hsample[i] = jpg.components[i].h_samp_factor;
       vsample[i] = jpg.components[i].v_samp_factor;
     }
     JXL_RETURN_IF_ERROR(cs->Set(hsample, vsample));
   } else if (nbcomp == 1) {
-    uint8_t hsample[3], vsample[3];
+    uint8_t hsample[3];
+    uint8_t vsample[3];
     for (size_t i = 0; i < 3; i++) {
       hsample[i] = jpg.components[0].h_samp_factor;
       vsample[i] = jpg.components[0].v_samp_factor;
@@ -394,8 +397,9 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
 
   io->metadata.m.SetIntensityTarget(kDefaultIntensityTarget);
   io->metadata.m.SetUintSamples(BITS_IN_JSAMPLE);
-  io->SetFromImage(Image3F(jpeg_data->width, jpeg_data->height),
-                   io->metadata.m.color_encoding);
+  JXL_ASSIGN_OR_RETURN(Image3F tmp,
+                       Image3F::Create(jpeg_data->width, jpeg_data->height));
+  io->SetFromImage(std::move(tmp), io->metadata.m.color_encoding);
   SetIntensityTarget(&io->metadata.m);
   return true;
 }
