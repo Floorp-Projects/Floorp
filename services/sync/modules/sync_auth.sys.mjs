@@ -387,28 +387,22 @@ SyncAuthManager.prototype = {
     // Do the token dance, with a retry in case of transient auth failure.
     // We need to prove that we know the sync key in order to get a token
     // from the tokenserver.
-    let getToken = async (key, accessToken) => {
+    let getToken = async key => {
       this._log.info("Getting a sync token from", this._tokenServerUrl);
-      let token = await this._fetchTokenUsingOAuth(key, accessToken);
+      let token = await this._fetchTokenUsingOAuth(key);
       this._log.trace("Successfully got a token");
       return token;
     };
 
-    const ttl = fxAccountsCommon.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS;
     try {
       let token, key;
       try {
         this._log.info("Getting sync key");
-        const tokenAndKey = await fxa.getOAuthTokenAndKey({
-          scope: SCOPE_OLD_SYNC,
-          ttl,
-        });
-
-        key = tokenAndKey.key;
+        key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
         if (!key) {
           throw new Error("browser does not have the sync key, cannot sync");
         }
-        token = await getToken(key, tokenAndKey.token);
+        token = await getToken(key);
       } catch (err) {
         // If we get a 401 fetching the token it may be that our auth tokens needed
         // to be regenerated; retry exactly once.
@@ -418,11 +412,8 @@ SyncAuthManager.prototype = {
         this._log.warn(
           "Token server returned 401, retrying token fetch with fresh credentials"
         );
-        const tokenAndKey = await fxa.getOAuthTokenAndKey({
-          scope: SCOPE_OLD_SYNC,
-          ttl,
-        });
-        token = await getToken(tokenAndKey.key, tokenAndKey.token);
+        key = await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+        token = await getToken(key);
       }
       // TODO: Make it be only 80% of the duration, so refresh the token
       // before it actually expires. This is to avoid sync storage errors
@@ -469,13 +460,17 @@ SyncAuthManager.prototype = {
   },
 
   /**
-   * Exchanges an OAuth access_token for a TokenServer token.
+   * Generates an OAuth access_token using the OLD_SYNC scope and exchanges it
+   * for a TokenServer token.
+   *
    * @returns {Promise}
    * @private
    */
-  async _fetchTokenUsingOAuth(key, accessToken) {
+  async _fetchTokenUsingOAuth(key) {
     this._log.debug("Getting a token using OAuth");
     const fxa = this._fxaService;
+    const ttl = fxAccountsCommon.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS;
+    const accessToken = await fxa.getOAuthToken({ scope: SCOPE_OLD_SYNC, ttl });
     const headers = {
       "X-KeyId": key.kid,
     };

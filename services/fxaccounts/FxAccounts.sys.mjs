@@ -65,8 +65,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
-export const ERROR_INVALID_ACCOUNT_STATE = "ERROR_INVALID_ACCOUNT_STATE";
-
 // An AccountState object holds all state related to one specific account.
 // It is considered "private" to the FxAccounts modules.
 // Only one AccountState is ever "current" in the FxAccountsInternal object -
@@ -172,7 +170,7 @@ AccountState.prototype = {
       delete updatedFields.uid;
     }
     if (!this.isCurrent) {
-      return Promise.reject(new Error(ERROR_INVALID_ACCOUNT_STATE));
+      return Promise.reject(new Error("Another user has signed in"));
     }
     return this.storageManager.updateAccountData(updatedFields);
   },
@@ -181,11 +179,11 @@ AccountState.prototype = {
     if (!this.isCurrent) {
       log.info(
         "An accountState promise was resolved, but was actually rejected" +
-          " due to the account state changing. This can happen if a new account signed in, or" +
-          " the account was signed out. Originally resolved with, ",
+          " due to a different user being signed in. Originally resolved" +
+          " with",
         result
       );
-      return Promise.reject(new Error(ERROR_INVALID_ACCOUNT_STATE));
+      return Promise.reject(new Error("A different user signed in"));
     }
     return Promise.resolve(result);
   },
@@ -197,13 +195,12 @@ AccountState.prototype = {
     // problems.
     if (!this.isCurrent) {
       log.info(
-        "An accountState promise was rejected, but we are ignoring that" +
-          " reason and rejecting it due to the account state changing. This can happen if" +
-          " a different account signed in or the account was signed out" +
-          " originally resolved with, ",
+        "An accountState promise was rejected, but we are ignoring that " +
+          "reason and rejecting it due to a different user being signed in. " +
+          "Originally rejected with",
         error
       );
-      return Promise.reject(new Error(ERROR_INVALID_ACCOUNT_STATE));
+      return Promise.reject(new Error("A different user signed in"));
     }
     return Promise.reject(error);
   },
@@ -218,7 +215,7 @@ AccountState.prototype = {
   // A preamble for the cache helpers...
   _cachePreamble() {
     if (!this.isCurrent) {
-      throw new Error(ERROR_INVALID_ACCOUNT_STATE);
+      throw new Error("Another user has signed in");
     }
   },
 
@@ -467,37 +464,6 @@ export class FxAccounts {
     } catch (err) {
       throw this._internal._errorToErrorClass(err);
     }
-  }
-
-  /** Gets both the OAuth token and the users scoped keys for that token
-   * and verifies that both operations were done for the same user,
-   * preventing race conditions where a caller
-   * can get the key for one user, and the id of another if the user
-   * is rapidly switching between accounts
-   *
-   * @param options
-   *        {
-   *          scope: string the oauth scope being requested. This must
-   *          be a scope with an associated key, otherwise an error
-   *          will be thrown that the key is not available.
-   *          ttl: (number) OAuth token TTL in seconds
-   *        }
-   *
-   * @return Promise.<Object | Error>
-   * The promise resolve to both the access token being requested, and the scoped key
-   *        {
-   *         token: (string) access token
-   *         key: (object) the scoped key object
-   *        }
-   * The promise can reject, with one of the errors `getOAuthToken`, `FxAccountKeys.getKeyForScope`, or
-   * error if the user changed in-between operations
-   */
-  getOAuthTokenAndKey(options = {}) {
-    return this._withCurrentAccountState(async () => {
-      const key = await this.keys.getKeyForScope(options.scope);
-      const token = await this.getOAuthToken(options);
-      return { token, key };
-    });
   }
 
   /**
