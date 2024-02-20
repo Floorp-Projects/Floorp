@@ -661,6 +661,9 @@ class Element : public FragmentOrElement {
   // AriaAttributes
   REFLECT_NULLABLE_DOMSTRING_ATTR(AriaAtomic, aria_atomic)
   REFLECT_NULLABLE_DOMSTRING_ATTR(AriaAutoComplete, aria_autocomplete)
+  REFLECT_NULLABLE_DOMSTRING_ATTR(AriaBrailleLabel, aria_braillelabel)
+  REFLECT_NULLABLE_DOMSTRING_ATTR(AriaBrailleRoleDescription,
+                                  aria_brailleroledescription)
   REFLECT_NULLABLE_DOMSTRING_ATTR(AriaBusy, aria_busy)
   REFLECT_NULLABLE_DOMSTRING_ATTR(AriaChecked, aria_checked)
   REFLECT_NULLABLE_DOMSTRING_ATTR(AriaColCount, aria_colcount)

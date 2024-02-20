@@ -122,6 +122,8 @@ class ElementInternals final : public nsIFormControl,
   ARIA_REFLECT_ATTR(AriaAtomic, aria_atomic)
   ARIA_REFLECT_ATTR(AriaAutoComplete, aria_autocomplete)
   ARIA_REFLECT_ATTR(AriaBusy, aria_busy)
+  ARIA_REFLECT_ATTR(AriaBrailleLabel, aria_braillelabel)
+  ARIA_REFLECT_ATTR(AriaBrailleRoleDescription, aria_brailleroledescription)
   ARIA_REFLECT_ATTR(AriaChecked, aria_checked)
   ARIA_REFLECT_ATTR(AriaColCount, aria_colcount)
   ARIA_REFLECT_ATTR(AriaColIndex, aria_colindex)
