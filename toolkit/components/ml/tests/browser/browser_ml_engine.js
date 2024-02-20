@@ -162,7 +162,7 @@ add_task(async function test_ml_engine_model_error() {
   }
   is(
     error?.message,
-    'Received the message "throw", so intentionally throwing an error.',
+    'Error: Received the message "throw", so intentionally throwing an error.',
     "The error is correctly surfaced."
   );
 
