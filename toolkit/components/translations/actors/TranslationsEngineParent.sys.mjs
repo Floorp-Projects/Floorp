@@ -5,7 +5,6 @@
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
-  EngineProcess: "chrome://global/content/ml/EngineProcess.sys.mjs",
 });
 
 /**
@@ -23,12 +22,12 @@ export class TranslationsEngineParent extends JSWindowActorParent {
   async receiveMessage({ name, data }) {
     switch (name) {
       case "TranslationsEngine:Ready":
-        if (!lazy.EngineProcess.resolveTranslationsEngineParent) {
+        if (!lazy.TranslationsParent.resolveEngine) {
           throw new Error(
             "Unable to find the resolve function for when the translations engine is ready."
           );
         }
-        lazy.EngineProcess.resolveTranslationsEngineParent(this);
+        lazy.TranslationsParent.resolveEngine(this);
         return undefined;
       case "TranslationsEngine:RequestEnginePayload": {
         const { fromLanguage, toLanguage } = data;
@@ -63,7 +62,12 @@ export class TranslationsEngineParent extends JSWindowActorParent {
         return undefined;
       }
       case "TranslationsEngine:DestroyEngineProcess":
-        lazy.EngineProcess.destroyTranslationsEngine().catch(error =>
+        ChromeUtils.addProfilerMarker(
+          "TranslationsEngine",
+          {},
+          "Loading bergamot wasm array buffer"
+        );
+        lazy.TranslationsParent.destroyEngineProcess().catch(error =>
           console.error(error)
         );
         return undefined;

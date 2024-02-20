@@ -58,7 +58,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   TranslationsTelemetry:
     "chrome://global/content/translations/TranslationsTelemetry.sys.mjs",
-  EngineProcess: "chrome://global/content/ml/EngineProcess.sys.mjs",
+  HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -349,6 +349,106 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * @type {Promise<{ hiddenFrame: HiddenFrame, actor: TranslationsEngineParent }> | null}
+   */
+  static #engine = null;
+
+  static async getEngineProcess() {
+    if (!TranslationsParent.#engine) {
+      TranslationsParent.#engine = TranslationsParent.#getEngineProcessImpl();
+    }
+    const enginePromise = TranslationsParent.#engine;
+
+    // Determine if the actor was destroyed, or if there was an error. In this case
+    // attempt to rebuild the process.
+    let needsRebuilding = true;
+    try {
+      const { actor } = await enginePromise;
+      needsRebuilding = actor.isDestroyed;
+    } catch {}
+
+    if (
+      TranslationsParent.#engine &&
+      enginePromise !== TranslationsParent.#engine
+    ) {
+      // This call lost the race, something else updated the engine promise, return that.
+      return TranslationsParent.#engine;
+    }
+
+    if (needsRebuilding) {
+      // The engine was destroyed, attempt to re-create the engine process.
+      const rebuild = TranslationsParent.destroyEngineProcess().then(() =>
+        TranslationsParent.#getEngineProcessImpl()
+      );
+      TranslationsParent.#engine = rebuild;
+      return rebuild;
+    }
+
+    return enginePromise;
+  }
+
+  static destroyEngineProcess() {
+    const enginePromise = this.#engine;
+    this.#engine = null;
+    if (enginePromise) {
+      ChromeUtils.addProfilerMarker(
+        "TranslationsParent",
+        {},
+        "Destroying the translations engine process"
+      );
+      return enginePromise.then(({ actor, hiddenFrame }) =>
+        actor
+          .forceShutdown()
+          .catch(error => {
+            lazy.console.error(
+              "There was an error shutting down the engine.",
+              error
+            );
+          })
+          .then(() => {
+            hiddenFrame.destroy();
+          })
+      );
+    }
+    return Promise.resolve();
+  }
+
+  /**
+   * @type {Promise<{ hiddenFrame: HiddenFrame, actor: TranslationsEngineParent }> | null}
+   */
+  static async #getEngineProcessImpl() {
+    ChromeUtils.addProfilerMarker(
+      "TranslationsParent",
+      {},
+      "Creating the translations engine process"
+    );
+
+    // Manages the hidden ChromeWindow.
+    const hiddenFrame = new lazy.HiddenFrame();
+    const chromeWindow = await hiddenFrame.get();
+    const doc = chromeWindow.document;
+
+    const actorPromise = new Promise(resolve => {
+      this.resolveEngine = resolve;
+    });
+
+    const browser = doc.createXULElement("browser");
+    browser.setAttribute("remote", "true");
+    browser.setAttribute("remoteType", "web");
+    browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("type", "content");
+    browser.setAttribute(
+      "src",
+      "chrome://global/content/translations/translations-engine.html"
+    );
+    doc.documentElement.appendChild(browser);
+
+    const actor = await actorPromise;
+    this.resolveEngine = null;
+    return { hiddenFrame, browser, actor };
+  }
+
+  /**
    * Offer translations (for instance by automatically opening the popup panel) whenever
    * languages are detected, but only do it once per host per session.
    * @param {LangTags} detectedLanguages
@@ -457,6 +557,10 @@ export class TranslationsParent extends JSWindowActorParent {
         "maybeOfferTranslations - Offering a translation",
         documentURI.spec,
         detectedLanguages
+      );
+
+      TranslationsParent.getEngineProcess().catch(error =>
+        console.error(error)
       );
 
       browser.dispatchEvent(
@@ -710,9 +814,9 @@ export class TranslationsParent extends JSWindowActorParent {
           return undefined;
         }
 
-        let actor;
+        let engineProcess;
         try {
-          actor = await lazy.EngineProcess.getTranslationsEngineParent();
+          engineProcess = await TranslationsParent.getEngineProcess();
         } catch (error) {
           console.error("Failed to get the translation engine process", error);
           return undefined;
@@ -732,7 +836,7 @@ export class TranslationsParent extends JSWindowActorParent {
         // The MessageChannel will be used for communicating directly between the content
         // process and the engine's process.
         const { port1, port2 } = new MessageChannel();
-        actor.startTranslation(
+        engineProcess.actor.startTranslation(
           requestedTranslationPair.fromLanguage,
           requestedTranslationPair.toLanguage,
           port1,
@@ -1897,9 +2001,9 @@ export class TranslationsParent extends JSWindowActorParent {
     } else {
       const { docLangTag } = this.languageState.detectedLanguages;
 
-      let actor;
+      let engineProcess;
       try {
-        actor = await lazy.EngineProcess.getTranslationsEngineParent();
+        engineProcess = await TranslationsParent.getEngineProcess();
       } catch (error) {
         console.error("Failed to get the translation engine process", error);
         return;
@@ -1914,7 +2018,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // The MessageChannel will be used for communicating directly between the content
       // process and the engine's process.
       const { port1, port2 } = new MessageChannel();
-      actor.startTranslation(
+      engineProcess.actor.startTranslation(
         fromLanguage,
         toLanguage,
         port1,
@@ -2480,15 +2584,15 @@ export class TranslationsParent extends JSWindowActorParent {
    * are misbehaving.
    */
   #ensureTranslationsDiscarded() {
-    if (!lazy.EngineProcess.translationsEngineParent) {
+    if (!TranslationsParent.#engine) {
       return;
     }
-    lazy.EngineProcess.translationsEngineParent
+    TranslationsParent.#engine
       // If the engine fails to load, ignore it since we are ending translations.
       .catch(() => null)
-      .then(actor => {
-        if (actor && this.languageState.requestedTranslationPair) {
-          actor.discardTranslations(this.innerWindowId);
+      .then(engineProcess => {
+        if (engineProcess && this.languageState.requestedTranslationPair) {
+          engineProcess.actor.discardTranslations(this.innerWindowId);
         }
       })
       // This error will be one from the endTranslation code, which we need to
