@@ -89,14 +89,6 @@ config("runtime_library") {
 
   libs = []
 
-  # On 64-bit platforms, the only symbols provided by libandroid_support.a are
-  # strto{d,f,l,ul}_l. These symbols are not used by our libc++, and newer NDKs
-  # don't provide a libandroid_support.a on 64-bit platforms, so we only depend
-  # on this library on 32-bit platforms.
-  if (target_cpu == "arm" || target_cpu == "x86") {
-    libs += [ "android_support" ]
-  }
-
   # arm builds of libc++ starting in NDK r12 depend on unwind.
   if (target_cpu == "arm") {
     libs += [ "unwind" ]
