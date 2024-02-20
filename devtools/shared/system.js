@@ -10,9 +10,13 @@ loader.lazyRequireGetter(
   true
 );
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+  },
+  { global: "contextual" }
+);
 loader.lazyGetter(this, "hostname", () => {
   try {
     // On some platforms (Linux according to try), this service does not exist and fails.

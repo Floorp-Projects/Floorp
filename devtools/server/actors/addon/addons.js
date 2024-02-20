@@ -14,7 +14,8 @@ const { AddonManager } = ChromeUtils.importESModule(
   { global: "shared" }
 );
 const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
+  "resource://gre/modules/FileUtils.sys.mjs",
+  { global: "contextual" }
 );
 
 // This actor is used by DevTools as well as external tools such as webext-run

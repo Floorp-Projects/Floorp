@@ -7,10 +7,14 @@
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  getAddonIdForWindowGlobal:
-    "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    getAddonIdForWindowGlobal:
+      "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 // ms of delay to throttle updates
 const BATCH_DELAY = 200;

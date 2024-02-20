@@ -11,7 +11,8 @@ const { WatcherRegistry } = ChromeUtils.importESModule(
   { global: "shared" }
 );
 const { WindowGlobalLogger } = ChromeUtils.importESModule(
-  "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.sys.mjs"
+  "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.sys.mjs",
+  { global: "contextual" }
 );
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 

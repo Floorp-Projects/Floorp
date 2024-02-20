@@ -62,18 +62,23 @@
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  DevToolsInfaillibleUtils:
-    "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs",
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    DevToolsInfaillibleUtils:
+      "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs",
 
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-});
+    NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 // It would make sense to put this in the above
 // ChromeUtils.defineESModuleGetters, but that doesn't seem to work.
 ChromeUtils.defineLazyGetter(lazy, "certDecoder", () => {
   const { parse, pemToDER } = ChromeUtils.importESModule(
-    "chrome://global/content/certviewer/certDecoder.mjs"
+    "chrome://global/content/certviewer/certDecoder.mjs",
+    { global: "contextual" }
   );
   return { parse, pemToDER };
 });

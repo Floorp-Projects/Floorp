@@ -36,7 +36,8 @@ const { TargetActorRegistry } = ChromeUtils.importESModule(
   { global: "shared" }
 );
 const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  { global: "contextual" }
 );
 
 const EXTENSION_CONTENT_SYS_MJS =

@@ -23,10 +23,14 @@ import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+    FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,

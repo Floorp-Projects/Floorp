@@ -6,7 +6,8 @@
 
 const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const { isWindowGlobalPartOfContext } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  { global: "contextual" }
 );
 
 // ms of delay to throttle updates

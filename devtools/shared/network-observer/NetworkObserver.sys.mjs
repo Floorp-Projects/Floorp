@@ -19,23 +19,28 @@ const lazy = {};
 
 import { DevToolsInfaillibleUtils } from "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs";
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  ChannelMap: "resource://devtools/shared/network-observer/ChannelMap.sys.mjs",
-  NetworkAuthListener:
-    "resource://devtools/shared/network-observer/NetworkAuthListener.sys.mjs",
-  NetworkHelper:
-    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
-  NetworkOverride:
-    "resource://devtools/shared/network-observer/NetworkOverride.sys.mjs",
-  NetworkResponseListener:
-    "resource://devtools/shared/network-observer/NetworkResponseListener.sys.mjs",
-  NetworkThrottleManager:
-    "resource://devtools/shared/network-observer/NetworkThrottleManager.sys.mjs",
-  NetworkUtils:
-    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
-  wildcardToRegExp:
-    "resource://devtools/shared/network-observer/WildcardToRegexp.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    ChannelMap:
+      "resource://devtools/shared/network-observer/ChannelMap.sys.mjs",
+    NetworkAuthListener:
+      "resource://devtools/shared/network-observer/NetworkAuthListener.sys.mjs",
+    NetworkHelper:
+      "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+    NetworkOverride:
+      "resource://devtools/shared/network-observer/NetworkOverride.sys.mjs",
+    NetworkResponseListener:
+      "resource://devtools/shared/network-observer/NetworkResponseListener.sys.mjs",
+    NetworkThrottleManager:
+      "resource://devtools/shared/network-observer/NetworkThrottleManager.sys.mjs",
+    NetworkUtils:
+      "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
+    wildcardToRegExp:
+      "resource://devtools/shared/network-observer/WildcardToRegexp.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 const gActivityDistributor = Cc[
   "@mozilla.org/network/http-activity-distributor;1"

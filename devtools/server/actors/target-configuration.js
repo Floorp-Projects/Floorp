@@ -13,7 +13,8 @@ const {
   SessionDataHelpers,
 } = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const { isBrowsingContextPartOfContext } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  { global: "contextual" }
 );
 const { SUPPORTED_DATA } = SessionDataHelpers;
 const { TARGET_CONFIGURATION } = SUPPORTED_DATA;
