@@ -191,7 +191,7 @@ module.exports = {
       },
     },
     {
-      ...browserTestConfig,
+      ...removeOverrides(browserTestConfig),
       files: testPaths.browser.map(path => `${path}**`),
       excludedFiles: ["**/*.jsm", "**/*.mjs"],
     },
@@ -220,6 +220,33 @@ module.exports = {
         ...testPaths.mochitest.map(path => `${path}/**/*.js`),
         ...testPaths.chrome.map(path => `${path}/**/*.js`),
       ],
+    },
+    {
+      // Some directories have multiple kinds of tests, and some rules
+      // don't work well for HTML-based mochitests, so disable those.
+      files: testPaths.xpcshell
+        .concat(testPaths.browser)
+        .map(path => [`${path}/**/*.html`, `${path}/**/*.xhtml`])
+        .flat(),
+      rules: {
+        // plain/chrome mochitests don't automatically include Assert, so
+        // autofixing `ok()` to Assert.something is bad.
+        "mozilla/no-comparison-or-assignment-inside-ok": "off",
+      },
+    },
+    {
+      // Some directories reuse `test_foo.js` files between mochitest-plain and
+      // unit tests, or use custom postMessage-based assertion propagation into
+      // browser tests. Ignore those too:
+      files: [
+        // Reuses xpcshell unit test scripts in mochitest-plain HTML files.
+        "dom/indexedDB/test/**",
+        // Dispatches functions to the webpage in ways that are hard to detect.
+        "toolkit/components/antitracking/test/**",
+      ],
+      rules: {
+        "mozilla/no-comparison-or-assignment-inside-ok": "off",
+      },
     },
     {
       // Bug 881389 - Complete switching to console.createInstance from custom

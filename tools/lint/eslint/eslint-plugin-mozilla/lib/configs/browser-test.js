@@ -57,6 +57,19 @@ module.exports = {
     waitForFocus: false,
   },
 
+  overrides: [
+    {
+      // Some directories have multiple kinds of tests, and some rules
+      // don't work well for plain mochitests, so disable those.
+      files: ["*.html", "*.xhtml"],
+      // plain/chrome mochitests don't automatically include Assert, so
+      // autofixing `ok()` to Assert.something is bad.
+      rules: {
+        "mozilla/no-comparison-or-assignment-inside-ok": "off",
+      },
+    },
+  ],
+
   plugins: ["mozilla", "@microsoft/sdl"],
 
   rules: {
@@ -83,6 +96,7 @@ module.exports = {
     "mozilla/mark-test-function-used": "error",
     "mozilla/no-addtask-setup": "error",
     "mozilla/no-arbitrary-setTimeout": "error",
+    "mozilla/no-comparison-or-assignment-inside-ok": "error",
     "mozilla/no-redeclare-with-import-autofix": [
       "error",
       { errorForNonImports: false },
