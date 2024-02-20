@@ -952,6 +952,41 @@ namespace xsimd
         /**********
          * zip_lo *
          **********/
+        template <class A, class T, detail::enable_sized_unsigned_t<T, 1> = 0>
+        inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_u8(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_signed_t<T, 1> = 0>
+        inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_s8(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_unsigned_t<T, 2> = 0>
+        inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_u16(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_signed_t<T, 2> = 0>
+        inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_s16(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_unsigned_t<T, 4> = 0>
+        inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_u32(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_signed_t<T, 4> = 0>
+        inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_s32(lhs, rhs);
+        }
 
         template <class A, class T, detail::enable_sized_unsigned_t<T, 8> = 0>
         inline batch<T, A> zip_lo(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
@@ -966,6 +1001,12 @@ namespace xsimd
         }
 
         template <class A>
+        inline batch<float, A> zip_lo(batch<float, A> const& lhs, batch<float, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip1q_f32(lhs, rhs);
+        }
+
+        template <class A>
         inline batch<double, A> zip_lo(batch<double, A> const& lhs, batch<double, A> const& rhs, requires_arch<neon64>) noexcept
         {
             return vzip1q_f64(lhs, rhs);
@@ -974,6 +1015,42 @@ namespace xsimd
         /**********
          * zip_hi *
          **********/
+
+        template <class A, class T, detail::enable_sized_unsigned_t<T, 1> = 0>
+        inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_u8(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_signed_t<T, 1> = 0>
+        inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_s8(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_unsigned_t<T, 2> = 0>
+        inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_u16(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_signed_t<T, 2> = 0>
+        inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_s16(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_unsigned_t<T, 4> = 0>
+        inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_u32(lhs, rhs);
+        }
+
+        template <class A, class T, detail::enable_sized_signed_t<T, 4> = 0>
+        inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_s32(lhs, rhs);
+        }
 
         template <class A, class T, detail::enable_sized_unsigned_t<T, 8> = 0>
         inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
@@ -985,6 +1062,12 @@ namespace xsimd
         inline batch<T, A> zip_hi(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon64>) noexcept
         {
             return vzip2q_s64(lhs, rhs);
+        }
+
+        template <class A>
+        inline batch<float, A> zip_hi(batch<float, A> const& lhs, batch<float, A> const& rhs, requires_arch<neon64>) noexcept
+        {
+            return vzip2q_f32(lhs, rhs);
         }
 
         template <class A>
