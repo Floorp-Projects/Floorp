@@ -8168,8 +8168,23 @@ WPARAM nsWindow::wParamFromGlobalMouseState() {
   return result;
 }
 
+// WORKAROUND FOR UNDOCUMENTED BEHAVIOR: `IFileDialog::Show` disables the
+// top-level ancestor of its provided owner-window. If the modal window's
+// container process crashes, it will never get a chance to undo that.
+//
+// For simplicity's sake we simply unconditionally perform both the disabling
+// and reenabling here, synchronously, on the main thread, rather than leaving
+// it to happen in our asynchronously-operated IFileDialog.
+
 void nsWindow::PickerOpen() {
   AssertIsOnMainThread();
+
+  // Disable the root-level window synchronously before any file-dialogs get a
+  // chance to fight over doing it asynchronously.
+  if (!mPickerDisplayCount) {
+    ::EnableWindow(::GetAncestor(GetWindowHandle(), GA_ROOT), FALSE);
+  }
+
   mPickerDisplayCount++;
 }
 
@@ -8179,14 +8194,7 @@ void nsWindow::PickerClosed() {
   if (!mPickerDisplayCount) return;
   mPickerDisplayCount--;
 
-  // WORKAROUND FOR UNDOCUMENTED BEHAVIOR: `IFileDialog::Show` disables the
-  // top-level ancestor of its provided owner-window. If the modal window's
-  // container process crashes, it will never get a chance to undo that, so we
-  // do it manually here.
-  //
-  // Note that this may cause problems in the embedded case if you reparent a
-  // subtree of the native window hierarchy containing a Gecko window while that
-  // Gecko window has a file-dialog open.
+  // Once all the file-dialogs are gone, reenable the root-level window.
   if (!mPickerDisplayCount) {
     ::EnableWindow(::GetAncestor(GetWindowHandle(), GA_ROOT), TRUE);
   }
