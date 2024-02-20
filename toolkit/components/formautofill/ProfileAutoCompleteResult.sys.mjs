@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 ChromeUtils.defineLazyGetter(
   lazy,
   "l10n",
-  () => new Localization(["browser/preferences/formAutofill.ftl"], true)
+  () => new Localization(["toolkit/formautofill/formAutofill.ftl"], true)
 );
 
 class ProfileAutoCompleteResult {
@@ -277,10 +277,19 @@ export class AddressResult extends ProfileAutoCompleteResult {
   }
 
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
+    const manageLabel = lazy.l10n.formatValueSync(
+      "autofill-manage-addresses-label"
+    );
+
     if (this._isInputAutofilled) {
       return [
         { primary: "", secondary: "" }, // Clear button
-        { primary: "", secondary: "" }, // Footer
+        // Footer
+        {
+          primary: "",
+          secondary: "",
+          manageLabel,
+        },
       ];
     }
 
@@ -306,6 +315,10 @@ export class AddressResult extends ProfileAutoCompleteResult {
           ),
         };
       });
+
+    const focusedCategory =
+      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
+
     // Add an empty result entry for footer. Its content will come from
     // the footer binding, so don't assign any value to it.
     // The additional properties: categories and focusedCategory are required of
@@ -313,12 +326,11 @@ export class AddressResult extends ProfileAutoCompleteResult {
     labels.push({
       primary: "",
       secondary: "",
+      manageLabel,
       categories: lazy.FormAutofillUtils.getCategoriesFromFieldNames(
         this._allFieldNames
       ),
-      focusedCategory: lazy.FormAutofillUtils.getCategoryFromFieldName(
-        this._focusedFieldName
-      ),
+      focusedCategory,
     });
 
     return labels;
@@ -385,10 +397,19 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
       ];
     }
 
+    const manageLabel = lazy.l10n.formatValueSync(
+      "autofill-manage-payment-methods-label"
+    );
+
     if (this._isInputAutofilled) {
       return [
         { primary: "", secondary: "" }, // Clear button
-        { primary: "", secondary: "" }, // Footer
+        // Footer
+        {
+          primary: "",
+          secondary: "",
+          manageLabel,
+        },
       ];
     }
 
@@ -431,8 +452,17 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
           image,
         };
       });
+
+    const focusedCategory =
+      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
+
     // Add an empty result entry for footer.
-    labels.push({ primary: "", secondary: "" });
+    labels.push({
+      primary: "",
+      secondary: "",
+      manageLabel,
+      focusedCategory,
+    });
 
     return labels;
   }

@@ -77,8 +77,7 @@ async function checkFormChangeHappened(formId) {
   // Click on an autofilled field would show an autocomplete popup with "clear form" entry
   checkMenuEntries([
     JSON.stringify({primary: "", secondary: ""}), // Clear Autofill Form
-    JSON.stringify({primary: "", secondary: ""})  // FormAutofill Preferemce
-  ], false);
+  ], true);
 
   // This is for checking the changes of element removed and added then.
   document.querySelector(`#${formId} input[name=address-level2]`).remove();
