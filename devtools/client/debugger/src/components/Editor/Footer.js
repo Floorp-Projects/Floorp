@@ -7,6 +7,7 @@ import {
   div,
   button,
   span,
+  hr,
 } from "devtools/client/shared/vendor/react-dom-factories";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import { connect } from "devtools/client/shared/vendor/react-redux";
@@ -23,6 +24,12 @@ import {
   isSourceOnSourceMapIgnoreList,
   isSourceMapIgnoreListEnabled,
   getSelectedMappedSource,
+  getSourceMapErrorForSourceActor,
+  areSourceMapsEnabled,
+  getShouldSelectOriginalLocation,
+  isSourceActorWithSourceMap,
+  getSourceMapResolvedURL,
+  isSelectedMappedSourceLoading,
 } from "../../selectors/index";
 
 import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
@@ -31,6 +38,9 @@ import { PaneToggleButton } from "../shared/Button/index";
 import AccessibleImage from "../shared/AccessibleImage";
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
+const MenuButton = require("resource://devtools/client/shared/components/menu/MenuButton.js");
+const MenuItem = require("resource://devtools/client/shared/components/menu/MenuItem.js");
+const MenuList = require("resource://devtools/client/shared/components/menu/MenuList.js");
 
 class SourceFooter extends PureComponent {
   static get propTypes() {
@@ -155,9 +165,11 @@ class SourceFooter extends PureComponent {
   }
 
   renderCommands() {
-    const commands = [this.blackBoxButton(), this.prettyPrintButton()].filter(
-      Boolean
-    );
+    const commands = [
+      this.blackBoxButton(),
+      this.prettyPrintButton(),
+      this.renderSourceMapButton(),
+    ].filter(Boolean);
 
     return commands.length
       ? div(
@@ -169,7 +181,7 @@ class SourceFooter extends PureComponent {
       : null;
   }
 
-  renderSourceSummary() {
+  renderMappedSource() {
     const { mappedSource, jumpToMappedLocation, selectedLocation } = this.props;
 
     if (!mappedSource) {
@@ -227,6 +239,148 @@ class SourceFooter extends PureComponent {
     );
   }
 
+  getSourceMapLabel() {
+    if (!this.props.selectedLocation) {
+      return undefined;
+    }
+    if (!this.props.areSourceMapsEnabled) {
+      return L10N.getStr("sourceFooter.sourceMapButton.disabled");
+    }
+    if (this.props.sourceMapError) {
+      return undefined;
+    }
+    if (!this.props.isSourceActorWithSourceMap) {
+      return L10N.getStr("sourceFooter.sourceMapButton.sourceNotMapped");
+    }
+    if (this.props.selectedLocation.source.isOriginal) {
+      return L10N.getStr("sourceFooter.sourceMapButton.isOriginalSource");
+    }
+    return L10N.getStr("sourceFooter.sourceMapButton.isBundleSource");
+  }
+
+  getSourceMapTitle() {
+    if (this.props.sourceMapError) {
+      return L10N.getFormatStr(
+        "sourceFooter.sourceMapButton.errorTitle",
+        this.props.sourceMapError
+      );
+    }
+    if (this.props.isSourceMapLoading) {
+      return L10N.getStr("sourceFooter.sourceMapButton.loadingTitle");
+    }
+    return L10N.getStr("sourceFooter.sourceMapButton.title");
+  }
+
+  renderSourceMapButton() {
+    const { toolboxDoc } = this.context;
+
+    return React.createElement(
+      MenuButton,
+      {
+        menuId: "debugger-source-map-button",
+        toolboxDoc: toolboxDoc,
+        className: classnames("devtools-button", "debugger-source-map-button", {
+          error: !!this.props.sourceMapError,
+          loading: this.props.isSourceMapLoading,
+          disabled: !this.props.areSourceMapsEnabled,
+          "not-mapped":
+            !this.props.selectedLocation?.source.isOriginal &&
+            !this.props.isSourceActorWithSourceMap,
+          original: this.props.selectedLocation?.source.isOriginal,
+        }),
+        title: this.getSourceMapTitle(),
+        label: this.getSourceMapLabel(),
+        icon: true,
+      },
+      () => this.renderSourceMapMenuItems()
+    );
+  }
+
+  renderSourceMapMenuItems() {
+    const items = [
+      React.createElement(MenuItem, {
+        className: "menu-item debugger-source-map-enabled",
+        checked: this.props.areSourceMapsEnabled,
+        label: L10N.getStr("sourceFooter.sourceMapButton.enable"),
+        onClick: this.toggleSourceMaps,
+      }),
+      hr(),
+      React.createElement(MenuItem, {
+        className: "menu-item debugger-source-map-open-original",
+        checked: this.props.shouldSelectOriginalLocation,
+        label: L10N.getStr(
+          "sourceFooter.sourceMapButton.showOriginalSourceByDefault"
+        ),
+        onClick: this.toggleSelectOriginalByDefault,
+      }),
+    ];
+
+    if (this.props.mappedSource) {
+      items.push(
+        React.createElement(MenuItem, {
+          className: "menu-item debugger-jump-mapped-source",
+          label: this.props.mappedSource.isOriginal
+            ? L10N.getStr("sourceFooter.sourceMapButton.jumpToGeneratedSource")
+            : L10N.getStr("sourceFooter.sourceMapButton.jumpToOriginalSource"),
+          tooltip: this.props.mappedSource.url,
+          onClick: () =>
+            this.props.jumpToMappedLocation(this.props.selectedLocation),
+        })
+      );
+    }
+
+    if (this.props.resolvedSourceMapURL) {
+      items.push(
+        React.createElement(MenuItem, {
+          className: "menu-item debugger-source-map-link",
+          label: L10N.getStr(
+            "sourceFooter.sourceMapButton.openSourceMapInNewTab"
+          ),
+          onClick: this.openSourceMap,
+        })
+      );
+    }
+    return React.createElement(
+      MenuList,
+      {
+        id: "debugger-source-map-list",
+      },
+      items
+    );
+  }
+
+  openSourceMap = () => {
+    let line, column;
+    if (
+      this.props.sourceMapError &&
+      this.props.sourceMapError.includes("JSON.parse")
+    ) {
+      const match = this.props.sourceMapError.match(
+        /at line (\d+) column (\d+)/
+      );
+      if (match) {
+        line = match[1];
+        column = match[2];
+      }
+    }
+    this.props.openSourceMap(
+      this.props.resolvedSourceMapURL || this.props.selectedLocation.source.url,
+      line,
+      column
+    );
+  };
+
+  toggleSourceMaps = () => {
+    this.props.toggleSourceMapsEnabled(!this.props.areSourceMapsEnabled);
+  };
+
+  toggleSelectOriginalByDefault = () => {
+    this.props.setDefaultSelectedLocation(
+      !this.props.shouldSelectOriginalLocation
+    );
+    this.props.jumpToMappedSelectedLocation();
+  };
+
   render() {
     return div(
       {
@@ -242,18 +396,39 @@ class SourceFooter extends PureComponent {
         {
           className: "source-footer-end",
         },
-        this.renderSourceSummary(),
+        this.renderMappedSource(),
         this.renderCursorPosition(),
         this.renderToggleButton()
       )
     );
   }
 }
+SourceFooter.contextTypes = {
+  toolboxDoc: PropTypes.object,
+};
 
 const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
   const selectedLocation = getSelectedLocation(state);
   const sourceTextContent = getSelectedSourceTextContent(state);
+
+  const areSourceMapsEnabledProp = areSourceMapsEnabled(state);
+  const isSourceActorWithSourceMapProp = isSourceActorWithSourceMap(
+    state,
+    selectedLocation?.sourceActor.id
+  );
+  const sourceMapError = selectedLocation?.sourceActor
+    ? getSourceMapErrorForSourceActor(state, selectedLocation.sourceActor.id)
+    : null;
+  const mappedSource = getSelectedMappedSource(state);
+
+  const isSourceMapLoading =
+    areSourceMapsEnabledProp &&
+    isSourceActorWithSourceMapProp &&
+    // `mappedSource` will be null while loading, we need another way to know when it is done computing
+    !mappedSource &&
+    isSelectedMappedSourceLoading(state) &&
+    !sourceMapError;
 
   return {
     selectedSource,
@@ -265,7 +440,8 @@ const mapStateToProps = state => {
       isSourceMapIgnoreListEnabled(state) &&
       isSourceOnSourceMapIgnoreList(state, selectedSource),
     sourceLoaded: !!sourceTextContent,
-    mappedSource: getSelectedMappedSource(state),
+    mappedSource,
+    isSourceMapLoading,
     prettySource: getPrettySource(
       state,
       selectedSource ? selectedSource.id : null
@@ -277,6 +453,17 @@ const mapStateToProps = state => {
     prettyPrintMessage: selectedLocation
       ? getPrettyPrintMessage(state, selectedLocation)
       : null,
+
+    sourceMapError,
+    resolvedSourceMapURL: selectedLocation?.sourceActor
+      ? getSourceMapResolvedURL(state, selectedLocation.sourceActor.id)
+      : null,
+    isSourceActorWithSourceMap: isSourceActorWithSourceMapProp,
+
+    sourceMapURL: selectedLocation?.sourceActor.sourceMapURL,
+
+    areSourceMapsEnabled: areSourceMapsEnabledProp,
+    shouldSelectOriginalLocation: getShouldSelectOriginalLocation(state),
   };
 };
 
@@ -285,4 +472,8 @@ export default connect(mapStateToProps, {
   toggleBlackBox: actions.toggleBlackBox,
   jumpToMappedLocation: actions.jumpToMappedLocation,
   togglePaneCollapse: actions.togglePaneCollapse,
+  toggleSourceMapsEnabled: actions.toggleSourceMapsEnabled,
+  setDefaultSelectedLocation: actions.setDefaultSelectedLocation,
+  jumpToMappedSelectedLocation: actions.jumpToMappedSelectedLocation,
+  openSourceMap: actions.openSourceMap,
 })(SourceFooter);
