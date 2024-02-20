@@ -7090,7 +7090,11 @@ static bool EmitLoadSplatSimd128(FunctionCompiler& f, Scalar::Type viewType,
     return false;
   }
 
-  f.iter().setResult(f.loadSplatSimd128(viewType, addr, splatOp));
+  auto* ins = f.loadSplatSimd128(viewType, addr, splatOp);
+  if (!f.inDeadCode() && !ins) {
+    return false;
+  }
+  f.iter().setResult(ins);
   return true;
 }
 
@@ -7100,7 +7104,11 @@ static bool EmitLoadExtendSimd128(FunctionCompiler& f, wasm::SimdOp op) {
     return false;
   }
 
-  f.iter().setResult(f.loadExtendSimd128(addr, op));
+  auto* ins = f.loadExtendSimd128(addr, op);
+  if (!f.inDeadCode() && !ins) {
+    return false;
+  }
+  f.iter().setResult(ins);
   return true;
 }
 
@@ -7111,7 +7119,11 @@ static bool EmitLoadZeroSimd128(FunctionCompiler& f, Scalar::Type viewType,
     return false;
   }
 
-  f.iter().setResult(f.loadZeroSimd128(viewType, numBytes, addr));
+  auto* ins = f.loadZeroSimd128(viewType, numBytes, addr);
+  if (!f.inDeadCode() && !ins) {
+    return false;
+  }
+  f.iter().setResult(ins);
   return true;
 }
 
@@ -7123,7 +7135,11 @@ static bool EmitLoadLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
     return false;
   }
 
-  f.iter().setResult(f.loadLaneSimd128(laneSize, addr, laneIndex, src));
+  auto* ins = f.loadLaneSimd128(laneSize, addr, laneIndex, src);
+  if (!f.inDeadCode() && !ins) {
+    return false;
+  }
+  f.iter().setResult(ins);
   return true;
 }
 
