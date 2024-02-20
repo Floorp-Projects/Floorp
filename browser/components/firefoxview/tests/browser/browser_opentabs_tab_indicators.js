@@ -22,7 +22,7 @@ add_task(async function test_notification_dot_indicator() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
-    await navigateToCategoryAndWait(document, "opentabs");
+    await navigateToViewAndWait(document, "opentabs");
     // load page that opens prompt when page is hidden
     let openedTab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
@@ -79,7 +79,7 @@ add_task(async function test_container_indicator() {
       URLs[0]
     );
 
-    await navigateToCategoryAndWait(document, "opentabs");
+    await navigateToViewAndWait(document, "opentabs");
 
     let openTabs = document.querySelector("view-opentabs[name=opentabs]");
 
@@ -118,7 +118,7 @@ add_task(async function test_container_indicator() {
 add_task(async function test_sound_playing_muted_indicator() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    await navigateToCategoryAndWait(document, "opentabs");
+    await navigateToViewAndWait(document, "opentabs");
 
     // Load a page in a container tab
     let soundTab = await BrowserTestUtils.openNewForegroundTab(

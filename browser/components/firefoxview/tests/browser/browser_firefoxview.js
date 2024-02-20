@@ -6,10 +6,7 @@ add_task(async function about_firefoxview_smoke_test() {
     const { document } = browser.contentWindow;
 
     // sanity check the important regions exist on this page
-    ok(
-      document.querySelector("fxview-category-navigation"),
-      "fxview-category-navigation element exists"
-    );
+    ok(document.querySelector("moz-page-nav"), "moz-page-nav element exists");
     ok(document.querySelector("named-deck"), "named-deck element exists");
   });
 });
