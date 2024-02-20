@@ -101,7 +101,7 @@ processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
 wpf-gpu-raster = { git = "https://github.com/FirefoxGraphics/wpf-gpu-raster", rev = "99979da091fd58fba8477e7fcdf5ec0727102916" }
-aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "96e66f91bb8e8efb80ff144eabd668002aa89650" }
+aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "d94278ed9c7020f50232689a26d1277eb0eb74d2" }
 
 url = "2.5.0"
 

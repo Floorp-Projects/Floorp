@@ -16,8 +16,8 @@ pub type HRESULT = i32;
 pub const S_OK: i32 = 0;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GpPointR {
-    pub x: f64,
-    pub y: f64
+    pub x: f32,
+    pub y: f32
 }
 
 impl Sub for GpPointR {
@@ -48,32 +48,32 @@ impl SubAssign for GpPointR {
     }
 }
 
-impl MulAssign<f64> for GpPointR {
-    fn mul_assign(&mut self, rhs: f64) {
+impl MulAssign<f32> for GpPointR {
+    fn mul_assign(&mut self, rhs: f32) {
         *self = *self * rhs;
     }
 }
 
 
-impl Mul<f64> for GpPointR {
+impl Mul<f32> for GpPointR {
     type Output = Self;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: f32) -> Self::Output {
         GpPointR { x: self.x * rhs, y: self.y * rhs }
     }
 }
 
-impl Div<f64> for GpPointR {
+impl Div<f32> for GpPointR {
     type Output = Self;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: f32) -> Self::Output {
         GpPointR { x: self.x / rhs, y: self.y / rhs }
     }
 }
 
 
 impl Mul for GpPointR {
-    type Output = f64;
+    type Output = f32;
 
     fn mul(self, rhs: Self) -> Self::Output {
         self.x * rhs.x +  self.y * rhs.y
@@ -81,17 +81,17 @@ impl Mul for GpPointR {
 }
 
 impl GpPointR {
-    pub fn ApproxNorm(&self) -> f64 {
+    pub fn ApproxNorm(&self) -> f32 {
         self.x.abs().max(self.y.abs())
     }
-    pub fn Norm(&self) -> f64 {
+    pub fn Norm(&self) -> f32 {
         self.x.hypot(self.y)
     }
 }
 
 // Relative to this is relative to the tolerance squared. In other words, a vector
 // whose length is less than .01*tolerance will be considered 0
-const  SQ_LENGTH_FUZZ: f64 = 1.0e-4;
+const  SQ_LENGTH_FUZZ: f32 = 1.0e-4;
 
 // Some of these constants need further thinking
 
@@ -103,7 +103,7 @@ const  SQ_LENGTH_FUZZ: f64 = 1.0e-4;
 const FUZZ_DOUBLE: f64 = 1.0e-12;           // Double-precision relative 0
 const MIN_TOLERANCE: f64 = 1.0e-6;
 const DEFAULT_FLATTENING_TOLERANCE: f64 = 0.25;*/
-const TWICE_MIN_BEZIER_STEP_SIZE: f64 = 1.0e-3; // The step size in the Bezier flattener should
+const TWICE_MIN_BEZIER_STEP_SIZE: f32 = 1.0e-3; // The step size in the Bezier flattener should
                                                  // never go below half this amount.
 //+-----------------------------------------------------------------------------
 //
@@ -318,7 +318,7 @@ pub trait CFlatteningSink {
         fn AcceptPoint(&mut self,
             pt: &GpPointR,
                 // The point
-            t: f64,
+            t: f32,
                 // Parameter we're at
             fAborted: &mut bool,
             lastPoint: bool
@@ -339,16 +339,16 @@ pub struct CBezierFlattener<'a>
     bezier: CBezier,
         // Flattening defining data
         m_pSink: &'a mut dyn CFlatteningSink,           // The recipient of the flattening data
-        m_rTolerance: f64,       // Prescribed tolerance
+        m_rTolerance: f32,       // Prescribed tolerance
         m_fWithTangents: bool,    // Generate tangent vectors if true
-        m_rQuarterTolerance: f64,// Prescribed tolerance/4 (for doubling the step)
-        m_rFuzz: f64,            // Computational zero
+        m_rQuarterTolerance: f32,// Prescribed tolerance/4 (for doubling the step)
+        m_rFuzz: f32,            // Computational zero
     
         // Flattening working data
         m_ptE: [GpPointR; 4],           // The moving basis of the curve definition
         m_cSteps: i32,           // The number of steps left to the end of the curve
-        m_rParameter: f64,       // Parameter value
-        m_rStepSize: f64,        // Steps size in parameter domain
+        m_rParameter: f32,       // Parameter value
+        m_rStepSize: f32,        // Steps size in parameter domain
 }
 impl<'a> CBezierFlattener<'a> {
     /*fn new(
@@ -449,7 +449,7 @@ impl<'a> CBezierFlattener<'a> {
 pub fn new(bezier: &CBezier,
     pSink: &'a mut dyn CFlatteningSink,
         // The reciptient of the flattened data
-    rTolerance: f64)       // Flattening tolerance
+    rTolerance: f32)       // Flattening tolerance
     -> Self 
 {
     let mut result = CBezierFlattener {

@@ -230,8 +230,8 @@ fn arc_segment_tri(path: &mut PathBuilder, xc: f32, yc: f32, radius: f32, a: Vec
 
     let h = (4. / 3.) * dot(perp(a), mid2) / dot(a, mid2);
 
-    let last_point = GpPointR { x: (xc + r_cos_a) as f64, y: (yc + r_sin_a) as f64 };
-    let initial_normal = GpPointR { x: a.x as f64, y: a.y as f64 };
+    let last_point = GpPointR { x: (xc + r_cos_a), y: (yc + r_sin_a) };
+    let initial_normal = GpPointR { x: a.x, y: a.y };
 
 
     struct Target<'a, 'b> { last_point: GpPointR, last_normal: GpPointR, xc: f32, yc: f32, path: &'a mut PathBuilder<'b> }
@@ -253,24 +253,24 @@ fn arc_segment_tri(path: &mut PathBuilder, xc: f32, yc: f32, radius: f32, a: Vec
                     let width = 0.5; 
 
                     self.path.ramp(
-                    (pt.x - normal.x * width) as f32, 
-                    (pt.y - normal.y * width) as f32,
-                    (pt.x + normal.x * width) as f32, 
-                    (pt.y + normal.y * width) as f32,
-                    (self.last_point.x + self.last_normal.x * width) as f32,
-                    (self.last_point.y + self.last_normal.y * width) as f32, 
-                    (self.last_point.x - self.last_normal.x * width) as f32,
-                    (self.last_point.y - self.last_normal.y * width) as f32, );
+                    pt.x - normal.x * width, 
+                    pt.y - normal.y * width,
+                    pt.x + normal.x * width, 
+                    pt.y + normal.y * width,
+                    self.last_point.x + self.last_normal.x * width,
+                    self.last_point.y + self.last_normal.y * width, 
+                    self.last_point.x - self.last_normal.x * width,
+                    self.last_point.y - self.last_normal.y * width, );
                     self.path.push_tri(
-                        (self.last_point.x - self.last_normal.x * 0.5) as f32,
-                        (self.last_point.y - self.last_normal.y * 0.5) as f32, 
-                        (pt.x - normal.x * 0.5) as f32, 
-                        (pt.y - normal.y * 0.5) as f32,
+                        self.last_point.x - self.last_normal.x * 0.5,
+                        self.last_point.y - self.last_normal.y * 0.5, 
+                        pt.x - normal.x * 0.5, 
+                        pt.y - normal.y * 0.5,
                          self.xc, self.yc);
                     self.last_normal = normal;
 
                 } else {
-                    self.path.push_tri(self.last_point.x as f32, self.last_point.y as f32, pt.x as f32, pt.y as f32, self.xc, self.yc);
+                    self.path.push_tri(self.last_point.x, self.last_point.y, pt.x, pt.y, self.xc, self.yc);
                 }
                 self.last_point = pt.clone();
                 return S_OK;
@@ -279,19 +279,19 @@ fn arc_segment_tri(path: &mut PathBuilder, xc: f32, yc: f32, radius: f32, a: Vec
         fn AcceptPoint(&mut self,
             pt: &GpPointR,
                 // The point
-            _t: f64,
+            _t: f32,
                 // Parameter we're at
             _aborted: &mut bool,
             _last_point: bool) -> HRESULT {
-            self.path.push_tri(self.last_point.x as f32, self.last_point.y as f32, pt.x as f32, pt.y as f32, self.xc, self.yc);
+            self.path.push_tri(self.last_point.x, self.last_point.y, pt.x, pt.y, self.xc, self.yc);
             self.last_point = pt.clone();
             return S_OK;
         }
     }
-    let bezier = CBezier::new([GpPointR { x: (xc + r_cos_a) as f64, y: (yc + r_sin_a) as f64,  },
-        GpPointR { x: (xc + r_cos_a - h * r_sin_a) as f64, y: (yc + r_sin_a + h * r_cos_a) as f64, },
-        GpPointR { x: (xc + r_cos_b + h * r_sin_b) as f64, y: (yc + r_sin_b - h * r_cos_b) as f64, },
-        GpPointR { x: (xc + r_cos_b) as f64, y: (yc + r_sin_b) as f64, }]);
+    let bezier = CBezier::new([GpPointR { x: (xc + r_cos_a), y: (yc + r_sin_a),  },
+        GpPointR { x: (xc + r_cos_a - h * r_sin_a), y: (yc + r_sin_a + h * r_cos_a), },
+        GpPointR { x: (xc + r_cos_b + h * r_sin_b), y: (yc + r_sin_b - h * r_cos_b), },
+        GpPointR { x: (xc + r_cos_b), y: (yc + r_sin_b), }]);
     if bezier.is_degenerate() {
         return;
     }
@@ -810,23 +810,23 @@ impl<'z> Stroker<'z> {
             fn AcceptPoint(&mut self,
                 pt: &GpPointR,
                     // The point
-                _t: f64,
+                _t: f32,
                     // Parameter we're at
                 _aborted: &mut bool,
                 last_point: bool) -> HRESULT {
                 if last_point && self.end  {
-                    self.stroker.line_to_capped(Point::new(pt.x as f32, pt.y as f32));
+                    self.stroker.line_to_capped(Point::new(pt.x, pt.y));
                 } else {
-                    self.stroker.line_to(Point::new(pt.x as f32, pt.y as f32));
+                    self.stroker.line_to(Point::new(pt.x, pt.y));
                 }
                 return S_OK;
             }
         }
         let cur_pt = self.cur_pt.unwrap_or(cx1);
-        let bezier = CBezier::new([GpPointR { x: cur_pt.x as f64, y: cur_pt.y as f64,  },
-            GpPointR { x: cx1.x as f64, y: cx1.y as f64, },
-            GpPointR { x: cx2.x as f64, y: cx2.y as f64, },
-            GpPointR { x: pt.x as f64, y: pt.y as f64, }]);
+        let bezier = CBezier::new([GpPointR { x: cur_pt.x, y: cur_pt.y,  },
+            GpPointR { x: cx1.x, y: cx1.y, },
+            GpPointR { x: cx2.x, y: cx2.y, },
+            GpPointR { x: pt.x, y: pt.y, }]);
         let mut t = Target{ stroker: self, end };
         let mut f = CBezierFlattener::new(&bezier, &mut t, 0.25);
         f.Flatten(false);
