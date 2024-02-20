@@ -216,7 +216,11 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
         return;
       }
 
-      if ((aToken.First() != 't') && (aToken.First() != 'f')) {
+      if (aToken.First() == 't') {
+        mInIsolatedMozBrowser = true;
+      } else if (aToken.First() == 'f') {
+        mInIsolatedMozBrowser = false;
+      } else {
         QM_WARNING("'%s' is not a valid value for the inMozBrowser flag!",
                    nsCString(aToken).get());
 

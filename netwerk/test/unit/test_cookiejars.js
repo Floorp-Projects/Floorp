@@ -36,11 +36,19 @@ function inChildProcess() {
 var tests = [
   {
     cookieName: "LCC_App0_BrowF_PrivF",
-    originAttributes: new OriginAttributes(0),
+    originAttributes: new OriginAttributes(0, false, 0),
+  },
+  {
+    cookieName: "LCC_App0_BrowT_PrivF",
+    originAttributes: new OriginAttributes(0, true, 0),
   },
   {
     cookieName: "LCC_App1_BrowF_PrivF",
-    originAttributes: new OriginAttributes(1),
+    originAttributes: new OriginAttributes(1, false, 0),
+  },
+  {
+    cookieName: "LCC_App1_BrowT_PrivF",
+    originAttributes: new OriginAttributes(1, true, 0),
   },
 ];
 

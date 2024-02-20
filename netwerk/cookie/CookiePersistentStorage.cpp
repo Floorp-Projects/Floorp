@@ -132,7 +132,14 @@ NS_IMETHODIMP
 ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
     mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult) {
   nsresult rv;
-  OriginAttributes attrs;
+  int32_t inIsolatedMozBrowser;
+
+  rv = aFunctionArguments->GetInt32(1, &inIsolatedMozBrowser);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create an originAttributes object by inIsolatedMozBrowser.
+  // Then create the originSuffix string from this object.
+  OriginAttributes attrs(inIsolatedMozBrowser != 0);
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
@@ -198,7 +205,7 @@ SetInBrowserFromOriginAttributesSQLFunction::OnFunctionCall(
   NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
   RefPtr<nsVariant> outVar(new nsVariant());
-  rv = outVar->SetAsInt32(false);
+  rv = outVar->SetAsInt32(attrs.mInIsolatedMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
   outVar.forget(aResult);

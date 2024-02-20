@@ -213,6 +213,7 @@
 #include "nsILocalStorageManager.h"
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
 #include "nsIParentChannel.h"

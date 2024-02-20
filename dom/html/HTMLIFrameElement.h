@@ -142,6 +142,11 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
   Document* GetSVGDocument(nsIPrincipal& aSubjectPrincipal) {
     return GetContentDocument(aSubjectPrincipal);
   }
+  bool Mozbrowser() const { return GetBoolAttr(nsGkAtoms::mozbrowser); }
+  void SetMozbrowser(bool aAllow, ErrorResult& aError) {
+    SetHTMLBoolAttr(nsGkAtoms::mozbrowser, aAllow, aError);
+  }
+  using nsGenericHTMLFrameElement::SetMozbrowser;
   // nsGenericHTMLFrameElement::GetFrameLoader is fine
   // nsGenericHTMLFrameElement::GetAppManifestURL is fine
 

@@ -9,33 +9,6 @@
 
 namespace mozilla::dom::quota::test {
 
-TEST(DOM_Quota_StorageOriginAttributes, Constructor_Default)
-{
-  {
-    StorageOriginAttributes originAttributes;
-
-    ASSERT_FALSE(originAttributes.InIsolatedMozBrowser());
-    ASSERT_EQ(originAttributes.UserContextId(), 0u);
-  }
-}
-
-TEST(DOM_Quota_StorageOriginAttributes, Constructor_InIsolatedMozbrowser)
-{
-  {
-    StorageOriginAttributes originAttributes(/* aInIsolatedMozBrowser */ false);
-
-    ASSERT_FALSE(originAttributes.InIsolatedMozBrowser());
-    ASSERT_EQ(originAttributes.UserContextId(), 0u);
-  }
-
-  {
-    StorageOriginAttributes originAttributes(/* aInIsolatedMozBrowser */ true);
-
-    ASSERT_TRUE(originAttributes.InIsolatedMozBrowser());
-    ASSERT_EQ(originAttributes.UserContextId(), 0u);
-  }
-}
-
 TEST(DOM_Quota_StorageOriginAttributes, PopulateFromOrigin_NoOriginAttributes)
 {
   {
@@ -186,54 +159,6 @@ TEST(DOM_Quota_StorageOriginAttributes, PopulateFromOrigin_Mixed_Invalid)
     ASSERT_TRUE(originAttributes.InIsolatedMozBrowser());
     ASSERT_EQ(originAttributes.UserContextId(), 1u);
     ASSERT_TRUE(originNoSuffix.Equals("https://www.example.com"_ns));
-  }
-}
-
-TEST(DOM_Quota_StorageOriginAttributes, CreateSuffix_NoOriginAttributes)
-{
-  {
-    StorageOriginAttributes originAttributes;
-    nsCString suffix;
-    originAttributes.CreateSuffix(suffix);
-
-    ASSERT_TRUE(suffix.IsEmpty());
-  }
-}
-
-TEST(DOM_Quota_StorageOriginAttributes, CreateSuffix_InIsolatedMozbrowser)
-{
-  {
-    StorageOriginAttributes originAttributes;
-    originAttributes.SetInIsolatedMozBrowser(true);
-    nsCString suffix;
-    originAttributes.CreateSuffix(suffix);
-
-    ASSERT_TRUE(suffix.Equals("^inBrowser=1"_ns));
-  }
-}
-
-TEST(DOM_Quota_StorageOriginAttributes, CreateSuffix_UserContextId)
-{
-  {
-    StorageOriginAttributes originAttributes;
-    originAttributes.SetUserContextId(42);
-    nsCString suffix;
-    originAttributes.CreateSuffix(suffix);
-
-    ASSERT_TRUE(suffix.Equals("^userContextId=42"_ns));
-  }
-}
-
-TEST(DOM_Quota_StorageOriginAttributes, CreateSuffix_Mixed)
-{
-  {
-    StorageOriginAttributes originAttributes;
-    originAttributes.SetInIsolatedMozBrowser(true);
-    originAttributes.SetUserContextId(42);
-    nsCString suffix;
-    originAttributes.CreateSuffix(suffix);
-
-    ASSERT_TRUE(suffix.Equals("^inBrowser=1&userContextId=42"_ns));
   }
 }
 

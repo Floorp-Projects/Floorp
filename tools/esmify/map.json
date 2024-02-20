@@ -470,6 +470,8 @@
   "resource://gre/modules/BookmarkHTMLUtils.jsm": "toolkit/components/places/BookmarkHTMLUtils.jsm",
   "resource://gre/modules/BookmarkJSONUtils.jsm": "toolkit/components/places/BookmarkJSONUtils.jsm",
   "resource://gre/modules/Bookmarks.jsm": "toolkit/components/places/Bookmarks.jsm",
+  "resource://gre/modules/BrowserElementParent.jsm": "dom/browser-element/BrowserElementParent.jsm",
+  "resource://gre/modules/BrowserElementPromptService.jsm": "dom/browser-element/BrowserElementPromptService.jsm",
   "resource://gre/modules/BrowserTelemetryUtils.jsm": "toolkit/modules/BrowserTelemetryUtils.jsm",
   "resource://gre/modules/BrowserUtils.jsm": "toolkit/modules/BrowserUtils.jsm",
   "resource://gre/modules/CSV.js": "toolkit/components/passwordmgr/CSV.js",

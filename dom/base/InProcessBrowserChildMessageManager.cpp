@@ -13,6 +13,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsQueryObject.h"
 #include "xpcpublic.h"
+#include "nsIMozBrowserFrame.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/Document.h"
@@ -99,6 +100,15 @@ InProcessBrowserChildMessageManager::InProcessBrowserChildMessageManager(
       mOwner(aOwner),
       mChromeMessageManager(aChrome) {
   mozilla::HoldJSObjects(this);
+
+  // If owner corresponds to an <iframe mozbrowser>, we'll have to tweak our
+  // GetEventTargetParent implementation.
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwner);
+  if (browserFrame) {
+    mIsBrowserFrame = browserFrame->GetReallyIsBrowser();
+  } else {
+    mIsBrowserFrame = false;
+  }
 }
 
 InProcessBrowserChildMessageManager::~InProcessBrowserChildMessageManager() {

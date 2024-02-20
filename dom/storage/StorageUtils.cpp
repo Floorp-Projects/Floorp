@@ -13,7 +13,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
-#include "mozilla/StorageOriginAttributes.h"
 
 namespace mozilla::dom::StorageUtils {
 
@@ -62,16 +61,16 @@ nsCString Scheme0Scope(const nsACString& aOriginSuffix,
                        const nsACString& aOriginNoSuffix) {
   nsCString result;
 
-  StorageOriginAttributes oa;
+  OriginAttributes oa;
   if (!aOriginSuffix.IsEmpty()) {
     DebugOnly<bool> success = oa.PopulateFromSuffix(aOriginSuffix);
     MOZ_ASSERT(success);
   }
 
-  if (oa.InIsolatedMozBrowser()) {
+  if (oa.mInIsolatedMozBrowser) {
     result.AppendInt(0);  // This is the appId to be removed.
     result.Append(':');
-    result.Append(oa.InIsolatedMozBrowser() ? 't' : 'f');
+    result.Append(oa.mInIsolatedMozBrowser ? 't' : 'f');
     result.Append(':');
   }
 
@@ -81,7 +80,7 @@ nsCString Scheme0Scope(const nsACString& aOriginSuffix,
   // with originAttributes and originKey columns) so that switch between
   // schema 1 and 0 always works in both ways.
   nsAutoCString remaining;
-  oa.SetInIsolatedMozBrowser(false);
+  oa.mInIsolatedMozBrowser = false;
   oa.CreateSuffix(remaining);
   if (!remaining.IsEmpty()) {
     MOZ_ASSERT(!aOriginSuffix.IsEmpty());

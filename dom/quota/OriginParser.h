@@ -65,6 +65,7 @@ class MOZ_STACK_CLASS OriginParser final {
 
   SchemeType mSchemeType;
   State mState;
+  bool mInIsolatedMozBrowser;
   bool mUniversalFileOrigin;
   bool mMaybeDriveLetter;
   bool mError;
@@ -79,6 +80,7 @@ class MOZ_STACK_CLASS OriginParser final {
         mTokenizer(aOrigin, '+'),
         mSchemeType(eNone),
         mState(eExpectingAppIdOrScheme),
+        mInIsolatedMozBrowser(false),
         mUniversalFileOrigin(false),
         mMaybeDriveLetter(false),
         mError(false),

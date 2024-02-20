@@ -20,24 +20,27 @@ function cached_handler(metadata, response) {
   handlers_called++;
 }
 
-function makeChan(url, userContextId) {
+function makeChan(url, inIsolatedMozBrowser, userContextId) {
   var chan = NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
-  chan.loadInfo.originAttributes = { userContextId };
+  chan.loadInfo.originAttributes = { inIsolatedMozBrowser, userContextId };
   return chan;
 }
 
-// [userContextId, expected_handlers_called]
+// [inIsolatedMozBrowser, userContextId, expected_handlers_called]
 var firstTests = [
-  [0, 1],
-  [1, 1],
+  [false, 0, 1],
+  [true, 0, 1],
+  [false, 1, 1],
+  [true, 1, 1],
 ];
 var secondTests = [
-  [0, 0],
-  [1, 1],
-  [1, 0],
+  [false, 0, 0],
+  [true, 0, 0],
+  [false, 1, 1],
+  [true, 1, 0],
 ];
 
 async function run_all_tests() {
@@ -78,9 +81,9 @@ function run_test() {
   });
 }
 
-function test_channel(userContextId, expected) {
+function test_channel(inIsolatedMozBrowser, userContextId, expected) {
   return new Promise(resolve => {
-    var chan = makeChan(URL, userContextId);
+    var chan = makeChan(URL, inIsolatedMozBrowser, userContextId);
     chan.asyncOpen(
       new ChannelListener(doneFirstLoad.bind(null, resolve), expected)
     );
@@ -90,7 +93,7 @@ function test_channel(userContextId, expected) {
 function doneFirstLoad(resolve, req, buffer, expected) {
   // Load it again, make sure it hits the cache
   var oa = req.loadInfo.originAttributes;
-  var chan = makeChan(URL, oa.userContextId);
+  var chan = makeChan(URL, oa.isInIsolatedMozBrowserElement, oa.userContextId);
   chan.asyncOpen(
     new ChannelListener(doneSecondLoad.bind(null, resolve), expected)
   );

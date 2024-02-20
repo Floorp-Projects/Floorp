@@ -308,6 +308,17 @@ nsresult GetPrincipalFromOrigin(const nsACString& aOrigin, bool aForceStripOA,
   return NS_OK;
 }
 
+nsresult GetPrincipal(nsIURI* aURI, bool aIsInIsolatedMozBrowserElement,
+                      nsIPrincipal** aPrincipal) {
+  OriginAttributes attrs(aIsInIsolatedMozBrowserElement);
+  nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateContentPrincipal(aURI, attrs);
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  principal.forget(aPrincipal);
+  return NS_OK;
+}
+
 nsresult GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal) {
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
@@ -358,6 +369,7 @@ already_AddRefed<nsIURI> GetNextSubDomainURI(nsIURI* aURI) {
 nsresult UpgradeHostToOriginAndInsert(
     const nsACString& aHost, const nsCString& aType, uint32_t aPermission,
     uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime,
+    bool aIsInIsolatedMozBrowserElement,
     std::function<nsresult(const nsACString& aOrigin, const nsCString& aType,
                            uint32_t aPermission, uint32_t aExpireType,
                            int64_t aExpireTime, int64_t aModificationTime)>&&
@@ -384,7 +396,8 @@ nsresult UpgradeHostToOriginAndInsert(
     }
 
     nsCOMPtr<nsIPrincipal> principal;
-    rv = GetPrincipal(uri, getter_AddRefs(principal));
+    rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
+                      getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString origin;
@@ -499,7 +512,8 @@ nsresult UpgradeHostToOriginAndInsert(
 
       // We now have a URI which we can make a nsIPrincipal out of
       nsCOMPtr<nsIPrincipal> principal;
-      rv = GetPrincipal(uri, getter_AddRefs(principal));
+      rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
+                        getter_AddRefs(principal));
       if (NS_WARN_IF(NS_FAILED(rv))) continue;
 
       nsAutoCString origin;
@@ -546,7 +560,8 @@ nsresult UpgradeHostToOriginAndInsert(
     rv = NS_NewURI(getter_AddRefs(uri), "http://"_ns + hostSegment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetPrincipal(uri, getter_AddRefs(principal));
+    rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
+                      getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetOriginFromPrincipal(principal, IsOAForceStripPermission(aType),
@@ -560,7 +575,8 @@ nsresult UpgradeHostToOriginAndInsert(
     rv = NS_NewURI(getter_AddRefs(uri), "https://"_ns + hostSegment);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetPrincipal(uri, getter_AddRefs(principal));
+    rv = GetPrincipal(uri, aIsInIsolatedMozBrowserElement,
+                      getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetOriginFromPrincipal(principal, IsOAForceStripPermission(aType),
@@ -1208,6 +1224,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
             entry.mExpireType = stmt->AsInt32(3);
             entry.mExpireTime = stmt->AsInt64(4);
             entry.mModificationTime = stmt->AsInt64(5);
+            entry.mIsInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             mMigrationEntries.AppendElement(entry);
           }
@@ -1362,6 +1379,7 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
             entry.mExpireType = stmt->AsInt32(3);
             entry.mExpireTime = stmt->AsInt64(4);
             entry.mModificationTime = stmt->AsInt64(5);
+            entry.mIsInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             mMigrationEntries.AppendElement(entry);
           }
@@ -3050,7 +3068,7 @@ void PermissionManager::CompleteMigrations() {
   for (const MigrationEntry& entry : entries) {
     rv = UpgradeHostToOriginAndInsert(
         entry.mHost, entry.mType, entry.mPermission, entry.mExpireType,
-        entry.mExpireTime, entry.mModificationTime,
+        entry.mExpireTime, entry.mModificationTime, entry.mIsInBrowserElement,
         [&](const nsACString& aOrigin, const nsCString& aType,
             uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
             int64_t aModificationTime) {
@@ -3671,7 +3689,7 @@ nsresult PermissionManager::ImportLatestDefaults() {
 
       rv = UpgradeHostToOriginAndInsert(
           entry.mHostOrOrigin, entry.mType, entry.mPermission,
-          nsIPermissionManager::EXPIRE_NEVER, 0, modificationTime,
+          nsIPermissionManager::EXPIRE_NEVER, 0, modificationTime, false,
           [&](const nsACString& aOrigin, const nsCString& aType,
               uint32_t aPermission, uint32_t aExpireType, int64_t aExpireTime,
               int64_t aModificationTime) {

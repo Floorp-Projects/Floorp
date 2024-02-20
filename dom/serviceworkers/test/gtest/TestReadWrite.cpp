@@ -219,7 +219,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -280,24 +280,30 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
   {
     RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
-    ServiceWorkerRegistrationData reg;
+    for (int i = 0; i < 2; ++i) {
+      ServiceWorkerRegistrationData reg;
 
-    reg.scope() = "https://scope_write_0.org"_ns;
-    reg.currentWorkerURL() = "currentWorkerURL write 0"_ns;
-    reg.currentWorkerHandlesFetch() = true;
-    reg.cacheName() = u"cacheName write 0"_ns;
-    reg.updateViaCache() =
-        nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS;
+      reg.scope() = nsPrintfCString("https://scope_write_%d.org", i);
+      reg.currentWorkerURL() = nsPrintfCString("currentWorkerURL write %d", i);
+      reg.currentWorkerHandlesFetch() = true;
+      reg.cacheName() =
+          NS_ConvertUTF8toUTF16(nsPrintfCString("cacheName write %d", i));
+      reg.updateViaCache() =
+          nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS;
 
-    reg.currentWorkerInstalledTime() = PR_Now();
-    reg.currentWorkerActivatedTime() = PR_Now();
-    reg.lastUpdateTime() = PR_Now();
+      reg.currentWorkerInstalledTime() = PR_Now();
+      reg.currentWorkerActivatedTime() = PR_Now();
+      reg.lastUpdateTime() = PR_Now();
 
-    const auto spec = "spec write 0"_ns;
-    reg.principal() = mozilla::ipc::ContentPrincipalInfo(
-        mozilla::OriginAttributes(), spec, spec, mozilla::Nothing(), spec);
+      nsAutoCString spec;
+      spec.AppendPrintf("spec write %d", i);
 
-    swr->TestRegisterServiceWorker(reg);
+      reg.principal() = mozilla::ipc::ContentPrincipalInfo(
+          mozilla::OriginAttributes(i % 2), spec, spec, mozilla::Nothing(),
+          spec);
+
+      swr->TestRegisterServiceWorker(reg);
+    }
 
     nsresult rv = swr->TestWriteData();
     ASSERT_EQ(NS_OK, rv) << "WriteData() should not fail";
@@ -308,37 +314,47 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
   nsresult rv = swr->TestReadData();
   ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
 
-  const nsTArray<ServiceWorkerRegistrationData>& dataArr = swr->TestGetData();
-  ASSERT_EQ((uint32_t)1, dataArr.Length()) << "1 entries should be found";
+  const nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
+  ASSERT_EQ((uint32_t)2, data.Length()) << "2 entries should be found";
 
-  const auto& data = dataArr[0];
+  for (int i = 0; i < 2; ++i) {
+    nsAutoCString test;
 
-  ASSERT_EQ(data.principal().type(),
-            mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
-  const mozilla::ipc::ContentPrincipalInfo& cInfo = data.principal();
+    ASSERT_EQ(data[i].principal().type(),
+              mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
+    const mozilla::ipc::ContentPrincipalInfo& cInfo = data[i].principal();
 
-  mozilla::OriginAttributes attrs;
-  nsAutoCString suffix, expectSuffix;
-  attrs.CreateSuffix(expectSuffix);
-  cInfo.attrs().CreateSuffix(suffix);
+    mozilla::OriginAttributes attrs(i % 2);
+    nsAutoCString suffix, expectSuffix;
+    attrs.CreateSuffix(expectSuffix);
+    cInfo.attrs().CreateSuffix(suffix);
 
-  ASSERT_STREQ(expectSuffix.get(), suffix.get());
+    ASSERT_STREQ(expectSuffix.get(), suffix.get());
 
-  ASSERT_STREQ("https://scope_write_0.org", cInfo.spec().get());
-  ASSERT_STREQ("https://scope_write_0.org", data.scope().get());
-  ASSERT_STREQ("currentWorkerURL write 0", data.currentWorkerURL().get());
+    test.AppendPrintf("https://scope_write_%d.org", i);
+    ASSERT_STREQ(test.get(), cInfo.spec().get());
 
-  ASSERT_EQ(true, data.currentWorkerHandlesFetch());
+    test.Truncate();
+    test.AppendPrintf("https://scope_write_%d.org", i);
+    ASSERT_STREQ(test.get(), data[i].scope().get());
 
-  ASSERT_STREQ("cacheName write 0",
-               NS_ConvertUTF16toUTF8(data.cacheName()).get());
+    test.Truncate();
+    test.AppendPrintf("currentWorkerURL write %d", i);
+    ASSERT_STREQ(test.get(), data[i].currentWorkerURL().get());
 
-  ASSERT_EQ(nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS,
-            data.updateViaCache());
+    ASSERT_EQ(true, data[i].currentWorkerHandlesFetch());
 
-  ASSERT_NE((int64_t)0, data.currentWorkerInstalledTime());
-  ASSERT_NE((int64_t)0, data.currentWorkerActivatedTime());
-  ASSERT_NE((int64_t)0, data.lastUpdateTime());
+    test.Truncate();
+    test.AppendPrintf("cacheName write %d", i);
+    ASSERT_STREQ(test.get(), NS_ConvertUTF16toUTF8(data[i].cacheName()).get());
+
+    ASSERT_EQ(nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS,
+              data[i].updateViaCache());
+
+    ASSERT_NE((int64_t)0, data[i].currentWorkerInstalledTime());
+    ASSERT_NE((int64_t)0, data[i].currentWorkerActivatedTime());
+    ASSERT_NE((int64_t)0, data[i].lastUpdateTime());
+  }
 }
 
 TEST(ServiceWorkerRegistrar, TestVersion2Migration)
@@ -378,7 +394,7 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -448,7 +464,7 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -516,7 +532,7 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -588,7 +604,7 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -662,7 +678,7 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -749,7 +765,7 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -834,7 +850,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
   nsAutoCString suffix0;
   cInfo0.attrs().CreateSuffix(suffix0);
 
-  ASSERT_STREQ("", suffix0.get());
+  ASSERT_STREQ("^inBrowser=1", suffix0.get());
   ASSERT_STREQ("https://scope_0.org", cInfo0.spec().get());
   ASSERT_STREQ("https://scope_0.org", data[0].scope().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
@@ -887,7 +903,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
       spec.AppendPrintf("spec write dedupe/%d", i);
 
       reg.principal() = mozilla::ipc::ContentPrincipalInfo(
-          mozilla::OriginAttributes(), spec, spec, mozilla::Nothing(), spec);
+          mozilla::OriginAttributes(false), spec, spec, mozilla::Nothing(),
+          spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -909,7 +926,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
             mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
   const mozilla::ipc::ContentPrincipalInfo& cInfo = data[0].principal();
 
-  mozilla::OriginAttributes attrs;
+  mozilla::OriginAttributes attrs(false);
   nsAutoCString suffix, expectSuffix;
   attrs.CreateSuffix(expectSuffix);
   cInfo.attrs().CreateSuffix(suffix);
