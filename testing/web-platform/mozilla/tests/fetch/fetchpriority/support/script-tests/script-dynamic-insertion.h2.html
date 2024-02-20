@@ -8,19 +8,34 @@
 <script>
   onload = function() {
     const kData = [
-        { src: "../resources/dummy.js?1", fetchPriority: "low"},
-        { src: "../resources/dummy.js?2", fetchPriority: "high"},
-        { src: "../resources/dummy.js?3", fetchPriority: "auto"},
-        { src: "../resources/dummy.js?4"}
+        { src: "../resources/dummy.js?1", fetchPriority: "low", svg: false},
+        { src: "../resources/dummy.js?2", fetchPriority: "high", svg: false},
+        { src: "../resources/dummy.js?3", fetchPriority: "auto", svg: false},
+        { src: "../resources/dummy.js?4", svg: false},
+        { src: "../resources/dummy.js?5", fetchPriority: "low", svg: true},
+        { src: "../resources/dummy.js?6", fetchPriority: "high", svg: true},
+        { src: "../resources/dummy.js?7", fetchPriority: "auto", svg: true},
+        { src: "../resources/dummy.js?8", svg: true},
     ];
 
     let allScriptElements = [];
     for (data of kData) {
-      let scriptElement = document.createElement("script");
-      scriptElement.src = data.src;
-
-      if ("fetchPriority" in data) {
-        scriptElement.fetchPriority = data.fetchPriority;
+      let scriptElement;
+      if (!data.svg) {
+        scriptElement = document.createElement("script");
+        scriptElement.src = data.src;
+        if ("fetchPriority" in data) {
+          scriptElement.fetchPriority = data.fetchPriority;
+        }
+      } else {
+        const namespaceURI = "http://www.w3.org/2000/svg";
+        scriptElement = document.createElementNS(namespaceURI, "script");
+        // Use setAttribute as SVGURIReference's href property is read-only
+        // and SVGScriptElement has no fetchPriority property.
+        scriptElement.setAttribute("href", data.src);
+        if ("fetchPriority" in data) {
+          scriptElement.setAttribute("fetchPriority", data.fetchPriority);
+        }
       }
 
       allScriptElements.push(scriptElement);
