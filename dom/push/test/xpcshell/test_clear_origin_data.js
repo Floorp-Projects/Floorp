@@ -59,11 +59,6 @@ add_task(async function test_webapps_cleardata() {
       originAttributes: {},
       clearIf: { inIsolatedMozBrowser: false },
     },
-    {
-      scope: "https://example.org/1",
-      originAttributes: { inIsolatedMozBrowser: true },
-      clearIf: {},
-    },
   ];
 
   let unregisterDone;
