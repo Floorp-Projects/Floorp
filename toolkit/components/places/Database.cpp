@@ -1615,7 +1615,7 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InvalidateDaysOfHistoryFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = MD5HexFunction::create(mMainConn);
+  rv = SHA256HexFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetShouldStartFrecencyRecalculationFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);

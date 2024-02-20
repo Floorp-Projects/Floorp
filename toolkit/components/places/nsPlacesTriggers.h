@@ -112,7 +112,7 @@
         "UPDATE moz_origins SET recalc_frecency = 1, recalc_alt_frecency = 1 " \
         "WHERE id = OLD.origin_id; "                                           \
         "INSERT OR IGNORE INTO moz_previews_tombstones VALUES "                \
-        "(md5hex(OLD.url));"                                                   \
+        "(sha256hex(OLD.url));"                                                \
         "END ")
 
 // This is the supporting table for the "AFTER DELETE ON moz_places" triggers.

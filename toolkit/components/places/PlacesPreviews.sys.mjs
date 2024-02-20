@@ -184,7 +184,7 @@ class DeletionHandler {
 
 /**
  * Handles previews for Places urls.
- * Previews are stored in WebP format, using MD5 hash of the page url in hex
+ * Previews are stored in WebP format, using SHA256 hash of the page url in hex
  * format. All the previews are saved into a "places-previews" folder under
  * the roaming profile folder.
  */
@@ -255,13 +255,13 @@ export const PlacesPreviews = new (class extends EventEmitter {
   getPathForUrl(url) {
     return PathUtils.join(
       this.getPath(),
-      lazy.PlacesUtils.md5(url, { format: "hex" }) + this.fileExtension
+      lazy.PlacesUtils.sha256(url, { format: "hex" }) + this.fileExtension
     );
   }
 
   /**
    * Returns the file path of the preview having the given hash.
-   * @param {string} hash md5 hash in hex format.
+   * @param {string} hash SHA256 hash in hex format.
    * @returns {string } File path of the preview having the given hash.
    */
   getPathForHash(hash) {
@@ -395,7 +395,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
           INSERT OR IGNORE INTO moz_previews_tombstones
             SELECT hash FROM files
             EXCEPT
-            SELECT md5hex(url) FROM moz_places
+            SELECT sha256hex(url) FROM moz_places
           `
         );
       }
