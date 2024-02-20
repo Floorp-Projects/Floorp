@@ -505,8 +505,9 @@ add_task(async function test_tabsFromPrivateWindows() {
   });
   const private2TabsChanges = getTabsTargetForWindow(private2Win);
   private2TabsChanges.addEventListener("TabChange", private2Listener);
-  ok(
-    privateTabsChanges !== getTabsTargetForWindow(private2Win),
+  Assert.notStrictEqual(
+    privateTabsChanges,
+    getTabsTargetForWindow(private2Win),
     "getTabsTargetForWindow creates a distinct instance for a different private window"
   );
 

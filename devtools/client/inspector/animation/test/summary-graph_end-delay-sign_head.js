@@ -69,8 +69,9 @@ async function testSummaryGraphEndDelaySign() {
       function assertExpected(key) {
         const actual = parseFloat(endDelaySignEl.style[key]);
         const expected = parseFloat(expectedResult[key]);
-        ok(
-          Math.abs(actual - expected) < 0.01,
+        Assert.less(
+          Math.abs(actual - expected),
+          0.01,
           `${key} should be ${expected} (got ${actual})`
         );
       }
