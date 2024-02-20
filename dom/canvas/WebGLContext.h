@@ -667,7 +667,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   //////////////////////////
 
   void UniformData(uint32_t loc, bool transpose,
-                   const Span<const webgl::UniformDataVal>& data) const;
+                   const Range<const webgl::UniformDataVal>& data) const;
 
   ////////////////////////////////////
 
@@ -1156,7 +1156,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   bool ValidateFramebufferTarget(GLenum target) const;
   bool ValidateInvalidateFramebuffer(GLenum target,
-                                     const Span<const GLenum>& attachments,
+                                     const Range<const GLenum>& attachments,
                                      std::vector<GLenum>* const scopedVector,
                                      GLsizei* const out_glNumAttachments,
                                      const GLenum** const out_glAttachments);

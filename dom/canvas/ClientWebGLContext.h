@@ -929,11 +929,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void EnqueueErrorImpl(GLenum errorOrZero, const nsACString&) const;
 
  public:
-  Maybe<Span<uint8_t>> ValidateArrayBufferView(const Span<uint8_t>& bytes,
-                                               size_t elemSize,
-                                               GLuint elemOffset,
-                                               GLuint elemCountOverride,
-                                               const GLenum errorEnum) const;
+  Maybe<Range<uint8_t>> ValidateArrayBufferView(const Span<uint8_t>& bytes,
+                                                size_t elemSize,
+                                                GLuint elemOffset,
+                                                GLuint elemCountOverride,
+                                                const GLenum errorEnum) const;
 
  protected:
   template <typename T>
@@ -1087,7 +1087,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  private:
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
   [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
-                                  Span<uint8_t>) const;
+                                  Range<uint8_t>) const;
   uvec2 DrawingBufferSize();
 
   // -

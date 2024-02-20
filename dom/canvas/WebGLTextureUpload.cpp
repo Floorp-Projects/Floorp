@@ -925,7 +925,23 @@ void WebGLTexture::TexStorage(TexTarget target, uint32_t levels,
 void WebGLTexture::TexImage(uint32_t level, GLenum respecFormat,
                             const uvec3& offset, const webgl::PackingInfo& pi,
                             const webgl::TexUnpackBlobDesc& src) {
-  const auto blob = webgl::TexUnpackBlob::Create(src);
+  Maybe<RawBuffer<>> cpuDataView;
+  if (src.cpuData) {
+    cpuDataView = Some(RawBuffer<>{src.cpuData->Data()});
+  }
+  const auto srcViewDesc = webgl::TexUnpackBlobDesc{src.imageTarget,
+                                                    src.size,
+                                                    src.srcAlphaType,
+                                                    std::move(cpuDataView),
+                                                    src.pboOffset,
+                                                    src.structuredSrcSize,
+                                                    src.image,
+                                                    src.sd,
+                                                    src.dataSurf,
+                                                    src.unpacking,
+                                                    src.applyUnpackTransforms};
+
+  const auto blob = webgl::TexUnpackBlob::Create(srcViewDesc);
   if (!blob) {
     MOZ_ASSERT(false);
     return;

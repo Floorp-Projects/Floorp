@@ -24,7 +24,6 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/Span.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Logging.h"
@@ -854,6 +853,47 @@ struct VertAttribPointerCalculated final {
 
 }  // namespace webgl
 
+// TODO: s/RawBuffer/Span/
+template <typename T = uint8_t>
+class RawBuffer final {
+  const T* mBegin = nullptr;
+  size_t mLen = 0;
+
+ public:
+  using ElementType = T;
+
+  explicit RawBuffer(const Range<const T>& data)
+      : mBegin(data.begin().get()), mLen(data.length()) {
+    if (mLen) {
+      MOZ_ASSERT(mBegin);
+    }
+  }
+
+  ~RawBuffer() = default;
+
+  Range<const T> Data() const { return {begin(), mLen}; }
+  const auto& begin() const {
+    if (mLen) {
+      MOZ_RELEASE_ASSERT(mBegin);
+    }
+    return mBegin;
+  }
+  const auto& size() const { return mLen; }
+
+  void Shrink(const size_t newLen) {
+    if (mLen <= newLen) return;
+    mLen = newLen;
+  }
+
+  RawBuffer() = default;
+
+  RawBuffer(const RawBuffer&) = delete;
+  RawBuffer& operator=(const RawBuffer&) = delete;
+
+  RawBuffer(RawBuffer&&) = default;
+  RawBuffer& operator=(RawBuffer&&) = default;
+};
+
 template <class T>
 inline Range<T> ShmemRange(const mozilla::ipc::Shmem& shmem) {
   return {shmem.get<T>(), shmem.Size<T>()};
@@ -1056,7 +1096,7 @@ struct TexUnpackBlobDesc final {
   uvec3 size;
   gfxAlphaType srcAlphaType = gfxAlphaType::NonPremult;
 
-  Maybe<Span<const uint8_t>> cpuData;
+  Maybe<RawBuffer<>> cpuData;
   Maybe<uint64_t> pboOffset;
 
   Maybe<uvec2> structuredSrcSize;
@@ -1094,6 +1134,11 @@ inline Range<const T> MakeRange(const dom::Sequence<T>& seq) {
   return {seq.Elements(), seq.Length()};
 }
 
+template <typename T>
+inline Range<const T> MakeRange(const RawBuffer<T>& from) {
+  return from.Data();
+}
+
 // -
 
 constexpr auto kUniversalAlignment = alignof(std::max_align_t);
@@ -1110,6 +1155,13 @@ inline size_t AlignmentOffset(const size_t alignment, const T posOrPtr) {
 template <typename T>
 inline size_t ByteSize(const Range<T>& range) {
   return range.length() * sizeof(T);
+}
+
+// -
+
+template <typename T>
+RawBuffer<T> RawBufferView(const Range<T>& range) {
+  return RawBuffer<T>{range};
 }
 
 // -
@@ -1153,13 +1205,6 @@ template <class T, class U>
 inline void Memcpy(const RangedPtr<T>* const destBegin,
                    const Range<U>& srcRange) {
   Memcpy(destBegin, srcRange->begin(), srcRange->length());
-}
-
-template <typename Dst, typename Src>
-inline void Memcpy(const Span<Dst>* const dest, const Span<Src>& src) {
-  MOZ_RELEASE_ASSERT(src.size_bytes() >= dest->size_bytes());
-  MOZ_ASSERT(src.size_bytes() == dest->size_bytes());
-  memcpy(dest->data(), src.data(), dest->size_bytes());
 }
 
 // -
@@ -1239,15 +1284,6 @@ inline const char* ToChars(const bool val) {
   if (val) return "true";
   return "false";
 }
-
-template <class To>
-struct ReinterpretToSpan {
-  template <class From>
-  static inline constexpr Span<To> From(const Span<From>& from) {
-    static_assert(sizeof(From) == sizeof(To));
-    return {reinterpret_cast<To*>(from.data()), from.size()};
-  }
-};
 
 }  // namespace mozilla
 
