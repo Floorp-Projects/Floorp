@@ -1829,14 +1829,13 @@ export var PlacesUtils = {
    * Run some text through md5 and return the hash.
    * @param {string} data The string to hash.
    * @param {string} [format] Which format of the hash to return:
-   *   - "ascii" for ascii format.
+   *   - "base64" for ascii format.
    *   - "hex" for hex format.
-   * @returns {string} hash of the input string in the required format.
+   * @returns {string} hash of the input data in the required format.
    * @deprecated use sha256 instead.
    */
-  md5(data, { format = "ascii" } = {}) {
+  md5(data, { format = "base64" } = {}) {
     let hasher = new lazy.CryptoHash("md5");
-
     // Convert the data to a byte array for hashing.
     data = new TextEncoder().encode(data);
     hasher.update(data, data.length);
@@ -1846,7 +1845,7 @@ export var PlacesUtils = {
         return Array.from(hash, (c, i) =>
           hash.charCodeAt(i).toString(16).padStart(2, "0")
         ).join("");
-      case "ascii":
+      case "base64":
       default:
         return hasher.finish(true);
     }
@@ -1854,25 +1853,35 @@ export var PlacesUtils = {
 
   /**
    * Run some text through SHA256 and return the hash.
-   * @param {string} data The string to hash.
+   * @param {string|nsIStringInputStream} data The data to hash.
    * @param {string} [format] Which format of the hash to return:
-   *   - "ascii" for ascii format.
+   *   - "base64" (default) for ascii format, not safe for URIs or file names.
    *   - "hex" for hex format.
-   * @returns {string} hash of the input string in the required format.
+   *   - "base64url" for ascii format safe to be used in file names (RFC 4648).
+   *       You should normally use the "hex" format for file names, but if the
+   *       user may manipulate the file, it would be annoying to have very long
+   *       and unreadable file names, thus this provides a shorter alternative.
+   *       Note padding "=" are untouched and may have to be encoded in URIs.
+   * @returns {string} hash of the input data in the required format.
    */
-  sha256(data, { format = "ascii" } = {}) {
+  sha256(data, { format = "base64" } = {}) {
     let hasher = new lazy.CryptoHash("sha256");
-
-    // Convert the data to a byte array for hashing.
-    data = new TextEncoder().encode(data);
-    hasher.update(data, data.length);
+    if (data instanceof Ci.nsIStringInputStream) {
+      hasher.updateFromStream(data, -1);
+    } else {
+      // Convert the data string to a byte array for hashing.
+      data = new TextEncoder().encode(data);
+      hasher.update(data, data.length);
+    }
     switch (format) {
       case "hex":
         let hash = hasher.finish(false);
         return Array.from(hash, (c, i) =>
           hash.charCodeAt(i).toString(16).padStart(2, "0")
         ).join("");
-      case "ascii":
+      case "base64url":
+        return hasher.finish(true).replaceAll("+", "-").replaceAll("/", "_");
+      case "base64":
       default:
         return hasher.finish(true);
     }

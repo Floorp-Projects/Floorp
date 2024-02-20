@@ -17,7 +17,7 @@ add_task(async function () {
     oldBackup
   );
   Assert.ok(count > 0);
-  Assert.equal(hash.length, 24);
+  Assert.equal(hash.length, 44);
   oldBackupName = oldBackupName.replace(
     /\.json/,
     "_" + count + "_" + hash + ".json"
