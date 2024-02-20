@@ -9,7 +9,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   HttpError: "resource://testing-common/httpd.sys.mjs",
   HttpServer: "resource://testing-common/httpd.sys.mjs",
   HTTP_404: "resource://testing-common/httpd.sys.mjs",
-  Log: "resource://gre/modules/Log.sys.mjs",
 });
 
 const SERVER_PREF = "services.settings.server";
@@ -23,23 +22,16 @@ export class RemoteSettingsServer {
    * The server must be started by calling `start()`.
    *
    * @param {object} options
-   * @param {number} options.logLevel
-   *   A `Log.Level` value from `Log.sys.mjs`. `Log.Level.Info` logs basic info
-   *   on requests and responses like paths and status codes. Pass
-   *   `Log.Level.Debug` to log more info like headers, response bodies, and
-   *   added and removed records.
+   * @param {number} options.maxLogLevel
+   *   A log level value as defined by ConsoleInstance. `Info` logs basic info
+   *   on requests and responses like paths and status codes. Pass `Debug` to
+   *   log more info like headers, response bodies, added and removed records.
    */
-  constructor({ logLevel = lazy.Log.Level.Info } = {}) {
-    this.#log = lazy.Log.repository.getLogger("RemoteSettingsServer");
-    this.#log.level = logLevel;
-
-    // Use `DumpAppender` instead of `ConsoleAppender`. The xpcshell and browser
-    // test harnesses buffer console messages and log them later, which makes it
-    // really hard to debug problems. `DumpAppender` logs to stdout, which the
-    // harnesses log immediately.
-    this.#log.addAppender(
-      new lazy.Log.DumpAppender(new lazy.Log.BasicFormatter())
-    );
+  constructor({ maxLogLevel = "Info" } = {}) {
+    this.#log = console.createInstance({
+      prefix: "RemoteSettingsServer",
+      maxLogLevel,
+    });
   }
 
   /**
