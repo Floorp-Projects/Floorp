@@ -667,7 +667,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   //////////////////////////
 
   void UniformData(uint32_t loc, bool transpose,
-                   const Range<const webgl::UniformDataVal>& data) const;
+                   const Span<const webgl::UniformDataVal>& data) const;
 
   ////////////////////////////////////
 

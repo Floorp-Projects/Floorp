@@ -603,8 +603,8 @@ class HostWebGLContext final : public SupportsWeakPtr {
   // ------------------------ Uniforms and attributes ------------------------
 
   void UniformData(uint32_t loc, bool transpose,
-                   const RawBuffer<webgl::UniformDataVal>& data) const {
-    mContext->UniformData(loc, transpose, data.Data());
+                   const Span<const webgl::UniformDataVal>& data) const {
+    mContext->UniformData(loc, transpose, data);
   }
 
   void VertexAttrib4T(GLuint index, const webgl::TypedQuad& data) const {
