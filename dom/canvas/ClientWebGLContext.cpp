@@ -4856,9 +4856,8 @@ void ClientWebGLContext::UniformData(const GLenum funcElemType,
   const auto begin =
       reinterpret_cast<const webgl::UniformDataVal*>(bytes.begin().get()) +
       elemOffset;
-  const auto range = Range{begin, availCount};
-  RunWithGCData<RPROC(UniformData)>(std::move(nogc), locId, transpose,
-                                    RawBuffer{range});
+  const auto range = Span{begin, availCount};
+  RunWithGCData<RPROC(UniformData)>(std::move(nogc), locId, transpose, range);
 }
 
 // -
