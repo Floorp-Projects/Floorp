@@ -14,9 +14,6 @@ module.exports = {
     // Enforce return statements in callbacks of array methods.
     "array-callback-return": "error",
 
-    // Verify calls of super() in constructors.
-    "constructor-super": "error",
-
     // Require default case in switch statements.
     "default-case": "error",
 
