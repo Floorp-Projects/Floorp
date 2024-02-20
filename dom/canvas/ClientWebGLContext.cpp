@@ -3419,7 +3419,7 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
     const auto& child = notLost->outOfProcess;
     child->FlushPendingCmds();
     mozilla::ipc::Shmem rawShmem;
-    if (!child->SendGetBufferSubData(target, srcByteOffset, destView->length(),
+    if (!child->SendGetBufferSubData(target, srcByteOffset, destView->size(),
                                      &rawShmem)) {
       return;
     }
@@ -3429,14 +3429,13 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
       return;
     }
 
-    const auto shmemView = shmem.ByteRange();
-    MOZ_RELEASE_ASSERT(shmemView.length() == 1 + destView->length());
+    const auto shmemView = Span{shmem.ByteRange()};
+    MOZ_RELEASE_ASSERT(shmemView.size() == 1 + destView->size());
 
-    const auto ok = bool(*(shmemView.begin().get()));
-    const auto srcView =
-        Range<const uint8_t>{shmemView.begin() + 1, shmemView.end()};
+    const auto ok = bool(shmemView[0]);
+    const auto srcView = shmemView.subspan(1);
     if (ok) {
-      Memcpy(destView->begin(), srcView.begin(), srcView.length());
+      Memcpy(&*destView, srcView);
     }
   });
 }
@@ -3463,8 +3462,8 @@ void ClientWebGLContext::BufferData(
   if (!ValidateNonNull("src", maybeSrc)) return;
   const auto& src = maybeSrc.Value();
 
-  src.ProcessFixedData([&](const Span<uint8_t>& aData) {
-    Run<RPROC(BufferData)>(target, RawBuffer<>(aData), usage);
+  src.ProcessFixedData([&](const Span<const uint8_t>& aData) {
+    Run<RPROC(BufferData)>(target, aData, usage);
   });
 }
 
@@ -3481,7 +3480,7 @@ void ClientWebGLContext::BufferData(GLenum target,
     if (!range) {
       return;
     }
-    Run<RPROC(BufferData)>(target, RawBuffer<>(*range), usage);
+    Run<RPROC(BufferData)>(target, *range, usage);
   });
 }
 
@@ -3491,8 +3490,8 @@ void ClientWebGLContext::BufferSubData(GLenum target,
                                        WebGLsizeiptr dstByteOffset,
                                        const dom::ArrayBuffer& src) {
   const FuncScope funcScope(*this, "bufferSubData");
-  src.ProcessFixedData([&](const Span<uint8_t>& aData) {
-    Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(aData),
+  src.ProcessFixedData([&](const Span<const uint8_t>& aData) {
+    Run<RPROC(BufferSubData)>(target, dstByteOffset, aData,
                               /* unsynchronized */ false);
   });
 }
@@ -3511,7 +3510,7 @@ void ClientWebGLContext::BufferSubData(GLenum target,
     if (!range) {
       return;
     }
-    Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(*range),
+    Run<RPROC(BufferSubData)>(target, dstByteOffset, *range,
                               /* unsynchronized */ false);
   });
 }
@@ -3811,9 +3810,7 @@ void ClientWebGLContext::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1,
 void ClientWebGLContext::InvalidateFramebuffer(
     GLenum target, const dom::Sequence<GLenum>& attachments,
     ErrorResult& unused) {
-  const auto range = MakeRange(attachments);
-  const auto& buffer = RawBufferView(range);
-  Run<RPROC(InvalidateFramebuffer)>(target, buffer);
+  Run<RPROC(InvalidateFramebuffer)>(target, Span{attachments});
 
   // Never invalidate the backbuffer, so never needs AfterDrawCall.
 }
@@ -3821,9 +3818,8 @@ void ClientWebGLContext::InvalidateFramebuffer(
 void ClientWebGLContext::InvalidateSubFramebuffer(
     GLenum target, const dom::Sequence<GLenum>& attachments, GLint x, GLint y,
     GLsizei width, GLsizei height, ErrorResult& unused) {
-  const auto range = MakeRange(attachments);
-  const auto& buffer = RawBufferView(range);
-  Run<RPROC(InvalidateSubFramebuffer)>(target, buffer, x, y, width, height);
+  Run<RPROC(InvalidateSubFramebuffer)>(target, Span{attachments}, x, y, width,
+                                       height);
 
   // Never invalidate the backbuffer, so never needs AfterDrawCall.
 }
@@ -4588,7 +4584,7 @@ void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
 
       RunWithGCData<RPROC(CompressedTexImage)>(
           std::move(aNoGC), sub, imageTarget, static_cast<uint32_t>(level),
-          format, CastUvec3(offset), CastUvec3(isize), RawBuffer<>{*range},
+          format, CastUvec3(offset), CastUvec3(isize), *range,
           static_cast<uint32_t>(pboImageSize), Maybe<uint64_t>());
       return;
     });
@@ -4603,8 +4599,8 @@ void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
 
   Run<RPROC(CompressedTexImage)>(
       sub, imageTarget, static_cast<uint32_t>(level), format, CastUvec3(offset),
-      CastUvec3(isize), RawBuffer<>(), static_cast<uint32_t>(pboImageSize),
-      Some(*src.mPboOffset));
+      CastUvec3(isize), Span<const uint8_t>{},
+      static_cast<uint32_t>(pboImageSize), Some(*src.mPboOffset));
 }
 
 void ClientWebGLContext::CopyTexImage(uint8_t funcDims, GLenum imageTarget,
@@ -6572,7 +6568,7 @@ const webgl::LinkResult& ClientWebGLContext::GetLinkResult(
 
 // ---------------------------
 
-Maybe<Range<uint8_t>> ClientWebGLContext::ValidateArrayBufferView(
+Maybe<Span<uint8_t>> ClientWebGLContext::ValidateArrayBufferView(
     const Span<uint8_t>& bytes, size_t elemSize, GLuint elemOffset,
     GLuint elemCountOverride, const GLenum errorEnum) const {
   size_t elemCount = bytes.Length() / elemSize;
@@ -6590,8 +6586,7 @@ Maybe<Range<uint8_t>> ClientWebGLContext::ValidateArrayBufferView(
     elemCount = elemCountOverride;
   }
 
-  return Some(Range<uint8_t>(
-      bytes.Subspan(elemOffset * elemSize, elemCount * elemSize)));
+  return Some(bytes.Subspan(elemOffset * elemSize, elemCount * elemSize));
 }
 
 // ---------------------------
