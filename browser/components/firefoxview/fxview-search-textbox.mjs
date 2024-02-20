@@ -24,8 +24,6 @@ const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
  *
  * @property {string} placeholder
  *   The placeholder text for the search box.
- * @property {string} query
- *   The query that is currently in the search box.
  * @property {number} size
  *   The width (number of characters) of the search box.
  * @property {string} pageName
@@ -34,7 +32,6 @@ const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
 export default class FxviewSearchTextbox extends MozLitElement {
   static properties = {
     placeholder: { type: String },
-    query: { type: String },
     size: { type: Number },
     pageName: { type: String },
   };
@@ -44,9 +41,10 @@ export default class FxviewSearchTextbox extends MozLitElement {
     input: "input",
   };
 
+  #query = "";
+
   constructor() {
     super();
-    this.query = "";
     this.searchTask = new lazy.DeferredTask(
       () => this.#dispatchQueryEvent(),
       SEARCH_DEBOUNCE_RATE_MS,
@@ -70,14 +68,18 @@ export default class FxviewSearchTextbox extends MozLitElement {
   }
 
   onInput(event) {
-    this.query = event.target.value.trim();
+    this.#query = event.target.value.trim();
     event.preventDefault();
     this.onSearch();
   }
 
+  /**
+   * Handler for query updates from keyboard input, and textbox clears from 'X'
+   * button.
+   */
   onSearch() {
-    // Make the search and then immediately finalize
     this.searchTask?.arm();
+    this.requestUpdate();
   }
 
   clear(event) {
@@ -86,7 +88,7 @@ export default class FxviewSearchTextbox extends MozLitElement {
       (event.type == "keydown" && event.code == "Enter") ||
       (event.type == "keydown" && event.code == "Space")
     ) {
-      this.query = "";
+      this.#query = "";
       event.preventDefault();
       this.onSearch();
     }
@@ -98,7 +100,7 @@ export default class FxviewSearchTextbox extends MozLitElement {
       new CustomEvent("fxview-search-textbox-query", {
         bubbles: true,
         composed: true,
-        detail: { query: this.query },
+        detail: { query: this.#query },
       })
     );
 
@@ -122,14 +124,14 @@ export default class FxviewSearchTextbox extends MozLitElement {
         type="search"
         .placeholder=${ifDefined(this.placeholder)}
         .size=${ifDefined(this.size)}
-        .value=${this.query}
+        .value=${this.#query}
         @input=${this.onInput}
       ></input>
       <div
         class="clear-icon"
         role="button"
         tabindex="0"
-        ?hidden=${!this.query}
+        ?hidden=${!this.#query}
         @click=${this.clear}
         @keydown=${this.clear}
         data-l10n-id="firefoxview-search-text-box-clear-button"
