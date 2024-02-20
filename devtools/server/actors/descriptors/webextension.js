@@ -28,13 +28,13 @@ const lazy = {};
 loader.lazyGetter(lazy, "AddonManager", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-    { loadInDevToolsLoader: false }
+    { global: "shared" }
   ).AddonManager;
 });
 loader.lazyGetter(lazy, "ExtensionParent", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-    { loadInDevToolsLoader: false }
+    { global: "shared" }
   ).ExtensionParent;
 });
 loader.lazyRequireGetter(

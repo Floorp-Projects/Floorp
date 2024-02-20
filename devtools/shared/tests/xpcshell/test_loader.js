@@ -22,7 +22,7 @@ function run_test() {
   const DevToolsSpecialGlobal = Cu.getGlobalForObject(
     ChromeUtils.importESModule(
       "resource://devtools/shared/DevToolsInfaillibleUtils.sys.mjs",
-      { loadInDevToolsLoader: true }
+      { global: "devtools" }
     )
   );
 

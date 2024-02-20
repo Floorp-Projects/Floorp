@@ -6,11 +6,9 @@
 
 const { WatcherRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
-  {
-    // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
-    // which also has to be a true singleton.
-    loadInDevToolsLoader: false,
-  }
+  // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
+  // which also has to be a true singleton.
+  { global: "shared" }
 );
 
 loader.lazyRequireGetter(

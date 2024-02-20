@@ -31,9 +31,7 @@ const {
 } = require("resource://devtools/server/actors/targets/base-target-actor.js");
 const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
-  {
-    loadInDevToolsLoader: false,
-  }
+  { global: "shared" }
 );
 
 loader.lazyRequireGetter(

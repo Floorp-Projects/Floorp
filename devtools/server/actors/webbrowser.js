@@ -52,7 +52,7 @@ const lazy = {};
 loader.lazyGetter(lazy, "AddonManager", () => {
   return ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-    { loadInDevToolsLoader: false }
+    { global: "shared" }
   ).AddonManager;
 });
 
