@@ -53,6 +53,16 @@ add_task(async function () {
     "There is a warning about the missing source map file"
   );
 
+  let footerButton = findElement(dbg, "sourceMapFooterButton");
+  ok(
+    footerButton.classList.contains("not-mapped"),
+    "The source map error causes the file to be reported as not mapped"
+  );
+  ok(
+    footerButton.classList.contains("error"),
+    "The source map error is displayed in the source map icon"
+  );
+
   // Test a Source Map with missing original text content
   await selectSource(dbg, "map-with-failed-original-request.js");
   ok(
@@ -85,6 +95,25 @@ add_task(async function () {
   is(
     getCM(dbg).getValue(),
     `Error while fetching an original source: request failed with status 404\nSource URL: ${EXAMPLE_URL}map-with-failed-original-request.original.js`
+  );
+
+  footerButton = findElement(dbg, "sourceMapFooterButton");
+  is(
+    footerButton.textContent,
+    "original file",
+    "Even if the original can't be loaded, it is reported as original in the footer"
+  );
+  ok(
+    !footerButton.classList.contains("loading"),
+    "The source map isn't loading because of the missing text content"
+  );
+  ok(
+    !footerButton.classList.contains("error"),
+    "The source map isn't reported with an error because of the missing text content"
+  );
+  ok(
+    footerButton.classList.contains("original"),
+    "The source map icon is set to original"
   );
 
   await resume(dbg);

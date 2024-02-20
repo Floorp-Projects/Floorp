@@ -1776,6 +1776,7 @@ const selectors = {
   prettyPrintButton: ".source-footer .prettyPrint",
   mappedSourceLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",
+  sourceMapFooterButton: ".debugger-source-map-button",
   editorFooter: ".editor-pane .source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i}) .node`,
   sourceNodes: ".sources-list .tree-node",
@@ -2206,8 +2207,9 @@ async function clickAtPos(dbg, pos) {
       bubbles: true,
       cancelable: true,
       view: dbg.win,
-      clientX: left,
-      clientY: top,
+      // Shift by one as we might be on the edge of the element and click on previous line/column
+      clientX: left + 1,
+      clientY: top + 1,
     })
   );
 }
@@ -2946,6 +2948,33 @@ async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
 
   // Waits for the debugger settings panel to disappear.
   await waitFor(() => menuButton.getAttribute("aria-expanded") === "false");
+}
+
+/**
+ * Click on the source map button in the editor's footer
+ * and wait for its context menu to be rendered before clicking
+ * on one menuitem of it.
+ *
+ * @param {Object} dbg
+ * @param {String} className
+ *        The class name of the menuitem to click in the context menu.
+ */
+async function clickOnSourceMapMenuItem(dbg, className) {
+  const menuButton = findElement(dbg, "sourceMapFooterButton");
+  const { parent } = dbg.panel.panelWin;
+  const { document } = parent;
+
+  menuButton.click();
+  // Waits for the debugger settings panel to appear.
+  await waitFor(() => {
+    const menuListEl = document.querySelector("#debugger-source-map-list");
+    // Lets check the offsetParent property to make sure the menu list is actually visible
+    // by its parents display property being no longer "none".
+    return menuListEl && menuListEl.offsetParent !== null;
+  });
+
+  const menuItem = document.querySelector(className);
+  menuItem.click();
 }
 
 async function setLogPoint(dbg, index, value) {

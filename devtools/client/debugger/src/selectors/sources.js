@@ -163,6 +163,16 @@ export function getSelectedMappedSource(state) {
   return mappedSource || null;
 }
 
+/**
+ * Helps knowing if we are still computing the mapped location for the currently selected source.
+ */
+export function isSelectedMappedSourceLoading(state) {
+  const { selectedOriginalLocation } = state.sources;
+  // This `selectedOriginalLocation` attribute is set to UNDEFINED_LOCATION when selecting a new source attribute
+  // and later on, when the source map is processed, it will switch to either a valid location object, or NO_LOCATION if no valid one if found.
+  return selectedOriginalLocation === UNDEFINED_LOCATION;
+}
+
 export const getSelectedSource = createSelector(
   getSelectedLocation,
   selectedLocation => {

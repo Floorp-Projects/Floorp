@@ -79,6 +79,29 @@ button:hover {
   gap: 8px;
   grid-area: notification;
   display: flex;
+  /* center text within the notification */
+  align-items: center;
+
+  .info.icon {
+    align-self: normal;
+  }
+
+  .close-button {
+    /* set a fixed height in order to avoid having it flexed to full height */
+    height: 16px;
+    padding: 0;
+    /* put in top-right corner */
+    margin-inline-start: auto;
+    align-self: normal;
+
+    &::before {
+      display: block;
+      width: 16px;
+      height: 16px;
+      content: "";
+      background-image: url("chrome://devtools/skin/images/close.svg");
+    }
+  }
 }
 
 /* Utils */
