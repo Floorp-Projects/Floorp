@@ -99,7 +99,7 @@
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Rhedeg yn y pori preifat</string>
     <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
-    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Ni chaniateir mewn ffenestri preifat</string>
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Heb ei ganiatáu mewn ffenestri preifat</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Galluogwyd</string>
     <!-- Indicates the add-on is disabled. -->
@@ -253,7 +253,7 @@
     <!-- Text shown in the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Agorwch ef yn y ddewislen</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
-    <string name="mozac_feature_addons_installed_dialog_description_2">Mynediad %1$s o ddewislen %2$s.</string>
+    <string name="mozac_feature_addons_installed_dialog_description_2">Cael %1$s o ddewislen %2$s.</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Iawn, rwy’n deall</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->

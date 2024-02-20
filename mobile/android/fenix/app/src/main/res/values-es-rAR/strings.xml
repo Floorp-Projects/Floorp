@@ -505,7 +505,7 @@
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">Sitio seguro no disponible</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
-    <string name="errorpage_httpsonly_message_title">Lo más probable es que el sitio web simplemente no sea compatible con HTTPs.</string>
+    <string name="errorpage_httpsonly_message_title">Lo más probable es que el sitio web simplemente no sea compatible con HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
     <string name="errorpage_httpsonly_message_summary">Sin embargo, también es posible que un atacante esté involucrado. Si continúa al sitio web, no debe ingresar ninguna información sensible. Si continúa, el modo solo HTTPS se desactivará temporalmente para el sitio.</string>
     <!-- Preference for accessibility -->

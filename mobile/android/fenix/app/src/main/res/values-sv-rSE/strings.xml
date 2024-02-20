@@ -505,7 +505,7 @@
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">Säker webbplats är inte tillgänglig</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
-    <string name="errorpage_httpsonly_message_title">Troligtvis stöder webbplatsen helt enkelt inte HTTPs.</string>
+    <string name="errorpage_httpsonly_message_title">Troligtvis stöder webbplatsen helt enkelt inte HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
     <string name="errorpage_httpsonly_message_summary">Men det är också möjligt att en angripare är inblandad. Om du fortsätter till webbplatsen ska du inte ange någon känslig information. Om du fortsätter kommer endast HTTPS-läget att stängas av tillfälligt för webbplatsen.</string>
     <!-- Preference for accessibility -->

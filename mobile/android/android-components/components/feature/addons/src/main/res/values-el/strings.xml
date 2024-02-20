@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Να επιτρέπεται στην ιδιωτική περιήγηση</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Εκτέλεση στην ιδιωτική περιήγηση</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Δεν επιτρέπεται στα ιδιωτικά παράθυρα</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Ενεργά</string>
     <!-- Indicates the add-on is disabled. -->

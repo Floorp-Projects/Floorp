@@ -498,7 +498,7 @@
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">Trang web an toàn không khả dụng</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
-    <string name="errorpage_httpsonly_message_title">Rất có thể, trang web chỉ đơn giản là không hỗ trợ HTTPs.</string>
+    <string name="errorpage_httpsonly_message_title">Rất có thể, trang web chỉ đơn giản là không hỗ trợ HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
     <string name="errorpage_httpsonly_message_summary">Tuy nhiên, cũng có thể có kẻ tấn công tham gia. Nếu bạn tiếp tục vào trang web, bạn không nên nhập bất kỳ thông tin nhạy cảm nào. Nếu bạn tiếp tục, chế độ chỉ HTTPS sẽ tạm thời bị tắt cho trang web.</string>
     <!-- Preference for accessibility -->
