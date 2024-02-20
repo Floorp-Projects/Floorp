@@ -602,23 +602,6 @@ void ChromeUtils::Import(const GlobalObject& aGlobal,
   aRetval.set(exports);
 }
 
-static mozJSModuleLoader* GetContextualESLoader(
-    const Optional<bool>& aLoadInDevToolsLoader, JSObject* aGlobal) {
-  RefPtr devToolsModuleloader = mozJSModuleLoader::GetDevToolsLoader();
-  // We should load the module in the DevTools loader if:
-  // - ChromeUtils.importESModule's `loadInDevToolsLoader` option is true, or,
-  // - if the callsite is from a module loaded in the DevTools loader and
-  // `loadInDevToolsLoader` isn't an explicit false.
-  bool shouldUseDevToolsLoader =
-      (aLoadInDevToolsLoader.WasPassed() && aLoadInDevToolsLoader.Value()) ||
-      (devToolsModuleloader && !aLoadInDevToolsLoader.WasPassed() &&
-       devToolsModuleloader->IsLoaderGlobal(aGlobal));
-  if (shouldUseDevToolsLoader) {
-    return mozJSModuleLoader::GetOrCreateDevToolsLoader();
-  }
-  return mozJSModuleLoader::Get();
-}
-
 static mozJSModuleLoader* GetModuleLoaderForCurrentGlobal(
     JSContext* aCx, const GlobalObject& aGlobal,
     Maybe<loader::NonSharedGlobalSyncModuleLoaderScope>&
@@ -681,7 +664,7 @@ static mozJSModuleLoader* GetModuleLoaderForOptions(
     Maybe<loader::NonSharedGlobalSyncModuleLoaderScope>&
         aMaybeSyncLoaderScope) {
   if (!aOptions.mGlobal.WasPassed()) {
-    return GetContextualESLoader(aOptions.mLoadInDevToolsLoader, aGlobal.Get());
+    return mozJSModuleLoader::Get();
   }
 
   switch (aOptions.mGlobal.Value()) {
@@ -715,7 +698,8 @@ static mozJSModuleLoader* GetModuleLoaderForOptions(
 }
 
 static bool ValidateImportOptions(
-    JSContext* aCx, const ImportESModuleOptionsDictionary& aOptions) {
+    JSContext* aCx, const GlobalObject& aGlobal,
+    const ImportESModuleOptionsDictionary& aOptions) {
   if (!NS_IsMainThread() &&
       (!aOptions.mGlobal.WasPassed() ||
        (aOptions.mGlobal.Value() != ImportESModuleTargetGlobal::Current &&
@@ -727,12 +711,17 @@ static bool ValidateImportOptions(
     return false;
   }
 
-  if (aOptions.mGlobal.WasPassed() &&
-      aOptions.mLoadInDevToolsLoader.WasPassed()) {
-    JS_ReportErrorASCII(aCx,
-                        "global option and loadInDevToolsLoader option "
-                        "cannot be used at the same time");
-    return false;
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIGlobalObject> global =
+        do_QueryInterface(aGlobal.GetAsSupports());
+
+    if (mozJSModuleLoader::IsDevToolsLoaderGlobal(global) &&
+        !aOptions.mGlobal.WasPassed()) {
+      JS_ReportErrorASCII(aCx,
+                          "ChromeUtils.importESModule: global option is "
+                          "required in DevTools distinct global");
+      return false;
+    }
   }
 
   return true;
@@ -745,7 +734,7 @@ void ChromeUtils::ImportESModule(
     JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
 
-  if (!ValidateImportOptions(cx, aOptions)) {
+  if (!ValidateImportOptions(cx, aGlobal, aOptions)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -789,21 +778,11 @@ void ChromeUtils::ImportESModule(
 class EncodedOptions {
  public:
   explicit EncodedOptions(const ImportESModuleOptionsDictionary& aOptions) {
-    uint32_t globalFlag = 0;
     if (aOptions.mGlobal.WasPassed()) {
-      globalFlag = uint32_t(aOptions.mGlobal.Value()) + 1;
+      mValue = uint32_t(aOptions.mGlobal.Value()) + 1;
+    } else {
+      mValue = 0;
     }
-
-    uint32_t devtoolsFlag = 0;
-    if (aOptions.mLoadInDevToolsLoader.WasPassed()) {
-      if (aOptions.mLoadInDevToolsLoader.Value()) {
-        devtoolsFlag = DevToolsFlag_True;
-      } else {
-        devtoolsFlag = DevToolsFlag_False;
-      }
-    }
-
-    mValue = globalFlag | devtoolsFlag;
   }
 
   explicit EncodedOptions(uint32_t aValue) : mValue(aValue) {}
@@ -811,37 +790,14 @@ class EncodedOptions {
   int32_t toInt32() const { return int32_t(mValue); }
 
   void DecodeInto(ImportESModuleOptionsDictionary& aOptions) {
-    uint32_t globalFlag = mValue & GlobalFlag_Mask;
-    if (globalFlag == 0) {
+    if (mValue == 0) {
       aOptions.mGlobal.Reset();
     } else {
-      aOptions.mGlobal.Construct(ImportESModuleTargetGlobal(globalFlag - 1));
-    }
-
-    uint32_t devtoolsFlag = mValue & DevToolsFlag_Mask;
-    switch (devtoolsFlag) {
-      case DevToolsFlag_NotPassed:
-        aOptions.mLoadInDevToolsLoader.Reset();
-        break;
-      case DevToolsFlag_False:
-        aOptions.mLoadInDevToolsLoader.Construct(false);
-        break;
-      case DevToolsFlag_True:
-        aOptions.mLoadInDevToolsLoader.Construct(true);
-        break;
-      default:
-        MOZ_CRASH("Unknown DevToolsFlag");
+      aOptions.mGlobal.Construct(ImportESModuleTargetGlobal(mValue - 1));
     }
   }
 
  private:
-  static constexpr uint32_t GlobalFlag_Mask = 0xF;
-
-  static constexpr uint32_t DevToolsFlag_NotPassed = 0x00;
-  static constexpr uint32_t DevToolsFlag_False = 0x10;
-  static constexpr uint32_t DevToolsFlag_True = 0x20;
-  static constexpr uint32_t DevToolsFlag_Mask = 0x0F0;
-
   uint32_t mValue = 0;
 };
 
@@ -1017,10 +973,6 @@ static bool ModuleGetterImpl(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     ImportESModuleOptionsDictionary options;
     encodedOptions.DecodeInto(options);
 
-    if (!ValidateImportOptions(aCx, options)) {
-      return false;
-    }
-
     GlobalObject global(aCx, callee);
 
     Maybe<loader::NonSharedGlobalSyncModuleLoaderScope> maybeSyncLoaderScope;
@@ -1195,6 +1147,11 @@ void ChromeUtils::DefineESModuleGetters(
   JS::Rooted<JS::IdVector> props(cx, JS::IdVector(cx));
   if (!JS_Enumerate(cx, modules, &props)) {
     aRv.NoteJSContextException(cx);
+    return;
+  }
+
+  if (!ValidateImportOptions(cx, global, aOptions)) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
