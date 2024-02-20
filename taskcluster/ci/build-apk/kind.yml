@@ -229,7 +229,7 @@ jobs:
             shipping-product: focus
         description: 'Focus Nightly build for UI tests'
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         disable-optimization: true
         run:
             gradle-build-type: nightly
@@ -247,7 +247,7 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Nightly build for UI tests'
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         disable-optimization: true
         run:
             gradle-build-type: nightly
@@ -347,7 +347,7 @@ jobs:
             shipping-product: focus
         description: 'Focus Nightly Android Test for debugging'
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
@@ -374,7 +374,7 @@ jobs:
             shipping-product: fenix
         description: 'Fenix Nightly Android Test for debugging'
         dependencies:
-            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
         apk-artifact-template:
             # 3 differences here:
             #  * "androidTest/" is added
