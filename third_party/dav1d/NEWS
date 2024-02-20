@@ -1,3 +1,17 @@
+Changes for 1.4.0 'Road Runner':
+--------------------------------
+
+1.4.0 is a medium release of dav1d, focusing on new architecture support and optimizations
+
+- AVX-512 optimizations for z1, z2, z3 in 8bit and high-bitdepth
+- New architecture supported: loongarch
+- Loongarch optimizations for 8bit
+- New architecture supported: RISC-V
+- RISC-V optimizations for itx
+- Misc improvements in threading and in reducing binary size
+- Fix potential integer overflow with extremely large frame sizes (CVE-2024-1580)
+
+
 Changes for 1.3.0 'Tundra Peregrine Falcon (Calidus)':
 ------------------------------------------------------
 

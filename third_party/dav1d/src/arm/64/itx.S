@@ -1426,6 +1426,7 @@ endfunc
 function inv_txfm_add_16x16_neon
         mov             x15, x30
         sub             sp,  sp,  #512
+        mov             x8,  #16*2
 .irp i, 0, 8
         add             x6,  sp,  #(\i*16*2)
 .if \i == 8
@@ -1433,7 +1434,6 @@ function inv_txfm_add_16x16_neon
         b.lt            1f
 .endif
         add             x7,  x2,  #(\i*2)
-        mov             x8,  #16*2
         blr             x9
 .endr
         b               2f
@@ -1449,7 +1449,6 @@ function inv_txfm_add_16x16_neon
 .irp i, 0, 8
         add             x6,  x0,  #(\i)
         add             x7,  sp,  #(\i*2)
-        mov             x8,  #32
         bl              inv_txfm_add_vert_8x16_neon
 .endr
 
@@ -2461,10 +2460,10 @@ function inv_txfm_add_dct_dct_32x16_8bpc_neon, export=1
         b.gt            2b
 
 3:
+        mov             x8,  #32*2
 .irp i, 0, 8, 16, 24
         add             x6,  x0,  #(\i)
         add             x7,  sp,  #(\i*2)
-        mov             x8,  #32*2
         bl              inv_txfm_add_vert_8x16_neon
 .endr
 
@@ -3205,10 +3204,10 @@ function inv_txfm_add_dct_dct_64x16_8bpc_neon, export=1
 
 3:
         adr             x5,  inv_dct_8h_x16_neon
+        mov             x8,  #64*2
 .irp i, 0, 8, 16, 24, 32, 40, 48, 56
         add             x6,  x0,  #(\i)
         add             x7,  x4,  #(\i*2)
-        mov             x8,  #64*2
         bl              inv_txfm_add_vert_8x16_neon
 .endr
 
