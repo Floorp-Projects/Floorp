@@ -136,6 +136,8 @@ GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
     }
   } else if (!strcmp(aTopic, "application-background")) {
     mManager->mAppInForeground = false;
+  } else if (!strcmp(aTopic, "screen-information-changed")) {
+    mManager->ScreenInformationChanged();
   }
   return NS_OK;
 }
@@ -148,6 +150,7 @@ void GPUProcessManager::OnXPCOMShutdown() {
     if (obsServ) {
       obsServ->RemoveObserver(mObserver, "application-foreground");
       obsServ->RemoveObserver(mObserver, "application-background");
+      obsServ->RemoveObserver(mObserver, "screen-information-changed");
     }
     mObserver = nullptr;
   }
@@ -170,6 +173,14 @@ void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
   } else if (IsGPUProcessLaunching()) {
     mQueuedPrefs.AppendElement(pref);
   }
+}
+
+void GPUProcessManager::ScreenInformationChanged() {
+#if defined(XP_WIN)
+  if (!!mGPUChild) {
+    mGPUChild->SendScreenInformationChanged();
+  }
+#endif
 }
 
 void GPUProcessManager::ResetProcessStable() {
@@ -207,6 +218,7 @@ bool GPUProcessManager::LaunchGPUProcess() {
     if (obsServ) {
       obsServ->AddObserver(mObserver, "application-foreground", false);
       obsServ->AddObserver(mObserver, "application-background", false);
+      obsServ->AddObserver(mObserver, "screen-information-changed", false);
     }
   }
 
