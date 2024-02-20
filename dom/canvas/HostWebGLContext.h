@@ -482,9 +482,8 @@ class HostWebGLContext final : public SupportsWeakPtr {
     return GetWebGL2Context()->GetBufferSubData(target, srcByteOffset, dest);
   }
 
-  void BufferData(GLenum target, const Span<const uint8_t>& srcData,
-                  GLenum usage) const {
-    mContext->BufferData(target, srcData.size(), srcData.data(), usage);
+  void BufferData(GLenum target, const RawBuffer<>& srcData, GLenum usage) const {
+    mContext->BufferData(target, srcData.size(), srcData.begin(), usage);
   }
 
   void BufferData_SizeOnly(GLenum target, size_t byteSize, GLenum usage) const {
@@ -492,10 +491,11 @@ class HostWebGLContext final : public SupportsWeakPtr {
   }
 
   void BufferSubData(GLenum target, uint64_t dstByteOffset,
-                     const Span<const uint8_t>& srcData,
+                     const RawBuffer<>& srcData,
                      bool unsynchronized = false) const {
-    mContext->BufferSubData(target, dstByteOffset, srcData.size(),
-                            srcData.data(), unsynchronized);
+    const auto& range = srcData.Data();
+    mContext->BufferSubData(target, dstByteOffset, range.length(),
+                            range.begin().get(), unsynchronized);
   }
 
   // -------------------------- Framebuffer Objects --------------------------
@@ -507,15 +507,16 @@ class HostWebGLContext final : public SupportsWeakPtr {
   }
 
   void InvalidateFramebuffer(GLenum target,
-                             const Span<const GLenum>& attachments) const {
-    GetWebGL2Context()->InvalidateFramebuffer(target, attachments);
+                             const RawBuffer<const GLenum>& attachments) const {
+    GetWebGL2Context()->InvalidateFramebuffer(target, MakeRange(attachments));
   }
 
   void InvalidateSubFramebuffer(GLenum target,
-                                const Span<const GLenum>& attachments, GLint x,
-                                GLint y, GLsizei width, GLsizei height) const {
-    GetWebGL2Context()->InvalidateSubFramebuffer(target, attachments, x, y,
-                                                 width, height);
+                                const RawBuffer<const GLenum>& attachments,
+                                GLint x, GLint y, GLsizei width,
+                                GLsizei height) const {
+    GetWebGL2Context()->InvalidateSubFramebuffer(target, MakeRange(attachments),
+                                                 x, y, width, height);
   }
 
   void ReadBuffer(GLenum mode) const { GetWebGL2Context()->ReadBuffer(mode); }
@@ -553,11 +554,10 @@ class HostWebGLContext final : public SupportsWeakPtr {
   // CompressedTexSubImage if `sub`
   void CompressedTexImage(bool sub, GLenum imageTarget, uint32_t level,
                           GLenum format, const uvec3& offset, const uvec3& size,
-                          const Span<const uint8_t>& src,
-                          const uint32_t pboImageSize,
+                          const RawBuffer<>& src, const uint32_t pboImageSize,
                           const Maybe<uint64_t>& pboOffset) const {
     mContext->CompressedTexImage(sub, imageTarget, level, format, offset, size,
-                                 src, pboImageSize, pboOffset);
+                                 MakeRange(src), pboImageSize, pboOffset);
   }
 
   // CopyTexSubImage if `!respecFormat`
@@ -603,8 +603,8 @@ class HostWebGLContext final : public SupportsWeakPtr {
   // ------------------------ Uniforms and attributes ------------------------
 
   void UniformData(uint32_t loc, bool transpose,
-                   const Span<const webgl::UniformDataVal>& data) const {
-    mContext->UniformData(loc, transpose, data);
+                   const RawBuffer<webgl::UniformDataVal>& data) const {
+    mContext->UniformData(loc, transpose, data.Data());
   }
 
   void VertexAttrib4T(GLuint index, const webgl::TypedQuad& data) const {

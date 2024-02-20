@@ -98,10 +98,6 @@ template <>
 struct BytesAlwaysValidT<webgl::UniformDataVal> {
   static constexpr bool value = true;
 };
-template <>
-struct BytesAlwaysValidT<const webgl::UniformDataVal> {
-  static constexpr bool value = true;
-};
 
 // -
 

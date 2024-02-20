@@ -476,7 +476,8 @@ bool TexUnpackBytes::Validate(const WebGLContext* const webgl,
 
   CheckedInt<size_t> availBytes = 0;
   if (mDesc.cpuData) {
-    availBytes = mDesc.cpuData->size();
+    const auto& range = mDesc.cpuData->Data();
+    availBytes = range.length();
   } else if (mDesc.pboOffset) {
     const auto& pboOffset = *mDesc.pboOffset;
 
@@ -513,7 +514,11 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   const uint8_t* uploadPtr = nullptr;
   if (mDesc.cpuData) {
-    uploadPtr = mDesc.cpuData->data();
+    const auto range = mDesc.cpuData->Data();
+    uploadPtr = range.begin().get();
+    if (!uploadPtr) {
+      MOZ_ASSERT(!range.length());
+    }
   } else if (mDesc.pboOffset) {
     uploadPtr = reinterpret_cast<const uint8_t*>(*mDesc.pboOffset);
   }
