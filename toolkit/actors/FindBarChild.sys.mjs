@@ -141,8 +141,11 @@ export class FindBarChild extends JSWindowActorChild {
         return false;
       }
 
-      if (win.XULFrameElement.isInstance(elt)) {
-        // If we're targeting an embedded XULFrameElement
+      if (
+        (win.HTMLIFrameElement.isInstance(elt) && elt.mozbrowser) ||
+        win.XULFrameElement.isInstance(elt)
+      ) {
+        // If we're targeting a mozbrowser iframe or an embedded XULFrameElement
         // (e.g. about:addons extensions inline options page), do not activate
         // fast find.
         return false;

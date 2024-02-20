@@ -45,6 +45,12 @@ TEST(OriginAttributes, Suffix_default)
   TestSuffix(attrs);
 }
 
+TEST(OriginAttributes, Suffix_inIsolatedMozBrowser)
+{
+  OriginAttributes attrs(true);
+  TestSuffix(attrs);
+}
+
 TEST(OriginAttributes, FirstPartyDomain_default)
 {
   bool oldFpiPref = Preferences::GetBool(FPI_PREF);

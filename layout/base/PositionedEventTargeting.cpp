@@ -249,6 +249,18 @@ static nsIContent* GetClickableAncestor(
       return content;
     }
 
+    // Bug 921928: we don't have access to the content of remote iframe.
+    // So fluffing won't go there. We do an optimistic assumption here:
+    // that the content of the remote iframe needs to be a target.
+    if (content->IsHTMLElement(nsGkAtoms::iframe) &&
+        content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                          nsGkAtoms::mozbrowser,
+                                          nsGkAtoms::_true, eIgnoreCase) &&
+        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
+                                          nsGkAtoms::_true, eIgnoreCase)) {
+      return content;
+    }
+
     // See nsCSSFrameConstructor::FindXULTagData. This code is not
     // really intended to be used with XUL, though.
     if (content->IsAnyOfXULElements(

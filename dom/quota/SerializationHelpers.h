@@ -64,6 +64,7 @@ struct ParamTraits<mozilla::OriginAttributesPattern> {
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mFirstPartyDomain);
+    WriteParam(aWriter, aParam.mInIsolatedMozBrowser);
     WriteParam(aWriter, aParam.mPrivateBrowsingId);
     WriteParam(aWriter, aParam.mUserContextId);
     WriteParam(aWriter, aParam.mGeckoViewSessionContextId);
@@ -71,6 +72,7 @@ struct ParamTraits<mozilla::OriginAttributesPattern> {
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mFirstPartyDomain) &&
+           ReadParam(aReader, &aResult->mInIsolatedMozBrowser) &&
            ReadParam(aReader, &aResult->mPrivateBrowsingId) &&
            ReadParam(aReader, &aResult->mUserContextId) &&
            ReadParam(aReader, &aResult->mGeckoViewSessionContextId);

@@ -90,6 +90,7 @@ class KeyParser : protected Tokenizer {
         break;
       case 'b':
         // Leaving to be able to read and understand oldformatted entries
+        originAttribs.mInIsolatedMozBrowser = true;
         break;
       case 'a':
         isAnonymous = true;
