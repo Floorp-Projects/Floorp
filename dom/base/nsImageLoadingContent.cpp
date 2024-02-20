@@ -1639,10 +1639,12 @@ void nsImageLoadingContent::BindToTree(BindContext& aContext,
   }
 }
 
-void nsImageLoadingContent::UnbindFromTree(bool aNullParent) {
+void nsImageLoadingContent::UnbindFromTree() {
   // We may be leaving the document, so if our image is tracked, untrack it.
   nsCOMPtr<Document> doc = GetOurCurrentDoc();
-  if (!doc) return;
+  if (!doc) {
+    return;
+  }
 
   UntrackImage(mCurrentRequest);
   UntrackImage(mPendingRequest);

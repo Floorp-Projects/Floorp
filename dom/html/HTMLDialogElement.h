@@ -35,7 +35,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
     mReturnValue = aReturnValue;
   }
 
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   void Close(const mozilla::dom::Optional<nsAString>& aReturnValue);
   MOZ_CAN_RUN_SCRIPT void Show(ErrorResult& aError);

@@ -474,7 +474,8 @@ class Element : public FragmentOrElement {
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
+  using nsIContent::UnbindFromTree;
 
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   static void MapNoAttributesInto(mozilla::MappedDeclarationsBuilder&);

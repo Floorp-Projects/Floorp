@@ -317,9 +317,9 @@ void XULButtonElement::StartBlinking() {
       "XULButtonElement::StartBlinking", GetMainThreadSerialEventTarget());
 }
 
-void XULButtonElement::UnbindFromTree(bool aNullParent) {
+void XULButtonElement::UnbindFromTree(UnbindContext& aContext) {
   StopBlinking();
-  nsXULElement::UnbindFromTree(aNullParent);
+  nsXULElement::UnbindFromTree(aContext);
 }
 
 void XULButtonElement::ExecuteMenu(WidgetEvent& aEvent) {

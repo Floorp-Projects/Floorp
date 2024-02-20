@@ -38,7 +38,7 @@ class SVGMPathElement final : public SVGMPathElementBase {
 
   // nsIContent interface
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
   void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aMaybeScriptedPrincipal,

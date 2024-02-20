@@ -110,7 +110,7 @@ void HTMLLinkElement::LinkAdded() {
   CreateAndDispatchEvent(u"DOMLinkAdded"_ns);
 }
 
-void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
+void HTMLLinkElement::UnbindFromTree(UnbindContext& aContext) {
   CancelDNSPrefetch(*this);
   CancelPrefetchOrPreload();
 
@@ -130,7 +130,7 @@ void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
     }
   }
 
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
 }

@@ -188,7 +188,7 @@ nsMapRuleToAttributesFunc HTMLVideoElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-void HTMLVideoElement::UnbindFromTree(bool aNullParent) {
+void HTMLVideoElement::UnbindFromTree(UnbindContext& aContext) {
   if (mVisualCloneSource) {
     mVisualCloneSource->EndCloningVisually();
   } else if (mVisualCloneTarget) {
@@ -198,7 +198,7 @@ void HTMLVideoElement::UnbindFromTree(bool aNullParent) {
     EndCloningVisually();
   }
 
-  HTMLMediaElement::UnbindFromTree(aNullParent);
+  HTMLMediaElement::UnbindFromTree(aContext);
 }
 
 nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {

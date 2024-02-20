@@ -89,9 +89,9 @@ nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-void HTMLObjectElement::UnbindFromTree(bool aNullParent) {
-  nsObjectLoadingContent::UnbindFromTree(aNullParent);
-  nsGenericHTMLFormControlElement::UnbindFromTree(aNullParent);
+void HTMLObjectElement::UnbindFromTree(UnbindContext& aContext) {
+  nsObjectLoadingContent::UnbindFromTree();
+  nsGenericHTMLFormControlElement::UnbindFromTree(aContext);
 }
 
 void HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,

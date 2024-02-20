@@ -30,7 +30,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
 
   // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
   void DoneCreatingElement() override;
 
   // Element

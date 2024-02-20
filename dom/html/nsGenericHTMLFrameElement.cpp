@@ -202,7 +202,7 @@ nsresult nsGenericHTMLFrameElement::BindToTree(BindContext& aContext,
   return rv;
 }
 
-void nsGenericHTMLFrameElement::UnbindFromTree(bool aNullParent) {
+void nsGenericHTMLFrameElement::UnbindFromTree(UnbindContext& aContext) {
   if (mFrameLoader) {
     // This iframe is being taken out of the document, destroy the
     // iframe's frame loader (doing that will tear down the window in
@@ -214,7 +214,7 @@ void nsGenericHTMLFrameElement::UnbindFromTree(bool aNullParent) {
     mFrameLoader = nullptr;
   }
 
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 }
 
 /* static */

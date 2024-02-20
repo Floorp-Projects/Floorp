@@ -55,7 +55,7 @@ class XULButtonElement : public nsXULElement {
 
   XULMenuParentElement* GetMenuParent() const;
 
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   MOZ_CAN_RUN_SCRIPT bool HandleKeyPress(KeyboardEvent& keyEvent);
   bool OpenedWithKey() const;

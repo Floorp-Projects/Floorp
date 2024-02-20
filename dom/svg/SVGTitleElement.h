@@ -45,7 +45,7 @@ class SVGTitleElement final : public SVGTitleElementBase,
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   void DoneAddingChildren(bool aHaveNotified) override;
 

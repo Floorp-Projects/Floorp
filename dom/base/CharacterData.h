@@ -106,7 +106,7 @@ class CharacterData : public nsIContent {
   // Implementation for nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   const nsTextFragment* GetText() override { return &mText; }
   uint32_t TextLength() const final { return TextDataLength(); }

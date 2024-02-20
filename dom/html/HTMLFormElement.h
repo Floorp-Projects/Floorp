@@ -70,7 +70,7 @@ class HTMLFormElement final : public nsGenericHTMLElement {
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
   void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                      const nsAttrValue* aValue, bool aNotify) override;
 

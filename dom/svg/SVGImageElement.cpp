@@ -260,9 +260,9 @@ nsresult SVGImageElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void SVGImageElement::UnbindFromTree(bool aNullParent) {
-  nsImageLoadingContent::UnbindFromTree(aNullParent);
-  SVGImageElementBase::UnbindFromTree(aNullParent);
+void SVGImageElement::UnbindFromTree(UnbindContext& aContext) {
+  nsImageLoadingContent::UnbindFromTree();
+  SVGImageElementBase::UnbindFromTree(aContext);
 }
 
 void SVGImageElement::DestroyContent() {

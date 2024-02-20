@@ -35,7 +35,7 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
   // child source element.
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   // If this element's media attr matches for its owner document.  Returns true
   // if no media attr was set.

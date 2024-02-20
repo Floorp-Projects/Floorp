@@ -106,9 +106,9 @@ void HTMLDialogElement::StorePreviouslyFocusedElement() {
   }
 }
 
-void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
+void HTMLDialogElement::UnbindFromTree(UnbindContext& aContext) {
   RemoveFromTopLayerIfNeeded();
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 }
 
 void HTMLDialogElement::ShowModal(ErrorResult& aError) {

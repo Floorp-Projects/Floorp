@@ -47,7 +47,7 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
   void SetDevtoolsAsTriggeringPrincipal();
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
   virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                             const nsAttrValue* aValue,
                             const nsAttrValue* aOldValue,

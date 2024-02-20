@@ -149,8 +149,8 @@ nsresult SVGAElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void SVGAElement::UnbindFromTree(bool aNullParent) {
-  SVGAElementBase::UnbindFromTree(aNullParent);
+void SVGAElement::UnbindFromTree(UnbindContext& aContext) {
+  SVGAElementBase::UnbindFromTree(aContext);
   // Without removing the link state we risk a dangling pointer
   // in the mStyledLinks hashtable
   Link::UnbindFromTree();

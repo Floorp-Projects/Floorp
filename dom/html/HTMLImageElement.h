@@ -74,7 +74,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
                        int32_t* aTabIndex) override;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

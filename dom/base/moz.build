@@ -281,6 +281,7 @@ EXPORTS.mozilla.dom += [
     "TreeOrderedArrayInlines.h",
     "TreeWalker.h",
     "UIDirectionManager.h",
+    "UnbindContext.h",
     "UseCounterMetrics.h",
     "UserActivation.h",
     "ViewportMetaData.h",

@@ -202,7 +202,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
                               nsAttrValue& aResult) override;
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
   virtual void DoneCreatingElement() override;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,

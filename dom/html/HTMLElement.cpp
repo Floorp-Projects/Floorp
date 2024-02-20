@@ -77,8 +77,8 @@ nsresult HTMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void HTMLElement::UnbindFromTree(bool aNullParent) {
-  nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
+void HTMLElement::UnbindFromTree(UnbindContext& aContext) {
+  nsGenericHTMLFormElement::UnbindFromTree(aContext);
 
   UpdateBarredFromConstraintValidation();
   UpdateValidityElementStates(false);

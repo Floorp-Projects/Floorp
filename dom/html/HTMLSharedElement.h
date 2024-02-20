@@ -32,7 +32,7 @@ class HTMLSharedElement final : public nsGenericHTMLElement {
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

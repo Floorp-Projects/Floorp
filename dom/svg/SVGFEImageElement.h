@@ -70,7 +70,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
   void DestroyContent() override;
 
   NS_DECL_IMGINOTIFICATIONOBSERVER

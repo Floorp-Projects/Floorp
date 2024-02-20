@@ -47,7 +47,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
 

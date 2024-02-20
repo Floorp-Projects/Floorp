@@ -18,7 +18,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/FormData.h"
@@ -29,6 +28,7 @@
 #include "nsQueryObject.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/UnbindContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
@@ -524,7 +524,7 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
   return rv;
 }
 
-void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
+void nsGenericHTMLElement::UnbindFromTree(UnbindContext& aContext) {
   if (IsInComposedDoc()) {
     // https://html.spec.whatwg.org/#dom-trees:hide-popover-algorithm
     // If removedNode's popover attribute is not in the no popover state, then
@@ -544,7 +544,7 @@ void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
     }
   }
 
-  nsStyledElement::UnbindFromTree(aNullParent);
+  nsStyledElement::UnbindFromTree(aContext);
 
   // Invalidate .labels list. It will be repopulated when used the next time.
   nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
@@ -1811,14 +1811,14 @@ nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
+void nsGenericHTMLFormElement::UnbindFromTree(UnbindContext& aContext) {
   // Save state before doing anything else.
   SaveState();
 
   if (IsFormAssociatedElement()) {
     if (HTMLFormElement* form = GetFormInternal()) {
       // Might need to unset form
-      if (aNullParent) {
+      if (aContext.IsUnbindRoot(this)) {
         // No more parent means no more form
         ClearForm(true, true);
       } else {
@@ -1839,7 +1839,7 @@ void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
     }
   }
 
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 
   // The element might not have a fieldset anymore.
   UpdateFieldSet(false);

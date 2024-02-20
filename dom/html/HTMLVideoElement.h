@@ -53,7 +53,7 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   mozilla::Maybe<mozilla::CSSIntSize> GetVideoSize() const;
 

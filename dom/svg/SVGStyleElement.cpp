@@ -69,10 +69,10 @@ nsresult SVGStyleElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void SVGStyleElement::UnbindFromTree(bool aNullParent) {
+void SVGStyleElement::UnbindFromTree(UnbindContext& aContext) {
   nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
   ShadowRoot* oldShadow = GetContainingShadow();
-  SVGStyleElementBase::UnbindFromTree(aNullParent);
+  SVGStyleElementBase::UnbindFromTree(aContext);
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 

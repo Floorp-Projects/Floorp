@@ -270,7 +270,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
    * Called when an attribute is about to be changed
    */
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
   void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                      const nsAttrValue* aValue, bool aNotify) override;
   void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,

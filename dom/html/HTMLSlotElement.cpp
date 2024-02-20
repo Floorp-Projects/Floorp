@@ -64,10 +64,10 @@ nsresult HTMLSlotElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void HTMLSlotElement::UnbindFromTree(bool aNullParent) {
+void HTMLSlotElement::UnbindFromTree(UnbindContext& aContext) {
   RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 
   if (oldContainingShadow && !GetContainingShadow()) {
     oldContainingShadow->RemoveSlot(this);

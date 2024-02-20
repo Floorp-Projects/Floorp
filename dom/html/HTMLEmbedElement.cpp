@@ -65,9 +65,9 @@ nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void HTMLEmbedElement::UnbindFromTree(bool aNullParent) {
-  nsObjectLoadingContent::UnbindFromTree(aNullParent);
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+void HTMLEmbedElement::UnbindFromTree(UnbindContext& aContext) {
+  nsObjectLoadingContent::UnbindFromTree();
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 }
 
 void HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,

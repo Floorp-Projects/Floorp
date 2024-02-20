@@ -961,9 +961,9 @@ nsresult HTMLTableElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void HTMLTableElement::UnbindFromTree(bool aNullParent) {
+void HTMLTableElement::UnbindFromTree(UnbindContext& aContext) {
   ReleaseInheritedAttributes();
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 }
 
 void HTMLTableElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,

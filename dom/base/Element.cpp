@@ -106,6 +106,7 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/dom/UnbindContext.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/nsCSPContext.h"
@@ -1958,7 +1959,8 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-bool WillDetachFromShadowOnUnbind(const Element& aElement, bool aNullParent) {
+static bool WillDetachFromShadowOnUnbind(const Element& aElement,
+                                         bool aNullParent) {
   // If our parent still is in a shadow tree by now, and we're not removing
   // ourselves from it, then we're still going to be in a shadow tree after
   // this.
@@ -1966,12 +1968,14 @@ bool WillDetachFromShadowOnUnbind(const Element& aElement, bool aNullParent) {
          (aNullParent || !aElement.GetParent()->IsInShadowTree());
 }
 
-void Element::UnbindFromTree(bool aNullParent) {
-  HandleShadowDOMRelatedRemovalSteps(aNullParent);
+void Element::UnbindFromTree(UnbindContext& aContext) {
+  const bool nullParent = aContext.IsUnbindRoot(this);
+
+  HandleShadowDOMRelatedRemovalSteps(nullParent);
 
   if (HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) &&
       !IsHTMLElement(nsGkAtoms::datalist)) {
-    if (aNullParent) {
+    if (nullParent) {
       UnsetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);
     } else {
       nsIContent* parent = GetParent();
@@ -1983,7 +1987,7 @@ void Element::UnbindFromTree(bool aNullParent) {
   }
 
   const bool detachingFromShadow =
-      WillDetachFromShadowOnUnbind(*this, aNullParent);
+      WillDetachFromShadowOnUnbind(*this, nullParent);
   // Make sure to only remove from the ID table if our subtree root is actually
   // changing.
   if (IsInUncomposedDoc() || detachingFromShadow) {
@@ -2033,7 +2037,7 @@ void Element::UnbindFromTree(bool aNullParent) {
     data->ClearAllAnimationCollections();
   }
 
-  if (aNullParent) {
+  if (nullParent) {
     if (GetParent()) {
       RefPtr<nsINode> p;
       p.swap(mParent);
@@ -2071,15 +2075,13 @@ void Element::UnbindFromTree(bool aNullParent) {
     ClearElementCreatedFromPrototypeAndHasUnmodifiedL10n();
   }
 
-  if (aNullParent || !mParent->IsInShadowTree()) {
+  if (nullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
     // Begin keeping track of our subtree root.
-    SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
-  }
+    SetSubtreeRootPointer(nullParent ? this : mParent->SubtreeRoot());
 
-  if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
-    if (aNullParent || !mParent->IsInShadowTree()) {
+    if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
       slots->mContainingShadow = nullptr;
     }
   }
@@ -2121,9 +2123,7 @@ void Element::UnbindFromTree(bool aNullParent) {
 
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    // Note that we pass false for aNullParent here, since we don't want
-    // the kids to forget us.
-    child->UnbindFromTree(false);
+    child->UnbindFromTree(aContext);
   }
 
   MutationObservers::NotifyParentChainChanged(this);

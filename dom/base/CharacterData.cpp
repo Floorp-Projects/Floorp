@@ -11,32 +11,22 @@
 
 #include "mozilla/dom/CharacterData.h"
 
-#include "mozilla/DebugOnly.h"
-
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/UnbindContext.h"
 #include "nsReadableUtils.h"
 #include "mozilla/InternalMutationEvent.h"
-#include "nsCOMPtr.h"
-#include "nsDOMString.h"
-#include "nsChangeHint.h"
-#include "nsCOMArray.h"
 #include "mozilla/dom/DirectionalityUtils.h"
-#include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
 #include "nsIContentInlines.h"
 #include "nsTextNode.h"
 #include "nsBidiUtils.h"
-#include "PLDHashTable.h"
 #include "mozilla/Sprintf.h"
 #include "nsWindowSizes.h"
-#include "nsWrapperCacheInlines.h"
 
 #if defined(ACCESSIBILITY) && defined(DEBUG)
 #  include "nsAccessibilityService.h"
@@ -478,13 +468,14 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void CharacterData::UnbindFromTree(bool aNullParent) {
+void CharacterData::UnbindFromTree(UnbindContext& aContext) {
   // Unset frame flags; if we need them again later, they'll get set again.
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
 
-  HandleShadowDOMRelatedRemovalSteps(aNullParent);
+  const bool nullParent = aContext.IsUnbindRoot(this);
+  HandleShadowDOMRelatedRemovalSteps(nullParent);
 
-  if (aNullParent) {
+  if (nullParent) {
     if (GetParent()) {
       NS_RELEASE(mParent);
     } else {
@@ -495,15 +486,13 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
   ClearInDocument();
   SetIsConnected(false);
 
-  if (aNullParent || !mParent->IsInShadowTree()) {
+  if (nullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
     // Begin keeping track of our subtree root.
-    SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
-  }
+    SetSubtreeRootPointer(nullParent ? this : mParent->SubtreeRoot());
 
-  if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
-    if (aNullParent || !mParent->IsInShadowTree()) {
+    if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
       slots->mContainingShadow = nullptr;
     }
   }

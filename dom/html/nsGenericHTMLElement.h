@@ -332,7 +332,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
  public:
   // Implementation for nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   Focusable IsFocusableWithoutStyle(bool aWithMouse) override {
     Focusable result;
@@ -1004,7 +1004,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   // nsIContent
   void SaveSubtreeState() override;
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   /**
    * This callback is called by a fieldest on all its elements whenever its
