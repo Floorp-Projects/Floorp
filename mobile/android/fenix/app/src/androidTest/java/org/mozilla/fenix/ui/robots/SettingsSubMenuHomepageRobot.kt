@@ -43,24 +43,218 @@ class SettingsSubMenuHomepageRobot {
         pocketSwitchEnabled: Boolean = true,
         sponsoredStoriesCheckBox: Boolean = true,
     ) {
-        assertShortcutsButton()
-        assertShortcutsSwitchState(shortcutsSwitchEnabled)
-        assertSponsoredShortcutsButton()
-        assertSponsoredShortcutsCheckBox(sponsoredShortcutsCheckBox)
-        assertJumpBackInButton()
-        assertJumpBackInSwitchState(jumpBackInSwitchEnabled)
-        assertRecentBookmarksButton()
-        assertRecentBookmarksSwitchState(recentBookmarksSwitchEnabled)
-        assertRecentlyVisitedButton()
-        assertRecentlyVisitedSwitchState(recentlyVisitedSwitchEnabled)
-        assertPocketButton()
-        assertPocketSwitchState(pocketSwitchEnabled)
-        assertSponsoredStoriesButton()
-        assertSponsoredStoriesCheckBox(sponsoredStoriesCheckBox)
-        assertOpeningScreenHeading()
-        assertHomepageButton()
-        assertLastTabButton()
-        assertHomepageAfterFourHoursButton()
+        shortcutsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (shortcutsSwitchEnabled) {
+            shortcutsButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            shortcutsButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        sponsoredShortcutsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (sponsoredShortcutsCheckBox) {
+            sponsoredShortcutsButton()
+                .check(
+                    matches(
+                        hasSibling(
+                            ViewMatchers.withChild(
+                                allOf(
+                                    withClassName(CoreMatchers.endsWith("CheckBox")),
+                                    isChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            sponsoredShortcutsButton()
+                .check(
+                    matches(
+                        hasSibling(
+                            ViewMatchers.withChild(
+                                allOf(
+                                    withClassName(CoreMatchers.endsWith("CheckBox")),
+                                    isNotChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        jumpBackInButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (jumpBackInSwitchEnabled) {
+            jumpBackInButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            jumpBackInButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        recentBookmarksButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (recentBookmarksSwitchEnabled) {
+            recentBookmarksButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            recentBookmarksButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        recentlyVisitedButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (recentlyVisitedSwitchEnabled) {
+            recentlyVisitedButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            recentlyVisitedButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        pocketButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (pocketSwitchEnabled) {
+            pocketButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            pocketButton()
+                .check(
+                    matches(
+                        TestHelper.hasCousin(
+                            Matchers.allOf(
+                                withClassName(Matchers.endsWith("Switch")),
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        sponsoredStoriesButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        if (sponsoredStoriesCheckBox) {
+            sponsoredStoriesButton()
+                .check(
+                    matches(
+                        hasSibling(
+                            ViewMatchers.withChild(
+                                allOf(
+                                    withClassName(CoreMatchers.endsWith("CheckBox")),
+                                    isChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            sponsoredStoriesButton()
+                .check(
+                    matches(
+                        hasSibling(
+                            ViewMatchers.withChild(
+                                allOf(
+                                    withClassName(CoreMatchers.endsWith("CheckBox")),
+                                    isNotChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        }
+
+        openingScreenHeading().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        homepageButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        lastTabButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        homepageAfterFourHoursButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
         Log.i(Constants.TAG, "verifyHomePageView: Verified the home page elements")
     }
 
@@ -94,12 +288,42 @@ class SettingsSubMenuHomepageRobot {
         }
     }
 
-    fun openWallpapersMenu() = wallpapersMenuButton.click()
+    fun openWallpapersMenu() = wallpapersMenuButton().click()
 
     fun selectWallpaper(wallpaperName: String) =
         mDevice.findObject(UiSelector().description(wallpaperName)).click()
 
-    fun verifySponsoredShortcutsCheckBox(checked: Boolean) = assertSponsoredShortcutsCheckBox(checked)
+    fun verifySponsoredShortcutsCheckBox(checked: Boolean) {
+        if (checked) {
+            sponsoredShortcutsButton()
+                .check(
+                    matches(
+                        hasSibling(
+                            ViewMatchers.withChild(
+                                allOf(
+                                    withClassName(CoreMatchers.endsWith("CheckBox")),
+                                    isChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        } else {
+            sponsoredShortcutsButton()
+                .check(
+                    matches(
+                        hasSibling(
+                            ViewMatchers.withChild(
+                                allOf(
+                                    withClassName(CoreMatchers.endsWith("CheckBox")),
+                                    isNotChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        }
+    }
 
     class Transition {
 
@@ -180,231 +404,4 @@ private fun homepageAfterFourHoursButton() =
 
 private fun goBackButton() = onView(allOf(withContentDescription(R.string.action_bar_up_description)))
 
-private fun assertShortcutsButton() =
-    shortcutsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertSponsoredShortcutsButton() =
-    sponsoredShortcutsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertJumpBackInButton() =
-    jumpBackInButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertRecentBookmarksButton() =
-    recentBookmarksButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertRecentlyVisitedButton() =
-    recentlyVisitedButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertPocketButton() =
-    pocketButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertSponsoredStoriesButton() =
-    sponsoredStoriesButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertOpeningScreenHeading() =
-    openingScreenHeading().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertHomepageButton() =
-    homepageButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertLastTabButton() =
-    lastTabButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertHomepageAfterFourHoursButton() =
-    homepageAfterFourHoursButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-fun assertShortcutsSwitchState(enabled: Boolean) {
-    if (enabled) {
-        shortcutsButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        shortcutsButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-fun assertSponsoredShortcutsCheckBox(checked: Boolean) {
-    if (checked) {
-        sponsoredShortcutsButton()
-            .check(
-                matches(
-                    hasSibling(
-                        ViewMatchers.withChild(
-                            allOf(
-                                withClassName(CoreMatchers.endsWith("CheckBox")),
-                                isChecked(),
-                            ),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        sponsoredShortcutsButton()
-            .check(
-                matches(
-                    hasSibling(
-                        ViewMatchers.withChild(
-                            allOf(
-                                withClassName(CoreMatchers.endsWith("CheckBox")),
-                                isNotChecked(),
-                            ),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-fun assertJumpBackInSwitchState(enabled: Boolean) {
-    if (enabled) {
-        jumpBackInButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        jumpBackInButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-fun assertRecentBookmarksSwitchState(enabled: Boolean) {
-    if (enabled) {
-        recentBookmarksButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        recentBookmarksButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-fun assertRecentlyVisitedSwitchState(enabled: Boolean) {
-    if (enabled) {
-        recentlyVisitedButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        recentlyVisitedButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-fun assertPocketSwitchState(enabled: Boolean) {
-    if (enabled) {
-        pocketButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        pocketButton()
-            .check(
-                matches(
-                    TestHelper.hasCousin(
-                        Matchers.allOf(
-                            withClassName(Matchers.endsWith("Switch")),
-                            isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-fun assertSponsoredStoriesCheckBox(checked: Boolean) {
-    if (checked) {
-        sponsoredStoriesButton()
-            .check(
-                matches(
-                    hasSibling(
-                        ViewMatchers.withChild(
-                            allOf(
-                                withClassName(CoreMatchers.endsWith("CheckBox")),
-                                isChecked(),
-                            ),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        sponsoredStoriesButton()
-            .check(
-                matches(
-                    hasSibling(
-                        ViewMatchers.withChild(
-                            allOf(
-                                withClassName(CoreMatchers.endsWith("CheckBox")),
-                                isNotChecked(),
-                            ),
-                        ),
-                    ),
-                ),
-            )
-    }
-}
-
-private val wallpapersMenuButton = onView(withText("Wallpapers"))
+private fun wallpapersMenuButton() = onView(withText("Wallpapers"))
