@@ -108,6 +108,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
+#include "mozilla/StorageOriginAttributes.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
@@ -3203,7 +3204,7 @@ nsresult QuotaManager::CreateDirectoryMetadata(
     const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
 
-  OriginAttributes groupAttributes;
+  StorageOriginAttributes groupAttributes;
 
   nsCString groupNoSuffix;
   QM_TRY(OkIf(groupAttributes.PopulateFromOrigin(aOriginMetadata.mGroup,
@@ -3211,11 +3212,11 @@ nsresult QuotaManager::CreateDirectoryMetadata(
          NS_ERROR_FAILURE);
 
   nsCString groupPrefix;
-  GetJarPrefix(groupAttributes.mInIsolatedMozBrowser, groupPrefix);
+  GetJarPrefix(groupAttributes.InIsolatedMozBrowser(), groupPrefix);
 
   nsCString group = groupPrefix + groupNoSuffix;
 
-  OriginAttributes originAttributes;
+  StorageOriginAttributes originAttributes;
 
   nsCString originNoSuffix;
   QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aOriginMetadata.mOrigin,
@@ -3223,7 +3224,7 @@ nsresult QuotaManager::CreateDirectoryMetadata(
          NS_ERROR_FAILURE);
 
   nsCString originPrefix;
-  GetJarPrefix(originAttributes.mInIsolatedMozBrowser, originPrefix);
+  GetJarPrefix(originAttributes.InIsolatedMozBrowser(), originPrefix);
 
   nsCString origin = originPrefix + originNoSuffix;
 

@@ -428,14 +428,6 @@ class ModuleEntry(object):
             )
             return res
 
-        if self.jsm:
-            res += (
-                "      nsCOMPtr<nsISupports> inst;\n"
-                "      MOZ_TRY(ConstructJSMComponent(nsLiteralCString(%s),\n"
-                "                                    %s,\n"
-                "                                    getter_AddRefs(inst)));"
-                "\n" % (json.dumps(self.jsm), json.dumps(self.constructor))
-            )
         elif self.esModule:
             res += (
                 "      nsCOMPtr<nsISupports> inst;\n"
@@ -951,9 +943,6 @@ def gen_substs(manifests):
 
     gen_includes(substs, headers)
 
-    substs["component_jsms"] = (
-        "\n".join(" %s," % strings.entry_to_cxx(jsm) for jsm in sorted(jsms)) + "\n"
-    )
     substs["component_esmodules"] = (
         "\n".join(
             " %s," % strings.entry_to_cxx(esModule) for esModule in sorted(esModules)
