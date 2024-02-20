@@ -412,17 +412,17 @@ class HashFunction final : public mozIStorageFunction {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-//// MD5 Function
+//// SHA256Hex Function
 
 /**
- * Calculates md5 hash for a given string.
+ * Calculates SHA256 hash for a given string in hex format.
  *
  * @param string
  *        A string.
  * @return
  *        The hash for the string.
  */
-class MD5HexFunction final : public mozIStorageFunction {
+class SHA256HexFunction final : public mozIStorageFunction {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
@@ -436,7 +436,7 @@ class MD5HexFunction final : public mozIStorageFunction {
   static nsresult create(mozIStorageConnection* aDBConn);
 
  private:
-  ~MD5HexFunction() = default;
+  ~SHA256HexFunction() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

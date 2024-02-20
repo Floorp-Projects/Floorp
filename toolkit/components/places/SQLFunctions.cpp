@@ -1191,19 +1191,19 @@ HashFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//// MD5 Function
+//// SHA256Hex Function
 
 /* static */
-nsresult MD5HexFunction::create(mozIStorageConnection* aDBConn) {
-  RefPtr<MD5HexFunction> function = new MD5HexFunction();
-  return aDBConn->CreateFunction("md5hex"_ns, -1, function);
+nsresult SHA256HexFunction::create(mozIStorageConnection* aDBConn) {
+  RefPtr<SHA256HexFunction> function = new SHA256HexFunction();
+  return aDBConn->CreateFunction("sha256hex"_ns, -1, function);
 }
 
-NS_IMPL_ISUPPORTS(MD5HexFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS(SHA256HexFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-MD5HexFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
-                               nsIVariant** _result) {
+SHA256HexFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                  nsIVariant** _result) {
   // Must have non-null function arguments.
   MOZ_ASSERT(aArguments);
 
@@ -1217,8 +1217,8 @@ MD5HexFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
   nsCOMPtr<nsICryptoHash> hasher =
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  // MD5 is not a secure hash function, but it's ok for this use.
-  rv = hasher->Init(nsICryptoHash::MD5);
+  // SHA256 is not super strong but fine for our mapping needs.
+  rv = hasher->Init(nsICryptoHash::SHA256);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = hasher->Update(reinterpret_cast<const uint8_t*>(str.BeginReading()),
