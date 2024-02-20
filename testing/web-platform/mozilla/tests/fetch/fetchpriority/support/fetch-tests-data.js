@@ -5,10 +5,10 @@ const kExpectedRequestsOfFetchAPI = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: "dummy.css?2",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?4",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
@@ -23,10 +23,10 @@ const kExpectedRequestsOfFetchAPI = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
     {   fileNameAndSuffix: "dummy.css?8",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?9",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.css?10",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
