@@ -267,7 +267,6 @@ class StaticComponents final {
   static bool InvalidateContractID(const nsACString& aContractID,
                                    bool aInvalid = true);
 
-  static already_AddRefed<nsIUTF8StringEnumerator> GetComponentJSMs();
   static already_AddRefed<nsIUTF8StringEnumerator> GetComponentESModules();
 
   static Span<const JSServiceEntry> GetJSServices();
