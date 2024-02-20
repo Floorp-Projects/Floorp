@@ -12,7 +12,6 @@
 #include "lib/extras/codec.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/span.h"
-#include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
@@ -21,6 +20,7 @@
 namespace jxl {
 namespace {
 
+using test::ButteraugliDistance;
 using test::ReadTestData;
 using test::Roundtrip;
 

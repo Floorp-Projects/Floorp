@@ -18,20 +18,15 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/fast_math-inl.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/convolve.h"
-#include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dec_transforms-inl.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_debug_image.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_transforms-inl.h"
-#include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/simd_util.h"
 
 // Some of the floating point constants in this file and in other
@@ -215,10 +210,10 @@ const uint8_t* TypeMask(const uint8_t& raw_strategy) {
   return kMask[raw_strategy];
 }
 
-void DumpAcStrategy(const AcStrategyImage& ac_strategy, size_t xsize,
-                    size_t ysize, const char* tag, AuxOut* aux_out,
-                    const CompressParams& cparams) {
-  Image3F color_acs(xsize, ysize);
+Status DumpAcStrategy(const AcStrategyImage& ac_strategy, size_t xsize,
+                      size_t ysize, const char* tag, AuxOut* aux_out,
+                      const CompressParams& cparams) {
+  JXL_ASSIGN_OR_RETURN(Image3F color_acs, Image3F::Create(xsize, ysize));
   for (size_t y = 0; y < ysize; y++) {
     float* JXL_RESTRICT rows[3] = {
         color_acs.PlaneRow(0, y),
@@ -269,7 +264,7 @@ void DumpAcStrategy(const AcStrategyImage& ac_strategy, size_t xsize,
       }
     }
   }
-  DumpImage(cparams, tag, color_acs);
+  return DumpImage(cparams, tag, color_acs);
 }
 
 }  // namespace
@@ -1102,9 +1097,9 @@ void AcStrategyHeuristics::ProcessRect(const Rect& rect,
   (cparams, config, rect, cmap, ac_strategy);
 }
 
-void AcStrategyHeuristics::Finalize(const FrameDimensions& frame_dim,
-                                    const AcStrategyImage& ac_strategy,
-                                    AuxOut* aux_out) {
+Status AcStrategyHeuristics::Finalize(const FrameDimensions& frame_dim,
+                                      const AcStrategyImage& ac_strategy,
+                                      AuxOut* aux_out) {
   // Accounting and debug output.
   if (aux_out != nullptr) {
     aux_out->num_small_blocks =
@@ -1141,9 +1136,11 @@ void AcStrategyHeuristics::Finalize(const FrameDimensions& frame_dim,
 
   // if (JXL_DEBUG_AC_STRATEGY && WantDebugOutput(aux_out)) {
   if (JXL_DEBUG_AC_STRATEGY && WantDebugOutput(cparams)) {
-    DumpAcStrategy(ac_strategy, frame_dim.xsize, frame_dim.ysize, "ac_strategy",
-                   aux_out, cparams);
+    JXL_RETURN_IF_ERROR(DumpAcStrategy(ac_strategy, frame_dim.xsize,
+                                       frame_dim.ysize, "ac_strategy", aux_out,
+                                       cparams));
   }
+  return true;
 }
 
 }  // namespace jxl

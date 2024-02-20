@@ -20,21 +20,21 @@ class LowMemoryRenderPipeline final : public RenderPipeline {
   std::vector<std::pair<ImageF*, Rect>> PrepareBuffers(
       size_t group_id, size_t thread_id) override;
 
-  void PrepareForThreadsInternal(size_t num, bool use_group_ids) override;
+  Status PrepareForThreadsInternal(size_t num, bool use_group_ids) override;
 
-  void ProcessBuffers(size_t group_id, size_t thread_id) override;
+  Status ProcessBuffers(size_t group_id, size_t thread_id) override;
 
   void ClearDone(size_t i) override { group_border_assigner_.ClearDone(i); }
 
-  void Init() override;
+  Status Init() override;
 
-  void EnsureBordersStorage();
+  Status EnsureBordersStorage();
   size_t GroupInputXSize(size_t c) const;
   size_t GroupInputYSize(size_t c) const;
-  void RenderRect(size_t thread_id, std::vector<ImageF>& input_data,
-                  Rect data_max_color_channel_rect,
-                  Rect image_max_color_channel_rect);
-  void RenderPadding(size_t thread_id, Rect rect);
+  Status RenderRect(size_t thread_id, std::vector<ImageF>& input_data,
+                    Rect data_max_color_channel_rect,
+                    Rect image_max_color_channel_rect);
+  Status RenderPadding(size_t thread_id, Rect rect);
 
   void SaveBorders(size_t group_id, size_t c, const ImageF& in);
   void LoadBorders(size_t group_id, size_t c, const Rect& r, ImageF* out);

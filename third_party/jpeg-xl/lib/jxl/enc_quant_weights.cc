@@ -7,22 +7,15 @@
 
 #include <stdlib.h>
 
-#include <algorithm>
 #include <cmath>
-#include <limits>
-#include <utility>
 
-#include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/dct_scales.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_modular.h"
 #include "lib/jxl/fields.h"
-#include "lib/jxl/image.h"
 #include "lib/jxl/modular/encoding/encoding.h"
-#include "lib/jxl/modular/options.h"
 
 namespace jxl {
 
@@ -95,8 +88,8 @@ Status EncodeQuant(const QuantEncoding& encoding, size_t idx, size_t size_x,
       break;
     }
     case QuantEncoding::kQuantModeRAW: {
-      ModularFrameEncoder::EncodeQuantTable(size_x, size_y, writer, encoding,
-                                            idx, modular_frame_encoder);
+      JXL_RETURN_IF_ERROR(ModularFrameEncoder::EncodeQuantTable(
+          size_x, size_y, writer, encoding, idx, modular_frame_encoder));
       break;
     }
     case QuantEncoding::kQuantModeAFV: {
@@ -195,19 +188,20 @@ void DequantMatricesRoundtrip(DequantMatrices* matrices) {
   JXL_CHECK(br.Close());
 }
 
-void DequantMatricesSetCustom(DequantMatrices* matrices,
-                              const std::vector<QuantEncoding>& encodings,
-                              ModularFrameEncoder* encoder) {
+Status DequantMatricesSetCustom(DequantMatrices* matrices,
+                                const std::vector<QuantEncoding>& encodings,
+                                ModularFrameEncoder* encoder) {
   JXL_ASSERT(encodings.size() == DequantMatrices::kNum);
   matrices->SetEncodings(encodings);
   for (size_t i = 0; i < encodings.size(); i++) {
     if (encodings[i].mode == QuantEncodingInternal::kQuantModeRAW) {
-      encoder->AddQuantTable(DequantMatrices::required_size_x[i] * kBlockDim,
-                             DequantMatrices::required_size_y[i] * kBlockDim,
-                             encodings[i], i);
+      JXL_RETURN_IF_ERROR(encoder->AddQuantTable(
+          DequantMatrices::required_size_x[i] * kBlockDim,
+          DequantMatrices::required_size_y[i] * kBlockDim, encodings[i], i));
     }
   }
   DequantMatricesRoundtrip(matrices);
+  return true;
 }
 
 }  // namespace jxl

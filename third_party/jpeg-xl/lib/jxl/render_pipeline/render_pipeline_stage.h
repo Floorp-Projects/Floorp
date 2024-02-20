@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "lib/jxl/base/arch_macros.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/frame_header.h"
 
 namespace jxl {
@@ -99,9 +100,10 @@ class RenderPipelineStage {
   // `GroupBorderAssigner::kPaddingXRound`. If `settings_.temp_buffer_size` is
   // nonzero, `temp` will point to an HWY-aligned buffer of at least that number
   // of floats; concurrent calls will have different buffers.
-  virtual void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                          size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                          size_t thread_id) const = 0;
+  virtual Status ProcessRow(const RowInfo& input_rows,
+                            const RowInfo& output_rows, size_t xextra,
+                            size_t xsize, size_t xpos, size_t ypos,
+                            size_t thread_id) const = 0;
 
   // How each channel will be processed. Channels are numbered starting from
   // color channels (always 3) and followed by all other channels.
@@ -114,8 +116,10 @@ class RenderPipelineStage {
 
   // Informs the stage about the total size of each channel. Few stages will
   // actually need to use this information.
-  virtual void SetInputSizes(
-      const std::vector<std::pair<size_t, size_t>>& input_sizes) {}
+  virtual Status SetInputSizes(
+      const std::vector<std::pair<size_t, size_t>>& input_sizes) {
+    return true;
+  }
 
   virtual Status PrepareForThreads(size_t num_threads) { return true; }
 

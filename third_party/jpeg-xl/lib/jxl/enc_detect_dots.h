@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/dec_patch_dictionary.h"
 #include "lib/jxl/enc_patch_dictionary.h"
 #include "lib/jxl/image.h"
 
@@ -58,7 +57,7 @@ struct EllipseQuantParams {
 };
 
 // Detects dots in XYB image.
-std::vector<PatchInfo> DetectGaussianEllipses(
+StatusOr<std::vector<PatchInfo>> DetectGaussianEllipses(
     const Image3F& opsin, const GaussianDetectParams& params,
     const EllipseQuantParams& qParams, ThreadPool* pool);
 

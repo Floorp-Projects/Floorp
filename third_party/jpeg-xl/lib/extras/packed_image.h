@@ -244,9 +244,21 @@ class PackedPixelFile {
   std::vector<PackedExtraChannel> extra_channels_info;
 
   // Color information of the decoded pixels.
-  // If the icc is empty, the JxlColorEncoding should be used instead.
-  std::vector<uint8_t> icc;
+  // `primary_color_representation` indicates whether `color_encoding` or `icc`
+  // is the “authoritative” encoding of the colorspace, as opposed to a fallback
+  // encoding. For example, if `color_encoding` is the primary one, as would
+  // occur when decoding a jxl file with such a representation, then `enc/jxl`
+  // will use it and ignore the ICC profile, whereas `enc/png` will include the
+  // ICC profile for compatibility.
+  // If `icc` is the primary representation, `enc/jxl` will preserve it when
+  // compressing losslessly, but *may* encode it as a color_encoding when
+  // compressing lossily.
+  enum {
+    kColorEncodingIsPrimary,
+    kIccIsPrimary
+  } primary_color_representation = kColorEncodingIsPrimary;
   JxlColorEncoding color_encoding = {};
+  std::vector<uint8_t> icc;
   // The icc profile of the original image.
   std::vector<uint8_t> orig_icc;
 

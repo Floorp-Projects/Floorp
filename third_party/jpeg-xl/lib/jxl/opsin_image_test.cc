@@ -27,7 +27,7 @@ namespace {
 void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
                        float* JXL_RESTRICT xyb_x, float* JXL_RESTRICT xyb_y,
                        float* JXL_RESTRICT xyb_b) {
-  Image3F linear(1, 1);
+  JXL_ASSIGN_OR_DIE(Image3F linear, Image3F::Create(1, 1));
   linear.PlaneRow(0, 0)[0] = rgb_r;
   linear.PlaneRow(1, 0)[0] = rgb_g;
   linear.PlaneRow(2, 0)[0] = rgb_b;
@@ -37,7 +37,7 @@ void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
   metadata.color_encoding = ColorEncoding::LinearSRGB();
   ImageBundle ib(&metadata);
   ib.SetFromImage(std::move(linear), metadata.color_encoding);
-  Image3F opsin(1, 1);
+  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(1, 1));
   (void)ToXYB(ib, /*pool=*/nullptr, &opsin, *JxlGetDefaultCms());
 
   *xyb_x = opsin.PlaneRow(0, 0)[0];
@@ -50,11 +50,11 @@ void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
 void OpsinToLinearSrgb(float xyb_x, float xyb_y, float xyb_b,
                        float* JXL_RESTRICT rgb_r, float* JXL_RESTRICT rgb_g,
                        float* JXL_RESTRICT rgb_b) {
-  Image3F opsin(1, 1);
+  JXL_ASSIGN_OR_DIE(Image3F opsin, Image3F::Create(1, 1));
   opsin.PlaneRow(0, 0)[0] = xyb_x;
   opsin.PlaneRow(1, 0)[0] = xyb_y;
   opsin.PlaneRow(2, 0)[0] = xyb_b;
-  Image3F linear(1, 1);
+  JXL_ASSIGN_OR_DIE(Image3F linear, Image3F::Create(1, 1));
   OpsinParams opsin_params;
   opsin_params.Init(/*intensity_target=*/255.0f);
   OpsinToLinear(opsin, Rect(opsin), nullptr, &linear, opsin_params);
@@ -64,9 +64,13 @@ void OpsinToLinearSrgb(float xyb_x, float xyb_y, float xyb_b,
 }
 
 void OpsinRoundtripTestRGB(float r, float g, float b) {
-  float xyb_x, xyb_y, xyb_b;
+  float xyb_x;
+  float xyb_y;
+  float xyb_b;
   LinearSrgbToOpsin(r, g, b, &xyb_x, &xyb_y, &xyb_b);
-  float r2, g2, b2;
+  float r2;
+  float g2;
+  float b2;
   OpsinToLinearSrgb(xyb_x, xyb_y, xyb_b, &r2, &g2, &b2);
   EXPECT_NEAR(r, r2, 1e-3);
   EXPECT_NEAR(g, g2, 1e-3);
@@ -105,7 +109,9 @@ TEST(OpsinImageTest, OpsinRoundtrip) {
 
 TEST(OpsinImageTest, VerifyZero) {
   // Test that black color (zero energy) is 0,0,0 in xyb.
-  float x, y, b;
+  float x;
+  float y;
+  float b;
   LinearSrgbToOpsin(0, 0, 0, &x, &y, &b);
   EXPECT_NEAR(0, x, 1e-9);
   EXPECT_NEAR(0, y, 1e-7);
@@ -115,7 +121,9 @@ TEST(OpsinImageTest, VerifyZero) {
 TEST(OpsinImageTest, VerifyGray) {
   // Test that grayscale colors have a fixed y/b ratio and x==0.
   for (size_t i = 1; i < 255; i++) {
-    float x, y, b;
+    float x;
+    float y;
+    float b;
     LinearSrgbToOpsin(i / 255., i / 255., i / 255., &x, &y, &b);
     EXPECT_NEAR(0, x, 1e-6);
     EXPECT_NEAR(jxl::cms::kYToBRatio, b / y, 3e-5);

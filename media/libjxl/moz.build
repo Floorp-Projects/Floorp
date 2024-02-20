@@ -50,6 +50,7 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/image.cc",
     "/third_party/jpeg-xl/lib/jxl/image_bundle.cc",
     "/third_party/jpeg-xl/lib/jxl/image_metadata.cc",
+    "/third_party/jpeg-xl/lib/jxl/image_ops.cc",
     "/third_party/jpeg-xl/lib/jxl/loop_filter.cc",
     "/third_party/jpeg-xl/lib/jxl/luminance.cc",
     "/third_party/jpeg-xl/lib/jxl/memory_manager_internal.cc",

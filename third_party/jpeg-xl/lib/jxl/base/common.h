@@ -90,6 +90,9 @@ std::string ToString(T n) {
   return data;
 }
 
+#define JXL_JOIN(x, y) JXL_DO_JOIN(x, y)
+#define JXL_DO_JOIN(x, y) x##y
+
 }  // namespace jxl
 
 #endif  // LIB_JXL_BASE_COMMON_H_

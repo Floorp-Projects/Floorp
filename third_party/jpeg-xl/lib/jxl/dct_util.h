@@ -8,8 +8,9 @@
 
 #include <stddef.h>
 
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/data_parallel.h"
+#include <memory>
+
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_ops.h"
@@ -50,12 +51,16 @@ template <typename T>
 class ACImageT final : public ACImage {
  public:
   ACImageT() = default;
-  ACImageT(size_t xsize, size_t ysize) {
+
+  static StatusOr<std::unique_ptr<ACImageT>> Make(size_t xsize, size_t ysize) {
     static_assert(
         std::is_same<T, int16_t>::value || std::is_same<T, int32_t>::value,
         "ACImage must be either 32- or 16- bit");
-    img_ = Image3<T>(xsize, ysize);
+    std::unique_ptr<ACImageT> result = jxl::make_unique<ACImageT>();
+    JXL_ASSIGN_OR_RETURN(result->img_, Image3<T>::Create(xsize, ysize));
+    return result;
   }
+
   ACType Type() const override {
     return sizeof(T) == 2 ? ACType::k16 : ACType::k32;
   }

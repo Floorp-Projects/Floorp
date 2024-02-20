@@ -105,7 +105,7 @@ TEST_P(SpeedTierTest, Roundtrip) {
   {
     extras::PackedPixelFile ppf_out;
     test::Roundtrip(t.ppf(), cparams, dparams, nullptr, &ppf_out);
-    EXPECT_LE(test::ButteraugliDistance(t.ppf(), ppf_out), 1.6);
+    EXPECT_LE(test::ButteraugliDistance(t.ppf(), ppf_out), 2.0);
   }
   if (params.shrink8) {
     cparams.distance = 0.0f;

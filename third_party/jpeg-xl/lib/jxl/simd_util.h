@@ -12,6 +12,10 @@ namespace jxl {
 // Maximal vector size in bytes.
 size_t MaxVectorSize();
 
+// Returns distance [bytes] between the start of two consecutive rows, a
+// multiple of vector/cache line size but NOT CacheAligned::kAlias - see below.
+size_t BytesPerRow(size_t xsize, size_t sizeof_t);
+
 }  // namespace jxl
 
 #endif  // LIB_JXL_SIMD_UTIL_H_

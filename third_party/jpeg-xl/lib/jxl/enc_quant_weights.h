@@ -27,9 +27,9 @@ void DequantMatricesSetCustomDC(DequantMatrices* matrices, const float* dc);
 
 void DequantMatricesScaleDC(DequantMatrices* matrices, float scale);
 
-void DequantMatricesSetCustom(DequantMatrices* matrices,
-                              const std::vector<QuantEncoding>& encodings,
-                              ModularFrameEncoder* encoder);
+Status DequantMatricesSetCustom(DequantMatrices* matrices,
+                                const std::vector<QuantEncoding>& encodings,
+                                ModularFrameEncoder* encoder);
 
 // Roundtrip encode/decode the matrices to ensure same values as decoder.
 void DequantMatricesRoundtrip(DequantMatrices* matrices);

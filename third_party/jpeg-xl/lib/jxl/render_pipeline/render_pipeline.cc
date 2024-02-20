@@ -5,8 +5,7 @@
 
 #include "lib/jxl/render_pipeline/render_pipeline.h"
 
-#include <algorithm>
-
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/render_pipeline/low_memory_render_pipeline.h"
 #include "lib/jxl/render_pipeline/simple_render_pipeline.h"
 #include "lib/jxl/sanitizers.h"
@@ -18,7 +17,7 @@ void RenderPipeline::Builder::AddStage(
   stages_.push_back(std::move(stage));
 }
 
-std::unique_ptr<RenderPipeline> RenderPipeline::Builder::Finalize(
+StatusOr<std::unique_ptr<RenderPipeline>> RenderPipeline::Builder::Finalize(
     FrameDimensions frame_dimensions) && {
 #if JXL_ENABLE_ASSERT
   // Check that the last stage is not an kInOut stage for any channel, and that
@@ -88,7 +87,7 @@ std::unique_ptr<RenderPipeline> RenderPipeline::Builder::Finalize(
     }
   }
   res->stages_ = std::move(stages_);
-  res->Init();
+  JXL_RETURN_IF_ERROR(res->Init());
   return res;
 }
 
@@ -103,7 +102,7 @@ RenderPipelineInput RenderPipeline::GetInputBuffers(size_t group_id,
   return ret;
 }
 
-void RenderPipeline::InputReady(
+Status RenderPipeline::InputReady(
     size_t group_id, size_t thread_id,
     const std::vector<std::pair<ImageF*, Rect>>& buffers) {
   JXL_DASSERT(group_id < group_completed_passes_.size());
@@ -113,20 +112,22 @@ void RenderPipeline::InputReady(
     JXL_CHECK_PLANE_INITIALIZED(*buffers[i].first, buffers[i].second, i);
   }
 
-  ProcessBuffers(group_id, thread_id);
+  JXL_RETURN_IF_ERROR(ProcessBuffers(group_id, thread_id));
+  return true;
 }
 
 Status RenderPipeline::PrepareForThreads(size_t num, bool use_group_ids) {
   for (const auto& stage : stages_) {
     JXL_RETURN_IF_ERROR(stage->PrepareForThreads(num));
   }
-  PrepareForThreadsInternal(num, use_group_ids);
+  JXL_RETURN_IF_ERROR(PrepareForThreadsInternal(num, use_group_ids));
   return true;
 }
 
-void RenderPipelineInput::Done() {
+Status RenderPipelineInput::Done() {
   JXL_ASSERT(pipeline_);
-  pipeline_->InputReady(group_id_, thread_id_, buffers_);
+  JXL_RETURN_IF_ERROR(pipeline_->InputReady(group_id_, thread_id_, buffers_));
+  return true;
 }
 
 }  // namespace jxl

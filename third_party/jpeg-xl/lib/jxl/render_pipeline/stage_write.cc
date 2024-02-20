@@ -9,7 +9,9 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/common.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_cache.h"
+#include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/sanitizers.h"
 
@@ -150,13 +152,13 @@ class WriteToOutputStage : public RenderPipelineStage {
     }
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     JXL_DASSERT(xextra == 0);
     JXL_DASSERT(main_.run_opaque_ || main_.buffer_);
-    if (ypos >= height_) return;
-    if (xpos >= width_) return;
+    if (ypos >= height_) return true;
+    if (xpos >= width_) return true;
     if (flip_y_) {
       ypos = height_ - 1u - ypos;
     }
@@ -184,6 +186,7 @@ class WriteToOutputStage : public RenderPipelineStage {
         OutputBuffers(extra, thread_id, ypos, xstart, len, line_buffers);
       }
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -202,7 +205,7 @@ class WriteToOutputStage : public RenderPipelineStage {
 
  private:
   struct Output {
-    Output(const ImageOutput& image_out)
+    explicit Output(const ImageOutput& image_out)
         : pixel_callback_(image_out.callback),
           buffer_(image_out.buffer),
           buffer_size_(image_out.buffer_size),
@@ -406,8 +409,8 @@ class WriteToOutputStage : public RenderPipelineStage {
                        sizeof(output[0]) * out.num_channels_ * padding);
   }
 
-  void StoreFloat16Row(const Output& out, const float* input[4], size_t len,
-                       uint16_t* output) const {
+  static void StoreFloat16Row(const Output& out, const float* input[4],
+                              size_t len, uint16_t* output) {
     const HWY_FULL(float) d;
     const Rebind<uint16_t, decltype(d)> du;
     const Rebind<hwy::float16_t, decltype(d)> df16;
@@ -452,8 +455,8 @@ class WriteToOutputStage : public RenderPipelineStage {
                        sizeof(output[0]) * out.num_channels_ * padding);
   }
 
-  void StoreFloatRow(const Output& out, const float* input[4], size_t len,
-                     float* output) const {
+  static void StoreFloatRow(const Output& out, const float* input[4],
+                            size_t len, float* output) {
     const HWY_FULL(float) d;
     if (out.num_channels_ == 1) {
       memcpy(output, input[0], len * sizeof(output[0]));
@@ -559,7 +562,7 @@ class WriteToImageBundleStage : public RenderPipelineStage {
         image_bundle_(image_bundle),
         color_encoding_(std::move(color_encoding)) {}
 
-  void SetInputSizes(
+  Status SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
 #if JXL_ENABLE_ASSERT
     JXL_ASSERT(input_sizes.size() >= 3);
@@ -569,19 +572,22 @@ class WriteToImageBundleStage : public RenderPipelineStage {
     }
 #endif
     // TODO(eustas): what should we do in the case of "want only ECs"?
-    image_bundle_->SetFromImage(
-        Image3F(input_sizes[0].first, input_sizes[0].second), color_encoding_);
+    JXL_ASSIGN_OR_RETURN(Image3F tmp, Image3F::Create(input_sizes[0].first,
+                                                      input_sizes[0].second));
+    image_bundle_->SetFromImage(std::move(tmp), color_encoding_);
     // TODO(veluca): consider not reallocating ECs if not needed.
     image_bundle_->extra_channels().clear();
     for (size_t c = 3; c < input_sizes.size(); c++) {
-      image_bundle_->extra_channels().emplace_back(input_sizes[c].first,
-                                                   input_sizes[c].second);
+      JXL_ASSIGN_OR_RETURN(ImageF ch, ImageF::Create(input_sizes[c].first,
+                                                     input_sizes[c].second));
+      image_bundle_->extra_channels().emplace_back(std::move(ch));
     }
+    return true;
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     for (size_t c = 0; c < 3; c++) {
       memcpy(image_bundle_->color()->PlaneRow(c, ypos) + xpos - xextra,
              GetInputRow(input_rows, c, 0) - xextra,
@@ -594,6 +600,7 @@ class WriteToImageBundleStage : public RenderPipelineStage {
              GetInputRow(input_rows, 3 + ec, 0) - xextra,
              sizeof(float) * (xsize + 2 * xextra));
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -612,7 +619,7 @@ class WriteToImage3FStage : public RenderPipelineStage {
   explicit WriteToImage3FStage(Image3F* image)
       : RenderPipelineStage(RenderPipelineStage::Settings()), image_(image) {}
 
-  void SetInputSizes(
+  Status SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
 #if JXL_ENABLE_ASSERT
     JXL_ASSERT(input_sizes.size() >= 3);
@@ -621,17 +628,20 @@ class WriteToImage3FStage : public RenderPipelineStage {
       JXL_ASSERT(input_sizes[c].second == input_sizes[0].second);
     }
 #endif
-    *image_ = Image3F(input_sizes[0].first, input_sizes[0].second);
+    JXL_ASSIGN_OR_RETURN(
+        *image_, Image3F::Create(input_sizes[0].first, input_sizes[0].second));
+    return true;
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     for (size_t c = 0; c < 3; c++) {
       memcpy(image_->PlaneRow(c, ypos) + xpos - xextra,
              GetInputRow(input_rows, c, 0) - xextra,
              sizeof(float) * (xsize + 2 * xextra));
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

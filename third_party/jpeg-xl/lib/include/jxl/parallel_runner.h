@@ -46,39 +46,41 @@ extern "C" {
 
 /** Return code used in the JxlParallel* functions as return value. A value
  * of 0 means success and any other value means error. The special value
- * JXL_PARALLEL_RET_RUNNER_ERROR can be used by the runner to indicate any
+ * ::JXL_PARALLEL_RET_RUNNER_ERROR can be used by the runner to indicate any
  * other error.
  */
 typedef int JxlParallelRetCode;
 
 /**
- * General error returned by the JxlParallelRunInit function to indicate
+ * General error returned by the @ref JxlParallelRunInit function to indicate
  * an error.
  */
 #define JXL_PARALLEL_RET_RUNNER_ERROR (-1)
 
 /**
- * Parallel run initialization callback. See JxlParallelRunner for details.
+ * Parallel run initialization callback. See @ref JxlParallelRunner for details.
  *
  * This function MUST be called by the JxlParallelRunner only once, on the
- * same thread that called JxlParallelRunner, before any parallel execution.
- * The purpose of this call is to provide the maximum number of threads that the
- * JxlParallelRunner will use, which can be used by JPEG XL to allocate
+ * same thread that called @ref JxlParallelRunner, before any parallel
+ * execution. The purpose of this call is to provide the maximum number of
+ * threads that the
+ * @ref JxlParallelRunner will use, which can be used by JPEG XL to allocate
  * per-thread storage if needed.
  *
  * @param jpegxl_opaque the @p jpegxl_opaque handle provided to
- * JxlParallelRunner() must be passed here.
+ * @ref JxlParallelRunner() must be passed here.
  * @param num_threads the maximum number of threads. This value must be
  * positive.
  * @return 0 if the initialization process was successful.
  * @return an error code if there was an error, which should be returned by
- * JxlParallelRunner().
+ * @ref JxlParallelRunner().
  */
 typedef JxlParallelRetCode (*JxlParallelRunInit)(void* jpegxl_opaque,
                                                  size_t num_threads);
 
 /**
- * Parallel run data processing callback. See JxlParallelRunner for details.
+ * Parallel run data processing callback. See @ref JxlParallelRunner for
+ * details.
  *
  * This function MUST be called once for every number in the range [start_range,
  * end_range) (including start_range but not including end_range) passing this
@@ -86,11 +88,11 @@ typedef JxlParallelRetCode (*JxlParallelRunInit)(void* jpegxl_opaque,
  * different threads in parallel.
  *
  * @param jpegxl_opaque the @p jpegxl_opaque handle provided to
- * JxlParallelRunner() must be passed here.
+ * @ref JxlParallelRunner() must be passed here.
  * @param value the number in the range [start_range, end_range) of the call.
  * @param thread_id the thread number where this function is being called from.
  * This must be lower than the @p num_threads value passed to
- * JxlParallelRunInit.
+ * @ref JxlParallelRunInit.
  */
 typedef void (*JxlParallelRunFunction)(void* jpegxl_opaque, uint32_t value,
                                        size_t thread_id);
@@ -103,11 +105,12 @@ typedef void (*JxlParallelRunFunction)(void* jpegxl_opaque, uint32_t value,
  * number in the range [start_range, end_range) (including start_range but not
  * including end_range) possibly from different multiple threads in parallel.
  *
- * The JxlParallelRunner function does not need to be re-entrant. This means
- * that the same JxlParallelRunner function with the same runner_opaque
- * provided parameter will not be called from the library from either @p init or
+ * The @ref JxlParallelRunner function does not need to be re-entrant. This
+ * means that the same @ref JxlParallelRunner function with the same
+ * runner_opaque provided parameter will not be called from the library from
+ * either @p init or
  * @p func in the same decoder or encoder instance. However, a single decoding
- * or encoding instance may call the provided JxlParallelRunner multiple
+ * or encoding instance may call the provided @ref JxlParallelRunner multiple
  * times for different parts of the decoding or encoding process.
  *
  * @return 0 if the @p init call succeeded (returned 0) and no other error
@@ -120,7 +123,7 @@ typedef JxlParallelRetCode (*JxlParallelRunner)(
     void* runner_opaque, void* jpegxl_opaque, JxlParallelRunInit init,
     JxlParallelRunFunction func, uint32_t start_range, uint32_t end_range);
 
-/* The following is an example of a JxlParallelRunner that doesn't use any
+/* The following is an example of a @ref JxlParallelRunner that doesn't use any
  * multi-threading. Note that this implementation doesn't store any state
  * between multiple calls of the ExampleSequentialRunner function, so the
  * runner_opaque value is not used.

@@ -5,10 +5,8 @@
 
 #include "lib/jxl/quantizer.h"
 
-#include "lib/jxl/base/span.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_fields.h"
-#include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/testing.h"
 
@@ -24,7 +22,8 @@ TEST(QuantizerTest, QuantizerParams) {
   for (uint32_t i = 1; i < 10000; ++i) {
     QuantizerParams p;
     p.global_scale = i;
-    size_t extension_bits = 0, total_bits = 0;
+    size_t extension_bits = 0;
+    size_t total_bits = 0;
     EXPECT_TRUE(Bundle::CanEncode(p, &extension_bits, &total_bits));
     EXPECT_EQ(0u, extension_bits);
     EXPECT_GE(total_bits, 4u);
@@ -36,7 +35,7 @@ TEST(QuantizerTest, BitStreamRoundtripSameQuant) {
   const int qysize = 8;
   DequantMatrices dequant;
   Quantizer quantizer1(&dequant);
-  ImageI raw_quant_field(qxsize, qysize);
+  JXL_ASSIGN_OR_DIE(ImageI raw_quant_field, ImageI::Create(qxsize, qysize));
   quantizer1.SetQuant(0.17f, 0.17f, &raw_quant_field);
   BitWriter writer;
   QuantizerParams params = quantizer1.GetParams();
@@ -57,10 +56,10 @@ TEST(QuantizerTest, BitStreamRoundtripRandomQuant) {
   const int qysize = 8;
   DequantMatrices dequant;
   Quantizer quantizer1(&dequant);
-  ImageI raw_quant_field(qxsize, qysize);
+  JXL_ASSIGN_OR_DIE(ImageI raw_quant_field, ImageI::Create(qxsize, qysize));
   quantizer1.SetQuant(0.17f, 0.17f, &raw_quant_field);
   float quant_dc = 0.17f;
-  ImageF qf(qxsize, qysize);
+  JXL_ASSIGN_OR_DIE(ImageF qf, ImageF::Create(qxsize, qysize));
   RandomFillImage(&qf, 0.0f, 1.0f);
   quantizer1.SetQuantField(quant_dc, qf, &raw_quant_field);
   BitWriter writer;

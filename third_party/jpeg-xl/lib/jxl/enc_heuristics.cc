@@ -190,9 +190,9 @@ void FindBestBlockEntropyModel(const CompressParams& cparams, const ImageI& rqf,
 
 namespace {
 
-void FindBestDequantMatrices(const CompressParams& cparams,
-                             ModularFrameEncoder* modular_frame_encoder,
-                             DequantMatrices* dequant_matrices) {
+Status FindBestDequantMatrices(const CompressParams& cparams,
+                               ModularFrameEncoder* modular_frame_encoder,
+                               DequantMatrices* dequant_matrices) {
   // TODO(veluca): quant matrices for no-gaborish.
   // TODO(veluca): heuristics for in-bitstream quant tables.
   *dequant_matrices = DequantMatrices();
@@ -204,13 +204,14 @@ void FindBestDequantMatrices(const CompressParams& cparams,
     DctQuantWeightParams dct_params(weights);
     std::vector<QuantEncoding> encodings(DequantMatrices::kNum,
                                          QuantEncoding::DCT(dct_params));
-    DequantMatricesSetCustom(dequant_matrices, encodings,
-                             modular_frame_encoder);
+    JXL_RETURN_IF_ERROR(DequantMatricesSetCustom(dequant_matrices, encodings,
+                                                 modular_frame_encoder));
     float dc_weights[3] = {1.0f / cparams.max_error[0],
                            1.0f / cparams.max_error[1],
                            1.0f / cparams.max_error[2]};
     DequantMatricesSetCustomDC(dequant_matrices, dc_weights);
   }
+  return true;
 }
 
 void StoreMin2(const float v, float& min1, float& min2) {
@@ -226,9 +227,9 @@ void StoreMin2(const float v, float& min1, float& min2) {
 
 void CreateMask(const ImageF& image, ImageF& mask) {
   for (size_t y = 0; y < image.ysize(); y++) {
-    auto* row_n = y > 0 ? image.Row(y - 1) : image.Row(y);
-    auto* row_in = image.Row(y);
-    auto* row_s = y + 1 < image.ysize() ? image.Row(y + 1) : image.Row(y);
+    const auto* row_n = y > 0 ? image.Row(y - 1) : image.Row(y);
+    const auto* row_in = image.Row(y);
+    const auto* row_s = y + 1 < image.ysize() ? image.Row(y + 1) : image.Row(y);
     auto* row_out = mask.Row(y);
     for (size_t x = 0; x < image.xsize(); x++) {
       // Center, west, east, north, south values and their absolute difference
@@ -258,7 +259,7 @@ void CreateMask(const ImageF& image, ImageF& mask) {
 // by the decoder. Ringing is slightly reduced by clamping the values of the
 // resulting pixels within certain bounds of a small region in the original
 // image.
-void DownsampleImage2_Sharper(const ImageF& input, ImageF* output) {
+Status DownsampleImage2_Sharper(const ImageF& input, ImageF* output) {
   const int64_t kernelx = 12;
   const int64_t kernely = 12;
 
@@ -315,11 +316,12 @@ void DownsampleImage2_Sharper(const ImageF& input, ImageF* output) {
   int64_t xsize = input.xsize();
   int64_t ysize = input.ysize();
 
-  ImageF box_downsample(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(ImageF box_downsample, ImageF::Create(xsize, ysize));
   CopyImageTo(input, &box_downsample);
-  DownsampleImage(&box_downsample, 2);
+  JXL_ASSIGN_OR_RETURN(box_downsample, DownsampleImage(box_downsample, 2));
 
-  ImageF mask(box_downsample.xsize(), box_downsample.ysize());
+  JXL_ASSIGN_OR_RETURN(ImageF mask, ImageF::Create(box_downsample.xsize(),
+                                                   box_downsample.ysize()));
   CreateMask(box_downsample, mask);
 
   for (size_t y = 0; y < output->ysize(); y++) {
@@ -379,50 +381,54 @@ void DownsampleImage2_Sharper(const ImageF& input, ImageF* output) {
       }
     }
   }
+  return true;
 }
 
 }  // namespace
 
-void DownsampleImage2_Sharper(Image3F* opsin) {
+Status DownsampleImage2_Sharper(Image3F* opsin) {
   // Allocate extra space to avoid a reallocation when padding.
-  Image3F downsampled(DivCeil(opsin->xsize(), 2) + kBlockDim,
-                      DivCeil(opsin->ysize(), 2) + kBlockDim);
+  JXL_ASSIGN_OR_RETURN(Image3F downsampled,
+                       Image3F::Create(DivCeil(opsin->xsize(), 2) + kBlockDim,
+                                       DivCeil(opsin->ysize(), 2) + kBlockDim));
   downsampled.ShrinkTo(downsampled.xsize() - kBlockDim,
                        downsampled.ysize() - kBlockDim);
 
   for (size_t c = 0; c < 3; c++) {
-    DownsampleImage2_Sharper(opsin->Plane(c), &downsampled.Plane(c));
+    JXL_RETURN_IF_ERROR(
+        DownsampleImage2_Sharper(opsin->Plane(c), &downsampled.Plane(c)));
   }
   *opsin = std::move(downsampled);
+  return true;
 }
 
 namespace {
 
 // The default upsampling kernels used by Upsampler in the decoder.
-static const constexpr int64_t kSize = 5;
+const constexpr int64_t kSize = 5;
 
-static const float kernel00[25] = {
+const float kernel00[25] = {
     -0.01716200f, -0.03452303f, -0.04022174f, -0.02921014f, -0.00624645f,
     -0.03452303f, 0.14111091f,  0.28896755f,  0.00278718f,  -0.01610267f,
     -0.04022174f, 0.28896755f,  0.56661550f,  0.03777607f,  -0.01986694f,
     -0.02921014f, 0.00278718f,  0.03777607f,  -0.03144731f, -0.01185068f,
     -0.00624645f, -0.01610267f, -0.01986694f, -0.01185068f, -0.00213539f,
 };
-static const float kernel01[25] = {
+const float kernel01[25] = {
     -0.00624645f, -0.01610267f, -0.01986694f, -0.01185068f, -0.00213539f,
     -0.02921014f, 0.00278718f,  0.03777607f,  -0.03144731f, -0.01185068f,
     -0.04022174f, 0.28896755f,  0.56661550f,  0.03777607f,  -0.01986694f,
     -0.03452303f, 0.14111091f,  0.28896755f,  0.00278718f,  -0.01610267f,
     -0.01716200f, -0.03452303f, -0.04022174f, -0.02921014f, -0.00624645f,
 };
-static const float kernel10[25] = {
+const float kernel10[25] = {
     -0.00624645f, -0.02921014f, -0.04022174f, -0.03452303f, -0.01716200f,
     -0.01610267f, 0.00278718f,  0.28896755f,  0.14111091f,  -0.03452303f,
     -0.01986694f, 0.03777607f,  0.56661550f,  0.28896755f,  -0.04022174f,
     -0.01185068f, -0.03144731f, 0.03777607f,  0.00278718f,  -0.02921014f,
     -0.00213539f, -0.01185068f, -0.01986694f, -0.01610267f, -0.00624645f,
 };
-static const float kernel11[25] = {
+const float kernel11[25] = {
     -0.00213539f, -0.01185068f, -0.01986694f, -0.01610267f, -0.00624645f,
     -0.01185068f, -0.03144731f, 0.03777607f,  0.00278718f,  -0.02921014f,
     -0.01986694f, 0.03777607f,  0.56661550f,  0.28896755f,  -0.04022174f,
@@ -435,14 +441,14 @@ static const float kernel11[25] = {
 // TODO(lode): use Upsampler instead. However, it requires pre-initialization
 // and padding on the left side of the image which requires refactoring the
 // other code using this.
-static void UpsampleImage(const ImageF& input, ImageF* output) {
+void UpsampleImage(const ImageF& input, ImageF* output) {
   int64_t xsize = input.xsize();
   int64_t ysize = input.ysize();
   int64_t xsize2 = output->xsize();
   int64_t ysize2 = output->ysize();
   for (int64_t y = 0; y < ysize2; y++) {
     for (int64_t x = 0; x < xsize2; x++) {
-      auto kernel = kernel00;
+      const auto* kernel = kernel00;
       if ((x & 1) && (y & 1)) {
         kernel = kernel11;
       } else if (x & 1) {
@@ -492,7 +498,7 @@ static void UpsampleImage(const ImageF& input, ImageF* output) {
 // Returns the derivative of Upsampler, with respect to input pixel x2, y2, to
 // output pixel x, y (ignoring the clamping).
 float UpsamplerDeriv(int64_t x2, int64_t y2, int64_t x, int64_t y) {
-  auto kernel = kernel00;
+  const auto* kernel = kernel00;
   if ((x & 1) && (y & 1)) {
     kernel = kernel11;
   } else if (x & 1) {
@@ -599,9 +605,7 @@ void ReduceRinging(const ImageF& initial, const ImageF& mask, ImageF& down) {
         for (int64_t xi = -1; xi < 2; xi++) {
           int64_t x2 = (int64_t)x + xi;
           int64_t y2 = (int64_t)y + yi;
-          if (x2 < 0 || y2 < 0 || x2 >= (int64_t)xsize2 ||
-              y2 >= (int64_t)ysize2)
-            continue;
+          if (x2 < 0 || y2 < 0 || x2 >= xsize2 || y2 >= ysize2) continue;
           min = std::min<float>(min, initial.Row(y2)[x2]);
           max = std::max<float>(max, initial.Row(y2)[x2]);
         }
@@ -625,32 +629,35 @@ void ReduceRinging(const ImageF& initial, const ImageF& mask, ImageF& down) {
 }
 
 // TODO(lode): move this to a separate file enc_downsample.cc
-void DownsampleImage2_Iterative(const ImageF& orig, ImageF* output) {
+Status DownsampleImage2_Iterative(const ImageF& orig, ImageF* output) {
   int64_t xsize = orig.xsize();
   int64_t ysize = orig.ysize();
   int64_t xsize2 = DivCeil(orig.xsize(), 2);
   int64_t ysize2 = DivCeil(orig.ysize(), 2);
 
-  ImageF box_downsample(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(ImageF box_downsample, ImageF::Create(xsize, ysize));
   CopyImageTo(orig, &box_downsample);
-  DownsampleImage(&box_downsample, 2);
-  ImageF mask(box_downsample.xsize(), box_downsample.ysize());
+  JXL_ASSIGN_OR_RETURN(box_downsample, DownsampleImage(box_downsample, 2));
+  JXL_ASSIGN_OR_RETURN(ImageF mask, ImageF::Create(box_downsample.xsize(),
+                                                   box_downsample.ysize()));
   CreateMask(box_downsample, mask);
 
   output->ShrinkTo(xsize2, ysize2);
 
   // Initial result image using the sharper downsampling.
   // Allocate extra space to avoid a reallocation when padding.
-  ImageF initial(DivCeil(orig.xsize(), 2) + kBlockDim,
-                 DivCeil(orig.ysize(), 2) + kBlockDim);
+  JXL_ASSIGN_OR_RETURN(ImageF initial,
+                       ImageF::Create(DivCeil(orig.xsize(), 2) + kBlockDim,
+                                      DivCeil(orig.ysize(), 2) + kBlockDim));
   initial.ShrinkTo(initial.xsize() - kBlockDim, initial.ysize() - kBlockDim);
-  DownsampleImage2_Sharper(orig, &initial);
+  JXL_RETURN_IF_ERROR(DownsampleImage2_Sharper(orig, &initial));
 
-  ImageF down(initial.xsize(), initial.ysize());
+  JXL_ASSIGN_OR_RETURN(ImageF down,
+                       ImageF::Create(initial.xsize(), initial.ysize()));
   CopyImageTo(initial, &down);
-  ImageF up(xsize, ysize);
-  ImageF corr(xsize, ysize);
-  ImageF corr2(xsize2, ysize2);
+  JXL_ASSIGN_OR_RETURN(ImageF up, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF corr, ImageF::Create(xsize, ysize));
+  JXL_ASSIGN_OR_RETURN(ImageF corr2, ImageF::Create(xsize2, ysize2));
 
   // In the weights map, relatively higher values will allow less ringing but
   // also less sharpness. With all constant values, it optimizes equally
@@ -659,25 +666,25 @@ void DownsampleImage2_Iterative(const ImageF& orig, ImageF* output) {
   // TODO(lode): Make use of the weights field for anti-ringing and clamping,
   // the values are all set to 1 for now, but it is intended to be used for
   // reducing ringing based on the mask, and taking clamping into account.
-  ImageF weights(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(ImageF weights, ImageF::Create(xsize, ysize));
   for (size_t y = 0; y < weights.ysize(); y++) {
     auto* row = weights.Row(y);
     for (size_t x = 0; x < weights.xsize(); x++) {
       row[x] = 1;
     }
   }
-  ImageF weights2(xsize2, ysize2);
+  JXL_ASSIGN_OR_RETURN(ImageF weights2, ImageF::Create(xsize2, ysize2));
   AntiUpsample(weights, &weights2);
 
   const size_t num_it = 3;
   for (size_t it = 0; it < num_it; ++it) {
     UpsampleImage(down, &up);
-    corr = LinComb<float>(1, orig, -1, up);
+    JXL_ASSIGN_OR_RETURN(corr, LinComb<float>(1, orig, -1, up));
     ElwiseMul(corr, weights, &corr);
     AntiUpsample(corr, &corr2);
     ElwiseDiv(corr2, weights2, &corr2);
 
-    down = LinComb<float>(1, down, 1, corr2);
+    JXL_ASSIGN_OR_RETURN(down, LinComb<float>(1, down, 1, corr2));
   }
 
   ReduceRinging(initial, mask, down);
@@ -690,32 +697,40 @@ void DownsampleImage2_Iterative(const ImageF& orig, ImageF* output) {
       output->Row(y)[x] = v;
     }
   }
+  return true;
 }
 
 }  // namespace
 
-void DownsampleImage2_Iterative(Image3F* opsin) {
+Status DownsampleImage2_Iterative(Image3F* opsin) {
   // Allocate extra space to avoid a reallocation when padding.
-  Image3F downsampled(DivCeil(opsin->xsize(), 2) + kBlockDim,
-                      DivCeil(opsin->ysize(), 2) + kBlockDim);
+  JXL_ASSIGN_OR_RETURN(Image3F downsampled,
+                       Image3F::Create(DivCeil(opsin->xsize(), 2) + kBlockDim,
+                                       DivCeil(opsin->ysize(), 2) + kBlockDim));
   downsampled.ShrinkTo(downsampled.xsize() - kBlockDim,
                        downsampled.ysize() - kBlockDim);
 
-  Image3F rgb(opsin->xsize(), opsin->ysize());
+  JXL_ASSIGN_OR_RETURN(Image3F rgb,
+                       Image3F::Create(opsin->xsize(), opsin->ysize()));
   OpsinParams opsin_params;  // TODO(user): use the ones that are actually used
   opsin_params.Init(kDefaultIntensityTarget);
   OpsinToLinear(*opsin, Rect(rgb), nullptr, &rgb, opsin_params);
 
-  ImageF mask(opsin->xsize(), opsin->ysize());
+  JXL_ASSIGN_OR_RETURN(ImageF mask,
+                       ImageF::Create(opsin->xsize(), opsin->ysize()));
   ButteraugliParams butter_params;
-  ButteraugliComparator butter(rgb, butter_params);
-  butter.Mask(&mask);
-  ImageF mask_fuzzy(opsin->xsize(), opsin->ysize());
+  JXL_ASSIGN_OR_RETURN(std::unique_ptr<ButteraugliComparator> butter,
+                       ButteraugliComparator::Make(rgb, butter_params));
+  JXL_RETURN_IF_ERROR(butter->Mask(&mask));
+  JXL_ASSIGN_OR_RETURN(ImageF mask_fuzzy,
+                       ImageF::Create(opsin->xsize(), opsin->ysize()));
 
   for (size_t c = 0; c < 3; c++) {
-    DownsampleImage2_Iterative(opsin->Plane(c), &downsampled.Plane(c));
+    JXL_RETURN_IF_ERROR(
+        DownsampleImage2_Iterative(opsin->Plane(c), &downsampled.Plane(c)));
   }
   *opsin = std::move(downsampled);
+  return true;
 }
 
 Status LossyFrameHeuristics(const FrameHeader& frame_header,
@@ -739,10 +754,11 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
   BlockCtxMap& block_ctx_map = shared.block_ctx_map;
 
   // Find and subtract splines.
+  if (cparams.custom_splines.HasAny()) {
+    image_features.splines = cparams.custom_splines;
+  }
   if (!streaming_mode && cparams.speed_tier <= SpeedTier::kSquirrel) {
-    if (cparams.custom_splines.HasAny()) {
-      image_features.splines = cparams.custom_splines;
-    } else {
+    if (!cparams.custom_splines.HasAny()) {
       image_features.splines = FindSplines(*opsin);
     }
     JXL_RETURN_IF_ERROR(image_features.splines.InitializeDrawCache(
@@ -754,7 +770,8 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
   if (!streaming_mode &&
       ApplyOverride(cparams.patches,
                     cparams.speed_tier <= SpeedTier::kSquirrel)) {
-    FindBestPatchDictionary(*opsin, enc_state, cms, pool, aux_out);
+    JXL_RETURN_IF_ERROR(
+        FindBestPatchDictionary(*opsin, enc_state, cms, pool, aux_out));
     PatchDictionaryEncoder::SubtractFrom(image_features.patches, opsin);
   }
 
@@ -791,10 +808,12 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
   // on simple heuristics in FindBestAcStrategy, or set a constant for Falcon
   // mode.
   if (cparams.speed_tier > SpeedTier::kHare) {
-    initial_quant_field =
-        ImageF(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
-    initial_quant_masking =
-        ImageF(frame_dim.xsize_blocks, frame_dim.ysize_blocks);
+    JXL_ASSIGN_OR_RETURN(
+        initial_quant_field,
+        ImageF::Create(frame_dim.xsize_blocks, frame_dim.ysize_blocks));
+    JXL_ASSIGN_OR_RETURN(
+        initial_quant_masking,
+        ImageF::Create(frame_dim.xsize_blocks, frame_dim.ysize_blocks));
     float q = 0.79 / cparams.butteraugli_distance;
     FillImage(q, &initial_quant_field);
     FillImage(1.0f / (q + 0.001f), &initial_quant_masking);
@@ -805,9 +824,11 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
     if (!frame_header.loop_filter.gab) {
       butteraugli_distance_for_iqf *= 0.73f;
     }
-    initial_quant_field = InitialQuantField(
-        butteraugli_distance_for_iqf, *opsin, rect, pool, 1.0f,
-        &initial_quant_masking, &initial_quant_masking1x1);
+    JXL_ASSIGN_OR_RETURN(
+        initial_quant_field,
+        InitialQuantField(butteraugli_distance_for_iqf, *opsin, rect, pool,
+                          1.0f, &initial_quant_masking,
+                          &initial_quant_masking1x1));
     float q = 0.39 / cparams.butteraugli_distance;
     quantizer.ComputeGlobalScaleAndQuant(quant_dc, q, 0);
   }
@@ -822,18 +843,21 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
         0.99406123118127299f,
         0.99719338015886894f,
     };
-    GaborishInverse(opsin, rect, weight, pool);
+    JXL_RETURN_IF_ERROR(GaborishInverse(opsin, rect, weight, pool));
   }
 
   if (initialize_global_state) {
-    FindBestDequantMatrices(cparams, modular_frame_encoder, &matrices);
+    JXL_RETURN_IF_ERROR(
+        FindBestDequantMatrices(cparams, modular_frame_encoder, &matrices));
   }
 
-  cfl_heuristics.Init(rect);
+  JXL_RETURN_IF_ERROR(cfl_heuristics.Init(rect));
   acs_heuristics.Init(*opsin, rect, initial_quant_field, initial_quant_masking,
                       initial_quant_masking1x1, &matrices);
 
+  std::atomic<bool> has_error{false};
   auto process_tile = [&](const uint32_t tid, const size_t thread) {
+    if (has_error) return;
     size_t n_enc_tiles = DivCeil(frame_dim.xsize_blocks, kEncTileDimInBlocks);
     size_t tx = tid % n_enc_tiles;
     size_t ty = tid / n_enc_tiles;
@@ -860,9 +884,12 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
 
     // Choose amount of post-processing smoothing.
     // TODO(veluca): should this go *after* AdjustQuantField?
-    ar_heuristics.RunRect(cparams, frame_header, r, *opsin, rect,
-                          initial_quant_field, ac_strategy, &epf_sharpness,
-                          thread);
+    if (!ar_heuristics.RunRect(cparams, frame_header, r, *opsin, rect,
+                               initial_quant_field, ac_strategy, &epf_sharpness,
+                               thread)) {
+      has_error = true;
+      return;
+    }
 
     // Always set the initial quant field, so we can compute the CfL map with
     // more accuracy. The initial quant field might change in slower modes, but
@@ -889,13 +916,15 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
         return true;
       },
       process_tile, "Enc Heuristics"));
+  if (has_error) return JXL_FAILURE("Enc Heuristics failed");
 
-  acs_heuristics.Finalize(frame_dim, ac_strategy, aux_out);
+  JXL_RETURN_IF_ERROR(acs_heuristics.Finalize(frame_dim, ac_strategy, aux_out));
 
   // Refine quantization levels.
   if (!streaming_mode) {
-    FindBestQuantizer(frame_header, original_pixels, *opsin,
-                      initial_quant_field, enc_state, cms, pool, aux_out);
+    JXL_RETURN_IF_ERROR(FindBestQuantizer(frame_header, original_pixels, *opsin,
+                                          initial_quant_field, enc_state, cms,
+                                          pool, aux_out));
   }
 
   // Choose a context model that depends on the amount of quantization for AC.

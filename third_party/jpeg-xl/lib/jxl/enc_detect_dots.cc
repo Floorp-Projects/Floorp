@@ -26,7 +26,6 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/enc_linalg.h"
-#include "lib/jxl/enc_optimize.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_ops.h"
 
@@ -44,14 +43,16 @@ using hwy::HWY_NAMESPACE::Add;
 using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::Sub;
 
-ImageF SumOfSquareDifferences(const Image3F& forig, const Image3F& smooth,
-                              ThreadPool* pool) {
+StatusOr<ImageF> SumOfSquareDifferences(const Image3F& forig,
+                                        const Image3F& smooth,
+                                        ThreadPool* pool) {
   const HWY_FULL(float) d;
   const auto color_coef0 = Set(d, 0.0f);
   const auto color_coef1 = Set(d, 10.0f);
   const auto color_coef2 = Set(d, 0.0f);
 
-  ImageF sum_of_squares(forig.xsize(), forig.ysize());
+  JXL_ASSIGN_OR_RETURN(ImageF sum_of_squares,
+                       ImageF::Create(forig.xsize(), forig.ysize()));
   JXL_CHECK(RunOnPool(
       pool, 0, forig.ysize(), ThreadPool::NoInit,
       [&](const uint32_t task, size_t thread) {
@@ -142,11 +143,12 @@ const WeightsSeparable5& WeightsSeparable5Gaussian3() {
   return weights;
 }
 
-ImageF ComputeEnergyImage(const Image3F& orig, Image3F* smooth,
-                          ThreadPool* pool) {
+StatusOr<ImageF> ComputeEnergyImage(const Image3F& orig, Image3F* smooth,
+                                    ThreadPool* pool) {
   // Prepare guidance images for dot selection.
-  Image3F forig(orig.xsize(), orig.ysize());
-  *smooth = Image3F(orig.xsize(), orig.ysize());
+  JXL_ASSIGN_OR_RETURN(Image3F forig,
+                       Image3F::Create(orig.xsize(), orig.ysize()));
+  JXL_ASSIGN_OR_RETURN(*smooth, Image3F::Create(orig.xsize(), orig.ysize()));
   Rect rect(orig);
 
   const auto& weights1 = WeightsSeparable5Gaussian0_65();
@@ -266,7 +268,10 @@ struct ConnectedComponent {
 
 Rect BoundingRectangle(const std::vector<Pixel>& pixels) {
   JXL_ASSERT(!pixels.empty());
-  int low_x, high_x, low_y, high_y;
+  int low_x;
+  int high_x;
+  int low_y;
+  int high_y;
   low_x = high_x = pixels[0].x;
   low_y = high_y = pixels[0].y;
   for (const Pixel& p : pixels) {
@@ -278,11 +283,13 @@ Rect BoundingRectangle(const std::vector<Pixel>& pixels) {
   return Rect(low_x, low_y, high_x - low_x + 1, high_y - low_y + 1);
 }
 
-std::vector<ConnectedComponent> FindCC(const ImageF& energy, double t_low,
-                                       double t_high, uint32_t maxWindow,
-                                       double minScore) {
+StatusOr<std::vector<ConnectedComponent>> FindCC(const ImageF& energy,
+                                                 double t_low, double t_high,
+                                                 uint32_t maxWindow,
+                                                 double minScore) {
   const int kExtraRect = 4;
-  ImageF img(energy.xsize(), energy.ysize());
+  JXL_ASSIGN_OR_RETURN(ImageF img,
+                       ImageF::Create(energy.xsize(), energy.ysize()));
   CopyImageTo(energy, &img);
   std::vector<ConnectedComponent> ans;
   for (size_t y = 0; y < img.ysize(); y++) {
@@ -328,7 +335,8 @@ void ComputeDotLosses(GaussianEllipse* ellipse, const ConnectedComponent& cc,
   const double kIntensityR = 0.0;   // 0.015;
   const double kSigmaR = 0.0;       // 0.01;
   const double kZeroEpsilon = 0.1;  // Tolerance to consider a value negative
-  double ct = cos(ellipse->angle), st = sin(ellipse->angle);
+  double ct = cos(ellipse->angle);
+  double st = sin(ellipse->angle);
   const std::array<double, 3> channelGains{{1.0, 1.0, 1.0}};
   int N = 0;
   ellipse->l1_loss = 0.0;
@@ -450,14 +458,16 @@ GaussianEllipse FitGaussianFast(const ConnectedComponent& cc,
     ans.intensity[j] = kScaleMult[j] * color[j];
   }
 
-  ImageD Sigma(2, 2), D(1, 2), U(2, 2);
-  Sigma.Row(0)[0] = m2[0] - m1[0] * m1[0];
-  Sigma.Row(1)[1] = m2[2] - m1[1] * m1[1];
-  Sigma.Row(0)[1] = Sigma.Row(1)[0] = m2[1] - m1[0] * m1[1];
-  ConvertToDiagonal(Sigma, &D, &U);
-  const double* JXL_RESTRICT d = D.ConstRow(0);
-  const double* JXL_RESTRICT u = U.ConstRow(1);
-  int p1 = 0, p2 = 1;
+  Matrix2x2 Sigma;
+  Vector2 d;
+  Matrix2x2 U;
+  Sigma[0][0] = m2[0] - m1[0] * m1[0];
+  Sigma[1][1] = m2[2] - m1[1] * m1[1];
+  Sigma[0][1] = Sigma[1][0] = m2[1] - m1[0] * m1[1];
+  ConvertToDiagonal(Sigma, d, U);
+  Vector2& u = U[1];
+  int p1 = 0;
+  int p2 = 1;
   if (d[0] < d[1]) std::swap(p1, p2);
   ans.sigma_x = kSigmaMult * d[p1];
   ans.sigma_y = kSigmaMult * d[p2];
@@ -466,7 +476,8 @@ GaussianEllipse FitGaussianFast(const ConnectedComponent& cc,
   ans.bgColor = bgColor;
   if (leastSqIntensity) {
     GaussianEllipse* ellipse = &ans;
-    double ct = cos(ans.angle), st = sin(ans.angle);
+    double ct = cos(ans.angle);
+    double st = sin(ans.angle);
     // Estimate intensity with least squares (fixed background)
     for (int c = 0; c < 3; c++) {
       double gg = 0.0;
@@ -522,14 +533,16 @@ GaussianEllipse FitGaussian(const ConnectedComponent& cc, const ImageF& energy,
 
 }  // namespace
 
-std::vector<PatchInfo> DetectGaussianEllipses(
+StatusOr<std::vector<PatchInfo>> DetectGaussianEllipses(
     const Image3F& opsin, const GaussianDetectParams& params,
     const EllipseQuantParams& qParams, ThreadPool* pool) {
   std::vector<PatchInfo> dots;
-  Image3F smooth(opsin.xsize(), opsin.ysize());
-  ImageF energy = ComputeEnergyImage(opsin, &smooth, pool);
-  std::vector<ConnectedComponent> components = FindCC(
-      energy, params.t_low, params.t_high, params.maxWinSize, params.minScore);
+  JXL_ASSIGN_OR_RETURN(Image3F smooth,
+                       Image3F::Create(opsin.xsize(), opsin.ysize()));
+  JXL_ASSIGN_OR_RETURN(ImageF energy, ComputeEnergyImage(opsin, &smooth, pool));
+  JXL_ASSIGN_OR_RETURN(std::vector<ConnectedComponent> components,
+                       FindCC(energy, params.t_low, params.t_high,
+                              params.maxWinSize, params.minScore));
   size_t numCC =
       std::min(params.maxCC, (components.size() * params.percCC) / 100);
   if (components.size() > numCC) {

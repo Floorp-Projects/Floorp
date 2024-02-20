@@ -113,7 +113,7 @@ void DecodeWithLibjpeg(const CompressParams& jparams,
             jpeg_read_header(cinfo, /*require_image=*/TRUE));
   if (!jparams.icc.empty()) {
     uint8_t* icc_data = nullptr;
-    unsigned int icc_len;
+    unsigned int icc_len = 0;  // "unpoison" via initialization
     JXL_CHECK(jpeg_read_icc_profile(cinfo, &icc_data, &icc_len));
     JXL_CHECK(icc_data);
     jxl::msan::UnpoisonMemory(icc_data, icc_len);

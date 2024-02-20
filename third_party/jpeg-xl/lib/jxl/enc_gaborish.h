@@ -9,6 +9,7 @@
 // Linear smoothing (3x3 convolution) for deblocking without too much blur.
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
@@ -16,8 +17,8 @@ namespace jxl {
 // Used in encoder to reduce the impact of the decoder's smoothing.
 // This is not exact. Works in-place to reduce memory use.
 // The input is typically in XYB space.
-void GaborishInverse(Image3F* in_out, const Rect& rect, float mul[3],
-                     ThreadPool* pool);
+Status GaborishInverse(Image3F* in_out, const Rect& rect, const float mul[3],
+                       ThreadPool* pool);
 
 }  // namespace jxl
 

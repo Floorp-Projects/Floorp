@@ -52,7 +52,8 @@ struct PixelCallback {
     const bool has_init = init != nullptr;
     const bool has_run = run != nullptr;
     const bool has_destroy = destroy != nullptr;
-    JXL_ASSERT(has_init == has_run && has_run == has_destroy);
+    const bool healthy = (has_init == has_run) && (has_run == has_destroy);
+    JXL_ASSERT(healthy);
 #endif
   }
 
@@ -128,7 +129,7 @@ struct PassesDecoderState {
   std::atomic<uint32_t> used_acs{0};
 
   // Storage for coefficients if in "accumulate" mode.
-  std::unique_ptr<ACImage> coefficients = make_unique<ACImageT<int32_t>>(0, 0);
+  std::unique_ptr<ACImage> coefficients = make_unique<ACImageT<int32_t>>();
 
   // Rendering pipeline.
   std::unique_ptr<RenderPipeline> render_pipeline;
@@ -166,8 +167,10 @@ struct PassesDecoderState {
 
     upsampler8x = GetUpsamplingStage(shared->metadata->transform_data, 0, 3);
     if (frame_header.loop_filter.epf_iters > 0) {
-      sigma = ImageF(shared->frame_dim.xsize_blocks + 2 * kSigmaPadding,
-                     shared->frame_dim.ysize_blocks + 2 * kSigmaPadding);
+      JXL_ASSIGN_OR_RETURN(
+          sigma,
+          ImageF::Create(shared->frame_dim.xsize_blocks + 2 * kSigmaPadding,
+                         shared->frame_dim.ysize_blocks + 2 * kSigmaPadding));
     }
     return true;
   }
@@ -193,14 +196,16 @@ struct PassesDecoderState {
 // Temp images required for decoding a single group. Reduces memory allocations
 // for large images because we only initialize min(#threads, #groups) instances.
 struct GroupDecCache {
-  void InitOnce(size_t num_passes, size_t used_acs) {
+  Status InitOnce(size_t num_passes, size_t used_acs) {
     for (size_t i = 0; i < num_passes; i++) {
       if (num_nzeroes[i].xsize() == 0) {
         // Allocate enough for a whole group - partial groups on the
         // right/bottom border just use a subset. The valid size is passed via
         // Rect.
 
-        num_nzeroes[i] = Image3I(kGroupDimInBlocks, kGroupDimInBlocks);
+        JXL_ASSIGN_OR_RETURN(
+            num_nzeroes[i],
+            Image3I::Create(kGroupDimInBlocks, kGroupDimInBlocks));
       }
     }
     size_t max_block_area = 0;
@@ -227,13 +232,17 @@ struct GroupDecCache {
     scratch_space = dec_group_block + max_block_area_ * 3;
     dec_group_qblock = int32_memory_.get();
     dec_group_qblock16 = int16_memory_.get();
+    return true;
   }
 
-  void InitDCBufferOnce() {
+  Status InitDCBufferOnce() {
     if (dc_buffer.xsize() == 0) {
-      dc_buffer = ImageF(kGroupDimInBlocks + kRenderPipelineXOffset * 2,
-                         kGroupDimInBlocks + 4);
+      JXL_ASSIGN_OR_RETURN(
+          dc_buffer,
+          ImageF::Create(kGroupDimInBlocks + kRenderPipelineXOffset * 2,
+                         kGroupDimInBlocks + 4));
     }
+    return true;
   }
 
   // Scratch space used by DecGroupImpl().

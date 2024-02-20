@@ -29,7 +29,6 @@
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
-#include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_toc.h"
@@ -54,6 +53,7 @@
 namespace jxl {
 namespace {
 
+using test::ButteraugliDistance;
 using test::ReadTestData;
 using test::Roundtrip;
 using test::TestImage;
@@ -209,7 +209,8 @@ TEST(ModularTest, RoundtripLossy16) {
 
 TEST(ModularTest, RoundtripExtraProperties) {
   constexpr size_t kSize = 250;
-  Image image(kSize, kSize, /*bitdepth=*/8, 3);
+  JXL_ASSIGN_OR_DIE(Image image,
+                    Image::Create(kSize, kSize, /*bitdepth=*/8, 3));
   ModularOptions options;
   options.max_properties = 4;
   options.predictor = Predictor::Zero;
@@ -224,10 +225,12 @@ TEST(ModularTest, RoundtripExtraProperties) {
   BitWriter writer;
   ASSERT_TRUE(ModularGenericCompress(image, options, &writer));
   writer.ZeroPadToByte();
-  Image decoded(kSize, kSize, /*bitdepth=*/8, image.channel.size());
+  JXL_ASSIGN_OR_DIE(Image decoded, Image::Create(kSize, kSize, /*bitdepth=*/8,
+                                                 image.channel.size()));
   for (size_t i = 0; i < image.channel.size(); i++) {
     const Channel& ch = image.channel[i];
-    decoded.channel[i] = Channel(ch.w, ch.h, ch.hshift, ch.vshift);
+    JXL_ASSIGN_OR_DIE(decoded.channel[i],
+                      Channel::Create(ch.w, ch.h, ch.hshift, ch.vshift));
   }
   Status status = true;
   {
@@ -302,7 +305,7 @@ TEST_P(ModularTestParam, RoundtripLossless) {
 
   double factor = ((1lu << bitdepth) - 1lu);
   double ifactor = 1.0 / factor;
-  Image3F noise_added(xsize, ysize);
+  JXL_ASSIGN_OR_DIE(Image3F noise_added, Image3F::Create(xsize, ysize));
 
   for (size_t c = 0; c < 3; c++) {
     for (size_t y = 0; y < ysize; y++) {
@@ -330,7 +333,7 @@ TEST_P(ModularTestParam, RoundtripLossless) {
   CodecInOut io2;
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _, &compressed_size));
-  EXPECT_LE(compressed_size, bitdepth * xsize * ysize / 3);
+  EXPECT_LE(compressed_size, bitdepth * xsize * ysize / 3 * 1.1);
   EXPECT_LE(0, ComputeDistance2(io.Main(), io2.Main(), *JxlGetDefaultCms()));
   size_t different = 0;
   for (size_t c = 0; c < 3; c++) {
@@ -350,7 +353,8 @@ TEST_P(ModularTestParam, RoundtripLossless) {
 
 TEST(ModularTest, RoundtripLosslessCustomFloat) {
   CodecInOut io;
-  size_t xsize = 100, ysize = 300;
+  size_t xsize = 100;
+  size_t ysize = 300;
   io.SetSize(xsize, ysize);
   io.metadata.m.bit_depth.bits_per_sample = 18;
   io.metadata.m.bit_depth.exponent_bits_per_sample = 6;
@@ -359,7 +363,7 @@ TEST(ModularTest, RoundtripLosslessCustomFloat) {
   ColorEncoding color_encoding;
   color_encoding.Tf().SetTransferFunction(TransferFunction::kLinear);
   color_encoding.SetColorSpace(ColorSpace::kRGB);
-  Image3F testimage(xsize, ysize);
+  JXL_ASSIGN_OR_DIE(Image3F testimage, Image3F::Create(xsize, ysize));
   float factor = 1.f / (1 << 14);
   for (size_t c = 0; c < 3; c++) {
     for (size_t y = 0; y < ysize; y++) {
@@ -442,7 +446,7 @@ TEST(ModularTest, PredictorIntegerOverflow) {
   WriteHeaders(&writer, xsize, ysize);
   std::vector<BitWriter> group_codes(1);
   {
-    BitWriter* bw = &group_codes[0];
+    BitWriter* bw = group_codes.data();
     BitWriter::Allotment allotment(bw, 1 << 20);
     WriteHistograms(bw);
     GroupHeader header;
@@ -466,7 +470,7 @@ TEST(ModularTest, PredictorIntegerOverflow) {
                              nullptr, &ppf));
   ASSERT_EQ(1, ppf.frames.size());
   const auto& img = ppf.frames[0].color;
-  const auto pixels = reinterpret_cast<const float*>(img.pixels());
+  const auto* pixels = reinterpret_cast<const float*>(img.pixels());
   EXPECT_EQ(-1.0f, pixels[0]);
 }
 
@@ -478,7 +482,7 @@ TEST(ModularTest, UnsqueezeIntegerOverflow) {
   WriteHeaders(&writer, xsize, ysize);
   std::vector<BitWriter> group_codes(1);
   {
-    BitWriter* bw = &group_codes[0];
+    BitWriter* bw = group_codes.data();
     BitWriter::Allotment allotment(bw, 1 << 20);
     WriteHistograms(bw);
     GroupHeader header;
@@ -514,7 +518,7 @@ TEST(ModularTest, UnsqueezeIntegerOverflow) {
                              nullptr, &ppf));
   ASSERT_EQ(1, ppf.frames.size());
   const auto& img = ppf.frames[0].color;
-  const auto pixels = reinterpret_cast<const float*>(img.pixels());
+  const float* pixels = reinterpret_cast<const float*>(img.pixels());
   for (size_t x = 0; x < xsize; ++x) {
     EXPECT_NEAR(-0.5f, pixels[x], 1e-10);
     EXPECT_NEAR(0.5f, pixels[xsize + x], 1e-10);

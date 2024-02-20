@@ -316,7 +316,7 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
                                float* JXL_RESTRICT inout,
                                int32_t* JXL_RESTRICT quantized) {
   float thres_y[4] = {0.58f, 0.64f, 0.64f, 0.64f};
-  {
+  if (enc_state->cparams.speed_tier <= SpeedTier::kHare) {
     int32_t max_quant = 0;
     int quant_orig = *quant;
     float val[3] = {enc_state->x_qm_multiplier, 1.0f,
@@ -337,6 +337,11 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
       max_quant = std::max(*quant, max_quant);
     }
     *quant = max_quant;
+  } else {
+    thres_y[0] = 0.56;
+    thres_y[1] = 0.62;
+    thres_y[2] = 0.62;
+    thres_y[3] = 0.62;
   }
 
   QuantizeBlockAC(quantizer, error_diffusion, 1, 1.0f, quant_kind, xsize, ysize,

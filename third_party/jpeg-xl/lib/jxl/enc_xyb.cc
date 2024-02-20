@@ -21,9 +21,7 @@
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/cms/transfer_functions-inl.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_image_bundle.h"
-#include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
 
@@ -44,7 +42,7 @@ JXL_INLINE void OpsinAbsorbance(const V r, const V g, const V b,
                                 const float* JXL_RESTRICT premul_absorb,
                                 V* JXL_RESTRICT mixed0, V* JXL_RESTRICT mixed1,
                                 V* JXL_RESTRICT mixed2) {
-  const float* bias = &jxl::cms::kOpsinAbsorbanceBias[0];
+  const float* bias = jxl::cms::kOpsinAbsorbanceBias.data();
   const HWY_FULL(float) d;
   const size_t N = Lanes(d);
   const auto m0 = Load(d, premul_absorb + 0 * N);
@@ -77,7 +75,9 @@ void LinearRGBToXYB(const V r, const V g, const V b,
                     const float* JXL_RESTRICT premul_absorb,
                     float* JXL_RESTRICT valx, float* JXL_RESTRICT valy,
                     float* JXL_RESTRICT valz) {
-  V mixed0, mixed1, mixed2;
+  V mixed0;
+  V mixed1;
+  V mixed2;
   OpsinAbsorbance(r, g, b, premul_absorb, &mixed0, &mixed1, &mixed2);
 
   // mixed* should be non-negative even for wide-gamut, so clamp to zero.
@@ -209,15 +209,16 @@ void ComputePremulAbsorb(float intensity_target, float* premul_absorb) {
   }
 }
 
-Image3F TransformToLinearRGB(const Image3F& in,
-                             const ColorEncoding& color_encoding,
-                             float intensity_target, const JxlCmsInterface& cms,
-                             ThreadPool* pool) {
+StatusOr<Image3F> TransformToLinearRGB(const Image3F& in,
+                                       const ColorEncoding& color_encoding,
+                                       float intensity_target,
+                                       const JxlCmsInterface& cms,
+                                       ThreadPool* pool) {
   ColorSpaceTransform c_transform(cms);
   bool is_gray = color_encoding.IsGray();
   const ColorEncoding& c_desired = ColorEncoding::LinearSRGB(is_gray);
-  Image3F out(in.xsize(), in.ysize());
-  std::atomic<bool> ok{true};
+  JXL_ASSIGN_OR_RETURN(Image3F out, Image3F::Create(in.xsize(), in.ysize()));
+  std::atomic<bool> has_error{false};
   JXL_CHECK(RunOnPool(
       pool, 0, in.ysize(),
       [&](const size_t num_threads) {
@@ -225,6 +226,7 @@ Image3F TransformToLinearRGB(const Image3F& in,
                                 in.xsize(), num_threads);
       },
       [&](const uint32_t y, const size_t thread) {
+        if (has_error) return;
         float* mutable_src_buf = c_transform.BufSrc(thread);
         const float* src_buf = mutable_src_buf;
         // Interleave input.
@@ -242,7 +244,7 @@ Image3F TransformToLinearRGB(const Image3F& in,
         }
         float* JXL_RESTRICT dst_buf = c_transform.BufDst(thread);
         if (!c_transform.Run(thread, src_buf, dst_buf)) {
-          ok.store(false);
+          has_error = true;
           return;
         }
         float* JXL_RESTRICT row_out0 = out.PlaneRow(0, y);
@@ -264,7 +266,7 @@ Image3F TransformToLinearRGB(const Image3F& in,
         }
       },
       "Colorspace transform"));
-  JXL_CHECK(ok.load());
+  JXL_CHECK(!has_error);
   return out;
 }
 
@@ -394,12 +396,13 @@ void ToXYB(const ColorEncoding& c_current, float intensity_target,
   (c_current, intensity_target, black, pool, image, cms, linear);
 }
 
-void ToXYB(const ImageBundle& in, ThreadPool* pool, Image3F* JXL_RESTRICT xyb,
-           const JxlCmsInterface& cms, Image3F* JXL_RESTRICT linear) {
-  *xyb = Image3F(in.xsize(), in.ysize());
+Status ToXYB(const ImageBundle& in, ThreadPool* pool, Image3F* JXL_RESTRICT xyb,
+             const JxlCmsInterface& cms, Image3F* JXL_RESTRICT linear) {
+  JXL_ASSIGN_OR_RETURN(*xyb, Image3F::Create(in.xsize(), in.ysize()));
   CopyImageTo(in.color(), xyb);
   ToXYB(in.c_current(), in.metadata()->IntensityTarget(),
         in.HasBlack() ? &in.black() : nullptr, pool, xyb, cms, linear);
+  return true;
 }
 
 HWY_EXPORT(LinearRGBRowToXYB);

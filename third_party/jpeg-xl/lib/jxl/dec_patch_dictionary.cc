@@ -10,26 +10,16 @@
 #include <sys/types.h>
 
 #include <algorithm>
-#include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
-#include "lib/jxl/ans_params.h"
-#include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/override.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/blending.h"
-#include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/common.h"  // kMaxNumReferenceFrames
 #include "lib/jxl/dec_ans.h"
-#include "lib/jxl/dec_frame.h"
-#include "lib/jxl/entropy_coder.h"
-#include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
-#include "lib/jxl/image_ops.h"
 #include "lib/jxl/pack_signed.h"
 #include "lib/jxl/patch_dictionary_internal.h"
 
@@ -322,8 +312,8 @@ std::vector<size_t> PatchDictionary::GetPatchesForRow(size_t y) const {
 
 // Adds patches to a segment of `xsize` pixels, starting at `inout`, assumed
 // to be located at position (x0, y) in the frame.
-void PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
-                                size_t xsize) const {
+Status PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
+                                  size_t xsize) const {
   size_t num_ec = shared_->metadata->m.num_extra_channels;
   std::vector<const float*> fg_ptrs(3 + num_ec);
   for (size_t pos_idx : GetPatchesForRow(y)) {
@@ -352,10 +342,11 @@ void PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
               ref_pos.y0 + iy) +
           ref_pos.x0 + x0 - bx;
     }
-    PerformBlending(inout, fg_ptrs.data(), inout, patch_x0 - x0,
-                    patch_x1 - patch_x0, blendings_[blending_idx],
-                    blendings_.data() + blending_idx + 1,
-                    shared_->metadata->m.extra_channel_info);
+    JXL_RETURN_IF_ERROR(PerformBlending(
+        inout, fg_ptrs.data(), inout, patch_x0 - x0, patch_x1 - patch_x0,
+        blendings_[blending_idx], blendings_.data() + blending_idx + 1,
+        shared_->metadata->m.extra_channel_info));
   }
+  return true;
 }
 }  // namespace jxl

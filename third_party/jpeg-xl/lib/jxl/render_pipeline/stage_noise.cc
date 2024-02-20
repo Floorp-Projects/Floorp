@@ -161,10 +161,10 @@ class AddNoiseStage : public RenderPipelineStage {
         cmap_(cmap),
         first_c_(first_c) {}
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
-    if (!noise_params_.HasAny()) return;
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
+    if (!noise_params_.HasAny()) return true;
     const StrengthEvalLut noise_model(noise_params_);
     D d;
     const auto half = Set(d, 0.5f);
@@ -212,6 +212,7 @@ class AddNoiseStage : public RenderPipelineStage {
     msan::PoisonMemory(row_x + xsize, (xsize_v - xsize) * sizeof(float));
     msan::PoisonMemory(row_y + xsize, (xsize_v - xsize) * sizeof(float));
     msan::PoisonMemory(row_b + xsize, (xsize_v - xsize) * sizeof(float));
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
@@ -241,9 +242,9 @@ class ConvolveNoiseStage : public RenderPipelineStage {
             /*shift=*/0, /*border=*/2)),
         first_c_(first_c) {}
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     const HWY_FULL(float) d;
     for (size_t c = first_c_; c < first_c_ + 3; c++) {
       float* JXL_RESTRICT rows[5];
@@ -271,6 +272,7 @@ class ConvolveNoiseStage : public RenderPipelineStage {
         StoreU(pixels, d, row_out + x);
       }
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

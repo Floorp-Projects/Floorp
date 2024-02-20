@@ -9,7 +9,6 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 
 #undef HWY_TARGET_INCLUDE
@@ -18,18 +17,13 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/common.h"
-#include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_transforms-inl.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_transforms-inl.h"
-#include "lib/jxl/entropy_coder.h"
-#include "lib/jxl/image_ops.h"
-#include "lib/jxl/modular/encoding/encoding.h"
 #include "lib/jxl/quantizer.h"
 #include "lib/jxl/simd_util.h"
 HWY_BEFORE_NAMESPACE();
@@ -149,7 +143,8 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
     // Derivatives are approximate due to the high amount of noise in the exact
     // derivatives.
     for (size_t i = 0; i < 20; i++) {
-      float dfpeps, dfmeps;
+      float dfpeps;
+      float dfmeps;
       float df = fn.Compute(x, eps, &dfpeps, &dfmeps);
       float ddf = (dfpeps - dfmeps) / (2 * eps);
       float kExperimentalInsignificantStabilizer = 0.85;
@@ -175,12 +170,13 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
   return std::max(-128.0f, std::min(127.0f, roundf(x)));
 }
 
-void InitDCStorage(size_t num_blocks, ImageF* dc_values) {
+Status InitDCStorage(size_t num_blocks, ImageF* dc_values) {
   // First row: Y channel
   // Second row: X channel
   // Third row: Y channel
   // Fourth row: B channel
-  *dc_values = ImageF(RoundUpTo(num_blocks, Lanes(df)), 4);
+  JXL_ASSIGN_OR_RETURN(*dc_values,
+                       ImageF::Create(RoundUpTo(num_blocks, Lanes(df)), 4));
 
   JXL_ASSERT(dc_values->xsize() != 0);
   // Zero-fill the last lanes
@@ -190,6 +186,7 @@ void InitDCStorage(size_t num_blocks, ImageF* dc_values) {
       dc_values->Row(y)[x] = 0;
     }
   }
+  return true;
 }
 
 void ComputeTile(const Image3F& opsin, const Rect& opsin_rect,
@@ -352,11 +349,11 @@ namespace jxl {
 HWY_EXPORT(InitDCStorage);
 HWY_EXPORT(ComputeTile);
 
-void CfLHeuristics::Init(const Rect& rect) {
+Status CfLHeuristics::Init(const Rect& rect) {
   size_t xsize_blocks = rect.xsize() / kBlockDim;
   size_t ysize_blocks = rect.ysize() / kBlockDim;
-  HWY_DYNAMIC_DISPATCH(InitDCStorage)
-  (xsize_blocks * ysize_blocks, &dc_values);
+  return HWY_DYNAMIC_DISPATCH(InitDCStorage)(xsize_blocks * ysize_blocks,
+                                             &dc_values);
 }
 
 void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,

@@ -8,12 +8,9 @@
 #include <string.h>
 
 #include <algorithm>
-#include <numeric>  // iota
-#include <type_traits>
 #include <utility>
 
 #include "lib/jxl/base/bits.h"
-#include "lib/jxl/image_ops.h"
 
 namespace jxl {
 
@@ -86,10 +83,12 @@ constexpr size_t AcStrategy::kMaxCoeffBlocks;
 constexpr size_t AcStrategy::kMaxBlockDim;
 constexpr size_t AcStrategy::kMaxCoeffArea;
 
-AcStrategyImage::AcStrategyImage(size_t xsize, size_t ysize)
-    : layers_(xsize, ysize) {
-  row_ = layers_.Row(0);
-  stride_ = layers_.PixelsPerRow();
+StatusOr<AcStrategyImage> AcStrategyImage::Create(size_t xsize, size_t ysize) {
+  AcStrategyImage img;
+  JXL_ASSIGN_OR_RETURN(img.layers_, ImageB::Create(xsize, ysize));
+  img.row_ = img.layers_.Row(0);
+  img.stride_ = img.layers_.PixelsPerRow();
+  return img;
 }
 
 size_t AcStrategyImage::CountBlocks(AcStrategy::Type type) const {

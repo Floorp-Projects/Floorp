@@ -23,9 +23,11 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
   size_t h = input.channel[c0].h;
   if (nb < 1) return JXL_FAILURE("Corrupted transforms");
   for (int i = 1; i < nb; i++) {
-    input.channel.insert(
-        input.channel.begin() + c0 + 1,
-        Channel(w, h, input.channel[c0].hshift, input.channel[c0].vshift));
+    StatusOr<Channel> channel_or = Channel::Create(
+        w, h, input.channel[c0].hshift, input.channel[c0].vshift);
+    JXL_RETURN_IF_ERROR(channel_or.status());
+    input.channel.insert(input.channel.begin() + c0 + 1,
+                         std::move(channel_or).value());
   }
   const Channel &palette = input.channel[0];
   const pixel_type *JXL_RESTRICT p_palette = input.channel[0].Row(0);
@@ -75,8 +77,10 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
     }
   } else {
     // Parallelized per channel.
-    ImageI indices = std::move(input.channel[c0].plane);
-    input.channel[c0].plane = ImageI(indices.xsize(), indices.ysize());
+    ImageI indices;
+    ImageI &plane = input.channel[c0].plane;
+    JXL_ASSIGN_OR_RETURN(indices, ImageI::Create(plane.xsize(), plane.ysize()));
+    plane.Swap(indices);
     if (predictor == Predictor::Weighted) {
       JXL_RETURN_IF_ERROR(RunOnPool(
           pool, 0, nb, ThreadPool::NoInit,
@@ -167,7 +171,7 @@ Status MetaPalette(Image &input, uint32_t begin_c, uint32_t end_c,
   }
   input.channel.erase(input.channel.begin() + begin_c + 1,
                       input.channel.begin() + end_c + 1);
-  Channel pch(nb_colors + nb_deltas, nb);
+  JXL_ASSIGN_OR_RETURN(Channel pch, Channel::Create(nb_colors + nb_deltas, nb));
   pch.hshift = -1;
   pch.vshift = -1;
   input.channel.insert(input.channel.begin(), std::move(pch));

@@ -8,14 +8,9 @@
 #include <jxl/types.h>
 #include <string.h>
 
-#include <algorithm>
-#include <array>
 #include <atomic>
-#include <functional>
 #include <utility>
-#include <vector>
 
-#include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/float.h"
@@ -114,7 +109,7 @@ Status ConvertFromExternalNoSizeCheck(const uint8_t* data, size_t xsize,
                        color_channels, format.num_channels);
   }
 
-  Image3F color(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(Image3F color, Image3F::Create(xsize, ysize));
   for (size_t c = 0; c < color_channels; ++c) {
     JXL_RETURN_IF_ERROR(ConvertFromExternalNoSizeCheck(
         data, xsize, ysize, stride, bits_per_sample, format, c, pool,
@@ -129,7 +124,7 @@ Status ConvertFromExternalNoSizeCheck(const uint8_t* data, size_t xsize,
   // Passing an interleaved image with an alpha channel to an image that doesn't
   // have alpha channel just discards the passed alpha channel.
   if (has_alpha && ib->HasAlpha()) {
-    ImageF alpha(xsize, ysize);
+    JXL_ASSIGN_OR_RETURN(ImageF alpha, ImageF::Create(xsize, ysize));
     JXL_RETURN_IF_ERROR(ConvertFromExternalNoSizeCheck(
         data, xsize, ysize, stride, bits_per_sample, format,
         format.num_channels - 1, pool, &alpha));
@@ -137,7 +132,7 @@ Status ConvertFromExternalNoSizeCheck(const uint8_t* data, size_t xsize,
   } else if (!has_alpha && ib->HasAlpha()) {
     // if alpha is not passed, but it is expected, then assume
     // it is all-opaque
-    ImageF alpha(xsize, ysize);
+    JXL_ASSIGN_OR_RETURN(ImageF alpha, ImageF::Create(xsize, ysize));
     FillImage(1.0f, &alpha);
     ib->SetAlpha(std::move(alpha));
   }
@@ -184,7 +179,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                        color_channels, format.num_channels);
   }
 
-  Image3F color(xsize, ysize);
+  JXL_ASSIGN_OR_RETURN(Image3F color, Image3F::Create(xsize, ysize));
   for (size_t c = 0; c < color_channels; ++c) {
     JXL_RETURN_IF_ERROR(ConvertFromExternal(bytes.data(), bytes.size(), xsize,
                                             ysize, bits_per_sample, format, c,
@@ -199,7 +194,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
   // Passing an interleaved image with an alpha channel to an image that doesn't
   // have alpha channel just discards the passed alpha channel.
   if (has_alpha && ib->HasAlpha()) {
-    ImageF alpha(xsize, ysize);
+    JXL_ASSIGN_OR_RETURN(ImageF alpha, ImageF::Create(xsize, ysize));
     JXL_RETURN_IF_ERROR(ConvertFromExternal(
         bytes.data(), bytes.size(), xsize, ysize, bits_per_sample, format,
         format.num_channels - 1, pool, &alpha));
@@ -207,7 +202,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
   } else if (!has_alpha && ib->HasAlpha()) {
     // if alpha is not passed, but it is expected, then assume
     // it is all-opaque
-    ImageF alpha(xsize, ysize);
+    JXL_ASSIGN_OR_RETURN(ImageF alpha, ImageF::Create(xsize, ysize));
     FillImage(1.0f, &alpha);
     ib->SetAlpha(std::move(alpha));
   }

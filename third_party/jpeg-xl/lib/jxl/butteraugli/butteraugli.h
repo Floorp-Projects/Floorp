@@ -14,12 +14,12 @@
 
 #include <atomic>
 #include <cmath>
+#include <cstddef>
 #include <memory>
-#include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/image_ops.h"
 
 #define BUTTERAUGLI_ENABLE_CHECKS 0
 #define BUTTERAUGLI_RESTRICT JXL_RESTRICT
@@ -87,9 +87,9 @@ bool ButteraugliInterface(const Image3F &rgb0, const Image3F &rgb1,
 // Same as ButteraugliInterface, but reuses rgb0 and rgb1 for other purposes
 // inside the function after they are not needed any more, and it ignores
 // params.xmul.
-bool ButteraugliInterfaceInPlace(Image3F &&rgb0, Image3F &&rgb1,
-                                 const ButteraugliParams &params,
-                                 ImageF &diffmap, double &diffvalue);
+Status ButteraugliInterfaceInPlace(Image3F &&rgb0, Image3F &&rgb1,
+                                   const ButteraugliParams &params,
+                                   ImageF &diffmap, double &diffvalue);
 
 // Converts the butteraugli score into fuzzy class values that are continuous
 // at the class boundary. The class boundary location is based on human
@@ -147,11 +147,13 @@ struct PsychoImage {
 // Blur needs a transposed image.
 // Hold it here and only allocate on demand to reduce memory usage.
 struct BlurTemp {
-  ImageF *GetTransposed(const ImageF &in) {
+  Status GetTransposed(const ImageF &in, ImageF **out) {
     if (transposed_temp.xsize() == 0) {
-      transposed_temp = ImageF(in.ysize(), in.xsize());
+      JXL_ASSIGN_OR_RETURN(transposed_temp,
+                           ImageF::Create(in.ysize(), in.xsize()));
     }
-    return &transposed_temp;
+    *out = &transposed_temp;
+    return true;
   }
 
   ImageF transposed_temp;
@@ -162,22 +164,26 @@ class ButteraugliComparator {
   // Butteraugli is calibrated at xmul = 1.0. We add a multiplier here so that
   // we can test the hypothesis that a higher weighing of the X channel would
   // improve results at higher Butteraugli values.
-  ButteraugliComparator(const Image3F &rgb0, const ButteraugliParams &params);
   virtual ~ButteraugliComparator() = default;
+
+  static StatusOr<std::unique_ptr<ButteraugliComparator>> Make(
+      const Image3F &rgb0, const ButteraugliParams &params);
 
   // Computes the butteraugli map between the original image given in the
   // constructor and the distorted image give here.
-  void Diffmap(const Image3F &rgb1, ImageF &result) const;
+  Status Diffmap(const Image3F &rgb1, ImageF &result) const;
 
   // Same as above, but OpsinDynamicsImage() was already applied.
-  void DiffmapOpsinDynamicsImage(const Image3F &xyb1, ImageF &result) const;
+  Status DiffmapOpsinDynamicsImage(const Image3F &xyb1, ImageF &result) const;
 
   // Same as above, but the frequency decomposition was already applied.
-  void DiffmapPsychoImage(const PsychoImage &pi1, ImageF &diffmap) const;
+  Status DiffmapPsychoImage(const PsychoImage &pi1, ImageF &diffmap) const;
 
-  void Mask(ImageF *BUTTERAUGLI_RESTRICT mask) const;
+  Status Mask(ImageF *BUTTERAUGLI_RESTRICT mask) const;
 
  private:
+  ButteraugliComparator(size_t xsize, size_t ysize,
+                        const ButteraugliParams &params);
   Image3F *Temp() const;
   void ReleaseTemp() const;
 
@@ -196,18 +202,19 @@ class ButteraugliComparator {
 };
 
 // Deprecated.
-bool ButteraugliDiffmap(const Image3F &rgb0, const Image3F &rgb1,
-                        double hf_asymmetry, double xmul, ImageF &diffmap);
+Status ButteraugliDiffmap(const Image3F &rgb0, const Image3F &rgb1,
+                          double hf_asymmetry, double xmul, ImageF &diffmap);
 
-bool ButteraugliDiffmap(const Image3F &rgb0, const Image3F &rgb1,
-                        const ButteraugliParams &params, ImageF &diffmap);
+Status ButteraugliDiffmap(const Image3F &rgb0, const Image3F &rgb1,
+                          const ButteraugliParams &params, ImageF &diffmap);
 
 double ButteraugliScoreFromDiffmap(const ImageF &diffmap,
                                    const ButteraugliParams *params = nullptr);
 
 // Generate rgb-representation of the distance between two images.
-Image3F CreateHeatMapImage(const ImageF &distmap, double good_threshold,
-                           double bad_threshold);
+StatusOr<Image3F> CreateHeatMapImage(const ImageF &distmap,
+                                     double good_threshold,
+                                     double bad_threshold);
 
 }  // namespace jxl
 

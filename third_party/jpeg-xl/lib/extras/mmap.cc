@@ -10,7 +10,8 @@
 
 #include "lib/jxl/base/common.h"
 
-#if __unix__
+#if defined(__unix__) || defined(__unix) || \
+    defined(__APPLE__) && defined(__MACH__)
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -96,6 +97,8 @@ struct MemoryMappedFileImpl {
     f->ptr = MapViewOfFile(f->handle_mapping.get(), FILE_MAP_READ, 0, 0, 0);
     return f;
   }
+
+  ~MemoryMappedFileImpl() { UnmapViewOfFile(ptr); }
 
   const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(ptr); }
   size_t size() const { return fsize.QuadPart; }

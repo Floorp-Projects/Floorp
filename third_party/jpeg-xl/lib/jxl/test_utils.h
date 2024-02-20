@@ -18,13 +18,13 @@
 #include <ostream>
 #include <vector>
 
-#include "lib/extras/dec/decode.h"
 #include "lib/extras/dec/jxl.h"
 #include "lib/extras/enc/jxl.h"
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/butteraugli/butteraugli.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_params.h"
@@ -63,9 +63,8 @@ void SetThreadParallelRunner(Params params, ThreadPool* pool) {
   }
 }
 
-Status DecodeFile(extras::JXLDecompressParams dparams,
-                  const Span<const uint8_t> file, CodecInOut* JXL_RESTRICT io,
-                  ThreadPool* pool = nullptr);
+Status DecodeFile(extras::JXLDecompressParams dparams, Span<const uint8_t> file,
+                  CodecInOut* JXL_RESTRICT io, ThreadPool* pool = nullptr);
 
 bool Roundtrip(const CodecInOut* io, const CompressParams& cparams,
                extras::JXLDecompressParams dparams,
@@ -74,7 +73,7 @@ bool Roundtrip(const CodecInOut* io, const CompressParams& cparams,
 
 // Returns compressed size [bytes].
 size_t Roundtrip(const extras::PackedPixelFile& ppf_in,
-                 extras::JXLCompressParams cparams,
+                 const extras::JXLCompressParams& cparams,
                  extras::JXLDecompressParams dparams, ThreadPool* pool,
                  extras::PackedPixelFile* ppf_out);
 
@@ -141,6 +140,18 @@ float ButteraugliDistance(const extras::PackedPixelFile& a,
                           const extras::PackedPixelFile& b,
                           ThreadPool* pool = nullptr);
 
+float ButteraugliDistance(const ImageBundle& rgb0, const ImageBundle& rgb1,
+                          const ButteraugliParams& params,
+                          const JxlCmsInterface& cms, ImageF* distmap = nullptr,
+                          ThreadPool* pool = nullptr,
+                          bool ignore_alpha = false);
+
+float ButteraugliDistance(const std::vector<ImageBundle>& frames0,
+                          const std::vector<ImageBundle>& frames1,
+                          const ButteraugliParams& params,
+                          const JxlCmsInterface& cms, ImageF* distmap = nullptr,
+                          ThreadPool* pool = nullptr);
+
 float Butteraugli3Norm(const extras::PackedPixelFile& a,
                        const extras::PackedPixelFile& b,
                        ThreadPool* pool = nullptr);
@@ -169,6 +180,7 @@ class ThreadPoolForTests {
   }
   ThreadPoolForTests(const ThreadPoolForTests&) = delete;
   ThreadPoolForTests& operator&(const ThreadPoolForTests&) = delete;
+  // TODO(eustas): avoid `&` overload?
   ThreadPool* operator&() { return pool_.get(); }
 
  private:

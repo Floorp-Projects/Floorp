@@ -81,7 +81,7 @@ Status CheckMetaSqueezeParams(const SqueezeParams &parameter, int num_channels);
 
 Status MetaSqueeze(Image &image, std::vector<SqueezeParams> *parameters);
 
-Status InvSqueeze(Image &input, std::vector<SqueezeParams> parameters,
+Status InvSqueeze(Image &input, const std::vector<SqueezeParams> &parameters,
                   ThreadPool *pool);
 
 }  // namespace jxl

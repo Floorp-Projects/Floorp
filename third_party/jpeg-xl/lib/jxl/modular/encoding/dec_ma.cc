@@ -5,6 +5,8 @@
 
 #include "lib/jxl/modular/encoding/dec_ma.h"
 
+#include <limits>
+
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/modular/encoding/ma_common.h"

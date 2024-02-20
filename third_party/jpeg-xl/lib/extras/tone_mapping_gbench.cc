@@ -10,7 +10,7 @@
 namespace jxl {
 
 static void BM_ToneMapping(benchmark::State& state) {
-  Image3F color(2268, 1512);
+  JXL_ASSIGN_OR_DIE(Image3F color, Image3F::Create(2268, 1512));
   FillImage(0.5f, &color);
 
   // Use linear Rec. 2020 so that `ToneMapTo` doesn't have to convert to it and
@@ -25,7 +25,8 @@ static void BM_ToneMapping(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     CodecInOut tone_mapping_input;
-    Image3F color2(color.xsize(), color.ysize());
+    JXL_ASSIGN_OR_DIE(Image3F color2,
+                      Image3F::Create(color.xsize(), color.ysize()));
     CopyImageTo(color, &color2);
     tone_mapping_input.SetFromImage(std::move(color2), linear_rec2020);
     tone_mapping_input.metadata.m.SetIntensityTarget(255);
