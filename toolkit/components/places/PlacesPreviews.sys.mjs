@@ -14,13 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
-  return console.createInstance({
-    prefix: "PlacesPreviews",
-    maxLogLevel: Services.prefs.getBoolPref("places.previews.log", false)
-      ? "Debug"
-      : "Warn",
-  });
+ChromeUtils.defineLazyGetter(lazy, "logger", function () {
+  return lazy.PlacesUtils.getLogger({ prefix: "Previews" });
 });
 
 // Toggling Places previews requires a restart, because a database trigger
@@ -112,7 +107,7 @@ class DeletionHandler {
       this.#timeoutId = null;
       ChromeUtils.idleDispatch(() => {
         this.#deleteChunk().catch(ex =>
-          lazy.logConsole.error("Error during previews deletion:" + ex)
+          lazy.logger.error("Error during previews deletion:" + ex)
         );
       });
     }, this.timeout);
@@ -156,7 +151,7 @@ class DeletionHandler {
         if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
           deleted.push(hash);
         } else {
-          lazy.logConsole.error("Unable to delete file: " + filePath);
+          lazy.logger.error("Unable to delete file: " + filePath);
         }
       }
       if (this.#shutdownProgress.shuttingDown) {
@@ -310,7 +305,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
     let filePath = this.getPathForUrl(url);
     if (!forceUpdate) {
       if (this.#recentlyUpdatedPreviews.has(filePath)) {
-        lazy.logConsole.debug("Skipping update because recently updated");
+        lazy.logger.debug("Skipping update because recently updated");
         return true;
       }
       try {
@@ -321,13 +316,13 @@ export const PlacesPreviews = new (class extends EventEmitter {
         ) {
           // File is recent enough.
           this.#recentlyUpdatedPreviews.add(filePath);
-          lazy.logConsole.debug("Skipping update because file is recent");
+          lazy.logger.debug("Skipping update because file is recent");
           return true;
         }
       } catch (ex) {
         // If the file doesn't exist, we always update it.
         if (!DOMException.isInstance(ex) || ex.name != "NotFoundError") {
-          lazy.logConsole.error("Error while trying to stat() preview" + ex);
+          lazy.logger.error("Error while trying to stat() preview" + ex);
           return false;
         }
       }
@@ -350,7 +345,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
       });
     });
     if (!buffer) {
-      lazy.logConsole.error("Unable to fetch preview: " + url);
+      lazy.logger.error("Unable to fetch preview: " + url);
       return false;
     }
     try {
@@ -359,9 +354,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
         tmpPath: filePath + ".tmp",
       });
     } catch (ex) {
-      lazy.logConsole.error(
-        lazy.logConsole.error("Unable to create preview: " + ex)
-      );
+      lazy.logger.error("Unable to create preview: " + ex);
       return false;
     }
     this.#recentlyUpdatedPreviews.add(filePath);
