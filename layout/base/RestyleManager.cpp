@@ -3450,11 +3450,8 @@ void RestyleManager::MaybeRestyleForNthOfState(ServoStyleSet& aStyleSet,
 
 static inline bool AttributeInfluencesOtherPseudoClassState(
     const Element& aElement, const nsAtom* aAttribute) {
-  // We must record some state for :-moz-browser-frame,
-  // :-moz-table-border-nonzero, and :-moz-select-list-box.
-  if (aAttribute == nsGkAtoms::mozbrowser) {
-    return aElement.IsAnyOfHTMLElements(nsGkAtoms::iframe, nsGkAtoms::frame);
-  }
+  // We must record some state for :-moz-table-border-nonzero and
+  // :-moz-select-list-box.
 
   if (aAttribute == nsGkAtoms::border) {
     return aElement.IsHTMLElement(nsGkAtoms::table);
