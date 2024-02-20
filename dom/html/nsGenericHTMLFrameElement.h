@@ -12,7 +12,6 @@
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIMozBrowserFrame.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -37,22 +36,16 @@ class XULFrameElement;
  * A helper class for frame elements
  */
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
-                                  public nsFrameLoaderOwner,
-                                  public nsIMozBrowserFrame {
+                                  public nsFrameLoaderOwner {
  public:
   nsGenericHTMLFrameElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
       mozilla::dom::FromParser aFromParser)
       : nsGenericHTMLElement(std::move(aNodeInfo)),
         mSrcLoadHappened(false),
-        mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK),
-        mBrowserFrameListenersRegistered(false),
-        mReallyIsBrowser(false) {}
+        mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK) {}
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSIDOMMOZBROWSERFRAME
-  NS_DECL_NSIMOZBROWSERFRAME
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_GENERICHTMLFRAMEELEMENT_IID)
 
@@ -66,8 +59,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 
   virtual int32_t TabIndexDefault() override;
-
-  virtual nsIMozBrowserFrame* GetAsMozBrowserFrame() override { return this; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGenericHTMLFrameElement,
                                            nsGenericHTMLElement)
@@ -124,9 +115,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
    * If the element is modified, it may lose the flag.
    */
   bool mNetworkCreated;
-
-  bool mBrowserFrameListenersRegistered;
-  bool mReallyIsBrowser;
 
   // This flag is only used by <iframe>. See HTMLIFrameElement::
   // FullscreenFlag() for details. It is placed here so that we

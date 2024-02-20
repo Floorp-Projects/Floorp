@@ -27,7 +27,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsILoadContext.h"
 #include "nsIFrame.h"
-#include "nsIMozBrowserFrame.h"
 #include "nsINode.h"
 #include "nsIURI.h"
 #include "nsFontMetrics.h"
