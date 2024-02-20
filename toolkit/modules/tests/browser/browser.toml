@@ -13,8 +13,6 @@ support-files = [
 ["browser_CreditCard.js"]
 skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
 
-["browser_Deprecated.js"]
-
 ["browser_Finder.js"]
 
 ["browser_FinderHighlighter.js"]

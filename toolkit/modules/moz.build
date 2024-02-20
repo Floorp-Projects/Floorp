@@ -163,7 +163,6 @@ EXTRA_JS_MODULES += [
     "CreditCard.sys.mjs",
     "DateTimePickerPanel.sys.mjs",
     "DeferredTask.sys.mjs",
-    "Deprecated.sys.mjs",
     "E10SUtils.sys.mjs",
     "EventEmitter.sys.mjs",
     "FileUtils.sys.mjs",
