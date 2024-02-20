@@ -4082,13 +4082,11 @@ Range<T> SubRange(const Range<T>& full, const size_t offset,
   return Range<T>{newBegin, newBegin + length};
 }
 
-Maybe<Range<const uint8_t>> GetRangeFromData(const Span<uint8_t>& data,
-                                             size_t bytesPerElem,
-                                             GLuint elemOffset,
-                                             GLuint elemCountOverride) {
-  const auto byteRange = Range(data);  // In bytes.
-
-  auto elemCount = byteRange.length() / bytesPerElem;
+Maybe<Span<const uint8_t>> GetRangeFromData(const Span<uint8_t>& data,
+                                            size_t bytesPerElem,
+                                            GLuint elemOffset,
+                                            GLuint elemCountOverride) {
+  auto elemCount = data.size() / bytesPerElem;
   if (elemOffset > elemCount) return {};
   elemCount -= elemOffset;
 
@@ -4096,9 +4094,8 @@ Maybe<Range<const uint8_t>> GetRangeFromData(const Span<uint8_t>& data,
     if (elemCountOverride > elemCount) return {};
     elemCount = elemCountOverride;
   }
-  const auto subrange =
-      SubRange(byteRange, elemOffset * bytesPerElem, elemCount * bytesPerElem);
-  return Some(subrange);
+  return Some(
+      data.subspan(elemOffset * bytesPerElem, elemCount * bytesPerElem));
 }
 
 // -
