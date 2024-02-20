@@ -64,20 +64,23 @@ static inline void UpdateAllocSiteOnTenure(Cell* cell) {
 
 void TenuringTracer::onObjectEdge(JSObject** objp, const char* name) {
   JSObject* obj = *objp;
-  if (IsInsideNursery(obj)) {
-    onNurseryObjectEdge(objp);
+  if (!IsInsideNursery(obj)) {
+    return;
   }
-}
-
-void TenuringTracer::onNurseryObjectEdge(JSObject** objp) {
-  JSObject* obj = *objp;
-  MOZ_ASSERT(IsInsideNursery(obj));
 
   if (obj->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(obj);
     *objp = static_cast<JSObject*>(overlay->forwardingAddress());
     return;
   }
+
+  onNonForwardedNurseryObjectEdge(objp);
+}
+
+void TenuringTracer::onNonForwardedNurseryObjectEdge(JSObject** objp) {
+  JSObject* obj = *objp;
+  MOZ_ASSERT(IsInsideNursery(obj));
+  MOZ_ASSERT(!obj->isForwarded());
 
   UpdateAllocSiteOnTenure(obj);
 
@@ -93,20 +96,23 @@ void TenuringTracer::onNurseryObjectEdge(JSObject** objp) {
 
 void TenuringTracer::onStringEdge(JSString** strp, const char* name) {
   JSString* str = *strp;
-  if (IsInsideNursery(str)) {
-    onNurseryStringEdge(strp);
+  if (!IsInsideNursery(str)) {
+    return;
   }
-}
-
-void TenuringTracer::onNurseryStringEdge(JSString** strp) {
-  JSString* str = *strp;
-  MOZ_ASSERT(IsInsideNursery(str));
 
   if (str->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(str);
     *strp = static_cast<JSString*>(overlay->forwardingAddress());
     return;
   }
+
+  onNonForwardedNurseryStringEdge(strp);
+}
+
+void TenuringTracer::onNonForwardedNurseryStringEdge(JSString** strp) {
+  JSString* str = *strp;
+  MOZ_ASSERT(IsInsideNursery(str));
+  MOZ_ASSERT(!str->isForwarded());
 
   UpdateAllocSiteOnTenure(str);
 
@@ -115,20 +121,23 @@ void TenuringTracer::onNurseryStringEdge(JSString** strp) {
 
 void TenuringTracer::onBigIntEdge(JS::BigInt** bip, const char* name) {
   JS::BigInt* bi = *bip;
-  if (IsInsideNursery(bi)) {
-    onNurseryBigIntEdge(bip);
+  if (!IsInsideNursery(bi)) {
+    return;
   }
-}
-
-void TenuringTracer::onNurseryBigIntEdge(JS::BigInt** bip) {
-  JS::BigInt* bi = *bip;
-  MOZ_ASSERT(IsInsideNursery(bi));
 
   if (bi->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(bi);
     *bip = static_cast<JS::BigInt*>(overlay->forwardingAddress());
     return;
   }
+
+  onNonForwardedNurseryBigIntEdge(bip);
+}
+
+void TenuringTracer::onNonForwardedNurseryBigIntEdge(JS::BigInt** bip) {
+  JS::BigInt* bi = *bip;
+  MOZ_ASSERT(IsInsideNursery(bi));
+  MOZ_ASSERT(!bi->isForwarded());
 
   UpdateAllocSiteOnTenure(bi);
 
@@ -152,7 +161,19 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   Value value = *thingp;
   CheckTracedThing(this, value);
 
-  if (!value.isGCThing() || !IsInsideNursery(value.toGCThing())) {
+  if (!value.isGCThing()) {
+    return;
+  }
+
+  Cell* cell = value.toGCThing();
+  if (!IsInsideNursery(cell)) {
+    return;
+  }
+
+  if (cell->isForwarded()) {
+    const gc::RelocationOverlay* overlay =
+        gc::RelocationOverlay::fromCell(cell);
+    thingp->changeGCThingPayload(overlay->forwardingAddress());
     return;
   }
 
@@ -160,7 +181,7 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   // tighter code than using MapGCThingTyped.
   if (value.isObject()) {
     JSObject* obj = &value.toObject();
-    onNurseryObjectEdge(&obj);
+    onNonForwardedNurseryObjectEdge(&obj);
     MOZ_ASSERT(obj != &value.toObject());
     *thingp = JS::ObjectValue(*obj);
     return;
@@ -168,7 +189,7 @@ void TenuringTracer::traverse(JS::Value* thingp) {
 #ifdef ENABLE_RECORD_TUPLE
   if (value.isExtendedPrimitive()) {
     JSObject* obj = &value.toExtendedPrimitive();
-    onNurseryObjectEdge(&obj);
+    onNonForwardedNurseryObjectEdge(&obj);
     MOZ_ASSERT(obj != &value.toExtendedPrimitive());
     *thingp = JS::ExtendedPrimitiveValue(*obj);
     return;
@@ -176,14 +197,14 @@ void TenuringTracer::traverse(JS::Value* thingp) {
 #endif
   if (value.isString()) {
     JSString* str = value.toString();
-    onNurseryStringEdge(&str);
+    onNonForwardedNurseryStringEdge(&str);
     MOZ_ASSERT(str != value.toString());
     *thingp = JS::StringValue(str);
     return;
   }
   MOZ_ASSERT(value.isBigInt());
   JS::BigInt* bi = value.toBigInt();
-  onNurseryBigIntEdge(&bi);
+  onNonForwardedNurseryBigIntEdge(&bi);
   MOZ_ASSERT(bi != value.toBigInt());
   *thingp = JS::BigIntValue(bi);
 }

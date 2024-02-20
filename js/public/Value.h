@@ -645,7 +645,20 @@ class alignas(8) Value {
   }
 #endif
 
+  void changeGCThingPayload(js::gc::Cell* cell) {
+    MOZ_ASSERT(js::gc::IsCellPointerValid(cell));
+#ifdef DEBUG
+    assertTraceKindMatches(cell);
+#endif
+    asBits_ = bitsFromTagAndPayload(toTag(), PayloadType(cell));
+    MOZ_ASSERT(toGCThing() == cell);
+  }
+
  private:
+#ifdef DEBUG
+  void assertTraceKindMatches(js::gc::Cell* cell) const;
+#endif
+
   void setObjectNoCheck(JSObject* obj) {
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_OBJECT, PayloadType(obj));
   }

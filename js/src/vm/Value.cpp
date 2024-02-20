@@ -10,6 +10,7 @@
 
 #include <inttypes.h>
 
+#include "gc/Cell.h"         // js::gc::Cell
 #include "js/Conversions.h"  // JS::NumberToString, JS::MaximumNumberToStringLength
 #include "js/Printer.h"      // js::GenericPrinter, js::Fprinter
 #include "vm/BigIntType.h"   // JS::BigInt
@@ -40,6 +41,12 @@ const HandleValue FalseHandleValue =
     HandleValue::fromMarkedLocation(&JSVAL_FALSE);
 const Handle<mozilla::Maybe<Value>> NothingHandleValue =
     Handle<mozilla::Maybe<Value>>::fromMarkedLocation(&JSVAL_NOTHING);
+
+#ifdef DEBUG
+void JS::Value::assertTraceKindMatches(js::gc::Cell* cell) const {
+  MOZ_ASSERT(traceKind() == cell->getTraceKind());
+}
+#endif
 
 }  // namespace JS
 
