@@ -29,15 +29,22 @@ import org.mozilla.fenix.helpers.click
  */
 class SettingsSubMenuDeleteBrowsingDataRobot {
 
-    fun verifyAllCheckBoxesAreChecked() = assertAllCheckBoxesAreChecked()
-    fun verifyOpenTabsCheckBox(status: Boolean) = assertOpenTabsCheckBox(status)
-    fun verifyBrowsingHistoryDetails(status: Boolean) = assertBrowsingHistoryCheckBox(status)
-    fun verifyCookiesCheckBox(status: Boolean) = assertCookiesCheckBox(status)
-    fun verifyCachedFilesCheckBox(status: Boolean) = assertCachedFilesCheckBox(status)
-    fun verifySitePermissionsCheckBox(status: Boolean) = assertSitePermissionsCheckBox(status)
-    fun verifyDownloadsCheckBox(status: Boolean) = assertDownloadsCheckBox(status)
-    fun verifyOpenTabsDetails(tabNumber: String) = assertOpenTabsDescription(tabNumber)
-    fun verifyBrowsingHistoryDetails(addresses: String) = assertBrowsingHistoryDescription(addresses)
+    fun verifyAllCheckBoxesAreChecked() {
+        openTabsCheckBox().assertIsChecked(true)
+        browsingHistoryCheckBox().assertIsChecked(true)
+        cookiesAndSiteDataCheckBox().assertIsChecked(true)
+        cachedFilesCheckBox().assertIsChecked(true)
+        sitePermissionsCheckBox().assertIsChecked(true)
+        downloadsCheckBox().assertIsChecked(true)
+    }
+    fun verifyOpenTabsCheckBox(status: Boolean) = openTabsCheckBox().assertIsChecked(status)
+    fun verifyBrowsingHistoryDetails(status: Boolean) = browsingHistoryCheckBox().assertIsChecked(status)
+    fun verifyCookiesCheckBox(status: Boolean) = cookiesAndSiteDataCheckBox().assertIsChecked(status)
+    fun verifyCachedFilesCheckBox(status: Boolean) = cachedFilesCheckBox().assertIsChecked(status)
+    fun verifySitePermissionsCheckBox(status: Boolean) = sitePermissionsCheckBox().assertIsChecked(status)
+    fun verifyDownloadsCheckBox(status: Boolean) = downloadsCheckBox().assertIsChecked(status)
+    fun verifyOpenTabsDetails(tabNumber: String) = openTabsDescription(tabNumber).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifyBrowsingHistoryDetails(addresses: String) = assertUIObjectExists(browsingHistoryDescription(addresses))
 
     fun verifyDeleteBrowsingDataDialog() {
         dialogMessage().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -56,78 +63,78 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
 
     fun selectOnlyOpenTabsCheckBox() {
         clickBrowsingHistoryCheckBox()
-        assertBrowsingHistoryCheckBox(false)
+        browsingHistoryCheckBox().assertIsChecked(false)
 
         clickCookiesCheckBox()
-        assertCookiesCheckBox(false)
+        cookiesAndSiteDataCheckBox().assertIsChecked(false)
 
         clickCachedFilesCheckBox()
-        assertCachedFilesCheckBox(false)
+        cachedFilesCheckBox().assertIsChecked(false)
 
         clickSitePermissionsCheckBox()
-        assertSitePermissionsCheckBox(false)
+        sitePermissionsCheckBox().assertIsChecked(false)
 
         clickDownloadsCheckBox()
-        assertDownloadsCheckBox(false)
+        downloadsCheckBox().assertIsChecked(false)
 
-        assertOpenTabsCheckBox(true)
+        openTabsCheckBox().assertIsChecked(true)
     }
 
     fun selectOnlyBrowsingHistoryCheckBox() {
         clickOpenTabsCheckBox()
-        assertOpenTabsCheckBox(false)
+        openTabsCheckBox().assertIsChecked(false)
 
         clickCookiesCheckBox()
-        assertCookiesCheckBox(false)
+        cookiesAndSiteDataCheckBox().assertIsChecked(false)
 
         clickCachedFilesCheckBox()
-        assertCachedFilesCheckBox(false)
+        cachedFilesCheckBox().assertIsChecked(false)
 
         clickSitePermissionsCheckBox()
-        assertSitePermissionsCheckBox(false)
+        sitePermissionsCheckBox().assertIsChecked(false)
 
         clickDownloadsCheckBox()
-        assertDownloadsCheckBox(false)
+        downloadsCheckBox().assertIsChecked(false)
 
-        assertBrowsingHistoryCheckBox(true)
+        browsingHistoryCheckBox().assertIsChecked(true)
     }
 
     fun selectOnlyCookiesCheckBox() {
         clickOpenTabsCheckBox()
-        assertOpenTabsCheckBox(false)
+        openTabsCheckBox().assertIsChecked(false)
 
-        assertCookiesCheckBox(true)
+        cookiesAndSiteDataCheckBox().assertIsChecked(true)
 
         clickCachedFilesCheckBox()
-        assertCachedFilesCheckBox(false)
+        cachedFilesCheckBox().assertIsChecked(false)
 
         clickSitePermissionsCheckBox()
-        assertSitePermissionsCheckBox(false)
+        sitePermissionsCheckBox().assertIsChecked(false)
 
         clickDownloadsCheckBox()
-        assertDownloadsCheckBox(false)
+        downloadsCheckBox().assertIsChecked(false)
 
         clickBrowsingHistoryCheckBox()
-        assertBrowsingHistoryCheckBox(false)
+        browsingHistoryCheckBox().assertIsChecked(false)
     }
 
     fun selectOnlyCachedFilesCheckBox() {
         clickOpenTabsCheckBox()
-        assertOpenTabsCheckBox(false)
+        openTabsCheckBox().assertIsChecked(false)
 
         clickBrowsingHistoryCheckBox()
-        assertBrowsingHistoryCheckBox(false)
+        browsingHistoryCheckBox().assertIsChecked(false)
 
         clickCookiesCheckBox()
-        assertCookiesCheckBox(false)
+        cookiesAndSiteDataCheckBox().assertIsChecked(false)
 
-        assertCachedFilesCheckBox(true)
+        cachedFilesCheckBox().assertIsChecked(true)
 
         clickSitePermissionsCheckBox()
-        assertSitePermissionsCheckBox(false)
+        sitePermissionsCheckBox().assertIsChecked(false)
 
         clickDownloadsCheckBox()
-        assertDownloadsCheckBox(false)
+        downloadsCheckBox().assertIsChecked(false)
     }
 
     fun confirmDeletionAndAssertSnackbar() {
@@ -179,32 +186,10 @@ private fun dialogMessage() =
     onView(withText("$appName will delete the selected browsing data."))
         .inRoot(isDialog())
 
-private fun assertAllCheckBoxesAreChecked() {
-    openTabsCheckBox().assertIsChecked(true)
-    browsingHistoryCheckBox().assertIsChecked(true)
-    cookiesAndSiteDataCheckBox().assertIsChecked(true)
-    cachedFilesCheckBox().assertIsChecked(true)
-    sitePermissionsCheckBox().assertIsChecked(true)
-    downloadsCheckBox().assertIsChecked(true)
-}
-
-private fun assertOpenTabsDescription(tabNumber: String) =
-    openTabsDescription(tabNumber).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertBrowsingHistoryDescription(addresses: String) =
-    assertUIObjectExists(browsingHistoryDescription(addresses))
-
 private fun assertDeleteBrowsingDataSnackbar() = assertUIObjectIsGone(itemWithText("Browsing data deleted"))
-
 private fun clickOpenTabsCheckBox() = openTabsCheckBox().click()
-private fun assertOpenTabsCheckBox(status: Boolean) = openTabsCheckBox().assertIsChecked(status)
 private fun clickBrowsingHistoryCheckBox() = browsingHistoryCheckBox().click()
-private fun assertBrowsingHistoryCheckBox(status: Boolean) = browsingHistoryCheckBox().assertIsChecked(status)
 private fun clickCookiesCheckBox() = cookiesAndSiteDataCheckBox().click()
-private fun assertCookiesCheckBox(status: Boolean) = cookiesAndSiteDataCheckBox().assertIsChecked(status)
 private fun clickCachedFilesCheckBox() = cachedFilesCheckBox().click()
-private fun assertCachedFilesCheckBox(status: Boolean) = cachedFilesCheckBox().assertIsChecked(status)
 private fun clickSitePermissionsCheckBox() = sitePermissionsCheckBox().click()
-private fun assertSitePermissionsCheckBox(status: Boolean) = sitePermissionsCheckBox().assertIsChecked(status)
 private fun clickDownloadsCheckBox() = downloadsCheckBox().click()
-private fun assertDownloadsCheckBox(status: Boolean) = downloadsCheckBox().assertIsChecked(status)
