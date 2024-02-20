@@ -24,13 +24,5 @@ onmessage = event => {
     caught3 = true;
   }
 
-  let caught4 = false;
-  try {
-    ChromeUtils.importESModule("resource://test/esmified-1.sys.mjs", {
-      loadInDevToolsLoader: true,
-    });
-  } catch (e) {
-    caught4 = true;
-  }
-  postMessage({ caught1, caught2, caught3, caught4 });
+  postMessage({ caught1, caught2, caught3 });
 };

@@ -36,17 +36,5 @@ onmessage = event => {
     caught3 = true;
   }
 
-  let caught4 = false;
-  try {
-    const lazy = {};
-    ChromeUtils.defineESModuleGetters(lazy, {
-      obj: "resource://test/esmified-1.sys.mjs"
-    }, {
-      loadInDevToolsLoader: true,
-    });
-    lazy.obj;
-  } catch (e) {
-    caught4 = true;
-  }
-  postMessage({ caught1, caught2, caught3, caught4 });
+  postMessage({ caught1, caught2, caught3 });
 };

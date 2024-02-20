@@ -327,6 +327,8 @@ namespace ChromeUtils {
    *
    * In worker threads, aOption is required and only { global: "current" } and
    * { global: "contextual" } are supported.
+   *
+   * In DevTools distinct global, aOptions.global is reuiqred.
    */
   [Throws]
   object importESModule(DOMString aResourceURI,
@@ -344,6 +346,8 @@ namespace ChromeUtils {
    *
    * In worker threads, aOption is required and only { global: "current" } and
    * { global: "contextual" } are supported.
+   *
+   * In DevTools distinct global, aOptions.global is reuiqred.
    */
   [Throws]
   undefined defineESModuleGetters(object aTarget, object aModules,
@@ -1030,13 +1034,8 @@ enum ImportESModuleTargetGlobal {
 };
 
 dictionary ImportESModuleOptionsDictionary {
-  /**
-   * If true, a distinct module loader will be used, in the system principal,
-   * but with a distinct global so that the DevTools can load a distinct set
-   * of modules and do not interfere with its debuggee.
-   */
-  boolean loadInDevToolsLoader;
-
+  // This field is required for importESModule and defineESModuleGetters in
+  // DevTools distinct global.
   ImportESModuleTargetGlobal global;
 };
 

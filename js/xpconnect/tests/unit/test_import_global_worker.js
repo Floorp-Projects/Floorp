@@ -17,5 +17,4 @@ add_task(async function testSharedInWorker() {
   Assert.equal(result.caught1, true);
   Assert.equal(result.caught2, true);
   Assert.equal(result.caught3, true);
-  Assert.equal(result.caught4, true);
 });

@@ -14,16 +14,14 @@ add_task(async function testShared() {
 });
 
 add_task(async function testDevTools() {
-  const ns1 = ChromeUtils.importESModule("resource://test/esmified-1.sys.mjs", {
-    loadInDevToolsLoader: true,
-  });
+  const ns1 = ChromeUtils.importESModule("resource://test/esmified-1.sys.mjs");
 
   const ns2 = ChromeUtils.importESModule("resource://test/esmified-1.sys.mjs", {
     global: "devtools",
   });
 
-  Assert.equal(ns1, ns2);
-  Assert.equal(ns1.obj, ns2.obj);
+  Assert.notEqual(ns1, ns2);
+  Assert.notEqual(ns1.obj, ns2.obj);
 });
 
 add_task(async function testInvalidOptions() {

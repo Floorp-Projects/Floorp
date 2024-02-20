@@ -25,29 +25,21 @@ add_task(async function testShared() {
 });
 
 add_task(async function testDevTools() {
-  const lazy1 = {};
-  const lazy2 = {};
+  const lazy = {};
 
-  ChromeUtils.defineESModuleGetters(lazy1, {
-    GetX: "resource://test/esm_lazy-1.sys.mjs",
-  }, {
-    loadInDevToolsLoader: true,
-  });
-
-  ChromeUtils.defineESModuleGetters(lazy2, {
+  ChromeUtils.defineESModuleGetters(lazy, {
     GetX: "resource://test/esm_lazy-1.sys.mjs",
   }, {
     global: "devtools",
   });
 
-  Assert.equal(lazy1.GetX, lazy2.GetX);
+  lazy.GetX; // delazify before import.
 
   const ns = ChromeUtils.importESModule("resource://test/esm_lazy-1.sys.mjs", {
-    loadInDevToolsLoader: true,
+    global: "devtools",
   });
 
-  Assert.equal(ns.GetX, lazy1.GetX);
-  Assert.equal(ns.GetX, lazy2.GetX);
+  Assert.equal(ns.GetX, lazy.GetX);
 });
 
 add_task(async function testSandbox() {

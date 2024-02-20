@@ -41,7 +41,7 @@ ruleTester.run("use-static-import", rule, {
     },
     {
       // importESModule with two args cannot be converted.
-      code: 'const { f } = ChromeUtils.importESModule("some/module.sys.mjs", { loadInDevToolsLoader : true });',
+      code: 'const { f } = ChromeUtils.importESModule("some/module.sys.mjs", { global : "shared" });',
       filename: "test.sys.mjs",
     },
     {
