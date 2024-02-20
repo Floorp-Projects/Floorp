@@ -6,6 +6,7 @@
 /* exported testGenerator */
 var testGenerator = testSteps();
 
+// eslint-disable-next-line require-yield
 function* testSteps() {
   const name = this.window ? window.location.pathname : "Splendid Test";
 

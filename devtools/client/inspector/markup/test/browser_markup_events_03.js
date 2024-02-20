@@ -17,7 +17,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":69:17",
+        filename: TEST_URL + ":70:17",
         attributes: ["Bubbling"],
         handler:
           "es6Method(foo, bar) {\n" + '  alert("obj.es6Method");\n' + "}",
@@ -29,7 +29,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":89:25",
+        filename: TEST_URL + ":91:25",
         attributes: ["Bubbling"],
         handler: "function* generator() {\n" + '  alert("generator");\n' + "}",
       },
@@ -40,7 +40,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":46:58",
+        filename: TEST_URL + ":47:58",
         attributes: ["Bubbling"],
         handler: "function*() {\n" + '  alert("anonGenerator");\n' + "}",
       },

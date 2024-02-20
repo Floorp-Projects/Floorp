@@ -351,9 +351,5 @@ module.exports = {
 
     // This may conflict with prettier, so turn it off.
     "prefer-arrow-callback": "off",
-
-    // XXX Bug 1487642 - decide if we want to enable this or not.
-    // Require generator functions to contain yield
-    "require-yield": "off",
   },
 };
