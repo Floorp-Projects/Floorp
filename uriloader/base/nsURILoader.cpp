@@ -274,12 +274,19 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   // could happen because the Content-Disposition header is set so, or, in the
   // future, because the user has specified external handling for the MIME
   // type.
+  //
+  // If we're not going to be able to retarget to an external handler, ignore
+  // content-disposition, and unconditionally try to display the content.
+  // This is used for object/embed tags, which expect to display subresources
+  // marked with an attachment disposition.
   bool forceExternalHandling = false;
-  uint32_t disposition;
-  rv = aChannel->GetContentDisposition(&disposition);
+  if (!(mFlags & nsIURILoader::DONT_RETARGET)) {
+    uint32_t disposition;
+    rv = aChannel->GetContentDisposition(&disposition);
 
-  if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT) {
-    forceExternalHandling = true;
+    if (NS_SUCCEEDED(rv) && disposition == nsIChannel::DISPOSITION_ATTACHMENT) {
+      forceExternalHandling = true;
+    }
   }
 
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
