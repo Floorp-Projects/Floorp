@@ -25,7 +25,7 @@ jobs:
           type: decision-task
           treeherder-symbol: screenshots-D
           target-tasks-method: screenshots
-      when: [{weekday: 'Monday', hour: 10, minute: 0}]
+      when: [] # unscheduled
     - name: legacy-api-ui-tests
       job:
           type: decision-task
