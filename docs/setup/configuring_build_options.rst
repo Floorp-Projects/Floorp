@@ -269,6 +269,18 @@ Optimization
 You can make an optimized build with debugging symbols. See :ref:`Building
 with Debug Symbols <Building with Debug Symbols>`.
 
+Building as Beta or Release
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``ac_add_options --as-milestone=release``
+   This makes it easy to build nightly with a release or beta configuration to
+   test the different ifdef behaviors. To do a full beta simulation see
+   `Sheriffing/How To/Beta simulations <https://wiki.mozilla.org/Sheriffing/How_To/Beta_simulations>`__.
+
+   - ``early-beta``
+   - ``late-beta``
+   - ``release``
+
 Extensions
 ^^^^^^^^^^
 
