@@ -177,13 +177,7 @@ function setTimeout(callback, ms) {
 
 const lazy = {};
 ChromeUtils.defineLazyGetter(lazy, "logger", function () {
-  return console.createInstance({
-    prefix: "PlacesTransactions",
-    maxLogLevel: Services.prefs.getCharPref(
-      "places.transactions.logLevel",
-      "Error"
-    ),
-  });
+  return PlacesUtils.getLogger({ prefix: "Transactions" });
 });
 
 class TransactionsHistoryArray extends Array {
