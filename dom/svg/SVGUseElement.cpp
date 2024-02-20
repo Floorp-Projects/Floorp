@@ -167,8 +167,8 @@ nsresult SVGUseElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void SVGUseElement::UnbindFromTree(bool aNullParent) {
-  SVGUseElementBase::UnbindFromTree(aNullParent);
+void SVGUseElement::UnbindFromTree(UnbindContext& aContext) {
+  SVGUseElementBase::UnbindFromTree(aContext);
   OwnerDoc()->UnscheduleSVGUseElementShadowTreeUpdate(*this);
 }
 

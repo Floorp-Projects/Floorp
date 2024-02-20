@@ -54,7 +54,7 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
 
   // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
   void DestroyContent() override;
 
   void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,

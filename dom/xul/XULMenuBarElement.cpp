@@ -85,7 +85,7 @@ nsresult XULMenuBarElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-void XULMenuBarElement::UnbindFromTree(bool aNullParent) {
+void XULMenuBarElement::UnbindFromTree(UnbindContext& aContext) {
   if (mListener) {
     mListener->Detach();
     mListener = nullptr;
@@ -97,7 +97,7 @@ void XULMenuBarElement::UnbindFromTree(bool aNullParent) {
       pm->SetActiveMenuBar(this, false);
     }
   }
-  return XULMenuParentElement::UnbindFromTree(aNullParent);
+  return XULMenuParentElement::UnbindFromTree(aContext);
 }
 
 }  // namespace mozilla::dom

@@ -308,8 +308,8 @@ nsresult HTMLButtonElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-void HTMLButtonElement::UnbindFromTree(bool aNullParent) {
-  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
+void HTMLButtonElement::UnbindFromTree(UnbindContext& aContext) {
+  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aContext);
 
   UpdateBarredFromConstraintValidation();
   UpdateValidityElementStates(false);

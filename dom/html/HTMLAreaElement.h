@@ -43,7 +43,7 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
   already_AddRefed<nsIURI> GetHrefURI() const override;
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

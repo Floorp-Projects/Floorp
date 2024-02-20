@@ -16,11 +16,11 @@
 #include "mozilla/dom/FragmentOrElement.h"
 #include "DOMIntersectionObserver.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/DeclarationBlock.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/ElementAnimationData.h"
+#include "mozilla/DeclarationBlock.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/PresShell.h"
@@ -30,39 +30,31 @@
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/RadioGroupContainer.h"
+#include "mozilla/dom/UnbindContext.h"
 #include "nsDOMAttributeMap.h"
 #include "nsAtom.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptLoader.h"
-#include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIControllers.h"
 #include "nsIDocumentEncoder.h"
 #include "nsFocusManager.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsNetUtil.h"
 #include "nsIFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsPresContext.h"
-#include "nsStyleConsts.h"
 #include "nsString.h"
-#include "nsUnicharUtils.h"
-#include "nsDOMCID.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsNameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMTokenList.h"
 #include "nsError.h"
-#include "nsDOMString.h"
 #include "nsXULElement.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
-#include "nsAttrValueOrString.h"
-#include "nsQueryObject.h"
-#include "nsFrameSelection.h"
 #ifdef DEBUG
 #  include "nsRange.h"
 #endif
@@ -73,7 +65,6 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsTextFragment.h"
-#include "nsContentCID.h"
 #include "nsWindowSizes.h"
 
 #include "nsIWidget.h"
@@ -82,10 +73,8 @@
 #include "nsGenericHTMLElement.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsView.h"
-#include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "ChildIterator.h"
-#include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
 
 #include "nsCCUncollectableMarker.h"
@@ -97,16 +86,12 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"
 #include "xpcpublic.h"
-#include "mozilla/Telemetry.h"
-
-#include "mozilla/CORSMode.h"
 
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/SVGUseElement.h"
 
-#include "nsStyledElement.h"
 #include "nsIContentInlines.h"
 #include "nsChildContentList.h"
 #include "mozilla/BloomFilter.h"
@@ -167,6 +152,11 @@ nsIContent* nsIContent::FindFirstNonChromeOnlyAccessContent() const {
     }
   }
   return nullptr;
+}
+
+void nsIContent::UnbindFromTree() {
+  UnbindContext context(*this);
+  UnbindFromTree(context);
 }
 
 // https://dom.spec.whatwg.org/#dom-slotable-assignedslot

@@ -34,7 +34,7 @@ class MathMLElement final : public MathMLElementBase, public Link {
   NS_IMPL_FROMNODE(MathMLElement, kNameSpaceID_MathML)
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,

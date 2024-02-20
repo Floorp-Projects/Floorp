@@ -62,7 +62,7 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
   void UpdateDisabledState(bool aNotify);
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

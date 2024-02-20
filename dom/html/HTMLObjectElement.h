@@ -40,7 +40,7 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
   bool IsInteractiveHTMLContent() const override;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;

@@ -213,7 +213,7 @@ class HTMLInputElement final : public TextControlElement,
                                    SnapToTickMarks = SnapToTickMarks::No);
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void DoneCreatingElement() override;

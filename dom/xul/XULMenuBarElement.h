@@ -38,7 +38,7 @@ class XULMenuBarElement final : public XULMenuParentElement {
   bool IsActiveByKeyboard() const { return mActiveByKeyboard; }
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent) override;
+  void UnbindFromTree(UnbindContext&) override;
 
  protected:
   ~XULMenuBarElement() override;

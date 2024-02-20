@@ -119,14 +119,14 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void HTMLMetaElement::UnbindFromTree(bool aNullParent) {
+void HTMLMetaElement::UnbindFromTree(UnbindContext& aContext) {
   if (Document* oldDoc = GetUncomposedDoc()) {
     if (const nsAttrValue* name = GetParsedAttr(nsGkAtoms::name)) {
       MetaRemoved(*oldDoc, *name, ChangeKind::TreeChange);
     }
     CreateAndDispatchEvent(*oldDoc, u"DOMMetaRemoved"_ns);
   }
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 }
 
 void HTMLMetaElement::CreateAndDispatchEvent(Document&,

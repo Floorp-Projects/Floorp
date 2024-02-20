@@ -156,7 +156,7 @@ class HTMLTableElement final : public nsGenericHTMLElement {
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
   /**
    * Called when an attribute is about to be changed
    */

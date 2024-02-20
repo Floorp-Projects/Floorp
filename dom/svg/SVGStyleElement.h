@@ -40,7 +40,7 @@ class SVGStyleElement final : public SVGStyleElementBase,
 
   // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
   virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                             const nsAttrValue* aValue,
                             const nsAttrValue* aOldValue,

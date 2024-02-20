@@ -159,13 +159,13 @@ nsresult XULFrameElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void XULFrameElement::UnbindFromTree(bool aNullParent) {
+void XULFrameElement::UnbindFromTree(UnbindContext& aContext) {
   if (RefPtr<nsFrameLoader> frameLoader = GetFrameLoader()) {
     frameLoader->Destroy();
   }
   mFrameLoader = nullptr;
 
-  nsXULElement::UnbindFromTree(aNullParent);
+  nsXULElement::UnbindFromTree(aContext);
 }
 
 void XULFrameElement::DestroyContent() {

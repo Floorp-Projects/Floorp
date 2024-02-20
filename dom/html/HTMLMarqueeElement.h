@@ -19,7 +19,7 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLMarqueeElement, marquee);
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   static const int kDefaultLoop = -1;
   static const int kDefaultScrollAmount = 6;

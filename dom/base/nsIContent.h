@@ -21,6 +21,7 @@ class HTMLEditor;
 struct URLExtraData;
 namespace dom {
 struct BindContext;
+struct UnbindContext;
 class ShadowRoot;
 class HTMLSlotElement;
 }  // namespace dom
@@ -58,6 +59,7 @@ class nsIContent : public nsINode {
   using IMEEnabled = mozilla::widget::IMEEnabled;
   using IMEState = mozilla::widget::IMEState;
   using BindContext = mozilla::dom::BindContext;
+  using UnbindContext = mozilla::dom::UnbindContext;
 
   void ConstructUbiNode(void* storage) override;
 
@@ -111,15 +113,10 @@ class nsIContent : public nsINode {
    * from a parent, this will be called after it has been removed from the
    * parent's child list and after the nsIDocumentObserver notifications for
    * the removal have been dispatched.
-   * @param aDeep Whether to recursively unbind the entire subtree rooted at
-   *        this node.  The only time false should be passed is when the
-   *        parent node of the content is being destroyed.
-   * @param aNullParent Whether to null out the parent pointer as well.  This
-   *        is usually desirable.  This argument should only be false while
-   *        recursively calling UnbindFromTree when a subtree is detached.
    * @note This method is safe to call on nodes that are not bound to a tree.
    */
-  virtual void UnbindFromTree(bool aNullParent = true) = 0;
+  virtual void UnbindFromTree(UnbindContext&) = 0;
+  void UnbindFromTree();
 
   enum {
     /**

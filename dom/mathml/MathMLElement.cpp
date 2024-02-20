@@ -77,8 +77,8 @@ nsresult MathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void MathMLElement::UnbindFromTree(bool aNullParent) {
-  MathMLElementBase::UnbindFromTree(aNullParent);
+void MathMLElement::UnbindFromTree(UnbindContext& aContext) {
+  MathMLElementBase::UnbindFromTree(aContext);
   // Without removing the link state we risk a dangling pointer in the
   // mStyledLinks hashtable
   Link::UnbindFromTree();

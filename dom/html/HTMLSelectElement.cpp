@@ -1089,8 +1089,8 @@ nsresult HTMLSelectElement::BindToTree(BindContext& aContext,
   return rv;
 }
 
-void HTMLSelectElement::UnbindFromTree(bool aNullParent) {
-  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
+void HTMLSelectElement::UnbindFromTree(UnbindContext& aContext) {
+  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aContext);
 
   // We might be no longer disabled because our parent chain changed.
   // XXXbz is this still needed now that fieldset changes always call

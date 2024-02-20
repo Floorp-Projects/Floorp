@@ -166,9 +166,9 @@ nsresult HTMLSourceElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-void HTMLSourceElement::UnbindFromTree(bool aNullParent) {
+void HTMLSourceElement::UnbindFromTree(UnbindContext& aContext) {
   mMappedAttributesForImage = nullptr;
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 }
 
 JSObject* HTMLSourceElement::WrapNode(JSContext* aCx,

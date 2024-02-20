@@ -4447,7 +4447,7 @@ void HTMLInputElement::MaybeDispatchLoginManagerEvents(HTMLFormElement* aForm) {
   dispatcher->PostDOMEvent();
 }
 
-void HTMLInputElement::UnbindFromTree(bool aNullParent) {
+void HTMLInputElement::UnbindFromTree(UnbindContext& aContext) {
   if (mType == FormControlType::InputPassword) {
     MaybeFireInputPasswordRemoved();
   }
@@ -4465,8 +4465,8 @@ void HTMLInputElement::UnbindFromTree(bool aNullParent) {
     NotifyUAWidgetTeardown();
   }
 
-  nsImageLoadingContent::UnbindFromTree(aNullParent);
-  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
+  nsImageLoadingContent::UnbindFromTree();
+  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aContext);
 
   // If we are contained within a disconnected subtree, attempt to add
   // ourselves to the subtree root's radio group.

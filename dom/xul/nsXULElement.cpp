@@ -654,7 +654,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void nsXULElement::UnbindFromTree(bool aNullParent) {
+void nsXULElement::UnbindFromTree(UnbindContext& aContext) {
   if (NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
     XULKeySetGlobalKeyListener::DetachKeyHandler(this);
   }
@@ -689,7 +689,7 @@ void nsXULElement::UnbindFromTree(bool aNullParent) {
     slots->mControllers = nullptr;
   }
 
-  nsStyledElement::UnbindFromTree(aNullParent);
+  nsStyledElement::UnbindFromTree(aContext);
 }
 
 void nsXULElement::DoneAddingChildren(bool aHaveNotified) {

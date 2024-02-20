@@ -43,7 +43,7 @@ class XMLStylesheetProcessingInstruction final : public ProcessingInstruction,
 
   // nsIContent
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
 
   /**
    * Tells this processing instruction to use a different base URI. This is used

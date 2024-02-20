@@ -62,7 +62,7 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                int32_t* aTabIndex) override;
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
   virtual void DestroyContent() override;
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);

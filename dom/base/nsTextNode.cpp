@@ -44,7 +44,7 @@ class nsAttributeTextNode final : public nsTextNode,
   }
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
@@ -123,10 +123,9 @@ nsresult nsTextNode::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-void nsTextNode::UnbindFromTree(bool aNullParent) {
+void nsTextNode::UnbindFromTree(UnbindContext& aContext) {
   ResetDirectionSetByTextNode(this);
-
-  CharacterData::UnbindFromTree(aNullParent);
+  CharacterData::UnbindFromTree(aContext);
 }
 
 #ifdef MOZ_DOM_LIST
@@ -209,16 +208,16 @@ nsresult nsAttributeTextNode::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-void nsAttributeTextNode::UnbindFromTree(bool aNullParent) {
+void nsAttributeTextNode::UnbindFromTree(UnbindContext& aContext) {
   // UnbindFromTree can be called anytime so we have to be safe.
   if (mGrandparent) {
-    // aNullParent might not be true here, but we want to remove the
+    // aContext might not be true here, but we want to remove the
     // mutation observer anyway since we only need it while we're
     // in the document.
     mGrandparent->RemoveMutationObserver(this);
     mGrandparent = nullptr;
   }
-  nsTextNode::UnbindFromTree(aNullParent);
+  nsTextNode::UnbindFromTree(aContext);
 }
 
 void nsAttributeTextNode::AttributeChanged(Element* aElement,

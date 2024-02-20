@@ -4891,14 +4891,14 @@ nsresult HTMLMediaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
+void HTMLMediaElement::UnbindFromTree(UnbindContext& aContext) {
   mVisibilityState = Visibility::Untracked;
 
   if (IsInComposedDoc()) {
     NotifyUAWidgetTeardown();
   }
 
-  nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aContext);
 
   MOZ_ASSERT(IsActuallyInvisible());
   NotifyDecoderActivityChanges();

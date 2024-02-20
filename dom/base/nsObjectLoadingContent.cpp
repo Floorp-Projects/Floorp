@@ -223,7 +223,7 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
   return docShell.forget();
 }
 
-void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
+void nsObjectLoadingContent::UnbindFromTree() {
   // Reset state and clear pending events
   /// XXX(johns): The implementation for GenericFrame notes that ideally we
   ///             would keep the docshell around, but trash the frameloader

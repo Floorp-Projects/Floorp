@@ -41,7 +41,7 @@ class HTMLTitleElement final : public nsGenericHTMLElement,
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  virtual void UnbindFromTree(UnbindContext&) override;
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
 

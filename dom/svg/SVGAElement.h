@@ -48,7 +48,7 @@ class SVGAElement final : public SVGAElementBase,
 
   // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   int32_t TabIndexDefault() override;
   Focusable IsFocusableWithoutStyle(bool aWithMouse) override;

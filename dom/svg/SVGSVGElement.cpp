@@ -337,12 +337,12 @@ nsresult SVGSVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return rv;
 }
 
-void SVGSVGElement::UnbindFromTree(bool aNullParent) {
+void SVGSVGElement::UnbindFromTree(UnbindContext& aContext) {
   if (mTimedDocumentRoot) {
     mTimedDocumentRoot->SetParent(nullptr);
   }
 
-  SVGGraphicsElement::UnbindFromTree(aNullParent);
+  SVGGraphicsElement::UnbindFromTree(aContext);
 }
 
 SVGAnimatedTransformList* SVGSVGElement::GetAnimatedTransformList(

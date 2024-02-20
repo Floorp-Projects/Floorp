@@ -49,10 +49,11 @@ nsresult XMLStylesheetProcessingInstruction::BindToTree(BindContext& aContext,
   return rv;
 }
 
-void XMLStylesheetProcessingInstruction::UnbindFromTree(bool aNullParent) {
+void XMLStylesheetProcessingInstruction::UnbindFromTree(
+    UnbindContext& aContext) {
   nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
 
-  ProcessingInstruction::UnbindFromTree(aNullParent);
+  ProcessingInstruction::UnbindFromTree(aContext);
   Unused << UpdateStyleSheetInternal(oldDoc, nullptr);
 }
 

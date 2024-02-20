@@ -36,7 +36,7 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   const Element* AsElement() const final { return this; }
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
