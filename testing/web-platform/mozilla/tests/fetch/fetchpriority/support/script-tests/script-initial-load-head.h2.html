@@ -7,6 +7,9 @@
   <script src="../resources/dummy.js?2" fetchpriority="high"></script>
   <script src="../resources/dummy.js?3" fetchpriority="auto"></script>
   <script src="../resources/dummy.js?4"></script>
+  <!-- We don't test in-head SVG <script> elements. The HTML parser ignores
+       explicit SVG namespace on such elements and moves any <svg> wrapper
+       into the body. -->
 </head>
 <body>
 <script>
