@@ -43,6 +43,7 @@
         generatorNode.addEventListener("click", generator);
 
         const anonGenerator = document.getElementById("anon-generator");
+        // eslint-disable-next-line require-yield
         anonGenerator.addEventListener("click", function* () {
           alert("anonGenerator");
         });
@@ -86,6 +87,7 @@
         }
       };
 
+      // eslint-disable-next-line require-yield
       function* generator() {
         alert("generator");
       }
