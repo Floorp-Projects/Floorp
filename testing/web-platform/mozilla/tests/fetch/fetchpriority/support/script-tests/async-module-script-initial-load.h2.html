@@ -9,6 +9,10 @@
   <script type="module" async src="../resources/dummy.js?4"></script>
 </head>
 <body>
+  <svg><script type="module" async href="../resources/dummy.js?5" fetchpriority="low"></script></svg>
+  <svg><script type="module" async href="../resources/dummy.js?6" fetchpriority="high"></script></svg>
+  <svg><script type="module" async href="../resources/dummy.js?7" fetchpriority="auto"></script></svg>
+  <svg><script type="module" async href="../resources/dummy.js?8"></script></svg>
 <script>
   onload = function() {
     opener.postMessage("ChildLoaded", "*");

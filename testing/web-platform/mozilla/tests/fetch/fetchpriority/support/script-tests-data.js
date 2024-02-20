@@ -213,6 +213,18 @@ const kExpectedRequestsForModuleScripts = [
     {   fileNameAndSuffix: "dummy.js?4",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
+    {   fileNameAndSuffix: "dummy.js?5",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?6",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?7",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?8",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
 ]
 
 const kExpectedRequestsForModuleScriptsDisabled = [
@@ -226,6 +238,18 @@ const kExpectedRequestsForModuleScriptsDisabled = [
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
     {   fileNameAndSuffix: "dummy.js?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?5",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?6",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?7",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+    },
+    {   fileNameAndSuffix: "dummy.js?8",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
     },
 ]
