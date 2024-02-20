@@ -111,15 +111,15 @@ void dav1d_picture_free_itut_t35(const uint8_t *const data, void *const user_dat
     dav1d_free(itut_t35_ctx);
 }
 
-static int picture_alloc_with_edges(Dav1dContext *const c,
-                                    Dav1dPicture *const p,
-                                    const int w, const int h,
-                                    Dav1dSequenceHeader *const seq_hdr, Dav1dRef *const seq_hdr_ref,
-                                    Dav1dFrameHeader *const frame_hdr, Dav1dRef *const frame_hdr_ref,
-                                    const int bpc,
-                                    const Dav1dDataProps *const props,
-                                    Dav1dPicAllocator *const p_allocator,
-                                    void **const extra_ptr)
+static int picture_alloc(Dav1dContext *const c,
+                         Dav1dPicture *const p,
+                         const int w, const int h,
+                         Dav1dSequenceHeader *const seq_hdr, Dav1dRef *const seq_hdr_ref,
+                         Dav1dFrameHeader *const frame_hdr, Dav1dRef *const frame_hdr_ref,
+                         const int bpc,
+                         const Dav1dDataProps *const props,
+                         Dav1dPicAllocator *const p_allocator,
+                         void **const extra_ptr)
 {
     if (p->data[0]) {
         dav1d_log(c, "Picture already allocated!\n");
@@ -194,12 +194,11 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
 {
     Dav1dThreadPicture *const p = &f->sr_cur;
 
-    const int res =
-        picture_alloc_with_edges(c, &p->p, f->frame_hdr->width[1], f->frame_hdr->height,
-                                 f->seq_hdr, f->seq_hdr_ref,
-                                 f->frame_hdr, f->frame_hdr_ref,
-                                 bpc, &f->tile[0].data.m, &c->allocator,
-                                 (void **) &p->progress);
+    const int res = picture_alloc(c, &p->p, f->frame_hdr->width[1], f->frame_hdr->height,
+                                  f->seq_hdr, f->seq_hdr_ref,
+                                  f->frame_hdr, f->frame_hdr_ref,
+                                  bpc, &f->tile[0].data.m, &c->allocator,
+                                  (void **) &p->progress);
     if (res) return res;
 
     dav1d_picture_copy_props(&p->p, c->content_light, c->content_light_ref,
@@ -212,9 +211,10 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
     c->itut_t35 = NULL;
     c->n_itut_t35 = 0;
 
-    // Don't clear these flags from c->frame_flags if the frame is not visible.
+    // Don't clear these flags from c->frame_flags if the frame is not going to be output.
     // This way they will be added to the next visible frame too.
-    const int flags_mask = (f->frame_hdr->show_frame || c->output_invisible_frames)
+    const int flags_mask = ((f->frame_hdr->show_frame || c->output_invisible_frames) &&
+                            c->max_spatial_id == f->frame_hdr->spatial_id)
                            ? 0 : (PICTURE_FLAG_NEW_SEQUENCE | PICTURE_FLAG_NEW_OP_PARAMS_INFO);
     p->flags = c->frame_flags;
     c->frame_flags &= flags_mask;
@@ -233,11 +233,11 @@ int dav1d_picture_alloc_copy(Dav1dContext *const c, Dav1dPicture *const dst, con
 {
     Dav1dMemPoolBuffer *const buf = (Dav1dMemPoolBuffer *)src->ref->const_data;
     struct pic_ctx_context *const pic_ctx = buf->data;
-    const int res = picture_alloc_with_edges(c, dst, w, src->p.h,
-                                             src->seq_hdr, src->seq_hdr_ref,
-                                             src->frame_hdr, src->frame_hdr_ref,
-                                             src->p.bpc, &src->m, &pic_ctx->allocator,
-                                             NULL);
+    const int res = picture_alloc(c, dst, w, src->p.h,
+                                  src->seq_hdr, src->seq_hdr_ref,
+                                  src->frame_hdr, src->frame_hdr_ref,
+                                  src->p.bpc, &src->m, &pic_ctx->allocator,
+                                  NULL);
     if (res) return res;
 
     dav1d_picture_copy_props(dst, src->content_light, src->content_light_ref,

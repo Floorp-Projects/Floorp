@@ -58,7 +58,8 @@ decl_itx_fn(BF(dav1d_inv_txfm_add_wht_wht_##w##x##h, opt))
 
 #define decl_itx_fns(ext) \
 decl_itx17_fns( 4,  4, ext); \
-decl_itx16_fns( 8,  8, ext)
+decl_itx16_fns( 8,  8, ext); \
+decl_itx16_fns(16, 16, ext)
 
 decl_itx_fns(rvv);
 
@@ -103,7 +104,8 @@ static ALWAYS_INLINE void itx_dsp_init_riscv(Dav1dInvTxfmDSPContext *const c, in
   if (!(flags & DAV1D_RISCV_CPU_FLAG_V)) return;
 
 #if BITDEPTH == 8
-  assign_itx16_fn( ,  4,  4, rvv);
+  assign_itx17_fn( ,  4,  4, rvv);
   assign_itx16_fn( ,  8,  8, rvv);
+  assign_itx12_fn( , 16, 16, rvv);
 #endif
 }

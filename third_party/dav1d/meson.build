@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '1.3.0',
+    version: '1.4.0',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
@@ -136,7 +136,7 @@ if host_machine.system() == 'windows'
     rc_data.set('API_VERSION_MAJOR', dav1d_api_version_major)
     rc_data.set('API_VERSION_MINOR', dav1d_api_version_minor)
     rc_data.set('API_VERSION_REVISION', dav1d_api_version_revision)
-    rc_data.set('COPYRIGHT_YEARS', '2018-2023')
+    rc_data.set('COPYRIGHT_YEARS', '2018-2024')
 else
     thread_dependency = dependency('threads')
     thread_compat_dep = []

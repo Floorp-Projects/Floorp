@@ -4,8 +4,8 @@ DAV1D="tools/dav1d"
 ARGON_DIR='.'
 FILMGRAIN=1
 CPUMASK=-1
-THREADS=0
-JOBS=1
+THREADS=1
+JOBS=0
 
 usage() {
     NAME=$(basename "$0")
@@ -19,8 +19,8 @@ usage() {
         printf " -a dir    path to argon dir (default: 'tests/argon' if found; '.' otherwise)\n"
         printf " -g \$num   enable filmgrain (default: 1)\n"
         printf " -c \$mask  use restricted cpumask (default: -1)\n"
-        printf " -t \$num   number of threads per dav1d (default: 0)\n"
-        printf " -j \$num   number of parallel dav1d processes (default: 1)\n\n"
+        printf " -t \$num   number of threads per dav1d (default: 1)\n"
+        printf " -j \$num   number of parallel dav1d processes (default: 0)\n\n"
     } >&2
     exit 1
 }
@@ -109,6 +109,14 @@ while getopts ":d:a:g:c:t:j:" opt; do
     esac
 done
 shift $((OPTIND-1))
+
+if [ "$JOBS" -eq 0 ]; then
+    if [ "$THREADS" -gt 0 ]; then
+        JOBS="$((($( (nproc || sysctl -n hw.logicalcpu || getconf _NPROCESSORS_ONLN || echo 1) 2>/dev/null)+THREADS-1)/THREADS))"
+    else
+        JOBS=1
+    fi
+fi
 
 if [ "$#" -eq 0 ]; then
     # Everything except large scale tiles and stress files.
