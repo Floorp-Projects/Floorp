@@ -16706,7 +16706,10 @@ skip-if = ["os == 'android'"]
 
 ["generated/test_conformance__textures__misc__texture-npot-video.html"]
 subsuite = "webgl1-core"
-skip-if = ["win11_2009"] # win11 - 50/50 intermittent
+skip-if = [
+  "win11_2009", # win11 - 50/50 intermittent
+  "os == 'android' && android_version == '33'", #Bug 1873144
+  ] 
 
 ["generated/test_conformance__textures__misc__texture-npot.html"]
 subsuite = "webgl1-core"
