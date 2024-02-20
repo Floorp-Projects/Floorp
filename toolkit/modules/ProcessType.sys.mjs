@@ -15,6 +15,17 @@ export const ProcessType = Object.freeze({
     socket: "process-type-socket",
     utility: "process-type-utility",
 
+    // Utility with actor names
+    utility_audioDecoder_Generic:
+      "process-type-utility-actor-audio-decoder-generic",
+    utility_audioDecoder_AppleMedia:
+      "process-type-utility-actor-audio-decoder-applemedia",
+    utility_audioDecoder_WMF: "process-type-utility-actor-audio-decoder-wmf",
+    utility_mfMediaEngineCDM: "process-type-utility-actor-mf-media-engine",
+    utility_jSOracle: "process-type-utility-actor-js-oracle",
+    utility_windowsUtils: "process-type-utility-actor-windows-utils",
+    utility_windowsFileDialog: "process-type-utility-actor-windows-file-dialog",
+
     // Keys defined in dom/ipc/RemoteType.h
     extension: "process-type-extension",
     file: "process-type-file",

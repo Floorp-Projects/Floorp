@@ -324,7 +324,8 @@ process there.
 - For `about:processes` you will probably want to follow the following steps:
 
   + Add handling for your new process type producing a unique `fluentName <https://searchfox.org/mozilla-central/rev/be4604e4be8c71b3c1dbff2398a5b05f15411673/toolkit/components/aboutprocesses/content/aboutProcesses.js#472-539>`_, i.e., constructing a dynamic name is highly discouraged
-  + Add matching localization strings within `fluent localization file <https://searchfox.org/mozilla-central/rev/be4604e4be8c71b3c1dbff2398a5b05f15411673/toolkit/locales/en-US/toolkit/about/aboutProcesses.ftl#35-55>`_
+  + Add matching localization strings within `about:processes localization file <https://searchfox.org/mozilla-central/rev/be4604e4be8c71b3c1dbff2398a5b05f15411673/toolkit/locales/en-US/toolkit/about/aboutProcesses.ftl#35-55>`_
+  + Add matching localization strings within `about:support localization file <https://searchfox.org/mozilla-central/source/toolkit/locales/en-US/toolkit/global/processTypes.ftl#54-60>`_
 
 Profiler
 ########
