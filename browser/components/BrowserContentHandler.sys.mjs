@@ -956,6 +956,23 @@ function handURIToExistingBrowser(
     return;
   }
 
+  // Floorp Injections
+  if (location == 3 || location == 0) {
+    if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      if (win) {
+        let tab = win.gBrowser.addTab(uri.spec, {
+          triggeringPrincipal,
+        });
+
+        win.gBrowser.selectedTab = tab;
+        win.focus();
+        return;
+      }
+    }
+  }
+  // End Floorp Injections
+
   let openInWindow = ({ browserDOMWindow }) => {
     browserDOMWindow.openURI(
       uri,
