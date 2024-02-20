@@ -177,7 +177,7 @@ webrender-dcomp-disabled:
 webrender-dcomp-present:  # Default variant ends up like this.
     description: "{description} with dcomp present but not overlays"
     component: "Core::Graphics: WebRender"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "wr-dc1-p"
     when:
         $eval: '"windows1" in task["test-platform"]'
