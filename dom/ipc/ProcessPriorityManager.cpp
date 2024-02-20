@@ -203,8 +203,6 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
   void BrowserPriorityChanged(CanonicalBrowsingContext* aBC, bool aPriority);
   void BrowserPriorityChanged(BrowserParent* aBrowserParent, bool aPriority);
 
-  void ResetPriority(ContentParent* aContentParent);
-
  private:
   static bool sPrefListenersRegistered;
   static bool sInitialized;
@@ -556,12 +554,6 @@ void ProcessPriorityManagerImpl::BrowserPriorityChanged(
         Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED,
         1);
     pppm->BrowserPriorityChanged(aBrowserParent, aPriority);
-  }
-}
-
-void ProcessPriorityManagerImpl::ResetPriority(ContentParent* aContentParent) {
-  if (RefPtr pppm = GetParticularProcessPriorityManager(aContentParent)) {
-    pppm->ResetPriority();
   }
 }
 
