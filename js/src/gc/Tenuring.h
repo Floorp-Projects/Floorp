@@ -92,6 +92,10 @@ class TenuringTracer final : public JSTracer {
   void traceBigInt(JS::BigInt* bi);
 
  private:
+  MOZ_ALWAYS_INLINE void onNurseryObjectEdge(JSObject** objp);
+  MOZ_ALWAYS_INLINE void onNurseryStringEdge(JSString** strp);
+  MOZ_ALWAYS_INLINE void onNurseryBigIntEdge(JS::BigInt** bip);
+
   // The dependent string chars needs to be relocated if the base which it's
   // using chars from has been deduplicated.
   template <typename CharT>
