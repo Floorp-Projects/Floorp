@@ -72,7 +72,6 @@ class RecentSyncedTabViewHolder(
 
             RecentSyncedTab(
                 tab = syncedTab,
-                storage = components.core.thumbnailStorage,
                 backgroundColor = wallpaperState.wallpaperCardColor,
                 buttonBackgroundColor = buttonBackgroundColor,
                 buttonTextColor = buttonTextColor,

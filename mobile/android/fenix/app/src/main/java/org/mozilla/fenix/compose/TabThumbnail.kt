@@ -16,12 +16,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
-import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -32,7 +30,6 @@ private const val FALLBACK_ICON_SIZE = 36
  * will be displayed until the thumbnail is loaded.
  *
  * @param tab The given [TabSessionState] to render a thumbnail for.
- * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param size Size of the thumbnail.
  * @param modifier [Modifier] used to draw the image content.
  * @param backgroundColor [Color] used for the background of the favicon.
@@ -44,7 +41,6 @@ private const val FALLBACK_ICON_SIZE = 36
 @Composable
 fun TabThumbnail(
     tab: TabSessionState,
-    storage: ThumbnailStorage,
     size: Int,
     modifier: Modifier = Modifier,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
@@ -62,8 +58,6 @@ fun TabThumbnail(
                 size = size,
                 isPrivate = tab.content.private,
             ),
-            storage = storage,
-            modifier = modifier,
             contentScale = contentScale,
             alignment = alignment,
         ) {
@@ -100,7 +94,6 @@ private fun ThumbnailCardPreview() {
         TabThumbnail(
             tab = createTab(url = "www.mozilla.com", title = "Mozilla"),
             size = 108,
-            storage = ThumbnailStorage(LocalContext.current),
             modifier = Modifier
                 .size(108.dp, 80.dp)
                 .clip(RoundedCornerShape(8.dp)),

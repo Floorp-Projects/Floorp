@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -20,37 +21,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.base.images.ImageLoadRequest
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Thumbnail belonging to a [ImageLoadRequest]. Asynchronously fetches the bitmap from storage.
  *
  * @param request [ImageLoadRequest] used to fetch the thumbnail bitmap.
- * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
- * @param modifier [Modifier] used to draw the image content.
  * @param contentScale [ContentScale] used to draw image content.
  * @param alignment [Alignment] used to draw the image content.
+ * @param modifier [Modifier] used to draw the image content.
  * @param fallbackContent The content to display with a thumbnail is unable to be loaded.
  */
 @Composable
 fun ThumbnailImage(
     request: ImageLoadRequest,
-    storage: ThumbnailStorage,
-    modifier: Modifier,
     contentScale: ContentScale,
     alignment: Alignment,
+    modifier: Modifier = Modifier,
     fallbackContent: @Composable () -> Unit,
 ) {
     if (inComposePreview) {
-        Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer3))
+        Box(modifier = modifier.background(color = FirefoxTheme.colors.layer3))
     } else {
         var state by remember { mutableStateOf(ThumbnailImageState(null, false)) }
         val scope = rememberCoroutineScope()
+        val storage = components.core.thumbnailStorage
 
         DisposableEffect(Unit) {
             if (!state.hasLoaded) {
@@ -102,15 +102,14 @@ private data class ThumbnailImageState(
 
 /**
  * This preview does not demo anything. This is to ensure that [ThumbnailImage] does not break other previews.
-*/
+ */
 @Preview
 @Composable
 private fun ThumbnailImagePreview() {
     FirefoxTheme {
         ThumbnailImage(
             request = ImageLoadRequest("1", 1, false),
-            storage = ThumbnailStorage(LocalContext.current),
-            modifier = Modifier,
+            modifier = Modifier.size(50.dp),
             contentScale = ContentScale.Crop,
             alignment = Alignment.Center,
             fallbackContent = {},

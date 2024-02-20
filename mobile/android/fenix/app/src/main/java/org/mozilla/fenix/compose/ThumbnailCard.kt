@@ -16,13 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
-import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -36,7 +34,6 @@ private const val FALLBACK_ICON_SIZE = 36
  *
  * @param url Url to display thumbnail for.
  * @param request [ImageLoadRequest] used to fetch the thumbnail bitmap.
- * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param modifier [Modifier] used to draw the image content.
  * @param backgroundColor [Color] used for the background of the favicon.
  * @param contentDescription Text used by accessibility services
@@ -48,7 +45,6 @@ private const val FALLBACK_ICON_SIZE = 36
 fun ThumbnailCard(
     url: String,
     request: ImageLoadRequest,
-    storage: ThumbnailStorage,
     modifier: Modifier = Modifier,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     contentDescription: String? = null,
@@ -61,8 +57,6 @@ fun ThumbnailCard(
     ) {
         ThumbnailImage(
             request = request,
-            storage = storage,
-            modifier = modifier,
             contentScale = contentScale,
             alignment = alignment,
         ) {
@@ -98,7 +92,6 @@ private fun ThumbnailCardPreview() {
         ThumbnailCard(
             url = "https://mozilla.com",
             request = ImageLoadRequest("123", THUMBNAIL_SIZE, false),
-            storage = ThumbnailStorage(LocalContext.current),
             modifier = Modifier
                 .size(THUMBNAIL_SIZE.dp)
                 .clip(RoundedCornerShape(8.dp)),

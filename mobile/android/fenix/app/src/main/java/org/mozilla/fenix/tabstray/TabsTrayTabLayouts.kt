@@ -33,7 +33,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.tabstray.TabGridItem
@@ -58,7 +57,6 @@ const val HEADER_ITEM_KEY = "header"
  * Top-level UI for displaying a list of tabs.
  *
  * @param tabs The list of [TabSessionState] to display.
- * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param displayTabsInGrid Whether the tabs should be displayed in a grid.
  * @param selectedTabId The ID of the currently selected tab.
  * @param selectionMode [TabsTrayState.Mode] indicating whether the Tabs Tray is in single selection
@@ -76,7 +74,6 @@ const val HEADER_ITEM_KEY = "header"
 @Composable
 fun TabLayout(
     tabs: List<TabSessionState>,
-    storage: ThumbnailStorage,
     displayTabsInGrid: Boolean,
     selectedTabId: String?,
     selectionMode: TabsTrayState.Mode,
@@ -102,7 +99,6 @@ fun TabLayout(
     if (displayTabsInGrid) {
         TabGrid(
             tabs = tabs,
-            storage = storage,
             selectedTabId = selectedTabId,
             selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
@@ -118,7 +114,6 @@ fun TabLayout(
     } else {
         TabList(
             tabs = tabs,
-            storage = storage,
             selectedTabId = selectedTabId,
             selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
@@ -139,7 +134,6 @@ fun TabLayout(
 @Composable
 private fun TabGrid(
     tabs: List<TabSessionState>,
-    storage: ThumbnailStorage,
     selectedTabId: String?,
     selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
@@ -213,7 +207,6 @@ private fun TabGrid(
                 TabGridItem(
                     tab = tab,
                     thumbnailSize = tabThumbnailSize,
-                    storage = storage,
                     isSelected = tab.id == selectedTabId,
                     multiSelectionEnabled = isInMultiSelectMode,
                     multiSelectionSelected = selectionMode.selectedTabs.contains(tab),
@@ -236,7 +229,6 @@ private fun TabGrid(
 @Composable
 private fun TabList(
     tabs: List<TabSessionState>,
-    storage: ThumbnailStorage,
     selectedTabId: String?,
     selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
@@ -308,7 +300,6 @@ private fun TabList(
                 TabListItem(
                     tab = tab,
                     thumbnailSize = tabThumbnailSize,
-                    storage = storage,
                     isSelected = tab.id == selectedTabId,
                     multiSelectionEnabled = isInMultiSelectMode,
                     multiSelectionSelected = selectionMode.selectedTabs.contains(tab),
@@ -339,7 +330,6 @@ private fun TabListPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
-                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[1].id,
                 selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = false,
@@ -367,7 +357,6 @@ private fun TabGridPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
-                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[0].id,
                 selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = false,
@@ -397,7 +386,6 @@ private fun TabGridSmallPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
-                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[0].id,
                 selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = true,
@@ -427,7 +415,6 @@ private fun TabGridMultiSelectPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
-                storage = ThumbnailStorage(LocalContext.current),
                 selectedTabId = tabs[0].id,
                 selectionMode = TabsTrayState.Mode.Select(selectedTabs.toSet()),
                 displayTabsInGrid = false,
