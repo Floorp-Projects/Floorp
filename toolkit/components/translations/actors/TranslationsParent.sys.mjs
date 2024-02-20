@@ -437,10 +437,8 @@ export class TranslationsParent extends JSWindowActorParent {
     browser.setAttribute("remoteType", "web");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("type", "content");
-    browser.setAttribute(
-      "src",
-      "chrome://global/content/translations/translations-engine.html"
-    );
+    // TODO(before landing) - This is a hack to get things working that should have a nice design.
+    browser.setAttribute("src", "chrome://global/content/ml/MLEngine.html");
     doc.documentElement.appendChild(browser);
 
     const actor = await actorPromise;
