@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.gamepad.non_standard_events.enabled",
- Exposed=Window, SecureContext]
+ Exposed=Window]
 interface GamepadAxisMoveEvent : GamepadEvent
 {
   constructor(DOMString type,
