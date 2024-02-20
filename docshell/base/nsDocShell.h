@@ -489,7 +489,8 @@ class nsDocShell final : public nsDocLoader,
   bool HasDocumentViewer() const { return !!mDocumentViewer; }
 
   static uint32_t ComputeURILoaderFlags(
-      mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType);
+      mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType,
+      bool aIsDocumentLoad = true);
 
   void SetLoadingSessionHistoryInfo(
       const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo,
