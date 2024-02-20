@@ -8,9 +8,15 @@ const Debugger = require("Debugger");
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  Reflect: "resource://gre/modules/reflect.sys.mjs",
-});
+if (!isWorker) {
+  ChromeUtils.defineESModuleGetters(
+    lazy,
+    {
+      Reflect: "resource://gre/modules/reflect.sys.mjs",
+    },
+    { global: "contextual" }
+  );
+}
 loader.lazyRequireGetter(
   this,
   ["isCommand"],

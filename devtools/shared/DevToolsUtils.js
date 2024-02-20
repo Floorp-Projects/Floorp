@@ -16,12 +16,18 @@ var {
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-  NetworkHelper:
-    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
-  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
-});
+if (!isWorker) {
+  ChromeUtils.defineESModuleGetters(
+    lazy,
+    {
+      FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+      NetworkHelper:
+        "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+      ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
+    },
+    { global: "contextual" }
+  );
+}
 
 // Native getters which are considered to be side effect free.
 ChromeUtils.defineLazyGetter(lazy, "sideEffectFreeGetters", () => {
@@ -459,7 +465,8 @@ DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
     return {};
   }
   return ChromeUtils.importESModule(
-    "resource://gre/modules/AppConstants.sys.mjs"
+    "resource://gre/modules/AppConstants.sys.mjs",
+    { global: "contextual" }
   ).AppConstants;
 });
 
@@ -508,8 +515,9 @@ Object.defineProperty(exports, "assert", {
 });
 
 DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
-  return ChromeUtils.importESModule("resource://gre/modules/NetUtil.sys.mjs")
-    .NetUtil;
+  return ChromeUtils.importESModule("resource://gre/modules/NetUtil.sys.mjs", {
+    global: "contextual",
+  }).NetUtil;
 });
 
 /**

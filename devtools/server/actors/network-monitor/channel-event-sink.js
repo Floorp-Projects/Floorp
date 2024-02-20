@@ -5,11 +5,12 @@
 "use strict";
 
 const { ComponentUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/ComponentUtils.sys.mjs"
+  "resource://gre/modules/ComponentUtils.sys.mjs",
+  { global: "contextual" }
 );
 
 /**
- * This is a nsIChannelEventSink implementation that monitors channel redirects and
+ * THIS is a nsIChannelEventSink implementation that monitors channel redirects and
  * informs the registered "collectors" about the old and new channels.
  */
 const SINK_CLASS_DESCRIPTION = "NetworkMonitor Channel Event Sink";

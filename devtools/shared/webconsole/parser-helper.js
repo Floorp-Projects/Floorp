@@ -5,9 +5,13 @@
 
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  Reflect: "resource://gre/modules/reflect.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    Reflect: "resource://gre/modules/reflect.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 /**
  * Gets a collection of parser methods for a specified source.

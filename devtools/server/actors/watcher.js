@@ -19,7 +19,8 @@ const { WatcherRegistry } = ChromeUtils.importESModule(
 );
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  { global: "contextual" }
 );
 const {
   SESSION_TYPES,

@@ -12,7 +12,8 @@ const {
 } = require("resource://devtools/server/devtools-server.js");
 const { getSystemInfo } = require("resource://devtools/shared/system.js");
 const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
+  "resource://gre/modules/AppConstants.sys.mjs",
+  { global: "contextual" }
 );
 
 exports.DeviceActor = class DeviceActor extends Actor {

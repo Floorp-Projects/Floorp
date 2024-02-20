@@ -30,9 +30,13 @@ loader.lazyGetter(this, "indexedDBForStorage", () => {
   }
 });
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 /**
  * An async method equivalent to setTimeout but using Promises
