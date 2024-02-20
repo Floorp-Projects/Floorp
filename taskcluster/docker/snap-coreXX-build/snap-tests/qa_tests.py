@@ -10,7 +10,7 @@ import tempfile
 import time
 
 from basic_tests import SnapTestsBase
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -267,22 +267,16 @@ class QATests(SnapTestsBase):
             )
         )
 
-        try:
-            self._wait.until(lambda d: page.is_displayed() is True)
-        except StaleElementReferenceException as ex:
-            self._logger.info("Stale element but who cares?: {}".format(ex))
-            time.sleep(2)
-
-        # self._wait.until(
-        #     lambda d: d.execute_script(
-        #         'return window.getComputedStyle(document.querySelector(".loadingInput.start"), "::after").getPropertyValue("visibility");'
-        #     )
-        #     == "hidden"
-        # )
+        self._wait.until(
+            lambda d: d.execute_script(
+                'return window.getComputedStyle(document.querySelector(".loadingInput.start"), "::after").getPropertyValue("visibility");'
+            )
+            != "visible"
+        )
 
         # PDF.js can take time to settle and we don't have a nice way to wait
         # for an event on it
-        time.sleep(2)
+        time.sleep(1)
         return page
 
     def pdf_go_to_page(self, page):
@@ -302,8 +296,8 @@ class QATests(SnapTestsBase):
         # Test basic rendering
         self.pdf_wait_div()
         self.pdf_select_zoom("1")
-        page_1 = self.pdf_get_page(1)
-        self.assert_rendering(exp["base"], page_1)
+        self.pdf_get_page(1)
+        self.assert_rendering(exp["base"], self._driver)
 
         # Navigating to page X, we know the PDF has 5 pages.
         rand_page = random.randint(1, 5)
@@ -423,6 +417,7 @@ class QATests(SnapTestsBase):
             )
         )
         action.drag_and_drop_by_offset(paragraph, 50, 10).perform()
+        time.sleep(0.75)
         self.assert_rendering(exp["select_text"], self._driver)
 
         # release select selection
