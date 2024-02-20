@@ -745,6 +745,16 @@ void nsGenericHTMLElement::AfterSetPopoverAttr() {
   }
 }
 
+void nsGenericHTMLElement::OnAttrSetButNotChanged(
+    int32_t aNamespaceID, nsAtom* aName, const nsAttrValueOrString& aValue,
+    bool aNotify) {
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::popovertarget) {
+    ClearExplicitlySetAttrElement(aName);
+  }
+  return nsGenericHTMLElementBase::OnAttrSetButNotChanged(aNamespaceID, aName,
+                                                          aValue, aNotify);
+}
+
 void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                         const nsAttrValue* aValue,
                                         const nsAttrValue* aOldValue,
@@ -763,7 +773,7 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
           NewRunnableMethod("nsGenericHTMLElement::AfterSetPopoverAttr", this,
                             &nsGenericHTMLElement::AfterSetPopoverAttr));
     } else if (aName == nsGkAtoms::popovertarget) {
-      ClearExplicitlySetAttrElement(nsGkAtoms::popovertarget);
+      ClearExplicitlySetAttrElement(aName);
     } else if (aName == nsGkAtoms::dir) {
       auto dir = Directionality::Ltr;
       // A boolean tracking whether we need to recompute our directionality.

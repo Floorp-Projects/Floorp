@@ -1723,8 +1723,7 @@ already_AddRefed<nsIHTMLCollection> Element::GetElementsByClassName(
 }
 
 Element* Element::GetAttrAssociatedElement(nsAtom* aAttr) const {
-  const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-  if (slots) {
+  if (const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
     nsWeakPtr weakAttrEl = slots->mExplicitlySetAttrElements.Get(aAttr);
     if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakAttrEl)) {
       // If reflectedTarget's explicitly set attr-element |attrEl| is
