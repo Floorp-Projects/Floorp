@@ -121,6 +121,8 @@ STATIC_ATOMS = [
     Atom("aria_activedescendant", "aria-activedescendant"),
     Atom("aria_atomic", "aria-atomic"),
     Atom("aria_autocomplete", "aria-autocomplete"),
+    Atom("aria_braillelabel", "aria-braillelabel"),
+    Atom("aria_brailleroledescription", "aria-brailleroledescription"),
     Atom("aria_busy", "aria-busy"),
     Atom("aria_checked", "aria-checked"),
     Atom("aria_controls", "aria-controls"),

@@ -21,6 +21,12 @@ interface mixin ARIAMixin {
   attribute DOMString? ariaAutoComplete;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
+  attribute DOMString? ariaBrailleLabel;
+
+  [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
+  attribute DOMString? ariaBrailleRoleDescription;
+
+  [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
   attribute DOMString? ariaBusy;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
