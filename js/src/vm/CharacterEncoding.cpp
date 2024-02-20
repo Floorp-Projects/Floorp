@@ -287,10 +287,7 @@ static bool InflateUTF8ToUTF16(JSContext* cx, const UTF8Chars& src,
       }
     } else {
       // Non-ASCII code unit.  Determine its length in bytes (n).
-      uint32_t n = 1;
-      while (v & (0x80 >> n)) {
-        n++;
-      }
+      uint32_t n = mozilla::CountLeadingZeroes32(~int8_t(src[i])) - 24;
 
 #define INVALID(report, arg, n2)                                    \
   do {                                                              \
