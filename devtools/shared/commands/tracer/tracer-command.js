@@ -6,13 +6,11 @@
 
 class TracerCommand {
   constructor({ commands }) {
-    this.#targetCommand = commands.targetCommand;
     this.#targetConfigurationCommand = commands.targetConfigurationCommand;
     this.#resourceCommand = commands.resourceCommand;
   }
 
   #resourceCommand;
-  #targetCommand;
   #targetConfigurationCommand;
   #isTracing = false;
 

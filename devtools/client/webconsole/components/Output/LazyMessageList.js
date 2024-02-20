@@ -158,10 +158,6 @@ class LazyMessageList extends Component {
   #cachedHeights;
   #scrollHandlerBinding;
 
-  get #maxIndex() {
-    return this.props.items.length - 1;
-  }
-
   get #overdrawHeight() {
     return this.props.scrollOverdrawCount * this.props.itemDefaultHeight;
   }

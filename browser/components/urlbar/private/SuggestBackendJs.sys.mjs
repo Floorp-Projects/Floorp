@@ -278,7 +278,6 @@ export class SuggestBackendJs extends BaseFeature {
   #config = {};
 
   #emitter = null;
-  #logger = null;
   #onSettingsSync = null;
 }
 
