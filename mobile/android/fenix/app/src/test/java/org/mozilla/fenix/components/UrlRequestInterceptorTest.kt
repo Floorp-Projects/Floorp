@@ -59,15 +59,21 @@ class UrlRequestInterceptorTest {
     fun `WHEN should intercept request is called THEN return the correct boolean value`() {
         val urlRequestInterceptor = getUrlRequestInterceptor()
 
-        assertFalse(
+        assertTrue(
             urlRequestInterceptor.shouldInterceptRequest(
-                uri = "https://getpocket.com",
+                uri = "https://www.google.com",
                 isSubframeRequest = false,
             ),
         )
-        assertFalse(
+        assertTrue(
             urlRequestInterceptor.shouldInterceptRequest(
-                uri = "https://www.google.com",
+                uri = "https://www.google.com/webhp",
+                isSubframeRequest = false,
+            ),
+        )
+        assertTrue(
+            urlRequestInterceptor.shouldInterceptRequest(
+                uri = "https://www.google.com/preferences",
                 isSubframeRequest = false,
             ),
         )
@@ -86,6 +92,13 @@ class UrlRequestInterceptorTest {
         assertTrue(
             urlRequestInterceptor.shouldInterceptRequest(
                 uri = "https://www.google.co.jp/search?q=red",
+                isSubframeRequest = false,
+            ),
+        )
+
+        assertFalse(
+            urlRequestInterceptor.shouldInterceptRequest(
+                uri = "https://getpocket.com",
                 isSubframeRequest = false,
             ),
         )
@@ -114,13 +127,24 @@ class UrlRequestInterceptorTest {
     }
 
     @Test
-    fun `WHEN a Google request is loaded THEN request is not intercepted`() {
+    fun `WHEN a Google request is loaded THEN request is intercepted`() {
         val uri = "https://www.google.com"
-        val response = getUrlRequestInterceptor().onLoadRequest(
-            uri = uri,
-        )
 
-        assertNull(response)
+        assertEquals(
+            RequestInterceptor.InterceptionResponse.Url(
+                url = uri,
+                flags = LoadUrlFlags.select(
+                    LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE,
+                    ALLOW_ADDITIONAL_HEADERS,
+                ),
+                additionalHeaders = mapOf(
+                    "X-Search-Subdivision" to "0",
+                ),
+            ),
+            getUrlRequestInterceptor().onLoadRequest(
+                uri = uri,
+            ),
+        )
     }
 
     @Test
