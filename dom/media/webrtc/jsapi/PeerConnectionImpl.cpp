@@ -85,7 +85,6 @@
 #include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCSctpTransportBinding.h"  // RTCSctpTransportState
 #include "mozilla/dom/RTCDtlsTransportBinding.h"  // RTCDtlsTransportState
-#include "mozilla/dom/RTCIceTransportBinding.h"   // RTCIceTransportState
 #include "mozilla/dom/RTCRtpReceiverBinding.h"
 #include "mozilla/dom/RTCRtpSenderBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -250,41 +249,19 @@ void PeerConnectionAutoTimer::UnregisterConnection(bool aContainedAV) {
 
 bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 
-// There is not presently an implementation of these for nsTHashMap :(
-inline void ImplCycleCollectionUnlink(
-    PeerConnectionImpl::RTCDtlsTransportMap& aMap) {
-  for (auto& tableEntry : aMap) {
-    ImplCycleCollectionUnlink(*tableEntry.GetModifiableData());
-  }
-  aMap.Clear();
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    PeerConnectionImpl::RTCDtlsTransportMap& aMap, const char* aName,
-    uint32_t aFlags = 0) {
-  for (auto& tableEntry : aMap) {
-    ImplCycleCollectionTraverse(aCallback, *tableEntry.GetModifiableData(),
-                                aName, aFlags);
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PeerConnectionImpl)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
   tmp->Close();
   tmp->BreakCycles();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(
-      mPCObserver, mWindow, mCertificate, mSTSThread, mReceiveStreams,
-      mOperations, mTransportIdToRTCDtlsTransport, mSctpTransport,
-      mLastStableSctpTransport, mLastStableSctpDtlsTransport, mKungFuDeathGrip)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
+                                  mSTSThread, mReceiveStreams, mOperations,
+                                  mSctpTransport, mKungFuDeathGrip)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
       mPCObserver, mWindow, mCertificate, mSTSThread, mReceiveStreams,
-      mOperations, mTransceivers, mTransportIdToRTCDtlsTransport,
-      mSctpTransport, mLastStableSctpTransport, mLastStableSctpDtlsTransport,
-      mKungFuDeathGrip)
+      mOperations, mTransceivers, mSctpTransport, mKungFuDeathGrip)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PeerConnectionImpl)
@@ -1084,7 +1061,7 @@ bool PeerConnectionImpl::CreatedSender(const dom::RTCRtpSender& aSender) const {
   return aSender.IsMyPc(this);
 }
 
-nsresult PeerConnectionImpl::MaybeInitializeDataChannel() {
+nsresult PeerConnectionImpl::InitializeDataChannel() {
   PC_AUTO_ENTER_API_CALL(false);
   CSFLogDebug(LOGTAG, "%s", __FUNCTION__);
 
@@ -1461,16 +1438,6 @@ void PeerConnectionImpl::UpdateNegotiationNeeded() {
         ErrorResult rv;
         mPCObserver->FireNegotiationNeededEvent(rv);
       }));
-}
-
-RefPtr<dom::RTCRtpTransceiver> PeerConnectionImpl::GetTransceiver(
-    const std::string& aTransceiverId) {
-  for (const auto& transceiver : mTransceivers) {
-    if (transceiver->GetJsepTransceiverId() == aTransceiverId) {
-      return transceiver;
-    }
-  }
-  return nullptr;
 }
 
 void PeerConnectionImpl::NotifyDataChannel(
@@ -2022,14 +1989,10 @@ nsresult PeerConnectionImpl::OnAlpnNegotiated(bool aPrivacyRequested) {
 
 void PeerConnectionImpl::OnDtlsStateChange(const std::string& aTransportId,
                                            TransportLayer::State aState) {
-  nsCString key(aTransportId.data(), aTransportId.size());
-  RefPtr<RTCDtlsTransport> dtlsTransport =
-      mTransportIdToRTCDtlsTransport.Get(key);
-  if (!dtlsTransport) {
-    return;
+  auto it = mTransportIdToRTCDtlsTransport.find(aTransportId);
+  if (it != mTransportIdToRTCDtlsTransport.end()) {
+    it->second->UpdateState(aState);
   }
-
-  dtlsTransport->UpdateState(aState);
   // Whenever the state of an RTCDtlsTransport changes or when the [[IsClosed]]
   // slot turns true, the user agent MUST update the connection state by
   // queueing a task that runs the following steps:
@@ -2061,9 +2024,9 @@ RTCPeerConnectionState PeerConnectionImpl::GetNewConnectionState() const {
   // Would use a bitset, but that requires lots of static_cast<size_t>
   // Oh well.
   std::set<RTCDtlsTransportState> statesFound;
-  std::set<RefPtr<RTCDtlsTransport>> transports(GetActiveTransports());
-  for (const auto& transport : transports) {
-    statesFound.insert(transport->State());
+  for (const auto& [id, dtlsTransport] : mTransportIdToRTCDtlsTransport) {
+    Unused << id;
+    statesFound.insert(dtlsTransport->State());
   }
 
   // failed 	The previous state doesn't apply, and either
@@ -2112,9 +2075,9 @@ RTCPeerConnectionState PeerConnectionImpl::GetNewConnectionState() const {
 bool PeerConnectionImpl::UpdateConnectionState() {
   auto newState = GetNewConnectionState();
   if (newState != mConnectionState) {
-    CSFLogInfo(LOGTAG, "%s: %d -> %d (%p)", __FUNCTION__,
-               static_cast<int>(mConnectionState), static_cast<int>(newState),
-               this);
+    CSFLogDebug(LOGTAG, "%s: %d -> %d (%p)", __FUNCTION__,
+                static_cast<int>(mConnectionState), static_cast<int>(newState),
+                this);
     mConnectionState = newState;
     if (mConnectionState != RTCPeerConnectionState::Closed) {
       return true;
@@ -2606,7 +2569,7 @@ PeerConnectionImpl::Close() {
     transceiver->Close();
   }
 
-  mTransportIdToRTCDtlsTransport.Clear();
+  mTransportIdToRTCDtlsTransport.clear();
 
   mQueuedIceCtxOperations.clear();
 
@@ -3001,25 +2964,18 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
           InvalidateLastReturnedParameters();
         }
 
-        if (aSdpType == dom::RTCSdpType::Offer &&
-            mSignalingState == RTCSignalingState::Stable) {
-          // If description is of type "offer" and
-          // connection.[[SignalingState]] is "stable" then for each
-          // transceiver in connection's set of transceivers, run the following
-          // steps:
-          SaveStateForRollback();
-        }
-
         // Section 4.4.1.5 Set the RTCSessionDescription:
         if (aSdpType == dom::RTCSdpType::Rollback) {
           // - step 4.5.10, type is rollback
-          RestoreStateForRollback();
+          RollbackRTCDtlsTransports();
         } else if (!(aRemote && aSdpType == dom::RTCSdpType::Offer)) {
           // - step 4.5.9 type is not rollback
           // - step 4.5.9.1 when remote is false
           // - step 4.5.9.2.13 when remote is true, type answer or pranswer
           // More simply: not rollback, and not for remote offers.
-          UpdateRTCDtlsTransports();
+          bool markAsStable = aSdpType == dom::RTCSdpType::Offer &&
+                              mSignalingState == RTCSignalingState::Stable;
+          UpdateRTCDtlsTransports(markAsStable);
         }
 
         // Did we just apply a local description?
@@ -3036,6 +2992,11 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
         }
 
         if (mJsepSession->GetState() == kJsepStateStable) {
+          if (aSdpType != dom::RTCSdpType::Rollback) {
+            // We need this initted for UpdateTransports
+            InitializeDataChannel();
+          }
+
           // If we're rolling back a local offer, we might need to remove some
           // transports, and stomp some MediaPipeline setup, but nothing further
           // needs to be done.
@@ -3110,10 +3071,6 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
         // Spec does not actually tell us to do this, but that is probably a
         // spec bug.
         // https://github.com/w3c/webrtc-pc/issues/2817
-        bool gatheringStateChanged = UpdateIceGatheringState();
-
-        bool iceConnectionStateChanged = UpdateIceConnectionState();
-
         bool connectionStateChanged = UpdateConnectionState();
 
         // This only gets populated for remote descriptions
@@ -3145,16 +3102,6 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
         RefPtr<PeerConnectionObserver> pcObserver(mPCObserver);
         if (signalingStateChanged) {
           pcObserver->OnStateChange(PCObserverStateType::SignalingState, jrv);
-        }
-
-        if (gatheringStateChanged) {
-          pcObserver->OnStateChange(PCObserverStateType::IceGatheringState,
-                                    jrv);
-        }
-
-        if (iceConnectionStateChanged) {
-          pcObserver->OnStateChange(PCObserverStateType::IceConnectionState,
-                                    jrv);
         }
 
         if (connectionStateChanged) {
@@ -3343,160 +3290,59 @@ void PeerConnectionImpl::SendLocalIceCandidateToContent(
 }
 
 void PeerConnectionImpl::IceConnectionStateChange(
-    const std::string& aTransportId, dom::RTCIceTransportState domState) {
-  // If connection.[[IsClosed]] is true, abort these steps.
+    dom::RTCIceConnectionState domState) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
-  CSFLogDebug(LOGTAG, "IceConnectionStateChange: %s %d (%p)",
-              aTransportId.c_str(), static_cast<int>(domState), this);
+  CSFLogDebug(LOGTAG, "%s: %d -> %d", __FUNCTION__,
+              static_cast<int>(mIceConnectionState),
+              static_cast<int>(domState));
 
-  // Let transport be the RTCIceTransport whose state is changing.
-  nsCString key(aTransportId.data(), aTransportId.size());
-  RefPtr<RTCDtlsTransport> dtlsTransport =
-      mTransportIdToRTCDtlsTransport.Get(key);
-  if (!dtlsTransport) {
-    return;
-  }
-  RefPtr<RTCIceTransport> transport = dtlsTransport->IceTransport();
-
-  if (domState == RTCIceTransportState::Closed) {
-    mTransportIdToRTCDtlsTransport.Remove(key);
-  }
-
-  // Let selectedCandidatePairChanged be false.
-  // TODO(bug 1307994)
-
-  // Let transportIceConnectionStateChanged be false.
-  bool transportIceConnectionStateChanged = false;
-
-  // Let connectionIceConnectionStateChanged be false.
-  bool connectionIceConnectionStateChanged = false;
-
-  // Let connectionStateChanged be false.
-  bool connectionStateChanged = false;
-
-  if (transport->State() == domState) {
+  if (domState == mIceConnectionState) {
+    // no work to be done since the states are the same.
+    // this can happen during ICE rollback situations.
     return;
   }
 
-  // If transport's RTCIceTransportState was changed, run the following steps:
+  mIceConnectionState = domState;
 
-  // Set transport.[[IceTransportState]] to the new indicated
-  // RTCIceTransportState.
-  transport->SetState(domState);
-
-  // Set transportIceConnectionStateChanged to true.
-  transportIceConnectionStateChanged = true;
-
-  // Set connection.[[IceConnectionState]] to the value of deriving a new state
-  // value as described by the RTCIceConnectionState enum.
-  if (UpdateIceConnectionState()) {
-    // If connection.[[IceConnectionState]] changed in the previous step, set
-    // connectionIceConnectionStateChanged to true.
-    connectionIceConnectionStateChanged = true;
+  // Would be nice if we had a means of converting one of these dom enums
+  // to a string that wasn't almost as much text as this switch statement...
+  switch (mIceConnectionState) {
+    case RTCIceConnectionState::New:
+      STAMP_TIMECARD(mTimeCard, "Ice state: new");
+      break;
+    case RTCIceConnectionState::Checking:
+      // For telemetry
+      mIceStartTime = TimeStamp::Now();
+      STAMP_TIMECARD(mTimeCard, "Ice state: checking");
+      break;
+    case RTCIceConnectionState::Connected:
+      STAMP_TIMECARD(mTimeCard, "Ice state: connected");
+      StartCallTelem();
+      break;
+    case RTCIceConnectionState::Completed:
+      STAMP_TIMECARD(mTimeCard, "Ice state: completed");
+      break;
+    case RTCIceConnectionState::Failed:
+      STAMP_TIMECARD(mTimeCard, "Ice state: failed");
+      break;
+    case RTCIceConnectionState::Disconnected:
+      STAMP_TIMECARD(mTimeCard, "Ice state: disconnected");
+      break;
+    case RTCIceConnectionState::Closed:
+      STAMP_TIMECARD(mTimeCard, "Ice state: closed");
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected mIceConnectionState!");
   }
 
-  // Set connection.[[ConnectionState]] to the value of deriving a new state
-  // value as described by the RTCPeerConnectionState enum.
-  if (UpdateConnectionState()) {
-    // If connection.[[ConnectionState]] changed in the previous step, set
-    // connectionStateChanged to true.
-    connectionStateChanged = true;
-  }
-
-  // If selectedCandidatePairChanged is true, fire an event named
-  // selectedcandidatepairchange at transport.
-  // TODO(bug 1307994)
-
-  // If transportIceConnectionStateChanged is true, fire an event named
-  // statechange at transport.
-  if (transportIceConnectionStateChanged) {
-    transport->FireStateChangeEvent();
-  }
-
+  bool connectionStateChanged = UpdateConnectionState();
   WrappableJSErrorResult rv;
   RefPtr<PeerConnectionObserver> pcObserver(mPCObserver);
-
-  // If connectionIceConnectionStateChanged is true, fire an event named
-  // iceconnectionstatechange at connection.
-  if (connectionIceConnectionStateChanged) {
-    pcObserver->OnStateChange(PCObserverStateType::IceConnectionState, rv);
-  }
-
-  // If connectionStateChanged is true, fire an event named
-  // connectionstatechange at connection.
+  pcObserver->OnStateChange(PCObserverStateType::IceConnectionState, rv);
   if (connectionStateChanged) {
     pcObserver->OnStateChange(PCObserverStateType::ConnectionState, rv);
   }
-}
-
-RTCIceConnectionState PeerConnectionImpl::GetNewIceConnectionState() const {
-  // closed 	The RTCPeerConnection object's [[IsClosed]] slot is true.
-  if (IsClosed()) {
-    return RTCIceConnectionState::Closed;
-  }
-
-  // Would use a bitset, but that requires lots of static_cast<size_t>
-  // Oh well.
-  std::set<RTCIceTransportState> statesFound;
-  std::set<RefPtr<RTCDtlsTransport>> transports(GetActiveTransports());
-  for (const auto& transport : transports) {
-    RefPtr<dom::RTCIceTransport> iceTransport = transport->IceTransport();
-    CSFLogWarn(LOGTAG, "GetNewIceConnectionState: %p %d", iceTransport.get(),
-               static_cast<int>(iceTransport->State()));
-    statesFound.insert(iceTransport->State());
-  }
-
-  // failed 	 None of the previous states apply and any RTCIceTransports are
-  // in the "failed" state.
-  if (statesFound.count(RTCIceTransportState::Failed)) {
-    return RTCIceConnectionState::Failed;
-  }
-
-  // disconnected 	 None of the previous states apply and any
-  // RTCIceTransports are in the "disconnected" state.
-  if (statesFound.count(RTCIceTransportState::Disconnected)) {
-    return RTCIceConnectionState::Disconnected;
-  }
-
-  // new 	 None of the previous states apply and all RTCIceTransports are
-  // in the "new" or "closed" state, or there are no transports.
-  if (!statesFound.count(RTCIceTransportState::Checking) &&
-      !statesFound.count(RTCIceTransportState::Completed) &&
-      !statesFound.count(RTCIceTransportState::Connected)) {
-    return RTCIceConnectionState::New;
-  }
-
-  // checking   None of the previous states apply and any RTCIceTransports are
-  // in the "new" or "checking" state.
-  if (statesFound.count(RTCIceTransportState::New) ||
-      statesFound.count(RTCIceTransportState::Checking)) {
-    return RTCIceConnectionState::Checking;
-  }
-
-  // completed  None of the previous states apply and all RTCIceTransports are
-  // in the "completed" or "closed" state.
-  if (!statesFound.count(RTCIceTransportState::Connected)) {
-    return RTCIceConnectionState::Completed;
-  }
-
-  // connected 	None of the previous states apply.
-  return RTCIceConnectionState::Connected;
-}
-
-bool PeerConnectionImpl::UpdateIceConnectionState() {
-  auto newState = GetNewIceConnectionState();
-  if (newState != mIceConnectionState) {
-    CSFLogInfo(LOGTAG, "%s: %d -> %d (%p)", __FUNCTION__,
-               static_cast<int>(mIceConnectionState),
-               static_cast<int>(newState), this);
-    mIceConnectionState = newState;
-    if (mIceConnectionState != RTCIceConnectionState::Closed) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 void PeerConnectionImpl::OnCandidateFound(const std::string& aTransportId,
@@ -3532,82 +3378,18 @@ void PeerConnectionImpl::OnCandidateFound(const std::string& aTransportId,
 }
 
 void PeerConnectionImpl::IceGatheringStateChange(
-    const std::string& aTransportId, dom::RTCIceGathererState state) {
-  // If connection.[[IsClosed]] is true, abort these steps.
+    dom::RTCIceGatheringState state) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
-  CSFLogWarn(LOGTAG, "IceGatheringStateChange: %s %d (%p)",
-             aTransportId.c_str(), static_cast<int>(state), this);
-
-  // Let transport be the RTCIceTransport for which candidate gathering
-  // began/finished.
-  nsCString key(aTransportId.data(), aTransportId.size());
-  RefPtr<RTCDtlsTransport> dtlsTransport =
-      mTransportIdToRTCDtlsTransport.Get(key);
-  if (!dtlsTransport) {
-    return;
-  }
-  RefPtr<RTCIceTransport> transport = dtlsTransport->IceTransport();
-
-  if (transport->GatheringState() == state) {
+  CSFLogDebug(LOGTAG, "%s %d", __FUNCTION__, static_cast<int>(state));
+  if (mIceGatheringState == state) {
     return;
   }
 
-  // Set transport.[[IceGathererState]] to gathering.
-  // or
-  // Set transport.[[IceGathererState]] to complete.
-  transport->SetGatheringState(state);
+  mIceGatheringState = state;
 
-  // Set connection.[[IceGatheringState]] to the value of deriving a new state
-  // value as described by the RTCIceGatheringState enum.
-  //
-  // Let connectionIceGatheringStateChanged be true if
-  // connection.[[IceGatheringState]] changed in the previous step, otherwise
-  // false.
-  bool gatheringStateChanged = UpdateIceGatheringState();
-
-  // Do not read or modify state beyond this point.
-
-  // Fire an event named gatheringstatechange at transport.
-  transport->FireGatheringStateChangeEvent();
-
-  // If connectionIceGatheringStateChanged is true, fire an event named
-  // icegatheringstatechange at connection.
-  if (gatheringStateChanged) {
-    // NOTE: If we're in the "complete" case, our JS code will fire a null
-    // icecandidate event after firing the icegatheringstatechange event.
-    // Fire an event named icecandidate using the RTCPeerConnectionIceEvent
-    // interface with the candidate attribute set to null at connection.
-    JSErrorResult rv;
-    mPCObserver->OnStateChange(PCObserverStateType::IceGatheringState, rv);
-  }
-}
-
-bool PeerConnectionImpl::UpdateIceGatheringState() {
-  // If connection.[[IsClosed]] is true, abort these steps.
-  if (IsClosed()) {
-    return false;
-  }
-
-  // Let newState be the value of deriving a new state value as
-  // described by the RTCIceGatheringState enum.
-  auto newState = GetNewIceGatheringState();
-
-  // If connection.[[IceGatheringState]] is equal to newState, abort
-  // these steps.
-  if (newState == mIceGatheringState) {
-    return false;
-  }
-
-  CSFLogInfo(LOGTAG, "UpdateIceGatheringState: %d -> %d (%p)",
-             static_cast<int>(mIceGatheringState), static_cast<int>(newState),
-             this);
-  // Set connection.[[IceGatheringState]] to newState.
-  mIceGatheringState = newState;
-
-  // Would be nice if we had a means of converting one of these dom
-  // enums to a string that wasn't almost as much text as this switch
-  // statement...
+  // Would be nice if we had a means of converting one of these dom enums
+  // to a string that wasn't almost as much text as this switch statement...
   switch (mIceGatheringState) {
     case RTCIceGatheringState::New:
       STAMP_TIMECARD(mTimeCard, "Ice gathering state: new");
@@ -3622,44 +3404,8 @@ bool PeerConnectionImpl::UpdateIceGatheringState() {
       MOZ_ASSERT_UNREACHABLE("Unexpected mIceGatheringState!");
   }
 
-  return true;
-}
-
-RTCIceGatheringState PeerConnectionImpl::GetNewIceGatheringState() const {
-  // new 	Any of the RTCIceTransports are in the "new" gathering state
-  // and none of the transports are in the "gathering" state, or there are no
-  // transports.
-
-  // NOTE! This derives the RTCIce**Gathering**State from the individual
-  // RTCIce**Gatherer**State of the transports. These are different enums.
-  // But they have exactly the same values, in the same order.
-  // ¯\_(ツ)_/¯
-  bool foundComplete = false;
-  std::set<RefPtr<RTCDtlsTransport>> transports(GetActiveTransports());
-  for (const auto& transport : transports) {
-    RefPtr<dom::RTCIceTransport> iceTransport = transport->IceTransport();
-    switch (iceTransport->GatheringState()) {
-      case RTCIceGathererState::New:
-        break;
-      case RTCIceGathererState::Gathering:
-        // gathering 	Any of the RTCIceTransports are in the "gathering"
-        // state.
-        return RTCIceGatheringState::Gathering;
-      case RTCIceGathererState::Complete:
-        foundComplete = true;
-        break;
-      case RTCIceGathererState::EndGuard_:
-        break;
-    }
-  }
-
-  if (!foundComplete) {
-    return RTCIceGatheringState::New;
-  }
-
-  // This could change depending on the outcome in
-  // https://github.com/w3c/webrtc-pc/issues/2914
-  return RTCIceGatheringState::Complete;
+  JSErrorResult rv;
+  mPCObserver->OnStateChange(PCObserverStateType::IceGatheringState, rv);
 }
 
 void PeerConnectionImpl::UpdateDefaultCandidate(
@@ -4132,8 +3878,11 @@ void PeerConnectionImpl::StunAddrsHandler::OnStunAddrsAvailable(
   pcw.impl()->mStunAddrs = addrs.Clone();
   pcw.impl()->mLocalAddrsRequestState = STUN_ADDR_REQUEST_COMPLETE;
   pcw.impl()->FlushIceCtxOperationQueueIfReady();
-  // If this fails, ICE cannot succeed, but we need to still go through the
-  // motions.
+  // If parent process returns 0 STUN addresses, change ICE connection
+  // state to failed.
+  if (!pcw.impl()->mStunAddrs.Length()) {
+    pcw.impl()->IceConnectionStateChange(dom::RTCIceConnectionState::Failed);
+  }
 }
 
 void PeerConnectionImpl::InitLocalAddrs() {
@@ -4203,118 +3952,107 @@ void PeerConnectionImpl::EnsureTransports(const JsepSession& aSession) {
   GatherIfReady();
 }
 
-void PeerConnectionImpl::UpdateRTCDtlsTransports() {
-  // We use mDataConnection below, make sure it is initted if necessary
-  MaybeInitializeDataChannel();
-
-  // Make sure that the SCTP transport is unset if we do not see a DataChannel.
-  // We'll restore this if we do see a DataChannel.
-  RefPtr<dom::RTCSctpTransport> oldSctp = mSctpTransport.forget();
-
+void PeerConnectionImpl::UpdateRTCDtlsTransports(bool aMarkAsStable) {
   mJsepSession->ForEachTransceiver(
-      [this, self = RefPtr<PeerConnectionImpl>(this),
-       oldSctp](const JsepTransceiver& jsepTransceiver) {
+      [this, self = RefPtr<PeerConnectionImpl>(this)](
+          const JsepTransceiver& jsepTransceiver) {
         std::string transportId = jsepTransceiver.mTransport.mTransportId;
-        RefPtr<dom::RTCDtlsTransport> dtlsTransport;
-        if (!transportId.empty()) {
-          nsCString key(transportId.data(), transportId.size());
-          dtlsTransport = mTransportIdToRTCDtlsTransport.GetOrInsertNew(
-              key, GetParentObject());
+        if (transportId.empty()) {
+          return;
         }
-
-        if (jsepTransceiver.GetMediaType() == SdpMediaSection::kApplication) {
-          // Spec says we only update the RTCSctpTransport when negotiation
-          // completes. This is probably a spec bug.
-          // https://github.com/w3c/webrtc-pc/issues/2898
-          if (!dtlsTransport || !mDataConnection) {
-            return;
-          }
-
-          // Why on earth does the spec use a floating point for this?
-          double maxMessageSize =
-              static_cast<double>(mDataConnection->GetMaxMessageSize());
-          Nullable<uint16_t> maxChannels;
-
-          if (!oldSctp) {
-            mSctpTransport = new RTCSctpTransport(
-                GetParentObject(), *dtlsTransport, maxMessageSize, maxChannels);
-          } else {
-            // Restore the SCTP transport we had before this function was called
-            oldSctp->SetTransport(*dtlsTransport);
-            oldSctp->SetMaxMessageSize(maxMessageSize);
-            oldSctp->SetMaxChannels(maxChannels);
-            mSctpTransport = oldSctp;
-          }
-        } else {
-          RefPtr<dom::RTCRtpTransceiver> domTransceiver =
-              GetTransceiver(jsepTransceiver.GetUuid());
-          if (domTransceiver) {
-            domTransceiver->SetDtlsTransport(dtlsTransport);
-          }
+        if (!mTransportIdToRTCDtlsTransport.count(transportId)) {
+          mTransportIdToRTCDtlsTransport.emplace(
+              transportId, new RTCDtlsTransport(GetParentObject()));
         }
       });
-}
-
-void PeerConnectionImpl::SaveStateForRollback() {
-  // This could change depending on the outcome in
-  // https://github.com/w3c/webrtc-pc/issues/2899
-  if (mSctpTransport) {
-    // We have to save both of these things, because the DTLS transport could
-    // change without the SCTP transport changing.
-    mLastStableSctpTransport = mSctpTransport;
-    mLastStableSctpDtlsTransport = mSctpTransport->Transport();
-  } else {
-    mLastStableSctpTransport = nullptr;
-    mLastStableSctpDtlsTransport = nullptr;
-  }
 
   for (auto& transceiver : mTransceivers) {
-    transceiver->SaveStateForRollback();
-  }
-}
-
-void PeerConnectionImpl::RestoreStateForRollback() {
-  for (auto& transceiver : mTransceivers) {
-    transceiver->RollbackToStableDtlsTransport();
-  }
-
-  mSctpTransport = mLastStableSctpTransport;
-  if (mSctpTransport) {
-    mSctpTransport->SetTransport(*mLastStableSctpDtlsTransport);
-  }
-}
-
-std::set<RefPtr<dom::RTCDtlsTransport>>
-PeerConnectionImpl::GetActiveTransports() const {
-  std::set<RefPtr<dom::RTCDtlsTransport>> result;
-  for (const auto& transceiver : mTransceivers) {
-    if (transceiver->GetDtlsTransport()) {
-      result.insert(transceiver->GetDtlsTransport());
+    std::string transportId = transceiver->GetTransportId();
+    if (transportId.empty()) {
+      continue;
+    }
+    if (mTransportIdToRTCDtlsTransport.count(transportId)) {
+      transceiver->SetDtlsTransport(mTransportIdToRTCDtlsTransport[transportId],
+                                    aMarkAsStable);
     }
   }
 
-  if (mSctpTransport && mSctpTransport->Transport()) {
-    result.insert(mSctpTransport->Transport());
+  // Spec says we only update the RTCSctpTransport when negotiation completes
+}
+
+void PeerConnectionImpl::RollbackRTCDtlsTransports() {
+  for (auto& transceiver : mTransceivers) {
+    transceiver->RollbackToStableDtlsTransport();
   }
-  return result;
+}
+
+void PeerConnectionImpl::RemoveRTCDtlsTransportsExcept(
+    const std::set<std::string>& aTransportIds) {
+  for (auto iter = mTransportIdToRTCDtlsTransport.begin();
+       iter != mTransportIdToRTCDtlsTransport.end();) {
+    if (!aTransportIds.count(iter->first)) {
+      iter = mTransportIdToRTCDtlsTransport.erase(iter);
+    } else {
+      ++iter;
+    }
+  }
 }
 
 nsresult PeerConnectionImpl::UpdateTransports(const JsepSession& aSession,
                                               const bool forceIceTcp) {
   std::set<std::string> finalTransports;
+  Maybe<std::string> sctpTransport;
   mJsepSession->ForEachTransceiver(
       [&, this, self = RefPtr<PeerConnectionImpl>(this)](
           const JsepTransceiver& transceiver) {
+        if (transceiver.GetMediaType() == SdpMediaSection::kApplication &&
+            transceiver.HasTransport()) {
+          sctpTransport = Some(transceiver.mTransport.mTransportId);
+        }
+
         if (transceiver.HasOwnTransport()) {
           finalTransports.insert(transceiver.mTransport.mTransportId);
           UpdateTransport(transceiver, forceIceTcp);
         }
       });
 
+  // clean up the unused RTCDtlsTransports
+  RemoveRTCDtlsTransportsExcept(finalTransports);
+
   mTransportHandler->RemoveTransportsExcept(finalTransports);
 
   for (const auto& transceiverImpl : mTransceivers) {
     transceiverImpl->UpdateTransport();
+  }
+
+  if (sctpTransport.isSome()) {
+    auto it = mTransportIdToRTCDtlsTransport.find(*sctpTransport);
+    if (it == mTransportIdToRTCDtlsTransport.end()) {
+      // What?
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+    }
+    if (!mDataConnection) {
+      // What?
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+    }
+    RefPtr<RTCDtlsTransport> dtlsTransport = it->second;
+    // Why on earth does the spec use a floating point for this?
+    double maxMessageSize =
+        static_cast<double>(mDataConnection->GetMaxMessageSize());
+    Nullable<uint16_t> maxChannels;
+
+    if (!mSctpTransport) {
+      mSctpTransport = new RTCSctpTransport(GetParentObject(), *dtlsTransport,
+                                            maxMessageSize, maxChannels);
+    } else {
+      mSctpTransport->SetTransport(*dtlsTransport);
+      mSctpTransport->SetMaxMessageSize(maxMessageSize);
+      mSctpTransport->SetMaxChannels(maxChannels);
+    }
+  } else {
+    mSctpTransport = nullptr;
   }
 
   return NS_OK;
@@ -4403,9 +4141,6 @@ nsresult PeerConnectionImpl::UpdateMediaPipelines() {
 
 void PeerConnectionImpl::StartIceChecks(const JsepSession& aSession) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mJsepSession->GetState() == kJsepStateStable);
-
-  auto transports = GetActiveTransports();
 
   if (!mCanRegisterMDNSHostnamesDirectly) {
     for (auto& pair : mMDNSHostnamesToRegister) {
@@ -4733,31 +4468,32 @@ std::string PeerConnectionImpl::GetTransportIdMatchingSendTrack(
 }
 
 void PeerConnectionImpl::SignalHandler::IceGatheringStateChange_s(
-    const std::string& aTransportId, dom::RTCIceGathererState aState) {
+    dom::RTCIceGatheringState aState) {
   ASSERT_ON_THREAD(mSTSThread);
+
   GetMainThreadSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction(__func__,
-                             [handle = mHandle, aTransportId, aState] {
+                             [handle = mHandle, aState] {
                                PeerConnectionWrapper wrapper(handle);
                                if (wrapper.impl()) {
                                  wrapper.impl()->IceGatheringStateChange(
-                                     aTransportId, aState);
+                                     aState);
                                }
                              }),
       NS_DISPATCH_NORMAL);
 }
 
 void PeerConnectionImpl::SignalHandler::IceConnectionStateChange_s(
-    const std::string& aTransportId, dom::RTCIceTransportState aState) {
+    dom::RTCIceConnectionState aState) {
   ASSERT_ON_THREAD(mSTSThread);
 
   GetMainThreadSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction(__func__,
-                             [handle = mHandle, aTransportId, aState] {
+                             [handle = mHandle, aState] {
                                PeerConnectionWrapper wrapper(handle);
                                if (wrapper.impl()) {
                                  wrapper.impl()->IceConnectionStateChange(
-                                     aTransportId, aState);
+                                     aState);
                                }
                              }),
       NS_DISPATCH_NORMAL);

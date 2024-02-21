@@ -27,13 +27,13 @@ enum RTCIceGatheringState {
 };
 
 enum RTCIceConnectionState {
-  "closed",
-  "failed",
-  "disconnected",
-  "new",
-  "checking",
-  "completed",
-  "connected"
+    "new",
+    "checking",
+    "connected",
+    "completed",
+    "failed",
+    "disconnected",
+    "closed"
 };
 
 enum RTCPeerConnectionState {
