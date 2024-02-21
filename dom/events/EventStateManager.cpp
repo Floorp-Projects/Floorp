@@ -3453,6 +3453,13 @@ void EventStateManager::PostHandleKeyboardEvent(
   }
 }
 
+static bool NeedsActiveContentChange(const WidgetMouseEvent* aMouseEvent) {
+  // If the mouse event is a synthesized mouse event due to a touch, do
+  // not set/clear the activation state. Element activation is handled by APZ.
+  return !aMouseEvent ||
+         aMouseEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+}
+
 nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                             WidgetEvent* aEvent,
                                             nsIFrame* aTargetFrame,
@@ -3696,7 +3703,9 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
       // XXX Why do we always set this is active?  Active window may be changed
       //     by a mousedown event listener.
-      SetActiveManager(this, activeContent);
+      if (NeedsActiveContentChange(mouseEvent)) {
+        SetActiveManager(this, activeContent);
+      }
     } break;
     case ePointerCancel:
     case ePointerUp: {
@@ -3724,10 +3733,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       PresShell::ReleaseCapturingContent();
 
       WidgetMouseEvent* mouseUpEvent = aEvent->AsMouseEvent();
-      // If the mouseup event is a synthesized mouse event due to a touch, do
-      // not clear the activation state. Element activation is handled by APZ.
-      if (!mouseUpEvent || mouseUpEvent->mInputSource !=
-                               dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+      if (NeedsActiveContentChange(mouseUpEvent)) {
         ClearGlobalActiveContent(this);
       }
       if (mouseUpEvent && EventCausesClickEvents(*mouseUpEvent)) {
