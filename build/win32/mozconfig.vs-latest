@@ -1,2 +1,0 @@
-. $topsrcdir/build/win32/mozconfig.vs2019
-. "$topsrcdir/build/mozconfig.clang-cl"

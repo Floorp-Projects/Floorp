@@ -2,7 +2,7 @@
 
 ac_add_options --target=i686-pc-windows-msvc
 
-. $topsrcdir/build/win32/mozconfig.vs-latest
+. $topsrcdir/build/mozconfig.clang-cl
 
 if test `uname -s` = Linux; then
 
