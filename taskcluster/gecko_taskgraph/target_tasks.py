@@ -731,6 +731,7 @@ def target_tasks_larch(full_task_graph, parameters, graph_config):
             "l10n" in task.kind
             or "msix" in task.kind
             or "android" in task.attributes.get("build_platform", "")
+            or (task.kind == "test" and "msix" in task.label)
         ):
             return False
         # otherwise reduce tests only
