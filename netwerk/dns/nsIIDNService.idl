@@ -43,12 +43,6 @@ interface nsIIDNService : nsISupports
     boolean isACE(in ACString input);
 
     /**
-     * Performs the unicode normalization needed for hostnames in IDN,
-     * for callers that want early normalization.
-     */
-    AUTF8String normalize(in AUTF8String input);
-
-    /**
      * Normalizes and converts a host to UTF-8 if the host is in the IDN
      * whitelist, otherwise converts it to ACE. This is useful for display
      * purposes and to ensure an encoding consistent with nsIURI::GetHost().

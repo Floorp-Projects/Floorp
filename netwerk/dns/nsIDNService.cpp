@@ -343,8 +343,7 @@ NS_IMETHODIMP nsIDNService::IsACE(const nsACString& input, bool* _retval) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIDNService::Normalize(const nsACString& input,
-                                      nsACString& output) {
+nsresult nsIDNService::Normalize(const nsACString& input, nsACString& output) {
   // protect against bogus input
   NS_ENSURE_TRUE(IsUtf8(input), NS_ERROR_UNEXPECTED);
 

@@ -98,6 +98,8 @@ class nsIDNService final : public nsIIDNService {
   nsresult ACEtoUTF8(const nsACString& input, nsACString& _retval,
                      stringPrepFlag flag);
 
+  nsresult Normalize(const nsACString& input, nsACString& output);
+
   void prefsChanged(const char* pref);
 
   static void PrefChanged(const char* aPref, void* aSelf) {
