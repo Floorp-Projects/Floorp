@@ -331,7 +331,7 @@
 
     <string name="preference_performance_block_javascript">JavaScript’i engelle</string>
     <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
-    <string name="preference_performance_block_javascript_summary">Sayfaları daha hızlı yüklenebilir ama sorun da çıkarabilirler</string>
+    <string name="preference_performance_block_javascript_summary">Sayfalar daha hızlı yüklenebilir ama sorun da çıkarabilirler</string>
 
     <!-- This preference does not set Focus as the default browser but instead links to Android's
      "default apps" settings screen or if not supported by this Android version to a SUMO page describing
@@ -624,7 +624,7 @@
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
-    <string name="your_rights_content3"><![CDATA[Mozilla Foundation’ın tescilli markaları olan Mozilla, Firefox, %1$s adları ve logoları da dahil olmak üzere, tescilli markalarımızın hakları ve lisansları sizinle paylaşılmamaktadır. Daha fazla bilgi almak isterseniz <a href="%2$s">buraya</a> bakabilirsiniz.]]></string>
+    <string name="your_rights_content3"><![CDATA[Mozilla Vakfı’nın tescilli markaları olan Mozilla, Firefox, %1$s adları ve logoları da dahil olmak üzere, tescilli markalarımızın hakları ve lisansları sizinle paylaşılmamaktadır. Daha fazla bilgi almak isterseniz <a href="%2$s">buraya</a> bakabilirsiniz.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
@@ -876,7 +876,7 @@
 
     <!-- Description for the prompt to enable search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="enable_search_suggestion_description">Arama önerileri alabilmeniz için %1$s’un adres çubuğuna yazdığınız şeyleri seçtiğiniz arama motoruna göndermesi gerekir.</string>
+    <string name="enable_search_suggestion_description"> Arama önerileri alabilmeniz için %1$s’un adres çubuğuna yazdığınız şeyleri seçtiğiniz arama motoruna göndermesi gerekir.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Hayır</string>
