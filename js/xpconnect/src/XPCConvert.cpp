@@ -250,27 +250,18 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
       // almost always ASCII, so the inexact allocations below
       // should be fine.
 
-      if (IsUtf8Latin1(*utf8String)) {
-        using UniqueLatin1Chars =
-            js::UniquePtr<JS::Latin1Char[], JS::FreePolicy>;
-
-        UniqueLatin1Chars buffer(static_cast<JS::Latin1Char*>(
-            JS_string_malloc(cx, allocLen.value())));
-        if (!buffer) {
+      // Is the string buffer is already valid latin1 (i.e. it is ASCII).
+      //
+      // NOTE: XPCStringConvert::UTF8ToJSVal cannot be used here because
+      //       it requires valid UTF-8 sequence.
+      if (mozilla::IsAscii(*utf8String)) {
+        nsStringBuffer* buf;
+        if (!XPCStringConvert::Latin1ToJSVal(cx, *utf8String, &buf, d)) {
           return false;
         }
-
-        size_t written = LossyConvertUtf8toLatin1(
-            *utf8String, Span(reinterpret_cast<char*>(buffer.get()), len));
-        buffer[written] = 0;
-
-        // written can never exceed len, so the truncation is OK.
-        JSString* str = JS_NewLatin1String(cx, std::move(buffer), written);
-        if (!str) {
-          return false;
+        if (buf) {
+          buf->AddRef();
         }
-
-        d.setString(str);
         return true;
       }
 
@@ -670,24 +661,7 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         return true;
       }
 
-      JSLinearString* linear = JS_EnsureLinearString(cx, str);
-      if (!linear) {
-        return false;
-      }
-
-      size_t utf8Length = JS::GetDeflatedUTF8StringLength(linear);
-      if (!rs->SetLength(utf8Length, fallible)) {
-        if (pErr) {
-          *pErr = NS_ERROR_OUT_OF_MEMORY;
-        }
-        return false;
-      }
-
-      mozilla::DebugOnly<size_t> written = JS::DeflateStringToUTF8Buffer(
-          linear, mozilla::Span(rs->BeginWriting(), utf8Length));
-      MOZ_ASSERT(written == utf8Length);
-
-      return true;
+      return AssignJSString(cx, *rs, str);
     }
 
     case nsXPTType::T_CSTRING: {
