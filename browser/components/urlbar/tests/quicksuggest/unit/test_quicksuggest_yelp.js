@@ -60,6 +60,7 @@ add_task(async function basic() {
       query: "ramen",
       expected: {
         url: "https://www.yelp.com/search?find_desc=ramen&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=ramen",
         displayUrl:
           "yelp.com/search?find_desc=ramen&find_loc=Yokohama,+Kanagawa",
         title: "ramen in Yokohama, Kanagawa",
@@ -86,6 +87,7 @@ add_task(async function basic() {
       query: "ramen",
       expected: {
         url: "https://www.yelp.com/search?find_desc=ramen&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=ramen",
         displayUrl:
           "yelp.com/search?find_desc=ramen&find_loc=Yokohama,+Kanagawa",
         title: "ramen in Yokohama, Kanagawa",
@@ -111,6 +113,7 @@ add_task(async function basic() {
       query: "best ra",
       expected: {
         url: "https://www.yelp.com/search?find_desc=best+ramen&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=best+ramen",
         displayUrl:
           "yelp.com/search?find_desc=best+ramen&find_loc=Yokohama,+Kanagawa",
         title: "best ramen in Yokohama, Kanagawa",
@@ -121,6 +124,7 @@ add_task(async function basic() {
       query: "ab",
       expected: {
         url: "https://www.yelp.com/search?find_desc=ab&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=ab",
         displayUrl: "yelp.com/search?find_desc=ab&find_loc=Yokohama,+Kanagawa",
         title: "ab in Yokohama, Kanagawa",
       },
@@ -149,6 +153,7 @@ add_task(async function basic() {
       query: "along",
       expected: {
         url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
         displayUrl:
           "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
         title: "alongerkeyword in Yokohama, Kanagawa",
@@ -168,6 +173,7 @@ add_task(async function basic() {
       showLessFrequentlyCount: 1,
       expected: {
         url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
         displayUrl:
           "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
         title: "alongerkeyword in Yokohama, Kanagawa",
@@ -187,6 +193,7 @@ add_task(async function basic() {
       showLessFrequentlyCount: 2,
       expected: {
         url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
         displayUrl:
           "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
         title: "alongerkeyword in Yokohama, Kanagawa",
@@ -443,6 +450,108 @@ add_task(async function yelpSuggestPriority() {
   });
 });
 
+// Tests the "Not relevant" command: a dismissed suggestion shouldn't be added.
+add_task(async function notRelevant() {
+  let result = makeExpectedResult({
+    url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+    title: "ramen in tokyo",
+  });
+
+  info("Triggering the 'Not relevant' command");
+  QuickSuggest.getFeature("YelpSuggestions").handleCommand(
+    {
+      controller: { removeResult() {} },
+    },
+    result,
+    "not_relevant"
+  );
+  await QuickSuggest.blockedSuggestions._test_readyPromise;
+
+  Assert.ok(
+    await QuickSuggest.blockedSuggestions.has(result.payload.originalUrl),
+    "The result's URL should be blocked"
+  );
+
+  info("Doing search for blocked suggestion");
+  await check_results({
+    context: createContext("ramen in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  info("Doing search for a suggestion that wasn't blocked");
+  await check_results({
+    context: createContext("alongerkeyword in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=tokyo",
+        title: "alongerkeyword in tokyo",
+      }),
+    ],
+  });
+
+  info("Clearing blocked suggestions");
+  await QuickSuggest.blockedSuggestions.clear();
+
+  info("Doing search for unblocked suggestion");
+  await check_results({
+    context: createContext("ramen in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [result],
+  });
+});
+
+// Tests the "Not interested" command: all Pocket suggestions should be disabled
+// and not added anymore.
+add_tasks_with_rust(async function notInterested() {
+  let result = makeExpectedResult({
+    url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+    title: "ramen in tokyo",
+  });
+
+  info("Triggering the 'Not interested' command");
+  QuickSuggest.getFeature("YelpSuggestions").handleCommand(
+    {
+      controller: { removeResult() {} },
+    },
+    result,
+    "not_interested"
+  );
+
+  Assert.ok(
+    !UrlbarPrefs.get("suggest.yelp"),
+    "Yelp suggestions should be disabled"
+  );
+
+  info("Doing search for the suggestion the command was used on");
+  await check_results({
+    context: createContext("ramen in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  info("Doing search for another Pocket suggestion");
+  await check_results({
+    context: createContext("alongerkeyword in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  UrlbarPrefs.clear("suggest.yelp");
+  await QuickSuggestTestUtils.forceSync();
+});
+
 // The `Yelp` Rust provider should be passed to the Rust component when
 // querying depending on whether Yelp suggestions are enabled.
 add_task(async function rustProviders() {
@@ -474,6 +583,7 @@ function makeExpectedResult(expected) {
   const utmParameters = "&utm_medium=partner&utm_source=mozilla";
 
   let url = expected.url + utmParameters;
+  let originalUrl = expected.originalUrl ?? expected.url;
   let displayUrl =
     (expected.displayUrl ??
       expected.url.replace(/^https:\/\/www[.]/, "").replace("%20", " ")) +
@@ -491,6 +601,7 @@ function makeExpectedResult(expected) {
       shouldShowUrl: true,
       bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
       url,
+      originalUrl,
       title: expected.title,
       displayUrl,
       icon: null,
