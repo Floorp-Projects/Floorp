@@ -1535,3 +1535,16 @@ interface TestPrefChromeOnlySCFuncConstructorForInterface {
   // in the generated constructor.
   constructor();
 };
+
+typedef (TestCallback or GrandparentDict) TestCallbackDictUnion;
+typedef (GrandparentDict or TestCallback) TestDictCallbackUnion;
+
+[Exposed=Window]
+interface TestCallbackDictUnionOverload {
+  undefined overload1(boolean arg);
+  undefined overload1(TestCallback arg);
+  undefined overload1(optional GrandparentDict arg = {});
+  undefined overload2(boolean arg);
+  undefined overload2(optional GrandparentDict arg = {});
+  undefined overload2(TestCallback arg);
+};

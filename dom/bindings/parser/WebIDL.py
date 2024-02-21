@@ -3032,6 +3032,9 @@ class IDLRecordType(IDLParametrizedType):
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
+        if other.isCallback():
+            # Let other determine if it's a LegacyTreatNonObjectAsNull callback
+            return other.isDistinguishableFrom(self)
         return (
             other.isPrimitive()
             or other.isString()
@@ -3490,7 +3493,7 @@ class IDLWrapperType(IDLType):
                 or other.isSequence()
                 or other.isRecord()
             )
-        if self.isDictionary() and (other.nullable() or other.isUndefined()):
+        if self.isDictionary() and other.nullable():
             return False
         if (
             other.isPrimitive()
@@ -3499,28 +3502,51 @@ class IDLWrapperType(IDLType):
             or other.isSequence()
         ):
             return True
-        if self.isDictionary():
+
+        # If this needs to handle other dictionary-like types we probably need
+        # some additional checks first.
+        assert self.isDictionaryLike() == (
+            self.isDictionary() or self.isCallbackInterface()
+        )
+        if self.isDictionaryLike():
+            if other.isCallback():
+                # Let other determine if it's a LegacyTreatNonObjectAsNull callback
+                return other.isDistinguishableFrom(self)
+
+            assert (
+                other.isNonCallbackInterface()
+                or other.isAny()
+                or other.isUndefined()
+                or other.isObject()
+                or other.isDictionaryLike()
+            )
+            # At this point, dictionary-like (for 'self') and interface-like
+            # (for 'other') are the only two that are distinguishable.
+            # any is the union of all non-union types, so it's not distinguishable
+            # from other unions (because it is a union itself), or from all
+            # non-union types (because it has all of them as its members).
             return other.isNonCallbackInterface()
 
-        assert self.isInterface()
-        if other.isInterface():
+        assert self.isNonCallbackInterface()
+
+        if other.isUndefined() or other.isDictionaryLike() or other.isCallback():
+            return True
+
+        if other.isNonCallbackInterface():
             if other.isSpiderMonkeyInterface():
                 # Just let |other| handle things
                 return other.isDistinguishableFrom(self)
+
             assert self.isGeckoInterface() and other.isGeckoInterface()
             if self.inner.isExternal() or other.unroll().inner.isExternal():
                 return self != other
-            return len(
-                self.inner.interfacesBasedOnSelf
-                & other.unroll().inner.interfacesBasedOnSelf
-            ) == 0 and (self.isNonCallbackInterface() or other.isNonCallbackInterface())
-        if (
-            other.isUndefined()
-            or other.isDictionary()
-            or other.isCallback()
-            or other.isRecord()
-        ):
-            return self.isNonCallbackInterface()
+            return (
+                len(
+                    self.inner.interfacesBasedOnSelf
+                    & other.unroll().inner.interfacesBasedOnSelf
+                )
+                == 0
+            )
 
         # Not much else |other| can be.
         # any is the union of all non-union types, so it's not distinguishable
@@ -6067,6 +6093,9 @@ class IDLCallbackType(IDLType):
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
+        # Callbacks without `LegacyTreatNonObjectAsNull` are distinguishable from Dictionary likes
+        if other.isDictionaryLike():
+            return not self.callback._treatNonObjectAsNull
         return (
             other.isUndefined()
             or other.isPrimitive()
