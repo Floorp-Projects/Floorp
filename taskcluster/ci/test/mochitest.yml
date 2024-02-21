@@ -783,8 +783,8 @@ mochitest-media:
                     default: []
             media-gpu:
                 by-test-platform:
-                    .*hw-ref.*: []
-                    (macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central', 'mozilla-beta']
+                    windows11.*hw-ref.*: ['autoland', 'mozilla-central', 'mozilla-beta']
+                    (macosx.*64)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central', 'mozilla-beta']
                     default: []
                     # TODO : add Android, it hasn't supported 'tags'
                     # TODO : add Linux, it would crash on gfxFeature.cpp:180
