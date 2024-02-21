@@ -353,9 +353,7 @@ void APZEventState::ProcessTouchEvent(
       }
       [[fallthrough]];
     case eTouchCancel:
-      if (mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick)) {
-        mEndTouchIsClick = false;
-      }
+      mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick);
       [[fallthrough]];
     case eTouchMove: {
       if (!mReceivedNonTouchStart) {
@@ -535,9 +533,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
     }
     case APZStateChange::eEndTouch: {
       mEndTouchIsClick = aArg;
-      if (mActiveElementManager->HandleTouchEnd(mEndTouchIsClick)) {
-        mEndTouchIsClick = false;
-      }
+      mActiveElementManager->HandleTouchEnd();
       break;
     }
   }

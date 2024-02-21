@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/EnumSet.h"
 
 namespace mozilla {
 
@@ -58,12 +57,12 @@ class ActiveElementManager final {
    * Handle a touch-end or touch-cancel event.
    * @param aWasClick whether the touch was a click
    */
-  bool HandleTouchEndEvent(bool aWasClick);
+  void HandleTouchEndEvent(bool aWasClick);
   /**
    * Handle a touch-end state notification from APZ. This notification may be
    * delayed until after touch listeners have responded to the APZ.
    */
-  bool HandleTouchEnd(bool aWasClick);
+  void HandleTouchEnd();
   /**
    * Possibly clear active element sate in response to a single tap.
    */
@@ -88,21 +87,6 @@ class ActiveElementManager final {
    * SetTargetElement() to be called in either order.
    */
   bool mCanBePanSet;
-
-  bool mSingleTapBeforeActivation;
-
-  enum class TouchEndState : uint8_t {
-    GotTouchEndNotification,
-    GotTouchEndEvent,
-  };
-  using TouchEndStates = EnumSet<TouchEndState>;
-
-  /**
-   * A flag tracks whether `APZStateChange::eEndTouch` notification has arrived
-   * and whether `eTouchEnd` event has arrived.
-   */
-  TouchEndStates mTouchEndState;
-
   /**
    * A task for calling SetActive() after a timeout.
    */
@@ -119,7 +103,6 @@ class ActiveElementManager final {
   void ResetTouchBlockState();
   void SetActiveTask(const nsCOMPtr<dom::Element>& aTarget);
   void CancelTask();
-  bool MaybeChangeActiveState(bool aWasClick);
 };
 
 }  // namespace layers
