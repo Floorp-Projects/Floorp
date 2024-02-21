@@ -19,3 +19,5 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 XPCSHELL_TESTS_MANIFESTS += [
     "unit/xpcshell.toml",
 ]
+
+MARIONETTE_MANIFESTS += ["marionette/manifest.toml"]
