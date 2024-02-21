@@ -128,9 +128,9 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         val downloadID = intent.getStringExtra(EXTRA_DOWNLOAD_ID) ?: ""
         val download = store.state.downloads[downloadID]
         val downloadStatus = intent.getSerializableExtraCompat(EXTRA_DOWNLOAD_STATUS, Status::class.java)
-            as Status
+            as Status?
 
-        if (download != null) {
+        if (download != null && downloadStatus != null) {
             onDownloadStopped(download, downloadID, downloadStatus)
         }
     }

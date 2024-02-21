@@ -27,6 +27,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -92,6 +93,30 @@ class FetchDownloadManagerTest {
         shadowOf(getMainLooper()).idle()
 
         assertTrue(downloadStopped)
+    }
+
+    @Test
+    fun `sending an ACTION_DOWNLOAD_COMPLETE intent without an EXTRA_DOWNLOAD_STATUS should not crash`() {
+        var downloadStopped = false
+
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadStopped = true }
+
+        grantPermissions()
+
+        assertTrue(store.state.downloads.isEmpty())
+        val id = downloadManager.download(download)!!
+        store.waitUntilIdle()
+        assertEquals(download, store.state.downloads[download.id])
+
+        // Excluding the EXTRA_DOWNLOAD_STATUS
+        val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
+        intent.putExtra(EXTRA_DOWNLOAD_ID, id)
+
+        testContext.sendBroadcast(intent)
+
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(downloadStopped)
     }
 
     @Test
