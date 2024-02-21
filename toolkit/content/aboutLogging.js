@@ -74,7 +74,7 @@ const gOsSpecificLoggingPresets = (() => {
 const gLoggingPresets = {
   networking: {
     modules:
-      "timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5",
+      "timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5,EarlyHint:5",
     l10nIds: {
       label: "about-logging-preset-networking-label",
       description: "about-logging-preset-networking-description",
