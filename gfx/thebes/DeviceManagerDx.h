@@ -6,8 +6,6 @@
 #ifndef mozilla_gfx_thebes_DeviceManagerDx_h
 #define mozilla_gfx_thebes_DeviceManagerDx_h
 
-#include <vector>
-
 #include "gfxPlatform.h"
 #include "gfxTelemetry.h"
 #include "gfxTypes.h"
@@ -89,9 +87,6 @@ class DeviceManagerDx final {
   // find the IDXGIOutput with a description.Monitor matching
   // 'monitor'; returns false if not found or some error occurred.
   bool GetOutputFromMonitor(HMONITOR monitor, RefPtr<IDXGIOutput>* aOutOutput);
-
-  void PostUpdateMonitorInfo();
-  bool SystemHDREnabled();
 
   // Check if the current adapter supports hardware stretching
   void CheckHardwareStretchingSupport(HwStretchingSupport& aRv);
@@ -177,9 +172,6 @@ class DeviceManagerDx final {
   bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
       MOZ_REQUIRES(mDeviceLock);
 
-  void UpdateMonitorInfo();
-  std::vector<DXGI_OUTPUT_DESC1> GetOutputDescs();
-
  private:
   static StaticAutoPtr<DeviceManagerDx> sInstance;
 
@@ -206,8 +198,6 @@ class DeviceManagerDx final {
   bool mCompositorDeviceSupportsVideo MOZ_GUARDED_BY(mDeviceLock);
   Maybe<D3D11DeviceStatus> mDeviceStatus MOZ_GUARDED_BY(mDeviceLock);
   Maybe<DeviceResetReason> mDeviceResetReason MOZ_GUARDED_BY(mDeviceLock);
-  RefPtr<Runnable> mUpdateMonitorInfoRunnable MOZ_GUARDED_BY(mDeviceLock);
-  Maybe<bool> mSystemHdrEnabled MOZ_GUARDED_BY(mDeviceLock);
 
   nsModuleHandle mDirectDrawDLL;
   RefPtr<IDirectDraw7> mDirectDraw;

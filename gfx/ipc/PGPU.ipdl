@@ -79,7 +79,6 @@ parent:
   async UpdateVar(GfxVarUpdate var);
 
   async PreferenceUpdate(Pref pref);
-  async ScreenInformationChanged();
 
   // Create a new content-process compositor bridge.
   async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint, ContentParentId childId, uint32_t aNamespace);
