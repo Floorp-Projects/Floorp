@@ -383,15 +383,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   bool exceptionHandlerIsSet = false;
   if (!CrashReporter::IsDummy()) {
-#if defined(XP_WIN)
-    if (aArgc < 1) {
-      return NS_ERROR_FAILURE;
-    }
-    // Pop the first argument, this is used by the WER runtime exception module
-    // which reads it from the command-line so we can just discard it here.
-    --aArgc;
-#endif
-
     if (aArgc < 1) return NS_ERROR_FAILURE;
     const char* const crashReporterArg = aArgv[--aArgc];
 
