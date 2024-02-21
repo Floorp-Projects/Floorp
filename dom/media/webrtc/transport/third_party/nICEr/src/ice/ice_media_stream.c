@@ -80,6 +80,7 @@ int nr_ice_media_stream_create(nr_ice_ctx *ctx,const char *label,const char *ufr
     stream->component_ct=components;
     stream->ice_state = NR_ICE_MEDIA_STREAM_UNPAIRED;
     stream->obsolete = 0;
+    stream->actually_started_checking = 0;
     stream->r2l_user = 0;
     stream->l2r_user = 0;
     stream->flags = ctx->flags;
@@ -177,8 +178,20 @@ int nr_ice_media_stream_initialize(nr_ice_ctx *ctx, nr_ice_media_stream *stream)
       comp=STAILQ_NEXT(comp,entry);
     }
 
+    if (!nr_ice_media_stream_is_done_gathering(stream) && ctx->gather_handler &&
+        ctx->gather_handler->vtbl->stream_gathering) {
+      ctx->gather_handler->vtbl->stream_gathering(ctx->gather_handler->obj,
+                                                  stream);
+    }
+
     _status=0;
   abort:
+    if (_status) {
+      if (ctx->gather_handler && ctx->gather_handler->vtbl->stream_gathered) {
+        ctx->gather_handler->vtbl->stream_gathered(ctx->gather_handler->obj,
+                                                   stream);
+      }
+    }
     return(_status);
   }
 
@@ -413,6 +426,19 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
 
     if(pair){
       nr_ice_candidate_pair_start(pair->pctx,pair); /* Ignore failures */
+
+      /* stream->ice_state goes to checking when we decide that it is ok to
+       * start checking, which can happen before we get remote candidates. We
+       * want to fire this event when we _actually_ start sending checks. */
+      if (!stream->actually_started_checking) {
+        stream->actually_started_checking = 1;
+        if (stream->pctx->handler &&
+            stream->pctx->handler->vtbl->stream_checking) {
+          stream->pctx->handler->vtbl->stream_checking(
+              stream->pctx->handler->obj, stream->local_stream);
+        }
+      }
+
       NR_ASYNC_TIMER_SET(timer_val,nr_ice_media_stream_check_timer_cb,cb_arg,&stream->timer);
     }
     else {
@@ -729,6 +755,11 @@ void nr_ice_media_stream_set_disconnected(nr_ice_media_stream *stream, int disco
 
     if (disconnected == NR_ICE_MEDIA_STREAM_DISCONNECTED) {
       if (!stream->local_stream->obsolete) {
+        if (stream->pctx->handler &&
+            stream->pctx->handler->vtbl->stream_disconnected) {
+          stream->pctx->handler->vtbl->stream_disconnected(
+              stream->pctx->handler->obj, stream->local_stream);
+        }
         nr_ice_peer_ctx_disconnected(stream->pctx);
       }
     } else {

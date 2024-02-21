@@ -72,6 +72,7 @@ struct nr_ice_media_stream_ {
    * processing. If this stream is connected already, traffic can continue to
    * flow for a limited time while the new stream gets ready. */
   int obsolete;
+  int actually_started_checking;
 
 #define NR_ICE_MEDIA_STREAM_UNPAIRED           1
 #define NR_ICE_MEDIA_STREAM_CHECKS_FROZEN      2
