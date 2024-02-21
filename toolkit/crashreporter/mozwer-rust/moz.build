@@ -1,6 +1,7 @@
 RustLibrary("mozwer_s")
 
 OS_LIBS += [
+    "advapi32",
     "dbghelp",
     "kernel32",
     "ntdll",
