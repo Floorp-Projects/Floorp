@@ -434,7 +434,7 @@ run-sequentially = "node server exceptions dont replay well"
 run-sequentially = "node server exceptions dont replay well"
 
 ["test_channel_close.js"]
-skip-if = ["os == 'win' && socketprocess_networking && !debug"]
+skip-if = ["socketprocess_networking"]
 
 ["test_channel_long_domain.js"]
 
