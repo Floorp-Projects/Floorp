@@ -13,7 +13,7 @@ async function run_test() {
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_PARTIAL_MAR, false);
-  await runHelperLockFile(gTestFiles[2]);
+  await runHelperLockFile(getTestFileByName("searchpluginspng1.png"));
   await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   // Files aren't checked after staging since this test locks a file which

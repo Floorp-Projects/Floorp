@@ -15,10 +15,8 @@ async function run_test() {
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
-  await runHelperFileInUse(
-    gTestFiles[13].relPathDir + gTestFiles[13].fileName,
-    false
-  );
+  const testFile = getTestFileByName("0exe0.exe");
+  await runHelperFileInUse(testFile.relPathDir + testFile.fileName, false);
   await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);

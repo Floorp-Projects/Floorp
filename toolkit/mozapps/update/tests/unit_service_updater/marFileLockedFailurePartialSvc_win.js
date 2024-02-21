@@ -12,7 +12,7 @@ async function run_test() {
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_PARTIAL_MAR, false);
-  await runHelperLockFile(gTestFiles[2]);
+  await runHelperLockFile(getTestFileByName("searchpluginspng1.png"));
   runUpdate(STATE_FAILED_READ_ERROR, false, 1, true);
   await waitForHelperExit();
   standardInit();

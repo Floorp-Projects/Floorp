@@ -10,7 +10,7 @@ async function run_test() {
     return;
   }
   gTestFiles = gTestFilesPartialSuccess;
-  gTestFiles[11].originalFile = "partial.png";
+  getTestFileByName("0exe0.exe").originalFile = "partial.png";
   gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_PARTIAL_MAR, false);

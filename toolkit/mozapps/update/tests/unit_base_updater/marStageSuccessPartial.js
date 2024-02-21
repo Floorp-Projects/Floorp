@@ -11,9 +11,10 @@ async function run_test() {
   }
   const STATE_AFTER_STAGE = gIsServiceTest ? STATE_APPLIED_SVC : STATE_APPLIED;
   gTestFiles = gTestFilesPartialSuccess;
-  gTestFiles[gTestFiles.length - 1].originalContents = null;
-  gTestFiles[gTestFiles.length - 1].compareContents = "FromPartial\n";
-  gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
+  const channelPrefs = getTestFileByName(FILE_CHANNEL_PREFS);
+  channelPrefs.originalContents = null;
+  channelPrefs.compareContents = "FromPartial\n";
+  channelPrefs.comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
   preventDistributionFiles();
   await setupUpdaterTest(FILE_PARTIAL_MAR, true);
