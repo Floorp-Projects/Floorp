@@ -655,6 +655,7 @@ class MacArtifactJob(ArtifactJob):
             "minidump-analyzer",
             "pingsender",
             "plugin-container.app/Contents/MacOS/plugin-container",
+            "updater.app/Contents/Frameworks/UpdateSettings.framework/Versions/A/UpdateSettings",
             "updater.app/Contents/MacOS/org.mozilla.updater",
             # 'xpcshell',
             "XUL",
