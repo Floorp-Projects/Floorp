@@ -2224,10 +2224,12 @@ void JSInlineString::dumpOwnRepresentationFields(js::JSONPrinter& json) const {}
 
 void JSLinearString::dumpOwnRepresentationFields(js::JSONPrinter& json) const {
   if (!isInline()) {
-    js::gc::StoreBuffer* sb = storeBuffer();
-    bool inNursery = sb && sb->nursery().isInside(nonInlineCharsRaw());
-
-    json.boolProperty("inNursery", inNursery);
+    // Include whether the chars are in the nursery even for tenured
+    // strings, which should always be false. For investigating bugs, it's
+    // better to not assume that.
+    js::Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+    bool inNursery = nursery.isInside(nonInlineCharsRaw());
+    json.boolProperty("charsInNursery", inNursery);
   }
 }
 #endif
