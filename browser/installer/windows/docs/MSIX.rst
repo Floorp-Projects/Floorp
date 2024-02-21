@@ -145,6 +145,27 @@ Linux users can obtain a prebuilt version with:
 After `bug 1743036 <https://bugzilla.mozilla.org/show_bug.cgi?id=1743036>`__
 is fixed, macOS and Windows users will have a similar option.
 
+Avoiding signing locally with unsigned packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Windows 11 allows to install unsigned packages, provided that its AppX
+manifest includes a special OID (organization ID) value in its
+``Identity`` element.  See
+https://github.com/MicrosoftDocs/msix-docs/blob/769dee9364df2b6fd0b78000774f8d14de8fe814/msix-src/package/unsigned-package.md.
+To produce a suitable package, use the ``--unsigned`` command line
+switch, like:
+
+::
+
+    $ ./mach repackage msix --unsigned
+
+Note that unsigned packages **must** be installed by an administrator.
+Generally, run Powershell as an administrator and then use commands like
+
+::
+
+    $ Add-AppxPackage -Path ... -AllowUnsigned -ForceUpdateFromAnyVersion
+
 Signing locally
 ~~~~~~~~~~~~~~~
 
