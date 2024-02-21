@@ -37,12 +37,12 @@ class SettingsSubMenuLoginsAndPasswordRobot {
 
     fun verifyDefaultView() {
         mDevice.waitNotNull(Until.findObjects(By.text("Save logins and passwords")), TestAssetHelper.waitingTime)
-        saveLoginsAndPasswordButton.check(matches(isDisplayed()))
-        autofillInFirefoxOption.check(matches(isDisplayed()))
-        autofillInOtherAppsOption.check(matches(isDisplayed()))
-        syncLoginsButton.check(matches(isDisplayed()))
-        savedLoginsButton.check(matches(isDisplayed()))
-        loginExceptionsButton.check(matches(isDisplayed()))
+        saveLoginsAndPasswordButton().check(matches(isDisplayed()))
+        autofillInFirefoxOption().check(matches(isDisplayed()))
+        autofillInOtherAppsOption().check(matches(isDisplayed()))
+        syncLoginsButton().check(matches(isDisplayed()))
+        savedLoginsButton().check(matches(isDisplayed()))
+        loginExceptionsButton().check(matches(isDisplayed()))
     }
 
     fun verifyDefaultViewBeforeSyncComplete() {
@@ -55,10 +55,10 @@ class SettingsSubMenuLoginsAndPasswordRobot {
 
     fun verifyDefaultValueAutofillLogins(context: Context) = assertDefaultValueAutofillLogins(context)
 
-    fun clickAutofillInFirefoxOption() = autofillInFirefoxOption.click()
+    fun clickAutofillInFirefoxOption() = autofillInFirefoxOption().click()
 
     fun verifyAutofillInFirefoxToggle(enabled: Boolean) {
-        autofillInFirefoxOption
+        autofillInFirefoxOption()
             .check(
                 matches(
                     hasCousin(
@@ -75,7 +75,7 @@ class SettingsSubMenuLoginsAndPasswordRobot {
             )
     }
     fun verifyAutofillLoginsInOtherAppsToggle(enabled: Boolean) {
-        autofillInOtherAppsOption
+        autofillInOtherAppsOption()
             .check(
                 matches(
                     hasCousin(
@@ -102,28 +102,28 @@ class SettingsSubMenuLoginsAndPasswordRobot {
         }
 
         fun openSavedLogins(interact: SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition {
-            savedLoginsButton.click()
+            savedLoginsButton().click()
 
             SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot().interact()
             return SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition()
         }
 
         fun openLoginExceptions(interact: SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition {
-            loginExceptionsButton.click()
+            loginExceptionsButton().click()
 
             SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot().interact()
             return SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition()
         }
 
         fun openSyncLogins(interact: SettingsTurnOnSyncRobot.() -> Unit): SettingsTurnOnSyncRobot.Transition {
-            syncLoginsButton.click()
+            syncLoginsButton().click()
 
             SettingsTurnOnSyncRobot().interact()
             return SettingsTurnOnSyncRobot.Transition()
         }
 
         fun openSaveLoginsAndPasswordsOptions(interact: SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.Transition {
-            saveLoginsAndPasswordButton.click()
+            saveLoginsAndPasswordButton().click()
 
             SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot().interact()
             return SettingsSubMenuLoginsAndPasswordOptionsToSaveRobot.Transition()
@@ -136,13 +136,13 @@ fun settingsSubMenuLoginsAndPassword(interact: SettingsSubMenuLoginsAndPasswordR
     return SettingsSubMenuLoginsAndPasswordRobot.Transition()
 }
 
-private val saveLoginsAndPasswordButton = onView(withText("Save logins and passwords"))
+private fun saveLoginsAndPasswordButton() = onView(withText("Save logins and passwords"))
 
-private val savedLoginsButton = onView(withText("Saved logins"))
+private fun savedLoginsButton() = onView(withText("Saved logins"))
 
-private val syncLoginsButton = onView(withText("Sync logins across devices"))
+private fun syncLoginsButton() = onView(withText("Sync logins across devices"))
 
-private val loginExceptionsButton = onView(withText("Exceptions"))
+private fun loginExceptionsButton() = onView(withText("Exceptions"))
 
 private fun goBackButton() =
     onView(allOf(ViewMatchers.withContentDescription("Navigate up")))
@@ -157,6 +157,6 @@ private fun assertDefaultValueAutofillLogins(context: Context) = onView(
 )
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private val autofillInFirefoxOption = onView(withText("Autofill in $appName"))
+private fun autofillInFirefoxOption() = onView(withText("Autofill in $appName"))
 
-private val autofillInOtherAppsOption = onView(withText("Autofill in other apps"))
+private fun autofillInOtherAppsOption() = onView(withText("Autofill in other apps"))
