@@ -669,11 +669,7 @@ AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
                [for libs in "" -lrt; do
                     _SAVE_LIBS="$LIBS"
                     LIBS="$LIBS $libs"
-dnl clock_gettime is available on OSX since 10.12, so depending on MACOSX_DEPLOYMENT_TARGET,
-dnl we should or not be able to use it. To detect if we can, we need to make the
-dnl availability attribute strict, so that compilation fails when the target is < 10.12.
-                    AC_TRY_LINK([#define availability(os, ...) availability(os, strict, __VA_ARGS)
-                                 #include <time.h>],
+                    AC_TRY_LINK([#include <time.h>],
                                  [ struct timespec ts;
                                    clock_gettime(CLOCK_MONOTONIC, &ts); ],
                                  ac_cv_clock_monotonic=$libs
