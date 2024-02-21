@@ -47,6 +47,7 @@ DIRS += [
     "jsoncpp/src/lib_json",
     "kvstore",
     "mediasniffer",
+    "ml",
     "mozintl",
     "mozprotocol",
     "parentalcontrols",
