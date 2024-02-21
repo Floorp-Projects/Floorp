@@ -213,7 +213,8 @@ body {
   color: var(--theme-body-color);
 }
 
-.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor:not(.CodeMirror-secondarycursor) {
+.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor:not(.CodeMirror-secondarycursor),
+.cm-editor .cm-cursor {
   border-left: solid 1px black;
 }
 
