@@ -325,7 +325,6 @@ class LoadStartDetectionRunnable final : public Runnable,
   WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   RefPtr<XMLHttpRequest> mXHR;
-  nsString mEventType;
   uint32_t mChannelId;
   bool mReceivedLoadStart;
 
