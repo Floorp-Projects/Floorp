@@ -173,6 +173,10 @@ panel[type="arrow"] {
         -moz-window-transform: translateY(70px);
       }
     }
+    /* If the @media rule above is removed, then we can also remove this */
+    &[animate="cancel"] {
+      -moz-window-opacity: 0;
+    }
   }
 
   &[animate="cancel"] {
