@@ -79,21 +79,15 @@
 #  include "base/process_util.h"
 #endif
 
-#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise, _msg, ...) \
+#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
   do {                                                                \
     if (nsresult _rv = PathUtils::InitFileWithPath((_file), (_path)); \
         NS_FAILED(_rv)) {                                             \
-      (_promise)->MaybeRejectWithOperationError(FormatErrorMessage(   \
-          _rv, _msg ": could not parse path", ##__VA_ARGS__));        \
+      (_promise)->MaybeRejectWithOperationError(                      \
+          FormatErrorMessage(_rv, "Could not parse path (%s)",        \
+                             NS_ConvertUTF16toUTF8(_path).get()));    \
       return;                                                         \
     }                                                                 \
-  } while (0)
-
-#define IOUTILS_TRY_WITH_CONTEXT(_expr, _fmt, ...)            \
-  do {                                                        \
-    if (nsresult _rv = (_expr); NS_FAILED(_rv)) {             \
-      return Err(IOUtils::IOError(_rv, _fmt, ##__VA_ARGS__)); \
-    }                                                         \
   } while (0)
 
 static constexpr auto SHUTDOWN_ERROR =
@@ -127,32 +121,34 @@ static bool IsNotDirectory(nsresult aResult) {
 /**
  * Formats an error message and appends the error name to the end.
  */
-static nsCString MOZ_FORMAT_PRINTF(2, 3)
-    FormatErrorMessage(nsresult aError, const char* const aFmt, ...) {
-  nsAutoCString errorName;
-  GetErrorName(aError, errorName);
+template <typename... Args>
+static nsCString FormatErrorMessage(nsresult aError, const char* const aMessage,
+                                    Args... aArgs) {
+  nsPrintfCString msg(aMessage, aArgs...);
 
-  nsCString msg;
+  if (const char* errName = GetStaticErrorName(aError)) {
+    msg.AppendPrintf(": %s", errName);
+  } else {
+    // In the exceptional case where there is no error name, print the literal
+    // integer value of the nsresult as an upper case hex value so it can be
+    // located easily in searchfox.
+    msg.AppendPrintf(": 0x%" PRIX32, static_cast<uint32_t>(aError));
+  }
 
-  va_list ap;
-  va_start(ap, aFmt);
-  msg.AppendVprintf(aFmt, ap);
-  va_end(ap);
-
-  msg.AppendPrintf(" (%s)", errorName.get());
-
-  return msg;
+  return std::move(msg);
 }
 
 static nsCString FormatErrorMessage(nsresult aError,
-                                    const nsCString& aMessage) {
-  nsAutoCString errorName;
-  GetErrorName(aError, errorName);
-
-  nsCString msg(aMessage);
-  msg.AppendPrintf(" (%s)", errorName.get());
-
-  return msg;
+                                    const char* const aMessage) {
+  const char* errName = GetStaticErrorName(aError);
+  if (errName) {
+    return nsPrintfCString("%s: %s", aMessage, errName);
+  }
+  // In the exceptional case where there is no error name, print the literal
+  // integer value of the nsresult as an upper case hex value so it can be
+  // located easily in searchfox.
+  return nsPrintfCString("%s: 0x%" PRIX32, aMessage,
+                         static_cast<uint32_t>(aError));
 }
 
 [[nodiscard]] inline bool ToJSValue(
@@ -187,82 +183,99 @@ static void ResolveJSPromise(Promise* aPromise, T&& aValue) {
 }
 
 static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
-  const auto errMsg = FormatErrorMessage(aError.Code(), aError.Message());
+  const auto& errMsg = aError.Message();
 
   switch (aError.Code()) {
     case NS_ERROR_FILE_UNRESOLVABLE_SYMLINK:
-      [[fallthrough]];
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
     case NS_ERROR_FILE_NOT_FOUND:
-      [[fallthrough]];
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_PATH
     case NS_ERROR_FILE_INVALID_PATH:
-      [[fallthrough]];
-    case NS_ERROR_NOT_AVAILABLE:
-      aPromise->MaybeRejectWithNotFoundError(errMsg);
+      aPromise->MaybeRejectWithNotFoundError(errMsg.refOr("File not found"_ns));
       break;
-
     case NS_ERROR_FILE_IS_LOCKED:
-      [[fallthrough]];
+      [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
     case NS_ERROR_FILE_ACCESS_DENIED:
-      aPromise->MaybeRejectWithNotAllowedError(errMsg);
+      aPromise->MaybeRejectWithNotAllowedError(
+          errMsg.refOr("Access was denied to the target file"_ns));
       break;
-
     case NS_ERROR_FILE_TOO_BIG:
-      [[fallthrough]];
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target file is too big"_ns));
+      break;
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
-      [[fallthrough]];
-    case NS_ERROR_FILE_DEVICE_FAILURE:
-      [[fallthrough]];
-    case NS_ERROR_FILE_FS_CORRUPTED:
-      [[fallthrough]];
-    case NS_ERROR_FILE_CORRUPTED:
-      aPromise->MaybeRejectWithNotReadableError(errMsg);
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target device is full"_ns));
       break;
-
     case NS_ERROR_FILE_ALREADY_EXISTS:
-      aPromise->MaybeRejectWithNoModificationAllowedError(errMsg);
+      aPromise->MaybeRejectWithNoModificationAllowedError(
+          errMsg.refOr("Target file already exists"_ns));
       break;
-
     case NS_ERROR_FILE_COPY_OR_MOVE_FAILED:
-      [[fallthrough]];
-    case NS_ERROR_FILE_NAME_TOO_LONG:
-      [[fallthrough]];
-    case NS_ERROR_FILE_UNRECOGNIZED_PATH:
-      [[fallthrough]];
-    case NS_ERROR_FILE_DIR_NOT_EMPTY:
-      aPromise->MaybeRejectWithOperationError(errMsg);
+      aPromise->MaybeRejectWithOperationError(
+          errMsg.refOr("Failed to copy or move the target file"_ns));
       break;
-
     case NS_ERROR_FILE_READ_ONLY:
-      aPromise->MaybeRejectWithReadOnlyError(errMsg);
+      aPromise->MaybeRejectWithReadOnlyError(
+          errMsg.refOr("Target file is read only"_ns));
       break;
-
     case NS_ERROR_FILE_NOT_DIRECTORY:
-      [[fallthrough]];
+      [[fallthrough]];  // to NS_ERROR_FILE_DESTINATION_NOT_DIR
     case NS_ERROR_FILE_DESTINATION_NOT_DIR:
-      [[fallthrough]];
+      aPromise->MaybeRejectWithInvalidAccessError(
+          errMsg.refOr("Target file is not a directory"_ns));
+      break;
     case NS_ERROR_FILE_IS_DIRECTORY:
-      [[fallthrough]];
+      aPromise->MaybeRejectWithInvalidAccessError(
+          errMsg.refOr("Target file is a directory"_ns));
+      break;
     case NS_ERROR_FILE_UNKNOWN_TYPE:
-      aPromise->MaybeRejectWithInvalidAccessError(errMsg);
+      aPromise->MaybeRejectWithInvalidAccessError(
+          errMsg.refOr("Target file is of unknown type"_ns));
       break;
-
+    case NS_ERROR_FILE_NAME_TOO_LONG:
+      aPromise->MaybeRejectWithOperationError(
+          errMsg.refOr("Target file path is too long"_ns));
+      break;
+    case NS_ERROR_FILE_UNRECOGNIZED_PATH:
+      aPromise->MaybeRejectWithOperationError(
+          errMsg.refOr("Target file path is not recognized"_ns));
+      break;
+    case NS_ERROR_FILE_DIR_NOT_EMPTY:
+      aPromise->MaybeRejectWithOperationError(
+          errMsg.refOr("Target directory is not empty"_ns));
+      break;
+    case NS_ERROR_FILE_DEVICE_FAILURE:
+      [[fallthrough]];  // to NS_ERROR_FILE_FS_CORRUPTED
+    case NS_ERROR_FILE_FS_CORRUPTED:
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target file system may be corrupt or unavailable"_ns));
+      break;
+    case NS_ERROR_FILE_CORRUPTED:
+      aPromise->MaybeRejectWithNotReadableError(
+          errMsg.refOr("Target file could not be read and may be corrupt"_ns));
+      break;
     case NS_ERROR_ILLEGAL_INPUT:
-      [[fallthrough]];
+      [[fallthrough]];  // NS_ERROR_ILLEGAL_VALUE
     case NS_ERROR_ILLEGAL_VALUE:
-      aPromise->MaybeRejectWithDataError(errMsg);
+      aPromise->MaybeRejectWithDataError(
+          errMsg.refOr("Argument is not allowed"_ns));
       break;
-
+    case NS_ERROR_NOT_AVAILABLE:
+      aPromise->MaybeRejectWithNotFoundError(errMsg.refOr("Unavailable"_ns));
+      break;
     case NS_ERROR_ABORT:
-      aPromise->MaybeRejectWithAbortError(errMsg);
+      aPromise->MaybeRejectWithAbortError(errMsg.refOr("Operation aborted"_ns));
       break;
-
     default:
-      aPromise->MaybeRejectWithUnknownError(errMsg);
+      aPromise->MaybeRejectWithUnknownError(FormatErrorMessage(
+          aError.Code(), errMsg.refOr("Unexpected error"_ns).get()));
   }
 }
 
 static void RejectShuttingDown(Promise* aPromise) {
-  RejectJSPromise(aPromise, IOUtils::IOError(NS_ERROR_ABORT, SHUTDOWN_ERROR));
+  RejectJSPromise(aPromise,
+                  IOUtils::IOError(NS_ERROR_ABORT).WithMessage(SHUTDOWN_ERROR));
 }
 
 static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
@@ -355,20 +368,10 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not read `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         Maybe<uint32_t> toRead = Nothing();
         if (!aOptions.mMaxBytes.IsNull()) {
-          if (aOptions.mDecompress) {
-            RejectJSPromise(
-                promise, IOError(NS_ERROR_ILLEGAL_INPUT,
-                                 "Could not read `%s': the `maxBytes' and "
-                                 "`decompress' options are mutually exclusive",
-                                 file->HumanReadablePath().get()));
-            return;
-          }
-
           if (aOptions.mMaxBytes.Value() == 0) {
             // Resolve with an empty buffer.
             nsTArray<uint8_t> arr(0);
@@ -434,8 +437,7 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not read `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<JsBuffer>(
             state->mEventQueue, promise,
@@ -453,8 +455,7 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not read `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         RefPtr<StrongWorkerRef> workerRef;
         if (!NS_IsMainThread()) {
@@ -475,12 +476,8 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
                  file](JsBuffer&& aBuffer) {
                   AutoJSAPI jsapi;
                   if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-                    RejectJSPromise(
-                        promise,
-                        IOError(
-                            NS_ERROR_DOM_UNKNOWN_ERR,
-                            "Could not read `%s': could not initialize JS API",
-                            file->HumanReadablePath().get()));
+                    promise->MaybeRejectWithUnknownError(
+                        "Could not initialize JS API");
                     return;
                   }
                   JSContext* cx = jsapi.cx();
@@ -489,12 +486,7 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
                       cx,
                       IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
                   if (!jsonStr) {
-                    RejectJSPromise(
-                        promise,
-                        IOError(
-                            NS_ERROR_OUT_OF_MEMORY,
-                            "Could not read `%s': failed to allocate buffer",
-                            file->HumanReadablePath().get()));
+                    RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
                     return;
                   }
 
@@ -505,11 +497,13 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
                       JS_ClearPendingException(cx);
                       promise->MaybeReject(exn);
                     } else {
-                      RejectJSPromise(promise,
-                                      IOError(NS_ERROR_DOM_UNKNOWN_ERR,
-                                              "Could not read `%s': ParseJSON "
-                                              "threw an uncatchable exception",
-                                              file->HumanReadablePath().get()));
+                      RejectJSPromise(
+                          promise,
+                          IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                              .WithMessage(
+                                  "ParseJSON threw an uncatchable exception "
+                                  "while parsing file(%s)",
+                                  file->HumanReadablePath().get()));
                     }
 
                     return;
@@ -532,31 +526,25 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not write to `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         Maybe<Buffer<uint8_t>> buf = aData.CreateFromData<Buffer<uint8_t>>();
         if (buf.isNothing()) {
-          promise->MaybeRejectWithOperationError(nsPrintfCString(
-              "Could not write to `%s': could not allocate buffer",
-              file->HumanReadablePath().get()));
+          promise->MaybeRejectWithOperationError(
+              "Out of memory: Could not allocate buffer while writing to file");
           return;
         }
 
-        auto result = InternalWriteOpts::FromBinding(aOptions);
-        if (result.isErr()) {
-          RejectJSPromise(
-              promise,
-              IOError::WithCause(result.unwrapErr(), "Could not write to `%s'",
-                                 file->HumanReadablePath().get()));
+        auto opts = InternalWriteOpts::FromBinding(aOptions);
+        if (opts.isErr()) {
+          RejectJSPromise(promise, opts.unwrapErr());
           return;
         }
 
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
             [file = std::move(file), buf = buf.extract(),
-             opts = result.unwrap()]() { return WriteSync(file, buf, opts); });
+             opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
       });
 }
 
@@ -569,23 +557,18 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not write to `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-        auto result = InternalWriteOpts::FromBinding(aOptions);
-        if (result.isErr()) {
-          RejectJSPromise(
-              promise,
-              IOError::WithCause(result.unwrapErr(), "Could not write to `%s'",
-                                 file->HumanReadablePath().get()));
+        auto opts = InternalWriteOpts::FromBinding(aOptions);
+        if (opts.isErr()) {
+          RejectJSPromise(promise, opts.unwrapErr());
           return;
         }
 
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
             [file = std::move(file), str = nsCString(aString),
-             opts = result.unwrap()]() {
+             opts = opts.unwrap()]() {
               return WriteSync(file, AsBytes(Span(str)), opts);
             });
       });
@@ -600,27 +583,18 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not write to `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-        auto result = InternalWriteOpts::FromBinding(aOptions);
-        if (result.isErr()) {
-          RejectJSPromise(
-              promise,
-              IOError::WithCause(result.unwrapErr(), "Could not write to `%s'",
-                                 file->HumanReadablePath().get()));
+        auto opts = InternalWriteOpts::FromBinding(aOptions);
+        if (opts.isErr()) {
+          RejectJSPromise(promise, opts.unwrapErr());
           return;
         }
 
-        auto opts = result.unwrap();
-
-        if (opts.mMode == WriteMode::Append ||
-            opts.mMode == WriteMode::AppendOrCreate) {
+        if (opts.inspect().mMode == WriteMode::Append ||
+            opts.inspect().mMode == WriteMode::AppendOrCreate) {
           promise->MaybeRejectWithNotSupportedError(
-              nsPrintfCString("Could not write to `%s': IOUtils.writeJSON does "
-                              "not support appending to files.",
-                              file->HumanReadablePath().get()));
+              "IOUtils.writeJSON does not support appending to files."_ns);
           return;
         }
 
@@ -634,9 +608,10 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
             JS_ClearPendingException(cx);
             promise->MaybeReject(exn);
           } else {
-            RejectJSPromise(promise,
-                            IOError(NS_ERROR_DOM_UNKNOWN_ERR,
-                                    "Could not serialize object to JSON"_ns));
+            RejectJSPromise(
+                promise,
+                IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                    .WithMessage("Could not serialize object to JSON"));
           }
           return;
         }
@@ -644,13 +619,10 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
             [file = std::move(file), string = std::move(string),
-             opts = std::move(opts)]() -> Result<uint32_t, IOError> {
+             opts = opts.unwrap()]() -> Result<uint32_t, IOError> {
               nsAutoCString utf8Str;
               if (!CopyUTF16toUTF8(string, utf8Str, fallible)) {
-                return Err(IOError(
-                    NS_ERROR_OUT_OF_MEMORY,
-                    "Failed to write to `%s': could not allocate buffer",
-                    file->HumanReadablePath().get()));
+                return Err(IOError(NS_ERROR_OUT_OF_MEMORY));
               }
               return WriteSync(file, AsBytes(Span(utf8Str)), opts);
             });
@@ -666,16 +638,10 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise,
-                                   "Could not move `%s' to `%s'",
-                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                                   NS_ConvertUTF16toUTF8(aDestPath).get());
+        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
         nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise,
-                                   "Could not move `%s' to `%s'",
-                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                                   NS_ConvertUTF16toUTF8(aDestPath).get());
+        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -694,9 +660,7 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not remove `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -715,9 +679,7 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not make directory `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<Ok>(state->mEventQueue, promise,
                                [file = std::move(file),
@@ -737,8 +699,7 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not stat `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<InternalFileInfo>(
             state->mEventQueue, promise,
@@ -755,16 +716,10 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise,
-                                   "Could not copy `%s' to `%s'",
-                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                                   NS_ConvertUTF16toUTF8(aDestPath).get());
+        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
         nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise,
-                                   "Could not copy `%s' to `%s'",
-                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
-                                   NS_ConvertUTF16toUTF8(aDestPath).get());
+        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -781,7 +736,7 @@ already_AddRefed<Promise> IOUtils::SetAccessTime(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aAccess, ErrorResult& aError) {
   return SetTime(aGlobal, aPath, aAccess, &nsIFile::SetLastAccessedTime,
-                 "access", aError);
+                 aError);
 }
 
 /* static */
@@ -789,7 +744,7 @@ already_AddRefed<Promise> IOUtils::SetModificationTime(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aModification, ErrorResult& aError) {
   return SetTime(aGlobal, aPath, aModification, &nsIFile::SetLastModifiedTime,
-                 "modification", aError);
+                 aError);
 }
 
 /* static */
@@ -797,14 +752,11 @@ already_AddRefed<Promise> IOUtils::SetTime(GlobalObject& aGlobal,
                                            const nsAString& aPath,
                                            const Optional<int64_t>& aNewTime,
                                            IOUtils::SetTimeFn aSetTimeFn,
-                                           const char* const aTimeKind,
                                            ErrorResult& aError) {
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not set %s time on `%s'", aTimeKind,
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         int64_t newTime = aNewTime.WasPassed() ? aNewTime.Value()
                                                : PR_Now() / PR_USEC_PER_MSEC;
@@ -823,9 +775,7 @@ already_AddRefed<Promise> IOUtils::GetChildren(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not get children of `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<nsTArray<nsString>>(
             state->mEventQueue, promise,
@@ -850,9 +800,7 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
 #endif
 
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not set permissions on `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -869,9 +817,7 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not determine if `%s' exists",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<bool>(
             state->mEventQueue, promise,
@@ -907,21 +853,14 @@ already_AddRefed<Promise> IOUtils::CreateUnique(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(
-            file, aParent, promise, "Could not create unique %s in `%s'",
-            aFileType == nsIFile::NORMAL_FILE_TYPE ? "file" : "directory",
-            NS_ConvertUTF16toUTF8(aParent).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aParent, promise);
 
         if (nsresult rv = file->Append(aPrefix); NS_FAILED(rv)) {
-          RejectJSPromise(
-              promise,
-              IOError(
-                  rv,
-                  "Could not create unique %s: could not append prefix `%s' to "
-                  "parent `%s'",
-                  aFileType == nsIFile::NORMAL_FILE_TYPE ? "file" : "directory",
-                  NS_ConvertUTF16toUTF8(aPrefix).get(),
-                  file->HumanReadablePath().get()));
+          RejectJSPromise(promise,
+                          IOError(rv).WithMessage(
+                              "Could not append prefix `%s' to parent `%s'",
+                              NS_ConvertUTF16toUTF8(aPrefix).get(),
+                              file->HumanReadablePath().get()));
           return;
         }
 
@@ -942,14 +881,14 @@ already_AddRefed<Promise> IOUtils::ComputeHexDigest(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         if (!nssInitialized) {
-          RejectJSPromise(promise, IOError(NS_ERROR_UNEXPECTED,
-                                           "Could not initialize NSS"_ns));
+          RejectJSPromise(promise,
+                          IOError(NS_ERROR_UNEXPECTED)
+                              .WithMessage("Could not initialize NSS"));
           return;
         }
 
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not hash `%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<nsCString>(state->mEventQueue, promise,
                                       [file = std::move(file), aAlgorithm]() {
@@ -968,10 +907,7 @@ already_AddRefed<Promise> IOUtils::GetWindowsAttributes(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
-                                   "Could not get Windows file attributes of "
-                                   "`%s'",
-                                   NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         RefPtr<StrongWorkerRef> workerRef;
         if (!NS_IsMainThread()) {
@@ -1009,10 +945,7 @@ already_AddRefed<Promise> IOUtils::SetWindowsAttributes(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(
-            file, aPath, promise,
-            "Could not set Windows file attributes on `%s'",
-            NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         uint32_t setAttrs = 0;
         uint32_t clearAttrs = 0;
@@ -1059,11 +992,7 @@ already_AddRefed<Promise> IOUtils::HasMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(
-            file, aPath, promise,
-            "Could not read the extended attribute `%s' from `%s'",
-            PromiseFlatCString(aAttr).get(),
-            NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<bool>(
             state->mEventQueue, promise,
@@ -1081,11 +1010,7 @@ already_AddRefed<Promise> IOUtils::GetMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(
-            file, aPath, promise,
-            "Could not read extended attribute `%s' from `%s'",
-            PromiseFlatCString(aAttr).get(),
-            NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<nsTArray<uint8_t>>(
             state->mEventQueue, promise,
@@ -1104,21 +1029,16 @@ already_AddRefed<Promise> IOUtils::SetMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(
-            file, aPath, promise,
-            "Could not set the extended attribute `%s' on `%s'",
-            PromiseFlatCString(aAttr).get(),
-            NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         nsTArray<uint8_t> value;
 
         if (!aValue.AppendDataTo(value)) {
           RejectJSPromise(
-              promise, IOError(NS_ERROR_OUT_OF_MEMORY,
-                               "Could not set extended attribute `%s' on `%s': "
-                               "could not allocate buffer",
-                               PromiseFlatCString(aAttr).get(),
-                               file->HumanReadablePath().get()));
+              promise,
+              IOError(NS_ERROR_OUT_OF_MEMORY)
+                  .WithMessage(
+                      "Could not allocate buffer to set extended attribute"));
           return;
         }
 
@@ -1138,11 +1058,7 @@ already_AddRefed<Promise> IOUtils::DelMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(
-            file, aPath, promise,
-            "Could not delete extended attribute `%s' on `%s'",
-            PromiseFlatCString(aAttr).get(),
-            NS_ConvertUTF16toUTF8(aPath).get());
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -1170,10 +1086,8 @@ already_AddRefed<Promise> IOUtils::GetFile(
         nsCOMPtr<nsIFile> parent;
         if (nsresult rv = file->GetParent(getter_AddRefs(parent));
             NS_FAILED(rv)) {
-          RejectJSPromise(promise, IOError(rv,
-                                           "Could not get nsIFile for `%s': "
-                                           "could not get parent directory",
-                                           file->HumanReadablePath().get()));
+          RejectJSPromise(promise, IOError(rv).WithMessage(
+                                       "Could not get parent directory"));
           return;
         }
 
@@ -1239,16 +1153,19 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
     nsIFile* aFile, const uint64_t aOffset, const Maybe<uint32_t> aMaxBytes,
     const bool aDecompress, IOUtils::BufferKind aBufferKind) {
   MOZ_ASSERT(!NS_IsMainThread());
-  // This is checked in IOUtils::Read.
-  MOZ_ASSERT(aMaxBytes.isNothing() || !aDecompress,
-             "maxBytes and decompress are mutually exclusive");
+
+  if (aMaxBytes.isSome() && aDecompress) {
+    return Err(
+        IOError(NS_ERROR_ILLEGAL_INPUT)
+            .WithMessage(
+                "The `maxBytes` and `decompress` options are not compatible"));
+  }
 
   if (aOffset > static_cast<uint64_t>(INT64_MAX)) {
-    return Err(
-        IOError(NS_ERROR_ILLEGAL_INPUT,
-                "Could not read `%s': requested offset is too large (%" PRIu64
-                " > %" PRId64 ")",
-                aFile->HumanReadablePath().get(), aOffset, INT64_MAX));
+    return Err(IOError(NS_ERROR_ILLEGAL_INPUT)
+                   .WithMessage("Requested offset is too large (%" PRIu64
+                                " > %" PRId64 ")",
+                                aOffset, INT64_MAX));
   }
 
   const int64_t offset = static_cast<int64_t>(aOffset);
@@ -1257,12 +1174,8 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
   if (nsresult rv =
           stream->Init(aFile, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
       NS_FAILED(rv)) {
-    if (IsFileNotFound(rv)) {
-      return Err(IOError(rv, "Could not open `%s': file does not exist",
-                         aFile->HumanReadablePath().get()));
-    }
-    return Err(
-        IOError(rv, "Could not open `%s'", aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage("Could not open the file at %s",
+                                       aFile->HumanReadablePath().get()));
   }
 
   uint32_t bufSize = 0;
@@ -1274,10 +1187,9 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
 
     int64_t rawStreamSize = -1;
     if (nsresult rv = stream->GetSize(&rawStreamSize); NS_FAILED(rv)) {
-      return Err(
-          IOError(NS_ERROR_FILE_ACCESS_DENIED,
-                  "Could not open `%s': could not stat file or directory",
-                  aFile->HumanReadablePath().get()));
+      return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
+                     .WithMessage("Could not get info for the file at %s",
+                                  aFile->HumanReadablePath().get()));
     }
     MOZ_RELEASE_ASSERT(rawStreamSize >= 0);
 
@@ -1286,9 +1198,10 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
       bufSize = 0;
     } else {
       if (streamSize - offset > static_cast<int64_t>(UINT32_MAX)) {
-        return Err(IOError(NS_ERROR_FILE_TOO_BIG,
-                           "Could not read `%s' with offset %" PRIu64
-                           ": file is too large (%" PRIu64 " bytes)",
+        return Err(IOError(NS_ERROR_FILE_TOO_BIG)
+                       .WithMessage(
+                           "Could not read the file at %s with offset %" PRIu32
+                           " because it is too large(size=%" PRIu64 " bytes)",
                            aFile->HumanReadablePath().get(), offset,
                            streamSize));
       }
@@ -1301,9 +1214,9 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
 
   if (offset > 0) {
     if (nsresult rv = stream->Seek(PR_SEEK_SET, offset); NS_FAILED(rv)) {
-      return Err(IOError(
-          rv, "Could not read `%s': could not seek to position %" PRId64,
-          aFile->HumanReadablePath().get(), offset));
+      return Err(IOError(rv).WithMessage(
+          "Could not seek to position %" PRId64 " in file %s", offset,
+          aFile->HumanReadablePath().get()));
     }
   }
 
@@ -1312,8 +1225,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
   if (bufSize > 0) {
     auto result = JsBuffer::Create(aBufferKind, bufSize);
     if (result.isErr()) {
-      return Err(IOError::WithCause(result.unwrapErr(), "Could not read `%s'",
-                                    aFile->HumanReadablePath().get()));
+      return result.propagateErr();
     }
     buffer = result.unwrap();
     Span<char> toRead = buffer.BeginWriting();
@@ -1329,9 +1241,9 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
       if (nsresult rv =
               stream->Read(toRead.Elements(), bytesToReadThisChunk, &bytesRead);
           NS_FAILED(rv)) {
-        return Err(
-            IOError(rv, "Could not read `%s': encountered an unexpected error",
-                    aFile->HumanReadablePath().get()));
+        return Err(IOError(rv).WithMessage(
+            "Encountered an unexpected error while reading file(%s)",
+            aFile->HumanReadablePath().get()));
       }
       if (bytesRead == 0) {
         break;
@@ -1345,13 +1257,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
 
   // Decompress the file contents, if required.
   if (aDecompress) {
-    auto result =
-        MozLZ4::Decompress(AsBytes(buffer.BeginReading()), aBufferKind);
-    if (result.isErr()) {
-      return Err(IOError::WithCause(result.unwrapErr(), "Could not read `%s'",
-                                    aFile->HumanReadablePath().get()));
-    }
-    return result;
+    return MozLZ4::Decompress(AsBytes(buffer.BeginReading()), aBufferKind);
   }
 
   return std::move(buffer);
@@ -1367,9 +1273,11 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadUTF8Sync(
 
   JsBuffer buffer = result.unwrap();
   if (!IsUtf8(buffer.BeginReading())) {
-    return Err(IOError(NS_ERROR_FILE_CORRUPTED,
-                       "Could not read `%s': file is not UTF-8 encoded",
-                       aFile->HumanReadablePath().get()));
+    return Err(
+        IOError(NS_ERROR_FILE_CORRUPTED)
+            .WithMessage(
+                "Could not read file(%s) because it is not UTF-8 encoded",
+                aFile->HumanReadablePath().get()));
   }
 
   return buffer;
@@ -1385,16 +1293,14 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   nsIFile* tempFile = aOptions.mTmpFile;
 
   bool exists = false;
-  IOUTILS_TRY_WITH_CONTEXT(
-      aFile->Exists(&exists),
-      "Could not write to `%s': could not stat file or directory",
-      aFile->HumanReadablePath().get());
+  MOZ_TRY(aFile->Exists(&exists));
 
   if (exists && aOptions.mMode == WriteMode::Create) {
-    return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS,
-                       "Could not write to `%s': refusing to overwrite file, "
-                       "`mode' is not \"overwrite\"",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
+                   .WithMessage("Refusing to overwrite the file at %s\n"
+                                "Specify `mode: \"overwrite\"` to allow "
+                                "overwriting the destination",
+                                aFile->HumanReadablePath().get()));
   }
 
   // If backupFile was specified, perform the backup as a move.
@@ -1410,12 +1316,11 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
 
     bool noOverwrite = aOptions.mMode == WriteMode::Create;
 
-    if (auto result = MoveSync(toMove, backupFile, noOverwrite);
-        result.isErr()) {
-      return Err(IOError::WithCause(
-          result.unwrapErr(),
-          "Could not write to `%s': failed to back up source file",
-          aFile->HumanReadablePath().get()));
+    if (MoveSync(toMove, backupFile, noOverwrite).isErr()) {
+      return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+                     .WithMessage("Failed to backup the source file(%s) to %s",
+                                  aFile->HumanReadablePath().get(),
+                                  backupFile->HumanReadablePath().get()));
     }
   }
 
@@ -1464,13 +1369,11 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     nsTArray<uint8_t> compressed;
     Span<const char> bytes;
     if (aOptions.mCompress) {
-      auto result = MozLZ4::Compress(aByteArray);
-      if (result.isErr()) {
-        return Err(IOError::WithCause(result.unwrapErr(),
-                                      "Could not write to `%s'",
-                                      writeFile->HumanReadablePath().get()));
+      auto rv = MozLZ4::Compress(aByteArray);
+      if (rv.isErr()) {
+        return rv.propagateErr();
       }
-      compressed = result.unwrap();
+      compressed = rv.unwrap();
       bytes = Span(reinterpret_cast<const char*>(compressed.Elements()),
                    compressed.Length());
     } else {
@@ -1485,9 +1388,9 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
       if (rv == nsresult::NS_ERROR_FILE_IS_DIRECTORY) {
         rv = NS_ERROR_FILE_ACCESS_DENIED;
       }
-      return Err(IOError(
-          rv, "Could not write to `%s': failed to open file for writing",
-          writeFile->HumanReadablePath().get()));
+      return Err(
+          IOError(rv).WithMessage("Could not open the file at %s for writing",
+                                  writeFile->HumanReadablePath().get()));
     }
 
     // nsFileRandomAccessStream::Write uses PR_Write under the hood, which
@@ -1504,10 +1407,10 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
       if (nsresult rv =
               stream->Write(pendingBytes.Elements(), chunkSize, &bytesWritten);
           NS_FAILED(rv)) {
-        return Err(IOError(rv,
-                           "Could not write to `%s': failed to write chunk; "
-                           "the file may be corrupt",
-                           writeFile->HumanReadablePath().get()));
+        return Err(IOError(rv).WithMessage(
+            "Could not write chunk (size = %" PRIu32
+            ") to file %s. The file may be corrupt.",
+            chunkSize, writeFile->HumanReadablePath().get()));
       }
       pendingBytes = pendingBytes.From(bytesWritten);
       totalWritten += bytesWritten;
@@ -1530,9 +1433,8 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
         bool isDir = false;
         if (nsresult rv = aFile->IsDirectory(&isDir);
             NS_FAILED(rv) && !IsFileNotFound(rv)) {
-          return Err(IOError(
-              rv, "Could not write to `%s': could not stat file or directory",
-              aFile->HumanReadablePath().get()));
+          return Err(IOError(rv).WithMessage("Could not stat the file at %s",
+                                             aFile->HumanReadablePath().get()));
         }
 
         // If we attempt to write to a directory *without* a temp file, we get a
@@ -1543,19 +1445,20 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
         // inside the directory, which is not what we want. In this case, we are
         // just going to bail out early.
         if (isDir) {
-          return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED,
-                             "Could not write to `%s': file is a directory",
-                             aFile->HumanReadablePath().get()));
+          return Err(
+              IOError(NS_ERROR_FILE_ACCESS_DENIED)
+                  .WithMessage("Could not open the file at %s for writing",
+                               aFile->HumanReadablePath().get()));
         }
       }
 
-      if (auto result = MoveSync(writeFile, aFile, /* aNoOverwrite = */ false);
-          result.isErr()) {
-        return Err(IOError::WithCause(
-            result.unwrapErr(),
-            "Could not write to `%s': could not move overwite with temporary "
-            "file",
-            aFile->HumanReadablePath().get()));
+      if (MoveSync(writeFile, aFile, /* aNoOverwrite = */ false).isErr()) {
+        return Err(
+            IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+                .WithMessage(
+                    "Could not move temporary file(%s) to destination(%s)",
+                    writeFile->HumanReadablePath().get(),
+                    aFile->HumanReadablePath().get()));
       }
     }
   }
@@ -1571,18 +1474,13 @@ Result<Ok, IOUtils::IOError> IOUtils::MoveSync(nsIFile* aSourceFile,
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
   bool srcExists = false;
-  IOUTILS_TRY_WITH_CONTEXT(
-      aSourceFile->Exists(&srcExists),
-      "Could not move `%s' to `%s': could not stat source file or directory",
-      aSourceFile->HumanReadablePath().get(),
-      aDestFile->HumanReadablePath().get());
-
+  MOZ_TRY(aSourceFile->Exists(&srcExists));
   if (!srcExists) {
     return Err(
-        IOError(NS_ERROR_FILE_NOT_FOUND,
-                "Could not move `%s' to `%s': source file does not exist",
-                aSourceFile->HumanReadablePath().get(),
-                aDestFile->HumanReadablePath().get()));
+        IOError(NS_ERROR_FILE_NOT_FOUND)
+            .WithMessage(
+                "Could not move source file(%s) because it does not exist",
+                aSourceFile->HumanReadablePath().get()));
   }
 
   return CopyOrMoveSync(&nsIFile::MoveToFollowingLinks, "move", aSourceFile,
@@ -1599,35 +1497,28 @@ Result<Ok, IOUtils::IOError> IOUtils::CopySync(nsIFile* aSourceFile,
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
   bool srcExists;
-  IOUTILS_TRY_WITH_CONTEXT(
-      aSourceFile->Exists(&srcExists),
-      "Could not copy `%s' to `%s': could not stat source file or directory",
-      aSourceFile->HumanReadablePath().get(),
-      aDestFile->HumanReadablePath().get());
-
+  MOZ_TRY(aSourceFile->Exists(&srcExists));
   if (!srcExists) {
     return Err(
-        IOError(NS_ERROR_FILE_NOT_FOUND,
-                "Could not copy `%s' to `%s': source file does not exist",
-                aSourceFile->HumanReadablePath().get(),
-                aDestFile->HumanReadablePath().get()));
+        IOError(NS_ERROR_FILE_NOT_FOUND)
+            .WithMessage(
+                "Could not copy source file(%s) because it does not exist",
+                aSourceFile->HumanReadablePath().get()));
   }
 
   // If source is a directory, fail immediately unless the recursive option is
   // true.
   bool srcIsDir = false;
-  IOUTILS_TRY_WITH_CONTEXT(
-      aSourceFile->IsDirectory(&srcIsDir),
-      "Could not copy `%s' to `%s': could not stat source file or directory",
-      aSourceFile->HumanReadablePath().get(),
-      aDestFile->HumanReadablePath().get());
-
+  MOZ_TRY(aSourceFile->IsDirectory(&srcIsDir));
   if (srcIsDir && !aRecursive) {
-    return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED,
-                       "Refused to copy directory `%s' to `%s': `recursive' is "
-                       "false\n",
-                       aSourceFile->HumanReadablePath().get(),
-                       aDestFile->HumanReadablePath().get()));
+    return Err(
+        IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
+            .WithMessage(
+                "Refused to copy source directory(%s) to the destination(%s)\n"
+                "Specify the `recursive: true` option to allow copying "
+                "directories",
+                aSourceFile->HumanReadablePath().get(),
+                aDestFile->HumanReadablePath().get()));
   }
 
   return CopyOrMoveSync(&nsIFile::CopyToFollowingLinks, "copy", aSourceFile,
@@ -1651,9 +1542,10 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
   if (NS_SUCCEEDED(rv) && destIsDir) {
     rv = (aSource->*aMethod)(aDest, u""_ns);
     if (NS_FAILED(rv)) {
-      return Err(IOError(rv, "Could not %s `%s' to `%s'", aMethodName,
-                         aSource->HumanReadablePath().get(),
-                         aDest->HumanReadablePath().get()));
+      return Err(IOError(rv).WithMessage(
+          "Could not %s source file(%s) to destination directory(%s)",
+          aMethodName, aSource->HumanReadablePath().get(),
+          aDest->HumanReadablePath().get()));
     }
     return Ok();
   }
@@ -1662,9 +1554,7 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
     if (!IsFileNotFound(rv)) {
       // It's ok if the dest file doesn't exist. Case 2 handles this below.
       // Bail out early for any other kind of error though.
-      return Err(IOError(rv, "Could not %s `%s' to `%s'", aMethodName,
-                         aSource->HumanReadablePath().get(),
-                         aDest->HumanReadablePath().get()));
+      return Err(IOError(rv));
     }
     destExists = false;
   }
@@ -1674,41 +1564,37 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
   //         If the destination exists and the source is not a regular file,
   //         then this may fail.
   if (aNoOverwrite && destExists) {
-    return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS,
-                       "Could not %s `%s' to `%s': destination file exists and "
-                       "`noOverwrite' is true",
-                       aMethodName, aSource->HumanReadablePath().get(),
-                       aDest->HumanReadablePath().get()));
+    return Err(
+        IOError(NS_ERROR_FILE_ALREADY_EXISTS)
+            .WithMessage(
+                "Could not %s source file(%s) to destination(%s) because the "
+                "destination already exists and overwrites are not allowed\n"
+                "Specify the `noOverwrite: false` option to mitigate this "
+                "error",
+                aMethodName, aSource->HumanReadablePath().get(),
+                aDest->HumanReadablePath().get()));
   }
   if (destExists && !destIsDir) {
     // If the source file is a directory, but the target is a file, abort early.
     // Different implementations of |CopyTo| and |MoveTo| seem to handle this
     // error case differently (or not at all), so we explicitly handle it here.
     bool srcIsDir = false;
-    IOUTILS_TRY_WITH_CONTEXT(
-        aSource->IsDirectory(&srcIsDir),
-        "Could not %s `%s' to `%s': could not stat source file or directory",
-        aMethodName, aSource->HumanReadablePath().get(),
-        aDest->HumanReadablePath().get());
+    MOZ_TRY(aSource->IsDirectory(&srcIsDir));
     if (srcIsDir) {
-      return Err(IOError(
-          NS_ERROR_FILE_DESTINATION_NOT_DIR,
-          "Could not %s directory `%s' to `%s': destination is not a directory",
-          aMethodName, aSource->HumanReadablePath().get(),
-          aDest->HumanReadablePath().get()));
+      return Err(IOError(NS_ERROR_FILE_DESTINATION_NOT_DIR)
+                     .WithMessage("Could not %s the source directory(%s) to "
+                                  "the destination(%s) because the destination "
+                                  "is not a directory",
+                                  aMethodName,
+                                  aSource->HumanReadablePath().get(),
+                                  aDest->HumanReadablePath().get()));
     }
   }
 
-  // We would have already thrown if the path was zero-length.
-  nsAutoString destName;
-  MOZ_ALWAYS_SUCCEEDS(aDest->GetLeafName(destName));
-
   nsCOMPtr<nsIFile> destDir;
-  IOUTILS_TRY_WITH_CONTEXT(
-      aDest->GetParent(getter_AddRefs(destDir)),
-      "Could not %s `%s` to `%s': path `%s' does not have a parent",
-      aMethodName, aSource->HumanReadablePath().get(),
-      aDest->HumanReadablePath().get(), aDest->HumanReadablePath().get());
+  nsAutoString destName;
+  MOZ_TRY(aDest->GetLeafName(destName));
+  MOZ_TRY(aDest->GetParent(getter_AddRefs(destDir)));
 
   // We know `destName` is a file and therefore must have a parent directory.
   MOZ_RELEASE_ASSERT(destDir);
@@ -1717,9 +1603,9 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
   // |MoveToFollowingLinks| will create it.
   rv = (aSource->*aMethod)(destDir, destName);
   if (NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not %s `%s' to `%s'", aMethodName,
-                       aSource->HumanReadablePath().get(),
-                       aDest->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage(
+        "Could not %s the source file(%s) to the destination(%s)", aMethodName,
+        aSource->HumanReadablePath().get(), aDest->HumanReadablePath().get()));
   }
   return Ok();
 }
@@ -1739,35 +1625,32 @@ Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(nsIFile* aFile,
     return Ok();
   }
   if (NS_FAILED(rv)) {
+    IOError err(rv);
     if (IsFileNotFound(rv)) {
-      return Err(IOError(rv, "Could not remove `%s': file does not exist",
-                         aFile->HumanReadablePath().get()));
+      return Err(err.WithMessage(
+          "Could not remove the file at %s because it does not exist.\n"
+          "Specify the `ignoreAbsent: true` option to mitigate this error",
+          aFile->HumanReadablePath().get()));
     }
     if (rv == NS_ERROR_FILE_DIR_NOT_EMPTY) {
-      return Err(IOError(rv,
-                         "Could not remove `%s': the directory is not empty",
-                         aFile->HumanReadablePath().get()));
+      return Err(err.WithMessage(
+          "Could not remove the non-empty directory at %s.\n"
+          "Specify the `recursive: true` option to mitigate this error",
+          aFile->HumanReadablePath().get()));
     }
 
 #ifdef XP_WIN
 
     if (rv == NS_ERROR_FILE_ACCESS_DENIED && aRetryReadonly) {
-      if (auto result =
-              SetWindowsAttributesSync(aFile, 0, FILE_ATTRIBUTE_READONLY);
-          result.isErr()) {
-        return Err(IOError::WithCause(
-            result.unwrapErr(),
-            "Could not remove `%s': could not clear readonly attribute",
-            aFile->HumanReadablePath().get()));
-      }
+      MOZ_TRY(SetWindowsAttributesSync(aFile, 0, FILE_ATTRIBUTE_READONLY));
       return RemoveSync(aFile, aIgnoreAbsent, aRecursive,
                         /* aRetryReadonly = */ false);
     }
 
 #endif
 
-    return Err(
-        IOError(rv, "Could not remove `%s'", aFile->HumanReadablePath().get()));
+    return Err(err.WithMessage("Could not remove the file at %s",
+                               aFile->HumanReadablePath().get()));
   }
   return Ok();
 }
@@ -1780,10 +1663,7 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
   MOZ_ASSERT(!NS_IsMainThread());
 
   nsCOMPtr<nsIFile> parent;
-  IOUTILS_TRY_WITH_CONTEXT(
-      aFile->GetParent(getter_AddRefs(parent)),
-      "Could not make directory `%s': could not get parent directory",
-      aFile->HumanReadablePath().get());
+  MOZ_TRY(aFile->GetParent(getter_AddRefs(parent)));
   if (!parent) {
     // If we don't have a parent directory, we were called with a
     // root directory. If the directory doesn't already exist (e.g., asking
@@ -1797,11 +1677,7 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
     // Otherwise, we fall through to `nsiFile::Create()` and let it fail there
     // instead.
     bool exists = false;
-    IOUTILS_TRY_WITH_CONTEXT(
-        aFile->Exists(&exists),
-        "Could not make directory `%s': could not stat file or directory",
-        aFile->HumanReadablePath().get());
-
+    MOZ_TRY(aFile->Exists(&exists));
     if (exists) {
       return Ok();
     }
@@ -1816,16 +1692,13 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
       // an existing file, since trying to create a directory where a regular
       // file exists may be indicative of a logic error.
       bool isDirectory;
-      IOUTILS_TRY_WITH_CONTEXT(
-          aFile->IsDirectory(&isDirectory),
-          "Could not make directory `%s': could not stat file or directory",
-          aFile->HumanReadablePath().get());
-
+      MOZ_TRY(aFile->IsDirectory(&isDirectory));
       if (!isDirectory) {
-        return Err(IOError(NS_ERROR_FILE_NOT_DIRECTORY,
-                           "Could not create directory `%s': file exists and "
-                           "is not a directory",
-                           aFile->HumanReadablePath().get()));
+        return Err(IOError(NS_ERROR_FILE_NOT_DIRECTORY)
+                       .WithMessage("Could not create directory because the "
+                                    "target file(%s) exists "
+                                    "and is not a directory",
+                                    aFile->HumanReadablePath().get()));
       }
       // The directory exists.
       // The caller may suppress this error.
@@ -1833,12 +1706,14 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
         return Ok();
       }
       // Otherwise, forward it.
-      return Err(IOError(
-          rv, "Could not create directory `%s': directory already exists",
+      return Err(IOError(rv).WithMessage(
+          "Could not create directory because it already exists at %s\n"
+          "Specify the `ignoreExisting: true` option to mitigate this "
+          "error",
           aFile->HumanReadablePath().get()));
     }
-    return Err(IOError(rv, "Could not create directory `%s'",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage("Could not create directory at %s",
+                                       aFile->HumanReadablePath().get()));
   }
   return Ok();
 }
@@ -1856,27 +1731,26 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   // Any subsequent errors are unexpected and will just be forwarded.
   nsresult rv = aFile->IsFile(&isRegular);
   if (NS_FAILED(rv)) {
+    IOError err(rv);
     if (IsFileNotFound(rv)) {
-      return Err(IOError(rv, "Could not stat `%s': file does not exist",
-                         aFile->HumanReadablePath().get()));
+      return Err(
+          err.WithMessage("Could not stat file(%s) because it does not exist",
+                          aFile->HumanReadablePath().get()));
     }
-    return Err(
-        IOError(rv, "Could not stat `%s'", aFile->HumanReadablePath().get()));
+    return Err(err);
   }
 
   // Now we can populate the info object by querying the file.
   info.mType = FileType::Regular;
   if (!isRegular) {
     bool isDir = false;
-    IOUTILS_TRY_WITH_CONTEXT(aFile->IsDirectory(&isDir), "Could not stat `%s'",
-                             aFile->HumanReadablePath().get());
+    MOZ_TRY(aFile->IsDirectory(&isDir));
     info.mType = isDir ? FileType::Directory : FileType::Other;
   }
 
   int64_t size = -1;
   if (info.mType == FileType::Regular) {
-    IOUTILS_TRY_WITH_CONTEXT(aFile->GetFileSize(&size), "Could not stat `%s'",
-                             aFile->HumanReadablePath().get());
+    MOZ_TRY(aFile->GetFileSize(&size));
   }
   info.mSize = size;
 
@@ -1885,27 +1759,18 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
     info.mCreationTime.emplace(static_cast<int64_t>(creationTime));
   } else if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
     // This field is only supported on some platforms.
-    return Err(
-        IOError(rv, "Could not stat `%s'", aFile->HumanReadablePath().get()));
+    return Err(IOError(rv));
   }
 
   PRTime lastAccessed = 0;
-  IOUTILS_TRY_WITH_CONTEXT(aFile->GetLastAccessedTime(&lastAccessed),
-                           "Could not stat `%s'",
-                           aFile->HumanReadablePath().get());
-
+  MOZ_TRY(aFile->GetLastAccessedTime(&lastAccessed));
   info.mLastAccessed = static_cast<int64_t>(lastAccessed);
 
   PRTime lastModified = 0;
-  IOUTILS_TRY_WITH_CONTEXT(aFile->GetLastModifiedTime(&lastModified),
-                           "Could not stat `%s'",
-                           aFile->HumanReadablePath().get());
-
+  MOZ_TRY(aFile->GetLastModifiedTime(&lastModified));
   info.mLastModified = static_cast<int64_t>(lastModified);
 
-  IOUTILS_TRY_WITH_CONTEXT(aFile->GetPermissions(&info.mPermissions),
-                           "Could not stat `%s'",
-                           aFile->HumanReadablePath().get());
+  MOZ_TRY(aFile->GetPermissions(&info.mPermissions));
 
   return info;
 }
@@ -1923,23 +1788,26 @@ Result<int64_t, IOUtils::IOError> IOUtils::SetTimeSync(
   // If it ever becomes possible to set a file time to 0, this check should be
   // removed, though this use case seems rare.
   if (aNewTime == 0) {
-    return Err(IOError(
-        NS_ERROR_ILLEGAL_VALUE,
-        "Refusing to set modification time of `%s' to 0: to use the current "
-        "system time, call `setModificationTime' with no arguments",
-        aFile->HumanReadablePath().get()));
+    return Err(
+        IOError(NS_ERROR_ILLEGAL_VALUE)
+            .WithMessage(
+                "Refusing to set the modification time of file(%s) to 0.\n"
+                "To use the current system time, call `setModificationTime` "
+                "with no arguments",
+                aFile->HumanReadablePath().get()));
   }
 
   nsresult rv = (aFile->*aSetTimeFn)(aNewTime);
 
   if (NS_FAILED(rv)) {
+    IOError err(rv);
     if (IsFileNotFound(rv)) {
-      return Err(IOError(
-          rv, "Could not set modification time of `%s': file does not exist",
-          aFile->HumanReadablePath().get()));
+      return Err(
+          err.WithMessage("Could not set modification time of file(%s) "
+                          "because it does not exist",
+                          aFile->HumanReadablePath().get()));
     }
-    return Err(IOError(rv, "Could not set modification time of `%s'",
-                       aFile->HumanReadablePath().get()));
+    return Err(err);
   }
   return aNewTime;
 }
@@ -1956,43 +1824,31 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
     return children;
   }
   if (NS_FAILED(rv)) {
+    IOError err(rv);
     if (IsFileNotFound(rv)) {
-      return Err(IOError(
-          rv, "Could not get children of `%s': directory does not exist",
+      return Err(err.WithMessage(
+          "Could not get children of file(%s) because it does not exist",
           aFile->HumanReadablePath().get()));
     }
     if (IsNotDirectory(rv)) {
-      return Err(
-          IOError(rv, "Could not get children of `%s': file is not a directory",
-                  aFile->HumanReadablePath().get()));
+      return Err(err.WithMessage(
+          "Could not get children of file(%s) because it is not a directory",
+          aFile->HumanReadablePath().get()));
     }
-    return Err(IOError(rv, "Could not get children of `%s'",
-                       aFile->HumanReadablePath().get()));
+    return Err(err);
   }
 
   bool hasMoreElements = false;
-  IOUTILS_TRY_WITH_CONTEXT(
-      iter->HasMoreElements(&hasMoreElements),
-      "Could not get children of `%s': could not iterate children",
-      aFile->HumanReadablePath().get());
-
+  MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
   while (hasMoreElements) {
     nsCOMPtr<nsIFile> child;
-    IOUTILS_TRY_WITH_CONTEXT(
-        iter->GetNextFile(getter_AddRefs(child)),
-        "Could not get children of `%s': could not retrieve child file",
-        aFile->HumanReadablePath().get());
-
+    MOZ_TRY(iter->GetNextFile(getter_AddRefs(child)));
     if (child) {
       nsString path;
-      MOZ_ALWAYS_SUCCEEDS(child->GetPath(path));
+      MOZ_TRY(child->GetPath(path));
       children.AppendElement(path);
     }
-
-    IOUTILS_TRY_WITH_CONTEXT(
-        iter->HasMoreElements(&hasMoreElements),
-        "Could not get children of `%s': could not iterate children",
-        aFile->HumanReadablePath().get());
+    MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
   }
 
   return children;
@@ -2003,10 +1859,7 @@ Result<Ok, IOUtils::IOError> IOUtils::SetPermissionsSync(
     nsIFile* aFile, const uint32_t aPermissions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  IOUTILS_TRY_WITH_CONTEXT(aFile->SetPermissions(aPermissions),
-                           "Could not set permissions on `%s'",
-                           aFile->HumanReadablePath().get());
-
+  MOZ_TRY(aFile->SetPermissions(aPermissions));
   return Ok{};
 }
 
@@ -2015,8 +1868,7 @@ Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   bool exists = false;
-  IOUTILS_TRY_WITH_CONTEXT(aFile->Exists(&exists), "Could not stat `%s'",
-                           aFile->HumanReadablePath().get());
+  MOZ_TRY(aFile->Exists(&exists));
 
   return exists;
 }
@@ -2028,13 +1880,7 @@ Result<nsString, IOUtils::IOError> IOUtils::CreateUniqueSync(
 
   if (nsresult rv = aFile->CreateUnique(aFileType, aPermissions);
       NS_FAILED(rv)) {
-    nsCOMPtr<nsIFile> aParent = nullptr;
-    MOZ_ALWAYS_SUCCEEDS(aFile->GetParent(getter_AddRefs(aParent)));
-    MOZ_RELEASE_ASSERT(aParent);
-    return Err(
-        IOError(rv, "Could not create unique %s in `%s'",
-                aFileType == nsIFile::NORMAL_FILE_TYPE ? "file" : "directory",
-                aParent->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage("Could not create unique path"));
   }
 
   nsString path;
@@ -2068,25 +1914,24 @@ Result<nsCString, IOUtils::IOError> IOUtils::ComputeHexDigestSync(
 
   Digest digest;
   if (nsresult rv = digest.Begin(alg); NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not hash `%s': could not create digest",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage("Could not hash file at %s",
+                                       aFile->HumanReadablePath().get()));
   }
 
   RefPtr<nsIInputStream> stream;
   if (nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aFile);
       NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not hash `%s': could not open for reading",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage("Could not open the file at %s",
+                                       aFile->HumanReadablePath().get()));
   }
 
   char buffer[BUFFER_SIZE];
   uint32_t read = 0;
   for (;;) {
     if (nsresult rv = stream->Read(buffer, BUFFER_SIZE, &read); NS_FAILED(rv)) {
-      return Err(IOError(rv,
-                         "Could not hash `%s': encountered an unexpected error "
-                         "while reading file",
-                         aFile->HumanReadablePath().get()));
+      return Err(IOError(rv).WithMessage(
+          "Encountered an unexpected error while reading file(%s)",
+          aFile->HumanReadablePath().get()));
     }
     if (read == 0) {
       break;
@@ -2095,22 +1940,20 @@ Result<nsCString, IOUtils::IOError> IOUtils::ComputeHexDigestSync(
     if (nsresult rv =
             digest.Update(reinterpret_cast<unsigned char*>(buffer), read);
         NS_FAILED(rv)) {
-      return Err(IOError(rv, "Could not hash `%s': could not update digest",
-                         aFile->HumanReadablePath().get()));
+      return Err(IOError(rv).WithMessage("Could not hash file at %s",
+                                         aFile->HumanReadablePath().get()));
     }
   }
 
   AutoTArray<uint8_t, SHA512_LENGTH> rawDigest;
   if (nsresult rv = digest.End(rawDigest); NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not hash `%s': could not compute digest",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage("Could not hash file at %s",
+                                       aFile->HumanReadablePath().get()));
   }
 
   nsCString hexDigest;
   if (!hexDigest.SetCapacity(2 * rawDigest.Length(), fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY,
-                       "Could not hash `%s': out of memory",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(NS_ERROR_OUT_OF_MEMORY));
   }
 
   const char HEX[] = "0123456789abcdef";
@@ -2134,8 +1977,9 @@ Result<uint32_t, IOUtils::IOError> IOUtils::GetWindowsAttributesSync(
   MOZ_ASSERT(file);
 
   if (nsresult rv = file->GetWindowsFileAttributes(&attrs); NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not get Windows file attributes for `%s'",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage(
+        "Could not get Windows file attributes for the file at `%s'",
+        aFile->HumanReadablePath().get()));
   }
   return attrs;
 }
@@ -2149,8 +1993,9 @@ Result<Ok, IOUtils::IOError> IOUtils::SetWindowsAttributesSync(
 
   if (nsresult rv = file->SetWindowsFileAttributes(aSetAttrs, aClearAttrs);
       NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not set Windows file attributes for `%s'",
-                       aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage(
+        "Could not set Windows file attributes for the file at `%s'",
+        aFile->HumanReadablePath().get()));
   }
 
   return Ok{};
@@ -2168,8 +2013,9 @@ Result<bool, IOUtils::IOError> IOUtils::HasMacXAttrSync(
 
   bool hasAttr = false;
   if (nsresult rv = file->HasXAttr(aAttr, &hasAttr); NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not read extended attribute `%s' from `%s'",
-                       aAttr.get(), aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage(
+        "Could not read the extended attribute `%s' from the file `%s'",
+        aAttr.get(), aFile->HumanReadablePath().get()));
   }
 
   return hasAttr;
@@ -2185,15 +2031,17 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::GetMacXAttrSync(
 
   nsTArray<uint8_t> value;
   if (nsresult rv = file->GetXAttr(aAttr, value); NS_FAILED(rv)) {
+    auto err = IOError(rv);
+
     if (rv == NS_ERROR_NOT_AVAILABLE) {
-      return Err(IOError(rv,
-                         "Could not get extended attribute `%s' from `%s': the "
-                         "file does not have the attribute",
-                         aAttr.get(), aFile->HumanReadablePath().get()));
+      return Err(err.WithMessage(
+          "The file `%s' does not have an extended attribute `%s'",
+          aFile->HumanReadablePath().get(), aAttr.get()));
     }
 
-    return Err(IOError(rv, "Could not read extended attribute `%s' from `%s'",
-                       aAttr.get(), aFile->HumanReadablePath().get()));
+    return Err(err.WithMessage(
+        "Could not read the extended attribute `%s' from the file `%s'",
+        aAttr.get(), aFile->HumanReadablePath().get()));
   }
 
   return value;
@@ -2208,8 +2056,9 @@ Result<Ok, IOUtils::IOError> IOUtils::SetMacXAttrSync(
   MOZ_ASSERT(file);
 
   if (nsresult rv = file->SetXAttr(aAttr, aValue); NS_FAILED(rv)) {
-    return Err(IOError(rv, "Could not set extended attribute `%s' on `%s'",
-                       aAttr.get(), aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage(
+        "Could not set extended attribute `%s' on file `%s'", aAttr.get(),
+        aFile->HumanReadablePath().get()));
   }
 
   return Ok{};
@@ -2224,15 +2073,17 @@ Result<Ok, IOUtils::IOError> IOUtils::DelMacXAttrSync(nsIFile* aFile,
   MOZ_ASSERT(file);
 
   if (nsresult rv = file->DelXAttr(aAttr); NS_FAILED(rv)) {
+    auto err = IOError(rv);
+
     if (rv == NS_ERROR_NOT_AVAILABLE) {
-      return Err(IOError(rv,
-                         "Could not delete extended attribute `%s' from "
-                         "`%s': the file does not have the attribute",
-                         aAttr.get(), aFile->HumanReadablePath().get()));
+      return Err(err.WithMessage(
+          "The file `%s' does not have an extended attribute `%s'",
+          aFile->HumanReadablePath().get(), aAttr.get()));
     }
 
-    return Err(IOError(rv, "Could not delete extended attribute `%s' from `%s'",
-                       aAttr.get(), aFile->HumanReadablePath().get()));
+    return Err(IOError(rv).WithMessage(
+        "Could not delete extended attribute `%s' on file `%s'", aAttr.get(),
+        aFile->HumanReadablePath().get()));
   }
 
   return Ok{};
@@ -2523,8 +2374,8 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
   size_t worstCaseSize =
       Compression::LZ4::maxCompressedSize(aUncompressed.Length()) + HEADER_SIZE;
   if (!result.SetCapacity(worstCaseSize, fallible)) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY,
-                       "could not allocate buffer to compress data"_ns));
+    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
+                   .WithMessage("Could not allocate buffer to compress data"));
   }
   result.AppendElements(Span(MAGIC_NUMBER.data(), MAGIC_NUMBER.size()));
   std::array<uint8_t, sizeof(uint32_t)> contentSizeBytes{};
@@ -2543,7 +2394,8 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
       aUncompressed.Length(),
       reinterpret_cast<char*>(result.Elements()) + HEADER_SIZE);
   if (!compressed) {
-    return Err(IOError(NS_ERROR_UNEXPECTED, "could not compress data"_ns));
+    return Err(
+        IOError(NS_ERROR_UNEXPECTED).WithMessage("Could not compress data"));
   }
   result.SetLength(HEADER_SIZE + compressed);
   return result;
@@ -2553,8 +2405,10 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
 Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
     Span<const uint8_t> aFileContents, IOUtils::BufferKind aBufferKind) {
   if (aFileContents.LengthBytes() < HEADER_SIZE) {
-    return Err(IOError(NS_ERROR_FILE_CORRUPTED,
-                       "could not decompress file: buffer is too small"_ns));
+    return Err(
+        IOError(NS_ERROR_FILE_CORRUPTED)
+            .WithMessage(
+                "Could not decompress file because the buffer is too short"));
   }
   auto header = aFileContents.To(HEADER_SIZE);
   if (!std::equal(std::begin(MAGIC_NUMBER), std::end(MAGIC_NUMBER),
@@ -2566,10 +2420,10 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
     }
     magicStr.AppendPrintf("%02X", header.at(i));
 
-    return Err(IOError(NS_ERROR_FILE_CORRUPTED,
-                       "could not decompress file: invalid LZ4 header: wrong "
-                       "magic number: `%s'",
-                       magicStr.get()));
+    return Err(IOError(NS_ERROR_FILE_CORRUPTED)
+                   .WithMessage("Could not decompress file because it has an "
+                                "invalid LZ4 header (wrong magic number: '%s')",
+                                magicStr.get()));
   }
   size_t numBytes = sizeof(uint32_t);
   Span<const uint8_t> sizeBytes = header.Last(numBytes);
@@ -2581,9 +2435,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
   auto contents = aFileContents.From(HEADER_SIZE);
   auto result = JsBuffer::Create(aBufferKind, expectedDecompressedSize);
   if (result.isErr()) {
-    return Err(IOError::WithCause(
-        result.unwrapErr(),
-        "could not decompress file: could not allocate buffer"_ns));
+    return result.propagateErr();
   }
 
   JsBuffer decompressed = result.unwrap();
@@ -2593,8 +2445,9 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
           reinterpret_cast<char*>(decompressed.Elements()),
           expectedDecompressedSize, &actualSize)) {
     return Err(
-        IOError(NS_ERROR_FILE_CORRUPTED,
-                "could not decompress file: the file may be corrupt"_ns));
+        IOError(NS_ERROR_FILE_CORRUPTED)
+            .WithMessage(
+                "Could not decompress file contents, the file may be corrupt"));
   }
   decompressed.SetLength(actualSize);
   return decompressed;
@@ -2730,8 +2583,8 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
     if (nsresult rv = PathUtils::InitFileWithPath(opts.mBackupFile,
                                                   aOptions.mBackupFile.Value());
         NS_FAILED(rv)) {
-      return Err(IOUtils::IOError(
-          rv, "Could not parse path of backupFile `%s'",
+      return Err(IOUtils::IOError(rv).WithMessage(
+          "Could not parse path of backupFile (%s)",
           NS_ConvertUTF16toUTF8(aOptions.mBackupFile.Value()).get()));
     }
   }
@@ -2741,8 +2594,8 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
     if (nsresult rv = PathUtils::InitFileWithPath(opts.mTmpFile,
                                                   aOptions.mTmpPath.Value());
         NS_FAILED(rv)) {
-      return Err(IOUtils::IOError(
-          rv, "Could not parse path of temp file `%s'",
+      return Err(IOUtils::IOError(rv).WithMessage(
+          "Could not parse path of temp file (%s)",
           NS_ConvertUTF16toUTF8(aOptions.mTmpPath.Value()).get()));
     }
   }
@@ -2756,7 +2609,8 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::JsBuffer::Create(
     IOUtils::BufferKind aBufferKind, size_t aCapacity) {
   JsBuffer buffer(aBufferKind, aCapacity);
   if (aCapacity != 0 && !buffer.mBuffer) {
-    return Err(IOError(NS_ERROR_OUT_OF_MEMORY, "Could not allocate buffer"_ns));
+    return Err(IOError(NS_ERROR_OUT_OF_MEMORY)
+                   .WithMessage("Could not allocate buffer"));
   }
   return buffer;
 }
@@ -2933,8 +2787,8 @@ void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
     }
 
     if (nsresult rv = mStream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
-      return aRv.ThrowOperationError(FormatErrorMessage(
-          rv, "Could not seek to position %" PRId64, aOffset));
+      return aRv.ThrowOperationError(
+          FormatErrorMessage(rv, "Could not seek to position %lld", aOffset));
     }
 
     Span<char> toRead = AsWritableChars(aData);
@@ -2951,8 +2805,7 @@ void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
                                       &bytesRead);
           NS_FAILED(rv)) {
         return aRv.ThrowOperationError(FormatErrorMessage(
-            rv,
-            "Encountered an unexpected error while reading file stream"_ns));
+            rv, "Encountered an unexpected error while reading file stream"));
       }
       if (bytesRead == 0) {
         return aRv.ThrowOperationError(
@@ -3043,4 +2896,3 @@ uint32_t IOUtils::LaunchProcess(GlobalObject& aGlobal,
 }  // namespace mozilla::dom
 
 #undef REJECT_IF_INIT_PATH_FAILED
-#undef IOUTILS_TRY_WITH_CONTEXT

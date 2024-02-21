@@ -148,7 +148,6 @@ class IOUtils final {
                                            const nsAString& aPath,
                                            const Optional<int64_t>& aNewTime,
                                            SetTimeFn aSetTimeFn,
-                                           const char* const aTimeKind,
                                            ErrorResult& aError);
 
  public:
@@ -654,34 +653,23 @@ class IOUtils::EventQueue final {
  */
 class IOUtils::IOError {
  public:
-  IOError(nsresult aCode, const nsCString& aMsg)
-      : mCode(aCode), mMessage(aMsg) {}
+  MOZ_IMPLICIT IOError(nsresult aCode) : mCode(aCode), mMessage(Nothing()) {}
 
-  IOError(nsresult aCode, const char* const aFmt, ...) MOZ_FORMAT_PRINTF(3, 4)
-      : mCode(aCode) {
-    va_list ap;
-    va_start(ap, aFmt);
-    mMessage.AppendVprintf(aFmt, ap);
-    va_end(ap);
+  /**
+   * Replaces the message associated with this error.
+   */
+  template <typename... Args>
+  IOError WithMessage(const char* const aMessage, Args... aArgs) {
+    mMessage.emplace(nsPrintfCString(aMessage, aArgs...));
+    return *this;
   }
-
-  static IOError WithCause(const IOError& aCause, const nsCString& aMsg) {
-    IOError e(aCause.mCode, aMsg);
-    e.mMessage.AppendPrintf(": %s", aCause.mMessage.get());
-    return e;
+  IOError WithMessage(const char* const aMessage) {
+    mMessage.emplace(nsCString(aMessage));
+    return *this;
   }
-
-  static IOError WithCause(const IOError& aCause, const char* const aFmt, ...)
-      MOZ_FORMAT_PRINTF(2, 3) {
-    va_list ap;
-    va_start(ap, aFmt);
-
-    IOError e(aCause.mCode, EmptyCString());
-    e.mMessage.AppendVprintf(aFmt, ap);
-    e.mMessage.AppendPrintf(": %s", aCause.mMessage.get());
-
-    va_end(ap);
-    return e;
+  IOError WithMessage(const nsCString& aMessage) {
+    mMessage.emplace(aMessage);
+    return *this;
   }
 
   /**
@@ -690,13 +678,13 @@ class IOUtils::IOError {
   nsresult Code() const { return mCode; }
 
   /**
-   * Returns the message associated with this error.
+   * Maybe returns a message associated with this error.
    */
-  const nsCString& Message() const { return mMessage; }
+  const Maybe<nsCString>& Message() const { return mMessage; }
 
  private:
   nsresult mCode;
-  nsCString mMessage;
+  Maybe<nsCString> mMessage;
 };
 
 /**

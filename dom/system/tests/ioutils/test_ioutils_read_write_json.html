@@ -77,7 +77,7 @@
       ok(!await IOUtils.exists(notExistsFilename), `${notExistsFilename} should not exist`);
       await Assert.rejects(
         IOUtils.readJSON(notExistsFilename),
-        /NotFoundError: Could not open `.*'/,
+        /NotFoundError: Could not open the file at/,
         "IOUtils::readJSON rejects when file does not exist"
       );
 
@@ -149,7 +149,7 @@
 
       await Assert.rejects(
         IOUtils.writeJSON(filename, OBJECT, {mode: "append"}),
-        /NotSupportedError: Could not write to `.*': IOUtils.writeJSON does not support appending to files/,
+        /NotSupportedError: IOUtils.writeJSON does not support appending to files/,
         "IOUtils.writeJSON() cannot append"
       );
 

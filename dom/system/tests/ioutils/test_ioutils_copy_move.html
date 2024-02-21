@@ -24,7 +24,7 @@
       info("Test moving a file to a relative destination");
       await Assert.rejects(
         IOUtils.move(tmpFileName, dest),
-        /OperationError: Could not move `.*' to `.*': could not parse path \(NS_ERROR_FILE_UNRECOGNIZED_PATH\)/,
+        /Could not parse path/,
         "IOUtils::move only works with absolute paths"
       );
       ok(
@@ -56,7 +56,7 @@
       // Test.
       await Assert.rejects(
         IOUtils.move(tmpFileName, destFileName, { noOverwrite: true }),
-        /Could not move `.*' to `.*': destination file exists and `noOverwrite' is true/,
+        /Could not move source file\(.*\) to destination\(.*\) because the destination already exists and overwrites are not allowed/,
         "IOUtils::move will refuse to move a file if overwrites are disabled"
       );
       ok(
@@ -161,7 +161,7 @@
       // Test.
       await Assert.rejects(
         IOUtils.move(notExistsSrc, notExistsDest),
-        /NotFoundError: Could not move `.*' to `.*': source file does not exist/,
+        /Could not move source file\(.*\) because it does not exist/,
         "IOUtils::move throws if source file does not exist"
       );
       ok(
@@ -178,7 +178,7 @@
       // Test.
       await Assert.rejects(
         IOUtils.move(srcDir, destFile),
-        /InvalidAccessError: Could not move directory `.*' to `.*': destination is not a directory/,
+        /Could not move the source directory\(.*\) to the destination\(.*\) because the destination is not a directory/,
         "IOUtils::move throws if try to move dir into an existing file"
       );
 
@@ -206,7 +206,7 @@
       // Test.
       await Assert.rejects(
         IOUtils.copy(tmpFileName, destFileName, { noOverwrite: true }),
-        /NoModificationAllowedError: Could not copy `.*' to `.*': destination file exists and `noOverwrite' is true/,
+        /Could not copy source file\(.*\) to destination\(.*\) because the destination already exists and overwrites are not allowed/,
         "IOUtils::copy will refuse to copy to existing destination if overwrites are disabled"
       );
       ok(
@@ -311,7 +311,7 @@
       // Test.
       await Assert.rejects(
         IOUtils.copy(notExistsSrc, notExistsDest),
-        /NotFoundError: Could not copy `.*' to `.*': source file does not exist/,
+        /Could not copy source file\(.*\) because it does not exist/,
         "IOUtils::copy throws if source file does not exist"
       );
       ok(
@@ -328,8 +328,8 @@
       // Test.
       await Assert.rejects(
         IOUtils.copy(srcDir, destFile, { recursive: true }),
-        /InvalidAccessError: Could not copy directory `.*' to `.*': destination is not a directory/,
-        "IOUtils::copy throws when trying to move a directory into an existing file"
+        /Could not copy the source directory\(.*\) to the destination\(.*\) because the destination is not a directory/,
+        "IOUtils::copy throws if try to move dir into an existing file"
       );
       ok(await fileHasTextContents(destFile, ""), "IOUtils::copy failure does not affect destination");
 
@@ -339,7 +339,7 @@
       // Test.
       await Assert.rejects(
         IOUtils.copy(srcDir, notExistsDest, { recursive: false }),
-        /OperationError: Refused to copy directory `.*' to `.*': `recursive' is false/,
+        /Refused to copy source directory\(.*\) to the destination\(.*\)/,
         "IOUtils::copy throws if try to copy a directory with { recursive: false }"
       );
       console.log(`${notExistsDest} exists?`, await IOUtils.exists(notExistsDest))
