@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocumentActivity.h"
 #include "nsWrapperCache.h"
@@ -29,13 +30,21 @@ class MediaMetadata;
 struct PositionState {
   PositionState() = default;
   PositionState(double aDuration, double aPlaybackRate,
-                double aLastReportedTime)
+                double aLastReportedTime, TimeStamp aPositionUpdatedTime)
       : mDuration(aDuration),
         mPlaybackRate(aPlaybackRate),
-        mLastReportedPlaybackPosition(aLastReportedTime) {}
-  double mDuration;
-  double mPlaybackRate;
-  double mLastReportedPlaybackPosition;
+        mLastReportedPlaybackPosition(aLastReportedTime),
+        mPositionUpdatedTime(aPositionUpdatedTime) {}
+
+  double mDuration = 0.0;
+  double mPlaybackRate = 0.0;
+  double mLastReportedPlaybackPosition = 0.0;
+  TimeStamp mPositionUpdatedTime;
+
+  // Returns the playback position in seconds (from 0 to mDuration)
+  // at the current time (aNow).
+  // https://w3c.github.io/mediasession/#current-playback-position
+  double CurrentPlaybackPosition(TimeStamp aNow = TimeStamp::Now()) const;
 };
 
 class MediaSession final : public nsIDocumentActivity, public nsWrapperCache {
