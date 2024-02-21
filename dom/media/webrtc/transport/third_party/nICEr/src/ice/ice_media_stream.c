@@ -763,6 +763,13 @@ void nr_ice_media_stream_set_disconnected(nr_ice_media_stream *stream, int disco
         nr_ice_peer_ctx_disconnected(stream->pctx);
       }
     } else {
+      if (!stream->local_stream->obsolete) {
+        if (stream->pctx->handler &&
+            stream->pctx->handler->vtbl->stream_ready) {
+          stream->pctx->handler->vtbl->stream_ready(stream->pctx->handler->obj,
+                                                    stream->local_stream);
+        }
+      }
       nr_ice_peer_ctx_check_if_connected(stream->pctx);
     }
   }

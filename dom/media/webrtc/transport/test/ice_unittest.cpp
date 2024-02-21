@@ -304,6 +304,8 @@ class SchedulableTrickleCandidate {
   }
 
   void Schedule(unsigned int ms) {
+    std::cerr << "Scheduling " << Candidate() << " in " << ms << "ms"
+              << std::endl;
     test_utils_->SyncDispatchToSTS(
         WrapRunnable(this, &SchedulableTrickleCandidate::Schedule_s, ms));
   }
@@ -721,7 +723,10 @@ class IceTestPeer : public sigslot::has_slots<> {
     }
     // take care of some local bookkeeping
     ready_ct_ = 0;
-    ice_reached_checking_ = false;
+    // We do not unset ice_reached_checking_ here, since we do not expect
+    // ICE to return to checking in an ICE restart, because the ICE stack
+    // continues using the old streams (which are probably connected) until the
+    // new ones are connected.
     remote_ = nullptr;
   }
 
@@ -744,7 +749,6 @@ class IceTestPeer : public sigslot::has_slots<> {
     remote_ = remote;
 
     trickle_mode_ = trickle_mode;
-    ice_reached_checking_ = false;
     res = ice_ctx_->ParseGlobalAttributes(remote->GetGlobalAttributes());
     ASSERT_FALSE(remote->simulate_ice_lite_ &&
                  (ice_ctx_->GetControlling() == NrIceCtx::ICE_CONTROLLED));
@@ -826,8 +830,11 @@ class IceTestPeer : public sigslot::has_slots<> {
     auto stream = GetStream_s(index);
     if (!stream) {
       // stream might have gone away before the trickle timer popped
+      std::cerr << "Trickle candidate has no stream: " << index << std::endl;
       return NS_OK;
     }
+    std::cerr << "Trickle candidate for " << index << " (" << stream->GetId()
+              << "):" << candidate << std::endl;
     return stream->ParseTrickleCandidate(candidate, ufrag, "");
   }
 
@@ -1179,22 +1186,34 @@ class IceTestPeer : public sigslot::has_slots<> {
       case NrIceCtx::ICE_CTX_INIT:
         break;
       case NrIceCtx::ICE_CTX_CHECKING:
-        std::cerr << name_ << " ICE reached checking" << std::endl;
+        std::cerr << name_ << " ICE reached checking (" << stream->GetId()
+                  << ")" << std::endl;
+        MOZ_ASSERT(ice_reached_checking_);
         break;
       case NrIceCtx::ICE_CTX_CONNECTED:
-        std::cerr << name_ << " ICE connected" << std::endl;
+        std::cerr << name_ << " ICE reached connected (" << stream->GetId()
+                  << ")" << std::endl;
+        MOZ_ASSERT(ice_reached_checking_);
         break;
       case NrIceCtx::ICE_CTX_COMPLETED:
-        std::cerr << name_ << " ICE completed" << std::endl;
+        std::cerr << name_ << " ICE reached completed (" << stream->GetId()
+                  << ")" << std::endl;
+        MOZ_ASSERT(ice_reached_checking_);
         break;
       case NrIceCtx::ICE_CTX_FAILED:
-        std::cerr << name_ << " ICE failed" << std::endl;
+        std::cerr << name_ << " ICE reached failed (" << stream->GetId() << ")"
+                  << std::endl;
+        MOZ_ASSERT(ice_reached_checking_);
         break;
       case NrIceCtx::ICE_CTX_DISCONNECTED:
-        std::cerr << name_ << " ICE disconnected" << std::endl;
+        std::cerr << name_ << " ICE reached disconnected (" << stream->GetId()
+                  << ")" << std::endl;
+        MOZ_ASSERT(ice_reached_checking_);
         break;
-      default:
-        MOZ_CRASH();
+      case NrIceCtx::ICE_CTX_CLOSED:
+        std::cerr << name_ << " ICE reached closed (" << stream->GetId() << ")"
+                  << std::endl;
+        break;
     }
   }
 
@@ -1721,10 +1740,8 @@ class WebRtcIceConnectTest : public StunTest {
                               TrickleMode mode = TRICKLE_NONE) {
     ASSERT_TRUE(caller->ready_ct() == 0);
     ASSERT_TRUE(caller->ice_connected() == 0);
-    ASSERT_TRUE(caller->ice_reached_checking() == 0);
     ASSERT_TRUE(callee->ready_ct() == 0);
     ASSERT_TRUE(callee->ice_connected() == 0);
-    ASSERT_TRUE(callee->ice_reached_checking() == 0);
 
     // IceTestPeer::Connect grabs attributes from the first arg, and
     // gives them to |this|, meaning that callee->Connect(caller, ...)
@@ -3396,6 +3413,8 @@ TEST_F(WebRtcIceConnectTest, TestConnectTrickleAddStreamDuringICE) {
   RealisticTrickleDelay(p1_->ControlTrickle(0));
   RealisticTrickleDelay(p2_->ControlTrickle(0));
   AddStream(1);
+  ASSERT_TRUE(Gather());
+  ConnectTrickle();
   RealisticTrickleDelay(p1_->ControlTrickle(1));
   RealisticTrickleDelay(p2_->ControlTrickle(1));
   WaitForConnected(1000);
