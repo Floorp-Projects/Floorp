@@ -3,6 +3,13 @@
 
 "use strict";
 
+/**
+ * @type {import("../../../ml/content/EngineProcess.sys.mjs")}
+ */
+const { EngineProcess } = ChromeUtils.importESModule(
+  "chrome://global/content/ml/EngineProcess.sys.mjs"
+);
+
 // Avoid about:blank's non-standard behavior.
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<!DOCTYPE html><title>Blank</title>Blank page";
@@ -134,7 +141,7 @@ async function openAboutTranslations({
   BrowserTestUtils.removeTab(tab);
 
   await removeMocks();
-  await TranslationsParent.destroyEngineProcess();
+  await EngineProcess.destroyTranslationsEngine();
 
   await SpecialPowers.popPrefEnv();
 }
@@ -443,7 +450,7 @@ async function setupActorTest({
     remoteClients,
     async cleanup() {
       await loadBlankPage();
-      await TranslationsParent.destroyEngineProcess();
+      await EngineProcess.destroyTranslationsEngine();
       await closeTranslationsPanelIfOpen();
       await closeContextMenuIfOpen();
       BrowserTestUtils.removeTab(tab);
@@ -500,7 +507,7 @@ async function loadTestPage({
 }) {
   info(`Loading test page starting at url: ${page}`);
   // Ensure no engine is being carried over from a previous test.
-  await TranslationsParent.destroyEngineProcess();
+  await EngineProcess.destroyTranslationsEngine();
   Services.fog.testResetFOG();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -586,7 +593,7 @@ async function loadTestPage({
      */
     async cleanup() {
       await loadBlankPage();
-      await TranslationsParent.destroyEngineProcess();
+      await EngineProcess.destroyTranslationsEngine();
       await closeTranslationsPanelIfOpen();
       await closeContextMenuIfOpen();
       await removeMocks();
@@ -1071,7 +1078,7 @@ async function setupAboutPreferences(
 
   async function cleanup() {
     await loadBlankPage();
-    await TranslationsParent.destroyEngineProcess();
+    await EngineProcess.destroyTranslationsEngine();
     await closeTranslationsPanelIfOpen();
     await closeContextMenuIfOpen();
     BrowserTestUtils.removeTab(tab);

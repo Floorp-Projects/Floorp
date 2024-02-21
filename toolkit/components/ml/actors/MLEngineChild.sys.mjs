@@ -46,18 +46,26 @@ export class MLEngineChild extends JSWindowActorChild {
    *
    * @type {Map<string, EngineDispatcher>}
    */
-  engineDispatchers = new Map();
+  #engineDispatchers = new Map();
 
+  // eslint-disable-next-line consistent-return
   async receiveMessage({ name, data }) {
     switch (name) {
-      case "MLEngine:NewPort":
+      case "MLEngine:NewPort": {
         const { engineName, port, timeoutMS } = data;
-        this.engineDispatchers.set(
-          this,
+        this.#engineDispatchers.set(
           engineName,
-          new EngineDispatcher(this, port, timeoutMS)
+          new EngineDispatcher(this, port, engineName, timeoutMS)
         );
         break;
+      }
+      case "MLEngine:ForceShutdown": {
+        for (const engineDispatcher of this.#engineDispatchers.values()) {
+          return engineDispatcher.terminate();
+        }
+        this.#engineDispatchers = null;
+        break;
+      }
     }
   }
 
@@ -74,6 +82,16 @@ export class MLEngineChild extends JSWindowActorChild {
    */
   getWasmArrayBuffer() {
     return this.sendQuery("MLEngine:GetWasmArrayBuffer");
+  }
+
+  /**
+   * @param {string} engineName
+   */
+  removeEngine(engineName) {
+    this.#engineDispatchers.delete(engineName);
+    if (this.#engineDispatchers.size === 0) {
+      this.sendQuery("MLEngine:DestroyEngineProcess");
+    }
   }
 }
 
@@ -94,17 +112,23 @@ class EngineDispatcher {
   /** @type {Promise<Engine> | null} */
   #engine = null;
 
+  /** @type {string} */
+  #engineName;
+
   /**
    * @param {MLEngineChild} mlEngineChild
    * @param {MessagePort} port
+   * @param {string} engineName
    * @param {number} timeoutMS
    */
-  constructor(mlEngineChild, port, timeoutMS) {
+  constructor(mlEngineChild, port, engineName, timeoutMS) {
     /** @type {MLEngineChild} */
     this.mlEngineChild = mlEngineChild;
 
     /** @type {number} */
     this.timeoutMS = timeoutMS;
+
+    this.#engineName = engineName;
 
     this.#engine = Promise.all([
       this.mlEngineChild.getWasmArrayBuffer(),
@@ -228,7 +252,10 @@ class EngineDispatcher {
     };
   }
 
-  terminate() {
+  /**
+   * Terminates the engine and its worker after a timeout.
+   */
+  async terminate() {
     if (this.#keepAliveTimeout) {
       lazy.clearTimeout(this.#keepAliveTimeout);
       this.#keepAliveTimeout = null;
@@ -238,7 +265,13 @@ class EngineDispatcher {
       port.close();
     }
     this.#ports = new Set();
-    this.mlEngineChild.engineDispatchers.delete(this.engineName);
+    this.mlEngineChild.removeEngine(this.#engineName);
+    try {
+      const engine = await this.#engine;
+      engine.terminate();
+    } catch (error) {
+      console.error("Failed to get the engine", error);
+    }
   }
 }
 
@@ -283,5 +316,10 @@ class FakeEngine {
    */
   run(request) {
     return this.#worker.post("run", [request]);
+  }
+
+  terminate() {
+    this.#worker.terminate();
+    this.#worker = null;
   }
 }
