@@ -18,6 +18,7 @@ import {
   getSelectedSourceTextContent,
   getPauseCommand,
   getCurrentThread,
+  getShouldHighlightSelectedLocation,
 } from "../../selectors/index";
 
 function isDebugLine(selectedFrame, selectedLocation) {
@@ -95,6 +96,7 @@ export class HighlightLine extends Component {
       selectedLocation,
       selectedFrame,
       selectedSourceTextContent,
+      shouldHighlightSelectedLocation,
     } = this.props;
     if (pauseCommand) {
       this.isStepping = true;
@@ -107,11 +109,13 @@ export class HighlightLine extends Component {
         prevProps.selectedSourceTextContent
       );
     }
-    this.setHighlightLine(
-      selectedLocation,
-      selectedFrame,
-      selectedSourceTextContent
-    );
+    if (shouldHighlightSelectedLocation) {
+      this.setHighlightLine(
+        selectedLocation,
+        selectedFrame,
+        selectedSourceTextContent
+      );
+    }
     endOperation();
   }
 
@@ -182,6 +186,7 @@ export default connect(state => {
   }
   return {
     pauseCommand: getPauseCommand(state, getCurrentThread(state)),
+    shouldHighlightSelectedLocation: getShouldHighlightSelectedLocation(state),
     selectedFrame: getVisibleSelectedFrame(state),
     selectedLocation,
     selectedSourceTextContent: getSelectedSourceTextContent(state),

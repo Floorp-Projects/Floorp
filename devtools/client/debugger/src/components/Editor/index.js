@@ -453,6 +453,9 @@ class Editor extends PureComponent {
         // Reset the context, so that we don't switch to original
         // while moving the cursor within a bundle
         keepContext: false,
+
+        // Avoid highlighting the selected line
+        highlight: false,
       }
     );
   };
