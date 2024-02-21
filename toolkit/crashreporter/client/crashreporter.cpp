@@ -752,8 +752,19 @@ int main(int argc, char** argv) {
 
     vector<string> restartArgs;
 
+    // We relaunch the application associated with the client.
+    string programPath = GetProgramPath(MOZ_APP_NAME);
+#ifndef XP_WIN
+    const char* moz_app_launcher = getenv("MOZ_APP_LAUNCHER");
+    if (moz_app_launcher) {
+      programPath = moz_app_launcher;
+    }
+#endif  // XP_WIN
+
+    restartArgs.push_back(programPath);
+
     ostringstream paramName;
-    int i = 0;
+    int i = 1;
     paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
     const char* param = getenv(paramName.str().c_str());
     while (param && *param) {
