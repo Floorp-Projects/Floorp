@@ -180,6 +180,9 @@ export const WatcherRegistry = {
 
     // Register the JS Window Actor the first time we start watching for something (e.g. resource, target, …).
     registerJSWindowActor();
+    if (sessionData?.targets?.includes("process")) {
+      registerJSProcessActor();
+    }
 
     persistMapToSharedData();
   },
@@ -245,7 +248,17 @@ export const WatcherRegistry = {
   unregisterWatcher(watcher) {
     sessionDataByWatcherActor.delete(watcher.actorID);
     watcherActors.delete(watcher.actorID);
-    this.maybeUnregisteringJSWindowActor();
+    this.maybeUnregisterJSActors();
+  },
+
+  /**
+   * Unregister the JS Actors if there is no more DevTools code observing any target/resource.
+   */
+  maybeUnregisterJSActors() {
+    if (sessionDataByWatcherActor.size == 0) {
+      unregisterJSWindowActor();
+      unregisterJSProcessActor();
+    }
   },
 
   /**
@@ -319,15 +332,6 @@ export const WatcherRegistry = {
       resourceTypes
     );
   },
-
-  /**
-   * Unregister the JS Window Actor if there is no more DevTools code observing any target/resource.
-   */
-  maybeUnregisteringJSWindowActor() {
-    if (sessionDataByWatcherActor.size == 0) {
-      unregisterJSWindowActor();
-    }
-  },
 };
 
 // Boolean flag to know if the DevToolsFrame JS Window Actor is currently registered
@@ -394,4 +398,64 @@ function unregisterJSWindowActor() {
     // ActorManagerParent doesn't expose a "removeActors" method, but it would be equivalent to that:
     ChromeUtils.unregisterWindowActor(JSWindowActorName);
   }
+}
+
+// Boolean flag to know if the DevToolsProcess JS Process Actor is currently registered
+let isJSProcessActorRegistered = false;
+
+const JSProcessActorConfig = {
+  parent: {
+    esModuleURI:
+      "resource://devtools/server/connectors/js-process-actor/DevToolsProcessParent.sys.mjs",
+  },
+  child: {
+    esModuleURI:
+      "resource://devtools/server/connectors/js-process-actor/DevToolsProcessChild.sys.mjs",
+    // There is no good observer service notification we can listen to to instantiate the JSProcess Actor
+    // reliably as soon as the process start.
+    // So manually spawn our JSProcessActor from a process script emitting a custom observer service notification...
+    observers: ["init-devtools-content-process-actor"],
+  },
+  // The parent process is handled very differently from content processes
+  // This uses the ParentProcessTarget which inherits from BrowsingContextTarget
+  // and is, for now, manually created by the descriptor as the top level target.
+  includeParent: false,
+
+  // This JS Process Actor is used to bootstrap DevTools code debugging the privileged code
+  // in content processes. The privileged code runs in the "shared JSM global" (See mozJSModuleLoader).
+  // DevTools modules should be loaded in a distinct global in order to be able to debug this privileged code.
+  // There is a strong requirement in spidermonkey for the debuggee and debugger to be using distinct compartments.
+  // This flag will force both parent and child modules to be loaded via a dedicated loader (See mozJSModuleLoader::GetOrCreateDevToolsLoader)
+  //
+  // Note that as a side effect, it makes these modules and all their dependencies to be invisible to the debugger.
+  loadInDevToolsLoader: true,
+};
+
+const PROCESS_SCRIPT_URL =
+  "resource://devtools/server/actors/watcher/target-helpers/content-process-jsprocessactor-startup.js";
+
+function registerJSProcessActor() {
+  if (isJSProcessActorRegistered) {
+    return;
+  }
+  isJSProcessActorRegistered = true;
+  ChromeUtils.registerProcessActor("DevToolsProcess", JSProcessActorConfig);
+
+  // There is no good observer service notification we can listen to to instantiate the JSProcess Actor
+  // as soon as the process start.
+  // So manually spawn our JSProcessActor from a process script emitting a custom observer service notification...
+  Services.ppmm.loadProcessScript(PROCESS_SCRIPT_URL, true);
+}
+
+function unregisterJSProcessActor() {
+  if (!isJSProcessActorRegistered) {
+    return;
+  }
+  isJSProcessActorRegistered = false;
+  try {
+    ChromeUtils.unregisterProcessActor("DevToolsProcess");
+  } catch (e) {
+    // If any pending query was still ongoing, this would throw
+  }
+  Services.ppmm.removeDelayedProcessScript(PROCESS_SCRIPT_URL);
 }
