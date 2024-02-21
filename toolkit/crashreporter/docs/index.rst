@@ -248,8 +248,9 @@ Environment variables used internally
 - ``MOZ_CRASHREPORTER_PING_DIRECTORY`` - Path of the directory holding the
   pending crash ping files.
 - ``MOZ_CRASHREPORTER_RESTART_ARG_<n>`` - Each of these variable specifies one
-  of the arguments that had been passed to the application, the crash reporter
-  client uses them for restarting it.
+  of the arguments that had been passed to the application, starting with the
+  first after the executable, the crash reporter client uses them for restarting
+  it.
 - ``MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE`` - If a XUL app file was specified
   when starting the app it has to be stored in this variable so that the crash
   reporter client can restart the application.
