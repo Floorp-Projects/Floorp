@@ -39,7 +39,7 @@ class SettingsSubMenuHttpsOnlyModeRobot {
     }
 
     fun verifyHttpsOnlyModeIsEnabled(shouldBeEnabled: Boolean) {
-        httpsModeOnlySwitch.check(
+        httpsModeOnlySwitch().check(
             matches(
                 if (shouldBeEnabled) {
                     isChecked(true)
@@ -50,36 +50,36 @@ class SettingsSubMenuHttpsOnlyModeRobot {
         )
     }
 
-    fun clickHttpsOnlyModeSwitch() = httpsModeOnlySwitch.click()
+    fun clickHttpsOnlyModeSwitch() = httpsModeOnlySwitch().click()
 
     fun verifyHttpsOnlyModeOptionsEnabled(shouldBeEnabled: Boolean) {
-        allTabsOption.assertIsEnabled(shouldBeEnabled)
-        onlyPrivateTabsOption.assertIsEnabled(shouldBeEnabled)
+        allTabsOption().assertIsEnabled(shouldBeEnabled)
+        onlyPrivateTabsOption().assertIsEnabled(shouldBeEnabled)
     }
 
     fun verifyHttpsOnlyOptionSelected(allTabsOptionSelected: Boolean, privateTabsOptionSelected: Boolean) {
         if (allTabsOptionSelected) {
-            allTabsOption.assertIsChecked(true)
-            onlyPrivateTabsOption.assertIsChecked(false)
+            allTabsOption().assertIsChecked(true)
+            onlyPrivateTabsOption().assertIsChecked(false)
         } else if (privateTabsOptionSelected) {
-            allTabsOption.assertIsChecked(false)
-            onlyPrivateTabsOption.assertIsChecked(true)
+            allTabsOption().assertIsChecked(false)
+            onlyPrivateTabsOption().assertIsChecked(true)
         }
     }
 
     fun selectHttpsOnlyModeOption(allTabsOptionSelected: Boolean, privateTabsOptionSelected: Boolean) {
         if (allTabsOptionSelected) {
-            allTabsOption.click()
-            allTabsOption.assertIsChecked(true)
+            allTabsOption().click()
+            allTabsOption().assertIsChecked(true)
         } else if (privateTabsOptionSelected) {
-            onlyPrivateTabsOption.click()
-            onlyPrivateTabsOption.assertIsChecked(true)
+            onlyPrivateTabsOption().click()
+            onlyPrivateTabsOption().assertIsChecked(true)
         }
     }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            goBackButton.perform(click())
+            goBackButton().perform(click())
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -87,9 +87,9 @@ class SettingsSubMenuHttpsOnlyModeRobot {
     }
 }
 
-private val httpsModeOnlySwitch = onView(withId(R.id.https_only_switch))
+private fun httpsModeOnlySwitch() = onView(withId(R.id.https_only_switch))
 
-private val allTabsOption =
+private fun allTabsOption() =
     onView(
         allOf(
             withId(R.id.https_only_all_tabs),
@@ -97,7 +97,7 @@ private val allTabsOption =
         ),
     )
 
-private val onlyPrivateTabsOption =
+private fun onlyPrivateTabsOption() =
     onView(
         allOf(
             withId(R.id.https_only_private_tabs),
@@ -105,4 +105,4 @@ private val onlyPrivateTabsOption =
         ),
     )
 
-private val goBackButton = onView(withContentDescription("Navigate up"))
+private fun goBackButton() = onView(withContentDescription("Navigate up"))
