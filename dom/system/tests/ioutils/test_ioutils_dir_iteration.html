@@ -21,7 +21,7 @@
 
       await Assert.rejects(
         IOUtils.getChildren(notExists),
-        /Could not get children of file\(.*\) because it does not exist/,
+        /NotFoundError: Could not get children of `.*': directory does not exist/,
         "IOUtils::getChildren rejects if the file does not exist"
       );
       ok(!await fileExists(notExists), `Expected ${notExists} not to exist`);
@@ -31,7 +31,7 @@
       let tmpFileName = PathUtils.join(PathUtils.tempDir, 'iterator_file.tmp');
       await createFile(tmpFileName)
       await Assert.rejects(IOUtils.getChildren(tmpFileName),
-        /Could not get children of file\(.*\) because it is not a directory/,
+        /InvalidAccessError: Could not get children of `.*': file is not a directory/,
         "IOUtils::getChildren rejects if the file is not a dir"
       );
 

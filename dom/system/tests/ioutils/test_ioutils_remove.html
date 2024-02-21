@@ -43,7 +43,7 @@
 
       await Assert.rejects(
         IOUtils.remove(tmpFileName, { ignoreAbsent: false }),
-        /Could not remove the file at .* because it does not exist/,
+        /NotFoundError: Could not remove `.*': file does not exist/,
         "IOUtils::remove can throw an error when target file is missing"
       );
       ok(!await fileExists(tmpFileName), `Expected file ${tmpFileName} not to exist`);
@@ -69,7 +69,7 @@
 
       await Assert.rejects(
         IOUtils.remove(tmpParentDir, { recursive: false }),
-        /Could not remove the non-empty directory at .*/,
+        /OperationError: Could not remove `.*': the directory is not empty/,
         "IOUtils::remove fails if non-recursively removing directory with contents"
       );
 
