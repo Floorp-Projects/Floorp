@@ -799,4 +799,11 @@ interface nsIAccessibleRole : nsISupports
    * Represents a specific point in time.
    */
   const unsigned long ROLE_TIME = 137;
+
+  /**
+   * Represents a composite widget containing a collection of one or more rows
+   * with one or more cells where some or all cells in the grid are focusable
+   * by using methods of two-dimensional navigation.
+   */
+  const unsigned long ROLE_GRID = 138;
 };

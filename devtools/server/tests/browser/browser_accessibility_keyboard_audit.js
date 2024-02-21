@@ -186,7 +186,11 @@ add_task(async function () {
       null,
     ],
     ["Interactive grid that is not focusable.", "#grid-1", null],
-    ["Focusable interactive grid.", "#grid-2", null],
+    [
+      "Focusable interactive grid.",
+      "#grid-2",
+      { score: "WARNING", issue: "FOCUSABLE_NO_SEMANTICS" },
+    ],
     [
       "Non interactive ARIA table does not need to be focusable.",
       "#table-1",

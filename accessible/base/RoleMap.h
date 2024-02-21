@@ -1543,4 +1543,14 @@ ROLE(TIME,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNameFromSubtreeIfReqRule)
 
+ROLE(GRID,
+     "grid",
+     nsGkAtoms::grid,
+     ATK_ROLE_TABLE,
+     NSAccessibilityTableRole,
+     NSAccessibilityUnknownSubrole,
+     ROLE_SYSTEM_TABLE,
+     ROLE_SYSTEM_TABLE,
+     java::SessionAccessibility::CLASSNAME_GRIDVIEW,
+     eNameFromSubtreeIfReqRule)
 // clang-format on

@@ -40,6 +40,7 @@ const ROLE_FLAT_EQUATION = nsIAccessibleRole.ROLE_FLAT_EQUATION;
 const ROLE_FORM = nsIAccessibleRole.ROLE_FORM;
 const ROLE_FORM_LANDMARK = nsIAccessibleRole.ROLE_FORM_LANDMARK;
 const ROLE_GRAPHIC = nsIAccessibleRole.ROLE_GRAPHIC;
+const ROLE_GRID = nsIAccessibleRole.ROLE_GRID;
 const ROLE_GRID_CELL = nsIAccessibleRole.ROLE_GRID_CELL;
 const ROLE_GROUPING = nsIAccessibleRole.ROLE_GROUPING;
 const ROLE_HEADING = nsIAccessibleRole.ROLE_HEADING;
