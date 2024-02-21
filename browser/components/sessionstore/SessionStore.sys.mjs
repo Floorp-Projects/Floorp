@@ -878,7 +878,7 @@ var SessionStoreInternal = {
         } else {
           if (state && state.windows) {
             for (let win of state.windows) {
-              if(win.isWebpanelWindow) {
+              if(win.floorpWebPanelWindow) {
                 state.windows.splice(state.windows.indexOf(win), 1);
               }
             }
@@ -1932,7 +1932,7 @@ var SessionStoreInternal = {
     // Floorp Injections
     if (
       aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
-      "true" || aWindow.IsWebpanelWindow
+      "true" || aWindow.floorpWebPanelWindow
     ) {
       return completionPromise;
     }
@@ -4075,8 +4075,8 @@ var SessionStoreInternal = {
       delete winData.windowUuid;
     }
 
-    let isWebpanelWindow = aWindow.IsWebpanelWindow;
-    winData.isWebpanelWindow = !!isWebpanelWindow;
+    let floorpWebPanelWindow = aWindow.floorpWebPanelWindow;
+    winData.floorpWebPanelWindow = !!floorpWebPanelWindow;
 
     // Floorp Injections end
 
