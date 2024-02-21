@@ -671,6 +671,12 @@ void nr_ice_peer_ctx_refresh_consent_all_streams(nr_ice_peer_ctx *pctx)
 
 void nr_ice_peer_ctx_disconnected(nr_ice_peer_ctx *pctx)
   {
+    if (pctx->connected_cb_timer) {
+      /* Whoops, never mind */
+      NR_async_timer_cancel(pctx->connected_cb_timer);
+      pctx->connected_cb_timer = 0;
+    }
+
     if (pctx->reported_connected &&
         pctx->handler &&
         pctx->handler->vtbl->ice_disconnected) {
