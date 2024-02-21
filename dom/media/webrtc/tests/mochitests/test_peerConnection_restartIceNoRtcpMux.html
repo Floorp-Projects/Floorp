@@ -23,12 +23,15 @@
         function PC_LOCAL_SET_OFFER_OPTION(test) {
           test.setOfferOptions({ iceRestart: true });
         },
-        function PC_LOCAL_EXPECT_ICE_CHECKING(test) {
-          test.pcLocal.expectIceChecking();
+        // Make sure we don't get the end of gathering racing against the
+        // setting of the new offer
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
         },
-        function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
-          test.pcRemote.expectIceChecking();
-        }
+        // Expect gathering to start again
+        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+          test.pcLocal.setupIceCandidateHandler(test);
+        },
       ]
     );
 

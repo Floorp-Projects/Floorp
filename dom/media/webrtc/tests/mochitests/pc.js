@@ -12,8 +12,8 @@ const iceStateTransitions = {
   checking: ["new", "connected", "failed", "closed"], //Note: do we need to
   // allow 'completed' in
   // here as well?
-  connected: ["new", "completed", "disconnected", "closed"],
-  completed: ["new", "disconnected", "closed"],
+  connected: ["new", "checking", "completed", "disconnected", "closed"],
+  completed: ["new", "checking", "disconnected", "closed"],
   disconnected: ["new", "connected", "completed", "failed", "closed"],
   failed: ["new", "disconnected", "closed"],
   closed: [],
