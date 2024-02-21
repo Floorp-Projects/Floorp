@@ -119,6 +119,11 @@ After the Beta cut, another task is to remove all soon to expire telemetry probe
 2. File an issue for removing expired telemetry to address the expired metrics. See [Bug 1881336](https://bugzilla.mozilla.org/show_bug.cgi?id=1881336) for an example.
 3. Remove the expired metrics.  See [example](https://github.com/mozilla-mobile/firefox-android/pull/5700).
 
+### [Dev Team] Add SERP Telemetry json dump
+
+After the beta cut, another task is to add SERP telemetry json to the [search-telemetry-v2.json](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/feature/search/src/main/assets/search/search_telemetry_v2.json)
+The dump is to be fetched from the desktop telemetry dump located at [desktop-search-telemetry-v2.json](https://searchfox.org/mozilla-central/source/services/settings/dumps/main/search-telemetry-v2.json)
+
 ### Ask for Help
 
 - Issues related to releases `#releaseduty` on Element
