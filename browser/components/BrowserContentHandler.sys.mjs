@@ -970,6 +970,7 @@ function handURIToExistingBrowser(
           triggeringPrincipal,
         });
         win.gBrowser.selectedTab = tab;
+        win.focus();
 
         return;
       }
