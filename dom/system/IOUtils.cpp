@@ -467,8 +467,12 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
                  file](JsBuffer&& aBuffer) {
                   AutoJSAPI jsapi;
                   if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-                    promise->MaybeRejectWithUnknownError(
-                        "Could not initialize JS API");
+                    RejectJSPromise(
+                        promise,
+                        IOError(
+                            NS_ERROR_DOM_UNKNOWN_ERR,
+                            "Could not read `%s': could not initialize JS API",
+                            file->HumanReadablePath().get()));
                     return;
                   }
                   JSContext* cx = jsapi.cx();
@@ -493,12 +497,11 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
                       JS_ClearPendingException(cx);
                       promise->MaybeReject(exn);
                     } else {
-                      RejectJSPromise(
-                          promise,
-                          IOError(NS_ERROR_DOM_UNKNOWN_ERR,
-                                  "ParseJSON threw an uncatchable exception "
-                                  "while parsing file(%s)",
-                                  file->HumanReadablePath().get()));
+                      RejectJSPromise(promise,
+                                      IOError(NS_ERROR_DOM_UNKNOWN_ERR,
+                                              "Could not read `%s': ParseJSON "
+                                              "threw an uncatchable exception",
+                                              file->HumanReadablePath().get()));
                     }
 
                     return;
@@ -525,14 +528,19 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
 
         Maybe<Buffer<uint8_t>> buf = aData.CreateFromData<Buffer<uint8_t>>();
         if (buf.isNothing()) {
-          promise->MaybeRejectWithOperationError(
-              "Out of memory: Could not allocate buffer while writing to file");
+          promise->MaybeRejectWithOperationError(nsPrintfCString(
+              "Could not write to `%s': could not allocate buffer",
+              file->HumanReadablePath().get()));
           return;
         }
 
         auto opts = InternalWriteOpts::FromBinding(aOptions);
         if (opts.isErr()) {
-          RejectJSPromise(promise, opts.unwrapErr());
+          auto err = opts.unwrapErr();
+          RejectJSPromise(
+              promise,
+              IOError(err.Code(), "Could not write to `%s': %s",
+                      file->HumanReadablePath().get(), err.Message().get()));
           return;
         }
 
@@ -556,7 +564,11 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
 
         auto opts = InternalWriteOpts::FromBinding(aOptions);
         if (opts.isErr()) {
-          RejectJSPromise(promise, opts.unwrapErr());
+          auto err = opts.unwrapErr();
+          RejectJSPromise(
+              promise,
+              IOError(err.Code(), "Could not write to `%s': %s",
+                      file->HumanReadablePath().get(), err.Message().get()));
           return;
         }
 
@@ -582,14 +594,20 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
 
         auto opts = InternalWriteOpts::FromBinding(aOptions);
         if (opts.isErr()) {
-          RejectJSPromise(promise, opts.unwrapErr());
+          auto err = opts.unwrapErr();
+          RejectJSPromise(
+              promise,
+              IOError(err.Code(), "Could not write to `%s': %s",
+                      file->HumanReadablePath().get(), err.Message().get()));
           return;
         }
 
         if (opts.inspect().mMode == WriteMode::Append ||
             opts.inspect().mMode == WriteMode::AppendOrCreate) {
           promise->MaybeRejectWithNotSupportedError(
-              "IOUtils.writeJSON does not support appending to files."_ns);
+              nsPrintfCString("Could not write to `%s': IOUtils.writeJSON does "
+                              "not support appending to files.",
+                              file->HumanReadablePath().get()));
           return;
         }
 

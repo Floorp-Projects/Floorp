@@ -149,7 +149,7 @@
 
       await Assert.rejects(
         IOUtils.writeJSON(filename, OBJECT, {mode: "append"}),
-        /NotSupportedError: IOUtils.writeJSON does not support appending to files/,
+        /NotSupportedError: Could not write to `.*': IOUtils.writeJSON does not support appending to files/,
         "IOUtils.writeJSON() cannot append"
       );
 
