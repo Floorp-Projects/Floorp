@@ -25,7 +25,6 @@ typedef HANDLE HREPORT;
 #  endif  // defined(__MINGW32__) || defined(__MINGW64__)
 #  include <stdlib.h>
 
-#  include "mozilla/mozalloc_oom.h"
 #  include "mozilla/Unused.h"
 
 using mozilla::Unused;
@@ -35,12 +34,6 @@ namespace CrashReporter {
 
 #ifdef XP_WIN
 
-struct InProcessWindowsErrorReportingData {
-  uint32_t mProcessType;
-  size_t* mOOMAllocationSizePtr;
-};
-
-static InProcessWindowsErrorReportingData gInProcessWerData;
 const static size_t kModulePathLength = MAX_PATH + 1;
 static wchar_t sModulePath[kModulePathLength];
 
@@ -90,10 +83,9 @@ void RegisterRuntimeExceptionModule() {
     return;
   }
 
-  gInProcessWerData.mProcessType = mozilla::GetGeckoProcessType();
-  gInProcessWerData.mOOMAllocationSizePtr = &gOOMAllocationSize;
-  if (FAILED(::WerRegisterRuntimeExceptionModule(sModulePath,
-                                                 &gInProcessWerData))) {
+  if (FAILED(::WerRegisterRuntimeExceptionModule(
+          sModulePath,
+          reinterpret_cast<PVOID>(mozilla::GetGeckoProcessType())))) {
     // The registration failed null out sModulePath to record this.
     *sModulePath = L'\0';
     return;
@@ -105,8 +97,8 @@ void UnregisterRuntimeExceptionModule() {
 #ifdef XP_WIN
   // If sModulePath is set then we have registered the module.
   if (*sModulePath) {
-    Unused << ::WerUnregisterRuntimeExceptionModule(sModulePath,
-                                                    &gInProcessWerData);
+    Unused << ::WerUnregisterRuntimeExceptionModule(
+        sModulePath, reinterpret_cast<PVOID>(mozilla::GetGeckoProcessType()));
     *sModulePath = L'\0';
   }
 #endif  // XP_WIN
