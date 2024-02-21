@@ -52,6 +52,7 @@ UNCOMMON_TRY_TASK_LABELS = [
     # Hide shippable versions of tests we have opt versions of because the non-shippable
     # versions are faster to run. This is mostly perf tests.
     r"-shippable(?!.*(awsy|browsertime|marionette-headless|mochitest-devtools-chrome-fis|raptor|talos|web-platform-tests-wdspec-headless|mochitest-plain-headless))",  # noqa - too long
+    r"nightly-simulation",
 ]
 
 
