@@ -817,11 +817,17 @@ JS_PUBLIC_API void js::gc::SetPerformanceHint(JSContext* cx,
 AutoSelectGCHeap::AutoSelectGCHeap(JSContext* cx,
                                    size_t allowedNurseryCollections)
     : cx_(cx), allowedNurseryCollections_(allowedNurseryCollections) {
-  JS::AddGCNurseryCollectionCallback(cx, &NurseryCollectionCallback, this);
+  if (!JS::AddGCNurseryCollectionCallback(cx, &NurseryCollectionCallback,
+                                          this)) {
+    cx_ = nullptr;
+  }
 }
 
 AutoSelectGCHeap::~AutoSelectGCHeap() {
-  JS::RemoveGCNurseryCollectionCallback(cx_, &NurseryCollectionCallback, this);
+  if (cx_) {
+    JS::RemoveGCNurseryCollectionCallback(cx_, &NurseryCollectionCallback,
+                                          this);
+  }
 }
 
 /* static */
