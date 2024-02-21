@@ -2530,17 +2530,11 @@ nsresult SetRestartArgs(int argc, char** argv) {
   int i;
   nsAutoCString envVar;
   char* env;
-  char* argv0 = getenv("MOZ_APP_LAUNCHER");
-  for (i = 0; i < argc; i++) {
+  for (i = 1; i < argc; i++) {
     envVar = "MOZ_CRASHREPORTER_RESTART_ARG_";
     envVar.AppendInt(i);
     envVar += "=";
-    if (argv0 && i == 0) {
-      // Is there a request to suppress default binary launcher?
-      envVar += argv0;
-    } else {
-      envVar += argv[i];
-    }
+    envVar += argv[i];
 
     // PR_SetEnv() wants the string to be available for the lifetime
     // of the app, so dup it here. This conversion is not lossy.
