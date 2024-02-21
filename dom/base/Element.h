@@ -1249,6 +1249,16 @@ class Element : public FragmentOrElement {
 
   void ClearExplicitlySetAttrElement(nsAtom*);
 
+  /**
+   * Gets the attribute element for the given attribute.
+   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+   * Unlike GetAttrAssociatedElement, this returns the target even if it isn't
+   * a descendant of any of this element's shadow-including ancestors. It also
+   * doesn't attempt to retrieve an element using a string id set in the content
+   * attribute.
+   */
+  Element* GetExplicitlySetAttrElement(nsAtom* aAttr) const;
+
   PseudoStyleType GetPseudoElementType() const {
     nsresult rv = NS_OK;
     auto raw = GetProperty(nsGkAtoms::pseudoProperty, &rv);

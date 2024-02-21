@@ -1786,6 +1786,16 @@ void Element::ExplicitlySetAttrElement(nsAtom* aAttr, Element* aElement) {
   UnsetAttr(aAttr, IgnoreErrors());
 }
 
+Element* Element::GetExplicitlySetAttrElement(nsAtom* aAttr) const {
+  if (const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
+    nsWeakPtr weakAttrEl = slots->mExplicitlySetAttrElements.Get(aAttr);
+    if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakAttrEl)) {
+      return attrEl;
+    }
+  }
+  return nullptr;
+}
+
 void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
   nsINode* cur = this;
   while (cur) {
