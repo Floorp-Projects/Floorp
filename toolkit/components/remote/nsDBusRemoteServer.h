@@ -29,7 +29,7 @@ class nsDBusRemoteServer final : public nsRemoteServer,
   void OnNameLost(GDBusConnection* aConnection);
 
   bool HandleOpenURL(const gchar* aInterfaceName, const gchar* aMethodName,
-                     const nsACString& aParam);
+                     const gchar* aParam);
 
  private:
   uint mDBusID = 0;
