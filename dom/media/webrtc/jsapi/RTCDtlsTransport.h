@@ -6,6 +6,7 @@
 #define _RTCDtlsTransport_h_
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/RTCIceTransport.h"
 #include "mozilla/RefPtr.h"
 #include "js/RootingAPI.h"
 #include "transport/transportlayer.h"
@@ -30,6 +31,7 @@ class RTCDtlsTransport : public DOMEventTargetHelper {
                        JS::Handle<JSObject*> aGivenProto) override;
   IMPL_EVENT_HANDLER(statechange)
   RTCDtlsTransportState State() const { return mState; }
+  RefPtr<RTCIceTransport> IceTransport() { return mIceTransport; }
 
   void UpdateStateNoEvent(TransportLayer::State aState);
   void UpdateState(TransportLayer::State aState);
@@ -38,6 +40,7 @@ class RTCDtlsTransport : public DOMEventTargetHelper {
   virtual ~RTCDtlsTransport() = default;
 
   RTCDtlsTransportState mState;
+  RefPtr<RTCIceTransport> mIceTransport;
 };
 
 }  // namespace mozilla::dom
