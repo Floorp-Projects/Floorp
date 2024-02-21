@@ -406,21 +406,21 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnAlpnNegotiated(
 }
 
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnGatheringStateChange(
-    const string& transportId, const int& state) {
+    const int& state) {
   MutexAutoLock lock(mMutex);
   if (mUser) {
-    mUser->OnGatheringStateChange(transportId,
-        static_cast<dom::RTCIceGathererState>(state));
+    mUser->OnGatheringStateChange(
+        static_cast<dom::RTCIceGatheringState>(state));
   }
   return ipc::IPCResult::Ok();
 }
 
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnConnectionStateChange(
-    const string& transportId, const int& state) {
+    const int& state) {
   MutexAutoLock lock(mMutex);
   if (mUser) {
-    mUser->OnConnectionStateChange(transportId,
-        static_cast<dom::RTCIceTransportState>(state));
+    mUser->OnConnectionStateChange(
+        static_cast<dom::RTCIceConnectionState>(state));
   }
   return ipc::IPCResult::Ok();
 }

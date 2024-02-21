@@ -119,8 +119,7 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   void SyncFromJsep(const JsepSession& aSession);
   std::string GetMidAscii() const;
 
-  void SetDtlsTransport(RTCDtlsTransport* aDtlsTransport);
-  void SaveStateForRollback();
+  void SetDtlsTransport(RTCDtlsTransport* aDtlsTransport, bool aStable);
   void RollbackToStableDtlsTransport();
 
   std::string GetTransportId() const {

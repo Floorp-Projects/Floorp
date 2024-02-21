@@ -834,7 +834,6 @@ STATIC_ATOMS = [
     Atom("onfocusout", "onfocusout"),
     Atom("onfullscreenchange", "onfullscreenchange"),
     Atom("onfullscreenerror", "onfullscreenerror"),
-    Atom("ongatheringstatechange", "ongatheringstatechange"),
     Atom("onget", "onget"),
     Atom("onhashchange", "onhashchange"),
     Atom("oninput", "oninput"),
