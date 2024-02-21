@@ -4,7 +4,7 @@
 
 use api::{ColorF, ColorU, GradientStop, PremultipliedColorF};
 use api::units::{LayoutRect, LayoutSize, LayoutVector2D};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
 use std::hash;
 
 mod linear;
@@ -167,7 +167,7 @@ impl GradientGpuBlockBuilder {
     // Build the gradient data from the supplied stops, reversing them if necessary.
     pub fn build(
         reverse_stops: bool,
-        gpu_buffer_builder: &mut GpuBufferBuilder,
+        gpu_buffer_builder: &mut GpuBufferBuilderF,
         src_stops: &[GradientStop],
     ) -> GpuBufferAddress {
         // Preconditions (should be ensured by DisplayListBuilder):
