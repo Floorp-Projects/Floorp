@@ -3617,7 +3617,7 @@ main section {
   padding-top: 52.4%;
 }
 .ds-card.ds-card-cta-button.variant-a .story-sponsored-label, .ds-card.ds-card-cta-button.variant-b .story-sponsored-label {
-  margin: var(--space-small) 0;
+  margin: var(--space-small) 0 0;
 }
 .ds-card.ds-card-cta-button.variant-a .source, .ds-card.ds-card-cta-button.variant-b .source {
   text-decoration: underline;
