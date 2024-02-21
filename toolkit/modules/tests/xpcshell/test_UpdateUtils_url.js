@@ -34,6 +34,7 @@ const gAppInfo = getAppInfo();
 const gDefaultPrefBranch = Services.prefs.getDefaultBranch(null);
 
 function setUpdateChannel(aChannel) {
+  gDefaultPrefBranch.unlockPref(PREF_APP_UPDATE_CHANNEL);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL, aChannel);
 }
 

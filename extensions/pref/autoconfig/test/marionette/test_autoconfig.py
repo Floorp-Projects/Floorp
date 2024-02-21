@@ -16,6 +16,8 @@ class TestAutoConfig(MarionetteTestCase):
             os.remove(self.pref_file)
         if hasattr(self, "autoconfig_file"):
             os.remove(self.autoconfig_file)
+        if hasattr(self, "pref_file_dir_created"):
+            os.rmdir(self.pref_file_dir)
 
         super(TestAutoConfig, self).tearDown()
 
@@ -48,7 +50,11 @@ class TestAutoConfig(MarionetteTestCase):
         self.marionette.quit()
 
         test_dir = os.path.dirname(__file__)
-        self.pref_file = os.path.join(self.exe_dir, "defaults", "pref", "autoconfig.js")
+        self.pref_file_dir = os.path.join(self.exe_dir, "defaults", "pref")
+        if not os.path.exists(self.pref_file_dir):
+            os.makedirs(self.pref_file_dir, exist_ok=True)
+            self.pref_file_dir_created = True
+        self.pref_file = os.path.join(self.pref_file_dir, "autoconfig.js")
         shutil.copyfile(os.path.join(test_dir, "autoconfig.js"), self.pref_file)
         self.autoconfig_file = os.path.join(self.exe_dir, "autoconfig.cfg")
         shutil.copyfile(os.path.join(test_dir, "autoconfig.cfg"), self.autoconfig_file)
