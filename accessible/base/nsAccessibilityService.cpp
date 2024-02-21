@@ -606,6 +606,24 @@ void nsAccessibilityService::NotifyOfDevPixelRatioChange(
   }
 }
 
+void nsAccessibilityService::NotifyAttrElementWillChange(
+    mozilla::dom::Element* aElement, nsAtom* aAttr) {
+  mozilla::dom::Document* doc = aElement->OwnerDoc();
+  MOZ_ASSERT(doc);
+  if (DocAccessible* docAcc = GetDocAccessible(doc)) {
+    docAcc->AttrElementWillChange(aElement, aAttr);
+  }
+}
+
+void nsAccessibilityService::NotifyAttrElementChanged(
+    mozilla::dom::Element* aElement, nsAtom* aAttr) {
+  mozilla::dom::Document* doc = aElement->OwnerDoc();
+  MOZ_ASSERT(doc);
+  if (DocAccessible* docAcc = GetDocAccessible(doc)) {
+    docAcc->AttrElementChanged(aElement, aAttr);
+  }
+}
+
 LocalAccessible* nsAccessibilityService::GetRootDocumentAccessible(
     PresShell* aPresShell, bool aCanCreate) {
   PresShell* presShell = aPresShell;

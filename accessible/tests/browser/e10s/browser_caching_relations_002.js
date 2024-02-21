@@ -383,10 +383,8 @@ between
 </template></div>
 <script>
   const toggle1 = document.getElementById("toggle1");
-  const toggle2 = document.getElementById("toggle2");
   const popover1 = document.getElementById("popover1");
   toggle1.popoverTargetElement = popover1;
-  toggle2.popoverTargetElement = popover1;
   const toggle3 = document.getElementById("toggle3");
   const shadow = document.getElementById("shadowHost").shadowRoot;
   const toggle4 = shadow.getElementById("toggle4");
@@ -415,13 +413,33 @@ between
     toggle1.doAction(0);
     const popover1 = (await shown).accessible;
     await testCachedRelation(toggle1, RELATION_DETAILS, popover1);
-    await testCachedRelation(toggle2, RELATION_DETAILS, popover1);
     // toggle5 is inside the shadow DOM and popover1 is outside, so the target
     // is valid.
     await testCachedRelation(toggle5, RELATION_DETAILS, popover1);
     await testCachedRelation(popover1, RELATION_DETAILS_FOR, [
       toggle1,
+      toggle5,
+    ]);
+    info("Setting toggle2's popover target to popover1");
+    await invokeContentTask(browser, [], () => {
+      const toggle2Dom = content.document.getElementById("toggle2");
+      const popover1Dom = content.document.getElementById("popover1");
+      toggle2Dom.popoverTargetElement = popover1Dom;
+    });
+    await testCachedRelation(toggle2, RELATION_DETAILS, popover1);
+    await testCachedRelation(popover1, RELATION_DETAILS_FOR, [
+      toggle1,
       toggle2,
+      toggle5,
+    ]);
+    info("Clearing toggle2's popover target");
+    await invokeContentTask(browser, [], () => {
+      const toggle2Dom = content.document.getElementById("toggle2");
+      toggle2Dom.popoverTargetElement = null;
+    });
+    await testCachedRelation(toggle2, RELATION_DETAILS, []);
+    await testCachedRelation(popover1, RELATION_DETAILS_FOR, [
+      toggle1,
       toggle5,
     ]);
     info("Hiding popover1");

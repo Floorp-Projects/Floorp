@@ -571,7 +571,6 @@ addAccessibleTask(
   const toggle1 = document.getElementById("toggle1");
   const popover1 = document.getElementById("popover1");
   toggle1.popoverTargetElement = popover1;
-  toggle2.popoverTargetElement = popover1;
   const toggle3 = document.getElementById("toggle3");
   const shadow = document.getElementById("shadowHost").shadowRoot;
   const toggle4 = shadow.getElementById("toggle4");
@@ -584,9 +583,28 @@ addAccessibleTask(
   `,
   async function (browser, docAcc) {
     const toggle1 = findAccessibleChildByID(docAcc, "toggle1");
+    // toggle1's popover target is set and connected to the document.
     testStates(toggle1, STATE_COLLAPSED);
+
     const toggle2 = findAccessibleChildByID(docAcc, "toggle2");
+    // toggle2's popover target isn't set yet.
+    testStates(
+      toggle2,
+      0,
+      0,
+      STATE_EXPANDED | STATE_COLLAPSED,
+      EXT_STATE_EXPANDABLE
+    );
+    info("Setting toggle2's popoverTargetElement");
+    let changed = waitForStateChange(toggle2, EXT_STATE_EXPANDABLE, true, true);
+    await invokeContentTask(browser, [], () => {
+      const toggle2Dom = content.document.getElementById("toggle2");
+      const popover1 = content.document.getElementById("popover1");
+      toggle2Dom.popoverTargetElement = popover1;
+    });
+    await changed;
     testStates(toggle2, STATE_COLLAPSED);
+
     const toggle5 = findAccessibleChildByID(docAcc, "toggle5");
     // toggle5 is inside the shadow DOM and popover1 is outside, so the target
     // is valid.
@@ -599,7 +617,7 @@ addAccessibleTask(
       [EVENT_STATE_CHANGE, toggle5],
     ];
     info("Showing popover1");
-    let changed = waitForEvents(changeEvents);
+    changed = waitForEvents(changeEvents);
     toggle1.doAction(0);
     await changed;
     testStates(toggle1, STATE_EXPANDED);
@@ -611,6 +629,40 @@ addAccessibleTask(
     await changed;
     testStates(toggle1, STATE_COLLAPSED);
     testStates(toggle2, STATE_COLLAPSED);
+
+    info("Clearing toggle1's popover target");
+    changed = waitForStateChange(toggle1, EXT_STATE_EXPANDABLE, false, true);
+    await invokeContentTask(browser, [], () => {
+      const toggle1Dom = content.document.getElementById("toggle1");
+      toggle1Dom.popoverTargetElement = null;
+    });
+    await changed;
+    testStates(
+      toggle1,
+      0,
+      0,
+      STATE_EXPANDED | STATE_COLLAPSED,
+      EXT_STATE_EXPANDABLE
+    );
+
+    info("Setting toggle2's popover target to a disconnected node");
+    changed = waitForStateChange(toggle2, EXT_STATE_EXPANDABLE, false, true);
+    await invokeContentTask(browser, [], () => {
+      const toggle2Dom = content.document.getElementById("toggle2");
+      const popover3 = content.document.createElement("div");
+      popover3.popover = "auto";
+      popover3.textContent = "popover3";
+      // We don't append popover3 anywhere, so it is disconnected.
+      toggle2Dom.popoverTargetElement = popover3;
+    });
+    await changed;
+    testStates(
+      toggle2,
+      0,
+      0,
+      STATE_EXPANDED | STATE_COLLAPSED,
+      EXT_STATE_EXPANDABLE
+    );
 
     const toggle3 = findAccessibleChildByID(docAcc, "toggle3");
     // toggle3 is outside popover2's shadow DOM, so the target isn't valid.
