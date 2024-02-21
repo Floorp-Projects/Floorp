@@ -18,6 +18,7 @@ enum RTCDtlsTransportState {
 [Pref="media.peerconnection.enabled",
  Exposed=Window]
 interface RTCDtlsTransport : EventTarget {
+  [SameObject] readonly attribute RTCIceTransport iceTransport;
   readonly attribute RTCDtlsTransportState state;
   attribute EventHandler onstatechange;
 };
