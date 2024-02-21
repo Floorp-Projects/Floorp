@@ -254,11 +254,11 @@ exports.WatcherActor = class WatcherActor extends Actor {
     const targetHelperModule = TARGET_HELPERS[targetType];
     targetHelperModule.destroyTargets(this, options);
 
-    // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource,
+    // Unregister the JS Actors if there is no more DevTools code observing any target/resource,
     // unless we're switching mode (having both condition at the same time should only
     // happen in tests).
     if (!options.isModeSwitching) {
-      WatcherRegistry.maybeUnregisteringJSWindowActor();
+      WatcherRegistry.maybeUnregisterJSActors();
     }
   }
 
@@ -634,7 +634,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
     }
 
     // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
-    WatcherRegistry.maybeUnregisteringJSWindowActor();
+    WatcherRegistry.maybeUnregisterJSActors();
   }
 
   clearResources(resourceTypes) {

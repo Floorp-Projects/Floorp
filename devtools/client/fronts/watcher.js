@@ -67,7 +67,7 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     // the watcher may notify us about the top level target destruction a bit late.
     // The descriptor (`this.parentFront`) already switched to the new target.
     // Missing `target-destroyed` isn't critical when target switching is off
-    // as `TargetCommand.switchToTarget` will end calling `TargetCommandonTargetDestroyed` for all
+    // as `TargetCommand.switchToTarget` will end calling `TargetCommand.onTargetDestroyed` for all
     // existing targets.
     // https://searchfox.org/mozilla-central/rev/af8e5d37fd56be90ccddae2203e7b875d3f3ae87/devtools/shared/commands/target/target-command.js#166-173
     if (front) {

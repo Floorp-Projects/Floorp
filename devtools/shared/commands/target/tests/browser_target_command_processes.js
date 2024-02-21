@@ -178,11 +178,13 @@ async function testProcesses(targetCommand, target) {
       onAvailable: onAvailable2,
     });
   });
+  info("open new tab in new process");
   const tab1 = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: TEST_URL,
     forceNewProcess: true,
   });
+  info("wait for process target to be created");
   const createdTarget = await onProcessCreated;
   // For some reason, creating a new tab purges processes created from previous tests
   // so it is not reasonable to assert the size of `targets` as it may be lower than expected.

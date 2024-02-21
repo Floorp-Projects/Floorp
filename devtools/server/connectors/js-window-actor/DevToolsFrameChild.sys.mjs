@@ -173,7 +173,7 @@ export class DevToolsFrameChild extends JSWindowActorChild {
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
    * @param Object options.sessionData
-   *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
+   *        All data managed by the Watcher Actor and WatcherRegistry.sys.mjs, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
    * @param Boolean options.isDocumentCreation
@@ -364,6 +364,10 @@ export class DevToolsFrameChild extends JSWindowActorChild {
       ignoreSubFrames: isEveryFrameTargetEnabled,
       sessionContext: sessionData.sessionContext,
     });
+    // There is no root actor in content processes and so
+    // the target actor can't be managed by it, but we do have to manage
+    // the actor to have it working and be registered in the DevToolsServerConnection.
+    // We make it manage itself and become a top level actor.
     targetActor.manage(targetActor);
     targetActor.createdFromJsWindowActor = true;
 
@@ -554,10 +558,10 @@ export class DevToolsFrameChild extends JSWindowActorChild {
       sessionContext,
     });
     // By the time we are calling this, the target may already have been destroyed.
-    if (targetActor) {
-      return targetActor.removeSessionDataEntry(type, entries);
+    if (!targetActor) {
+      return null;
     }
-    return null;
+    return targetActor.removeSessionDataEntry(type, entries);
   }
 
   handleEvent({ type, persisted, target }) {
@@ -691,8 +695,8 @@ export class DevToolsFrameChild extends JSWindowActorChild {
 
   didDestroy(options) {
     logWindowGlobal(this.manager, "Destroy WindowGlobalTarget");
-    for (const [, connectionInfo] of this._connections) {
-      connectionInfo.connection.close(options);
+    for (const { connection } of this._connections.values()) {
+      connection.close(options);
     }
     this._connections.clear();
 

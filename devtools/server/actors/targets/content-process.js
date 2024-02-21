@@ -216,7 +216,7 @@ class ContentProcessTargetActor extends BaseTargetActor {
     this.ensureWorkerList().workerPauser.setPauseServiceWorkers(request.origin);
   }
 
-  destroy() {
+  destroy({ isModeSwitching } = {}) {
     // Avoid reentrancy. We will destroy the Transport when emitting "destroyed",
     // which will force destroying all actors.
     if (this.destroying) {
@@ -228,7 +228,7 @@ class ContentProcessTargetActor extends BaseTargetActor {
     // otherwise you might have leaks reported when running browser_browser_toolbox_netmonitor.js in debug builds
     Resources.unwatchAllResources(this);
 
-    this.emit("destroyed");
+    this.emit("destroyed", { isModeSwitching });
 
     super.destroy();
 
