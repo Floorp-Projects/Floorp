@@ -11,6 +11,7 @@ import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Test
@@ -31,7 +32,8 @@ class TranslationsDialogMiddlewareTest {
                 initialState = TranslationsDialogState(),
                 middlewares = listOf(translationsDialogMiddleware),
             )
-            translationStore.dispatch(TranslationsDialogAction.FetchSupportedLanguages).joinBlocking()
+            translationStore.dispatch(TranslationsDialogAction.FetchSupportedLanguages)
+                .joinBlocking()
 
             translationStore.waitUntilIdle()
 
@@ -125,6 +127,155 @@ class TranslationsDialogMiddlewareTest {
                         tabId = "tab1",
                         fromLanguage = Language("fr", "France"),
                         toLanguage = Language("en", "English"),
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN FetchPageSettings from TranslationDialogStore is called THEN call FETCH_PAGE_SETTINGS from BrowserStore`() =
+        runTest {
+            val browserStore = mockk<BrowserStore>(relaxed = true)
+            val translationsDialogMiddleware =
+                TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1")
+
+            val translationStore = TranslationsDialogStore(
+                initialState = TranslationsDialogState(),
+                middlewares = listOf(translationsDialogMiddleware),
+            )
+            translationStore.dispatch(TranslationsDialogAction.FetchPageSettings).joinBlocking()
+
+            translationStore.waitUntilIdle()
+
+            verify {
+                browserStore.dispatch(
+                    TranslationsAction.OperationRequestedAction(
+                        tabId = "tab1",
+                        operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN UpdatePageSettingsValue with action type AlwaysOfferPopup from TranslationDialogStore is called THEN call UpdatePageSettingAction from BrowserStore`() =
+        runTest {
+            val browserStore = mockk<BrowserStore>(relaxed = true)
+            val translationsDialogMiddleware =
+                TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1")
+
+            val translationStore = TranslationsDialogStore(
+                initialState = TranslationsDialogState(),
+                middlewares = listOf(translationsDialogMiddleware),
+            )
+            translationStore.dispatch(
+                TranslationsDialogAction.UpdatePageSettingsValue(
+                    type = TranslationPageSettingsOption.AlwaysOfferPopup(),
+                    checkValue = true,
+                ),
+            ).joinBlocking()
+
+            translationStore.waitUntilIdle()
+
+            verify {
+                browserStore.dispatch(
+                    TranslationsAction.UpdatePageSettingAction(
+                        tabId = "tab1",
+                        operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
+                        setting = true,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN UpdatePageSettingsValue with action type AlwaysTranslateLanguage from TranslationDialogStore is called THEN call UpdatePageSettingAction from BrowserStore`() =
+        runTest {
+            val browserStore = mockk<BrowserStore>(relaxed = true)
+            val translationsDialogMiddleware =
+                TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1")
+
+            val translationStore = TranslationsDialogStore(
+                initialState = TranslationsDialogState(),
+                middlewares = listOf(translationsDialogMiddleware),
+            )
+            translationStore.dispatch(
+                TranslationsDialogAction.UpdatePageSettingsValue(
+                    type = TranslationPageSettingsOption.AlwaysTranslateLanguage(),
+                    checkValue = false,
+                ),
+            ).joinBlocking()
+
+            translationStore.waitUntilIdle()
+
+            verify {
+                browserStore.dispatch(
+                    TranslationsAction.UpdatePageSettingAction(
+                        tabId = "tab1",
+                        operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
+                        setting = false,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN UpdatePageSettingsValue with action type NeverTranslateLanguage from TranslationDialogStore is called THEN call UpdatePageSettingAction from BrowserStore`() =
+        runTest {
+            val browserStore = mockk<BrowserStore>(relaxed = true)
+            val translationsDialogMiddleware =
+                TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1")
+
+            val translationStore = TranslationsDialogStore(
+                initialState = TranslationsDialogState(),
+                middlewares = listOf(translationsDialogMiddleware),
+            )
+            translationStore.dispatch(
+                TranslationsDialogAction.UpdatePageSettingsValue(
+                    type = TranslationPageSettingsOption.NeverTranslateLanguage(),
+                    checkValue = true,
+                ),
+            ).joinBlocking()
+
+            translationStore.waitUntilIdle()
+
+            verify {
+                browserStore.dispatch(
+                    TranslationsAction.UpdatePageSettingAction(
+                        tabId = "tab1",
+                        operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE,
+                        setting = true,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN UpdatePageSettingsValue with action type NeverTranslateSite from TranslationDialogStore is called THEN call UpdatePageSettingAction from BrowserStore`() =
+        runTest {
+            val browserStore = mockk<BrowserStore>(relaxed = true)
+            val translationsDialogMiddleware =
+                TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1")
+
+            val translationStore = TranslationsDialogStore(
+                initialState = TranslationsDialogState(),
+                middlewares = listOf(translationsDialogMiddleware),
+            )
+            translationStore.dispatch(
+                TranslationsDialogAction.UpdatePageSettingsValue(
+                    type = TranslationPageSettingsOption.NeverTranslateSite(),
+                    checkValue = false,
+                ),
+            ).joinBlocking()
+
+            translationStore.waitUntilIdle()
+
+            verify {
+                browserStore.dispatch(
+                    TranslationsAction.UpdatePageSettingAction(
+                        tabId = "tab1",
+                        operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE,
+                        setting = false,
                     ),
                 )
             }

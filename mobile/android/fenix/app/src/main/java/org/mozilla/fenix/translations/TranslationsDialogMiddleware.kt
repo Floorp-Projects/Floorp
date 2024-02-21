@@ -7,6 +7,7 @@ package org.mozilla.fenix.translations
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 
@@ -18,6 +19,7 @@ class TranslationsDialogMiddleware(
     private val sessionId: String,
 ) : Middleware<TranslationsDialogState, TranslationsDialogAction> {
 
+    @Suppress("LongMethod")
     override fun invoke(
         context: MiddlewareContext<TranslationsDialogState, TranslationsDialogAction>,
         next: (TranslationsDialogAction) -> Unit,
@@ -43,6 +45,15 @@ class TranslationsDialogMiddleware(
                 )
             }
 
+            is TranslationsDialogAction.FetchPageSettings -> {
+                browserStore.dispatch(
+                    TranslationsAction.OperationRequestedAction(
+                        tabId = sessionId,
+                        operation = TranslationOperation.FETCH_PAGE_SETTINGS,
+                    ),
+                )
+            }
+
             is TranslationsDialogAction.TranslateAction -> {
                 context.state.initialFrom?.code?.let { fromLanguage ->
                     context.state.initialTo?.code?.let { toLanguage ->
@@ -62,6 +73,42 @@ class TranslationsDialogMiddleware(
 
             is TranslationsDialogAction.RestoreTranslation -> {
                 browserStore.dispatch(TranslationsAction.TranslateRestoreAction(sessionId))
+            }
+
+            is TranslationsDialogAction.UpdatePageSettingsValue -> {
+                when (action.type) {
+                    is TranslationPageSettingsOption.AlwaysOfferPopup -> browserStore.dispatch(
+                        TranslationsAction.UpdatePageSettingAction(
+                            tabId = sessionId,
+                            operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
+                            setting = action.checkValue,
+                        ),
+                    )
+
+                    is TranslationPageSettingsOption.AlwaysTranslateLanguage -> browserStore.dispatch(
+                        TranslationsAction.UpdatePageSettingAction(
+                            tabId = sessionId,
+                            operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
+                            setting = action.checkValue,
+                        ),
+                    )
+
+                    is TranslationPageSettingsOption.NeverTranslateLanguage -> browserStore.dispatch(
+                        TranslationsAction.UpdatePageSettingAction(
+                            tabId = sessionId,
+                            operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE,
+                            setting = action.checkValue,
+                        ),
+                    )
+
+                    is TranslationPageSettingsOption.NeverTranslateSite -> browserStore.dispatch(
+                        TranslationsAction.UpdatePageSettingAction(
+                            tabId = sessionId,
+                            operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE,
+                            setting = action.checkValue,
+                        ),
+                    )
+                }
             }
 
             else -> {

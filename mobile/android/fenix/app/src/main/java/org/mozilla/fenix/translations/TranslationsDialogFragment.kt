@@ -28,7 +28,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -114,6 +116,14 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
 
                 val density = LocalDensity.current
 
+                val translationsDialogState =
+                    translationsDialogStore.observeAsComposableState { it }.value
+
+                val learnMoreUrl = SupportUtils.getSumoURLForTopic(
+                    requireContext(),
+                    SupportUtils.SumoTopic.TRANSLATIONS,
+                )
+
                 TranslationDialogBottomSheet {
                     TranslationsAnimation(
                         translationsVisibility = translationsVisibility,
@@ -131,13 +141,9 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                                     }
                                 },
                             ) {
-                                val learnMoreUrl = SupportUtils.getSumoURLForTopic(
-                                    requireContext(),
-                                    SupportUtils.SumoTopic.TRANSLATIONS,
-                                )
-
                                 TranslationsDialogContent(
                                     learnMoreUrl = learnMoreUrl,
+                                    translationsDialogState = translationsDialogState,
                                 ) {
                                     translationsVisibility = false
                                 }
@@ -159,19 +165,12 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                                     }
                                 },
                             ) {
-                                TranslationsOptionsDialog(
-                                    onBackClicked = {
-                                        translationsVisibility = true
-                                    },
-                                    onTranslationSettingsClicked = {
-                                        findNavController().navigate(
-                                            TranslationsDialogFragmentDirections
-                                                .actionTranslationsDialogFragmentToTranslationSettingsFragment(
-                                                    sessionId = args.sessionId,
-                                                ),
-                                        )
-                                    },
-                                )
+                                TranslationsOptionsDialogContent(
+                                    learnMoreUrl = learnMoreUrl,
+                                    initialFrom = translationsDialogState?.initialFrom,
+                                ) {
+                                    translationsVisibility = true
+                                }
                             }
                         }
                     }
@@ -213,12 +212,13 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
         )
     }
 
-    @Composable
     @Suppress("LongMethod")
-    private fun TranslationsDialogContent(learnMoreUrl: String, onSettingClicked: () -> Unit) {
-        val translationsDialogState =
-            translationsDialogStore.observeAsComposableState { it }.value
-
+    @Composable
+    private fun TranslationsDialogContent(
+        learnMoreUrl: String,
+        translationsDialogState: TranslationsDialogState? = null,
+        onSettingClicked: () -> Unit,
+    ) {
         translationsDialogState?.let { state ->
             isTranslationInProgress = state.isTranslationInProgress
 
@@ -310,6 +310,44 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                 }
             }
         }
+    }
+
+    @Composable
+    private fun TranslationsOptionsDialogContent(
+        learnMoreUrl: String,
+        initialFrom: Language? = null,
+        onBackClicked: () -> Unit,
+    ) {
+        val pageSettingsState =
+            browserStore.observeAsComposableState { state ->
+                state.findTab(args.sessionId)?.translationsState?.pageSettings
+            }.value
+
+        TranslationsOptionsDialog(
+            context = requireContext(),
+            translationPageSettings = pageSettingsState,
+            initialFrom = initialFrom,
+            onStateChange = { type, checked ->
+                translationsDialogStore.dispatch(
+                    TranslationsDialogAction.UpdatePageSettingsValue(
+                        type as TranslationPageSettingsOption,
+                        checked,
+                    ),
+                )
+            },
+            onBackClicked = onBackClicked,
+            onTranslationSettingsClicked = {
+                findNavController().navigate(
+                    TranslationsDialogFragmentDirections
+                        .actionTranslationsDialogFragmentToTranslationSettingsFragment(
+                            sessionId = args.sessionId,
+                        ),
+                )
+            },
+            aboutTranslationClicked = {
+                openBrowserAndLoad(learnMoreUrl)
+            },
+        )
     }
 
     override fun onDismiss(dialog: DialogInterface) {

@@ -49,13 +49,18 @@ fun TranslationSettings(
             items(translationSwitchList) { item: TranslationSwitchItem ->
                 SwitchWithLabel(
                     checked = item.isChecked,
-                    onCheckedChange = item.onStateChange,
+                    onCheckedChange = { checked ->
+                        item.onStateChange.invoke(
+                            item.type,
+                            checked,
+                        )
+                    },
                     label = item.textLabel,
                     modifier = Modifier
                         .padding(start = 72.dp, end = 16.dp),
                 )
 
-                if (item.hasDivider) {
+                if (item.type.hasDivider) {
                     Divider(Modifier.padding(top = 8.dp, bottom = 8.dp))
                 }
             }
@@ -119,20 +124,24 @@ internal fun getTranslationSettingsSwitchList(): List<TranslationSwitchItem> {
     return mutableListOf<TranslationSwitchItem>().apply {
         add(
             TranslationSwitchItem(
+                type = TranslationSettingsScreenOption.OfferToTranslate(
+                    hasDivider = false,
+                ),
                 textLabel = stringResource(R.string.translation_settings_offer_to_translate),
                 isChecked = true,
-                hasDivider = false,
                 isEnabled = true,
-                onStateChange = {},
+                onStateChange = { _, _ -> },
             ),
         )
         add(
             TranslationSwitchItem(
+                type = TranslationSettingsScreenOption.AlwaysDownloadInSavingMode(
+                    hasDivider = true,
+                ),
                 textLabel = stringResource(R.string.translation_settings_always_download),
                 isChecked = false,
-                hasDivider = true,
                 isEnabled = true,
-                onStateChange = {},
+                onStateChange = { _, _ -> },
             ),
         )
     }
