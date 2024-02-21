@@ -300,3 +300,129 @@ async function checkNoRelay(iceServers) {
   );
   pc.close();
 }
+
+function gatheringStateReached(object, state) {
+  if (object instanceof RTCIceTransport) {
+    return new Promise(r =>
+      object.addEventListener("gatheringstatechange", function listener() {
+        if (object.gatheringState == state) {
+          object.removeEventListener("gatheringstatechange", listener);
+          r(state);
+        }
+      })
+    );
+  } else if (object instanceof RTCPeerConnection) {
+    return new Promise(r =>
+      object.addEventListener("icegatheringstatechange", function listener() {
+        if (object.iceGatheringState == state) {
+          object.removeEventListener("icegatheringstatechange", listener);
+          r(state);
+        }
+      })
+    );
+  } else {
+    throw "First parameter is neither an RTCIceTransport nor an RTCPeerConnection";
+  }
+}
+
+function nextGatheringState(object) {
+  if (object instanceof RTCIceTransport) {
+    return new Promise(resolve =>
+      object.addEventListener(
+        "gatheringstatechange",
+        () => resolve(object.gatheringState),
+        { once: true }
+      )
+    );
+  } else if (object instanceof RTCPeerConnection) {
+    return new Promise(resolve =>
+      object.addEventListener(
+        "icegatheringstatechange",
+        () => resolve(object.iceGatheringState),
+        { once: true }
+      )
+    );
+  } else {
+    throw "First parameter is neither an RTCIceTransport nor an RTCPeerConnection";
+  }
+}
+
+function emptyCandidate(pc) {
+  return new Promise(r =>
+    pc.addEventListener("icecandidate", function listener(e) {
+      if (e.candidate && e.candidate.candidate == "") {
+        pc.removeEventListener("icecandidate", listener);
+        r(e);
+      }
+    })
+  );
+}
+
+function nullCandidate(pc) {
+  return new Promise(r =>
+    pc.addEventListener("icecandidate", function listener(e) {
+      if (!e.candidate) {
+        pc.removeEventListener("icecandidate", listener);
+        r(e);
+      }
+    })
+  );
+}
+
+function connectionStateReached(object, state) {
+  if (object instanceof RTCIceTransport || object instanceof RTCDtlsTransport) {
+    return new Promise(resolve =>
+      object.addEventListener("statechange", function listener() {
+        if (object.state == state) {
+          object.removeEventListener("statechange", listener);
+          resolve(state);
+        }
+      })
+    );
+  } else if (object instanceof RTCPeerConnection) {
+    return new Promise(resolve =>
+      object.addEventListener("connectionstatechange", function listener() {
+        if (object.connectionState == state) {
+          object.removeEventListener("connectionstatechange", listener);
+          resolve(state);
+        }
+      })
+    );
+  } else {
+    throw "First parameter is neither an RTCIceTransport, an RTCDtlsTransport, nor an RTCPeerConnection";
+  }
+}
+
+function nextConnectionState(object) {
+  if (object instanceof RTCIceTransport || object instanceof RTCDtlsTransport) {
+    return new Promise(resolve =>
+      object.addEventListener("statechange", () => resolve(object.state), {
+        once: true,
+      })
+    );
+  } else if (object instanceof RTCPeerConnection) {
+    return new Promise(resolve =>
+      object.addEventListener(
+        "connectionstatechange",
+        () => resolve(object.connectionState),
+        { once: true }
+      )
+    );
+  } else {
+    throw "First parameter is neither an RTCIceTransport, an RTCDtlsTransport, nor an RTCPeerConnection";
+  }
+}
+
+function nextIceConnectionState(pc) {
+  if (pc instanceof RTCPeerConnection) {
+    return new Promise(resolve =>
+      pc.addEventListener(
+        "iceconnectionstatechange",
+        () => resolve(pc.iceConnectionState),
+        { once: true }
+      )
+    );
+  } else {
+    throw "First parameter is not an RTCPeerConnection";
+  }
+}
