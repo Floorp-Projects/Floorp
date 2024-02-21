@@ -64,24 +64,4 @@ skip-if = ["verify"] # Bug 1852375 - MerinoTestUtils.initWeather() doesn't play 
 
 ["browser_glean_telemetry_exposure_edge_cases.js"]
 
-["browser_glean_telemetry_impression_groups.js"]
-
-["browser_glean_telemetry_impression_interaction.js"]
-
-["browser_glean_telemetry_impression_interaction_persisted_search_terms_disabled.js"]
-
-["browser_glean_telemetry_impression_interaction_persisted_search_terms_enabled.js"]
-
-["browser_glean_telemetry_impression_n_chars_n_words.js"]
-
-["browser_glean_telemetry_impression_preferences.js"]
-
-["browser_glean_telemetry_impression_sap.js"]
-
-["browser_glean_telemetry_impression_search_engine_default_id.js"]
-
-["browser_glean_telemetry_impression_search_mode.js"]
-
-["browser_glean_telemetry_impression_timing.js"]
-
 ["browser_glean_telemetry_record_preferences.js"]

@@ -317,9 +317,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // If true, we show tail suggestions when available.
   ["richSuggestions.tail", true],
 
-  // Interval time until taking pause impression telemetry.
-  ["searchEngagementTelemetry.pauseImpressionIntervalMs", 1000],
-
   // Hidden pref. Disables checks that prevent search tips being shown, thus
   // showing them every time the newtab page or the default search engine
   // homepage is opened.

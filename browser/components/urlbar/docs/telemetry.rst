@@ -515,16 +515,15 @@ following documents for the details.
     complete an engagement action, usually unfocusing the urlbar. This also
     happens when the user switches to another window, if the results popup was
     opening.
-  - `Impression`_ :
-    It is defined as an action where the results had been shown to the user for
-    a while. In default, it will be recorded when the same results have been
-    shown and 1 sec has elapsed. The interval value can be modified through the
-    `browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs`
-    preference.
 
 .. _Engagement: https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/metrics/urlbar_engagement
 .. _Abandonment: https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/metrics/urlbar_abandonment
-.. _Impression: https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/metrics/urlbar_impression
+
+Changelog
+  Firefox 125
+    The "impression" engagement event has been removed. [Bug `1878983`_]
+
+.. _1878983: https://bugzilla.mozilla.org/show_bug.cgi?id=1878983
 
 
 Custom pings for Contextual Services

@@ -17,7 +17,6 @@ async function doUrlbarNewTabTest({ trigger, assert }) {
 async function doUrlbarTest({ trigger, assert }) {
   await doTest(async browser => {
     await openPopup("x");
-    await waitForPauseImpression();
     await doEnter();
     await openPopup("y");
 
