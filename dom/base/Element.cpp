@@ -3436,14 +3436,6 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
 void Element::GetLinkTarget(nsAString& aTarget) { aTarget.Truncate(); }
 
-static nsStaticAtom* const sPropertiesToTraverseAndUnlink[] = {
-    nsGkAtoms::dirAutoSetBy, nullptr};
-
-// static
-nsStaticAtom* const* Element::HTMLSVGPropertiesToTraverseAndUnlink() {
-  return sPropertiesToTraverseAndUnlink;
-}
-
 nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
   nsresult rv = aDst->mAttrs.EnsureCapacityToClone(mAttrs);
   NS_ENSURE_SUCCESS(rv, rv);

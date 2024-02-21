@@ -1111,8 +1111,6 @@ class Element : public FragmentOrElement {
     return FindAttributeDependence(aAttribute, aMaps, N);
   }
 
-  static nsStaticAtom* const* HTMLSVGPropertiesToTraverseAndUnlink();
-
   MOZ_CAN_RUN_SCRIPT virtual void HandleInvokeInternal(nsAtom* aAction,
                                                        ErrorResult& aRv) {}
 

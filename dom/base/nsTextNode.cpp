@@ -43,13 +43,13 @@ class nsAttributeTextNode final : public nsTextNode,
     NS_ASSERTION(mAttrName, "Must have attr name");
   }
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(UnbindContext&) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(UnbindContext&) override;
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual already_AddRefed<CharacterData> CloneDataNode(
+  already_AddRefed<CharacterData> CloneDataNode(
       mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const override {
     RefPtr<nsAttributeTextNode> it =
         new (aNodeInfo->NodeInfoManager()) nsAttributeTextNode(
@@ -124,8 +124,8 @@ nsresult nsTextNode::BindToTree(BindContext& aContext, nsINode& aParent) {
 }
 
 void nsTextNode::UnbindFromTree(UnbindContext& aContext) {
-  ResetDirectionSetByTextNode(this);
   CharacterData::UnbindFromTree(aContext);
+  ResetDirectionSetByTextNode(this, aContext);
 }
 
 #ifdef MOZ_DOM_LIST

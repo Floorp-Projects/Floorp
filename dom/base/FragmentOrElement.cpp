@@ -1327,14 +1327,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
       Element* elem = tmp->AsElement();
       elem->UnlinkIntersectionObservers();
     }
-
-    if (tmp->IsHTMLElement() || tmp->IsSVGElement()) {
-      nsStaticAtom* const* props =
-          Element::HTMLSVGPropertiesToTraverseAndUnlink();
-      for (uint32_t i = 0; props[i]; ++i) {
-        tmp->RemoveProperty(props[i]);
-      }
-    }
   }
 
   // Unlink child content (and unbind our subtree).
@@ -1803,15 +1795,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
         for (DOMIntersectionObserver* observer : observers->Keys()) {
           cb.NoteXPCOMChild(observer);
         }
-      }
-    }
-    if (tmp->IsHTMLElement() || tmp->IsSVGElement()) {
-      nsStaticAtom* const* props =
-          Element::HTMLSVGPropertiesToTraverseAndUnlink();
-      for (uint32_t i = 0; props[i]; ++i) {
-        nsISupports* property =
-            static_cast<nsISupports*>(tmp->GetProperty(props[i]));
-        cb.NoteXPCOMChild(property);
       }
     }
   }
