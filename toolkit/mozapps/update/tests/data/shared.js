@@ -223,6 +223,7 @@ function setUpdateChannel(aChannel) {
   debugDump(
     "setting default pref " + PREF_APP_UPDATE_CHANNEL + " to " + gChannel
   );
+  gDefaultPrefBranch.unlockPref(PREF_APP_UPDATE_CHANNEL);
   gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_CHANNEL, gChannel);
   gPrefRoot.addObserver(PREF_APP_UPDATE_CHANNEL, observer);
 }

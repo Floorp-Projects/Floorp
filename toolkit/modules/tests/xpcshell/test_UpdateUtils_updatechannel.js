@@ -25,6 +25,7 @@ add_task(async function test_updatechannel() {
   Assert.equal(UpdateUtils.getUpdateChannel(true), currentChannel);
   Assert.equal(UpdateUtils.getUpdateChannel(false), currentChannel);
 
+  defaultPrefs.unlock(PREF_APP_UPDATE_CHANNEL);
   defaultPrefs.set(PREF_APP_UPDATE_CHANNEL, TEST_CHANNEL);
   Assert.equal(UpdateUtils.UpdateChannel, TEST_CHANNEL);
   Assert.equal(UpdateUtils.getUpdateChannel(true), TEST_CHANNEL);
