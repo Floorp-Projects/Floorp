@@ -87,6 +87,7 @@ export class YelpSuggestions extends BaseFeature {
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           url: url.toString(),
+          originalUrl: suggestion.url,
           title: [title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
           shouldShowUrl: true,
           bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
@@ -166,7 +167,7 @@ export class YelpSuggestions extends BaseFeature {
       // selType == "dismiss" when the user presses the dismiss key shortcut.
       case "dismiss":
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
-        lazy.QuickSuggest.blockedSuggestions.add(result.payload.url);
+        lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
         result.acknowledgeDismissalL10n = {
           id: "firefox-suggest-dismissal-acknowledgment-one-yelp",
         };
