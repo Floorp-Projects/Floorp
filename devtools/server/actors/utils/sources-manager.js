@@ -429,15 +429,15 @@ class SourcesManager extends EventEmitter {
     // Without this check, the cache may return stale data that doesn't match
     // the document shown in the browser.
     let loadFromCache = canUseCache;
-    if (canUseCache && this._thread._parent.browsingContext) {
+    if (canUseCache && this._thread.targetActor.browsingContext) {
       loadFromCache = !(
-        this._thread._parent.browsingContext.defaultLoadFlags ===
+        this._thread.targetActor.browsingContext.defaultLoadFlags ===
         Ci.nsIRequest.LOAD_BYPASS_CACHE
       );
     }
 
     // Fetch the sources with the same principal as the original document
-    const win = this._thread._parent.window;
+    const win = this._thread.targetActor.window;
     let principal, cacheKey;
     // On xpcshell, we don't have a window but a Sandbox
     if (!isWorker && win instanceof Ci.nsIDOMWindow) {

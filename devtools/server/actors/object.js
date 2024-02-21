@@ -169,7 +169,7 @@ class ObjectActor extends Actor {
     }
 
     // Only process custom formatters if the feature is enabled.
-    if (this.thread?._parent?.customFormatters) {
+    if (this.thread?.targetActor?.customFormatters) {
       const result = customFormatterHeader(this);
       if (result) {
         const { formatter, ...header } = result;

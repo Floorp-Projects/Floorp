@@ -72,7 +72,7 @@ class WorkerTargetActor extends BaseTargetActor {
     });
 
     // needed by the console actor
-    this.threadActor = new ThreadActor(this, this.workerGlobal);
+    this.threadActor = new ThreadActor(this);
 
     // needed by the thread actor to communicate with the console when evaluating logpoints.
     this._consoleActor = new WebConsoleActor(this.conn, this);

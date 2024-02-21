@@ -147,7 +147,7 @@ class ContentProcessTargetActor extends BaseTargetActor {
     }
 
     if (!this.threadActor) {
-      this.threadActor = new ThreadActor(this, null);
+      this.threadActor = new ThreadActor(this);
       this.manage(this.threadActor);
     }
     if (!this.memoryActor) {

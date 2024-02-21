@@ -12,7 +12,7 @@ const Resources = require("resource://devtools/server/actors/resources/index.js"
 add_task(
   threadFrontTest(async ({ threadActor, threadFront, debuggee, client }) => {
     let lastMessage, lastExpression;
-    const targetActor = threadActor._parent;
+    const { targetActor } = threadActor;
     // Only Workers are evaluating through the WebConsoleActor.
     // Tabs will be evaluating directly via the frame object.
     targetActor._consoleActor = {
