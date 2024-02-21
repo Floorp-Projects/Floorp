@@ -23,7 +23,7 @@ class SearchRobot {
     fun typeInSearchBar(searchString: String) {
         assertTrue(searchBar.waitForExists(waitingTime))
         searchBar.clearTextField()
-        searchBar.text = searchString
+        searchBar.setText(searchString)
     }
 
     // Would you like to turn on search suggestions? Yes No

@@ -111,7 +111,7 @@ class HomeScreenScreenshots : ScreenshotTest() {
 
     private fun typeInSearchBar(searchString: String) {
         searchBar.clearTextField()
-        searchBar.text = searchString
+        searchBar.setText(searchString)
     }
 
     private val searchBar =

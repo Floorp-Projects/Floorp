@@ -66,7 +66,7 @@ class SettingsSubMenuLanguageRobot {
         searchBar().waitForExists(waitingTime)
         Log.i(TAG, "typeInSearchBar: Waited for $waitingTime ms for search bar to exist")
         Log.i(TAG, "typeInSearchBar: Trying to set search bar text to: $text")
-        searchBar().text = text
+        searchBar().setText(text)
         Log.i(TAG, "typeInSearchBar: Search bar text was set to: $text")
     }
 

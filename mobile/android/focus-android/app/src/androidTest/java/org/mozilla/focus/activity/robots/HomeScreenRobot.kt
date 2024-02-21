@@ -68,7 +68,7 @@ class HomeScreenRobot {
         val okButton = mDevice.findObject(UiSelector().textContains("ok"))
 
         titleTextField.clearTextField()
-        titleTextField.text = newTitle
+        titleTextField.setText(newTitle)
         okButton.click()
         // the dialog is not always dismissed on first click of the Ok button (not manually reproducible)
         if (!mDevice.findObject(UiSelector().text("Rename")).waitUntilGone(waitingTimeShort)) {

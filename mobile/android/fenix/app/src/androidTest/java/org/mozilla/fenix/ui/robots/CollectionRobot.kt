@@ -58,7 +58,7 @@ class CollectionRobot {
     // names a collection saved from tab drawer
     fun typeCollectionNameAndSave(collectionName: String) {
         Log.i(TAG, "typeCollectionNameAndSave: Trying to set collection name text field to: $collectionName")
-        collectionNameTextField().text = collectionName
+        collectionNameTextField().setText(collectionName)
         Log.i(TAG, "typeCollectionNameAndSave: Collection name text field set to: $collectionName")
         Log.i(TAG, "typeCollectionNameAndSave: Waiting for $waitingTime ms for add collection button panel to exist")
         addCollectionButtonPanel().waitForExists(waitingTime)
@@ -228,7 +228,7 @@ class CollectionRobot {
             mainMenuEditCollectionNameField().waitForExists(waitingTime)
             Log.i(TAG, "typeCollectionNameAndSave: Waited for $waitingTime ms for collection name text field to exist")
             Log.i(TAG, "typeCollectionNameAndSave: Trying to set collection name text field to: $name")
-            mainMenuEditCollectionNameField().text = name
+            mainMenuEditCollectionNameField().setText(name)
             Log.i(TAG, "typeCollectionNameAndSave: Collection name text field set to: $name")
             Log.i(TAG, "typeCollectionNameAndSave: Trying to press done action button")
             onView(withId(R.id.name_collection_edittext)).perform(pressImeActionButton())

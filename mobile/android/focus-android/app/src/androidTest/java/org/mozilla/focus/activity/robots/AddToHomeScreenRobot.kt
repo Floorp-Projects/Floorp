@@ -22,7 +22,7 @@ class AddToHomeScreenRobot {
     fun addShortcutWithTitle(title: String) {
         shortcutTitle.waitForExists(waitingTime)
         shortcutTitle.clearTextField()
-        shortcutTitle.text = title
+        shortcutTitle.setText(title)
         addToHSOKBtn.click()
     }
 
