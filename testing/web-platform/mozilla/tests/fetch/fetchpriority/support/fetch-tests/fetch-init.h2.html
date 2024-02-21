@@ -10,51 +10,66 @@
   onload = function() {
     const kData = [
       {
-        description: 'fetch() with URL and request_init whose priority is "high" must be fetched with high load priority',
-        request_info: `${resource_url}?1`,
+        request_info: new Request(`${resource_url}?1`, {priority: 'low'}),
+        request_init: {priority: 'low'}
+      },
+      {
+        request_info: new Request(`${resource_url}?2`, {priority: 'low'}),
         request_init: {priority: 'high'}
       },
       {
-        description: 'fetch() with URL and request_init whose priority is "auto" must have no effect on resource load priority',
-        request_info: `${resource_url}?2`,
+        request_info: new Request(`${resource_url}?3`, {priority: 'low'}),
         request_init: {priority: 'auto'}
       },
       {
-        description: 'fetch() with URL and request_init whose priority is missing must have no effect on resource load priority',
-        request_info: `${resource_url}?3`,
-        request_init: {}
+        request_info: new Request(`${resource_url}?4`, {priority: 'low'})
       },
       {
-        description: 'fetch() with URL and request_init whose priority is "low" must be fetched with low resource load priority',
-        request_info: `${resource_url}?4`,
+        request_info: new Request(`${resource_url}?5`, {priority: 'high'}),
         request_init: {priority: 'low'}
       },
       {
-        description: 'fetch() with Request whose priority is "low" and request_init whose priority is "high" must have no effect on resource load priority',
-        request_info: new Request(`${resource_url}?5`, {priority: 'low'}),
+        request_info: new Request(`${resource_url}?6`, {priority: 'high'}),
         request_init: {priority: 'high'}
       },
       {
-        description: 'fetch() with Request whose priority is "high" and request_init whose priority is "low" must be fetched with low resource load priority',
-        request_info: new Request(`${resource_url}?6`, {priority: 'high'}),
+        request_info: new Request(`${resource_url}?7`, {priority: 'high'}),
+        request_init: {priority: 'auto'}
+      },
+      {
+        request_info: new Request(`${resource_url}?8`, {priority: 'high'})
+      },
+      {
+        request_info: new Request(`${resource_url}?9`, {priority: 'auto'}),
         request_init: {priority: 'low'}
       },
       {
-        description: 'fetch() with Request whose priority is "high" and no request_init must be fetched with high resource load priority',
-        request_info: new Request(`${resource_url}?7`, {priority: 'high'})
+        request_info: new Request(`${resource_url}?10`, {priority: 'auto'}),
+        request_init: {priority: 'high'}
       },
       {
-        description: 'fetch() with Request whose priority is "auto" and no request_init must have no effect on resource load priority',
-        request_info: new Request(`${resource_url}?8`, {priority: 'auto'})
+        request_info: new Request(`${resource_url}?11`, {priority: 'auto'}),
+        request_init: {priority: 'auto'}
       },
       {
-        description: 'fetch() with Request whose priority is missing and no request_init must have no effect on resource load priority',
-        request_info: new Request(`${resource_url}?9`)
+        request_info: new Request(`${resource_url}?12`, {priority: 'auto'}),
       },
       {
-        description: 'fetch() with Request whose priority is "low" and no request_init must be fetched with low resource load priority',
-        request_info: new Request(`${resource_url}?10`, {priority: 'low'})
-      }
+        request_info: `${resource_url}?13`,
+        request_init: {priority: 'low'}
+      },
+      {
+        request_info: `${resource_url}?14`,
+        request_init: {priority: 'high'}
+      },
+      {
+        request_info: `${resource_url}?15`,
+        request_init: {priority: 'auto'}
+      },
+      {
+        request_info: `${resource_url}?16`,
+        request_init: {}
+      },
     ];
     for (const data of kData) {
         const response = fetch(data.request_info, data.request_init);
