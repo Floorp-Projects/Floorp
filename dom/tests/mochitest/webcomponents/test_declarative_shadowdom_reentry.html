@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1870055
+-->
+<head>
+  <title>Test for Logging of Declarative ShadowDOM attachment failure</title>
+  <script type="text/javascript" src="head.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const node = document.createElement('div');
+  document.documentElement.appendChild(node);
+  document.addEventListener('DOMSubtreeModified', (e) => {
+    node.setHTMLUnsafe('b');
+    is(node.textContent, 'b', 'Re-entry into setHTMLUnsafe is valid');
+    SimpleTest.finish();
+  }, { once: true });
+  node.setHTMLUnsafe('a');
+});
+</script>
