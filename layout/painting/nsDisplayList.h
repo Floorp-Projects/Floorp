@@ -3570,7 +3570,7 @@ class RetainedDisplayList : public nsDisplayList {
     for (OldItemInfo& i : mOldItems) {
       if (i.mItem && i.mOwnsItem) {
         i.mItem->Destroy(aBuilder);
-        MOZ_ASSERT(!GetBottom(),
+        MOZ_ASSERT(!GetBottom() || aBuilder->PartialBuildFailed(),
                    "mOldItems should not be owning items if we also have items "
                    "in the normal list");
       }
