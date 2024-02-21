@@ -33,7 +33,7 @@
       );
       await Assert.rejects(
         IOUtils.makeDirectory(newDirectoryName, { ignoreExisting: false }),
-        /Could not create directory because it already exists at .*/,
+        /NoModificationAllowedError: Could not create directory `.*': directory already exists/,
         "IOUtils::makeDirectory can throw if the target dir exists"
       )
 
@@ -45,7 +45,7 @@
       );
       await Assert.rejects(
         IOUtils.makeDirectory(nestedDirName, { createAncestors: false }),
-        /Could not create directory at .*/,
+        /NotFoundError: Could not create directory `.*'/,
         "IOUtils::makeDirectory can fail if the target is missing parents"
       );
       ok(!await IOUtils.exists(nestedDirName), `Expected ${nestedDirName} not to exist`);
@@ -65,14 +65,14 @@
 
       await Assert.rejects(
         IOUtils.makeDirectory(notADirFileName, { ignoreExisting: false }),
-        /Could not create directory because the target file\(.*\) exists and is not a directory/,
+        /InvalidAccessError: Could not create directory `.*': file exists and is not a directory/,
         "IOUtils::makeDirectory [ignoreExisting: false] throws when the target is an existing file"
       );
       ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);
 
       await Assert.rejects(
         IOUtils.makeDirectory(notADirFileName, { ignoreExisting: true }),
-        /Could not create directory because the target file\(.*\) exists and is not a directory/,
+        /InvalidAccessError: Could not create directory `.*': file exists and is not a directory/,
         "IOUtils::makeDirectory [ignoreExisting: true] throws when the target is an existing file"
       );
       ok(await fileExists(notADirFileName), `Expected ${notADirFileName} to exist`);

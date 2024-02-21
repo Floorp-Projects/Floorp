@@ -26,7 +26,7 @@
       const doesNotExist = PathUtils.join(PathUtils.tempDir, "does_not_exist.tmp");
       await Assert.rejects(
         IOUtils.readUTF8(doesNotExist),
-        /Could not open the file at .*/,
+        /NotFoundError: Could not open `.*'/,
         "IOUtils::readUTF8 rejects when file does not exist"
       );
 
@@ -38,7 +38,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(invalidUTF8File),
-        /Could not read file\(.*\) because it is not UTF-8 encoded/,
+        /NotReadableError: Could not read `.*': file is not UTF-8 encoded/,
         "IOUtils::readUTF8 will reject when reading a file that is not valid UTF-8"
       );
 
@@ -56,7 +56,7 @@
         IOUtils.writeUTF8(tmpFileName, newContents, {
           mode: "create",
         }),
-        /Refusing to overwrite the file at */,
+        /NoModificationAllowedError: Could not write to `.*': refusing to overwrite file, `mode' is not "overwrite"/,
         "IOUtils::writeUTF8 rejects writing to existing file if overwrites are disabled"
       );
       ok(
@@ -309,7 +309,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /Could not decompress file because it has an invalid LZ4 header \(wrong magic number: .*\)/,
+        /NotReadableError: Could not decompress file: invalid LZ4 header: wrong magic number: `01 01 01 01 01 01 01 01 01 01 01 01'/,
         "IOUtils::readUTF8 fails to decompress LZ4 data with a bad header"
       );
 
@@ -319,7 +319,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /Could not decompress file because the buffer is too short/,
+        /NotReadableError: Could not decompress file: buffer is too small/,
         "IOUtils::readUTF8 fails to decompress LZ4 data with missing header"
       );
 
@@ -331,7 +331,7 @@
 
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /Could not decompress file contents, the file may be corrupt/,
+        /NotReadableError: Could not decompress file: the file may be corrupt/,
         "IOUtils::readUTF8 fails to read corrupt LZ4 contents with a correct header"
       );
 
@@ -342,7 +342,7 @@
       }
       await Assert.rejects(
         IOUtils.readUTF8(tmpFileName, { decompress: true }),
-        /Could not decompress file because the buffer is too short/,
+        /NotReadableError: Could not decompress file: buffer is too small/,
         "IOUtils::readUTF8 fails to decompress empty files"
       );
 
