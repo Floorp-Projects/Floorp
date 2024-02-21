@@ -4,17 +4,7 @@
 
 @import url("chrome://global/skin/design-system/tokens-shared.css");
 
-:root,
-:host(.anonymous-content-host) {
-  /** Font size **/
-  --font-size-root: 15px;       /* Set at the `:root`. Do not use */
-  --font-size-small: 0.867rem;  /* 13px */
-  --font-size-large: 1.133rem;  /* 17px */
-  --font-size-xlarge: 1.467rem; /* 22px */
-  --font-size-xxlarge: 1.6rem;  /* 24px */
-}
-
-@media not (prefers-contrast) {
+@layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
     /** Border **/
@@ -41,6 +31,14 @@
     --brand-color-accent-hover: light-dark(var(--color-blue-60), var(--color-cyan-30));
     --brand-color-accent-active: light-dark(var(--color-blue-70), var(--color-cyan-20));
     --color-canvas: light-dark(var(--color-white), var(--color-gray-90));
+
+    /** Font size **/
+    --font-size-root: 15px;       /* Set at the `:root`. Do not use */
+    --font-size-small: 0.867rem;  /* 13px */
+    --font-size-large: 1.133rem;  /* 17px */
+    --font-size-xlarge: 1.467rem; /* 22px */
+    --font-size-xxlarge: 1.6rem;  /* 24px */
+
 
     /** Text **/
     --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
