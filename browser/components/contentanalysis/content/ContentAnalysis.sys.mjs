@@ -497,6 +497,7 @@ export const ContentAnalysis = {
       }),
       Ci.nsIPromptService.BUTTON_POS_0 *
         Ci.nsIPromptService.BUTTON_TITLE_CANCEL +
+        Ci.nsIPromptService.BUTTON_POS_1_DEFAULT +
         Ci.nsIPromptService.SHOW_SPINNER,
       null,
       null,
