@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="iceTestUtils.js"></script>
+  <script type="application/javascript" src="helpers_from_wpt/sdp.js"></script></head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1811912",
+    title: "Tests for RTCIceTransport"
+  });
+
+  const tests = [
+    async function iceRestartNewGathersFirst() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.block_udp', true]);
+      // We block UDP, and configure a fake UDP STUN server; this should result
+      // in gathering taking a while, because we'll just be sending UDP packets
+      // off to be eaten by the NAT simulator.
+      const pc1 = new RTCPeerConnection({ iceServers: [{
+        urls: ['stun:192.168.1.1']
+      }] });
+      const pc2 = new RTCPeerConnection();
+
+      const transceiver = pc1.addTransceiver('audio');
+      await pc1.setLocalDescription();
+      const {iceTransport} = transceiver.sender.transport;
+      is(await nextGatheringState(iceTransport), 'gathering');
+
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      pc1.setConfiguration({iceServers: []});
+      await pc1.setLocalDescription(await pc1.createOffer({iceRestart: true}));
+      is(iceTransport.gatheringState, 'gathering');
+
+      const gatheringDonePromise = nextGatheringState(iceTransport);
+      // The empty candidate should fire for the new underlying transport
+      // (created by the ICE restart), but there should be no gathering state
+      // change yet. (Spec says that the RTCIceTransport object is the same
+      // here, even thougb there's actually a new transport)
+      await emptyCandidate(pc1);
+
+      // New transport is done gathering, old should not be.
+      let result = await Promise.race([gatheringDonePromise, new Promise(r => setTimeout(r, 100))]);
+      is(result, undefined, 'Gathering should not complete yet');
+
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      // We might or might not have an empty candidate for the generation we
+      // just abandoned, depending on how the spec shakes out.
+
+      // Completing negotiation should result in a transition to complete very
+      // quickly
+      result = await Promise.race([gatheringDonePromise, new Promise(r => setTimeout(r, 100))]);
+      is(result, 'complete', 'Gathering should complete soon after the ICE restart is complete');
+      pc1.close();
+      pc2.close();
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function iceRestartNewGathersFirstThenRollback() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.block_udp', true]);
+      // This should result in gathering taking a while
+      const pc1 = new RTCPeerConnection({ iceServers: [{
+        urls: ['stun:192.168.1.1']
+      }] });
+      const pc2 = new RTCPeerConnection();
+
+      const transceiver = pc1.addTransceiver('audio');
+      await pc1.setLocalDescription();
+      const {iceTransport} = transceiver.sender.transport;
+      is(await nextGatheringState(iceTransport), 'gathering');
+
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      pc1.setConfiguration({iceServers: []});
+      await pc1.setLocalDescription(await pc1.createOffer({iceRestart: true}));
+      is(iceTransport.gatheringState, 'gathering');
+
+      const gatheringDonePromise = nextGatheringState(iceTransport);
+      // This should fire for the new transport, but there should be no
+      // gathering state change yet.
+      await emptyCandidate(pc1);
+
+      // Rollback should abandon the new transport, and we should remain in
+      // 'gathering'
+      await pc1.setLocalDescription({type: 'rollback', sdp: ''});
+
+      let result = await Promise.race([gatheringDonePromise, new Promise(r => setTimeout(r, 1000))]);
+      is(result, undefined, 'Gathering should not complete');
+      pc1.close();
+      pc2.close();
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function iceRestartOldGathersFirst() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.block_udp', true]);
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const transceiver = pc1.addTransceiver('audio');
+      await pc1.setLocalDescription();
+      const {iceTransport} = transceiver.sender.transport;
+      is(await nextGatheringState(iceTransport), 'gathering');
+      is(await nextGatheringState(iceTransport), 'complete');
+
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      // This should result in gathering taking a while
+      pc1.setConfiguration({ iceServers: [{
+        urls: ['stun:192.168.1.1']
+      }] });
+      await pc1.setLocalDescription(await pc1.createOffer({iceRestart: true}));
+
+      is(await nextGatheringState(iceTransport), 'gathering');
+
+      const gatheringDonePromise = nextGatheringState(iceTransport);
+      let result = await Promise.race([gatheringDonePromise, new Promise(r => setTimeout(r, 100))]);
+      is(result, undefined, 'Gathering should not complete');
+
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      result = await Promise.race([gatheringDonePromise, new Promise(r => setTimeout(r, 100))]);
+      is(result, undefined, 'Gathering should not complete');
+      pc1.close();
+      pc2.close();
+      await SpecialPowers.popPrefEnv();
+    },
+
+    async function iceRestartOldGathersFirstThenRollback() {
+      await pushPrefs(
+          ['media.peerconnection.nat_simulator.block_udp', true]);
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+
+      const transceiver = pc1.addTransceiver('audio');
+      await pc1.setLocalDescription();
+      const {iceTransport} = transceiver.sender.transport;
+      is(await nextGatheringState(iceTransport), 'gathering');
+      is(await nextGatheringState(iceTransport), 'complete');
+
+      await pc2.setRemoteDescription(pc1.localDescription);
+      await pc2.setLocalDescription();
+      await pc1.setRemoteDescription(pc2.localDescription);
+
+      // This should result in gathering taking a while
+      pc1.setConfiguration({ iceServers: [{
+        urls: ['stun:192.168.1.1']
+      }] });
+      await pc1.setLocalDescription(await pc1.createOffer({iceRestart: true}));
+
+      is(await nextGatheringState(iceTransport), 'gathering', 'ICE restart should put us back in gathering');
+
+      const gatheringDonePromise = nextGatheringState(iceTransport);
+      is(iceTransport.gatheringState, 'gathering');
+      await pc1.setLocalDescription({type: 'rollback', sdp: ''});
+      const result = await Promise.race([gatheringDonePromise, new Promise(r => setTimeout(r, 200))]);
+      is(iceTransport.gatheringState, 'complete', 'Rollback of ICE restart to transport that was already done gathering should result in a transition back to "complete"');
+      is(result, 'complete', 'Rollback that brings the gathering state back to complete should result in a gatheringstatechange event');
+      pc1.close();
+      pc2.close();
+      await SpecialPowers.popPrefEnv();
+    },
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      try {
+        await test();
+      } catch (e) {
+        ok(false, `Caught ${e.name}: ${e.message} ${e.stack}`);
+      }
+      info(`Done running test: ${test.name}`);
+      // Make sure we don't build up a pile of GC work, and also get PCImpl to
+      // print their timecards.
+      await new Promise(r => SpecialPowers.exactGC(r));
+    }
+  }, { useIceServer: true });
+</script>
+</pre>
+</body>
+</html>
