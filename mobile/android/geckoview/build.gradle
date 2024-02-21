@@ -229,7 +229,7 @@ dependencies {
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
 
     implementation "com.google.android.gms:play-services-fido:20.0.1"
-    implementation "org.yaml:snakeyaml:2.0"
+    implementation "org.yaml:snakeyaml:2.2"
 
     implementation "androidx.lifecycle:lifecycle-common:2.6.1"
     implementation "androidx.lifecycle:lifecycle-process:2.6.1"
