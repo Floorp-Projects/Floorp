@@ -113,6 +113,19 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder() {
   mOpQueue.Clear();
 }
 
+static void getTypeString(nsHtml5String& aType, nsAString& aTypeString) {
+  aType.ToString(aTypeString);
+
+  // Since `typeString` after trimming and lowercasing is only checked
+  // for "module" and " importmap", we don't need to remember
+  // pre-trimming emptiness here.
+
+  // ASCII whitespace https://infra.spec.whatwg.org/#ascii-whitespace:
+  // U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
+  static const char kASCIIWhitespace[] = "\t\n\f\r ";
+  aTypeString.Trim(kASCIIWhitespace);
+}
+
 nsIContentHandle* nsHtml5TreeBuilder::createElement(
     int32_t aNamespace, nsAtom* aName, nsHtml5HtmlAttributes* aAttributes,
     nsIContentHandle* aIntendedParent, nsHtml5ContentCreatorFunction aCreator) {
@@ -239,16 +252,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
           nsHtml5String type =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
           nsAutoString typeString;
-          type.ToString(typeString);
-
-          // Since `typeString` after trimming and lowercasing is only checked
-          // for "module" and " importmap", we don't need to remember
-          // pre-trimming emptiness here.
-
-          // ASCII whitespace https://infra.spec.whatwg.org/#ascii-whitespace:
-          // U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
-          static const char kASCIIWhitespace[] = "\t\n\f\r ";
-          typeString.Trim(kASCIIWhitespace);
+          getTypeString(type, typeString);
 
           bool isModule = typeString.LowerCaseEqualsASCII("module");
           bool importmap = typeString.LowerCaseEqualsASCII("importmap");
@@ -556,36 +560,70 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
               tokenizer->getColumnNumber() + 1);
           treeOp->Init(mozilla::AsVariant(operation));
 
+          nsHtml5String type =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
+          nsAutoString typeString;
+          getTypeString(type, typeString);
+
+          bool isModule = typeString.LowerCaseEqualsASCII("module");
+          bool importmap = typeString.LowerCaseEqualsASCII("importmap");
+          bool async = false;
+          bool defer = false;
+
+          if (importmap) {
+            // If we see an importmap, we don't want to later start speculative
+            // loads for modulepreloads, since such load might finish before
+            // the importmap is created. This also applies to module scripts so
+            // that any modulepreload integrity checks can be performed before
+            // the modules scripts are loaded.
+            // This state is not part of speculation rollback: If an importmap
+            // is seen speculatively and the speculation is rolled back, the
+            // importmap is still considered seen.
+            // TODO: Sync importmap seenness between the main thread and the
+            // parser thread.
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1848312
+            mHasSeenImportMap = true;
+          }
           nsHtml5String url =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
           if (!url) {
             url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           }
           if (url) {
-            nsHtml5String type =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
-            nsHtml5String crossOrigin =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-            nsHtml5String nonce =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
-            nsHtml5String integrity =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
-            nsHtml5String referrerPolicy = aAttributes->getValue(
-                nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+            async = aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC);
+            defer = aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER);
+            if ((isModule && !mHasSeenImportMap) || (!isModule && !importmap)) {
+              nsHtml5String type =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
+              nsHtml5String crossOrigin =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+              nsHtml5String nonce =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
+              nsHtml5String integrity =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
+              nsHtml5String referrerPolicy = aAttributes->getValue(
+                  nsHtml5AttributeName::ATTR_REFERRERPOLICY);
 
-            // Bug 1847712: SVG's `<script>` element doesn't support
-            // `fetchpriority` yet.
-            // Use the empty string and rely on the
-            // "invalid value default" state being used later.
-            // Compared to using a non-empty string, this doesn't
-            // require calling `Release()` for the string.
-            nsHtml5String fetchPriority = nsHtml5String::EmptyString();
+              // Bug 1847712: SVG's `<script>` element doesn't support
+              // `fetchpriority` yet.
+              // Use the empty string and rely on the
+              // "invalid value default" state being used later.
+              // Compared to using a non-empty string, this doesn't
+              // require calling `Release()` for the string.
+              nsHtml5String fetchPriority = nsHtml5String::EmptyString();
 
-            mSpeculativeLoadQueue.AppendElement()->InitScript(
-                url, nullptr, type, crossOrigin, /* aMedia = */ nullptr, nonce,
-                fetchPriority, integrity, referrerPolicy,
-                mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false);
+              mSpeculativeLoadQueue.AppendElement()->InitScript(
+                  url, nullptr, type, crossOrigin, /* aMedia = */ nullptr,
+                  nonce, fetchPriority, integrity, referrerPolicy,
+                  mode == nsHtml5TreeBuilder::IN_HEAD, async, defer, false);
+            }
           }
+          // `mCurrentHtmlScriptCannotDocumentWriteOrBlock` MUST be computed to
+          // match the ScriptLoader-perceived kind of the script regardless of
+          // enqueuing a speculative load. Either the attribute prevents a
+          // classic script execution or is ignored on a module script.
+          mCurrentHtmlScriptCannotDocumentWriteOrBlock =
+              isModule || importmap || async || defer;
         } else if (nsGkAtoms::style == aName) {
           mImportScanner.Start();
           nsHtml5TreeOperation* treeOp =
@@ -638,16 +676,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
         nsHtml5String type =
             aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
         nsAutoString typeString;
-        type.ToString(typeString);
-
-        // Since `typeString` after trimming and lowercasing is only checked
-        // for "module" and " importmap", we don't need to remember
-        // pre-trimming emptiness here.
-
-        // ASCII whitespace https://infra.spec.whatwg.org/#ascii-whitespace:
-        // U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
-        static const char kASCIIWhitespace[] = "\t\n\f\r ";
-        typeString.Trim(kASCIIWhitespace);
+        getTypeString(type, typeString);
 
         mCurrentHtmlScriptCannotDocumentWriteOrBlock =
             typeString.LowerCaseEqualsASCII("module") ||
@@ -1224,8 +1253,9 @@ void nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName,
       return;
     }
     if (mCurrentHtmlScriptCannotDocumentWriteOrBlock) {
-      NS_ASSERTION(aNamespace == kNameSpaceID_XHTML,
-                   "Only HTML scripts may be async/defer.");
+      NS_ASSERTION(
+          aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG,
+          "Only HTML and SVG scripts may be async/defer.");
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
       if (MOZ_UNLIKELY(!treeOp)) {
         MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
