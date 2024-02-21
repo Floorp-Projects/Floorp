@@ -49,14 +49,16 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
     NS_ENSURE_TRUE_VOID(mParent->SendOnAlpnNegotiated(aAlpn));
   }
 
-  void OnGatheringStateChange(dom::RTCIceGatheringState aState) {
-    NS_ENSURE_TRUE_VOID(
-        mParent->SendOnGatheringStateChange(static_cast<int>(aState)));
+  void OnGatheringStateChange(const std::string& aTransportId,
+                              dom::RTCIceGathererState aState) {
+    NS_ENSURE_TRUE_VOID(mParent->SendOnGatheringStateChange(
+        aTransportId, static_cast<int>(aState)));
   }
 
-  void OnConnectionStateChange(dom::RTCIceConnectionState aState) {
-    NS_ENSURE_TRUE_VOID(
-        mParent->SendOnConnectionStateChange(static_cast<int>(aState)));
+  void OnConnectionStateChange(const std::string& aTransportId,
+                               dom::RTCIceTransportState aState) {
+    NS_ENSURE_TRUE_VOID(mParent->SendOnConnectionStateChange(
+        aTransportId, static_cast<int>(aState)));
   }
 
   void OnPacketReceived(const std::string& aTransportId,

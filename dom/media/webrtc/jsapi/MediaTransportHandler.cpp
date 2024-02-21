@@ -156,9 +156,9 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   using MediaTransportHandler::OnRtcpStateChange;
   using MediaTransportHandler::OnStateChange;
 
-  void OnGatheringStateChange(NrIceCtx* aIceCtx,
-                              NrIceCtx::GatheringState aState);
-  void OnConnectionStateChange(NrIceCtx* aIceCtx,
+  void OnGatheringStateChange(const std::string& aTransportId,
+                              NrIceMediaStream::GatheringState aState);
+  void OnConnectionStateChange(NrIceMediaStream* aIceStream,
                                NrIceCtx::ConnectionState aState);
   void OnCandidateFound(NrIceMediaStream* aStream,
                         const std::string& aCandidate,
@@ -589,8 +589,6 @@ void MediaTransportHandlerSTS::CreateIceCtx(const std::string& aName) {
                                                     __func__);
               }
 
-              mIceCtx->SignalGatheringStateChange.connect(
-                  this, &MediaTransportHandlerSTS::OnGatheringStateChange);
               mIceCtx->SignalConnectionStateChange.connect(
                   this, &MediaTransportHandlerSTS::OnConnectionStateChange);
 
@@ -784,6 +782,8 @@ void MediaTransportHandlerSTS::EnsureProvisionalTransport(
 
           stream->SignalCandidate.connect(
               this, &MediaTransportHandlerSTS::OnCandidateFound);
+          stream->SignalGatheringStateChange.connect(
+              this, &MediaTransportHandlerSTS::OnGatheringStateChange);
         }
 
         // Begins an ICE restart if this stream has a different ufrag/pwd
@@ -1181,31 +1181,31 @@ void MediaTransportHandler::OnAlpnNegotiated(const std::string& aAlpn) {
 }
 
 void MediaTransportHandler::OnGatheringStateChange(
-    dom::RTCIceGatheringState aState) {
+    const std::string& aTransportId, dom::RTCIceGathererState aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
         // This is being called from sigslot, which does not hold a strong ref.
         WrapRunnable(this, &MediaTransportHandler::OnGatheringStateChange,
-                     aState),
+                     aTransportId, aState),
         NS_DISPATCH_NORMAL);
     return;
   }
 
-  SignalGatheringStateChange(aState);
+  SignalGatheringStateChange(aTransportId, aState);
 }
 
 void MediaTransportHandler::OnConnectionStateChange(
-    dom::RTCIceConnectionState aState) {
+    const std::string& aTransportId, dom::RTCIceTransportState aState) {
   if (mCallbackThread && !mCallbackThread->IsOnCurrentThread()) {
     mCallbackThread->Dispatch(
         // This is being called from sigslot, which does not hold a strong ref.
         WrapRunnable(this, &MediaTransportHandler::OnConnectionStateChange,
-                     aState),
+                     aTransportId, aState),
         NS_DISPATCH_NORMAL);
     return;
   }
 
-  SignalConnectionStateChange(aState);
+  SignalConnectionStateChange(aTransportId, aState);
 }
 
 void MediaTransportHandler::OnPacketReceived(const std::string& aTransportId,
@@ -1583,48 +1583,48 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
   return flow;
 }
 
-static mozilla::dom::RTCIceGatheringState toDomIceGatheringState(
-    NrIceCtx::GatheringState aState) {
+static mozilla::dom::RTCIceGathererState toDomIceGathererState(
+    NrIceMediaStream::GatheringState aState) {
   switch (aState) {
-    case NrIceCtx::ICE_CTX_GATHER_INIT:
-      return dom::RTCIceGatheringState::New;
-    case NrIceCtx::ICE_CTX_GATHER_STARTED:
-      return dom::RTCIceGatheringState::Gathering;
-    case NrIceCtx::ICE_CTX_GATHER_COMPLETE:
-      return dom::RTCIceGatheringState::Complete;
+    case NrIceMediaStream::ICE_STREAM_GATHER_INIT:
+      return dom::RTCIceGathererState::New;
+    case NrIceMediaStream::ICE_STREAM_GATHER_STARTED:
+      return dom::RTCIceGathererState::Gathering;
+    case NrIceMediaStream::ICE_STREAM_GATHER_COMPLETE:
+      return dom::RTCIceGathererState::Complete;
   }
   MOZ_CRASH();
 }
 
 void MediaTransportHandlerSTS::OnGatheringStateChange(
-    NrIceCtx* aIceCtx, NrIceCtx::GatheringState aState) {
-  OnGatheringStateChange(toDomIceGatheringState(aState));
+    const std::string& aTransportId, NrIceMediaStream::GatheringState aState) {
+  OnGatheringStateChange(aTransportId, toDomIceGathererState(aState));
 }
 
-static mozilla::dom::RTCIceConnectionState toDomIceConnectionState(
+static mozilla::dom::RTCIceTransportState toDomIceTransportState(
     NrIceCtx::ConnectionState aState) {
   switch (aState) {
     case NrIceCtx::ICE_CTX_INIT:
-      return dom::RTCIceConnectionState::New;
+      return dom::RTCIceTransportState::New;
     case NrIceCtx::ICE_CTX_CHECKING:
-      return dom::RTCIceConnectionState::Checking;
+      return dom::RTCIceTransportState::Checking;
     case NrIceCtx::ICE_CTX_CONNECTED:
-      return dom::RTCIceConnectionState::Connected;
+      return dom::RTCIceTransportState::Connected;
     case NrIceCtx::ICE_CTX_COMPLETED:
-      return dom::RTCIceConnectionState::Completed;
+      return dom::RTCIceTransportState::Completed;
     case NrIceCtx::ICE_CTX_FAILED:
-      return dom::RTCIceConnectionState::Failed;
+      return dom::RTCIceTransportState::Failed;
     case NrIceCtx::ICE_CTX_DISCONNECTED:
-      return dom::RTCIceConnectionState::Disconnected;
+      return dom::RTCIceTransportState::Disconnected;
     case NrIceCtx::ICE_CTX_CLOSED:
-      return dom::RTCIceConnectionState::Closed;
+      return dom::RTCIceTransportState::Closed;
   }
   MOZ_CRASH();
 }
 
 void MediaTransportHandlerSTS::OnConnectionStateChange(
-    NrIceCtx* aIceCtx, NrIceCtx::ConnectionState aState) {
-  OnConnectionStateChange(toDomIceConnectionState(aState));
+    NrIceMediaStream* aIceStream, NrIceCtx::ConnectionState aState) {
+  OnConnectionStateChange(aIceStream->GetId(), toDomIceTransportState(aState));
 }
 
 // The stuff below here will eventually go into the MediaTransportChild class

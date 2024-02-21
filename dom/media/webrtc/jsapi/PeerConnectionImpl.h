@@ -217,8 +217,10 @@ class PeerConnectionImpl final
   virtual const std::string& GetName();
 
   // ICE events
-  void IceConnectionStateChange(dom::RTCIceConnectionState state);
-  void IceGatheringStateChange(dom::RTCIceGatheringState state);
+  void IceConnectionStateChange(const std::string& aTransportId,
+                                dom::RTCIceTransportState state);
+  void IceGatheringStateChange(const std::string& aTransportId,
+                               dom::RTCIceGathererState state);
   void OnCandidateFound(const std::string& aTransportId,
                         const CandidateInfo& aCandidateInfo);
   void UpdateDefaultCandidate(const std::string& defaultAddr,
@@ -924,8 +926,10 @@ class PeerConnectionImpl final
     void ConnectSignals();
 
     // ICE events
-    void IceGatheringStateChange_s(dom::RTCIceGatheringState aState);
-    void IceConnectionStateChange_s(dom::RTCIceConnectionState aState);
+    void IceGatheringStateChange_s(const std::string& aTransportId,
+                                   dom::RTCIceGathererState aState);
+    void IceConnectionStateChange_s(const std::string& aTransportId,
+                                    dom::RTCIceTransportState aState);
     void OnCandidateFound_s(const std::string& aTransportId,
                             const CandidateInfo& aCandidateInfo);
     void AlpnNegotiated_s(const std::string& aAlpn, bool aPrivacyRequested);

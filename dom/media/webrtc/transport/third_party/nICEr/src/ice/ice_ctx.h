@@ -97,9 +97,23 @@ typedef struct nr_ice_stats_ {
   UINT2 turn_438s;
 } nr_ice_stats;
 
+typedef struct nr_ice_gather_handler_vtbl_ {
+  /* This media stream is gathering */
+  int (*stream_gathering)(void* obj, nr_ice_media_stream* stream);
+
+  /* This media stream has finished gathering */
+  int (*stream_gathered)(void* obj, nr_ice_media_stream* stream);
+} nr_ice_gather_handler_vtbl;
+
+typedef struct nr_ice_gather_handler_ {
+  void* obj;
+  nr_ice_gather_handler_vtbl* vtbl;
+} nr_ice_gather_handler;
+
 struct nr_ice_ctx_ {
   UINT4 flags;
   char *label;
+  nr_ice_gather_handler* gather_handler;
 
   UINT4 Ta;
 
@@ -129,7 +143,7 @@ struct nr_ice_ctx_ {
   nr_ice_peer_ctx_head peers;
   nr_ice_stun_id_head ids;
 
-  NR_async_cb done_cb;
+  NR_async_cb gather_done_cb;
   void *cb_arg;
 
   nr_ice_trickle_candidate_cb trickle_cb;
@@ -141,7 +155,8 @@ struct nr_ice_ctx_ {
   nr_transport_addr *target_for_default_local_address_lookup;
 };
 
-int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp);
+int nr_ice_ctx_create(char* label, UINT4 flags,
+                      nr_ice_gather_handler* gather_handler, nr_ice_ctx** ctxp);
 int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char* ufrag, char* pwd, nr_ice_ctx **ctxp);
 #define NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION             (1)
 #define NR_ICE_CTX_FLAGS_LITE                              (1<<1)
@@ -156,7 +171,7 @@ void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags);
 void nr_ice_ctx_destroy(nr_ice_ctx** ctxp);
 int nr_ice_set_local_addresses(nr_ice_ctx *ctx, nr_local_addr* stun_addrs, int stun_addr_ct);
 int nr_ice_set_target_for_default_local_address_lookup(nr_ice_ctx *ctx, const char *target_ip, UINT2 target_port);
-int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg);
+int nr_ice_gather(nr_ice_ctx* ctx, NR_async_cb gather_done_cb, void* cb_arg);
 int nr_ice_add_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg);
 int nr_ice_add_media_stream(nr_ice_ctx *ctx,const char *label,const char *ufrag,const char *pwd,int components, nr_ice_media_stream **streamp);
