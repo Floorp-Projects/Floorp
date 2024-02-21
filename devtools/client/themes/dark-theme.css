@@ -222,7 +222,8 @@ body {
   color: var(--theme-text-color-strong);
 }
 
-.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
+.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor,
+.cm-editor .cm-cursor {
   border-left: solid 1px #fff;
 }
 .cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor.CodeMirror-secondarycursor {
