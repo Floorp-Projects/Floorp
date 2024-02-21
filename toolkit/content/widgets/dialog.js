@@ -521,7 +521,7 @@
       }
 
       var btn = this.getButton(this.defaultButton);
-      if (btn) {
+      if (btn && !btn.hidden) {
         this._doButtonCommand(this.defaultButton);
       }
     }
