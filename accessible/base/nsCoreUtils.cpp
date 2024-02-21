@@ -620,3 +620,20 @@ bool nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(
   } while ((parent = parent->GetInProcessParentDocument()));
   return true;
 }
+
+bool nsCoreUtils::IsDescendantOfAnyShadowIncludingAncestor(
+    nsINode* aDescendant, nsINode* aStartAncestor) {
+  const nsINode* descRoot = aDescendant->SubtreeRoot();
+  nsINode* ancRoot = aStartAncestor->SubtreeRoot();
+  for (;;) {
+    if (ancRoot == descRoot) {
+      return true;
+    }
+    auto* shadow = mozilla::dom::ShadowRoot::FromNode(ancRoot);
+    if (!shadow || !shadow->GetHost()) {
+      break;
+    }
+    ancRoot = shadow->GetHost()->SubtreeRoot();
+  }
+  return false;
+}

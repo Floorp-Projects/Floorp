@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+requestLongerTimeout(2);
 
 /* import-globals-from ../../mochitest/role.js */
 /* import-globals-from ../../mochitest/states.js */
@@ -484,7 +485,7 @@ addAccessibleTask(
 );
 
 /**
- * Test caching of the expanded state for popover target element.
+ * Test caching of the expanded state for the popovertarget content attribute.
  */
 addAccessibleTask(
   `
@@ -549,4 +550,80 @@ addAccessibleTask(
     testStates(toggle, STATE_COLLAPSED, 0);
   },
   { chrome: true, topLevel: true, remoteIframe: true }
+);
+
+/**
+ * Test caching of the expanded state for the popoverTargetElement WebIDL
+ * attribute.
+ */
+addAccessibleTask(
+  `
+<button id="toggle1">toggle</button>
+<div id="popover1" popover>popover1</div>
+<button id="toggle2">toggle2</button>
+<button id="toggle3">toggle3</button>
+<div id="shadowHost"><template shadowrootmode="open">
+  <button id="toggle4">toggle4</button>
+  <div id="popover2" popover>popover2</div>
+  <button id="toggle5">toggle5</button>
+</template></div>
+<script>
+  const toggle1 = document.getElementById("toggle1");
+  const popover1 = document.getElementById("popover1");
+  toggle1.popoverTargetElement = popover1;
+  toggle2.popoverTargetElement = popover1;
+  const toggle3 = document.getElementById("toggle3");
+  const shadow = document.getElementById("shadowHost").shadowRoot;
+  const toggle4 = shadow.getElementById("toggle4");
+  const popover2 = shadow.getElementById("popover2");
+  toggle3.popoverTargetElement = popover2;
+  toggle4.popoverTargetElement = popover2;
+  const toggle5 = shadow.getElementById("toggle5");
+  toggle5.popoverTargetElement = popover1;
+</script>
+  `,
+  async function (browser, docAcc) {
+    const toggle1 = findAccessibleChildByID(docAcc, "toggle1");
+    testStates(toggle1, STATE_COLLAPSED);
+    const toggle2 = findAccessibleChildByID(docAcc, "toggle2");
+    testStates(toggle2, STATE_COLLAPSED);
+    const toggle5 = findAccessibleChildByID(docAcc, "toggle5");
+    // toggle5 is inside the shadow DOM and popover1 is outside, so the target
+    // is valid.
+    testStates(toggle5, STATE_COLLAPSED);
+
+    // Changes to the popover should fire events on all invokers.
+    const changeEvents = [
+      [EVENT_STATE_CHANGE, toggle1],
+      [EVENT_STATE_CHANGE, toggle2],
+      [EVENT_STATE_CHANGE, toggle5],
+    ];
+    info("Showing popover1");
+    let changed = waitForEvents(changeEvents);
+    toggle1.doAction(0);
+    await changed;
+    testStates(toggle1, STATE_EXPANDED);
+    testStates(toggle2, STATE_EXPANDED);
+
+    info("Hiding popover1");
+    changed = waitForEvents(changeEvents);
+    toggle1.doAction(0);
+    await changed;
+    testStates(toggle1, STATE_COLLAPSED);
+    testStates(toggle2, STATE_COLLAPSED);
+
+    const toggle3 = findAccessibleChildByID(docAcc, "toggle3");
+    // toggle3 is outside popover2's shadow DOM, so the target isn't valid.
+    testStates(
+      toggle3,
+      0,
+      0,
+      STATE_EXPANDED | STATE_COLLAPSED,
+      EXT_STATE_EXPANDABLE
+    );
+    const toggle4 = findAccessibleChildByID(docAcc, "toggle4");
+    // toggle4 is in the same shadow DOM as popover2.
+    testStates(toggle4, STATE_COLLAPSED);
+  },
+  { chrome: true, topLevel: true }
 );

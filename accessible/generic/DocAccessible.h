@@ -121,7 +121,7 @@ class DocAccessible : public HyperTextAccessible,
   void QueueCacheUpdate(LocalAccessible* aAcc, uint64_t aNewDomain);
 
   /**
-   * Walks the mDependentIDsHashes list for the given accessible and
+   * Walks the dependent ids and elements maps for the given accessible and
    * queues a CacheDomain::Relations cache update fore each related acc.
    * We call this when we observe an ID mutation or when an acc is bound
    * to its document.
@@ -486,6 +486,35 @@ class DocAccessible : public HyperTextAccessible,
                              nsAtom* aRelAttr = nullptr);
 
   /**
+   * Add dependent elements targeted by a relation attribute on an accessible
+   * element to the dependent elements cache. This is used for reflected IDL
+   * attributes which return DOM elements and reflect a content attribute, where
+   * the IDL attribute has been set to an element. For example, if the
+   * .popoverTargetElement IDL attribute is set to an element using JS, the
+   * target element will be added to the dependent elements cache. If the
+   * relation attribute is not specified, then all relation attributes are
+   * checked.
+   *
+   * @param aRelProvider [in] the accessible with the relation IDL attribute.
+   * @param aRelAttr [in, optional] the name of the reflected content attribute.
+   *   For example, for the popoverTargetElement IDL attribute, this would be
+   * "popovertarget".
+   */
+  void AddDependentElementsFor(LocalAccessible* aRelProvider,
+                               nsAtom* aRelAttr = nullptr);
+
+  /**
+   * Remove dependent elements targeted by a relation attribute on an accessible
+   * element from the dependent elements cache. If the relation attribute is
+   * not specified, then all relation attributes are checked.
+   *
+   * @param aRelProvider [in] the accessible with the relation IDL attribute.
+   * @param aRelAttr [in, optional] the name of the reflected content attribute.
+   */
+  void RemoveDependentElementsFor(LocalAccessible* aRelProvider,
+                                  nsAtom* aRelAttr = nullptr);
+
+  /**
    * Update or recreate an accessible depending on a changed attribute.
    *
    * @param aElement   [in] the element the attribute was changed on
@@ -727,11 +756,34 @@ class DocAccessible : public HyperTextAccessible,
   void RemoveRelProvidersIfEmpty(dom::Element* aElement, const nsAString& aID);
 
   /**
-   * The cache of IDs pointed by relation attributes.
+   * A map used to look up the target node for an implicit reverse relation
+   * where the target of the explicit relation is specified as an id.
+   * For example:
+   * <div id="label">Name:</div><input aria-labelledby="label">
+   * The div should get a LABEL_FOR relation targeting the input. To facilitate
+   * that, mDependentIDsHashes maps from "label" to an AttrRelProvider
+   * specifying aria-labelledby and the input. Because ids are scoped to the
+   * nearest ancestor document or shadow root, mDependentIDsHashes maps from the
+   * DocumentOrShadowRoot first.
    */
   nsClassHashtable<nsPtrHashKey<dom::DocumentOrShadowRoot>,
                    DependentIDsHashtable>
       mDependentIDsHashes;
+
+  /**
+   * A map used to look up the target element for an implicit reverse relation
+   * where the target of the explicit relation is also specified as an element.
+   * This is similar to mDependentIDsHashes, except that this is used when a
+   * DOM property is used to set the relation target element directly, rather
+   * than using an id. For example:
+   * <button>More info</button><div popover>Some info</div>
+   * The button's .popoverTargetElement property is set to the div so that the
+   * button invokes the popover.
+   * To facilitate finding the invoker given the popover, mDependentElementsMap
+   * maps from the div to an AttrRelProvider specifying popovertarget and the
+   * button.
+   */
+  nsTHashMap<nsIContent*, AttrRelProviders> mDependentElementsMap;
 
   friend class RelatedAccIterator;
 
