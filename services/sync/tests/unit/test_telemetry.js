@@ -734,7 +734,7 @@ add_task(async function test_clean_real_os_error() {
       equal(failureReason.name, "unexpectederror");
       equal(
         failureReason.error,
-        "OS error [File/Path not found] Could not open the file at [profileDir]/no/such/path.json"
+        "OS error [File/Path not found] Could not open `[profileDir]/no/such/path.json': file does not exist"
       );
     });
   } finally {
