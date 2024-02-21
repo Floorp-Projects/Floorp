@@ -17,29 +17,33 @@ const {
 } = SessionDataHelpers;
 
 // List of options supported by this thread configuration actor.
+/* eslint sort-keys: "error" */
 const SUPPORTED_OPTIONS = {
-  // Controls pausing on debugger statement.
-  // (This is enabled by default if omitted)
-  shouldPauseOnDebuggerStatement: true,
-  // Enable pausing on exceptions.
-  pauseOnExceptions: true,
   // Disable pausing on caught exceptions.
   ignoreCaughtExceptions: true,
-  // Include previously saved stack frames when paused.
-  shouldIncludeSavedFrames: true,
-  // Include async stack frames when paused.
-  shouldIncludeAsyncLiveFrames: true,
-  // Stop pausing on breakpoints.
-  skipBreakpoints: true,
   // Log the event break points.
   logEventBreakpoints: true,
   // Enable debugging asm & wasm.
   // See https://searchfox.org/mozilla-central/source/js/src/doc/Debugger/Debugger.md#16-26
   observeAsmJS: true,
   observeWasm: true,
+  // Enable pausing on exceptions.
+  pauseOnExceptions: true,
+  // Boolean to know if we should display the overlay when pausing
+  pauseOverlay: true,
   // Should pause all the workers untill thread has attached.
   pauseWorkersUntilAttach: true,
+  // Include async stack frames when paused.
+  shouldIncludeAsyncLiveFrames: true,
+  // Include previously saved stack frames when paused.
+  shouldIncludeSavedFrames: true,
+  // Controls pausing on debugger statement.
+  // (This is enabled by default if omitted)
+  shouldPauseOnDebuggerStatement: true,
+  // Stop pausing on breakpoints.
+  skipBreakpoints: true,
 };
+/* eslint-disable sort-keys */
 
 /**
  * This actor manages the configuration options which apply to thread actor for all the targets.

@@ -32,6 +32,7 @@ const {
 const {
   logEvent,
 } = require("resource://devtools/server/actors/utils/logEvent.js");
+const Targets = require("devtools/server/actors/targets/index");
 
 loader.lazyRequireGetter(
   this,
@@ -185,6 +186,7 @@ class ThreadActor extends Actor {
     this._gripDepth = 0;
     this._targetActorClosed = false;
     this._observingNetwork = false;
+    this._shouldShowPauseOverlay = true;
     this._frameActors = [];
     this._xhrBreakpoints = [];
 
@@ -451,6 +453,12 @@ class ThreadActor extends Actor {
   }
 
   _canShowOverlay() {
+    // Only attempt to show on overlay on WindowGlobal targets, which displays a document.
+    // Workers and content processes can't display any overlay.
+    if (this.targetActor.targetType != Targets.TYPES.FRAME) {
+      return false;
+    }
+
     const { window } = this.targetActor;
 
     // The CanvasFrameAnonymousContentHelper class we're using to create the paused overlay
@@ -471,21 +479,22 @@ class ThreadActor extends Actor {
 
   async showOverlay() {
     if (
-      this.isPaused() &&
-      this._canShowOverlay() &&
-      this.targetActor.on &&
-      this.pauseOverlay
+      !this._shouldShowPauseOverlay ||
+      !this.isPaused() ||
+      !this._canShowOverlay()
     ) {
-      const reason = this._priorPause.why.type;
-      await this.pauseOverlay.isReady;
-
-      // we might not be paused anymore.
-      if (!this.isPaused()) {
-        return;
-      }
-
-      this.pauseOverlay.show(reason);
+      return;
     }
+
+    const reason = this._priorPause.why.type;
+    await this.pauseOverlay.isReady;
+
+    // we might not be paused anymore.
+    if (!this.isPaused()) {
+      return;
+    }
+
+    this.pauseOverlay.show(reason);
   }
 
   hideOverlay() {
@@ -802,6 +811,9 @@ class ThreadActor extends Actor {
     }
     if ("observeWasm" in options) {
       this.dbg.allowUnobservedWasm = !options.observeWasm;
+    }
+    if ("pauseOverlay" in options) {
+      this._shouldShowPauseOverlay = !!options.pauseOverlay;
     }
 
     if (
