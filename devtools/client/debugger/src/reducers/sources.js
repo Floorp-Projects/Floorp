@@ -110,6 +110,13 @@ export function initialSourcesState(state) {
     selectedOriginalLocation: UNDEFINED_LOCATION,
 
     /**
+     * By default, the `selectedLocation` should be highlighted in the editor with a special background.
+     * On demand, this flag can be set to false in order to prevent this.
+     * The location will be shown, but not highlighted.
+     */
+    shouldHighlightSelectedLocation: true,
+
+    /**
      * By default, if we have a source-mapped source, we would automatically try
      * to select and show the content of the original source. But, if we explicitly
      * select a generated source, we remember this choice. That, until we explicitly
@@ -149,6 +156,7 @@ function update(state = initialSourcesState(), action) {
         selectedOriginalLocation: UNDEFINED_LOCATION,
         pendingSelectedLocation,
         shouldSelectOriginalLocation: action.shouldSelectOriginalLocation,
+        shouldHighlightSelectedLocation: action.shouldHighlightSelectedLocation,
       };
     }
 

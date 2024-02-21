@@ -41,11 +41,13 @@ import {
 // This is only used by jest tests (and within this module)
 export const setSelectedLocation = (
   location,
-  shouldSelectOriginalLocation
+  shouldSelectOriginalLocation,
+  shouldHighlightSelectedLocation
 ) => ({
   type: "SET_SELECTED_LOCATION",
   location,
   shouldSelectOriginalLocation,
+  shouldHighlightSelectedLocation,
 });
 
 // This is only used by jest tests (and within this module)
@@ -192,8 +194,14 @@ async function mayBeSelectMappedSource(location, keepContext, thunkArgs) {
  *        If false, this will ignore the currently selected source
  *        and select the generated or original location, even if we
  *        were currently selecting the other source type.
+ * @param {boolean} options.highlight
+ *        True by default. To be set to false in order to preveng highlighting the selected location in the editor.
+ *        We will only show the location, but do not put a special background on the line.
  */
-export function selectLocation(location, { keepContext = true } = {}) {
+export function selectLocation(
+  location,
+  { keepContext = true, highlight = true } = {}
+) {
   return async thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
 
@@ -245,7 +253,9 @@ export function selectLocation(location, { keepContext = true } = {}) {
       dispatch(addTab(source, sourceActor));
     }
 
-    dispatch(setSelectedLocation(location, shouldSelectOriginalLocation));
+    dispatch(
+      setSelectedLocation(location, shouldSelectOriginalLocation, highlight)
+    );
 
     await dispatch(loadSourceText(source, sourceActor));
 
