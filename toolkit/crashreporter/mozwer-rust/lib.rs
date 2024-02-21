@@ -8,7 +8,7 @@ use serde::Serialize;
 use serde_json::ser::to_writer;
 use std::convert::TryInto;
 use std::ffi::{c_void, OsString};
-use std::fs::{read_to_string, File};
+use std::fs::{read_to_string, DirBuilder, File};
 use std::io::{BufRead, BufReader, Write};
 use std::mem::{size_of, zeroed};
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
@@ -385,7 +385,7 @@ fn parse_child_data(command_line: &str) -> Result<(DWORD, *mut WindowsErrorRepor
     let address = itr.nth(1).ok_or(())?;
     let address = usize::from_str_radix(address, 16).map_err(|_err| (()))?;
     let address = address as *mut WindowsErrorReportingData;
-    let parent_pid = itr.nth(2).ok_or(())?;
+    let parent_pid = itr.nth(1).ok_or(())?;
     let parent_pid = u32::from_str_radix(parent_pid, 10).map_err(|_err| (()))?;
 
     Ok((parent_pid, address))
@@ -570,7 +570,8 @@ impl ApplicationInformation {
         let install_time = ApplicationInformation::get_install_time(
             &crash_reports_dir,
             &application_data.build_id,
-        )?;
+        )
+        .unwrap_or("0".to_string());
 
         Ok(ApplicationInformation {
             install_path,
@@ -741,6 +742,12 @@ impl CrashReport {
         &self,
         exception_information: PWER_RUNTIME_EXCEPTION_INFORMATION,
     ) -> Result<()> {
+        // Make sure that the target directory is present
+        DirBuilder::new()
+            .recursive(true)
+            .create(self.get_pending_path())
+            .map_err(|_e| ())?;
+
         let minidump_path = self.get_minidump_path();
         let minidump_file = File::create(minidump_path).map_err(|_e| ())?;
         let minidump_type: MINIDUMP_TYPE = self.get_minidump_type();
@@ -776,6 +783,12 @@ impl CrashReport {
     }
 
     fn write_event_file(&self) -> Result<()> {
+        // Make that the target directory is present
+        DirBuilder::new()
+            .recursive(true)
+            .create(self.get_events_path())
+            .map_err(|_e| ())?;
+
         let mut event_file = File::create(self.get_event_file_path()).map_err(|_e| ())?;
         writeln!(event_file, "crash.main.3").map_err(|_e| ())?;
         writeln!(event_file, "{}", self.crash_time).map_err(|_e| ())?;
