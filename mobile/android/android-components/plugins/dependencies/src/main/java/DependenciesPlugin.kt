@@ -83,7 +83,7 @@ object Versions {
         const val navigation = "2.7.7"
         const val work = "2.9.0"
         const val arch = "2.2.0"
-        const val uiautomator = "2.2.0"
+        const val uiautomator = "2.3.0"
         const val localbroadcastmanager = "1.0.0"
         const val swiperefreshlayout = "1.1.0"
         const val data_store_preferences="1.0.0"
