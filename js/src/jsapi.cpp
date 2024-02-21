@@ -4966,7 +4966,25 @@ JS_PUBLIC_API bool JS::CopyAsyncStack(JSContext* cx,
   return true;
 }
 
-JS_PUBLIC_API Zone* JS::GetObjectZone(JSObject* obj) { return obj->zone(); }
+JS_PUBLIC_API Zone* JS::GetObjectZone(JSObject* obj) {
+  Zone* zone = obj->zone();
+
+  // Check zone pointer is valid and not a poison value. See bug 1878421.
+  MOZ_RELEASE_ASSERT(zone->runtimeFromMainThread());
+
+  return zone;
+}
+
+JS_PUBLIC_API Zone* JS::GetTenuredGCThingZone(GCCellPtr thing) {
+  js::gc::Cell* cell = thing.asCell();
+  MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
+  Zone* zone = js::gc::detail::GetTenuredGCThingZone(cell);
+
+  // Check zone pointer is valid and not a poison value. See bug 1878421.
+  MOZ_RELEASE_ASSERT(zone->runtimeFromMainThread());
+
+  return zone;
+}
 
 JS_PUBLIC_API Zone* JS::GetNurseryCellZone(gc::Cell* cell) {
   return cell->nurseryZone();
