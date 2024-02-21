@@ -20,4 +20,3 @@ ac_add_options --disable-crashreporter
 ac_add_options --disable-profiling
 
 . "$topsrcdir/build/mozconfig.clang-cl"
-. "$topsrcdir/build/mozconfig.lld-link"
