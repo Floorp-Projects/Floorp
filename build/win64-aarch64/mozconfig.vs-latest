@@ -1,3 +1,2 @@
 . $topsrcdir/build/win64-aarch64/mozconfig.vs2019
 . "$topsrcdir/build/mozconfig.clang-cl"
-. "$topsrcdir/build/mozconfig.lld-link"
