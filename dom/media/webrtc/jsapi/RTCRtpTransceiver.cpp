@@ -279,12 +279,13 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
   mDirection = aInit.mDirection;
 }
 
-void RTCRtpTransceiver::SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport,
-                                         bool aStable) {
+void RTCRtpTransceiver::SetDtlsTransport(
+    dom::RTCDtlsTransport* aDtlsTransport) {
   mDtlsTransport = aDtlsTransport;
-  if (aStable) {
-    mLastStableDtlsTransport = mDtlsTransport;
-  }
+}
+
+void RTCRtpTransceiver::SaveStateForRollback() {
+  mLastStableDtlsTransport = mDtlsTransport;
 }
 
 void RTCRtpTransceiver::RollbackToStableDtlsTransport() {
@@ -366,12 +367,17 @@ void RTCRtpTransceiver::InitConduitControl() {
 }
 
 void RTCRtpTransceiver::Close() {
-  // Called via PCImpl::Close -> PCImpl::CloseInt -> PCImpl::ShutdownMedia ->
-  // PCMedia::SelfDestruct.  Satisfies step 7 of
+  // Called via PCImpl::Close
+  // Satisfies steps 7 and 9 of
   // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-close
+  // No events are fired for this.
   mShutdown = true;
   if (mDtlsTransport) {
     mDtlsTransport->UpdateStateNoEvent(TransportLayer::TS_CLOSED);
+    // Might not be set if we're cycle-collecting
+    if (mDtlsTransport->IceTransport()) {
+      mDtlsTransport->IceTransport()->SetState(RTCIceTransportState::Closed);
+    }
   }
   StopImpl();
 }
