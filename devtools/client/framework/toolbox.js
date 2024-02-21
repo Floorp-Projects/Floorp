@@ -291,6 +291,7 @@ function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
     this._applyServiceWorkersTestingSettings.bind(this);
   this._applySimpleHighlightersSettings =
     this._applySimpleHighlightersSettings.bind(this);
+  this._applyDebuggerOverlay = this._applyDebuggerOverlay.bind(this);
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBlur = this._onBlur.bind(this);
@@ -976,6 +977,10 @@ Toolbox.prototype = {
         this._applySimpleHighlightersSettings
       );
       Services.prefs.addObserver(
+        "devtools.debugger.features.overlay",
+        this._applyDebuggerOverlay
+      );
+      Services.prefs.addObserver(
         BROWSERTOOLBOX_SCOPE_PREF,
         this._refreshHostTitle
       );
@@ -996,6 +1001,7 @@ Toolbox.prototype = {
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
       this._applySimpleHighlightersSettings();
+      this._applyDebuggerOverlay();
 
       this._addWindowListeners();
       this._addChromeEventHandlerEvents();
@@ -2268,6 +2274,21 @@ Toolbox.prototype = {
     this.commands.targetConfigurationCommand.updateConfiguration({
       useSimpleHighlightersForReducedMotion,
     });
+  },
+
+  /**
+   * Update server configuration based on the current preference value for the debugger overlay
+   * displayed on pause.
+   */
+  async _applyDebuggerOverlay() {
+    const pauseOverlay = Services.prefs.getBoolPref(
+      "devtools.debugger.features.overlay",
+      false
+    );
+    await this.commands.threadConfigurationCommand.updateConfiguration({
+      pauseOverlay,
+    });
+    this.emitForTests("pause-overlay-applied");
   },
 
   /**
@@ -4068,6 +4089,10 @@ Toolbox.prototype = {
     Services.prefs.removeObserver(
       "devtools.inspector.simple-highlighters-reduced-motion",
       this._applySimpleHighlightersSettings
+    );
+    Services.prefs.removeObserver(
+      "devtools.debugger.features.overlay",
+      this._applyDebuggerOverlay
     );
     Services.prefs.removeObserver(
       BROWSERTOOLBOX_SCOPE_PREF,

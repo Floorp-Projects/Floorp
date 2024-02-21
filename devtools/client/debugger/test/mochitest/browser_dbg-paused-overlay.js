@@ -71,3 +71,39 @@ add_task(async function () {
   });
   ok(true, "The overlay is hidden after clicking on the resume button");
 });
+
+add_task(async function testOverlayDisabled() {
+  await pushPref("devtools.debugger.features.overlay", false);
+
+  const dbg = await initDebugger("doc-scripts.html");
+  const highlighterTestFront = await getHighlighterTestFront(dbg.toolbox);
+
+  info("Create an eval script that pauses itself.");
+  invokeInTab("doEval");
+
+  await waitForPaused(dbg);
+
+  // Let a chance to regress and still show the overlay
+  await wait(500);
+
+  const isPausedOverlayVisible =
+    await highlighterTestFront.isPausedDebuggerOverlayVisible();
+  ok(
+    !isPausedOverlayVisible,
+    "The paused overlay wasn't shown when the related feature preference is false"
+  );
+
+  const onPreferenceApplied = dbg.toolbox.once("pause-overlay-applied");
+  await pushPref("devtools.debugger.features.overlay", true);
+  await onPreferenceApplied;
+
+  info("Click debugger UI step-in button");
+  const stepButton = await waitFor(() => findElement(dbg, "stepIn"));
+  stepButton.click();
+
+  await waitFor(() => highlighterTestFront.isPausedDebuggerOverlayVisible());
+  ok(
+    true,
+    "Stepping after having toggled the feature preference back to true allow the overlay to be shown again"
+  );
+});
