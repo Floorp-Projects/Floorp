@@ -254,7 +254,7 @@ impl ConicGradientTemplate {
                 kind: RenderTaskCacheKeyKind::ConicGradient(cache_key),
             },
             frame_state.gpu_cache,
-            frame_state.frame_gpu_data_f,
+            frame_state.frame_gpu_data,
             frame_state.rg_builder,
             None,
             false,

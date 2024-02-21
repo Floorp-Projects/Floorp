@@ -25,7 +25,7 @@ use crate::prim_store::{PictureIndex, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
-use crate::renderer::{GpuBufferF, GpuBufferBuilderF, GpuBufferI, GpuBufferBuilderI};
+use crate::renderer::{GpuBuffer, GpuBufferBuilder};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTargetContext, RenderTargetKind, AlphaRenderTarget, ColorRenderTarget};
 use crate::render_task_graph::{RenderTaskGraph, Pass, SubPassSurface};
@@ -171,8 +171,7 @@ pub struct FrameBuildingState<'a> {
     pub surface_builder: SurfaceBuilder,
     pub cmd_buffers: &'a mut CommandBufferList,
     pub clip_tree: &'a ClipTree,
-    pub frame_gpu_data_f: &'a mut GpuBufferBuilderF,
-    pub frame_gpu_data_i: &'a mut GpuBufferBuilderI,
+    pub frame_gpu_data: &'a mut GpuBufferBuilder,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -277,8 +276,7 @@ impl FrameBuilder {
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         spatial_tree: &SpatialTree,
         cmd_buffers: &mut CommandBufferList,
-        frame_gpu_data_f: &mut GpuBufferBuilderF,
-        frame_gpu_data_i: &mut GpuBufferBuilderI,
+        frame_gpu_data: &mut GpuBufferBuilder,
         profile: &mut TransactionProfile,
     ) {
         profile_scope!("build_layer_screen_rects_and_cull_layers");
@@ -430,8 +428,7 @@ impl FrameBuilder {
             surface_builder: SurfaceBuilder::new(),
             cmd_buffers,
             clip_tree: &mut scene.clip_tree,
-            frame_gpu_data_f,
-            frame_gpu_data_i,
+            frame_gpu_data,
         };
 
         // Push a default dirty region which culls primitives
@@ -561,8 +558,7 @@ impl FrameBuilder {
         let mut cmd_buffers = CommandBufferList::new();
 
         // TODO(gw): Recycle backing vec buffers for gpu buffer builder between frames
-        let mut gpu_buffer_builder_f = GpuBufferBuilderF::new();
-        let mut gpu_buffer_builder_i = GpuBufferBuilderI::new();
+        let mut gpu_buffer_builder = GpuBufferBuilder::new();
 
         self.build_layer_screen_rects_and_cull_layers(
             scene,
@@ -580,8 +576,7 @@ impl FrameBuilder {
             tile_caches,
             spatial_tree,
             &mut cmd_buffers,
-            &mut gpu_buffer_builder_f,
-            &mut gpu_buffer_builder_i,
+            &mut gpu_buffer_builder,
             profile,
         );
 
@@ -637,7 +632,7 @@ impl FrameBuilder {
                     output_size,
                     &mut ctx,
                     gpu_cache,
-                    &mut gpu_buffer_builder_f,
+                    &mut gpu_buffer_builder,
                     &render_tasks,
                     &scene.clip_store,
                     &mut transform_palette,
@@ -695,8 +690,7 @@ impl FrameBuilder {
         scene.clip_store.end_frame(&mut scratch.clip_store);
         scratch.end_frame();
 
-        let gpu_buffer_f = gpu_buffer_builder_f.finalize(&render_tasks);
-        let gpu_buffer_i = gpu_buffer_builder_i.finalize(&render_tasks);
+        let gpu_buffer = gpu_buffer_builder.finalize(&render_tasks);
 
         Frame {
             device_rect: DeviceIntRect::from_origin_and_size(
@@ -713,8 +707,7 @@ impl FrameBuilder {
             prim_headers,
             debug_items: mem::replace(&mut scratch.primitive.debug_items, Vec::new()),
             composite_state,
-            gpu_buffer_f,
-            gpu_buffer_i,
+            gpu_buffer,
         }
     }
 
@@ -901,7 +894,7 @@ pub fn build_render_pass(
     screen_size: DeviceIntSize,
     ctx: &mut RenderTargetContext,
     gpu_cache: &mut GpuCache,
-    gpu_buffer_builder: &mut GpuBufferBuilderF,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     render_tasks: &RenderTaskGraph,
     clip_store: &ClipStore,
     transforms: &mut TransformPalette,
@@ -974,7 +967,7 @@ pub fn build_render_pass(
                 let task_id = sub_pass.task_ids[0];
                 let task = &render_tasks[task_id];
                 let target_rect = task.get_target_rect();
-                let mut gpu_buffer_builder = GpuBufferBuilderF::new();
+                let mut gpu_buffer_builder = GpuBufferBuilder::new();
 
                 match task.kind {
                     RenderTaskKind::Picture(ref pic_task) => {
@@ -1134,8 +1127,7 @@ pub struct Frame {
 
     /// Main GPU data buffer constructed (primarily) during the prepare
     /// pass for primitives that were visible and dirty.
-    pub gpu_buffer_f: GpuBufferF,
-    pub gpu_buffer_i: GpuBufferI,
+    pub gpu_buffer: GpuBuffer,
 }
 
 impl Frame {

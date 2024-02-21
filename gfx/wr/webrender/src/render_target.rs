@@ -24,7 +24,7 @@ use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
     ConicGradientInstance,
 };
-use crate::renderer::{GpuBufferBuilderF, GpuBufferAddress};
+use crate::renderer::{GpuBufferBuilder, GpuBufferAddress};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress, SubPass};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo, MaskSubPass};
@@ -121,7 +121,7 @@ pub trait RenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
@@ -277,7 +277,7 @@ impl RenderTarget for ColorRenderTarget {
     ) {
         profile_scope!("build");
         let mut merged_batches = AlphaBatchContainer::new(None);
-        let mut gpu_buffer_builder = GpuBufferBuilderF::new();
+        let mut gpu_buffer_builder = GpuBufferBuilder::new();
 
         for task_id in &self.alpha_tasks {
             profile_scope!("alpha_task");
@@ -360,7 +360,7 @@ impl RenderTarget for ColorRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         _: &ClipStore,
         transforms: &mut TransformPalette,
@@ -528,7 +528,7 @@ impl RenderTarget for AlphaRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
@@ -966,7 +966,7 @@ fn build_mask_tasks(
     clip_store: &ClipStore,
     data_stores: &DataStores,
     spatial_tree: &SpatialTree,
-    gpu_buffer_builder: &mut GpuBufferBuilderF,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     transforms: &mut TransformPalette,
     render_tasks: &RenderTaskGraph,
     results: &mut ClipMaskInstanceList,
@@ -1198,7 +1198,7 @@ fn build_mask_tasks(
 fn build_sub_pass(
     task_id: RenderTaskId,
     task: &RenderTask,
-    gpu_buffer_builder: &mut GpuBufferBuilderF,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     render_tasks: &RenderTaskGraph,
     transforms: &mut TransformPalette,
     ctx: &RenderTargetContext,
