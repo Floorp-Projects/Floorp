@@ -38,6 +38,15 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
                 const char* section = nullptr);
 
 /**
+ * This function reads in localized strings corresponding to the keys from a
+ * given string buffer.
+ */
+int ReadStringsFromBuffer(char* stringBuffer, const char* keyList,
+                          unsigned int numStrings,
+                          mozilla::UniquePtr<char[]>* results,
+                          const char* section = nullptr);
+
+/**
  * This class is meant to be a slightly cleaner interface into the ReadStrings
  * function.
  */
