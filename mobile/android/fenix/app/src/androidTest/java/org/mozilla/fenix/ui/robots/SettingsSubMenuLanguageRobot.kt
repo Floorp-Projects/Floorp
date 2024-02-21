@@ -21,8 +21,8 @@ import org.mozilla.fenix.helpers.click
 
 class SettingsSubMenuLanguageRobot {
     fun selectLanguage(language: String) {
-        languagesList.waitForExists(waitingTime)
-        languagesList
+        languagesList().waitForExists(waitingTime)
+        languagesList()
             .getChildByText(UiSelector().text(language), language)
             .click()
     }
@@ -35,9 +35,9 @@ class SettingsSubMenuLanguageRobot {
     fun verifyLanguageHeaderIsTranslated(translation: String) = assertUIObjectExists(itemWithText(translation))
 
     fun verifySelectedLanguage(language: String) {
-        languagesList.waitForExists(waitingTime)
+        languagesList().waitForExists(waitingTime)
         assertUIObjectExists(
-            languagesList
+            languagesList()
                 .getChildByText(UiSelector().text(language), language, true)
                 .getFromParent(UiSelector().resourceId("$packageName:id/locale_selected_icon")),
         )
@@ -48,8 +48,8 @@ class SettingsSubMenuLanguageRobot {
     }
 
     fun typeInSearchBar(text: String) {
-        searchBar.waitForExists(waitingTime)
-        searchBar.text = text
+        searchBar().waitForExists(waitingTime)
+        searchBar().text = text
     }
 
     fun verifySearchResultsContains(languageName: String) =
@@ -59,7 +59,7 @@ class SettingsSubMenuLanguageRobot {
         onView(withId(R.id.search_close_btn)).click()
     }
 
-    fun verifyLanguageListIsDisplayed() = assertUIObjectExists(languagesList)
+    fun verifyLanguageListIsDisplayed() = assertUIObjectExists(languagesList())
 
     class Transition {
 
@@ -76,7 +76,7 @@ class SettingsSubMenuLanguageRobot {
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
-private val languagesList =
+private fun languagesList() =
     UiScrollable(
         UiSelector()
             .resourceId("$packageName:id/locale_list")
@@ -85,5 +85,5 @@ private val languagesList =
 
 private fun language(name: String) = mDevice.findObject(UiSelector().text(name))
 
-private val searchBar =
+private fun searchBar() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/search_src_text"))
