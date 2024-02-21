@@ -16,9 +16,7 @@ namespace gfx {
 
 DrawEventRecorderPrivate::DrawEventRecorderPrivate() : mExternalFonts(false) {}
 
-DrawEventRecorderPrivate::~DrawEventRecorderPrivate() {
-  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
-}
+DrawEventRecorderPrivate::~DrawEventRecorderPrivate() = default;
 
 void DrawEventRecorderPrivate::SetDrawTarget(ReferencePtr aDT) {
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);

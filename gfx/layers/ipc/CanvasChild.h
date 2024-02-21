@@ -15,6 +15,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class ThreadSafeWorkerRef;
+}
+
 namespace gfx {
 class DrawTargetRecording;
 class SourceSurface;
@@ -28,7 +32,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
  public:
   NS_INLINE_DECL_REFCOUNTING(CanvasChild)
 
-  CanvasChild();
+  explicit CanvasChild(dom::ThreadSafeWorkerRef* aWorkerRef);
 
   /**
    * @returns true if remote canvas has been deactivated due to failure.
@@ -173,6 +177,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   static bool mDeactivated;
 
+  RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
   RefPtr<CanvasDrawEventRecorder> mRecorder;
 
   RefPtr<ipc::SharedMemoryBasic> mDataSurfaceShmem;

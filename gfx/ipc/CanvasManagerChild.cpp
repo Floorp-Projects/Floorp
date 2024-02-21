@@ -224,8 +224,9 @@ RefPtr<layers::CanvasChild> CanvasManagerChild::GetCanvasChild() {
   }
 
   if (!mCanvasChild) {
-    mCanvasChild = MakeAndAddRef<layers::CanvasChild>();
+    mCanvasChild = MakeAndAddRef<layers::CanvasChild>(mWorkerRef);
     if (!SendPCanvasConstructor(mCanvasChild)) {
+      mCanvasChild->Destroy();
       mCanvasChild = nullptr;
     }
   }
