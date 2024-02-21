@@ -798,6 +798,7 @@ skip-if = [
   "os == 'mac'", # 1517199 (timeout-on-osx)
   "os == 'linux'", # 1713397, 1719881 (high intermittent failure on linux tsan), 1776937
   "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "mda_gpu", # Disabled because high intermittent failure
 ]
 
 ["test_chaining.html"]
