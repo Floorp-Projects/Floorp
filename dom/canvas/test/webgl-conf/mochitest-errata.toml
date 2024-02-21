@@ -87,7 +87,10 @@ fail-if = ["os == 'mac' && !apple_silicon"]
 fail-if = ["os == 'android'"]
 
 ["generated/test_conformance__textures__misc__texture-npot-video.html"]
-skip-if = ["win11_2009"] # win11 - 50/50 intermittent
+skip-if = [
+  "win11_2009", # win11 - 50/50 intermittent
+  "os == 'android' && android_version == '33'", #Bug 1873144
+  ]
 ####################
 # Bugs surfaced during fx93 CTS update
 
