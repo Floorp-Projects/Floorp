@@ -41,7 +41,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     return true;
   }
   virtual void FlushItem(IntRect) {}
-  void DetachResources() {
+  virtual void DetachResources() {
     NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
 
     nsTHashSet<ScaledFont*> fonts = std::move(mStoredFonts);
@@ -116,7 +116,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     return mStoredObjects.EnsureInserted(aObject);
   }
 
-  void AddPendingDeletion(std::function<void()>&& aPendingDeletion) {
+  virtual void AddPendingDeletion(std::function<void()>&& aPendingDeletion) {
     auto lockedPendingDeletions = mPendingDeletions.Lock();
     lockedPendingDeletions->emplace_back(std::move(aPendingDeletion));
   }

@@ -7,6 +7,7 @@
 #include "CanvasChild.h"
 
 #include "MainThreadUtils.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 #include "mozilla/gfx/Tools.h"
@@ -165,9 +166,10 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   bool mDetached = false;
 };
 
-CanvasChild::CanvasChild() = default;
+CanvasChild::CanvasChild(dom::ThreadSafeWorkerRef* aWorkerRef)
+    : mWorkerRef(aWorkerRef) {}
 
-CanvasChild::~CanvasChild() = default;
+CanvasChild::~CanvasChild() { MOZ_ASSERT(!mWorkerRef); }
 
 static void NotifyCanvasDeviceReset() {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -213,7 +215,7 @@ void CanvasChild::EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   if (!mRecorder) {
     gfx::BackendType backendType =
         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
-    auto recorder = MakeRefPtr<CanvasDrawEventRecorder>();
+    auto recorder = MakeRefPtr<CanvasDrawEventRecorder>(mWorkerRef);
     if (!recorder->Init(aTextureType, backendType,
                         MakeUnique<RecorderHelpers>(this))) {
       return;
@@ -242,6 +244,8 @@ void CanvasChild::Destroy() {
   if (CanSend()) {
     Send__delete__(this);
   }
+
+  mWorkerRef = nullptr;
 }
 
 bool CanvasChild::EnsureBeginTransaction() {
