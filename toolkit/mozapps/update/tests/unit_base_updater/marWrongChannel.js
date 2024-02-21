@@ -14,8 +14,7 @@ async function run_test() {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
-  gTestFiles[gTestFiles.length - 2].originalContents =
-    UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
+  setUpdateSettingsUseWrongChannel();
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);
