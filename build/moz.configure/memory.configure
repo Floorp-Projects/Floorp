@@ -25,6 +25,14 @@ set_define("MOZ_MEMORY", True, when="--enable-jemalloc")
 add_old_configure_assignment("MOZ_MEMORY", True, when="--enable-jemalloc")
 
 
+@depends("--enable-jemalloc", moz_debug, win32_redist_dir)
+def check_redist(jemalloc, debug, win32_redist_dir):
+    if not jemalloc and not win32_redist_dir and not debug:
+        log.warning(
+            "When not building jemalloc, you need to build with --with-redist or set WIN32_REDIST_DIR."
+        )
+
+
 @depends(milestone, build_project)
 def replace_malloc_default(milestone, build_project):
     if build_project == "memory":

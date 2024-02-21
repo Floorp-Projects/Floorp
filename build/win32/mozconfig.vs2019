@@ -1,9 +1,1 @@
-if [ -z "${VSPATH}" ]; then
-    VSPATH="$(cd ${MOZ_FETCHES_DIR} && pwd)/vs"
-fi
-
-if [ -d "${VSPATH}" ]; then
-    export WIN32_REDIST_DIR="${VSPATH}/VC/Redist/MSVC/14.29.30133/x86/Microsoft.VC142.CRT"
-fi
-
 ac_add_options --target=i686-pc-windows-msvc

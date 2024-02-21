@@ -383,7 +383,7 @@ def lib_path_for(host_or_target):
                 compiler.compiler,
                 "/clang:--print-runtime-dir",
                 *compiler.flags,
-                onerror=lambda: None
+                onerror=lambda: None,
             ).strip()
             if runtime_dir and os.path.exists(runtime_dir):
                 # Put the clang runtime directory first, in case there is
@@ -479,3 +479,48 @@ host_link = check_prog(
 )
 
 add_old_configure_assignment("LINKER", link)
+
+option(
+    "--with-redist",
+    env="WIN32_REDIST_DIR",
+    default=depends("MOZ_AUTOMATION")(lambda x: bool(x)),
+    nargs="?",
+    help="{Package|Don't package} redistributable MSVCRT",
+)
+
+
+@depends("--with-redist", vc_path, target)
+@imports("os")
+def win32_redist_dir(redist, vc_path, target):
+    if len(redist):
+        if os.path.isdir(redist[0]):
+            return redist[0]
+        configure_error(f"Invalid Win32 Redist directory: {redist[0]}")
+    if redist:
+        if not vc_path:
+            configure_error("Cannot ship redistributable MSVCRT without MSVC")
+        # It would be too simple if the Redist dir had the same version number as
+        # the MSVC one.
+        base_redist_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(vc_path))), "Redist", "MSVC"
+        )
+        redist_target = {
+            "x86": "x86",
+            "x86_64": "x64",
+            "aarch64": "arm64",
+        }.get(target.cpu)
+        if redist_target and os.path.isdir(base_redist_path):
+            versions = [Version(v) for v in os.listdir(base_redist_path)]
+            redist_path = os.path.join(
+                base_redist_path,
+                str(max(v for v in versions if v.major)),
+                redist_target,
+            )
+            if os.path.isdir(redist_path):
+                crt_path = max(p for p in os.listdir(redist_path) if p.endswith("CRT"))
+                if crt_path:
+                    return os.path.join(redist_path, crt_path)
+        configure_error("Could not find redistributable MSVCRT files")
+
+
+set_config("WIN32_REDIST_DIR", win32_redist_dir)
