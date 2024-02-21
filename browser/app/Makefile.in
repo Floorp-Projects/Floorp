@@ -50,14 +50,17 @@ endif
 
 endif
 
-# channel-prefs.js is handled separate from other prefs due to bug 756325
+ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+
+# channel-prefs.js has been removed on macOS.
+# channel-prefs.js is handled separately from other prefs due to bug 756325.
 # DO NOT change the content of channel-prefs.js without taking the appropriate
 # steps. See bug 1431342.
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
 	$(call py_action,preprocessor channel-prefs.js,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+else
 
 MAC_APP_NAME = $(MOZ_APP_DISPLAYNAME)
 
