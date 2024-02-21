@@ -29,8 +29,11 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
     const char* cStr;
     const char16_t* str;
 
-    EventType(const char* name, const char16_t* uname)
+    constexpr EventType(const char* name, const char16_t* uname)
         : cStr(name), str(uname) {}
+
+    constexpr EventType(const EventType& other)
+        : cStr(other.cStr), str(other.str) {}
 
     operator const nsDependentString() const { return nsDependentString(str); }
 
@@ -56,55 +59,26 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
   };
 
   struct ProgressEventType : public EventType {
-    ProgressEventType(const char* name, const char16_t* uname)
+    constexpr ProgressEventType(const char* name, const char16_t* uname)
         : EventType(name, uname) {}
   };
 
   struct ErrorProgressEventType : public ProgressEventType {
     const nsresult errorCode;
-
-    ErrorProgressEventType(const char* name, const char16_t* uname,
-                           const nsresult code)
+    constexpr ErrorProgressEventType(const char* name, const char16_t* uname,
+                                     const nsresult code)
         : ProgressEventType(name, uname), errorCode(code) {}
   };
 
-#define DECL_EVENT(NAME) \
-  static inline const EventType NAME = EventType(#NAME, u## #NAME);
+#define DECL_EVENT(NAME) static constexpr EventType NAME{#NAME, u## #NAME};
 
-#define DECL_PROGRESSEVENT(NAME)               \
-  static inline const ProgressEventType NAME = \
-      ProgressEventType(#NAME, u## #NAME);
+#define DECL_PROGRESSEVENT(NAME) \
+  static constexpr ProgressEventType NAME { #NAME, u## #NAME }
 
-#define DECL_ERRORPROGRESSEVENT(NAME, ERR)          \
-  static inline const ErrorProgressEventType NAME = \
-      ErrorProgressEventType(#NAME, u## #NAME, ERR);
+#define DECL_ERRORPROGRESSEVENT(NAME, ERR) \
+  static constexpr ErrorProgressEventType NAME{#NAME, u## #NAME, ERR};
 
-  struct Events {
-    DECL_EVENT(readystatechange);
-    DECL_PROGRESSEVENT(loadstart);
-    DECL_PROGRESSEVENT(progress);
-    DECL_ERRORPROGRESSEVENT(error, NS_ERROR_DOM_NETWORK_ERR);
-    DECL_ERRORPROGRESSEVENT(abort, NS_ERROR_DOM_ABORT_ERR);
-    DECL_ERRORPROGRESSEVENT(timeout, NS_ERROR_DOM_TIMEOUT_ERR);
-    DECL_PROGRESSEVENT(load);
-    DECL_PROGRESSEVENT(loadend);
-
-    static inline const EventType* All[]{
-        &readystatechange, &loadstart, &progress, &error, &abort,
-        &timeout,          &load,      &loadend};
-
-    static inline const EventType* ProgressEvents[]{
-        &loadstart, &progress, &error, &abort, &timeout, &load, &loadend};
-
-    static inline const EventType* Find(const nsString& name) {
-      for (const EventType* type : Events::All) {
-        if (*type == name) {
-          return type;
-        }
-      }
-      return nullptr;
-    }
-  };
+  struct Events;
 
   static already_AddRefed<XMLHttpRequest> Constructor(
       const GlobalObject& aGlobal, const MozXMLHttpRequestParameters& aParams,
@@ -214,6 +188,33 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
  protected:
   explicit XMLHttpRequest(nsIGlobalObject* aGlobalObject)
       : XMLHttpRequestEventTarget(aGlobalObject) {}
+};
+
+struct XMLHttpRequest::Events {
+  DECL_EVENT(readystatechange);
+  DECL_PROGRESSEVENT(loadstart);
+  DECL_PROGRESSEVENT(progress);
+  DECL_ERRORPROGRESSEVENT(error, NS_ERROR_DOM_NETWORK_ERR);
+  DECL_ERRORPROGRESSEVENT(abort, NS_ERROR_DOM_ABORT_ERR);
+  DECL_ERRORPROGRESSEVENT(timeout, NS_ERROR_DOM_TIMEOUT_ERR);
+  DECL_PROGRESSEVENT(load);
+  DECL_PROGRESSEVENT(loadend);
+
+  static inline const EventType* All[]{
+      &readystatechange, &loadstart, &progress, &error, &abort,
+      &timeout,          &load,      &loadend};
+
+  static inline const EventType* ProgressEvents[]{
+      &loadstart, &progress, &error, &abort, &timeout, &load, &loadend};
+
+  static inline const EventType* Find(const nsString& name) {
+    for (const EventType* type : Events::All) {
+      if (*type == name) {
+        return type;
+      }
+    }
+    return nullptr;
+  }
 };
 
 }  // namespace mozilla::dom
