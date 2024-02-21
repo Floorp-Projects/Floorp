@@ -19,6 +19,15 @@ headless:
     mozinfo: "headless"
     replace:
         tier: 2
+    when:
+        $eval: '(
+                    "linux" in task["test-platform"]
+                    && (
+                        "mochitest-plain" in task["try-name"]
+                        || "marionette" in task["try-name"]
+                    )
+                )
+                || "web-platform-tests-wdspec" == task["try-name"]'
     merge:
         mozharness:
             extra-options:
@@ -32,6 +41,19 @@ a11y-checks:
     mozinfo: "a11y_checks"
     replace:
         tier: 2
+    when:
+        $eval: '(
+                    "linux" in task["test-platform"]
+                    && "opt" in task["test-platform"]
+                    && !(
+                        "asan" in task["test-platform"]
+                        || "tsan" in task["test-platform"]
+                        || "ccov" in task["test-platform"]
+                    )
+                ) && (
+                    "mochitest-devtools-chrome" == task["try-name"]
+                    || "mochitest-browser-chrome" == task["try-name"]
+                )'
     merge:
         mozharness:
             extra-options:
@@ -99,6 +121,11 @@ no-fission:
     expiration: "2024-03-01"
     suffix: "nofis"
     mozinfo: "fission"
+    when:
+        $eval: '
+                "linux" in task["test-platform"]
+                || "android" in task["test-platform"]
+                '
     merge:
         mozharness:
             extra-options:
@@ -112,6 +139,8 @@ xorigin:
     mozinfo: "xorigin"
     replace:
         e10s: true
+    when:
+        $eval: '"mochitest-plain" in task["try-name"]'
     merge:
         mozharness:
             extra-options:
@@ -124,6 +153,22 @@ conditioned_profile:
     expiration: "2024-03-01"
     suffix: "condprof"
     mozinfo: "condprof"
+    when:
+        $eval: '
+                (
+                    "linux" in task["test-platform"]
+                    || "windows" in task["test-platform"]
+                ) && (
+                    "opt" in task["test-platform"]
+                    && !(
+                        "asan" in task["test-platform"]
+                        || "tsan" in task["test-platform"]
+                        || "ccov" in task["test-platform"]
+                    )
+                ) && (
+                    "mochitest-plain" == task["try-name"]
+                    || "xpcshell" == task["try-name"]
+                )'
     merge:
         mozharness:
             extra-options:
@@ -137,6 +182,8 @@ socketprocess:
     expiration: "2024-09-01"
     suffix: "spi"
     mozinfo: "socketprocess_e10s"
+    when:
+        $eval: '"mochitest-media" in task["try-name"]'
     merge:
         mozharness:
             extra-options:
@@ -149,6 +196,16 @@ socketprocess_networking:
     expiration: "2024-09-01"
     suffix: "spi-nw"
     mozinfo: "socketprocess_networking"
+    when:
+        $eval: '
+                (
+                    "linux" in task["test-platform"]
+                    || "windows" in task["test-platform"]
+                    || "macosx" in task["test-platform"]
+                ) && (
+                    "mochitest" in task["try-name"]
+                    || "xpcshell" == task["try-name"]
+                )'
     merge:
         mozharness:
             extra-options:
@@ -252,6 +309,17 @@ devtools-no-eft:
     component: "DevTools::Framework"
     expiration: "2024-03-01"
     suffix: "dt-no-eft"
+    when:
+        $eval: '
+                "linux" in task["test-platform"]
+                && "opt" in task["test-platform"]
+                && "mochitest-devtools-chrome" == task["try-name"]
+                && !(
+                        "asan" in task["test-platform"]
+                        || "tsan" in task["test-platform"]
+                        || "ccov" in task["test-platform"]
+                    )
+                '
     merge:
         mozharness:
             extra-options:
@@ -281,6 +349,11 @@ media-gpu:
     expiration: "2024-04-21"
     suffix: "mda-gpu"
     mozinfo: "mda_gpu"
+    when:
+        $eval: '
+                    "windows" in task["test-platform"]
+                    || "macosx" in task["test-platform"]
+                '
     merge:
         virtualization: virtual-with-gpu
         mozharness:
@@ -295,7 +368,17 @@ msix:
     suffix: "msix"
     mozinfo: "msix"
     when:
-        $eval: '"windows1" in task["test-platform"] && "-64" in task["test-platform"] && ("opt" in task["test-platform"] || "debug" in task["test-platform"]) && !("asan" in task["test-platform"]) && !("ccov" in task["test-platform"])'
+        $eval: '
+                    "windows1" in task["test-platform"]
+                    && "-64" in task["test-platform"]
+                    && (
+                        "opt" in task["test-platform"]
+                        || "debug" in task["test-platform"]
+                    ) && !(
+                        "asan" in task["test-platform"]
+                        || "ccov" in task["test-platform"]
+                    )
+                '
     merge:
         mozharness:
             extra-options:
@@ -307,6 +390,14 @@ http3:
     expiration: "2024-09-01"
     suffix: "http3"
     mozinfo: "http3"
+    when:
+        $eval: '(
+                    "linux" in task["test-platform"]
+                    && "debug" in task["test-platform"]
+                ) && (
+                    "mochitest-plain" == task["try-name"]
+                    || "mochitest-devtools-chrome" == task["try-name"]
+                )'
     merge:
         mozharness:
             extra-options:
@@ -318,6 +409,13 @@ http2:
     expiration: "2024-09-01"
     suffix: "http2"
     mozinfo: "http2"
+    when:
+        $eval: '(
+                    "linux" in task["test-platform"]
+                    && "debug" in task["test-platform"]
+                )
+                    && "mochitest-plain" == task["try-name"]
+                '
     merge:
         mozharness:
             extra-options:
