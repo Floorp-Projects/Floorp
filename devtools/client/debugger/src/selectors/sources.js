@@ -184,6 +184,10 @@ export function getShouldSelectOriginalLocation(state) {
   return state.sources.shouldSelectOriginalLocation;
 }
 
+export function getShouldHighlightSelectedLocation(state) {
+  return state.sources.shouldHighlightSelectedLocation;
+}
+
 /**
  * Gets the first source actor for the source and/or thread
  * provided.

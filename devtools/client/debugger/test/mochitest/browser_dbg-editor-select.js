@@ -28,6 +28,8 @@ add_task(async function () {
     2,
     "when passing an explicit line number, the position is displayed"
   );
+  assertHighlightLocation(dbg, "simple1.js", 1);
+
   // Note that CodeMirror is 0-based while the footer displays 1-based
   getCM(dbg).setCursor({ line: 1, ch: 0 });
   assertCursorPosition(
@@ -36,6 +38,11 @@ add_task(async function () {
     1,
     "when moving the cursor, the position footer updates"
   );
+  ok(
+    !findElement(dbg, "highlightLine"),
+    "Moving the cursor resets the highlighted line"
+  );
+
   getCM(dbg).setCursor({ line: 2, ch: 0 });
   assertCursorPosition(
     dbg,
@@ -54,6 +61,7 @@ add_task(async function () {
     16,
     "when moving the cursor a second time, the position footer still updates"
   );
+  assertHighlightLocation(dbg, "simple1.js", 4);
 
   info("Call the function that we set a breakpoint in.");
   invokeInTab("main");
