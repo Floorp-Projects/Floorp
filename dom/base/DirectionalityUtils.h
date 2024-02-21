@@ -18,6 +18,7 @@ class nsTextNode;
 namespace mozilla::dom {
 class Element;
 class HTMLSlotElement;
+struct UnbindContext;
 }  // namespace mozilla::dom
 
 namespace mozilla {
@@ -133,10 +134,8 @@ void SetDirectionFromNewTextNode(nsTextNode* aTextNode);
 /**
  * When a text node is removed from a document, find any ancestors whose
  * directionality it determined and redetermine their directionality
- *
- * @param aTextNode the text node
  */
-void ResetDirectionSetByTextNode(nsTextNode* aTextNode);
+void ResetDirectionSetByTextNode(nsTextNode*, dom::UnbindContext&);
 
 /**
  * Set the directionality of an element according to the directionality of the

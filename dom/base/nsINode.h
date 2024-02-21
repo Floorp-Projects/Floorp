@@ -1895,13 +1895,9 @@ class nsINode : public mozilla::dom::EventTarget {
     // flags, because we can't use those to distinguish
     // <bdi dir="some-invalid-value"> and <bdi dir="auto">.
     NodeHasValidDirAttribute,
-    // Set if the node has dir=auto and has a property pointing to the text
-    // node that determines its direction
-    NodeHasDirAutoSet,
-    // Set if the node is a text node descendant of a node with dir=auto
-    // and has a TextNodeDirectionalityMap property listing the elements whose
-    // direction it determines.
-    NodeHasTextNodeDirectionalityMap,
+    // Set if this node, which must be a text node, might be responsible for
+    // setting the directionality of a dir="auto" ancestor.
+    NodeMaySetDirAuto,
     // Set if a node in the node's parent chain has dir=auto.
     NodeAncestorHasDirAuto,
     // Set if the node is handling a click.
@@ -2028,31 +2024,19 @@ class nsINode : public mozilla::dom::EventTarget {
   void SetHasValidDir() { SetBoolFlag(NodeHasValidDirAttribute); }
   void ClearHasValidDir() { ClearBoolFlag(NodeHasValidDirAttribute); }
   bool HasValidDir() const { return GetBoolFlag(NodeHasValidDirAttribute); }
-  void SetHasDirAutoSet() {
-    MOZ_ASSERT(NodeType() != TEXT_NODE, "SetHasDirAutoSet on text node");
-    SetBoolFlag(NodeHasDirAutoSet);
+  void SetMaySetDirAuto() {
+    // FIXME(bug 1881225): dir=auto should probably work on CDATA too.
+    MOZ_ASSERT(NodeType() == TEXT_NODE);
+    SetBoolFlag(NodeMaySetDirAuto);
   }
-  void ClearHasDirAutoSet() {
-    MOZ_ASSERT(NodeType() != TEXT_NODE, "ClearHasDirAutoSet on text node");
-    ClearBoolFlag(NodeHasDirAutoSet);
+  bool MaySetDirAuto() const {
+    MOZ_ASSERT(NodeType() == TEXT_NODE);
+    return GetBoolFlag(NodeMaySetDirAuto);
   }
-  bool HasDirAutoSet() const { return GetBoolFlag(NodeHasDirAutoSet); }
-  void SetHasTextNodeDirectionalityMap() {
-    MOZ_ASSERT(NodeType() == TEXT_NODE,
-               "SetHasTextNodeDirectionalityMap on non-text node");
-    SetBoolFlag(NodeHasTextNodeDirectionalityMap);
+  void ClearMaySetDirAuto() {
+    MOZ_ASSERT(NodeType() == TEXT_NODE);
+    ClearBoolFlag(NodeMaySetDirAuto);
   }
-  void ClearHasTextNodeDirectionalityMap() {
-    MOZ_ASSERT(NodeType() == TEXT_NODE,
-               "ClearHasTextNodeDirectionalityMap on non-text node");
-    ClearBoolFlag(NodeHasTextNodeDirectionalityMap);
-  }
-  bool HasTextNodeDirectionalityMap() const {
-    MOZ_ASSERT(NodeType() == TEXT_NODE,
-               "HasTextNodeDirectionalityMap on non-text node");
-    return GetBoolFlag(NodeHasTextNodeDirectionalityMap);
-  }
-
   void SetAncestorHasDirAuto() { SetBoolFlag(NodeAncestorHasDirAuto); }
   void ClearAncestorHasDirAuto() { ClearBoolFlag(NodeAncestorHasDirAuto); }
   bool AncestorHasDirAuto() const {

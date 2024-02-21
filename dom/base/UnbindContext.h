@@ -19,11 +19,15 @@ struct MOZ_STACK_CLASS UnbindContext final {
   nsINode& Root() const { return mRoot; }
   // Whether we're the root of the subtree being unbound.
   bool IsUnbindRoot(const nsINode* aNode) const { return &mRoot == aNode; }
+  // The parent node of the subtree we're unbinding from.
+  nsINode* GetOriginalSubtreeParent() const { return mOriginalParent; }
 
-  explicit UnbindContext(nsINode& aRoot) : mRoot(aRoot) {}
+  explicit UnbindContext(nsINode& aRoot)
+      : mRoot(aRoot), mOriginalParent(aRoot.GetParentNode()) {}
 
  private:
   nsINode& mRoot;
+  nsINode* const mOriginalParent;
 };
 
 }  // namespace mozilla::dom
