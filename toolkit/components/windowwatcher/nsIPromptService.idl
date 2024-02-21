@@ -263,7 +263,7 @@ interface nsIPromptService : nsISupports
   const unsigned long BUTTON_DELAY_ENABLE        = 1 << 26;
 
   /**
-   * Causes a spinner to be displayed in the dialog box.
+   * Causes a spinner to be displayed next to the title in the dialog box.
    */
   const unsigned long SHOW_SPINNER               = 1 << 27;
 
