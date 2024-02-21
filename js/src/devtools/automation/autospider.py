@@ -217,9 +217,40 @@ def ensure_dir_exists(
 with open(os.path.join(DIR.scripts, "variants", args.variant)) as fh:
     variant = json.load(fh)
 
+# Some of the variants request a particular word size (eg ARM simulators).
+word_bits = variant.get("bits")
+
+# On Linux and Windows, we build 32- and 64-bit versions on a 64 bit
+# host, so the caller has to specify what is desired.
+if word_bits is None and args.platform:
+    platform_arch = args.platform.split("-")[0]
+    if platform_arch in ("win32", "linux"):
+        word_bits = 32
+    elif platform_arch in ("win64", "linux64"):
+        word_bits = 64
+
+# Fall back to the word size of the host.
+if word_bits is None:
+    word_bits = 64 if platform.architecture()[0] == "64bit" else 32
+
+# Need a platform name to use as a key in variant files.
+if args.platform:
+    variant_platform = args.platform.split("-")[0]
+elif platform.system() == "Windows":
+    variant_platform = "win64" if word_bits == 64 else "win32"
+elif platform.system() == "Linux":
+    variant_platform = "linux64" if word_bits == 64 else "linux"
+elif platform.system() == "Darwin":
+    variant_platform = "macosx64"
+else:
+    variant_platform = "other"
+
 CONFIGURE_ARGS = variant["configure-args"]
 
-compiler = variant.get("compiler")
+if variant_platform in ("win32", "win64"):
+    compiler = "clang-cl"
+else:
+    compiler = variant.get("compiler")
 if compiler != "gcc" and "clang-plugin" not in CONFIGURE_ARGS:
     CONFIGURE_ARGS += " --enable-clang-plugin"
 
@@ -253,34 +284,6 @@ if opt is not None:
 opt = variant.get("nspr")
 if opt is None or opt:
     CONFIGURE_ARGS += " --enable-nspr-build"
-
-# Some of the variants request a particular word size (eg ARM simulators).
-word_bits = variant.get("bits")
-
-# On Linux and Windows, we build 32- and 64-bit versions on a 64 bit
-# host, so the caller has to specify what is desired.
-if word_bits is None and args.platform:
-    platform_arch = args.platform.split("-")[0]
-    if platform_arch in ("win32", "linux"):
-        word_bits = 32
-    elif platform_arch in ("win64", "linux64"):
-        word_bits = 64
-
-# Fall back to the word size of the host.
-if word_bits is None:
-    word_bits = 64 if platform.architecture()[0] == "64bit" else 32
-
-# Need a platform name to use as a key in variant files.
-if args.platform:
-    variant_platform = args.platform.split("-")[0]
-elif platform.system() == "Windows":
-    variant_platform = "win64" if word_bits == 64 else "win32"
-elif platform.system() == "Linux":
-    variant_platform = "linux64" if word_bits == 64 else "linux"
-elif platform.system() == "Darwin":
-    variant_platform = "macosx64"
-else:
-    variant_platform = "other"
 
 env["LD_LIBRARY_PATH"] = ":".join(
     d
