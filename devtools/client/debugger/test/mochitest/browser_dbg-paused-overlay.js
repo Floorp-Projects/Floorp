@@ -93,7 +93,7 @@ add_task(async function testOverlayDisabled() {
     "The paused overlay wasn't shown when the related feature preference is false"
   );
 
-  const onPreferenceApplied = dbg.toolbox.once("pause-overlay-applied");
+  const onPreferenceApplied = dbg.toolbox.once("new-configuration-applied");
   await pushPref("devtools.debugger.features.overlay", true);
   await onPreferenceApplied;
 
