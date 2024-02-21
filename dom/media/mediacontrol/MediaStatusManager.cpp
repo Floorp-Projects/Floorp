@@ -154,6 +154,7 @@ void MediaStatusManager::SetActiveMediaSessionContextId(
       *mActiveMediaSessionContextId);
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
   mSupportedActionsChangedEvent.Notify(GetSupportedActions());
+  mPositionStateChangedEvent.Notify(GetCurrentPositionState());
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
       obs->NotifyObservers(nullptr, "active-media-session-changed", nullptr);
@@ -170,6 +171,7 @@ void MediaStatusManager::ClearActiveMediaSessionContextIdIfNeeded() {
   StoreMediaSessionContextIdOnWindowContext();
   mMetadataChangedEvent.Notify(GetCurrentMediaMetadata());
   mSupportedActionsChangedEvent.Notify(GetSupportedActions());
+  mPositionStateChangedEvent.Notify(GetCurrentPositionState());
   if (StaticPrefs::media_mediacontrol_testingevents_enabled()) {
     if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
       obs->NotifyObservers(nullptr, "active-media-session-changed", nullptr);
@@ -364,6 +366,12 @@ void MediaStatusManager::DisableAction(uint64_t aBrowsingContextId,
 
 void MediaStatusManager::UpdatePositionState(
     uint64_t aBrowsingContextId, const Maybe<PositionState>& aState) {
+  auto info = mMediaSessionInfoMap.Lookup(aBrowsingContextId);
+  if (info) {
+    LOG("Update position state for context %" PRIu64, aBrowsingContextId);
+    info->mPositionState = aState;
+  }
+
   // The position state comes from non-active media session which we don't care.
   if (!mActiveMediaSessionContextId ||
       *mActiveMediaSessionContextId != aBrowsingContextId) {
@@ -419,6 +427,16 @@ MediaMetadataBase MediaStatusManager::GetCurrentMediaMetadata() const {
     return metadata;
   }
   return CreateDefaultMetadata();
+}
+
+Maybe<PositionState> MediaStatusManager::GetCurrentPositionState() const {
+  if (mActiveMediaSessionContextId) {
+    auto info = mMediaSessionInfoMap.Lookup(*mActiveMediaSessionContextId);
+    if (info) {
+      return info->mPositionState;
+    }
+  }
+  return Nothing();
 }
 
 void MediaStatusManager::FillMissingTitleAndArtworkIfNeeded(
