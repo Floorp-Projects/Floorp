@@ -191,7 +191,6 @@ async function doReturnedRestartedRefinedTest({ trigger, assert }) {
   for (const { firstInput, secondInput, expected } of testData) {
     await doTest(async browser => {
       await openPopup(firstInput);
-      await waitForPauseImpression();
       await doBlur();
 
       await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -213,7 +212,6 @@ async function doReturnedRestartedRefinedTest({ trigger, assert }) {
 async function doPersistedSearchTermsTest({ trigger, assert }) {
   await doTest(async browser => {
     await openPopup("x");
-    await waitForPauseImpression();
     await doEnter();
 
     await openPopup("x");
@@ -260,7 +258,6 @@ async function doPersistedSearchTermsRestartedRefinedTest({
   for (const { firstInput, secondInput, expected } of testData) {
     await doTest(async browser => {
       await openPopup(firstInput);
-      await waitForPauseImpression();
       await doEnter();
 
       await UrlbarTestUtils.promisePopupOpen(window, () => {
@@ -316,11 +313,9 @@ async function doPersistedSearchTermsRestartedRefinedViaAbandonmentTest({
   for (const { firstInput, secondInput, expected } of testData) {
     await doTest(async browser => {
       await openPopup("any search");
-      await waitForPauseImpression();
       await doEnter();
 
       await openPopup(firstInput);
-      await waitForPauseImpression();
       await doBlur();
 
       await UrlbarTestUtils.promisePopupOpen(window, () => {

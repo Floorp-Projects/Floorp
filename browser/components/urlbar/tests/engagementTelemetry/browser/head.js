@@ -58,10 +58,6 @@ function assertEngagementTelemetry(expectedExtraList) {
   _assertGleanTelemetry("engagement", expectedExtraList);
 }
 
-function assertImpressionTelemetry(expectedExtraList) {
-  _assertGleanTelemetry("impression", expectedExtraList);
-}
-
 function assertExposureTelemetry(expectedExtraList) {
   _assertGleanTelemetry("exposure", expectedExtraList);
 }
@@ -204,12 +200,6 @@ async function doPasteAndGo(data) {
 async function doTest(testFn) {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
-  // Enable recording telemetry for impression, as it is disabled by default.
-  Services.fog.setMetricsFeatureConfig(
-    JSON.stringify({
-      "urlbar.impression": true,
-    })
-  );
 
   gURLBar.controller.engagementEvent.reset();
   await PlacesUtils.history.clear();
@@ -223,8 +213,8 @@ async function doTest(testFn) {
 
   try {
     await BrowserTestUtils.withNewTab(gBrowser, testFn);
-  } finally {
-    Services.fog.setMetricsFeatureConfig("{}");
+  } catch (e) {
+    console.error(e);
   }
 }
 
@@ -423,10 +413,6 @@ async function setup() {
       ["browser.urlbar.quickactions.minimumSearchString", 0],
       ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
-      [
-        "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
-        100,
-      ],
     ],
   });
 
@@ -460,14 +446,4 @@ async function showResultByArrowDown() {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   });
   await UrlbarTestUtils.promiseSearchComplete(window);
-}
-
-async function waitForPauseImpression() {
-  await new Promise(r =>
-    setTimeout(
-      r,
-      UrlbarPrefs.get("searchEngagementTelemetry.pauseImpressionIntervalMs")
-    )
-  );
-  await Services.fog.testFlushAllChildren();
 }

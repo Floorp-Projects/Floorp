@@ -12,8 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
@@ -154,10 +152,6 @@ export class UrlbarController {
    * can't be cancelled.
    */
   cancelQuery() {
-    // We must clear the pause impression timer in any case, even if the query
-    // already finished.
-    this.engagementEvent.clearPauseImpressionTimer();
-
     // If the query finished already, don't handle cancel.
     if (!this._lastQueryContextWrapper || this._lastQueryContextWrapper.done) {
       return;
@@ -185,11 +179,6 @@ export class UrlbarController {
     if (queryContext.lastResultCount < 6 && queryContext.results.length >= 6) {
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, queryContext);
     }
-
-    this.engagementEvent.startPauseImpressionTimer(
-      queryContext,
-      this.input.getSearchSource()
-    );
 
     if (queryContext.firstResultChanged) {
       // Notify the input so it can make adjustments based on the first result.
@@ -833,8 +822,6 @@ class TelemetryEvent {
    * @param {DOMElement} [details.element] The picked view element.
    */
   record(event, details) {
-    this.clearPauseImpressionTimer();
-
     // This should never throw, or it may break the urlbar.
     try {
       this._internalRecord(event, details);
@@ -851,52 +838,6 @@ class TelemetryEvent {
         this._discarded = false;
       }
     }
-  }
-
-  /**
-   * Clear the pause impression timer started by startPauseImpressionTimer().
-   */
-  clearPauseImpressionTimer() {
-    lazy.clearTimeout(this._pauseImpressionTimer);
-  }
-
-  /**
-   * Start a timer that records the pause impression telemetry for given context.
-   * The telemetry will be recorded after
-   * "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs" ms.
-   * If want to clear this timer, please use clearPauseImpressionTimer().
-   *
-   * @param {UrlbarQueryContext} queryContext
-   *        The query details that will be recorded as pause impression telemetry.
-   * @param {string} searchSource
-   *        The seach source that will be recorded as pause impression telemetry.
-   */
-  startPauseImpressionTimer(queryContext, searchSource) {
-    if (this._impressionStartEventInfo === this._startEventInfo) {
-      // Already took an impression telemetry for this session.
-      return;
-    }
-
-    this.clearPauseImpressionTimer();
-    this._pauseImpressionTimer = lazy.setTimeout(() => {
-      let { numChars, numWords, searchWords } = this._parseSearchString(
-        queryContext.searchString
-      );
-      this._recordSearchEngagementTelemetry(
-        queryContext,
-        "impression",
-        this._startEventInfo,
-        {
-          reason: "pause",
-          numChars,
-          numWords,
-          searchWords,
-          searchSource,
-        }
-      );
-
-      this._impressionStartEventInfo = this._startEventInfo;
-    }, lazy.UrlbarPrefs.get("searchEngagementTelemetry.pauseImpressionIntervalMs"));
   }
 
   _internalRecord(event, details) {
@@ -1306,7 +1247,6 @@ class TelemetryEvent {
    * no-op.
    */
   discard() {
-    this.clearPauseImpressionTimer();
     if (this._startEventInfo) {
       this._startEventInfo = null;
       this._discarded = true;
