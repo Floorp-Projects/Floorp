@@ -2691,6 +2691,33 @@ static int ReadMARChannelIDsFromBuffer(char* aChannels,
                                &aResults->MARChannelID, "Settings");
 }
 #  endif  // XP_MACOSX
+
+/**
+ * This function reads in the `ACCEPTED_MAR_CHANNEL_IDS` from the appropriate
+ * (platform-dependent) source.
+ *
+ * @param aMARStrings
+ *        An out-param used to return the channel id string read. The contained
+ *        value is not specified if the function's return value is not `OK`.
+ * @return
+ *        `OK` on success, `UPDATE_SETTINGS_FILE_CHANNEL` on failure.
+ */
+static int GetAcceptableChannelIDs(MARChannelStringTable* aMARStrings) {
+  int rv = UPDATE_SETTINGS_FILE_CHANNEL;
+#ifdef XP_MACOSX
+  if (auto marChannels =
+          UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
+    rv = ReadMARChannelIDsFromBuffer(marChannels->data(), aMARStrings);
+  }
+#else
+  NS_tchar updateSettingsPath[MAXPATHLEN];
+  NS_tsnprintf(updateSettingsPath,
+               sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
+               NS_T("%s/update-settings.ini"), gInstallDirPath);
+  rv = ReadMARChannelIDsFromPath(updateSettingsPath, aMARStrings);
+#endif
+  return rv == OK ? OK : UPDATE_SETTINGS_FILE_CHANNEL;
+}
 #endif    // MOZ_VERIFY_MAR_SIGNATURE
 
 static int GetUpdateFileName(NS_tchar* fileName, int maxChars) {
@@ -2717,23 +2744,8 @@ static void UpdateThreadFunc(void* param) {
 
     if (rv == OK) {
       MARChannelStringTable MARStrings;
-#  ifndef XP_MACOSX
-      NS_tchar updateSettingsPath[MAXPATHLEN];
-      NS_tsnprintf(updateSettingsPath,
-                   sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
-                   NS_T("%s/update-settings.ini"), gInstallDirPath);
-      rv = ReadMARChannelIDsFromPath(updateSettingsPath, &MARStrings);
-#  else
-      if (auto marChannels =
-              UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
-        rv = ReadMARChannelIDsFromBuffer(marChannels->data(), &MARStrings);
-      } else {
-        rv = UPDATE_SETTINGS_FILE_CHANNEL;
-      }
-#  endif
-      if (rv != OK) {
-        rv = UPDATE_SETTINGS_FILE_CHANNEL;
-      } else {
+      rv = GetAcceptableChannelIDs(&MARStrings);
+      if (rv == OK) {
         rv = gArchiveReader.VerifyProductInformation(
             MARStrings.MARChannelID.get(), MOZ_APP_VERSION);
       }
@@ -2975,6 +2987,22 @@ int NS_main(int argc, NS_tchar** argv) {
   sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
 #endif
+
+  if (argc == 2 && NS_tstrcmp(argv[1], NS_T("--channels-allowed")) == 0) {
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
+    MARChannelStringTable MARStrings;
+    int rv = GetAcceptableChannelIDs(&MARStrings);
+    if (rv == OK) {
+      printf("Channels Allowed: %s\n", MARStrings.MARChannelID.get());
+      return 0;
+    }
+    printf("Error: %d\n", rv);
+    return 1;
+#else
+    printf("Not Applicable: No support for signature verification\n");
+    return 0;
+#endif
+  }
 
   // The callback is the remaining arguments starting at callbackIndex.
   // The argument specified by callbackIndex is the callback executable and the
