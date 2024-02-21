@@ -38,6 +38,7 @@
 #ifdef MOZ_UPDATER
 @APPNAME@/Contents/Library/LaunchServices
 #endif
+@APPNAME@/Contents/Frameworks
 @APPNAME@/Contents/PkgInfo
 @RESPATH@/firefox.icns
 @RESPATH@/document.icns
