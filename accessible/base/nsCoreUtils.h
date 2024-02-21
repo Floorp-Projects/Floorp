@@ -324,6 +324,13 @@ class nsCoreUtils {
    */
   static bool IsDocumentVisibleConsideringInProcessAncestors(
       const Document* aDocument);
+
+  /**
+   * Return true if `aDescendant` is a descendant of any of `aStartAncestor`'s
+   * shadow-including ancestors.
+   */
+  static bool IsDescendantOfAnyShadowIncludingAncestor(nsINode* aDescendant,
+                                                       nsINode* aStartAncestor);
 };
 
 #endif

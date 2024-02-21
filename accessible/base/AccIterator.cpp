@@ -71,7 +71,12 @@ AccIterator::IteratorState::IteratorState(const LocalAccessible* aParent,
 RelatedAccIterator::RelatedAccIterator(DocAccessible* aDocument,
                                        nsIContent* aDependentContent,
                                        nsAtom* aRelAttr)
-    : mDocument(aDocument), mRelAttr(aRelAttr), mProviders(nullptr), mIndex(0) {
+    : mDocument(aDocument),
+      mDependentContent(aDependentContent),
+      mRelAttr(aRelAttr),
+      mProviders(nullptr),
+      mIndex(0),
+      mIsWalkingDependentElements(false) {
   nsAutoString id;
   if (aDependentContent->IsElement() &&
       aDependentContent->AsElement()->GetAttr(nsGkAtoms::id, id)) {
@@ -80,26 +85,57 @@ RelatedAccIterator::RelatedAccIterator(DocAccessible* aDocument,
 }
 
 LocalAccessible* RelatedAccIterator::Next() {
-  if (!mProviders) return nullptr;
+  if (!mProviders || mIndex == mProviders->Length()) {
+    if (mIsWalkingDependentElements) {
+      // We've walked both dependent ids and dependent elements, so there are
+      // no more targets.
+      return nullptr;
+    }
+    // We've returned all dependent ids, but there might be dependent elements
+    // too. Walk those next.
+    mIsWalkingDependentElements = true;
+    mIndex = 0;
+    if (auto providers =
+            mDocument->mDependentElementsMap.Lookup(mDependentContent)) {
+      mProviders = &providers.Data();
+    } else {
+      mProviders = nullptr;
+      return nullptr;
+    }
+  }
 
   while (mIndex < mProviders->Length()) {
     const auto& provider = (*mProviders)[mIndex++];
 
     // Return related accessible for the given attribute.
-    if (provider->mRelAttr == mRelAttr) {
-      LocalAccessible* related = mDocument->GetAccessible(provider->mContent);
-      if (related) {
-        return related;
-      }
+    if (mRelAttr && provider->mRelAttr != mRelAttr) {
+      continue;
+    }
+    // If we're walking elements (not ids), the explicitly set attr-element
+    // `mDependentContent` must be a descendant of any of the refering element
+    // `mProvider->mContent`'s shadow-including ancestors.
+    if (mIsWalkingDependentElements &&
+        !nsCoreUtils::IsDescendantOfAnyShadowIncludingAncestor(
+            mDependentContent, provider->mContent)) {
+      continue;
+    }
+    LocalAccessible* related = mDocument->GetAccessible(provider->mContent);
+    if (related) {
+      return related;
+    }
 
-      // If the document content is pointed by relation then return the
-      // document itself.
-      if (provider->mContent == mDocument->GetContent()) {
-        return mDocument;
-      }
+    // If the document content is pointed by relation then return the
+    // document itself.
+    if (provider->mContent == mDocument->GetContent()) {
+      return mDocument;
     }
   }
 
+  // We exhausted mProviders without returning anything.
+  if (!mIsWalkingDependentElements) {
+    // Call this function again to start walking the dependent elements.
+    return Next();
+  }
   return nullptr;
 }
 

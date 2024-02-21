@@ -293,7 +293,7 @@ addAccessibleTask(
 );
 
 /**
- * Test details relations on popovers and their invokers.
+ * Test details relations for the popovertarget content attribute.
  */
 addAccessibleTask(
   `
@@ -304,7 +304,7 @@ addAccessibleTask(
 <div id="popover" popover>popover</div>
 <div id="details">details</div>
   `,
-  async function testPopover(browser, docAcc) {
+  async function testPopoverContent(browser, docAcc) {
     // The popover is hidden, so nothing should be referring to it.
     const hide = findAccessibleChildByID(docAcc, "hide");
     await testCachedRelation(hide, RELATION_DETAILS, []);
@@ -330,7 +330,7 @@ addAccessibleTask(
     await testCachedRelation(toggleSibling, RELATION_DETAILS, []);
     await testCachedRelation(popover, RELATION_DETAILS_FOR, toggle1);
 
-    info("Setting toggle2 popovertargetaction");
+    info("Setting toggle2 popovertarget");
     await invokeSetAttribute(browser, "toggle2", "popovertarget", "popover");
     await testCachedRelation(toggle2, RELATION_DETAILS, popover);
     await testCachedRelation(popover, RELATION_DETAILS_FOR, [toggle1, toggle2]);
@@ -363,4 +363,89 @@ addAccessibleTask(
     await testCachedRelation(toggle1, RELATION_DETAILS, []);
   },
   { chrome: false, topLevel: true }
+);
+
+/**
+ * Test details relations for the popoverTargetElement WebIDL attribute.
+ */
+addAccessibleTask(
+  `
+<button id="toggle1">toggle1</button>
+<button id="toggle2">toggle2</button>
+between
+<div id="popover1" popover>popover1</div>
+<button id="toggle3">toggle3</button>
+<div id="shadowHost"><template shadowrootmode="open">
+  <button id="toggle4">toggle4</button>
+  between
+  <div id="popover2" popover>popover2</div>
+  <button id="toggle5">toggle5</button>
+</template></div>
+<script>
+  const toggle1 = document.getElementById("toggle1");
+  const toggle2 = document.getElementById("toggle2");
+  const popover1 = document.getElementById("popover1");
+  toggle1.popoverTargetElement = popover1;
+  toggle2.popoverTargetElement = popover1;
+  const toggle3 = document.getElementById("toggle3");
+  const shadow = document.getElementById("shadowHost").shadowRoot;
+  const toggle4 = shadow.getElementById("toggle4");
+  const popover2 = shadow.getElementById("popover2");
+  toggle3.popoverTargetElement = popover2;
+  toggle4.popoverTargetElement = popover2;
+  const toggle5 = shadow.getElementById("toggle5");
+  toggle5.popoverTargetElement = popover1;
+</script>
+  `,
+  async function testPopoverIdl(browser, docAcc) {
+    // No popover is showing, so there shouldn't be any details relations.
+    const toggle1 = findAccessibleChildByID(docAcc, "toggle1");
+    await testCachedRelation(toggle1, RELATION_DETAILS, []);
+    const toggle2 = findAccessibleChildByID(docAcc, "toggle2");
+    await testCachedRelation(toggle2, RELATION_DETAILS, []);
+    const toggle3 = findAccessibleChildByID(docAcc, "toggle3");
+    await testCachedRelation(toggle3, RELATION_DETAILS, []);
+    const toggle4 = findAccessibleChildByID(docAcc, "toggle4");
+    await testCachedRelation(toggle4, RELATION_DETAILS, []);
+    const toggle5 = findAccessibleChildByID(docAcc, "toggle5");
+    await testCachedRelation(toggle5, RELATION_DETAILS, []);
+
+    info("Showing popover1");
+    let shown = waitForEvent(EVENT_SHOW, "popover1");
+    toggle1.doAction(0);
+    const popover1 = (await shown).accessible;
+    await testCachedRelation(toggle1, RELATION_DETAILS, popover1);
+    await testCachedRelation(toggle2, RELATION_DETAILS, popover1);
+    // toggle5 is inside the shadow DOM and popover1 is outside, so the target
+    // is valid.
+    await testCachedRelation(toggle5, RELATION_DETAILS, popover1);
+    await testCachedRelation(popover1, RELATION_DETAILS_FOR, [
+      toggle1,
+      toggle2,
+      toggle5,
+    ]);
+    info("Hiding popover1");
+    let hidden = waitForEvent(EVENT_HIDE, popover1);
+    toggle1.doAction(0);
+    await hidden;
+    await testCachedRelation(toggle1, RELATION_DETAILS, []);
+    await testCachedRelation(toggle2, RELATION_DETAILS, []);
+    await testCachedRelation(toggle5, RELATION_DETAILS, []);
+
+    info("Showing popover2");
+    shown = waitForEvent(EVENT_SHOW, "popover2");
+    toggle4.doAction(0);
+    const popover2 = (await shown).accessible;
+    // toggle4 is in the same shadow DOM as popover2.
+    await testCachedRelation(toggle4, RELATION_DETAILS, popover2);
+    // toggle3 is outside popover2's shadow DOM, so the target isn't valid.
+    await testCachedRelation(toggle3, RELATION_DETAILS, []);
+    await testCachedRelation(popover2, RELATION_DETAILS_FOR, [toggle4]);
+    info("Hiding popover2");
+    hidden = waitForEvent(EVENT_HIDE, popover2);
+    toggle4.doAction(0);
+    await hidden;
+    await testCachedRelation(toggle4, RELATION_DETAILS, []);
+  },
+  { chrome: true, topLevel: true }
 );

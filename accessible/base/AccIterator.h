@@ -67,7 +67,9 @@ class AccIterator : public AccIterable {
 
 /**
  * Allows to traverse through related accessibles that are pointing to the given
- * dependent accessible by relation attribute.
+ * dependent accessible by relation attribute. This is typically used to query
+ * implicit reverse relations; e.g. calculating the LABEL_FOR relation for a
+ * label where that label was referenced using aria-labelledby.
  */
 class RelatedAccIterator : public AccIterable {
  public:
@@ -79,7 +81,7 @@ class RelatedAccIterator : public AccIterable {
    * @param aDependentContent [in] the content of dependent accessible that
    *                           relations were requested for
    * @param aRelAttr          [in] relation attribute that relations are
-   *                           pointed by
+   *                           pointed by, null for all relations
    */
   RelatedAccIterator(DocAccessible* aDocument, nsIContent* aDependentContent,
                      nsAtom* aRelAttr);
@@ -97,9 +99,11 @@ class RelatedAccIterator : public AccIterable {
   RelatedAccIterator& operator=(const RelatedAccIterator&);
 
   DocAccessible* mDocument;
+  nsIContent* mDependentContent;
   nsAtom* mRelAttr;
   DocAccessible::AttrRelProviders* mProviders;
   uint32_t mIndex;
+  bool mIsWalkingDependentElements;
 };
 
 /**

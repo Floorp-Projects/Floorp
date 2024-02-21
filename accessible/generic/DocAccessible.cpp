@@ -67,6 +67,9 @@ static nsStaticAtom* const kRelationAttrs[] = {
 
 static const uint32_t kRelationAttrsLen = ArrayLength(kRelationAttrs);
 
+static nsStaticAtom* const kSingleElementRelationIdlAttrs[] = {
+    nsGkAtoms::popovertarget};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/desctructor
 
@@ -383,25 +386,25 @@ void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc,
 
 void DocAccessible::QueueCacheUpdateForDependentRelations(
     LocalAccessible* aAcc) {
-  if (!mIPCDoc || !aAcc || !aAcc->Elm() || !aAcc->IsInDocument() ||
-      aAcc->IsDefunct()) {
+  if (!mIPCDoc || !aAcc || !aAcc->IsInDocument() || aAcc->IsDefunct()) {
     return;
   }
-  nsAutoString ID;
-  aAcc->DOMNodeID(ID);
-  if (AttrRelProviders* list = GetRelProviders(aAcc->Elm(), ID)) {
-    // We call this function when we've noticed an ID change, or when an acc
-    // is getting bound to its document. We need to ensure any existing accs
-    // that depend on this acc's ID have their rel cache entries updated.
-    for (const auto& provider : *list) {
-      LocalAccessible* relatedAcc = GetAccessible(provider->mContent);
-      if (!relatedAcc || relatedAcc->IsDefunct() ||
-          !relatedAcc->IsInDocument() ||
-          mInsertedAccessibles.Contains(relatedAcc)) {
-        continue;
-      }
-      QueueCacheUpdate(relatedAcc, CacheDomain::Relations);
+  dom::Element* el = aAcc->Elm();
+  if (!el) {
+    return;
+  }
+
+  // We call this function when we've noticed an ID change, or when an acc
+  // is getting bound to its document. We need to ensure any existing accs
+  // that depend on this acc's ID or Element have their relation cache entries
+  // updated.
+  RelatedAccIterator iter(this, el, nullptr);
+  while (LocalAccessible* relatedAcc = iter.Next()) {
+    if (relatedAcc->IsDefunct() || !relatedAcc->IsInDocument() ||
+        mInsertedAccessibles.Contains(relatedAcc)) {
+      continue;
     }
+    QueueCacheUpdate(relatedAcc, CacheDomain::Relations);
   }
 }
 
@@ -507,6 +510,7 @@ void DocAccessible::Shutdown() {
   }
 
   mDependentIDsHashes.Clear();
+  mDependentElementsMap.Clear();
   mNodeToAccessibleMap.Clear();
 
   mAnchorJumpElm = nullptr;
@@ -1150,6 +1154,7 @@ void DocAccessible::BindToDocument(LocalAccessible* aAccessible,
 
   if (aAccessible->HasOwnContent()) {
     AddDependentIDsFor(aAccessible);
+    AddDependentElementsFor(aAccessible);
 
     nsIContent* content = aAccessible->GetContent();
     if (content->IsElement() &&
@@ -1769,6 +1774,61 @@ void DocAccessible::RemoveDependentIDsFor(LocalAccessible* aRelProvider,
   }
 }
 
+void DocAccessible::AddDependentElementsFor(LocalAccessible* aRelProvider,
+                                            nsAtom* aRelAttr) {
+  dom::Element* providerEl = aRelProvider->Elm();
+  if (!providerEl) {
+    return;
+  }
+  for (nsStaticAtom* attr : kSingleElementRelationIdlAttrs) {
+    if (aRelAttr && aRelAttr != attr) {
+      continue;
+    }
+    if (dom::Element* targetEl =
+            providerEl->GetExplicitlySetAttrElement(attr)) {
+      AttrRelProviders& providers =
+          mDependentElementsMap.LookupOrInsert(targetEl);
+      AttrRelProvider* provider = new AttrRelProvider(attr, providerEl);
+      providers.AppendElement(provider);
+    }
+    // If the relation attribute was given, we've already handled it. We don't
+    // have anything else to check.
+    if (aRelAttr) {
+      break;
+    }
+  }
+}
+
+void DocAccessible::RemoveDependentElementsFor(LocalAccessible* aRelProvider,
+                                               nsAtom* aRelAttr) {
+  dom::Element* providerEl = aRelProvider->Elm();
+  if (!providerEl) {
+    return;
+  }
+  for (nsStaticAtom* attr : kSingleElementRelationIdlAttrs) {
+    if (aRelAttr && aRelAttr != attr) {
+      continue;
+    }
+    if (dom::Element* targetEl =
+            providerEl->GetExplicitlySetAttrElement(attr)) {
+      if (auto providers = mDependentElementsMap.Lookup(targetEl)) {
+        providers.Data().RemoveElementsBy([attr,
+                                           providerEl](const auto& provider) {
+          return provider->mRelAttr == attr && provider->mContent == providerEl;
+        });
+        if (providers.Data().IsEmpty()) {
+          providers.Remove();
+        }
+      }
+    }
+    // If the relation attribute was given, we've already handled it. We don't
+    // have anything else to check.
+    if (aRelAttr) {
+      break;
+    }
+  }
+}
+
 bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
                                                  nsAtom* aAttribute) {
   if (aAttribute == nsGkAtoms::role) {
@@ -2003,7 +2063,7 @@ bool InsertIterator::Next() {
   return false;
 }
 
-void DocAccessible::MaybeFireEventsForChangedPopover(LocalAccessible *aAcc) {
+void DocAccessible::MaybeFireEventsForChangedPopover(LocalAccessible* aAcc) {
   dom::Element* el = aAcc->Elm();
   if (!el || !el->IsHTMLElement() || !el->HasAttr(nsGkAtoms::popover)) {
     return;  // Not a popover.
@@ -2620,6 +2680,7 @@ void DocAccessible::UncacheChildrenInSubtree(LocalAccessible* aRoot) {
   MaybeFireEventsForChangedPopover(aRoot);
   aRoot->mStateFlags |= eIsNotInDocument;
   RemoveDependentIDsFor(aRoot);
+  RemoveDependentElementsFor(aRoot);
 
   // The parent of the removed subtree is about to be cleared, so we must do
   // this here rather than in LocalAccessible::UnbindFromParent because we need
