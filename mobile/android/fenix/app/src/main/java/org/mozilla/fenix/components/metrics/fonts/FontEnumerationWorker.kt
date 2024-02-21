@@ -5,11 +5,9 @@
 package org.mozilla.fenix.components.metrics.fonts
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.fonts.Font
 import android.graphics.fonts.SystemFonts
 import android.os.Build
-import android.os.LocaleList
 import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
@@ -18,15 +16,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
 import java.io.File
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.hours
 
@@ -40,15 +33,12 @@ class FontEnumerationWorker(
 ) : CoroutineWorker(context, workerParameters) {
     @Suppress("TooGenericExceptionCaught")
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        val s: String
         try {
             readAllFonts()
-            s = createJSONString()
         } catch (e: Exception) {
             return@withContext Result.retry()
         }
 
-        Metrics.fontListJson.set(s)
         Pings.fontList.submit()
 
         // To avoid getting multiple submissions from new installs, set directly
@@ -77,68 +67,6 @@ class FontEnumerationWorker(
                 brokenFonts.add(Pair(path, FontParser.calculateFileHash(path)))
             }
         }
-    }
-
-    /**
-     * This function creates a single JSON String containing
-     * The user's phone information, as well as all the fonts and their information,
-     * And the names of files that encountered a parsing error.
-     */
-    @Throws(JSONException::class)
-    fun createJSONString(): String {
-        val submission = JSONObject()
-
-        run {
-            submission.put("submission", kDesiredSubmissions)
-            submission.put("brand", Build.BRAND)
-            submission.put("device", Build.DEVICE)
-            submission.put("hardware", Build.HARDWARE)
-            submission.put("manufacturer", Build.MANUFACTURER)
-            submission.put("model", Build.MODEL)
-            submission.put("product", Build.PRODUCT)
-            submission.put("release_version", Build.VERSION.RELEASE)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                submission.put("security_patch", Build.VERSION.SECURITY_PATCH)
-                submission.put("base_os", Build.VERSION.BASE_OS)
-            } else {
-                submission.put("security_patch", "too-low-version")
-                submission.put("base_os", "too-low-version")
-            }
-            val config: Configuration = this.applicationContext.resources.configuration
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val supportedLocales: LocaleList = LocaleList.getDefault()
-                val sb = StringBuilder()
-                for (i in 0 until supportedLocales.size()) {
-                    val locale: Locale = supportedLocales.get(i)
-                    sb.append(locale.toString())
-                    sb.append(",")
-                }
-                submission.put("current_locale", config.locales[0].toString())
-                submission.put("all_locales", sb.toString())
-            } else {
-                @Suppress("DEPRECATION")
-                submission.put("current_locale", config.locale.toString())
-                submission.put("all_locales", "too-low-version")
-            }
-        }
-
-        val fontArr = JSONArray()
-        for (fontDetails in fonts) {
-            fontArr.put(fontDetails.toJson())
-        }
-
-        val errorArr = JSONArray()
-        for (error in brokenFonts) {
-            val errorObj = JSONObject()
-            errorObj.put("path", error.first)
-            errorObj.put("hash", error.second)
-            errorArr.put(errorObj)
-        }
-
-        submission.put("fonts", fontArr)
-        submission.put("errors", errorArr)
-
-        return submission.toString()
     }
 
     companion object {

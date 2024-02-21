@@ -2654,25 +2654,6 @@ metrics:
     metadata:
       tags:
         - Experiments
-  font_list_json:
-    type: text
-    lifetime: ping
-    description: |
-      A JSON blob representing the installed fonts
-    send_in_pings:
-      - font-list
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858193
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858193#c2
-    data_sensitivity:
-      # Text metrics are _required_ to be web_activity or highly_sensitive, so even though this
-      # is more like 'technical' (per the Data Review), I'm marking highly sensitive.
-      - highly_sensitive
-    notification_emails:
-      - android-probes@mozilla.com
-      - tom@mozilla.com
-    expires: 124
 
 customize_home:
   most_visited_sites:
