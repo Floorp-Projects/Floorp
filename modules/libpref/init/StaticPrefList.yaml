@@ -5693,6 +5693,12 @@
   value: false
   mirror: once
 
+# Whether OffscreenCanvas can use remote canvas
+- name: gfx.canvas.remote.allow-offscreen
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # How many worker threads spawned for remote canvas
 #  -1 - Calculate based on processor cores
 #   0 - No worker threads spawned, will do work on CanvasRenderThread
