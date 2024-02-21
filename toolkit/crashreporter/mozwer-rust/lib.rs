@@ -19,11 +19,20 @@ use std::slice::from_raw_parts;
 use uuid::Uuid;
 use windows_sys::core::{HRESULT, PWSTR};
 use windows_sys::Wdk::System::Threading::{NtQueryInformationProcess, ProcessBasicInformation};
+use windows_sys::Win32::Foundation::{
+    GetLastError, SetLastError, ERROR_INSUFFICIENT_BUFFER, ERROR_SUCCESS,
+};
+use windows_sys::Win32::Security::{
+    GetSidSubAuthority, GetSidSubAuthorityCount, GetTokenInformation, IsTokenRestricted,
+    TokenIntegrityLevel, TOKEN_MANDATORY_LABEL,
+};
+use windows_sys::Win32::System::SystemServices::SECURITY_MANDATORY_MEDIUM_RID;
 use windows_sys::Win32::{
     Foundation::{
         CloseHandle, BOOL, EXCEPTION_BREAKPOINT, E_UNEXPECTED, FALSE, FILETIME, HANDLE, HWND,
         LPARAM, MAX_PATH, STATUS_SUCCESS, S_OK, TRUE, UNICODE_STRING, WAIT_OBJECT_0,
     },
+    Security::TOKEN_QUERY,
     System::Com::CoTaskMemFree,
     System::Diagnostics::Debug::{
         GetThreadContext, MiniDumpWithFullMemoryInfo, MiniDumpWithIndirectlyReferencedMemory,
@@ -41,10 +50,10 @@ use windows_sys::Win32::{
     System::SystemServices::VER_GREATER_EQUAL,
     System::Threading::{
         CreateProcessW, CreateRemoteThread, GetProcessId, GetProcessTimes, GetThreadId,
-        OpenProcess, OpenThread, TerminateProcess, WaitForSingleObject, CREATE_NO_WINDOW,
-        CREATE_UNICODE_ENVIRONMENT, LPTHREAD_START_ROUTINE, NORMAL_PRIORITY_CLASS, PEB,
-        PROCESS_ALL_ACCESS, PROCESS_BASIC_INFORMATION, PROCESS_INFORMATION, STARTUPINFOW,
-        THREAD_GET_CONTEXT,
+        OpenProcess, OpenProcessToken, OpenThread, TerminateProcess, WaitForSingleObject,
+        CREATE_NO_WINDOW, CREATE_UNICODE_ENVIRONMENT, LPTHREAD_START_ROUTINE,
+        NORMAL_PRIORITY_CLASS, PEB, PROCESS_ALL_ACCESS, PROCESS_BASIC_INFORMATION,
+        PROCESS_INFORMATION, STARTUPINFOW, THREAD_GET_CONTEXT,
     },
     UI::Shell::{FOLDERID_RoamingAppData, SHGetKnownFolderPath},
     UI::WindowsAndMessaging::{EnumWindows, GetWindowThreadProcessId, IsHungAppWindow},
@@ -196,7 +205,15 @@ fn out_of_process_exception_event_callback(
     );
     crash_report.write_minidump(exception_information)?;
     if wer_data.process_type == MAIN_PROCESS_TYPE {
-        handle_main_process_crash(crash_report, process, &application_info)
+        match is_sandboxed_process(process) {
+            Ok(false) => handle_main_process_crash(crash_report, process, &application_info),
+            _ => {
+                // The parent process should never be sandboxed, bail out so the
+                // process which is impersonating it gets killed right away. Also
+                // bail out if is_sandboxed_process() failed while checking.
+                Ok(())
+            }
+        }
     } else {
         handle_child_process_crash(crash_report, process)
     }
@@ -236,6 +253,11 @@ fn find_hung_window_thread(process: HANDLE) -> Result<DWORD> {
     search.ui_thread_id.ok_or(())
 }
 
+fn get_parent_process(process: HANDLE) -> Result<HANDLE> {
+    let pbi = get_process_basic_information(process)?;
+    get_process_handle(pbi.InheritedFromUniqueProcessId as u32)
+}
+
 fn handle_main_process_crash(
     crash_report: CrashReport,
     process: HANDLE,
@@ -256,9 +278,9 @@ fn handle_main_process_crash(
 
 fn handle_child_process_crash(crash_report: CrashReport, child_process: HANDLE) -> Result<()> {
     let command_line = read_command_line(child_process)?;
-    let (parent_pid, data_ptr) = parse_child_data(&command_line)?;
+    let data_ptr = parse_child_data(&command_line)?;
+    let parent_process = get_parent_process(child_process)?;
 
-    let parent_process = get_process_handle(parent_pid)?;
     let mut wer_data: WindowsErrorReportingData = read_from_process(parent_process, data_ptr)?;
     wer_data.child_pid = get_process_id(child_process)?;
     wer_data.minidump_name = crash_report.get_minidump_name();
@@ -380,15 +402,12 @@ fn get_oom_allocation_size(
     read_from_process(process, wer_data.oom_allocation_size_ptr).unwrap_or(0)
 }
 
-fn parse_child_data(command_line: &str) -> Result<(DWORD, *mut WindowsErrorReportingData)> {
+fn parse_child_data(command_line: &str) -> Result<*mut WindowsErrorReportingData> {
     let mut itr = command_line.rsplit(' ');
     let address = itr.nth(1).ok_or(())?;
     let address = usize::from_str_radix(address, 16).map_err(|_err| (()))?;
-    let address = address as *mut WindowsErrorReportingData;
-    let parent_pid = itr.nth(1).ok_or(())?;
-    let parent_pid = u32::from_str_radix(parent_pid, 10).map_err(|_err| (()))?;
 
-    Ok((parent_pid, address))
+    Ok(address as *mut WindowsErrorReportingData)
 }
 
 fn get_process_id(process: HANDLE) -> Result<DWORD> {
@@ -869,6 +888,19 @@ fn read_command_line(process: HANDLE) -> Result<String> {
 fn read_user_process_parameters(
     process: HANDLE,
 ) -> Result<RTL_USER_PROCESS_PARAMETERS_UNDOCUMENTED> {
+    let pbi = get_process_basic_information(process)?;
+
+    // Read the process environment block
+    let peb: PEB = read_from_process(process, pbi.PebBaseAddress)?;
+
+    // Read the user process parameters
+    read_from_process::<RTL_USER_PROCESS_PARAMETERS_UNDOCUMENTED>(
+        process,
+        peb.ProcessParameters as *mut _,
+    )
+}
+
+fn get_process_basic_information(process: HANDLE) -> Result<PROCESS_BASIC_INFORMATION> {
     let mut pbi: PROCESS_BASIC_INFORMATION = unsafe { zeroed() };
     let mut length: ULONG = 0;
     let result = unsafe {
@@ -885,14 +917,59 @@ fn read_user_process_parameters(
         return Err(());
     }
 
-    // Read the process environment block
-    let peb: PEB = read_from_process(process, pbi.PebBaseAddress)?;
+    Ok(pbi)
+}
 
-    // Read the user process parameters
-    read_from_process(
-        process,
-        peb.ProcessParameters as *mut RTL_USER_PROCESS_PARAMETERS_UNDOCUMENTED,
-    )
+fn is_sandboxed_process(process: HANDLE) -> Result<bool> {
+    let mut token: HANDLE = 0;
+    let res = unsafe { OpenProcessToken(process, TOKEN_QUERY, &mut token as *mut _) };
+
+    if res != TRUE {
+        return Err(());
+    }
+
+    let is_restricted = unsafe { IsTokenRestricted(token) } != FALSE;
+
+    unsafe { SetLastError(ERROR_SUCCESS) };
+    let mut buffer_size: DWORD = 0;
+    let res = unsafe {
+        GetTokenInformation(
+            token,
+            TokenIntegrityLevel,
+            null_mut(),
+            0,
+            &mut buffer_size as *mut _,
+        )
+    };
+
+    if (res != FALSE) || (unsafe { GetLastError() } != ERROR_INSUFFICIENT_BUFFER) {
+        return Err(());
+    }
+
+    let mut buffer: Vec<u8> = vec![Default::default(); buffer_size as usize];
+    let res = unsafe {
+        GetTokenInformation(
+            token,
+            TokenIntegrityLevel,
+            buffer.as_mut_ptr() as *mut _,
+            buffer_size,
+            &mut buffer_size as *mut _,
+        )
+    };
+
+    if res != TRUE {
+        return Err(());
+    }
+
+    let token_mandatory_label = &unsafe { *(buffer.as_ptr() as *const TOKEN_MANDATORY_LABEL) };
+    let sid = token_mandatory_label.Label.Sid;
+    // We're not checking for errors in the following two calls because these
+    // functions can only fail if provided with an invalid SID and we know the
+    // one we obtained from `GetTokenInformation()` is valid.
+    let sid_subauthority_count = unsafe { *GetSidSubAuthorityCount(sid) - 1u8 };
+    let integrity_level = unsafe { *GetSidSubAuthority(sid, sid_subauthority_count.into()) };
+
+    Ok((integrity_level < SECURITY_MANDATORY_MEDIUM_RID as u32) || is_restricted)
 }
 
 // The below structs encompass undocumented fields.
