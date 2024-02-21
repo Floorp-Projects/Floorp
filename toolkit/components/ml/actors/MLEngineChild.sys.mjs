@@ -2,8 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+/**
+ * @typedef {import("../../promiseworker/PromiseWorker.sys.mjs").BasePromiseWorker} BasePromiseWorker
+ */
+
+/**
+ * @typedef {object} Lazy
+ * @property {typeof import("../../promiseworker/PromiseWorker.sys.mjs").BasePromiseWorker} BasePromiseWorker
+ * @property {typeof setTimeout} setTimeout
+ * @property {typeof clearTimeout} clearTimeout
+ */
+
+/** @type {Lazy} */
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -14,6 +29,12 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
     prefix: "ML",
   });
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "loggingLevel",
+  "browser.ml.logLevel"
+);
 
 /**
  * The engine child is responsible for the life cycle and instantiation of the local
@@ -88,7 +109,7 @@ class EngineDispatcher {
     this.#engine = Promise.all([
       this.mlEngineChild.getWasmArrayBuffer(),
       this.getModel(port),
-    ]).then(([wasm, model]) => new FakeEngine(wasm, model));
+    ]).then(([wasm, model]) => FakeEngine.create(wasm, model));
 
     this.#engine
       .then(() => void this.keepAlive())
@@ -225,25 +246,42 @@ class EngineDispatcher {
  * Fake the engine by slicing the text in half.
  */
 class FakeEngine {
+  /** @type {BasePromiseWorker} */
+  #worker;
+
   /**
+   * Initialize the worker.
+   *
    * @param {ArrayBuffer} wasm
    * @param {ArrayBuffer} model
+   * @returns {FakeEngine}
    */
-  constructor(wasm, model) {
-    this.wasm = wasm;
-    this.model = model;
+  static async create(wasm, model) {
+    /** @type {BasePromiseWorker} */
+    const worker = new lazy.BasePromiseWorker(
+      "chrome://global/content/ml/MLEngine.worker.mjs",
+      { type: "module" }
+    );
+
+    const args = [wasm, model, lazy.loggingLevel];
+    const closure = {};
+    const transferables = [wasm, model];
+    await worker.post("initializeEngine", args, closure, transferables);
+    return new FakeEngine(worker);
+  }
+
+  /**
+   * @param {BasePromiseWorker} worker
+   */
+  constructor(worker) {
+    this.#worker = worker;
   }
 
   /**
    * @param {string} request
-   * @returns {string}
+   * @returns {Promise<string>}
    */
   run(request) {
-    if (request === "throw") {
-      throw new Error(
-        'Received the message "throw", so intentionally throwing an error.'
-      );
-    }
-    return request.slice(0, Math.floor(request.length / 2));
+    return this.#worker.post("run", [request]);
   }
 }
