@@ -269,7 +269,7 @@ addAccessibleTask(
       "AXUIElementCountForSearchPredicate",
       NSDictionary(searchPred)
     );
-    is(4, tableCount, "Found four tables");
+    is(tableCount, 3, "Found three tables");
 
     const tables = webArea.getParameterizedAttributeValue(
       "AXUIElementsForSearchPredicate",
@@ -278,7 +278,6 @@ addAccessibleTask(
     const shapes = getNativeInterface(accDoc, "shapes");
     const food = getNativeInterface(accDoc, "food");
     const ariaTable = getNativeInterface(accDoc, "ariaTable");
-    const grid = getNativeInterface(accDoc, "grid");
 
     is(
       shapes.getAttributeValue("AXColumnCount"),
@@ -294,11 +293,6 @@ addAccessibleTask(
       ariaTable.getAttributeValue("AXColumnCount"),
       tables[2].getAttributeValue("AXColumnCount"),
       "Found correct third table"
-    );
-    is(
-      grid.getAttributeValue("AXColumnCount"),
-      tables[3].getAttributeValue("AXColumnCount"),
-      "Found correct fourth table"
     );
   }
 );

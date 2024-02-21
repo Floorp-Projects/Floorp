@@ -263,6 +263,7 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
                                       bool* aIsHierarchical) {
   uint32_t itemCount = 0;
   switch (aContainer->Role()) {
+    case roles::GRID:
     case roles::TABLE:
       if (auto val = aContainer->GetIntARIAAttr(nsGkAtoms::aria_rowcount)) {
         if (*val >= 0) {
