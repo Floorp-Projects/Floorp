@@ -757,24 +757,21 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
     kidReflowInput.Init(aPresContext, Nothing(), Nothing(), Some(padding));
     if (firstKid->IsScrollFrame()) {
       // Propagate explicit block sizes to our inner frame, if it's a scroll
-      // frame.
+      // frame. Note that in table layout, explicit heights act as a minimum
+      // height, see nsTableRowFrame::CalcCellActualBSize.
+      //
       // Table cells don't respect box-sizing, so we need to remove the
       // padding, so that the scroll-frame sizes properly (since the
       // scrollbars also add to the padding area).
       auto ToScrolledBSize = [&](const nscoord aBSize) {
         return std::max(0, aBSize - padding.BStartEnd(kidWM));
       };
+      nscoord minBSize = aReflowInput.ComputedMinBSize();
       if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-        kidReflowInput.SetComputedBSize(
-            ToScrolledBSize(aReflowInput.ComputedBSize()));
+        minBSize = std::max(minBSize, aReflowInput.ComputedBSize());
       }
-      if (aReflowInput.ComputedMinBSize() > 0) {
-        kidReflowInput.SetComputedMinBSize(
-            ToScrolledBSize(aReflowInput.ComputedMinBSize()));
-      }
-      if (aReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
-        kidReflowInput.SetComputedMaxBSize(
-            ToScrolledBSize(aReflowInput.ComputedMaxBSize()));
+      if (minBSize > 0) {
+        kidReflowInput.SetComputedMinBSize(ToScrolledBSize(minBSize));
       }
     }
   }
