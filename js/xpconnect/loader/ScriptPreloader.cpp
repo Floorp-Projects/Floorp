@@ -982,6 +982,9 @@ already_AddRefed<JS::Stencil> ScriptPreloader::WaitForCachedStencil(
     JSContext* cx, const JS::ReadOnlyDecodeOptions& options,
     CachedStencil* script) {
   if (!script->mReadyToExecute) {
+    // mReadyToExecute is kept as false only when off-thread decode task was
+    // available (pref is set to true) and the task was successfully created.
+    // See ScriptPreloader::StartDecodeTask methods.
     MOZ_ASSERT(mDecodedStencils);
 
     // Check for the finished operations that can contain our target.
@@ -1066,7 +1069,12 @@ void ScriptPreloader::OnDecodeTaskFailed() {
 void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
   mMonitor.AssertCurrentThreadOwns();
 
-  MOZ_ASSERT_IF(!mDecodingScripts.isEmpty(), mDecodedStencils);
+  // If off-thread decoding task hasn't been started, nothing to do.
+  // This can happen if the javascript.options.parallel_parsing pref was false,
+  // or the decode task fails to start.
+  if (!mDecodedStencils) {
+    return;
+  }
 
   // Process any pending decodes that are in flight.
   while (!mDecodingScripts.isEmpty()) {
