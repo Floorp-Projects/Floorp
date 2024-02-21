@@ -73,7 +73,8 @@ class IcePeer {
         peer_ctx_(nullptr),
         nat_(nat),
         test_utils_(test_utils) {
-    nr_ice_ctx_create(const_cast<char*>(name_.c_str()), flags, &ice_ctx_);
+    nr_ice_ctx_create(const_cast<char*>(name_.c_str()), flags, nullptr,
+                      &ice_ctx_);
 
     if (nat_) {
       nr_socket_factory* factory;

@@ -325,8 +325,9 @@ int nr_ice_fetch_turn_servers(int ct, nr_ice_turn_server **out)
 #endif /* USE_TURN */
 
 #define MAXADDRS 100 /* Ridiculously high */
-int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
-  {
+  int nr_ice_ctx_create(char* label, UINT4 flags,
+                        nr_ice_gather_handler* gather_handler,
+                        nr_ice_ctx** ctxp) {
     nr_ice_ctx *ctx=0;
     int r,_status;
 
@@ -340,6 +341,8 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
 
     if(!(ctx->label=r_strdup(label)))
       ABORT(R_NO_MEMORY);
+
+    ctx->gather_handler = gather_handler;
 
     /* Get the STUN servers */
     if(r=NR_reg_get_child_count(NR_ICE_REG_STUN_SRV_PRFX,
@@ -442,7 +445,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     int i;
     nr_ice_stun_id *id1,*id2;
 
-    ctx->done_cb = 0;
+    ctx->gather_done_cb = 0;
     ctx->trickle_cb = 0;
 
     STAILQ_FOREACH_SAFE(s1, &ctx->streams, entry, s2){
@@ -451,6 +454,8 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     }
 
     RFREE(ctx->label);
+
+    ctx->gather_handler = 0;
 
     RFREE(ctx->stun_servers_cfg);
 
@@ -539,20 +544,26 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
       }
     }
 
-    if (nr_ice_media_stream_is_done_gathering(stream) &&
-        ctx->trickle_cb) {
-      ctx->trickle_cb(ctx->trickle_cb_arg, ctx, stream, component_id, NULL);
+    if (nr_ice_media_stream_is_done_gathering(stream)) {
+      if (ctx->gather_handler && ctx->gather_handler->vtbl->stream_gathered) {
+        ctx->gather_handler->vtbl->stream_gathered(ctx->gather_handler->obj,
+                                                   stream);
+      }
+      if (ctx->trickle_cb) {
+        ctx->trickle_cb(ctx->trickle_cb_arg, ctx, stream, component_id, NULL);
+      }
     }
 
     if(ctx->uninitialized_candidates==0){
+      assert(nr_ice_media_stream_is_done_gathering(stream));
       r_log(LOG_ICE, LOG_INFO, "ICE(%s): All candidates initialized",
             ctx->label);
-      if (ctx->done_cb) {
-        ctx->done_cb(0,0,ctx->cb_arg);
-      }
-      else {
+      if (ctx->gather_done_cb) {
+        ctx->gather_done_cb(0, 0, ctx->cb_arg);
+      } else {
         r_log(LOG_ICE, LOG_INFO,
-              "ICE(%s): No done_cb. We were probably destroyed.", ctx->label);
+              "ICE(%s): No gather_done_cb. We were probably destroyed.",
+              ctx->label);
       }
     }
     else {
@@ -850,8 +861,7 @@ int nr_ice_set_target_for_default_local_address_lookup(nr_ice_ctx *ctx, const ch
     return(_status);
   }
 
-int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
-  {
+  int nr_ice_gather(nr_ice_ctx* ctx, NR_async_cb gather_done_cb, void* cb_arg) {
     int r,_status;
     nr_ice_media_stream *stream;
     nr_local_addr stun_addrs[MAXADDRS];
@@ -872,7 +882,7 @@ int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg)
     }
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Initializing candidates",ctx->label);
-    ctx->done_cb=done_cb;
+    ctx->gather_done_cb = gather_done_cb;
     ctx->cb_arg=cb_arg;
 
     /* Initialize all the media stream/component pairs */

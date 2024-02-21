@@ -88,8 +88,8 @@ parent:
 child:
   async OnCandidate(string transportId, CandidateInfo candidateInfo);
   async OnAlpnNegotiated(string alpn);
-  async OnGatheringStateChange(int state);
-  async OnConnectionStateChange(int state);
+  async OnGatheringStateChange(string transportId, int state);
+  async OnConnectionStateChange(string transportId, int state);
   async OnPacketReceived(string transportId, MediaPacket packet);
   async OnEncryptedSending(string transportId, MediaPacket packet);
   async OnStateChange(string transportId, int state);

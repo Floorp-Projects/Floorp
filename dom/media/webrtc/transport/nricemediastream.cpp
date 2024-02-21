@@ -204,11 +204,17 @@ nsresult NrIceMediaStream::ConnectToPeer(
   MOZ_ASSERT(stream_);
 
   if (Matches(old_stream_, ufrag, pwd)) {
+    bool wasGathering = !AllGenerationsDoneGathering();
     // (We swap before we close so we never have stream_ == nullptr)
     MOZ_MTLOG(ML_DEBUG,
               "Rolling back to old stream ufrag=" << ufrag << " " << name_);
     std::swap(stream_, old_stream_);
     CloseStream(&old_stream_);
+    if (wasGathering && AllGenerationsDoneGathering()) {
+      // Special case; we do not need to send another empty candidate, but we
+      // do need to handle the transition from gathering to complete.
+      SignalGatheringStateChange(GetId(), ICE_STREAM_GATHER_COMPLETE);
+    }
   } else if (old_stream_) {
     // Right now we wait for ICE to complete before closing the old stream.
     // It might be worth it to close it sooner, but we don't want to close it
@@ -273,6 +279,10 @@ nsresult NrIceMediaStream::SetIceCredentials(const std::string& ufrag,
   }
 
   state_ = ICE_CONNECTING;
+
+  MOZ_MTLOG(ML_WARNING,
+            "SetIceCredentials new=" << stream_ << " old=" << old_stream_);
+
   return NS_OK;
 }
 
@@ -661,6 +671,21 @@ void NrIceMediaStream::Failed() {
   }
 }
 
+void NrIceMediaStream::OnGatheringStarted(nr_ice_media_stream* stream) {
+  MOZ_MTLOG(ML_WARNING, "OnGatheringStarted called for " << stream);
+  SignalGatheringStateChange(GetId(), ICE_STREAM_GATHER_STARTED);
+}
+
+void NrIceMediaStream::OnGatheringComplete(nr_ice_media_stream* stream) {
+  MOZ_MTLOG(ML_WARNING, "OnGatheringComplete called for " << stream);
+  // Spec says to queue two separate tasks; one for the empty candidate, and
+  // the next for the state change.
+  SignalCandidate(this, "", stream->ufrag, "", "");
+  if (AllGenerationsDoneGathering()) {
+    SignalGatheringStateChange(GetId(), ICE_STREAM_GATHER_COMPLETE);
+  }
+}
+
 void NrIceMediaStream::Close() {
   MOZ_MTLOG(ML_DEBUG, "Marking stream closed '" << name_ << "'");
   state_ = ICE_CLOSED;
@@ -709,4 +734,34 @@ nr_ice_media_stream* NrIceMediaStream::GetStreamForRemoteUfrag(
   return nullptr;
 }
 
+bool NrIceMediaStream::AllGenerationsDoneGathering() const {
+  if (stream_ && !nr_ice_media_stream_is_done_gathering(stream_)) {
+    return false;
+  }
+  if (old_stream_ && !nr_ice_media_stream_is_done_gathering(old_stream_)) {
+    return false;
+  }
+  return true;
+}
+
+bool NrIceMediaStream::AnyGenerationIsConnected() const {
+  nr_ice_media_stream* peer_stream = nullptr;
+
+  if (stream_ &&
+      !nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peer_stream)) {
+    if (peer_stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED &&
+        !peer_stream->disconnected) {
+      return true;
+    }
+  }
+
+  if (old_stream_ &&
+      !nr_ice_peer_ctx_find_pstream(ctx_->peer(), old_stream_, &peer_stream)) {
+    if (peer_stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED &&
+        !peer_stream->disconnected) {
+      return true;
+    }
+  }
+  return false;
+}
 }  // namespace mozilla
