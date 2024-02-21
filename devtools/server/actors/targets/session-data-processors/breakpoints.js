@@ -7,6 +7,7 @@
 const {
   STATES: THREAD_STATES,
 } = require("resource://devtools/server/actors/thread.js");
+const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 module.exports = {
   async addOrSetSessionDataEntry(
@@ -15,6 +16,17 @@ module.exports = {
     isDocumentCreation,
     updateType
   ) {
+    // When debugging the whole browser (via the Browser Toolbox), we instantiate both content process and window global (FRAME) targets.
+    // But the debugger will only use the content process target's thread actor.
+    // Thread actor, Sources and Breakpoints have to be only managed for the content process target,
+    // and we should explicitly ignore the window global target.
+    if (
+      targetActor.sessionContext.type == "all" &&
+      targetActor.targetType === Targets.TYPES.FRAME &&
+      targetActor.typeName != "parentProcessTarget"
+    ) {
+      return;
+    }
     const { threadActor } = targetActor;
     if (updateType == "set") {
       threadActor.removeAllBreakpoints();
