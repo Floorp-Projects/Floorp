@@ -4,15 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Application Update")
+Framework("UpdateSettings-WrongChannel")
+FINAL_TARGET = "_tests/xpcshell/toolkit/mozapps/update/tests"
 
-DIRS += ["UpdateSettings", "UpdateSettings-xpcshell", "UpdateSettings-WrongChannel"]
-
-EXPORTS += [
-    "UpdateSettingsUtil.h",
-]
+DEFINES["ACCEPTED_MAR_CHANNEL_IDS"] = '"wrong-channel"'
 
 UNIFIED_SOURCES += [
-    "UpdateSettingsUtil.mm",
+    "../UpdateSettings/UpdateSettings.mm",
+]
+
+OS_LIBS += [
+    "-framework Foundation",
 ]
