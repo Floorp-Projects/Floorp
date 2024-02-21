@@ -1012,6 +1012,37 @@ networking:
       - kershaw@mozilla.com
     expires: never
 
+  proxy_info_type:
+    type: labeled_counter
+    description: >
+      The proxies configurations created in the browser session (SOCKSv4, SOCKSv5, HTTP, HTTPS)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879848
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - manuel@mozilla.com
+    expires: 129
+    labels:
+      - http
+      - https
+      # SOCKS4 Proxy
+      - socks4
+      # SOCKS4a Proxy. Proxy resolves URL hostname
+      - socks4a
+      # SOCKS5 Proxy
+      - socks5
+      # SOCKS5 Proxy. Proxy resolves URL hostname
+      # Use convention from curl for socks5 proxies that resolve the hostname
+      # https://curl.se/libcurl/c/CURLOPT_PROXY.html
+      - socks5h
+      # No proxy
+      - direct
+      - unknown
+
   transaction_wait_time:
     type: timing_distribution
     time_unit: millisecond
