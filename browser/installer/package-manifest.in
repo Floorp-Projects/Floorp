@@ -145,7 +145,10 @@
 #endif
 @RESPATH@/application.ini
 #ifdef MOZ_UPDATER
+# update-settings.ini has been removed on macOS.
+#ifndef XP_MACOSX
 @RESPATH@/update-settings.ini
+#endif
 #endif
 @RESPATH@/platform.ini
 #ifndef MOZ_FOLD_LIBS
