@@ -51,23 +51,6 @@ export function getString(name) {
 }
 
 /**
- * Assert an expression is true or throw if false.
- *
- * @param expression
- * @param message
- *        Optional message.
- * @return expression
- */
-export function assert(expression, message) {
-  if (!expression) {
-    const msg = message ? "ASSERTION FAILURE:" + message : "ASSERTION FAILURE";
-    log(msg);
-    throw new Error(msg);
-  }
-  return expression;
-}
-
-/**
  * Retrieve or set the text content of an element.
  *
  * @param DOMElement root
@@ -91,18 +74,6 @@ export function text(root, selector, textContent) {
   }
   element.textContent = textContent;
   return textContent;
-}
-
-/**
- * Log a message to the console.
- *
- * @param ...rest
- *        One or multiple arguments to log.
- *        If multiple arguments are given, they will be joined by " "
- *        in the log.
- */
-export function log() {
-  console.logStringMessage(Array.prototype.slice.call(arguments).join(" "));
 }
 
 /**
