@@ -79,13 +79,12 @@
 #  include "base/process_util.h"
 #endif
 
-#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
+#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise, _msg, ...) \
   do {                                                                \
     if (nsresult _rv = PathUtils::InitFileWithPath((_file), (_path)); \
         NS_FAILED(_rv)) {                                             \
-      (_promise)->MaybeRejectWithOperationError(                      \
-          FormatErrorMessage(_rv, "Could not parse path (%s)",        \
-                             NS_ConvertUTF16toUTF8(_path).get()));    \
+      (_promise)->MaybeRejectWithOperationError(FormatErrorMessage(   \
+          _rv, _msg ": could not parse path", ##__VA_ARGS__));        \
       return;                                                         \
     }                                                                 \
   } while (0)
@@ -128,34 +127,32 @@ static bool IsNotDirectory(nsresult aResult) {
 /**
  * Formats an error message and appends the error name to the end.
  */
-template <typename... Args>
-static nsCString FormatErrorMessage(nsresult aError, const char* const aMessage,
-                                    Args... aArgs) {
-  nsPrintfCString msg(aMessage, aArgs...);
+static nsCString MOZ_FORMAT_PRINTF(2, 3)
+    FormatErrorMessage(nsresult aError, const char* const aFmt, ...) {
+  nsAutoCString errorName;
+  GetErrorName(aError, errorName);
 
-  if (const char* errName = GetStaticErrorName(aError)) {
-    msg.AppendPrintf(": %s", errName);
-  } else {
-    // In the exceptional case where there is no error name, print the literal
-    // integer value of the nsresult as an upper case hex value so it can be
-    // located easily in searchfox.
-    msg.AppendPrintf(": 0x%" PRIX32, static_cast<uint32_t>(aError));
-  }
+  nsCString msg;
 
-  return std::move(msg);
+  va_list ap;
+  va_start(ap, aFmt);
+  msg.AppendVprintf(aFmt, ap);
+  va_end(ap);
+
+  msg.AppendPrintf(" (%s)", errorName.get());
+
+  return msg;
 }
 
 static nsCString FormatErrorMessage(nsresult aError,
-                                    const char* const aMessage) {
-  const char* errName = GetStaticErrorName(aError);
-  if (errName) {
-    return nsPrintfCString("%s: %s", aMessage, errName);
-  }
-  // In the exceptional case where there is no error name, print the literal
-  // integer value of the nsresult as an upper case hex value so it can be
-  // located easily in searchfox.
-  return nsPrintfCString("%s: 0x%" PRIX32, aMessage,
-                         static_cast<uint32_t>(aError));
+                                    const nsCString& aMessage) {
+  nsAutoCString errorName;
+  GetErrorName(aError, errorName);
+
+  nsCString msg(aMessage);
+  msg.AppendPrintf(" (%s)", errorName.get());
+
+  return msg;
 }
 
 [[nodiscard]] inline bool ToJSValue(
@@ -261,7 +258,7 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
 
     default:
       aPromise->MaybeRejectWithUnknownError(
-          FormatErrorMessage(aError.Code(), errMsg.get()));
+          FormatErrorMessage(aError.Code(), errMsg));
   }
 }
 
@@ -359,7 +356,8 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not read `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         Maybe<uint32_t> toRead = Nothing();
         if (!aOptions.mMaxBytes.IsNull()) {
@@ -428,7 +426,8 @@ already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not read `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<JsBuffer>(
             state->mEventQueue, promise,
@@ -446,7 +445,8 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not read `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         RefPtr<StrongWorkerRef> workerRef;
         if (!NS_IsMainThread()) {
@@ -524,7 +524,9 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not write to `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         Maybe<Buffer<uint8_t>> buf = aData.CreateFromData<Buffer<uint8_t>>();
         if (buf.isNothing()) {
@@ -560,7 +562,9 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not write to `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         auto opts = InternalWriteOpts::FromBinding(aOptions);
         if (opts.isErr()) {
@@ -590,7 +594,9 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not write to `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         auto opts = InternalWriteOpts::FromBinding(aOptions);
         if (opts.isErr()) {
@@ -653,10 +659,16 @@ already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
+        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise,
+                                   "Could not move `%s' to `%s'",
+                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
+                                   NS_ConvertUTF16toUTF8(aDestPath).get());
 
         nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise,
+                                   "Could not move `%s' to `%s'",
+                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
+                                   NS_ConvertUTF16toUTF8(aDestPath).get());
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -675,7 +687,9 @@ already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not remove `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -694,7 +708,9 @@ already_AddRefed<Promise> IOUtils::MakeDirectory(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not make directory `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<Ok>(state->mEventQueue, promise,
                                [file = std::move(file),
@@ -714,7 +730,8 @@ already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not stat `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<InternalFileInfo>(
             state->mEventQueue, promise,
@@ -731,10 +748,16 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
+        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise,
+                                   "Could not copy `%s' to `%s'",
+                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
+                                   NS_ConvertUTF16toUTF8(aDestPath).get());
 
         nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise,
+                                   "Could not copy `%s' to `%s'",
+                                   NS_ConvertUTF16toUTF8(aSourcePath).get(),
+                                   NS_ConvertUTF16toUTF8(aDestPath).get());
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -751,7 +774,7 @@ already_AddRefed<Promise> IOUtils::SetAccessTime(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aAccess, ErrorResult& aError) {
   return SetTime(aGlobal, aPath, aAccess, &nsIFile::SetLastAccessedTime,
-                 aError);
+                 "access", aError);
 }
 
 /* static */
@@ -759,7 +782,7 @@ already_AddRefed<Promise> IOUtils::SetModificationTime(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aModification, ErrorResult& aError) {
   return SetTime(aGlobal, aPath, aModification, &nsIFile::SetLastModifiedTime,
-                 aError);
+                 "modification", aError);
 }
 
 /* static */
@@ -767,11 +790,14 @@ already_AddRefed<Promise> IOUtils::SetTime(GlobalObject& aGlobal,
                                            const nsAString& aPath,
                                            const Optional<int64_t>& aNewTime,
                                            IOUtils::SetTimeFn aSetTimeFn,
+                                           const char* const aTimeKind,
                                            ErrorResult& aError) {
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not set %s time on `%s'", aTimeKind,
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         int64_t newTime = aNewTime.WasPassed() ? aNewTime.Value()
                                                : PR_Now() / PR_USEC_PER_MSEC;
@@ -790,7 +816,9 @@ already_AddRefed<Promise> IOUtils::GetChildren(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not get children of `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<nsTArray<nsString>>(
             state->mEventQueue, promise,
@@ -815,7 +843,9 @@ already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
 #endif
 
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not set permissions on `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -832,7 +862,9 @@ already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not determine if `%s' exists",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<bool>(
             state->mEventQueue, promise,
@@ -868,7 +900,10 @@ already_AddRefed<Promise> IOUtils::CreateUnique(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aParent, promise);
+        REJECT_IF_INIT_PATH_FAILED(
+            file, aParent, promise, "Could not create unique %s in `%s'",
+            aFileType == nsIFile::NORMAL_FILE_TYPE ? "file" : "directory",
+            NS_ConvertUTF16toUTF8(aParent).get());
 
         if (nsresult rv = file->Append(aPrefix); NS_FAILED(rv)) {
           RejectJSPromise(
@@ -906,7 +941,8 @@ already_AddRefed<Promise> IOUtils::ComputeHexDigest(
         }
 
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise, "Could not hash `%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<nsCString>(state->mEventQueue, promise,
                                       [file = std::move(file), aAlgorithm]() {
@@ -925,7 +961,10 @@ already_AddRefed<Promise> IOUtils::GetWindowsAttributes(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise,
+                                   "Could not get Windows file attributes of "
+                                   "`%s'",
+                                   NS_ConvertUTF16toUTF8(aPath).get());
 
         RefPtr<StrongWorkerRef> workerRef;
         if (!NS_IsMainThread()) {
@@ -963,7 +1002,10 @@ already_AddRefed<Promise> IOUtils::SetWindowsAttributes(
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(
+            file, aPath, promise,
+            "Could not set Windows file attributes on `%s'",
+            NS_ConvertUTF16toUTF8(aPath).get());
 
         uint32_t setAttrs = 0;
         uint32_t clearAttrs = 0;
@@ -1010,7 +1052,11 @@ already_AddRefed<Promise> IOUtils::HasMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(
+            file, aPath, promise,
+            "Could not read the extended attribute `%s' from `%s'",
+            PromiseFlatCString(aAttr).get(),
+            NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<bool>(
             state->mEventQueue, promise,
@@ -1028,7 +1074,11 @@ already_AddRefed<Promise> IOUtils::GetMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(
+            file, aPath, promise,
+            "Could not read extended attribute `%s' from `%s'",
+            PromiseFlatCString(aAttr).get(),
+            NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<nsTArray<uint8_t>>(
             state->mEventQueue, promise,
@@ -1047,7 +1097,11 @@ already_AddRefed<Promise> IOUtils::SetMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(
+            file, aPath, promise,
+            "Could not set the extended attribute `%s' on `%s'",
+            PromiseFlatCString(aAttr).get(),
+            NS_ConvertUTF16toUTF8(aPath).get());
 
         nsTArray<uint8_t> value;
 
@@ -1077,7 +1131,11 @@ already_AddRefed<Promise> IOUtils::DelMacXAttr(GlobalObject& aGlobal,
   return WithPromiseAndState(
       aGlobal, aError, [&](Promise* promise, auto& state) {
         nsCOMPtr<nsIFile> file = new nsLocalFile();
-        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        REJECT_IF_INIT_PATH_FAILED(
+            file, aPath, promise,
+            "Could not delete extended attribute `%s' on `%s'",
+            PromiseFlatCString(aAttr).get(),
+            NS_ConvertUTF16toUTF8(aPath).get());
 
         DispatchAndResolve<Ok>(
             state->mEventQueue, promise,
@@ -2862,8 +2920,8 @@ void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
     }
 
     if (nsresult rv = mStream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
-      return aRv.ThrowOperationError(
-          FormatErrorMessage(rv, "Could not seek to position %lld", aOffset));
+      return aRv.ThrowOperationError(FormatErrorMessage(
+          rv, "Could not seek to position %" PRId64, aOffset));
     }
 
     Span<char> toRead = AsWritableChars(aData);
@@ -2880,7 +2938,8 @@ void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
                                       &bytesRead);
           NS_FAILED(rv)) {
         return aRv.ThrowOperationError(FormatErrorMessage(
-            rv, "Encountered an unexpected error while reading file stream"));
+            rv,
+            "Encountered an unexpected error while reading file stream"_ns));
       }
       if (bytesRead == 0) {
         return aRv.ThrowOperationError(
