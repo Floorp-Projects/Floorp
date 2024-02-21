@@ -733,9 +733,26 @@ std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
 NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(DocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(DocAccessible)
 
+// When a reflected element IDL attribute changes, we might get the following
+// synchronous calls:
+// 1. AttributeWillChange for the element.
+// 2. AttributeWillChange for the content attribute.
+// 3. AttributeChanged for the content attribute.
+// 4. AttributeChanged for the element.
+// Since the content attribute value is "" for any element, we won't always get
+// 2 or 3. Even if we do, they might occur after the element has already
+// changed, which means we can't detect any relevant state changes there; e.g.
+// mPrevStateBits. Thus, we need 1 and 4, and we must ignore 2 and 3. To
+// facilitate this, sIsAttrElementChanging will be set to true for 2 and 3.
+static bool sIsAttrElementChanging = false;
+
 void DocAccessible::AttributeWillChange(dom::Element* aElement,
                                         int32_t aNameSpaceID,
                                         nsAtom* aAttribute, int32_t aModType) {
+  if (sIsAttrElementChanging) {
+    // See the comment above the definition of sIsAttrElementChanging.
+    return;
+  }
   LocalAccessible* accessible = GetAccessible(aElement);
   if (!accessible) {
     if (aElement != mContent) return;
@@ -748,6 +765,7 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   // elements.
   if (aModType != dom::MutationEvent_Binding::ADDITION) {
     RemoveDependentIDsFor(accessible, aAttribute);
+    RemoveDependentElementsFor(accessible, aAttribute);
   }
 
   if (aAttribute == nsGkAtoms::id) {
@@ -782,6 +800,10 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
                                      int32_t aNameSpaceID, nsAtom* aAttribute,
                                      int32_t aModType,
                                      const nsAttrValue* aOldValue) {
+  if (sIsAttrElementChanging) {
+    // See the comment above the definition of sIsAttrElementChanging.
+    return;
+  }
   NS_ASSERTION(!IsDefunct(),
                "Attribute changed called on defunct document accessible!");
 
@@ -855,6 +877,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
   if (aModType == dom::MutationEvent_Binding::MODIFICATION ||
       aModType == dom::MutationEvent_Binding::ADDITION) {
     AddDependentIDsFor(accessible, aAttribute);
+    AddDependentElementsFor(accessible, aAttribute);
   }
 }
 
@@ -2905,4 +2928,23 @@ void DocAccessible::MaybeHandleChangeToHiddenNameOrDescription(
                        dependentAcc);
     }
   }
+}
+
+void DocAccessible::AttrElementWillChange(dom::Element* aElement,
+                                          nsAtom* aAttr) {
+  MOZ_ASSERT(!sIsAttrElementChanging);
+  AttributeWillChange(aElement, kNameSpaceID_None, aAttr,
+                      dom::MutationEvent_Binding::MODIFICATION);
+  // We might get notified about a related content attribute change. Ignore
+  // it.
+  sIsAttrElementChanging = true;
+}
+
+void DocAccessible::AttrElementChanged(dom::Element* aElement, nsAtom* aAttr) {
+  MOZ_ASSERT(sIsAttrElementChanging);
+  // The element has changed and the content attribute change notifications
+  // (if any) have been sent.
+  sIsAttrElementChanging = false;
+  AttributeChanged(aElement, kNameSpaceID_None, aAttr,
+                   dom::MutationEvent_Binding::MODIFICATION, nullptr);
 }

@@ -410,6 +410,9 @@ class DocAccessible : public HyperTextAccessible,
     return mMovedAccessibles.Contains(aAcc);
   }
 
+  void AttrElementWillChange(dom::Element* aElement, nsAtom* aAttr);
+  void AttrElementChanged(dom::Element* aElement, nsAtom* aAttr);
+
  protected:
   virtual ~DocAccessible();
 

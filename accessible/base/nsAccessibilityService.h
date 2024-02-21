@@ -244,6 +244,19 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   void NotifyOfDevPixelRatioChange(mozilla::PresShell* aPresShell,
                                    int32_t aAppUnitsPerDevPixel);
 
+  /**
+   * Notify accessibility that an element explicitly set for an attribute is
+   * about to change. See dom::Element::ExplicitlySetAttrElement.
+   */
+  void NotifyAttrElementWillChange(mozilla::dom::Element* aElement,
+                                   nsAtom* aAttr);
+
+  /**
+   * Notify accessibility that an element explicitly set for an attribute has
+   * changed. See dom::Element::ExplicitlySetAttrElement.
+   */
+  void NotifyAttrElementChanged(mozilla::dom::Element* aElement, nsAtom* aAttr);
+
   // nsAccessibiltiyService
 
   /**
