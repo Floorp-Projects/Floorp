@@ -2160,6 +2160,9 @@ class GFX2D_API Factory {
       SurfaceFormat aFormat, SourceSurfaceDeallocator aDeallocator = nullptr,
       void* aClosure = nullptr);
 
+  static already_AddRefed<DataSourceSurface> CopyDataSourceSurface(
+      DataSourceSurface* aSource);
+
   static void CopyDataSourceSurface(DataSourceSurface* aSource,
                                     DataSourceSurface* aDest);
 

@@ -6200,6 +6200,11 @@
   value: true
   mirror: always
 
+- name: gfx.offscreencanvas.snapshot-timeout-ms
+  type: int32_t
+  value: 10000
+  mirror: always
+
 - name: gfx.omta.background-color
   type: bool
   value: true

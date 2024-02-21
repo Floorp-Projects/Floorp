@@ -1106,6 +1106,40 @@ already_AddRefed<DataSourceSurface> Factory::CreateDataSourceSurfaceWithStride(
   return nullptr;
 }
 
+already_AddRefed<DataSourceSurface> Factory::CopyDataSourceSurface(
+    DataSourceSurface* aSource) {
+  // Don't worry too much about speed.
+  MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+             aSource->GetFormat() == SurfaceFormat::R8G8B8X8 ||
+             aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+             aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
+
+  DataSourceSurface::ScopedMap srcMap(aSource, DataSourceSurface::READ);
+  if (NS_WARN_IF(!srcMap.IsMapped())) {
+    MOZ_ASSERT_UNREACHABLE("CopyDataSourceSurface: Failed to map surface.");
+    return nullptr;
+  }
+
+  IntSize size = aSource->GetSize();
+  SurfaceFormat format = aSource->GetFormat();
+
+  RefPtr<DataSourceSurface> dst = CreateDataSourceSurfaceWithStride(
+      size, format, srcMap.GetStride(), /* aZero */ false);
+  if (NS_WARN_IF(!dst)) {
+    return nullptr;
+  }
+
+  DataSourceSurface::ScopedMap dstMap(dst, DataSourceSurface::WRITE);
+  if (NS_WARN_IF(!dstMap.IsMapped())) {
+    MOZ_ASSERT_UNREACHABLE("CopyDataSourceSurface: Failed to map surface.");
+    return nullptr;
+  }
+
+  SwizzleData(srcMap.GetData(), srcMap.GetStride(), format, dstMap.GetData(),
+              dstMap.GetStride(), format, size);
+  return dst.forget();
+}
+
 void Factory::CopyDataSourceSurface(DataSourceSurface* aSource,
                                     DataSourceSurface* aDest) {
   // Don't worry too much about speed.

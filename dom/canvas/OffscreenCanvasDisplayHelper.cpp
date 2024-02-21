@@ -16,6 +16,7 @@
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureWrapperImage.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsRFPService.h"
@@ -393,81 +394,110 @@ already_AddRefed<gfx::SourceSurface>
 OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  class SnapshotWorkerRunnable final : public MainThreadWorkerRunnable {
+   public:
+    SnapshotWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                           OffscreenCanvasDisplayHelper* aDisplayHelper)
+        : MainThreadWorkerRunnable(aWorkerPrivate, "SnapshotWorkerRunnable"),
+          mMonitor("SnapshotWorkerRunnable::mMonitor"),
+          mDisplayHelper(aDisplayHelper) {}
+
+    bool WorkerRun(JSContext*, WorkerPrivate*) override {
+      // The OffscreenCanvas can only be freed on the worker thread, so we
+      // cannot be racing with an OffscreenCanvas::DestroyCanvas call and its
+      // destructor. We just need to make sure we don't call into
+      // OffscreenCanvas while holding the lock since it calls back into the
+      // OffscreenCanvasDisplayHelper.
+      RefPtr<OffscreenCanvas> canvas;
+      {
+        MutexAutoLock lock(mDisplayHelper->mMutex);
+        canvas = mDisplayHelper->mOffscreenCanvas;
+      }
+
+      // Now that we are on the correct thread, we can extract the snapshot. If
+      // it is a Skia surface, perform a copy to threading issues.
+      RefPtr<gfx::SourceSurface> surface;
+      if (canvas) {
+        if (auto* context = canvas->GetContext()) {
+          surface =
+              context->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
+          if (surface && surface->GetType() == gfx::SurfaceType::SKIA) {
+            surface = gfx::Factory::CopyDataSourceSurface(
+                static_cast<gfx::DataSourceSurface*>(surface.get()));
+          }
+        }
+      }
+
+      MonitorAutoLock lock(mMonitor);
+      mSurface = std::move(surface);
+      mComplete = true;
+      lock.NotifyAll();
+      return true;
+    }
+
+    already_AddRefed<gfx::SourceSurface> Wait(int32_t aTimeoutMs) {
+      MonitorAutoLock lock(mMonitor);
+
+      TimeDuration timeout = TimeDuration::FromMilliseconds(aTimeoutMs);
+      while (!mComplete) {
+        if (lock.Wait(timeout) == CVStatus::Timeout) {
+          return nullptr;
+        }
+      }
+
+      return mSurface.forget();
+    }
+
+   private:
+    Monitor mMonitor;
+    RefPtr<OffscreenCanvasDisplayHelper> mDisplayHelper;
+    RefPtr<gfx::SourceSurface> mSurface MOZ_GUARDED_BY(mMonitor);
+    bool mComplete MOZ_GUARDED_BY(mMonitor) = false;
+  };
+
   bool hasAlpha;
   bool isAlphaPremult;
   gl::OriginPos originPos;
-  Maybe<uint32_t> managerId;
-  Maybe<int32_t> childId;
   HTMLCanvasElement* canvasElement;
   RefPtr<gfx::SourceSurface> surface;
-  Maybe<layers::RemoteTextureOwnerId> ownerId;
+  RefPtr<SnapshotWorkerRunnable> workerRunnable;
 
   {
     MutexAutoLock lock(mMutex);
+#ifdef MOZ_WIDGET_ANDROID
+    // On Android, we cannot both display a GL context and read back the pixels.
+    if (mCanvasElement) {
+      return nullptr;
+    }
+#endif
+
     hasAlpha = !mData.mIsOpaque;
     isAlphaPremult = mData.mIsAlphaPremult;
     originPos = mData.mOriginPos;
-    ownerId = mData.mOwnerId;
-    managerId = mContextManagerId;
-    childId = mContextChildId;
     canvasElement = mCanvasElement;
-    surface = mFrontBufferSurface;
-  }
-
-  if (surface) {
-    // We already have a copy of the front buffer in our process.
-    return TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
-  }
-
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android, we cannot both display a GL context and read back the pixels.
-  if (canvasElement) {
-    return nullptr;
-  }
-#endif
-
-  if (managerId && childId) {
-    // We don't have a usable surface, and the context lives in the compositor
-    // process.
-    return gfx::CanvasManagerChild::Get()->GetSnapshot(
-        managerId.value(), childId.value(), ownerId,
-        hasAlpha ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::R8G8B8X8,
-        hasAlpha && !isAlphaPremult, originPos == gl::OriginPos::BottomLeft);
-  }
-
-  if (!canvasElement) {
-    return nullptr;
-  }
-
-  // If we don't have any protocol IDs, or an existing surface, it is possible
-  // it is a main thread OffscreenCanvas instance. If so, then the element's
-  // OffscreenCanvas is not neutered and has access to the context. We can use
-  // that to get the snapshot directly.
-  const auto* offscreenCanvas = canvasElement->GetOffscreenCanvas();
-  if (nsICanvasRenderingContextInternal* context =
-          offscreenCanvas->GetContext()) {
-    surface = context->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
-    surface = TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
-    if (surface) {
-      return surface.forget();
+    if (mWorkerRef) {
+      workerRunnable =
+          MakeRefPtr<SnapshotWorkerRunnable>(mWorkerRef->Private(), this);
+      workerRunnable->Dispatch();
     }
   }
 
-  // Finally, we can try peeking into the image container to see if we are able
-  // to do a readback via the TextureClient.
-  if (layers::ImageContainer* container = canvasElement->GetImageContainer()) {
-    AutoTArray<layers::ImageContainer::OwningImage, 1> images;
-    uint32_t generationCounter;
-    container->GetCurrentImages(&images, &generationCounter);
-    if (!images.IsEmpty()) {
-      if (layers::Image* image = images.LastElement().mImage) {
-        surface = image->GetAsSourceSurface();
-        return TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
-      }
+  if (workerRunnable) {
+    // We transferred to a DOM worker, so we need to do the readback on the
+    // owning thread and wait for the result.
+    surface = workerRunnable->Wait(
+        StaticPrefs::gfx_offscreencanvas_snapshot_timeout_ms());
+  } else if (canvasElement) {
+    // If we have a context, it is owned by the main thread.
+    const auto* offscreenCanvas = canvasElement->GetOffscreenCanvas();
+    if (nsICanvasRenderingContextInternal* context =
+            offscreenCanvas->GetContext()) {
+      surface =
+          context->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
     }
   }
 
-  return nullptr;
+  return TransformSurface(surface, hasAlpha, isAlphaPremult, originPos);
 }
 
 already_AddRefed<layers::Image> OffscreenCanvasDisplayHelper::GetAsImage() {
