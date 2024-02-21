@@ -544,20 +544,19 @@ already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
           return;
         }
 
-        auto opts = InternalWriteOpts::FromBinding(aOptions);
-        if (opts.isErr()) {
-          auto err = opts.unwrapErr();
+        auto result = InternalWriteOpts::FromBinding(aOptions);
+        if (result.isErr()) {
           RejectJSPromise(
               promise,
-              IOError(err.Code(), "Could not write to `%s': %s",
-                      file->HumanReadablePath().get(), err.Message().get()));
+              IOError::WithCause(result.unwrapErr(), "Could not write to `%s'",
+                                 file->HumanReadablePath().get()));
           return;
         }
 
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
             [file = std::move(file), buf = buf.extract(),
-             opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
+             opts = result.unwrap()]() { return WriteSync(file, buf, opts); });
       });
 }
 
@@ -574,20 +573,19 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
                                    "Could not write to `%s'",
                                    NS_ConvertUTF16toUTF8(aPath).get());
 
-        auto opts = InternalWriteOpts::FromBinding(aOptions);
-        if (opts.isErr()) {
-          auto err = opts.unwrapErr();
+        auto result = InternalWriteOpts::FromBinding(aOptions);
+        if (result.isErr()) {
           RejectJSPromise(
               promise,
-              IOError(err.Code(), "Could not write to `%s': %s",
-                      file->HumanReadablePath().get(), err.Message().get()));
+              IOError::WithCause(result.unwrapErr(), "Could not write to `%s'",
+                                 file->HumanReadablePath().get()));
           return;
         }
 
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
             [file = std::move(file), str = nsCString(aString),
-             opts = opts.unwrap()]() {
+             opts = result.unwrap()]() {
               return WriteSync(file, AsBytes(Span(str)), opts);
             });
       });
@@ -606,18 +604,19 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
                                    "Could not write to `%s'",
                                    NS_ConvertUTF16toUTF8(aPath).get());
 
-        auto opts = InternalWriteOpts::FromBinding(aOptions);
-        if (opts.isErr()) {
-          auto err = opts.unwrapErr();
+        auto result = InternalWriteOpts::FromBinding(aOptions);
+        if (result.isErr()) {
           RejectJSPromise(
               promise,
-              IOError(err.Code(), "Could not write to `%s': %s",
-                      file->HumanReadablePath().get(), err.Message().get()));
+              IOError::WithCause(result.unwrapErr(), "Could not write to `%s'",
+                                 file->HumanReadablePath().get()));
           return;
         }
 
-        if (opts.inspect().mMode == WriteMode::Append ||
-            opts.inspect().mMode == WriteMode::AppendOrCreate) {
+        auto opts = result.unwrap();
+
+        if (opts.mMode == WriteMode::Append ||
+            opts.mMode == WriteMode::AppendOrCreate) {
           promise->MaybeRejectWithNotSupportedError(
               nsPrintfCString("Could not write to `%s': IOUtils.writeJSON does "
                               "not support appending to files.",
@@ -645,7 +644,7 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
             [file = std::move(file), string = std::move(string),
-             opts = opts.unwrap()]() -> Result<uint32_t, IOError> {
+             opts = std::move(opts)]() -> Result<uint32_t, IOError> {
               nsAutoCString utf8Str;
               if (!CopyUTF16toUTF8(string, utf8Str, fallible)) {
                 return Err(IOError(
@@ -1313,7 +1312,8 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
   if (bufSize > 0) {
     auto result = JsBuffer::Create(aBufferKind, bufSize);
     if (result.isErr()) {
-      return result.propagateErr();
+      return Err(IOError::WithCause(result.unwrapErr(), "Could not read `%s'",
+                                    aFile->HumanReadablePath().get()));
     }
     buffer = result.unwrap();
     Span<char> toRead = buffer.BeginWriting();
@@ -1345,7 +1345,13 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
 
   // Decompress the file contents, if required.
   if (aDecompress) {
-    return MozLZ4::Decompress(AsBytes(buffer.BeginReading()), aBufferKind);
+    auto result =
+        MozLZ4::Decompress(AsBytes(buffer.BeginReading()), aBufferKind);
+    if (result.isErr()) {
+      return Err(IOError::WithCause(result.unwrapErr(), "Could not read `%s'",
+                                    aFile->HumanReadablePath().get()));
+    }
+    return result;
   }
 
   return std::move(buffer);
@@ -1404,12 +1410,12 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
 
     bool noOverwrite = aOptions.mMode == WriteMode::Create;
 
-    if (MoveSync(toMove, backupFile, noOverwrite).isErr()) {
-      return Err(IOError(
-          NS_ERROR_FILE_COPY_OR_MOVE_FAILED,
-          "Could not write to `%s': failed to back up source file to `%s'",
-          aFile->HumanReadablePath().get(),
-          backupFile->HumanReadablePath().get()));
+    if (auto result = MoveSync(toMove, backupFile, noOverwrite);
+        result.isErr()) {
+      return Err(IOError::WithCause(
+          result.unwrapErr(),
+          "Could not write to `%s': failed to back up source file",
+          aFile->HumanReadablePath().get()));
     }
   }
 
@@ -1458,11 +1464,13 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
     nsTArray<uint8_t> compressed;
     Span<const char> bytes;
     if (aOptions.mCompress) {
-      auto rv = MozLZ4::Compress(aByteArray);
-      if (rv.isErr()) {
-        return rv.propagateErr();
+      auto result = MozLZ4::Compress(aByteArray);
+      if (result.isErr()) {
+        return Err(IOError::WithCause(result.unwrapErr(),
+                                      "Could not write to `%s'",
+                                      writeFile->HumanReadablePath().get()));
       }
-      compressed = rv.unwrap();
+      compressed = result.unwrap();
       bytes = Span(reinterpret_cast<const char*>(compressed.Elements()),
                    compressed.Length());
     } else {
@@ -1541,13 +1549,13 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
         }
       }
 
-      if (MoveSync(writeFile, aFile, /* aNoOverwrite = */ false).isErr()) {
-        return Err(IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED,
-                           "Could not write to `%s': could not move temporary "
-                           "file `%s' to `%s'",
-                           aFile->HumanReadablePath().get(),
-                           writeFile->HumanReadablePath().get(),
-                           aFile->HumanReadablePath().get()));
+      if (auto result = MoveSync(writeFile, aFile, /* aNoOverwrite = */ false);
+          result.isErr()) {
+        return Err(IOError::WithCause(
+            result.unwrapErr(),
+            "Could not write to `%s': could not move overwite with temporary "
+            "file",
+            aFile->HumanReadablePath().get()));
       }
     }
   }
@@ -1747,11 +1755,10 @@ Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(nsIFile* aFile,
       if (auto result =
               SetWindowsAttributesSync(aFile, 0, FILE_ATTRIBUTE_READONLY);
           result.isErr()) {
-        const auto err = result.unwrapErr();
-        return Err(
-            IOError(err.Code(),
-                    "Could not remove `%s': could not clear readonly attribute",
-                    aFile->HumanReadablePath().get()));
+        return Err(IOError::WithCause(
+            result.unwrapErr(),
+            "Could not remove `%s': could not clear readonly attribute",
+            aFile->HumanReadablePath().get()));
       }
       return RemoveSync(aFile, aIgnoreAbsent, aRecursive,
                         /* aRetryReadonly = */ false);
@@ -2517,7 +2524,7 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
       Compression::LZ4::maxCompressedSize(aUncompressed.Length()) + HEADER_SIZE;
   if (!result.SetCapacity(worstCaseSize, fallible)) {
     return Err(IOError(NS_ERROR_OUT_OF_MEMORY,
-                       "Could not allocate buffer to compress data"_ns));
+                       "could not allocate buffer to compress data"_ns));
   }
   result.AppendElements(Span(MAGIC_NUMBER.data(), MAGIC_NUMBER.size()));
   std::array<uint8_t, sizeof(uint32_t)> contentSizeBytes{};
@@ -2536,7 +2543,7 @@ Result<nsTArray<uint8_t>, IOUtils::IOError> IOUtils::MozLZ4::Compress(
       aUncompressed.Length(),
       reinterpret_cast<char*>(result.Elements()) + HEADER_SIZE);
   if (!compressed) {
-    return Err(IOError(NS_ERROR_UNEXPECTED, "Could not compress data"_ns));
+    return Err(IOError(NS_ERROR_UNEXPECTED, "could not compress data"_ns));
   }
   result.SetLength(HEADER_SIZE + compressed);
   return result;
@@ -2547,7 +2554,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
     Span<const uint8_t> aFileContents, IOUtils::BufferKind aBufferKind) {
   if (aFileContents.LengthBytes() < HEADER_SIZE) {
     return Err(IOError(NS_ERROR_FILE_CORRUPTED,
-                       "Could not decompress file: buffer is too small"_ns));
+                       "could not decompress file: buffer is too small"_ns));
   }
   auto header = aFileContents.To(HEADER_SIZE);
   if (!std::equal(std::begin(MAGIC_NUMBER), std::end(MAGIC_NUMBER),
@@ -2560,7 +2567,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
     magicStr.AppendPrintf("%02X", header.at(i));
 
     return Err(IOError(NS_ERROR_FILE_CORRUPTED,
-                       "Could not decompress file: invalid LZ4 header: wrong "
+                       "could not decompress file: invalid LZ4 header: wrong "
                        "magic number: `%s'",
                        magicStr.get()));
   }
@@ -2574,7 +2581,9 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
   auto contents = aFileContents.From(HEADER_SIZE);
   auto result = JsBuffer::Create(aBufferKind, expectedDecompressedSize);
   if (result.isErr()) {
-    return result.propagateErr();
+    return Err(IOError::WithCause(
+        result.unwrapErr(),
+        "could not decompress file: could not allocate buffer"_ns));
   }
 
   JsBuffer decompressed = result.unwrap();
@@ -2585,7 +2594,7 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::MozLZ4::Decompress(
           expectedDecompressedSize, &actualSize)) {
     return Err(
         IOError(NS_ERROR_FILE_CORRUPTED,
-                "Could not decompress file: the file may be corrupt"_ns));
+                "could not decompress file: the file may be corrupt"_ns));
   }
   decompressed.SetLength(actualSize);
   return decompressed;
