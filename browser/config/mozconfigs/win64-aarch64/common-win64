@@ -2,7 +2,7 @@
 
 ac_add_options --target=aarch64-pc-windows-msvc
 
-. $topsrcdir/build/win64-aarch64/mozconfig.vs-latest
+. $topsrcdir/build/mozconfig.clang-cl
 
 if test `uname -s` = Linux; then
 
