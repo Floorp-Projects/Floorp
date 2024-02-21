@@ -4,7 +4,7 @@
 
 @import url("chrome://global/skin/design-system/tokens-shared.css");
 
-@media not (prefers-contrast) {
+@layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
     /** Border **/
