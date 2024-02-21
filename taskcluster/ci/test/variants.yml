@@ -150,7 +150,7 @@ xorigin:
 conditioned_profile:
     description: "{description} with conditioned profile"
     component: "Testing::General"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "condprof"
     mozinfo: "condprof"
     when:
