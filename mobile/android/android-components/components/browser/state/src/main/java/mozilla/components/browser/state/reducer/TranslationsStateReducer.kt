@@ -37,19 +37,37 @@ internal object TranslationsStateReducer {
         }
 
         is TranslationsAction.TranslateStateChangeAction -> {
+            var isExpectedTranslate = state.findTab(action.tabId)?.translationsState?.isExpectedTranslate ?: true
+            // Checking if a translation can be anticipated or not based on
+            // the new translation engine state detected metadata.
+            if (action.translationEngineState.detectedLanguages == null ||
+                action.translationEngineState.detectedLanguages?.supportedDocumentLang == false ||
+                action.translationEngineState.detectedLanguages?.userPreferredLangTag == null
+            ) {
+                // Value can also update through [TranslateExpectedAction]
+                // via the translations engine.
+                isExpectedTranslate = false
+            }
+
+            // Checking for if the translations engine is in the fully translated state or not based
+            // on the values of the translation pair.
             if (action.translationEngineState.requestedTranslationPair == null ||
                 action.translationEngineState.requestedTranslationPair?.fromLanguage == null ||
                 action.translationEngineState.requestedTranslationPair?.toLanguage == null
             ) {
+                // In an untranslated state
                 state.copyWithTranslationsState(action.tabId) {
                     it.copy(
+                        isExpectedTranslate = isExpectedTranslate,
                         isTranslated = false,
                         translationEngineState = action.translationEngineState,
                     )
                 }
             } else {
+                // In a translated state
                 state.copyWithTranslationsState(action.tabId) {
                     it.copy(
+                        isExpectedTranslate = isExpectedTranslate,
                         isTranslated = true,
                         translationError = null,
                         translationEngineState = action.translationEngineState,
