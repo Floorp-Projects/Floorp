@@ -338,6 +338,22 @@ async function doDismiss({ menu, assert }) {
   assert(result);
 
   await UrlbarTestUtils.promisePopupClose(window);
+
+  // Check that the result should not be shown anymore.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "ramen",
+  });
+
+  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+    details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    Assert.ok(
+      details.result.payload.provider !== "Yelp",
+      "Yelp result should not be present"
+    );
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window);
 }
 
 // Tests the row/group label.
