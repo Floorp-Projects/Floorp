@@ -121,3 +121,9 @@ WithSupportLink.args = {
   hasSupportLink: true,
   hasActionButton: false,
 };
+
+export const WithHeading = Template.bind({});
+WithHeading.args = {
+  ...Default.args,
+  l10nId: "moz-message-bar-message-heading",
+};
