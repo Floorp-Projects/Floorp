@@ -2372,3 +2372,14 @@ nimbusIsReady:
     eventCount:
       description: The number of events that should be sent.
       type: int
+
+nimbusTelemetry:
+  description: A feature that enables or disables Nimbus telemetry.
+  owner: chumphreys@mozilla.com
+  hasExposure: false
+  applications:
+    - firefox-desktop
+  variables:
+    gleanMetricConfiguration:
+      description: A Glean metric configuration JSON blob.
+      type: json
