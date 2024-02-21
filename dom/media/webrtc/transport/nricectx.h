@@ -74,6 +74,8 @@ typedef struct nr_ice_peer_ctx_ nr_ice_peer_ctx;
 typedef struct nr_ice_media_stream_ nr_ice_media_stream;
 typedef struct nr_ice_handler_ nr_ice_handler;
 typedef struct nr_ice_handler_vtbl_ nr_ice_handler_vtbl;
+typedef struct nr_ice_gather_handler_ nr_ice_gather_handler;
+typedef struct nr_ice_gather_handler_vtbl_ nr_ice_gather_handler_vtbl;
 typedef struct nr_ice_candidate_ nr_ice_candidate;
 typedef struct nr_ice_cand_pair_ nr_ice_cand_pair;
 typedef struct nr_ice_stun_server_ nr_ice_stun_server;
@@ -200,12 +202,6 @@ class NrIceCtx {
     ICE_CTX_CLOSED
   };
 
-  enum GatheringState {
-    ICE_CTX_GATHER_INIT,
-    ICE_CTX_GATHER_STARTED,
-    ICE_CTX_GATHER_COMPLETE
-  };
-
   enum Controlling { ICE_CONTROLLING, ICE_CONTROLLED };
 
   enum Policy { ICE_POLICY_RELAY, ICE_POLICY_NO_HOST, ICE_POLICY_ALL };
@@ -294,12 +290,6 @@ class NrIceCtx {
   // The name of the ctx
   const std::string& name() const { return name_; }
 
-  // Current state
-  ConnectionState connection_state() const { return connection_state_; }
-
-  // Current state
-  GatheringState gathering_state() const { return gathering_state_; }
-
   // Get the global attributes
   std::vector<std::string> GetGlobalAttributes();
 
@@ -351,9 +341,7 @@ class NrIceCtx {
 
   // Signals to indicate events. API users can (and should)
   // register for these.
-  sigslot::signal2<NrIceCtx*, NrIceCtx::GatheringState>
-      SignalGatheringStateChange;
-  sigslot::signal2<NrIceCtx*, NrIceCtx::ConnectionState>
+  sigslot::signal2<NrIceMediaStream*, NrIceCtx::ConnectionState>
       SignalConnectionStateChange;
 
   // The thread to direct method calls to
@@ -375,7 +363,11 @@ class NrIceCtx {
   static int select_pair(void* obj, nr_ice_media_stream* stream,
                          int component_id, nr_ice_cand_pair** potentials,
                          int potential_ct);
+  static int stream_gathering(void* obj, nr_ice_media_stream* stream);
+  static int stream_gathered(void* obj, nr_ice_media_stream* stream);
+  static int stream_checking(void* obj, nr_ice_media_stream* stream);
   static int stream_ready(void* obj, nr_ice_media_stream* stream);
+  static int stream_disconnected(void* obj, nr_ice_media_stream* stream);
   static int stream_failed(void* obj, nr_ice_media_stream* stream);
   static int ice_checking(void* obj, nr_ice_peer_ctx* pctx);
   static int ice_connected(void* obj, nr_ice_peer_ctx* pctx);
@@ -387,28 +379,25 @@ class NrIceCtx {
                          nr_ice_media_stream* stream, int component_id,
                          nr_ice_candidate* candidate);
 
+  void SignalAllStreamsFailed();
+
   // Find a media stream by stream ptr. Gross
   RefPtr<NrIceMediaStream> FindStream(nr_ice_media_stream* stream);
-
-  // Set the state
-  void SetConnectionState(ConnectionState state);
-
-  // Set the state
-  void SetGatheringState(GatheringState state);
 
   void GenerateObfuscatedAddress(nr_ice_candidate* candidate,
                                  std::string* mdns_address,
                                  std::string* actual_address);
 
-  ConnectionState connection_state_;
-  GatheringState gathering_state_;
+  bool dumped_rlog_ = false;
   const std::string name_;
   bool ice_controlling_set_;
   std::map<std::string, RefPtr<NrIceMediaStream>> streams_;
   nr_ice_ctx* ctx_;
   nr_ice_peer_ctx* peer_;
-  nr_ice_handler_vtbl* ice_handler_vtbl_;  // Must be pointer
-  nr_ice_handler* ice_handler_;            // Must be pointer
+  nr_ice_handler_vtbl* ice_handler_vtbl_;                // Must be pointer
+  nr_ice_handler* ice_handler_;                          // Must be pointer
+  nr_ice_gather_handler_vtbl* ice_gather_handler_vtbl_;  // Must be pointer
+  nr_ice_gather_handler* ice_gather_handler_;            // Must be pointer
   bool trickle_;
   nsCOMPtr<nsIEventTarget> sts_target_;  // The thread to run on
   Config config_;

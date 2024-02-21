@@ -355,10 +355,7 @@ class IceTestPeer : public sigslot::has_slots<> {
         offerer_(offerer),
         stream_counter_(0),
         shutting_down_(false),
-        gathering_complete_(false),
         ready_ct_(0),
-        ice_connected_(false),
-        ice_failed_(false),
         ice_reached_checking_(false),
         received_(0),
         sent_(0),
@@ -372,8 +369,6 @@ class IceTestPeer : public sigslot::has_slots<> {
         simulate_ice_lite_(false),
         nat_(new TestNat),
         test_utils_(utils) {
-    ice_ctx_->SignalGatheringStateChange.connect(
-        this, &IceTestPeer::GatheringStateChange);
     ice_ctx_->SignalConnectionStateChange.connect(
         this, &IceTestPeer::ConnectionStateChange);
 
@@ -426,6 +421,10 @@ class IceTestPeer : public sigslot::has_slots<> {
     stream->SignalReady.connect(this, &IceTestPeer::StreamReady);
     stream->SignalFailed.connect(this, &IceTestPeer::StreamFailed);
     stream->SignalPacketReceived.connect(this, &IceTestPeer::PacketReceived);
+    stream->SignalGatheringStateChange.connect(
+        this, &IceTestPeer::GatheringStateChange);
+    mConnectionStates[id] = NrIceCtx::ICE_CTX_INIT;
+    mGatheringStates[id] = NrIceMediaStream::ICE_STREAM_GATHER_INIT;
   }
 
   void AddStream(int components) {
@@ -434,7 +433,10 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void RemoveStream_s(size_t index) {
-    ice_ctx_->DestroyStream(MakeTransportId(index));
+    const std::string id = MakeTransportId(index);
+    ice_ctx_->DestroyStream(id);
+    mConnectionStates.erase(id);
+    mGatheringStates.erase(id);
   }
 
   void RemoveStream(size_t index) {
@@ -650,7 +652,15 @@ class IceTestPeer : public sigslot::has_slots<> {
     return host_net;
   }
 
-  bool gathering_complete() { return gathering_complete_; }
+  bool gathering_complete() {
+    for (const auto& [id, state] : mGatheringStates) {
+      Unused << id;
+      if (state != NrIceMediaStream::ICE_STREAM_GATHER_COMPLETE) {
+        return false;
+      }
+    }
+    return true;
+  }
   int ready_ct() { return ready_ct_; }
   bool is_ready_s(size_t index) {
     auto media_stream = GetStream_s(index);
@@ -666,8 +676,33 @@ class IceTestPeer : public sigslot::has_slots<> {
         WrapRunnableRet(&result, this, &IceTestPeer::is_ready_s, stream));
     return result;
   }
-  bool ice_connected() { return ice_connected_; }
-  bool ice_failed() { return ice_failed_; }
+  bool ice_connected() {
+    for (const auto& [id, state] : mConnectionStates) {
+      if (state != NrIceCtx::ICE_CTX_CONNECTED) {
+        return false;
+      }
+    }
+    return true;
+  }
+  bool ice_failed() {
+    for (const auto& [id, state] : mConnectionStates) {
+      if (state == NrIceCtx::ICE_CTX_FAILED) {
+        return true;
+      }
+    }
+    return false;
+  }
+  bool ice_checking() {
+    if (ice_failed() || ice_connected()) {
+      return false;
+    }
+    for (const auto& [id, state] : mConnectionStates) {
+      if (state == NrIceCtx::ICE_CTX_CHECKING) {
+        return true;
+      }
+    }
+    return false;
+  }
   bool ice_reached_checking() { return ice_reached_checking_; }
   size_t received() { return received_; }
   size_t sent() { return sent_; }
@@ -680,12 +715,12 @@ class IceTestPeer : public sigslot::has_slots<> {
   void RestartIce_s() {
     for (auto& stream : ice_ctx_->GetStreams()) {
       SetIceCredentials_s(*stream);
+      mConnectionStates[stream->GetId()] = NrIceCtx::ICE_CTX_INIT;
+      mGatheringStates[stream->GetId()] =
+          NrIceMediaStream::ICE_STREAM_GATHER_INIT;
     }
     // take care of some local bookkeeping
     ready_ct_ = 0;
-    gathering_complete_ = false;
-    ice_connected_ = false;
-    ice_failed_ = false;
     ice_reached_checking_ = false;
     remote_ = nullptr;
   }
@@ -709,8 +744,6 @@ class IceTestPeer : public sigslot::has_slots<> {
     remote_ = remote;
 
     trickle_mode_ = trickle_mode;
-    ice_connected_ = false;
-    ice_failed_ = false;
     ice_reached_checking_ = false;
     res = ice_ctx_->ParseGlobalAttributes(remote->GetGlobalAttributes());
     ASSERT_FALSE(remote->simulate_ice_lite_ &&
@@ -940,16 +973,18 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   // Handle events
-  void GatheringStateChange(NrIceCtx* ctx, NrIceCtx::GatheringState state) {
+  void GatheringStateChange(const std::string& aTransportId,
+                            NrIceMediaStream::GatheringState state) {
     if (shutting_down_) {
       return;
     }
-    if (state != NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
+    mGatheringStates[aTransportId] = state;
+
+    if (!gathering_complete()) {
       return;
     }
 
     std::cerr << name_ << " Gathering complete" << std::endl;
-    gathering_complete_ = true;
 
     std::cerr << name_ << " ATTRIBUTES:" << std::endl;
     for (const auto& stream : ice_ctx_->GetStreams()) {
@@ -973,9 +1008,9 @@ class IceTestPeer : public sigslot::has_slots<> {
     if (candidate.empty()) {
       return;
     }
-    std::cerr << "Candidate for stream " << stream->name()
+    std::cerr << "Candidate for stream " << stream->GetId()
               << " initialized: " << candidate << std::endl;
-    candidates_[stream->name()].push_back(candidate);
+    candidates_[stream->GetId()].push_back(candidate);
 
     // If we are connected, then try to trickle to the other side.
     if (remote_ && remote_->remote_ && (trickle_mode_ != TRICKLE_SIMULATE)) {
@@ -990,7 +1025,7 @@ class IceTestPeer : public sigslot::has_slots<> {
           return;
         }
       }
-      ADD_FAILURE() << "No matching stream found for " << stream;
+      ADD_FAILURE() << "No matching stream found for " << stream->GetId();
     }
   }
 
@@ -1133,29 +1168,30 @@ class IceTestPeer : public sigslot::has_slots<> {
     DumpCandidatePairs_s(stream);
   }
 
-  void ConnectionStateChange(NrIceCtx* ctx, NrIceCtx::ConnectionState state) {
-    (void)ctx;
+  void ConnectionStateChange(NrIceMediaStream* stream,
+                             NrIceCtx::ConnectionState state) {
+    mConnectionStates[stream->GetId()] = state;
+    if (ice_checking()) {
+      ice_reached_checking_ = true;
+    }
+
     switch (state) {
       case NrIceCtx::ICE_CTX_INIT:
         break;
       case NrIceCtx::ICE_CTX_CHECKING:
         std::cerr << name_ << " ICE reached checking" << std::endl;
-        ice_reached_checking_ = true;
         break;
       case NrIceCtx::ICE_CTX_CONNECTED:
         std::cerr << name_ << " ICE connected" << std::endl;
-        ice_connected_ = true;
         break;
       case NrIceCtx::ICE_CTX_COMPLETED:
         std::cerr << name_ << " ICE completed" << std::endl;
         break;
       case NrIceCtx::ICE_CTX_FAILED:
         std::cerr << name_ << " ICE failed" << std::endl;
-        ice_failed_ = true;
         break;
       case NrIceCtx::ICE_CTX_DISCONNECTED:
         std::cerr << name_ << " ICE disconnected" << std::endl;
-        ice_connected_ = false;
         break;
       default:
         MOZ_CRASH();
@@ -1326,10 +1362,9 @@ class IceTestPeer : public sigslot::has_slots<> {
   std::map<std::string, std::pair<std::string, std::string>> mOldIceCredentials;
   size_t stream_counter_;
   bool shutting_down_;
-  bool gathering_complete_;
+  std::map<std::string, NrIceCtx::ConnectionState> mConnectionStates;
+  std::map<std::string, NrIceMediaStream::GatheringState> mGatheringStates;
   int ready_ct_;
-  bool ice_connected_;
-  bool ice_failed_;
   bool ice_reached_checking_;
   size_t received_;
   size_t sent_;
