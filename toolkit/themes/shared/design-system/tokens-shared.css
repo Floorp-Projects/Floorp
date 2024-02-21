@@ -2,111 +2,74 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root,
-:host(.anonymous-content-host) {
-  /* Base tokens */
-  /* Do not use base tokens directly as they don't carry any meaning and are used to set our base. Refer to Application tokens below. */
-  /** Color **/
-  --color-white: #ffffff;
-  --color-black-a10: rgba(0, 0, 0, 0.1);
-  --color-blue-05: #deeafc;
-  --color-blue-30: #73a7f3;
-  --color-blue-50: #0060df;
-  --color-blue-60: #0250bb;
-  --color-blue-70: #054096;
-  --color-blue-80: #003070;
-  --color-cyan-20: #aaf2ff;
-  --color-cyan-30: #80ebff;
-  --color-cyan-50: #00ddff;
-  --color-gray-05: #fbfbfe;
-  --color-gray-50: #bfbfc9;
-  --color-gray-60: #8f8f9d;
-  --color-gray-70: #5b5b66;
-  --color-gray-80: #23222b;
-  --color-gray-90: #1c1b22;
-  --color-gray-100: #15141a;
-  --color-green-05: #d8eedc;
-  --color-green-30: #4dbc87;
-  --color-green-50: #017a40;
-  --color-green-80: #004725;
-  --color-red-05: #ffe8e8;
-  --color-red-20: #ff9aa2;
-  --color-red-30: #f37f98;
-  --color-red-50: #d7264c;
-  --color-red-80: #690f22;
-  --color-yellow-05: #ffebcd;
-  --color-yellow-30: #e49c49;
-  --color-yellow-50: #cd411e;
-  --color-yellow-80: #5a3100;
+@layer tokens-foundation, tokens-prefers-contrast, tokens-forced-colors;
 
-  /* Application tokens */
-  /** Border **/
-  --border-radius-circle: 9999px;
-  --border-radius-small: 4px;
-  --border-radius-medium: 8px;
-  --border-width: 1px;
-
-  /** Box **/
-  --box-background-color: light-dark(var(--color-white), var(--color-gray-80));
-  --box-shadow-10: 0 1px 4px var(--color-black-a10);
-
-  /** Font weight **/
-  --font-weight-default: normal;
-  --font-weight-bold: 600;
-
-  /** Focus outline **/
-  --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
-  --focus-outline-color: var(--color-accent-primary);
-  --focus-outline-inset: calc(-1 * var(--focus-outline-width));
-  --focus-outline-offset: 2px;
-  --focus-outline-width: 2px;
-
-  /** Input **/
-  /*** Button ***/
-  --button-border-radius: var(--border-radius-small);
-  --button-font-weight: var(--font-weight-bold);
-  --button-line-height: var(--line-height-small);
-  --button-min-height: var(--size-item-large);
-
-  /*** Checkbox ***/
-  --checkbox-margin-inline: var(--space-small);
-  /* TODO Bug 1876537: Make this em-based, probably? */
-  --checkbox-size: var(--size-item-small);
-
-  /*** Text ***/
-  --input-text-line-height: var(--button-line-height);
-  --input-text-min-height: var(--button-min-height);
-
-  /** Link **/
-  /* Not using --focus-outline-offset for links because that's intended for
-    elements with a background, and we only want a slight offset here while not
-    overlapping adjacent text. */
-  --link-focus-outline-offset: 1px;
-
-  /** Text **/
-  --text-color-deemphasized: color-mix(in srgb, currentColor 60%, transparent);
-
-  /** Size **/
-  --size-item-small: 16px;
-  --size-item-medium: 28px;
-  --size-item-large: 32px;
-
-  /** Space **/
-  --space-xxsmall: calc(0.5 * var(--space-xsmall));
-  --space-xsmall: 0.267rem;
-  --space-small: calc(2 * var(--space-xsmall));
-  --space-xlarge: calc(8 * var(--space-xsmall));
-}
-
-@media not (prefers-contrast) {
+@layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
+    /* Base tokens */
+    /* Do not use base tokens directly as they don't carry any meaning and are used to set our base. Refer to Application tokens below. */
+    /** Color **/
+    --color-white: #ffffff;
+    --color-black-a10: rgba(0, 0, 0, 0.1);
+    --color-blue-05: #deeafc;
+    --color-blue-30: #73a7f3;
+    --color-blue-50: #0060df;
+    --color-blue-60: #0250bb;
+    --color-blue-70: #054096;
+    --color-blue-80: #003070;
+    --color-cyan-20: #aaf2ff;
+    --color-cyan-30: #80ebff;
+    --color-cyan-50: #00ddff;
+    --color-gray-05: #fbfbfe;
+    --color-gray-50: #bfbfc9;
+    --color-gray-60: #8f8f9d;
+    --color-gray-70: #5b5b66;
+    --color-gray-80: #23222b;
+    --color-gray-90: #1c1b22;
+    --color-gray-100: #15141a;
+    --color-green-05: #d8eedc;
+    --color-green-30: #4dbc87;
+    --color-green-50: #017a40;
+    --color-green-80: #004725;
+    --color-red-05: #ffe8e8;
+    --color-red-20: #ff9aa2;
+    --color-red-30: #f37f98;
+    --color-red-50: #d7264c;
+    --color-red-80: #690f22;
+    --color-yellow-05: #ffebcd;
+    --color-yellow-30: #e49c49;
+    --color-yellow-50: #cd411e;
+    --color-yellow-80: #5a3100;
+
+    /* Application tokens */
+    /** Border **/
+    --border-radius-circle: 9999px;
+    --border-radius-small: 4px;
+    --border-radius-medium: 8px;
+    --border-width: 1px;
+
+    /** Box **/
+    --box-background-color: light-dark(var(--color-white), var(--color-gray-80));
+    --box-shadow-10: 0 1px 4px var(--color-black-a10);
+
     /** Color **/
     --color-background-information: light-dark(var(--color-blue-05), var(--color-blue-80));
     --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
     --color-background-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
     --color-background-critical: light-dark(var(--color-red-05), var(--color-red-80));
     --color-error-outline: light-dark(var(--color-red-50), var(--color-red-20));
+
+    /** Font weight **/
+    --font-weight-default: normal;
+    --font-weight-bold: 600;
+
+    /** Focus outline **/
+    --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+    --focus-outline-color: var(--color-accent-primary);
+    --focus-outline-inset: calc(-1 * var(--focus-outline-width));
+    --focus-outline-offset: 2px;
+    --focus-outline-width: 2px;
 
     /** Icon **/
     --icon-color: light-dark(var(--color-gray-70), var(--color-gray-05));
@@ -115,76 +78,117 @@
     --icon-color-warning: light-dark(var(--color-yellow-50), var(--color-yellow-30));
     --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
 
+    /** Input **/
+    /*** Button ***/
+    --button-border-radius: var(--border-radius-small);
+    --button-font-weight: var(--font-weight-bold);
+    --button-line-height: var(--line-height-small);
+    --button-min-height: var(--size-item-large);
+
+    /*** Checkbox ***/
+    --checkbox-margin-inline: var(--space-small);
+    /* TODO Bug 1876537: Make this em-based, probably? */
+    --checkbox-size: var(--size-item-small);
+
+    /*** Text ***/
+    --input-text-line-height: var(--button-line-height);
+    --input-text-min-height: var(--button-min-height);
+
+    /** Link **/
+    /* Not using --focus-outline-offset for links because that's intended for
+      elements with a background, and we only want a slight offset here while not
+      overlapping adjacent text. */
+    --link-focus-outline-offset: 1px;
+
     /** Text **/
+    --text-color-deemphasized: color-mix(in srgb, currentColor 60%, transparent);
     --text-color-error: light-dark(var(--color-red-50), var(--color-red-20));
+
+    /** Size **/
+    --size-item-small: 16px;
+    --size-item-medium: 28px;
+    --size-item-large: 32px;
+
+    /** Space **/
+    --space-xxsmall: calc(0.5 * var(--space-xsmall));
+    --space-xsmall: 0.267rem;
+    --space-small: calc(2 * var(--space-xsmall));
+    --space-xlarge: calc(8 * var(--space-xsmall));
   }
 }
 
-@media (prefers-contrast) {
-  :root,
-  :host(.anonymous-content-host) {
-    /* Border */
-    --border-color: var(--text-color);
-    --border-interactive-color: AccentColor;
-    --border-interactive-color-hover: ButtonText;
-    --border-interactive-color-active: AccentColor;
-    --border-interactive-color-disabled: GrayText;
-
-    /** Box **/
-    --box-background-color: var(--color-canvas);
-
-    /* Button */
-    --button-background-color: ButtonFace;
-    --button-background-color-hover: ButtonFace;
-    --button-background-color-active: ButtonFace;
-    --button-background-color-disabled: GrayText;
-
-    /** Link **/
-    --link-color: LinkText;
-    --link-color-hover: LinkText;
-    --link-color-active: ActiveText;
-    --link-color-visited: var(--link-color);
-
-    /** Color **/
-    --color-canvas: Canvas;
-    --color-background-information: var(--color-canvas);
-    --color-background-success: var(--color-canvas);
-    --color-background-warning: var(--color-canvas);
-    --color-background-critical: var(--color-canvas);
-    --color-accent-primary: AccentColor;
-    /* FIXME(emilio): These seem rather sketchy */
-    --color-accent-primary-hover: ButtonText;
-    --color-accent-primary-active: ButtonText;
-    --color-error-outline: var(--border-color);
-
-    /** Icon **/
-    --icon-color: var(--text-color);
-    --icon-color-information: var(--icon-color);
-    --icon-color-success: var(--icon-color);
-    --icon-color-warning: var(--icon-color);
-    --icon-color-critical: var(--icon-color);
-
-    /** Text **/
-    --text-color: CanvasText;
-    --text-color-error: inherit;
-    --text-color-deemphasized: inherit;
-  }
-
-  @media (forced-colors) {
-    /* Applies to Windows HCM only, by default.
-       TODO(emilio): These seem rather sketchy */
+/* Bug 1879900: Can't nest media queries inside of :host, :root selector
+   until Bug 1879349 lands */
+@layer tokens-prefers-contrast {
+  @media (prefers-contrast) {
     :root,
     :host(.anonymous-content-host) {
-      /** Border **/
-      --border-interactive-color: ButtonText;
-      --border-interactive-color-hover: SelectedItem;
-      --border-interactive-color-active: ButtonText;
+
+      /* Border */
+      --border-color: var(--text-color);
+      --border-interactive-color: AccentColor;
+      --border-interactive-color-hover: ButtonText;
+      --border-interactive-color-active: AccentColor;
       --border-interactive-color-disabled: GrayText;
 
+      /** Box **/
+      --box-background-color: var(--color-canvas);
+
+      /* Button */
+      --button-background-color: ButtonFace;
+      --button-background-color-hover: ButtonFace;
+      --button-background-color-active: ButtonFace;
+      --button-background-color-disabled: GrayText;
+
+      /** Link **/
+      --link-color: LinkText;
+      --link-color-hover: LinkText;
+      --link-color-active: ActiveText;
+      --link-color-visited: var(--link-color);
+
       /** Color **/
-      --color-accent-primary: ButtonText;
-      --color-accent-primary-hover: SelectedItem;
-      --color-accent-primary-active: SelectedItem;
+      --color-canvas: Canvas;
+      --color-background-information: var(--color-canvas);
+      --color-background-success: var(--color-canvas);
+      --color-background-warning: var(--color-canvas);
+      --color-background-critical: var(--color-canvas);
+      --color-accent-primary: AccentColor;
+      /* FIXME(emilio): These seem rather sketchy */
+      --color-accent-primary-hover: ButtonText;
+      --color-accent-primary-active: ButtonText;
+      --color-error-outline: var(--border-color);
+
+      /** Icon **/
+      --icon-color: var(--text-color);
+      --icon-color-information: var(--icon-color);
+      --icon-color-success: var(--icon-color);
+      --icon-color-warning: var(--icon-color);
+      --icon-color-critical: var(--icon-color);
+
+      /** Text **/
+      --text-color: CanvasText;
+      --text-color-error: inherit;
+      --text-color-deemphasized: inherit;
+    }
+  }
+}
+
+/* Bug 1879900: Can't nest media queries inside of :host, :root selector
+   until Bug 1879349 lands */
+@layer tokens-forced-colors {
+  @media (forced-colors) {
+    :root,
+    :host(.anonymous-content-host) {
+    /** Border **/
+    --border-interactive-color: ButtonText;
+    --border-interactive-color-hover: SelectedItem;
+    --border-interactive-color-active: ButtonText;
+    --border-interactive-color-disabled: GrayText;
+
+    /** Color **/
+    --color-accent-primary: ButtonText;
+    --color-accent-primary-hover: SelectedItem;
+    --color-accent-primary-active: SelectedItem;
     }
   }
 }
