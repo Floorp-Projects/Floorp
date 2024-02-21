@@ -2041,6 +2041,15 @@ nsresult Database::MigrateV75Up() {
   return NS_OK;
 }
 
+nsresult Database::MigrateV76Up() {
+  // Recalculate origins frecency.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_origins SET recalc_frecency = 1"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
 int64_t Database::CreateMobileRoot() {
   MOZ_ASSERT(NS_IsMainThread());
 

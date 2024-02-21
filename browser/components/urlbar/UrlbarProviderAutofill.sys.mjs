@@ -38,15 +38,11 @@ const ORIGIN_FRECENCY_FIELD = ORIGIN_USE_ALT_FRECENCY
   ? "alt_frecency"
   : "frecency";
 
-// `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
-// the mean of all moz_origins.frecency values + stddevMultiplier * one standard
-// deviation.  This is inlined directly in the SQL (as opposed to being a custom
-// Sqlite function for example) in order to be as efficient as possible.
-// For alternative frecency, a NULL frecency will be normalized to 0.0, and when
-// it will graduate, it will likely become 1 (official frecency is NOT NULL).
-// Thus we set a minimum threshold of 2.0, otherwise if all the visits are older
-// than the cutoff, we end up checking 0.0 (frecency) >= 0.0 (threshold) and
-// autofill everything instead of nothing.
+// `WITH` clause for the autofill queries.
+// A NULL frecency is normalized to 1.0, because the table doesn't support NULL.
+// Because of that, here we must set a minimum threshold of 2.0, otherwise when
+// all the visits are older than the cutoff, we'd check
+// 0.0 (frecency) >= 0.0 (threshold) and autofill everything instead of nothing.
 const SQL_AUTOFILL_WITH = ORIGIN_USE_ALT_FRECENCY
   ? `
     WITH
@@ -59,20 +55,11 @@ const SQL_AUTOFILL_WITH = ORIGIN_USE_ALT_FRECENCY
     `
   : `
     WITH
-    frecency_stats(count, sum, squares) AS (
-      SELECT
-        CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = 'origin_frecency_count') AS REAL),
-        CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = 'origin_frecency_sum') AS REAL),
-        CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = 'origin_frecency_sum_of_squares') AS REAL)
-    ),
     autofill_frecency_threshold(value) AS (
-      SELECT
-        CASE count
-        WHEN 0 THEN 0.0
-        WHEN 1 THEN sum
-        ELSE (sum / count) + (:stddevMultiplier * sqrt((squares - ((sum * sum) / count)) / count))
-        END
-      FROM frecency_stats
+      SELECT IFNULL(
+        (SELECT value FROM moz_meta WHERE key = 'origin_frecency_threshold'),
+        2.0
+      )
     )
   `;
 
@@ -463,9 +450,6 @@ class ProviderAutofill extends UrlbarProvider {
     let conditions = [];
     // Pay attention to the order of params, since they are not named.
     let params = [...hosts];
-    if (!ORIGIN_USE_ALT_FRECENCY) {
-      params.unshift(lazy.UrlbarPrefs.get("autoFill.stddevMultiplier"));
-    }
     let sources = queryContext.sources;
     if (
       sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
@@ -536,9 +520,6 @@ class ProviderAutofill extends UrlbarProvider {
       query_type: QUERYTYPE.AUTOFILL_ORIGIN,
       searchString: searchStr.toLowerCase(),
     };
-    if (!ORIGIN_USE_ALT_FRECENCY) {
-      opts.stddevMultiplier = lazy.UrlbarPrefs.get("autoFill.stddevMultiplier");
-    }
     if (this._strippedPrefix) {
       opts.prefix = this._strippedPrefix;
     }

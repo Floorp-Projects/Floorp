@@ -893,8 +893,11 @@ add_autofill_task(async function bookmarkBelowThreshold() {
   await cleanup();
 });
 
-// Bookmarked places should be autofilled when they *do* meet the threshold.
+// Bookmarked places should be autofilled also when they meet the threshold.
 add_autofill_task(async function bookmarkAboveThreshold() {
+  // Add a visit to the URL, otherwise origin frecency will be too small, note
+  // it would be filled anyway as bookmarks are always filled.
+  await PlacesTestUtils.addVisits(["http://" + url]);
   // Bookmark a URL.
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
@@ -957,13 +960,10 @@ add_autofill_task(async function zeroThreshold() {
   );
   Assert.equal(placeFrecency, -1);
 
-  // Make sure the origin's frecency is 0.
   let originFrecency = await getOriginFrecency("http://", host);
-  Assert.equal(originFrecency, 0);
-
-  // Make sure the autofill threshold is 0.
+  Assert.equal(originFrecency, 1, "Check expected origin's frecency");
   let threshold = await getOriginAutofillThreshold();
-  Assert.equal(threshold, 0);
+  Assert.equal(threshold, 1, "Check expected origins threshold");
 
   let context = createContext(search, { isPrivate: false });
   await check_results({

@@ -32,7 +32,10 @@ add_task(async function test_javascript_match() {
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Match non-javascript: with plain search");
-  let context = createContext("a", { isPrivate: false });
+  let context = createContext("a", {
+    isPrivate: false,
+    allowAutofill: false /* avoid autofilling abc, as it's not necessary */,
+  });
   await check_results({
     context,
     matches: [

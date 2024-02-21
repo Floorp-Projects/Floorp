@@ -1103,44 +1103,13 @@ async function getOriginFrecency(prefix, aHost) {
 }
 
 /**
- * Returns the origin frecency stats.
- *
- * @returns {object}
- *          An object { count, sum, squares }.
- */
-async function getOriginFrecencyStats() {
-  let db = await PlacesUtils.promiseDBConnection();
-  let rows = await db.execute(`
-    SELECT
-      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_count'), 0),
-      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum'), 0),
-      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum_of_squares'), 0)
-  `);
-  let count = rows[0].getResultByIndex(0);
-  let sum = rows[0].getResultByIndex(1);
-  let squares = rows[0].getResultByIndex(2);
-  return { count, sum, squares };
-}
-
-/**
  * Returns the origin autofill frecency threshold.
  *
  * @returns {number}
  *          The threshold.
  */
 async function getOriginAutofillThreshold() {
-  let { count, sum, squares } = await getOriginFrecencyStats();
-  if (!count) {
-    return 0;
-  }
-  if (count == 1) {
-    return sum;
-  }
-  let stddevMultiplier = UrlbarPrefs.get("autoFill.stddevMultiplier");
-  return (
-    sum / count +
-    stddevMultiplier * Math.sqrt((squares - (sum * sum) / count) / count)
-  );
+  return PlacesUtils.metadata.get("origin_frecency_threshold", 2.0);
 }
 
 /**
