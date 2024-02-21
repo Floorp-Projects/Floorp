@@ -5481,25 +5481,30 @@ uint32_t computeSanitizationFlags(nsIPrincipal* aPrincipal, int32_t aFlags) {
 void nsContentUtils::SetHTMLUnsafe(FragmentOrElement* aTarget,
                                    Element* aContext,
                                    const nsAString& aSource) {
-  MOZ_ASSERT(!sFragmentParsingActive, "Re-entrant fragment parsing attempted.");
-  mozilla::AutoRestore<bool> guard(sFragmentParsingActive);
-  sFragmentParsingActive = true;
-  if (!sHTMLFragmentParser) {
-    NS_ADDREF(sHTMLFragmentParser = new nsHtml5StringParser());
-    // Now sHTMLFragmentParser owns the object
-  }
+  RefPtr<DocumentFragment> fragment;
+  {
+    MOZ_ASSERT(!sFragmentParsingActive,
+               "Re-entrant fragment parsing attempted.");
+    mozilla::AutoRestore<bool> guard(sFragmentParsingActive);
+    sFragmentParsingActive = true;
+    if (!sHTMLFragmentParser) {
+      NS_ADDREF(sHTMLFragmentParser = new nsHtml5StringParser());
+      // Now sHTMLFragmentParser owns the object
+    }
 
-  nsAtom* contextLocalName = aContext->NodeInfo()->NameAtom();
-  int32_t contextNameSpaceID = aContext->GetNameSpaceID();
+    nsAtom* contextLocalName = aContext->NodeInfo()->NameAtom();
+    int32_t contextNameSpaceID = aContext->GetNameSpaceID();
 
-  RefPtr<Document> doc = aTarget->OwnerDoc();
-  RefPtr<DocumentFragment> fragment = doc->CreateDocumentFragment();
-  nsresult rv = sHTMLFragmentParser->ParseFragment(
-      aSource, fragment, contextLocalName, contextNameSpaceID,
-      fragment->OwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks,
-      true, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to parse fragment for SetHTMLUnsafe");
+    RefPtr<Document> doc = aTarget->OwnerDoc();
+    fragment = doc->CreateDocumentFragment();
+    nsresult rv = sHTMLFragmentParser->ParseFragment(
+        aSource, fragment, contextLocalName, contextNameSpaceID,
+        fragment->OwnerDoc()->GetCompatibilityMode() ==
+            eCompatibility_NavQuirks,
+        true, true);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to parse fragment for SetHTMLUnsafe");
+    }
   }
 
   aTarget->ReplaceChildren(fragment, IgnoreErrors());
