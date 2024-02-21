@@ -668,7 +668,7 @@ if use_minidump:
         [
             mach,
             "python",
-            "virtualenv=build",
+            "--virtualenv=build",
             os.path.join(DIR.source, "testing/mozbase/mozcrash/mozcrash/mozcrash.py"),
             os.getenv("TMPDIR", "/tmp"),
             os.path.join(OBJDIR, "dist/crashreporter-symbols"),
