@@ -830,9 +830,6 @@ else
 fi
 
 if test "$MOZ_MEMORY"; then
-  dnl The generic feature tests that determine how to compute ncpus are long and
-  dnl complicated.  Therefore, simply define special cpp variables for the
-  dnl platforms we have special knowledge of.
   case "${target}" in
   *-mingw*)
     export MOZ_NO_DEBUG_RTL=1
