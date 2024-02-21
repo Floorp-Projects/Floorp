@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsView.h"
 #include "nsCaret.h"
-#include "nsLayoutCID.h"
 #include "nsITextControlFrame.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsTextControlFrame.h"

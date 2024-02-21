@@ -27,7 +27,6 @@
 #include "nsParserBase.h"
 #include "nsViewManager.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"

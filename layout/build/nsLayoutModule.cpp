@@ -27,7 +27,6 @@
 #include "nsPlainTextSerializer.h"
 #include "nsXMLContentSerializer.h"
 #include "nsXHTMLContentSerializer.h"
-#include "nsLayoutCID.h"
 #include "nsFocusManager.h"
 #include "ThirdPartyUtil.h"
 #include "gfxPlatform.h"

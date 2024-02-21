@@ -17,7 +17,6 @@
 #include "nsNetUtil.h"
 #include "nsError.h"
 #include "nsIPrincipal.h"
-#include "nsLayoutCID.h"
 #include "mozilla/dom/Attr.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"

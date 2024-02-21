@@ -21,8 +21,6 @@
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 
-#include "nsLayoutCID.h"
-
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"

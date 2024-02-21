@@ -50,7 +50,6 @@
 #include "nsDataChannel.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
-#include "nsLayoutCID.h"
 #include "nsReadableUtils.h"
 #include "nsSandboxFlags.h"
 

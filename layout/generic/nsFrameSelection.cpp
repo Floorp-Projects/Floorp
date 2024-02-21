@@ -48,7 +48,6 @@
 
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsLayoutCID.h"
 #include "nsBidiPresUtils.h"
 #include "nsTextFrame.h"
 

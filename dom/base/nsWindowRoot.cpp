@@ -13,7 +13,6 @@
 #include "nsWindowRoot.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
-#include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsString.h"
 #include "nsFrameLoaderOwner.h"
