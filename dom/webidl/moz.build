@@ -1047,6 +1047,7 @@ if CONFIG["MOZ_WEBRTC"]:
         "RTCEncodedAudioFrame.webidl",
         "RTCEncodedVideoFrame.webidl",
         "RTCIceCandidate.webidl",
+        "RTCIceTransport.webidl",
         "RTCIdentityAssertion.webidl",
         "RTCIdentityProvider.webidl",
         "RTCPeerConnection.webidl",
