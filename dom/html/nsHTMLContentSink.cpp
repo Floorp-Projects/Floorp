@@ -53,8 +53,6 @@
 #include "nsIDocShell.h"
 #include "nsIScriptContext.h"
 
-#include "nsLayoutCID.h"
-
 #include "nsEscape.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"

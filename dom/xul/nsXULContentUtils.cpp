@@ -20,7 +20,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsXULContentUtils.h"
-#include "nsLayoutCID.h"
 #include "nsString.h"
 #include "nsGkAtoms.h"
 
