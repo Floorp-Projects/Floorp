@@ -2277,8 +2277,10 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
 
     // Given a successful connection, process any STS or PKP data that's
     // relevant.
-    DebugOnly<nsresult> rv = ProcessSecurityHeaders();
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
+    nsresult rv = ProcessSecurityHeaders();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("ProcessSTSHeader failed, continuing load.");
+    }
 
     if ((httpStatus < 500) && (httpStatus != 421)) {
       ProcessAltService();
