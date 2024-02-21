@@ -128,7 +128,7 @@ class SourceActor extends Actor {
       // because we can't easily fetch the full html content of the srcdoc attribute.
       this.__isInlineSource =
         source.introductionType === "inlineScript" &&
-        !resolveSourceURL(source.displayURL, this.threadActor._parent) &&
+        !resolveSourceURL(source.displayURL, this.threadActor.targetActor) &&
         !this.url.startsWith("about:srcdoc");
     }
     return this.__isInlineSource;
@@ -148,7 +148,7 @@ class SourceActor extends Actor {
   }
   get url() {
     if (this._url === undefined) {
-      this._url = getSourceURL(this._source, this.threadActor._parent);
+      this._url = getSourceURL(this._source, this.threadActor.targetActor);
     }
     return this._url;
   }
@@ -205,7 +205,7 @@ class SourceActor extends Actor {
       isBlackBoxed: this.sourcesManager.isBlackBoxed(this.url),
       sourceMapBaseURL: getSourcemapBaseURL(
         this.url,
-        this.threadActor._parent.window
+        this.threadActor.targetActor.window
       ),
       sourceMapURL: source.sourceMapURL,
       introductionType,

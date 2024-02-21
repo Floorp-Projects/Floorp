@@ -1164,7 +1164,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
    * This sets up the content window for being debugged
    */
   _createThreadActor() {
-    this.threadActor = new ThreadActor(this, this.window);
+    this.threadActor = new ThreadActor(this);
     this.manage(this.threadActor);
   }
 
