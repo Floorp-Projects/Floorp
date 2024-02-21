@@ -51,6 +51,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
   90
 );
 
+// For origins frecency calculation only sample pages visited recently.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "originsFrecencyCutOffDays",
+  "places.frecency.originsCutOffDays",
+  90
+);
+
 // Time between deferred task executions.
 const DEFERRED_TASK_INTERVAL_MS = 2 * 60000;
 // Maximum time to wait for an idle before the task is executed anyway.
@@ -218,16 +226,19 @@ export class PlacesFrecencyRecalculator {
     let affectedCount = 0;
     let db = await lazy.PlacesUtils.promiseUnsafeWritableDBConnection();
     await db.executeTransaction(async () => {
+      // NULL frecencies are normalized to 1.0 (to avoid confusion with pages
+      // 0 frecency special meaning), as the table doesn't support NULL values.
       let affected = await db.executeCached(
         `
         UPDATE moz_origins
-        SET frecency = CAST(
-              (SELECT total(frecency)
-               FROM moz_places h
-               WHERE origin_id = moz_origins.id AND frecency > 0)
-              AS INT
-            ),
-            recalc_frecency = 0
+        SET frecency = IFNULL((
+          SELECT sum(frecency)
+          FROM moz_places h
+          WHERE origin_id = moz_origins.id
+          AND last_visit_date >
+            strftime('%s','now','localtime','start of day',
+                     '-${lazy.originsFrecencyCutOffDays} day','utc') * 1000000
+        ), 1.0), recalc_frecency = 0
         WHERE id IN (
           SELECT id FROM moz_origins
           WHERE recalc_frecency = 1
@@ -238,25 +249,19 @@ export class PlacesFrecencyRecalculator {
       );
       affectedCount += affected.length;
 
-      // Calculate and store the frecency statistics used to calculate a
-      // thredhold. Origins above that threshold will be considered meaningful
-      // and autofilled.
+      // Calculate and store the frecency threshold. Origins whose frecency is
+      // above this value will be considered meaningful and autofilled.
       // While it may be tempting to do this only when some frecency was
       // updated, that won't catch the edge case of the moz_origins table being
       // emptied.
-      let row = (
-        await db.executeCached(`
-        SELECT count(*), total(frecency), total(pow(frecency,2))
-        FROM moz_origins
-        WHERE frecency > 0
-      `)
-      )[0];
-      await lazy.PlacesUtils.metadata.setMany(
-        new Map([
-          ["origin_frecency_count", row.getResultByIndex(0)],
-          ["origin_frecency_sum", row.getResultByIndex(1)],
-          ["origin_frecency_sum_of_squares", row.getResultByIndex(2)],
-        ])
+      // In case of NULL, the default threshold is 2, that is higher than the
+      // default frecency set above.
+      let threshold = (
+        await db.executeCached(`SELECT avg(frecency) FROM moz_origins`)
+      )[0].getResultByIndex(0);
+      await lazy.PlacesUtils.metadata.set(
+        "origin_frecency_threshold",
+        threshold ?? 2
       );
     });
 

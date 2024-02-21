@@ -78,5 +78,5 @@ add_task(async function test_frecency_decay() {
   );
 
   let snapshot = histogram.snapshot();
-  Assert.greater(snapshot.sum, 0);
+  Assert.greater(Object.values(snapshot.values).length, 0);
 });
