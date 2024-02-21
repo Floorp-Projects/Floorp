@@ -89,6 +89,8 @@ class ActiveElementManager final {
    */
   bool mCanBePanSet;
 
+  bool mSingleTapBeforeActivation;
+
   enum class TouchEndState : uint8_t {
     GotTouchEndNotification,
     GotTouchEndEvent,

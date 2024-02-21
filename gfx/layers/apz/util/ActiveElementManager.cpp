@@ -137,7 +137,10 @@ void DelayedClearElementActivation::ClearGlobalActiveContent() {
 NS_IMPL_ISUPPORTS(DelayedClearElementActivation, nsITimerCallback, nsINamed)
 
 ActiveElementManager::ActiveElementManager()
-    : mCanBePan(false), mCanBePanSet(false), mSetActiveTask(nullptr) {}
+    : mCanBePan(false),
+      mCanBePanSet(false),
+      mSingleTapBeforeActivation(false),
+      mSetActiveTask(nullptr) {}
 
 ActiveElementManager::~ActiveElementManager() = default;
 
@@ -194,6 +197,9 @@ void ActiveElementManager::TriggerElementActivation() {
     SetActive(mTarget);
 
     if (mDelayedClearElementActivation) {
+      if (mSingleTapBeforeActivation) {
+        mDelayedClearElementActivation->MarkSingleTapProcessed();
+      }
       mDelayedClearElementActivation->StartTimer();
     }
   } else {
@@ -265,6 +271,9 @@ bool ActiveElementManager::MaybeChangeActiveState(bool aWasClick) {
 
 void ActiveElementManager::ProcessSingleTap() {
   if (!mDelayedClearElementActivation) {
+    // We have not received touch-start notification yet. We will have to run
+    // MarkSingleTapProcessed() when we receive the touch-start notification.
+    mSingleTapBeforeActivation = true;
     return;
   }
 
@@ -315,6 +324,7 @@ void ActiveElementManager::ResetTouchBlockState() {
   mTarget = nullptr;
   mCanBePanSet = false;
   mTouchEndState.clear();
+  mSingleTapBeforeActivation = false;
 }
 
 void ActiveElementManager::SetActiveTask(
