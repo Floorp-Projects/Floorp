@@ -54,7 +54,7 @@ vec4 sample_gradient(float offset) {
     float entry_fract = x - entry_index;
 
     // Fetch the start and end color. There is a [start, end] color per entry.
-    vec4 texels[2] = fetch_from_gpu_buffer_2(v_gradient_address.x + 2 * int(entry_index));
+    vec4 texels[2] = fetch_from_gpu_buffer_2f(v_gradient_address.x + 2 * int(entry_index));
 
     // Finally interpolate and apply dithering
     return dither(texels[0] + texels[1] * entry_fract);
