@@ -7084,7 +7084,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaFullScreenState(
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyPositionStateChanged(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    const PositionState& aState) {
+    const Maybe<PositionState>& aState) {
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }

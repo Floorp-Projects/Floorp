@@ -41,7 +41,7 @@ class MediaControlKeyManager final : public MediaControlKeySource,
   void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override;
   void SetEnableFullScreen(bool aIsEnabled) override;
   void SetEnablePictureInPictureMode(bool aIsEnabled) override;
-  void SetPositionState(const PositionState& aState) override;
+  void SetPositionState(const Maybe<PositionState>& aState) override;
 
  private:
   ~MediaControlKeyManager();

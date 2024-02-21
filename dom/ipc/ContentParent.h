@@ -1270,7 +1270,7 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvNotifyPositionStateChanged(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      const PositionState& aState);
+      const Maybe<PositionState>& aState);
 
   mozilla::ipc::IPCResult RecvAddOrRemovePageAwakeRequest(
       const MaybeDiscarded<BrowsingContext>& aContext,
