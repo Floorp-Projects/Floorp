@@ -2640,13 +2640,14 @@ static nsresult GetPartialTextRect(RectCallback* aCallback,
 static void CollectClientRectsForSubtree(
     nsINode* aNode, RectCallback* aCollector, Sequence<nsString>* aTextList,
     nsINode* aStartContainer, uint32_t aStartOffset, nsINode* aEndContainer,
-    uint32_t aEndOffset, bool aClampToEdge, bool aFlushLayout) {
+    uint32_t aEndOffset, bool aClampToEdge, bool aFlushLayout, bool aTextOnly) {
   auto* content = nsIContent::FromNode(aNode);
   if (!content) {
     return;
   }
 
-  if (content->IsText()) {
+  const bool isText = content->IsText();
+  if (isText) {
     if (aNode == aStartContainer) {
       int32_t offset = aStartContainer == aEndContainer
                            ? static_cast<int32_t>(aEndOffset)
@@ -2665,19 +2666,30 @@ static void CollectClientRectsForSubtree(
     }
   }
 
-  if (aNode->IsElement() && aNode->AsElement()->IsDisplayContents()) {
-    FlattenedChildIterator childIter(content);
-
-    for (nsIContent* child = childIter.GetNextChild(); child;
-         child = childIter.GetNextChild()) {
-      CollectClientRectsForSubtree(child, aCollector, aTextList,
-                                   aStartContainer, aStartOffset, aEndContainer,
-                                   aEndOffset, aClampToEdge, aFlushLayout);
+  if (nsIFrame* frame = content->GetPrimaryFrame()) {
+    if (!aTextOnly || isText) {
+      nsLayoutUtils::GetAllInFlowRectsAndTexts(
+          frame, nsLayoutUtils::GetContainingBlockForClientRect(frame),
+          aCollector, aTextList, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+      if (isText) {
+        return;
+      }
+      aTextOnly = true;
+      // We just get the text when calling GetAllInFlowRectsAndTexts, so we
+      // don't need to call it again when visiting the children.
+      aTextList = nullptr;
     }
-  } else if (nsIFrame* frame = content->GetPrimaryFrame()) {
-    nsLayoutUtils::GetAllInFlowRectsAndTexts(
-        frame, nsLayoutUtils::GetContainingBlockForClientRect(frame),
-        aCollector, aTextList, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+  } else if (!content->IsElement() ||
+             !content->AsElement()->IsDisplayContents()) {
+    return;
+  }
+
+  FlattenedChildIterator childIter(content);
+  for (nsIContent* child = childIter.GetNextChild(); child;
+       child = childIter.GetNextChild()) {
+    CollectClientRectsForSubtree(child, aCollector, aTextList, aStartContainer,
+                                 aStartOffset, aEndContainer, aEndOffset,
+                                 aClampToEdge, aFlushLayout, aTextOnly);
   }
 }
 
@@ -2745,7 +2757,7 @@ void nsRange::CollectClientRectsAndText(
 
     CollectClientRectsForSubtree(node, aCollector, aTextList, aStartContainer,
                                  aStartOffset, aEndContainer, aEndOffset,
-                                 aClampToEdge, aFlushLayout);
+                                 aClampToEdge, aFlushLayout, false);
   } while (!iter.IsDone());
 }
 
