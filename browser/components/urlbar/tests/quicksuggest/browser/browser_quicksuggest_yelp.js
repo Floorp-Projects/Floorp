@@ -202,7 +202,7 @@ async function doShowLessFrequently({
         );
         await UrlbarTestUtils.openResultMenuAndClickItem(
           window,
-          "show_less_frequentry",
+          "show_less_frequently",
           { resultIndex, openByMouse: true }
         );
 

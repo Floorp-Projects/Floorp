@@ -170,6 +170,14 @@ class _MerinoTestUtils {
   }
 
   /**
+   * @returns {object}
+   *   Mock geolocation data.
+   */
+  get GEOLOCATION() {
+    return { ...GEOLOCATION_DATA.custom_details.geolocation };
+  }
+
+  /**
    * @returns {string}
    *   The weather keyword in `WEATHER_RS_DATA`. Can be used as a search string
    *   to match the weather suggestion.
