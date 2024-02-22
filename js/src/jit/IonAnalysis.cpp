@@ -2228,6 +2228,7 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
         phi->replaceOperand(i, in->toBox()->input());
       } else {
         MInstruction* replacement;
+        MBasicBlock* predecessor = phi->block()->getPredecessor(i);
 
         if (phiType == MIRType::Double && IsFloatType(in->type())) {
           // Convert int32 operands to double.
@@ -2239,14 +2240,14 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
             // See comment below
             if (in->type() != MIRType::Value) {
               MBox* box = MBox::New(alloc(), in);
-              in->block()->insertBefore(in->block()->lastIns(), box);
+              predecessor->insertAtEnd(box);
               in = box;
             }
 
             MUnbox* unbox =
                 MUnbox::New(alloc(), in, MIRType::Double, MUnbox::Fallible);
             unbox->setBailoutKind(BailoutKind::SpeculativePhi);
-            in->block()->insertBefore(in->block()->lastIns(), unbox);
+            predecessor->insertAtEnd(unbox);
             replacement = MToFloat32::New(alloc(), in);
           }
         } else {
@@ -2255,7 +2256,7 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
           // below.
           if (in->type() != MIRType::Value) {
             MBox* box = MBox::New(alloc(), in);
-            in->block()->insertBefore(in->block()->lastIns(), box);
+            predecessor->insertAtEnd(box);
             in = box;
           }
 
@@ -2265,7 +2266,7 @@ bool TypeAnalyzer::adjustPhiInputs(MPhi* phi) {
         }
 
         replacement->setBailoutKind(BailoutKind::SpeculativePhi);
-        in->block()->insertBefore(in->block()->lastIns(), replacement);
+        predecessor->insertAtEnd(replacement);
         phi->replaceOperand(i, replacement);
       }
     }
