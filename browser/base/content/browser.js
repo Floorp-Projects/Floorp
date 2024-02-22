@@ -2411,11 +2411,13 @@ var gBrowserInit = {
               tab.setAttribute("floorpSSB", "true");
             });
 
-            // Load SSB Support Script & CSS
-            Services.scriptloader.loadSubScript(
-              "chrome://browser/content/browser-ssb-support.js",
-              this
-            );
+            SessionStore.promiseInitialized.then(() => {
+              // Load SSB Support Script & CSS
+              Services.scriptloader.loadSubScript(
+                "chrome://browser/content/browser-ssb-support.js",
+               this
+              );
+            });
           }
         } catch (e) {
           console.error(e);
