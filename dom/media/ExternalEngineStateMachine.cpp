@@ -1232,6 +1232,7 @@ bool ExternalEngineStateMachine::IsCDMProxySupported(CDMProxy* aProxy) {
 void ExternalEngineStateMachine::ReportTelemetry(const MediaResult& aError) {
   glean::mfcdm::ErrorExtra extraData;
   extraData.errorName = Some(aError.ErrorName());
+  extraData.currentState = Some(nsAutoCString{StateToStr(mState.mName)});
   nsAutoCString resolution;
   if (mInfo) {
     if (mInfo->HasAudio()) {
