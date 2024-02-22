@@ -83,20 +83,20 @@ on:
         default: ""
 
 jobs:
-   Integration:
+  Integration:
     runs-on: macos-latest
     steps:
         - name: Clone 📥
           uses: actions/checkout@v3
           with:
             submodules: 'recursive'
-    
+
         - name: download M1 build artifact 📥
           uses: actions/download-artifact@v3
           with:
             name: ${{ inputs.aarch64_artifact_name }}
             path: ./
-    
+
         - name: download Intel build artifact 📥
           uses: actions/download-artifact@v3
           with:
@@ -120,7 +120,7 @@ jobs:
           run: |
             ./mach --no-interactive bootstrap --application-choice browser
             echo -e "ac_add_options --enable-bootstrap" >> mozconfig
-      
+
             echo 'mozconfig: **********************'
             cat ./mozconfig
             echo '*********************************'
@@ -136,7 +136,7 @@ jobs:
             echo "folder structure: aarch64-apple-darwin"
             ls -l ./obj-aarch64-apple-darwin/dist/
             echo "****************************************************************************************************"
-            
+
         - name: Integration 🗃
           run: |
             if [ ${{ inputs.beta }} == 'true' ]; then
@@ -150,8 +150,8 @@ jobs:
         - name: import APPLE DEVELOPER ID CERTIFICATE for .app 🔑
           uses: apple-actions/import-codesign-certs@v2
           with:
-           p12-file-base64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
-           p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
+            p12-file-base64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
+            p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
 
         - name: Sign to .app 🖋️
           run: |
@@ -200,46 +200,46 @@ jobs:
             fi
 
             codesign -s "${{ secrets.macOS_AppleDeveloperId }}" floorp-macOS-universal.dmg
-      
+
             xcrun notarytool submit "floorp-macOS-universal.dmg" \
                 --apple-id "${{ secrets.macOS_AppleAccountId }}" \
                 --team-id "${{ secrets.macOS_AppleTeamId }}" \
                 --password "${{ secrets.macOS_AppleAccountAppSpecificPassword }}" \
                 --wait
-      
+
             mkdir -p ./output
             mv ./floorp-macOS-universal.dmg ./output/${INSTALLER_NAME}-macOS-universal.dmg
 
         - name: Create MAR artifact 📦
           run: |
-           if [ ${{ inputs.beta }} == true ]; then
-             export APP_NAME="Floorp Daylight.app"
-           else
-             export APP_NAME="Floorp.app"
-           fi
+            if [ ${{ inputs.beta }} == true ]; then
+              export APP_NAME="Floorp Daylight.app"
+            else
+              export APP_NAME="Floorp.app"
+            fi
 
-           brew install tree
-           chmod +x ./floorp/build/bin/mac/mar
-           chmod +x ./tools/update-packaging/make_full_update.sh
-           touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
-           MAR="floorp/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ inputs.display_version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/${APP_NAME}"
+            brew install tree
+            chmod +x ./floorp/build/bin/mac/mar
+            chmod +x ./tools/update-packaging/make_full_update.sh
+            touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
+            MAR="floorp/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ inputs.display_version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/${APP_NAME}"
 
-           export MACOS_MAR_SIZE=`stat -f%z ./output/DARWIN-Universal.mar`
-           echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
+            export MACOS_MAR_SIZE=`stat -f%z ./output/DARWIN-Universal.mar`
+            echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
           env: 
             GHA_beta: ${{ inputs.beta }}
- 
+
         - name: Create Update XML for "BETA" Build 🚩
           if : ${{ inputs.beta }} == 'true'
           run: |
-           echo '<?xml version="1.0" encoding="UTF-8"?>
-             <updates>
-              <update type="minor" displayVersion="${{ inputs.display_version }}" appVersion="${{ inputs.inside_version }}" platformVersion="${{ inputs.inside_version }}" buildID="${{ inputs.MOZ_BUILD_DATE }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-              <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/DARWIN-Universal.mar" size="${{ env.MACOS_MAR_SIZE }}" />
-             </update>
-           </updates>' > DARWIN-Universal.xml
-        
-           cp DARWIN-Universal.xml output/DARWIN-Universal.xml
+            echo '<?xml version="1.0" encoding="UTF-8"?>
+              <updates>
+                <update type="minor" displayVersion="${{ inputs.display_version }}" appVersion="${{ inputs.inside_version }}" platformVersion="${{ inputs.inside_version }}" buildID="${{ inputs.MOZ_BUILD_DATE }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
+                <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/DARWIN-Universal.mar" size="${{ env.MACOS_MAR_SIZE }}" />
+              </update>
+            </updates>' > DARWIN-Universal.xml
+
+            cp DARWIN-Universal.xml output/DARWIN-Universal.xml
 
         - name: make name of publish archive
           shell: node {0}
@@ -248,8 +248,8 @@ jobs:
             let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
             fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
           env:
-             GHA_out_artifact_name : ${{inputs.out_artifact_name}}
-             GHA_default_name: Universal-Artifact
+            GHA_out_artifact_name : ${{inputs.out_artifact_name}}
+            GHA_default_name: Universal-Artifact
 
         - name: Publish 🎁
           uses: actions/upload-artifact@v3
@@ -257,4 +257,4 @@ jobs:
             name: ${{ env.ARTIFACT_NAME }}
             if-no-files-found: ignore
             path: |
-             ./output/
+              ./output/

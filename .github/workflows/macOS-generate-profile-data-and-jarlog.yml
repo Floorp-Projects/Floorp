@@ -9,7 +9,7 @@ on:
     workflow_call:
     workflow_dispatch:
 jobs:
-   macOS-Universal-gen-profdata-and-jarlog:
+  macOS-Universal-gen-profdata-and-jarlog:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
@@ -76,7 +76,7 @@ jobs:
           LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
         env:
           GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
-      
+
       - name: Publish 🎁
         uses: actions/upload-artifact@v3
         with:

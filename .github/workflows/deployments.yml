@@ -113,7 +113,7 @@ jobs:
     with:
       browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
       arch: x86
-    
+
   Part3-win-x86-build-with-profdata-and-jarlog:
     needs: [get-buildid, Part2-win-x86-gen-profdata-and-jarlog]
     uses: ./.github/workflows/windows-build.yml
@@ -153,7 +153,7 @@ jobs:
 
 ################################################ ↑ Linux AArch64 Build ################################################
 
- #----------------------------------------- macOS -----------------------------------------#
+#----------------------------------------- macOS -----------------------------------------#
 
   Part1-macOS-Universal-build-with-profgen:
     uses: ./.github/workflows/macOS-Universal.yml
@@ -165,7 +165,7 @@ jobs:
   Part2-macOS-Universal-gen-profdata-and-jarlog:
     needs: Part1-macOS-Universal-build-with-profgen
     uses: ./.github/workflows/macOS-generate-profile-data-and-jarlog.yml
-  
+
   Part3-macOS-Universal-build-with-profdata-and-jarlog:
     uses: ./.github/workflows/macOS-Universal.yml
     needs: [get-buildid,  Part2-macOS-Universal-gen-profdata-and-jarlog]
@@ -256,7 +256,7 @@ jobs:
 
     - name: Deploy to GitHub Releases for Stable Version 🚀
       id: create_release
-      uses: "softprops/action-gh-release@v1"
+      uses: softprops/action-gh-release@v1
       with:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar

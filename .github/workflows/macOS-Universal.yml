@@ -238,13 +238,12 @@ jobs:
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
-  
+
         ./mach build
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
-  
-    - name: Package 📦
 
+    - name: Package 📦
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE

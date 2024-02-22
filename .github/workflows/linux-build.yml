@@ -68,7 +68,7 @@ jobs:
       run: |
         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
         sudo apt update
-  
+
     - name: Setup Disk & Swap Space 💿
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
@@ -222,7 +222,7 @@ jobs:
       run: |
         rm -fr ./third_party/rust
         rm -fr ./third_party/libwebrtc
-        
+
     - name: Package 1 - mach 🎁
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
@@ -269,7 +269,7 @@ jobs:
 
           echo "MAR_NAME=LINUX-aarch64.mar" >> $GITHUB_OUTPUT
           echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-aarch64.mar)" >> $GITHUB_OUTPUT
-  
+
         else
 
           touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
