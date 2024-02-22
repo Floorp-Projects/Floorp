@@ -516,6 +516,7 @@ int Node::AcceptEvent(const NodeName& from_node, ScopedEvent event) {
     return AcceptEventInternal(port_ref, from_node, std::move(event));
   }
 
+#ifndef FUZZING_SNAPSHOT
   // Before processing the event, verify the sender and sequence number.
   {
     SinglePortLocker locker(&port_ref);
@@ -532,6 +533,7 @@ int Node::AcceptEvent(const NodeName& from_node, ScopedEvent event) {
       return OK;
     }
   }
+#endif
 
   int ret = AcceptEventInternal(port_ref, from_node, std::move(event));
 
