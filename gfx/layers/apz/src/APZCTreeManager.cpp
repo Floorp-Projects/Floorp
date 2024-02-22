@@ -83,10 +83,10 @@ typedef CompositorBridgeParent::LayerTreeState LayerTreeState;
 struct APZCTreeManager::TreeBuildingState {
   TreeBuildingState(LayersId aRootLayersId, bool aIsFirstPaint,
                     LayersId aOriginatingLayersId, APZTestData* aTestData,
-                    uint32_t aPaintSequence)
+                    uint32_t aPaintSequence, bool aIsTestLoggingEnabled)
       : mIsFirstPaint(aIsFirstPaint),
         mOriginatingLayersId(aOriginatingLayersId),
-        mPaintLogger(aTestData, aPaintSequence) {
+        mPaintLogger(aTestData, aPaintSequence, aIsTestLoggingEnabled) {
     CompositorBridgeParent::CallWithIndirectShadowTree(
         aRootLayersId, [this](LayerTreeState& aState) -> void {
           mCompositorController = aState.GetCompositorController();
@@ -430,7 +430,8 @@ void APZCTreeManager::UpdateHitTestingTree(
   // For testing purposes, we log some data to the APZTestData associated with
   // the layers id that originated this update.
   APZTestData* testData = nullptr;
-  if (StaticPrefs::apz_test_logging_enabled()) {
+  const bool testLoggingEnabled = StaticPrefs::apz_test_logging_enabled();
+  if (testLoggingEnabled) {
     MutexAutoLock lock(mTestDataLock);
     UniquePtr<APZTestData> ptr = MakeUnique<APZTestData>();
     auto result =
@@ -440,7 +441,7 @@ void APZCTreeManager::UpdateHitTestingTree(
   }
 
   TreeBuildingState state(mRootLayersId, aIsFirstPaint, aOriginatingLayersId,
-                          testData, aPaintSequenceNumber);
+                          testData, aPaintSequenceNumber, testLoggingEnabled);
 
   // We do this business with collecting the entire tree into an array because
   // otherwise it's very hard to determine which APZC instances need to be
