@@ -163,10 +163,6 @@ class LookAndFeel {
      * 1: scrollbar button repeats to scroll even if cursor is outside of it.
      */
     ScrollbarButtonAutoRepeatBehavior,
-    /**
-     * Delay before showing a tooltip.
-     */
-    TooltipDelay,
     /*
      * A Boolean value to determine whether swipe animations should be used.
      */

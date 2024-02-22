@@ -1,7 +1,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltip.delay_ms", 0]] });
 });
 
 add_task(async function test_title_in_shadow_dom() {

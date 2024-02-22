@@ -2,7 +2,7 @@
 
 let tempFile;
 add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltip.delay_ms", 0]] });
   tempFile = createTempFile();
   registerCleanupFunction(function () {
     tempFile.remove(true);

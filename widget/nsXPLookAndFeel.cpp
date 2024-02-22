@@ -161,7 +161,6 @@ static const char sIntPrefs[][45] = {
     "ui.SpellCheckerUnderlineStyle",
     "ui.menuBarDrag",
     "ui.scrollbarButtonAutoRepeatBehavior",
-    "ui.tooltipDelay",
     "ui.swipeAnimationEnabled",
     "ui.scrollbarDisplayOnMouseMove",
     "ui.scrollbarFadeBeginDelay",

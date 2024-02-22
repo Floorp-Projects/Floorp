@@ -6,9 +6,7 @@ add_task(async function () {
     "data:text/html," + html
   );
 
-  await new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] }, resolve);
-  });
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltip.delay_ms", 0]] });
 
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#p1",

@@ -312,10 +312,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 200;
       break;
 
-    case IntID::TooltipDelay:
-      aResult = 500;
-      break;
-
     case IntID::MenusCanOverlapOSBar:
       // we want XUL popups to be able to overlap the task bar.
       aResult = 1;

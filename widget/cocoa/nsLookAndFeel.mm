@@ -366,9 +366,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::SubmenuDelay:
       aResult = 200;
       break;
-    case IntID::TooltipDelay:
-      aResult = 500;
-      break;
     case IntID::MenusCanOverlapOSBar:
       // xul popups are not allowed to overlap the menubar.
       aResult = 0;
