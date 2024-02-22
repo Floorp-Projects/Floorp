@@ -587,17 +587,6 @@ interface nsIPrincipal : nsISupports
     [infallible] readonly attribute unsigned long privateBrowsingId;
 
     /**
-     * Returns true iff the principal is inside an isolated mozbrowser element.
-     * <xul:browser> is not considered to be a mozbrowser element.
-     * <iframe mozbrowser noisolation> does not count as isolated since
-     * isolation is disabled.  Isolation can only be disabled if the
-     * containing document is chrome.
-     *
-     * May be called from any thread.
-     */
-    [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
-
-    /**
      * Returns true iff this is a null principal (corresponding to an
      * unknown, hence assumed minimally privileged, security context).
      *
