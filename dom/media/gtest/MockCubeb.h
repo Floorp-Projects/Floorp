@@ -203,6 +203,10 @@ class MockCubebStream {
   // For RunningMode::Manual, drive this MockCubebStream forward.
   KeepProcessing ManualDataCallback(long aNrFrames);
 
+  // For RunningMode::Manual, notify the client of a DeviceChanged event
+  // synchronously.
+  void NotifyDeviceChangedNow();
+
   // Enable input recording for this driver. This is best called before
   // the thread is running, but is safe to call whenever.
   void SetOutputRecordingEnabled(bool aEnabled);
@@ -239,6 +243,7 @@ class MockCubebStream {
 
  private:
   void NotifyState(cubeb_state aState);
+  void NotifyDeviceChanged();
 
   static constexpr long kMaxNrFrames = 1920;
   // Monitor used to block start until mFrozenStart is false.
