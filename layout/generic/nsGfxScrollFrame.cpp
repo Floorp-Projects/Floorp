@@ -2040,8 +2040,13 @@ class nsHTMLScrollFrame::AsyncSmoothMSDScroll final
    * Should be used at most once during the lifetime of this object.
    */
   void SetRefreshObserver(nsHTMLScrollFrame* aCallee) {
-    NS_ASSERTION(aCallee && !mCallee,
-                 "AsyncSmoothMSDScroll::SetRefreshObserver - Invalid usage.");
+    MOZ_ASSERT(aCallee,
+               "AsyncSmoothMSDScroll::SetRefreshObserver needs "
+               "a non-null aCallee in order to get a refresh driver");
+    MOZ_RELEASE_ASSERT(!mCallee,
+                       "AsyncSmoothMSDScroll::SetRefreshObserver "
+                       "shouldn't be called if we're already registered with "
+                       "a refresh driver, via a preexisting mCallee");
 
     RefreshDriver(aCallee)->AddRefreshObserver(this, FlushType::Style,
                                                "Smooth scroll (MSD) animation");
@@ -2168,8 +2173,13 @@ class nsHTMLScrollFrame::AsyncScroll final : public nsARefreshObserver {
    * Should be used at most once during the lifetime of this object.
    */
   void SetRefreshObserver(nsHTMLScrollFrame* aCallee) {
-    NS_ASSERTION(aCallee && !mCallee,
-                 "AsyncScroll::SetRefreshObserver - Invalid usage.");
+    MOZ_ASSERT(aCallee,
+               "AsyncScroll::SetRefreshObserver needs "
+               "a non-null aCallee in order to get a refresh driver");
+    MOZ_RELEASE_ASSERT(!mCallee,
+                       "AsyncScroll::SetRefreshObserver "
+                       "shouldn't be called if we're already registered with "
+                       "a refresh driver, via a preexisting mCallee");
 
     RefreshDriver(aCallee)->AddRefreshObserver(this, FlushType::Style,
                                                "Smooth scroll animation");
