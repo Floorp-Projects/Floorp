@@ -267,11 +267,9 @@ struct SsrcInfo {
   std::string stream_id;
   std::string track_id;
 };
-typedef std::vector<SsrcInfo> SsrcInfoVec;
-typedef std::vector<SsrcGroup> SsrcGroupVec;
+using SsrcInfoVec = std::vector<SsrcInfo>;
+using SsrcGroupVec = std::vector<SsrcGroup>;
 
-template <class T>
-static void AddFmtpLine(const T& codec, std::string* message);
 static void BuildMediaDescription(const ContentInfo* content_info,
                                   const TransportInfo* transport_info,
                                   const cricket::MediaType media_type,
@@ -2628,7 +2626,7 @@ static std::unique_ptr<MediaContentDescription> ParseContentDescription(
     int* msid_signaling,
     TransportDescription* transport,
     std::vector<std::unique_ptr<JsepIceCandidate>>* candidates,
-    webrtc::SdpParseError* error) {
+    SdpParseError* error) {
   std::unique_ptr<MediaContentDescription> media_desc;
   if (media_type == cricket::MediaType::MEDIA_TYPE_AUDIO) {
     media_desc = std::make_unique<AudioContentDescription>();

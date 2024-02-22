@@ -162,7 +162,7 @@ class PeerConnectionCryptoBaseTest : public ::testing::Test {
     return transport_info->description.connection_role;
   }
 
-  webrtc::test::ScopedKeyValueConfig field_trials_;
+  test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> pc_factory_;

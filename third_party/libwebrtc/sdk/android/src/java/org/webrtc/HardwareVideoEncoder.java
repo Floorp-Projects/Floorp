@@ -292,7 +292,7 @@ class HardwareVideoEncoder implements VideoEncoder {
       updateInputFormat(codec.getInputFormat());
 
       codec.start();
-    } catch (IllegalStateException e) {
+    } catch (IllegalArgumentException | IllegalStateException e) {
       Logging.e(TAG, "initEncodeInternal failed", e);
       release();
       return VideoCodecStatus.FALLBACK_SOFTWARE;

@@ -222,4 +222,19 @@ TEST_F(RtpSenderAudioTest, CheckMarkerBitForTelephoneEvents) {
   EXPECT_FALSE(transport_.last_sent_packet().Marker());
 }
 
+TEST_F(RtpSenderAudioTest, SendsCsrcs) {
+  const char payload_name[] = "audio";
+  const uint8_t payload_type = 127;
+  ASSERT_EQ(0, rtp_sender_audio_->RegisterAudioPayload(
+                   payload_name, payload_type, 48000, 0, 1500));
+  uint8_t payload[] = {47, 11, 32, 93, 89};
+
+  std::vector<uint32_t> csrcs({123, 456, 789});
+
+  ASSERT_TRUE(rtp_sender_audio_->SendAudio(
+      {.payload = payload, .payload_id = payload_type, .csrcs = csrcs}));
+
+  EXPECT_EQ(transport_.last_sent_packet().Csrcs(), csrcs);
+}
+
 }  // namespace webrtc

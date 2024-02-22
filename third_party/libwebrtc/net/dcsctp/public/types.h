@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <limits>
 
+#include "api/units/time_delta.h"
 #include "rtc_base/strong_alias.h"
 
 namespace dcsctp {
@@ -41,6 +42,10 @@ class DurationMs : public webrtc::StrongAlias<class DurationMsTag, int32_t> {
   constexpr explicit DurationMs(const UnderlyingType& v)
       : webrtc::StrongAlias<class DurationMsTag, int32_t>(v) {}
 
+  constexpr explicit DurationMs(webrtc::TimeDelta v)
+      : webrtc::StrongAlias<class DurationMsTag, int32_t>(
+            v.IsInfinite() ? InfiniteDuration() : DurationMs(v.ms())) {}
+
   static constexpr DurationMs InfiniteDuration() {
     return DurationMs(std::numeric_limits<int32_t>::max());
   }
@@ -57,6 +62,11 @@ class DurationMs : public webrtc::StrongAlias<class DurationMsTag, int32_t> {
   constexpr DurationMs& operator*=(T factor) {
     value_ *= factor;
     return *this;
+  }
+  constexpr webrtc::TimeDelta ToTimeDelta() const {
+    return *this == DurationMs::InfiniteDuration()
+               ? webrtc::TimeDelta::PlusInfinity()
+               : webrtc::TimeDelta::Millis(value_);
   }
 };
 

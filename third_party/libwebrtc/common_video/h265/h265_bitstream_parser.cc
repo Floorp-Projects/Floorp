@@ -475,8 +475,8 @@ void H265BitstreamParser::ParseSlice(const uint8_t* slice, size_t length) {
     case H265::NaluType::kAud:
     case H265::NaluType::kPrefixSei:
     case H265::NaluType::kSuffixSei:
-    case H265::NaluType::kAP:
-    case H265::NaluType::kFU:
+    case H265::NaluType::kAp:
+    case H265::NaluType::kFu:
       break;
     default:
       Result res = ParseNonParameterSetNalu(slice, length, nalu_type);

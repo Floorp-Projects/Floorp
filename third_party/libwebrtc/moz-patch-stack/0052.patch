@@ -24,10 +24,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
  10 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index ddc3323df9..777cc6d4c1 100644
+index 549e65a59c..8080f4a3b8 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -431,7 +431,7 @@ ChannelSend::ChannelSend(
+@@ -443,7 +443,7 @@ ChannelSend::ChannelSend(
        transport_controller->GetRtcpObserver();
    configuration.transport_feedback_callback =
        transport_controller->transport_feedback_observer();
@@ -37,17 +37,18 @@ index ddc3323df9..777cc6d4c1 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index 6b975edc6a..c0ee5a92f4 100644
+index 42b3b988ea..d2ac705274 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -473,12 +473,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -473,6 +473,7 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
 +/* Mozilla: Avoid this since it could use GetRealTimeClock().
  std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-   Clock* clock = Clock::GetRealTimeClock();
-   return Create(config, clock,
+   Clock* clock =
+       config.env.has_value() ? &config.env->clock() : Clock::GetRealTimeClock();
+@@ -480,6 +481,7 @@ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
                  RtpTransportControllerSendFactory().Create(
                      config.ExtractTransportConfig(), clock));
  }

@@ -49,9 +49,6 @@ struct MediaEngineDependencies {
   rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory;
   rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer;
   rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing;
-  // TODO(bugs.webrtc.org/15111):
-  //   Remove the raw AudioFrameProcessor pointer in the follow-up.
-  webrtc::AudioFrameProcessor* audio_frame_processor = nullptr;
   std::unique_ptr<webrtc::AudioFrameProcessor> owned_audio_frame_processor;
 
   std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory;
@@ -63,8 +60,9 @@ struct MediaEngineDependencies {
 // CreateMediaEngine may be called on any thread, though the engine is
 // only expected to be used on one thread, internally called the "worker
 // thread". This is the thread Init must be called on.
-RTC_EXPORT std::unique_ptr<MediaEngineInterface> CreateMediaEngine(
-    MediaEngineDependencies dependencies);
+[[deprecated("bugs.webrtc.org/15574")]]  //
+RTC_EXPORT std::unique_ptr<MediaEngineInterface>
+CreateMediaEngine(MediaEngineDependencies dependencies);
 
 // Verify that extension IDs are within 1-byte extension range and are not
 // overlapping, and that they form a legal change from previously registerd

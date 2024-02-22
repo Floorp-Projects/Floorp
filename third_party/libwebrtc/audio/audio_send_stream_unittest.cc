@@ -242,11 +242,11 @@ struct ConfigHelper {
   void SetupMockForSetupSendCodec(bool expect_set_encoder_call) {
     if (expect_set_encoder_call) {
       EXPECT_CALL(*channel_send_, SetEncoder)
-          .WillOnce(
-              [this](int payload_type, std::unique_ptr<AudioEncoder> encoder) {
-                this->audio_encoder_ = std::move(encoder);
-                return true;
-              });
+          .WillOnce([this](int payload_type, const SdpAudioFormat& format,
+                           std::unique_ptr<AudioEncoder> encoder) {
+            this->audio_encoder_ = std::move(encoder);
+            return true;
+          });
     }
   }
 
@@ -595,6 +595,7 @@ TEST(AudioSendStreamTest, SendCodecCanApplyVad) {
     std::unique_ptr<AudioEncoder> stolen_encoder;
     EXPECT_CALL(*helper.channel_send(), SetEncoder)
         .WillOnce([&stolen_encoder](int payload_type,
+                                    const SdpAudioFormat& format,
                                     std::unique_ptr<AudioEncoder> encoder) {
           stolen_encoder = std::move(encoder);
           return true;

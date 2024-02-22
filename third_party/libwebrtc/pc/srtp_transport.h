@@ -41,9 +41,6 @@ class SrtpTransport : public RtpTransport {
 
   virtual ~SrtpTransport() = default;
 
-  virtual RTCError SetSrtpSendKey(const cricket::CryptoParams& params);
-  virtual RTCError SetSrtpReceiveKey(const cricket::CryptoParams& params);
-
   bool SendRtpPacket(rtc::CopyOnWriteBuffer* packet,
                      const rtc::PacketOptions& options,
                      int flags) override;
@@ -108,6 +105,10 @@ class SrtpTransport : public RtpTransport {
   void CacheRtpAbsSendTimeHeaderExtension(int rtp_abs_sendtime_extn_id) {
     rtp_abs_sendtime_extn_id_ = rtp_abs_sendtime_extn_id;
   }
+
+  // In addition to unregistering the sink, the SRTP transport
+  // disassociates all SSRCs of the sink from libSRTP.
+  bool UnregisterRtpDemuxerSink(RtpPacketSinkInterface* sink) override;
 
  protected:
   // If the writable state changed, fire the SignalWritableState.

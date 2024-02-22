@@ -142,19 +142,12 @@ class ReassemblyQueue {
   bool IsConsistent() const;
   void AddReassembledMessage(rtc::ArrayView<const UnwrappedTSN> tsns,
                              DcSctpMessage message);
-  void MaybeMoveLastAssembledWatermarkFurther();
 
   const absl::string_view log_prefix_;
   const size_t max_size_bytes_;
   const size_t watermark_bytes_;
   UnwrappedTSN::Unwrapper tsn_unwrapper_;
 
-  // Whenever a message has been assembled, either increase
-  // `last_assembled_tsn_watermark_` or - if there are gaps - add the message's
-  // TSNs into delivered_tsns_ so that messages are not re-delivered on
-  // duplicate chunks.
-  UnwrappedTSN last_assembled_tsn_watermark_;
-  std::set<UnwrappedTSN> delivered_tsns_;
   // Messages that have been reassembled, and will be returned by
   // `FlushMessages`.
   std::vector<DcSctpMessage> reassembled_messages_;

@@ -32,6 +32,7 @@ rtc_library("audio_codecs_api") {
     "..:array_view",
     "..:bitrate_allocation",
     "..:make_ref_counted",
+    "..:ref_count",
     "..:scoped_refptr",
     "../../api:field_trials_view",
     "../../rtc_base:buffer",

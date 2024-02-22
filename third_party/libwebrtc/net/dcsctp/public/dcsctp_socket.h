@@ -18,6 +18,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/timestamp.h"
 #include "net/dcsctp/public/dcsctp_handover_state.h"
 #include "net/dcsctp/public/dcsctp_message.h"
 #include "net/dcsctp/public/dcsctp_options.h"
@@ -323,9 +324,21 @@ class DcSctpSocketCallbacks {
 
   // Returns the current time in milliseconds (from any epoch).
   //
+  // TODO(bugs.webrtc.org/15593): This method is deprecated, see `Now`.
+  //
   // Note that it's NOT ALLOWED to call into this library from within this
   // callback.
-  virtual TimeMs TimeMillis() = 0;
+  virtual TimeMs TimeMillis() { return TimeMs(0); }
+
+  // Returns the current time (from any epoch).
+  //
+  // This callback will eventually replace `TimeMillis()`.
+  //
+  // Note that it's NOT ALLOWED to call into this library from within this
+  // callback.
+  virtual webrtc::Timestamp Now() {
+    return webrtc::Timestamp::Millis(*TimeMillis());
+  }
 
   // Called when the library needs a random number uniformly distributed between
   // `low` (inclusive) and `high` (exclusive). The random numbers used by the

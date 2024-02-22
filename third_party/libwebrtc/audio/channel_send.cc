@@ -37,6 +37,7 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/rate_limiter.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/time_utils.h"
@@ -104,6 +105,7 @@ class ChannelSend : public ChannelSendInterface,
 
   // Send using this encoder, with this payload type.
   void SetEncoder(int payload_type,
+                  const SdpAudioFormat& encoder_format,
                   std::unique_ptr<AudioEncoder> encoder) override;
   void ModifyEncoder(rtc::FunctionView<void(std::unique_ptr<AudioEncoder>*)>
                          modifier) override;
@@ -192,7 +194,8 @@ class ChannelSend : public ChannelSendInterface,
                        uint8_t payloadType,
                        uint32_t rtp_timestamp_without_offset,
                        rtc::ArrayView<const uint8_t> payload,
-                       int64_t absolute_capture_timestamp_ms)
+                       int64_t absolute_capture_timestamp_ms,
+                       rtc::ArrayView<const uint32_t> csrcs)
       RTC_RUN_ON(encoder_queue_);
 
   void OnReceivedRtt(int64_t rtt_ms);
@@ -264,6 +267,8 @@ class ChannelSend : public ChannelSendInterface,
   // Defined last to ensure that there are no running tasks when the other
   // members are destroyed.
   rtc::TaskQueue encoder_queue_;
+
+  SdpAudioFormat encoder_format_;
 };
 
 const int kTelephoneEventAttenuationdB = 10;
@@ -310,21 +315,26 @@ int32_t ChannelSend::SendData(AudioFrameType frameType,
   if (frame_transformer_delegate_) {
     // Asynchronously transform the payload before sending it. After the payload
     // is transformed, the delegate will call SendRtpAudio to send it.
+    char buf[1024];
+    rtc::SimpleStringBuilder mime_type(buf);
+    mime_type << MediaTypeToString(cricket::MEDIA_TYPE_AUDIO) << "/"
+              << encoder_format_.name;
     frame_transformer_delegate_->Transform(
         frameType, payloadType, rtp_timestamp + rtp_rtcp_->StartTimestamp(),
         payloadData, payloadSize, absolute_capture_timestamp_ms,
-        rtp_rtcp_->SSRC());
+        rtp_rtcp_->SSRC(), mime_type.str());
     return 0;
   }
   return SendRtpAudio(frameType, payloadType, rtp_timestamp, payload,
-                      absolute_capture_timestamp_ms);
+                      absolute_capture_timestamp_ms, /*csrcs=*/{});
 }
 
 int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
                                   uint8_t payloadType,
                                   uint32_t rtp_timestamp_without_offset,
                                   rtc::ArrayView<const uint8_t> payload,
-                                  int64_t absolute_capture_timestamp_ms) {
+                                  int64_t absolute_capture_timestamp_ms,
+                                  rtc::ArrayView<const uint32_t> csrcs) {
   // E2EE Custom Audio Frame Encryption (This is optional).
   // Keep this buffer around for the lifetime of the send call.
   rtc::Buffer encrypted_audio_payload;
@@ -386,7 +396,8 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
       .payload = payload,
       .payload_id = payloadType,
       .rtp_timestamp =
-          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp()};
+          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp(),
+      .csrcs = csrcs};
   if (absolute_capture_timestamp_ms > 0) {
     frame.capture_time = Timestamp::Millis(absolute_capture_timestamp_ms);
   }
@@ -426,7 +437,8 @@ ChannelSend::ChannelSend(
       crypto_options_(crypto_options),
       encoder_queue_(task_queue_factory->CreateTaskQueue(
           "AudioEncoder",
-          TaskQueueFactory::Priority::NORMAL)) {
+          TaskQueueFactory::Priority::NORMAL)),
+      encoder_format_("x-unknown", 0, 0) {
   audio_coding_ = AudioCodingModule::Create();
 
   RtpRtcpInterface::Configuration configuration;
@@ -527,6 +539,7 @@ void ChannelSend::StopSend() {
 }
 
 void ChannelSend::SetEncoder(int payload_type,
+                             const SdpAudioFormat& encoder_format,
                              std::unique_ptr<AudioEncoder> encoder) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   RTC_DCHECK_GE(payload_type, 0);
@@ -540,6 +553,7 @@ void ChannelSend::SetEncoder(int payload_type,
                                           encoder->RtpTimestampRateHz(),
                                           encoder->NumChannels(), 0);
 
+  encoder_format_ = encoder_format;
   audio_coding_->SetEncoder(std::move(encoder));
 }
 
@@ -881,12 +895,13 @@ void ChannelSend::InitFrameTransformerDelegate(
       [this](AudioFrameType frameType, uint8_t payloadType,
              uint32_t rtp_timestamp_with_offset,
              rtc::ArrayView<const uint8_t> payload,
-             int64_t absolute_capture_timestamp_ms) {
+             int64_t absolute_capture_timestamp_ms,
+             rtc::ArrayView<const uint32_t> csrcs) {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
         return SendRtpAudio(
             frameType, payloadType,
             rtp_timestamp_with_offset - rtp_rtcp_->StartTimestamp(), payload,
-            absolute_capture_timestamp_ms);
+            absolute_capture_timestamp_ms, csrcs);
       };
   frame_transformer_delegate_ =
       rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(

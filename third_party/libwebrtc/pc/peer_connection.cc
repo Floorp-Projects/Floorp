@@ -23,6 +23,7 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "api/environment/environment.h"
 #include "api/jsep_ice_candidate.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
@@ -185,7 +186,7 @@ IceCandidatePairType GetIceCandidatePairCounter(
 absl::optional<int> RTCConfigurationToIceConfigOptionalInt(
     int rtc_configuration_parameter) {
   if (rtc_configuration_parameter ==
-      webrtc::PeerConnectionInterface::RTCConfiguration::kUndefined) {
+      PeerConnectionInterface::RTCConfiguration::kUndefined) {
     return absl::nullopt;
   }
   return rtc_configuration_parameter;
@@ -449,7 +450,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     absl::optional<int> ice_unwritable_min_checks;
     absl::optional<int> ice_inactive_timeout;
     absl::optional<int> stun_candidate_keepalive_interval;
-    webrtc::TurnCustomizer* turn_customizer;
+    TurnCustomizer* turn_customizer;
     SdpSemantics sdp_semantics;
     absl::optional<rtc::AdapterType> network_preference;
     bool active_reset_srtp_params;
@@ -459,7 +460,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     bool enable_implicit_rollback;
     absl::optional<int> report_usage_pattern_delay_ms;
     absl::optional<int> stable_writable_connection_ping_interval_ms;
-    webrtc::VpnPreference vpn_preference;
+    VpnPreference vpn_preference;
     std::vector<rtc::NetworkMask> vpn_list;
     PortAllocatorConfig port_allocator_config;
     absl::optional<TimeDelta> pacer_burst_interval;
@@ -536,9 +537,9 @@ bool PeerConnectionInterface::RTCConfiguration::operator!=(
 }
 
 RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
+    const Environment& env,
     rtc::scoped_refptr<ConnectionContext> context,
     const PeerConnectionFactoryInterface::Options& options,
-    std::unique_ptr<RtcEventLog> event_log,
     std::unique_ptr<Call> call,
     const PeerConnectionInterface::RTCConfiguration& configuration,
     PeerConnectionDependencies dependencies) {
@@ -577,36 +578,15 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
       configuration.sdp_semantics == SdpSemantics::kUnifiedPlan;
   bool dtls_enabled = DtlsEnabled(configuration, options, dependencies);
 
-  // Interim code: If an AsyncResolverFactory is given, but not an
-  // AsyncDnsResolverFactory, wrap it in a WrappingAsyncDnsResolverFactory
-  // If neither is given, create a BasicAsyncDnsResolverFactory.
-  // TODO(bugs.webrtc.org/12598): Remove code once all callers pass a
-  // AsyncDnsResolverFactory.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  if (dependencies.async_dns_resolver_factory &&
-      dependencies.async_resolver_factory) {
-    RTC_LOG(LS_ERROR)
-        << "Attempt to set both old and new type of DNS resolver factory";
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Both old and new type of DNS resolver given");
-  }
   if (!dependencies.async_dns_resolver_factory) {
-    if (dependencies.async_resolver_factory) {
-      dependencies.async_dns_resolver_factory =
-          std::make_unique<WrappingAsyncDnsResolverFactory>(
-              std::move(dependencies.async_resolver_factory));
-    } else {
       dependencies.async_dns_resolver_factory =
           std::make_unique<BasicAsyncDnsResolverFactory>();
-    }
   }
-#pragma clang diagnostic pop
 
   // The PeerConnection constructor consumes some, but not all, dependencies.
   auto pc = rtc::make_ref_counted<PeerConnection>(
-      context, options, is_unified_plan, std::move(event_log), std::move(call),
-      dependencies, dtls_enabled);
+      env, context, options, is_unified_plan, std::move(call), dependencies,
+      dtls_enabled);
   RTCError init_error = pc->Initialize(configuration, std::move(dependencies));
   if (!init_error.ok()) {
     RTC_LOG(LS_ERROR) << "PeerConnection initialization failed";
@@ -616,20 +596,18 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
 }
 
 PeerConnection::PeerConnection(
+    const Environment& env,
     rtc::scoped_refptr<ConnectionContext> context,
     const PeerConnectionFactoryInterface::Options& options,
     bool is_unified_plan,
-    std::unique_ptr<RtcEventLog> event_log,
     std::unique_ptr<Call> call,
     PeerConnectionDependencies& dependencies,
     bool dtls_enabled)
-    : context_(context),
-      trials_(std::move(dependencies.trials), &context->field_trials()),
+    : env_(env),
+      context_(context),
       options_(options),
       observer_(dependencies.observer),
       is_unified_plan_(is_unified_plan),
-      event_log_(std::move(event_log)),
-      event_log_ptr_(event_log_.get()),
       async_dns_resolver_factory_(
           std::move(dependencies.async_dns_resolver_factory)),
       port_allocator_(std::move(dependencies.allocator)),
@@ -648,7 +626,10 @@ PeerConnection::PeerConnection(
       dtls_enabled_(dtls_enabled),
       data_channel_controller_(this),
       message_handler_(signaling_thread()),
-      weak_factory_(this) {}
+      weak_factory_(this) {
+  // Field trials specific to the peerconnection should be owned by the `env`,
+  RTC_DCHECK(dependencies.trials == nullptr);
+}
 
 PeerConnection::~PeerConnection() {
   TRACE_EVENT0("webrtc", "PeerConnection::~PeerConnection");
@@ -699,13 +680,11 @@ PeerConnection::~PeerConnection() {
   sctp_mid_s_.reset();
   SetSctpTransportName("");
 
-  // call_ and event_log_ must be destroyed on the worker thread.
+  // call_ must be destroyed on the worker thread.
   worker_thread()->BlockingCall([this] {
     RTC_DCHECK_RUN_ON(worker_thread());
     worker_thread_safety_->SetNotAlive();
     call_.reset();
-    // The event log must outlive call (and any other object that uses it).
-    event_log_.reset();
   });
 
   data_channel_controller_.PrepareForShutdown();
@@ -797,7 +776,7 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
   config.transport_observer = this;
   config.rtcp_handler = InitializeRtcpCallback();
   config.un_demuxable_packet_handler = InitializeUnDemuxablePacketHandler();
-  config.event_log = event_log_ptr_;
+  config.event_log = &env_.event_log();
 #if defined(ENABLE_EXTERNAL_AUTH)
   config.enable_external_auth = true;
 #endif
@@ -816,7 +795,7 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
         }
       };
 
-  config.field_trials = trials_.get();
+  config.field_trials = &env_.field_trials();
 
   transport_controller_.reset(new JsepTransportController(
       network_thread(), port_allocator_.get(),
@@ -1685,7 +1664,7 @@ void PeerConnection::AddIceCandidate(
     std::function<void(RTCError)> callback) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   sdp_handler_->AddIceCandidate(std::move(candidate),
-                                [this, callback](webrtc::RTCError result) {
+                                [this, callback](RTCError result) {
                                   ClearStatsCache();
                                   callback(result);
                                 });
@@ -1789,7 +1768,7 @@ bool PeerConnection::StartRtcEventLog(
     std::unique_ptr<RtcEventLogOutput> output) {
   int64_t output_period_ms = 5000;
   if (trials().IsDisabled("WebRTC-RtcEventLogNewFormat")) {
-    output_period_ms = webrtc::RtcEventLog::kImmediateOutput;
+    output_period_ms = RtcEventLog::kImmediateOutput;
   }
   return StartRtcEventLog(std::move(output), output_period_ms);
 }
@@ -1931,8 +1910,7 @@ void PeerConnection::Close() {
     RTC_DCHECK_RUN_ON(worker_thread());
     worker_thread_safety_->SetNotAlive();
     call_.reset();
-    // The event log must outlive call (and any other object that uses it).
-    event_log_.reset();
+    StopRtcEventLog_w();
   });
   ReportUsagePattern();
 
@@ -2029,13 +2007,13 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ProvisionalAnswer", pranswer,
                             kProvisionalAnswerMax);
 
-  // Record the number of valid / invalid ice-ufrag. We do allow certain
-  // non-spec ice-char for backward-compat reasons. At this point we know
-  // that the ufrag/pwd consists of a valid ice-char or one of the four
-  // not allowed characters since we have passed the IsIceChar check done
-  // by the p2p transport description on setRemoteDescription calls.
   auto transport_infos = remote_description()->description()->transport_infos();
-  if (transport_infos.size() > 0) {
+  if (!transport_infos.empty()) {
+    // Record the number of valid / invalid ice-ufrag. We do allow certain
+    // non-spec ice-char for backward-compat reasons. At this point we know
+    // that the ufrag/pwd consists of a valid ice-char or one of the four
+    // not allowed characters since we have passed the IsIceChar check done
+    // by the p2p transport description on setRemoteDescription calls.
     auto ice_parameters = transport_infos[0].description.GetIceParameters();
     auto is_invalid_char = [](char c) {
       return c == '-' || c == '=' || c == '#' || c == '_';
@@ -2047,6 +2025,16 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
     RTC_HISTOGRAM_BOOLEAN(
         "WebRTC.PeerConnection.ValidIceChars",
         !(isUsingInvalidIceCharInUfrag || isUsingInvalidIceCharInPwd));
+
+    // Record whether the hash algorithm of the first transport's
+    // DTLS fingerprint is still using SHA-1.
+    if (transport_infos[0].description.identity_fingerprint) {
+      RTC_HISTOGRAM_BOOLEAN(
+          "WebRTC.PeerConnection.DtlsFingerprintLegacySha1",
+          absl::EqualsIgnoreCase(
+              transport_infos[0].description.identity_fingerprint->algorithm,
+              "sha-1"));
+    }
   }
 
   // Record RtcpMuxPolicy setting.
@@ -2222,7 +2210,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
     IceTransportsType type,
     int candidate_pool_size,
     PortPrunePolicy turn_port_prune_policy,
-    webrtc::TurnCustomizer* turn_customizer,
+    TurnCustomizer* turn_customizer,
     absl::optional<int> stun_candidate_keepalive_interval,
     bool have_local_description) {
   RTC_DCHECK_RUN_ON(network_thread());
@@ -2245,17 +2233,15 @@ bool PeerConnection::StartRtcEventLog_w(
     std::unique_ptr<RtcEventLogOutput> output,
     int64_t output_period_ms) {
   RTC_DCHECK_RUN_ON(worker_thread());
-  if (!event_log_) {
+  if (!worker_thread_safety_->alive()) {
     return false;
   }
-  return event_log_->StartLogging(std::move(output), output_period_ms);
+  return env_.event_log().StartLogging(std::move(output), output_period_ms);
 }
 
 void PeerConnection::StopRtcEventLog_w() {
   RTC_DCHECK_RUN_ON(worker_thread());
-  if (event_log_) {
-    event_log_->StopLogging();
-  }
+  env_.event_log().StopLogging();
 }
 
 absl::optional<rtc::SSLRole> PeerConnection::GetSctpSslRole_n() {

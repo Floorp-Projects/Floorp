@@ -28,7 +28,6 @@
 #include "api/field_trials_view.h"
 #include "api/units/time_delta.h"
 #include "logging/rtc_event_log/ice_logger.h"
-#include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/basic_ice_controller.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/connection_info.h"
@@ -117,25 +116,11 @@ std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
     absl::string_view transport_name,
     int component,
     webrtc::IceTransportInit init) {
-  // TODO(bugs.webrtc.org/12598): Remove pragma and fallback once
-  // async_resolver_factory is gone
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  if (init.async_resolver_factory()) {
-    return absl::WrapUnique(new P2PTransportChannel(
-        transport_name, component, init.port_allocator(), nullptr,
-        std::make_unique<webrtc::WrappingAsyncDnsResolverFactory>(
-            init.async_resolver_factory()),
-        init.event_log(), init.ice_controller_factory(),
-        init.active_ice_controller_factory(), init.field_trials()));
-#pragma clang diagnostic pop
-  } else {
-    return absl::WrapUnique(new P2PTransportChannel(
-        transport_name, component, init.port_allocator(),
-        init.async_dns_resolver_factory(), nullptr, init.event_log(),
-        init.ice_controller_factory(), init.active_ice_controller_factory(),
-        init.field_trials()));
-  }
+  return absl::WrapUnique(new P2PTransportChannel(
+      transport_name, component, init.port_allocator(),
+      init.async_dns_resolver_factory(), nullptr, init.event_log(),
+      init.ice_controller_factory(), init.active_ice_controller_factory(),
+      init.field_trials()));
 }
 
 P2PTransportChannel::P2PTransportChannel(
@@ -884,7 +869,7 @@ void P2PTransportChannel::MaybeStartGathering() {
                             ice_parameters_.ufrag, ice_parameters_.pwd)) {
     if (gathering_state_ != kIceGatheringGathering) {
       gathering_state_ = kIceGatheringGathering;
-      SignalGatheringState(this);
+      SendGatheringStateEvent();
     }
 
     if (!allocator_sessions_.empty()) {
@@ -996,7 +981,9 @@ void P2PTransportChannel::OnCandidateError(
     PortAllocatorSession* session,
     const IceCandidateErrorEvent& event) {
   RTC_DCHECK(network_thread_ == rtc::Thread::Current());
-  SignalCandidateError(this, event);
+  if (candidate_error_callback_) {
+    candidate_error_callback_(this, event);
+  }
 }
 
 void P2PTransportChannel::OnCandidatesAllocationDone(
@@ -1012,7 +999,7 @@ void P2PTransportChannel::OnCandidatesAllocationDone(
   gathering_state_ = kIceGatheringComplete;
   RTC_LOG(LS_INFO) << "P2PTransportChannel: " << transport_name()
                    << ", component " << component() << " gathering complete";
-  SignalGatheringState(this);
+  SendGatheringStateEvent();
 }
 
 // Handle stun packets
@@ -1869,8 +1856,9 @@ void P2PTransportChannel::SwitchSelectedConnectionInternal(
     } else {
       pair_change.estimated_disconnected_time_ms = 0;
     }
-
-    SignalCandidatePairChanged(pair_change);
+    if (candidate_pair_change_callback_) {
+      candidate_pair_change_callback_(pair_change);
+    }
   }
 
   ++selected_candidate_pair_changes_;
@@ -2200,7 +2188,9 @@ void P2PTransportChannel::OnCandidatesRemoved(
     candidate.set_transport_name(transport_name());
     candidates_to_remove.push_back(candidate);
   }
-  SignalCandidatesRemoved(this, candidates_to_remove);
+  if (candidates_removed_callback_) {
+    candidates_removed_callback_(this, candidates_to_remove);
+  }
 }
 
 void P2PTransportChannel::PruneAllPorts() {

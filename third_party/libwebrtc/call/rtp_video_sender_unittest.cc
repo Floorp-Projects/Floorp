@@ -1092,7 +1092,7 @@ TEST(RtpVideoSenderTest, ClearsPendingPacketsOnInactivation) {
 
   // Set a very low bitrate.
   test.router()->OnBitrateUpdated(
-      CreateBitrateAllocationUpdate(/*rate_bps=*/30'000),
+      CreateBitrateAllocationUpdate(/*rate_bps=*/10'000),
       /*framerate=*/30);
 
   // Create and send a large keyframe.
@@ -1119,7 +1119,7 @@ TEST(RtpVideoSenderTest, ClearsPendingPacketsOnInactivation) {
     EXPECT_FALSE(packet.Marker());
   }
   EXPECT_GT(transmittedPayload, DataSize::Zero());
-  EXPECT_LT(transmittedPayload, DataSize::Bytes(kImageSizeBytes / 4));
+  EXPECT_LT(transmittedPayload, DataSize::Bytes(kImageSizeBytes / 3));
 
   // Record the RTP timestamp of the first frame.
   const uint32_t first_frame_timestamp = sent_packets[0].Timestamp();

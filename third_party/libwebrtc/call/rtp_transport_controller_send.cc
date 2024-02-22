@@ -80,12 +80,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       task_queue_(TaskQueueBase::Current()),
       bitrate_configurator_(config.bitrate_config),
       pacer_started_(false),
-      pacer_(clock,
-             &packet_router_,
-             *config.trials,
-             TimeDelta::Millis(5),
-             3,
-             config.pacer_burst_interval),
+      pacer_(clock, &packet_router_, *config.trials, TimeDelta::Millis(5), 3),
       observer_(nullptr),
       controller_factory_override_(config.network_controller_factory),
       controller_factory_fallback_(

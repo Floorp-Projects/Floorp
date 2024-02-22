@@ -314,6 +314,15 @@ rtc_source_set("jsep_transport_controller") {
   ]
 }
 
+rtc_source_set("media_factory") {
+  sources = [ "media_factory.h" ]
+  deps = [
+    "../api/environment",
+    "../call:call_interfaces",
+    "../media:rtc_media_base",
+  ]
+}
+
 rtc_source_set("media_session") {
   visibility = [ "*" ]  # Used by Chrome
   sources = [
@@ -730,6 +739,7 @@ rtc_library("media_protocol_names") {
 rtc_source_set("peerconnection") {
   # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
   visibility = [ "*" ]  # Used by Chromium and others
+  allow_poison = [ "environment_construction" ]
   cflags = []
   sources = []
 
@@ -919,6 +929,7 @@ rtc_library("connection_context") {
     "connection_context.h",
   ]
   deps = [
+    ":media_factory",
     "../api:callfactory_api",
     "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",
@@ -926,6 +937,7 @@ rtc_library("connection_context") {
     "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/environment",
     "../api/neteq:neteq_api",
     "../api/transport:field_trial_based_config",
     "../api/transport:sctp_transport_factory_interface",
@@ -1223,6 +1235,7 @@ rtc_source_set("peer_connection") {
     "../api:turn_customizer",
     "../api/adaptation:resource_adaptation_api",
     "../api/crypto:options",
+    "../api/environment",
     "../api/rtc_event_log",
     "../api/task_queue:pending_task_safety_flag",
     "../api/transport:bitrate_settings",
@@ -1486,6 +1499,7 @@ rtc_library("media_stream_observer") {
 rtc_source_set("peer_connection_factory") {
   # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
   visibility = [ "*" ]  # Known to be used externally
+  allow_poison = [ "environment_construction" ]
   sources = [
     "peer_connection_factory.cc",
     "peer_connection_factory.h",
@@ -1510,10 +1524,11 @@ rtc_source_set("peer_connection_factory") {
     "../api:rtp_parameters",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/environment",
+    "../api/environment:environment_factory",
     "../api/metronome",
     "../api/neteq:neteq_api",
     "../api/rtc_event_log:rtc_event_log",
-    "../api/task_queue:task_queue",
     "../api/transport:bitrate_settings",
     "../api/transport:network_control",
     "../api/transport:sctp_transport_factory_interface",
@@ -1525,6 +1540,7 @@ rtc_source_set("peer_connection_factory") {
     "../p2p:rtc_p2p",
     "../pc:audio_track",
     "../pc:connection_context",
+    "../pc:media_factory",
     "../pc:media_stream",
     "../pc:rtp_parameters_conversion",
     "../pc:session_description",
@@ -2051,6 +2067,7 @@ rtc_source_set("legacy_stats_collector_interface") {
 rtc_source_set("libjingle_peerconnection") {
   # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
   visibility = [ "*" ]  # Used by Chrome and others
+  allow_poison = [ "environment_construction" ]
 
   deps = [
     ":peerconnection",
@@ -2362,6 +2379,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":dtls_srtp_transport",
       ":dtls_transport",
       ":dtmf_sender",
+      ":enable_fake_media",
       ":ice_server_parsing",
       ":integration_test_helpers",
       ":jitter_buffer_delay",
@@ -2401,10 +2419,13 @@ if (rtc_include_tests && !build_with_chromium) {
       ":webrtc_sdp",
       "../api:array_view",
       "../api:audio_options_api",
+      "../api:callfactory_api",
       "../api:candidate",
       "../api:create_peerconnection_factory",
       "../api:dtls_transport_interface",
       "../api:dtmf_sender_interface",
+      "../api:enable_media",
+      "../api:enable_media_with_defaults",
       "../api:fake_frame_decryptor",
       "../api:fake_frame_encryptor",
       "../api:field_trials_view",
@@ -2429,6 +2450,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/crypto:frame_decryptor_interface",
       "../api/crypto:frame_encryptor_interface",
       "../api/crypto:options",
+      "../api/environment:environment_factory",
       "../api/rtc_event_log",
       "../api/rtc_event_log:rtc_event_log_factory",
       "../api/task_queue",
@@ -2457,7 +2479,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../media:rid_description",
       "../media:rtc_data_sctp_transport_internal",
       "../media:rtc_media_config",
-      "../media:rtc_media_engine_defaults",
       "../media:stream_params",
       "../modules/audio_device:audio_device_api",
       "../modules/audio_processing:audio_processing_statistics",
@@ -2520,7 +2541,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":libjingle_peerconnection",
       ":pc_test_utils",
       ":rtc_pc",
-      "../api:callfactory_api",
       "../api:rtc_event_log_output_file",
       "../api:rtc_stats_api",
       "../api:rtp_parameters",
@@ -2627,9 +2647,9 @@ if (rtc_include_tests && !build_with_chromium) {
       ":video_track_source",
       "../api:array_view",
       "../api:audio_options_api",
-      "../api:callfactory_api",
       "../api:candidate",
       "../api:create_peerconnection_factory",
+      "../api:enable_media_with_defaults",
       "../api:fake_frame_decryptor",
       "../api:fake_frame_encryptor",
       "../api:field_trials_view",
@@ -2665,10 +2685,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "../call:call_interfaces",
       "../call/adaptation:resource_adaptation_test_utilities",
       "../logging:fake_rtc_event_log",
-      "../media:rtc_audio_video",
       "../media:rtc_media_base",
       "../media:rtc_media_config",
-      "../media:rtc_media_engine_defaults",
       "../media:rtc_media_tests_utils",
       "../media:stream_params",
       "../modules/audio_device:audio_device_api",
@@ -2719,6 +2737,24 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
   }
 
+  rtc_library("enable_fake_media") {
+    testonly = true
+    visibility = [ ":*" ]
+    sources = [
+      "test/enable_fake_media.cc",
+      "test/enable_fake_media.h",
+    ]
+    deps = [
+      ":media_factory",
+      "../api:libjingle_peerconnection_api",
+      "../api/environment",
+      "../call:call_interfaces",
+      "../media:rtc_media_tests_utils",
+      "../rtc_base:checks",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
+  }
+
   rtc_library("pc_test_utils") {
     testonly = true
     sources = [
@@ -2751,6 +2787,7 @@ if (rtc_include_tests && !build_with_chromium) {
     deps = [
       ":channel",
       ":channel_interface",
+      ":enable_fake_media",
       ":jitter_buffer_delay",
       ":libjingle_peerconnection",
       ":peer_connection_internal",
@@ -2778,6 +2815,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:sequence_checker",
       "../api/audio:audio_mixer_api",
       "../api/audio_codecs:audio_codecs_api",
+      "../api/environment:environment_factory",
       "../api/task_queue",
       "../api/task_queue:default_task_queue_factory",
       "../api/units:time_delta",

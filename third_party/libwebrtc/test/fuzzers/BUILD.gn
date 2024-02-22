@@ -12,6 +12,7 @@ import("../../webrtc.gni")
 
 rtc_library("webrtc_fuzzer_main") {
   sources = [ "webrtc_fuzzer_main.cc" ]
+  testonly = true
   deps = [
     "../../rtc_base:logging",
     "//testing/libfuzzer:fuzzing_engine_main",

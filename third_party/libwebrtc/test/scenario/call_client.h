@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "api/array_view.h"
+#include "api/environment/environment.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtp_parameters.h"
 #include "api/test/time_controller.h"
@@ -156,9 +157,8 @@ class CallClient : public EmulatedNetworkReceiverInterface {
   void UnBind();
 
   TimeController* const time_controller_;
-  Clock* clock_;
+  Environment env_;
   const std::unique_ptr<LogWriterFactoryInterface> log_writer_factory_;
-  std::unique_ptr<RtcEventLog> event_log_;
   LoggingNetworkControllerFactory network_controller_factory_;
   CallClientFakeAudio fake_audio_setup_;
   std::unique_ptr<Call> call_;
@@ -175,8 +175,6 @@ class CallClient : public EmulatedNetworkReceiverInterface {
   std::map<uint32_t, MediaType> ssrc_media_types_;
   // Defined last so it's destroyed first.
   TaskQueueForTest task_queue_;
-
-  const FieldTrialBasedConfig field_trials_;
 };
 
 class CallClientPair {

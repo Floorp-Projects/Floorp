@@ -7,6 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include <cstdint>
+
+#include "api/array_view.h"
+#include "rtc_base/network/received_packet.h"
 #if defined(WEBRTC_POSIX)
 #include <dirent.h>
 
@@ -218,12 +222,8 @@ class TurnPortTest : public ::testing::Test,
   }
   void OnUdpPortComplete(Port* port) { udp_ready_ = true; }
   void OnSocketReadPacket(rtc::AsyncPacketSocket* socket,
-                          const char* data,
-                          size_t size,
-                          const rtc::SocketAddress& remote_addr,
-                          const int64_t& packet_time_us) {
-    turn_port_->HandleIncomingPacket(socket, data, size, remote_addr,
-                                     packet_time_us);
+                          const rtc::ReceivedPacket& packet) {
+    turn_port_->HandleIncomingPacket(socket, packet);
   }
   void OnTurnPortDestroyed(PortInterface* port) { turn_port_destroyed_ = true; }
 
@@ -323,8 +323,11 @@ class TurnPortTest : public ::testing::Test,
       socket_.reset(socket_factory()->CreateUdpSocket(
           rtc::SocketAddress(kLocalAddr1.ipaddr(), 0), 0, 0));
       ASSERT_TRUE(socket_ != NULL);
-      socket_->SignalReadPacket.connect(this,
-                                        &TurnPortTest::OnSocketReadPacket);
+      socket_->RegisterReceivedPacketCallback(
+          [&](rtc::AsyncPacketSocket* socket,
+              const rtc::ReceivedPacket& packet) {
+            OnSocketReadPacket(socket, packet);
+          });
     }
 
     RelayServerConfig config;
@@ -929,7 +932,7 @@ class TurnLoggingIdValidator : public StunMessageObserver {
       }
     }
   }
-  void ReceivedChannelData(const char* data, size_t size) override {}
+  void ReceivedChannelData(rtc::ArrayView<const uint8_t> packet) override {}
 
  private:
   const char* expect_val_;
@@ -1193,8 +1196,10 @@ TEST_F(TurnPortTest, TestTurnAllocateMismatch) {
   // Verify that all packets received from the shared socket are ignored.
   std::string test_packet = "Test packet";
   EXPECT_FALSE(turn_port_->HandleIncomingPacket(
-      socket_.get(), test_packet.data(), test_packet.size(),
-      rtc::SocketAddress(kTurnUdpExtAddr.ipaddr(), 0), rtc::TimeMicros()));
+      socket_.get(),
+      rtc::ReceivedPacket::CreateFromLegacy(
+          test_packet.data(), test_packet.size(), rtc::TimeMicros(),
+          rtc::SocketAddress(kTurnUdpExtAddr.ipaddr(), 0))));
 }
 
 // Tests that a shared-socket-TurnPort creates its own socket after
@@ -1722,14 +1727,14 @@ class MessageObserver : public StunMessageObserver {
     const StunByteStringAttribute* attr =
         msg->GetByteString(TestTurnCustomizer::STUN_ATTR_COUNTER);
     if (attr != nullptr && attr_counter_ != nullptr) {
-      rtc::ByteBufferReader buf(attr->bytes(), attr->length());
+      rtc::ByteBufferReader buf(attr->array_view());
       unsigned int val = ~0u;
       buf.ReadUInt32(&val);
       (*attr_counter_)++;
     }
   }
 
-  void ReceivedChannelData(const char* data, size_t size) override {
+  void ReceivedChannelData(rtc::ArrayView<const uint8_t> payload) override {
     if (channel_data_counter_ != nullptr) {
       (*channel_data_counter_)++;
     }

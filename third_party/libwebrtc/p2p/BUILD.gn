@@ -105,7 +105,6 @@ rtc_library("rtc_p2p") {
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api:turn_customizer",
-    "../api:wrapping_async_dns_resolver",
     "../api/crypto:options",
     "../api/rtc_event_log",
     "../api/task_queue",
@@ -117,7 +116,6 @@ rtc_library("rtc_p2p") {
     "../logging:ice_log",
     "../rtc_base:async_dns_resolver",
     "../rtc_base:async_packet_socket",
-    "../rtc_base:async_resolver_interface",
     "../rtc_base:async_tcp_socket",
     "../rtc_base:async_udp_socket",
     "../rtc_base:buffer",
@@ -220,7 +218,6 @@ if (rtc_include_tests) {
       "base/fake_dtls_transport.h",
       "base/fake_packet_transport.h",
       "base/mock_active_ice_controller.h",
-      "base/mock_async_resolver.h",
       "base/mock_dns_resolving_packet_socket_factory.h",
       "base/mock_ice_agent.h",
       "base/mock_ice_controller.h",
@@ -243,7 +240,6 @@ if (rtc_include_tests) {
       "../api:turn_customizer",
       "../api/crypto:options",
       "../api/transport:stun_types",
-      "../rtc_base:async_resolver_interface",
       "../rtc_base:async_udp_socket",
       "../rtc_base:copy_on_write_buffer",
       "../rtc_base:gunit_helpers",
@@ -268,7 +264,6 @@ if (rtc_include_tests) {
 
     sources = [
       "base/async_stun_tcp_socket_unittest.cc",
-      "base/basic_async_resolver_factory_unittest.cc",
       "base/dtls_transport_unittest.cc",
       "base/ice_credentials_iterator_unittest.cc",
       "base/p2p_transport_channel_unittest.cc",
@@ -294,6 +289,7 @@ if (rtc_include_tests) {
       ":p2p_server_utils",
       ":p2p_test_utils",
       ":rtc_p2p",
+      "../api:array_view",
       "../api:candidate",
       "../api:dtls_transport_interface",
       "../api:field_trials_view",
@@ -332,6 +328,7 @@ if (rtc_include_tests) {
       "../rtc_base:testclient",
       "../rtc_base:threading",
       "../rtc_base:timeutils",
+      "../rtc_base/network:received_packet",
       "../rtc_base/network:sent_packet",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:metrics",
@@ -376,6 +373,7 @@ rtc_library("p2p_server_utils") {
     "../rtc_base:socket_address",
     "../rtc_base:ssl",
     "../rtc_base:stringutils",
+    "../rtc_base/network:received_packet",
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
@@ -394,6 +392,7 @@ rtc_library("libstunprober") {
 
   deps = [
     ":rtc_p2p",
+    "../api:array_view",
     "../api:async_dns_resolver",
     "../api:packet_socket_factory",
     "../api:sequence_checker",
@@ -401,7 +400,6 @@ rtc_library("libstunprober") {
     "../api/transport:stun_types",
     "../api/units:time_delta",
     "../rtc_base:async_packet_socket",
-    "../rtc_base:async_resolver_interface",
     "../rtc_base:byte_buffer",
     "../rtc_base:checks",
     "../rtc_base:ip_address",
@@ -411,6 +409,7 @@ rtc_library("libstunprober") {
     "../rtc_base:ssl",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
+    "../rtc_base/network:received_packet",
     "../rtc_base/system:rtc_export",
   ]
 }

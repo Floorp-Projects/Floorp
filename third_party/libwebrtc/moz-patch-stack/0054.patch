@@ -15,7 +15,7 @@ Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
  create mode 100644 call/call_basic_stats.h
 
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 825097e8d4..47018a570a 100644
+index fa733a67b9..626ed95066 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
@@ -32,7 +32,7 @@ index 825097e8d4..47018a570a 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/call.cc b/call/call.cc
-index c0ee5a92f4..0f3699501e 100644
+index d2ac705274..63dc370f1a 100644
 --- a/call/call.cc
 +++ b/call/call.cc
 @@ -460,19 +460,6 @@ class Call final : public webrtc::Call,
@@ -54,7 +54,7 @@ index c0ee5a92f4..0f3699501e 100644
 -
  /* Mozilla: Avoid this since it could use GetRealTimeClock().
  std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-   Clock* clock = Clock::GetRealTimeClock();
+   Clock* clock =
 diff --git a/call/call.h b/call/call.h
 index 6f8e4cd6d7..b36872f5b5 100644
 --- a/call/call.h

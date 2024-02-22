@@ -30,7 +30,7 @@ index a4e3e897fd..e777a45f92 100644
  
  enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index e207598d68..58485f28e9 100644
+index f31b239c71..7279bed476 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
 @@ -13,6 +13,7 @@

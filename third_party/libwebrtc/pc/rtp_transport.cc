@@ -180,12 +180,16 @@ bool RtpTransport::UnregisterRtpDemuxerSink(RtpPacketSinkInterface* sink) {
   return true;
 }
 
+flat_set<uint32_t> RtpTransport::GetSsrcsForSink(RtpPacketSinkInterface* sink) {
+  return rtp_demuxer_.GetSsrcsForSink(sink);
+}
+
 void RtpTransport::DemuxPacket(rtc::CopyOnWriteBuffer packet,
                                int64_t packet_time_us) {
-  webrtc::RtpPacketReceived parsed_packet(
-      &header_extension_map_, packet_time_us == -1
-                                  ? Timestamp::MinusInfinity()
-                                  : Timestamp::Micros(packet_time_us));
+  RtpPacketReceived parsed_packet(&header_extension_map_,
+                                  packet_time_us == -1
+                                      ? Timestamp::MinusInfinity()
+                                      : Timestamp::Micros(packet_time_us));
   if (!parsed_packet.Parse(std::move(packet))) {
     RTC_LOG(LS_ERROR)
         << "Failed to parse the incoming RTP packet before demuxing. Drop it.";
@@ -226,7 +230,14 @@ void RtpTransport::OnSentPacket(rtc::PacketTransportInternal* packet_transport,
                                 const rtc::SentPacket& sent_packet) {
   RTC_DCHECK(packet_transport == rtp_packet_transport_ ||
              packet_transport == rtcp_packet_transport_);
+  if (processing_sent_packet_) {
+    TaskQueueBase::Current()->PostTask(SafeTask(
+        safety_.flag(), [this, sent_packet] { SendSentPacket(sent_packet); }));
+    return;
+  }
+  processing_sent_packet_ = true;
   SendSentPacket(sent_packet);
+  processing_sent_packet_ = false;
 }
 
 void RtpTransport::OnRtpPacketReceived(rtc::CopyOnWriteBuffer packet,

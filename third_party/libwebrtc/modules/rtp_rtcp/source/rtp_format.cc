@@ -22,6 +22,9 @@
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "rtc_base/checks.h"
+#ifdef RTC_ENABLE_H265
+#include "modules/rtp_rtcp/source/rtp_packetizer_h265.h"
+#endif
 
 namespace webrtc {
 
@@ -57,7 +60,11 @@ std::unique_ptr<RtpPacketizer> RtpPacketizer::Create(
       return std::make_unique<RtpPacketizerAv1>(
           payload, limits, rtp_video_header.frame_type,
           rtp_video_header.is_last_frame_in_picture);
-    // TODO(bugs.webrtc.org/13485): Implement RtpPacketizerH265.
+#ifdef RTC_ENABLE_H265
+    case kVideoCodecH265: {
+      return std::make_unique<RtpPacketizerH265>(payload, limits);
+    }
+#endif
     default: {
       return std::make_unique<RtpPacketizerGeneric>(payload, limits,
                                                     rtp_video_header);

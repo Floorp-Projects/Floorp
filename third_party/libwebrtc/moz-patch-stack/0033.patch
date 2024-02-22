@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc
  4 files changed, 35 insertions(+)
 
 diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index 0caf59a20e..bffb910832 100644
+index c9dc42c04e..e7ebb2bf4e 100644
 --- a/audio/audio_send_stream.cc
 +++ b/audio/audio_send_stream.cc
 @@ -431,6 +431,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
@@ -27,10 +27,10 @@ index 0caf59a20e..bffb910832 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 81d5c66652..ddc3323df9 100644
+index 310e0517cf..549e65a59c 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -55,6 +55,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
+@@ -56,6 +56,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
  class RtpPacketSenderProxy;
  class TransportSequenceNumberProxy;
  
@@ -62,7 +62,7 @@ index 81d5c66652..ddc3323df9 100644
  class ChannelSend : public ChannelSendInterface,
                      public AudioPacketizationCallback,  // receive encoded
                                                          // packets from the ACM
-@@ -207,6 +232,8 @@ class ChannelSend : public ChannelSendInterface,
+@@ -210,6 +235,8 @@ class ChannelSend : public ChannelSendInterface,
    bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
    bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
  
@@ -71,7 +71,7 @@ index 81d5c66652..ddc3323df9 100644
    PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
        nullptr;
    const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
-@@ -387,6 +414,7 @@ ChannelSend::ChannelSend(
+@@ -398,6 +425,7 @@ ChannelSend::ChannelSend(
      const FieldTrialsView& field_trials)
      : ssrc_(ssrc),
        event_log_(rtc_event_log),
@@ -79,7 +79,7 @@ index 81d5c66652..ddc3323df9 100644
        rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
        retransmission_rate_limiter_(
            new RateLimiter(clock, kMaxRetransmissionWindowMs)),
-@@ -411,6 +439,8 @@ ChannelSend::ChannelSend(
+@@ -423,6 +451,8 @@ ChannelSend::ChannelSend(
  
    configuration.event_log = event_log_;
    configuration.rtt_stats = rtcp_rtt_stats;
@@ -88,7 +88,7 @@ index 81d5c66652..ddc3323df9 100644
    if (field_trials.IsDisabled("WebRTC-DisableRtxRateLimiter")) {
      configuration.retransmission_rate_limiter =
          retransmission_rate_limiter_.get();
-@@ -673,6 +703,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -687,6 +717,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();
@@ -97,7 +97,7 @@ index 81d5c66652..ddc3323df9 100644
    StreamDataCounters rtp_stats;
    StreamDataCounters rtx_stats;
 diff --git a/audio/channel_send.h b/audio/channel_send.h
-index 00d954c952..f0c9232296 100644
+index b6a6a37bf5..f36085c1fa 100644
 --- a/audio/channel_send.h
 +++ b/audio/channel_send.h
 @@ -43,6 +43,7 @@ struct CallSendStatistics {

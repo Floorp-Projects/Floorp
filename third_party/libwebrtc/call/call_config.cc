@@ -14,6 +14,14 @@
 
 namespace webrtc {
 
+CallConfig::CallConfig(const Environment& env,
+                       TaskQueueBase* network_task_queue)
+    : env(env),
+      event_log(&env.event_log()),
+      task_queue_factory(&env.task_queue_factory()),
+      trials(&env.field_trials()),
+      network_task_queue_(network_task_queue) {}
+
 CallConfig::CallConfig(RtcEventLog* event_log,
                        TaskQueueBase* network_task_queue /* = nullptr*/)
     : event_log(event_log), network_task_queue_(network_task_queue) {
@@ -31,7 +39,6 @@ RtpTransportConfig CallConfig::ExtractTransportConfig() const {
       network_state_predictor_factory;
   transportConfig.task_queue_factory = task_queue_factory;
   transportConfig.trials = trials;
-  transportConfig.pacer_burst_interval = pacer_burst_interval;
 
   return transportConfig;
 }

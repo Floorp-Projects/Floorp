@@ -1,0 +1,24 @@
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Fri, 2 Feb 2024 17:13:00 -0500
+Subject: Bug 1876843 - (fix-082cb56ee7) remove mozilla dependency on
+ pc:media_factory.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/136b3fc0377be6dcaa302469d27968f445e0355e
+---
+ api/BUILD.gn | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/api/BUILD.gn b/api/BUILD.gn
+index e3df28ad89..10a4c8c95f 100644
+--- a/api/BUILD.gn
++++ b/api/BUILD.gn
+@@ -49,6 +49,9 @@ rtc_source_set("enable_media") {
+     "../rtc_base/system:rtc_export",
+     "environment",
+   ]
++  if (build_with_mozilla) {
++    deps -= [ "../pc:media_factory" ]
++  }
+ }
+ 
+ rtc_source_set("enable_media_with_defaults") {

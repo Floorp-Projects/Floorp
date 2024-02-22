@@ -16,8 +16,10 @@
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "p2p/base/mock_dns_resolving_packet_socket_factory.h"
 #include "p2p/base/test_stun_server.h"
+#include "rtc_base/async_packet_socket.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/helpers.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/virtual_socket_server.h"
@@ -94,8 +96,10 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
         thread_(ss_.get()),
         network_(network),
         socket_factory_(ss_.get()),
-        stun_server_1_(cricket::TestStunServer::Create(ss_.get(), kStunAddr1)),
-        stun_server_2_(cricket::TestStunServer::Create(ss_.get(), kStunAddr2)),
+        stun_server_1_(
+            cricket::TestStunServer::Create(ss_.get(), kStunAddr1, thread_)),
+        stun_server_2_(
+            cricket::TestStunServer::Create(ss_.get(), kStunAddr2, thread_)),
         mdns_responder_provider_(new FakeMdnsResponderProvider()),
         done_(false),
         error_(false),
@@ -160,7 +164,10 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
           rtc::SocketAddress(kLocalAddr.ipaddr(), 0), 0, 0));
     }
     ASSERT_TRUE(socket_ != NULL);
-    socket_->SignalReadPacket.connect(this, &StunPortTestBase::OnReadPacket);
+    socket_->RegisterReceivedPacketCallback(
+        [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+          OnReadPacket(socket, packet);
+        });
     stun_port_ = cricket::UDPPort::Create(
         rtc::Thread::Current(), socket_factory(), &network_, socket_.get(),
         rtc::CreateRandomString(16), rtc::CreateRandomString(22), false,
@@ -178,18 +185,15 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
   void PrepareAddress() { stun_port_->PrepareAddress(); }
 
   void OnReadPacket(rtc::AsyncPacketSocket* socket,
-                    const char* data,
-                    size_t size,
-                    const rtc::SocketAddress& remote_addr,
-                    const int64_t& /* packet_time_us */) {
-    stun_port_->HandleIncomingPacket(socket, data, size, remote_addr,
-                                     /* packet_time_us */ -1);
+                    const rtc::ReceivedPacket& packet) {
+    stun_port_->HandleIncomingPacket(socket, packet);
   }
 
   void SendData(const char* data, size_t len) {
-    stun_port_->HandleIncomingPacket(socket_.get(), data, len,
-                                     rtc::SocketAddress("22.22.22.22", 0),
-                                     /* packet_time_us */ -1);
+    stun_port_->HandleIncomingPacket(socket_.get(),
+                                     rtc::ReceivedPacket::CreateFromLegacy(
+                                         data, len, /* packet_time_us */ -1,
+                                         rtc::SocketAddress("22.22.22.22", 0)));
   }
 
   void EnableMdnsObfuscation() {
@@ -224,14 +228,16 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
   cricket::TestStunServer* stun_server_1() { return stun_server_1_.get(); }
   cricket::TestStunServer* stun_server_2() { return stun_server_2_.get(); }
 
+  rtc::AutoSocketServerThread& thread() { return thread_; }
+
  private:
   std::unique_ptr<rtc::VirtualSocketServer> ss_;
   rtc::AutoSocketServerThread thread_;
   rtc::Network network_;
   rtc::BasicPacketSocketFactory socket_factory_;
   std::unique_ptr<cricket::UDPPort> stun_port_;
-  std::unique_ptr<cricket::TestStunServer> stun_server_1_;
-  std::unique_ptr<cricket::TestStunServer> stun_server_2_;
+  cricket::TestStunServer::StunServerPtr stun_server_1_;
+  cricket::TestStunServer::StunServerPtr stun_server_2_;
   std::unique_ptr<rtc::AsyncPacketSocket> socket_;
   std::unique_ptr<rtc::MdnsResponderProvider> mdns_responder_provider_;
   bool done_;
@@ -618,12 +624,12 @@ class StunIPv6PortTestBase : public StunPortTestBase {
                                       kIPv6LocalAddr.ipaddr(),
                                       128),
                          kIPv6LocalAddr.ipaddr()) {
-    stun_server_ipv6_1_.reset(
-        cricket::TestStunServer::Create(ss(), kIPv6StunAddr1));
+    stun_server_ipv6_1_ =
+        cricket::TestStunServer::Create(ss(), kIPv6StunAddr1, thread());
   }
 
  protected:
-  std::unique_ptr<cricket::TestStunServer> stun_server_ipv6_1_;
+  cricket::TestStunServer::StunServerPtr stun_server_ipv6_1_;
 };
 
 class StunIPv6PortTestWithRealClock : public StunIPv6PortTestBase {};

@@ -156,8 +156,12 @@ rtc_library("byte_buffer") {
   deps = [
     ":buffer",
     ":byte_order",
+    "../api:array_view",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("buffer_queue") {
@@ -371,6 +375,7 @@ rtc_source_set("refcount") {
   ]
   deps = [
     ":macromagic",
+    "../api:ref_count",
     "../api:scoped_refptr",
   ]
 }
@@ -613,6 +618,7 @@ rtc_library("stringutils") {
     "string_to_number.h",
     "string_utils.cc",
     "string_utils.h",
+    "strings/str_join.h",
     "strings/string_builder.cc",
     "strings/string_builder.h",
     "strings/string_format.cc",
@@ -925,20 +931,6 @@ rtc_library("net_test_helpers") {
   }
 }
 
-rtc_library("async_resolver_interface") {
-  visibility = [ "*" ]
-  sources = [
-    "async_resolver_interface.cc",
-    "async_resolver_interface.h",
-  ]
-  deps = [
-    ":checks",
-    ":socket_address",
-    "system:rtc_export",
-    "third_party/sigslot",
-  ]
-}
-
 rtc_library("async_dns_resolver") {
   sources = [
     "async_dns_resolver.cc",
@@ -1037,8 +1029,6 @@ rtc_library("threading") {
   visibility = [ "*" ]
 
   sources = [
-    "async_resolver.cc",
-    "async_resolver.h",
     "internal/default_socket_server.cc",
     "internal/default_socket_server.h",
     "network_monitor.cc",
@@ -1060,7 +1050,6 @@ rtc_library("threading") {
   ]
   deps = [
     ":async_dns_resolver",
-    ":async_resolver_interface",
     ":byte_order",
     ":checks",
     ":criticalsection",
@@ -1395,16 +1384,33 @@ if (!build_with_mozilla) {
   ]
   deps = [
     ":callback_list",
+    ":checks",
     ":dscp",
     ":socket",
     ":timeutils",
     "../api:sequence_checker",
+    "network:received_packet",
     "network:sent_packet",
     "system:no_unique_address",
     "system:rtc_export",
     "third_party/sigslot",
   ]
 }
+}
+
+if (rtc_include_tests) {
+  rtc_library("async_packet_socket_unittest") {
+    testonly = true
+    visibility = [ "*" ]
+    sources = [ "async_packet_socket_unittest.cc" ]
+    deps = [
+      ":async_packet_socket",
+      ":gunit_helpers",
+      "../test:test_support",
+      "network:received_packet",
+      "third_party/sigslot",
+    ]
+  }
 }
 
 rtc_library("mdns_responder_interface") {
@@ -1680,10 +1686,13 @@ rtc_library("testclient") {
   ]
   deps = [
     ":async_udp_socket",
+    ":buffer",
     ":gunit_helpers",
     ":rtc_base_tests_utils",
     ":threading",
     ":timeutils",
+    "../api/units:timestamp",
+    "network:received_packet",
     "synchronization:mutex",
   ]
 }
@@ -1766,12 +1775,14 @@ rtc_library("rtc_base_tests_utils") {
     "../api:make_ref_counted",
     "../api:refcountedbase",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/task_queue",
     "../api/units:time_delta",
     "../api/units:timestamp",
     "../test:scoped_key_value_config",
     "memory:always_valid_pointer",
     "memory:fifo_buffer",
+    "network:received_packet",
     "synchronization:mutex",
     "third_party/sigslot",
   ]
@@ -1929,6 +1940,7 @@ if (rtc_include_tests) {
         "string_encode_unittest.cc",
         "string_to_number_unittest.cc",
         "string_utils_unittest.cc",
+        "strings/str_join_unittest.cc",
         "strings/string_builder_unittest.cc",
         "strings/string_format_unittest.cc",
         "strong_alias_unittest.cc",
@@ -1993,6 +2005,7 @@ if (rtc_include_tests) {
         ":zero_memory",
         "../api:array_view",
         "../api:make_ref_counted",
+        "../api:ref_count",
         "../api:scoped_refptr",
         "../api/numerics",
         "../api/units:data_rate",

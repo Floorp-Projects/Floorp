@@ -34,7 +34,7 @@ protected:
     virtual ~VideoInputFeedBack(){}
 };
 
-class VideoCaptureModule : public rtc::RefCountInterface {
+class VideoCaptureModule : public RefCountInterface {
  public:
   // Interface for receiving information about available camera devices.
   class DeviceInfo {

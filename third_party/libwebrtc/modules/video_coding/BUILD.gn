@@ -757,7 +757,6 @@ if (rtc_include_tests) {
         "../../api/video_codecs:video_codecs_api",
         "../../modules/utility:utility",
         "../../rtc_base:checks",
-        "../../rtc_base:ignore_wundef",
         "../../sdk/android:internal_jni",
         "../../sdk/android:native_api_base",
         "../../sdk/android:native_api_codecs",
@@ -852,8 +851,6 @@ if (rtc_include_tests) {
       "../../api:frame_generator_api",
       "../../api:scoped_refptr",
       "../../api:sequence_checker",
-      "../../api:video_codec_stats_api",
-      "../../api:video_codec_tester_api",
       "../../api:videocodec_test_fixture_api",
       "../../api/numerics:numerics",
       "../../api/task_queue",
@@ -995,46 +992,6 @@ if (rtc_include_tests) {
     ]
   }
 
-  rtc_library("video_codec_tester") {
-    testonly = true
-    sources = [
-      "codecs/test/video_codec_analyzer.cc",
-      "codecs/test/video_codec_analyzer.h",
-      "codecs/test/video_codec_stats_impl.cc",
-      "codecs/test/video_codec_stats_impl.h",
-      "codecs/test/video_codec_tester_impl.cc",
-      "codecs/test/video_codec_tester_impl.h",
-    ]
-
-    deps = [
-      ":video_coding_utility",
-      "../../api:sequence_checker",
-      "../../api:video_codec_stats_api",
-      "../../api:video_codec_tester_api",
-      "../../api/numerics:numerics",
-      "../../api/task_queue:default_task_queue_factory",
-      "../../api/test/metrics:metrics_logger",
-      "../../api/units:data_rate",
-      "../../api/units:frequency",
-      "../../api/units:time_delta",
-      "../../api/units:timestamp",
-      "../../api/video:encoded_image",
-      "../../api/video:resolution",
-      "../../api/video:video_codec_constants",
-      "../../api/video:video_frame",
-      "../../rtc_base:checks",
-      "../../rtc_base:rtc_event",
-      "../../rtc_base:task_queue_for_test",
-      "../../rtc_base:timeutils",
-      "../../rtc_base/system:no_unique_address",
-      "../../system_wrappers",
-      "../../test:video_test_support",
-      "//third_party/libyuv",
-    ]
-
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-  }
-
   rtc_test("video_codec_perf_tests") {
     testonly = true
 
@@ -1042,28 +999,20 @@ if (rtc_include_tests) {
 
     deps = [
       ":video_codec_interface",
-      ":video_codec_tester",
-      "../../api:create_video_codec_tester_api",
-      "../../api:video_codec_tester_api",
-      "../../api:videocodec_test_stats_api",
       "../../api/test/metrics:global_metrics_logger_and_exporter",
       "../../api/units:data_rate",
       "../../api/units:frequency",
-      "../../api/video:encoded_image",
       "../../api/video:resolution",
-      "../../api/video:video_frame",
-      "../../api/video_codecs:scalability_mode",
-      "../../api/video_codecs:video_codecs_api",
-      "../../media:rtc_internal_video_codecs",
+      "../../api/video_codecs:builtin_video_decoder_factory",
+      "../../api/video_codecs:builtin_video_encoder_factory",
+      "../../modules/video_coding/svc:scalability_mode_util",
       "../../rtc_base:logging",
+      "../../rtc_base:stringutils",
       "../../test:fileutils",
       "../../test:test_flags",
       "../../test:test_main",
       "../../test:test_support",
-      "../../test:video_test_support",
-      "../rtp_rtcp:rtp_rtcp_format",
-      "svc:scalability_mode_util",
-      "//third_party/libyuv",
+      "../../test:video_codec_tester",
     ]
 
     if (is_android) {
@@ -1191,9 +1140,6 @@ if (rtc_include_tests) {
 
     sources = [
       "chain_diff_calculator_unittest.cc",
-      "codecs/test/video_codec_analyzer_unittest.cc",
-      "codecs/test/video_codec_stats_impl_unittest.cc",
-      "codecs/test/video_codec_tester_impl_unittest.cc",
       "codecs/test/videocodec_test_fixture_config_unittest.cc",
       "codecs/test/videocodec_test_stats_impl_unittest.cc",
       "codecs/test/videoprocessor_unittest.cc",
@@ -1248,7 +1194,6 @@ if (rtc_include_tests) {
       ":packet_buffer",
       ":simulcast_test_fixture_impl",
       ":video_codec_interface",
-      ":video_codec_tester",
       ":video_codecs_test_framework",
       ":video_coding",
       ":video_coding_legacy",
@@ -1271,7 +1216,6 @@ if (rtc_include_tests) {
       "../../api:rtp_packet_info",
       "../../api:scoped_refptr",
       "../../api:simulcast_test_fixture_api",
-      "../../api:video_codec_tester_api",
       "../../api:videocodec_test_fixture_api",
       "../../api/task_queue",
       "../../api/task_queue:default_task_queue_factory",
@@ -1297,6 +1241,7 @@ if (rtc_include_tests) {
       "../../common_video/generic_frame_descriptor",
       "../../common_video/test:utilities",
       "../../media:media_constants",
+      "../../media:rtc_internal_video_codecs",
       "../../media:rtc_media_base",
       "../../rtc_base:checks",
       "../../rtc_base:gunit_helpers",
