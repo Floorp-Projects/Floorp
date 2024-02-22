@@ -56,7 +56,6 @@
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
 #include "vm/Time.h"
-#include "vm/Warnings.h"
 
 #include "vm/Compartment-inl.h"  // For js::UnwrapAndTypeCheckThis
 #include "vm/GeckoProfiler-inl.h"
@@ -1911,16 +1910,6 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, JSLinearString* s,
   // JSRuntime::setUseCounter out of AutoCheckCannotGC's scope.
   if (countLateWeekday) {
     cx->runtime()->setUseCounter(cx->global(), JSUseCounter::LATE_WEEKDAY);
-
-    if (!cx->realm()->warnedAboutDateLateWeekday) {
-      if (!WarnNumberASCII(cx, JSMSG_DEPRECATED_LATE_WEEKDAY)) {
-        // Proceed as if nothing happened if warning fails
-        if (cx->isExceptionPending()) {
-          cx->clearPendingException();
-        }
-      }
-      cx->realm()->warnedAboutDateLateWeekday = true;
-    }
   }
 
   return success;
