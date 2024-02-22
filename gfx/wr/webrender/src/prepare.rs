@@ -32,7 +32,7 @@ use crate::render_task_graph::{RenderTaskId};
 use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask, SubPass, MaskSubPass, EmptyTask};
-use crate::renderer::{GpuBufferBuilder, GpuBufferAddress};
+use crate::renderer::{GpuBufferBuilderF, GpuBufferAddress};
 use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
 use crate::space::SpaceMapper;
 use crate::util::{clamp_to_scale_factor, pack_as_float, MaxRect};
@@ -452,7 +452,7 @@ fn prepare_interned_prim_for_render(
                         kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
                     },
                     frame_state.gpu_cache,
-                    frame_state.frame_gpu_data,
+                    frame_state.frame_gpu_data_f,
                     frame_state.rg_builder,
                     None,
                     false,
@@ -607,7 +607,7 @@ fn prepare_interned_prim_for_render(
                 handles.push(frame_state.resource_cache.request_render_task(
                     cache_key,
                     frame_state.gpu_cache,
-                    frame_state.frame_gpu_data,
+                    frame_state.frame_gpu_data_f,
                     frame_state.rg_builder,
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
@@ -764,7 +764,7 @@ fn prepare_interned_prim_for_render(
                 //           the written block count) to gpu-buffer, we could add a trait for
                 //           writing typed data?
                 let main_prim_address = write_prim_blocks(
-                    frame_state.frame_gpu_data,
+                    frame_state.frame_gpu_data_f,
                     prim_data.common.prim_rect,
                     prim_instance.vis.clip_chain.local_clip_rect,
                     premul_color,
@@ -1138,7 +1138,7 @@ fn prepare_interned_prim_for_render(
 
             let stops_address = GradientGpuBlockBuilder::build(
                 prim_data.reverse_stops,
-                frame_state.frame_gpu_data,
+                frame_state.frame_gpu_data_f,
                 &prim_data.stops,
             );
 
@@ -1297,7 +1297,7 @@ fn prepare_interned_prim_for_render(
                     .cast_unit();
 
                 let main_prim_address = write_prim_blocks(
-                    frame_state.frame_gpu_data,
+                    frame_state.frame_gpu_data_f,
                     prim_local_rect,
                     prim_instance.vis.clip_chain.local_clip_rect,
                     PremultipliedColorF::WHITE,
@@ -1820,7 +1820,7 @@ pub fn update_clip_task(
             root_spatial_node_index,
             frame_state.clip_store,
             frame_state.gpu_cache,
-            frame_state.frame_gpu_data,
+            frame_state.frame_gpu_data_f,
             frame_state.resource_cache,
             frame_state.rg_builder,
             &mut data_stores.clip,
@@ -1881,7 +1881,7 @@ pub fn update_brush_segment_clip_task(
         root_spatial_node_index,
         frame_state.clip_store,
         frame_state.gpu_cache,
-        frame_state.frame_gpu_data,
+        frame_state.frame_gpu_data_f,
         frame_state.resource_cache,
         frame_state.rg_builder,
         clip_data_store,
@@ -2117,7 +2117,7 @@ fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: D
 }
 
 pub fn write_prim_blocks(
-    builder: &mut GpuBufferBuilder,
+    builder: &mut GpuBufferBuilderF,
     prim_rect: LayoutRect,
     clip_rect: LayoutRect,
     color: PremultipliedColorF,
@@ -2223,7 +2223,7 @@ fn add_composite_prim(
     segments: &[QuadSegment],
 ) {
     let composite_prim_address = write_prim_blocks(
-        frame_state.frame_gpu_data,
+        frame_state.frame_gpu_data_f,
         rect,
         rect,
         color,

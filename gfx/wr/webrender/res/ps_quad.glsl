@@ -61,7 +61,7 @@ struct QuadPrimitive {
 QuadSegment fetch_segment(int base, int index) {
     QuadSegment seg;
 
-    vec4 texels[2] = fetch_from_gpu_buffer_2(base + 3 + index * 2);
+    vec4 texels[2] = fetch_from_gpu_buffer_2f(base + 3 + index * 2);
 
     seg.rect = RectWithEndpoint(texels[0].xy, texels[0].zw);
     seg.uv_rect = texels[1];
@@ -72,7 +72,7 @@ QuadSegment fetch_segment(int base, int index) {
 QuadPrimitive fetch_primitive(int index) {
     QuadPrimitive prim;
 
-    vec4 texels[3] = fetch_from_gpu_buffer_3(index);
+    vec4 texels[3] = fetch_from_gpu_buffer_3f(index);
 
     prim.bounds = RectWithEndpoint(texels[0].xy, texels[0].zw);
     prim.clip = RectWithEndpoint(texels[1].xy, texels[1].zw);

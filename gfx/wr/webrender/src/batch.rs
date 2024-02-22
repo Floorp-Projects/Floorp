@@ -27,7 +27,7 @@ use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::{RenderTaskAddress, RenderTaskKind, SubPass};
 use crate::renderer::{BlendMode, ShaderColorMode};
-use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilder, GpuBufferAddress};
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilderF, GpuBufferAddress};
 use crate::resource_cache::{GlyphFetchResult, ImageProperties};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
@@ -857,7 +857,7 @@ impl BatchBuilder {
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
-        _gpu_buffer_builder: &mut GpuBufferBuilder,
+        _gpu_buffer_builder: &mut GpuBufferBuilderF,
         segments: &[RenderTaskId],
     ) {
         let (prim_instance_index, extra_prim_gpu_address) = match cmd {

@@ -54,12 +54,12 @@ void main(void) {
 
 #ifdef SWGL_DRAW_SPAN
 void swgl_drawSpanRGBA8() {
-    int address = swgl_validateGradient(sGpuBuffer, get_gpu_buffer_uv(v_gradient_address.x), int(GRADIENT_ENTRIES + 2.0));
+    int address = swgl_validateGradient(sGpuBufferF, get_gpu_buffer_uv(v_gradient_address.x), int(GRADIENT_ENTRIES + 2.0));
     if (address < 0) {
         return;
     }
 
-    swgl_commitLinearGradientRGBA8(sGpuBuffer, address, GRADIENT_ENTRIES, false, v_gradient_repeat.x != 0.0,
+    swgl_commitLinearGradientRGBA8(sGpuBufferF, address, GRADIENT_ENTRIES, false, v_gradient_repeat.x != 0.0,
                                    v_pos, v_scale_dir, v_start_offset.x);
 }
 #endif

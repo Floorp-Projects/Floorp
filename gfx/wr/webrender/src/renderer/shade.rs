@@ -282,7 +282,7 @@ impl LazilyCompiledShader {
                             ("sGpuCache", TextureSampler::GpuCache),
                             ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
                             ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
-                            ("sGpuBuffer", TextureSampler::GpuBuffer),
+                            ("sGpuBufferF", TextureSampler::GpuBufferF),
                         ],
                     );
                 }
@@ -300,7 +300,7 @@ impl LazilyCompiledShader {
                             ("sPrimitiveHeadersF", TextureSampler::PrimitiveHeadersF),
                             ("sPrimitiveHeadersI", TextureSampler::PrimitiveHeadersI),
                             ("sClipMask", TextureSampler::ClipMask),
-                            ("sGpuBuffer", TextureSampler::GpuBuffer),
+                            ("sGpuBufferF", TextureSampler::GpuBufferF),
                         ],
                     );
                 }
