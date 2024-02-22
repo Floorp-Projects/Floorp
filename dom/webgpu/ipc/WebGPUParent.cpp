@@ -354,6 +354,11 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   nsAutoCString message(aMessage);
   req->mParent->LoseDevice(deviceId, reason, message);
 
+  auto it = req->mParent->mDeviceFenceHandles.find(deviceId);
+  if (it != req->mParent->mDeviceFenceHandles.end()) {
+    req->mParent->mDeviceFenceHandles.erase(it);
+  }
+
   // We're no longer tracking the memory for this callback, so erase
   // it to ensure we don't leak memory.
   req->mParent->mDeviceLostRequests.erase(deviceId);
@@ -394,7 +399,9 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   HANDLE handle =
       wgpu_server_get_device_fence_handle(mContext.get(), aDeviceId);
   if (handle) {
-    mFenceHandle = new gfx::FileHandleWrapper(UniqueFileHandle(handle));
+    RefPtr<gfx::FileHandleWrapper> fenceHandle =
+        new gfx::FileHandleWrapper(UniqueFileHandle(handle));
+    mDeviceFenceHandles.emplace(aDeviceId, std::move(fenceHandle));
   }
 #endif
 
@@ -1083,9 +1090,12 @@ void WebGPUParent::PostExternalTexture(
   const auto index = aExternalTexture->GetSubmissionIndex();
   MOZ_ASSERT(index != 0);
 
+  RefPtr<PresentationData> data = lookup->second.get();
+
   Maybe<gfx::FenceInfo> fenceInfo;
-  if (mFenceHandle) {
-    fenceInfo = Some(gfx::FenceInfo(mFenceHandle, index));
+  auto it = mDeviceFenceHandles.find(data->mDeviceId);
+  if (it != mDeviceFenceHandles.end()) {
+    fenceInfo = Some(gfx::FenceInfo(it->second, index));
   }
 
   Maybe<layers::SurfaceDescriptor> desc =
@@ -1097,8 +1107,6 @@ void WebGPUParent::PostExternalTexture(
 
   mRemoteTextureOwner->PushTexture(aRemoteTextureId, aOwnerId, aExternalTexture,
                                    size, surfaceFormat, *desc);
-
-  RefPtr<PresentationData> data = lookup->second.get();
 
   auto recycledTexture = mRemoteTextureOwner->GetRecycledExternalTexture(
       size, surfaceFormat, desc->type(), aOwnerId);

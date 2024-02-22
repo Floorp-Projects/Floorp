@@ -219,7 +219,7 @@ class WebGPUParent final : public PWebGPUParent, public SupportsWeakPtr {
   nsTHashSet<RawId> mLostDeviceIds;
 
   // Shared handle of wgpu device's fence.
-  RefPtr<gfx::FileHandleWrapper> mFenceHandle;
+  std::unordered_map<RawId, RefPtr<gfx::FileHandleWrapper>> mDeviceFenceHandles;
 
   // Store DeviceLostRequest structs for each device as unique_ptrs mapped
   // to their device ids. We keep these unique_ptrs alive as long as the
