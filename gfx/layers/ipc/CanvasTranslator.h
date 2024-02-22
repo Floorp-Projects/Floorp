@@ -69,6 +69,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * CanvasEventRingBuffer.
    *
    * @param aTextureType the TextureType the translator will create
+   * @param aWebglTextureType the TextureType of any WebGL buffers
    * @param aBackendType the BackendType for texture data
    * @param aHeaderHandle handle for the control header
    * @param aBufferHandles handles for the initial buffers for translation
@@ -77,6 +78,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * @param aWriterSem writing blocked semaphore for the CanvasEventRingBuffer
    */
   ipc::IPCResult RecvInitTranslator(TextureType aTextureType,
+                                    TextureType aWebglTextureType,
                                     gfx::BackendType aBackendType,
                                     Handle&& aReadHandle,
                                     nsTArray<Handle>&& aBufferHandles,
@@ -358,6 +360,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
   UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
   TextureType mTextureType = TextureType::Unknown;
+  TextureType mWebglTextureType = TextureType::Unknown;
   UniquePtr<TextureData> mReferenceTextureData;
   dom::ContentParentId mContentId;
   uint32_t mManagerId;

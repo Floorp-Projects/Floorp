@@ -19,8 +19,6 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/PathSkia.h"
 #include "mozilla/gfx/Swizzle.h"
-#include "mozilla/layers/CanvasRenderer.h"
-#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "skia/include/core/SkPixmap.h"
@@ -4724,7 +4722,8 @@ void DrawTargetWebgl::EndFrame() {
 }
 
 bool DrawTargetWebgl::CopyToSwapChain(
-    layers::RemoteTextureId aId, layers::RemoteTextureOwnerId aOwnerId,
+    layers::TextureType aTextureType, layers::RemoteTextureId aId,
+    layers::RemoteTextureOwnerId aOwnerId,
     layers::RemoteTextureOwnerClient* aOwnerClient) {
   if (!mWebglValid && !FlushFromSkia()) {
     return false;
@@ -4739,11 +4738,8 @@ bool DrawTargetWebgl::CopyToSwapChain(
       StaticPrefs::gfx_canvas_accelerated_async_present();
   options.remoteTextureId = aId;
   options.remoteTextureOwnerId = aOwnerId;
-  const RefPtr<layers::ImageBridgeChild> imageBridge =
-      layers::ImageBridgeChild::GetSingleton();
-  auto texType = layers::TexTypeForWebgl(imageBridge);
-  return mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, texType, options,
-                                                 aOwnerClient);
+  return mSharedContext->mWebgl->CopyToSwapChain(mFramebuffer, aTextureType,
+                                                 options, aOwnerClient);
 }
 
 already_AddRefed<DrawTarget> DrawTargetWebgl::CreateSimilarDrawTarget(

@@ -73,6 +73,7 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
     virtual ~Helpers() = default;
 
     virtual bool InitTranslator(TextureType aTextureType,
+                                TextureType aWebglTextureType,
                                 gfx::BackendType aBackendType,
                                 Handle&& aReadHandle,
                                 nsTArray<Handle>&& aBufferHandles,
@@ -94,8 +95,8 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
     virtual bool RestartReader() = 0;
   };
 
-  bool Init(TextureType aTextureType, gfx::BackendType aBackendType,
-            UniquePtr<Helpers> aHelpers);
+  bool Init(TextureType aTextureType, TextureType aWebglTextureType,
+            gfx::BackendType aBackendType, UniquePtr<Helpers> aHelpers);
 
   /**
    * Record an event for processing by the CanvasParent's CanvasTranslator.

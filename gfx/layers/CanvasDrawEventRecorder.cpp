@@ -53,6 +53,7 @@ CanvasDrawEventRecorder::CanvasDrawEventRecorder(
 CanvasDrawEventRecorder::~CanvasDrawEventRecorder() { MOZ_ASSERT(!mWorkerRef); }
 
 bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
+                                   TextureType aWebglTextureType,
                                    gfx::BackendType aBackendType,
                                    UniquePtr<Helpers> aHelpers) {
   NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
@@ -104,7 +105,7 @@ bool CanvasDrawEventRecorder::Init(TextureType aTextureType,
     return false;
   }
 
-  if (!mHelpers->InitTranslator(aTextureType, aBackendType,
+  if (!mHelpers->InitTranslator(aTextureType, aWebglTextureType, aBackendType,
                                 std::move(header->handle),
                                 std::move(bufferHandles), mDefaultBufferSize,
                                 std::move(readerSem), std::move(writerSem))) {

@@ -27,6 +27,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 #include "mozilla/ipc/SharedMemory.h"  // for SharedMemory, etc
+#include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -375,7 +376,8 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
     RefPtr<CanvasChild> canvasChild = aAllocator->GetCanvasChild();
     if (canvasChild) {
       return new RecordedTextureData(canvasChild.forget(), aSize, aFormat,
-                                     textureType);
+                                     textureType,
+                                     layers::TexTypeForWebgl(aKnowsCompositor));
     }
     // If we must be remote, but there is no canvas child, then falling back
     // is not possible.

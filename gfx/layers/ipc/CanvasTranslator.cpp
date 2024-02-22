@@ -132,15 +132,17 @@ bool CanvasTranslator::EnsureSharedContextWebgl() {
 }
 
 mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
-    TextureType aTextureType, gfx::BackendType aBackendType,
-    Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
-    uint64_t aBufferSize, CrossProcessSemaphoreHandle&& aReaderSem,
+    TextureType aTextureType, TextureType aWebglTextureType,
+    gfx::BackendType aBackendType, Handle&& aReadHandle,
+    nsTArray<Handle>&& aBufferHandles, uint64_t aBufferSize,
+    CrossProcessSemaphoreHandle&& aReaderSem,
     CrossProcessSemaphoreHandle&& aWriterSem) {
   if (mHeaderShmem) {
     return IPC_FAIL(this, "RecvInitTranslator called twice.");
   }
 
   mTextureType = aTextureType;
+  mWebglTextureType = aWebglTextureType;
   mBackendType = aBackendType;
   mOtherPid = OtherPid();
 
@@ -1040,7 +1042,8 @@ bool CanvasTranslator::PresentTexture(int64_t aTextureId, RemoteTextureId aId) {
   RemoteTextureOwnerId ownerId = info.mRemoteTextureOwnerId;
   if (gfx::DrawTargetWebgl* webgl = info.GetDrawTargetWebgl()) {
     EnsureRemoteTextureOwner(ownerId);
-    if (webgl->CopyToSwapChain(aId, ownerId, mRemoteTextureOwner)) {
+    if (webgl->CopyToSwapChain(mWebglTextureType, aId, ownerId,
+                               mRemoteTextureOwner)) {
       return true;
     }
     if (mSharedContext && mSharedContext->IsContextLost()) {

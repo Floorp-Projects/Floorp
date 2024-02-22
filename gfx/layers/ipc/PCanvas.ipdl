@@ -32,9 +32,9 @@ parent:
    * each aBufferHandles' memory and the default size. aReaderSem and aWriterSem
    * are handles for the semaphores to handle waiting on either side.
    */
-  async InitTranslator(TextureType aTextureType, BackendType aBackendType,
-                       Handle aHeaderHandle, Handle[] aBufferHandles,
-                       uint64_t aBufferSize,
+  async InitTranslator(TextureType aTextureType, TextureType aWebglTextureType,
+                       BackendType aBackendType, Handle aHeaderHandle,
+                       Handle[] aBufferHandles, uint64_t aBufferSize,
                        CrossProcessSemaphoreHandle aReaderSem,
                        CrossProcessSemaphoreHandle aWriterSem);
 
