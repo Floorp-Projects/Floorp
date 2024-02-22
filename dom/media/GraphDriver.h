@@ -655,9 +655,11 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   void Init(const nsCString& aStreamName);
   void SetCubebStreamName(const nsCString& aStreamName);
   void Stop();
-  /**
-   *  Fall back to a SystemClockDriver using a normal thread. If needed,
-   *  the graph will try to re-open an audio stream later. */
+  /* Calls FallbackToSystemClockDriver() and returns true if no fallback is
+   * running, otherwise returns false. */
+  bool EnsureFallbackDriver();
+  /* Fall back to a SystemClockDriver using a normal thread. If needed, the
+   * graph will try to re-open an audio stream later. */
   void FallbackToSystemClockDriver();
   /* Called by the fallback driver when it has fully stopped, after finishing
    * its last iteration. If it stopped after the audio stream started, aState
@@ -738,6 +740,9 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
     /* cubeb_start_stream() is about to be or has been called on mAudioStream.
      * Any previous cubeb_streams have been destroyed. */
     Starting,
+    /* mAudioStream has advertised it will change device. In this state we
+       ignore all data callbacks until the fallback driver has started. */
+    ChangingDevice,
     /* mAudioStream is running. */
     Running,
     /* mAudioStream is draining, and will soon stop. */
@@ -764,6 +769,10 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   /* If using a fallback driver, this is the next time we'll try to start the
    * audio stream. */
   TimeStamp mNextReInitAttempt;
+  /* The time mAudioStreamState was changed to ChangingDevice.
+   * Synchronized by the mAudioStreamState atomic, i.e. written *before* writing
+   * the atomic, and read *after* reading the atomic. */
+  TimeStamp mChangingDeviceStartTime;
 #ifdef XP_MACOSX
   /* When using the built-in speakers on macbook pro (13 and 15, all models),
    * it's best to hard pan the audio on the right, to avoid feedback into the

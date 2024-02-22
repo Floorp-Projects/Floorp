@@ -376,11 +376,17 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
   TrackTime dataNeed = std::min(mPendingData.GetDuration(), need);
   TrackTime silenceNeed = std::max(need - dataNeed, (TrackTime)0);
 
-  MOZ_ASSERT_IF(dataNeed > 0, silenceNeed == 0);
+  // TODO (bug 1879353): Reenable assertion.
+  // MOZ_ASSERT_IF(dataNeed > 0, silenceNeed == 0);
 
   GetData<AudioSegment>()->AppendSlice(mPendingData, 0, dataNeed);
   mPendingData.RemoveLeading(dataNeed);
   GetData<AudioSegment>()->AppendNullData(silenceNeed);
+
+  // TODO (bug 1879353): Remove as assertion above will hold.
+  if (dataNeed > 0 && silenceNeed > 0) {
+    NotifyInputStopped(mGraph);
+  }
 }
 
 uint32_t NativeInputTrack::NumberOfChannels() const {
