@@ -622,8 +622,13 @@ async function doMigrateTest({
  *   The name of the Nimbus variable that stores the "show less frequently" cap
  *   being tested.
  * @param {object} options.keyword
- *   The primary keyword to use during the test. It must contain more than one
- *   word, and it must have at least two chars after the first space.
+ *   The primary keyword to use during the test.
+ * @param {number} options.keywordBaseIndex
+ *   The index in `keyword` to base substring checks around. This function will
+ *   test substrings starting at the beginning of keyword and ending at the
+ *   following indexes: one index before `keywordBaseIndex`,
+ *   `keywordBaseIndex`, `keywordBaseIndex` + 1, `keywordBaseIndex` + 2, and
+ *   `keywordBaseIndex` + 3.
  */
 async function doShowLessFrequentlyTests({
   feature,
@@ -631,18 +636,19 @@ async function doShowLessFrequentlyTests({
   showLessFrequentlyCountPref,
   nimbusCapVariable,
   keyword,
+  keywordBaseIndex = keyword.indexOf(" "),
 }) {
   // Do some sanity checks on the keyword. Any checks that fail are errors in
   // the test.
-  let spaceIndex = keyword.indexOf(" ");
-  if (spaceIndex < 0) {
-    throw new Error("keyword must contain a space");
+  if (keywordBaseIndex <= 0) {
+    throw new Error(
+      "keywordBaseIndex must be > 0, but it's " + keywordBaseIndex
+    );
   }
-  if (spaceIndex == 0) {
-    throw new Error("keyword must not start with a space");
-  }
-  if (keyword.length < spaceIndex + 3) {
-    throw new Error("keyword must have at least two chars after the space");
+  if (keyword.length < keywordBaseIndex + 3) {
+    throw new Error(
+      "keyword must have at least two chars after keywordBaseIndex"
+    );
   }
 
   let tests = [
@@ -650,32 +656,32 @@ async function doShowLessFrequentlyTests({
       showLessFrequentlyCount: 0,
       canShowLessFrequently: true,
       newSearches: {
-        [keyword.substring(0, spaceIndex - 1)]: false,
-        [keyword.substring(0, spaceIndex)]: true,
-        [keyword.substring(0, spaceIndex + 1)]: true,
-        [keyword.substring(0, spaceIndex + 2)]: true,
-        [keyword.substring(0, spaceIndex + 3)]: true,
+        [keyword.substring(0, keywordBaseIndex - 1)]: false,
+        [keyword.substring(0, keywordBaseIndex)]: true,
+        [keyword.substring(0, keywordBaseIndex + 1)]: true,
+        [keyword.substring(0, keywordBaseIndex + 2)]: true,
+        [keyword.substring(0, keywordBaseIndex + 3)]: true,
       },
     },
     {
       showLessFrequentlyCount: 1,
       canShowLessFrequently: true,
       newSearches: {
-        [keyword.substring(0, spaceIndex)]: false,
+        [keyword.substring(0, keywordBaseIndex)]: false,
       },
     },
     {
       showLessFrequentlyCount: 2,
       canShowLessFrequently: true,
       newSearches: {
-        [keyword.substring(0, spaceIndex + 1)]: false,
+        [keyword.substring(0, keywordBaseIndex + 1)]: false,
       },
     },
     {
       showLessFrequentlyCount: 3,
       canShowLessFrequently: false,
       newSearches: {
-        [keyword.substring(0, spaceIndex + 2)]: false,
+        [keyword.substring(0, keywordBaseIndex + 2)]: false,
       },
     },
     {
@@ -685,19 +691,16 @@ async function doShowLessFrequentlyTests({
     },
   ];
 
-  // The Rust implementation doesn't support the remote settings config.
-  if (!UrlbarPrefs.get("quicksuggest.rustEnabled")) {
-    info("Testing 'show less frequently' with cap in remote settings");
-    await doOneShowLessFrequentlyTest({
-      tests,
-      feature,
-      expectedResult,
-      showLessFrequentlyCountPref,
-      rs: {
-        show_less_frequently_cap: 3,
-      },
-    });
-  }
+  info("Testing 'show less frequently' with cap in remote settings");
+  await doOneShowLessFrequentlyTest({
+    tests,
+    feature,
+    expectedResult,
+    showLessFrequentlyCountPref,
+    rs: {
+      show_less_frequently_cap: 3,
+    },
+  });
 
   // Nimbus should override remote settings.
   info("Testing 'show less frequently' with cap in Nimbus and remote settings");
