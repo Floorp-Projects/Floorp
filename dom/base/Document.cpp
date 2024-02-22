@@ -9311,7 +9311,7 @@ void Document::DoNotifyPossibleTitleChange() {
     return;
   }
   // Make sure the pending runnable method is cleared.
-  mPendingTitleChangeEvent.Forget();
+  mPendingTitleChangeEvent.Revoke();
   mHaveFiredTitleChange = true;
 
   nsAutoString title;
