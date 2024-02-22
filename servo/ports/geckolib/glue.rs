@@ -204,6 +204,9 @@ pub unsafe extern "C" fn Servo_Initialize(
     // Pretend that we're a Servo Layout thread, to make some assertions happy.
     thread_state::initialize(thread_state::ThreadState::LAYOUT);
 
+    debug_assert!(is_main_thread());
+    lazy_static::initialize(&STYLE_THREAD_POOL);
+
     // Perform some debug-only runtime assertions.
     origin_flags::assert_flags_match();
     traversal_flags::assert_traversal_flags_match();

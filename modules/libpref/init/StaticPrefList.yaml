@@ -6063,13 +6063,13 @@
   mirror: once
 
 - name: gfx.font_loader.delay
-  type: uint32_t
+  type: RelaxedAtomicUint32
 #if defined(XP_WIN)
   value: 60000
 #else
   value: 8000
 #endif
-  mirror: once
+  mirror: always
 
 # Disable antialiasing of Ahem, for use in tests.
 - name: gfx.font_rendering.ahem_antialias_none
@@ -8781,9 +8781,9 @@
 # numbers override as specified.
 # Note that 1 still creates a thread-pool of one thread!
 - name: layout.css.stylo-threads
-  type: int32_t
+  type: RelaxedAtomicInt32
   value: -1
-  mirror: once
+  mirror: always
   rust: true
 
 # Stylo work unit size. This is the amount of nodes we'll process in a single
