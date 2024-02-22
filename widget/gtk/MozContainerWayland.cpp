@@ -431,7 +431,6 @@ void moz_container_wayland_map(GtkWidget* widget) {
 
 void moz_container_wayland_size_allocate(GtkWidget* widget,
                                          GtkAllocation* allocation) {
-  MozContainer* container;
   GtkAllocation tmp_allocation;
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
@@ -442,10 +441,8 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
                allocation->height);
 
   /* short circuit if you can */
-  container = MOZ_CONTAINER(widget);
   gtk_widget_get_allocation(widget, &tmp_allocation);
-  if (!container->data.children && tmp_allocation.x == allocation->x &&
-      tmp_allocation.y == allocation->y &&
+  if (tmp_allocation.x == allocation->x && tmp_allocation.y == allocation->y &&
       tmp_allocation.width == allocation->width &&
       tmp_allocation.height == allocation->height) {
     return;
@@ -459,6 +456,7 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
     // We need to position our subsurface according to GdkWindow
     // when offset changes (GdkWindow is maximized for instance).
     // see gtk-clutter-embed.c for reference.
+    MozContainer* container = MOZ_CONTAINER(widget);
     MutexAutoLock lock(container->data.wl_container.container_lock);
     if (!container->data.wl_container.surface) {
       if (!moz_container_wayland_surface_create_locked(lock, container)) {
