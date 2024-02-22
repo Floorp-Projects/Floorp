@@ -106,8 +106,6 @@ skip-if = [
 
 ["test_auth_dialog_permission.js"]
 
-["test_auth_jar.js"]
-
 ["test_auth_multiple.js"]
 
 ["test_auth_proxy.js"]
