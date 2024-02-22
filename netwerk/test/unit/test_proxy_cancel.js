@@ -19,6 +19,14 @@ function makeChan(uri) {
   return chan;
 }
 
+add_setup(async function setup() {
+  // See Bug 1878505
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
+  registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  });
+});
+
 add_task(async function test_cancel_after_asyncOpen() {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
