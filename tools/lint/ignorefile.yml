@@ -1,0 +1,10 @@
+---
+ignorefile:
+    description: Linter for .gitignore and .hgignore files
+    include:
+        - '.gitignore'
+        - '.hgignore'
+    support-files:
+        - 'tools/lint/ignorefile**'
+    type: external
+    payload: ignorefile:lint
