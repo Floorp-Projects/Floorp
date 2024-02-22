@@ -58,6 +58,7 @@ jobs:
                     (fenix-nightly|fenix-release|fenix-beta): fenix
                     default: focus-android
         shipping-phase: push
+        shipping-product: firefox-android
         treeherder:
             symbol:
                 by-build-type:
