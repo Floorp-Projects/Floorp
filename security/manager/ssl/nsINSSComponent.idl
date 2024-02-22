@@ -45,13 +45,11 @@ interface nsINSSComponent : nsISupports {
    * function returns an empty array on all other platforms.
    */
   Array<Array<octet> > getEnterpriseRoots();
-  ACString getEnterpriseRootsPEM();
 
   /**
    * Similarly, but for intermediate certificates.
    */
   Array<Array<octet> > getEnterpriseIntermediates();
-  ACString getEnterpriseIntermediatesPEM();
 
   /**
    * Test utility for adding an intermediate certificate to the current set of
