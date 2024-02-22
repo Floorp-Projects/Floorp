@@ -126,9 +126,9 @@ win32-chromedriver-122:
         type: static-url
         artifact-name: chromedriver_win32_122.tar.zst
         add-prefix: "122"
-        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/122.0.6261.18/win32/chrome-win32.zip
-        sha256: 4778e327a30972fa1d39a9aabc60c04e82553b7cafa2f8f768eaec9ee0935eab
-        size: 134566218
+        url: https://storage.googleapis.com/chrome-for-testing-public/122.0.6261.57/win32/chromedriver-win32.zip
+        sha256: f6309630e014ffb00dd78813e75d8bf664e755ea2ebc79974c8a0478ca96a154
+        size: 8001652
 
 linux64-chromedriver-122:
     description: "Linux64 chromedriver v122"
@@ -136,9 +136,9 @@ linux64-chromedriver-122:
         type: static-url
         artifact-name: chromedriver_linux64_122.tar.zst
         add-prefix: "122"
-        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/122.0.6261.18/linux64/chrome-linux64.zip
-        sha256: 5514382fc80e092f76a6a7ea85bdfcafacd7e62e1c831a7842f0eca003383c5d
-        size: 149627735
+        url: https://storage.googleapis.com/chrome-for-testing-public/122.0.6261.57/linux64/chromedriver-linux64.zip
+        sha256: 0c80bb130eda0afb583155d55ec9cc22d75e2cf0dd90d657647df923465d584b
+        size: 8613042
 
 mac64-chromedriver-122:
     description: "Mac64 chromedriver v122"
@@ -146,9 +146,9 @@ mac64-chromedriver-122:
         type: static-url
         artifact-name: chromedriver_mac64_122.tar.zst
         add-prefix: "122"
-        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/122.0.6261.18/mac-x64/chrome-mac-x64.zip
-        sha256: 753d2814bb82d723289eea76628e9b043bc36666d7cf285876dc4f19ca811c04
-        size: 155446914
+        url: https://storage.googleapis.com/chrome-for-testing-public/122.0.6261.57/mac-x64/chromedriver-mac-x64.zip
+        sha256: 31d9be68e77c733357ee825c34249dbb94c5c08961e58dfb38b7623e9383fa69
+        size: 9209421
 
 mac-arm-chromedriver-122:
     description: "Mac64 arm chromedriver v122"
@@ -156,9 +156,9 @@ mac-arm-chromedriver-122:
         type: static-url
         artifact-name: chromedriver_mac-arm_122.tar.zst
         add-prefix: "122"
-        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/122.0.6261.18/mac-arm64/chrome-mac-arm64.zip
-        sha256: 1edd4096771669e6c429eff5a459f520defd43afb798fc86d58608d95355be6e
-        size: 146946870
+        url: https://storage.googleapis.com/chrome-for-testing-public/122.0.6261.57/mac-arm64/chromedriver-mac-arm64.zip
+        sha256: 645f277c05d7f7d238c7a45412f42489767f48cba05d8632ce00b54b3704d4e1
+        size: 8293896
 
 upload-speed-test-file:
     description: "File used for the upload speed performance test"
