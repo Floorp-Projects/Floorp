@@ -1473,14 +1473,6 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsIFile* aLocation) {
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::GetComponentJSMs(nsIUTF8StringEnumerator** aJSMs) {
-  nsCOMPtr<nsIUTF8StringEnumerator> result =
-      StaticComponents::GetComponentJSMs();
-  result.forget(aJSMs);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsComponentManagerImpl::GetComponentESModules(
     nsIUTF8StringEnumerator** aESModules) {
   nsCOMPtr<nsIUTF8StringEnumerator> result =

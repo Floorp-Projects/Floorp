@@ -15,11 +15,19 @@ namespace mozilla {
 // in OriginAttributes class anymore.
 class StorageOriginAttributes {
  public:
+  StorageOriginAttributes() = default;
+  explicit StorageOriginAttributes(bool aInIsolatedMozBrowser) {
+    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
+  }
   bool InIsolatedMozBrowser() const { return mInIsolatedMozBrowser; }
 
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
 
   // New getters can be added here incrementally.
+
+  void SetInIsolatedMozBrowser(bool aInIsolatedMozBrowser) {
+    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
+  }
 
   [[nodiscard]] bool PopulateFromSuffix(const nsACString& aStr);
 
@@ -27,6 +35,10 @@ class StorageOriginAttributes {
   // |uri^key1=value1&key2=value2| and returns the uri without the suffix.
   [[nodiscard]] bool PopulateFromOrigin(const nsACString& aOrigin,
                                         nsACString& aOriginNoSuffix);
+
+  /* XXX This method only supports the legacy mInIsolatedMozBrowser at the
+  moment, other origin attributes won't be serialized */
+  void CreateSuffix(nsACString& aStr) const;
 
  private:
   OriginAttributes mOriginAttributes;

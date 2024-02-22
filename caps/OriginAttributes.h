@@ -17,10 +17,6 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
  public:
   OriginAttributes() = default;
 
-  explicit OriginAttributes(bool aInIsolatedMozBrowser) {
-    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-  }
-
   explicit OriginAttributes(const OriginAttributesDictionary& aOther)
       : OriginAttributesDictionary(aOther) {}
 
@@ -74,8 +70,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   }
 
   [[nodiscard]] bool EqualsIgnoringFPD(const OriginAttributes& aOther) const {
-    return mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
-           mUserContextId == aOther.mUserContextId &&
+    return mUserContextId == aOther.mUserContextId &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
            mGeckoViewSessionContextId == aOther.mGeckoViewSessionContextId;
   }
@@ -159,11 +154,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
 
   // Performs a match of |aAttrs| against this pattern.
   bool Matches(const OriginAttributes& aAttrs) const {
-    if (mInIsolatedMozBrowser.WasPassed() &&
-        mInIsolatedMozBrowser.Value() != aAttrs.mInIsolatedMozBrowser) {
-      return false;
-    }
-
     if (mUserContextId.WasPassed() &&
         mUserContextId.Value() != aAttrs.mUserContextId) {
       return false;
@@ -227,12 +217,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
   }
 
   bool Overlaps(const OriginAttributesPattern& aOther) const {
-    if (mInIsolatedMozBrowser.WasPassed() &&
-        aOther.mInIsolatedMozBrowser.WasPassed() &&
-        mInIsolatedMozBrowser.Value() != aOther.mInIsolatedMozBrowser.Value()) {
-      return false;
-    }
-
     if (mUserContextId.WasPassed() && aOther.mUserContextId.WasPassed() &&
         mUserContextId.Value() != aOther.mUserContextId.Value()) {
       return false;
