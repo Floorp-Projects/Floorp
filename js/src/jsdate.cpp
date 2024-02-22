@@ -1070,23 +1070,6 @@ int FixupNonFullYear(int year) {
 }
 
 template <typename CharT>
-bool IsPrefixOfKeyword(const CharT* s, size_t len, const char* keyword) {
-  while (len > 0 && *keyword) {
-    MOZ_ASSERT(IsAsciiAlpha(*s));
-    MOZ_ASSERT(IsAsciiLowercaseAlpha(*keyword));
-
-    if (unicode::ToLowerCase(static_cast<Latin1Char>(*s)) != *keyword) {
-      break;
-    }
-
-    s++, keyword++;
-    len--;
-  }
-
-  return len == 0;
-}
-
-template <typename CharT>
 bool MatchesKeyword(const CharT* s, size_t len, const char* keyword) {
   while (len > 0) {
     MOZ_ASSERT(IsAsciiAlpha(*s));
@@ -1328,10 +1311,6 @@ struct CharsAndAction {
   int action;
 };
 
-static constexpr const char* const days_of_week[] = {
-    "monday", "tuesday",  "wednesday", "thursday",
-    "friday", "saturday", "sunday"};
-
 static constexpr CharsAndAction keywords[] = {
     // clang-format off
   // AM/PM
@@ -1364,8 +1343,7 @@ constexpr size_t MinKeywordLength(const CharsAndAction (&keywords)[N]) {
 
 template <typename CharT>
 static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
-                      size_t length, ClippedTime* result,
-                      bool* countLateWeekday) {
+                      size_t length, ClippedTime* result) {
   if (length == 0) {
     return false;
   }
@@ -1433,8 +1411,6 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   bool negativeYear = false;
   // Includes "GMT", "UTC", "UT", and "Z" timezone keywords
   bool seenGmtAbbr = false;
-  // For telemetry purposes
-  bool seenLateWeekday = false;
 
   // Try parsing the leading dashed-date.
   //
@@ -1666,21 +1642,6 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         return false;
       }
 
-      // Completely ignore days of the week, and don't derive any semantics
-      // from them.
-      bool isLateWeekday = false;
-      for (const char* weekday : days_of_week) {
-        if (IsPrefixOfKeyword(s + start, index - start, weekday)) {
-          isLateWeekday = true;
-          seenLateWeekday = true;
-          break;
-        }
-      }
-      if (isLateWeekday) {
-        prevc = 0;
-        continue;
-      }
-
       // Record a month if it is a month name. Note that some numbers are
       // initially treated as months; if a numeric field has already been
       // interpreted as a month, store that value to the actually appropriate
@@ -1881,38 +1842,16 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
     date += tzOffset * msPerMinute;
   }
 
-  // Setting this down here so that it only counts the telemetry in
-  // the case of a successful parse.
-  if (seenLateWeekday) {
-    *countLateWeekday = true;
-  }
-
   *result = TimeClip(date);
   return true;
 }
 
 static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, JSLinearString* s,
-                      ClippedTime* result, JSContext* cx) {
-  bool countLateWeekday = false;
-  bool success;
-
-  {
-    AutoCheckCannotGC nogc;
-    success = s->hasLatin1Chars()
-                  ? ParseDate(forceUTC, s->latin1Chars(nogc), s->length(),
-                              result, &countLateWeekday)
-                  : ParseDate(forceUTC, s->twoByteChars(nogc), s->length(),
-                              result, &countLateWeekday);
-  }
-
-  // We are running telemetry to see if support for day of week after
-  // mday can be dropped. It is being done here to keep
-  // JSRuntime::setUseCounter out of AutoCheckCannotGC's scope.
-  if (countLateWeekday) {
-    cx->runtime()->setUseCounter(cx->global(), JSUseCounter::LATE_WEEKDAY);
-  }
-
-  return success;
+                      ClippedTime* result) {
+  AutoCheckCannotGC nogc;
+  return s->hasLatin1Chars()
+             ? ParseDate(forceUTC, s->latin1Chars(nogc), s->length(), result)
+             : ParseDate(forceUTC, s->twoByteChars(nogc), s->length(), result);
 }
 
 static bool date_parse(JSContext* cx, unsigned argc, Value* vp) {
@@ -1934,7 +1873,7 @@ static bool date_parse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   ClippedTime result;
-  if (!ParseDate(ForceUTC(cx->realm()), linearStr, &result, cx)) {
+  if (!ParseDate(ForceUTC(cx->realm()), linearStr, &result)) {
     args.rval().setNaN();
     return true;
   }
@@ -3778,7 +3717,7 @@ static bool DateOneArgument(JSContext* cx, const CallArgs& args) {
         return false;
       }
 
-      if (!ParseDate(ForceUTC(cx->realm()), linearStr, &t, cx)) {
+      if (!ParseDate(ForceUTC(cx->realm()), linearStr, &t)) {
         t = ClippedTime::invalid();
       }
     } else {

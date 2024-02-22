@@ -12,7 +12,6 @@ const accepted = {
   "Sep 26 1995 10:00 am": "1995-09-26T10:00:00",
   "Sep 26 1995 10:00 AM": "1995-09-26T10:00:00",
   "Sep 26 1995 10:00 pm": "1995-09-26T22:00:00",
-  "Sep 26 Thurs 1995 Mon 10:thursday:00": "1995-09-26T10:00:00",
 };
 const rejected = [
   "Sep 26 1995 G",
@@ -22,6 +21,12 @@ const rejected = [
   "Sep 26 1995 10:00 a",
   "Sep 26 1995 10:00 p",
   "0/zx",
+
+  // Late weekday
+  "Sep 26 Thurs 1995 10:00",
+  "Sep 26 1995 Thurs 10:00",
+  "Sep 26 1995 10:Thurs:00",
+  "Sep 26 1995 10:00 Thurs",
 ];
 
 for (const [test, expected] of Object.entries(accepted)) {
