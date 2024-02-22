@@ -45,12 +45,12 @@ Clip fetch_clip(int index) {
     clip.space = aClipData.z;
 
 #ifdef WR_FEATURE_FAST_PATH
-    vec4 texels[3] = fetch_from_gpu_buffer_3(index);
+    vec4 texels[3] = fetch_from_gpu_buffer_3f(index);
     clip.rect = RectWithEndpoint(texels[0].xy, texels[0].zw);
     clip.radii = texels[1];
     clip.mode = texels[2].x;
 #else
-    vec4 texels[4] = fetch_from_gpu_buffer_4(index);
+    vec4 texels[4] = fetch_from_gpu_buffer_4f(index);
     clip.rect = RectWithEndpoint(texels[0].xy, texels[0].zw);
     clip.radii_top = texels[1];
     clip.radii_bottom = texels[2];

@@ -257,7 +257,7 @@ impl ImageData {
                             kind: RenderTaskCacheKeyKind::Image(image_cache_key),
                         },
                         frame_state.gpu_cache,
-                        frame_state.frame_gpu_data,
+                        frame_state.frame_gpu_data_f,
                         frame_state.rg_builder,
                         None,
                         descriptor.is_opaque(),

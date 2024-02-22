@@ -13,19 +13,50 @@
 
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use api::units::{DeviceIntRect, DeviceIntSize, LayoutRect, PictureRect, DeviceRect};
-use api::{PremultipliedColorF};
+use api::{PremultipliedColorF, ImageFormat};
 use crate::device::Texel;
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 
+pub type GpuBufferF = GpuBuffer<GpuBufferBlockF>;
+pub type GpuBufferBuilderF = GpuBufferBuilder<GpuBufferBlockF>;
 
-unsafe impl Texel for GpuBufferBlock {}
+pub type GpuBufferI = GpuBuffer<GpuBufferBlockI>;
+pub type GpuBufferBuilderI = GpuBufferBuilder<GpuBufferBlockI>;
+
+unsafe impl Texel for GpuBufferBlockF {
+    fn image_format() -> ImageFormat { ImageFormat::RGBAF32 }
+}
+
+unsafe impl Texel for GpuBufferBlockI {
+    fn image_format() -> ImageFormat { ImageFormat::RGBAI32 }
+}
+
+impl Default for GpuBufferBlockF {
+    fn default() -> Self {
+        GpuBufferBlockF::EMPTY
+    }
+}
+
+impl Default for GpuBufferBlockI {
+    fn default() -> Self {
+        GpuBufferBlockI::EMPTY
+    }
+}
 
 /// A single texel in RGBAF32 texture - 16 bytes.
 #[derive(Copy, Clone, Debug, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GpuBufferBlock {
+pub struct GpuBufferBlockF {
     data: [f32; 4],
+}
+
+/// A single texel in RGBAI32 texture - 16 bytes.
+#[derive(Copy, Clone, Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct GpuBufferBlockI {
+    data: [i32; 4],
 }
 
 #[derive(Copy, Debug, Clone, MallocSizeOf, Eq, PartialEq)]
@@ -48,13 +79,17 @@ impl GpuBufferAddress {
     pub const INVALID: GpuBufferAddress = GpuBufferAddress { u: !0, v: !0 };
 }
 
-impl GpuBufferBlock {
-    pub const EMPTY: Self = GpuBufferBlock { data: [0.0; 4] };
+impl GpuBufferBlockF {
+    pub const EMPTY: Self = GpuBufferBlockF { data: [0.0; 4] };
 }
 
-impl Into<GpuBufferBlock> for LayoutRect {
-    fn into(self) -> GpuBufferBlock {
-        GpuBufferBlock {
+impl GpuBufferBlockI {
+    pub const EMPTY: Self = GpuBufferBlockI { data: [0; 4] };
+}
+
+impl Into<GpuBufferBlockF> for LayoutRect {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
             data: [
                 self.min.x,
                 self.min.y,
@@ -65,9 +100,9 @@ impl Into<GpuBufferBlock> for LayoutRect {
     }
 }
 
-impl Into<GpuBufferBlock> for PictureRect {
-    fn into(self) -> GpuBufferBlock {
-        GpuBufferBlock {
+impl Into<GpuBufferBlockF> for PictureRect {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
             data: [
                 self.min.x,
                 self.min.y,
@@ -78,9 +113,9 @@ impl Into<GpuBufferBlock> for PictureRect {
     }
 }
 
-impl Into<GpuBufferBlock> for DeviceRect {
-    fn into(self) -> GpuBufferBlock {
-        GpuBufferBlock {
+impl Into<GpuBufferBlockF> for DeviceRect {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
             data: [
                 self.min.x,
                 self.min.y,
@@ -91,9 +126,9 @@ impl Into<GpuBufferBlock> for DeviceRect {
     }
 }
 
-impl Into<GpuBufferBlock> for PremultipliedColorF {
-    fn into(self) -> GpuBufferBlock {
-        GpuBufferBlock {
+impl Into<GpuBufferBlockF> for PremultipliedColorF {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
             data: [
                 self.r,
                 self.g,
@@ -104,22 +139,35 @@ impl Into<GpuBufferBlock> for PremultipliedColorF {
     }
 }
 
-impl Into<GpuBufferBlock> for DeviceIntRect {
-    fn into(self) -> GpuBufferBlock {
-        GpuBufferBlock {
+impl From<DeviceIntRect> for GpuBufferBlockF {
+    fn from(rect: DeviceIntRect) -> Self {
+        GpuBufferBlockF {
             data: [
-                self.min.x as f32,
-                self.min.y as f32,
-                self.max.x as f32,
-                self.max.y as f32,
+                rect.min.x as f32,
+                rect.min.y as f32,
+                rect.max.x as f32,
+                rect.max.y as f32,
             ],
         }
     }
 }
 
-impl Into<GpuBufferBlock> for [f32; 4] {
-    fn into(self) -> GpuBufferBlock {
-        GpuBufferBlock {
+impl From<DeviceIntRect> for GpuBufferBlockI {
+    fn from(rect: DeviceIntRect) -> Self {
+        GpuBufferBlockI {
+            data: [
+                rect.min.x,
+                rect.min.y,
+                rect.max.x,
+                rect.max.y,
+            ],
+        }
+    }
+}
+
+impl Into<GpuBufferBlockF> for [f32; 4] {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
             data: self,
         }
     }
@@ -132,16 +180,16 @@ struct DeferredBlock {
 }
 
 /// Interface to allow writing multiple GPU blocks, possibly of different types
-pub struct GpuBufferWriter<'a> {
-    buffer: &'a mut Vec<GpuBufferBlock>,
+pub struct GpuBufferWriter<'a, T> {
+    buffer: &'a mut Vec<T>,
     deferred: &'a mut Vec<DeferredBlock>,
     index: usize,
     block_count: usize,
 }
 
-impl<'a> GpuBufferWriter<'a> {
+impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
     fn new(
-        buffer: &'a mut Vec<GpuBufferBlock>,
+        buffer: &'a mut Vec<T>,
         deferred: &'a mut Vec<DeferredBlock>,
         index: usize,
         block_count: usize,
@@ -155,7 +203,7 @@ impl<'a> GpuBufferWriter<'a> {
     }
 
     /// Push one (16 byte) block of data in to the writer
-    pub fn push_one<B>(&mut self, block: B) where B: Into<GpuBufferBlock> {
+    pub fn push_one<B>(&mut self, block: B) where B: Into<T> {
         self.buffer.push(block.into());
     }
 
@@ -166,7 +214,7 @@ impl<'a> GpuBufferWriter<'a> {
             task_id,
             index: self.buffer.len(),
         });
-        self.buffer.push(GpuBufferBlock::EMPTY);
+        self.buffer.push(T::default());
     }
 
     /// Close this writer, returning the GPU address of this set of block(s).
@@ -180,18 +228,18 @@ impl<'a> GpuBufferWriter<'a> {
     }
 }
 
-impl<'a> Drop for GpuBufferWriter<'a> {
+impl<'a, T> Drop for GpuBufferWriter<'a, T> {
     fn drop(&mut self) {
         assert_eq!(self.buffer.len(), self.index + self.block_count, "Claimed block_count was not written");
     }
 }
 
-pub struct GpuBufferBuilder {
-    data: Vec<GpuBufferBlock>,
+pub struct GpuBufferBuilder<T> {
+    data: Vec<T>,
     deferred: Vec<DeferredBlock>,
 }
 
-impl GpuBufferBuilder {
+impl<T> GpuBufferBuilder<T> where T: Texel + std::convert::From<DeviceIntRect> {
     pub fn new() -> Self {
         GpuBufferBuilder {
             data: Vec::new(),
@@ -202,13 +250,13 @@ impl GpuBufferBuilder {
     #[allow(dead_code)]
     pub fn push(
         &mut self,
-        blocks: &[GpuBufferBlock],
+        blocks: &[T],
     ) -> GpuBufferAddress {
         assert!(blocks.len() <= MAX_VERTEX_TEXTURE_WIDTH);
 
         if (self.data.len() % MAX_VERTEX_TEXTURE_WIDTH) + blocks.len() > MAX_VERTEX_TEXTURE_WIDTH {
             while self.data.len() % MAX_VERTEX_TEXTURE_WIDTH != 0 {
-                self.data.push(GpuBufferBlock::EMPTY);
+                self.data.push(T::default());
             }
         }
 
@@ -226,12 +274,12 @@ impl GpuBufferBuilder {
     pub fn write_blocks(
         &mut self,
         block_count: usize,
-    ) -> GpuBufferWriter {
+    ) -> GpuBufferWriter<T> {
         assert!(block_count <= MAX_VERTEX_TEXTURE_WIDTH);
 
         if (self.data.len() % MAX_VERTEX_TEXTURE_WIDTH) + block_count > MAX_VERTEX_TEXTURE_WIDTH {
             while self.data.len() % MAX_VERTEX_TEXTURE_WIDTH != 0 {
-                self.data.push(GpuBufferBlock::EMPTY);
+                self.data.push(T::default());
             }
         }
 
@@ -248,11 +296,11 @@ impl GpuBufferBuilder {
     pub fn finalize(
         mut self,
         render_tasks: &RenderTaskGraph,
-    ) -> GpuBuffer {
+    ) -> GpuBuffer<T> {
         let required_len = (self.data.len() + MAX_VERTEX_TEXTURE_WIDTH-1) & !(MAX_VERTEX_TEXTURE_WIDTH-1);
 
         for _ in 0 .. required_len - self.data.len() {
-            self.data.push(GpuBufferBlock::EMPTY);
+            self.data.push(T::default());
         }
 
         let len = self.data.len();
@@ -271,18 +319,20 @@ impl GpuBufferBuilder {
         GpuBuffer {
             data: self.data,
             size: DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32, (len / MAX_VERTEX_TEXTURE_WIDTH) as i32),
+            format: T::image_format(),
         }
     }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GpuBuffer {
-    pub data: Vec<GpuBufferBlock>,
+pub struct GpuBuffer<T> {
+    pub data: Vec<T>,
     pub size: DeviceIntSize,
+    pub format: ImageFormat,
 }
 
-impl GpuBuffer {
+impl<T> GpuBuffer<T> {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -292,13 +342,13 @@ impl GpuBuffer {
 #[test]
 fn test_gpu_buffer_sizing_push() {
     let render_task_graph = RenderTaskGraph::new_for_testing();
-    let mut builder = GpuBufferBuilder::new();
+    let mut builder = GpuBufferBuilder::<GpuBufferBlockF>::new();
 
-    let row = vec![GpuBufferBlock::EMPTY; MAX_VERTEX_TEXTURE_WIDTH];
+    let row = vec![GpuBufferBlockF::EMPTY; MAX_VERTEX_TEXTURE_WIDTH];
     builder.push(&row);
 
-    builder.push(&[GpuBufferBlock::EMPTY]);
-    builder.push(&[GpuBufferBlock::EMPTY]);
+    builder.push(&[GpuBufferBlockF::EMPTY]);
+    builder.push(&[GpuBufferBlockF::EMPTY]);
 
     let buffer = builder.finalize(&render_task_graph);
     assert_eq!(buffer.data.len(), MAX_VERTEX_TEXTURE_WIDTH * 2);
@@ -307,20 +357,20 @@ fn test_gpu_buffer_sizing_push() {
 #[test]
 fn test_gpu_buffer_sizing_writer() {
     let render_task_graph = RenderTaskGraph::new_for_testing();
-    let mut builder = GpuBufferBuilder::new();
+    let mut builder = GpuBufferBuilder::<GpuBufferBlockF>::new();
 
     let mut writer = builder.write_blocks(MAX_VERTEX_TEXTURE_WIDTH);
     for _ in 0 .. MAX_VERTEX_TEXTURE_WIDTH {
-        writer.push_one(GpuBufferBlock::EMPTY);
+        writer.push_one(GpuBufferBlockF::EMPTY);
     }
     writer.finish();
 
     let mut writer = builder.write_blocks(1);
-    writer.push_one(GpuBufferBlock::EMPTY);
+    writer.push_one(GpuBufferBlockF::EMPTY);
     writer.finish();
 
     let mut writer = builder.write_blocks(1);
-    writer.push_one(GpuBufferBlock::EMPTY);
+    writer.push_one(GpuBufferBlockF::EMPTY);
     writer.finish();
 
     let buffer = builder.finalize(&render_task_graph);
