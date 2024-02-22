@@ -12,9 +12,7 @@ transforms:
 kind-dependencies:
     - release-beetmover-push-to-release
     - post-beetmover-components-dummy
-    # TODO: Make it depend on push-bundle too. At the moment, it's okay to wait solely
-    # on post-beetmover because they're part of the ship graph while push-bundle is in the
-    # promote one
+    - push-bundle
 
 job-defaults:
     description: Release Promotion version bump/tag
