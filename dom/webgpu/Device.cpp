@@ -247,6 +247,7 @@ already_AddRefed<Sampler> Device::CreateSampler(
   desc.mipmap_filter = ffi::WGPUFilterMode(aDesc.mMipmapFilter);
   desc.lod_min_clamp = aDesc.mLodMinClamp;
   desc.lod_max_clamp = aDesc.mLodMaxClamp;
+  desc.max_anisotropy = aDesc.mMaxAnisotropy;
 
   ffi::WGPUCompareFunction comparison = ffi::WGPUCompareFunction_Sentinel;
   if (aDesc.mCompare.WasPassed()) {
