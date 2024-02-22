@@ -436,9 +436,6 @@ class JS::Realm : public JS::shadow::Realm {
   // features are required.
   bool isUnlimitedStacksCapturingEnabled = false;
 
-  // Whether or not the deprecation warning for bug 1873186 has been shown.
-  bool warnedAboutDateLateWeekday = false;
-
  private:
   void updateDebuggerObservesFlag(unsigned flag);
 
