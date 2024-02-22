@@ -110,7 +110,7 @@ def run_awsy(command_context, tests, binary=None, **kwargs):
             "-v",
             "--tooltool-manifest=%s" % manifest_file,
             "--cache-dir=%s"
-            % os.path.join(command_context.topsrcdir, "tooltool-cache"),
+            % os.path.join(command_context._mach_context.state_dir, "tooltool-cache"),
         ]
     }
     command_context.run_process(cwd=page_load_test_dir, **tooltool_args)
