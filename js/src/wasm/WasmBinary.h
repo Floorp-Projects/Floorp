@@ -72,12 +72,18 @@ class Opcode {
     static_assert(size_t(SimdOp::Limit) <= 0xFFFFFF, "fits");
     MOZ_ASSERT(size_t(op) < size_t(SimdOp::Limit));
   }
+  MOZ_IMPLICIT Opcode(GcOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::GcPrefix)) {
+    static_assert(size_t(SimdOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(SimdOp::Limit));
+  }
 
   bool isOp() const { return bits_ < uint32_t(Op::FirstPrefix); }
   bool isMisc() const { return (bits_ & 255) == uint32_t(Op::MiscPrefix); }
   bool isThread() const { return (bits_ & 255) == uint32_t(Op::ThreadPrefix); }
   bool isMoz() const { return (bits_ & 255) == uint32_t(Op::MozPrefix); }
   bool isSimd() const { return (bits_ & 255) == uint32_t(Op::SimdPrefix); }
+  bool isGc() const { return (bits_ & 255) == uint32_t(Op::GcPrefix); }
 
   Op asOp() const {
     MOZ_ASSERT(isOp());
@@ -98,6 +104,10 @@ class Opcode {
   SimdOp asSimd() const {
     MOZ_ASSERT(isSimd());
     return SimdOp(bits_ >> 8);
+  }
+  GcOp asGc() const {
+    MOZ_ASSERT(isGc());
+    return GcOp(bits_ >> 8);
   }
 
   uint32_t bits() const { return bits_; }
@@ -127,6 +137,7 @@ using MaybeSectionRange = Maybe<SectionRange>;
 
 class Encoder {
   Bytes& bytes_;
+  const TypeContext* types_;
 
   template <class T>
   [[nodiscard]] bool write(const T& v) {
@@ -201,7 +212,13 @@ class Encoder {
   }
 
  public:
-  explicit Encoder(Bytes& bytes) : bytes_(bytes) { MOZ_ASSERT(empty()); }
+  explicit Encoder(Bytes& bytes) : bytes_(bytes), types_(nullptr) {
+    MOZ_ASSERT(empty());
+  }
+  explicit Encoder(Bytes& bytes, const TypeContext& types)
+      : bytes_(bytes), types_(&types) {
+    MOZ_ASSERT(empty());
+  }
 
   size_t currentOffset() const { return bytes_.length(); }
   bool empty() const { return currentOffset() == 0; }
@@ -226,9 +243,17 @@ class Encoder {
   [[nodiscard]] bool writeVarS64(int64_t i) { return writeVarS<int64_t>(i); }
   [[nodiscard]] bool writeValType(ValType type) {
     static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-    // writeValType is only used by asm.js, which doesn't use type
-    // references
-    MOZ_RELEASE_ASSERT(!type.isTypeRef(), "NYI");
+    if (type.isTypeRef()) {
+      MOZ_RELEASE_ASSERT(types_,
+                         "writeValType is used, but types were not specified.");
+      if (!writeFixedU8(uint8_t(type.isNullable() ? TypeCode::NullableRef
+                                                  : TypeCode::Ref))) {
+        return false;
+      }
+      uint32_t typeIndex = types_->indexOf(*type.typeDef());
+      // Encode positive LEB S33 as S64.
+      return writeVarS64(typeIndex);
+    }
     TypeCode tc = type.packed().typeCode();
     MOZ_ASSERT(size_t(tc) < size_t(TypeCode::Limit));
     return writeFixedU8(uint8_t(tc));
