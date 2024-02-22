@@ -16,7 +16,7 @@ import { selectSource } from "../actions/sources/select";
 import {
   getEditor,
   getLocationsInViewport,
-  updateLineWrappingForAllDocuments,
+  updateEditorLineWrapping,
 } from "../utils/editor/index";
 import { blackboxSourceActorsForSource } from "./sources/blackbox";
 import { toggleBreakpoints } from "./breakpoints/index";
@@ -85,7 +85,7 @@ export function toggleInlinePreview(toggleValue) {
 
 export function toggleEditorWrapping(toggleValue) {
   return ({ dispatch, getState }) => {
-    updateLineWrappingForAllDocuments(toggleValue);
+    updateEditorLineWrapping(toggleValue);
 
     dispatch({
       type: "TOGGLE_EDITOR_WRAPPING",

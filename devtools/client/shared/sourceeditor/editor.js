@@ -611,9 +611,12 @@ class Editor extends EventEmitter {
 
     const tabSizeCompartment = new Compartment();
     const indentCompartment = new Compartment();
+    const lineWrapCompartment = new Compartment();
+
     this.#compartments = {
       tabSizeCompartment,
       indentCompartment,
+      lineWrapCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -650,7 +653,7 @@ class Editor extends EventEmitter {
     }
 
     if (this.config.lineWrapping) {
-      extensions.push(EditorView.lineWrapping);
+      extensions.push(lineWrapCompartment.of(EditorView.lineWrapping));
     }
 
     const cm = new EditorView({
@@ -1488,6 +1491,23 @@ class Editor extends EventEmitter {
     const cm = editors.get(this);
     cm.getWrapperElement().style.fontSize = parseInt(size, 10) + "px";
     cm.refresh();
+  }
+
+  setLineWrapping(value) {
+    const cm = editors.get(this);
+    if (this.config.cm6) {
+      const {
+        codemirrorView: { EditorView },
+      } = this.#win.CodeMirror;
+      cm.dispatch({
+        effects: this.#compartments.lineWrapCompartment.reconfigure(
+          value ? EditorView.lineWrapping : []
+        ),
+      });
+    } else {
+      cm.setOption("lineWrapping", value);
+    }
+    this.config.lineWrapping = value;
   }
 
   /**
