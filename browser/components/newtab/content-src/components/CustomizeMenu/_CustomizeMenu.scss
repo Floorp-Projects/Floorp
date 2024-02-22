@@ -143,6 +143,10 @@
       border-radius: 4px;
       appearance: none;
       background-color: var(--newtab-element-secondary-color);
+
+      &:hover {
+        background-color: var(--newtab-element-secondary-hover-color);
+      }
     }
 
     .sponsored-checkbox:checked {
@@ -150,6 +154,14 @@
       fill: var(--newtab-primary-element-text-color);
       background: url('chrome://global/skin/icons/check.svg') center no-repeat;
       background-color: var(--newtab-primary-action-background);
+
+      &:hover {
+        background-color: var(--newtab-primary-element-hover-color);
+      }
+
+      &:active {
+        background-color: var(--newtab-primary-element-active-color);
+      }
 
       @media (forced-colors: active) {
         fill: $black;
@@ -177,6 +189,10 @@
       background-size: 8px;
       background-origin: content-box;
       background-color: var(--newtab-background-color-secondary);
+
+      &:hover {
+        background-color: var(--newtab-element-secondary-hover-color);
+      }
 
       &:dir(rtl) {
         background-position-x: left;

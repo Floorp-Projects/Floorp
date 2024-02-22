@@ -1699,11 +1699,20 @@ main section {
   appearance: none;
   background-color: var(--newtab-element-secondary-color);
 }
+.home-section .section .sponsored-checkbox:hover {
+  background-color: var(--newtab-element-secondary-hover-color);
+}
 .home-section .section .sponsored-checkbox:checked {
   -moz-context-properties: fill;
   fill: var(--newtab-primary-element-text-color);
   background: url("chrome://global/skin/icons/check.svg") center no-repeat;
   background-color: var(--newtab-primary-action-background);
+}
+.home-section .section .sponsored-checkbox:checked:hover {
+  background-color: var(--newtab-primary-element-hover-color);
+}
+.home-section .section .sponsored-checkbox:checked:active {
+  background-color: var(--newtab-primary-element-active-color);
 }
 @media (forced-colors: active) {
   .home-section .section .sponsored-checkbox:checked {
@@ -1730,6 +1739,9 @@ main section {
   background-size: 8px;
   background-origin: content-box;
   background-color: var(--newtab-background-color-secondary);
+}
+.home-section .section .selector:hover {
+  background-color: var(--newtab-element-secondary-hover-color);
 }
 .home-section .section .selector:dir(rtl) {
   background-position-x: left;
