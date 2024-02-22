@@ -260,7 +260,7 @@ fuzzy-if(d2d,0-1,0-400) == standalone--pct-pct--px-px.svg       pass-pct-pct.xht
 # coverage.
 
 == inline--display-block--01.xhtml inline--display-block--01-ref.xhtml
-fuzzy-if(OSX,0-1,0-10) == inline--display-inline--01.xhtml inline--display-inline--01-ref.xhtml
+fuzzy-if(cocoaWidget,0-1,0-10) == inline--display-inline--01.xhtml inline--display-inline--01-ref.xhtml
 == inline--display-inline-block--01.xhtml inline--display-inline-block--01-ref.xhtml
 == inline--float-left--01.xhtml            inline--float-left--01-ref.xhtml
 == inline--float-right--01.xhtml           inline--float-right--01-ref.xhtml

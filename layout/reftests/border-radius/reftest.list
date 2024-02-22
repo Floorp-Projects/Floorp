@@ -47,7 +47,7 @@ skip-if(Android&&emulator) fuzzy(0-8,0-20) fuzzy-if(useDrawSnapshot,1-1,172-172)
 fuzzy(0-1,0-172) == clipping-4-image.html clipping-4-ref.html
 fuzzy(0-1,0-77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 skip-if(Android&&emulator) == clipping-5-canvas.html clipping-5-refc.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-5) == clipping-5-image.html clipping-5-refi.html
+fuzzy-if(winWidget,0-1,0-5) == clipping-5-image.html clipping-5-refi.html
 fuzzy(0-1,0-77) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy(0-1,0-97) == clipping-5-refi.html clipping-5-ref.html
 skip-if(Android&&emulator) fuzzy(0-1,0-77) fuzzy-if(useDrawSnapshot,1-1,97-97) == clipping-5-refc.html clipping-5-ref.html # bug 732535
@@ -73,7 +73,7 @@ fuzzy(0-1,0-116) == invalidate-1a.html invalidate-1-ref.html
 fuzzy(0-1,0-117) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
-fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-12,0-12) fuzzy-if(!Android,0-1,0-50) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-12,0-12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+fails-if(Android) fuzzy-if(!Android,0-1,0-50) fuzzy-if(gtkWidget,0-12,0-12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
 fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
@@ -82,7 +82,7 @@ random-if(winWidget) fuzzy(0-255,0-610) == corner-joins-2.xhtml corner-joins-2-r
 
 fuzzy(0-59,0-146) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-35,0-194) fuzzy-if(swgl,0-1,0-2) == transforms-1.html transforms-1-ref.html # bug 1507152
+fuzzy-if(winWidget,0-35,0-194) fuzzy-if(swgl,0-1,0-2) == transforms-1.html transforms-1-ref.html # bug 1507152
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 

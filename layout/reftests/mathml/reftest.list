@@ -1,4 +1,4 @@
-random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,200-250) fuzzy-if(winWidget,114-255,245-361) fuzzy-if(OSX,79-153,240-250) == mirror-op-1.html mirror-op-1-ref.html
+random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,200-250) fuzzy-if(winWidget,114-255,245-361) fuzzy-if(cocoaWidget,79-153,240-250) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
@@ -11,11 +11,11 @@ random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,20
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-5.html semantics-5-ref.html # bug 1309429; bug 1648335
-fuzzy-if(OSX,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
-fuzzy-if(OSX,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
+fuzzy-if(cocoaWidget,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
+fuzzy-if(cocoaWidget,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
-fails-if(OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
+fails-if(cocoaWidget) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 != scale-stretchy-4.xhtml scale-stretchy-4-ref.xhtml
 != scale-stretchy-5.xhtml scale-stretchy-5-ref.xhtml
 != stretchy-1.html stretchy-1-ref.html

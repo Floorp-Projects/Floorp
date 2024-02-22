@@ -77,7 +77,7 @@ pref(intl.icu4x.segmenter.enabled,false) == wordbreak-1.html wordbreak-1-ref.htm
 == wordbreak-3.html wordbreak-3-ref.html
 == wordbreak-4b.html wordbreak-4b-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
-fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
+fails-if(winWidget) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
 == wordbreak-7a.html wordbreak-7a-ref.html
 fails == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html

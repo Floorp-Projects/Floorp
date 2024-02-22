@@ -18,8 +18,8 @@ fuzzy-if(Android,0-253,0-77) == bidiSVG-03.svg bidiSVG-03-ref.svg
 fuzzy(0-1,0-1) fuzzy-if(winWidget,0-1,0-2) == bidiSVG-04.svg bidiSVG-04-ref.svg
 == bidiSVG-05.svg bidiSVG-05-ref.svg
 == bidiMirroring.svg bidiMirroring-ref.svg # Bug 1392106
-fuzzy-if(Android,0-9,0-134) random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
-fuzzy-if(Android,0-9,0-134) random-if(layersGPUAccelerated) == logicalmarquee.html marquee-ref.html
+fuzzy-if(Android,0-9,0-134) random == visualmarquee.html marquee-ref.html
+fuzzy-if(Android,0-9,0-134) random == logicalmarquee.html marquee-ref.html
 == visualmarquee.html logicalmarquee.html
 # test for glyph mirroring in right-to-left text
 == mirroring-01.html mirroring-01-ref.html
@@ -144,7 +144,7 @@ fuzzy(0-1,0-3) == 698291-1.html 698291-1-ref.html
 == 847242-1.html 847242-1-ref.html
 
 # Skip on Android because this is a <tree> test and we don't have the requisite XUL on Android.
-skip-if(Android) fuzzy(0-92,0-350) fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) == chrome://reftest/content/bidi/869833-1.xhtml chrome://reftest/content/bidi/869833-1-ref.xhtml
+skip-if(Android) fuzzy(0-92,0-350) fuzzy-if(gtkWidget,0-1,0-11) == chrome://reftest/content/bidi/869833-1.xhtml chrome://reftest/content/bidi/869833-1-ref.xhtml
 
 == 922530-1.html 922530-1-ref.html
 == 922550-1.html 922550-1-ref.html # Bug 1392106

@@ -39,14 +39,14 @@ fuzzy-if(Android,0-4,0-810) == containing-block-1.html containing-block-1-ref.ht
 == overconstrained-3.html overconstrained-3-ref.html
 == inline-1.html inline-1-ref.html
 == inline-2.html inline-2-ref.html
-fuzzy-if(OSX,0-99,0-210) == inline-3.html inline-3-ref.html
+fuzzy-if(cocoaWidget,0-99,0-210) == inline-3.html inline-3-ref.html
 skip-if(!asyncPan) fuzzy-if(swgl&&!Android,0-1,0-3) fails-if(useDrawSnapshot) == inline-4.html inline-4-ref.html
 == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
-fuzzy(0-1,0-22) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) fuzzy-if(Android,0-8,0-1533) == block-in-inline-2.html block-in-inline-2-ref.html
-fuzzy(0-1,0-220) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) == block-in-inline-3.html block-in-inline-3-ref.html
+fuzzy(0-1,0-22) fuzzy-if(Android,0-8,0-1533) == block-in-inline-2.html block-in-inline-2-ref.html
+fuzzy(0-1,0-220) == block-in-inline-3.html block-in-inline-3-ref.html
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
 == transformed-1.html transformed-1-ref.html

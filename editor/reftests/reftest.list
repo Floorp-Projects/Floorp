@@ -93,8 +93,8 @@ skip-if(Android) needs-focus == spellcheck-non-latin-japanese.html spellcheck-no
 skip-if(Android) fuzzy(0-3,0-1) needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
-fuzzy-if(browserIsRemote,0-255,0-3) asserts-if(browserIsRemote,0-3) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # bug 959132 for assertions
-fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-2824) == 642800.html 642800-ref.html
+fuzzy(0-255,0-3) asserts(0-3) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # bug 959132 for assertions
+== 642800.html 642800-ref.html
 needs-focus == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
 needs-focus != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
 needs-focus != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
@@ -115,8 +115,8 @@ needs-focus == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.html
 skip-if(Android) needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
 skip-if(Android) needs-focus != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html
 fuzzy(0-1,0-3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
-fuzzy-if(OSX,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html #Bug 1313253
-fuzzy-if(OSX,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html #Bug 1312951
+fuzzy-if(cocoaWidget,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html #Bug 1313253
+fuzzy-if(cocoaWidget,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html #Bug 1312951
 needs-focus != 824080-2.html 824080-3.html
 fuzzy(0-1,0-3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
 fuzzy(0-2,0-1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html

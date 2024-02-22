@@ -220,7 +220,7 @@ load 1406109-1.html
 load 1411473.html
 load 1413815.html
 load 1419799.html
-skip-if(!browserIsRemote) skip-if(geckoview) skip-if(geckoview&&isDebugBuild) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902. Bug 1563013 for GV+WR. Bug 1524493 GV+debug. Bug 1573281 asan
+skip-if(geckoview) skip-if(geckoview&&isDebugBuild) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) pref(dom.disable_open_during_load,false) load 1419902.html # skip Bug 1419902. Bug 1563013 for GV+WR. Bug 1524493 GV+debug. Bug 1573281 asan
 load 1422883.html
 load 1428053.html
 load 1441029.html
@@ -250,7 +250,7 @@ load 1555786.html
 load 1577191.html
 load eventSource_invalid_scheme_worker_shutdown.html
 load 1291535.html
-skip-if(!isDebugBuild||xulRuntime.OS!="Linux") load 1611853.html
+skip-if(!isDebugBuild||!gtkWidget) load 1611853.html
 load 1619322.html
 asserts(0-2) load 1623918.html # May hit an assertion if the <input> element's anonymous tree hasn't been flushed when IMEContentObserver handles focus
 load 1656925.html

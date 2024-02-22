@@ -277,13 +277,13 @@ include outline/reftest.list
 include object/reftest.list
 
 # ogg-video/
-skip-if(browserIsRemote) include ogg-video/reftest.list
+skip include ogg-video/reftest.list
 
 # webm-video/
-skip-if(browserIsRemote) include webm-video/reftest.list
+skip include webm-video/reftest.list
 
 # mp4-video/
-skip-if(browserIsRemote) include mp4-video/reftest.list
+skip include mp4-video/reftest.list
 
 # parser/
 include ../../parser/htmlparser/tests/reftest/reftest.list
@@ -372,8 +372,7 @@ include ../../toolkit/themes/osx/reftests/reftest.list
 include ../../toolkit/content/tests/reftests/reftest.list
 
 # transform/
-# skipping on non-e10s windows because of assertion in bug 1401228
-skip-if(winWidget&&!browserIsRemote) include transform/reftest.list
+include transform/reftest.list
 
 # 3d transforms
 include transform-3d/reftest.list

@@ -24,8 +24,8 @@ fuzzy(0-16,0-100) == preserve3d-5a.html preserve3d-5-ref.html
 == preserve3d-6a.html preserve3d-6-ref.html
 == preserve3d-table.html preserve3d-table-ref.html
 == scale3d-z.html scalez-1-ref.html
-fuzzy-if(winWidget,0-143,0-689) fuzzy-if(OSX,0-224,0-924) fuzzy-if(winWidget,0-154,0-644) == scale3d-all.html scale3d-1-ref.html # subpixel AA
-fuzzy-if(winWidget,0-143,0-689) fuzzy-if(OSX,0-224,0-924) fuzzy-if(winWidget,0-154,0-644) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget,0-143,0-689) fuzzy-if(cocoaWidget,0-224,0-924) fuzzy-if(winWidget,0-154,0-644) == scale3d-all.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget,0-143,0-689) fuzzy-if(cocoaWidget,0-224,0-924) fuzzy-if(winWidget,0-154,0-644) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
 == scale3d-xz.html scale3d-1-ref.html
 == translatez-1a.html translatez-1-ref.html
 != translatez-1b.html translatez-1-ref.html
@@ -38,14 +38,14 @@ fuzzy(0-1,0-6) == rotate3d-2a.html rotatey-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
 == backface-visibility-1c.html about:blank
-fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-251) fuzzy-if(useDrawSnapshot,64-64,1438-1438) == backface-visibility-2.html backface-visibility-2-ref.html
+fuzzy-if(useDrawSnapshot,64-64,1438-1438) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
 == perspective-clipping-1.html perspective-clipping-1-ref.html
 == perspective-clipping-2.html perspective-clipping-2-ref.html
 != perspective-origin-1a.html rotatex-perspective-1a.html
 fuzzy(0-1,0-3) == perspective-origin-1b.html perspective-origin-1a.html
-fuzzy(0-3,0-99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
-fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-61) == perspective-origin-3a.html perspective-origin-3-ref.html
+fuzzy(0-3,0-99) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568
+== perspective-origin-3a.html perspective-origin-3-ref.html
 == perspective-origin-4a.html perspective-origin-4-ref.html
 == perspective-zindex.html green-rect.html
 == perspective-zindex-2.html green-rect.html
@@ -57,13 +57,13 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,0-1,0-61) == perspective-origin-3a.htm
 == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
 fuzzy(0-1,0-4) == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
-fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),0-1,0-86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
 == willchange-containing-block.html?willchange willchange-containing-block.html?ref
 != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy(0-3,0-304) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
-fails-if(!layersGPUAccelerated) fails-if(useDrawSnapshot) fuzzy-if(!useDrawSnapshot,0-60,0-826) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
+fails-if(useDrawSnapshot) fuzzy-if(!useDrawSnapshot,0-60,0-826) == 1035611-1.html 1035611-1-ref.html
 random-if(swgl&&Android) != 1157984-1.html about:blank # Bug 1157984
 fuzzy(0-220,0-660) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
 fuzzy(0-240,0-400) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
@@ -71,7 +71,7 @@ fuzzy(0-240,0-400) == animate-cube-radians-zoom.html animate-cube-radians-zoom-r
 fuzzy(0-240,0-660) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
 fuzzy(0-240,0-400) fails-if(useDrawSnapshot) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
-fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
+fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||gtkWidget,0-143,0-100) fuzzy-if(winWidget||cocoaWidget,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy(0-255,0-153) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 fuzzy(0-255,0-153) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
 == animate-backface-hidden.html about:blank
