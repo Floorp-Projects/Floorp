@@ -129,9 +129,9 @@ nsresult UnboxBundle(JSContext* aCx, const jni::Object::LocalRef& aData,
     nsresult rv = UnboxValue(aCx, values->GetElement(i), &value);
     if (rv == NS_ERROR_INVALID_ARG && !JS_IsExceptionPending(aCx)) {
       JS_ReportErrorUTF8(
-          aCx, u8"Invalid event data property %s",
-          NS_ConvertUTF16toUTF8(
-              nsString(reinterpret_cast<const char16_t*>(keyChars), keyLen))
+          aCx, "Invalid event data property %s",
+          NS_ConvertUTF16toUTF8(reinterpret_cast<const char16_t*>(keyChars),
+                                keyLen)
               .get());
     }
     NS_ENSURE_SUCCESS(rv, rv);
