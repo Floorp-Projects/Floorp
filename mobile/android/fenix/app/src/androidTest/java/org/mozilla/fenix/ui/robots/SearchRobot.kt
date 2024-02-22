@@ -27,6 +27,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
@@ -295,9 +296,11 @@ class SearchRobot {
     }
 
     fun tapOutsideToDismissSearchBar() {
-        Log.i(TAG, "tapOutsideToDismissSearchBar: Trying to click the search wrapper")
-        itemWithResId("$packageName:id/search_wrapper").click()
-        Log.i(TAG, "tapOutsideToDismissSearchBar: Clicked the search wrapper")
+        Log.i(TAG, "tapOutsideToDismissSearchBar: Trying to perform a backward scroll action")
+        // After updating UIAutomator to 2.3.0 the click action doesn't seem to dismiss anymore the awesome bar
+        // On the other hand, the scroll action seems to be working properly and dismisses the awesome bar
+        UiScrollable(UiSelector().resourceId("$packageName:id/search_wrapper")).scrollBackward()
+        Log.i(TAG, "tapOutsideToDismissSearchBar: Performed a backward scroll action")
         Log.i(TAG, "tapOutsideToDismissSearchBar: Waiting for $waitingTime ms for the edit mode toolbar to be gone")
         browserToolbarEditView().waitUntilGone(waitingTime)
         Log.i(TAG, "tapOutsideToDismissSearchBar: Waited for $waitingTime ms for the edit mode toolbar to be gone")
