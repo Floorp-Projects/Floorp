@@ -106,3 +106,29 @@ Pattern({
       other:   { by: 'count', label: 'other' }
     }
   }));
+
+try {
+  const breakdown = { by: "objectClass" };
+  breakdown.then = breakdown;
+  dbg.memory.takeCensus({ breakdown });
+  assertEq(true, false, "should not reach here");
+} catch (e) {
+  assertEq(e.message, "takeCensus breakdown 'by' value nested within itself: \"objectClass\"");
+}
+
+try {
+  const breakdown = { by: "objectClass", then: { by: "objectClass" } };
+  dbg.memory.takeCensus({ breakdown });
+  assertEq(true, false, "should not reach here");
+} catch (e) {
+  assertEq(e.message, "takeCensus breakdown 'by' value nested within itself: \"objectClass\"");
+}
+
+try {
+  const breakdown = { by: "coarseType", scripts: { by: "filename" } };
+  breakdown.scripts.noFilename = breakdown;
+  dbg.memory.takeCensus({ breakdown });
+  assertEq(true, false, "should not reach here");
+} catch (e) {
+  assertEq(e.message, "takeCensus breakdown 'by' value nested within itself: \"coarseType\"");
+}
