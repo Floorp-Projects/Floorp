@@ -189,6 +189,7 @@ void nsCocoaWindow::DestroyNativeWindow() {
   // sent to it after this object has been destroyed.
   [mWindow setDelegate:nil];
   [mWindow close];
+  [mWindow release];
   mWindow = nil;
   [mDelegate autorelease];
 
@@ -507,6 +508,10 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
                                              backing:NSBackingStoreBuffered
                                                defer:YES];
 
+  // Whatever kind of window it is, don't release it on close. We'll do this
+  // ourselves in DestroyNativeWindow().
+  mWindow.releasedWhenClosed = NO;
+
   // Make sure that window titles don't leak to disk in private browsing mode
   // due to macOS' resume feature.
   [mWindow setRestorable:!aIsPrivateBrowsing];
@@ -643,13 +648,10 @@ void nsCocoaWindow::Destroy() {
     nsCocoaUtils::HideOSChromeOnScreen(false);
   }
 
-  // Destroy the native window here (and not wait for that to happen in our
-  // destructor). Otherwise this might not happen for several seconds because
-  // at least one object holding a reference to ourselves is usually waiting
-  // to be garbage-collected.
+  // Close the native window. It will be destroyed later when GC calls
+  // our destructor.
   if (mWindow && mWindowMadeHere) {
-    CancelAllTransitions();
-    DestroyNativeWindow();
+    [mWindow close];
   }
 }
 
