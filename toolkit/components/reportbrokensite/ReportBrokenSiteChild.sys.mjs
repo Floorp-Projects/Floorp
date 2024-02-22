@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const SCREENSHOT_FORMAT = { format: "jpeg", quality: 75 };
 
 function RunScriptInFrame(win, script) {
@@ -206,95 +204,21 @@ const FrameworkDetector = {
   },
 };
 
-function getSysinfoProperty(propertyName, defaultValue) {
-  try {
-    return Services.sysinfo.getProperty(propertyName);
-  } catch (e) {}
-  return defaultValue;
-}
-
-const BrowserInfo = {
-  getAppInfo() {
-    const { userAgent } = Cc[
-      "@mozilla.org/network/protocol;1?name=http"
-    ].getService(Ci.nsIHttpProtocolHandler);
-    return {
-      applicationName: Services.appinfo.name,
-      buildId: Services.appinfo.appBuildID,
-      defaultUserAgent: userAgent,
-      updateChannel: AppConstants.MOZ_UPDATE_CHANNEL,
-      version: AppConstants.MOZ_APP_VERSION_DISPLAY,
-    };
-  },
-
-  getPrefs() {
-    const prefs = {};
-    for (const [name, dflt] of Object.entries({
-      "layers.acceleration.force-enabled": undefined,
-      "gfx.webrender.software": undefined,
-      "browser.opaqueResponseBlocking": undefined,
-      "extensions.InstallTrigger.enabled": undefined,
-      "privacy.resistFingerprinting": undefined,
-      "privacy.globalprivacycontrol.enabled": undefined,
-    })) {
-      prefs[name] = Services.prefs.getBoolPref(name, dflt);
-    }
-    const cookieBehavior = "network.cookie.cookieBehavior";
-    prefs[cookieBehavior] = Services.prefs.getIntPref(cookieBehavior);
-    return prefs;
-  },
-
-  getPlatformInfo() {
-    let memoryMB = getSysinfoProperty("memsize", null);
-    if (memoryMB) {
-      memoryMB = Math.round(memoryMB / 1024 / 1024);
-    }
-
-    const info = {
-      fissionEnabled: Services.appinfo.fissionAutostart,
-      memoryMB,
-      osArchitecture: getSysinfoProperty("arch", null),
-      osName: getSysinfoProperty("name", null),
-      osVersion: getSysinfoProperty("version", null),
-      os: AppConstants.platform,
-    };
-    if (AppConstants.platform === "android") {
-      info.device = getSysinfoProperty("device", null);
-      info.isTablet = getSysinfoProperty("tablet", false);
-    }
-    return info;
-  },
-
-  getAllData() {
-    return {
-      app: BrowserInfo.getAppInfo(),
-      prefs: BrowserInfo.getPrefs(),
-      platform: BrowserInfo.getPlatformInfo(),
-    };
-  },
-};
-
 export class ReportBrokenSiteChild extends JSWindowActorChild {
   #getWebCompatInfo(docShell) {
     return Promise.all([
       this.#getConsoleLogs(docShell),
-      this.sendQuery(
-        "GetWebcompatInfoOnlyAvailableInParentProcess",
-        SCREENSHOT_FORMAT
-      ),
+      this.sendQuery("GetWebcompatInfoFromParentProcess", SCREENSHOT_FORMAT),
     ]).then(([consoleLog, infoFromParent]) => {
-      const { antitracking, graphics, locales, screenshot, security } =
-        infoFromParent;
-
-      const browser = BrowserInfo.getAllData();
-      browser.graphics = graphics;
-      browser.locales = locales;
-      browser.security = security;
+      const { antitracking, browser, screenshot } = infoFromParent;
 
       const win = docShell.domWindow;
-      const frameworks = FrameworkDetector.checkWindow(win);
 
-      if (browser.platform.os !== "linux") {
+      const devicePixelRatio = win.devicePixelRatio;
+      const frameworks = FrameworkDetector.checkWindow(win);
+      const { languages, userAgent } = win.navigator;
+
+      if (browser.platform.name !== "linux") {
         delete browser.prefs["layers.acceleration.force-enabled"];
       }
 
@@ -302,12 +226,12 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
         antitracking,
         browser,
         consoleLog,
-        devicePixelRatio: win.devicePixelRatio,
+        devicePixelRatio,
         frameworks,
-        languages: win.navigator.languages,
+        languages,
         screenshot,
         url: win.location.href,
-        userAgent: win.navigator.userAgent,
+        userAgent,
       };
     });
   }
@@ -369,13 +293,19 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
 
       message.blockList = blockList;
 
-      const { app, graphics, prefs, platform, security } = browser;
+      const { app, graphics, locales, prefs, platform, security } = browser;
 
-      const { applicationName, version, updateChannel, defaultUserAgent } = app;
+      const {
+        applicationName,
+        buildId,
+        defaultUserAgent,
+        updateChannel,
+        version,
+      } = app;
 
       const {
         fissionEnabled,
-        memoryMb,
+        memoryMB,
         osArchitecture,
         osName,
         osVersion,
@@ -386,6 +316,7 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
       const additionalData = {
         applicationName,
         blockList,
+        buildId,
         devicePixelRatio,
         finalUserAgent: userAgent,
         fissionEnabled,
@@ -395,16 +326,15 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
         hasTrackingContentBlocked,
         isPB: isPrivateBrowsing,
         languages,
-        memoryMb,
+        locales,
+        memoryMB,
         osArchitecture,
         osName,
         osVersion,
         prefs,
-        updateChannel,
-        userAgent: defaultUserAgent,
         version,
       };
-      if (security !== undefined) {
+      if (security !== undefined && Object.keys(security).length) {
         additionalData.sec = security;
       }
       if (device !== undefined) {
@@ -424,9 +354,9 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
 
       const details = Object.assign(message.details, specialPrefs, {
         additionalData,
-        buildId: browser.buildId,
         blockList,
-        channel: browser.updateChannel,
+        channel: updateChannel,
+        defaultUserAgent,
         hasTouchScreen: browser.graphics.hasTouchScreen,
       });
 

@@ -139,11 +139,13 @@ async function getExpectedWebCompatInfo(tab, snapshot, fullAppData = false) {
       },
       hasTouchScreen,
       monitorsJson(actualStr) {
-        // We don't care about monitor data on Android right now.
-        if (AppConstants.platform == "android") {
-          return actualStr == "undefined";
+        const expected = gfxInfo.getMonitors();
+        // If undefined is saved to the Glean value here, we'll get the string "undefined" (invalid JSON).
+        // We should stop using JSON like this in bug 1875185.
+        if (!actualStr || actualStr == "undefined") {
+          return !expected.length;
         }
-        return actualStr == JSON.stringify(gfxInfo.getMonitors());
+        return areObjectsEqual(JSON.parse(actualStr), expected);
       },
     },
     prefs: {
@@ -274,6 +276,20 @@ async function testSend(tab, menu, expectedOverrides = {}) {
     Services.fog.testResetFOG();
     GleanPings.brokenSiteReport.testBeforeNextSubmit(() => {
       const ping = extractBrokenSiteReportFromGleanPing(Glean);
+
+      // sanity checks
+      const { browserInfo, tabInfo } = ping;
+      ok(ping.url?.length, "Got a URL");
+      ok(
+        ["basic", "strict"].includes(tabInfo.antitracking.blockList),
+        "Got a blockList"
+      );
+      ok(tabInfo.useragentString?.length, "Got a final UA string");
+      ok(
+        browserInfo.app.defaultUseragentString?.length,
+        "Got a default UA string"
+      );
+
       ok(areObjectsEqual(ping, expected), "ping matches expectations");
       resolve();
     });
