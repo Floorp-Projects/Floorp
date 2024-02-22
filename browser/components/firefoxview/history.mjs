@@ -555,7 +555,6 @@ class HistoryInView extends ViewPage {
             isSearchEnabled(),
             () => html` <div class="history-sort-option">
               <fxview-search-textbox
-                .query=${this.searchQuery}
                 data-l10n-id="firefoxview-search-text-box-history"
                 data-l10n-attrs="placeholder"
                 .size=${this.searchTextboxSize}
