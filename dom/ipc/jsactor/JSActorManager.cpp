@@ -63,13 +63,13 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
   // If the JSActor uses `loadInDevToolsLoader`, force loading in the DevTools
   // specific's loader.
   RefPtr loader = protocol->mLoadInDevToolsLoader
-                      ? mozJSModuleLoader::GetOrCreateDevToolsLoader()
+                      ? mozJSModuleLoader::GetOrCreateDevToolsLoader(aCx)
                       : mozJSModuleLoader::Get();
   MOZ_ASSERT(loader);
 
   // We're about to construct the actor, so make sure we're in the loader realm
   // while importing etc.
-  JSAutoRealm ar(aCx, loader->GetSharedGlobal(aCx));
+  JSAutoRealm ar(aCx, loader->GetSharedGlobal());
 
   // If a module URI was provided, use it to construct an instance of the actor.
   JS::Rooted<JSObject*> actorObj(aCx);

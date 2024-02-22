@@ -3196,13 +3196,7 @@ void XPCJSRuntime::DeleteSingletonScopes() {
 
 JSObject* XPCJSRuntime::LoaderGlobal() {
   if (!mLoaderGlobal) {
-    RefPtr loader = mozJSModuleLoader::Get();
-
-    dom::AutoJSAPI jsapi;
-    jsapi.Init();
-
-    mLoaderGlobal = loader->GetSharedGlobal(jsapi.cx());
-    MOZ_RELEASE_ASSERT(!JS_IsExceptionPending(jsapi.cx()));
+    mLoaderGlobal = mozJSModuleLoader::Get()->GetSharedGlobal();
   }
   return mLoaderGlobal;
 }

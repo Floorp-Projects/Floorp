@@ -612,7 +612,7 @@ static mozJSModuleLoader* GetModuleLoaderForCurrentGlobal(
     return mozJSModuleLoader::Get();
   }
   if (mozJSModuleLoader::IsDevToolsLoaderGlobal(global)) {
-    return mozJSModuleLoader::GetOrCreateDevToolsLoader();
+    return mozJSModuleLoader::GetOrCreateDevToolsLoader(aCx);
   }
 
   if (loader::NonSharedGlobalSyncModuleLoaderScope::IsActive()) {
@@ -672,7 +672,7 @@ static mozJSModuleLoader* GetModuleLoaderForOptions(
       return mozJSModuleLoader::Get();
 
     case ImportESModuleTargetGlobal::Devtools:
-      return mozJSModuleLoader::GetOrCreateDevToolsLoader();
+      return mozJSModuleLoader::GetOrCreateDevToolsLoader(aCx);
 
     case ImportESModuleTargetGlobal::Contextual: {
       if (!NS_IsMainThread()) {
@@ -683,7 +683,7 @@ static mozJSModuleLoader* GetModuleLoaderForOptions(
       RefPtr devToolsModuleloader = mozJSModuleLoader::GetDevToolsLoader();
       if (devToolsModuleloader &&
           devToolsModuleloader->IsLoaderGlobal(aGlobal.Get())) {
-        return mozJSModuleLoader::GetOrCreateDevToolsLoader();
+        return mozJSModuleLoader::GetOrCreateDevToolsLoader(aCx);
       }
       return mozJSModuleLoader::Get();
     }

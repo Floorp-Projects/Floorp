@@ -76,9 +76,14 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
     return sSelf;
   }
 
-  JSObject* GetSharedGlobal(JSContext* aCx);
+  JSObject* GetSharedGlobal() {
+    MOZ_ASSERT(mLoaderGlobal);
+    return mLoaderGlobal;
+  }
 
  private:
+  void InitSharedGlobal(JSContext* aCx);
+
   void InitSyncModuleLoaderForGlobal(nsIGlobalObject* aGlobal);
   void DisconnectSyncModuleLoaderFromGlobal();
 
@@ -86,7 +91,7 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
 
  public:
   static mozJSModuleLoader* GetDevToolsLoader() { return sDevToolsLoader; }
-  static mozJSModuleLoader* GetOrCreateDevToolsLoader();
+  static mozJSModuleLoader* GetOrCreateDevToolsLoader(JSContext* aCx);
 
   nsresult ImportInto(const nsACString& aResourceURI,
                       JS::HandleValue aTargetObj, JSContext* aCx, uint8_t aArgc,
