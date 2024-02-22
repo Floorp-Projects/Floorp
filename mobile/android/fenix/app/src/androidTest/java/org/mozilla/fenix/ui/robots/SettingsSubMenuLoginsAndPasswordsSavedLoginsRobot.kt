@@ -30,7 +30,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithClassNameAndIndex
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -42,7 +41,8 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 
 class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
-    fun verifySecurityPromptForLogins() = assertSavedLoginsView()
+    fun verifySecurityPromptForLogins() =
+        onView(withText("Secure your logins and passwords")).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
     fun verifyEmptySavedLoginsListView() {
         onView(withText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text)))
@@ -58,9 +58,9 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun verifySavedLoginsAfterSync() {
         mDevice.waitNotNull(
             Until.findObjects(By.text("https://accounts.google.com")),
-            TestAssetHelper.waitingTime,
+            waitingTime,
         )
-        assertSavedLoginAppears()
+        onView(withText("https://accounts.google.com")).check(matches(isDisplayed()))
     }
 
     fun tapSetupLater() = onView(withText("Later")).perform(ViewActions.click())
@@ -216,14 +216,6 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
-
-private fun assertSavedLoginsView() =
-    onView(withText("Secure your logins and passwords"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertSavedLoginAppears() =
-    onView(withText("https://accounts.google.com"))
-        .check(matches(isDisplayed()))
 
 private fun openWebsiteButton() = onView(withId(R.id.openWebAddress))
 
