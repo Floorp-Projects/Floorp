@@ -609,6 +609,7 @@ skip-if = ["!nightly_build"] # OHTTP Config manager not currently shipped to rel
 
 ["test_http2-proxy-failing.js"]
 run-sequentially = "node server exceptions dont replay well"
+skip-if = ["true"] # bug 1881334
 
 ["test_http2-proxy.js"]
 run-sequentially = "one http2 node proxy is used for all tests, this test is using global session counter"
