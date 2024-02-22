@@ -34,7 +34,7 @@ jobs:
     outputs:
       display-version: ${{ steps.get.outputs.display-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         sparse-checkout: 'browser/config/version_display.txt'
     - name: Get Display Version
@@ -47,7 +47,7 @@ jobs:
     outputs:
       inside-version: ${{ steps.get.outputs.inside-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         sparse-checkout: 'browser/config/version.txt'
     - name: Get Inside Version
@@ -217,31 +217,31 @@ jobs:
         mkdir -p ~/downloads/artifacts/macOS-x64
 
     - name: download Linux x86_64 build artifact 📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: floorp-linux-x64
         path: ~/downloads/artifacts/linux-x64
 
     - name: download Linux aarch64 build artifact 📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: floorp-linux-aarch64
         path: ~/downloads/artifacts/linux-aarch64
 
     - name: download Windows x86_64 build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x64
 
     - name: download Windows x86 build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x86
 
     - name: download macOS Universal build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Universal-Artifact
         path: ~/downloads/artifacts/macOS-x64

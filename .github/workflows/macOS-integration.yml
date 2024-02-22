@@ -87,18 +87,18 @@ jobs:
     runs-on: macos-latest
     steps:
         - name: Clone 📥
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
           with:
             submodules: 'recursive'
 
         - name: download M1 build artifact 📥
-          uses: actions/download-artifact@v3
+          uses: actions/download-artifact@v4
           with:
             name: ${{ inputs.aarch64_artifact_name }}
             path: ./
 
         - name: download Intel build artifact 📥
-          uses: actions/download-artifact@v3
+          uses: actions/download-artifact@v4
           with:
             name: ${{ inputs.x86_64_artifact_name }}
             path: ./
@@ -111,7 +111,7 @@ jobs:
             tar -xf ./floorp-aarch64-apple-darwin-with-pgo.tar.gz
             tar -xf ./floorp-x86_64-apple-darwin-with-pgo.tar.gz
 
-        - uses: actions/setup-python@v4
+        - uses: actions/setup-python@v5
           with:
             python-version: '3.11' 
 
@@ -252,7 +252,7 @@ jobs:
             GHA_default_name: Universal-Artifact
 
         - name: Publish 🎁
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: ${{ env.ARTIFACT_NAME }}
             if-no-files-found: ignore

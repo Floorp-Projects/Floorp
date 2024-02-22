@@ -35,7 +35,7 @@ jobs:
   Generate-Profile-data-and-jarlog:
     runs-on: windows-latest
     steps:
-        - uses: actions/download-artifact@v3
+        - uses: actions/download-artifact@v4
           name: Download artifact 📥
           with:
             name: ${{ inputs.browser-artifact-name }}
@@ -47,7 +47,7 @@ jobs:
             zstd -d floorp-*.tar.zst
             7z x floorp-*.tar
 
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
           name: Clone 🧬
           with:
             submodules: 'recursive'    
@@ -70,7 +70,7 @@ jobs:
             C:\mozilla-build\start-shell.bat $workspace_dir\mozilla-build-run.sh
 
         - name: Publish 🎁
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: floorp-windows-${{ inputs.arch }}-profdata-and-jarlog
             path: |
