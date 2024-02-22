@@ -52,7 +52,7 @@ add_task(async function () {
     gBrowser.selectedBrowser
   );
 
-  await hasConsoleMessage(dbg, "DOM(click)");
+  await hasConsoleMessage(dbg, "DOM | click");
   await hasConsoleMessage(dbg, "λ simple");
 
   // Test Blackboxing

@@ -804,15 +804,24 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Styles for JavaScript Tracer messages */
-.webconsole-app .jstracer-dom-event {
+.webconsole-app :is(
+   .jstracer-dom-event,
+   .jstracer-dom-mutation,
+   .jstracer-implementation
+ ) {
   padding-inline: 4px;
   margin-inline: 2px;
+}
+.webconsole-app .jstracer-dom-event {
   background-color: var(--toolbarbutton-checked-background);
   color: var(--toolbarbutton-checked-color);
 }
+.webconsole-app .jstracer-dom-mutation {
+  background-color: var(--toolbarbutton-checked-background);
+  color: var(--toolbarbutton-checked-color);
+  margin-inline-end: 4px;
+}
 .webconsole-app .jstracer-implementation {
-  padding-inline: 4px;
-  margin-inline: 2px;
   background-color: var(--theme-toolbarbutton-checked-hover-background);
   color: var(--theme-toolbarbutton-checked-hover-color);
 }
