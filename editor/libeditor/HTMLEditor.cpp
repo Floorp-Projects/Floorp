@@ -5949,14 +5949,23 @@ bool HTMLEditor::IsEmpty() const {
     return true;
   }
 
-  // XXX Oddly, we check body or document element's state instead of
-  //     active editing host.  Must be a bug.
-  Element* bodyOrDocumentElement = GetRoot();
-  if (!bodyOrDocumentElement) {
-    return true;
+  const Element* activeElement =
+      GetDocument() ? GetDocument()->GetActiveElement() : nullptr;
+  const Element* editingHostOrBodyOrRootElement =
+      activeElement && activeElement->IsEditable()
+          ? ComputeEditingHost(*activeElement, LimitInBodyElement::No)
+          : ComputeEditingHost(LimitInBodyElement::No);
+  if (MOZ_UNLIKELY(!editingHostOrBodyOrRootElement)) {
+    // If there is no active element nor no selection range in the document,
+    // let's check entire the document as what we do traditionally.
+    editingHostOrBodyOrRootElement = GetRoot();
+    if (!editingHostOrBodyOrRootElement) {
+      return true;
+    }
   }
 
-  for (nsIContent* childContent = bodyOrDocumentElement->GetFirstChild();
+  for (nsIContent* childContent =
+           editingHostOrBodyOrRootElement->GetFirstChild();
        childContent; childContent = childContent->GetNextSibling()) {
     if (!childContent->IsText() || childContent->Length()) {
       return false;
