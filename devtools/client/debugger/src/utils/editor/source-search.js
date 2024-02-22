@@ -55,7 +55,7 @@ function searchOverlay(query, modifiers) {
   });
 
   return {
-    token: function (stream, state) {
+    token(stream, state) {
       // set the last index to be the current stream position
       // this acts as an offset
       regexQuery.lastIndex = stream.pos;

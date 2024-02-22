@@ -107,7 +107,7 @@ class Preview extends PureComponent {
       return null;
     }
     return React.createElement(Popup, {
-      preview: preview,
+      preview,
       editor: this.props.editor,
       editorRef: this.props.editorRef,
       clearPreview: this.clearPreview,

@@ -150,7 +150,7 @@ class Tabs extends PureComponent {
     return li(
       {
         key: source.id,
-        onClick: onClick,
+        onClick,
         title: getFileURL(source, false),
       },
       React.createElement(AccessibleImage, {

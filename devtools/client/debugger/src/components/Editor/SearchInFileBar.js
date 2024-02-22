@@ -321,7 +321,7 @@ class SearchInFileBar extends Component {
       },
       React.createElement(SearchInput, {
         query: this.state.query,
-        count: count,
+        count,
         placeholder: L10N.getStr("sourceSearch.search.placeholder2"),
         summaryMsg: this.buildSummaryMsg(),
         isLoading: false,

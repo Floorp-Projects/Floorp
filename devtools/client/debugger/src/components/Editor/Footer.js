@@ -278,7 +278,7 @@ class SourceFooter extends PureComponent {
       MenuButton,
       {
         menuId: "debugger-source-map-button",
-        toolboxDoc: toolboxDoc,
+        toolboxDoc,
         className: classnames("devtools-button", "debugger-source-map-button", {
           error: !!this.props.sourceMapError,
           loading: this.props.isSourceMapLoading,

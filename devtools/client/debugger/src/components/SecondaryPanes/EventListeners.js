@@ -136,7 +136,7 @@ class EventListeners extends Component {
         className: classnames("event-search-input", {
           focused,
         }),
-        placeholder: placeholder,
+        placeholder,
         value: searchText,
         onChange: this.onInputChange,
         onKeyDown: this.onKeyDown,
@@ -233,7 +233,7 @@ class EventListeners extends Component {
               indeterminate ? false : e.target.checked
             );
           },
-          checked: checked,
+          checked,
           ref: el => el && (el.indeterminate = indeterminate),
         }),
         span(

@@ -21,7 +21,7 @@ describe("CommandBarButton", () => {
     const children = [1, 2, 3, 4];
     const wrapper = shallow(
       React.createElement(CommandBarButton, {
-        children: children,
+        children,
         className: "",
       })
     );

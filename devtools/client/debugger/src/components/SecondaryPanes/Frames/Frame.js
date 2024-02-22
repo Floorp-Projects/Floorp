@@ -167,12 +167,12 @@ export default class FrameComponent extends Component {
       {
         role: "listitem",
         key: frame.id,
-        className: className,
+        className,
         onMouseDown: e => this.onMouseDown(e, frame, selectedFrame),
         onKeyUp: e => this.onKeyUp(e, frame, selectedFrame),
         onContextMenu: disableContextMenu ? null : e => this.onContextMenu(e),
         tabIndex: 0,
-        title: title,
+        title,
       },
       frame.asyncCause &&
         React.createElement(

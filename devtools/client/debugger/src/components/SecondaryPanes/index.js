@@ -52,7 +52,7 @@ const classnames = require("resource://devtools/client/shared/classnames.js");
 function debugBtn(onClick, type, className, tooltip) {
   return button(
     {
-      onClick: onClick,
+      onClick,
       className: `${type} ${className}`,
       key: type,
       title: tooltip,

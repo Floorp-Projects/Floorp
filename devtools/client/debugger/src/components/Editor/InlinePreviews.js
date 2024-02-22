@@ -49,7 +49,7 @@ class InlinePreviews extends Component {
       inlinePreviewRows = Object.keys(previewsObj).map(line => {
         const lineNum = parseInt(line, 10);
         return React.createElement(InlinePreviewRow, {
-          editor: editor,
+          editor,
           key: line,
           line: lineNum,
           previews: previewsObj[line],

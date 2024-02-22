@@ -93,7 +93,7 @@ export default class ResultList extends Component {
         ref: this.ref,
         className: classnames("result-list", size),
         id: "result-list",
-        role: role,
+        role,
         "aria-live": "polite",
       },
       items.map(this.renderListItem)

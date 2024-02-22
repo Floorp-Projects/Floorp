@@ -307,7 +307,7 @@ class Scopes extends PureComponent {
           dimTopLevelWindow: true,
           frame: selectedFrame,
           mayUseCustomFormatter: true,
-          openLink: openLink,
+          openLink,
           onDOMNodeClick: grip => openElementInInspector(grip),
           onInspectIconClick: grip => openElementInInspector(grip),
           onDOMNodeMouseOver: grip => highlightDomElement(grip),
@@ -315,7 +315,7 @@ class Scopes extends PureComponent {
           onContextMenu: this.onContextMenu,
           setExpanded: (path, expand) =>
             setExpandedScope(selectedFrame, path, expand),
-          initiallyExpanded: initiallyExpanded,
+          initiallyExpanded,
           renderItemActions: this.renderWatchpointButton,
           shouldRenderTooltip: true,
         })

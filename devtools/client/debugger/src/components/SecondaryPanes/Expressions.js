@@ -296,7 +296,7 @@ class Expressions extends Component {
           roots: [root],
           autoExpandDepth: 0,
           disableWrap: true,
-          openLink: openLink,
+          openLink,
           createElement: this.createElement,
           onDoubleClick: (items, { depth }) => {
             if (depth === 0) {

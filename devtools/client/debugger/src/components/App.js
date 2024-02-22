@@ -257,13 +257,13 @@ class App extends Component {
           className: "editor-container",
         },
         React.createElement(EditorTabs, {
-          startPanelCollapsed: startPanelCollapsed,
-          endPanelCollapsed: endPanelCollapsed,
-          horizontal: horizontal,
+          startPanelCollapsed,
+          endPanelCollapsed,
+          horizontal,
         }),
         React.createElement(Editor, {
-          startPanelSize: startPanelSize,
-          endPanelSize: endPanelSize,
+          startPanelSize,
+          endPanelSize,
         }),
         !this.props.selectedLocation
           ? React.createElement(WelcomeBox, {
@@ -322,7 +322,7 @@ class App extends Component {
           prefs.startPanelSize = num;
           this.triggerEditorPaneResize();
         },
-        startPanelCollapsed: startPanelCollapsed,
+        startPanelCollapsed,
         startPanel: React.createElement(PrimaryPanes, {
           horizontal,
         }),
@@ -332,7 +332,7 @@ class App extends Component {
       endPanel: React.createElement(SecondaryPanes, {
         horizontal,
       }),
-      endPanelCollapsed: endPanelCollapsed,
+      endPanelCollapsed,
     });
   };
 

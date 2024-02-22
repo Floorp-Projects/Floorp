@@ -205,12 +205,12 @@ class XHRBreakpoints extends Component {
         className: classnames("xhr-input-container xhr-input-form", {
           focused,
         }),
-        onSubmit: onSubmit,
+        onSubmit,
       },
       input({
         className: "xhr-input-url",
         type: "text",
-        placeholder: placeholder,
+        placeholder,
         onChange: this.handleChange,
         onBlur: this.hideInput,
         onFocus: this.onFocus,
