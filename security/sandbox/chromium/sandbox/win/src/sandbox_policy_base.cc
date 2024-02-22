@@ -17,7 +17,6 @@
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/acl.h"
 #include "sandbox/win/src/filesystem_policy.h"
-#include "sandbox/win/src/handle_policy.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/job.h"
 #include "sandbox/win/src/line_break_policy.h"
@@ -775,14 +774,6 @@ ResultCode PolicyBase::AddRuleInternal(SubSystem subsystem,
       }
       break;
     }
-    case SUBSYS_HANDLES: {
-      if (!HandlePolicy::GenerateRules(pattern, semantics, policy_maker_)) {
-        NOTREACHED();
-        return SBOX_ERROR_BAD_PARAMS;
-      }
-      break;
-    }
-
     case SUBSYS_WIN32K_LOCKDOWN: {
       // Win32k intercept rules only supported on Windows 8 and above. This must
       // match the version checks in process_mitigations.cc for consistency.

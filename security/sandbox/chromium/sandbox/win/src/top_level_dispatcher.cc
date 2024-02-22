@@ -10,7 +10,6 @@
 #include "base/logging.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/filesystem_dispatcher.h"
-#include "sandbox/win/src/handle_dispatcher.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/internal_types.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -61,10 +60,6 @@ TopLevelDispatcher::TopLevelDispatcher(PolicyBase* policy) : policy_(policy) {
   ipc_targets_[static_cast<size_t>(IpcTag::NTCREATEKEY)] = dispatcher;
   ipc_targets_[static_cast<size_t>(IpcTag::NTOPENKEY)] = dispatcher;
   registry_dispatcher_.reset(dispatcher);
-
-  dispatcher = new HandleDispatcher(policy_);
-  ipc_targets_[static_cast<size_t>(IpcTag::DUPLICATEHANDLEPROXY)] = dispatcher;
-  handle_dispatcher_.reset(dispatcher);
 
   dispatcher = new ProcessMitigationsWin32KDispatcher(policy_);
   ipc_targets_[static_cast<size_t>(IpcTag::GDI_GDIDLLINITIALIZE)] = dispatcher;

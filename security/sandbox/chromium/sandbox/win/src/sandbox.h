@@ -172,20 +172,6 @@ class TargetServices {
   // LowerToken has been called or not.
   virtual ProcessState* GetState() = 0;
 
-  // Requests the broker to duplicate the supplied handle into the target
-  // process. The target process must be an active sandbox child process
-  // and the source process must have a corresponding policy allowing
-  // handle duplication for this object type.
-  // Returns:
-  //   ALL_OK if successful. All other return values imply failure.
-  //   If the return is ERROR_GENERIC, you can call ::GetLastError() to get
-  //   more information.
-  virtual ResultCode DuplicateHandle(HANDLE source_handle,
-                                     DWORD target_process_id,
-                                     HANDLE* target_handle,
-                                     DWORD desired_access,
-                                     DWORD options) = 0;
-
   virtual ResultCode GetComplexLineBreaks(const WCHAR* text, uint32_t length,
                                           uint8_t* break_before) = 0;
 
