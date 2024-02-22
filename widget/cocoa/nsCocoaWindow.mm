@@ -718,7 +718,15 @@ bool nsCocoaWindow::IsVisible() const {
 void nsCocoaWindow::SetModal(bool aState) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  if (!mWindow) return;
+  // Unlike many functions here, we explicitly *do not check* for the
+  // existence of mWindow. This is to ensure that calls to SetModal have
+  // no early exits and always update state. That way, if the calls are
+  // balanced, we get expected behavior even if the native window has
+  // been destroyed during the modal period. Within this function, all
+  // the calls to mWindow will resolve even if mWindow is nil (as is
+  // guaranteed by Objective-C). And since those calls are only concerned
+  // with changing mWindow appearance/level, it's fine for them to be
+  // no-ops if mWindow has already been destroyed.
 
   // This is used during startup (outside the event loop) when creating
   // the add-ons compatibility checking dialog and the profile manager UI;
