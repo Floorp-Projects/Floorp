@@ -481,7 +481,9 @@ nsresult HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   if (aVisitor.mEvent->mMessage == eFormSelect) {
     mHandlingSelect = false;
   }
-
+  if (aVisitor.mEvent->mMessage == eFocus) {
+    GetValueInternal(mFocusedValue, true);
+  }
   return NS_OK;
 }
 
