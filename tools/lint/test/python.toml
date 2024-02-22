@@ -26,6 +26,8 @@ skip-if = ["os == 'win'"]
 
 ["test_fluent_lint.py"]
 
+["test_ignorefile.py"]
+
 ["test_lintpref.py"]
 
 ["test_manifest_alpha.py"]

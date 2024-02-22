@@ -607,3 +607,15 @@ trojan-source:
             - '**/*.py'
             - '**/*.rs'
             - 'tools/lint/trojan-source.yml'
+
+ignorefile-test:
+    description: .gitignore vs .hgignore consistency check
+    platform: lint/opt
+    treeherder:
+        symbol: ignorefile
+    run:
+        mach: lint -v -l ignorefile .gitignore .hgignore
+    when:
+        files-changed:
+            - '.gitignore'
+            - '.hgignore'
