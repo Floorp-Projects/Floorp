@@ -444,7 +444,7 @@ export class QuickOpenModal extends Component {
         handleClose: this.closeModal,
       },
       React.createElement(SearchInput, {
-        query: query,
+        query,
         hasPrefix: true,
         count: this.getResultCount(),
         placeholder: L10N.getStr("sourceSearch.search2"),
@@ -454,7 +454,7 @@ export class QuickOpenModal extends Component {
         onChange: this.onChange,
         onKeyDown: this.onKeyDown,
         handleClose: this.closeModal,
-        expanded: expanded,
+        expanded,
         showClose: false,
         searchKey: searchKeys.QUICKOPEN_SEARCH,
         showExcludePatterns: false,
@@ -466,11 +466,11 @@ export class QuickOpenModal extends Component {
       results &&
         React.createElement(ResultList, {
           key: "results",
-          items: items,
+          items,
           selected: selectedIndex,
           selectItem: this.selectResultItem,
           ref: "resultList",
-          expanded: expanded,
+          expanded,
           ...(this.isSourceSearch() ? SIZE_BIG : SIZE_DEFAULT),
         })
     );

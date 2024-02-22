@@ -42,7 +42,7 @@ function promiseMiddleware({ dispatch, getState }) {
       .finally(() => new Promise(resolve => executeSoon(resolve)))
       .then(
         value => {
-          dispatch({ ...action, status: "done", value: value });
+          dispatch({ ...action, status: "done", value });
           return value;
         },
         error => {

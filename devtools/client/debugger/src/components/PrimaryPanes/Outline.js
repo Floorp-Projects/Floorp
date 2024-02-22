@@ -365,7 +365,7 @@ export class Outline extends Component {
       div(
         null,
         React.createElement(OutlineFilter, {
-          filter: filter,
+          filter,
           updateFilter: this.updateFilter,
         }),
         this.renderFunctions(functions),

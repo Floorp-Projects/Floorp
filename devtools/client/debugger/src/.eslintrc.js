@@ -267,10 +267,6 @@ module.exports = {
     "no-var": 0,
     // Allow using TODO/FIXME comments.
     "no-warning-comments": 0,
-    // Dont require method and property shorthand syntax for object literals.
-    // We use this in the code a lot, but not consistently, and this seems more
-    // like something to check at code review time.
-    "object-shorthand": 0,
     // Allow more than one variable declaration per function.
     "one-var": 0,
     // Require use of the second argument for parseInt().

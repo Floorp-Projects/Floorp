@@ -67,13 +67,13 @@ class InlinePreviewRow extends PureComponent {
         null,
         previews.map(preview =>
           React.createElement(InlinePreview, {
-            line: line,
+            line,
             key: `${line}-${preview.name}`,
             variable: preview.name,
             value: preview.value,
-            openElementInInspector: openElementInInspector,
-            highlightDomElement: highlightDomElement,
-            unHighlightDomElement: unHighlightDomElement,
+            openElementInInspector,
+            highlightDomElement,
+            unHighlightDomElement,
           })
         )
       ),

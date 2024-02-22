@@ -100,7 +100,7 @@ export class Popup extends Component {
 
   renderExceptionPreview(exception) {
     return React.createElement(ExceptionPopup, {
-      exception: exception,
+      exception,
       clearPreview: this.props.clearPreview,
     });
   }
@@ -182,8 +182,8 @@ export class Popup extends Component {
       Popover,
       {
         targetPosition: cursorPos,
-        type: type,
-        editorRef: editorRef,
+        type,
+        editorRef,
         target: this.props.preview.target,
         mouseout: this.props.clearPreview,
       },

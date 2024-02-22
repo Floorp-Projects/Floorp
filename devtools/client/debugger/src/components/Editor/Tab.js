@@ -91,10 +91,10 @@ class Tab extends PureComponent {
     return div(
       {
         draggable: true,
-        onDragOver: onDragOver,
-        onDragStart: onDragStart,
-        onDragEnd: onDragEnd,
-        className: className,
+        onDragOver,
+        onDragStart,
+        onDragEnd,
+        className,
         "data-index": index,
         "data-source-id": sourceId,
         onClick: handleTabClick,

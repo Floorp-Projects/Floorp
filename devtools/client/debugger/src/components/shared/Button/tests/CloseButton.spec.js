@@ -11,7 +11,7 @@ describe("CloseButton", () => {
     const tooltip = "testTooltip";
     const wrapper = shallow(
       React.createElement(CloseButton, {
-        tooltip: tooltip,
+        tooltip,
         handleClick: () => {},
       })
     );

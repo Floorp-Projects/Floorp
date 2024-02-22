@@ -17,7 +17,7 @@ describe("SearchInput", () => {
   });
   const wrapper = shallow(
     React.createElement(SearchInput, {
-      store: store,
+      store,
       query: "",
       count: 5,
       placeholder: "A placeholder",

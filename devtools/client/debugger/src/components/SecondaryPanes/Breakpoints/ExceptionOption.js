@@ -21,7 +21,7 @@ export default function ExceptionOption({
     input({
       type: "checkbox",
       checked: isChecked,
-      onChange: onChange,
+      onChange,
     }),
     div(
       {

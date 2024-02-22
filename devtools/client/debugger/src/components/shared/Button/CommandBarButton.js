@@ -22,9 +22,9 @@ export function debugBtn(
     CommandBarButton,
     {
       className: classnames(type, className),
-      disabled: disabled,
+      disabled,
       key: type,
-      onClick: onClick,
+      onClick,
       pressed: ariaPressed,
       title: tooltip,
     },

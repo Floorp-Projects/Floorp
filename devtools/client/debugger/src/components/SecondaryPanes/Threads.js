@@ -25,7 +25,7 @@ export class Threads extends Component {
       },
       threads.map(thread =>
         React.createElement(Thread, {
-          thread: thread,
+          thread,
           key: thread.actor,
         })
       )

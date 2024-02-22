@@ -29,7 +29,7 @@ const sources = [
 ];
 
 export const mockCommandClient = {
-  sourceContents: function ({ source }) {
+  sourceContents({ source }) {
     return new Promise((resolve, reject) => {
       if (sources.includes(source)) {
         resolve(createSource(source));
