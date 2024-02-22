@@ -70,18 +70,18 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun verifyAddNewLoginView() {
         assertUIObjectExists(
-            siteHeader,
-            siteTextInput,
-            usernameHeader,
-            usernameTextInput,
-            passwordHeader,
-            passwordTextInput,
-            siteDescription,
+            siteHeader(),
+            siteTextInput(),
+            usernameHeader(),
+            usernameTextInput(),
+            passwordHeader(),
+            passwordTextInput(),
+            siteDescription(),
         )
-        siteTextInputHint.check(matches(withHint(R.string.add_login_hostname_hint_text)))
+        siteTextInputHint().check(matches(withHint(R.string.add_login_hostname_hint_text)))
     }
 
-    fun enterSiteCredential(website: String) = siteTextInput.setText(website)
+    fun enterSiteCredential(website: String) = siteTextInput().setText(website)
 
     fun verifyHostnameErrorMessage() =
         assertUIObjectExists(itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_2)))
@@ -149,11 +149,11 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun clickCancelDeleteLogin() =
         onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog()).click()
 
-    fun setNewUserName(userName: String) = usernameTextInput.setText(userName)
+    fun setNewUserName(userName: String) = usernameTextInput().setText(userName)
 
     fun clickClearUserNameButton() = itemWithResId("$packageName:id/clearUsernameTextButton").click()
 
-    fun setNewPassword(password: String) = passwordTextInput.setText(password)
+    fun setNewPassword(password: String) = passwordTextInput().setText(password)
 
     fun clickClearPasswordButton() = itemWithResId("$packageName:id/clearPasswordTextButton").click()
 
@@ -206,7 +206,7 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         }
 
         fun goToSavedWebsite(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            openWebsiteButton.click()
+            openWebsiteButton().click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -225,13 +225,13 @@ private fun assertSavedLoginAppears() =
     onView(withText("https://accounts.google.com"))
         .check(matches(isDisplayed()))
 
-private val openWebsiteButton = onView(withId(R.id.openWebAddress))
+private fun openWebsiteButton() = onView(withId(R.id.openWebAddress))
 
-private val siteHeader = itemWithResId("$packageName:id/hostnameHeaderText")
-private val siteTextInput = itemWithResId("$packageName:id/hostnameText")
-private val siteDescription = itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_3))
-private val siteTextInputHint = onView(withId(R.id.hostnameText))
-private val usernameHeader = itemWithResId("$packageName:id/usernameHeader")
-private val usernameTextInput = itemWithResId("$packageName:id/usernameText")
-private val passwordHeader = itemWithResId("$packageName:id/passwordHeader")
-private val passwordTextInput = itemWithResId("$packageName:id/passwordText")
+private fun siteHeader() = itemWithResId("$packageName:id/hostnameHeaderText")
+private fun siteTextInput() = itemWithResId("$packageName:id/hostnameText")
+private fun siteDescription() = itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_3))
+private fun siteTextInputHint() = onView(withId(R.id.hostnameText))
+private fun usernameHeader() = itemWithResId("$packageName:id/usernameHeader")
+private fun usernameTextInput() = itemWithResId("$packageName:id/usernameText")
+private fun passwordHeader() = itemWithResId("$packageName:id/passwordHeader")
+private fun passwordTextInput() = itemWithResId("$packageName:id/passwordText")
