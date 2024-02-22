@@ -51,8 +51,8 @@ SMILAnimationController::~SMILAnimationController() {
   NS_ASSERTION(mAnimationElementTable.IsEmpty(),
                "Animation controller shouldn't be tracking any animation"
                " elements when it dies");
-  NS_ASSERTION(!mRegisteredWithRefreshDriver,
-               "Leaving stale entry in refresh driver's observer list");
+  MOZ_RELEASE_ASSERT(!mRegisteredWithRefreshDriver,
+                     "Leaving stale entry in refresh driver's observer list");
 }
 
 void SMILAnimationController::Disconnect() {
