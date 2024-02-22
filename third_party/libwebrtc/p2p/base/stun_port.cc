@@ -19,12 +19,12 @@
 #include "p2p/base/connection.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/port_allocator.h"
-#include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace cricket {
@@ -46,7 +46,9 @@ class StunBindingRequest : public StunRequest {
                     std::make_unique<StunMessage>(STUN_BINDING_REQUEST)),
         port_(port),
         server_addr_(addr),
-        start_time_(start_time) {}
+        start_time_(start_time) {
+    SetAuthenticationRequired(false);
+  }
 
   const rtc::SocketAddress& server_addr() const { return server_addr_; }
 
@@ -220,7 +222,10 @@ bool UDPPort::Init() {
       RTC_LOG(LS_WARNING) << ToString() << ": UDP socket creation failed";
       return false;
     }
-    socket_->SignalReadPacket.connect(this, &UDPPort::OnReadPacket);
+    socket_->RegisterReceivedPacketCallback(
+        [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+          OnReadPacket(socket, packet);
+        });
   }
   socket_->SignalSentPacket.connect(this, &UDPPort::OnSentPacket);
   socket_->SignalReadyToSend.connect(this, &UDPPort::OnReadyToSend);
@@ -340,12 +345,9 @@ int UDPPort::GetError() {
 }
 
 bool UDPPort::HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
-                                   const char* data,
-                                   size_t size,
-                                   const rtc::SocketAddress& remote_addr,
-                                   int64_t packet_time_us) {
+                                   const rtc::ReceivedPacket& packet) {
   // All packets given to UDP port will be consumed.
-  OnReadPacket(socket, data, size, remote_addr, packet_time_us);
+  OnReadPacket(socket, packet);
   return true;
 }
 
@@ -387,26 +389,26 @@ void UDPPort::PostAddAddress(bool is_final) {
 }
 
 void UDPPort::OnReadPacket(rtc::AsyncPacketSocket* socket,
-                           const char* data,
-                           size_t size,
-                           const rtc::SocketAddress& remote_addr,
-                           const int64_t& packet_time_us) {
+                           const rtc::ReceivedPacket& packet) {
   RTC_DCHECK(socket == socket_);
-  RTC_DCHECK(!remote_addr.IsUnresolvedIP());
+  RTC_DCHECK(!packet.source_address().IsUnresolvedIP());
 
   // Look for a response from the STUN server.
   // Even if the response doesn't match one of our outstanding requests, we
   // will eat it because it might be a response to a retransmitted packet, and
   // we already cleared the request when we got the first response.
-  if (server_addresses_.find(remote_addr) != server_addresses_.end()) {
-    request_manager_.CheckResponse(data, size);
+  if (server_addresses_.find(packet.source_address()) !=
+      server_addresses_.end()) {
+    request_manager_.CheckResponse(
+        reinterpret_cast<const char*>(packet.payload().data()),
+        packet.payload().size());
     return;
   }
 
-  if (Connection* conn = GetConnection(remote_addr)) {
-    conn->OnReadPacket(data, size, packet_time_us);
+  if (Connection* conn = GetConnection(packet.source_address())) {
+    conn->OnReadPacket(packet);
   } else {
-    Port::OnReadPacket(data, size, remote_addr, PROTO_UDP);
+    Port::OnReadPacket(packet, PROTO_UDP);
   }
 }
 

@@ -13,7 +13,7 @@ diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_ca
 index 56c94baada..8f5dc25516 100644
 --- a/modules/desktop_capture/window_capturer_mac.mm
 +++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -169,8 +169,9 @@ void WindowCapturerMac::CaptureFrame() {
+@@ -169,8 +169,9 @@ explicit WindowCapturerMac(
            return webrtc::GetWindowList(
                [sources](CFDictionaryRef window) {
                  WindowId window_id = GetWindowId(window);

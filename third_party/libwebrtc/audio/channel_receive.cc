@@ -47,6 +47,7 @@
 #include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/race_checker.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/time_utils.h"
@@ -313,6 +314,8 @@ class ChannelReceive : public ChannelReceiveInterface,
   mutable Mutex rtcp_counter_mutex_;
   RtcpPacketTypeCounter rtcp_packet_type_counter_
       RTC_GUARDED_BY(rtcp_counter_mutex_);
+
+  std::map<int, SdpAudioFormat> payload_type_map_;
 };
 
 void ChannelReceive::OnReceivedPayloadData(
@@ -639,6 +642,7 @@ void ChannelReceive::SetReceiveCodecs(
     RTC_DCHECK_GE(kv.second.clockrate_hz, 1000);
     payload_type_frequencies_[kv.first] = kv.second.clockrate_hz;
   }
+  payload_type_map_ = codecs;
   acm_receiver_.SetCodecs(codecs);
 }
 
@@ -725,7 +729,14 @@ void ChannelReceive::ReceivePacket(const uint8_t* packet,
   if (frame_transformer_delegate_) {
     // Asynchronously transform the received payload. After the payload is
     // transformed, the delegate will call OnReceivedPayloadData to handle it.
-    frame_transformer_delegate_->Transform(payload_data, header, remote_ssrc_);
+    char buf[1024];
+    rtc::SimpleStringBuilder mime_type(buf);
+    auto it = payload_type_map_.find(header.payloadType);
+    mime_type << MediaTypeToString(cricket::MEDIA_TYPE_AUDIO) << "/"
+              << (it != payload_type_map_.end() ? it->second.name
+                                                : "x-unknown");
+    frame_transformer_delegate_->Transform(payload_data, header, remote_ssrc_,
+                                           mime_type.str());
   } else {
     OnReceivedPayloadData(payload_data, header);
   }
@@ -917,10 +928,17 @@ void ChannelReceive::SetAssociatedSendChannel(
 void ChannelReceive::SetDepacketizerToDecoderFrameTransformer(
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  // Depending on when the channel is created, the transformer might be set
-  // twice. Don't replace the delegate if it was already initialized.
-  if (!frame_transformer || frame_transformer_delegate_) {
+  if (!frame_transformer) {
     RTC_DCHECK_NOTREACHED() << "Not setting the transformer?";
+    return;
+  }
+  if (frame_transformer_delegate_) {
+    // Depending on when the channel is created, the transformer might be set
+    // twice. Don't replace the delegate if it was already initialized.
+    // TODO(crbug.com/webrtc/15674): Prevent multiple calls during
+    // reconfiguration.
+    RTC_CHECK_EQ(frame_transformer_delegate_->FrameTransformer(),
+                 frame_transformer);
     return;
   }
 

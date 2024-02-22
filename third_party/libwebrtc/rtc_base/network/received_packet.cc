@@ -17,7 +17,26 @@
 namespace rtc {
 
 ReceivedPacket::ReceivedPacket(rtc::ArrayView<const uint8_t> payload,
+                               const SocketAddress& source_address,
                                absl::optional<webrtc::Timestamp> arrival_time)
-    : payload_(payload), arrival_time_(std::move(arrival_time)) {}
+    : payload_(payload),
+      arrival_time_(std::move(arrival_time)),
+      source_address_(source_address) {}
+
+// static
+ReceivedPacket ReceivedPacket::CreateFromLegacy(
+    const char* data,
+    size_t size,
+    int64_t packet_time_us,
+    const rtc::SocketAddress& source_address) {
+  RTC_DCHECK(packet_time_us == -1 || packet_time_us >= 0);
+  return ReceivedPacket(rtc::reinterpret_array_view<const uint8_t>(
+                            rtc::MakeArrayView(data, size)),
+                        source_address,
+                        (packet_time_us >= 0)
+                            ? absl::optional<webrtc::Timestamp>(
+                                  webrtc::Timestamp::Micros(packet_time_us))
+                            : absl::nullopt);
+}
 
 }  // namespace rtc

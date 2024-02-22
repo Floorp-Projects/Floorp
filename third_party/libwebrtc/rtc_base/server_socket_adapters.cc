@@ -63,7 +63,8 @@ AsyncSocksProxyServerSocket::AsyncSocksProxyServerSocket(Socket* socket)
 void AsyncSocksProxyServerSocket::ProcessInput(char* data, size_t* len) {
   RTC_DCHECK(state_ < SS_CONNECT_PENDING);
 
-  ByteBufferReader response(data, *len);
+  ByteBufferReader response(
+      rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(data), *len));
   if (state_ == SS_HELLO) {
     HandleHello(&response);
   } else if (state_ == SS_AUTH) {

@@ -65,6 +65,7 @@ class CallbackDeferrer : public DcSctpSocketCallbacks {
   std::unique_ptr<Timeout> CreateTimeout(
       webrtc::TaskQueueBase::DelayPrecision precision) override;
   TimeMs TimeMillis() override;
+  webrtc::Timestamp Now() override { return underlying_.Now(); }
   uint32_t GetRandomInt(uint32_t low, uint32_t high) override;
   void OnMessageReceived(DcSctpMessage message) override;
   void OnError(ErrorKind error, absl::string_view message) override;

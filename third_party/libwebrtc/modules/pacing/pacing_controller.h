@@ -25,6 +25,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_size.h"
+#include "api/units/time_delta.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
 #include "modules/pacing/prioritized_packet_queue.h"
@@ -92,6 +93,10 @@ class PacingController {
   // the send burst interval.
   // Ex: max send burst interval = 63Kb / 10Mbit/s = 50ms.
   static constexpr DataSize kMaxBurstSize = DataSize::Bytes(63 * 1000);
+  // The pacer is allowed to send enqued packets in bursts and can build up a
+  // packet "debt" that correspond to approximately the send rate during
+  // the burst interval.
+  static constexpr TimeDelta kDefaultBurstInterval = TimeDelta::Millis(40);
 
   PacingController(Clock* clock,
                    PacketSender* packet_sender,

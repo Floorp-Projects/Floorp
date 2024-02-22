@@ -262,7 +262,6 @@ rtc_library("codec") {
   ]
   deps = [
     ":media_constants",
-    "../api:field_trials_view",
     "../api:rtp_parameters",
     "../api/audio_codecs:audio_codecs_api",
     "../api/video_codecs:video_codecs_api",
@@ -546,7 +545,6 @@ rtc_library("rtc_audio_video") {
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:dscp",
     "../rtc_base:event_tracer",
-    "../rtc_base:ignore_wundef",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:network_route",
@@ -609,33 +607,6 @@ rtc_library("rtc_audio_video") {
   } else {
     deps += [ "../modules/audio_processing/aec_dump:null_aec_dump_factory" ]
   }
-}
-
-# Heavy but optional helper for unittests and webrtc users who prefer to use
-# defaults factories or do not worry about extra dependencies and binary size.
-rtc_library("rtc_media_engine_defaults") {
-  visibility = [ "*" ]
-  allow_poison = [
-    "audio_codecs",
-    "default_task_queue",
-    "software_video_codecs",
-  ]
-  sources = [
-    "engine/webrtc_media_engine_defaults.cc",
-    "engine/webrtc_media_engine_defaults.h",
-  ]
-  deps = [
-    ":rtc_audio_video",
-    "../api/audio_codecs:builtin_audio_decoder_factory",
-    "../api/audio_codecs:builtin_audio_encoder_factory",
-    "../api/task_queue:default_task_queue_factory",
-    "../api/video:builtin_video_bitrate_allocator_factory",
-    "../api/video_codecs:builtin_video_decoder_factory",
-    "../api/video_codecs:builtin_video_encoder_factory",
-    "../modules/audio_processing:api",
-    "../rtc_base:checks",
-    "../rtc_base/system:rtc_export",
-  ]
 }
 
 rtc_source_set("rtc_data_sctp_transport_internal") {
@@ -840,7 +811,6 @@ if (rtc_include_tests) {
         ":rtc_internal_video_codecs",
         ":rtc_media",
         ":rtc_media_base",
-        ":rtc_media_engine_defaults",
         ":rtc_media_tests_utils",
         ":rtc_sdp_video_format_utils",
         ":rtc_simulcast_encoder_adapter",
@@ -860,6 +830,8 @@ if (rtc_include_tests) {
         "../api:simulcast_test_fixture_api",
         "../api/audio_codecs:builtin_audio_decoder_factory",
         "../api/audio_codecs:builtin_audio_encoder_factory",
+        "../api/environment",
+        "../api/environment:environment_factory",
         "../api/rtc_event_log",
         "../api/task_queue",
         "../api/task_queue:default_task_queue_factory",

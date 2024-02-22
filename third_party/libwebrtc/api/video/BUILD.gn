@@ -67,6 +67,7 @@ rtc_library("video_frame") {
     ":video_rtp_headers",
     "..:array_view",
     "..:make_ref_counted",
+    "..:ref_count",
     "..:rtp_packet_info",
     "..:scoped_refptr",
     "..:video_track_source_constraints",

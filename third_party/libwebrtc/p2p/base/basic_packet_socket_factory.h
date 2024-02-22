@@ -48,10 +48,6 @@ class RTC_EXPORT BasicPacketSocketFactory : public PacketSocketFactory {
       const std::string& user_agent,
       const PacketSocketTcpOptions& tcp_options) override;
 
-  // TODO(bugs.webrtc.org/12598) Remove when downstream stops using it.
-  ABSL_DEPRECATED("Use CreateAsyncDnsResolver")
-  AsyncResolverInterface* CreateAsyncResolver() override;
-
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAsyncDnsResolver()
       override;
 

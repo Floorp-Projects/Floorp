@@ -363,7 +363,7 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   const FieldTrialsView& trials() const override { return field_trials_; }
 
  protected:
-  webrtc::test::ScopedKeyValueConfig field_trials_;
+  test::ScopedKeyValueConfig field_trials_;
 };
 
 }  // namespace webrtc

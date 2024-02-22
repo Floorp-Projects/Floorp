@@ -724,6 +724,7 @@ if (rtc_include_tests) {
         ":test_main",
         ":test_support",
         ":test_support_test_artifacts",
+        ":video_codec_tester",
         ":video_test_common",
         ":video_test_support",
         ":y4m_frame_generator",
@@ -731,11 +732,15 @@ if (rtc_include_tests) {
         "../api:create_frame_generator",
         "../api:create_simulcast_test_fixture_api",
         "../api:frame_generator_api",
+        "../api:mock_video_codec_factory",
+        "../api:mock_video_decoder",
+        "../api:mock_video_encoder",
         "../api:scoped_refptr",
         "../api:simulcast_test_fixture_api",
         "../api/task_queue:task_queue_test",
         "../api/test/video:function_video_factory",
         "../api/test/video:video_frame_writer",
+        "../api/units:data_rate",
         "../api/units:time_delta",
         "../api/video:encoded_image",
         "../api/video:video_frame",
@@ -752,6 +757,7 @@ if (rtc_include_tests) {
         "../modules/video_coding:webrtc_h264",
         "../modules/video_coding:webrtc_vp8",
         "../modules/video_coding:webrtc_vp9",
+        "../modules/video_coding/svc:scalability_mode_util",
         "../rtc_base:criticalsection",
         "../rtc_base:rtc_event",
         "../rtc_base:rtc_task_queue",
@@ -765,6 +771,7 @@ if (rtc_include_tests) {
         "scenario:scenario_unittests",
         "time_controller:time_controller",
         "time_controller:time_controller_unittests",
+        "//third_party/libyuv",
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/flags:flag",
@@ -789,6 +796,7 @@ if (rtc_include_tests) {
         "testsupport/y4m_frame_writer_unittest.cc",
         "testsupport/yuv_frame_reader_unittest.cc",
         "testsupport/yuv_frame_writer_unittest.cc",
+        "video_codec_tester_unittest.cc",
       ]
 
       if (rtc_enable_protobuf) {
@@ -1287,9 +1295,10 @@ if (!build_with_chromium) {
       "../api:transport_api",
       "../api/audio_codecs:builtin_audio_decoder_factory",
       "../api/audio_codecs:builtin_audio_encoder_factory",
+      "../api/environment",
+      "../api/environment:environment_factory",
       "../api/rtc_event_log",
       "../api/task_queue",
-      "../api/task_queue:default_task_queue_factory",
       "../api/test/video:function_video_factory",
       "../api/transport:field_trial_based_config",
       "../api/units:time_delta",
@@ -1376,5 +1385,49 @@ rtc_library("fake_encoded_frame") {
     "../api/video:video_frame_type",
     "../api/video:video_rtp_headers",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("video_codec_tester") {
+  testonly = true
+  sources = [
+    "video_codec_tester.cc",
+    "video_codec_tester.h",
+  ]
+  deps = [
+    "../api:array_view",
+    "../api/numerics:numerics",
+    "../api/test/metrics:metric",
+    "../api/test/metrics:metrics_logger",
+    "../api/units:data_rate",
+    "../api/units:data_size",
+    "../api/units:frequency",
+    "../api/units:time_delta",
+    "../api/units:timestamp",
+    "../api/video:builtin_video_bitrate_allocator_factory",
+    "../api/video:encoded_image",
+    "../api/video:resolution",
+    "../api/video:video_bitrate_allocator",
+    "../api/video:video_frame",
+    "../api/video_codecs:video_codecs_api",
+    "../media:media_constants",
+    "../modules/video_coding:video_codec_interface",
+    "../modules/video_coding:video_coding_utility",
+    "../modules/video_coding:webrtc_vp9_helpers",
+    "../modules/video_coding/codecs/av1:av1_svc_config",
+    "../modules/video_coding/svc:scalability_mode_util",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:rtc_event",
+    "../rtc_base:stringutils",
+    "../rtc_base:task_queue_for_test",
+    "../rtc_base:timeutils",
+    "../rtc_base/synchronization:mutex",
+    "../system_wrappers",
+    "../test:fileutils",
+    "../test:video_test_support",
+    "//third_party/libyuv",
+  ]
+
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

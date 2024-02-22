@@ -81,7 +81,9 @@
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helper.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/rate_tracker.h"
+#include "rtc_base/thread.h"
 
 namespace cricket {
 using ::webrtc::SafeTask;
@@ -159,7 +161,7 @@ Connection* TCPPort::CreateConnection(const Candidate& address,
     // Incoming connection; we already created a socket and connected signals,
     // so we need to hand off the "read packet" responsibility to
     // TCPConnection.
-    socket->SignalReadPacket.disconnect(this);
+    socket->DeregisterReceivedPacketCallback();
     conn = new TCPConnection(NewWeakPtr(), address, socket);
   } else {
     // Outgoing connection, which will create a new socket for which we still
@@ -288,7 +290,10 @@ void TCPPort::OnNewConnection(rtc::AsyncListenSocket* socket,
   Incoming incoming;
   incoming.addr = new_socket->GetRemoteAddress();
   incoming.socket = new_socket;
-  incoming.socket->SignalReadPacket.connect(this, &TCPPort::OnReadPacket);
+  incoming.socket->RegisterReceivedPacketCallback(
+      [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+        OnReadPacket(socket, packet);
+      });
   incoming.socket->SignalReadyToSend.connect(this, &TCPPort::OnReadyToSend);
   incoming.socket->SignalSentPacket.connect(this, &TCPPort::OnSentPacket);
 
@@ -326,11 +331,8 @@ rtc::AsyncPacketSocket* TCPPort::GetIncoming(const rtc::SocketAddress& addr,
 }
 
 void TCPPort::OnReadPacket(rtc::AsyncPacketSocket* socket,
-                           const char* data,
-                           size_t size,
-                           const rtc::SocketAddress& remote_addr,
-                           const int64_t& packet_time_us) {
-  Port::OnReadPacket(data, size, remote_addr, PROTO_TCP);
+                           const rtc::ReceivedPacket& packet) {
+  Port::OnReadPacket(packet, PROTO_TCP);
 }
 
 void TCPPort::OnSentPacket(rtc::AsyncPacketSocket* socket,
@@ -559,13 +561,10 @@ void TCPConnection::MaybeReconnect() {
 }
 
 void TCPConnection::OnReadPacket(rtc::AsyncPacketSocket* socket,
-                                 const char* data,
-                                 size_t size,
-                                 const rtc::SocketAddress& remote_addr,
-                                 const int64_t& packet_time_us) {
+                                 const rtc::ReceivedPacket& packet) {
   RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK_EQ(socket, socket_.get());
-  Connection::OnReadPacket(data, size, packet_time_us);
+  Connection::OnReadPacket(packet);
 }
 
 void TCPConnection::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
@@ -623,7 +622,10 @@ void TCPConnection::ConnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   if (outgoing_) {
     socket->SignalConnect.connect(this, &TCPConnection::OnConnect);
   }
-  socket->SignalReadPacket.connect(this, &TCPConnection::OnReadPacket);
+  socket->RegisterReceivedPacketCallback(
+      [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+        OnReadPacket(socket, packet);
+      });
   socket->SignalReadyToSend.connect(this, &TCPConnection::OnReadyToSend);
   socket->SubscribeCloseEvent(this, [this, safety = network_safety_.flag()](
                                         rtc::AsyncPacketSocket* s, int err) {
@@ -636,7 +638,7 @@ void TCPConnection::DisconnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   if (outgoing_) {
     socket->SignalConnect.disconnect(this);
   }
-  socket->SignalReadPacket.disconnect(this);
+  socket->DeregisterReceivedPacketCallback();
   socket->SignalReadyToSend.disconnect(this);
   socket->UnsubscribeCloseEvent(this);
 }

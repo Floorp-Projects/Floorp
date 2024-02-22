@@ -258,6 +258,13 @@ rtc_library("rtp_rtcp") {
     "source/video_rtp_depacketizer_vp9.h",
   ]
 
+  if (rtc_use_h265) {
+    sources += [
+      "source/rtp_packetizer_h265.cc",
+      "source/rtp_packetizer_h265.h",
+    ]
+  }
+
   if (rtc_enable_bwe_test_logging) {
     defines = [ "BWE_TEST_LOGGING_COMPILE_TIME_ENABLE=1" ]
   } else {
@@ -624,6 +631,10 @@ if (rtc_include_tests) {
       "source/video_rtp_depacketizer_vp8_unittest.cc",
       "source/video_rtp_depacketizer_vp9_unittest.cc",
     ]
+    if (rtc_use_h265) {
+      sources += [ "source/rtp_packetizer_h265_unittest.cc" ]
+    }
+
     deps = [
       ":fec_test_helper",
       ":frame_transformer_factory_unittest",

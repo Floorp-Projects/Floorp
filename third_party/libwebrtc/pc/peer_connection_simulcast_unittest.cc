@@ -220,7 +220,7 @@ class PeerConnectionSimulcastMetricsTests
     : public PeerConnectionSimulcastTests,
       public ::testing::WithParamInterface<int> {
  protected:
-  PeerConnectionSimulcastMetricsTests() { webrtc::metrics::Reset(); }
+  PeerConnectionSimulcastMetricsTests() { metrics::Reset(); }
 };
 #endif
 

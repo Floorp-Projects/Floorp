@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 58485f28e9..04203033b0 100644
+index 7279bed476..db07580921 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
 @@ -16,6 +16,8 @@
@@ -22,7 +22,7 @@ index 58485f28e9..04203033b0 100644
  #include <set>
  
  #if defined(ANDROID)
-@@ -40,15 +42,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -40,15 +42,18 @@ class VideoCaptureModule : public RefCountInterface {
      virtual uint32_t NumberOfDevices() = 0;
      virtual int32_t Refresh() = 0;
      virtual void DeviceChange() {
@@ -41,7 +41,7 @@ index 58485f28e9..04203033b0 100644
        auto it = _inputCallBacks.find(callBack);
        if (it != _inputCallBacks.end()) {
          _inputCallBacks.erase(it);
-@@ -102,7 +107,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -102,7 +107,8 @@ class VideoCaptureModule : public RefCountInterface {
  
      virtual ~DeviceInfo() {}
     private:

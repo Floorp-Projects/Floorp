@@ -16,7 +16,6 @@
 
 #include "absl/memory/memory.h"
 #include "api/async_dns_resolver.h"
-#include "api/wrapping_async_dns_resolver.h"
 #include "p2p/base/async_stun_tcp_socket.h"
 #include "rtc_base/async_dns_resolver.h"
 #include "rtc_base/async_tcp_socket.h"
@@ -179,10 +178,6 @@ AsyncPacketSocket* BasicPacketSocketFactory::CreateClientTcpSocket(
   }
 
   return tcp_socket;
-}
-
-AsyncResolverInterface* BasicPacketSocketFactory::CreateAsyncResolver() {
-  return new AsyncResolver();
 }
 
 std::unique_ptr<webrtc::AsyncDnsResolverInterface>

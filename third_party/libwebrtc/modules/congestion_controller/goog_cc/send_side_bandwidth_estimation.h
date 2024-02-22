@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include <deque>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -167,6 +168,7 @@ class SendSideBandwidthEstimation {
   bool LossBasedBandwidthEstimatorV1ReadyForUse() const;
   bool LossBasedBandwidthEstimatorV2ReadyForUse() const;
 
+  const FieldTrialsView* key_value_config_;
   RttBasedBackoff rtt_backoff_;
   LinkCapacityTracker link_capacity_;
 
@@ -208,7 +210,7 @@ class SendSideBandwidthEstimation {
   float high_loss_threshold_;
   DataRate bitrate_threshold_;
   LossBasedBandwidthEstimation loss_based_bandwidth_estimator_v1_;
-  LossBasedBweV2 loss_based_bandwidth_estimator_v2_;
+  std::unique_ptr<LossBasedBweV2> loss_based_bandwidth_estimator_v2_;
   LossBasedState loss_based_state_;
   FieldTrialFlag disable_receiver_limit_caps_only_;
 };

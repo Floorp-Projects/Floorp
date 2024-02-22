@@ -33,10 +33,10 @@ class RTC_EXPORT VideoFrame {
   static constexpr uint16_t kNotSetId = 0;
 
   struct RTC_EXPORT UpdateRect {
-    int offset_x;
-    int offset_y;
-    int width;
-    int height;
+    int offset_x = 0;
+    int offset_y = 0;
+    int width = 0;
+    int height = 0;
 
     // Makes this UpdateRect a bounding box of this and other rect.
     void Union(const UpdateRect& other);

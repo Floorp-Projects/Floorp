@@ -155,9 +155,9 @@ class DcSctpSocket : public DcSctpSocketInterface {
   // Closes the association, because of too many retransmission errors.
   void CloseConnectionBecauseOfTooManyTransmissionErrors();
   // Timer expiration handlers
-  absl::optional<DurationMs> OnInitTimerExpiry();
-  absl::optional<DurationMs> OnCookieTimerExpiry();
-  absl::optional<DurationMs> OnShutdownTimerExpiry();
+  webrtc::TimeDelta OnInitTimerExpiry();
+  webrtc::TimeDelta OnCookieTimerExpiry();
+  webrtc::TimeDelta OnShutdownTimerExpiry();
   void OnSentPacket(rtc::ArrayView<const uint8_t> packet,
                     SendPacketStatus status);
   // Sends SHUTDOWN or SHUTDOWN-ACK if the socket is shutting down and if all

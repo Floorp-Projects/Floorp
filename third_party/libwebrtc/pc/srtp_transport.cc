@@ -37,86 +37,6 @@ SrtpTransport::SrtpTransport(bool rtcp_mux_enabled,
                              const FieldTrialsView& field_trials)
     : RtpTransport(rtcp_mux_enabled), field_trials_(field_trials) {}
 
-RTCError SrtpTransport::SetSrtpSendKey(const cricket::CryptoParams& params) {
-  if (send_params_) {
-    LOG_AND_RETURN_ERROR(
-        webrtc::RTCErrorType::UNSUPPORTED_OPERATION,
-        "Setting the SRTP send key twice is currently unsupported.");
-  }
-  if (recv_params_ && recv_params_->crypto_suite != params.crypto_suite) {
-    LOG_AND_RETURN_ERROR(
-        webrtc::RTCErrorType::UNSUPPORTED_OPERATION,
-        "The send key and receive key must have the same cipher suite.");
-  }
-
-  send_crypto_suite_ = rtc::SrtpCryptoSuiteFromName(params.crypto_suite);
-  if (*send_crypto_suite_ == rtc::kSrtpInvalidCryptoSuite) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Invalid SRTP crypto suite");
-  }
-
-  int send_key_len, send_salt_len;
-  if (!rtc::GetSrtpKeyAndSaltLengths(*send_crypto_suite_, &send_key_len,
-                                     &send_salt_len)) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Could not get lengths for crypto suite(s):"
-                    " send crypto_suite ");
-  }
-
-  send_key_ = rtc::ZeroOnFreeBuffer<uint8_t>(send_key_len + send_salt_len);
-  if (!ParseKeyParams(params.key_params, send_key_.data(), send_key_.size())) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Failed to parse the crypto key params");
-  }
-
-  if (!MaybeSetKeyParams()) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Failed to set the crypto key params");
-  }
-  send_params_ = params;
-  return RTCError::OK();
-}
-
-RTCError SrtpTransport::SetSrtpReceiveKey(const cricket::CryptoParams& params) {
-  if (recv_params_) {
-    LOG_AND_RETURN_ERROR(
-        webrtc::RTCErrorType::UNSUPPORTED_OPERATION,
-        "Setting the SRTP send key twice is currently unsupported.");
-  }
-  if (send_params_ && send_params_->crypto_suite != params.crypto_suite) {
-    LOG_AND_RETURN_ERROR(
-        webrtc::RTCErrorType::UNSUPPORTED_OPERATION,
-        "The send key and receive key must have the same cipher suite.");
-  }
-
-  recv_crypto_suite_ = rtc::SrtpCryptoSuiteFromName(params.crypto_suite);
-  if (*recv_crypto_suite_ == rtc::kSrtpInvalidCryptoSuite) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Invalid SRTP crypto suite");
-  }
-
-  int recv_key_len, recv_salt_len;
-  if (!rtc::GetSrtpKeyAndSaltLengths(*recv_crypto_suite_, &recv_key_len,
-                                     &recv_salt_len)) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Could not get lengths for crypto suite(s):"
-                    " recv crypto_suite ");
-  }
-
-  recv_key_ = rtc::ZeroOnFreeBuffer<uint8_t>(recv_key_len + recv_salt_len);
-  if (!ParseKeyParams(params.key_params, recv_key_.data(), recv_key_.size())) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Failed to parse the crypto key params");
-  }
-
-  if (!MaybeSetKeyParams()) {
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Failed to set the crypto key params");
-  }
-  recv_params_ = params;
-  return RTCError::OK();
-}
-
 bool SrtpTransport::SendRtpPacket(rtc::CopyOnWriteBuffer* packet,
                                   const rtc::PacketOptions& options,
                                   int flags) {
@@ -517,6 +437,21 @@ void SrtpTransport::MaybeUpdateWritableState() {
     writable_ = writable;
     SendWritableState(writable_);
   }
+}
+
+bool SrtpTransport::UnregisterRtpDemuxerSink(RtpPacketSinkInterface* sink) {
+  if (recv_session_ &&
+      field_trials_.IsEnabled("WebRTC-SrtpRemoveReceiveStream")) {
+    // Remove the SSRCs explicitly registered with the demuxer
+    // (via SDP negotiation) from the SRTP session.
+    for (const auto ssrc : GetSsrcsForSink(sink)) {
+      if (!recv_session_->RemoveSsrcFromSession(ssrc)) {
+        RTC_LOG(LS_WARNING)
+            << "Could not remove SSRC " << ssrc << " from SRTP session.";
+      }
+    }
+  }
+  return RtpTransport::UnregisterRtpDemuxerSink(sink);
 }
 
 }  // namespace webrtc

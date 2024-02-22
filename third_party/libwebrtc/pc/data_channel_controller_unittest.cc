@@ -27,7 +27,7 @@ namespace {
 using ::testing::NiceMock;
 using ::testing::Return;
 
-class MockDataChannelTransport : public webrtc::DataChannelTransportInterface {
+class MockDataChannelTransport : public DataChannelTransportInterface {
  public:
   ~MockDataChannelTransport() override {}
 

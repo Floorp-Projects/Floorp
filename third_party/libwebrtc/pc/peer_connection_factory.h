@@ -29,12 +29,10 @@
 #include "api/network_state_predictor.h"
 #include "api/peer_connection_interface.h"
 #include "api/rtc_error.h"
-#include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtc_event_log/rtc_event_log_factory_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
-#include "api/task_queue/task_queue_factory.h"
 #include "api/transport/network_control.h"
 #include "api/transport/sctp_transport_factory_interface.h"
 #include "call/call.h"
@@ -52,8 +50,6 @@ class BasicPacketSocketFactory;
 }  // namespace rtc
 
 namespace webrtc {
-
-class RtcEventLog;
 
 class PeerConnectionFactory : public PeerConnectionFactoryInterface {
  public:
@@ -135,16 +131,13 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
 
   bool IsTrialEnabled(absl::string_view key) const;
 
-  std::unique_ptr<RtcEventLog> CreateRtcEventLog_w();
   std::unique_ptr<Call> CreateCall_w(
-      RtcEventLog* event_log,
-      const FieldTrialsView& field_trials,
+      const Environment& env,
       const PeerConnectionInterface::RTCConfiguration& configuration);
 
   rtc::scoped_refptr<ConnectionContext> context_;
   PeerConnectionFactoryInterface::Options options_
       RTC_GUARDED_BY(signaling_thread());
-  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory_;
   std::unique_ptr<FecControllerFactoryInterface> fec_controller_factory_;
   std::unique_ptr<NetworkStatePredictorFactoryInterface>

@@ -158,8 +158,7 @@ bool Codec::operator==(const Codec& c) const {
               : (packetization == c.packetization));
 }
 
-bool Codec::Matches(const Codec& codec,
-                    const webrtc::FieldTrialsView* field_trials) const {
+bool Codec::Matches(const Codec& codec) const {
   // Match the codec id/name based on the typical static/dynamic name rules.
   // Matching is case-insensitive.
 

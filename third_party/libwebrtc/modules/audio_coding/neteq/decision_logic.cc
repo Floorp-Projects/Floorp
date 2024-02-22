@@ -95,10 +95,14 @@ DecisionLogic::DecisionLogic(NetEqController::Config config)
 DecisionLogic::DecisionLogic(
     NetEqController::Config config,
     std::unique_ptr<DelayManager> delay_manager,
-    std::unique_ptr<BufferLevelFilter> buffer_level_filter)
+    std::unique_ptr<BufferLevelFilter> buffer_level_filter,
+    std::unique_ptr<PacketArrivalHistory> packet_arrival_history)
     : delay_manager_(std::move(delay_manager)),
       buffer_level_filter_(std::move(buffer_level_filter)),
-      packet_arrival_history_(config_.packet_history_size_ms),
+      packet_arrival_history_(packet_arrival_history
+                                  ? std::move(packet_arrival_history)
+                                  : std::make_unique<PacketArrivalHistory>(
+                                        config_.packet_history_size_ms)),
       tick_timer_(config.tick_timer),
       disallow_time_stretching_(!config.allow_time_stretching),
       timescale_countdown_(
@@ -115,7 +119,7 @@ void DecisionLogic::SoftReset() {
   time_stretched_cn_samples_ = 0;
   delay_manager_->Reset();
   buffer_level_filter_->Reset();
-  packet_arrival_history_.Reset();
+  packet_arrival_history_->Reset();
 }
 
 void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
@@ -124,7 +128,7 @@ void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
              fs_hz == 48000);
   sample_rate_khz_ = fs_hz / 1000;
   output_size_samples_ = output_size_samples;
-  packet_arrival_history_.set_sample_rate(fs_hz);
+  packet_arrival_history_->set_sample_rate(fs_hz);
 }
 
 NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
@@ -218,15 +222,15 @@ absl::optional<int> DecisionLogic::PacketArrived(
     delay_manager_->SetPacketAudioLength(packet_length_samples_ * 1000 / fs_hz);
   }
   int64_t time_now_ms = tick_timer_->ticks() * tick_timer_->ms_per_tick();
-  packet_arrival_history_.Insert(info.main_timestamp, time_now_ms);
-  if (packet_arrival_history_.size() < 2) {
+  packet_arrival_history_->Insert(info.main_timestamp, time_now_ms);
+  if (packet_arrival_history_->size() < 2) {
     // No meaningful delay estimate unless at least 2 packets have arrived.
     return absl::nullopt;
   }
   int arrival_delay_ms =
-      packet_arrival_history_.GetDelayMs(info.main_timestamp, time_now_ms);
+      packet_arrival_history_->GetDelayMs(info.main_timestamp, time_now_ms);
   bool reordered =
-      !packet_arrival_history_.IsNewestRtpTimestamp(info.main_timestamp);
+      !packet_arrival_history_->IsNewestRtpTimestamp(info.main_timestamp);
   delay_manager_->Update(arrival_delay_ms, reordered);
   return arrival_delay_ms;
 }
@@ -306,10 +310,10 @@ NetEq::Operation DecisionLogic::ExpectedPacketAvailable(
       !status.play_dtmf) {
     if (config_.enable_stable_delay_mode) {
       const int playout_delay_ms = GetPlayoutDelayMs(status);
-      const int low_limit = TargetLevelMs();
-      const int high_limit = low_limit +
-                             packet_arrival_history_.GetMaxDelayMs() +
-                             kDelayAdjustmentGranularityMs;
+      const int64_t low_limit = TargetLevelMs();
+      const int64_t high_limit = low_limit +
+                                 packet_arrival_history_->GetMaxDelayMs() +
+                                 kDelayAdjustmentGranularityMs;
       if (playout_delay_ms >= high_limit * 4) {
         return NetEq::Operation::kFastAccelerate;
       }
@@ -460,7 +464,7 @@ int DecisionLogic::GetPlayoutDelayMs(
     NetEqController::NetEqStatus status) const {
   uint32_t playout_timestamp =
       status.target_timestamp - status.sync_buffer_samples;
-  return packet_arrival_history_.GetDelayMs(
+  return packet_arrival_history_->GetDelayMs(
       playout_timestamp, tick_timer_->ticks() * tick_timer_->ms_per_tick());
 }
 

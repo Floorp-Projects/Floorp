@@ -31,8 +31,11 @@
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/stream.h"
 #include "test/field_trial.h"
+#include "test/gmock.h"
+#include "test/gtest.h"
 
 using ::testing::Combine;
+using ::testing::NotNull;
 using ::testing::tuple;
 using ::testing::Values;
 using ::testing::WithParamInterface;
@@ -593,9 +596,12 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
     size_t client_digest_len;
     bool rv;
 
+    ASSERT_THAT(server_identity(), NotNull());
     rv = server_identity()->certificate().ComputeDigest(
         rtc::DIGEST_SHA_1, server_digest, 20, &server_digest_len);
     ASSERT_TRUE(rv);
+
+    ASSERT_THAT(client_identity(), NotNull());
     rv = client_identity()->certificate().ComputeDigest(
         rtc::DIGEST_SHA_1, client_digest, 20, &client_digest_len);
     ASSERT_TRUE(rv);
@@ -1607,11 +1613,14 @@ INSTANTIATE_TEST_SUITE_P(
                    rtc::KeyParams::RSA(1152, 65537),
                    rtc::KeyParams::ECDSA(rtc::EC_NIST_P256))));
 
-// Tests for enabling / disabling legacy TLS protocols in DTLS.
-class SSLStreamAdapterTestDTLSLegacyProtocols
+// Tests for enabling the (D)TLS extension permutation which randomizes the
+// order of extensions in the client hello.
+// These tests are a no-op under OpenSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+class SSLStreamAdapterTestDTLSExtensionPermutation
     : public SSLStreamAdapterTestDTLSBase {
  public:
-  SSLStreamAdapterTestDTLSLegacyProtocols()
+  SSLStreamAdapterTestDTLSExtensionPermutation()
       : SSLStreamAdapterTestDTLSBase(rtc::KeyParams::ECDSA(rtc::EC_NIST_P256),
                                      rtc::KeyParams::ECDSA(rtc::EC_NIST_P256)) {
   }
@@ -1650,179 +1659,6 @@ class SSLStreamAdapterTestDTLSLegacyProtocols
   }
 };
 
-// Test getting the used DTLS ciphers.
-// DTLS 1.2 enabled for neither client nor server -> DTLS 1.0 will be used.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols, TestGetSslCipherSuite) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake();
-
-  int client_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(true, &client_cipher));
-  int server_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(false, &server_cipher));
-
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(true));
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(false));
-
-  ASSERT_EQ(client_cipher, server_cipher);
-}
-
-// Test getting the used DTLS 1.2 ciphers.
-// DTLS 1.2 enabled for client and server -> DTLS 1.2 will be used.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslCipherSuiteDtls12Both) {
-  ConfigureClient("");
-  ConfigureServer("");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_12, rtc::SSL_PROTOCOL_DTLS_12);
-  TestHandshake();
-
-  int client_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(true, &client_cipher));
-  int server_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(false, &server_cipher));
-
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_12, GetSslVersion(true));
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_12, GetSslVersion(false));
-
-  ASSERT_EQ(client_cipher, server_cipher);
-}
-
-// DTLS 1.2 enabled for client only -> DTLS 1.0 will be used.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslCipherSuiteDtls12Client) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_12);
-  TestHandshake();
-
-  int client_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(true, &client_cipher));
-  int server_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(false, &server_cipher));
-
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(true));
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(false));
-
-  ASSERT_EQ(client_cipher, server_cipher);
-}
-
-// DTLS 1.2 enabled for server only -> DTLS 1.0 will be used.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslCipherSuiteDtls12Server) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_12, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake();
-
-  int client_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(true, &client_cipher));
-  int server_cipher;
-  ASSERT_TRUE(GetSslCipherSuite(false, &server_cipher));
-
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(true));
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(false));
-
-  ASSERT_EQ(client_cipher, server_cipher);
-}
-
-// Client has legacy TLS versions disabled, server has DTLS 1.0 only.
-// This is meant to cause a failure.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyDisabledServer10) {
-  ConfigureClient("");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_12);
-  // Handshake should fail.
-  TestHandshake(false);
-}
-
-// Both client and server have legacy TLS versions disabled and support
-// DTLS 1.2. This should work.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyDisabledServer12) {
-  ConfigureClient("");
-  ConfigureServer("");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_12, rtc::SSL_PROTOCOL_DTLS_12);
-  TestHandshake();
-}
-
-// Both client and server have legacy TLS versions enabled and support DTLS 1.0.
-// This should work.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyEnabledClient10Server10) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake();
-}
-
-// Legacy protocols are disabled in the client, max TLS version is 1.0
-// This should be a configuration error, and handshake should fail.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyDisabledClient10Server10) {
-  ConfigureClient("");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake(false);
-}
-
-// Both client and server have legacy TLS versions enabled and support DTLS 1.0.
-// This should work.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyOverrideEnabledClient10Server10) {
-  rtc::SetAllowLegacyTLSProtocols(true);
-  ConfigureClient("");
-  ConfigureServer("");
-  // Remove override.
-  rtc::SetAllowLegacyTLSProtocols(absl::nullopt);
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake();
-}
-
-// Client has legacy TLS disabled and server has legacy TLS enabled via
-// override. Handshake for DTLS 1.0 should fail.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyOverrideDisabledClient10EnabledServer10) {
-  rtc::SetAllowLegacyTLSProtocols(false);
-  ConfigureClient("");
-  rtc::SetAllowLegacyTLSProtocols(true);
-  ConfigureServer("");
-  // Remove override.
-  rtc::SetAllowLegacyTLSProtocols(absl::nullopt);
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake(false);
-}
-
-// Client has legacy TLS enabled and server has legacy TLS disabled via
-// override. Handshake for DTLS 1.0 should fail.
-TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
-       TestGetSslVersionLegacyOverrideEnabledClient10DisabledServer10) {
-  rtc::SetAllowLegacyTLSProtocols(true);
-  ConfigureClient("");
-  rtc::SetAllowLegacyTLSProtocols(false);
-  ConfigureServer("");
-  // Remove override.
-  rtc::SetAllowLegacyTLSProtocols(absl::nullopt);
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
-  TestHandshake(false);
-}
-
-// These tests are a no-op under OpenSSL.
-#ifdef OPENSSL_IS_BORINGSSL
-// TODO(https://bugs.webrtc.org/10261): when removing
-// SSLStreamAdapterTestDTLSLegacyProtocols that this class
-// inherits from move the code to this class.
-class SSLStreamAdapterTestDTLSExtensionPermutation
-    : public SSLStreamAdapterTestDTLSLegacyProtocols {
- public:
-  SSLStreamAdapterTestDTLSExtensionPermutation()
-      : SSLStreamAdapterTestDTLSLegacyProtocols() {}
-};
-
-// Tests for enabling the (D)TLS extension permutation which randomizes the
-// order of extensions in the client hello.
 TEST_F(SSLStreamAdapterTestDTLSExtensionPermutation,
        ClientDefaultServerDefault) {
   ConfigureClient("");

@@ -509,6 +509,7 @@ if (!build_with_chromium) {
 
     deps = [
       "api:create_peerconnection_factory",
+      "api:enable_media",
       "api:libjingle_peerconnection_api",
       "api:rtc_error",
       "api:transport_api",
@@ -544,6 +545,7 @@ if (!build_with_chromium) {
     if (build_with_mozilla) {
       deps -= [
         "api:create_peerconnection_factory",
+        "api:enable_media",
         "api:rtc_error",
         "api:transport_api",
         "api/crypto",
@@ -657,6 +659,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "p2p:libstunprober_unittests",
       "p2p:rtc_p2p_unittests",
       "rtc_base:async_dns_resolver_unittests",
+      "rtc_base:async_packet_socket_unittest",
       "rtc_base:callback_list_unittests",
       "rtc_base:rtc_base_approved_unittests",
       "rtc_base:rtc_base_unittests",
@@ -850,10 +853,10 @@ rtc_static_library("dcsctp") {
 group("poison_audio_codecs") {
 }
 
-group("poison_default_task_queue") {
+group("poison_default_echo_detector") {
 }
 
-group("poison_default_echo_detector") {
+group("poison_environment_construction") {
 }
 
 group("poison_software_video_codecs") {

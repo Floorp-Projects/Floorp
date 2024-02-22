@@ -26,7 +26,6 @@
 #include "p2p/base/fake_port_allocator.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/mock_active_ice_controller.h"
-#include "p2p/base/mock_async_resolver.h"
 #include "p2p/base/mock_ice_controller.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "p2p/base/test_stun_server.h"
@@ -45,11 +44,13 @@
 #include "rtc_base/mdns_responder_interface.h"
 #include "rtc_base/nat_server.h"
 #include "rtc_base/nat_socket_factory.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/proxy_server.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "system_wrappers/include/metrics.h"
 #include "test/scoped_key_value_config.h"
@@ -283,7 +284,7 @@ class P2PTransportChannelTestBase : public ::testing::Test,
         ss_(new rtc::FirewallSocketServer(nss_.get())),
         socket_factory_(new rtc::BasicPacketSocketFactory(ss_.get())),
         main_(ss_.get()),
-        stun_server_(TestStunServer::Create(ss_.get(), kStunAddr)),
+        stun_server_(TestStunServer::Create(ss_.get(), kStunAddr, main_)),
         turn_server_(&main_, ss_.get(), kTurnUdpIntAddr, kTurnUdpExtAddr),
         socks_server1_(ss_.get(),
                        kSocksProxyAddrs[0],
@@ -486,8 +487,10 @@ class P2PTransportChannelTestBase : public ::testing::Test,
         this, &P2PTransportChannelTestBase::OnReadyToSend);
     channel->SignalCandidateGathered.connect(
         this, &P2PTransportChannelTestBase::OnCandidateGathered);
-    channel->SignalCandidatesRemoved.connect(
-        this, &P2PTransportChannelTestBase::OnCandidatesRemoved);
+    channel->SetCandidatesRemovedCallback(
+        [this](IceTransportInternal* transport, const Candidates& candidates) {
+          OnCandidatesRemoved(transport, candidates);
+        });
     channel->SignalReadPacket.connect(
         this, &P2PTransportChannelTestBase::OnReadPacket);
     channel->SignalRoleConflict.connect(
@@ -1023,7 +1026,7 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   rtc::AutoSocketServerThread main_;
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_ =
       PendingTaskSafetyFlag::Create();
-  std::unique_ptr<TestStunServer> stun_server_;
+  TestStunServer::StunServerPtr stun_server_;
   TestTurnServer turn_server_;
   rtc::SocksProxyServer socks_server1_;
   rtc::SocksProxyServer socks_server2_;
@@ -3479,8 +3482,10 @@ class P2PTransportChannelPingTest : public ::testing::Test,
                                   &P2PTransportChannelPingTest::OnReadyToSend);
     ch->SignalStateChanged.connect(
         this, &P2PTransportChannelPingTest::OnChannelStateChanged);
-    ch->SignalCandidatePairChanged.connect(
-        this, &P2PTransportChannelPingTest::OnCandidatePairChanged);
+    ch->SetCandidatePairChangeCallback(
+        [this](const cricket::CandidatePairChangeEvent& event) {
+          OnCandidatePairChanged(event);
+        });
   }
 
   Connection* WaitForConnectionTo(
@@ -3595,7 +3600,8 @@ class P2PTransportChannelPingTest : public ::testing::Test,
     msg.AddFingerprint();
     rtc::ByteBufferWriter buf;
     msg.Write(&buf);
-    conn->OnReadPacket(buf.Data(), buf.Length(), rtc::TimeMicros());
+    conn->OnReadPacket(rtc::ReceivedPacket::CreateFromLegacy(
+        buf.Data(), buf.Length(), rtc::TimeMicros()));
   }
 
   void ReceivePingOnConnection(Connection* conn,
@@ -4060,7 +4066,9 @@ TEST_F(P2PTransportChannelPingTest, TestReceivingStateChange) {
 
   clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
   conn1->ReceivedPing();
-  conn1->OnReadPacket("ABC", 3, rtc::TimeMicros());
+  conn1->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("ABC", 3, rtc::TimeMicros()));
+
   EXPECT_TRUE_SIMULATED_WAIT(ch.receiving(), kShortTimeout, clock);
   EXPECT_TRUE_SIMULATED_WAIT(!ch.receiving(), kShortTimeout, clock);
 }
@@ -4370,7 +4378,8 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBasedOnMediaReceived) {
   Connection* conn2 = WaitForConnectionTo(&ch, "2.2.2.2", 2);
   ASSERT_TRUE(conn2 != nullptr);
   conn2->ReceivedPingResponse(LOW_RTT, "id");  // Become writable and receiving.
-  conn2->OnReadPacket("ABC", 3, rtc::TimeMicros());
+  conn2->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("ABC", 3, rtc::TimeMicros()));
   EXPECT_EQ(conn2, ch.selected_connection());
   conn2->ReceivedPingResponse(LOW_RTT, "id");  // Become writable.
 
@@ -4397,7 +4406,8 @@ TEST_F(P2PTransportChannelPingTest, TestSelectConnectionBasedOnMediaReceived) {
   // selected connection was nominated by the controlling side.
   conn2->ReceivedPing();
   conn2->ReceivedPingResponse(LOW_RTT, "id");
-  conn2->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+  conn2->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("XYZ", 3, rtc::TimeMicros()));
   EXPECT_EQ_WAIT(conn3, ch.selected_connection(), kDefaultTimeout);
 }
 
@@ -4427,12 +4437,15 @@ TEST_F(P2PTransportChannelPingTest,
   // Advance the clock by 1ms so that the last data receiving timestamp of
   // conn2 is larger.
   SIMULATED_WAIT(false, 1, clock);
-  conn2->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+
+  conn2->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("XYZ", 3, rtc::TimeMicros()));
   EXPECT_EQ(1, reset_selected_candidate_pair_switches());
   EXPECT_TRUE(CandidatePairMatchesNetworkRoute(conn2));
 
   // conn1 also receives data; it becomes selected due to priority again.
-  conn1->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+  conn1->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("ABC", 3, rtc::TimeMicros()));
   EXPECT_EQ(1, reset_selected_candidate_pair_switches());
   EXPECT_TRUE(CandidatePairMatchesNetworkRoute(conn2));
 
@@ -4441,7 +4454,8 @@ TEST_F(P2PTransportChannelPingTest,
   SIMULATED_WAIT(false, 1, clock);
   // Need to become writable again because it was pruned.
   conn2->ReceivedPingResponse(LOW_RTT, "id");
-  conn2->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+  conn2->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("ABC", 3, rtc::TimeMicros()));
   EXPECT_EQ(1, reset_selected_candidate_pair_switches());
   EXPECT_TRUE(CandidatePairMatchesNetworkRoute(conn2));
 
@@ -4472,7 +4486,9 @@ TEST_F(P2PTransportChannelPingTest,
   // conn1 received data; it is the selected connection.
   // Advance the clock to have a non-zero last-data-receiving time.
   SIMULATED_WAIT(false, 1, clock);
-  conn1->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+
+  conn1->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("XYZ", 3, rtc::TimeMicros()));
   EXPECT_EQ(1, reset_selected_candidate_pair_switches());
   EXPECT_TRUE(CandidatePairMatchesNetworkRoute(conn1));
 
@@ -4572,7 +4588,8 @@ TEST_F(P2PTransportChannelPingTest, TestEstimatedDisconnectedTime) {
   {
     clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
     // This will not parse as STUN, and is considered data
-    conn1->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+    conn1->OnReadPacket(
+        rtc::ReceivedPacket::CreateFromLegacy("XYZ", 3, rtc::TimeMicros()));
     clock.AdvanceTime(webrtc::TimeDelta::Seconds(2));
 
     // conn2 is nominated; it becomes selected.
@@ -4584,8 +4601,8 @@ TEST_F(P2PTransportChannelPingTest, TestEstimatedDisconnectedTime) {
 
   {
     clock.AdvanceTime(webrtc::TimeDelta::Seconds(1));
-    conn2->OnReadPacket("XYZ", 3, rtc::TimeMicros());
-
+    conn2->OnReadPacket(
+        rtc::ReceivedPacket::CreateFromLegacy("XYZ", 3, rtc::TimeMicros()));
     clock.AdvanceTime(webrtc::TimeDelta::Seconds(2));
     ReceivePingOnConnection(conn2, kIceUfrag[1], 1, nomination++);
 
@@ -4758,7 +4775,8 @@ TEST_F(P2PTransportChannelPingTest, TestDontPruneHighPriorityConnections) {
   // conn2.
   NominateConnection(conn1);
   SIMULATED_WAIT(false, 1, clock);
-  conn1->OnReadPacket("XYZ", 3, rtc::TimeMicros());
+  conn1->OnReadPacket(
+      rtc::ReceivedPacket::CreateFromLegacy("XYZ", 3, rtc::TimeMicros()));
   SIMULATED_WAIT(conn2->pruned(), 100, clock);
   EXPECT_FALSE(conn2->pruned());
 }

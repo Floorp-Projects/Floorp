@@ -43,6 +43,7 @@
 #include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/network.h"
+#include "rtc_base/network/received_packet.h"
 #include "rtc_base/proxy_info.h"
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/socket_address.h"
@@ -313,10 +314,7 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // port implemented this method.
   // TODO(mallinath) - Make it pure virtual.
   virtual bool HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
-                                    const char* data,
-                                    size_t size,
-                                    const rtc::SocketAddress& remote_addr,
-                                    int64_t packet_time_us);
+                                    const rtc::ReceivedPacket& packet);
 
   // Shall the port handle packet from this `remote_addr`.
   // This method is overridden by TurnPort.
@@ -422,10 +420,19 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // Called when a packet is received from an unknown address that is not
   // currently a connection.  If this is an authenticated STUN binding request,
   // then we will signal the client.
-  void OnReadPacket(const char* data,
-                    size_t size,
-                    const rtc::SocketAddress& addr,
-                    ProtocolType proto);
+  void OnReadPacket(const rtc::ReceivedPacket& packet, ProtocolType proto);
+
+  [[deprecated(
+      "Use OnReadPacket(const rtc::ReceivedPacket& packet, ProtocolType "
+      "proto)")]] void
+  OnReadPacket(const char* data,
+               size_t size,
+               const rtc::SocketAddress& addr,
+               ProtocolType proto) {
+    OnReadPacket(rtc::ReceivedPacket::CreateFromLegacy(
+                     data, size, /*packet_time_us = */ -1, addr),
+                 proto);
+  }
 
   // If the given data comprises a complete and correct STUN message then the
   // return value is true, otherwise false. If the message username corresponds

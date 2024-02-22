@@ -20,9 +20,9 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
-#include "api/rtc_event_log/rtc_event_log.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/rtp_parameters.h"
-#include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/mock_encoder_selector.h"
 #include "api/test/mock_video_bitrate_allocator.h"
 #include "api/test/mock_video_bitrate_allocator_factory.h"
@@ -101,6 +101,8 @@ using ::testing::WithArg;
 using ::webrtc::BitrateConstraints;
 using ::webrtc::Call;
 using ::webrtc::CallConfig;
+using ::webrtc::CreateEnvironment;
+using ::webrtc::Environment;
 using ::webrtc::kDefaultScalabilityModeStr;
 using ::webrtc::RtpExtension;
 using ::webrtc::RtpPacket;
@@ -355,13 +357,10 @@ class WebRtcVideoEngineTest : public ::testing::Test {
   explicit WebRtcVideoEngineTest(const std::string& field_trials)
       : field_trials_(field_trials),
         time_controller_(webrtc::Timestamp::Millis(4711)),
-        task_queue_factory_(time_controller_.CreateTaskQueueFactory()),
-        call_(Call::Create([&] {
-          CallConfig call_config(&event_log_);
-          call_config.task_queue_factory = task_queue_factory_.get();
-          call_config.trials = &field_trials_;
-          return call_config;
-        }())),
+        env_(CreateEnvironment(&field_trials_,
+                               time_controller_.CreateTaskQueueFactory(),
+                               time_controller_.GetClock())),
+        call_(Call::Create(CallConfig(env_))),
         encoder_factory_(new cricket::FakeWebRtcVideoEncoderFactory),
         decoder_factory_(new cricket::FakeWebRtcVideoDecoderFactory),
         video_bitrate_allocator_factory_(
@@ -398,8 +397,7 @@ class WebRtcVideoEngineTest : public ::testing::Test {
 
   webrtc::test::ScopedKeyValueConfig field_trials_;
   webrtc::GlobalSimulatedTimeController time_controller_;
-  webrtc::RtcEventLogNull event_log_;
-  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
+  Environment env_;
   // Used in WebRtcVideoEngineVoiceTest, but defined here so it's properly
   // initialized when the constructor is called.
   std::unique_ptr<Call> call_;
@@ -1479,14 +1477,10 @@ TEST(WebRtcVideoEngineNewVideoCodecFactoryTest, Vp8) {
   EXPECT_CALL(*decoder_factory, CreateVideoDecoder(format)).Times(0);
 
   // Create a call.
-  webrtc::RtcEventLogNull event_log;
   webrtc::GlobalSimulatedTimeController time_controller(
       webrtc::Timestamp::Millis(4711));
-  auto task_queue_factory = time_controller.CreateTaskQueueFactory();
-  CallConfig call_config(&event_log);
-  webrtc::FieldTrialBasedConfig field_trials;
-  call_config.trials = &field_trials;
-  call_config.task_queue_factory = task_queue_factory.get();
+  CallConfig call_config(CreateEnvironment(
+      time_controller.CreateTaskQueueFactory(), time_controller.GetClock()));
   const std::unique_ptr<Call> call = Call::Create(call_config);
 
   // Create send channel.
@@ -1615,18 +1609,11 @@ TEST_F(WebRtcVideoEngineTest, SetVideoRtxEnabled) {
 
 class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
  protected:
-  CallConfig GetCallConfig(webrtc::RtcEventLogNull* event_log,
-                           webrtc::TaskQueueFactory* task_queue_factory) {
-    CallConfig call_config(event_log);
-    call_config.task_queue_factory = task_queue_factory;
-    call_config.trials = &field_trials_;
-    return call_config;
-  }
-
   WebRtcVideoChannelEncodedFrameCallbackTest()
-      : task_queue_factory_(time_controller_.CreateTaskQueueFactory()),
-        call_(Call::Create(
-            GetCallConfig(&event_log_, task_queue_factory_.get()))),
+      : env_(CreateEnvironment(&field_trials_,
+                               time_controller_.CreateTaskQueueFactory(),
+                               time_controller_.GetClock())),
+        call_(Call::Create(CallConfig(env_))),
         video_bitrate_allocator_factory_(
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
         engine_(
@@ -1676,8 +1663,7 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
   webrtc::GlobalSimulatedTimeController time_controller_{
       Timestamp::Seconds(1000)};
   webrtc::test::ScopedKeyValueConfig field_trials_;
-  webrtc::RtcEventLogNull event_log_;
-  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
+  Environment env_;
   std::unique_ptr<Call> call_;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       video_bitrate_allocator_factory_;
@@ -1796,7 +1782,9 @@ TEST_F(WebRtcVideoChannelEncodedFrameCallbackTest, DoesNotDecodeWhenDisabled) {
 class WebRtcVideoChannelBaseTest : public ::testing::Test {
  protected:
   WebRtcVideoChannelBaseTest()
-      : task_queue_factory_(time_controller_.CreateTaskQueueFactory()),
+      : env_(CreateEnvironment(&field_trials_,
+                               time_controller_.CreateTaskQueueFactory(),
+                               time_controller_.GetClock())),
         video_bitrate_allocator_factory_(
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
         engine_(std::make_unique<webrtc::VideoEncoderFactoryTemplate<
@@ -1814,10 +1802,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
   void SetUp() override {
     // One testcase calls SetUp in a loop, only create call_ once.
     if (!call_) {
-      CallConfig call_config(&event_log_);
-      call_config.task_queue_factory = task_queue_factory_.get();
-      call_config.trials = &field_trials_;
-      call_ = Call::Create(call_config);
+      call_ = Call::Create(CallConfig(env_));
     }
 
     cricket::MediaConfig media_config;
@@ -2016,10 +2001,9 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
   webrtc::GlobalSimulatedTimeController time_controller_{
       Timestamp::Seconds(1000)};
 
-  webrtc::RtcEventLogNull event_log_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<webrtc::test::ScopedKeyValueConfig> override_field_trials_;
-  std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory_;
+  Environment env_;
   std::unique_ptr<Call> call_;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       video_bitrate_allocator_factory_;
@@ -4378,7 +4362,7 @@ TEST_F(WebRtcVideoChannelTest, SetDefaultSendCodecs) {
 
   absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
-  EXPECT_TRUE(codec->Matches(engine_.send_codecs()[0], &field_trials_));
+  EXPECT_TRUE(codec->Matches(engine_.send_codecs()[0]));
 
   // Using a RTX setup to verify that the default RTX payload type is good.
   const std::vector<uint32_t> ssrcs = MAKE_VECTOR(kSsrcs1);
@@ -9863,7 +9847,6 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
   }
 
   webrtc::test::ScopedKeyValueConfig field_trials_;
-  webrtc::RtcEventLogNull event_log_;
   FakeCall fake_call_;
   cricket::FakeWebRtcVideoEncoderFactory* encoder_factory_;
   cricket::FakeWebRtcVideoDecoderFactory* decoder_factory_;

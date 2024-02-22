@@ -70,7 +70,7 @@ std::unique_ptr<FrameCadenceAdapterInterface> CreateAdapter(
 
 class MockCallback : public FrameCadenceAdapterInterface::Callback {
  public:
-  MOCK_METHOD(void, OnFrame, (Timestamp, int, const VideoFrame&), (override));
+  MOCK_METHOD(void, OnFrame, (Timestamp, bool, const VideoFrame&), (override));
   MOCK_METHOD(void, OnDiscardedFrame, (), (override));
   MOCK_METHOD(void, RequestRefreshFrame, (), (override));
 };
@@ -115,13 +115,13 @@ TEST(FrameCadenceAdapterTest, CountsOutstandingFramesToProcess) {
   MockCallback callback;
   auto adapter = CreateAdapter(no_field_trials, time_controller.GetClock());
   adapter->Initialize(&callback);
-  EXPECT_CALL(callback, OnFrame(_, 2, _)).Times(1);
-  EXPECT_CALL(callback, OnFrame(_, 1, _)).Times(1);
+  EXPECT_CALL(callback, OnFrame(_, true, _)).Times(1);
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
   auto frame = CreateFrame();
   adapter->OnFrame(frame);
   adapter->OnFrame(frame);
   time_controller.AdvanceTime(TimeDelta::Zero());
-  EXPECT_CALL(callback, OnFrame(_, 1, _)).Times(1);
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
   adapter->OnFrame(frame);
   time_controller.AdvanceTime(TimeDelta::Zero());
 }
@@ -184,6 +184,29 @@ TEST(FrameCadenceAdapterTest, FrameRateFollowsMaxFpsWhenZeroHertzActivated) {
   }
 }
 
+TEST(FrameCadenceAdapterTest, ZeroHertzAdapterSupportsMaxFpsChange) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(adapter->GetInputFrameRateFps(), 1u);
+  adapter->OnFrame(CreateFrame());
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 2});
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(adapter->GetInputFrameRateFps(), 2u);
+  adapter->OnFrame(CreateFrame());
+  // Ensure that the max_fps has been changed from 1 to 2 fps even if it was
+  // changed while zero hertz was already active.
+  EXPECT_CALL(callback, OnFrame);
+  time_controller.AdvanceTime(TimeDelta::Millis(500));
+}
+
 TEST(FrameCadenceAdapterTest,
      FrameRateFollowsRateStatisticsAfterZeroHertzDeactivated) {
   ZeroHertzFieldTrialEnabler enabler;
@@ -230,7 +253,7 @@ TEST(FrameCadenceAdapterTest, ForwardsFramesDelayed) {
     EXPECT_CALL(callback, OnFrame).Times(0);
     adapter->OnFrame(frame);
     EXPECT_CALL(callback, OnFrame)
-        .WillOnce(Invoke([&](Timestamp post_time, int,
+        .WillOnce(Invoke([&](Timestamp post_time, bool,
                              const VideoFrame& frame) {
           EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
           EXPECT_EQ(frame.timestamp_us(),
@@ -309,7 +332,7 @@ TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
   adapter->OnFrame(frame);
 
   EXPECT_CALL(callback, OnFrame)
-      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+      .WillOnce(Invoke([&](Timestamp post_time, bool, const VideoFrame& frame) {
         EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
         EXPECT_EQ(frame.timestamp_us(), original_timestamp_us);
         EXPECT_EQ(frame.ntp_time_ms(), original_ntp_time.ToMs());
@@ -318,7 +341,7 @@ TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
   Mock::VerifyAndClearExpectations(&callback);
 
   EXPECT_CALL(callback, OnFrame)
-      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+      .WillOnce(Invoke([&](Timestamp post_time, bool, const VideoFrame& frame) {
         EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
         EXPECT_EQ(frame.timestamp_us(),
                   original_timestamp_us + rtc::kNumMicrosecsPerSec);
@@ -329,7 +352,7 @@ TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
   Mock::VerifyAndClearExpectations(&callback);
 
   EXPECT_CALL(callback, OnFrame)
-      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+      .WillOnce(Invoke([&](Timestamp post_time, bool, const VideoFrame& frame) {
         EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
         EXPECT_EQ(frame.timestamp_us(),
                   original_timestamp_us + 2 * rtc::kNumMicrosecsPerSec);
@@ -359,7 +382,7 @@ TEST(FrameCadenceAdapterTest,
   // Send one frame, expect a repeat.
   adapter->OnFrame(CreateFrame());
   EXPECT_CALL(callback, OnFrame)
-      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+      .WillOnce(Invoke([&](Timestamp post_time, bool, const VideoFrame& frame) {
         EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
         EXPECT_EQ(frame.timestamp_us(), 0);
         EXPECT_EQ(frame.ntp_time_ms(), 0);
@@ -367,7 +390,7 @@ TEST(FrameCadenceAdapterTest,
   time_controller.AdvanceTime(TimeDelta::Seconds(1));
   Mock::VerifyAndClearExpectations(&callback);
   EXPECT_CALL(callback, OnFrame)
-      .WillOnce(Invoke([&](Timestamp post_time, int, const VideoFrame& frame) {
+      .WillOnce(Invoke([&](Timestamp post_time, bool, const VideoFrame& frame) {
         EXPECT_EQ(post_time, time_controller.GetClock()->CurrentTime());
         EXPECT_EQ(frame.timestamp_us(), 0);
         EXPECT_EQ(frame.ntp_time_ms(), 0);
@@ -399,7 +422,7 @@ TEST(FrameCadenceAdapterTest, StopsRepeatingFramesDelayed) {
   // Send the new frame at 2.5s, which should appear after 3.5s.
   adapter->OnFrame(CreateFrameWithTimestamps(&time_controller));
   EXPECT_CALL(callback, OnFrame)
-      .WillOnce(Invoke([&](Timestamp, int, const VideoFrame& frame) {
+      .WillOnce(Invoke([&](Timestamp, bool, const VideoFrame& frame) {
         EXPECT_EQ(frame.timestamp_us(), 5 * rtc::kNumMicrosecsPerSec / 2);
         EXPECT_EQ(frame.ntp_time_ms(),
                   original_ntp_time.ToMs() + 5u * rtc::kNumMillisecsPerSec / 2);
@@ -708,6 +731,8 @@ class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
   static constexpr TimeDelta kMinFrameDelay = TimeDelta::Millis(100);
   static constexpr TimeDelta kIdleFrameDelay =
       FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod;
+  // Restricts non-idle repeat rate to 5 fps (default is 10 fps);
+  static constexpr int kRestrictedMaxFps = 5;
 
   ZeroHertzLayerQualityConvergenceTest() {
     adapter_->Initialize(&callback_);
@@ -725,7 +750,7 @@ class ZeroHertzLayerQualityConvergenceTest : public ::testing::Test {
       std::initializer_list<TimeDelta> list) {
     Timestamp origin = time_controller_.GetClock()->CurrentTime();
     for (auto delay : list) {
-      EXPECT_CALL(callback_, OnFrame(origin + delay, _, _));
+      EXPECT_CALL(callback_, OnFrame(origin + delay, false, _));
       time_controller_.AdvanceTime(origin + delay -
                                    time_controller_.GetClock()->CurrentTime());
     }
@@ -810,6 +835,100 @@ TEST_F(ZeroHertzLayerQualityConvergenceTest,
   });
 }
 
+TEST_F(ZeroHertzLayerQualityConvergenceTest,
+       UnconvergedRepeatRateAdaptsDownWhenRestricted) {
+  PassFrame();
+  ScheduleDelayed(1.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(kRestrictedMaxFps);
+  });
+  ExpectFrameEntriesAtDelaysFromNow({
+      1 * kMinFrameDelay,  // Original frame emitted at non-restricted rate.
+
+      // 1.5 * kMinFrameDelay: restricts max fps to 5 fps which should result
+      // in a new non-idle repeat delay of 2 * kMinFrameDelay.
+      2 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+      4 * kMinFrameDelay,  // Unconverged repeats at restricted rate. This
+                           // happens 2 * kMinFrameDelay after the last frame.
+      6 * kMinFrameDelay,  // ...
+  });
+}
+
+TEST_F(ZeroHertzLayerQualityConvergenceTest,
+       UnconvergedRepeatRateAdaptsUpWhenGoingFromRestrictedToUnrestricted) {
+  PassFrame();
+  ScheduleDelayed(1.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(kRestrictedMaxFps);
+  });
+  ScheduleDelayed(5.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(absl::nullopt);
+  });
+  ExpectFrameEntriesAtDelaysFromNow({
+      1 * kMinFrameDelay,  // Original frame emitted at non-restricted rate.
+
+      // 1.5 * kMinFrameDelay: restricts max fps to 5 fps which should result
+      // in a new non-idle repeat delay of 2 * kMinFrameDelay.
+      2 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+      4 * kMinFrameDelay,  // Unconverged repeat at restricted rate.
+
+      // 5.5 * kMinFrameDelay: removes frame-rate restriction and we should
+      // then go back to 10 fps as unconverged repeat rate.
+      6 * kMinFrameDelay,  // Last unconverged repeat at restricted rate.
+      7 * kMinFrameDelay,  // Back to unconverged repeat at non-restricted rate.
+      8 * kMinFrameDelay,  // We are now unrestricted.
+      9 * kMinFrameDelay,  // ...
+  });
+}
+
+TEST_F(ZeroHertzLayerQualityConvergenceTest,
+       UnconvergedRepeatRateMaintainsRestrictionOnReconfigureToHigherMaxFps) {
+  PassFrame();
+  ScheduleDelayed(1.5 * kMinFrameDelay, [&] {
+    adapter_->UpdateVideoSourceRestrictions(kRestrictedMaxFps);
+  });
+  ScheduleDelayed(2.5 * kMinFrameDelay, [&] {
+    adapter_->OnConstraintsChanged(VideoTrackSourceConstraints{
+        /*min_fps=*/0, /*max_fps=*/2 * TimeDelta::Seconds(1) / kMinFrameDelay});
+  });
+  ScheduleDelayed(3 * kMinFrameDelay, [&] { PassFrame(); });
+  ScheduleDelayed(8 * kMinFrameDelay, [&] {
+    adapter_->OnConstraintsChanged(VideoTrackSourceConstraints{
+        /*min_fps=*/0,
+        /*max_fps=*/0.2 * TimeDelta::Seconds(1) / kMinFrameDelay});
+  });
+  ScheduleDelayed(9 * kMinFrameDelay, [&] { PassFrame(); });
+  ExpectFrameEntriesAtDelaysFromNow({
+      1 * kMinFrameDelay,  // Original frame emitted at non-restricted rate.
+
+      // 1.5 * kMinFrameDelay: restricts max fps to 5 fps which should result
+      // in a new non-idle repeat delay of 2 * kMinFrameDelay.
+      2 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+
+      // 2.5 * kMinFrameDelay: new constraint asks for max rate of 20 fps.
+      // The 0Hz adapter is reconstructed for 20 fps but inherits the current
+      // restriction for rate of non-converged frames of 5 fps.
+
+      // A new frame is passed at 3 * kMinFrameDelay. The previous repeat
+      // cadence was stopped by the change in constraints.
+      3.5 * kMinFrameDelay,  // Original frame emitted at non-restricted 20 fps.
+                             // The delay is 0.5 * kMinFrameDelay.
+      5.5 * kMinFrameDelay,  // Unconverged repeat at restricted rate.
+                             // The delay is 2 * kMinFrameDelay when restricted.
+      7.5 * kMinFrameDelay,  // ...
+
+      // 8 * kMinFrameDelay: new constraint asks for max rate of 2 fps.
+      // The 0Hz adapter is reconstructed for 2 fps and will therefore not obey
+      // the current restriction for rate of non-converged frames of 5 fps
+      // since the new max rate is lower.
+
+      // A new frame is passed at 9 * kMinFrameDelay. The previous repeat
+      // cadence was stopped by the change in constraints.
+      14 * kMinFrameDelay,  // Original frame emitted at non-restricted 2 fps.
+                            // The delay is 5 * kMinFrameDelay.
+      19 * kMinFrameDelay,  // Unconverged repeat at non-restricted rate.
+      24 * kMinFrameDelay,  // ...
+  });
+}
+
 class FrameCadenceAdapterMetricsTest : public ::testing::Test {
  public:
   FrameCadenceAdapterMetricsTest() : time_controller_(Timestamp::Millis(1)) {
@@ -869,7 +988,7 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
     constexpr int kSleepMs = rtc::kNumMillisecsPerSec / 2;
     EXPECT_CALL(callback, OnFrame)
         .WillRepeatedly(
-            Invoke([&](Timestamp, int, const VideoFrame& incoming_frame) {
+            Invoke([&](Timestamp, bool, const VideoFrame& incoming_frame) {
               ++frame_counter;
               // Avoid the first OnFrame and sleep on the second.
               if (frame_counter == 2) {

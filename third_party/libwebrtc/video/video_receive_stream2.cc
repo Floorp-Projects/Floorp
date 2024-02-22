@@ -568,10 +568,7 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
         rtp_receive_statistics_->GetStatistician(rtx_ssrc());
     if (rtx_statistician) {
       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
-      // TODO(bugs.webrtc.org/15096): remove kill-switch after rollout.
-      if (!call_->trials().IsDisabled("WebRTC-Stats-RtxReceiveStats")) {
-        stats.rtx_rtp_stats = rtx_statistician->GetStats();
-      }
+      stats.rtx_rtp_stats = rtx_statistician->GetStats();
     }
   }
 
@@ -917,6 +914,22 @@ int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
   }
 
   int decode_result = video_receiver_.Decode(frame_ptr);
+  if (decode_result < WEBRTC_VIDEO_CODEC_OK) {
+    // Asynchronous decoders may delay error reporting, potentially resulting in
+    // error reports reflecting issues that occurred several frames back.
+    RTC_LOG(LS_WARNING)
+        << "Failed to decode frame. Return code: " << decode_result
+        << ", SSRC: " << remote_ssrc()
+        << ", frame RTP timestamp: " << frame_ptr->RtpTimestamp()
+        << ", type: " << VideoFrameTypeToString(frame_ptr->FrameType())
+        << ", size: " << frame_ptr->size()
+        << ", width: " << frame_ptr->_encodedWidth
+        << ", height: " << frame_ptr->_encodedHeight
+        << ", spatial idx: " << frame_ptr->SpatialIndex().value_or(-1)
+        << ", temporal idx: " << frame_ptr->TemporalIndex().value_or(-1)
+        << ", id: " << frame_ptr->Id();
+  }
+
   if (encoded_frame_output_enabled) {
     absl::optional<RecordableEncodedFrame::EncodedResolution>
         pending_resolution;

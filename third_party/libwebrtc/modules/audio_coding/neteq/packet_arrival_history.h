@@ -26,6 +26,7 @@ namespace webrtc {
 class PacketArrivalHistory {
  public:
   explicit PacketArrivalHistory(int window_size_ms);
+  virtual ~PacketArrivalHistory() = default;
 
   // Insert packet with `rtp_timestamp` and `arrival_time_ms` into the history.
   void Insert(uint32_t rtp_timestamp, int64_t arrival_time_ms);
@@ -34,10 +35,10 @@ class PacketArrivalHistory {
   // `(time_ms - p.arrival_time_ms) - (rtp_timestamp - p.rtp_timestamp)`
   // where `p` is chosen as the packet arrival in the history that maximizes the
   // delay.
-  int GetDelayMs(uint32_t rtp_timestamp, int64_t time_ms) const;
+  virtual int GetDelayMs(uint32_t rtp_timestamp, int64_t time_ms) const;
 
   // Get the maximum packet arrival delay observed in the history.
-  int GetMaxDelayMs() const;
+  virtual int GetMaxDelayMs() const;
 
   bool IsNewestRtpTimestamp(uint32_t rtp_timestamp) const;
 

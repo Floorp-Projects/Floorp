@@ -41,7 +41,9 @@ uint32_t ReduceTransactionId(absl::string_view transaction_id) {
   RTC_DCHECK(transaction_id.length() == cricket::kStunTransactionIdLength ||
              transaction_id.length() == cricket::kStunLegacyTransactionIdLength)
       << transaction_id.length();
-  ByteBufferReader reader(transaction_id.data(), transaction_id.size());
+  ByteBufferReader reader(rtc::MakeArrayView(
+      reinterpret_cast<const uint8_t*>(transaction_id.data()),
+      transaction_id.size()));
   uint32_t result = 0;
   uint32_t next;
   while (reader.ReadUInt32(&next)) {
@@ -912,7 +914,8 @@ bool StunAddressAttribute::Read(ByteBufferReader* buf) {
     if (length() != SIZE_IP4) {
       return false;
     }
-    if (!buf->ReadBytes(reinterpret_cast<char*>(&v4addr), sizeof(v4addr))) {
+    if (!buf->ReadBytes(rtc::MakeArrayView(reinterpret_cast<uint8_t*>(&v4addr),
+                                           sizeof(v4addr)))) {
       return false;
     }
     rtc::IPAddress ipaddr(v4addr);
@@ -922,7 +925,8 @@ bool StunAddressAttribute::Read(ByteBufferReader* buf) {
     if (length() != SIZE_IP6) {
       return false;
     }
-    if (!buf->ReadBytes(reinterpret_cast<char*>(&v6addr), sizeof(v6addr))) {
+    if (!buf->ReadBytes(rtc::MakeArrayView(reinterpret_cast<uint8_t*>(&v6addr),
+                                           sizeof(v6addr)))) {
       return false;
     }
     rtc::IPAddress ipaddr(v6addr);
@@ -1128,13 +1132,13 @@ StunAttributeValueType StunByteStringAttribute::value_type() const {
 }
 
 void StunByteStringAttribute::CopyBytes(absl::string_view bytes) {
-  char* new_bytes = new char[bytes.size()];
+  uint8_t* new_bytes = new uint8_t[bytes.size()];
   memcpy(new_bytes, bytes.data(), bytes.size());
   SetBytes(new_bytes, bytes.size());
 }
 
 void StunByteStringAttribute::CopyBytes(const void* bytes, size_t length) {
-  char* new_bytes = new char[length];
+  uint8_t* new_bytes = new uint8_t[length];
   memcpy(new_bytes, bytes, length);
   SetBytes(new_bytes, length);
 }
@@ -1142,7 +1146,7 @@ void StunByteStringAttribute::CopyBytes(const void* bytes, size_t length) {
 uint8_t StunByteStringAttribute::GetByte(size_t index) const {
   RTC_DCHECK(bytes_ != NULL);
   RTC_DCHECK(index < length());
-  return static_cast<uint8_t>(bytes_[index]);
+  return bytes_[index];
 }
 
 void StunByteStringAttribute::SetByte(size_t index, uint8_t value) {
@@ -1152,8 +1156,8 @@ void StunByteStringAttribute::SetByte(size_t index, uint8_t value) {
 }
 
 bool StunByteStringAttribute::Read(ByteBufferReader* buf) {
-  bytes_ = new char[length()];
-  if (!buf->ReadBytes(bytes_, length())) {
+  bytes_ = new uint8_t[length()];
+  if (!buf->ReadBytes(rtc::ArrayView<uint8_t>(bytes_, length()))) {
     return false;
   }
 
@@ -1166,12 +1170,12 @@ bool StunByteStringAttribute::Write(ByteBufferWriter* buf) const {
   if (!LengthValid(type(), length())) {
     return false;
   }
-  buf->WriteBytes(bytes_, length());
+  buf->WriteBytes(reinterpret_cast<const char*>(bytes_), length());
   WritePadding(buf);
   return true;
 }
 
-void StunByteStringAttribute::SetBytes(char* bytes, size_t length) {
+void StunByteStringAttribute::SetBytes(uint8_t* bytes, size_t length) {
   delete[] bytes_;
   bytes_ = bytes;
   SetLength(static_cast<uint16_t>(length));

@@ -453,7 +453,7 @@ class Call final : public webrtc::Call,
   bool is_started_ RTC_GUARDED_BY(worker_thread_) = false;
 
   // Sequence checker for outgoing network traffic. Could be the network thread.
-  // Could also be a pacer owned thread or TQ such as the TaskQueuePacedSender.
+  // Could also be a pacer owned thread or TQ such as the TaskQueueSender.
   RTC_NO_UNIQUE_ADDRESS SequenceChecker sent_packet_sequence_checker_;
   absl::optional<rtc::SentPacket> last_sent_packet_
       RTC_GUARDED_BY(sent_packet_sequence_checker_);
@@ -462,7 +462,8 @@ class Call final : public webrtc::Call,
 
 /* Mozilla: Avoid this since it could use GetRealTimeClock().
 std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-  Clock* clock = Clock::GetRealTimeClock();
+  Clock* clock =
+      config.env.has_value() ? &config.env->clock() : Clock::GetRealTimeClock();
   return Create(config, clock,
                 RtpTransportControllerSendFactory().Create(
                     config.ExtractTransportConfig(), clock));

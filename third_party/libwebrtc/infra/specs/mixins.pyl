@@ -176,7 +176,7 @@
         'location':
         '.',
         'revision':
-        'git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb'
+        'git_revision:32d81d877ee07af07bf03b7f70ce597e323b80ce'
       }]
     }
   },
@@ -309,6 +309,9 @@
   'xcode_13_main': {
     'args': ['--xcode-build-version', '13c100'],
     'swarming': {
+      'dimensions': {
+        'caches': 'xcode_ios_13c100'
+      },
       'named_caches': [{
         'name': 'xcode_ios_13c100',
         'path': 'Xcode.app'
@@ -318,6 +321,9 @@
   'xcode_14_main': {
     'args': ['--xcode-build-version', '14c18'],
     'swarming': {
+      'dimensions': {
+        'caches': 'xcode_ios_14c18'
+      },
       'named_caches': [{
         'name': 'xcode_ios_14c18',
         'path': 'Xcode.app'
@@ -325,10 +331,10 @@
     }
   },
   'xcode_15_main': {
-    'args': ['--xcode-build-version', '15a240d'],
+    'args': ['--xcode-build-version', '15a507'],
     'swarming': {
       'named_caches': [{
-        'name': 'xcode_ios_15a240d',
+        'name': 'xcode_ios_15a507',
         'path': 'Xcode.app'
       }]
     }

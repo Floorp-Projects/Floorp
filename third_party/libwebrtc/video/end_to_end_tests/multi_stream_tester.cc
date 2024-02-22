@@ -14,8 +14,8 @@
 #include <utility>
 #include <vector>
 
-#include "api/rtc_event_log/rtc_event_log.h"
-#include "api/task_queue/default_task_queue_factory.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/create_frame_generator.h"
 #include "api/test/simulated_network.h"
@@ -42,17 +42,13 @@ MultiStreamTester::MultiStreamTester() {
 MultiStreamTester::~MultiStreamTester() = default;
 
 void MultiStreamTester::RunTest() {
-  webrtc::RtcEventLogNull event_log;
-  auto task_queue_factory = CreateDefaultTaskQueueFactory();
+  Environment env = CreateEnvironment();
   // Use high prioirity since this task_queue used for fake network delivering
   // at correct time. Those test tasks should be prefered over code under test
   // to make test more stable.
-  auto task_queue = task_queue_factory->CreateTaskQueue(
+  auto task_queue = env.task_queue_factory().CreateTaskQueue(
       "TaskQueue", TaskQueueFactory::Priority::HIGH);
-  CallConfig config(&event_log);
-  test::ScopedKeyValueConfig field_trials;
-  config.trials = &field_trials;
-  config.task_queue_factory = task_queue_factory.get();
+  CallConfig config(env);
   std::unique_ptr<Call> sender_call;
   std::unique_ptr<Call> receiver_call;
   std::unique_ptr<test::DirectTransport> sender_transport;
@@ -115,10 +111,10 @@ void MultiStreamTester::RunTest() {
       receive_streams[i]->Start();
 
       auto* frame_generator = new test::FrameGeneratorCapturer(
-          Clock::GetRealTimeClock(),
+          &env.clock(),
           test::CreateSquareFrameGenerator(width, height, absl::nullopt,
                                            absl::nullopt),
-          30, *task_queue_factory);
+          30, env.task_queue_factory());
       frame_generators[i] = frame_generator;
       send_streams[i]->SetSource(frame_generator,
                                  DegradationPreference::MAINTAIN_FRAMERATE);

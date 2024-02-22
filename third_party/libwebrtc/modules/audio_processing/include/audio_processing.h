@@ -28,10 +28,10 @@
 #include "api/array_view.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "api/audio/echo_control.h"
+#include "api/ref_count.h"
 #include "api/scoped_refptr.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "rtc_base/arraysize.h"
-#include "rtc_base/ref_count.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -127,7 +127,7 @@ class CustomProcessing;
 // // Close the application...
 // apm.reset();
 //
-class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
+class RTC_EXPORT AudioProcessing : public RefCountInterface {
  public:
   // The struct below constitutes the new parameter scheme for the audio
   // processing. It is being introduced gradually and until it is fully
@@ -912,7 +912,7 @@ class CustomProcessing {
 };
 
 // Interface for an echo detector submodule.
-class EchoDetector : public rtc::RefCountInterface {
+class EchoDetector : public RefCountInterface {
  public:
   // (Re-)Initializes the submodule.
   virtual void Initialize(int capture_sample_rate_hz,

@@ -1191,7 +1191,8 @@ void PseudoTcp::parseOptions(const char* data, uint32_t len) {
 
   // See http://www.freesoft.org/CIE/Course/Section4/8.htm for
   // parsing the options list.
-  rtc::ByteBufferReader buf(data, len);
+  rtc::ByteBufferReader buf(
+      rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(data), len));
   while (buf.Length()) {
     uint8_t kind = TCP_OPT_EOL;
     buf.ReadUInt8(&kind);

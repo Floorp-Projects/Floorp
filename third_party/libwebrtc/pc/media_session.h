@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "api/crypto/crypto_options.h"
-#include "api/field_trials_view.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
@@ -230,28 +229,14 @@ class MediaSessionDescriptionFactory {
       const TransportDescription& transport_desc,
       SessionDescription* answer_desc) const;
 
-  // Helpers for adding media contents to the SessionDescription. Returns true
-  // it succeeds or the media content is not needed, or false if there is any
-  // error.
-
-  webrtc::RTCError AddAudioContentForOffer(
+  // Helpers for adding media contents to the SessionDescription.
+  webrtc::RTCError AddRtpContentForOffer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
       const ContentInfo* current_content,
       const SessionDescription* current_description,
-      const RtpHeaderExtensions& audio_rtp_extensions,
-      const AudioCodecs& audio_codecs,
-      StreamParamsVec* current_streams,
-      SessionDescription* desc,
-      IceCredentialsIterator* ice_credentials) const;
-
-  webrtc::RTCError AddVideoContentForOffer(
-      const MediaDescriptionOptions& media_description_options,
-      const MediaSessionOptions& session_options,
-      const ContentInfo* current_content,
-      const SessionDescription* current_description,
-      const RtpHeaderExtensions& video_rtp_extensions,
-      const VideoCodecs& video_codecs,
+      const RtpHeaderExtensions& header_extensions,
+      const std::vector<Codec>& codecs,
       StreamParamsVec* current_streams,
       SessionDescription* desc,
       IceCredentialsIterator* ice_credentials) const;
@@ -273,7 +258,7 @@ class MediaSessionDescriptionFactory {
       SessionDescription* desc,
       IceCredentialsIterator* ice_credentials) const;
 
-  webrtc::RTCError AddAudioContentForAnswer(
+  webrtc::RTCError AddRtpContentForAnswer(
       const MediaDescriptionOptions& media_description_options,
       const MediaSessionOptions& session_options,
       const ContentInfo* offer_content,
@@ -281,22 +266,8 @@ class MediaSessionDescriptionFactory {
       const ContentInfo* current_content,
       const SessionDescription* current_description,
       const TransportInfo* bundle_transport,
-      const AudioCodecs& audio_codecs,
-      const RtpHeaderExtensions& rtp_header_extensions,
-      StreamParamsVec* current_streams,
-      SessionDescription* answer,
-      IceCredentialsIterator* ice_credentials) const;
-
-  webrtc::RTCError AddVideoContentForAnswer(
-      const MediaDescriptionOptions& media_description_options,
-      const MediaSessionOptions& session_options,
-      const ContentInfo* offer_content,
-      const SessionDescription* offer_description,
-      const ContentInfo* current_content,
-      const SessionDescription* current_description,
-      const TransportInfo* bundle_transport,
-      const VideoCodecs& video_codecs,
-      const RtpHeaderExtensions& rtp_header_extensions,
+      const std::vector<Codec>& codecs,
+      const RtpHeaderExtensions& header_extensions,
       StreamParamsVec* current_streams,
       SessionDescription* answer,
       IceCredentialsIterator* ice_credentials) const;

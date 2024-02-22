@@ -147,10 +147,6 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   // Error if Send() returns < 0
   virtual int GetError() = 0;
 
-  // TODO(webrtc:11943): Remove SignalReadPacket once upstream projects have
-  // switched to use RegisterReceivedPacket.
-  sigslot::signal4<Connection*, const char*, size_t, int64_t> SignalReadPacket;
-
   // Register as a recipient of received packets. There can only be one.
   void RegisterReceivedPacketCallback(
       absl::AnyInvocable<void(Connection*, const rtc::ReceivedPacket&)>
@@ -160,7 +156,9 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   sigslot::signal1<Connection*> SignalReadyToSend;
 
   // Called when a packet is received on this connection.
-  void OnReadPacket(const char* data, size_t size, int64_t packet_time_us);
+  void OnReadPacket(const rtc::ReceivedPacket& packet);
+  [[deprecated("Pass a rtc::ReceivedPacket")]] void
+  OnReadPacket(const char* data, size_t size, int64_t packet_time_us);
 
   // Called when the socket is currently able to send.
   void OnReadyToSend();
