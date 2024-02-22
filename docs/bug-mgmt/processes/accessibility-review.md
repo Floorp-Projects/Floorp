@@ -54,9 +54,12 @@ bug for the accessibility review. Otherwise, particularly for smaller changes,
 you may do this on an existing bug. Note that if you file a new bug, you will
 need to submit the bug and then edit it to set the flag.
 
-Once the review is done, the accessibility team will set the a11y-review
-flag depending on the outcome:
-
+During the review process, the accessibility team will modify the a11y-review
+flag:
+- assigned: The review has been triaged by the team and an engineer has been assigned
+    to the review. If the flag has been set on a bug filed specifically for the purposes
+    of review (i.e., the bug does not have additional engineering work attached, and the bug is not a meta bug) the review assignee will assign the bug to themselves.
+    Otherwise, they'll comment on the bug so you know who they are :)
 - passed: Either no changes are required, or some changes are required but the
     accessibility team does not believe it is necessary to review or verify
     those changes prior to shipping. Generally, a review will not be passed if
