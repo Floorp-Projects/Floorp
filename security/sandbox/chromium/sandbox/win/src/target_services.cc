@@ -12,7 +12,6 @@
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/handle_closer_agent.h"
-#include "sandbox/win/src/handle_interception.h"
 #include "sandbox/win/src/heap_helper.h"
 #include "sandbox/win/src/line_break_interception.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -244,15 +243,6 @@ void ProcessState::SetRevertedToSelf() {
 
 void ProcessState::SetCsrssConnected(bool csrss_connected) {
   csrss_connected_ = csrss_connected;
-}
-
-ResultCode TargetServicesBase::DuplicateHandle(HANDLE source_handle,
-                                               DWORD target_process_id,
-                                               HANDLE* target_handle,
-                                               DWORD desired_access,
-                                               DWORD options) {
-  return sandbox::DuplicateHandleProxy(source_handle, target_process_id,
-                                       target_handle, desired_access, options);
 }
 
 ResultCode TargetServicesBase::GetComplexLineBreaks(const WCHAR* text,
