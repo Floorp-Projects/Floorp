@@ -560,7 +560,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   JSObject* UnprivilegedJunkScope(const mozilla::fallible_t&);
 
   bool IsUnprivilegedJunkScope(JSObject*);
-  JSObject* LoaderGlobal();
 
   void DeleteSingletonScopes();
 
@@ -610,7 +609,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::DoCycleCollectionCallback mPrevDoCycleCollectionCallback;
   mozilla::WeakPtr<SandboxPrivate> mUnprivilegedJunkScope;
-  JS::PersistentRootedObject mLoaderGlobal;
   RefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
   friend class XPCJSContext;
