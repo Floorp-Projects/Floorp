@@ -44,7 +44,7 @@ class Breakpoints extends Component {
     this.removeEditor();
   }
 
-  getEditor() {
+  getHeadlessEditor() {
     if (!this.headlessEditor) {
       this.headlessEditor = createHeadlessEditor();
     }
@@ -119,7 +119,7 @@ class Breakpoints extends Component {
       return null;
     }
 
-    const editor = this.getEditor();
+    const editor = this.getHeadlessEditor();
     const sources = breakpointSources.map(({ source }) => source);
     return div(
       {
