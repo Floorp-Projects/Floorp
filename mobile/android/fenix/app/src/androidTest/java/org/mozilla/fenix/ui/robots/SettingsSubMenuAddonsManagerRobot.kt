@@ -90,15 +90,6 @@ class SettingsSubMenuAddonsManagerRobot {
             ),
         )
         Log.i(TAG, "clickInstallAddon: Scrolled into view the install $addonName button")
-        Log.i(TAG, "clickInstallAddon: Trying to ensure the full visibility of the the install $addonName button")
-        addonsList().ensureFullyVisible(
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/details_container")
-                    .childSelector(UiSelector().text(addonName)),
-            ),
-        )
-        Log.i(TAG, "clickInstallAddon: Ensured the full visibility of the the install $addonName button")
         Log.i(TAG, "clickInstallAddon: Trying to click the install $addonName button")
         installButtonForAddon(addonName).click()
         Log.i(TAG, "clickInstallAddon: Clicked the install $addonName button")
