@@ -673,14 +673,6 @@ def vc_compiler_version(vc_compiler_path):
 
 
 @depends_if(vc_compiler_version)
-def is_vs2019_or_more(vc_compiler_version):
-    return vc_compiler_version >= Version("19.20")
-
-
-add_old_configure_assignment("IS_VS2019_OR_MORE", is_vs2019_or_more)
-
-
-@depends_if(vc_compiler_version)
 def msvs_version(vc_compiler_version):
     # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
     # be set for GYP on Windows.
@@ -688,8 +680,7 @@ def msvs_version(vc_compiler_version):
         return "2022"
     if vc_compiler_version >= Version("19.20"):
         return "2019"
-    if vc_compiler_version >= Version("19.10"):
-        return "2017"
+    configure_error("Only Visual Studio 2019 or newer are supported")
 
     return ""
 

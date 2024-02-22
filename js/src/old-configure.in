@@ -111,7 +111,7 @@ case "$target" in
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
 
         MSVC_C_RUNTIME_DLL=vcruntime140.dll
-        if test -n "$IS_VS2019_OR_MORE" -a "$TARGET_CPU" != "x86"; then
+        if test "$TARGET_CPU" != "x86"; then
             MSVC_C_RUNTIME_1_DLL=vcruntime140_1.dll
         fi
         MSVC_CXX_RUNTIME_DLL=msvcp140.dll
