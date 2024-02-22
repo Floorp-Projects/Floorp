@@ -357,7 +357,6 @@ class RecentlyClosedTabsInView extends ViewPage {
             isSearchEnabled(),
             () => html`<div>
               <fxview-search-textbox
-                .query=${this.searchQuery}
                 data-l10n-id="firefoxview-search-text-box-recentlyclosed"
                 data-l10n-attrs="placeholder"
                 @fxview-search-textbox-query=${this.onSearchQuery}
