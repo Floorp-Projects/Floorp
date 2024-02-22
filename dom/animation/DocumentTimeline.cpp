@@ -55,9 +55,9 @@ DocumentTimeline::DocumentTimeline(Document* aDocument,
 }
 
 DocumentTimeline::~DocumentTimeline() {
-  MOZ_ASSERT(!mIsObservingRefreshDriver,
-             "Timeline should have disassociated"
-             " from the refresh driver before being destroyed");
+  MOZ_RELEASE_ASSERT(!mIsObservingRefreshDriver,
+                     "Timeline should have disassociated"
+                     " from the refresh driver before being destroyed");
   if (isInList()) {
     remove();
   }
@@ -206,7 +206,8 @@ void DocumentTimeline::NotifyTimerAdjusted(TimeStamp aTime) {
 }
 
 void DocumentTimeline::ObserveRefreshDriver(nsRefreshDriver* aDriver) {
-  MOZ_ASSERT(!mIsObservingRefreshDriver);
+  MOZ_RELEASE_ASSERT(!mIsObservingRefreshDriver,
+                     "shouldn't register as an observer more than once");
   // Set the mIsObservingRefreshDriver flag before calling AddRefreshObserver
   // since it might end up calling NotifyTimerAdjusted which calls
   // MostRecentRefreshTimeUpdated which has an assertion for
@@ -218,9 +219,10 @@ void DocumentTimeline::ObserveRefreshDriver(nsRefreshDriver* aDriver) {
 }
 
 void DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver) {
-  MOZ_ASSERT(!mIsObservingRefreshDriver,
-             "Timeline should not be observing the refresh driver before"
-             " it is created");
+  MOZ_RELEASE_ASSERT(
+      !mIsObservingRefreshDriver,
+      "Timeline should not be observing the refresh driver before"
+      " it is created");
 
   if (!mAnimationOrder.isEmpty()) {
     MOZ_ASSERT(isInList(),
