@@ -755,7 +755,7 @@ bool gfxPlatformFontList::InitOtherFamilyNames(
   // (This is used so we can reliably run reftests that depend on localized
   // font-family names being available.)
   if (aDeferOtherFamilyNamesLoading &&
-      StaticPrefs::gfx_font_loader_delay_AtStartup() > 0) {
+      StaticPrefs::gfx_font_loader_delay() > 0) {
     if (!mPendingOtherFamilyNameTask) {
       RefPtr<mozilla::CancelableRunnable> task =
           new InitOtherFamilyNamesRunnable();
@@ -2648,7 +2648,7 @@ bool gfxPlatformFontList::LoadFontInfo() {
     // Limit the time spent reading fonts in one pass, unless the font-loader
     // delay was set to zero, in which case we run to completion even if it
     // causes some jank.
-    if (StaticPrefs::gfx_font_loader_delay_AtStartup() > 0) {
+    if (StaticPrefs::gfx_font_loader_delay() > 0) {
       TimeDuration elapsed = TimeStamp::Now() - start;
       if (elapsed.ToMilliseconds() > FONT_LOADER_MAX_TIMESLICE &&
           i + 1 != endIndex) {
@@ -2751,7 +2751,7 @@ void gfxPlatformFontList::GetPrefsAndStartLoader() {
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return;
   }
-  uint32_t delay = std::max(1u, StaticPrefs::gfx_font_loader_delay_AtStartup());
+  uint32_t delay = std::max(1u, StaticPrefs::gfx_font_loader_delay());
   if (NS_IsMainThread()) {
     StartLoader(delay);
   } else {

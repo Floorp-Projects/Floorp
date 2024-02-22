@@ -31,3 +31,4 @@ style = {path = "../../components/style", features = ["gecko"]}
 style_traits = {path = "../../components/style_traits"}
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 to_shmem = {path = "../../components/to_shmem"}
+lazy_static = "1.0"

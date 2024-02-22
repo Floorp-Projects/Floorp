@@ -23,6 +23,7 @@ extern crate style;
 extern crate style_traits;
 extern crate thin_vec;
 extern crate to_shmem;
+extern crate lazy_static;
 
 mod error_reporter;
 #[allow(non_snake_case)]

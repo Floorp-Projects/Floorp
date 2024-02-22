@@ -2094,6 +2094,7 @@ dependencies = [
  "cstr",
  "dom",
  "gecko-profiler",
+ "lazy_static",
  "libc",
  "log",
  "malloc_size_of",
