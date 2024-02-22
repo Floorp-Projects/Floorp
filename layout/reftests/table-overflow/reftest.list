@@ -1,6 +1,7 @@
 defaults pref(layout.tables.scrollable-cells,true)
 
-skip-if(ThreadSanitizer) == bug785684-x.html bug785684-x-ref.html
-== bug785684-y.html bug785684-y-ref.html
+# Android: Tests assume non-overlay scrollbars
+fails-if(Android) skip-if(ThreadSanitizer) == bug785684-x.html bug785684-x-ref.html
+fails-if(Android) == bug785684-y.html bug785684-y-ref.html
 == table-caption-scroll.html table-caption-scroll-ref.html
 == table-cell-block-overflow.html table-cell-block-overflow-ref.html
