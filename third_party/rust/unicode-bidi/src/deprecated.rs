@@ -71,10 +71,8 @@ pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
 
             // Found the start of a sequence. Now find the end.
             let mut seq_end = seq_start + 1;
-            while seq_end < run_count {
-                if levels[runs[seq_end].start] < max_level {
-                    break;
-                }
+
+            while seq_end < run_count && levels[runs[seq_end].start] >= max_level {
                 seq_end += 1;
             }
 
@@ -83,6 +81,7 @@ pub fn visual_runs(line: Range<usize>, levels: &[Level]) -> Vec<LevelRun> {
 
             seq_start = seq_end;
         }
+
         max_level
             .lower(1)
             .expect("Lowering embedding level below zero");

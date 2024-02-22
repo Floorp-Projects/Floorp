@@ -52,10 +52,10 @@ pub fn isolating_run_sequences(
 
     // When we encounter an isolate initiator, we push the current sequence onto the
     // stack so we can resume it after the matching PDI.
-    let mut stack = vec![Vec::new()];
+    let mut stack = vec![vec![]];
 
     for run in runs {
-        assert!(run.len() > 0);
+        assert!(!run.is_empty());
         assert!(!stack.is_empty());
 
         let start_class = original_classes[run.start];
@@ -67,8 +67,7 @@ pub fn isolating_run_sequences(
             .iter()
             .copied()
             .rev()
-            .filter(not_removed_by_x9)
-            .next()
+            .find(not_removed_by_x9)
             .unwrap_or(start_class);
 
         let mut sequence = if start_class == PDI && stack.len() > 1 {
@@ -81,7 +80,7 @@ pub fn isolating_run_sequences(
 
         sequence.push(run);
 
-        if let RLI | LRI | FSI = end_class {
+        if matches!(end_class, RLI | LRI | FSI) {
             // Resume this sequence after the isolate.
             stack.push(sequence);
         } else {
@@ -89,7 +88,7 @@ pub fn isolating_run_sequences(
             sequences.push(sequence);
         }
     }
-    // Pop any remaning sequences off the stack.
+    // Pop any remaining sequences off the stack.
     sequences.extend(stack.into_iter().rev().filter(|seq| !seq.is_empty()));
 
     // Determine the `sos` and `eos` class for each sequence.
@@ -110,28 +109,22 @@ pub fn isolating_run_sequences(
             let end_of_seq = result.runs[runs_len - 1].end;
 
             // > (not counting characters removed by X9)
-            let seq_level = result
+            let seq_level = levels[result
                 .iter_forwards_from(start_of_seq, 0)
-                .filter(|i| not_removed_by_x9(&original_classes[*i]))
-                .map(|i| levels[i])
-                .next()
-                .unwrap_or(levels[start_of_seq]);
+                .find(|i| not_removed_by_x9(&original_classes[*i]))
+                .unwrap_or(start_of_seq)];
 
             // XXXManishearth the spec talks of a start and end level,
             // but for a given IRS the two should be equivalent, yes?
-            let end_level = result
+            let end_level = levels[result
                 .iter_backwards_from(end_of_seq, runs_len - 1)
-                .filter(|i| not_removed_by_x9(&original_classes[*i]))
-                .map(|i| levels[i])
-                .next()
-                .unwrap_or(levels[end_of_seq - 1]);
+                .find(|i| not_removed_by_x9(&original_classes[*i]))
+                .unwrap_or(end_of_seq - 1)];
 
             #[cfg(test)]
-            for run in result.runs.clone() {
-                for idx in run {
-                    if not_removed_by_x9(&original_classes[idx]) {
-                        assert_eq!(seq_level, levels[idx]);
-                    }
+            for idx in result.runs.clone().into_iter().flatten() {
+                if not_removed_by_x9(&original_classes[idx]) {
+                    assert_eq!(seq_level, levels[idx]);
                 }
             }
 
@@ -156,7 +149,7 @@ pub fn isolating_run_sequences(
                 .unwrap_or(BN);
 
             // Get the level of the next non-removed char after the runs.
-            let succ_level = if let RLI | LRI | FSI = last_non_removed {
+            let succ_level = if matches!(last_non_removed, RLI | LRI | FSI) {
                 para_level
             } else {
                 match original_classes[end_of_seq..]
@@ -246,10 +239,7 @@ fn level_runs(levels: &[Level], original_classes: &[BidiClass]) -> Vec<LevelRun>
 ///
 /// <http://www.unicode.org/reports/tr9/#X9>
 pub fn removed_by_x9(class: BidiClass) -> bool {
-    match class {
-        RLE | LRE | RLO | LRO | PDF | BN => true,
-        _ => false,
-    }
+    matches!(class, RLE | LRE | RLO | LRO | PDF | BN)
 }
 
 // For use as a predicate for `position` / `rposition`

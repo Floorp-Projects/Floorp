@@ -45,7 +45,7 @@ pub enum BidiClass {
 use self::BidiClass::*;
 
 #[cfg(feature = "hardcoded-data")]
-pub const bidi_class_table: &'static [(char, char, BidiClass)] = &[
+pub const bidi_class_table: &[(char, char, BidiClass)] = &[
     ('\u{0}', '\u{8}', BN), ('\u{9}', '\u{9}', S), ('\u{a}', '\u{a}', B), ('\u{b}', '\u{b}', S),
     ('\u{c}', '\u{c}', WS), ('\u{d}', '\u{d}', B), ('\u{e}', '\u{1b}', BN), ('\u{1c}', '\u{1e}', B),
     ('\u{1f}', '\u{1f}', S), ('\u{20}', '\u{20}', WS), ('\u{21}', '\u{22}', ON), ('\u{23}',
@@ -516,7 +516,7 @@ pub const bidi_class_table: &'static [(char, char, BidiClass)] = &[
     '\u{e01ef}', NSM), ('\u{f0000}', '\u{ffffd}', L), ('\u{100000}', '\u{10fffd}', L)
 ];
 
-pub const bidi_pairs_table: &'static [(char, char, Option<char>)] = &[
+pub const bidi_pairs_table: &[(char, char, Option<char>)] = &[
     ('\u{28}', '\u{29}', None), ('\u{5b}', '\u{5d}', None), ('\u{7b}', '\u{7d}', None), ('\u{f3a}',
     '\u{f3b}', None), ('\u{f3c}', '\u{f3d}', None), ('\u{169b}', '\u{169c}', None), ('\u{2045}',
     '\u{2046}', None), ('\u{207d}', '\u{207e}', None), ('\u{208d}', '\u{208e}', None), ('\u{2308}',

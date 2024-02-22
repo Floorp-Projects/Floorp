@@ -5191,9 +5191,9 @@ checksum = "75ce4f9dc4a41b4c3476cc925f1efb11b66df373a8fde5d4b8915fa91b5d995e"
 
 [[package]]
 name = "smallvec"
-version = "1.11.1"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "942b4a808e05215192e39f4ab80813e599068285906cc91aa64f923db842bd5a"
+checksum = "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
 dependencies = [
  "serde",
 ]
@@ -5855,8 +5855,10 @@ dependencies = [
 [[package]]
 name = "unicode-bidi"
 version = "0.3.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08f95100a766bf4f8f28f90d77e0a5461bbdb219042e7679bebe79004fed8d75"
+source = "git+https://github.com/servo/unicode-bidi?rev=d43c644c388659d093cc5d1648a970daeef692d5#d43c644c388659d093cc5d1648a970daeef692d5"
+dependencies = [
+ "smallvec",
+]
 
 [[package]]
 name = "unicode-bidi-ffi"

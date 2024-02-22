@@ -59,10 +59,7 @@ pub(crate) fn bidi_matched_opening_bracket(c: char) -> Option<BidiMatchedOpening
 }
 
 pub fn is_rtl(bidi_class: BidiClass) -> bool {
-    match bidi_class {
-        RLE | RLO | RLI => true,
-        _ => false,
-    }
+    matches!(bidi_class, RLE | RLO | RLI)
 }
 
 #[cfg(feature = "hardcoded-data")]
