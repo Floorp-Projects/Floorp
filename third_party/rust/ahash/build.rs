@@ -7,7 +7,9 @@ fn main() {
     if let Some(channel) = version_check::Channel::read() {
         if channel.supports_features() {
             println!("cargo:rustc-cfg=feature=\"specialize\"");
-            println!("cargo:rustc-cfg=feature=\"stdsimd\"");
+            if version_check::Version::read().map_or(false, |v| v.at_most("1.77.9")) {
+                println!("cargo:rustc-cfg=feature=\"stdsimd\"");
+            }
         }
     }
     let os = env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS was not set");

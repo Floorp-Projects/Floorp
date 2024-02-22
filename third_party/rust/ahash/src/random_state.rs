@@ -29,8 +29,13 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std as alloc;
 
+#[cfg(feature = "atomic-polyfill")]
+use atomic_polyfill as atomic;
+#[cfg(not(feature = "atomic-polyfill"))]
+use core::sync::atomic;
+
 use alloc::boxed::Box;
-use core::sync::atomic::{AtomicUsize, Ordering};
+use atomic::{AtomicUsize, Ordering};
 #[cfg(not(all(target_arch = "arm", target_os = "none")))]
 use once_cell::race::OnceBox;
 

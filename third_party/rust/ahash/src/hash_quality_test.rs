@@ -1,5 +1,5 @@
 use core::hash::{Hash, Hasher};
-use std::collections::HashMap;
+use std::collections::{HashMap};
 
 fn assert_sufficiently_different(a: u64, b: u64, tolerance: i32) {
     let (same_byte_count, same_nibble_count) = count_same_bytes_and_nibbles(a, b);
@@ -326,6 +326,28 @@ fn test_length_extension<T: Hasher>(hasher: impl Fn(u128, u128) -> T) {
     }
 }
 
+fn test_sparse<T: Hasher>(hasher: impl Fn() -> T) {
+    let mut buf = [0u8; 256];
+    let mut hashes = HashMap::new();
+    for idx_1 in 0..256 {
+        for idx_2 in idx_1+1..256 {
+            for value_1 in [1, 2, 4, 8, 16, 32, 64, 128] {
+                for value_2 in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 16, 17, 18, 20, 24, 31, 32, 33, 48, 64, 96, 127, 128, 129, 192, 254, 255] {
+                    buf[idx_1] = value_1;
+                    buf[idx_2] = value_2;
+                    let hash_value = hash_with(&buf, &mut hasher());
+                    let keys = hashes.entry(hash_value).or_insert(Vec::new());
+                    keys.push((idx_1, value_1, idx_2, value_2));
+                    buf[idx_1] = 0;
+                    buf[idx_2] = 0;
+                }
+            }
+        }
+    }
+    hashes.retain(|_key, value| value.len() != 1);
+    assert_eq!(0, hashes.len(), "Collision with: {:?}", hashes);
+}
+
 #[cfg(test)]
 mod fallback_tests {
     use crate::fallback_hash::*;
@@ -391,6 +413,12 @@ mod fallback_tests {
     #[test]
     fn fallback_length_extension() {
         test_length_extension(|a, b| AHasher::new_with_keys(a, b));
+    }
+
+    #[test]
+    fn test_no_sparse_collisions() {
+        test_sparse(|| AHasher::new_with_keys(0, 0));
+        test_sparse(|| AHasher::new_with_keys(1, 2));
     }
 }
 
@@ -479,5 +507,11 @@ mod aes_tests {
     #[test]
     fn aes_length_extension() {
         test_length_extension(|a, b| AHasher::test_with_keys(a, b));
+    }
+
+    #[test]
+    fn aes_no_sparse_collisions() {
+        test_sparse(|| AHasher::test_with_keys(0, 0));
+        test_sparse(|| AHasher::test_with_keys(1, 2));
     }
 }
