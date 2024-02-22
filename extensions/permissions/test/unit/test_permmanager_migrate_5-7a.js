@@ -211,7 +211,6 @@ add_task(async function test() {
     // The http:// entries under foo.com won't be inserted, as there are history entries for foo.com,
     // and http://foo.com or a subdomain are never visited.
     // ["http://foo.com", "A", 1, 0, 0],
-    // ["http://foo.com^inBrowser=1", "A", 1, 0, 0],
     //
     // Because we search for port/scheme combinations under eTLD+1, we should not have http:// entries
     // for subdomains of foo.com either
@@ -220,15 +219,14 @@ add_task(async function test() {
 
     ["https://foo.com", "A", 1, 0, 0],
     ["https://foo.com", "C", 1, 0, 0],
-    ["https://foo.com^inBrowser=1", "A", 1, 0, 0],
     ["https://sub.foo.com", "B", 1, 0, 0],
     ["https://subber.sub.foo.com", "B", 1, 0, 0],
 
     // bar.ca will have both http:// and https:// for all entries, because there are no associated history entries
     ["http://bar.ca", "B", 1, 0, 0],
     ["https://bar.ca", "B", 1, 0, 0],
-    ["http://bar.ca^inBrowser=1", "A", 1, 0, 0],
-    ["https://bar.ca^inBrowser=1", "A", 1, 0, 0],
+    ["http://bar.ca", "A", 1, 0, 0],
+    ["https://bar.ca", "A", 1, 0, 0],
     ["file:///some/path/to/file.html", "A", 1, 0, 0],
     ["file:///another/file.html", "A", 1, 0, 0],
 
@@ -236,7 +234,6 @@ add_task(async function test() {
     // also have these entries
     ["ftp://foo.com:8000", "A", 1, 0, 0],
     ["ftp://foo.com:8000", "C", 1, 0, 0],
-    ["ftp://foo.com:8000^inBrowser=1", "A", 1, 0, 0],
 
     // In addition, because we search for port/scheme combinations under eTLD+1, we should have the
     // following entries

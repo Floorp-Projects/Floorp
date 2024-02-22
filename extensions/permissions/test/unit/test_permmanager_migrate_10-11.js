@@ -106,7 +106,7 @@ add_task(async function test() {
     ["https://foo.com", "storageAccessAPI^https://foo.com", 2, 0, 0, 0],
     ["http://foo.com", "storageAccessAPI^https://bar.com", 2, 0, 0, 0],
     ["http://foo.com", "storageAccessAPI^https://bar.com", 2, 0, 0, 0],
-    ["http://foo.com^inBrowser=1", "A", 2, 0, 0, 0],
+    ["http://foo.com", "A", 2, 0, 0, 0],
   ];
 
   let found = expected.map(it => 0);

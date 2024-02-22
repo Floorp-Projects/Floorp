@@ -102,7 +102,6 @@ add_task(function test() {
   let expected = [
     ["https://foo.com", "A", 2, 0, 0, 0],
     ["http://foo.com", "A", 2, 0, 0, 0],
-    ["http://foo.com^inBrowser=1", "A", 2, 0, 0, 0],
 
     ["http://127.0.0.1", "B", 2, 0, 0, 0],
     ["http://localhost", "B", 2, 0, 0, 0],
