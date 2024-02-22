@@ -596,8 +596,7 @@ class PermissionManager final : public nsIPermissionManager,
           mPermission(0),
           mExpireType(0),
           mExpireTime(0),
-          mModificationTime(0),
-          mIsInBrowserElement(false) {}
+          mModificationTime(0) {}
 
     nsCString mHost;
     nsCString mType;
@@ -606,9 +605,6 @@ class PermissionManager final : public nsIPermissionManager,
     uint32_t mExpireType;
     int64_t mExpireTime;
     int64_t mModificationTime;
-
-    // Legacy, for migration.
-    bool mIsInBrowserElement;
   };
 
   // List of entries read from the database. It will be populated OMT and
