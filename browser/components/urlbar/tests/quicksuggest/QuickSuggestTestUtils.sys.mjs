@@ -78,7 +78,12 @@ Object.defineProperty(lazy, "MerinoTestUtils", {
   },
 });
 
-const DEFAULT_CONFIG = {};
+// TODO bug 1881409: Previously this was an empty object, but the Rust backend
+// seems to persist old config after ingesting an empty config object.
+const DEFAULT_CONFIG = {
+  // Zero means there is no cap, the same as if this wasn't specified at all.
+  show_less_frequently_cap: 0,
+};
 
 // The following properties and methods are copied from the test scope to the
 // test utils object so they can be easily accessed. Be careful about assuming a
