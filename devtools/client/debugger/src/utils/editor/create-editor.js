@@ -5,7 +5,7 @@
 import SourceEditor from "devtools/client/shared/sourceeditor/editor";
 import { features, prefs } from "../prefs";
 
-export function createEditor() {
+export function createEditor(useCm6 = false) {
   const gutters = ["breakpoints", "hit-markers", "CodeMirror-linenumbers"];
 
   if (features.codeFolding) {
@@ -13,7 +13,8 @@ export function createEditor() {
   }
 
   return new SourceEditor({
-    mode: "javascript",
+    mode: SourceEditor.modes.js,
+    cm6: useCm6,
     foldGutter: features.codeFolding,
     enableCodeFolding: features.codeFolding,
     readOnly: true,

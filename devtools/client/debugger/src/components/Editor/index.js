@@ -12,6 +12,7 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
 import { getIndentation } from "../../utils/indentation";
+import { features } from "../../utils/prefs";
 
 import {
   getActiveSearch,
@@ -142,37 +143,45 @@ class Editor extends PureComponent {
         this.props.selectedSourceTextContent?.value ||
       nextProps.symbols !== this.props.symbols;
 
-    const shouldUpdateSize =
-      nextProps.startPanelSize !== this.props.startPanelSize ||
-      nextProps.endPanelSize !== this.props.endPanelSize;
+    if (!features.codemirrorNext) {
+      const shouldUpdateSize =
+        nextProps.startPanelSize !== this.props.startPanelSize ||
+        nextProps.endPanelSize !== this.props.endPanelSize;
 
-    const shouldScroll =
-      nextProps.selectedLocation &&
-      this.shouldScrollToLocation(nextProps, editor);
+      const shouldScroll =
+        nextProps.selectedLocation &&
+        this.shouldScrollToLocation(nextProps, editor);
 
-    if (shouldUpdateText || shouldUpdateSize || shouldScroll) {
-      startOperation();
+      if (shouldUpdateText || shouldUpdateSize || shouldScroll) {
+        startOperation();
+        if (shouldUpdateText) {
+          this.setText(nextProps, editor);
+        }
+        if (shouldUpdateSize) {
+          editor.codeMirror.setSize();
+        }
+        if (shouldScroll) {
+          this.scrollToLocation(nextProps, editor);
+        }
+        endOperation();
+      }
+
+      if (this.props.selectedSource != nextProps.selectedSource) {
+        this.props.updateViewport();
+        resizeBreakpointGutter(editor.codeMirror);
+        resizeToggleButton(editor.codeMirror);
+      }
+    } else {
+      // For codemirror 6
+      // eslint-disable-next-line no-lonely-if
       if (shouldUpdateText) {
         this.setText(nextProps, editor);
       }
-      if (shouldUpdateSize) {
-        editor.codeMirror.setSize();
-      }
-      if (shouldScroll) {
-        this.scrollToLocation(nextProps, editor);
-      }
-      endOperation();
-    }
-
-    if (this.props.selectedSource != nextProps.selectedSource) {
-      this.props.updateViewport();
-      resizeBreakpointGutter(editor.codeMirror);
-      resizeToggleButton(editor.codeMirror);
     }
   }
 
   setupEditor() {
-    const editor = getEditor();
+    const editor = getEditor(features.codemirrorNext);
 
     // disables the default search shortcuts
     editor._initShortcuts = () => {};
@@ -182,71 +191,84 @@ class Editor extends PureComponent {
       editor.appendToLocalElement(node.querySelector(".editor-mount"));
     }
 
-    const { codeMirror } = editor;
+    if (!features.codemirrorNext) {
+      const { codeMirror } = editor;
 
-    this.abortController = new window.AbortController();
+      this.abortController = new window.AbortController();
 
-    // CodeMirror refreshes its internal state on window resize, but we need to also
-    // refresh it when the side panels are resized.
-    // We could have a ResizeObserver instead, but we wouldn't be able to differentiate
-    // between window resize and side panel resize and as a result, might refresh
-    // codeMirror twice, which is wasteful.
-    window.document
-      .querySelector(".editor-pane")
-      .addEventListener("resizeend", () => codeMirror.refresh(), {
-        signal: this.abortController.signal,
-      });
+      // CodeMirror refreshes its internal state on window resize, but we need to also
+      // refresh it when the side panels are resized.
+      // We could have a ResizeObserver instead, but we wouldn't be able to differentiate
+      // between window resize and side panel resize and as a result, might refresh
+      // codeMirror twice, which is wasteful.
+      window.document
+        .querySelector(".editor-pane")
+        .addEventListener("resizeend", () => codeMirror.refresh(), {
+          signal: this.abortController.signal,
+        });
 
-    codeMirror.on("gutterClick", this.onGutterClick);
-    codeMirror.on("cursorActivity", this.onCursorChange);
+      codeMirror.on("gutterClick", this.onGutterClick);
+      codeMirror.on("cursorActivity", this.onCursorChange);
 
-    const codeMirrorWrapper = codeMirror.getWrapperElement();
-    // Set code editor wrapper to be focusable
-    codeMirrorWrapper.tabIndex = 0;
-    codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
-    codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
-    codeMirrorWrapper.addEventListener("mouseover", onMouseOver(codeMirror));
+      const codeMirrorWrapper = codeMirror.getWrapperElement();
+      // Set code editor wrapper to be focusable
+      codeMirrorWrapper.tabIndex = 0;
+      codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
+      codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
+      codeMirrorWrapper.addEventListener("mouseover", onMouseOver(codeMirror));
 
-    const toggleFoldMarkerVisibility = e => {
-      if (node instanceof HTMLElement) {
-        node
-          .querySelectorAll(".CodeMirror-guttermarker-subtle")
-          .forEach(elem => {
-            elem.classList.toggle("visible");
-          });
-      }
-    };
+      const toggleFoldMarkerVisibility = e => {
+        if (node instanceof HTMLElement) {
+          node
+            .querySelectorAll(".CodeMirror-guttermarker-subtle")
+            .forEach(elem => {
+              elem.classList.toggle("visible");
+            });
+        }
+      };
 
-    const codeMirrorGutter = codeMirror.getGutterElement();
-    codeMirrorGutter.addEventListener("mouseleave", toggleFoldMarkerVisibility);
-    codeMirrorGutter.addEventListener("mouseenter", toggleFoldMarkerVisibility);
-    codeMirrorWrapper.addEventListener("contextmenu", event =>
-      this.openMenu(event)
-    );
+      const codeMirrorGutter = codeMirror.getGutterElement();
+      codeMirrorGutter.addEventListener(
+        "mouseleave",
+        toggleFoldMarkerVisibility
+      );
+      codeMirrorGutter.addEventListener(
+        "mouseenter",
+        toggleFoldMarkerVisibility
+      );
+      codeMirrorWrapper.addEventListener("contextmenu", event =>
+        this.openMenu(event)
+      );
 
-    codeMirror.on("scroll", this.onEditorScroll);
-    this.onEditorScroll();
+      codeMirror.on("scroll", this.onEditorScroll);
+      this.onEditorScroll();
+    }
     this.setState({ editor });
     return editor;
   }
 
   componentDidMount() {
-    const { shortcuts } = this.context;
+    if (!features.codemirrorNext) {
+      const { shortcuts } = this.context;
 
-    shortcuts.on(L10N.getStr("toggleBreakpoint.key"), this.onToggleBreakpoint);
-    shortcuts.on(
-      L10N.getStr("toggleCondPanel.breakpoint.key"),
-      this.onToggleConditionalPanel
-    );
-    shortcuts.on(
-      L10N.getStr("toggleCondPanel.logPoint.key"),
-      this.onToggleConditionalPanel
-    );
-    shortcuts.on(
-      L10N.getStr("sourceTabs.closeTab.key"),
-      this.onCloseShortcutPress
-    );
-    shortcuts.on("Esc", this.onEscape);
+      shortcuts.on(
+        L10N.getStr("toggleBreakpoint.key"),
+        this.onToggleBreakpoint
+      );
+      shortcuts.on(
+        L10N.getStr("toggleCondPanel.breakpoint.key"),
+        this.onToggleConditionalPanel
+      );
+      shortcuts.on(
+        L10N.getStr("toggleCondPanel.logPoint.key"),
+        this.onToggleConditionalPanel
+      );
+      shortcuts.on(
+        L10N.getStr("sourceTabs.closeTab.key"),
+        this.onCloseShortcutPress
+      );
+      shortcuts.on("Esc", this.onEscape);
+    }
   }
 
   onCloseShortcutPress = e => {
@@ -259,22 +281,24 @@ class Editor extends PureComponent {
   };
 
   componentWillUnmount() {
-    const { editor } = this.state;
-    if (editor) {
-      editor.destroy();
-      editor.codeMirror.off("scroll", this.onEditorScroll);
-      this.setState({ editor: null });
-    }
+    if (!features.codemirrorNext) {
+      const { editor } = this.state;
+      if (editor) {
+        editor.destroy();
+        editor.codeMirror.off("scroll", this.onEditorScroll);
+        this.setState({ editor: null });
+      }
 
-    const { shortcuts } = this.context;
-    shortcuts.off(L10N.getStr("sourceTabs.closeTab.key"));
-    shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
-    shortcuts.off(L10N.getStr("toggleCondPanel.breakpoint.key"));
-    shortcuts.off(L10N.getStr("toggleCondPanel.logPoint.key"));
+      const { shortcuts } = this.context;
+      shortcuts.off(L10N.getStr("sourceTabs.closeTab.key"));
+      shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
+      shortcuts.off(L10N.getStr("toggleCondPanel.breakpoint.key"));
+      shortcuts.off(L10N.getStr("toggleCondPanel.logPoint.key"));
 
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
+      if (this.abortController) {
+        this.abortController.abort();
+        this.abortController = null;
+      }
     }
   }
 
@@ -582,7 +606,9 @@ class Editor extends PureComponent {
 
     // check if we previously had a selected source
     if (!selectedSource) {
-      this.clearEditor();
+      if (!features.codemirrorNext) {
+        this.clearEditor();
+      }
       return;
     }
 
@@ -601,7 +627,16 @@ class Editor extends PureComponent {
       return;
     }
 
-    showSourceText(editor, selectedSource, selectedSourceTextContent, symbols);
+    if (!features.codemirrorNext) {
+      showSourceText(
+        editor,
+        selectedSource,
+        selectedSourceTextContent,
+        symbols
+      );
+    } else {
+      editor.setText(selectedSourceTextContent.value.value);
+    }
   }
 
   clearEditor() {
@@ -627,21 +662,31 @@ class Editor extends PureComponent {
     } else {
       error = L10N.getFormatStr("errorLoadingText3", msg);
     }
-    const doc = editor.createDocument(error, { name: "text" });
-    editor.replaceDocument(doc);
-    resetLineNumberFormat(editor);
+    if (!features.codemirrorNext) {
+      const doc = editor.createDocument(error, { name: "text" });
+      editor.replaceDocument(doc);
+      resetLineNumberFormat(editor);
+    } else {
+      editor.setText(error);
+    }
   }
 
   showLoadingMessage(editor) {
-    // Create the "loading message" document only once
-    let doc = getDocument("loading");
-    if (!doc) {
-      doc = editor.createDocument(L10N.getStr("loadingText"), { name: "text" });
-      setDocument("loading", doc);
+    if (!features.codemirrorNext) {
+      // Create the "loading message" document only once
+      let doc = getDocument("loading");
+      if (!doc) {
+        doc = editor.createDocument(L10N.getStr("loadingText"), {
+          name: "text",
+        });
+        setDocument("loading", doc);
+      }
+      // `createDocument` won't be used right away in the editor, we still need to
+      // explicitely update it
+      editor.replaceDocument(doc);
+    } else {
+      editor.setText(L10N.getStr("loadingText"));
     }
-    // `createDocument` won't be used right away in the editor, we still need to
-    // explicitely update it
-    editor.replaceDocument(doc);
   }
 
   getInlineEditorStyles() {
