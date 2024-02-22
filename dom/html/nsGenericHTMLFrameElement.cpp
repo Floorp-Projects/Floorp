@@ -46,19 +46,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFrameElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
-    nsGenericHTMLFrameElement, nsGenericHTMLElement, nsFrameLoaderOwner,
-    nsIDOMMozBrowserFrame, nsIMozBrowserFrame, nsGenericHTMLFrameElement)
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetMozbrowser(bool* aValue) {
-  *aValue = GetBoolAttr(nsGkAtoms::mozbrowser);
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::SetMozbrowser(bool aValue) {
-  return SetBoolAttr(nsGkAtoms::mozbrowser, aValue);
-}
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsGenericHTMLFrameElement,
+                                             nsGenericHTMLElement,
+                                             nsFrameLoaderOwner,
+                                             nsGenericHTMLFrameElement)
 
 int32_t nsGenericHTMLFrameElement::TabIndexDefault() { return 0; }
 
@@ -258,9 +249,6 @@ void nsGenericHTMLFrameElement::AfterSetAttr(
           child->SendScrollbarPreferenceChanged(pref);
         }
       }
-    } else if (aName == nsGkAtoms::mozbrowser) {
-      mReallyIsBrowser = !!aValue && XRE_IsParentProcess() &&
-                         NodePrincipal()->IsSystemPrincipal();
     }
   }
 
@@ -333,27 +321,4 @@ bool nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
 
   *aIsFocusable = true;
   return false;
-}
-
-/**
- * Return true if this frame element really is a mozbrowser.  (It
- * needs to have the right attributes, and its creator must have the right
- * permissions.)
- */
-/* [infallible] */
-nsresult nsGenericHTMLFrameElement::GetReallyIsBrowser(bool* aOut) {
-  *aOut = mReallyIsBrowser;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::InitializeBrowserAPI() {
-  MOZ_ASSERT(mFrameLoader);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::DestroyBrowserFrameScripts() {
-  MOZ_ASSERT(mFrameLoader);
-  return NS_OK;
 }

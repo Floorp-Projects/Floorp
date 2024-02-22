@@ -108,9 +108,6 @@ class InProcessBrowserChildMessageManager final
   RefPtr<nsDocShell> mDocShell;
   bool mLoadingScript;
 
-  // Is this the message manager for an in-process <iframe mozbrowser>? This
-  // affects where events get sent, so it affects GetEventTargetParent.
-  bool mIsBrowserFrame;
   bool mPreventEventsEscaping;
 
   // We keep a strong reference to the frameloader after we've started
