@@ -1,8 +1,8 @@
 [DEFAULT]
 support-files = ["referrer_page.sjs"]
 
-["browser_fragment_navigation.js"]
-support-files = ["file_fragment_navigation.sjs"]
+["browser_session_history.js"]
+support-files = ["file_session_history.sjs"]
 
 ["browser_referrer_disallow_cross_site_relaxing.js"]
 

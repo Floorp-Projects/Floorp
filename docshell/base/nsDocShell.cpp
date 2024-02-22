@@ -11376,11 +11376,14 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     if (mozilla::SessionHistoryInParent()) {
       MOZ_LOG(gSHLog, LogLevel::Debug,
               ("nsDocShell %p UpdateActiveEntry (not replacing)", this));
+
       nsString title(mActiveEntry->GetTitle());
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = mActiveEntry->GetReferrerInfo();
+
       UpdateActiveEntry(false,
                         /* aPreviousScrollPos = */ Some(scrollPos), aNewURI,
                         /* aOriginalURI = */ nullptr,
-                        /* aReferrerInfo = */ nullptr,
+                        /* aReferrerInfo = */ referrerInfo,
                         /* aTriggeringPrincipal = */ aDocument->NodePrincipal(),
                         csp, title, scrollRestorationIsManual, aData,
                         uriWasModified);
@@ -11399,11 +11402,13 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
       // mode from the current entry.
       newSHEntry->SetScrollRestorationIsManual(scrollRestorationIsManual);
 
+      // Set the new SHEntry's title (bug 655273).
       nsString title;
       mOSHE->GetTitle(title);
-
-      // Set the new SHEntry's title (bug 655273).
       newSHEntry->SetTitle(title);
+
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = mOSHE->GetReferrerInfo();
+      newSHEntry->SetReferrerInfo(referrerInfo);
 
       // Link the new SHEntry to the old SHEntry's BFCache entry, since the
       // two entries correspond to the same document.
@@ -11453,6 +11458,8 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
       mOSHE = newSHEntry;
     }
 
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = mOSHE->GetReferrerInfo();
+
     newSHEntry->SetURI(aNewURI);
     newSHEntry->SetOriginalURI(aNewURI);
     // We replaced the URI of the entry, clear the unstripped URI as it
@@ -11463,6 +11470,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     // in our case.  We could also set it to aNewURI, with the same result.
     newSHEntry->SetResultPrincipalURI(nullptr);
     newSHEntry->SetLoadReplace(false);
+    newSHEntry->SetReferrerInfo(referrerInfo);
   }
 
   if (!mozilla::SessionHistoryInParent()) {
