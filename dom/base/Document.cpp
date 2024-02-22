@@ -14751,6 +14751,10 @@ void Document::TopLayerPush(Element& aElement) {
   const bool modal = aElement.State().HasState(ElementState::MODAL);
 
   TopLayerPop(aElement);
+  if (nsIFrame* f = aElement.GetPrimaryFrame()) {
+    f->MarkNeedsDisplayItemRebuild();
+  }
+
   mTopLayer.AppendElement(do_GetWeakReference(&aElement));
   NS_ASSERTION(GetTopLayerTop() == &aElement, "Should match");
 
@@ -14804,6 +14808,9 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
     nsCOMPtr<Element> element(do_QueryReferent(mTopLayer[i]));
     if (element && aPredicate(element)) {
       removedElement = element;
+      if (nsIFrame* f = element->GetPrimaryFrame()) {
+        f->MarkNeedsDisplayItemRebuild();
+      }
       mTopLayer.RemoveElementAt(i);
       break;
     }
@@ -14818,6 +14825,12 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
   while (!mTopLayer.IsEmpty()) {
     Element* element = GetTopLayerTop();
     if (!element || element->GetComposedDoc() != this) {
+      if (element) {
+        if (nsIFrame* f = element->GetPrimaryFrame()) {
+          f->MarkNeedsDisplayItemRebuild();
+        }
+      }
+
       mTopLayer.RemoveLastElement();
     } else {
       // The top element of the stack is now an in-doc element. Return here.

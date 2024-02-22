@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script>
+// this is a crashtest, just getting to the end is a pass, fullscreen
+// doesn't work in crashtests though not sure why -->
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.requestFlakyTimeout("crashtest sensitive to timing");
+
+function begin() {
+  SimpleTest.waitForFocus(begin2);
+}
+
+function begin2() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["full-screen-api.allow-trusted-requests-only", false]]
+  }, startTest);
+}
+
+window.addEventListener("load", begin);
+
+const func_0 = async function(arg0) {
+  //SpecialPowers.wrap(document).notifyUserGestureActivation();
+  await arg0.originalTarget.requestFullscreen()
+  arg0.originalTarget.ariaValueText = "a"
+}
+
+async function startTest() {
+  let a = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")
+  document.documentElement.appendChild(a)
+  document.addEventListener("DOMAttrModified", func_0, { })
+  let b = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")
+  document.documentElement.appendChild(b)
+  b.setAttribute("class", "x")
+  //SpecialPowers.wrap(document).notifyUserGestureActivation();
+  await b.mozRequestFullScreen()
+  let c = document.createElementNS("http://www.w3.org/1999/xhtml", "slot")
+  document.documentElement.appendChild(c)
+  c.setAttribute("class", "x")
+  b.inert = true
+  setTimeout(async () => {
+    b.setAttribute("title", "a")
+  }, 200)
+  a.ariaSort = "descending"
+  setTimeout(finishup, 400);
+}
+async function finishup() {
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  await document.exitFullscreen();
+  SimpleTest.finish();
+}
+</script>
+</html>
