@@ -71,14 +71,12 @@ struct ParamTraits<mozilla::dom::PositionState> {
     WriteParam(aWriter, aParam.mDuration);
     WriteParam(aWriter, aParam.mPlaybackRate);
     WriteParam(aWriter, aParam.mLastReportedPlaybackPosition);
-    WriteParam(aWriter, aParam.mPositionUpdatedTime);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     if (!ReadParam(aReader, &(aResult->mDuration)) ||
         !ReadParam(aReader, &(aResult->mPlaybackRate)) ||
-        !ReadParam(aReader, &(aResult->mLastReportedPlaybackPosition)) ||
-        !ReadParam(aReader, &(aResult->mPositionUpdatedTime))) {
+        !ReadParam(aReader, &(aResult->mLastReportedPlaybackPosition))) {
       return false;
     }
     return true;

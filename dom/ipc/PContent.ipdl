@@ -1733,7 +1733,7 @@ parent:
      */
     async NotifyPositionStateChanged(
         MaybeDiscardedBrowsingContext aContext,
-        PositionState? aState);
+        PositionState aState);
 
     /**
      * This method will make canonical browsing context to update the count of

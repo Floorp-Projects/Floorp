@@ -286,8 +286,8 @@ void ContentMediaAgent::NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
   }
 }
 
-void ContentMediaAgent::UpdatePositionState(
-    uint64_t aBrowsingContextId, const Maybe<PositionState>& aState) {
+void ContentMediaAgent::UpdatePositionState(uint64_t aBrowsingContextId,
+                                            const PositionState& aState) {
   RefPtr<BrowsingContext> bc = GetBrowsingContextForAgent(aBrowsingContextId);
   if (!bc || bc->IsDiscarded()) {
     return;

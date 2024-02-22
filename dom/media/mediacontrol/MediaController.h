@@ -159,7 +159,7 @@ class MediaController final : public DOMEventTargetHelper,
   void HandleSupportedMediaSessionActionsChanged(
       const nsTArray<MediaSessionAction>& aSupportedAction);
 
-  void HandlePositionStateChanged(const Maybe<PositionState>& aState);
+  void HandlePositionStateChanged(const PositionState& aState);
   void HandleMetadataChanged(const MediaMetadataBase& aMetadata);
 
   // This would register controller to the media control service that takes a

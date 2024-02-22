@@ -66,7 +66,7 @@ class ContentMediaAgent : public IMediaInfoUpdater {
   void NotifyMediaFullScreenState(uint64_t aBrowsingContextId,
                                   bool aIsInFullScreen) override;
   void UpdatePositionState(uint64_t aBrowsingContextId,
-                           const Maybe<PositionState>& aState) override;
+                           const PositionState& aState) override;
 
   // Use these methods to register/unregister `ContentMediaControlKeyReceiver`
   // in order to listen to media control key events.
