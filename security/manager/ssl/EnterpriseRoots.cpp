@@ -7,11 +7,9 @@
 #include "EnterpriseRoots.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Unused.h"
 #include "mozpkix/Result.h"
-#include "nsCRT.h"
 #include "nsNSSCertHelper.h"
 #include "nsThreadUtils.h"
 
@@ -62,19 +60,63 @@ bool EnterpriseCert::IsKnownRoot(UniqueSECMODModule& rootsModule) {
 }
 
 #ifdef XP_WIN
-struct CertStoreLocation {
-  const wchar_t* mName;
-  const bool mIsRoot;
+const wchar_t* kWindowsDefaultRootStoreNames[] = {L"ROOT", L"CA"};
 
-  CertStoreLocation(const wchar_t* name, bool isRoot)
-      : mName(name), mIsRoot(isRoot) {}
-};
+// Helper function to determine if the OS considers the given certificate to be
+// a trust anchor for TLS server auth certificates. This is to be used in the
+// context of importing what are presumed to be root certificates from the OS.
+// If this function returns true but it turns out that the given certificate is
+// in some way unsuitable to issue certificates, mozilla::pkix will never build
+// a valid chain that includes the certificate, so importing it even if it
+// isn't a valid CA poses no risk.
+static void CertIsTrustAnchorForTLSServerAuth(PCCERT_CONTEXT certificate,
+                                              bool& isTrusted, bool& isRoot) {
+  isTrusted = false;
+  isRoot = false;
+  MOZ_ASSERT(certificate);
+  if (!certificate) {
+    return;
+  }
 
-// The documentation doesn't make this clear, but the certificate location
-// identified by "ROOT" contains trusted root certificates. The certificate
-// location identified by "CA" contains intermediate certificates.
-const CertStoreLocation kCertStoreLocations[] = {
-    CertStoreLocation(L"ROOT", true), CertStoreLocation(L"CA", false)};
+  PCCERT_CHAIN_CONTEXT pChainContext = nullptr;
+  CERT_ENHKEY_USAGE enhkeyUsage;
+  memset(&enhkeyUsage, 0, sizeof(CERT_ENHKEY_USAGE));
+  LPCSTR identifiers[] = {
+      "1.3.6.1.5.5.7.3.1",  // id-kp-serverAuth
+  };
+  enhkeyUsage.cUsageIdentifier = ArrayLength(identifiers);
+  enhkeyUsage.rgpszUsageIdentifier =
+      const_cast<LPSTR*>(identifiers);  // -Wwritable-strings
+  CERT_USAGE_MATCH certUsage;
+  memset(&certUsage, 0, sizeof(CERT_USAGE_MATCH));
+  certUsage.dwType = USAGE_MATCH_TYPE_AND;
+  certUsage.Usage = enhkeyUsage;
+  CERT_CHAIN_PARA chainPara;
+  memset(&chainPara, 0, sizeof(CERT_CHAIN_PARA));
+  chainPara.cbSize = sizeof(CERT_CHAIN_PARA);
+  chainPara.RequestedUsage = certUsage;
+  // Disable anything that could result in network I/O.
+  DWORD flags = CERT_CHAIN_REVOCATION_CHECK_CACHE_ONLY |
+                CERT_CHAIN_CACHE_ONLY_URL_RETRIEVAL |
+                CERT_CHAIN_DISABLE_AUTH_ROOT_AUTO_UPDATE |
+                CERT_CHAIN_DISABLE_AIA;
+  if (!CertGetCertificateChain(nullptr, certificate, nullptr, nullptr,
+                               &chainPara, flags, nullptr, &pChainContext)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertGetCertificateChain failed"));
+    return;
+  }
+  isTrusted = pChainContext->TrustStatus.dwErrorStatus == CERT_TRUST_NO_ERROR;
+  if (isTrusted && pChainContext->cChain > 0) {
+    // The so-called "final chain" is what we're after:
+    // https://docs.microsoft.com/en-us/windows/desktop/api/wincrypt/ns-wincrypt-_cert_chain_context
+    CERT_SIMPLE_CHAIN* finalChain =
+        pChainContext->rgpChain[pChainContext->cChain - 1];
+    // This is a root if the final chain consists of only one certificate (i.e.
+    // this one).
+    isRoot = finalChain->cElement == 1;
+  }
+  CertFreeCertificateChain(pChainContext);
+}
 
 // Because HCERTSTORE is just a typedef void*, we can't use any of the nice
 // scoped or unique pointer templates. To elaborate, any attempt would
@@ -93,44 +135,6 @@ class ScopedCertStore final {
   ScopedCertStore& operator=(const ScopedCertStore&) = delete;
   HCERTSTORE certstore;
 };
-
-// To determine if a certificate would be useful when verifying a server
-// certificate for TLS server auth, Windows provides the function
-// `CertGetEnhancedKeyUsage`, which combines the extended key usage extension
-// with something called "enhanced key usage", which appears to be a Microsoft
-// concept.
-static bool CertCanBeUsedForTLSServerAuth(PCCERT_CONTEXT certificate) {
-  DWORD usageSize = 0;
-  if (!CertGetEnhancedKeyUsage(certificate, 0, NULL, &usageSize)) {
-    return false;
-  }
-  nsTArray<uint8_t> usageBytes;
-  usageBytes.SetLength(usageSize);
-  PCERT_ENHKEY_USAGE usage(
-      reinterpret_cast<PCERT_ENHKEY_USAGE>(usageBytes.Elements()));
-  if (!CertGetEnhancedKeyUsage(certificate, 0, usage, &usageSize)) {
-    return false;
-  }
-  // https://learn.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-certgetenhancedkeyusage:
-  // "If the cUsageIdentifier member is zero, the certificate might be valid
-  // for all uses or the certificate might have no valid uses. The return from
-  // a call to GetLastError can be used to determine whether the certificate is
-  // good for all uses or for none. If GetLastError returns CRYPT_E_NOT_FOUND,
-  // the certificate is good for all uses. If it returns zero, the certificate
-  // has no valid uses."
-  if (usage->cUsageIdentifier == 0) {
-    return GetLastError() == static_cast<DWORD>(CRYPT_E_NOT_FOUND);
-  }
-  for (DWORD i = 0; i < usage->cUsageIdentifier; i++) {
-    if (!nsCRT::strcmp(usage->rgpszUsageIdentifier[i],
-                       szOID_PKIX_KP_SERVER_AUTH) ||
-        !nsCRT::strcmp(usage->rgpszUsageIdentifier[i],
-                       szOID_ANY_ENHANCED_KEY_USAGE)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 // Loads the enterprise roots at the registry location corresponding to the
 // given location flag.
@@ -169,27 +173,29 @@ static void GatherEnterpriseCertsForLocation(DWORD locationFlag,
   // of Microsoft's root store program.
   // The 3rd parameter to CertOpenStore should be NULL according to
   // https://msdn.microsoft.com/en-us/library/windows/desktop/aa376559%28v=vs.85%29.aspx
-  for (const auto& location : kCertStoreLocations) {
-    ScopedCertStore certStore(CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY_W,
-                                            0, NULL, flags, location.mName));
-    if (!certStore.get()) {
+  for (auto name : kWindowsDefaultRootStoreNames) {
+    ScopedCertStore enterpriseRootStore(
+        CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY_W, 0, NULL, flags, name));
+    if (!enterpriseRootStore.get()) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-              ("failed to open certificate store"));
+              ("failed to open enterprise root store"));
       continue;
     }
     PCCERT_CONTEXT certificate = nullptr;
     uint32_t numImported = 0;
     while ((certificate = CertFindCertificateInStore(
-                certStore.get(), X509_ASN_ENCODING, 0, CERT_FIND_ANY, nullptr,
-                certificate))) {
-      if (!CertCanBeUsedForTLSServerAuth(certificate)) {
+                enterpriseRootStore.get(), X509_ASN_ENCODING, 0, CERT_FIND_ANY,
+                nullptr, certificate))) {
+      bool isTrusted;
+      bool isRoot;
+      CertIsTrustAnchorForTLSServerAuth(certificate, isTrusted, isRoot);
+      if (!isTrusted) {
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                ("skipping cert not relevant for TLS server auth"));
+                ("skipping cert not trusted for TLS server auth"));
         continue;
       }
       EnterpriseCert enterpriseCert(certificate->pbCertEncoded,
-                                    certificate->cbCertEncoded,
-                                    location.mIsRoot);
+                                    certificate->cbCertEncoded, isRoot);
       if (!enterpriseCert.IsKnownRoot(rootsModule)) {
         certs.AppendElement(std::move(enterpriseCert));
         numImported++;
@@ -198,7 +204,7 @@ static void GatherEnterpriseCertsForLocation(DWORD locationFlag,
       }
     }
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("imported %u certs from %S", numImported, location.mName));
+            ("imported %u certs from %S", numImported, name));
   }
 }
 
