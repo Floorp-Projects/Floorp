@@ -17,6 +17,7 @@
 #include "mozilla/MemUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "stdlib.h"
 #include "nsDirectoryService.h"
 #include "nsWildCard.h"
@@ -242,6 +243,15 @@ nsresult nsZipHandle::Init(nsZipArchive* zip, const char* entry,
   if (!handle) return NS_ERROR_OUT_OF_MEMORY;
 
   LOG(("ZipHandle::Init entry %s", entry));
+
+  nsZipItem* item = zip->GetItem(entry);
+  if (item && item->Compression() == DEFLATED &&
+      StaticPrefs::network_jar_max_entry_size()) {
+    if (item->RealSize() > StaticPrefs::network_jar_max_entry_size()) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
   handle->mBuf = MakeUnique<nsZipItemPtr<uint8_t>>(zip, entry);
   if (!handle->mBuf) return NS_ERROR_OUT_OF_MEMORY;
 

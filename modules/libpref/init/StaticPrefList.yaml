@@ -12968,6 +12968,15 @@
   value: true
   mirror: always
 
+# When decompressing an archived entry we need to allocate a buffer
+# large enough to hold the uncompressed entry. This pref specifies the max
+# size of such a buffer.
+# When set to 0 there is no limit.
+- name: network.jar.max_entry_size
+  type: RelaxedAtomicUint32
+  value: 256*1024*1024 # 256 Mb
+  mirror: always
+
 # When this pref is true, we will use the HTTPS acceptable content encoding
 # list for trustworthy domains such as http://localhost
 - name: network.http.encoding.trustworthy_is_https
