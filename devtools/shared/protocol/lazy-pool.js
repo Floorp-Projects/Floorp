@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { extend } = require("devtools/shared/extend");
 const { Pool } = require("devtools/shared/protocol");
 
 /**
@@ -19,11 +18,11 @@ const { Pool } = require("devtools/shared/protocol");
  *   addActorPool, removeActorPool, and poolFor.
  * @constructor
  */
-function LazyPool(conn) {
-  this.conn = conn;
-}
+class LazyPool extends Pool {
+  constructor(conn) {
+    super(conn);
+  }
 
-LazyPool.prototype = extend(Pool.prototype, {
   // The actor for a given actor id stored in this pool
   getActorByID(actorID) {
     if (this.__poolMap) {
@@ -34,8 +33,8 @@ LazyPool.prototype = extend(Pool.prototype, {
       return entry;
     }
     return null;
-  },
-});
+  }
+}
 
 exports.LazyPool = LazyPool;
 

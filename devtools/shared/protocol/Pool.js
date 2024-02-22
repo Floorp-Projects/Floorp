@@ -212,8 +212,12 @@ class Pool extends EventEmitter {
         actor.destroy = destroy;
       }
     }
-    this.conn.removeActorPool(this);
-    this.conn = null;
+
+    // `conn` might be null for LazyPool in an unexplained way.
+    if (this.conn) {
+      this.conn.removeActorPool(this);
+      this.conn = null;
+    }
   }
 }
 
