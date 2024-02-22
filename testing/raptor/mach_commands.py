@@ -267,7 +267,7 @@ class RaptorRunner(MozbuildObject):
 
 
 def setup_node(command_context):
-    """Fetch the latest node-16 binary and install it into the .mozbuild directory."""
+    """Fetch the latest node-18 binary and install it into the .mozbuild directory."""
     import platform
 
     from mozbuild.artifact_commands import artifact_toolchain
@@ -276,11 +276,11 @@ def setup_node(command_context):
 
     print("Setting up node for browsertime...")
     state_dir = get_state_dir()
-    cache_path = os.path.join(state_dir, "browsertime", "node-16")
+    cache_path = os.path.join(state_dir, "browsertime", "node-18")
 
     def __check_for_node():
         # Check standard locations first
-        node_exe = find_node_executable(min_version=Version("16.0.0"))
+        node_exe = find_node_executable(min_version=Version("18.0.0"))
         if node_exe and (node_exe[0] is not None):
             return node_exe[0]
         if not os.path.exists(cache_path):
@@ -293,14 +293,14 @@ def setup_node(command_context):
             node_exe_path = os.path.join(
                 state_dir,
                 "browsertime",
-                "node-16",
+                "node-18",
                 "node",
             )
         else:
             node_exe_path = os.path.join(
                 state_dir,
                 "browsertime",
-                "node-16",
+                "node-18",
                 "node",
                 "bin",
             )
@@ -313,7 +313,7 @@ def setup_node(command_context):
 
     node_exe = __check_for_node()
     if node_exe is None:
-        toolchain_job = "{}-node-16"
+        toolchain_job = "{}-node-18"
         plat = platform.system()
         if plat == "Windows":
             toolchain_job = toolchain_job.format("win64")
@@ -326,7 +326,7 @@ def setup_node(command_context):
             toolchain_job = toolchain_job.format("linux64")
 
         print(
-            "Downloading Node v16 from Taskcluster toolchain {}...".format(
+            "Downloading Node v18 from Taskcluster toolchain {}...".format(
                 toolchain_job
             )
         )
@@ -351,11 +351,11 @@ def setup_node(command_context):
 
         node_exe = __check_for_node()
         if node_exe is None:
-            raise Exception("Could not find Node v16 binary for Raptor-Browsertime")
+            raise Exception("Could not find Node v18 binary for Raptor-Browsertime")
 
-        print("Finished downloading Node v16 from Taskcluster")
+        print("Finished downloading Node v18 from Taskcluster")
 
-    print("Node v16+ found at: %s" % node_exe)
+    print("Node v18+ found at: %s" % node_exe)
     return node_exe
 
 

@@ -20,16 +20,6 @@ linux64-node-12:
         fetch:
             - nodejs-12-linux64
 
-linux64-node-16:
-    treeherder:
-        symbol: TL(node-16)
-    run:
-        toolchain-alias:
-            - linux64-node
-    fetches:
-        fetch:
-            - nodejs-16-linux64
-
 linux64-node-18:
     # The upstream prebuilt binary requires glibc 2.28, which is too recent for Ubuntu 18.04,
     # so we build our own that won't have that requirement.
@@ -38,6 +28,8 @@ linux64-node-18:
         symbol: TL(node-18)
     run:
         script: build-nodejs.sh
+        toolchain-alias:
+            - linux64-node
     fetches:
         fetch:
             - nodejs-18-source
@@ -45,70 +37,43 @@ linux64-node-18:
             - linux64-gcc-11
             - linux64-toolchain-sysroot
 
-macosx64-node-16:
-    treeherder:
-        symbol: TM(node-16)
-    run:
-        toolchain-alias:
-            - macosx64-node
-    fetches:
-        fetch:
-            - nodejs-16-macosx64
-
 macosx64-node-18:
     treeherder:
         symbol: TM(node-18)
+    run:
+        toolchain-alias:
+            - macosx64-node
+
     fetches:
         fetch:
             - nodejs-18-macosx64
 
-macosx64-aarch64-node-16:
+macosx64-aarch64-node-18:
     treeherder:
-        symbol: TM(node-16-arm64)
+        symbol: TM(node-18-arm64)
     run:
         toolchain-alias:
             - macosx64-aarch64-node
     fetches:
         fetch:
-            - nodejs-16-macosx64-arm64
-
-macosx64-aarch64-node-18:
-    treeherder:
-        symbol: TM(node-18-arm64)
-    fetches:
-        fetch:
             - nodejs-18-macosx64-arm64
 
-win64-node-16:
+win64-node-18:
     treeherder:
-        symbol: TW64(node-16)
+        symbol: TW64(node-18)
     run:
         toolchain-alias:
             - win64-node
     fetches:
         fetch:
-            - nodejs-16-win64
-
-win64-node-18:
-    treeherder:
-        symbol: TW64(node-18)
-    fetches:
-        fetch:
             - nodejs-18-win64
-
-win32-node-16:
-    treeherder:
-        symbol: TW32(node-16)
-    run:
-        toolchain-alias:
-            - win32-node
-    fetches:
-        fetch:
-            - nodejs-16-win32
 
 win32-node-18:
     treeherder:
         symbol: TW32(node-18)
+    run:
+        toolchain-alias:
+            - win32-node
     fetches:
         fetch:
             - nodejs-18-win32
