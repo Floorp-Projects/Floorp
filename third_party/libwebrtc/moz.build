@@ -59,6 +59,7 @@ DIRS += [
     "/third_party/libwebrtc/api/neteq/tick_timer_gn",
     "/third_party/libwebrtc/api/network_state_predictor_api_gn",
     "/third_party/libwebrtc/api/priority_gn",
+    "/third_party/libwebrtc/api/ref_count_gn",
     "/third_party/libwebrtc/api/refcountedbase_gn",
     "/third_party/libwebrtc/api/rtc_error_gn",
     "/third_party/libwebrtc/api/rtc_event_log/rtc_event_log_gn",
