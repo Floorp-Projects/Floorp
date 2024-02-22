@@ -135,11 +135,11 @@ class AddressSelectBar @JvmOverloads constructor(
             view?.hideKeyboard()
             expanderView?.rotation = ROTATE_180
             headerView?.contentDescription =
-                context.getString(R.string.mozac_feature_prompts_collapse_address_content_description)
+                context.getString(R.string.mozac_feature_prompts_collapse_address_content_description_2)
         } else {
             expanderView?.rotation = 0F
             headerView?.contentDescription =
-                context.getString(R.string.mozac_feature_prompts_expand_address_content_description)
+                context.getString(R.string.mozac_feature_prompts_expand_address_content_description_2)
         }
     }
 

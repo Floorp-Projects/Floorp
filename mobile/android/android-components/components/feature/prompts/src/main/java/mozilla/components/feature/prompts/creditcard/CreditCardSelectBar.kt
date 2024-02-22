@@ -135,12 +135,12 @@ class CreditCardSelectBar @JvmOverloads constructor(
             view?.hideKeyboard()
             expanderView?.rotation = ROTATE_180
             headerView?.contentDescription =
-                context.getString(R.string.mozac_feature_prompts_collapse_credit_cards_content_description)
+                context.getString(R.string.mozac_feature_prompts_collapse_credit_cards_content_description_2)
             emitCreditCardAutofillExpandedFact()
         } else {
             expanderView?.rotation = 0F
             headerView?.contentDescription =
-                context.getString(R.string.mozac_feature_prompts_expand_credit_cards_content_description)
+                context.getString(R.string.mozac_feature_prompts_expand_credit_cards_content_description_2)
         }
     }
 

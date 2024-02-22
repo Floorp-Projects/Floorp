@@ -138,7 +138,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
         view.findViewById<AppCompatTextView>(R.id.host_name).text = origin
 
         view.findViewById<AppCompatTextView>(R.id.save_message).text =
-            getString(R.string.mozac_feature_prompt_login_save_headline)
+            getString(R.string.mozac_feature_prompt_login_save_headline_2)
 
         view.findViewById<Button>(R.id.save_confirm).setOnClickListener {
             onPositiveClickAction()
@@ -322,7 +322,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                 when (result) {
                     Result.CanBeCreated -> {
                         setViewState(
-                            headline = context?.getString(R.string.mozac_feature_prompt_login_save_headline),
+                            headline = context?.getString(R.string.mozac_feature_prompt_login_save_headline_2),
                             negativeText = context?.getString(R.string.mozac_feature_prompt_never_save),
                             confirmText = context?.getString(R.string.mozac_feature_prompt_save_confirmation),
                         )
@@ -334,7 +334,7 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
                                     R.string.mozac_feature_prompt_login_add_username_headline,
                                 )
                             } else {
-                                context?.getString(R.string.mozac_feature_prompt_login_update_headline)
+                                context?.getString(R.string.mozac_feature_prompt_login_update_headline_2)
                             },
                             negativeText = context?.getString(R.string.mozac_feature_prompt_dont_update),
                             confirmText =

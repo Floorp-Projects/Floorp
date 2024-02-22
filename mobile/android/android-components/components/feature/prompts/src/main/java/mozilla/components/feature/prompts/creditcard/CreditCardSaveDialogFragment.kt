@@ -32,6 +32,7 @@ import mozilla.components.feature.prompts.dialog.KEY_SHOULD_DISMISS_ON_LOAD
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillCreatedFact
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillUpdatedFact
+import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.utils.creditCardIssuerNetwork
 import mozilla.components.support.utils.ext.getParcelableCompat
@@ -81,6 +82,12 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
 
         view.findViewById<ImageView>(R.id.credit_card_logo)
             .setImageResource(creditCard.cardType.creditCardIssuerNetwork().icon)
+
+        view.findViewById<TextView>(R.id.save_credit_card_message).text =
+            getString(
+                R.string.mozac_feature_prompts_save_credit_card_prompt_body_2,
+                context?.appName,
+            )
 
         view.findViewById<TextView>(R.id.credit_card_number).text = creditCard.obfuscatedCardNumber
         view.findViewById<TextView>(R.id.credit_card_expiration_date).text = creditCard.expiryDate

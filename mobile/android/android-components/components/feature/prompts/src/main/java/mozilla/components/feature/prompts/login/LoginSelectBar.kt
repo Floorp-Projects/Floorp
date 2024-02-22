@@ -130,7 +130,7 @@ class LoginSelectBar @JvmOverloads constructor(
             loginsList?.isVisible = false
             manageLoginsButton?.isVisible = false
             savedLoginsHeader?.contentDescription =
-                context.getString(R.string.mozac_feature_prompts_expand_logins_content_description)
+                context.getString(R.string.mozac_feature_prompts_expand_logins_content_description_2)
         }
     }
 

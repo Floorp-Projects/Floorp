@@ -24,7 +24,7 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:background="?android:selectableItemBackground"
-                android:contentDescription="@string/mozac_feature_prompts_expand_address_content_description"
+                android:contentDescription="@string/mozac_feature_prompts_expand_address_content_description_2"
                 android:drawablePadding="24dp"
                 android:gravity="center_vertical"
                 android:paddingStart="16dp"
