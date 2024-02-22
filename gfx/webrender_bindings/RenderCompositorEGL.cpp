@@ -91,8 +91,8 @@ bool RenderCompositorEGL::BeginFrame() {
 #ifdef MOZ_WIDGET_GTK
   if (mWidget->AsGTK()) {
     if (!mWidget->AsGTK()->SetEGLNativeWindowSize(GetBufferSize())) {
-      gfxCriticalNote
-          << "We don't have GTK/EGLWindow with correct size, can't draw.";
+      // It's possible that GtkWidget is hidden on Wayland. We can't draw
+      // into it right now, let's try later.
       return false;
     }
   }
