@@ -721,7 +721,7 @@
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards">Betalingskort</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Betalingsmetoder</string>
+    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Betalingsmåter</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresser</string>
 

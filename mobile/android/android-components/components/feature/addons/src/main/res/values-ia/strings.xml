@@ -148,6 +148,8 @@
     <string name="mozac_feature_addons_user_rating_count_2">Recensiones: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
+    <string name="mozac_feature_addons_rating_content_description_2">Qualification: %1$.02f de 5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Additivos</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
@@ -250,6 +252,8 @@
     <string name="mozac_feature_addons_installed_dialog_title">%1$s ha essite addite a %2$s.</string>
     <!-- Text shown in the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Aperi lo in le menu</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">Accede a %1$s ex menu de %2$s.</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">OK, io lo comprende</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->

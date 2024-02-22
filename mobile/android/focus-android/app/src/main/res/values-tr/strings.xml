@@ -894,7 +894,8 @@
 
     <!-- Tip displayed on home view explaining how to disable tracking protection
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection">Düzgün görünmeyen bir site mi var?\n İzlenme Koruması’nı kapatmayı deneyin</string>
+    <string name="tip_disable_tracking_protection">Düzgün görünmeyen bir site mi var?\n
+    İzlenme Koruması’nı kapatmayı deneyin</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -903,15 +904,21 @@
     <!-- Tip displayed on home view explaining how to make Focus the default browser
     Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_set_default_browser">Her bağlantıyı %1$s ile açabilirsiniz\n %1$s’u varsayılan tarayıcınız yapın</string>
+    <string name="tip_set_default_browser">Her bağlantıyı %1$s ile açabilirsiniz\n
+        %1$s’u varsayılan tarayıcınız yapın
+    </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_autocomplete_url">En çok kullandığınız sitelerin adreslerini otomatik tamamlayabilirsiniz\n Adres çubuğundaki herhangi bir adrese basılı tutun</string>
+    <string name="tip_autocomplete_url">En çok kullandığınız sitelerin adreslerini otomatik tamamlayabilirsiniz\n
+        Adres çubuğundaki herhangi bir adrese basılı tutun
+    </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
     The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n Bir sayfadaki herhangi bir bağlantıya uzun basın</string>
+    <string name="tip_open_in_new_tab">Bağlantıları yeni sekmede açabilirsiniz\n
+        Bir sayfadaki herhangi bir bağlantıya uzun basın
+    </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Başlangıç ​​ekranında ipuçlarını kapat</string>

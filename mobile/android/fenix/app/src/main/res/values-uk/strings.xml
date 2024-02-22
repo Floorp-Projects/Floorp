@@ -603,7 +603,7 @@
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection">Власна збірка додатків</string>
     <!-- Button caption to confirm the add-on collection configuration -->
-    <string name="customize_addon_collection_ok">Гаразд</string>
+    <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Скасувати</string>
     <!-- Hint displayed on input field for custom collection name -->
@@ -926,7 +926,7 @@
     <!-- Dialog message shown after removing a study -->
     <string name="studies_restart_app">Програма припинить застосовувати зміни</string>
     <!-- Dialog button to confirm the removing a study. -->
-    <string name="studies_restart_dialog_ok">Гаразд</string>
+    <string name="studies_restart_dialog_ok">OK</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Скасувати</string>
 
@@ -1135,13 +1135,13 @@
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Очистити дозволи</string>
     <!-- Text for the OK button on Clear permissions dialog -->
-    <string name="clear_permissions_positive">Гаразд</string>
+    <string name="clear_permissions_positive">OK</string>
     <!-- Text for the cancel button on Clear permissions dialog -->
     <string name="clear_permissions_negative">Скасувати</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Очистити дозвіл</string>
     <!-- Text for the OK button on Clear permission dialog -->
-    <string name="clear_permission_positive">Гаразд</string>
+    <string name="clear_permission_positive">OK</string>
     <!-- Text for the cancel button on Clear permission dialog -->
     <string name="clear_permission_negative">Скасувати</string>
     <!-- Button label for clearing all the information on all sites-->
@@ -1249,7 +1249,7 @@
     <string name="create_collection_view">Переглянути</string>
 
     <!-- Text for the OK button from collection dialogs -->
-    <string name="create_collection_positive">Гаразд</string>
+    <string name="create_collection_positive">OK</string>
     <!-- Text for the cancel button from collection dialogs -->
     <string name="create_collection_negative">Скасувати</string>
 
@@ -1385,7 +1385,7 @@
     <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
     <string name="qr_scanner_dialog_invalid">Вебадреса недійсна.</string>
     <!-- QR code scanner prompt dialog positive option when there is an error -->
-    <string name="qr_scanner_dialog_invalid_ok">Гаразд</string>
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Ви дійсно хочете видалити %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -2140,7 +2140,7 @@
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Назва ярлика</string>
     <!-- Button caption to confirm the renaming of the top site. -->
-    <string name="top_sites_rename_dialog_ok">Гаразд</string>
+    <string name="top_sites_rename_dialog_ok">OK</string>
     <!-- Dialog button text for canceling the rename top site prompt. -->
     <string name="top_sites_rename_dialog_cancel">Скасувати</string>
 
