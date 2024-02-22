@@ -6,10 +6,6 @@
 
 MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 
-TEST_DIRS += [
-    "test/gtest",
-]
-
 EXPORTS.mozilla.dom += [
     "MediaMetadata.h",
     "MediaSession.h",

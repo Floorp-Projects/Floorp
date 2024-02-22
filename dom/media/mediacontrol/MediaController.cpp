@@ -493,16 +493,11 @@ void MediaController::HandleSupportedMediaSessionActionsChanged(
   MediaController_Binding::ClearCachedSupportedKeysValue(this);
 }
 
-void MediaController::HandlePositionStateChanged(
-    const Maybe<PositionState>& aState) {
-  if (!aState) {
-    return;
-  }
-
+void MediaController::HandlePositionStateChanged(const PositionState& aState) {
   PositionStateEventInit init;
-  init.mDuration = aState->mDuration;
-  init.mPlaybackRate = aState->mPlaybackRate;
-  init.mPosition = aState->mLastReportedPlaybackPosition;
+  init.mDuration = aState.mDuration;
+  init.mPlaybackRate = aState.mPlaybackRate;
+  init.mPosition = aState.mLastReportedPlaybackPosition;
   RefPtr<PositionStateEvent> event =
       PositionStateEvent::Constructor(this, u"positionstatechange"_ns, init);
   DispatchAsyncEvent(event.forget());

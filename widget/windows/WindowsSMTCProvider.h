@@ -46,9 +46,6 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
 
   void SetSupportedMediaKeys(const MediaKeysArray& aSupportedKeys) override;
 
-  void SetPositionState(
-      const mozilla::Maybe<mozilla::dom::PositionState>& aState) override;
-
  private:
   ~WindowsSMTCProvider();
   void UnregisterEvents();
@@ -57,13 +54,11 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   void OnButtonPressed(mozilla::dom::MediaControlKey aKey) const;
   // Enable the SMTC interface
   bool EnableControl(bool aEnabled) const;
-  // Sets the play, pause, next, previous, seekto buttons on the SMTC interface
-  // by mSupportedKeys
-  bool UpdateButtons();
+  // Sets the play, pause, next, previous buttons on the SMTC interface by
+  // mSupportedKeys
+  bool UpdateButtons() const;
   bool IsKeySupported(mozilla::dom::MediaControlKey aKey) const;
   bool EnableKey(mozilla::dom::MediaControlKey aKey, bool aEnable) const;
-
-  void OnPositionChangeRequested(double aPosition) const;
 
   bool InitDisplayAndControls();
 
@@ -127,7 +122,6 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
   // EventRegistrationTokens are used to have a handle on a callback (to remove
   // it again)
   EventRegistrationToken mButtonPressedToken;
-  EventRegistrationToken mSeekRegistrationToken;
 };
 
 #endif  // __MINGW32__

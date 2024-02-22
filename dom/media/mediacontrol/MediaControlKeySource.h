@@ -109,7 +109,7 @@ class MediaControlKeySource {
   // to notify change to the embedded application.
   virtual void SetEnableFullScreen(bool aIsEnabled){};
   virtual void SetEnablePictureInPictureMode(bool aIsEnabled){};
-  virtual void SetPositionState(const Maybe<PositionState>& aState){};
+  virtual void SetPositionState(const PositionState& aState){};
 
  protected:
   virtual ~MediaControlKeySource() = default;
