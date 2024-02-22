@@ -17,6 +17,7 @@ import { getSelectedLocation } from "../../../utils/selected-location";
 import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
 import { makeBreakpointId } from "../../../utils/breakpoint/index";
+import { features } from "../../../utils/prefs";
 
 import {
   getSelectedSource,
@@ -153,7 +154,7 @@ class Breakpoints extends Component {
         className: "pane",
       },
       this.renderExceptionsOptions(),
-      this.renderBreakpoints()
+      !features.codemirrorNext ? this.renderBreakpoints() : null
     );
   }
 }
