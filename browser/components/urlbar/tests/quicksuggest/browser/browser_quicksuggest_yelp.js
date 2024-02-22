@@ -162,6 +162,13 @@ add_task(async function resultMenu_show_less_frequently() {
         input: "ramen",
         expected: {
           hasSuggestion: true,
+          hasShowLessItem: true,
+        },
+      },
+      {
+        input: "ramen",
+        expected: {
+          hasSuggestion: true,
           hasShowLessItem: false,
         },
       },
@@ -202,7 +209,7 @@ async function doShowLessFrequently({
         );
         await UrlbarTestUtils.openResultMenuAndClickItem(
           window,
-          "show_less_frequentry",
+          "show_less_frequently",
           { resultIndex, openByMouse: true }
         );
 
