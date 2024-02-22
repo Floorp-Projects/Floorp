@@ -183,6 +183,11 @@ def getArtifactId() {
 }
 
 def getGeckoViewDependency() {
+    // on try, relax geckoview version pin to allow for --use-existing-task
+    if ('https://hg.mozilla.org/try' == System.env.GECKO_HEAD_REPOSITORY) {
+        rootProject.logger.lifecycle("Getting geckoview on try: ${getArtifactId()}:+")
+        return "org.mozilla.geckoview:${getArtifactId()}:+"
+    }
     rootProject.logger.lifecycle("Getting geckoview: ${getArtifactId()}:${getVersionNumber()}")
     return "org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}"
 }
