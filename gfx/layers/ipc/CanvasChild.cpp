@@ -34,9 +34,9 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
 
   ~RecorderHelpers() override = default;
 
-  bool InitTranslator(TextureType aTextureType, gfx::BackendType aBackendType,
-                      Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
-                      uint64_t aBufferSize,
+  bool InitTranslator(TextureType aTextureType, TextureType aWebglTextureType,
+                      gfx::BackendType aBackendType, Handle&& aReadHandle,
+                      nsTArray<Handle>&& aBufferHandles, uint64_t aBufferSize,
                       CrossProcessSemaphoreHandle&& aReaderSem,
                       CrossProcessSemaphoreHandle&& aWriterSem) override {
     NS_ASSERT_OWNINGTHREAD(RecorderHelpers);
@@ -44,7 +44,7 @@ class RecorderHelpers final : public CanvasDrawEventRecorder::Helpers {
       return false;
     }
     return mCanvasChild->SendInitTranslator(
-        aTextureType, aBackendType, std::move(aReadHandle),
+        aTextureType, aWebglTextureType, aBackendType, std::move(aReadHandle),
         std::move(aBufferHandles), aBufferSize, std::move(aReaderSem),
         std::move(aWriterSem));
   }
@@ -209,14 +209,15 @@ ipc::IPCResult CanvasChild::RecvBlockCanvas() {
 }
 
 void CanvasChild::EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                 TextureType aTextureType) {
+                                 TextureType aTextureType,
+                                 TextureType aWebglTextureType) {
   NS_ASSERT_OWNINGTHREAD(CanvasChild);
 
   if (!mRecorder) {
     gfx::BackendType backendType =
         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
     auto recorder = MakeRefPtr<CanvasDrawEventRecorder>(mWorkerRef);
-    if (!recorder->Init(aTextureType, backendType,
+    if (!recorder->Init(aTextureType, aWebglTextureType, backendType,
                         MakeUnique<RecorderHelpers>(this))) {
       return;
     }

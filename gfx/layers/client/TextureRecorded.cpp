@@ -23,9 +23,10 @@ static int64_t sNextRecordedTextureId = 0;
 
 RecordedTextureData::RecordedTextureData(
     already_AddRefed<CanvasChild> aCanvasChild, gfx::IntSize aSize,
-    gfx::SurfaceFormat aFormat, TextureType aTextureType)
+    gfx::SurfaceFormat aFormat, TextureType aTextureType,
+    TextureType aWebglTextureType)
     : mCanvasChild(aCanvasChild), mSize(aSize), mFormat(aFormat) {
-  mCanvasChild->EnsureRecorder(aSize, aFormat, aTextureType);
+  mCanvasChild->EnsureRecorder(aSize, aFormat, aTextureType, aWebglTextureType);
 }
 
 RecordedTextureData::~RecordedTextureData() {

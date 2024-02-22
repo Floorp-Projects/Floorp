@@ -577,7 +577,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void* GetNativeSurface(NativeSurfaceType aType) override;
 
   bool CopyToSwapChain(
-      layers::RemoteTextureId aId, layers::RemoteTextureOwnerId aOwnerId,
+      layers::TextureType aTextureType, layers::RemoteTextureId aId,
+      layers::RemoteTextureOwnerId aOwnerId,
       layers::RemoteTextureOwnerClient* aOwnerClient = nullptr);
 
   void OnMemoryPressure() { mSharedContext->OnMemoryPressure(); }
