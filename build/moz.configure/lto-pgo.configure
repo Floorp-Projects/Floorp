@@ -148,7 +148,10 @@ def pgo_flags(
         use_ldflags = []
         if orderfile:
             if compiler.type == "clang-cl":
-                use_ldflags += ["-ORDER:@" + orderfile]
+                use_ldflags += [
+                    "-ORDER:@" + orderfile,
+                    "/ignore:4037",  # Disable warn missing order symbol
+                ]
             elif linker.KIND == "ld64" or (linker.KIND == "lld" and target.os == "OSX"):
                 use_ldflags += ["-Wl,-order_file", orderfile]
             elif linker.KIND == "lld":
