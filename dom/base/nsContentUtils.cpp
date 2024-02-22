@@ -9063,13 +9063,19 @@ class StringBuilder {
       TextFragmentWithEncode,
     };
 
+    struct LiteralSpan {
+      const char16_t* mData;
+      uint32_t mLength;
+
+      Span<const char16_t> AsSpan() { return Span(mData, mLength); }
+    };
+
     union {
       nsAtom* mAtom;
-      const char16_t* mLiteral;
+      LiteralSpan mLiteral;
       nsString mString;
       const nsTextFragment* mTextFragment;
     };
-    uint32_t mLength = 0;
     Type mType = Type::Unknown;
   };
 
@@ -9099,17 +9105,15 @@ class StringBuilder {
     u->mAtom = aAtom;
     u->mType = Unit::Type::Atom;
     uint32_t len = aAtom->GetLength();
-    u->mLength = len;
     mLength += len;
   }
 
   template <int N>
   void Append(const char16_t (&aLiteral)[N]) {
+    constexpr uint32_t len = N - 1;
     Unit* u = AddUnit();
-    u->mLiteral = aLiteral;
+    u->mLiteral = {aLiteral, len};
     u->mType = Unit::Type::Literal;
-    uint32_t len = N - 1;
-    u->mLength = len;
     mLength += len;
   }
 
@@ -9118,7 +9122,6 @@ class StringBuilder {
     uint32_t len = aString.Length();
     new (&u->mString) nsString(std::move(aString));
     u->mType = Unit::Type::String;
-    u->mLength = len;
     mLength += len;
   }
 
@@ -9126,7 +9129,6 @@ class StringBuilder {
     Unit* u = AddUnit();
     new (&u->mString) nsString(std::move(aString));
     u->mType = Unit::Type::StringWithEncode;
-    u->mLength = aLen;
     mLength += aLen;
   }
 
@@ -9135,7 +9137,6 @@ class StringBuilder {
     u->mTextFragment = aTextFragment;
     u->mType = Unit::Type::TextFragment;
     uint32_t len = aTextFragment->GetLength();
-    u->mLength = len;
     mLength += len;
   }
 
@@ -9143,7 +9144,6 @@ class StringBuilder {
     Unit* u = AddUnit();
     u->mTextFragment = aTextFragment;
     u->mType = Unit::Type::TextFragmentWithEncode;
-    u->mLength = aLen;
     mLength += aLen;
   }
 
@@ -9174,7 +9174,7 @@ class StringBuilder {
             EncodeAttrString(u.mString, appender);
             break;
           case Unit::Type::Literal:
-            appender.Append(Span(u.mLiteral, u.mLength));
+            appender.Append(u.mLiteral.AsSpan());
             break;
           case Unit::Type::TextFragment:
             if (u.mTextFragment->Is2b()) {
