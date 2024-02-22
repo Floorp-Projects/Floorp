@@ -137,4 +137,6 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   return NS_OK;
 }
 
+void DNSThreadShutdown() {}
+
 }  // namespace mozilla::net

@@ -9,6 +9,7 @@
 #include "nsIDNSService.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/ThreadLocal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,10 @@
 #include <resolv.h>
 
 namespace mozilla::net {
+
+#if defined(HAVE_RES_NINIT)
+MOZ_THREAD_LOCAL(struct __res_state*) sThreadRes;
+#endif
 
 #define LOG(msg, ...) \
   MOZ_LOG(gGetAddrInfoLog, LogLevel::Debug, ("[DNS]: " msg, ##__VA_ARGS__))
@@ -33,16 +38,28 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
     return NS_ERROR_UNKNOWN_HOST;
   }
 
+#if defined(HAVE_RES_NINIT)
+  if (!sThreadRes.get()) {
+    UniquePtr<struct __res_state> resState(new struct __res_state);
+    memset(resState.get(), 0, sizeof(struct __res_state));
+    if (int ret = res_ninit(resState.get())) {
+      LOG("res_ninit failed: %d", ret);
+      return NS_ERROR_UNKNOWN_HOST;
+    }
+    sThreadRes.set(resState.release());
+  }
+#endif
+
   LOG("resolving %s\n", host.get());
   // Perform the query
   rv = packet.FillBuffer(
       [&](unsigned char response[DNSPacket::MAX_SIZE]) -> int {
         int len = 0;
-#if defined(XP_LINUX)
-        len = res_nquery(&_res, host.get(), ns_c_in,
+#if defined(HAVE_RES_NINIT)
+        len = res_nquery(sThreadRes.get(), host.get(), ns_c_in,
                          nsIDNSService::RESOLVE_TYPE_HTTPSSVC, response,
                          DNSPacket::MAX_SIZE);
-#elif defined(XP_MACOSX)
+#else
         len =
             res_query(host.get(), ns_c_in, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
                       response, DNSPacket::MAX_SIZE);
@@ -58,6 +75,18 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   }
 
   return ParseHTTPSRecord(host, packet, aResult, aTTL);
+}
+
+void DNSThreadShutdown() {
+#if defined(HAVE_RES_NINIT)
+  auto* res = sThreadRes.get();
+  if (!res) {
+    return;
+  }
+
+  sThreadRes.set(nullptr);
+  res_nclose(res);
+#endif
 }
 
 }  // namespace mozilla::net

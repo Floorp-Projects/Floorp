@@ -67,6 +67,8 @@ nsresult GetAddrInfoInit();
  */
 nsresult GetAddrInfoShutdown();
 
+void DNSThreadShutdown();
+
 /**
  * Resolves a HTTPS record. Will check overrides before calling the
  * native OS implementation.
