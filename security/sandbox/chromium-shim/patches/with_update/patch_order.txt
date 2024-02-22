@@ -1,4 +1,3 @@
-revert_remove_AddTargetPeer.patch
 replace_ScopedNativeLibrary_in_ApplyMitigationsToCurrentThread.patch
 ifdef_out_FromStringInternal.patch
 add_option_to_not_use_restricting_sids.patch

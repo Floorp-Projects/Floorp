@@ -159,8 +159,6 @@ ResultCode BrokerServicesBase::Init() {
   if (job_port_.IsValid() || thread_pool_)
     return SBOX_ERROR_UNEXPECTED_CALL;
 
-  ::InitializeCriticalSection(&lock_);
-
   job_port_.Set(::CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0));
   if (!job_port_.IsValid())
     return SBOX_ERROR_CANNOT_INIT_BROKERSERVICES;
@@ -201,7 +199,6 @@ BrokerServicesBase::~BrokerServicesBase() {
     return;
   }
   thread_pool_.reset();
-  ::DeleteCriticalSection(&lock_);
 }
 
 scoped_refptr<TargetPolicy> BrokerServicesBase::CreatePolicy() {
@@ -294,11 +291,6 @@ DWORD WINAPI BrokerServicesBase::TargetEventsThread(PVOID param) {
 
         case JOB_OBJECT_MSG_EXIT_PROCESS:
         case JOB_OBJECT_MSG_ABNORMAL_EXIT_PROCESS: {
-          {
-            AutoLock lock(&broker->lock_);
-            broker->active_targets_.erase(
-                static_cast<DWORD>(reinterpret_cast<uintptr_t>(ovl)));
-          }
           size_t erase_result = child_process_ids.erase(
               static_cast<DWORD>(reinterpret_cast<uintptr_t>(ovl)));
           if (erase_result != 1U) {
@@ -363,11 +355,6 @@ DWORD WINAPI BrokerServicesBase::TargetEventsThread(PVOID param) {
     } else if (THREAD_CTRL_PROCESS_SIGNALLED == key) {
       ProcessTracker* tracker =
           static_cast<ProcessTracker*>(reinterpret_cast<void*>(ovl));
-
-      {
-        AutoLock lock(&broker->lock_);
-        broker->active_targets_.erase(tracker->process_id);
-      }
 
       ::UnregisterWait(tracker->wait_handle);
       tracker->wait_handle = INVALID_HANDLE_VALUE;
@@ -659,19 +646,26 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
     // SpawnCleanup() caused deletion of TargetProcess twice. crbug.com/480639
     CHECK(
         AssociateCompletionPort(tracker->job.Get(), job_port_.Get(), tracker));
-
-    AutoLock lock(&lock_);
-    active_targets_.insert(process_info.process_id());
   } else {
-    result = AddTargetPeerInternal(process_info.process_handle(),
-                                   process_info.process_id(),
-                                   policy_base, last_error);
-    if (result != SBOX_ALL_OK) {
+    // Duplicate the process handle to give the tracking machinery
+    // something valid to wait on in the tracking thread.
+    HANDLE tmp_process_handle = INVALID_HANDLE_VALUE;
+    if (!::DuplicateHandle(::GetCurrentProcess(), process_info.process_handle(),
+                           ::GetCurrentProcess(), &tmp_process_handle,
+                           SYNCHRONIZE, false, 0 /*no options*/)) {
+      *last_error = ::GetLastError();
       // This may fail in the same way as Job associated processes.
       // crbug.com/480639.
       target->Terminate();
-      return result;
+      return SBOX_ERROR_CANNOT_DUPLICATE_PROCESS_HANDLE;
     }
+    base::win::ScopedHandle dup_process_handle(tmp_process_handle);
+    ProcessTracker* tracker = new ProcessTracker(
+        policy_base, process_info.process_id(), std::move(dup_process_handle));
+    // The tracker and policy will leak if this call fails.
+    ::PostQueuedCompletionStatus(job_port_.Get(), 0,
+                                 THREAD_CTRL_NEW_PROCESS_TRACKER,
+                                 reinterpret_cast<LPOVERLAPPED>(tracker));
   }
 
   *target_info = process_info.Take();
@@ -681,45 +675,6 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
 ResultCode BrokerServicesBase::WaitForAllTargets() {
   ::WaitForSingleObject(no_targets_.Get(), INFINITE);
   return SBOX_ALL_OK;
-}
-
-bool BrokerServicesBase::IsSafeDuplicationTarget(DWORD process_id) {
-  AutoLock lock(&lock_);
-  return active_targets_.find(process_id) != active_targets_.end();
-}
-
-ResultCode BrokerServicesBase::AddTargetPeerInternal(
-    HANDLE peer_process_handle,
-    DWORD peer_process_id,
-    scoped_refptr<PolicyBase> policy_base,
-    DWORD* last_error) {
-  // Duplicate the process handle to give the tracking machinery
-  // something valid to wait on in the tracking thread.
-  HANDLE tmp_process_handle = INVALID_HANDLE_VALUE;
-  if (!::DuplicateHandle(::GetCurrentProcess(), peer_process_handle,
-                         ::GetCurrentProcess(), &tmp_process_handle,
-                         SYNCHRONIZE, false, 0 /*no options*/)) {
-    *last_error = ::GetLastError();
-    return SBOX_ERROR_CANNOT_DUPLICATE_PROCESS_HANDLE;
-  }
-  base::win::ScopedHandle dup_process_handle(tmp_process_handle);
-  ProcessTracker* tracker = new ProcessTracker(
-      policy_base, peer_process_id, std::move(dup_process_handle));
-  // The tracker and policy will leak if this call fails.
-  ::PostQueuedCompletionStatus(job_port_.Get(), 0,
-                               THREAD_CTRL_NEW_PROCESS_TRACKER,
-                               reinterpret_cast<LPOVERLAPPED>(tracker));
-
-  AutoLock lock(&lock_);
-  active_targets_.insert(peer_process_id);
-
-  return SBOX_ALL_OK;
-}
-
-ResultCode BrokerServicesBase::AddTargetPeer(HANDLE peer_process) {
-  DWORD last_error;
-  return AddTargetPeerInternal(peer_process, ::GetProcessId(peer_process),
-                               nullptr, &last_error);
 }
 
 ResultCode BrokerServicesBase::GetPolicyDiagnostics(
