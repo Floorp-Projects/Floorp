@@ -71,6 +71,8 @@
 extern crate std;
 #[macro_use]
 extern crate alloc;
+#[cfg(feature = "smallvec")]
+extern crate smallvec;
 
 pub mod data_source;
 pub mod deprecated;
@@ -99,6 +101,8 @@ use core::cmp;
 use core::iter::repeat;
 use core::ops::Range;
 use core::str::CharIndices;
+#[cfg(feature = "smallvec")]
+use smallvec::SmallVec;
 
 use crate::format_chars as chars;
 use crate::BidiClass::*;
@@ -300,6 +304,9 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     let mut original_classes = Vec::with_capacity(text.len());
 
     // The stack contains the starting code unit index for each nested isolate we're inside.
+    #[cfg(feature = "smallvec")]
+    let mut isolate_stack = SmallVec::<[usize; 8]>::new();
+    #[cfg(not(feature = "smallvec"))]
     let mut isolate_stack = Vec::new();
 
     debug_assert!(
@@ -855,12 +862,12 @@ impl<'text> ParagraphBidiInfo<'text> {
 ///
 /// [Rule L3]: https://www.unicode.org/reports/tr9/#L3
 /// [Rule L4]: https://www.unicode.org/reports/tr9/#L4
-fn reorder_line<'text>(
-    text: &'text str,
+fn reorder_line(
+    text: &str,
     line: Range<usize>,
     levels: Vec<Level>,
     runs: Vec<LevelRun>,
-) -> Cow<'text, str> {
+) -> Cow<'_, str> {
     // If all isolating run sequences are LTR, no reordering is needed
     if runs.iter().all(|run| levels[run.start].is_ltr()) {
         return text[line].into();
@@ -1122,20 +1129,20 @@ fn reorder_levels<'a, T: TextSource<'a> + ?Sized>(
             B | S => {
                 assert_eq!(reset_to, None);
                 reset_to = Some(i + T::char_len(c));
-                if reset_from == None {
+                if reset_from.is_none() {
                     reset_from = Some(i);
                 }
             }
             // Whitespace, isolate formatting
             WS | FSI | LRI | RLI | PDI => {
-                if reset_from == None {
+                if reset_from.is_none() {
                     reset_from = Some(i);
                 }
             }
             // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
             // same as above + set the level
             RLE | LRE | RLO | LRO | PDF | BN => {
-                if reset_from == None {
+                if reset_from.is_none() {
                     reset_from = Some(i);
                 }
                 // also set the level to previous
@@ -1294,8 +1301,8 @@ fn get_base_direction_impl<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     let mut isolate_level = 0;
     for c in text.chars() {
         match data_source.bidi_class(c) {
-            LRI | RLI | FSI => isolate_level = isolate_level + 1,
-            PDI if isolate_level > 0 => isolate_level = isolate_level - 1,
+            LRI | RLI | FSI => isolate_level += 1,
+            PDI if isolate_level > 0 => isolate_level -= 1,
             L if isolate_level == 0 => return Direction::Ltr,
             R | AL if isolate_level == 0 => return Direction::Rtl,
             B if !use_full_text => break,
@@ -1342,7 +1349,7 @@ impl<'text> TextSource<'text> for str {
     }
     #[inline]
     fn indices_lengths(&'text self) -> Self::IndexLenIter {
-        Utf8IndexLenIter::new(&self)
+        Utf8IndexLenIter::new(self)
     }
     #[inline]
     fn char_len(ch: char) -> usize {

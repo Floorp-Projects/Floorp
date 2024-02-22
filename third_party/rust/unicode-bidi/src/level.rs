@@ -13,10 +13,14 @@
 //!
 //! <http://www.unicode.org/reports/tr9/#BD2>
 
-use alloc::string::{String, ToString};
-use alloc::vec::Vec;
-use core::convert::{From, Into};
-use core::slice;
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
+use core::{
+    convert::{From, Into},
+    slice,
+};
 
 use super::char_data::BidiClass;
 
@@ -219,11 +223,11 @@ pub fn has_rtl(levels: &[Level]) -> bool {
     levels.iter().any(|&lvl| lvl.is_rtl())
 }
 
-impl Into<u8> for Level {
+impl From<Level> for u8 {
     /// Convert to the level number
     #[inline]
-    fn into(self) -> u8 {
-        self.number()
+    fn from(val: Level) -> Self {
+        val.number()
     }
 }
 
@@ -244,7 +248,7 @@ impl<'a> PartialEq<&'a str> for Level {
 }
 
 /// Used for matching levels in conformance tests
-impl<'a> PartialEq<String> for Level {
+impl PartialEq<String> for Level {
     #[inline]
     fn eq(&self, s: &String) -> bool {
         self == &s.as_str()

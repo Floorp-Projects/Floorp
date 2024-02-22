@@ -11,6 +11,8 @@
 
 use alloc::vec::Vec;
 use core::cmp::max;
+#[cfg(feature = "smallvec")]
+use smallvec::SmallVec;
 
 use super::char_data::BidiClass::{self, *};
 use super::level::Level;
@@ -39,7 +41,13 @@ pub fn resolve_weak<'a, T: TextSource<'a> + ?Sized>(
     // The previous class for the purposes of rule W1, not tracking changes from any other rules.
     let mut prev_class_before_w1 = sequence.sos;
     let mut last_strong_is_al = false;
+    #[cfg(feature = "smallvec")]
+    let mut et_run_indices = SmallVec::<[usize; 8]>::new(); // for W5
+    #[cfg(not(feature = "smallvec"))]
     let mut et_run_indices = Vec::new(); // for W5
+    #[cfg(feature = "smallvec")]
+    let mut bn_run_indices = SmallVec::<[usize; 8]>::new(); // for W5 +  <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
+    #[cfg(not(feature = "smallvec"))]
     let mut bn_run_indices = Vec::new(); // for W5 +  <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
 
     for (run_index, level_run) in sequence.runs.iter().enumerate() {
@@ -177,7 +185,7 @@ pub fn resolve_weak<'a, T: TextSource<'a> + ?Sized>(
                         _ => {
                             // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
                             // If there was a BN run before this, that's now a part of this ET run.
-                            et_run_indices.extend(&bn_run_indices);
+                            et_run_indices.extend(bn_run_indices.clone());
 
                             // In case this is followed by an EN.
                             et_run_indices.push(i);
@@ -224,22 +232,20 @@ pub fn resolve_weak<'a, T: TextSource<'a> + ?Sized>(
 
     // W7. If the previous strong char was L, change EN to L.
     let mut last_strong_is_l = sequence.sos == L;
-    for run in &sequence.runs {
-        for i in run.clone() {
-            match processing_classes[i] {
-                EN if last_strong_is_l => {
-                    processing_classes[i] = L;
-                }
-                L => {
-                    last_strong_is_l = true;
-                }
-                R | AL => {
-                    last_strong_is_l = false;
-                }
-                // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
-                // Already scanning past BN here.
-                _ => {}
+    for i in sequence.runs.iter().cloned().flatten() {
+        match processing_classes[i] {
+            EN if last_strong_is_l => {
+                processing_classes[i] = L;
             }
+            L => {
+                last_strong_is_l = true;
+            }
+            R | AL => {
+                last_strong_is_l = false;
+            }
+            // <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
+            // Already scanning past BN here.
+            _ => {}
         }
     }
 }
@@ -308,7 +314,7 @@ pub fn resolve_neutral<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
                 found_e = true;
             } else if class == not_e {
                 found_not_e = true;
-            } else if class == BidiClass::EN || class == BidiClass::AN {
+            } else if matches!(class, BidiClass::EN | BidiClass::AN) {
                 // > Within this scope, bidirectional types EN and AN are treated as R.
                 if e == BidiClass::L {
                     found_not_e = true;
@@ -337,15 +343,15 @@ pub fn resolve_neutral<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
                 .iter_backwards_from(pair.start, pair.start_run)
                 .map(|i| processing_classes[i])
                 .find(|class| {
-                    *class == BidiClass::L
-                        || *class == BidiClass::R
-                        || *class == BidiClass::EN
-                        || *class == BidiClass::AN
+                    matches!(
+                        class,
+                        BidiClass::L | BidiClass::R | BidiClass::EN | BidiClass::AN
+                    )
                 })
                 .unwrap_or(sequence.sos);
 
             // > Within this scope, bidirectional types EN and AN are treated as R.
-            if previous_strong == BidiClass::EN || previous_strong == BidiClass::AN {
+            if matches!(previous_strong, BidiClass::EN | BidiClass::AN) {
                 previous_strong = BidiClass::R;
             }
 
@@ -413,6 +419,9 @@ pub fn resolve_neutral<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     let mut prev_class = sequence.sos;
     while let Some(mut i) = indices.next() {
         // Process sequences of NI characters.
+        #[cfg(feature = "smallvec")]
+        let mut ni_run = SmallVec::<[usize; 8]>::new();
+        #[cfg(not(feature = "smallvec"))]
         let mut ni_run = Vec::new();
         // The BN is for <https://www.unicode.org/reports/tr9/#Retaining_Explicit_Formatting_Characters>
         if is_NI(processing_classes[i]) || processing_classes[i] == BN {
@@ -486,7 +495,10 @@ fn identify_bracket_pairs<'a, T: TextSource<'a> + ?Sized, D: BidiDataSource>(
     original_classes: &[BidiClass],
 ) -> Vec<BracketPair> {
     let mut ret = vec![];
-    let mut stack = vec![];
+    #[cfg(feature = "smallvec")]
+    let mut stack = SmallVec::<[(char, usize, usize); 8]>::new();
+    #[cfg(not(feature = "smallvec"))]
+    let mut stack = Vec::new();
 
     for (run_index, level_run) in run_sequence.runs.iter().enumerate() {
         for (i, ch) in text.subrange(level_run.clone()).char_indices() {
@@ -578,8 +590,5 @@ pub fn resolve_levels(original_classes: &[BidiClass], levels: &mut [Level]) -> L
 /// <http://www.unicode.org/reports/tr9/#NI>
 #[allow(non_snake_case)]
 fn is_NI(class: BidiClass) -> bool {
-    match class {
-        B | S | WS | ON | FSI | LRI | RLI | PDI => true,
-        _ => false,
-    }
+    matches!(class, B | S | WS | ON | FSI | LRI | RLI | PDI)
 }

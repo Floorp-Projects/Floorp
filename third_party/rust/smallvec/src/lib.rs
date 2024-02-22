@@ -149,8 +149,7 @@ use core::mem::ManuallyDrop;
 /// - Create a [`SmallVec`] containing a given list of elements:
 ///
 /// ```
-/// # #[macro_use] extern crate smallvec;
-/// # use smallvec::SmallVec;
+/// # use smallvec::{smallvec, SmallVec};
 /// # fn main() {
 /// let v: SmallVec<[_; 128]> = smallvec![1, 2, 3];
 /// assert_eq!(v[0], 1);
@@ -162,8 +161,7 @@ use core::mem::ManuallyDrop;
 /// - Create a [`SmallVec`] from a given element and size:
 ///
 /// ```
-/// # #[macro_use] extern crate smallvec;
-/// # use smallvec::SmallVec;
+/// # use smallvec::{smallvec, SmallVec};
 /// # fn main() {
 /// let v: SmallVec<[_; 0x8000]> = smallvec![1; 3];
 /// assert_eq!(v, SmallVec::from_buf([1, 1, 1]));
@@ -209,8 +207,7 @@ macro_rules! smallvec {
 /// - Create a [`SmallVec`] containing a given list of elements:
 ///
 /// ```
-/// # #[macro_use] extern crate smallvec;
-/// # use smallvec::SmallVec;
+/// # use smallvec::{smallvec_inline, SmallVec};
 /// # fn main() {
 /// const V: SmallVec<[i32; 3]> = smallvec_inline![1, 2, 3];
 /// assert_eq!(V[0], 1);
@@ -222,8 +219,7 @@ macro_rules! smallvec {
 /// - Create a [`SmallVec`] from a given element and size:
 ///
 /// ```
-/// # #[macro_use] extern crate smallvec;
-/// # use smallvec::SmallVec;
+/// # use smallvec::{smallvec_inline, SmallVec};
 /// # fn main() {
 /// const V: SmallVec<[i32; 3]> = smallvec_inline![1; 3];
 /// assert_eq!(V, SmallVec::from_buf([1, 1, 1]));
@@ -328,7 +324,7 @@ fn infallible<T>(result: Result<T, CollectionAllocErr>) -> T {
 }
 
 /// FIXME: use `Layout::array` when we require a Rust version where it’s stable
-/// https://github.com/rust-lang/rust/issues/55724
+/// <https://github.com/rust-lang/rust/issues/55724>
 fn layout_array<T>(n: usize) -> Result<Layout, CollectionAllocErr> {
     let size = mem::size_of::<T>()
         .checked_mul(n)
@@ -430,7 +426,7 @@ impl<'a, T: 'a + Array> Drop for Drain<'a, T> {
 /// An iterator which uses a closure to determine if an element should be removed.
 ///
 /// Returned from [`SmallVec::drain_filter`][1].
-/// 
+///
 /// [1]: struct.SmallVec.html#method.drain_filter
 pub struct DrainFilter<'a, T, F>
 where
@@ -815,7 +811,7 @@ impl<A: Array> SmallVec<A> {
 
     /// Construct a new `SmallVec` from a `Vec<A::Item>`.
     ///
-    /// Elements will be copied to the inline buffer if vec.capacity() <= Self::inline_capacity().
+    /// Elements will be copied to the inline buffer if `vec.capacity() <= Self::inline_capacity()`.
     ///
     /// ```rust
     /// use smallvec::SmallVec;
@@ -970,7 +966,7 @@ impl<A: Array> SmallVec<A> {
     }
 
     /// Returns a tuple with (data ptr, len, capacity)
-    /// Useful to get all SmallVec properties with a single check of the current storage variant.
+    /// Useful to get all `SmallVec` properties with a single check of the current storage variant.
     #[inline]
     fn triple(&self) -> (ConstNonNull<A::Item>, usize, usize) {
         unsafe {
@@ -1055,13 +1051,12 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
-    
     #[cfg(feature = "drain_filter")]
     /// Creates an iterator which uses a closure to determine if an element should be removed.
-    /// 
+    ///
     /// If the closure returns true, the element is removed and yielded. If the closure returns
     /// false, the element will remain in the vector and will not be yielded by the iterator.
-    /// 
+    ///
     /// Using this method is equivalent to the following code:
     /// ```
     /// # use smallvec::SmallVec;
@@ -1076,7 +1071,7 @@ impl<A: Array> SmallVec<A> {
     ///         i += 1;
     ///     }
     /// }
-    /// 
+    ///
     /// # assert_eq!(vec, SmallVec::<[i32; 8]>::from_slice(&[1i32, 4, 5]));
     /// ```
     /// ///
@@ -1476,7 +1471,7 @@ impl<A: Array> SmallVec<A> {
         }
     }
 
-    /// Convert a SmallVec to a Vec, without reallocating if the SmallVec has already spilled onto
+    /// Convert a `SmallVec` to a `Vec`, without reallocating if the `SmallVec` has already spilled onto
     /// the heap.
     pub fn into_vec(mut self) -> Vec<A::Item> {
         if self.spilled() {
@@ -1499,10 +1494,10 @@ impl<A: Array> SmallVec<A> {
         self.into_vec().into_boxed_slice()
     }
 
-    /// Convert the SmallVec into an `A` if possible. Otherwise return `Err(Self)`.
+    /// Convert the `SmallVec` into an `A` if possible. Otherwise return `Err(Self)`.
     ///
-    /// This method returns `Err(Self)` if the SmallVec is too short (and the `A` contains uninitialized elements),
-    /// or if the SmallVec is too long (and all the elements were spilled to the heap).
+    /// This method returns `Err(Self)` if the `SmallVec` is too short (and the `A` contains uninitialized elements),
+    /// or if the `SmallVec` is too long (and all the elements were spilled to the heap).
     pub fn into_inner(self) -> Result<A, Self> {
         if self.spilled() || self.len() != A::size() {
             // Note: A::size, not Self::inline_capacity
@@ -1596,7 +1591,7 @@ impl<A: Array> SmallVec<A> {
     ///
     /// If `new_len` is greater than `len`, the `SmallVec` is extended by the difference, with each
     /// additional slot filled with the result of calling the closure `f`. The return values from `f`
-    //// will end up in the `SmallVec` in the order they have been generated.
+    /// will end up in the `SmallVec` in the order they have been generated.
     ///
     /// If `new_len` is less than `len`, the `SmallVec` is simply truncated.
     ///
@@ -1604,7 +1599,7 @@ impl<A: Array> SmallVec<A> {
     /// value, use `resize`. If you want to use the `Default` trait to generate values, you can pass
     /// `Default::default()` as the second argument.
     ///
-    /// Added for std::vec::Vec compatibility (added in Rust 1.33.0)
+    /// Added for `std::vec::Vec` compatibility (added in Rust 1.33.0)
     ///
     /// ```
     /// # use smallvec::{smallvec, SmallVec};
@@ -1667,8 +1662,7 @@ impl<A: Array> SmallVec<A> {
     /// # Examples
     ///
     /// ```
-    /// # #[macro_use] extern crate smallvec;
-    /// # use smallvec::SmallVec;
+    /// # use smallvec::{smallvec, SmallVec};
     /// use std::mem;
     /// use std::ptr;
     ///
@@ -2322,7 +2316,7 @@ impl<'a, A: Array> IntoIterator for &'a mut SmallVec<A> {
     }
 }
 
-/// Types that can be used as the backing store for a SmallVec
+/// Types that can be used as the backing store for a [`SmallVec`].
 pub unsafe trait Array {
     /// The type of the array's elements.
     type Item;
@@ -2332,7 +2326,7 @@ pub unsafe trait Array {
 
 /// Set the length of the vec when the `SetLenOnDrop` value goes out of scope.
 ///
-/// Copied from https://github.com/rust-lang/rust/pull/36355
+/// Copied from <https://github.com/rust-lang/rust/pull/36355>
 struct SetLenOnDrop<'a> {
     len: &'a mut usize,
     local_len: usize,
@@ -2390,9 +2384,23 @@ impl<T, const N: usize> SmallVec<[T; N]> {
             data: SmallVecData::from_const(MaybeUninit::new(items)),
         }
     }
+
+    /// Constructs a new `SmallVec` on the stack from an array without
+    /// copying elements. Also sets the length. The user is responsible
+    /// for ensuring that `len <= N`.
+    /// 
+    /// This is a `const` version of [`SmallVec::from_buf_and_len_unchecked`] that is enabled by the feature `const_new`, with the limitation that it only works for arrays.
+    #[cfg_attr(docsrs, doc(cfg(feature = "const_new")))]
+    #[inline]
+    pub const unsafe fn from_const_with_len_unchecked(items: [T; N], len: usize) -> Self {
+        SmallVec {
+            capacity: len,
+            data: SmallVecData::from_const(MaybeUninit::new(items)),
+        }
+    }
 }
 
-#[cfg(all(feature = "const_generics", not(doc)))]
+#[cfg(feature = "const_generics")]
 #[cfg_attr(docsrs, doc(cfg(feature = "const_generics")))]
 unsafe impl<T, const N: usize> Array for [T; N] {
     type Item = T;
@@ -2402,7 +2410,7 @@ unsafe impl<T, const N: usize> Array for [T; N] {
     }
 }
 
-#[cfg(any(not(feature = "const_generics"), doc))]
+#[cfg(not(feature = "const_generics"))]
 macro_rules! impl_array(
     ($($size:expr),+) => {
         $(
@@ -2415,7 +2423,7 @@ macro_rules! impl_array(
     }
 );
 
-#[cfg(any(not(feature = "const_generics"), doc))]
+#[cfg(not(feature = "const_generics"))]
 impl_array!(
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
     26, 27, 28, 29, 30, 31, 32, 36, 0x40, 0x60, 0x80, 0x100, 0x200, 0x400, 0x600, 0x800, 0x1000,
