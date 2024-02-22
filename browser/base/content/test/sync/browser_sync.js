@@ -616,7 +616,7 @@ add_task(async function test_experiment_ui_state_unconfigured() {
     headerTitle: expectedLabel,
     headerDescription: "",
     enabledItems: [
-      "PanelUI-fxa-pxi-cta-menu",
+      "PanelUI-fxa-cta-menu",
       "PanelUI-fxa-menu-sync-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-relay-button",
@@ -689,7 +689,7 @@ add_task(async function test_experiment_ui_state_signedin() {
       "PanelUI-fxa-menu-syncnow-button",
       "PanelUI-fxa-menu-sync-prefs-button",
       "PanelUI-fxa-menu-account-signout-button",
-      "PanelUI-fxa-pxi-cta-menu",
+      "PanelUI-fxa-cta-menu",
       "PanelUI-fxa-menu-sync-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-relay-button",
