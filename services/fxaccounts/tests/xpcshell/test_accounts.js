@@ -6,7 +6,7 @@
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );
-const { FxAccounts } = ChromeUtils.importESModule(
+const { FxAccounts, ERROR_INVALID_ACCOUNT_STATE } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
 );
 const { FxAccountsClient } = ChromeUtils.importESModule(
@@ -777,11 +777,10 @@ add_task(async function test_getKeyForScope_nonexistent_account() {
     });
   });
 
-  // XXX - the exception message here isn't ideal, but doesn't really matter...
-  await Assert.rejects(
-    fxa.keys.getKeyForScope(SCOPE_OLD_SYNC),
-    /A different user signed in/
-  );
+  await Assert.rejects(fxa.keys.getKeyForScope(SCOPE_OLD_SYNC), err => {
+    Assert.equal(err.message, ERROR_INVALID_ACCOUNT_STATE);
+    return true; // expected error
+  });
 
   await promiseLogout;
 
@@ -1403,6 +1402,31 @@ add_test(function test_getOAuthToken_error() {
       run_next_test();
     });
   });
+});
+
+add_test(async function test_getOAuthTokenAndKey_errors_if_user_change() {
+  const fxa = new MockFxAccounts();
+  const alice = getTestUser("alice");
+  const bob = getTestUser("bob");
+  alice.verified = true;
+  bob.verified = true;
+
+  fxa.getOAuthToken = async () => {
+    // We mock what would happen if the user got changed
+    // after we got the access token
+    await fxa.setSignedInUser(bob);
+    return "access token";
+  };
+  fxa.keys.getKeyForScope = () => Promise.resolve("key!");
+  await fxa.setSignedInUser(alice);
+  await Assert.rejects(
+    fxa.getOAuthTokenAndKey({ scope: "foo", ttl: 10 }),
+    err => {
+      Assert.equal(err.message, ERROR_INVALID_ACCOUNT_STATE);
+      return true; // expected error
+    }
+  );
+  run_next_test();
 });
 
 add_task(async function test_listAttachedOAuthClients() {
