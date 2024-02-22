@@ -613,9 +613,13 @@ JSObject* NACScope(JSObject* global) {
   return scope;
 }
 
-JSObject* PrivilegedJunkScope() { return XPCJSRuntime::Get()->LoaderGlobal(); }
+JSObject* PrivilegedJunkScope() {
+  return mozJSModuleLoader::Get()->GetSharedGlobal();
+}
 
-JSObject* CompilationScope() { return XPCJSRuntime::Get()->LoaderGlobal(); }
+JSObject* CompilationScope() {
+  return mozJSModuleLoader::Get()->GetSharedGlobal();
+}
 
 nsGlobalWindowInner* WindowOrNull(JSObject* aObj) {
   MOZ_ASSERT(aObj);
@@ -2905,8 +2909,6 @@ void ConstructUbiNode(void* storage, JSObject* ptr) {
 }
 
 void XPCJSRuntime::Initialize(JSContext* cx) {
-  mLoaderGlobal.init(cx, nullptr);
-
   // these jsids filled in later when we have a JSContext to work with.
   mStrIDs[0] = JS::PropertyKey::Void();
 
@@ -3191,14 +3193,6 @@ void XPCJSRuntime::DeleteSingletonScopes() {
     sandbox->ReleaseWrapper(sandbox);
     mUnprivilegedJunkScope = nullptr;
   }
-  mLoaderGlobal = nullptr;
-}
-
-JSObject* XPCJSRuntime::LoaderGlobal() {
-  if (!mLoaderGlobal) {
-    mLoaderGlobal = mozJSModuleLoader::Get()->GetSharedGlobal();
-  }
-  return mLoaderGlobal;
 }
 
 uint32_t GetAndClampCPUCount() {
