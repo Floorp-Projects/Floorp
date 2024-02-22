@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIThreadPool.h"
 #if defined(HAVE_RES_NINIT)
 #  include <sys/types.h>
 #  include <netinet/in.h>
@@ -137,6 +138,24 @@ class nsResState {
 
 #endif  // RES_RETRY_ON_FAILURE
 
+class DnsThreadListener final : public nsIThreadPoolListener {
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITHREADPOOLLISTENER
+ private:
+  virtual ~DnsThreadListener() = default;
+};
+
+NS_IMETHODIMP
+DnsThreadListener::OnThreadCreated() { return NS_OK; }
+
+NS_IMETHODIMP
+DnsThreadListener::OnThreadShuttingDown() {
+  DNSThreadShutdown();
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(DnsThreadListener, nsIThreadPoolListener)
+
 //----------------------------------------------------------------------------
 
 static const char kPrefGetTtl[] = "network.dns.get-ttl";
@@ -252,6 +271,8 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   MOZ_ALWAYS_SUCCEEDS(
       threadPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize));
   MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("DNS Resolver"_ns));
+  nsCOMPtr<nsIThreadPoolListener> listener = new DnsThreadListener();
+  threadPool->SetListener(listener);
   mResolverThreads = ToRefPtr(std::move(threadPool));
 
   return NS_OK;
