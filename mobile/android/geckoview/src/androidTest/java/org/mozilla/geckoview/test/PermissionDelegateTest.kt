@@ -275,7 +275,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_GEOLOCATION &&
@@ -342,7 +342,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_GEOLOCATION &&
@@ -462,6 +462,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_TRACKING) {
@@ -501,6 +502,7 @@ class PermissionDelegateTest : BaseSessionTest() {
         assertTrackingProtectionPermission(null)
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
         assertTrackingProtectionPermission(ContentPermission.VALUE_DENY)
     }
 
@@ -551,7 +553,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
@@ -617,7 +619,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
@@ -707,7 +709,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
@@ -777,7 +779,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         session2.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
@@ -841,7 +843,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
@@ -919,7 +921,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 var permFound2 = false
                 for (perm in perms) {
                     if (perm.permission == PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
