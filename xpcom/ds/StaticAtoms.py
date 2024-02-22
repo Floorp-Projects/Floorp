@@ -208,7 +208,6 @@ STATIC_ATOMS = [
     Atom("box", "box"),
     Atom("br", "br"),
     Atom("browser", "browser"),
-    Atom("mozbrowser", "mozbrowser"),
     Atom("button", "button"),
     Atom("callTemplate", "call-template"),
     Atom("canvas", "canvas"),
