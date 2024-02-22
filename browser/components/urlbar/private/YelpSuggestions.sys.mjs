@@ -19,7 +19,7 @@ const RESULT_MENU_COMMAND = {
   INACCURATE_LOCATION: "inaccurate_location",
   NOT_INTERESTED: "not_interested",
   NOT_RELEVANT: "not_relevant",
-  SHOW_LESS_FREQUENTLY: "show_less_frequentry",
+  SHOW_LESS_FREQUENTLY: "show_less_frequently",
 };
 
 /**
@@ -42,6 +42,19 @@ export class YelpSuggestions extends BaseFeature {
     return ["Yelp"];
   }
 
+  get showLessFrequentlyCount() {
+    const count = lazy.UrlbarPrefs.get("yelp.showLessFrequentlyCount") || 0;
+    return Math.max(count, 0);
+  }
+
+  get canShowLessFrequently() {
+    const cap =
+      lazy.UrlbarPrefs.get("yelpShowLessFrequentlyCap") ||
+      lazy.QuickSuggest.backend.config?.showLessFrequentlyCap ||
+      0;
+    return !cap || this.showLessFrequentlyCount < cap;
+  }
+
   getSuggestionTelemetryType(suggestion) {
     return "yelp";
   }
@@ -57,9 +70,9 @@ export class YelpSuggestions extends BaseFeature {
     // subject wasn't typed in full, then apply the min length threshold and
     // return null if the entire search string is too short.
     if (
-      (this.#showLessFrequentlyCount || !suggestion.subjectExactMatch) &&
+      (this.showLessFrequentlyCount || !suggestion.subjectExactMatch) &&
       searchString.length <
-        this.#showLessFrequentlyCount + this.#minKeywordLength
+        this.showLessFrequentlyCount + this.#minKeywordLength
     ) {
       return null;
     }
@@ -111,7 +124,7 @@ export class YelpSuggestions extends BaseFeature {
       },
     ];
 
-    if (this.#canShowLessFrequently) {
+    if (this.canShowLessFrequently) {
       commands.push({
         name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
         l10n: {
@@ -182,19 +195,19 @@ export class YelpSuggestions extends BaseFeature {
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         view.acknowledgeFeedback(result);
-        this.#incrementShowLessFrequentlyCount();
-        if (!this.#canShowLessFrequently) {
+        this.incrementShowLessFrequentlyCount();
+        if (!this.canShowLessFrequently) {
           view.invalidateResultMenuCommands();
         }
         break;
     }
   }
 
-  #incrementShowLessFrequentlyCount() {
-    if (this.#canShowLessFrequently) {
+  incrementShowLessFrequentlyCount() {
+    if (this.canShowLessFrequently) {
       lazy.UrlbarPrefs.set(
         "yelp.showLessFrequentlyCount",
-        this.#showLessFrequentlyCount + 1
+        this.showLessFrequentlyCount + 1
       );
     }
   }
@@ -202,16 +215,6 @@ export class YelpSuggestions extends BaseFeature {
   get #minKeywordLength() {
     const len = lazy.UrlbarPrefs.get("yelpMinKeywordLength") || 0;
     return Math.max(len, 0);
-  }
-
-  get #showLessFrequentlyCount() {
-    const count = lazy.UrlbarPrefs.get("yelp.showLessFrequentlyCount") || 0;
-    return Math.max(count, 0);
-  }
-
-  get #canShowLessFrequently() {
-    const cap = lazy.UrlbarPrefs.get("yelpShowLessFrequentlyCap") || 0;
-    return !cap || this.#showLessFrequentlyCount < cap;
   }
 
   async #fetchCity() {
