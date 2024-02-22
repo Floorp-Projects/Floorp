@@ -55,6 +55,9 @@ class FxSuggestSuggestionProvider(
                 if (includeSponsoredSuggestions && availableSuggestionTypes[SuggestionType.AMP] == true) {
                     add(SuggestionProvider.AMP)
                 }
+                if (includeSponsoredSuggestions && availableSuggestionTypes[SuggestionType.AMP_MOBILE] == true) {
+                    add(SuggestionProvider.AMP_MOBILE)
+                }
                 if (includeNonSponsoredSuggestions && availableSuggestionTypes[SuggestionType.WIKIPEDIA] == true) {
                     add(SuggestionProvider.WIKIPEDIA)
                 }

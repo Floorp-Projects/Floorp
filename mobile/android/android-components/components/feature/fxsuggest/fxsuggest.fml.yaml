@@ -21,6 +21,7 @@ features:
         type: Map<SuggestionType, Boolean>
         default: {
           "amp": false,
+          "ampMobile": false,
           "wikipedia": true,
         }
 enums:
@@ -29,5 +30,7 @@ enums:
     variants:
       amp:
         description: A Firefox Suggestion from adMarketplace.
+      ampMobile:
+        description: A firefox Suggestion from adMarketplace specifically for mobile.
       wikipedia:
         description: A Firefox Suggestion for a Wikipedia page.

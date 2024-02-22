@@ -30,6 +30,7 @@ import:
         - value:
             available-suggestion-types: {
               "amp": true,
+              "ampMobile": false,
               "wikipedia": true,
             }
 
