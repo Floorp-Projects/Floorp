@@ -54,18 +54,6 @@ function updateLineNumberFormat(editor, sourceId) {
   resizeToggleButton(cm);
 }
 
-/**
- *  Update the line wrapping state of all the documents
- */
-export function updateLineWrappingForAllDocuments(value) {
-  for (const doc of sourceDocs.values()) {
-    if (doc.cm == null) {
-      continue;
-    }
-    doc.cm.setOption("lineWrapping", value);
-  }
-}
-
 const contentTypeModeMap = new Map([
   ["text/javascript", { name: "javascript" }],
   ["text/typescript", { name: "javascript", typescript: true }],

@@ -27,6 +27,16 @@ export function removeEditor() {
   editor = null;
 }
 
+/**
+ *  Update line wrapping for the codemirror editor.
+ */
+export function updateEditorLineWrapping(value) {
+  if (!editor) {
+    return;
+  }
+  editor.setLineWrapping(value);
+}
+
 function getCodeMirror() {
   return editor && editor.hasCodeMirror ? editor.codeMirror : null;
 }
