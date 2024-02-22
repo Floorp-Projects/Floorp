@@ -891,6 +891,19 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       }
     }
 
+    // Conversion from application/x-moz-file to text/uri-list
+    if ((!file || !mTargetDragUris) && (flavorStr.EqualsLiteral(kFileMime))) {
+      LOGDRAGSERVICE(
+          "  file not found, proceed with conversion %s =>  %s flavor\n",
+          kFileMime, gTextUriListType);
+
+      gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
+      if (gdkFlavor) {
+        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
+      }
+    }
+
     if (file) {
       LOGDRAGSERVICE("  from drag uris set as file %s - flavor: %s",
                      mTargetDragUris.get()[aItemIndex], flavorStr.get());
@@ -903,42 +916,6 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       dataFound = true;
     } else {
       LOGDRAGSERVICE("  dataFound = false, try conversions\n");
-
-      // Dragging and dropping from the file manager would cause us
-      // to parse the source text as a nsIFile URL.
-      if (flavorStr.EqualsLiteral(kFileMime)) {
-        LOGDRAGSERVICE("  conversion %s => %s", kFileMime, gTextUriListType);
-        gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
-        GetTargetDragData(gdkFlavor, dragFlavors);
-        if (mTargetDragData) {
-          const char* text = static_cast<char*>(mTargetDragData);
-          char16_t* convertedText = nullptr;
-          uint32_t convertedTextLen = 0;
-
-          GetTextUriListItem(text, mTargetDragDataLen, aItemIndex,
-                             &convertedText, &convertedTextLen);
-
-          if (convertedText) {
-            nsCOMPtr<nsIFile> file;
-            rv = GetFileFromUri(NS_ConvertUTF16toUTF8(convertedText), file);
-            if (NS_SUCCEEDED(rv)) {
-              // The common wrapping code at the end of
-              // this function assumes the data is text
-              // and calls text-specific operations.
-              // Make a secret hideout here for nsIFile
-              // objects and return early.
-              LOGDRAGSERVICE("  set as file %s",
-                             NS_ConvertUTF16toUTF8(convertedText).get());
-              aTransferable->SetTransferData(flavorStr.get(), file);
-              g_free(convertedText);
-              return NS_OK;
-            }
-            g_free(convertedText);
-          }
-          continue;
-        }
-      }
-
       // If we are looking for text/plain, try again with non utf-8 text.
       if (flavorStr.EqualsLiteral(kTextMime)) {
         LOGDRAGSERVICE("  conversion %s => %s", kTextMime, kTextMime);
