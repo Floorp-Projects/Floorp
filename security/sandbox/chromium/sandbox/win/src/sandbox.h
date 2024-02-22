@@ -102,14 +102,6 @@ class BrokerServices {
   //   more information.
   virtual ResultCode WaitForAllTargets() = 0;
 
-  // Adds an unsandboxed process as a peer for policy decisions (e.g.
-  // HANDLES_DUP_ANY policy).
-  // Returns:
-  //   ALL_OK if successful. All other return values imply failure.
-  //   If the return is ERROR_GENERIC, you can call ::GetLastError() to get
-  //   more information.
-  virtual ResultCode AddTargetPeer(HANDLE peer_process) = 0;
-
   // This call creates a snapshot of policies managed by the sandbox and
   // returns them via a helper class.
   // Parameters:
