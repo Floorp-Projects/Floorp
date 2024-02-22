@@ -80,7 +80,7 @@
           ok(true, "nsIEditor.documentIsEmpty should throw an exception when no editing host has focus");
         }
         document.querySelector("div[contenteditable]").focus();
-        todo_is(getHTMLEditor().documentIsEmpty, true,
+        is(getHTMLEditor().documentIsEmpty, true,
           "nsIEditor.documentIsEmpty should be true when editing host does not have contents");
 
         document.body.innerHTML = "<div contenteditable><br></div>";
