@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     "nsIDOMMozBrowserFrame.idl",
-    "nsIMozBrowserFrame.idl",
 ]
 
 XPIDL_MODULE = "dom_html"

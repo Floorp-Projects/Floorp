@@ -123,13 +123,6 @@ interface FrameLoader {
   readonly attribute unsigned long long childID;
 
   /**
-   * Find out whether the owner content really is a mozbrowser. <xul:browser>
-   * is not considered to be a mozbrowser frame.
-   */
-  [Pure]
-  readonly attribute boolean ownerIsMozBrowserFrame;
-
-  /**
    * The last known width of the frame. Reading this property will not trigger
    * a reflow, and therefore may not reflect the current state of things. It
    * should only be used in asynchronous APIs where values are not guaranteed
