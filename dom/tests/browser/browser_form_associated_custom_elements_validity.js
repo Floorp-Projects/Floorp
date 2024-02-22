@@ -109,3 +109,50 @@ add_task(async function form_report_validity() {
     }
   );
 });
+
+add_task(async function no_validation_anchor() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: `data:text/html,<my-control tabindex=0>custom elements</my-control>`,
+    },
+    async function (aBrowser) {
+      let promisePopupShown = BrowserTestUtils.waitForEvent(
+        window,
+        "popupshown"
+      );
+
+      let message = "valueMissing message";
+      await SpecialPowers.spawn(aBrowser, [message], function (aMessage) {
+        class MyControl extends content.HTMLElement {
+          static get formAssociated() {
+            return true;
+          }
+          constructor() {
+            super();
+            let internals = this.attachInternals();
+            internals.setValidity({ valueMissing: true }, aMessage);
+            internals.reportValidity();
+          }
+        }
+        content.customElements.define("my-control", MyControl);
+
+        let myControl = content.document.querySelector("my-control");
+        content.customElements.upgrade(myControl);
+      });
+      await promisePopupShown;
+
+      let invalidFormPopup =
+        window.document.getElementById("invalid-form-popup");
+      is(invalidFormPopup.state, "open", "invalid-form-popup should be opened");
+      is(invalidFormPopup.firstChild.textContent, message, "check message");
+
+      let promisePopupHidden = BrowserTestUtils.waitForEvent(
+        invalidFormPopup,
+        "popuphidden"
+      );
+      invalidFormPopup.hidePopup();
+      await promisePopupHidden;
+    }
+  );
+});
