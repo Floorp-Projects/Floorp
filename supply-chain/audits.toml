@@ -4006,6 +4006,12 @@ who = "Jonathan Kew <jfkthame@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.3.14 -> 0.3.15"
 
+[[audits.unicode-bidi]]
+who = "Jonathan Kew <jfkthame@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.15 -> 0.3.15@git:d43c644c388659d093cc5d1648a970daeef692d5"
+importable = false
+
 [[audits.unicode-ident]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
