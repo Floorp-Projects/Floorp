@@ -3,7 +3,7 @@
 == chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
 pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xhtml chrome://reftest/content/xul/accesskey-ref.xhtml
-fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) fuzzy-if(winWidget,0-1,0-1) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
+fuzzy-if(gtkWidget,0-1,0-11) fuzzy-if(winWidget,0-1,0-1) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
 skip-if(!cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xhtml chrome://reftest/content/xul/mac-tab-toolbar-ref.xhtml
 != chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
 == chrome://reftest/content/xul/text-crop.xhtml chrome://reftest/content/xul/text-crop-ref.xhtml

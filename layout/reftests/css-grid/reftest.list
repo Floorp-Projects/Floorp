@@ -36,7 +36,7 @@ fails == grid-abspos-items-016.html grid-abspos-items-015-ref.html
 fuzzy(0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
 == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-fuzzy(0-64,0-1) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
+fuzzy(0-64,0-1) skip-if(winWidget) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
 == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html

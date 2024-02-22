@@ -34,7 +34,7 @@ fuzzy(0-1,0-1200) == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html
 == modify-range.html modify-range-ref.html
 == dom-mutations.html dom-mutations-ref.html
-fuzzy-if(!OSX,0-1,0-2138) == trailing-space-1.html trailing-space-1-ref.html
+fuzzy-if(!cocoaWidget,0-1,0-2138) == trailing-space-1.html trailing-space-1-ref.html
 != invalidation-1-ref.html invalidation-2-ref.html
 == invalidation-1a.html invalidation-1-ref.html
 == invalidation-1b.html invalidation-1-ref.html
@@ -50,7 +50,7 @@ fuzzy-if(!OSX,0-1,0-2138) == trailing-space-1.html trailing-space-1-ref.html
 == invalidation-2f.html invalidation-2-ref.html
 fuzzy(0-7,0-4) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html
 needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
-fuzzy-if(OSX,0-1,0-6) fuzzy-if(Android,0-188,0-39) needs-focus == writing-mode.html writing-mode-ref.html
+fuzzy-if(cocoaWidget,0-1,0-6) fuzzy-if(Android,0-188,0-39) needs-focus == writing-mode.html writing-mode-ref.html
 needs-focus fuzzy(0-5,0-1) == 1478604.html 1478604-ref.html # !webrender: Seems like an antialiasing+invalidation issue.
 
 needs-focus fuzzy(0-3,0-13) == disabled-1.html disabled-1-ref.html

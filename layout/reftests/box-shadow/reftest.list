@@ -15,7 +15,7 @@ fuzzy(0-14,0-179) fuzzy-if(swgl&&!Android,0-1,0-952) fuzzy-if(useDrawSnapshot&&s
 
 == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 fuzzy(13-19,28-51) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
-fuzzy(0-1,0-18) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
+fuzzy(0-1,0-18) random == boxshadow-mixed.html boxshadow-mixed-ref.html
 fuzzy(0-1,0-17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
 random-if(d2d) fuzzy(0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy(0-1,0-50) == chrome://reftest/content/box-shadow/boxshadow-dynamic.xhtml chrome://reftest/content/box-shadow/boxshadow-dynamic-ref.xhtml

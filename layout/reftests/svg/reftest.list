@@ -164,7 +164,7 @@ fuzzy(0-1,0-10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01
 == dynamic-pattern-contents-01.svg pass.svg
 == dynamic-pattern-contents-02.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
-fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 776038 for Win7, Win8
+fuzzy-if(d2d,0-3,0-1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 776038 for Win7, Win8
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-rect-04.xhtml pass.svg
 == dynamic-rect-05.svg pass.svg
@@ -176,8 +176,8 @@ fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-1200) == dynamic-rect-02.svg dynamic-re
 == dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
-fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
-fuzzy-if(d2d&&layersGPUAccelerated,0-2,0-10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
+fuzzy-if(d2d,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
+fuzzy-if(d2d,0-2,0-10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 == dynamic-text-04.svg dynamic-text-04-ref.svg
 == dynamic-text-05.svg pass.svg
 == dynamic-text-06.svg pass.svg
@@ -226,7 +226,7 @@ skip pref(security.fileuri.strict_origin_policy,true) == filter-extref-different
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
-fuzzy(0-71,0-821) fails-if(winWidget) fuzzy-if(OSX&&!swgl,1-1,216-458) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
+fuzzy(0-71,0-821) fails-if(winWidget) fuzzy-if(cocoaWidget&&!swgl,1-1,216-458) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
 == filter-result-01.svg filter-result-01-ref.svg
 == filter-scaled-01.svg pass.svg
 fuzzy(0-1,0-500) == filter-scaled-02.html filter-scaled-02-ref.html
@@ -333,7 +333,7 @@ fuzzy(0-1,0-6400) == mask-type-04.svg mask-type-01-ref.svg
 
 fuzzy(0-3,0-448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
-fuzzy(0-2,0-1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
+fuzzy(0-2,0-1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg
 fuzzy(0-51,0-900) fuzzy-if(Android,0-51,0-4090) fails-if(useDrawSnapshot) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 
@@ -369,7 +369,7 @@ fuzzy(0-7,0-214) == outline.html outline-ref.html # Bug 1503525
 == paint-on-maskLayer-1a.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-5) == paint-order-01.svg paint-order-01-ref.svg
+fuzzy-if(winWidget,0-16,0-5) == paint-order-01.svg paint-order-01-ref.svg
 == paint-order-02.svg paint-order-02-ref.svg
 == paint-order-03.svg paint-order-03-ref.svg
 
@@ -494,7 +494,7 @@ random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fail
 == text-layout-03.svg text-layout-03-ref.svg
 == text-layout-04.svg text-layout-04-ref.svg
 == text-layout-05.svg text-layout-05-ref.svg
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-3) == text-layout-06.svg text-layout-06-ref.svg
+fuzzy-if(cocoaWidget,0-1,0-3) == text-layout-06.svg text-layout-06-ref.svg
 == text-layout-07.svg text-layout-07-ref.svg
 == text-layout-08.svg text-layout-08-ref.svg
 == text-layout-09.svg pass.svg
@@ -630,7 +630,7 @@ fails-if(Android) != mask-resource.html about:blank # The image the test uses is
 == 1570363-1.html 1570363-1-ref.html
 
 fuzzy(0-1,0-150) == mask-opacity-invalidation-1.html mask-opacity-invalidation-1-ref.html # clip-path mask/opacity optimization
-skip-if(Android) skip-if(cocoaWidget) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == transform-animation-on-path.html transform-animation-on-path-ref.html #Bug 1638909
+skip-if(Android) skip-if(cocoaWidget) skip-if(winWidget) == transform-animation-on-path.html transform-animation-on-path-ref.html #Bug 1638909
 
 fuzzy(0-20,0-110) == 1792313.svg 1792313-ref.svg
 pref(svg.use-element.recursive-clone-limit.enabled,1) != about:blank explosive-use.svg

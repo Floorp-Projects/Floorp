@@ -5,7 +5,7 @@ fails-if(Android) skip-if(gtkWidget) == aspect-ratio-2a.xhtml aspect-ratio-2-ref
 fails-if(Android) skip-if(gtkWidget) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
 == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
-fails-if(Android) random-if(layersGPUAccelerated) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html
+fails-if(Android) random == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html
 fails-if(Android) == basic-1.xhtml basic-1-ref.html
 == canvas-1a.xhtml basic-1-ref.html
 fails-if(Android) == canvas-1b.xhtml basic-1-ref.html
@@ -43,15 +43,15 @@ fuzzy(0-5,0-111556) == webm-alpha-2.html webm-alpha-2-ref.html
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on any
 # particular (non-spec-mandated) video codec.
 defaults test-pref(gfx.ycbcr.accurate-conversion,true)
-fails-if(layersGPUAccelerated) == object-fit-contain-webm-001.html object-fit-contain-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-contain-webm-002.html object-fit-contain-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-cover-webm-001.html object-fit-cover-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-cover-webm-002.html object-fit-cover-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-fill-webm-001.html object-fit-fill-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-fill-webm-002.html object-fit-fill-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-none-webm-001.html object-fit-none-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-none-webm-002.html object-fit-none-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails == object-position-webm-001.html object-position-webm-001-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures
-fails == object-position-webm-002.html object-position-webm-002-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures
+fails == object-fit-contain-webm-001.html object-fit-contain-webm-001-ref.html # Bug 1083516
+fails == object-fit-contain-webm-002.html object-fit-contain-webm-002-ref.html # Bug 1083516
+fails == object-fit-cover-webm-001.html object-fit-cover-webm-001-ref.html # Bug 1083516
+fails == object-fit-cover-webm-002.html object-fit-cover-webm-002-ref.html # Bug 1083516
+fails == object-fit-fill-webm-001.html object-fit-fill-webm-001-ref.html # Bug 1083516
+fails == object-fit-fill-webm-002.html object-fit-fill-webm-002-ref.html # Bug 1083516
+fails == object-fit-none-webm-001.html object-fit-none-webm-001-ref.html # Bug 1083516
+fails == object-fit-none-webm-002.html object-fit-none-webm-002-ref.html # Bug 1083516
+fails == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001-ref.html # Bug 1083516
+fails == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002-ref.html # Bug 1083516
+fails == object-position-webm-001.html object-position-webm-001-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516
+fails == object-position-webm-002.html object-position-webm-002-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516

@@ -34,17 +34,17 @@ fuzzy(0-3,0-21070) == linear-vertical-subpixel-1.html linear-vertical-subpixel-1
 == onestop.html about:blank
 random-if(d2d) fuzzy(0-4,0-6000) == radial-1a.html radial-1-ref.html
 random-if(d2d) fuzzy(0-4,0-6000) == radial-1b.html radial-1-ref.html
-fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2a.html radial-2-ref.html
-fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2b.html radial-2-ref.html
-fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2c.html radial-2-ref.html
-fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-90000) == radial-2d.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2a.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2b.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2c.html radial-2-ref.html
+fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2d.html radial-2-ref.html
 fuzzy(0-1,0-50) == radial-position-1b.html radial-position-1-ref.html
 fuzzy-if(cocoaWidget,0-4,0-22317) fuzzy-if(Android,0-8,0-771) == radial-shape-closest-corner-1a.html radial-shape-closest-corner-1-ref.html
 fuzzy(0-2,0-300) == radial-shape-closest-corner-1b.html radial-shape-closest-corner-1-ref.html
 fuzzy(0-5,0-30000) fuzzy-if(Android,0-17,0-5000) == radial-shape-closest-side-1a.html radial-shape-closest-side-1-ref.html
 fuzzy(0-5,0-30000) fuzzy-if(Android,0-17,0-5000) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
 fuzzy-if(Android,0-8,0-771) == radial-shape-farthest-corner-1a.html radial-shape-farthest-corner-1-ref.html
-fails-if(gtkWidget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(0-2,0-500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
+fails-if(gtkWidget) fuzzy(0-2,0-500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
 fuzzy(0-2,0-15000) fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
 fuzzy(0-2,0-15000) fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
 == radial-size-1a.html radial-size-1-ref.html
@@ -73,7 +73,7 @@ fuzzy(0-141,0-300) == twostops-1d.html twostops-1-ref.html
 fuzzy(0-73,0-900) == twostops-1e.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy-if(azureSkiaGL||layersGPUAccelerated,0-8,0-20000) == aja-linear-1a.html aja-linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,0-3,0-20000) fuzzy(0-8,0-20000) == aja-linear-1a.html aja-linear-1-ref.html
 fuzzy(0-1,0-20000) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 fuzzy(0-8,0-20000) == aja-linear-1c.html aja-linear-1-ref.html
 fuzzy(0-8,0-20000) == aja-linear-1d.html aja-linear-1-ref.html

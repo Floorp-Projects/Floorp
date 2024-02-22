@@ -1,4 +1,4 @@
-skip-if(OSX) load 1185191.html # this needs to run near the beginning of the test suite
+skip-if(cocoaWidget) load 1185191.html # this needs to run near the beginning of the test suite
 load 0-timescale.html # bug 1229166
 skip-if(Android) pref(media.autoplay.default,0) load 459439-1.html # bug 888557
 load 466607-1.html
@@ -14,7 +14,7 @@ load 497734-2.html
 load 576612-1.html
 load 752784-1.html
 skip-if(Android) load 789075-1.html # bug 1374405 for android
-skip-if(Android&&AndroidVersion=='22') HTTP load 795892-1.html # bug 1358718
+HTTP load 795892-1.html # bug 1358718
 load 844563.html
 load 846612.html
 load 852838.html
@@ -76,7 +76,7 @@ skip-if(Android) test-pref(media.navigator.permission.disabled,true) load 102845
 load 1041466.html
 load 1045650.html
 load 1080986.html
-skip-if(Android&&AndroidVersion=='21') load 1180881.html # bug 1409365
+load 1180881.html # bug 1409365
 load 1197935.html
 load 1122218.html
 load 1127188.html
@@ -113,7 +113,7 @@ HTTP load media-element-source-seek-1.html
 load offline-buffer-source-ended-1.html
 load oscillator-ended-1.html
 load oscillator-ended-2.html
-skip-if(Android&&AndroidVersion=='22') load video-replay-after-audio-end.html # bug 1315125, bug 1358876
+load video-replay-after-audio-end.html # bug 1315125, bug 1358876
 # This needs to run at the end to avoid leaking busted state into other tests.
 skip-if(Android||ThreadSanitizer) load 691096-1.html # Bug 1365451
 load 1236639.html
@@ -122,7 +122,7 @@ load 1414444.mp4
 load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
 load 1530897.webm
-skip-if(Android&&AndroidVersion<21) load encrypted-track-with-bad-sample-description-index.mp4 # Bug 1533211, unkip after bug 1550912
+load encrypted-track-with-bad-sample-description-index.mp4 # Bug 1533211, unkip after bug 1550912
 load encrypted-track-without-tenc.mp4 # Bug 1533215
 asserts-if(Android,0-1) load encrypted-track-with-sample-missing-cenc-aux.mp4 # Bug 1533625, bug 1588967
 load 1538727.html

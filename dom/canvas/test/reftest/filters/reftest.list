@@ -1,7 +1,7 @@
 == default-color.html ref.html
 == drop-shadow.html ref.html
 == drop-shadow-transformed.html ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia,0-1,0-1500) == global-alpha.html global-alpha-ref.html
+fuzzy-if(winWidget||azureSkia,0-1,0-1500) == global-alpha.html global-alpha-ref.html
 == global-composite-operation.html global-composite-operation-ref.html
 == liveness.html ref.html
 == liveness-document-open.html data:text/html,PASS

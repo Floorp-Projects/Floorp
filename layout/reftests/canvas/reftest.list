@@ -30,8 +30,8 @@ random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enab
 == text-ltr-alignment-test.html text-ltr-alignment-ref.html
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256) == text-horzline-with-bottom.html text-horzline.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256) fails-if(azureSkia&&OSX) == text-horzline-with-top.html text-horzline.html
+fuzzy-if(winWidget,0-1,0-256) == text-horzline-with-bottom.html text-horzline.html
+fuzzy-if(winWidget,0-1,0-256) fails-if(azureSkia&&cocoaWidget) == text-horzline-with-top.html text-horzline.html
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html
@@ -42,7 +42,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256) fails-if(azureSki
 
 == text-no-frame-test.html text-no-frame-ref.html
 == text-no-frame-2-test.html text-not-in-doc-ref.html
-fuzzy-if(azureSkiaGL,0-10,0-400) == text-not-in-doc-test.html text-not-in-doc-ref.html
+== text-not-in-doc-test.html text-not-in-doc-ref.html
 
 == text-bidi-ltr-test.html text-bidi-ltr-ref.html
 != text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
@@ -79,7 +79,7 @@ fuzzy(0-9,0-470) random-if(Android) == dash-1.html dash-1-ref.svg # Bug 668412 (
 == ctm-singular-sanity.html data:text/html,<body>Pass
 
 == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-45) == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
+fuzzy-if(winWidget,0-1,0-45) == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
 
 != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted
 
@@ -92,7 +92,7 @@ fuzzy(0-1,0-20) == transformed-gradient.html transformed-gradient-ref.html
 == 749467-1.html 749467-1-ref.html
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
-fuzzy(0-16,0-84) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-153) == 784573-1.html 784573-1-ref.html
+fuzzy(0-16,0-84) fuzzy-if(d2d&&winWidget,0-2,0-153) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
 == 1074733-1.html 1074733-1-ref.html
