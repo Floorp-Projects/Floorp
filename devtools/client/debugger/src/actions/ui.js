@@ -16,7 +16,7 @@ import { selectSource } from "../actions/sources/select";
 import {
   getEditor,
   getLocationsInViewport,
-  updateDocuments,
+  updateLineWrappingForAllDocuments,
 } from "../utils/editor/index";
 import { blackboxSourceActorsForSource } from "./sources/blackbox";
 import { toggleBreakpoints } from "./breakpoints/index";
@@ -85,7 +85,7 @@ export function toggleInlinePreview(toggleValue) {
 
 export function toggleEditorWrapping(toggleValue) {
   return ({ dispatch, getState }) => {
-    updateDocuments(doc => doc.cm.setOption("lineWrapping", toggleValue));
+    updateLineWrappingForAllDocuments(toggleValue);
 
     dispatch({
       type: "TOGGLE_EDITOR_WRAPPING",
