@@ -45,6 +45,12 @@ const FRAME_EXIT_REASONS = {
 
 const listeners = new Set();
 
+// Detecting worker is different if this file is loaded via Common JS loader (isWorker global)
+// or as a JSM (constructor name)
+const isWorker =
+  globalThis.isWorker ||
+  globalThis.constructor.name == "WorkerDebuggerGlobalScope";
+
 // This module can be loaded from the worker thread, where we can't use ChromeUtils.
 // So implement custom lazy getters (without XPCOMUtils ESM) from here.
 // Worker codepath in DevTools will pass a custom Debugger instance.
@@ -60,7 +66,7 @@ const customLazy = {
     // (ex: from tracer actor module),
     // this module no longer has WorkerDebuggerGlobalScope as global,
     // but has to use require() to pull Debugger.
-    if (typeof isWorker == "boolean") {
+    if (isWorker) {
       return require("Debugger");
     }
     const { addDebuggerToGlobal } = ChromeUtils.importESModule(
@@ -152,13 +158,7 @@ class JavaScriptTracer {
     if (!this.loggingMethod) {
       // On workers, `dump` can't be called with JavaScript on another object,
       // so bind it.
-      // Detecting worker is different if this file is loaded via Common JS loader (isWorker)
-      // or as a JSM (constructor name)
-      this.loggingMethod =
-        typeof isWorker == "boolean" ||
-        globalThis.constructor.name == "WorkerDebuggerGlobalScope"
-          ? dump.bind(null)
-          : dump;
+      this.loggingMethod = isWorker ? dump.bind(null) : dump;
     }
 
     this.traceDOMEvents = !!options.traceDOMEvents;
@@ -172,36 +172,8 @@ class JavaScriptTracer {
     this.frameId = 0;
 
     // This feature isn't supported on Workers as they aren't involving user events
-    if (options.traceOnNextInteraction && typeof isWorker !== "boolean") {
-      this.abortController = new AbortController();
-      const listener = () => {
-        this.abortController.abort();
-        // Avoid tracing if the users asked to stop tracing.
-        if (this.dbg) {
-          this.#startTracing();
-        }
-      };
-      const eventOptions = {
-        signal: this.abortController.signal,
-        capture: true,
-      };
-      // Register the event listener on the Chrome Event Handler in order to receive the event first.
-      // When used for the parent process target, `tracedGlobal` is browser.xhtml's window, which doesn't have a chromeEventHandler.
-      const eventHandler =
-        this.tracedGlobal.docShell.chromeEventHandler || this.tracedGlobal;
-      eventHandler.addEventListener("mousedown", listener, eventOptions);
-      eventHandler.addEventListener("keydown", listener, eventOptions);
-
-      // Significate to the user that the tracer is registered, but not tracing just yet.
-      let shouldLogToStdout = listeners.size == 0;
-      for (const l of listeners) {
-        if (typeof l.onTracingPending == "function") {
-          shouldLogToStdout |= l.onTracingPending();
-        }
-      }
-      if (shouldLogToStdout) {
-        this.loggingMethod(this.prefix + NEXT_INTERACTION_MESSAGE + "\n");
-      }
+    if (options.traceOnNextInteraction && !isWorker) {
+      this.#waitForNextInteraction();
     } else {
       this.#startTracing();
     }
@@ -210,6 +182,44 @@ class JavaScriptTracer {
   // Is actively tracing?
   // We typically start tracing from the constructor, unless the "trace on next user interaction" feature is used.
   isTracing = false;
+
+  /**
+   * In case `traceOnNextInteraction` option is used, delay the actual start of tracing until a first user interaction.
+   */
+  #waitForNextInteraction() {
+    // Use a dedicated Abort Controller as we are going to stop it as soon as we get the first user interaction,
+    // whereas other listeners would typically wait for tracer stop.
+    this.nextInteractionAbortController = new AbortController();
+
+    const listener = () => {
+      this.nextInteractionAbortController.abort();
+      // Avoid tracing if the users asked to stop tracing while we were waiting for the user interaction.
+      if (this.dbg) {
+        this.#startTracing();
+      }
+    };
+    const eventOptions = {
+      signal: this.nextInteractionAbortController.signal,
+      capture: true,
+    };
+    // Register the event listener on the Chrome Event Handler in order to receive the event first.
+    // When used for the parent process target, `tracedGlobal` is browser.xhtml's window, which doesn't have a chromeEventHandler.
+    const eventHandler =
+      this.tracedGlobal.docShell.chromeEventHandler || this.tracedGlobal;
+    eventHandler.addEventListener("mousedown", listener, eventOptions);
+    eventHandler.addEventListener("keydown", listener, eventOptions);
+
+    // Significate to the user that the tracer is registered, but not tracing just yet.
+    let shouldLogToStdout = listeners.size == 0;
+    for (const l of listeners) {
+      if (typeof l.onTracingPending == "function") {
+        shouldLogToStdout |= l.onTracingPending();
+      }
+    }
+    if (shouldLogToStdout) {
+      this.loggingMethod(this.prefix + NEXT_INTERACTION_MESSAGE + "\n");
+    }
+  }
 
   /**
    * Actually really start watching for executions.
@@ -306,9 +316,9 @@ class JavaScriptTracer {
     this.depth = 0;
 
     // Cancel the traceOnNextInteraction event listeners.
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
+    if (this.nextInteractionAbortController) {
+      this.nextInteractionAbortController.abort();
+      this.nextInteractionAbortController = null;
     }
 
     if (this.traceDOMEvents) {
