@@ -13,8 +13,6 @@ kind-dependencies:
     - release-balrog-scheduling
     - release-bouncer-aliases
     - release-version-bump
-    - post-beetmover-components-dummy
-    - push-bundle
 
 job-defaults:
     description: mark release as shipped in Ship-It
