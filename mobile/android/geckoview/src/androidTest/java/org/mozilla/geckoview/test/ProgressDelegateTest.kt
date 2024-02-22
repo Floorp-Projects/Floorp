@@ -33,7 +33,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             ProgressDelegate,
             NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 assertThat("LocationChange is called", url, endsWith(path))
             }
 
@@ -467,6 +467,7 @@ class ProgressDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
@@ -487,7 +488,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         session.goBack()
 
         session.waitUntilCalled(object : NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 assertThat("History should be preserved", url, equalTo(helloUri))
             }
         })
@@ -511,7 +512,7 @@ class ProgressDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<ContentPermission>, hasUserGesture: Boolean) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
         })

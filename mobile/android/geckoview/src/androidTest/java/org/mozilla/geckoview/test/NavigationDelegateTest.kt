@@ -123,6 +123,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         if (errorPageUrl != null) {
             sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
                 @AssertCalled(count = 1, order = [1])
+                @Suppress("OVERRIDE_DEPRECATION")
                 override fun onLocationChange(
                     session: GeckoSession,
                     url: String?,
@@ -593,6 +594,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
@@ -646,6 +648,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         // No good way to wait for loading about:blank error page. Use onLocaitonChange etc.
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
@@ -1478,10 +1481,12 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", url, notNullValue())
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -1514,8 +1519,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match the provided data URL", url, equalTo(dataUrl))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1)
@@ -1542,6 +1549,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Test that if we unset the navigation delegate during a load, the load still proceeds.
         var onLocationCount = 0
         mainSession.navigationDelegate = object : NavigationDelegate {
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,
@@ -1587,12 +1595,14 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat(
                     "URL should be a data URL",
                     url,
                     equalTo(createDataUri(dataString, mimeType)),
                 )
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1)
@@ -1612,8 +1622,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should be a data URL", url, startsWith("data:"))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1)
@@ -1641,8 +1653,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, "text/html")))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1)
@@ -1683,8 +1697,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, mimeType)))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1)
@@ -1740,8 +1756,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -1774,8 +1792,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
         })
 
@@ -1802,8 +1822,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -1845,8 +1867,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -2621,6 +2645,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 currentUrl = url
             }
@@ -2717,8 +2742,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URI should match", url, endsWith("#test1"))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
         })
 
@@ -2739,8 +2766,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
             ) {
                 assertThat("URI should match", url, endsWith("#test2"))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
         })
     }
@@ -2826,6 +2855,54 @@ class NavigationDelegateTest : BaseSessionTest() {
                     equalTo(false),
                 )
                 return GeckoResult.allow()
+            }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun locationReplaceOnUserGesture() {
+        mainSession.loadUri("$TEST_ENDPOINT$CLICK_TO_REPLACE_HTML_PATH")
+        mainSession.waitForPageStop()
+
+        mainSession.synthesizeTap(50, 50)
+
+        sessionRule.waitUntilCalled(object : NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
+            ) {
+                assertThat("Should have a user gesture", hasUserGesture, equalTo(true))
+                assertThat(
+                    "Location should be replaced to replacedUrl",
+                    url,
+                    equalTo("replacedUrl"),
+                )
+            }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun locationNotReplaceOnNoUserGesture() {
+        mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
+            @AssertCalled(count = 1, order = [2])
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>,
+                hasUserGesture: Boolean,
+            ) {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat("URL should not be null", url, notNullValue())
+                assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
+                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
         })
     }
@@ -3119,6 +3196,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         var lastTitle: String? = ""
         sessionRule.delegateDuringNextWait(object : NavigationDelegate, ContentDelegate {
             @AssertCalled(count = 1)
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onLocationChange(
                 session: GeckoSession,
                 url: String?,

@@ -13,6 +13,16 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v125
+- ⚠️ Deprecated [`GeckoSession.NavigationDelegate.onLocationChange`][125.1], to be removed in v127.
+([bug 1837601]({{bugzilla}}1837601))
+- Added [`GeckoSession.NavigationDelegate.onLocationChange#hasUserGesture`][125.2]. This indicates if a location change was requested
+while a user gesture was active (e.g., a tap).
+([bug 1837601]({{bugzilla}}1837601))
+
+[125.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
+[125.2]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List,boolean)
+
 ## v124
 
 - Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverMode`][124.1] to enable DNS-over-HTTPS using different resolver modes ([bug 1591533]({{bugzilla}}1591533)).
@@ -36,7 +46,7 @@ exclude: true
 
 [123.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html#checkPairDownloadSize(java.lang.String,java.lang.String)
 [123.2]: {{javadoc_uri}}/TranslationsController.TranslationsException.html#ERROR_MODEL_LANGUAGE_REQUIRED
-[121.3]: {{javadoc_uri}}/GeckoSession.html#sendPlacementAttributionEvent(String)
+[123.3]: {{javadoc_uri}}/GeckoSession.html#sendPlacementAttributionEvent(String)
 
 ## v122
 - ⚠️ Removed [`onGetNimbusFeature`][115.5], please use `ExperimentDelegate.onGetExperimentFeature` instead.
@@ -1519,4 +1529,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ff5a513251f19534bbf4ebe0084909665d00a227
+[api-version]: f3786e0fcd543773be728be1ff2bf27ac23566d5
