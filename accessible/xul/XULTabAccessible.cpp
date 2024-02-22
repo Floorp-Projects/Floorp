@@ -69,8 +69,7 @@ uint64_t XULTabAccessible::NativeState() const {
       state |= states::SELECTED;
     }
 
-    if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::pinned,
-                                           nsGkAtoms::_true, eCaseMatters)) {
+    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::pinned)) {
       state |= states::PINNED;
     }
   }
