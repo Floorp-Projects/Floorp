@@ -144,10 +144,10 @@ class APZTestData {
 // A helper class for logging data for a paint.
 class APZPaintLogHelper {
  public:
-  APZPaintLogHelper(APZTestData* aTestData, SequenceNumber aPaintSequenceNumber)
+  APZPaintLogHelper(APZTestData* aTestData, SequenceNumber aPaintSequenceNumber,
+                    bool aIsTestLoggingEnabled)
       : mTestData(aTestData), mPaintSequenceNumber(aPaintSequenceNumber) {
-    MOZ_ASSERT(!aTestData || StaticPrefs::apz_test_logging_enabled(),
-               "don't call me");
+    MOZ_ASSERT(!aTestData || aIsTestLoggingEnabled, "don't call me");
   }
 
   template <typename Value>
