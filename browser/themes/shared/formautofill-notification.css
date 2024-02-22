@@ -103,9 +103,10 @@
   display: flex;
   flex-direction: row;
 
-  > p {
+  > h1 {
+    font-size: 1em;
     padding-block: 8px 4px;
-    font-weight: var(--font-weight-bold);
+    margin-block: 0;
   }
 }
 

@@ -187,7 +187,7 @@ export class AutofillDoorhanger {
 
   renderHeader() {
     // Render the header text
-    const text = this.header.querySelector(`p`);
+    const text = this.header.querySelector(`h1`);
     this.doc.l10n.setAttributes(text, this.ui.header.l10nId);
 
     // Render the menu button
@@ -529,6 +529,8 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
       //const img = this.doc.createElement("img");
       const img = this.doc.createXULElement("image");
       img.setAttribute("class", imgClass);
+      // ToDo: provide meaningful alt values (bug 1870155):
+      img.setAttribute("alt", "");
       section.appendChild(img);
 
       // Each line is consisted of multiple <span> to form diff style texts
