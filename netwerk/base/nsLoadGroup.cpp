@@ -1021,12 +1021,6 @@ void nsLoadGroup::TelemetryReportChannel(nsITimedChannel* aTimedChannel,
   if (httpChannel && NS_SUCCEEDED(httpChannel->GetHasHTTPSRR(&hasHTTPSRR)) &&
       cacheReadStart.IsNull() && cacheReadEnd.IsNull() &&
       !requestStart.IsNull()) {
-    nsCString key = (hasHTTPSRR) ? ((aDefaultRequest) ? "uses_https_rr_page"_ns
-                                                      : "uses_https_rr_sub"_ns)
-                                 : ((aDefaultRequest) ? "no_https_rr_page"_ns
-                                                      : "no_https_rr_sub"_ns);
-    Telemetry::AccumulateTimeDelta(Telemetry::HTTPS_RR_OPEN_TO_FIRST_SENT, key,
-                                   asyncOpen, requestStart);
     TimeDuration elapsed = requestStart - asyncOpen;
     if (hasHTTPSRR) {
       if (aDefaultRequest) {
