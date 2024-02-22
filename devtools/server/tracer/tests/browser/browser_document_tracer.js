@@ -52,7 +52,7 @@ add_task(async function testTracingWorker() {
 
     const firstFrame = frames[0];
     is(firstFrame.formatedDisplayName, "λ foo");
-    is(firstFrame.currentDOMEvent, "DOM(click)");
+    is(firstFrame.currentDOMEvent, "DOM | click");
 
     const lastFrame = frames.at(-1);
     is(lastFrame.formatedDisplayName, "λ bar");

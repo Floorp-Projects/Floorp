@@ -25,6 +25,7 @@ const EXPORTED_SYMBOLS = [
   "addTracingListener",
   "removeTracingListener",
   "NEXT_INTERACTION_MESSAGE",
+  "DOM_MUTATIONS",
 ];
 
 const NEXT_INTERACTION_MESSAGE =
@@ -41,6 +42,15 @@ const FRAME_EXIT_REASONS = {
   AWAIT: "await",
   // The function throws an exception
   THROW: "throw",
+};
+
+const DOM_MUTATIONS = {
+  // Track all DOM Node being added
+  ADD: "add",
+  // Track all attributes being modified
+  ATTRIBUTES: "attributes",
+  // Track all DOM Node being removed
+  REMOVE: "remove",
 };
 
 const listeners = new Set();
@@ -119,6 +129,12 @@ const customLazy = {
  * @param {Boolean} options.traceDOMEvents
  *        Optional setting to enable tracing all the DOM events being going through
  *        dom/events/EventListenerManager.cpp's `EventListenerManager`.
+ * @param {Array<string>} options.traceDOMMutations
+ *        Optional setting to enable tracing all the DOM mutations.
+ *        This array may contains three strings:
+ *          - "add": trace all new DOM Node being added,
+ *          - "attributes": trace all DOM attribute modifications,
+ *          - "delete": trace all DOM Node being removed.
  * @param {Boolean} options.traceValues
  *        Optional setting to enable tracing all function call values as well,
  *        as returned values (when we do log returned frames).
@@ -137,6 +153,11 @@ const customLazy = {
 class JavaScriptTracer {
   constructor(options) {
     this.onEnterFrame = this.onEnterFrame.bind(this);
+
+    // DevTools CommonJS Workers modules don't have access to AbortController
+    if (!isWorker) {
+      this.abortController = new AbortController();
+    }
 
     // By default, we would trace only JavaScript related to caller's global.
     // As there is no way to compute the caller's global default to the global of the
@@ -162,6 +183,19 @@ class JavaScriptTracer {
     }
 
     this.traceDOMEvents = !!options.traceDOMEvents;
+
+    if (options.traceDOMMutations) {
+      if (!Array.isArray(options.traceDOMMutations)) {
+        throw new Error("'traceDOMMutations' attribute should be an array");
+      }
+      const acceptedValues = Object.values(DOM_MUTATIONS);
+      if (!options.traceDOMMutations.every(e => acceptedValues.includes(e))) {
+        throw new Error(
+          `'traceDOMMutations' only accept array of strings whose values can be: ${acceptedValues}`
+        );
+      }
+      this.traceDOMMutations = options.traceDOMMutations;
+    }
     this.traceValues = !!options.traceValues;
     this.traceFunctionReturn = !!options.traceFunctionReturn;
     this.maxDepth = options.maxDepth;
@@ -235,6 +269,10 @@ class JavaScriptTracer {
     if (this.traceDOMEvents) {
       this.startTracingDOMEvents();
     }
+    // This feature isn't supported on Workers as they aren't interacting with the DOM Tree
+    if (this.traceDOMMutations?.length > 0 && !isWorker) {
+      this.startTracingDOMMutations();
+    }
 
     // In any case, we consider the tracing as started
     this.notifyToggle(true);
@@ -257,6 +295,97 @@ class JavaScriptTracer {
     }
     this.currentDOMEvent = null;
   }
+
+  startTracingDOMMutations() {
+    this.tracedGlobal.document.devToolsWatchingDOMMutations = true;
+
+    const eventOptions = {
+      signal: this.abortController.signal,
+      capture: true,
+    };
+    if (this.traceDOMMutations.includes(DOM_MUTATIONS.ADD)) {
+      this.tracedGlobal.docShell.chromeEventHandler.addEventListener(
+        "devtoolschildinserted",
+        this.#onDOMMutation,
+        eventOptions
+      );
+    }
+    if (this.traceDOMMutations.includes(DOM_MUTATIONS.ATTRIBUTES)) {
+      this.tracedGlobal.docShell.chromeEventHandler.addEventListener(
+        "devtoolsattrmodified",
+        this.#onDOMMutation,
+        eventOptions
+      );
+    }
+    if (this.traceDOMMutations.includes(DOM_MUTATIONS.REMOVE)) {
+      this.tracedGlobal.docShell.chromeEventHandler.addEventListener(
+        "devtoolschildremoved",
+        this.#onDOMMutation,
+        eventOptions
+      );
+    }
+  }
+
+  stopTracingDOMMutations() {
+    this.tracedGlobal.document.devToolsWatchingDOMMutations = false;
+    // Note that the event listeners are all going to be unregistered via the AbortController.
+  }
+
+  /**
+   * Called for any DOM Mutation done in the traced document.
+   *
+   * @param {DOM Event} event
+   */
+  #onDOMMutation = event => {
+    // Ignore elements inserted by DevTools, like the inspector's highlighters
+    if (event.target.isNativeAnonymous) {
+      return;
+    }
+
+    let type = "";
+    switch (event.type) {
+      case "devtoolschildinserted":
+        type = DOM_MUTATIONS.ADD;
+        break;
+      case "devtoolsattrmodified":
+        type = DOM_MUTATIONS.ATTRIBUTES;
+        break;
+      case "devtoolschildremoved":
+        type = DOM_MUTATIONS.REMOVE;
+        break;
+      default:
+        throw new Error("Unexpected DOM Mutation event type: " + event.type);
+    }
+
+    let shouldLogToStdout = true;
+    if (listeners.size > 0) {
+      shouldLogToStdout = false;
+      for (const listener of listeners) {
+        // If any listener return true, also log to stdout
+        if (typeof listener.onTracingDOMMutation == "function") {
+          shouldLogToStdout |= listener.onTracingDOMMutation({
+            depth: this.depth,
+            prefix: this.prefix,
+
+            type,
+            element: event.target,
+            caller: Components.stack.caller,
+          });
+        }
+      }
+    }
+
+    if (shouldLogToStdout) {
+      const padding = "—".repeat(this.depth + 1);
+      this.loggingMethod(
+        this.prefix +
+          padding +
+          `[DOM Mutation | ${type}] ` +
+          objectToString(event.target) +
+          "\n"
+      );
+    }
+  };
 
   /**
    * Called by DebuggerNotificationObserver interface when a DOM event start being notified
@@ -287,7 +416,7 @@ class JavaScriptTracer {
             .makeDebuggeeValue(notification.event)
             .getProperty("type").return;
         }
-        this.currentDOMEvent = `DOM(${type})`;
+        this.currentDOMEvent = `DOM | ${type}`;
       } else {
         this.currentDOMEvent = notification.type;
       }
@@ -323,6 +452,14 @@ class JavaScriptTracer {
 
     if (this.traceDOMEvents) {
       this.stopTracingDOMEvents();
+    }
+    if (this.traceDOMMutations?.length > 0 && !isWorker) {
+      this.stopTracingDOMMutations();
+    }
+
+    // Unregister all event listeners
+    if (this.abortController) {
+      this.abortController.abort();
     }
 
     this.tracedGlobal = null;
@@ -419,6 +556,9 @@ class JavaScriptTracer {
       // Because of async frame which are popped and entered again on completion of the awaited async task,
       // we have to compute the depth from the frame. (and can't use a simple increment on enter/decrement on pop).
       const depth = getFrameDepth(frame);
+
+      // Save the current depth for the DOM Mutation handler
+      this.depth = depth;
 
       // Ignore the frame if we reached the depth limit (if one is provided)
       if (this.maxDepth && depth >= this.maxDepth) {

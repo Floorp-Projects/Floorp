@@ -133,25 +133,35 @@ class TracerActor extends Actor {
       onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
       onTracingToggled: this.onTracingToggled.bind(this),
       onTracingPending: this.onTracingPending.bind(this),
+      onTracingDOMMutation: this.onTracingDOMMutation.bind(this),
     };
     addTracingListener(this.tracingListener);
     this.traceValues = !!options.traceValues;
-    startTracing({
-      global: this.targetActor.window || this.targetActor.workerGlobal,
-      prefix: options.prefix || "",
-      // Enable receiving the `currentDOMEvent` being passed to `onTracingFrame`
-      traceDOMEvents: true,
-      // Enable tracing function arguments as well as returned values
-      traceValues: !!options.traceValues,
-      // Enable tracing only on next user interaction
-      traceOnNextInteraction: !!options.traceOnNextInteraction,
-      // Notify about frame exit / function call returning
-      traceFunctionReturn: !!options.traceFunctionReturn,
-      // Ignore frames beyond the given depth
-      maxDepth: options.maxDepth,
-      // Stop the tracing after a number of top level frames
-      maxRecords: options.maxRecords,
-    });
+    try {
+      startTracing({
+        global: this.targetActor.window || this.targetActor.workerGlobal,
+        prefix: options.prefix || "",
+        // Enable receiving the `currentDOMEvent` being passed to `onTracingFrame`
+        traceDOMEvents: true,
+        // Enable tracing DOM Mutations
+        traceDOMMutations: options.traceDOMMutations,
+        // Enable tracing function arguments as well as returned values
+        traceValues: !!options.traceValues,
+        // Enable tracing only on next user interaction
+        traceOnNextInteraction: !!options.traceOnNextInteraction,
+        // Notify about frame exit / function call returning
+        traceFunctionReturn: !!options.traceFunctionReturn,
+        // Ignore frames beyond the given depth
+        maxDepth: options.maxDepth,
+        // Stop the tracing after a number of top level frames
+        maxRecords: options.maxRecords,
+      });
+    } catch (e) {
+      // If startTracing throws, it probably rejected one of its options and we should
+      // unregister the tracing listener.
+      this.stopTracing();
+      throw e;
+    }
   }
 
   stopTracing() {
@@ -262,6 +272,52 @@ class TracerActor extends Actor {
       },
     ]);
 
+    return false;
+  }
+
+  /**
+   * Called by JavaScriptTracer class when a new mutation happened on any DOM Element.
+   *
+   * @param {Object} options
+   * @param {Number} options.depth
+   *        Represents the depth of the frame in the call stack.
+   * @param {String} options.prefix
+   *        A string to be displayed as a prefix of any logged frame.
+   * @param {nsIStackFrame} options.caller
+   *        The JS Callsite which caused this mutation.
+   * @param {String} options.type
+   *        Type of DOM Mutation:
+   *        - "add": Node being added,
+   *        - "attributes": Node whose attributes changed,
+   *        - "remove": Node being removed,
+   * @param {DOMNode} options.element
+   *        The DOM Node related to the current mutation.
+   */
+  onTracingDOMMutation({ depth, prefix, type, caller, element }) {
+    // Delegate to JavaScriptTracer to log to stdout
+    if (this.logMethod == LOG_METHODS.STDOUT) {
+      return true;
+    }
+
+    if (this.logMethod == LOG_METHODS.CONSOLE) {
+      const dbgObj = makeDebuggeeValue(this.targetActor, element);
+      this.throttledTraces.push({
+        resourceType: JSTRACER_TRACE,
+        prefix,
+        timeStamp: ChromeUtils.dateNow(),
+
+        filename: caller?.filename,
+        lineNumber: caller?.lineNumber,
+        columnNumber: caller?.columnNumber,
+        sourceId: caller.sourceId,
+
+        depth,
+        mutationType: type,
+        mutationElement: createValueGripForTarget(this.targetActor, dbgObj),
+      });
+      this.throttleEmitTraces();
+      return false;
+    }
     return false;
   }
 

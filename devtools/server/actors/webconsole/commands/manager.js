@@ -11,6 +11,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  ["DOM_MUTATIONS"],
+  "resource://devtools/server/tracer/tracer.jsm",
+  true
+);
+
 loader.lazyGetter(this, "l10n", () => {
   return new Localization(
     [
@@ -873,6 +880,26 @@ WebConsoleCommandsManager.register({
     const tracerActor =
       owner.consoleActor.parentActor.getTargetScopedActor("tracer");
     const logMethod = args.logMethod || "console";
+    let traceDOMMutations = null;
+    if ("dom-mutations" in args) {
+      // When no value is passed, track all types of mutations
+      if (args["dom-mutations"] === true) {
+        traceDOMMutations = ["add", "attributes", "remove"];
+      } else if (typeof args["dom-mutations"] == "string") {
+        // Otherwise consider the value as coma seperated list and remove any white space.
+        traceDOMMutations = args["dom-mutations"].split(",").map(e => e.trim());
+        const acceptedValues = Object.values(DOM_MUTATIONS);
+        if (!traceDOMMutations.every(e => acceptedValues.includes(e))) {
+          throw new Error(
+            `:trace --dom-mutations only accept a list of strings whose values can be: ${acceptedValues}`
+          );
+        }
+      } else {
+        throw new Error(
+          ":trace --dom-mutations accept only no arguments, or a list mutation type strings (add,attributes,remove)"
+        );
+      }
+    }
     // Note that toggleTracing does some sanity checks and will throw meaningful error
     // when the arguments are wrong.
     const enabled = tracerActor.toggleTracing({
@@ -880,6 +907,7 @@ WebConsoleCommandsManager.register({
       prefix: args.prefix || null,
       traceValues: !!args.values,
       traceOnNextInteraction: args["on-next-interaction"] || null,
+      traceDOMMutations,
       maxDepth: args["max-depth"] || null,
       maxRecords: args["max-records"] || null,
     });
@@ -895,6 +923,7 @@ WebConsoleCommandsManager.register({
     "max-depth",
     "max-records",
     "on-next-interaction",
+    "dom-mutations",
     "prefix",
     "values",
   ],

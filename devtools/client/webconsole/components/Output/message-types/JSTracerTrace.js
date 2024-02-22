@@ -62,28 +62,14 @@ function JSTracerTrace(props) {
     relatedTraceId,
     // See tracer.jsm FRAME_EXIT_REASONS
     why,
+
+    // Attributes specific to DOM Mutations
+    mutationType,
+    mutationElement,
   } = message;
 
-  // When we are logging a DOM event, we have the `eventName` defined.
-  let messageBody;
-  if (eventName) {
-    messageBody = [dom.span({ className: "jstracer-dom-event" }, eventName)];
-  } else if (typeof relatedTraceId == "number") {
-    messageBody = [
-      dom.span({ className: "jstracer-io" }, "⟵ "),
-      dom.span({ className: "jstracer-display-name" }, displayName),
-    ];
-  } else {
-    messageBody = [
-      dom.span({ className: "jstracer-io" }, "⟶ "),
-      dom.span({ className: "jstracer-implementation" }, implementation),
-      // Add a space in order to improve copy paste rendering
-      dom.span({ className: "jstracer-display-name" }, " " + displayName),
-    ];
-  }
-
   let messageBodyConfig;
-  if (parameters || why) {
+  if (parameters || why || mutationType) {
     messageBodyConfig = {
       dispatch,
       serviceContainer,
@@ -96,8 +82,35 @@ function JSTracerTrace(props) {
       customFormat: false,
     };
   }
-  // Arguments will only be passed on-demand
 
+  // When we are logging a DOM event, we have the `eventName` defined.
+  let messageBody;
+  if (eventName) {
+    messageBody = [dom.span({ className: "jstracer-dom-event" }, eventName)];
+  } else if (typeof relatedTraceId == "number") {
+    messageBody = [
+      dom.span({ className: "jstracer-io" }, "⟵ "),
+      dom.span({ className: "jstracer-display-name" }, displayName),
+    ];
+  } else if (mutationType) {
+    messageBody = [
+      dom.span(
+        { className: "jstracer-dom-mutation" },
+        // Add an extra space at the end to have nice copy-paste messages
+        "— DOM Mutation | " + mutationType + " "
+      ),
+    ];
+    messageBody.push(formatRep(messageBodyConfig, mutationElement));
+  } else {
+    messageBody = [
+      dom.span({ className: "jstracer-io" }, "⟶ "),
+      dom.span({ className: "jstracer-implementation" }, implementation),
+      // Add a space in order to improve copy paste rendering
+      dom.span({ className: "jstracer-display-name" }, " " + displayName),
+    ];
+  }
+
+  // Arguments will only be passed on-demand
   if (parameters) {
     messageBody.push("(", ...formatReps(messageBodyConfig, parameters), ")");
   }
