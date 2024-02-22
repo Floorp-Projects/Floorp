@@ -18,7 +18,7 @@
 #include "nsAtom.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "mozilla/LookAndFeel.h"
+#include "mozilla/StaticPrefs_ui.h"
 
 // Interfaces needed to be included
 #include "nsPresContext.h"
@@ -1184,9 +1184,8 @@ nsresult ChromeTooltipListener::MouseMove(Event* aMouseEvent) {
     if (mPossibleTooltipNode) {
       nsresult rv = NS_NewTimerWithFuncCallback(
           getter_AddRefs(mTooltipTimer), sTooltipCallback, this,
-          LookAndFeel::GetInt(LookAndFeel::IntID::TooltipDelay, 500),
-          nsITimer::TYPE_ONE_SHOT, "ChromeTooltipListener::MouseMove",
-          GetMainThreadSerialEventTarget());
+          StaticPrefs::ui_tooltip_delay_ms(), nsITimer::TYPE_ONE_SHOT,
+          "ChromeTooltipListener::MouseMove", GetMainThreadSerialEventTarget());
       if (NS_FAILED(rv)) {
         mPossibleTooltipNode = nullptr;
         NS_WARNING("Could not create a timer for tooltip tracking");

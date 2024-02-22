@@ -118,9 +118,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::ScrollbarButtonAutoRepeatBehavior:
       aResult = 0;
       break;
-    case IntID::TooltipDelay:
-      aResult = 500;
-      break;
     case IntID::SwipeAnimationEnabled:
       aResult = 0;
       break;

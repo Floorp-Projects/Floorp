@@ -412,7 +412,7 @@ add_task(async function testPaginatorAfterSettingsUpdate() {
 });
 
 add_task(async function testTooltips() {
-  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
+  await SpecialPowers.pushPrefEnv({ set: [["ui.tooltip.delay_ms", 0]] });
   const mockPrinterName = "Fake Printer";
   await PrintHelper.withTestPage(async helper => {
     helper.addMockPrinter(mockPrinterName);
