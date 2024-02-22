@@ -217,6 +217,13 @@ nsresult nsHttpTransaction::Init(
 
   LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
 
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    LOG(
+        ("nsHttpTransaction aborting init because of app"
+         "shutdown"));
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   MOZ_ASSERT(cinfo);
   MOZ_ASSERT(requestHead);
   MOZ_ASSERT(target);
