@@ -78,7 +78,7 @@
       <popupnotificationcontent orient="vertical">
         <label data-l10n-id="panel-save-update-username" control="password-notification-username" class="password-notification-label"></label>
         <stack>
-          <html:input id="password-notification-username" 
+          <html:input id="password-notification-username"
                       type="text"
                       class="ac-has-end-icon"
                       autocompletesearch="login-doorhanger-username"
@@ -132,7 +132,7 @@
       <popupnotificationcontent id="addon-install-blocked-content" orient="vertical">
         <description id="addon-install-blocked-message" class="popup-notification-description"></description>
         <hbox>
-          <html:a 
+          <html:a
               is="moz-support-link"
               id="addon-install-blocked-info"
               class="popup-notification-learnmore-link"
@@ -261,7 +261,7 @@
     <popupnotification id="address-save-update-notification" class="address-capture-notification" hidden="true">
       <popupnotificationcontent class="address-save-update-notification-content" orient="vertical">
         <html:div class="address-capture-header">
-          <html:p/>
+          <html:h1/>
         </html:div>
         <html:div class="address-capture-description">
           <html:p/>
@@ -274,7 +274,7 @@
     <popupnotification id="address-edit-notification" class="address-capture-notification" hidden="true">
       <popupnotificationcontent class="address-edit-notification-content" orient="vertical">
         <html:div class="address-capture-header">
-          <html:p/>
+          <html:h1/>
         </html:div>
         <html:div class="address-capture-content">
         </html:div>
