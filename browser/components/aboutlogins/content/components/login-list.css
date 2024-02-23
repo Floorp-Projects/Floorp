@@ -34,7 +34,7 @@
 }
 
 #login-sort > option {
-  font-weight: var(--font-weight-default);
+  font-weight: var(--font-weight);
 }
 
 .count {

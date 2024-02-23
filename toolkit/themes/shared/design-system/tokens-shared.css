@@ -61,7 +61,7 @@
     --color-error-outline: light-dark(var(--color-red-50), var(--color-red-20));
 
     /** Font weight **/
-    --font-weight-default: normal;
+    --font-weight: normal;
     --font-weight-bold: 600;
 
     /** Focus outline **/

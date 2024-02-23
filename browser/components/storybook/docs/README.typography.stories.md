@@ -260,7 +260,7 @@ Type setting relies on design tokens for font size and font weight.
   <tbody>
     <tr>
       <th>
-        <code>--font-weight-default</code>
+        <code>--font-weight</code>
       </th>
       <td>
         <code>normal</code>

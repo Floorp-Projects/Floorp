@@ -68,7 +68,7 @@
   box-sizing: border-box;
   display: flex;
   font-size: 0.87rem;
-  font-weight: var(--font-weight-default);
+  font-weight: var(--font-weight);
   margin: 0;
   padding: 0.125rem 0.5rem;
 }
