@@ -8042,6 +8042,20 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   return newFrame;
 }
 
+void nsCSSFrameConstructor::MaybeSetNextPageContentFramePageName(
+    const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame, "Frame should not be null");
+  // No parent means the root frame, which isn't what this funciton is for.
+  MOZ_ASSERT(aFrame->GetParent(),
+             "Frame should be the first child placed on a new page, not the "
+             "root frame.");
+  if (mNextPageContentFramePageName) {
+    return;
+  }
+  const nsAtom* const autoValue = aFrame->GetParent()->GetAutoPageValue();
+  mNextPageContentFramePageName = aFrame->ComputePageValue(autoValue);
+}
+
 nsresult nsCSSFrameConstructor::ReplicateFixedFrames(
     nsPageContentFrame* aParentFrame) {
   // Now deal with fixed-pos things....  They should appear on all pages,
