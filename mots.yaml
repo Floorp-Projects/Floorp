@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-02-13T20:45:29.452204'
+updated_at: '2024-02-12T11:38:43.189353'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1152,6 +1152,22 @@ modules:
       - *hiro
       - *mstange
     machine_name: core_apz_graphics_submodule
+
+  - name: 'Core: Browser WebAPI'
+    description: Web API for rendering apps, browser windows and widgets.
+    includes:
+      - dom/browser-element/**/*
+    meta:
+      owners_emeritus:
+        - Kan-Ru Chen
+      peers_emeritus:
+        - Fabrice Desré
+      group: dev-webapi
+      components:
+        - Core::DOM
+    owners:
+      - *smaug
+    machine_name: core_browser_webapi
 
   - name: 'Core: Build and Release Tools'
     description: Tools related to build and release automation and configuration of
@@ -4207,5 +4223,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 9080f32f58cb9b83b823208e0a6f31b9e48cb0b9
-  export: f76b4dffdb520c5cd0045f89775b565af422d933
+  config: 308df3f31d4c18ad2b33ff42089ec56cca1566a1
+  export: de95c24371652728c9a29fb28c859cc845d9e04a

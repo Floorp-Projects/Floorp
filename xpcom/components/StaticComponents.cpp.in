@@ -83,6 +83,10 @@ const nsXPTInterface gInterfaces[] = {
 //# @interfaces@
 };
 
+const StringOffset gComponentJSMs[] = {
+//# @component_jsms@
+};
+
 const StringOffset gComponentESModules[] = {
 //# @component_esmodules@
 };
@@ -110,7 +114,7 @@ bool ContractEntry::Matches(const nsACString& aContractID) const {
 enum class ComponentType { JSM, ESM };
 
 template <ComponentType type>
-[[maybe_unused]] static nsresult ConstructJSMOrESMComponent(const nsACString& aURI,
+static nsresult ConstructJSMOrESMComponent(const nsACString& aURI,
                                            const char* aConstructor,
                                            nsISupports** aResult) {
   if (!nsComponentManagerImpl::JSLoaderReady()) {
@@ -142,6 +146,13 @@ template <ComponentType type>
 
   return nsContentUtils::XPConnect()->WrapJS(cx, inst, NS_GET_IID(nsISupports),
                                              (void**)aResult);
+}
+
+static nsresult ConstructJSMComponent(const nsACString& aURI,
+                                      const char* aConstructor,
+                                      nsISupports** aResult) {
+  return ConstructJSMOrESMComponent<ComponentType::JSM>(
+    aURI, aConstructor, aResult);
 }
 
 static nsresult ConstructESModuleComponent(const nsACString& aURI,
@@ -336,6 +347,20 @@ const StaticProtocolHandler* StaticProtocolHandler::Lookup(const nsACString& aSc
     return true;
   }
   return false;
+}
+
+/* static */ already_AddRefed<nsIUTF8StringEnumerator>
+StaticComponents::GetComponentJSMs() {
+  auto jsms = MakeUnique<nsTArray<nsCString>>(MOZ_ARRAY_LENGTH(gComponentJSMs));
+
+  for (const auto& entry : gComponentJSMs) {
+    jsms->AppendElement(GetString(entry));
+  }
+
+  nsCOMPtr<nsIUTF8StringEnumerator> result;
+  MOZ_ALWAYS_SUCCEEDS(NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(result),
+                                                         jsms.release()));
+  return result.forget();
 }
 
 /* static */ already_AddRefed<nsIUTF8StringEnumerator>

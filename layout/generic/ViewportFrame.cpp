@@ -21,6 +21,7 @@
 #include "nsCanvasFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsSubDocumentFrame.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "MobileViewportManager.h"
 
