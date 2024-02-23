@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <link rel=author href="mailto:jarhar@chromium.org">
-<link rel=help href="https://github.com/w3c/csswg-drafts/issues/4441">
+<link rel=help href="https://drafts.csswg.org/css-transitions-2/#transition-behavior-property">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/css/css-animations/support/testcommon.js"></script>
@@ -30,12 +30,55 @@ promise_test(async () => {
   normal.classList.add('animated');
   const normalAnims = normal.getAnimations();
   assert_equals(normalAnims.length, 0,
-                "Started a discrete property transition on a normal element");
+                "Should not start a discrete property transition");
 
   discrete.classList.add('animated');
   const anims = discrete.getAnimations();
   assert_equals(anims.length, 1,
-                "Did not start a discrete-property transition");
+                "Should start a discrete property transition");
   assert_equals(anims[0].transitionProperty, 'float');
-}, 'transition:all with transition-behavior:allow-discrete should animate discrete properties.');
+}, 'transition-behavior:allow-discrete should animate discrete properties.');
+
+promise_test(async t => {
+  const div = addDiv(t, {
+    style: 'transition: all 1s normal, float 1s allow-discrete; float: left',
+  });
+  getComputedStyle(div).float;
+
+  div.style.float = 'right';
+  const anims = div.getAnimations();
+  assert_equals(anims.length, 1,
+                "Should start a discrete property transition");
+}, 'transition-behavior:allow-discrete overlaps the previous normal value.');
+
+promise_test(async t => {
+  const div = addDiv(t, {
+    style: 'transition: all 1s allow-discrete, float 1s normal; float: left',
+  });
+  getComputedStyle(div).float;
+
+  div.style.float = 'right';
+  const anims = div.getAnimations();
+  assert_equals(anims.length, 0,
+                "Should not start a discrete property transition");
+}, 'transition-behavior:normal overlaps the previous allow-discrete value.');
+
+promise_test(async t => {
+  const div = addDiv(t, {
+    style: 'transition: position 1s allow-discrete; position: relative',
+  });
+  getComputedStyle(div).position;
+
+  div.style.position = 'static';
+  assert_equals(div.getAnimations().length, 1,
+                "Should start a discrete property transition");
+
+  div.style.transitionBehavior = "normal";
+  div.style.position = 'absolute';
+  assert_equals(getComputedStyle(div).position, "absolute");
+  assert_equals(div.getAnimations().length, 0,
+                "The running transition should be cancelled");
+}, 'transition-behavior changed to normal should stop the running discrete ' +
+   'transitions.');
+
 </script>

@@ -1207,8 +1207,16 @@ pub struct ShouldTransitionResult {
 }
 
 #[inline]
-fn is_transitionable(prop: PropertyDeclarationId) -> bool {
-    prop.is_animatable() && !prop.is_discrete_animatable()
+fn is_transitionable(prop: PropertyDeclarationId, behavior: computed::TransitionBehavior) -> bool {
+    if !prop.is_animatable() {
+        return false;
+    }
+
+    match behavior {
+        computed::TransitionBehavior::Normal => !prop.is_discrete_animatable(),
+        // If transition-behavior is allow-discrete, transitionable is the same as animatable.
+        computed::TransitionBehavior::AllowDiscrete => true,
+    }
 }
 
 #[no_mangle]
@@ -1216,6 +1224,7 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     old: &ComputedValues,
     new: &ComputedValues,
     prop: &structs::AnimatedPropertyID,
+    behavior: computed::TransitionBehavior,
     old_transition_value: Option<&AnimationValue>,
     start: &mut structs::RefPtr<AnimationValue>,
     end: &mut structs::RefPtr<AnimationValue>,
@@ -1224,7 +1233,7 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
         return Default::default();
     };
     let prop = prop.as_borrowed();
-    if !is_transitionable(prop) {
+    if !is_transitionable(prop, behavior) {
         return Default::default();
     }
 
@@ -1266,8 +1275,9 @@ pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
     let Some(prop) = OwnedPropertyDeclarationId::from_gecko_animated_property_id(prop) else {
         return false;
     };
+    // Note: the running transitions should be transitionable, so it is always allow-discrete.
     let prop = prop.as_borrowed();
-    if !is_transitionable(prop) {
+    if !is_transitionable(prop, computed::TransitionBehavior::AllowDiscrete) {
         return false;
     }
     let Some(value) = AnimationValue::from_computed_values(prop, style) else {

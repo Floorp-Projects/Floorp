@@ -116,6 +116,7 @@ bool nsTransitionManager::DoUpdateTransitions(
       continue;
     }
 
+    const auto behavior = aStyle.GetTransitionBehavior(i);
     ExpandTransitionProperty(aStyle.GetTransitionProperty(i),
                              [&](const AnimatedPropertyID& aProperty) {
                                // We might have something to transition.  See if
@@ -123,8 +124,9 @@ bool nsTransitionManager::DoUpdateTransitions(
                                // are animatable.
                                startedAny |= ConsiderInitiatingTransition(
                                    aProperty, aStyle, i, delay, duration,
-                                   aElement, aPseudoType, aElementTransitions,
-                                   aOldStyle, aNewStyle, propertiesChecked);
+                                   behavior, aElement, aPseudoType,
+                                   aElementTransitions, aOldStyle, aNewStyle,
+                                   propertiesChecked);
                              });
   }
 
@@ -248,8 +250,8 @@ GetReplacedTransitionProperties(const CSSTransition* aTransition,
 bool nsTransitionManager::ConsiderInitiatingTransition(
     const AnimatedPropertyID& aProperty, const nsStyleUIReset& aStyle,
     uint32_t aTransitionIndex, float aDelay, float aDuration,
-    dom::Element* aElement, PseudoStyleType aPseudoType,
-    CSSTransitionCollection*& aElementTransitions,
+    mozilla::StyleTransitionBehavior aBehavior, dom::Element* aElement,
+    PseudoStyleType aPseudoType, CSSTransitionCollection*& aElementTransitions,
     const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle,
     AnimatedPropertyIDSet& aPropertiesChecked) {
   // IsShorthand itself will assert if aProperty is not a property.
@@ -294,7 +296,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   AnimationValue startValue, endValue;
   const StyleShouldTransitionResult result =
       Servo_ComputedValues_ShouldTransition(
-          &aOldStyle, &aNewStyle, &property,
+          &aOldStyle, &aNewStyle, &property, aBehavior,
           oldTransition ? oldTransition->ToValue().mServo.get() : nullptr,
           &startValue.mServo, &endValue.mServo);
 

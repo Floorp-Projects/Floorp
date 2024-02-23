@@ -117,6 +117,7 @@ impl TransitionProperty {
 /// https://drafts.csswg.org/css-transitions-2/#transition-behavior-property
 #[derive(
     Clone,
+    Copy,
     Debug,
     MallocSizeOf,
     Parse,
