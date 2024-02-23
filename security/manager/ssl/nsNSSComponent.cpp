@@ -20,6 +20,7 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FilePreferences.h"
@@ -393,10 +394,58 @@ nsNSSComponent::GetEnterpriseRoots(
   return CommonGetEnterpriseCerts(enterpriseRoots, true);
 }
 
+nsresult BytesArrayToPEM(const nsTArray<nsTArray<uint8_t>>& bytesArray,
+                         nsACString& pemArray) {
+  for (const auto& bytes : bytesArray) {
+    nsAutoCString base64;
+    nsresult rv = Base64Encode(reinterpret_cast<const char*>(bytes.Elements()),
+                               bytes.Length(), base64);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (!pemArray.IsEmpty()) {
+      pemArray.AppendLiteral("\n");
+    }
+    pemArray.AppendLiteral("-----BEGIN CERTIFICATE-----\n");
+    for (size_t i = 0; i < base64.Length() / 64; i++) {
+      pemArray.Append(Substring(base64, i * 64, 64));
+      pemArray.AppendLiteral("\n");
+    }
+    if (base64.Length() % 64 != 0) {
+      size_t chunks = base64.Length() / 64;
+      pemArray.Append(Substring(base64, chunks * 64));
+      pemArray.AppendLiteral("\n");
+    }
+    pemArray.AppendLiteral("-----END CERTIFICATE-----");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetEnterpriseRootsPEM(nsACString& enterpriseRootsPEM) {
+  nsTArray<nsTArray<uint8_t>> enterpriseRoots;
+  nsresult rv = GetEnterpriseRoots(enterpriseRoots);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return BytesArrayToPEM(enterpriseRoots, enterpriseRootsPEM);
+}
+
 NS_IMETHODIMP
 nsNSSComponent::GetEnterpriseIntermediates(
     nsTArray<nsTArray<uint8_t>>& enterpriseIntermediates) {
   return CommonGetEnterpriseCerts(enterpriseIntermediates, false);
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetEnterpriseIntermediatesPEM(
+    nsACString& enterpriseIntermediatesPEM) {
+  nsTArray<nsTArray<uint8_t>> enterpriseIntermediates;
+  nsresult rv = GetEnterpriseIntermediates(enterpriseIntermediates);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return BytesArrayToPEM(enterpriseIntermediates, enterpriseIntermediatesPEM);
 }
 
 NS_IMETHODIMP
