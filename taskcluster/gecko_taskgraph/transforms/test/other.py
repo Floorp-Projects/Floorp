@@ -146,8 +146,8 @@ def set_treeherder_machine_platform(config, tasks):
         # treeherder.
         "macosx1100-64/opt": "osx-1100/opt",
         "macosx1100-64-shippable/opt": "osx-1100-shippable/opt",
-        "macosx1300-64/opt": "osx-1300/opt",
-        "macosx1300-64-shippable/opt": "osx-1300-shippable/opt",
+        "macosx1400-64/opt": "osx-1300/opt",
+        "macosx1400-64-shippable/opt": "osx-1400-shippable/opt",
         "win64-asan/opt": "windows10-64/asan",
         "win64-aarch64/opt": "windows10-aarch64/opt",
     }
@@ -315,7 +315,7 @@ def setup_browsertime(config, tasks):
                     "macosx64-geckodriver",
                     "macosx64-node",
                 ],
-                "macosx1300.*": [
+                "macosx1400.*": [
                     "browsertime",
                     "macosx64-aarch64-geckodriver",
                     "macosx64-aarch64-node",
@@ -339,7 +339,7 @@ def setup_browsertime(config, tasks):
                 "android.*": ["linux64-ffmpeg-4.4.1"],
                 "linux.*": ["linux64-ffmpeg-4.4.1"],
                 "macosx1015.*": ["mac64-ffmpeg-4.4.1"],
-                "macosx1300.*": ["mac64-ffmpeg-4.4.1"],
+                "macosx1400.*": ["mac64-ffmpeg-4.4.1"],
                 "windows.*aarch64.*": ["win64-ffmpeg-4.4.1"],
                 "windows.*-32.*": ["win64-ffmpeg-4.4.1"],
                 "windows.*-64.*": ["win64-ffmpeg-4.4.1"],
@@ -362,7 +362,7 @@ def setup_browsertime(config, tasks):
                 "mac64-chromedriver-121",
                 "mac64-chromedriver-122",
             ],
-            "macosx1300.*": [
+            "macosx1400.*": [
                 "mac-arm-chromedriver-120",
                 "mac-arm-chromedriver-121",
                 "mac-arm-chromedriver-122",
@@ -387,7 +387,7 @@ def setup_browsertime(config, tasks):
         chromium_fetches = {
             "linux.*": ["linux64-chromium"],
             "macosx1015.*": ["mac-chromium"],
-            "macosx1300.*": ["mac-chromium-arm"],
+            "macosx1400.*": ["mac-chromium-arm"],
             "windows.*aarch64.*": ["win32-chromium"],
             "windows.*-32.*": ["win32-chromium"],
             "windows.*-64.*": ["win64-chromium"],
@@ -687,8 +687,8 @@ def handle_tier(config, tasks):
                 "macosx1015-64-qr/debug",
                 "macosx1100-64-shippable-qr/opt",
                 "macosx1100-64-qr/debug",
-                "macosx1300-64-shippable-qr/opt",
-                "macosx1300-64-qr/debug",
+                "macosx1400-64-shippable-qr/opt",
+                "macosx1400-64-qr/debug",
                 "android-em-7.0-x86_64-shippable/opt",
                 "android-em-7.0-x86_64-shippable-lite/opt",
                 "android-em-7.0-x86_64/debug",

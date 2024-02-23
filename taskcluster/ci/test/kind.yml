@@ -74,7 +74,7 @@ job-defaults:
                 macosx1100.*:
                     - macosx64-aarch64-minidump-stackwalk
                     - macosx64-aarch64-fix-stacks
-                macosx1300.*:
+                macosx1400.*:
                     - macosx64-aarch64-minidump-stackwalk
                     - macosx64-aarch64-fix-stacks
                 android-em-7.*:
