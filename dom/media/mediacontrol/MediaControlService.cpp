@@ -510,7 +510,7 @@ void MediaControlService::ControllerManager::ConnectMainControllerEvents() {
             mSource->SetEnablePictureInPictureMode(aIsEnabled);
           });
   mPositionChangedListener = mMainController->PositionChangedEvent().Connect(
-      AbstractThread::MainThread(), [this](const PositionState& aState) {
+      AbstractThread::MainThread(), [this](const Maybe<PositionState>& aState) {
         mSource->SetPositionState(aState);
       });
 }

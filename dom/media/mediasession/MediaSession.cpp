@@ -138,6 +138,7 @@ void MediaSession::SetPositionState(const MediaPositionState& aState,
   // If the state is an empty dictionary then clear the position state.
   if (!aState.IsAnyMemberPresent()) {
     mPositionState.reset();
+    NotifyPositionStateChanged();
     return;
   }
 
@@ -328,7 +329,7 @@ void MediaSession::NotifyPositionStateChanged() {
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update action after context destroyed!");
   if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
-    updater->UpdatePositionState(currentBC->Id(), *mPositionState);
+    updater->UpdatePositionState(currentBC->Id(), mPositionState);
   }
 }
 
