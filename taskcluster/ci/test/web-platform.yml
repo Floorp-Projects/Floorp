@@ -378,9 +378,9 @@ web-platform-tests-wdspec:
     treeherder-symbol: W(Wd)
     chunks:
         by-test-platform:
-            .*-ccov.*/.*: 4
+            .*-ccov.*/.*: 6
             .*-tsan.*/.*: 8
-            default: 3
+            default: 5
     mozharness:
         extra-options:
             by-test-platform:
