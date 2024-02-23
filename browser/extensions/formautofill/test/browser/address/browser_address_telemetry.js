@@ -7,7 +7,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 );
 
 const { AddressTelemetry } = ChromeUtils.importESModule(
-  "resource://autofill/AutofillTelemetry.sys.mjs"
+  "resource://gre/modules/shared/AutofillTelemetry.sys.mjs"
 );
 
 // Telemetry definitions

@@ -134,7 +134,7 @@ import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AutofillTelemetry: "resource://autofill/AutofillTelemetry.sys.mjs",
+  AutofillTelemetry: "resource://gre/modules/shared/AutofillTelemetry.sys.mjs",
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
   CreditCardRecord: "resource://gre/modules/shared/CreditCardRecord.sys.mjs",
   FormAutofillNameUtils:

@@ -17,7 +17,7 @@ const { FormAutofill } = ChromeUtils.importESModule(
   "resource://autofill/FormAutofill.sys.mjs"
 );
 const { AutofillTelemetry } = ChromeUtils.importESModule(
-  "resource://autofill/AutofillTelemetry.sys.mjs"
+  "resource://gre/modules/shared/AutofillTelemetry.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
