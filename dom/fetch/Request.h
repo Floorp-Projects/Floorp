@@ -53,6 +53,8 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
 
   RequestRedirect Redirect() const { return mRequest->GetRedirectMode(); }
 
+  RequestPriority Priority() const { return mRequest->GetPriorityMode(); }
+
   void GetIntegrity(nsAString& aIntegrity) const {
     aIntegrity = mRequest->GetIntegrity();
   }

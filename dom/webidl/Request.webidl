@@ -64,6 +64,9 @@ dictionary RequestInit {
 
   AbortSignal? signal;
 
+  [Pref="network.fetchpriority.enabled"]
+  RequestPriority priority;
+
   [Pref="dom.fetchObserver.enabled"]
   ObserverCallback observe;
 };
