@@ -724,7 +724,7 @@ function garbage_per_frame_changed() {
     return;
   }
   if (gLoadMgr.load_running()) {
-    gLoadMgr.change_garbagePerFrame = value;
+    gLoadMgr.change_garbagePerFrame(value);
     console.log(
       `Updated garbage-per-frame to ${
         gLoadMgr.activeLoad().garbagePerFrame
