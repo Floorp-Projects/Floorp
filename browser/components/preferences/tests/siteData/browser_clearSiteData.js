@@ -137,7 +137,7 @@ async function testClearData(clearSiteData, clearCache) {
   let clearButton = dialogWin.document
     .querySelector("dialog")
     .getButton("accept");
-  if (!clearSiteData && !clearCache) {
+  if (!clearSiteData && !clearCache && useOldClearHistoryDialog) {
     // Simulate user input on one of the checkboxes to trigger the event listener for
     // disabling the clearButton.
     clearCacheCheckbox.doCommand();

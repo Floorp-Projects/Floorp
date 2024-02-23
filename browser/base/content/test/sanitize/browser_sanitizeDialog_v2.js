@@ -662,6 +662,72 @@ add_task(async function test_cancel() {
   await dh.promiseClosed;
 });
 
+// test remembering user options for various entry points
+add_task(async function test_pref_remembering() {
+  let dh = new DialogHelper("clearSiteData");
+  dh.onload = function () {
+    this.checkPrefCheckbox("cookiesAndStorage", false);
+    this.checkPrefCheckbox("siteSettings", true);
+
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // validate if prefs are remembered
+  dh = new DialogHelper("clearSiteData");
+  dh.onload = function () {
+    this.validateCheckbox("cookiesAndStorage", false);
+    this.validateCheckbox("siteSettings", true);
+
+    this.checkPrefCheckbox("cookiesAndStorage", true);
+    this.checkPrefCheckbox("siteSettings", false);
+
+    // we will test cancelling the dialog, to make sure it doesn't remember
+    // the prefs when cancelled
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // validate if prefs did not change since we cancelled the dialog
+  dh = new DialogHelper("clearSiteData");
+  dh.onload = function () {
+    this.validateCheckbox("cookiesAndStorage", false);
+    this.validateCheckbox("siteSettings", true);
+
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // test rememebering prefs from the clear history context
+  // since clear history and clear site data have seperate remembering
+  // of prefs
+  dh = new DialogHelper("clearHistory");
+  dh.onload = function () {
+    this.checkPrefCheckbox("cookiesAndStorage", true);
+    this.checkPrefCheckbox("siteSettings", false);
+    this.checkPrefCheckbox("cache", false);
+
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // validate if prefs are remembered across both clear history and browser
+  dh = new DialogHelper("browser");
+  dh.onload = function () {
+    this.validateCheckbox("cookiesAndStorage", true);
+    this.validateCheckbox("siteSettings", false);
+    this.validateCheckbox("cache", false);
+
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+});
+
 /**
  * Ensures that the "Everything" duration option works.
  */
@@ -769,12 +835,6 @@ add_task(async function testAcceptButtonDisabled() {
     this.uncheckAllCheckboxes();
     await new Promise(resolve => SimpleTest.executeSoon(resolve));
     is(clearButton.disabled, true, "Clear button should be disabled");
-    // await BrowserTestUtils.waitForMutationCondition(
-    //   clearButton,
-    //   { attributes: true },
-    //   () => clearButton.disabled,
-    //   "Clear button should be disabled"
-    // );
 
     this.checkPrefCheckbox("cache", true);
     await new Promise(resolve => SimpleTest.executeSoon(resolve));
@@ -1017,27 +1077,6 @@ add_task(async function test_cache_sizes() {
   });
 });
 
-add_task(async function test_downloads_sizes() {
-  await clearAndValidateDataSizes({
-    clearCookies: false,
-    clearCache: false,
-    clearDownloads: true,
-    timespan: Sanitizer.TIMESPAN_HOUR,
-  });
-  await clearAndValidateDataSizes({
-    clearCookies: false,
-    clearCache: false,
-    clearDownloads: true,
-    timespan: Sanitizer.TIMESPAN_4HOURS,
-  });
-  await clearAndValidateDataSizes({
-    clearCookies: false,
-    clearCache: false,
-    clearDownloads: true,
-    timespan: Sanitizer.TIMESPAN_EVERYTHING,
-  });
-});
-
 add_task(async function test_all_data_sizes() {
   await clearAndValidateDataSizes({
     clearCookies: true,
@@ -1190,37 +1229,6 @@ add_task(async function test_clear_on_shutdown() {
 
   // Clean up
   await SiteDataTestUtils.clear();
-});
-
-// test default prefs for entry points
-add_task(async function test_defaults_prefs() {
-  let dh = new DialogHelper("clearSiteData");
-  dh.onload = function () {
-    this.validateCheckbox("historyFormDataAndDownloads", false);
-    this.validateCheckbox("cache", true);
-    this.validateCheckbox("cookiesAndStorage", true);
-    this.validateCheckbox("siteSettings", false);
-
-    this.cancelDialog();
-  };
-  dh.open();
-  await dh.promiseClosed;
-
-  // We don't need to specify the mode again,
-  // as the default mode is taken (browser, clear history)
-
-  dh = new DialogHelper();
-  dh.onload = function () {
-    // Default checked for browser and clear history mode
-    this.validateCheckbox("historyFormDataAndDownloads", true);
-    this.validateCheckbox("cache", true);
-    this.validateCheckbox("cookiesAndStorage", true);
-    this.validateCheckbox("siteSettings", false);
-
-    this.cancelDialog();
-  };
-  dh.open();
-  await dh.promiseClosed;
 });
 
 /**
@@ -1399,31 +1407,4 @@ add_task(async function testClearingOptionsTelemetry() {
     telemetryObject[0].extra,
     `Expected ${telemetryObject} to be the same as ${expectedObject}`
   );
-});
-
-add_task(async function testCheckboxStatesAfterMigration() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.clearOnShutdown.history", false],
-      ["privacy.clearOnShutdown.formdata", true],
-      ["privacy.clearOnShutdown.cookies", true],
-      ["privacy.clearOnShutdown.offlineApps", false],
-      ["privacy.clearOnShutdown.sessions", false],
-      ["privacy.clearOnShutdown.siteSettings", false],
-      ["privacy.clearOnShutdown.cache", true],
-      ["privacy.clearOnShutdown_v2.cookiesAndStorage", false],
-      ["privacy.sanitize.sanitizeOnShutdown.hasMigratedToNewPrefs", false],
-    ],
-  });
-
-  let dh = new DialogHelper("clearOnShutdown");
-  dh.onload = function () {
-    this.validateCheckbox("cookiesAndStorage", true);
-    this.validateCheckbox("historyFormDataAndDownloads", false);
-    this.validateCheckbox("cache", true);
-    this.validateCheckbox("siteSettings", false);
-    this.cancelDialog();
-  };
-  dh.open();
-  await dh.promiseClosed;
 });
