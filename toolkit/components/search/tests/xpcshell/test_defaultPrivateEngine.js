@@ -108,7 +108,9 @@ add_task(async function test_defaultPrivateEngine() {
       loadPath: SearchUtils.newSearchConfigEnabled
         ? "[app]engine-rel-searchform-purpose@search.mozilla.org"
         : "[addon]engine-rel-searchform-purpose@search.mozilla.org",
-      submissionUrl: "https://www.google.com/search?q=&channel=sb",
+      submissionUrl: SearchUtils.newSearchConfigEnabled
+        ? "https://www.google.com/search?channel=sb&q="
+        : "https://www.google.com/search?q=&channel=sb",
       verified: "default",
     },
   });

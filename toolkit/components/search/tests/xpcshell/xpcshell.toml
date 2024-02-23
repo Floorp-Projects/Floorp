@@ -33,6 +33,7 @@ support-files = [
   "data/engine-same-name/_locales/gd/messages.json",
   "data/engines-no-order-hint.json",
   "data/engines.json",
+  "data/search-config-v2.json",
   "data/iconsRedirect.sjs",
   "data/search.json",
   "data/search-legacy.json",

@@ -1,0 +1,223 @@
+{
+  "data": [
+    {
+      "recordType": "engine",
+      "identifier": "engine",
+      "base": {
+        "name": "Test search engine",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "params": [
+              {
+                "name": "channel",
+                "searchAccessPoint": {
+                  "addressbar": "fflb",
+                  "contextmenu": "rcs"
+                }
+              }
+            ],
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "excludedLocales": ["gd"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "engine-pref",
+      "base": {
+        "name": "engine-pref",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "params": [
+              {
+                "name": "code",
+                "experimentConfig": "code"
+              },
+              {
+                "name": "test",
+                "experimentConfig": "test"
+              }
+            ],
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "excludedLocales": ["de"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "engine-rel-searchform-purpose",
+      "base": {
+        "name": "engine-rel-searchform-purpose",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "params": [
+              {
+                "name": "channel",
+                "searchAccessPoint": {
+                  "addressbar": "fflb",
+                  "contextmenu": "rcs",
+                  "searchbar": "sb"
+                }
+              }
+            ],
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "excludedLocales": ["de", "fr"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "engine-chromeicon",
+      "base": {
+        "name": "engine-chromeicon",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "excludedLocales": ["de", "fr"] }
+        },
+        {
+          "environment": { "regions": ["ru"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "engine-resourceicon",
+      "base": {
+        "name": "engine-resourceicon",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": {
+            "excludedRegions": ["ru"],
+            "locales": ["en-US", "fr"]
+          }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "engine-resourceicon-gd",
+      "base": {
+        "name": "engine-resourceicon-gd",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "locales": ["gd"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "engine-reordered",
+      "base": {
+        "name": "Test search engine (Reordered)",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "params": [
+              {
+                "name": "channel",
+                "searchAccessPoint": {
+                  "addressbar": "fflb",
+                  "contextmenu": "rcs"
+                }
+              }
+            ],
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "excludedLocales": ["de", "fr"] }
+        }
+      ]
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "engine",
+      "specificDefaults": [
+        {
+          "defaultPrivate": "engine-pref",
+          "environment": { "excludedLocales": ["de"] }
+        },
+        {
+          "default": "engine-resourceicon-gd",
+          "environment": { "locales": ["gd"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": [
+        {
+          "environment": { "allRegionsAndLocales": true },
+          "order": [
+            "engine",
+            "engine-resourceicon",
+            "engine-chromeicon",
+            "engine-pref",
+            "engine-rel-searchform-purpose",
+            "engine-reordered"
+          ]
+        },
+        {
+          "environment": { "locales": ["gd"] },
+          "order": [
+            "engine",
+            "engine-rel-searchform-purpose",
+            "engine-resourceicon",
+            "engine-chromeicon",
+            "engine-pref",
+            "engine-reordered"
+          ]
+        }
+      ]
+    }
+  ]
+}

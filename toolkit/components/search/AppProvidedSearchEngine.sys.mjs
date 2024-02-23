@@ -83,24 +83,10 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *   Returns true if the engine was updated, false otherwise.
    */
   async updateIfNoNameChange({ configuration, locale }) {
-    let newName;
-    if (locale != "default") {
-      newName = configuration.webExtension.searchProvider[locale].name;
-    } else if (
-      locale == "default" &&
-      configuration.webExtension.default_locale
-    ) {
-      newName =
-        configuration.webExtension.searchProvider[
-          configuration.webExtension.default_locale
-        ].name;
-    } else {
-      newName = configuration.webExtension.name;
-    }
-
-    if (this.name != newName.trim()) {
+    if (this.name != configuration.name.trim()) {
       return false;
     }
+
     this.update({ locale, configuration });
     return true;
   }

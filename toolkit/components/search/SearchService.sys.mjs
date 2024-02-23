@@ -69,6 +69,13 @@ export const NON_SPLIT_ENGINE_IDS = [
   "wolnelektury-pl",
   "yahoo-jp",
   "yahoo-jp-auctions",
+  // below are test engines
+  "engine-pref",
+  "engine-rel-searchform-purpose",
+  "engine-chromeicon",
+  "engine-resourceicon",
+  "engine-resourceicon-gd",
+  "engine-reordered",
 ];
 
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
