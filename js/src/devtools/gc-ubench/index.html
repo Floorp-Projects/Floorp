@@ -15,13 +15,6 @@
 
   <!-- List of garbage-creating test loads -->
   <script src="test_list.js"></script>
-
-  <!-- Collect all test loads into a `tests` Map -->
-  <script>
-    var tests = new Map();
-    foreach_test_file(path => import("./" + path));
-  </script>
-
 </head>
 
 <body onload="onload()" onunload="onunload()">
