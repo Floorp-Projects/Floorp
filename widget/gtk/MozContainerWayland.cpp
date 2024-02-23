@@ -155,8 +155,13 @@ bool moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                nsIntSize aSize, int aScale) {
   MozContainerWayland* wl_container = &container->data.wl_container;
   MutexAutoLock lock(wl_container->container_lock);
+
+  // We may be called after unmap so we're missing egl window completelly.
+  // In such case don't return false which would block compositor.
+  // We return true here and don't block flush WebRender queue.
+  // We'll be repainted if our window become visible again anyway.
   if (!wl_container->eglwindow) {
-    return false;
+    return true;
   }
 
   if (wl_container->buffer_scale != aScale) {
