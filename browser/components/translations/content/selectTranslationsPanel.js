@@ -4,6 +4,11 @@
 
 /* eslint-env mozilla/browser-window */
 
+ChromeUtils.defineESModuleGetters(this, {
+  TranslationsPanelShared:
+    "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs",
+});
+
 /**
  * This singleton class controls the Translations popup panel.
  */
@@ -64,48 +69,20 @@ var SelectTranslationsPanel = new (class {
         settingsButton,
       };
 
-      /**
-       * Define a getter on #lazyElements that gets the element by an id
-       * or class name.
-       */
-      const getter = (name, discriminator) => {
-        let element;
-        Object.defineProperty(this.#lazyElements, name, {
-          get: () => {
-            if (!element) {
-              if (discriminator[0] === ".") {
-                // Lookup by class
-                element = document.querySelector(discriminator);
-              } else {
-                // Lookup by id
-                element = document.getElementById(discriminator);
-              }
-            }
-            if (!element) {
-              throw new Error(
-                `Could not find "${name}" at "#${discriminator}".`
-              );
-            }
-            return element;
-          },
-        });
-      };
-
-      // Getters by id
-      getter("betaIcon", "select-translations-panel-beta-icon");
-      getter("copyButton", "select-translations-panel-copy-button");
-      getter("doneButton", "select-translations-panel-done-button");
-      getter("fromLabel", "select-translations-panel-from-label");
-      getter("fromMenuList", "select-translations-panel-from");
-      getter("header", "select-translations-panel-header");
-      getter("multiview", "select-translations-panel-multiview");
-      getter("textArea", "select-translations-panel-translation-area");
-      getter("toLabel", "select-translations-panel-to-label");
-      getter("toMenuList", "select-translations-panel-to");
-      getter(
-        "translateFullPageButton",
-        "select-translations-panel-translate-full-page-button"
-      );
+      TranslationsPanelShared.defineLazyElements(document, this.#lazyElements, {
+        betaIcon: "select-translations-panel-beta-icon",
+        copyButton: "select-translations-panel-copy-button",
+        doneButton: "select-translations-panel-done-button",
+        fromLabel: "select-translations-panel-from-label",
+        fromMenuList: "select-translations-panel-from",
+        header: "select-translations-panel-header",
+        multiview: "select-translations-panel-multiview",
+        textArea: "select-translations-panel-translation-area",
+        toLabel: "select-translations-panel-to-label",
+        toMenuList: "select-translations-panel-to",
+        translateFullPageButton:
+          "select-translations-panel-translate-full-page-button",
+      });
     }
 
     return this.#lazyElements;
