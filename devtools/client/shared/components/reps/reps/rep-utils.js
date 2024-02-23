@@ -548,30 +548,12 @@ define(function (require, exports, module) {
       }, {});
   }
 
-  /**
-   * Append has-rtl-char to className if passed string has RTL chars.
-   * has-rtl-char is used in reps.css to set `unicode-bidi: isolate` on the element.
-   * It's important to only apply it when needed as this CSS property can have an
-   * important impact on performance (See Bug 1879806)
-   *
-   * @param {String} className: The className want to set on an element
-   * @param {String} strToCheck: The string for which we want to check if it has RTL chars
-   * @returns {String}
-   */
-  function appendRTLClassNameIfNeeded(className = "", strToCheck) {
-    if (!Services.intl.stringHasRTLChars(strToCheck)) {
-      return className;
-    }
-    return `${className} has-rtl-char`;
-  }
-
   module.exports = {
     interleave,
     isURL,
     cropString,
     containsURL,
     rawCropString,
-    appendRTLClassNameIfNeeded,
     sanitizeString,
     escapeString,
     wrapRender,

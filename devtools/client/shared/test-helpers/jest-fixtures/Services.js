@@ -549,9 +549,6 @@ const Services = {
       };
     },
   },
-  intl: {
-    stringHasRTLChars: () => false,
-  },
 };
 
 function pref(name, value) {

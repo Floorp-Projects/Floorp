@@ -11,7 +11,6 @@ define(function (require, exports, module) {
   const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
   const {
-    appendRTLClassNameIfNeeded,
     maybeEscapePropertyName,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -74,7 +73,7 @@ define(function (require, exports, module) {
       }
       key = span(
         {
-          className: appendRTLClassNameIfNeeded(className, name),
+          className,
           title: shouldRenderTooltip ? name : null,
         },
         name

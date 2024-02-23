@@ -12,7 +12,6 @@ define(function (require, exports, module) {
 
   // Reps
   const {
-    appendRTLClassNameIfNeeded,
     getGripType,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -43,12 +42,7 @@ define(function (require, exports, module) {
 
     return span(
       config,
-      span(
-        {
-          className: appendRTLClassNameIfNeeded("attrName", attrName),
-        },
-        attrName
-      ),
+      span({ className: "attrName" }, attrName),
       span({ className: "attrEqual" }, "="),
       StringRep({ className: "attrValue", object: value })
     );
