@@ -76,6 +76,87 @@ const CONFIG = [
   },
 ];
 
+const CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "engine",
+    base: {
+      name: "Test search engine",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "channel",
+              searchAccessPoint: {
+                addressbar: "fflb",
+                contextmenu: "rcs",
+              },
+            },
+          ],
+          searchTermParamName: "q",
+        },
+        suggestions: {
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { excludedRegions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-pref",
+    base: {
+      name: "engine-pref",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "code",
+              experimentConfig: "code",
+            },
+            {
+              name: "test",
+              experimentConfig: "test",
+            },
+          ],
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    specificDefaults: [
+      {
+        default: "engine",
+        defaultPrivate: "engine",
+        environment: { excludedRegions: ["FR"] },
+      },
+      {
+        default: "engine-pref",
+        defaultPrivate: "engine-pref",
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 // Default engine with no region defined.
 const DEFAULT = "Test search engine";
 // Default engine with region set to FR.
@@ -104,7 +185,11 @@ add_setup(async function () {
   );
 
   SearchTestUtils.useMockIdleService();
-  await SearchTestUtils.useTestEngines("data", null, CONFIG);
+  await SearchTestUtils.useTestEngines(
+    "data",
+    null,
+    SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : CONFIG
+  );
   await AddonTestUtils.promiseStartupManager();
 });
 

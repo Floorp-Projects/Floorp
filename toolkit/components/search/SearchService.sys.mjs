@@ -76,6 +76,10 @@ export const NON_SPLIT_ENGINE_IDS = [
   "engine-resourceicon",
   "engine-resourceicon-gd",
   "engine-reordered",
+  "engine-same-name",
+  "engine-same-name-gd",
+  "engine-purpose",
+  "engine-fr",
 ];
 
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";

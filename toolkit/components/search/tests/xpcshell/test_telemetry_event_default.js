@@ -45,6 +45,49 @@ const BASE_CONFIG = [
     default: "yes",
   },
 ];
+
+const BASE_CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "engine",
+    base: {
+      name: "Test search engine",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "channel",
+              searchAccessPoint: {
+                addressbar: "fflb",
+                contextmenu: "rcs",
+              },
+            },
+          ],
+          searchTermParamName: "q",
+        },
+        suggestions: {
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "engine",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
 const MAIN_CONFIG = [
   {
     webExtension: {
@@ -78,7 +121,6 @@ const MAIN_CONFIG = [
   {
     webExtension: {
       id: "engine-chromeicon@search.mozilla.org",
-
       name: "engine-chromeicon",
       search_url: "https://www.google.com/search",
       params: [
@@ -163,6 +205,154 @@ const MAIN_CONFIG = [
   },
 ];
 
+const MAIN_CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "engine",
+    base: {
+      name: "Test search engine",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "channel",
+              searchAccessPoint: {
+                addressbar: "fflb",
+                contextmenu: "rcs",
+              },
+            },
+          ],
+          searchTermParamName: "q",
+        },
+        suggestions: {
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-chromeicon",
+    base: {
+      name: "engine-chromeicon",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-fr",
+    base: {
+      name: "Test search engine (fr)",
+      urls: {
+        search: {
+          base: "https://www.google.fr/search",
+          params: [
+            {
+              name: "ie",
+              value: "iso-8859-1",
+            },
+            {
+              name: "oe",
+              value: "iso-8859-1",
+            },
+          ],
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-pref",
+    base: {
+      name: "engine-pref",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "code",
+              experimentConfig: "code",
+            },
+            {
+              name: "test",
+              experimentConfig: "test",
+            },
+          ],
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine2",
+    base: {
+      name: "A second test engine",
+      urls: {
+        search: {
+          base: "https://duckduckgo.com/",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "engine-chromeicon",
+    specificDefaults: [
+      {
+        default: "engine-fr",
+        environment: { excludedRegions: ["DE"], locales: ["fr"] },
+      },
+      {
+        default: "engine-pref",
+        environment: { regions: ["DE"] },
+      },
+      {
+        default: "engine2",
+        environment: { experiment: "test1" },
+      },
+    ],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 const testSearchEngine = {
   id: "engine",
   name: "Test search engine",
@@ -186,7 +376,9 @@ const testFrEngine = {
   loadPath: SearchUtils.newSearchConfigEnabled
     ? "[app]engine-fr@search.mozilla.org"
     : "[addon]engine-fr@search.mozilla.org",
-  submissionURL: "https://www.google.fr/search?q=&ie=iso-8859-1&oe=iso-8859-1",
+  submissionURL: SearchUtils.newSearchConfigEnabled
+    ? "https://www.google.fr/search?ie=iso-8859-1&oe=iso-8859-1&q="
+    : "https://www.google.fr/search?q=&ie=iso-8859-1&oe=iso-8859-1",
 };
 const testPrefEngine = {
   id: "engine-pref",
@@ -335,7 +527,11 @@ add_setup(async () => {
     "_showRemovalOfSearchEngineNotificationBox"
   );
 
-  await SearchTestUtils.useTestEngines("data", null, BASE_CONFIG);
+  await SearchTestUtils.useTestEngines(
+    "data",
+    null,
+    SearchUtils.newSearchConfigEnabled ? BASE_CONFIG_V2 : BASE_CONFIG
+  );
   await AddonTestUtils.promiseStartupManager();
 
   await Services.search.init();
@@ -344,7 +540,9 @@ add_setup(async () => {
 add_task(async function test_configuration_changes_default() {
   clearTelemetry();
 
-  await SearchTestUtils.updateRemoteSettingsConfig(MAIN_CONFIG);
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled ? MAIN_CONFIG_V2 : MAIN_CONFIG
+  );
 
   await checkTelemetry(
     "config",

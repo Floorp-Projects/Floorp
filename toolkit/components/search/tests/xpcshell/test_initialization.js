@@ -43,13 +43,60 @@ const CONFIG = [
   },
 ];
 
+const CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "engine",
+    base: {
+      name: "Test search engine",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "channel",
+              searchAccessPoint: {
+                addressbar: "fflb",
+                contextmenu: "rcs",
+              },
+            },
+          ],
+          searchTermParamName: "q",
+        },
+        suggestions: {
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "engine",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 add_setup(() => {
   do_get_profile();
   Services.fog.initializeFOG();
 });
 
 add_task(async function test_initialization_delayed_addon_manager() {
-  let stub = await SearchTestUtils.useTestEngines("data", null, CONFIG);
+  let stub = await SearchTestUtils.useTestEngines(
+    "data",
+    null,
+    SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : CONFIG
+  );
   // Wait until the search service gets its configuration before starting
   // to initialise the add-on manager. This simulates the add-on manager
   // starting late which used to cause the search service to fail to load any
@@ -58,7 +105,7 @@ add_task(async function test_initialization_delayed_addon_manager() {
     Services.tm.dispatchToMainThread(() => {
       AddonTestUtils.promiseStartupManager();
     });
-    return CONFIG;
+    return SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : CONFIG;
   });
 
   await Services.search.init();
