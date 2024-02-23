@@ -22,8 +22,62 @@ const TEST_CONFIG = [
   },
 ];
 
+const TEST_CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "get",
+    base: {
+      name: "Get Engine",
+      urls: {
+        search: {
+          base: "https://example.com",
+          params: [
+            {
+              name: "webExtension",
+              value: "1",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+        suggestions: {
+          base: "https://example.com",
+          params: [
+            {
+              name: "custom_param",
+              experimentConfig: "test_pref_param",
+            },
+            {
+              name: "webExtension",
+              value: "1",
+            },
+          ],
+          searchTermParamName: "suggest",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "get",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 add_setup(async function () {
-  await SearchTestUtils.useTestEngines("method-extensions", null, TEST_CONFIG);
+  await SearchTestUtils.useTestEngines(
+    "method-extensions",
+    null,
+    SearchUtils.newSearchConfigEnabled ? TEST_CONFIG_V2 : TEST_CONFIG
+  );
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
 });

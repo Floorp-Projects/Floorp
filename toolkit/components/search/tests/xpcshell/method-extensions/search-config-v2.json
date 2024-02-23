@@ -1,0 +1,83 @@
+{
+  "data": [
+    {
+      "recordType": "engine",
+      "identifier": "get",
+      "base": {
+        "name": "Get Engine",
+        "urls": {
+          "search": {
+            "base": "https://example.com",
+            "params": [
+              {
+                "name": "config",
+                "value": "1"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://example.com",
+            "params": [
+              {
+                "name": "config",
+                "value": "1"
+              }
+            ],
+            "searchTermParamName": "suggest"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "post",
+      "base": {
+        "name": "Post Engine",
+        "urls": {
+          "search": {
+            "base": "https://example.com",
+            "method": "POST",
+            "params": [
+              {
+                "name": "config",
+                "value": "1"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://example.com",
+            "method": "POST",
+            "params": [
+              {
+                "name": "config",
+                "value": "1"
+              }
+            ],
+            "searchTermParamName": "suggest"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "get",
+      "specificDefaults": []
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": []
+    }
+  ]
+}
