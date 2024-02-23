@@ -451,17 +451,6 @@ The `--font-size-root` token was created for specific use under the document's `
   </div>
 </div>
 
-Just like the specific HTML term 'root', we tend to include the term 'default' on scales in order to identify values that are used as a default, or at the global level (`:root` or `body` tag):
-
-<div class="box">
-  <div class="post-it blue big">
-    font-weight
-  </div>
-  <div class="post-it big">
-   <strong>default</strong>
-  </div>
-</div>
-
 It's okay to include intentional terms within scales that better represent the meaning of a value and when to use it. For example, our border radius collection, which uses t-shirt sizing, also mixes the 'circle' option within its scale in order to describe a border radius that will create a circular effect:
 
 <div class="box">

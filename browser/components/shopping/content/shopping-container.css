@@ -47,7 +47,7 @@
 
 #beta-marker {
   font-size: var(--font-size-small);
-  font-weight: var(--font-weight-default);
+  font-weight: var(--font-weight);
   padding: 2px 4px;
   margin: 0;
   line-height: 150%;

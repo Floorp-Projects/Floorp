@@ -246,7 +246,7 @@ login-command-button {
 
 .alert-title {
   font-size: var(--font-size-xlarge);
-  font-weight: var(--font-weight-default);
+  font-weight: var(--font-weight);
   line-height: 1em;
   margin-block: 0 12px;
 }
