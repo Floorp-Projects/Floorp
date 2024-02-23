@@ -392,7 +392,8 @@ static void GtkWindowSetTransientFor(GtkWindow* aWindow, GtkWindow* aParent) {
   }
 
 nsWindow::nsWindow()
-    : mDestroyMutex("nsWindow::mDestroyMutex"),
+    : mTitlebarRectMutex("nsWindow::mTitlebarRectMutex"),
+      mDestroyMutex("nsWindow::mDestroyMutex"),
       mIsDestroyed(false),
       mIsShown(false),
       mNeedsShow(false),
@@ -5377,6 +5378,8 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     } else {
       ClearTransparencyBitmap();
     }
+  } else {
+    SetTitlebarRect();
   }
 }
 
@@ -7057,6 +7060,8 @@ void nsWindow::UpdateTopLevelOpaqueRegion() {
     moz_container_wayland_update_opaque_region(mContainer, radius);
   }
 #endif
+
+  SetTitlebarRect();
 }
 
 bool nsWindow::IsChromeWindowTitlebar() {
@@ -7232,22 +7237,20 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
 
 #define TITLEBAR_HEIGHT 10
 
-LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
-  // See NS_NATIVE_EGL_WINDOW why we can't block here.
-  auto ret = LayoutDeviceIntRect();
+void nsWindow::SetTitlebarRect() {
+  MutexAutoLock lock(mTitlebarRectMutex);
 
-  if (mDestroyMutex.TryLock()) {
-    if (mGdkWindow && mDrawInTitlebar) {
-      int height = 0;
-      if (DoDrawTilebarCorners()) {
-        height = GdkCeiledScaleFactor() * TITLEBAR_HEIGHT;
-      }
-      ret = LayoutDeviceIntRect(0, 0, mBounds.width, height);
-    }
-    mDestroyMutex.Unlock();
+  if (!mGdkWindow || !DoDrawTilebarCorners()) {
+    mTitlebarRect = LayoutDeviceIntRect();
+    return;
   }
+  mTitlebarRect = LayoutDeviceIntRect(0, 0, mBounds.width,
+                                      GdkCeiledScaleFactor() * TITLEBAR_HEIGHT);
+}
 
-  return ret;
+LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
+  MutexAutoLock lock(mTitlebarRectMutex);
+  return mTitlebarRect;
 }
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
@@ -9061,6 +9064,8 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     } else {
       ClearTransparencyBitmap();
     }
+  } else {
+    SetTitlebarRect();
   }
 }
 
