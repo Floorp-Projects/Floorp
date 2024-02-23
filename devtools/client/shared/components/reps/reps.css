@@ -37,7 +37,13 @@
   white-space: pre-wrap;
 }
 
-.objectBox * {
+:is(
+  .objectBox-string,
+  .objectBox-textNode,
+  .objectBox > .nodeName,
+  .objectBox-node .tag-name,
+  .objectBox-node .attrName
+).has-rtl-char {
   unicode-bidi: isolate;
 }
 
