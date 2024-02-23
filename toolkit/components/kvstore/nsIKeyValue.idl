@@ -33,6 +33,12 @@ interface nsIKeyValuePair;
  */
 [scriptable, builtinclass, rust_sync, uuid(46c893dd-4c14-4de0-b33d-a1be18c6d062)]
 interface nsIKeyValueService : nsISupports {
+    cenum RecoveryStrategy: 8 {
+        ERROR,
+        DISCARD,
+        RENAME,
+    };
+
     /**
      * Get a handle to an existing database or a newly-created one
      * at the specified path and with the given name.
@@ -46,6 +52,12 @@ interface nsIKeyValueService : nsISupports {
         in nsIKeyValueDatabaseCallback callback,
         in AUTF8String path,
         in AUTF8String name);
+
+    void getOrCreateWithOptions(
+        in nsIKeyValueDatabaseCallback callback,
+        in AUTF8String path,
+        in AUTF8String name,
+        [optional] in nsIKeyValueService_RecoveryStrategy recoveryStrategy);
 };
 
 /**
