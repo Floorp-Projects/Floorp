@@ -73,6 +73,66 @@ const CONFIG_SIMPLE_LOCALE_DE = [
   },
 ];
 
+const CONFIG_SIMPLE_LOCALE_DE_V2 = [
+  {
+    recordType: "engine",
+    identifier: "basic",
+    base: {
+      name: "basic",
+      urls: {
+        search: {
+          base: "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "simple",
+    base: {
+      name: "Simple Engine",
+      urls: {
+        search: {
+          base: "https://example.com",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { locales: ["de"] },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "basic",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 const CONFIG_SIMPLE_EVERYWHERE = [
   {
     webExtension: {
@@ -123,6 +183,66 @@ const CONFIG_SIMPLE_EVERYWHERE = [
   },
 ];
 
+const CONFIG_SIMPLE_EVERYWHERE_V2 = [
+  {
+    recordType: "engine",
+    identifier: "basic",
+    base: {
+      name: "basic",
+      urls: {
+        search: {
+          base: "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "simple",
+    base: {
+      name: "Simple Engine",
+      urls: {
+        search: {
+          base: "https://example.com",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "basic",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 let extension;
 let configStub;
 let notificationBoxStub;
@@ -160,14 +280,26 @@ add_task(async function test_app_provided_engine_deployment_extended() {
   await assertCorrectlySwitchedWhenExtended(async () => {
     info("Change configuration to include engine in user's environment");
 
-    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_SIMPLE_EVERYWHERE);
+    await SearchTestUtils.updateRemoteSettingsConfig(
+      SearchUtils.newSearchConfigEnabled
+        ? CONFIG_SIMPLE_EVERYWHERE_V2
+        : CONFIG_SIMPLE_EVERYWHERE
+    );
   });
 
   await assertCorrectlySwitchedWhenRemoved(async () => {
     info("Change configuration to remove engine from user's environment");
 
-    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_SIMPLE_LOCALE_DE);
-    configStub.returns(CONFIG_SIMPLE_LOCALE_DE);
+    await SearchTestUtils.updateRemoteSettingsConfig(
+      SearchUtils.newSearchConfigEnabled
+        ? CONFIG_SIMPLE_LOCALE_DE_V2
+        : CONFIG_SIMPLE_LOCALE_DE
+    );
+    configStub.returns(
+      SearchUtils.newSearchConfigEnabled
+        ? CONFIG_SIMPLE_LOCALE_DE_V2
+        : CONFIG_SIMPLE_LOCALE_DE
+    );
   });
 });
 
@@ -201,7 +333,11 @@ add_task(async function test_user_environment_changes() {
  *   engine to be added for the user.
  */
 async function assertCorrectlySwitchedWhenExtended(changeFn) {
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_SIMPLE_LOCALE_DE);
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled
+      ? CONFIG_SIMPLE_LOCALE_DE_V2
+      : CONFIG_SIMPLE_LOCALE_DE
+  );
   notificationBoxStub.resetHistory();
 
   info("Install WebExtension based engine and set as default");
