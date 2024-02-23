@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(this, {
   PageActions: "resource:///modules/PageActions.sys.mjs",
   TranslationsTelemetry:
     "chrome://browser/content/translations/TranslationsTelemetry.sys.mjs",
+  TranslationsPanelShared:
+    "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs",
 });
 
 /**
@@ -272,92 +274,38 @@ var FullPageTranslationsPanel = new (class {
         // The rest of the elements are set by the getter below.
       };
 
-      /**
-       * Define a getter on #lazyElements that gets the element by an id
-       * or class name.
-       */
-      const getter = (name, discriminator) => {
-        let element;
-        Object.defineProperty(this.#lazyElements, name, {
-          get: () => {
-            if (!element) {
-              if (discriminator[0] === ".") {
-                // Lookup by class
-                element = document.querySelector(discriminator);
-              } else {
-                // Lookup by id
-                element = document.getElementById(discriminator);
-              }
-            }
-            if (!element) {
-              throw new Error(
-                `Could not find "${name}" at "#${discriminator}".`
-              );
-            }
-            return element;
-          },
-        });
-      };
-
-      // Getters by id
-      getter("appMenuButton", "PanelUI-menu-button");
-      getter("cancelButton", "full-page-translations-panel-cancel");
-      getter(
-        "changeSourceLanguageButton",
-        "full-page-translations-panel-change-source-language"
-      );
-      getter(
-        "dismissErrorButton",
-        "full-page-translations-panel-dismiss-error"
-      );
-      getter("error", "full-page-translations-panel-error");
-      getter("errorMessage", "full-page-translations-panel-error-message");
-      getter(
-        "errorMessageHint",
-        "full-page-translations-panel-error-message-hint"
-      );
-      getter(
-        "errorHintAction",
-        "full-page-translations-panel-translate-hint-action"
-      );
-      getter("fromMenuList", "full-page-translations-panel-from");
-      getter("fromLabel", "full-page-translations-panel-from-label");
-      getter("header", "full-page-translations-panel-header");
-      getter("intro", "full-page-translations-panel-intro");
-      getter(
-        "introLearnMoreLink",
-        "full-page-translations-panel-intro-learn-more-link"
-      );
-      getter("langSelection", "full-page-translations-panel-lang-selection");
-      getter("multiview", "full-page-translations-panel-multiview");
-      getter("restoreButton", "full-page-translations-panel-restore-button");
-      getter("toLabel", "full-page-translations-panel-to-label");
-      getter("toMenuList", "full-page-translations-panel-to");
-      getter("translateButton", "full-page-translations-panel-translate");
-      getter(
-        "unsupportedHeader",
-        "full-page-translations-panel-unsupported-language-header"
-      );
-      getter(
-        "unsupportedHint",
-        "full-page-translations-panel-error-unsupported-hint"
-      );
-      getter(
-        "unsupportedLearnMoreLink",
-        "full-page-translations-panel-unsupported-learn-more-link"
-      );
-
-      // Getters by class
-      getter(
-        "alwaysTranslateLanguageMenuItem",
-        ".always-translate-language-menuitem"
-      );
-      getter("manageLanguagesMenuItem", ".manage-languages-menuitem");
-      getter(
-        "neverTranslateLanguageMenuItem",
-        ".never-translate-language-menuitem"
-      );
-      getter("neverTranslateSiteMenuItem", ".never-translate-site-menuitem");
+      TranslationsPanelShared.defineLazyElements(document, this.#lazyElements, {
+        alwaysTranslateLanguageMenuItem: ".always-translate-language-menuitem",
+        appMenuButton: "PanelUI-menu-button",
+        cancelButton: "full-page-translations-panel-cancel",
+        changeSourceLanguageButton:
+          "full-page-translations-panel-change-source-language",
+        dismissErrorButton: "full-page-translations-panel-dismiss-error",
+        error: "full-page-translations-panel-error",
+        errorMessage: "full-page-translations-panel-error-message",
+        errorMessageHint: "full-page-translations-panel-error-message-hint",
+        errorHintAction: "full-page-translations-panel-translate-hint-action",
+        fromMenuList: "full-page-translations-panel-from",
+        fromLabel: "full-page-translations-panel-from-label",
+        header: "full-page-translations-panel-header",
+        intro: "full-page-translations-panel-intro",
+        introLearnMoreLink:
+          "full-page-translations-panel-intro-learn-more-link",
+        langSelection: "full-page-translations-panel-lang-selection",
+        manageLanguagesMenuItem: ".manage-languages-menuitem",
+        multiview: "full-page-translations-panel-multiview",
+        neverTranslateLanguageMenuItem: ".never-translate-language-menuitem",
+        neverTranslateSiteMenuItem: ".never-translate-site-menuitem",
+        restoreButton: "full-page-translations-panel-restore-button",
+        toLabel: "full-page-translations-panel-to-label",
+        toMenuList: "full-page-translations-panel-to",
+        translateButton: "full-page-translations-panel-translate",
+        unsupportedHeader:
+          "full-page-translations-panel-unsupported-language-header",
+        unsupportedHint: "full-page-translations-panel-error-unsupported-hint",
+        unsupportedLearnMoreLink:
+          "full-page-translations-panel-unsupported-learn-more-link",
+      });
     }
 
     return this.#lazyElements;
