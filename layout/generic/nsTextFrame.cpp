@@ -5374,9 +5374,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
   // Text-shadow overflows
   if (aIncludeShadows) {
-    nsRect shadowRect =
+    *aInkOverflowRect =
         nsLayoutUtils::GetTextShadowRectsUnion(*aInkOverflowRect, this);
-    aInkOverflowRect->UnionRect(*aInkOverflowRect, shadowRect);
   }
 
   // When this frame is not selected, the text-decoration area must be in
