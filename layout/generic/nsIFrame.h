@@ -1643,13 +1643,7 @@ class nsIFrame : public nsQueryFrame {
   // This is intended to be used either on the root frame to find the first
   // page's page-name, or on a newly created continuation to find what the new
   // page's page-name will be.
-  //
-  // The auto page value can be set by the caller. This is useful when trying
-  // to compute a page value in the middle of a frame tree. In that case the
-  // auto value can be found from the AutoPageValue frame property of the
-  // parent frame. A null auto value is interpreted as the empty-string atom.
-  const nsAtom* ComputePageValue(const nsAtom* aAutoValue = nullptr) const
-      MOZ_NONNULL_RETURN;
+  const nsAtom* ComputePageValue() const MOZ_NONNULL_RETURN;
 
   ///////////////////////////////////////////////////////////////////////////////
   // The public visibility API.
