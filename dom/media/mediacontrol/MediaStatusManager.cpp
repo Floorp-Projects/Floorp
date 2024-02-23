@@ -362,8 +362,8 @@ void MediaStatusManager::DisableAction(uint64_t aBrowsingContextId,
   NotifySupportedKeysChangedIfNeeded(aBrowsingContextId);
 }
 
-void MediaStatusManager::UpdatePositionState(uint64_t aBrowsingContextId,
-                                             const PositionState& aState) {
+void MediaStatusManager::UpdatePositionState(
+    uint64_t aBrowsingContextId, const Maybe<PositionState>& aState) {
   // The position state comes from non-active media session which we don't care.
   if (!mActiveMediaSessionContextId ||
       *mActiveMediaSessionContextId != aBrowsingContextId) {

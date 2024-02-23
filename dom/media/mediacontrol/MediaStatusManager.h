@@ -118,7 +118,7 @@ class IMediaInfoUpdater {
 
   // Use this method when media session update its position state.
   virtual void UpdatePositionState(uint64_t aBrowsingContextId,
-                                   const PositionState& aState) = 0;
+                                   const Maybe<PositionState>& aState) = 0;
 };
 
 /**
@@ -163,7 +163,7 @@ class MediaStatusManager : public IMediaInfoUpdater {
   void DisableAction(uint64_t aBrowsingContextId,
                      MediaSessionAction aAction) override;
   void UpdatePositionState(uint64_t aBrowsingContextId,
-                           const PositionState& aState) override;
+                           const Maybe<PositionState>& aState) override;
 
   // Return active media session's metadata if active media session exists and
   // it has already set its metadata. Otherwise, return default media metadata
@@ -180,7 +180,7 @@ class MediaStatusManager : public IMediaInfoUpdater {
     return mMetadataChangedEvent;
   }
 
-  MediaEventSource<PositionState>& PositionChangedEvent() {
+  MediaEventSource<Maybe<PositionState>>& PositionChangedEvent() {
     return mPositionStateChangedEvent;
   }
 
@@ -266,7 +266,7 @@ class MediaStatusManager : public IMediaInfoUpdater {
   MediaEventProducer<MediaMetadataBase> mMetadataChangedEvent;
   MediaEventProducer<nsTArray<MediaSessionAction>>
       mSupportedActionsChangedEvent;
-  MediaEventProducer<PositionState> mPositionStateChangedEvent;
+  MediaEventProducer<Maybe<PositionState>> mPositionStateChangedEvent;
   MediaEventProducer<MediaSessionPlaybackState> mPlaybackStateChangedEvent;
   MediaPlaybackStatus mPlaybackStatusDelegate;
 };
