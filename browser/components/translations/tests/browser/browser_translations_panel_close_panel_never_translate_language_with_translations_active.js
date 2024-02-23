@@ -17,7 +17,7 @@ add_task(
       "The translations button is available"
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -39,7 +39,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -49,7 +49,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
       checked: false,
     });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       async () => {
         await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
@@ -79,7 +79,7 @@ add_task(
       "The translations button is available"
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -101,7 +101,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -119,7 +119,7 @@ add_task(
     );
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -136,7 +136,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
       checked: false,
     });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       async () => {
         await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();

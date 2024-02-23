@@ -25,7 +25,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
@@ -113,7 +113,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     expectFirstInteraction: true,
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 

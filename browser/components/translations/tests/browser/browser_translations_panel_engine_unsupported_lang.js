@@ -16,7 +16,7 @@ add_task(async function test_unsupported_lang() {
     ],
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     openFromAppMenu: true,
     onOpenPanel:
       FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,

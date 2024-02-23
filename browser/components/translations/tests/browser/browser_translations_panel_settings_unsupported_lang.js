@@ -26,7 +26,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     "The translations button is visible."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -56,7 +56,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     "The translations button should be unavailable."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     openFromAppMenu: true,
     onOpenPanel:
       FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,

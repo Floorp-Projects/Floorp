@@ -230,7 +230,7 @@ async function navigate(
 
   info(`Loading url: "${url}"`);
   if (onOpenPanel) {
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
       loadTargetPage,
       onOpenPanel
@@ -609,46 +609,30 @@ class FullPageTranslationsTestUtils {
    *   A list of expectations for the visibility of any subset of TranslationsPanel.elements
    */
   static #assertPanelElementVisibility(expectations = {}) {
-    // Assume nothing is visible by default, and overwrite them
-    // with any specific expectations provided in the argument.
-    const finalExpectations = {
-      cancelButton: false,
-      changeSourceLanguageButton: false,
-      dismissErrorButton: false,
-      error: false,
-      fromMenuList: false,
-      fromLabel: false,
-      header: false,
-      intro: false,
-      introLearnMoreLink: false,
-      langSelection: false,
-      restoreButton: false,
-      toLabel: false,
-      toMenuList: false,
-      translateButton: false,
-      unsupportedHeader: false,
-      unsupportedHint: false,
-      unsupportedLearnMoreLink: false,
-      ...expectations,
-    };
-
-    const elements = TranslationsPanel.elements;
-    const hidden = {};
-    const visible = {};
-
-    for (const propertyName in finalExpectations) {
-      ok(
-        elements.hasOwnProperty(propertyName),
-        `Expected translations panel elements to have property ${propertyName}`
-      );
-      if (finalExpectations[propertyName]) {
-        visible[propertyName] = elements[propertyName];
-      } else {
-        hidden[propertyName] = elements[propertyName];
+    SharedTranslationsTestUtils._assertPanelElementVisibility(
+      TranslationsPanel.elements,
+      {
+        cancelButton: false,
+        changeSourceLanguageButton: false,
+        dismissErrorButton: false,
+        error: false,
+        fromMenuList: false,
+        fromLabel: false,
+        header: false,
+        intro: false,
+        introLearnMoreLink: false,
+        langSelection: false,
+        restoreButton: false,
+        toLabel: false,
+        toMenuList: false,
+        translateButton: false,
+        unsupportedHeader: false,
+        unsupportedHint: false,
+        unsupportedLearnMoreLink: false,
+        // Overwrite any of the above defaults with the passed in expectations.
+        ...expectations,
       }
-    }
-
-    assertVisibility({ hidden, visible });
+    );
   }
 
   /**
@@ -671,12 +655,9 @@ class FullPageTranslationsTestUtils {
    * @param {string} expectedId
    */
   static #assertPanelMainViewId(expectedId) {
-    const mainViewId =
-      TranslationsPanel.elements.multiview.getAttribute("mainViewId");
-    is(
-      mainViewId,
-      expectedId,
-      "The full-page Translations panel mainViewId should match its expected value"
+    SharedTranslationsTestUtils._assertPanelMainViewId(
+      TranslationsPanel,
+      expectedId
     );
   }
 
@@ -917,7 +898,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { cancelButton } = TranslationsPanel.elements;
     assertVisibility({ visible: { cancelButton } });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
         click(cancelButton, "Clicking the cancel button");
@@ -937,7 +918,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { changeSourceLanguageButton } = TranslationsPanel.elements;
     assertVisibility({ visible: { changeSourceLanguageButton } });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
       () => {
         click(
@@ -958,7 +939,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { dismissErrorButton } = TranslationsPanel.elements;
     assertVisibility({ visible: { dismissErrorButton } });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
         click(dismissErrorButton, "Click the dismiss-error button");
@@ -1009,7 +990,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { restoreButton } = TranslationsPanel.elements;
     assertVisibility({ visible: { restoreButton } });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
         click(restoreButton, "Click the restore-page button");
@@ -1047,7 +1028,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const { translateButton } = TranslationsPanel.elements;
     assertVisibility({ visible: { translateButton } });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
         click(translateButton);
@@ -1074,7 +1055,7 @@ class FullPageTranslationsTestUtils {
    * @param {boolean} config.openWithKeyboard
    *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
    */
-  static async openTranslationsPanel({
+  static async openPanel({
     onOpenPanel = null,
     openFromAppMenu = false,
     openWithKeyboard = false,
@@ -1082,17 +1063,15 @@ class FullPageTranslationsTestUtils {
     logAction();
     await closeAllOpenPanelsAndMenus();
     if (openFromAppMenu) {
-      await FullPageTranslationsTestUtils.#openTranslationsPanelViaAppMenu({
+      await FullPageTranslationsTestUtils.#openPanelViaAppMenu({
         onOpenPanel,
         openWithKeyboard,
       });
     } else {
-      await FullPageTranslationsTestUtils.#openTranslationsPanelViaTranslationsButton(
-        {
-          onOpenPanel,
-          openWithKeyboard,
-        }
-      );
+      await FullPageTranslationsTestUtils.#openPanelViaTranslationsButton({
+        onOpenPanel,
+        openWithKeyboard,
+      });
     }
   }
 
@@ -1105,7 +1084,7 @@ class FullPageTranslationsTestUtils {
    * @param {boolean} config.openWithKeyboard
    *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
    */
-  static async #openTranslationsPanelViaAppMenu({
+  static async #openPanelViaAppMenu({
     onOpenPanel = null,
     openWithKeyboard = false,
   }) {
@@ -1126,7 +1105,7 @@ class FullPageTranslationsTestUtils {
       "The app-menu translate button should be enabled"
     );
 
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
       () => {
         if (openWithKeyboard) {
@@ -1148,7 +1127,7 @@ class FullPageTranslationsTestUtils {
    * @param {boolean} config.openWithKeyboard
    *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
    */
-  static async #openTranslationsPanelViaTranslationsButton({
+  static async #openPanelViaTranslationsButton({
     onOpenPanel = null,
     openWithKeyboard = false,
   }) {
@@ -1158,7 +1137,7 @@ class FullPageTranslationsTestUtils {
         { button: true },
         "The translations button is visible."
       );
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
       () => {
         if (openWithKeyboard) {
@@ -1230,26 +1209,19 @@ class FullPageTranslationsTestUtils {
    *   An optional assertion to be made immediately after the event occurs.
    * @returns {Promise<void>}
    */
-  static async waitForTranslationsPopupEvent(
+  static async waitForPanelPopupEvent(
     eventName,
     callback,
     postEventAssertion = null
   ) {
     // De-lazify the panel elements.
     TranslationsPanel.elements;
-    const panel = document.getElementById("translations-panel");
-    if (!panel) {
-      throw new Error("Unable to find the translations panel element.");
-    }
-    const promise = BrowserTestUtils.waitForEvent(panel, eventName);
-    await callback();
-    info("Waiting for the translations panel popup to be shown");
-    await promise;
-    if (postEventAssertion) {
-      postEventAssertion();
-    }
-    // Wait a single tick on the event loop.
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await SharedTranslationsTestUtils._waitForPopupEvent(
+      "translations-panel",
+      eventName,
+      callback,
+      postEventAssertion
+    );
   }
 }
 

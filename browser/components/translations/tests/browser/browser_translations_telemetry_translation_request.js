@@ -39,7 +39,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     }
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 

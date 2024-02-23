@@ -29,7 +29,7 @@ add_task(
       "The translations button is visible."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -59,7 +59,7 @@ add_task(
       "The translations button should be unavailable."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel:
         FullPageTranslationsTestUtils.assertPanelViewUnsupportedLanguage,
@@ -76,7 +76,7 @@ add_task(
       runInPage
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
