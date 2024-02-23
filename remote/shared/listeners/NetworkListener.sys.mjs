@@ -84,6 +84,12 @@ export class NetworkListener {
   }
 
   #ignoreChannelFunction = channel => {
+    // Bug 1826210: Ignore file channels which don't support the same APIs as
+    // regular HTTP channels.
+    if (channel instanceof Ci.nsIFileChannel) {
+      return true;
+    }
+
     // Ignore chrome-privileged or DevTools-initiated requests
     if (
       channel.loadInfo?.loadingDocument === null &&
