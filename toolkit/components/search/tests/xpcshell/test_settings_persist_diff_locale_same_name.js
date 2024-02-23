@@ -49,8 +49,78 @@ const CONFIG = [
   },
 ];
 
+const CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "engine",
+    base: {
+      name: "Test search engine",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-same-name",
+    base: {
+      name: "engine-same-name",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { excludedRegions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-same-name-gd",
+    base: {
+      name: "engine-same-name",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "engine",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 add_setup(async function () {
-  await SearchTestUtils.useTestEngines("data", null, CONFIG);
+  await SearchTestUtils.useTestEngines(
+    "data",
+    null,
+    SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : CONFIG
+  );
   await AddonTestUtils.promiseStartupManager();
   let settingsFileWritten = promiseAfterSettings();
   Region._setHomeRegion("US", false);

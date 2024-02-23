@@ -238,6 +238,262 @@ const CONFIG = [
   },
 ];
 
+const CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "engine",
+    base: {
+      name: "Test search engine",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "channel",
+              searchAccessPoint: {
+                addressbar: "fflb",
+                contextmenu: "rcs",
+              },
+            },
+          ],
+          searchTermParamName: "q",
+        },
+        suggestions: {
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-pref",
+    base: {
+      name: "engine-pref",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "code",
+              experimentConfig: "code",
+            },
+            {
+              name: "test",
+              experimentConfig: "test",
+            },
+          ],
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-chromeicon",
+    base: {
+      name: "engine-chromeicon",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+      {
+        environment: { regions: ["FR"] },
+        urls: {
+          search: {
+            params: [
+              {
+                name: "c",
+                value: "my-test",
+              },
+              {
+                name: "q1",
+                value: "{searchTerms}",
+              },
+            ],
+          },
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-rel-searchform-purpose",
+    base: {
+      name: "engine-rel-searchform-purpose",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { excludedRegions: ["FR"] },
+        urls: {
+          search: {
+            params: [
+              {
+                name: "channel",
+                searchAccessPoint: {
+                  addressbar: "fflb",
+                  contextmenu: "rcs",
+                  searchbar: "sb",
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-reordered",
+    base: {
+      name: "Test search engine (Reordered)",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          params: [
+            {
+              name: "channel",
+              searchAccessPoint: {
+                addressbar: "fflb",
+                contextmenu: "rcs",
+              },
+            },
+          ],
+          searchTermParamName: "q",
+        },
+        suggestions: {
+          base: "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-resourceicon",
+    base: {
+      name: "engine-resourceicon",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { excludedRegions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-resourceicon-gd",
+    base: {
+      name: "engine-resourceicon-gd",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-same-name",
+    base: {
+      name: "engine-same-name",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { excludedRegions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-same-name-gd",
+    base: {
+      name: "engine-same-name-gd",
+      urls: {
+        search: {
+          base: "https://www.google.com/search",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    specificDefaults: [
+      {
+        default: "engine",
+        defaultPrivate: "engine",
+        environment: { excludedRegions: ["FR"] },
+      },
+      {
+        default: "engine-pref",
+        defaultPrivate: "engine-pref",
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [
+      {
+        order: ["engine-resourceicon-gd"],
+        environment: { regions: ["FR"] },
+      },
+    ],
+  },
+];
+
 async function visibleEngines() {
   return (await Services.search.getVisibleEngines()).map(e => e.identifier);
 }
@@ -250,7 +506,11 @@ add_setup(async function () {
   );
 
   SearchTestUtils.useMockIdleService();
-  await SearchTestUtils.useTestEngines("data", null, CONFIG);
+  await SearchTestUtils.useTestEngines(
+    "data",
+    null,
+    SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : CONFIG
+  );
   await AddonTestUtils.promiseStartupManager();
 });
 
