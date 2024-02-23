@@ -10,6 +10,8 @@ var stroke = {
 
 var numSamples = 500;
 
+var tests = new Map();
+
 var gHistogram = new Map(); // {ms: count}
 var gHistory = new FrameHistory(numSamples);
 var gPerf = new PerfTracker();
@@ -466,10 +468,17 @@ function reset_draw_state() {
 }
 
 function onunload() {
-  gLoadMgr.deactivateLoad();
+  if (gLoadMgr) {
+    gLoadMgr.deactivateLoad();
+  }
 }
 
-function onload() {
+async function onload() {
+  // Collect all test loads into the `tests` Map.
+  let imports = [];
+  foreach_test_file(path => imports.push(import("./" + path)));
+  await Promise.all(imports);
+
   // The order of `tests` is currently based on their asynchronous load
   // order, rather than the listed order. Rearrange by extracting the test
   // names from their filenames, which is kind of gross.
