@@ -11,6 +11,7 @@ const { NimbusFeatures } = ChromeUtils.importESModule(
 );
 
 const baseURL = "https://www.google.com/search?q=foo";
+const baseURLSearchConfigV2 = "https://www.google.com/search?";
 
 let getVariableStub;
 let updateStub;
@@ -48,7 +49,9 @@ add_task(async function test_pref_initial_value() {
   const engine = Services.search.getEngineByName("engine-pref");
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    baseURL + "&code=good%26id%3Dunique",
+    SearchUtils.newSearchConfigEnabled
+      ? baseURLSearchConfigV2 + "code=good%26id%3Dunique&q=foo"
+      : baseURL + "&code=good%26id%3Dunique",
     "Should have got the submission URL with the correct code"
   );
 });
@@ -68,7 +71,9 @@ add_task(async function test_pref_updated() {
   const engine = Services.search.getEngineByName("engine-pref");
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    baseURL + "&code=supergood%26id%3Dunique123456",
+    SearchUtils.newSearchConfigEnabled
+      ? baseURLSearchConfigV2 + "code=supergood%26id%3Dunique123456&q=foo"
+      : baseURL + "&code=supergood%26id%3Dunique123456",
     "Should have got the submission URL with the updated code"
   );
 });
@@ -90,7 +95,9 @@ add_task(async function test_multiple_params() {
   let engine = Services.search.getEngineByName("engine-pref");
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    baseURL + "&code=sng&test=sup",
+    SearchUtils.newSearchConfigEnabled
+      ? baseURLSearchConfigV2 + "code=sng&test=sup&q=foo"
+      : baseURL + "&code=sng&test=sup",
     "Should have got the submission URL with both parameters"
   );
 
@@ -107,7 +114,9 @@ add_task(async function test_multiple_params() {
   engine = Services.search.getEngineByName("engine-pref");
   Assert.equal(
     engine.getSubmission("foo").uri.spec,
-    baseURL + "&code=sng",
+    SearchUtils.newSearchConfigEnabled
+      ? baseURLSearchConfigV2 + "code=sng&q=foo"
+      : baseURL + "&code=sng",
     "Should have got the submission URL with one parameter"
   );
 });
