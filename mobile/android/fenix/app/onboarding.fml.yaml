@@ -32,7 +32,6 @@ features:
 
             add-search-widget:
               card-type: add-search-widget
-              enabled: false
               title: juno_onboarding_add_search_widget_title
               body: juno_onboarding_add_search_widget_description
               image-res: ic_onboarding_search_widget

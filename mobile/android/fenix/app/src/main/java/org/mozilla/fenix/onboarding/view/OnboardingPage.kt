@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -138,6 +141,11 @@ fun OnboardingPage(
                 modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 PrimaryButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics {
+                            testTag = pageState.title + "onboarding_card.positive_button"
+                        },
                     text = pageState.primaryButton.text,
                     onClick = pageState.primaryButton.onClick,
                 )
@@ -145,6 +153,11 @@ fun OnboardingPage(
                 if (pageState.secondaryButton != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     SecondaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                testTag = pageState.title + "onboarding_card.negative_button"
+                            },
                         text = pageState.secondaryButton.text,
                         onClick = pageState.secondaryButton.onClick,
                     )

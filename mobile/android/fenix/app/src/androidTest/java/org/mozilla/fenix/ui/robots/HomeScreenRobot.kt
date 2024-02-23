@@ -201,31 +201,72 @@ class HomeScreenRobot {
         composeTestRule.also {
             Log.i(TAG, "verifySecondOnboardingCard: Trying to verify that the second onboarding screen title exists")
             it.onNodeWithText(
-                getStringResource(R.string.juno_onboarding_sign_in_title_2),
+                getStringResource(R.string.juno_onboarding_add_search_widget_title),
             ).assertExists()
             Log.i(TAG, "verifySecondOnboardingCard: Verified that the second onboarding screen title exists")
             Log.i(TAG, "verifySecondOnboardingCard: Trying to verify that the  second onboarding screen description exists")
             it.onNodeWithText(
-                getStringResource(R.string.juno_onboarding_sign_in_description_2),
+                getStringResource(R.string.juno_onboarding_add_search_widget_description),
             ).assertExists()
             Log.i(TAG, "verifySecondOnboardingCard: Verified that the second onboarding screen description exists")
             Log.i(TAG, "verifySecondOnboardingCard: Trying to verify that the first onboarding \"Sign in\" button exists")
             it.onNodeWithText(
-                getStringResource(R.string.juno_onboarding_sign_in_positive_button),
+                getStringResource(R.string.juno_onboarding_add_search_widget_positive_button),
             ).assertExists()
-            Log.i(TAG, "verifySecondOnboardingCard: Verified that the first onboarding \"Sign in\" button exists")
-            Log.i(TAG, "verifySecondOnboardingCard: Trying to verify that the first onboarding \"Not now\" button exists")
-            it.onNodeWithText(
-                getStringResource(R.string.juno_onboarding_sign_in_negative_button),
+            Log.i(TAG, "verifySecondOnboardingCard: Verified that the first onboarding \"Add Firefox widget\" button exists")
+            Log.i(TAG, "verifySecondOnboardingCard: Trying to verify that the second onboarding \"Not now\" button exists")
+            it.onNodeWithTag(
+                getStringResource(R.string.juno_onboarding_add_search_widget_title) + "onboarding_card.negative_button",
             ).assertExists()
-            Log.i(TAG, "verifySecondOnboardingCard: Verified that the first onboarding \"Not now\" button exists")
+            Log.i(TAG, "verifySecondOnboardingCard: Verified that the second onboarding \"Not now\" button exists")
         }
     }
 
-    fun clickNotNowOnboardingButton(composeTestRule: ComposeTestRule) {
+    fun verifyThirdOnboardingCard(composeTestRule: ComposeTestRule) {
+        composeTestRule.also {
+            Log.i(TAG, "verifyThirdOnboardingCard: Trying to verify that the third onboarding screen title exists")
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_title_2),
+            ).assertExists()
+            Log.i(TAG, "verifyThirdOnboardingCard: Verified that the third onboarding screen title exists")
+            Log.i(TAG, "verifyThirdOnboardingCard: Trying to verify that the  third onboarding screen description exists")
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_description_2),
+            ).assertExists()
+            Log.i(TAG, "verifyThirdOnboardingCard: Verified that the third onboarding screen description exists")
+            Log.i(TAG, "verifyThirdOnboardingCard: Trying to verify that the first onboarding \"Sign in\" button exists")
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_positive_button),
+            ).assertExists()
+            Log.i(TAG, "verifyThirdOnboardingCard: Verified that the first onboarding \"Sign in\" button exists")
+            Log.i(TAG, "verifyThirdOnboardingCard: Trying to verify that the third onboarding \"Not now\" button exists")
+            it.onNodeWithTag(
+                getStringResource(R.string.juno_onboarding_sign_in_title_2) + "onboarding_card.negative_button",
+            ).assertExists()
+            Log.i(TAG, "verifySecondOnboardingCard: Verified that the third onboarding \"Not now\" button exists")
+        }
+    }
+
+    fun clickDefaultCardNotNowOnboardingButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickNotNowOnboardingButton: Trying to click \"Not now\" onboarding button")
-        composeTestRule.onNodeWithText(
-            getStringResource(R.string.juno_onboarding_default_browser_negative_button),
+        composeTestRule.onNodeWithTag(
+            getStringResource(R.string.juno_onboarding_default_browser_title_nimbus_2) + "onboarding_card.negative_button",
+        ).performClick()
+        Log.i(TAG, "clickNotNowOnboardingButton: Clicked \"Not now\" onboarding button")
+    }
+
+    fun clickAddSearchWidgetNotNowOnboardingButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickNotNowOnboardingButton: Trying to click \"Not now\" onboarding button")
+        composeTestRule.onNodeWithTag(
+            getStringResource(R.string.juno_onboarding_add_search_widget_title) + "onboarding_card.negative_button",
+        ).performClick()
+        Log.i(TAG, "clickNotNowOnboardingButton: Clicked \"Not now\" onboarding button")
+    }
+
+    fun clickSyncSignInWidgetNotNowOnboardingButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickNotNowOnboardingButton: Trying to click \"Not now\" onboarding button")
+        composeTestRule.onNodeWithTag(
+            getStringResource(R.string.juno_onboarding_sign_in_title_2) + "onboarding_card.negative_button",
         ).performClick()
         Log.i(TAG, "clickNotNowOnboardingButton: Clicked \"Not now\" onboarding button")
     }

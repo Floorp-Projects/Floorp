@@ -33,7 +33,7 @@ class OnboardingTest : TestSetup() {
     fun verifyFirstOnboardingCardItemsFunctionalityTest() {
         runWithLauncherIntent(activityTestRule) {
             homeScreen {
-                clickNotNowOnboardingButton(activityTestRule)
+                clickDefaultCardNotNowOnboardingButton(activityTestRule)
                 verifySecondOnboardingCard(activityTestRule)
                 swipeSecondOnboardingCardToRight()
             }.clickSetAsDefaultBrowserOnboardingButton(activityTestRule) {
@@ -49,7 +49,7 @@ class OnboardingTest : TestSetup() {
     fun verifySecondOnboardingCardItemsTest() {
         runWithLauncherIntent(activityTestRule) {
             homeScreen {
-                clickNotNowOnboardingButton(activityTestRule)
+                clickDefaultCardNotNowOnboardingButton(activityTestRule)
                 verifySecondOnboardingCard(activityTestRule)
             }
         }
@@ -58,11 +58,13 @@ class OnboardingTest : TestSetup() {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2122344
     @SmokeTest
     @Test
-    fun verifySecondOnboardingCardSignInFunctionalityTest() {
+    fun verifyThirdOnboardingCardSignInFunctionalityTest() {
         runWithLauncherIntent(activityTestRule) {
             homeScreen {
-                clickNotNowOnboardingButton(activityTestRule)
+                clickDefaultCardNotNowOnboardingButton(activityTestRule)
                 verifySecondOnboardingCard(activityTestRule)
+                clickAddSearchWidgetNotNowOnboardingButton(activityTestRule)
+                verifyThirdOnboardingCard(activityTestRule)
             }.clickSignInOnboardingButton(activityTestRule) {
                 verifyTurnOnSyncMenu()
             }
