@@ -800,18 +800,18 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
     return r;
   }
 
-  // Determine the amount of overflow above and below the frame's mRect.
+  // Determine the amount of overflow around frame's mRect.
   //
   // We need to call InkOverflowRectRelativeToSelf because this includes
-  // overflowing decorations, which the MeasureText call below does not.  We
-  // assume here the decorations only overflow above and below the frame, never
-  // horizontally.
+  // overflowing decorations, which the MeasureText call below does not.
   nsRect self = mFrame->InkOverflowRectRelativeToSelf();
   nsRect rect = mFrame->GetRect();
   bool vertical = IsVertical();
-  nscoord above = vertical ? -self.x : -self.y;
-  nscoord below =
-      vertical ? self.XMost() - rect.width : self.YMost() - rect.height;
+  nsMargin inkOverflow(
+      vertical ? -self.x : -self.y,
+      vertical ? self.YMost() - rect.height : self.XMost() - rect.width,
+      vertical ? self.XMost() - rect.width : self.YMost() - rect.height,
+      vertical ? -self.y : -self.x);
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxSkipCharsIterator start = it;
@@ -838,8 +838,7 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   metrics.mBoundingBox.UnionRect(metrics.mBoundingBox, fontBox);
 
   // Determine the rectangle that covers the rendered run's fill,
-  // taking into account the measured vertical overflow due to
-  // decorations.
+  // taking into account the measured overflow due to decorations.
   nscoord baseline =
       NSToCoordRoundWithClamp(metrics.mBoundingBox.y + metrics.mAscent);
   gfxFloat x, width;
@@ -854,10 +853,10 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;
   }
-  nsRect fillInAppUnits(
-      NSToCoordRoundWithClamp(x), baseline - above,
-      NSToCoordRoundWithClamp(width),
-      NSToCoordRoundWithClamp(metrics.mBoundingBox.height) + above + below);
+  nsRect fillInAppUnits(NSToCoordRoundWithClamp(x), baseline,
+                        NSToCoordRoundWithClamp(width),
+                        NSToCoordRoundWithClamp(metrics.mBoundingBox.height));
+  fillInAppUnits.Inflate(inkOverflow);
   if (textRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     std::swap(fillInAppUnits.x, fillInAppUnits.y);
