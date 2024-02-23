@@ -275,11 +275,13 @@ class ArgumentsObject : public NativeObject {
     return argc;
   }
 
-  // True iff arguments.length has been assigned or deleted.
-  bool hasOverriddenLength() const {
+  bool hasFlags(uint32_t flags) const {
     const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
-    return v.toInt32() & LENGTH_OVERRIDDEN_BIT;
+    return v.toInt32() & flags;
   }
+
+  // True iff arguments.length has been assigned or deleted.
+  bool hasOverriddenLength() const { return hasFlags(LENGTH_OVERRIDDEN_BIT); }
 
   void markLengthOverridden() {
     uint32_t v =
@@ -292,8 +294,7 @@ class ArgumentsObject : public NativeObject {
 
   // True iff arguments[@@iterator] has been assigned or deleted.
   bool hasOverriddenIterator() const {
-    const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
-    return v.toInt32() & ITERATOR_OVERRIDDEN_BIT;
+    return hasFlags(ITERATOR_OVERRIDDEN_BIT);
   }
 
   void markIteratorOverridden() {
@@ -311,10 +312,7 @@ class ArgumentsObject : public NativeObject {
   static bool getArgumentsIterator(JSContext* cx, MutableHandleValue val);
 
   // True iff any element has been assigned or deleted.
-  bool hasOverriddenElement() const {
-    const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
-    return v.toInt32() & ELEMENT_OVERRIDDEN_BIT;
-  }
+  bool hasOverriddenElement() const { return hasFlags(ELEMENT_OVERRIDDEN_BIT); }
 
   void markElementOverridden() {
     uint32_t v =
@@ -409,10 +407,7 @@ class ArgumentsObject : public NativeObject {
     return IsMagicScopeSlotValue(v);
   }
 
-  bool anyArgIsForwarded() const {
-    const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
-    return v.toInt32() & FORWARDED_ARGUMENTS_BIT;
-  }
+  bool anyArgIsForwarded() const { return hasFlags(FORWARDED_ARGUMENTS_BIT); }
 
   void markArgumentForwarded() {
     uint32_t v =
@@ -504,10 +499,7 @@ class MappedArgumentsObject : public ArgumentsObject {
     return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
   }
 
-  bool hasOverriddenCallee() const {
-    const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
-    return v.toInt32() & CALLEE_OVERRIDDEN_BIT;
-  }
+  bool hasOverriddenCallee() const { return hasFlags(CALLEE_OVERRIDDEN_BIT); }
 
   void markCalleeOverridden() {
     uint32_t v =
