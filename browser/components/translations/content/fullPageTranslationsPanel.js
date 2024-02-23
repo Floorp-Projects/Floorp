@@ -415,74 +415,18 @@ var FullPageTranslationsPanel = new (class {
   }
 
   /**
-   * @type {"initialized" | "error" | "uninitialized"}
-   */
-  #langListsPhase = "uninitialized";
-
-  /**
    * Builds the <menulist> of languages for both the "from" and "to". This can be
    * called every time the popup is shown, as it will retry when there is an error
    * (such as a network error) or be a noop if it's already initialized.
-   *
-   * TODO(Bug 1813796) This needs to be updated when the supported languages change
-   * via RemoteSettings.
    */
   async #ensureLangListsBuilt() {
-    switch (this.#langListsPhase) {
-      case "initialized":
-        // This has already been initialized.
-        return;
-      case "error":
-        // Attempt to re-initialize.
-        this.#langListsPhase = "uninitialized";
-        break;
-      case "uninitialized":
-        // Ready to initialize.
-        break;
-      default:
-        this.console?.error("Unknown langList phase", this.#langListsPhase);
-    }
-
     try {
-      /** @type {SupportedLanguages} */
-      const { languagePairs, fromLanguages, toLanguages } =
-        await TranslationsParent.getSupportedLanguages();
-
-      // Verify that we are in a proper state.
-      if (languagePairs.length === 0) {
-        throw new Error("No translation languages were retrieved.");
-      }
-
-      const { panel } = this.elements;
-      const fromPopups = panel.querySelectorAll(
-        ".translations-panel-language-menupopup-from"
+      await TranslationsPanelShared.ensureLangListsBuilt(
+        document,
+        this.elements.panel
       );
-      const toPopups = panel.querySelectorAll(
-        ".translations-panel-language-menupopup-to"
-      );
-
-      for (const popup of fromPopups) {
-        for (const { langTag, displayName } of fromLanguages) {
-          const fromMenuItem = document.createXULElement("menuitem");
-          fromMenuItem.setAttribute("value", langTag);
-          fromMenuItem.setAttribute("label", displayName);
-          popup.appendChild(fromMenuItem);
-        }
-      }
-
-      for (const popup of toPopups) {
-        for (const { langTag, displayName } of toLanguages) {
-          const toMenuItem = document.createXULElement("menuitem");
-          toMenuItem.setAttribute("value", langTag);
-          toMenuItem.setAttribute("label", displayName);
-          popup.appendChild(toMenuItem);
-        }
-      }
-
-      this.#langListsPhase = "initialized";
     } catch (error) {
       this.console?.error(error);
-      this.#langListsPhase = "error";
     }
   }
 
@@ -608,7 +552,7 @@ var FullPageTranslationsPanel = new (class {
     // Unconditionally hide the intro text in case the panel is re-shown.
     intro.hidden = true;
 
-    if (this.#langListsPhase === "error") {
+    if (TranslationsPanelShared.getLangListsInitState(panel) === "error") {
       // There was an error, display it in the view rather than the language
       // dropdowns.
       const { cancelButton, errorHintAction } = this.elements;
