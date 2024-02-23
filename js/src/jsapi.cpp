@@ -1289,7 +1289,7 @@ JS_PUBLIC_API void JS_RemoveExtraGCRootsTracer(JSContext* cx,
 }
 
 JS_PUBLIC_API JS::GCReason JS::WantEagerMinorGC(JSRuntime* rt) {
-  if (rt->gc.nursery().shouldCollect()) {
+  if (rt->gc.nursery().wantEagerCollection()) {
     return JS::GCReason::EAGER_NURSERY_COLLECTION;
   }
   return JS::GCReason::NO_REASON;
@@ -1302,7 +1302,7 @@ JS_PUBLIC_API JS::GCReason JS::WantEagerMajorGC(JSRuntime* rt) {
 JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
                                                  JS::GCReason reason) {
   gc::GCRuntime& gc = rt->gc;
-  if (gc.nursery().shouldCollect()) {
+  if (gc.nursery().wantEagerCollection()) {
     gc.minorGC(reason);
   }
 }

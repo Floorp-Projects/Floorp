@@ -447,23 +447,26 @@
     NoCheck, 16 * 1024 * 1024)                                                 \
                                                                                \
   /*                                                                           \
-   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION                           \
-   * JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_FRACTION                  \
-   * JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS                               \
+   * JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_KB                                \
+   * JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_PERCENT                           \
+   * JSGC_NURSERY_EAGER_COLLECTION_TIMEOUT_MS                                  \
    *                                                                           \
-   * Attempt to run a minor GC in the idle time if the free space falls below  \
-   * this threshold or if it hasn't been collected for too long. The absolute  \
-   * threshold is used when the nursery is large and the percentage when it is \
-   * small. See Nursery::shouldCollect().                                      \
+   * JS::MaybeRunNurseryCollection will run a minor GC if the free space falls \
+   * below a threshold or if it hasn't been collected for too long.            \
+   *                                                                           \
+   * To avoid making this too eager, two thresholds must be met. The free      \
+   * space must fall below a size threshold and the fraction of free space     \
+   * remaining must also fall below a threshold.                               \
+   *                                                                           \
+   * See Nursery::wantEagerCollection() for more details.                      \
    */                                                                          \
-  _(JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION, size_t,                   \
-    nurseryFreeThresholdForIdleCollection, ConvertSize, NoCheck,               \
-    ChunkSize / 4)                                                             \
-  _(JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT, double,           \
-    nurseryFreeThresholdForIdleCollectionFraction, ConvertTimes100,            \
+  _(JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_KB, size_t,                        \
+    nurseryEagerCollectionThresholdBytes, ConvertKB, NoCheck, ChunkSize / 4)   \
+  _(JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_PERCENT, double,                   \
+    nurseryEagerCollectionThresholdPercent, ConvertTimes100,                   \
     CheckNonZeroUnitRange, 0.25)                                               \
-  _(JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS, mozilla::TimeDuration,        \
-    nurseryTimeoutForIdleCollection, ConvertMillis, NoCheck,                   \
+  _(JSGC_NURSERY_EAGER_COLLECTION_TIMEOUT_MS, mozilla::TimeDuration,           \
+    nurseryEagerCollectionTimeout, ConvertMillis, NoCheck,                     \
     mozilla::TimeDuration::FromSeconds(5))                                     \
                                                                                \
   /*                                                                           \
