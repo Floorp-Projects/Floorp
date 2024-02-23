@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this && 'stackTest' in this) || helperThreadCount() === 0
+// |jit-test| skip-if: !(hasFunction.oomTest && hasFunction.stackTest) || helperThreadCount() === 0
 
 // Check that oomTest throws an exception on worker threads.
 

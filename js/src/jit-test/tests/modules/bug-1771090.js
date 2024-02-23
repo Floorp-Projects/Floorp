@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomAfterAllocations' in this)
+// |jit-test| skip-if: !hasFunction.oomAfterAllocations
 
 asyncFunc1("geval0\n await ''")
 async function asyncFunc1(lfVarx) {

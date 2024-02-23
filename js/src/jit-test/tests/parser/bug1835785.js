@@ -1,4 +1,4 @@
-// |jit-test| allow-unhandlable-oom; allow-oom; skip-if: !('oomAtAllocation' in this)
+// |jit-test| allow-unhandlable-oom; allow-oom; skip-if: !hasFunction.oomAtAllocation
 function main() {
   this
   oomAtAllocation(7);

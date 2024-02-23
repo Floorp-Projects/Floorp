@@ -1,4 +1,4 @@
-// |jit-test| slow; allow-oom; skip-if: !wasmIsSupported() || !('oomTest' in this)
+// |jit-test| slow; allow-oom; skip-if: !wasmIsSupported() || !hasFunction.oomTest
 
 Object.getOwnPropertyNames(this);
 s = newGlobal();
