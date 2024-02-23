@@ -62,6 +62,7 @@ fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is no
 skip-if = [
   "os == 'win'",
   "os == 'mac' && verify"
+  "os == 'linux'" # Bug 1875877
 ] # macos times out, see bug 1857293, skipped for windows, see bug 1858460
 
 ["browser_opentabs_tab_indicators.js"]
