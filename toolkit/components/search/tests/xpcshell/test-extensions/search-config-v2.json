@@ -1,0 +1,139 @@
+{
+  "data": [
+    {
+      "recordType": "engine",
+      "identifier": "plainengine",
+      "base": {
+        "name": "Plain",
+        "urls": {
+          "search": {
+            "base": "https://duckduckgo.com/",
+            "params": [
+              {
+                "name": "t",
+                "searchAccessPoint": {
+                  "newtab": "ffnt",
+                  "homepage": "ffhp",
+                  "searchbar": "ffsb",
+                  "addressbar": "ffab",
+                  "contextmenu": "ffcm"
+                }
+              }
+            ],
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://ac.duckduckgo.com/ac/q={searchTerms}&type=list"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "special-engine",
+      "base": {
+        "name": "Special",
+        "urls": {
+          "search": {
+            "base": "https://www.google.com/search",
+            "params": [
+              {
+                "name": "client",
+                "searchAccessPoint": {
+                  "searchbar": "firefox-b-1",
+                  "addressbar": "firefox-b-1-ab"
+                }
+              }
+            ],
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://www.google.com/complete/search?client=firefox&q={searchTerms}"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "multilocale-an",
+      "base": {
+        "name": "Multilocale AN",
+        "urls": {
+          "search": {
+            "base": "https://an.wikipedia.org/wiki/Especial:Mirar",
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://an.wikipedia.org/w/api.php",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "regions": ["an"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "multilocale-af",
+      "base": {
+        "name": "Multilocale AF",
+        "urls": {
+          "search": {
+            "base": "https://af.wikipedia.org/wiki/Spesiaal:Soek",
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://af.wikipedia.org/w/api.php",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "regions": ["af"] }
+        }
+      ]
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "plainengine",
+      "specificDefaults": [
+        {
+          "default": "special-engine",
+          "environment": { "regions": ["tr"] }
+        },
+        {
+          "default": "multilocale-an",
+          "environment": { "regions": ["an"] }
+        }
+      ]
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": [
+        {
+          "order": [
+            "plainengine",
+            "special-engine",
+            "multilocale-af",
+            "multilocale-an"
+          ],
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    }
+  ]
+}
