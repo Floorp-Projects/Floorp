@@ -874,6 +874,9 @@ add_task(async function checkAllTheFiles() {
   // Wait for all manifest to be parsed
   await PerfTestHelpers.throttledMapPromises(manifestURIs, parseManifest);
 
+  for (let jsm of Components.manager.getComponentJSMs()) {
+    gReferencesFromCode.set(jsm, null);
+  }
   for (let esModule of Components.manager.getComponentESModules()) {
     gReferencesFromCode.set(esModule, null);
   }

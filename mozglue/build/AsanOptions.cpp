@@ -187,6 +187,7 @@ extern "C" const char* __lsan_default_suppressions() {
          "leak:js::frontend::Parse\n"
          "leak:xpc::CIGSHelper\n"
          "leak:mozJSModuleLoader\n"
+         "leak:mozilla::xpcom::ConstructJSMComponent\n"
          "leak:XPCWrappedNativeJSOps\n"
 
       // End of suppressions.

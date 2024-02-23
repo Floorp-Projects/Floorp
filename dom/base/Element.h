@@ -90,6 +90,7 @@ class nsIDOMXULSelectControlElement;
 class nsIDOMXULSelectControlItemElement;
 class nsIFrame;
 class nsIHTMLCollection;
+class nsIMozBrowserFrame;
 class nsIPrincipal;
 class nsIScreen;
 class nsIScrollableFrame;
@@ -456,6 +457,16 @@ class Element : public FragmentOrElement {
    * Returns if the element is interactive content as per HTML specification.
    */
   virtual bool IsInteractiveHTMLContent() const;
+
+  /**
+   * Returns |this| as an nsIMozBrowserFrame* if the element is a frame or
+   * iframe element.
+   *
+   * We have this method, rather than using QI, so that we can use it during
+   * the servo traversal, where we can't QI DOM nodes because of non-thread-safe
+   * refcounts.
+   */
+  virtual nsIMozBrowserFrame* GetAsMozBrowserFrame() { return nullptr; }
 
   /**
    * Is the attribute named aAttribute a mapped attribute?

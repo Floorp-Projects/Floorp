@@ -66,11 +66,26 @@ function run_test() {
 
   pm = Services.perms;
 
-  let entries = [{ origin: "http://example.com", originAttributes: {} }];
+  let entries = [
+    { origin: "http://example.com", originAttributes: {} },
+    {
+      origin: "http://example.com",
+      originAttributes: { inIsolatedMozBrowser: true },
+    },
+  ];
 
   // In that case, all permissions should be removed.
   test(entries, getData({}), [
     pm.UNKNOWN_ACTION,
+    pm.UNKNOWN_ACTION,
+    pm.ALLOW_ACTION,
+    pm.ALLOW_ACTION,
+  ]);
+
+  // In that case, only the permissions related to a browserElement should be removed.
+  // All the other permissions should stay.
+  test(entries, getData({ inIsolatedMozBrowser: true }), [
+    pm.ALLOW_ACTION,
     pm.UNKNOWN_ACTION,
     pm.ALLOW_ACTION,
     pm.ALLOW_ACTION,

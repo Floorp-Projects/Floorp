@@ -80,6 +80,8 @@ class ProcessPriorityManager final {
   static void BrowserPriorityChanged(dom::BrowserParent* aBrowserParent,
                                      bool aPriority);
 
+  static void RemoteBrowserFrameShown(nsFrameLoader* aFrameLoader);
+
  private:
   ProcessPriorityManager();
   ProcessPriorityManager(const ProcessPriorityManager&) = delete;

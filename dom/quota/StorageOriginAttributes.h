@@ -15,31 +15,11 @@ namespace mozilla {
 // in OriginAttributes class anymore.
 class StorageOriginAttributes {
  public:
-  StorageOriginAttributes() : mInIsolatedMozBrowser(false) {}
-
-  explicit StorageOriginAttributes(bool aInIsolatedMozBrowser)
-      : mInIsolatedMozBrowser(aInIsolatedMozBrowser) {}
-
   bool InIsolatedMozBrowser() const { return mInIsolatedMozBrowser; }
 
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
 
   // New getters can be added here incrementally.
-
-  void SetInIsolatedMozBrowser(bool aInIsolatedMozBrowser) {
-    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-  }
-
-  void SetUserContextId(uint32_t aUserContextId) {
-    mOriginAttributes.mUserContextId = aUserContextId;
-  }
-
-  // New setters can be added here incrementally.
-
-  // Serializes/Deserializes non-default values into the suffix format, i.e.
-  // |^key1=value1&key2=value2|. If there are no non-default attributes, this
-  // returns an empty string
-  void CreateSuffix(nsACString& aStr) const;
 
   [[nodiscard]] bool PopulateFromSuffix(const nsACString& aStr);
 
@@ -51,7 +31,7 @@ class StorageOriginAttributes {
  private:
   OriginAttributes mOriginAttributes;
 
-  bool mInIsolatedMozBrowser;
+  bool mInIsolatedMozBrowser = false;
 };
 
 }  // namespace mozilla

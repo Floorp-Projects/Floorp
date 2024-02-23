@@ -163,6 +163,8 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetIsIpAddress(bool* aIsIpAddress) override;
   NS_IMETHOD GetIsLocalIpAddress(bool* aIsIpAddress) override;
   NS_IMETHOD GetIsOnion(bool* aIsOnion) override;
+  NS_IMETHOD GetIsInIsolatedMozBrowserElement(
+      bool* aIsInIsolatedMozBrowserElement) final;
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
   NS_IMETHOD GetSiteOrigin(nsACString& aSiteOrigin) final;
@@ -247,6 +249,9 @@ class BasePrincipal : public nsJSPrincipals {
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const {
     return mOriginAttributes.mPrivateBrowsingId;
+  }
+  bool IsInIsolatedMozBrowserElement() const {
+    return mOriginAttributes.mInIsolatedMozBrowser;
   }
 
   PrincipalKind Kind() const { return mKind; }
