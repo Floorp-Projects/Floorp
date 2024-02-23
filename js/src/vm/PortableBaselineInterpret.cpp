@@ -2320,53 +2320,68 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
       ReservedRooted<JSString*> rhs(
           &state.str1, reinterpret_cast<JSString*>(icregs.icVals[rhsId.id()]));
       bool result;
-      switch (op) {
-        case JSOp::Eq:
-        case JSOp::StrictEq:
-          if (lhs->length() != rhs->length()) {
-            result = false;
+      if (lhs == rhs) {
+        // If operands point to the same instance, the strings are trivially
+        // equal.
+        result = op == JSOp::Eq || op == JSOp::StrictEq || op == JSOp::Le ||
+                 op == JSOp::Ge;
+      } else {
+        switch (op) {
+          case JSOp::Eq:
+          case JSOp::StrictEq:
+            if (lhs->isAtom() && rhs->isAtom()) {
+              result = false;
+              break;
+            }
+            if (lhs->length() != rhs->length()) {
+              result = false;
+              break;
+            }
+            if (!StringsEqual<EqualityKind::Equal>(cx, lhs, rhs, &result)) {
+              return ICInterpretOpResult::Error;
+            }
             break;
-          }
-          if (!StringsEqual<EqualityKind::Equal>(cx, lhs, rhs, &result)) {
-            return ICInterpretOpResult::Error;
-          }
-          break;
-        case JSOp::Ne:
-        case JSOp::StrictNe:
-          if (lhs->length() != rhs->length()) {
-            result = true;
+          case JSOp::Ne:
+          case JSOp::StrictNe:
+            if (lhs->isAtom() && rhs->isAtom()) {
+              result = true;
+              break;
+            }
+            if (lhs->length() != rhs->length()) {
+              result = true;
+              break;
+            }
+            if (!StringsEqual<EqualityKind::NotEqual>(cx, lhs, rhs, &result)) {
+              return ICInterpretOpResult::Error;
+            }
             break;
-          }
-          if (!StringsEqual<EqualityKind::NotEqual>(cx, lhs, rhs, &result)) {
-            return ICInterpretOpResult::Error;
-          }
-          break;
-        case JSOp::Lt:
-          if (!StringsCompare<ComparisonKind::LessThan>(cx, lhs, rhs,
-                                                        &result)) {
-            return ICInterpretOpResult::Error;
-          }
-          break;
-        case JSOp::Ge:
-          if (!StringsCompare<ComparisonKind::GreaterThanOrEqual>(cx, lhs, rhs,
-                                                                  &result)) {
-            return ICInterpretOpResult::Error;
-          }
-          break;
-        case JSOp::Le:
-          if (!StringsCompare<ComparisonKind::GreaterThanOrEqual>(
-                  cx, /* N.B. swapped order */ rhs, lhs, &result)) {
-            return ICInterpretOpResult::Error;
-          }
-          break;
-        case JSOp::Gt:
-          if (!StringsCompare<ComparisonKind::LessThan>(
-                  cx, /* N.B. swapped order */ rhs, lhs, &result)) {
-            return ICInterpretOpResult::Error;
-          }
-          break;
-        default:
-          MOZ_CRASH("bad opcode");
+          case JSOp::Lt:
+            if (!StringsCompare<ComparisonKind::LessThan>(cx, lhs, rhs,
+                                                          &result)) {
+              return ICInterpretOpResult::Error;
+            }
+            break;
+          case JSOp::Ge:
+            if (!StringsCompare<ComparisonKind::GreaterThanOrEqual>(
+                    cx, lhs, rhs, &result)) {
+              return ICInterpretOpResult::Error;
+            }
+            break;
+          case JSOp::Le:
+            if (!StringsCompare<ComparisonKind::GreaterThanOrEqual>(
+                    cx, /* N.B. swapped order */ rhs, lhs, &result)) {
+              return ICInterpretOpResult::Error;
+            }
+            break;
+          case JSOp::Gt:
+            if (!StringsCompare<ComparisonKind::LessThan>(
+                    cx, /* N.B. swapped order */ rhs, lhs, &result)) {
+              return ICInterpretOpResult::Error;
+            }
+            break;
+          default:
+            MOZ_CRASH("bad opcode");
+        }
       }
       icregs.icResult = BooleanValue(result).asRawBits();
     }
