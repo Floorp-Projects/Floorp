@@ -679,3 +679,29 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test the mixed state of indeterminate HTML checkboxes.
+ */
+addAccessibleTask(
+  `<input type="checkbox" id="checkbox">`,
+  async function testHTMLCheckboxMixed(browser, docAcc) {
+    const checkbox = findAccessibleChildByID(docAcc, "checkbox");
+    testStates(checkbox, 0, 0, STATE_MIXED);
+    info("Setting indeterminate on checkbox");
+    let changed = waitForStateChange(checkbox, STATE_MIXED, true);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("checkbox").indeterminate = true;
+    });
+    await changed;
+    testStates(checkbox, STATE_MIXED);
+    info("Clearing indeterminate on checkbox");
+    changed = waitForStateChange(checkbox, STATE_MIXED, false);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("checkbox").indeterminate = false;
+    });
+    await changed;
+    testStates(checkbox, 0, 0, STATE_MIXED);
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
