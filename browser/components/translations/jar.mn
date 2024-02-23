@@ -4,4 +4,4 @@
 
 browser.jar:
     content/browser/translations/selectTranslationsPanel.js    (content/selectTranslationsPanel.js)
-    content/browser/translations/translationsPanel.js          (content/translationsPanel.js)
+    content/browser/translations/fullPageTranslationsPanel.js          (content/fullPageTranslationsPanel.js)
