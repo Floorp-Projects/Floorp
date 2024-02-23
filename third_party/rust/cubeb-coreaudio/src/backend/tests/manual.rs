@@ -338,6 +338,23 @@ fn test_stream_tester() {
                 params.set(InputProcessingParams::ECHO_CANCELLATION, true);
                 params.set(InputProcessingParams::NOISE_SUPPRESSION, true);
             }
+            let mut agc = u32::from(false);
+            let mut size: usize = mem::size_of::<u32>();
+            assert_eq!(
+                audio_unit_get_property(
+                    stm.core_stream_data.input_unit,
+                    kAUVoiceIOProperty_VoiceProcessingEnableAGC,
+                    kAudioUnitScope_Global,
+                    AU_IN_BUS,
+                    &mut agc,
+                    &mut size,
+                ),
+                NO_ERR
+            );
+            assert_eq!(size, mem::size_of::<u32>());
+            if agc == 1 {
+                params.set(InputProcessingParams::AUTOMATIC_GAIN_CONTROL, true);
+            }
         }
         let mut done = false;
         while !done {
