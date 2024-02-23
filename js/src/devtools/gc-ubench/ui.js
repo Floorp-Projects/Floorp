@@ -53,8 +53,14 @@ var Firefox = class extends Host {
   get gcBytes() {
     return gMemory.zone.gcBytes;
   }
+  get mallocBytes() {
+    return gMemory.zone.mallocBytes;
+  }
   get gcAllocTrigger() {
     return gMemory.zone.gcAllocTrigger;
+  }
+  get mallocTrigger() {
+    return gMemory.zone.mallocTriggerBytes;
   }
 
   features = {
@@ -108,7 +114,7 @@ var Graph = class {
   }
 
   xpos(index) {
-    return (index / numSamples) * (this.width - 80 * this.scale);
+    return (index / numSamples) * (this.width - 100 * this.scale);
   }
 
   clear() {
@@ -286,18 +292,19 @@ var LatencyGraph = class extends Graph {
 var MemoryGraph = class extends Graph {
   constructor(ctx) {
     super(ctx);
-    this.worstEver = this.bestEver = gHost.gcBytes;
-    this.limit = Math.max(this.worstEver, gHost.gcAllocTrigger);
+    this.range = 1;
   }
 
   ypos(size) {
-    const range = this.limit - this.bestEver;
-    const percent = (size - this.bestEver) / range;
-
+    const percent = size / this.range;
     return (1 - percent) * this.height * 0.9 + this.scale * 20;
   }
 
-  drawHBar(size, label, color = "rgb(150,150,150)") {
+  drawHBarForBytes(size, name, color) {
+    this.drawHBar(size, `${format_bytes(size)} ${name}`, color)
+  }
+
+  drawHBar(size, label, color) {
     const ctx = this.ctx;
 
     const y = this.ypos(size);
@@ -320,50 +327,48 @@ var MemoryGraph = class extends Graph {
     this.clear();
     this.drawFrame();
 
-    var worst = 0,
-      worstpos = 0;
+    let gcMaxPos = 0;
+    let mallocMaxPos = 0;
+    let gcMax = 0;
+    let mallocMax = 0;
     for (let i = 0; i < numSamples; i++) {
-      if (gHistory.gcBytes[i] >= worst) {
-        worst = gHistory.gcBytes[i];
-        worstpos = i;
+      if (gHistory.gcBytes[i] >= gcMax) {
+        gcMax = gHistory.gcBytes[i];
+        gcMaxPos = i;
       }
-      if (gHistory.gcBytes[i] < this.bestEver) {
-        this.bestEver = gHistory.gcBytes[i];
+      if (gHistory.mallocBytes[i] >= mallocMax) {
+        mallocMax = gHistory.mallocBytes[i];
+        mallocMaxPos = i;
       }
     }
 
-    if (this.worstEver < worst) {
-      this.worstEver = worst;
-      this.limit = Math.max(this.worstEver, gHost.gcAllocTrigger);
-    }
+    this.range = Math.max(gcMax, mallocMax, gHost.gcAllocTrigger, gHost.mallocTrigger);
 
-    this.drawHBar(
-      this.bestEver,
-      `${format_bytes(this.bestEver)} min`,
-      "#00cf61"
-    );
-    this.drawHBar(
-      this.worstEver,
-      `${format_bytes(this.worstEver)} max`,
-      "#cc1111"
-    );
-    this.drawHBar(
-      gHost.gcAllocTrigger,
-      `${format_bytes(gHost.gcAllocTrigger)} trigger`,
-      "#cc11cc"
-    );
+    this.drawHBarForBytes(gcMax, "GC max", "#00cf61");
+    this.drawHBarForBytes(mallocMax, "Malloc max", "#cc1111");
+    this.drawHBarForBytes(gHost.gcAllocTrigger, "GC trigger", "#cc11cc");
+    this.drawHBarForBytes(gHost.mallocTrigger, "Malloc trigger", "#cc11cc");
 
     ctx.fillStyle = "rgb(255,0,0)";
-    if (worst) {
+
+    if (gcMax !== 0) {
       ctx.fillText(
-        format_bytes(worst),
-        this.xpos(worstpos) - 10,
-        this.ypos(worst) - 14
+        format_bytes(gcMax),
+        this.xpos(gcMaxPos) - 10,
+        this.ypos(gcMax) - 14
+      );
+    }
+    if (mallocMax !== 0) {
+      ctx.fillText(
+        format_bytes(mallocMax),
+        this.xpos(mallocMaxPos) - 10,
+        this.ypos(mallocMax) - 14
       );
     }
 
+    const where = sampleIndex % numSamples;
+
     ctx.beginPath();
-    var where = sampleIndex % numSamples;
     ctx.arc(
       this.xpos(where),
       this.ypos(gHistory.gcBytes[where]),
@@ -373,19 +378,47 @@ var MemoryGraph = class extends Graph {
       true
     );
     ctx.fill();
+    ctx.beginPath();
+    ctx.arc(
+      this.xpos(where),
+      this.ypos(gHistory.mallocBytes[where]),
+      5,
+      0,
+      Math.PI * 2,
+      true
+    );
+    ctx.fill();
 
     ctx.beginPath();
     for (let i = 0; i < numSamples; i++) {
+      let x = this.xpos(i);
+      let y = this.ypos(gHistory.gcBytes[i]);
       if (i == (sampleIndex + 1) % numSamples) {
-        ctx.moveTo(this.xpos(i), this.ypos(gHistory.gcBytes[i]));
+        ctx.moveTo(x, y);
       } else {
-        ctx.lineTo(this.xpos(i), this.ypos(gHistory.gcBytes[i]));
+        ctx.lineTo(x, y);
       }
       if (i == where) {
         ctx.stroke();
       }
     }
     ctx.stroke();
+
+    ctx.beginPath();
+    for (let i = 0; i < numSamples; i++) {
+      let x = this.xpos(i);
+      let y = this.ypos(gHistory.mallocBytes[i]);
+      if (i == (sampleIndex + 1) % numSamples) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      if (i == where) {
+        ctx.stroke();
+      }
+    }
+    ctx.stroke();
+
     ctx.fillStyle = "rgb(0,0,0)";
 
     this.drawAxisLabels("Time", "Heap Memory Usage");
