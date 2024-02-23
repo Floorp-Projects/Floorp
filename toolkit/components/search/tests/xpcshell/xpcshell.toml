@@ -83,6 +83,7 @@ support-files = [
   "method-extensions/get/manifest.json",
   "method-extensions/post/manifest.json",
   "method-extensions/engines.json",
+  "method-extensions/search-config-v2.json",
 ]
 
 ["test_defaultEngine.js"]
