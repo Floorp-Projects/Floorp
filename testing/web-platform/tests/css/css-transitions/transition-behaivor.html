@@ -81,4 +81,42 @@ promise_test(async t => {
 }, 'transition-behavior changed to normal should stop the running discrete ' +
    'transitions.');
 
+promise_test(async t => {
+  const div = addDiv(t, {
+    style: 'transition: clip-path 5s normal; clip-path: circle(50px)',
+  });
+  getComputedStyle(div).transition;
+
+  div.style.clipPath = "circle(farthest-side)";
+  assert_equals(getComputedStyle(div).clipPath, "circle(farthest-side)");
+  assert_equals(div.getAnimations().length, 0,
+                "Should not start a transition of discrete animation values");
+
+  div.style.transitionBehavior = "allow-discrete";
+  div.style.clipPath = "circle(200px)";
+  assert_equals(getComputedStyle(div).clipPath, "circle(farthest-side)");
+  assert_equals(div.getAnimations().length, 1,
+                "Should start a transition for discrete animation values");
+}, 'transition-behavior:allow-discrete should animate for values fallback to ' +
+   'discrete animations.');
+
+promise_test(async t => {
+  const div = addDiv(t, {
+    style: 'transition: clip-path 5s allow-discrete; clip-path: circle(50px)',
+  });
+  getComputedStyle(div).transition;
+
+  div.style.clipPath = "circle(farthest-side)";
+  assert_equals(getComputedStyle(div).clipPath, "circle(50px)");
+  assert_equals(div.getAnimations().length, 1,
+                "Should start a transition for discrete animation values");
+
+  div.style.transitionBehavior = "normal";
+  div.style.clipPath = "ellipse()";
+  assert_equals(getComputedStyle(div).clipPath, "ellipse()");
+  assert_equals(div.getAnimations().length, 0,
+                "The running transition should be cancelled");
+}, 'transition-behavior:normal should cancel the running transitions whose ' +
+   'animation values are not interpolatable');
+
 </script>

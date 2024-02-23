@@ -1253,7 +1253,10 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     let Some(old_value) = AnimationValue::from_computed_values(prop, old) else {
         return Default::default();
     };
-    if old_value == new_value || !old_value.interpolable_with(&new_value) {
+    if old_value == new_value
+        || (matches!(behavior, computed::TransitionBehavior::Normal)
+            && !old_value.interpolable_with(&new_value))
+    {
         return Default::default();
     }
 
