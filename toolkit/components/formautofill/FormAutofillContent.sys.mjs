@@ -20,7 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormStateManager: "resource://gre/modules/shared/FormStateManager.sys.mjs",
   ProfileAutocomplete:
     "resource://autofill/AutofillProfileAutoComplete.sys.mjs",
-  AutofillTelemetry: "resource://autofill/AutofillTelemetry.sys.mjs",
+  AutofillTelemetry: "resource://gre/modules/shared/AutofillTelemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

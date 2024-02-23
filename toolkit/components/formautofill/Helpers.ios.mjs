@@ -58,6 +58,15 @@ const withNotImplementedError = obj =>
     },
   });
 
+// This function will create a proxy for each undefined property
+// This is useful when the accessed property name is unkonwn beforehand
+const undefinedProxy = () =>
+  new Proxy(() => {}, {
+    get() {
+      return undefinedProxy();
+    },
+  });
+
 // Webpack needs to be able to statically analyze require statements in order to build the dependency graph
 // In order to require modules dynamically at runtime, we use require.context() to create a dynamic require
 // that is still able to be parsed by Webpack at compile time. The "./" and ".mjs" tells webpack that files
@@ -154,7 +163,60 @@ export const Services = withNotImplementedError({
         formatStringFromName: () => "",
       }),
   }),
-  uuid: withNotImplementedError({ generateUUID: () => "" }),
+  telemetry: withNotImplementedError({
+    scalarAdd: (scalarName, scalarValue) => {
+      // For now, we only care about the address form telemetry
+      // TODO(FXCM-935): move address telemetry to Glean so we can remove this
+      // Data format of the sent message is:
+      // {
+      //   type: "scalar",
+      //   name: "formautofill.addresses.detected_sections_count",
+      //   value: Number,
+      // }
+      if (scalarName !== "formautofill.addresses.detected_sections_count") {
+        return;
+      }
+
+      // eslint-disable-next-line no-undef
+      webkit.messageHandlers.addressFormTelemetryMessageHandler.postMessage({
+        type: "scalar",
+        name: scalarName,
+        value: scalarValue,
+      });
+    },
+    recordEvent: (category, method, object, value, extra) => {
+      // For now, we only care about the address form telemetry
+      // TODO(FXCM-935): move address telemetry to Glean so we can remove this
+      // Data format of the sent message is:
+      // {
+      //   type: "event",
+      //   category: "address",
+      //   method: "detected" | "filled" | "filled_modified",
+      //   object: "address_form" | "address_form_ext",
+      //   value: String,
+      //   extra: Any,
+      // }
+      if (category !== "address") {
+        return;
+      }
+
+      // eslint-disable-next-line no-undef
+      webkit.messageHandlers.addressFormTelemetryMessageHandler.postMessage({
+        type: "event",
+        category,
+        method,
+        object,
+        value,
+        extra,
+      });
+    },
+  }),
+  // TODO(FXCM-936): we should use crypto.randomUUID() instead of Services.uuid.generateUUID() in our codebase
+  // Underneath crypto.randomUUID() uses the same implementation as generateUUID()
+  // https://searchfox.org/mozilla-central/rev/d405168c4d3c0fb900a7354ae17bb34e939af996/dom/base/Crypto.cpp#96
+  // The only limitation is that it's not available in insecure contexts, which should be fine for both iOS and Desktop
+  // since we only autofill in secure contexts
+  uuid: withNotImplementedError({ generateUUID: () => crypto.randomUUID() }),
 });
 window.Services = Services;
 
@@ -163,15 +225,18 @@ window.Localization = function () {
   return { formatValueSync: () => "" };
 };
 
+// For now, we ignore all calls to glean.
+// TODO(FXCM-935): move address telemetry to Glean so we can create a universal mock for glean that
+// dispatches telemetry messages to the iOS.
+window.Glean = {
+  formautofillCreditcards: undefinedProxy(),
+  formautofill: undefinedProxy(),
+};
+
 export const windowUtils = withNotImplementedError({
   removeManuallyManagedState: () => {},
   addManuallyManagedState: () => {},
 });
 window.windowUtils = windowUtils;
-
-export const AutofillTelemetry = withNotImplementedError({
-  recordFormInteractionEvent: () => {},
-  recordDetectedSectionCount: () => {},
-});
 
 export { IOSAppConstants as AppConstants } from "resource://gre/modules/shared/Constants.ios.mjs";
