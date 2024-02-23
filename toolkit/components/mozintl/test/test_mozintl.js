@@ -8,6 +8,7 @@ function run_test() {
   test_rtf_formatBestUnit();
   test_datetimeformat();
   test_getLanguageDirection();
+  test_stringHasRTLChars();
 
   ok(true);
 }
@@ -180,4 +181,24 @@ function test_getLanguageDirection() {
   equal(Services.intl.getScriptDirection("en"), "ltr");
   equal(Services.intl.getScriptDirection("en-US"), "ltr");
   equal(Services.intl.getScriptDirection("fr"), "ltr");
+}
+
+function test_stringHasRTLChars() {
+  equal(Services.intl.stringHasRTLChars(""), false);
+  equal(Services.intl.stringHasRTLChars("a"), false);
+  equal(Services.intl.stringHasRTLChars("أهلا"), true);
+  equal(Services.intl.stringHasRTLChars(">\u202e<"), true);
+
+  const invalidArgs = [undefined, null, false, 42, {}];
+  for (const invalidArg of invalidArgs) {
+    try {
+      Services.intl.stringHasRTLChars(invalidArg);
+      ok(
+        false,
+        `stringHasRTLChars should throw when called with ${invalidArg}`
+      );
+    } catch (e) {
+      ok(true, `stringHasRTLChars throws when called with ${invalidArg}`);
+    }
+  }
 }
