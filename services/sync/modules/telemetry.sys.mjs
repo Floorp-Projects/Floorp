@@ -241,10 +241,14 @@ export class ErrorSanitizer {
     NotAllowedError: this.E_PERMISSION_DENIED,
   };
 
+  // IOUtils error messages include the specific nsresult error code that caused them.
+  static NS_ERROR_RE = new RegExp(/ \(NS_ERROR_.*\)$/);
+
   static #cleanOSErrorMessage(message, error = undefined) {
     if (DOMException.isInstance(error)) {
       const sub = this.DOMErrorSubstitutions[error.name];
       message = message.replaceAll("\\", "/");
+      message = message.replace(this.NS_ERROR_RE, "");
       if (sub) {
         return `${sub} ${message}`;
       }
