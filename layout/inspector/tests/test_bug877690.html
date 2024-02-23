@@ -145,7 +145,7 @@ function do_test() {
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "all", "unset", "cubic-bezier", "ease", "ease-in", "ease-in-out",
                    "ease-out", "inherit", "revert", "revert-layer", "linear", "none", "step-end", "step-start",
-                   "steps" ];
+                   "steps", "normal", "allow-discrete" ];
   ok(testValues(values, expected), "property transition's values.");
 
   // test invalid property

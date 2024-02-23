@@ -141,6 +141,12 @@ impl TransitionBehavior {
     pub fn normal() -> Self {
         Self::Normal
     }
+
+    /// Return true if it is normal.
+    #[inline]
+    pub fn is_normal(&self) -> bool {
+        matches!(*self, Self::Normal)
+    }
 }
 
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count

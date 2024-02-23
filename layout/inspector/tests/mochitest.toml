@@ -3,6 +3,7 @@ prefs = [
   "layout.css.basic-shape-rect.enabled=true",
   "layout.css.basic-shape-xywh.enabled=true",
   "layout.css.properties-and-values.enabled=true",
+  "layout.css.transition-behavior.enabled=true",
   "dom.customHighlightAPI.enabled=true",
 ]
 support-files = [
