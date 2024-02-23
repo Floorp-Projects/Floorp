@@ -127,8 +127,8 @@ class Browser(object):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             return self.marionette.execute_script(
                 """\
-                const { ClientID } = ChromeUtils.import(
-                  "resource://gre/modules/ClientID.jsm"
+                const { ClientID } = ChromeUtils.importESModule(
+                  "resource://gre/modules/ClientID.sys.mjs"
                 );
                 return ClientID.getCachedClientID();
             """
@@ -165,8 +165,8 @@ class Browser(object):
             # triggers an "environment-change" ping.
             script = """\
                     let [resolve] = arguments;
-            const { TelemetryEnvironment } = ChromeUtils.import(
-              "resource://gre/modules/TelemetryEnvironment.jsm"
+            const { TelemetryEnvironment } = ChromeUtils.importESModule(
+              "resource://gre/modules/TelemetryEnvironment.sys.mjs"
             );
             TelemetryEnvironment.onInitialized().then(resolve);
             """

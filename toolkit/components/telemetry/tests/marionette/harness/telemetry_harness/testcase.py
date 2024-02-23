@@ -175,8 +175,8 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
             # triggers an "environment-change" ping.
             script = """\
             let [resolve] = arguments;
-            const { TelemetryEnvironment } = ChromeUtils.import(
-              "resource://gre/modules/TelemetryEnvironment.jsm"
+            const { TelemetryEnvironment } = ChromeUtils.importESModule(
+              "resource://gre/modules/TelemetryEnvironment.sys.mjs"
             );
             TelemetryEnvironment.onInitialized().then(resolve);
             """
@@ -205,8 +205,8 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             return self.marionette.execute_script(
                 """\
-                const { ClientID } = ChromeUtils.import(
-                  "resource://gre/modules/ClientID.jsm"
+                const { ClientID } = ChromeUtils.importESModule(
+                  "resource://gre/modules/ClientID.sys.mjs"
                 );
                 return ClientID.getCachedClientID();
                 """
@@ -218,8 +218,8 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             ping_data = self.marionette.execute_script(
                 """\
-                const { TelemetryController } = ChromeUtils.import(
-                  "resource://gre/modules/TelemetryController.jsm"
+                const { TelemetryController } = ChromeUtils.importESModule(
+                  "resource://gre/modules/TelemetryController.sys.mjs"
                 );
                 return TelemetryController.getCurrentPingData(true);
                 """

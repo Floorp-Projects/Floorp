@@ -224,8 +224,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.runAsyncCode(
             """
           let resolve = arguments[arguments.length - 1];
-          let { FxAccountsStorageManager } = ChromeUtils.import(
-            "resource://gre/modules/FxAccountsStorage.jsm"
+          let { FxAccountsStorageManager } = ChromeUtils.importESModule(
+            "resource://gre/modules/FxAccountsStorage.sys.mjs"
           );
           let storage = new FxAccountsStorageManager();
           let data = {email: "test@test.com", uid: "uid", keyFetchToken: "top-secret"};
@@ -448,8 +448,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
     def checkFxA(self):
         result = self.runAsyncCode(
             """
-          let { FxAccountsStorageManager } = ChromeUtils.import(
-            "resource://gre/modules/FxAccountsStorage.jsm"
+          let { FxAccountsStorageManager } = ChromeUtils.importESModule(
+            "resource://gre/modules/FxAccountsStorage.sys.mjs"
           );
           let resolve = arguments[arguments.length - 1];
           let storage = new FxAccountsStorageManager();
@@ -528,16 +528,16 @@ class TestFirefoxRefresh(MarionetteTestCase):
           global.Preferences = ChromeUtils.importESModule(
             "resource://gre/modules/Preferences.sys.mjs"
           ).Preferences;
-          global.FormHistory = ChromeUtils.import(
-            "resource://gre/modules/FormHistory.jsm"
+          global.FormHistory = ChromeUtils.importESModule(
+            "resource://gre/modules/FormHistory.sys.mjs"
           ).FormHistory;
         """  # NOQA: E501
         )
         self._formAutofillAvailable = self.runCode(
             """
           try {
-            global.formAutofillStorage = ChromeUtils.import(
-              "resource://formautofill/FormAutofillStorage.jsm"
+            global.formAutofillStorage = ChromeUtils.importESModule(
+              "resource://formautofill/FormAutofillStorage.sys.mjs"
             ).formAutofillStorage;
           } catch(e) {
             return false;

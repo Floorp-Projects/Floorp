@@ -171,11 +171,11 @@ def install_addon(session, addon_file_path):
         """
         const addon_file_path = arguments[0];
         const cb = arguments[1];
-        const { AddonManager } = ChromeUtils.import(
-            "resource://gre/modules/AddonManager.jsm"
+        const { AddonManager } = ChromeUtils.importESModule(
+            "resource://gre/modules/AddonManager.sys.mjs"
         );
-        const { ExtensionPermissions } = ChromeUtils.import(
-            "resource://gre/modules/ExtensionPermissions.jsm"
+        const { ExtensionPermissions } = ChromeUtils.importESModule(
+            "resource://gre/modules/ExtensionPermissions.sys.mjs"
         );
         const { FileUtils } = ChromeUtils.importESModule(
             "resource://gre/modules/FileUtils.sys.mjs"
