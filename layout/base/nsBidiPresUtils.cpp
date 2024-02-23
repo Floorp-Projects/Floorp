@@ -2363,9 +2363,6 @@ void nsBidiPresUtils::ProcessSimpleRun(const char16_t* aText, size_t aLength,
                                        nsBidiPositionResolve* aPosResolve,
                                        int32_t aPosResolveCount,
                                        nscoord* aWidth) {
-  if (!aLength) {
-    return;
-  }
   // Get bidi class from the first (or only) character.
   uint32_t ch = aText[0];
   if (aLength > 1 && NS_IS_HIGH_SURROGATE(ch) &&
