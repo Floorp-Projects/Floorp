@@ -311,7 +311,7 @@ typedef enum JSGCParamKey {
    * Free space bytes threshold for eager nursery collection.
    *
    * Default: NurseryChunkUsableSize / 4
-   * Pref: None
+   * Pref: javascript.options.mem.nursery_eager_collection_threshold_kb
    */
   JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_KB = 27,
 
@@ -320,7 +320,7 @@ typedef enum JSGCParamKey {
    * percentage (from 0 to 99).
    *
    * Default: 25
-   * Pref: None
+   * Pref: javascript.options.mem.nursery_eager_collection_threshold_percent
    */
   JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_PERCENT = 30,
 
@@ -417,7 +417,7 @@ typedef enum JSGCParamKey {
    * collected in this many milliseconds.
    *
    * Default: 5000
-   * Pref: None
+   * Pref: javascript.options.mem.nursery_eager_collection_timeout_ms
    */
   JSGC_NURSERY_EAGER_COLLECTION_TIMEOUT_MS = 46,
 
@@ -455,6 +455,7 @@ typedef enum JSGCParamKey {
   /**
    * The heap size above which to use parallel marking.
    *
+   * Pref: javascript.options.mem.gc_parallel_marking_threshold_mb
    * Default: ParallelMarkingThresholdMB
    */
   JSGC_PARALLEL_MARKING_THRESHOLD_MB = 50,
