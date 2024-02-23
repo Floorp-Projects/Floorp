@@ -9664,7 +9664,7 @@
 # Is support for MediaKeys.getStatusForPolicy enabled?
 - name: media.eme.hdcp-policy-check.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_OR_DEV_EDITION@
   mirror: always
 
 - name: media.eme.max-throughput-ms
