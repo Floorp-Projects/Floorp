@@ -93,6 +93,7 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
                   RequestRedirect aRequestRedirect,
                   RequestCredentials aRequestCredentials,
                   const nsAString& aReferrer, ReferrerPolicy aReferrerPolicy,
+                  RequestPriority aPriority,
                   nsContentPolicyType aContentPolicyType,
                   const nsAString& aIntegrity);
 
@@ -248,6 +249,12 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
 
   void SetRedirectMode(RequestRedirect aRedirectMode) {
     mRedirectMode = aRedirectMode;
+  }
+
+  RequestPriority GetPriorityMode() const { return mPriorityMode; }
+
+  void SetPriorityMode(RequestPriority aPriorityMode) {
+    mPriorityMode = aPriorityMode;
   }
 
   const nsString& GetIntegrity() const { return mIntegrity; }
@@ -445,6 +452,7 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
   LoadTainting mResponseTainting = LoadTainting::Basic;
   RequestCache mCacheMode;
   RequestRedirect mRedirectMode;
+  RequestPriority mPriorityMode = RequestPriority::Auto;
   nsString mIntegrity;
   bool mMozErrors = false;
   nsCString mFragment;

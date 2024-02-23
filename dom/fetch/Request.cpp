@@ -430,6 +430,13 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
     signal = aInit.mSignal.Value();
   }
 
+  // https://fetch.spec.whatwg.org/#dom-global-fetch
+  // https://fetch.spec.whatwg.org/#dom-request
+  // The priority of init overrides input's priority.
+  if (aInit.mPriority.WasPassed()) {
+    request->SetPriorityMode(aInit.mPriority.Value());
+  }
+
   UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo;
   nsILoadInfo::CrossOriginEmbedderPolicy coep =
       nsILoadInfo::EMBEDDER_POLICY_NULL;

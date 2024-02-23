@@ -11778,7 +11778,7 @@
 # Indicates whether the `fetchpriority` attribute for elements which support it
 # (e.g. `<script>`) is enabled.
 - name: network.fetchpriority.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
@@ -11959,6 +11959,24 @@
   mirror: always
 - name: network.fetchpriority.adjustments.non-deferred-style.auto
   type: int32_t
+  value: 0
+  mirror: always
+
+# Adjustments to apply to the internal priority of gloable fetch API
+# for fetchpriority=low/high/auto with respect to the case when
+# network.fetchpriority is disabled.
+# - When the flag is disabled, Gecko currently sets priority to NORMAL.
+# - When the flag is enabled, it respectively maps to LOW/HIGH/NORMAL.
+- name: network.fetchpriority.adjustments.global-fetch-api.low
+  type: RelaxedAtomicInt32
+  value: 10
+  mirror: always
+- name: network.fetchpriority.adjustments.global-fetch-api.high
+  type: RelaxedAtomicInt32
+  value: -10
+  mirror: always
+- name: network.fetchpriority.adjustments.global-fetch-api.auto
+  type: RelaxedAtomicInt32
   value: 0
   mirror: always
 
