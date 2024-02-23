@@ -157,7 +157,8 @@ gfxMatrix SVGGradientFrame::GetGradientTransform(
   const SVGAnimatedTransformList* animTransformList =
       GetGradientTransformList(GetContent());
   if (!animTransformList) {
-    return bboxMatrix;
+    return bboxMatrix.PreMultiply(
+        SVGUtils::GetTransformMatrixInUserSpace(this));
   }
 
   gfxMatrix gradientTransform =
