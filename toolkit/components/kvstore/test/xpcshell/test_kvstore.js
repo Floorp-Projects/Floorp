@@ -12,9 +12,16 @@ function run_test() {
   run_next_test();
 }
 
-async function makeDatabaseDir(name) {
+async function makeDatabaseDir(name, { mockCorrupted = false } = {}) {
   const databaseDir = PathUtils.join(PathUtils.profileDir, name);
   await IOUtils.makeDirectory(databaseDir);
+  if (mockCorrupted) {
+    // Mock a corrupted db.
+    await IOUtils.write(
+      PathUtils.join(databaseDir, "data.safe.bin"),
+      new Uint8Array([0x00, 0x00, 0x00, 0x00])
+    );
+  }
   return databaseDir;
 }
 
@@ -24,6 +31,17 @@ const gKeyValueService = Cc["@mozilla.org/key-value-service;1"].getService(
 
 add_task(async function getService() {
   Assert.ok(gKeyValueService);
+});
+
+add_task(async function getOrCreate_defaultRecoveryStrategyError() {
+  const databaseDir = await makeDatabaseDir("getOrCreate_Error", {
+    mockCorrupted: true,
+  });
+
+  await Assert.rejects(
+    KeyValueService.getOrCreate(databaseDir, "db"),
+    /FileInvalid/
+  );
 });
 
 add_task(async function getOrCreate() {
