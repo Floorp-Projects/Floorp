@@ -667,7 +667,7 @@ class FullPageTranslationsTestUtils {
   static assertPanelViewDefault() {
     info("Checking that the panel shows the default view");
     FullPageTranslationsTestUtils.#assertPanelMainViewId(
-      "translations-panel-view-default"
+      "full-page-translations-panel-view-default"
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       ...FullPageTranslationsTestUtils.#defaultViewVisibilityExpectations,
@@ -683,7 +683,7 @@ class FullPageTranslationsTestUtils {
   static assertPanelViewError() {
     info("Checking that the panel shows the error view");
     FullPageTranslationsTestUtils.#assertPanelMainViewId(
-      "translations-panel-view-default"
+      "full-page-translations-panel-view-default"
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       error: true,
@@ -713,7 +713,7 @@ class FullPageTranslationsTestUtils {
   static assertPanelViewFirstShow() {
     info("Checking that the panel shows the first-show view");
     FullPageTranslationsTestUtils.#assertPanelMainViewId(
-      "translations-panel-view-default"
+      "full-page-translations-panel-view-default"
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       intro: true,
@@ -731,7 +731,7 @@ class FullPageTranslationsTestUtils {
   static assertPanelViewFirstShowError() {
     info("Checking that the panel shows the first-show error view");
     FullPageTranslationsTestUtils.#assertPanelMainViewId(
-      "translations-panel-view-default"
+      "full-page-translations-panel-view-default"
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       error: true,
@@ -750,7 +750,7 @@ class FullPageTranslationsTestUtils {
   static assertPanelViewRevisit() {
     info("Checking that the panel shows the revisit view");
     FullPageTranslationsTestUtils.#assertPanelMainViewId(
-      "translations-panel-view-default"
+      "full-page-translations-panel-view-default"
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
@@ -771,7 +771,7 @@ class FullPageTranslationsTestUtils {
   static assertPanelViewUnsupportedLanguage() {
     info("Checking that the panel shows the unsupported-language view");
     FullPageTranslationsTestUtils.#assertPanelMainViewId(
-      "translations-panel-view-unsupported-language"
+      "full-page-translations-panel-view-unsupported-language"
     );
     FullPageTranslationsTestUtils.#assertPanelElementVisibility({
       changeSourceLanguageButton: true,
@@ -1217,7 +1217,7 @@ class FullPageTranslationsTestUtils {
     // De-lazify the panel elements.
     TranslationsPanel.elements;
     await SharedTranslationsTestUtils._waitForPopupEvent(
-      "translations-panel",
+      "full-page-translations-panel",
       eventName,
       callback,
       postEventAssertion

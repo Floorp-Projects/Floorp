@@ -3,26 +3,26 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <html:template id="template-translations-panel">
-<panel id="translations-panel"
+<panel id="full-page-translations-panel"
        class="panel-no-padding translations-panel"
        type="arrow"
        role="alertdialog"
        noautofocus="true"
-       aria-labelledby="translations-panel-header"
+       aria-labelledby="full-page-translations-panel-header"
        orient="vertical"
        onclick="TranslationsPanel.handlePanelButtonEvent(event)"
        onpopupshown="TranslationsPanel.handlePanelPopupShownEvent(event)"
        onpopuphidden="TranslationsPanel.handlePanelPopupHiddenEvent(event)">
-  <panelmultiview id="translations-panel-multiview"
-                  mainViewId="translations-panel-view-default">
-    <panelview id="translations-panel-view-default"
+  <panelmultiview id="full-page-translations-panel-multiview"
+                  mainViewId="full-page-translations-panel-view-default">
+    <panelview id="full-page-translations-panel-view-default"
                class="PanelUI-subView translations-panel-view"
                role="document"
                mainview-with-header="true"
                has-custom-header="true">
       <hbox class="panel-header translations-panel-header">
         <html:h1 class="translations-panel-header-wrapper">
-          <html:span id="translations-panel-header"></html:span>
+          <html:span id="full-page-translations-panel-header"></html:span>
         </html:h1>
         <hbox class="translations-panel-beta">
           <image class="translations-panel-beta-icon"></image>
@@ -35,37 +35,37 @@
       </hbox>
 
       <vbox class="translations-panel-content">
-        <html:div id="translations-panel-intro">
+        <html:div id="full-page-translations-panel-intro">
           <html:span data-l10n-id="translations-panel-intro-description"></html:span>
-          <html:a id="translations-panel-intro-learn-more-link"
+          <html:a id="full-page-translations-panel-intro-learn-more-link"
                   is="moz-support-link"
                   data-l10n-id="translations-panel-learn-more-link"
                   support-page="website-translation"
                   onclick="TranslationsPanel.onLearnMoreLink()" />
         </html:div>
-        <vbox id="translations-panel-lang-selection">
-          <label data-l10n-id="translations-panel-from-label" id="translations-panel-from-label"></label>
-          <menulist id="translations-panel-from"
+        <vbox id="full-page-translations-panel-lang-selection">
+          <label data-l10n-id="translations-panel-from-label" id="full-page-translations-panel-from-label"></label>
+          <menulist id="full-page-translations-panel-from"
                     flex="1"
                     value="detect"
                     size="large"
                     aria-labelledby="translations-panel-from-label"
                     oncommand="TranslationsPanel.onChangeFromLanguage(event)">
-            <menupopup id="translations-panel-from-menupopup"
+            <menupopup id="full-page-translations-panel-from-menupopup"
                       class="translations-panel-language-menupopup-from">
               <menuitem data-l10n-id="translations-panel-choose-language" value=""></menuitem>
               <!-- The list of <menuitem> will be dynamically inserted. -->
             </menupopup>
           </menulist>
 
-          <label data-l10n-id="translations-panel-to-label" id="translations-panel-to-label"></label>
-          <menulist id="translations-panel-to"
+          <label data-l10n-id="translations-panel-to-label" id="full-page-translations-panel-to-label"></label>
+          <menulist id="full-page-translations-panel-to"
                     flex="1"
                     value="detect"
                     size="large"
                     aria-labelledby="translations-panel-to-label"
                     oncommand="TranslationsPanel.onChangeToLanguage(event)">
-            <menupopup id="translations-panel-to-menupopup"
+            <menupopup id="full-page-translations-panel-to-menupopup"
                       class="translations-panel-language-menupopup-to">
               <menuitem data-l10n-id="translations-panel-choose-language" value=""></menuitem>
               <!-- The list of <menuitem> will be dynamically inserted. -->
@@ -73,30 +73,30 @@
           </menulist>
         </vbox>
 
-        <vbox id="translations-panel-error" hidden="true">
+        <vbox id="full-page-translations-panel-error" hidden="true">
           <hbox class="translations-panel-error-header">
             <image class="translations-panel-error-icon translations-panel-error-header-icon" />
-            <description id="translations-panel-error-message"></description>
+            <description id="full-page-translations-panel-error-message"></description>
           </hbox>
-          <hbox id="translations-panel-error-message-hint"></hbox>
+          <hbox id="full-page-translations-panel-error-message-hint"></hbox>
           <hbox pack="end">
-            <button id="translations-panel-translate-hint-action" />
+            <button id="full-page-translations-panel-translate-hint-action" />
           </hbox>
         </vbox>
       </vbox>
 
       <html:moz-button-group class="panel-footer translations-panel-footer">
-        <button id="translations-panel-restore-button"
+        <button id="full-page-translations-panel-restore-button"
                 class="footer-button"
                 oncommand="TranslationsPanel.onRestore(event);"
                 data-l10n-id="translations-panel-restore-button">
         </button>
-        <button id="translations-panel-cancel"
+        <button id="full-page-translations-panel-cancel"
                 class="footer-button"
                 oncommand="TranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-translate-cancel">
         </button>
-        <button id="translations-panel-translate"
+        <button id="full-page-translations-panel-translate"
                 class="footer-button"
                 oncommand="TranslationsPanel.onTranslate(event);"
                 data-l10n-id="translations-panel-translate-button"
@@ -105,21 +105,21 @@
       </html:moz-button-group>
     </panelview>
 
-    <panelview id="translations-panel-view-unsupported-language"
+    <panelview id="full-page-translations-panel-view-unsupported-language"
                class="PanelUI-subView translations-panel-view"
                role="document"
                has-custom-header="true">
       <hbox class="panel-header translations-panel-header">
         <image class="translations-panel-error-icon" />
-        <html:h1 id="translations-panel-unsupported-language-header">
+        <html:h1 id="full-page-translations-panel-unsupported-language-header">
           <html:span data-l10n-id="translations-panel-error-unsupported"></html:span>
         </html:h1>
       </hbox>
 
       <vbox class="translations-panel-content">
         <html:div>
-          <html:span id="translations-panel-error-unsupported-hint"></html:span>
-          <html:a id="translations-panel-unsupported-learn-more-link"
+          <html:span id="full-page-translations-panel-error-unsupported-hint"></html:span>
+          <html:a id="full-page-translations-panel-unsupported-learn-more-link"
                   is="moz-support-link"
                   data-l10n-id="translations-panel-learn-more-link"
                   support-page="website-translation"
@@ -128,12 +128,12 @@
       </vbox>
 
       <html:moz-button-group class="panel-footer translations-panel-footer">
-        <button id="translations-panel-change-source-language"
+        <button id="full-page-translations-panel-change-source-language"
                 class="footer-button"
                 oncommand="TranslationsPanel.onChangeSourceLanguage(event);"
                 data-l10n-id="translations-panel-error-change-button">
         </button>
-        <button id="translations-panel-dismiss-error"
+        <button id="full-page-translations-panel-dismiss-error"
                 class="footer-button"
                 oncommand="TranslationsPanel.onCancel(event);"
                 data-l10n-id="translations-panel-error-dismiss-button"

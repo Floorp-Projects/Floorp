@@ -301,35 +301,50 @@ var TranslationsPanel = new (class {
 
       // Getters by id
       getter("appMenuButton", "PanelUI-menu-button");
-      getter("cancelButton", "translations-panel-cancel");
+      getter("cancelButton", "full-page-translations-panel-cancel");
       getter(
         "changeSourceLanguageButton",
-        "translations-panel-change-source-language"
+        "full-page-translations-panel-change-source-language"
       );
-      getter("dismissErrorButton", "translations-panel-dismiss-error");
-      getter("error", "translations-panel-error");
-      getter("errorMessage", "translations-panel-error-message");
-      getter("errorMessageHint", "translations-panel-error-message-hint");
-      getter("errorHintAction", "translations-panel-translate-hint-action");
-      getter("fromMenuList", "translations-panel-from");
-      getter("fromLabel", "translations-panel-from-label");
-      getter("header", "translations-panel-header");
-      getter("intro", "translations-panel-intro");
-      getter("introLearnMoreLink", "translations-panel-intro-learn-more-link");
-      getter("langSelection", "translations-panel-lang-selection");
-      getter("multiview", "translations-panel-multiview");
-      getter("restoreButton", "translations-panel-restore-button");
-      getter("toLabel", "translations-panel-to-label");
-      getter("toMenuList", "translations-panel-to");
-      getter("translateButton", "translations-panel-translate");
+      getter(
+        "dismissErrorButton",
+        "full-page-translations-panel-dismiss-error"
+      );
+      getter("error", "full-page-translations-panel-error");
+      getter("errorMessage", "full-page-translations-panel-error-message");
+      getter(
+        "errorMessageHint",
+        "full-page-translations-panel-error-message-hint"
+      );
+      getter(
+        "errorHintAction",
+        "full-page-translations-panel-translate-hint-action"
+      );
+      getter("fromMenuList", "full-page-translations-panel-from");
+      getter("fromLabel", "full-page-translations-panel-from-label");
+      getter("header", "full-page-translations-panel-header");
+      getter("intro", "full-page-translations-panel-intro");
+      getter(
+        "introLearnMoreLink",
+        "full-page-translations-panel-intro-learn-more-link"
+      );
+      getter("langSelection", "full-page-translations-panel-lang-selection");
+      getter("multiview", "full-page-translations-panel-multiview");
+      getter("restoreButton", "full-page-translations-panel-restore-button");
+      getter("toLabel", "full-page-translations-panel-to-label");
+      getter("toMenuList", "full-page-translations-panel-to");
+      getter("translateButton", "full-page-translations-panel-translate");
       getter(
         "unsupportedHeader",
-        "translations-panel-unsupported-language-header"
+        "full-page-translations-panel-unsupported-language-header"
       );
-      getter("unsupportedHint", "translations-panel-error-unsupported-hint");
+      getter(
+        "unsupportedHint",
+        "full-page-translations-panel-error-unsupported-hint"
+      );
       getter(
         "unsupportedLearnMoreLink",
-        "translations-panel-unsupported-learn-more-link"
+        "full-page-translations-panel-unsupported-learn-more-link"
       );
 
       // Getters by class
@@ -616,7 +631,8 @@ var TranslationsPanel = new (class {
     }
     const { multiview } = this.elements;
     return (
-      multiview.getAttribute("mainViewId") === "translations-panel-view-default"
+      multiview.getAttribute("mainViewId") ===
+      "full-page-translations-panel-view-default"
     );
   }
 
@@ -650,9 +666,10 @@ var TranslationsPanel = new (class {
       const { cancelButton, errorHintAction } = this.elements;
 
       this.#showError({
-        message: "translations-panel-error-load-languages",
-        hint: "translations-panel-error-load-languages-hint",
-        actionText: "translations-panel-error-load-languages-hint-button",
+        message: "full-page-translations-panel-error-load-languages",
+        hint: "full-page-translations-panel-error-load-languages-hint",
+        actionText:
+          "full-page-translations-panel-error-load-languages-hint-button",
         actionCommand: () => this.#reloadLangList(actor),
       });
 
@@ -686,7 +703,10 @@ var TranslationsPanel = new (class {
 
       this.updateUIForReTranslation(false /* isReTranslation */);
       cancelButton.hidden = false;
-      multiview.setAttribute("mainViewId", "translations-panel-view-default");
+      multiview.setAttribute(
+        "mainViewId",
+        "full-page-translations-panel-view-default"
+      );
 
       if (!this._hasShownPanel) {
         actor.firstShowUriSpec = gBrowser.currentURI.spec;
@@ -709,7 +729,7 @@ var TranslationsPanel = new (class {
       const { unsupportedHint } = this.elements;
       multiview.setAttribute(
         "mainViewId",
-        "translations-panel-view-unsupported-language"
+        "full-page-translations-panel-view-unsupported-language"
       );
       let language;
       if (langTags?.docLangTag) {
@@ -1468,7 +1488,7 @@ var TranslationsPanel = new (class {
     }
     this.elements.error.hidden = false;
     this.#showError({
-      message: "translations-panel-error-translating",
+      message: "full-page-translations-panel-error-translating",
     });
     const targetButton = button.hidden ? this.elements.appMenuButton : button;
 
