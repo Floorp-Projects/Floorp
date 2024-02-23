@@ -143,7 +143,7 @@ function bestFit(absDiff) {
  * Thresholds to use for calculating the best unit for relative time fromatting.
  */
 const threshold = {
-  month: 2, // at least 2 months before using year.
+  month: 11, // at least 11 months before using year.
   week: 3, // at least 3 weeks before using month.
   day: 6, // at least 6 days before using week.
   hour: 6, // at least 6 hours before using day.

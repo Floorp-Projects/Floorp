@@ -139,6 +139,10 @@ function test_rtf_formatBestUnit() {
     let anchor = new Date("2016-04-10 12:00:00");
     testRTFBestUnit(anchor, "2014-04-01 00:00", "2 years ago");
     testRTFBestUnit(anchor, "2015-03-01 00:00", "last year");
+    testRTFBestUnit(anchor, "2015-04-01 00:00", "last year");
+    testRTFBestUnit(anchor, "2015-05-01 00:00", "11 months ago");
+    testRTFBestUnit(anchor, "2015-12-01 00:00", "4 months ago");
+    testRTFBestUnit(anchor, "2016-02-01 00:00", "2 months ago");
     testRTFBestUnit(anchor, "2017-05-01 00:00", "next year");
     testRTFBestUnit(anchor, "2024-12-01 23:59", "in 8 years");
 
@@ -147,8 +151,10 @@ function test_rtf_formatBestUnit() {
     testRTFBestUnit(anchor, "2015-12-29 18:30", "2 years ago");
 
     anchor = new Date("2016-12-29 18:30");
-    testRTFBestUnit(anchor, "2017-07-12 18:30", "next year");
     testRTFBestUnit(anchor, "2017-02-12 18:30", "in 2 months");
+    testRTFBestUnit(anchor, "2017-07-12 18:30", "in 7 months");
+    testRTFBestUnit(anchor, "2017-11-29 18:30", "in 11 months");
+    testRTFBestUnit(anchor, "2017-12-01 18:30", "next year");
     testRTFBestUnit(anchor, "2018-01-02 18:30", "in 2 years");
 
     testRTFBestUnit(anchor, "2098-01-02 18:30", "in 82 years");
