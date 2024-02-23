@@ -16,7 +16,7 @@
 #include "uiaRawElmProvider.h"
 
 #include "mozilla/a11y/DocAccessibleChild.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 #include "ISimpleDOM.h"
 
@@ -44,7 +44,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
 
   // UIA IAccessibleEx
   if (aGuidService == IID_IAccessibleEx &&
-      Preferences::GetBool("accessibility.uia.enable") && localAcc) {
+      StaticPrefs::accessibility_uia_enable() && localAcc) {
     uiaRawElmProvider* accEx = new uiaRawElmProvider(localAcc);
     HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
     if (FAILED(hr)) delete accEx;

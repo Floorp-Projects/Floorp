@@ -242,6 +242,12 @@
 #endif
   mirror: always
 
+# Whether to enable support for the UI Automation API on Windows.
+- name: accessibility.uia.enable
+  type: bool
+  value: false
+  mirror: always
+
 # Whether to avoid accessibility activation on Windows shortly after clipboard
 # copy.
 #
