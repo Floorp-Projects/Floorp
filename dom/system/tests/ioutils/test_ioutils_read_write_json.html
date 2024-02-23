@@ -77,7 +77,7 @@
       ok(!await IOUtils.exists(notExistsFilename), `${notExistsFilename} should not exist`);
       await Assert.rejects(
         IOUtils.readJSON(notExistsFilename),
-        /NotFoundError: Could not open the file at/,
+        /NotFoundError: Could not open `.*'/,
         "IOUtils::readJSON rejects when file does not exist"
       );
 

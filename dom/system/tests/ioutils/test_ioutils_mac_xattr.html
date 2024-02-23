@@ -36,7 +36,7 @@
       info("Testing getting an attribute that does not exist");
       await Assert.rejects(
         IOUtils.getMacXAttr(path, ATTR),
-        /NotFoundError: The file `.+' does not have an extended attribute/,
+        /NotFoundError: Could not get extended attribute `bogus.attr' from `.*': the file does not have the attribute/,
         "IOUtils::getMacXAttr rejects when the attribute does not exist"
       );
 
@@ -61,7 +61,7 @@
       await IOUtils.delMacXAttr(path, ATTR);
       await Assert.rejects(
         IOUtils.getMacXAttr(path, ATTR),
-        /NotFoundError: The file `.+' does not have an extended attribute/,
+        /NotFoundError: Could not get extended attribute `bogus.attr' from `.*': the file does not have the attribute/,
         "IOUtils::delMacXAttr removes the attribute"
       );
 
@@ -73,7 +73,7 @@
       info("Testing removing an attribute that does not exist");
       await Assert.rejects(
         IOUtils.delMacXAttr(path, ATTR),
-        /NotFoundError: The file `.+' does not have an extended attribute/,
+        /NotFoundError: Could not delete extended attribute `bogus.attr' from `.*': the file does not have the attribute/,
         "IOUtils::delMacXAttr rejects when the attribute does not exist"
       );
 
