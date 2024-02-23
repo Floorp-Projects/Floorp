@@ -90,6 +90,13 @@
     }                                                                 \
   } while (0)
 
+#define IOUTILS_TRY_WITH_CONTEXT(_expr, _fmt, ...)                        \
+  do {                                                                    \
+    if (nsresult _rv = (_expr); NS_FAILED(_rv)) {                         \
+      return Err(IOUtils::IOError(_rv).WithMessage(_fmt, ##__VA_ARGS__)); \
+    }                                                                     \
+  } while (0)
+
 static constexpr auto SHUTDOWN_ERROR =
     "IOUtils: Shutting down and refusing additional I/O tasks"_ns;
 
@@ -1293,7 +1300,10 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
   nsIFile* tempFile = aOptions.mTmpFile;
 
   bool exists = false;
-  MOZ_TRY(aFile->Exists(&exists));
+  IOUTILS_TRY_WITH_CONTEXT(
+      aFile->Exists(&exists),
+      "Could not write to `%s': could not stat file or directory",
+      aFile->HumanReadablePath().get());
 
   if (exists && aOptions.mMode == WriteMode::Create) {
     return Err(IOError(NS_ERROR_FILE_ALREADY_EXISTS)
@@ -1474,7 +1484,12 @@ Result<Ok, IOUtils::IOError> IOUtils::MoveSync(nsIFile* aSourceFile,
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
   bool srcExists = false;
-  MOZ_TRY(aSourceFile->Exists(&srcExists));
+  IOUTILS_TRY_WITH_CONTEXT(
+      aSourceFile->Exists(&srcExists),
+      "Could not move `%s' to `%s': could not stat source file or directory",
+      aSourceFile->HumanReadablePath().get(),
+      aDestFile->HumanReadablePath().get());
+
   if (!srcExists) {
     return Err(
         IOError(NS_ERROR_FILE_NOT_FOUND)
@@ -1497,7 +1512,12 @@ Result<Ok, IOUtils::IOError> IOUtils::CopySync(nsIFile* aSourceFile,
   // Ensure the source file exists before continuing. If it doesn't exist,
   // subsequent operations can fail in different ways on different platforms.
   bool srcExists;
-  MOZ_TRY(aSourceFile->Exists(&srcExists));
+  IOUTILS_TRY_WITH_CONTEXT(
+      aSourceFile->Exists(&srcExists),
+      "Could not copy `%s' to `%s': could not stat source file or directory",
+      aSourceFile->HumanReadablePath().get(),
+      aDestFile->HumanReadablePath().get());
+
   if (!srcExists) {
     return Err(
         IOError(NS_ERROR_FILE_NOT_FOUND)
@@ -1509,7 +1529,12 @@ Result<Ok, IOUtils::IOError> IOUtils::CopySync(nsIFile* aSourceFile,
   // If source is a directory, fail immediately unless the recursive option is
   // true.
   bool srcIsDir = false;
-  MOZ_TRY(aSourceFile->IsDirectory(&srcIsDir));
+  IOUTILS_TRY_WITH_CONTEXT(
+      aSourceFile->IsDirectory(&srcIsDir),
+      "Could not copy `%s' to `%s': could not stat source file or directory",
+      aSourceFile->HumanReadablePath().get(),
+      aDestFile->HumanReadablePath().get());
+
   if (srcIsDir && !aRecursive) {
     return Err(
         IOError(NS_ERROR_FILE_COPY_OR_MOVE_FAILED)
@@ -1579,7 +1604,11 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
     // Different implementations of |CopyTo| and |MoveTo| seem to handle this
     // error case differently (or not at all), so we explicitly handle it here.
     bool srcIsDir = false;
-    MOZ_TRY(aSource->IsDirectory(&srcIsDir));
+    IOUTILS_TRY_WITH_CONTEXT(
+        aSource->IsDirectory(&srcIsDir),
+        "Could not %s `%s' to `%s': could not stat source file or directory",
+        aMethodName, aSource->HumanReadablePath().get(),
+        aDest->HumanReadablePath().get());
     if (srcIsDir) {
       return Err(IOError(NS_ERROR_FILE_DESTINATION_NOT_DIR)
                      .WithMessage("Could not %s the source directory(%s) to "
@@ -1591,10 +1620,16 @@ Result<Ok, IOUtils::IOError> IOUtils::CopyOrMoveSync(CopyOrMoveFn aMethod,
     }
   }
 
-  nsCOMPtr<nsIFile> destDir;
+  // We would have already thrown if the path was zero-length.
   nsAutoString destName;
-  MOZ_TRY(aDest->GetLeafName(destName));
-  MOZ_TRY(aDest->GetParent(getter_AddRefs(destDir)));
+  MOZ_ALWAYS_SUCCEEDS(aDest->GetLeafName(destName));
+
+  nsCOMPtr<nsIFile> destDir;
+  IOUTILS_TRY_WITH_CONTEXT(
+      aDest->GetParent(getter_AddRefs(destDir)),
+      "Could not %s `%s` to `%s': path `%s' does not have a parent",
+      aMethodName, aSource->HumanReadablePath().get(),
+      aDest->HumanReadablePath().get(), aDest->HumanReadablePath().get());
 
   // We know `destName` is a file and therefore must have a parent directory.
   MOZ_RELEASE_ASSERT(destDir);
@@ -1642,7 +1677,14 @@ Result<Ok, IOUtils::IOError> IOUtils::RemoveSync(nsIFile* aFile,
 #ifdef XP_WIN
 
     if (rv == NS_ERROR_FILE_ACCESS_DENIED && aRetryReadonly) {
-      MOZ_TRY(SetWindowsAttributesSync(aFile, 0, FILE_ATTRIBUTE_READONLY));
+      if (auto result =
+              SetWindowsAttributesSync(aFile, 0, FILE_ATTRIBUTE_READONLY);
+          result.isErr()) {
+        return Err(IOError(result.unwrapErr().Code())
+                       .WithMessage("Could not remove `%s': could not "
+                                    "clear readonly attribute",
+                                    aFile->HumanReadablePath().get()));
+      }
       return RemoveSync(aFile, aIgnoreAbsent, aRecursive,
                         /* aRetryReadonly = */ false);
     }
@@ -1663,7 +1705,10 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
   MOZ_ASSERT(!NS_IsMainThread());
 
   nsCOMPtr<nsIFile> parent;
-  MOZ_TRY(aFile->GetParent(getter_AddRefs(parent)));
+  IOUTILS_TRY_WITH_CONTEXT(
+      aFile->GetParent(getter_AddRefs(parent)),
+      "Could not make directory `%s': could not get parent directory",
+      aFile->HumanReadablePath().get());
   if (!parent) {
     // If we don't have a parent directory, we were called with a
     // root directory. If the directory doesn't already exist (e.g., asking
@@ -1677,7 +1722,11 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
     // Otherwise, we fall through to `nsiFile::Create()` and let it fail there
     // instead.
     bool exists = false;
-    MOZ_TRY(aFile->Exists(&exists));
+    IOUTILS_TRY_WITH_CONTEXT(
+        aFile->Exists(&exists),
+        "Could not make directory `%s': could not stat file or directory",
+        aFile->HumanReadablePath().get());
+
     if (exists) {
       return Ok();
     }
@@ -1692,7 +1741,11 @@ Result<Ok, IOUtils::IOError> IOUtils::MakeDirectorySync(nsIFile* aFile,
       // an existing file, since trying to create a directory where a regular
       // file exists may be indicative of a logic error.
       bool isDirectory;
-      MOZ_TRY(aFile->IsDirectory(&isDirectory));
+      IOUTILS_TRY_WITH_CONTEXT(
+          aFile->IsDirectory(&isDirectory),
+          "Could not make directory `%s': could not stat file or directory",
+          aFile->HumanReadablePath().get());
+
       if (!isDirectory) {
         return Err(IOError(NS_ERROR_FILE_NOT_DIRECTORY)
                        .WithMessage("Could not create directory because the "
@@ -1744,13 +1797,15 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   info.mType = FileType::Regular;
   if (!isRegular) {
     bool isDir = false;
-    MOZ_TRY(aFile->IsDirectory(&isDir));
+    IOUTILS_TRY_WITH_CONTEXT(aFile->IsDirectory(&isDir), "Could not stat `%s'",
+                             aFile->HumanReadablePath().get());
     info.mType = isDir ? FileType::Directory : FileType::Other;
   }
 
   int64_t size = -1;
   if (info.mType == FileType::Regular) {
-    MOZ_TRY(aFile->GetFileSize(&size));
+    IOUTILS_TRY_WITH_CONTEXT(aFile->GetFileSize(&size), "Could not stat `%s'",
+                             aFile->HumanReadablePath().get());
   }
   info.mSize = size;
 
@@ -1763,14 +1818,22 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
   }
 
   PRTime lastAccessed = 0;
-  MOZ_TRY(aFile->GetLastAccessedTime(&lastAccessed));
+  IOUTILS_TRY_WITH_CONTEXT(aFile->GetLastAccessedTime(&lastAccessed),
+                           "Could not stat `%s'",
+                           aFile->HumanReadablePath().get());
+
   info.mLastAccessed = static_cast<int64_t>(lastAccessed);
 
   PRTime lastModified = 0;
-  MOZ_TRY(aFile->GetLastModifiedTime(&lastModified));
+  IOUTILS_TRY_WITH_CONTEXT(aFile->GetLastModifiedTime(&lastModified),
+                           "Could not stat `%s'",
+                           aFile->HumanReadablePath().get());
+
   info.mLastModified = static_cast<int64_t>(lastModified);
 
-  MOZ_TRY(aFile->GetPermissions(&info.mPermissions));
+  IOUTILS_TRY_WITH_CONTEXT(aFile->GetPermissions(&info.mPermissions),
+                           "Could not stat `%s'",
+                           aFile->HumanReadablePath().get());
 
   return info;
 }
@@ -1839,16 +1902,28 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
   }
 
   bool hasMoreElements = false;
-  MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
+  IOUTILS_TRY_WITH_CONTEXT(
+      iter->HasMoreElements(&hasMoreElements),
+      "Could not get children of `%s': could not iterate children",
+      aFile->HumanReadablePath().get());
+
   while (hasMoreElements) {
     nsCOMPtr<nsIFile> child;
-    MOZ_TRY(iter->GetNextFile(getter_AddRefs(child)));
+    IOUTILS_TRY_WITH_CONTEXT(
+        iter->GetNextFile(getter_AddRefs(child)),
+        "Could not get children of `%s': could not retrieve child file",
+        aFile->HumanReadablePath().get());
+
     if (child) {
       nsString path;
-      MOZ_TRY(child->GetPath(path));
+      MOZ_ALWAYS_SUCCEEDS(child->GetPath(path));
       children.AppendElement(path);
     }
-    MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
+
+    IOUTILS_TRY_WITH_CONTEXT(
+        iter->HasMoreElements(&hasMoreElements),
+        "Could not get children of `%s': could not iterate children",
+        aFile->HumanReadablePath().get());
   }
 
   return children;
@@ -1859,7 +1934,10 @@ Result<Ok, IOUtils::IOError> IOUtils::SetPermissionsSync(
     nsIFile* aFile, const uint32_t aPermissions) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  MOZ_TRY(aFile->SetPermissions(aPermissions));
+  IOUTILS_TRY_WITH_CONTEXT(aFile->SetPermissions(aPermissions),
+                           "Could not set permissions on `%s'",
+                           aFile->HumanReadablePath().get());
+
   return Ok{};
 }
 
@@ -1868,7 +1946,8 @@ Result<bool, IOUtils::IOError> IOUtils::ExistsSync(nsIFile* aFile) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   bool exists = false;
-  MOZ_TRY(aFile->Exists(&exists));
+  IOUTILS_TRY_WITH_CONTEXT(aFile->Exists(&exists), "Could not stat `%s'",
+                           aFile->HumanReadablePath().get());
 
   return exists;
 }
@@ -2896,3 +2975,4 @@ uint32_t IOUtils::LaunchProcess(GlobalObject& aGlobal,
 }  // namespace mozilla::dom
 
 #undef REJECT_IF_INIT_PATH_FAILED
+#undef IOUTILS_TRY_WITH_CONTEXT
