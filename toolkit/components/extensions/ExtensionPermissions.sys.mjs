@@ -133,9 +133,10 @@ class PermissionStore {
     const storePath = lazy.FileUtils.getDir("ProfD", [RKV_DIRNAME]).path;
     // Make sure the folder exists
     await IOUtils.makeDirectory(storePath, { ignoreExisting: true });
-    this._store = await lazy.KeyValueService.getOrCreate(
+    this._store = await lazy.KeyValueService.getOrCreateWithOptions(
       storePath,
-      "permissions"
+      "permissions",
+      { strategy: lazy.KeyValueService.RecoveryStrategy.RENAME }
     );
     if (!(await this._store.has(VERSION_KEY))) {
       // If _shouldMigrateFromOldKVStorePath is true (default only on Nightly channel
