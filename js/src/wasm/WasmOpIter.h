@@ -493,7 +493,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool getControl(uint32_t relativeDepth, Control** controlEntry);
   [[nodiscard]] bool checkBranchValueAndPush(uint32_t relativeDepth,
                                              ResultType* type,
-                                             ValueVector* values);
+                                             ValueVector* values,
+                                             bool rewriteStackTypes);
   [[nodiscard]] bool checkBrTableEntryAndPush(uint32_t* relativeDepth,
                                               ResultType prevBranchType,
                                               ResultType* branchType,
@@ -1480,14 +1481,15 @@ inline void OpIter<Policy>::popEnd() {
 template <typename Policy>
 inline bool OpIter<Policy>::checkBranchValueAndPush(uint32_t relativeDepth,
                                                     ResultType* type,
-                                                    ValueVector* values) {
+                                                    ValueVector* values,
+                                                    bool rewriteStackTypes) {
   Control* block = nullptr;
   if (!getControl(relativeDepth, &block)) {
     return false;
   }
 
   *type = block->branchTargetType();
-  return checkTopTypeMatches(*type, values, /*rewriteStackTypes=*/false);
+  return checkTopTypeMatches(*type, values, rewriteStackTypes);
 }
 
 template <typename Policy>
@@ -1499,7 +1501,8 @@ inline bool OpIter<Policy>::readBr(uint32_t* relativeDepth, ResultType* type,
     return fail("unable to read br depth");
   }
 
-  if (!checkBranchValueAndPush(*relativeDepth, type, values)) {
+  if (!checkBranchValueAndPush(*relativeDepth, type, values,
+                               /*rewriteStackTypes=*/false)) {
     return false;
   }
 
@@ -1520,7 +1523,8 @@ inline bool OpIter<Policy>::readBrIf(uint32_t* relativeDepth, ResultType* type,
     return false;
   }
 
-  return checkBranchValueAndPush(*relativeDepth, type, values);
+  return checkBranchValueAndPush(*relativeDepth, type, values,
+                                 /*rewriteStackTypes=*/true);
 }
 
 #define UNKNOWN_ARITY UINT32_MAX
@@ -2457,7 +2461,8 @@ inline bool OpIter<Policy>::readBrOnNull(uint32_t* relativeDepth,
     return false;
   }
 
-  if (!checkBranchValueAndPush(*relativeDepth, type, values)) {
+  if (!checkBranchValueAndPush(*relativeDepth, type, values,
+                               /*rewriteStackTypes=*/true)) {
     return false;
   }
 
@@ -2505,7 +2510,7 @@ inline bool OpIter<Policy>::readBrOnNonNull(uint32_t* relativeDepth,
   }
 
   // Check if the type stack matches the branch target type.
-  if (!checkTopTypeMatches(*type, values, /*rewriteStackTypes=*/false)) {
+  if (!checkTopTypeMatches(*type, values, /*rewriteStackTypes=*/true)) {
     return false;
   }
 
@@ -4001,7 +4006,7 @@ inline bool OpIter<Policy>::readBrOnCast(bool onSuccess,
   fallthroughTypes[labelTypeNumValues - 1] = typeOnFallthrough;
 
   return checkTopTypeMatches(ResultType::Vector(fallthroughTypes), values,
-                             /*rewriteStackTypes=*/false);
+                             /*rewriteStackTypes=*/true);
 }
 
 template <typename Policy>
