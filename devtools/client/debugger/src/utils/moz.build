@@ -42,7 +42,6 @@ CompiledModules(
     "source-queue.js",
     "source.js",
     "tabs.js",
-    "task.js",
     "telemetry.js",
     "text.js",
     "ui.js",
