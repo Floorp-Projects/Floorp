@@ -125,18 +125,23 @@ IdentityCredentialStorageService::GetAsyncShutdownBarrier() const {
 nsresult IdentityCredentialStorageService::Init() {
   AssertIsOnMainThread();
 
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+  nsCOMPtr<nsIAsyncShutdownClient> asc = GetAsyncShutdownBarrier();
+  if (!asc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // We should only allow this service to start before its
+  // shutdown barrier is closed, so it never leaks.
+  bool closed;
+  nsresult rv = asc->GetIsClosed(&closed);
+  if (closed || NS_WARN_IF(NS_FAILED(rv))) {
     MonitorAutoLock lock(mMonitor);
     mShuttingDown.Flip();
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
-  nsCOMPtr<nsIAsyncShutdownClient> asc = GetAsyncShutdownBarrier();
-  if (!asc) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  nsresult rv = asc->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
-                                __LINE__, u""_ns);
+  rv = asc->AddBlocker(this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__,
+                       u""_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
