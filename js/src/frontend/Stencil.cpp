@@ -575,7 +575,7 @@ void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
     }
 
     bool hasEnv = si.hasSyntacticEnvironment();
-    auto setCacthAll = [&](NameLocation loc) {
+    auto setCatchAll = [&](NameLocation loc) {
       return si.scope().match([&](auto& scope_ref) {
         using BindingMapPtr = decltype(scopeCache->createCacheFor(scope_ref));
         BindingMapPtr bindingMapPtr = scopeCache->createCacheFor(scope_ref);
@@ -604,7 +604,7 @@ void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
       case ScopeKind::Function:
         if (hasEnv) {
           if (si.scope().funHasExtensibleScope()) {
-            setCacthAll(NameLocation::Dynamic());
+            setCatchAll(NameLocation::Dynamic());
             return;
           }
 
@@ -733,21 +733,21 @@ void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
         if (!hasEnv) {
           ScopeKind kind = si.scope().enclosing().kind();
           if (kind == ScopeKind::Global || kind == ScopeKind::NonSyntactic) {
-            setCacthAll(NameLocation::Global(BindingKind::Var));
+            setCatchAll(NameLocation::Global(BindingKind::Var));
             return;
           }
         }
 
-        setCacthAll(NameLocation::Dynamic());
+        setCatchAll(NameLocation::Dynamic());
         return;
 
       case ScopeKind::Global:
-        setCacthAll(NameLocation::Global(BindingKind::Var));
+        setCatchAll(NameLocation::Global(BindingKind::Var));
         return;
 
       case ScopeKind::With:
       case ScopeKind::NonSyntactic:
-        setCacthAll(NameLocation::Dynamic());
+        setCatchAll(NameLocation::Dynamic());
         return;
 
       case ScopeKind::WasmInstance:
