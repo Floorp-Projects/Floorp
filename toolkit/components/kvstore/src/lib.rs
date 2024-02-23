@@ -29,7 +29,7 @@ use moz_task::{create_background_task_queue, DispatchOptions, TaskRunnable};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use nsstring::{nsACString, nsCString};
 use owned_value::{owned_to_variant, variant_to_owned};
-use rkv::backend::{SafeModeDatabase, SafeModeEnvironment};
+use rkv::backend::{RecoveryStrategy, SafeModeDatabase, SafeModeEnvironment};
 use rkv::OwnedValue;
 use std::{
     ptr,
@@ -37,14 +37,16 @@ use std::{
     vec::IntoIter,
 };
 use task::{
-    ClearTask, DeleteTask, EnumerateTask, GetOrCreateTask, GetTask, HasTask, PutTask, WriteManyTask,
+    ClearTask, DeleteTask, EnumerateTask, GetOrCreateWithOptionsTask, GetTask, HasTask, PutTask,
+    WriteManyTask,
 };
 use thin_vec::ThinVec;
 use xpcom::{
     getter_addrefs,
     interfaces::{
         nsIKeyValueDatabaseCallback, nsIKeyValueEnumeratorCallback, nsIKeyValuePair,
-        nsIKeyValueVariantCallback, nsIKeyValueVoidCallback, nsISerialEventTarget, nsIVariant,
+        nsIKeyValueService, nsIKeyValueVariantCallback, nsIKeyValueVoidCallback,
+        nsISerialEventTarget, nsIVariant,
     },
     nsIID, xpcom, xpcom_method, RefPtr,
 };
@@ -109,13 +111,47 @@ impl KeyValueService {
         path: &nsACString,
         name: &nsACString,
     ) -> Result<(), nsresult> {
-        let task = Box::new(GetOrCreateTask::new(
+        let task = Box::new(GetOrCreateWithOptionsTask::new(
             RefPtr::new(callback),
             nsCString::from(path),
             nsCString::from(name),
+            RecoveryStrategy::Error,
         ));
 
         TaskRunnable::new("KVService::GetOrCreate", task)?
+            .dispatch_background_task_with_options(DispatchOptions::default().may_block(true))
+    }
+
+    xpcom_method!(
+        get_or_create_with_options => GetOrCreateWithOptions(
+            callback: *const nsIKeyValueDatabaseCallback,
+            path: *const nsACString,
+            name: *const nsACString,
+            strategy: u8
+        )
+    );
+
+    fn get_or_create_with_options(
+        &self,
+        callback: &nsIKeyValueDatabaseCallback,
+        path: &nsACString,
+        name: &nsACString,
+        xpidl_strategy: u8,
+    ) -> Result<(), nsresult> {
+        let strategy = match xpidl_strategy {
+            nsIKeyValueService::ERROR => RecoveryStrategy::Error,
+            nsIKeyValueService::DISCARD => RecoveryStrategy::Discard,
+            nsIKeyValueService::RENAME => RecoveryStrategy::Rename,
+            _ => return Err(NS_ERROR_FAILURE),
+        };
+        let task = Box::new(GetOrCreateWithOptionsTask::new(
+            RefPtr::new(callback),
+            nsCString::from(path),
+            nsCString::from(name),
+            strategy,
+        ));
+
+        TaskRunnable::new("KVService::GetOrCreateWithOptions", task)?
             .dispatch_background_task_with_options(DispatchOptions::default().may_block(true))
     }
 }

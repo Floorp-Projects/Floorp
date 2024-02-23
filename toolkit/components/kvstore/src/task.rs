@@ -10,7 +10,10 @@ use moz_task::Task;
 use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::nsCString;
 use owned_value::owned_to_variant;
-use rkv::backend::{BackendInfo, SafeMode, SafeModeDatabase, SafeModeEnvironment};
+use rkv::backend::{
+    BackendEnvironmentBuilder, BackendInfo, RecoveryStrategy, SafeMode, SafeModeDatabase,
+    SafeModeEnvironment,
+};
 use rkv::{OwnedValue, StoreError, StoreOptions, Value};
 use std::{
     path::Path,
@@ -161,23 +164,26 @@ fn passive_resize(env: &Rkv, wanted: usize) -> Result<(), StoreError> {
     Ok(())
 }
 
-pub struct GetOrCreateTask {
+pub struct GetOrCreateWithOptionsTask {
     callback: AtomicCell<Option<ThreadBoundRefPtr<nsIKeyValueDatabaseCallback>>>,
     path: nsCString,
     name: nsCString,
+    strategy: RecoveryStrategy,
     result: AtomicCell<Option<Result<RkvStoreTuple, KeyValueError>>>,
 }
 
-impl GetOrCreateTask {
+impl GetOrCreateWithOptionsTask {
     pub fn new(
         callback: RefPtr<nsIKeyValueDatabaseCallback>,
         path: nsCString,
         name: nsCString,
-    ) -> GetOrCreateTask {
-        GetOrCreateTask {
+        strategy: RecoveryStrategy,
+    ) -> GetOrCreateWithOptionsTask {
+        GetOrCreateWithOptionsTask {
             callback: AtomicCell::new(Some(ThreadBoundRefPtr::new(callback))),
             path,
             name,
+            strategy,
             result: AtomicCell::default(),
         }
     }
@@ -187,18 +193,24 @@ impl GetOrCreateTask {
     }
 }
 
-impl Task for GetOrCreateTask {
+impl Task for GetOrCreateWithOptionsTask {
     fn run(&self) {
         // We do the work within a closure that returns a Result so we can
         // use the ? operator to simplify the implementation.
         self.result
             .store(Some(|| -> Result<RkvStoreTuple, KeyValueError> {
                 let store;
+                let mut builder = Rkv::environment_builder::<SafeMode>();
+                builder.set_corruption_recovery_strategy(self.strategy);
                 let mut manager = Manager::singleton().write()?;
                 // Note that path canonicalization is diabled to work around crashes on Fennec:
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1531887
                 let path = Path::new(str::from_utf8(&self.path)?);
-                let rkv = manager.get_or_create(path, Rkv::new::<SafeMode>)?;
+                let rkv = manager.get_or_create_from_builder(
+                    path,
+                    builder,
+                    Rkv::from_builder::<SafeMode>,
+                )?;
                 {
                     let env = rkv.read()?;
                     let load_ratio = env.load_ratio()?.unwrap_or(0.0);

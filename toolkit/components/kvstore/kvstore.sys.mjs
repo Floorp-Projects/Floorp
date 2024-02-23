@@ -27,9 +27,30 @@ function promisify(fn, ...args) {
  */
 
 export class KeyValueService {
+  static RecoveryStrategy = {
+    ERROR: gKeyValueService.ERROR,
+    DISCARD: gKeyValueService.DISCARD,
+    RENAME: gKeyValueService.RENAME,
+  };
+
   static async getOrCreate(dir, name) {
     return new KeyValueDatabase(
       await promisify(gKeyValueService.getOrCreate, dir, name)
+    );
+  }
+
+  static async getOrCreateWithOptions(
+    dir,
+    name,
+    { strategy = gKeyValueService.RENAME } = {}
+  ) {
+    return new KeyValueDatabase(
+      await promisify(
+        gKeyValueService.getOrCreateWithOptions,
+        dir,
+        name,
+        strategy
+      )
     );
   }
 }
