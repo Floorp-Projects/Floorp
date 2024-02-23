@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: helperThreadCount() == 0 || !('oomAfterAllocations' in this)
+// |jit-test| allow-oom; skip-if: helperThreadCount() == 0 || !hasFunction.oomAfterAllocations
 
 var lfcode = new Array();
 lfcode.push("5");

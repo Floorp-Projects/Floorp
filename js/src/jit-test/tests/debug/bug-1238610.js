@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomAfterAllocations' in this) || helperThreadCount() === 0
+// |jit-test| allow-oom; skip-if: !hasFunction.oomAfterAllocations || helperThreadCount() === 0
 
 lfcode = new Array();
 dbg = Debugger();

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomAtAllocation' in this); error: Error
+// |jit-test| skip-if: !hasFunction.oomAtAllocation; error: Error
 
 const THREAD_TYPE_WORKER = 10;
 

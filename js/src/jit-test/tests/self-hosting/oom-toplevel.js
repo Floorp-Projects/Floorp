@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomAtAllocation' in this)
+// |jit-test| skip-if: !hasFunction.oomAtAllocation
 
 function code(n) {
     return `

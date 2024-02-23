@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this)
+// |jit-test| skip-if: !hasFunction.oomTest
 
 evalcx(`
     eval('\

@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomAfterAllocations' in this)
+// |jit-test| allow-oom; skip-if: !hasFunction.oomAfterAllocations
 
 var g = newGlobal();
 g.debuggeeGlobal = [];

@@ -7,17 +7,32 @@ var appendToActual = function(s) {
     actual += s + ',';
 }
 
-// Add dummy versions of missing functions and record whether they
-// were originally present.
+// Add dummy versions of missing functions and record whether they were
+// originally present.
+//
+// This only affects the main global. Any globals created by the test will
+// lack the function.
 let hasFunction = {};
-for (const name of ["gczeal",
-                    "schedulegc",
-                    "gcslice",
-                    "selectforgc",
-                    "verifyprebarriers",
-                    "verifypostbarriers",
-                    "gcPreserveCode",
-                    "setMarkStackLimit"]) {
+for (const name of [
+    // Functions present if JS_GC_ZEAL defined:
+    "gczeal",
+    "unsetgczeal",
+    "schedulegc",
+    "selectforgc",
+    "verifyprebarriers",
+    "verifypostbarriers",
+    "currentgc",
+    "deterministicgc",
+    "dumpGCArenaInfo",
+    "setMarkStackLimit",
+    // Functions present if DEBUG or JS_OOM_BREAKPOINT defined:
+    "oomThreadTypes",
+    "oomAfterAllocations",
+    "oomAtAllocation",
+    "resetOOMFailure",
+    "oomTest",
+    "stackTest",
+    "interruptTest"]) {
     const present = name in this;
     if (!present) {
         this[name] = function() {};
