@@ -367,6 +367,7 @@ class nsWindow final : public nsBaseWidget {
 
   nsresult SetNonClientMargins(const LayoutDeviceIntMargin&) override;
   void SetDrawsInTitlebar(bool aState);
+  void SetTitlebarRect();
   mozilla::LayoutDeviceIntCoord GetTitlebarRadius();
   LayoutDeviceIntRect GetTitlebarRect();
   void UpdateWindowDraggingRegion(
@@ -622,14 +623,10 @@ class nsWindow final : public nsBaseWidget {
   static GdkCursor* gsGtkCursorCache[eCursorCount];
 
   // If true, draw our own window titlebar.
-  //
-  // Needs to be atomic because GetTitlebarRect() gets called from non-main
-  // threads.
-  //
-  // FIXME(emilio): GetTitlebarRect() reads other things that TSAN doesn't
-  // catch because mDrawInTitlebar is false on automation ~always. We should
-  // probably make GetTitlebarRect() simpler / properly thread-safe.
-  mozilla::Atomic<bool, mozilla::Relaxed> mDrawInTitlebar{false};
+  bool mDrawInTitlebar = false;
+
+  mozilla::Mutex mTitlebarRectMutex;
+  LayoutDeviceIntRect mTitlebarRect MOZ_GUARDED_BY(mTitlebarRectMutex);
 
   mozilla::Mutex mDestroyMutex;
 
