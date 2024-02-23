@@ -10668,7 +10668,7 @@
 # enabled through constraints (possibly defaults). Whether it has any effect
 # depends on the backend.
 - name: media.getusermedia.microphone.prefer_voice_stream_with_processing.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: True
   mirror: always
 
