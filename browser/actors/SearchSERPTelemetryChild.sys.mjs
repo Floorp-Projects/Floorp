@@ -439,14 +439,15 @@ class SearchAdImpression {
             for (let child of component.included.children) {
               let childElements = parent.querySelectorAll(child.selector);
               if (childElements.length) {
-                this.#recordElementData(parent, {
-                  type: component.type,
-                  childElements: Array.from(childElements),
-                });
-                break;
+                if (!child.skipCount) {
+                  this.#recordElementData(parent, {
+                    type: component.type,
+                    childElements: Array.from(childElements),
+                  });
+                }
               }
             }
-          } else {
+          } else if (!component.included.parent.skipCount) {
             this.#recordElementData(parent, {
               type: component.type,
             });

@@ -385,6 +385,22 @@ add_setup(function () {
   });
 });
 
+async function openSerpInNewTab(url, expectedAds = true) {
+  let promise;
+  if (expectedAds) {
+    promise = waitForPageWithAdImpressions();
+  }
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await promise;
+
+  let cleanup = async () => {
+    await BrowserTestUtils.removeTab(tab);
+    resetTelemetry();
+  };
+
+  return { tab, cleanup };
+}
+
 function assertCategorizationValues(expectedResults) {
   // TODO Bug 1868476: Replace with calls to Glean telemetry.
   let actualResults = [...fakeTelemetryStorage];
