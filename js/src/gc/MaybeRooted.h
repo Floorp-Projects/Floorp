@@ -35,7 +35,7 @@ class MOZ_RAII FakeRooted : public RootedOperations<T, FakeRooted<T>> {
   explicit FakeRooted(JSContext* cx)
       : ptr(JS::SafelyInitialized<T>::create()) {}
 
-  FakeRooted(JSContext* cx, T initial) : ptr(initial) {}
+  FakeRooted(JSContext* cx, const T& initial) : ptr(initial) {}
 
   FakeRooted(const FakeRooted&) = delete;
 
@@ -43,6 +43,8 @@ class MOZ_RAII FakeRooted : public RootedOperations<T, FakeRooted<T>> {
   DECLARE_POINTER_ASSIGN_OPS(FakeRooted, T);
   DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
   DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(ptr);
+
+  operator JS::Handle<T>() { return JS::Handle<T>::fromMarkedLocation(&ptr); }
 
  private:
   T ptr;
