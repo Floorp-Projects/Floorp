@@ -107,6 +107,14 @@ function openContextMenu(aMessage, aBrowser, aActor) {
 }
 
 class nsContextMenu {
+  /**
+   * A promise to retrieve the translations language pair
+   * if the context menu was opened in a context relevant to
+   * open the SelectTranslationsPanel.
+   * @type {Promise<{fromLang: string, toLang: string}>}
+   */
+  #translationsLangPairPromise;
+
   constructor(aXulMenu, aIsShift) {
     // Get contextual info.
     this.setContext();
@@ -2514,9 +2522,65 @@ class nsContextMenu {
   }
 
   /**
-   * Displays or hides as well as localizes the translate-selection item in the context menu.
+   * Opens the SelectTranslationsPanel singleton instance.
+   *
+   * @param {Event} event - The triggering event for opening the panel.
    */
-  async showTranslateSelectionItem() {
+  openSelectTranslationsPanel(event) {
+    SelectTranslationsPanel.open(event, this.#translationsLangPairPromise);
+  }
+
+  /**
+   * Localizes the translate-selection menuitem.
+   *
+   * The item will either be localized with a target language's display name
+   * or localized in a generic way without a target language.
+   *
+   * @param {Element} translateSelectionItem
+   * @returns {Promise<void>}
+   */
+  async localizeTranslateSelectionItem(translateSelectionItem) {
+    const { toLang } = await this.#translationsLangPairPromise;
+
+    if (toLang) {
+      // A valid to-language exists, so localize the menuitem for that language.
+      let displayName;
+
+      try {
+        const displayNames = new Services.intl.DisplayNames(undefined, {
+          type: "language",
+        });
+        displayName = displayNames.of(toLang);
+      } catch {
+        // Services.intl.DisplayNames.of threw, do nothing.
+      }
+
+      if (displayName) {
+        document.l10n.setAttributes(
+          translateSelectionItem,
+          this.isTextSelected
+            ? "main-context-menu-translate-selection-to-language"
+            : "main-context-menu-translate-link-text-to-language",
+          { language: displayName }
+        );
+        return;
+      }
+    }
+
+    // Either no to-language exists, or an error occurred,
+    // so localize the menuitem without a target language.
+    document.l10n.setAttributes(
+      translateSelectionItem,
+      this.isTextSelected
+        ? "main-context-menu-translate-selection"
+        : "main-context-menu-translate-link-text"
+    );
+  }
+
+  /**
+   * Displays or hides the translate-selection item in the context menu.
+   */
+  showTranslateSelectionItem() {
     const translateSelectionItem = document.getElementById(
       "context-translate-selection"
     );
@@ -2528,7 +2592,7 @@ class nsContextMenu {
     );
 
     // Selected text takes precedence over link text.
-    const translatableText = this.isTextSelected
+    const textToTranslate = this.isTextSelected
       ? this.selectedText.trim()
       : this.linkTextStr.trim();
 
@@ -2536,7 +2600,7 @@ class nsContextMenu {
       // Only show the item if the feature is enabled.
       !(translationsEnabled && selectTranslationsEnabled) ||
       // If there is no text to translate, we have nothing to do.
-      translatableText.length === 0 ||
+      textToTranslate.length === 0 ||
       // We do not allow translating selections on top of Full Page Translations.
       nsContextMenu.#isFullPageTranslationsActive();
 
@@ -2544,39 +2608,9 @@ class nsContextMenu {
       return;
     }
 
-    const preferredLanguages =
-      nsContextMenu.TranslationsParent.getPreferredLanguages();
-    const topPreferredLanguage = preferredLanguages[0];
-
-    if (topPreferredLanguage) {
-      const { language } = await nsContextMenu.LanguageDetector.detectLanguage(
-        translatableText
-      );
-      if (topPreferredLanguage !== language) {
-        try {
-          const dn = new Services.intl.DisplayNames(undefined, {
-            type: "language",
-          });
-          document.l10n.setAttributes(
-            translateSelectionItem,
-            this.isTextSelected
-              ? "main-context-menu-translate-selection-to-language"
-              : "main-context-menu-translate-link-text-to-language",
-            { language: dn.of(topPreferredLanguage) }
-          );
-          return;
-        } catch {
-          // Services.intl.DisplayNames.of threw, do nothing.
-        }
-      }
-    }
-
-    document.l10n.setAttributes(
-      translateSelectionItem,
-      this.isTextSelected
-        ? "main-context-menu-translate-selection"
-        : "main-context-menu-translate-link-text"
-    );
+    this.#translationsLangPairPromise =
+      SelectTranslationsPanel.getLangPairPromise(textToTranslate);
+    this.localizeTranslateSelectionItem(translateSelectionItem);
   }
 
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
@@ -2681,8 +2715,6 @@ class nsContextMenu {
 
 ChromeUtils.defineESModuleGetters(nsContextMenu, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
-  LanguageDetector:
-    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
   LoginManagerContextMenu:
     "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",

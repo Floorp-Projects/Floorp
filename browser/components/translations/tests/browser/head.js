@@ -300,6 +300,58 @@ class SharedTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the selected from-language matches the provided arguments.
+   *
+   * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
+   *  - The UI component or panel whose selected from-language is being asserted.
+   * @param {object} options - An object containing assertion parameters.
+   * @param {string} [options.langTag] - A BCP-47 language tag.
+   * @param {string} [options.l10nId] - A localization identifier.
+   */
+  static _assertSelectedFromLanguage(panel, { langTag, l10nId }) {
+    const { fromMenuList } = panel.elements;
+    is(
+      fromMenuList.value,
+      langTag,
+      "Expected selected from-language to match the given language tag"
+    );
+    if (l10nId) {
+      is(
+        fromMenuList.getAttribute("data-l10n-id"),
+        l10nId,
+        "Expected selected from-language to match the given l10n id"
+      );
+    }
+  }
+
+  /**
+   * Asserts that the selected to-language matches the provided arguments.
+   *
+   * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
+   *  - The UI component or panel whose selected from-language is being asserted.
+   * @param {object} options - An object containing assertion parameters.
+   * @param {string} [options.langTag] - A BCP-47 language tag.
+   * @param {string} [options.l10nId] - A localization identifier.
+   */
+  static _assertSelectedToLanguage(panel, { langTag, l10nId }) {
+    const { toMenuList } = panel.elements;
+    if (langTag) {
+      is(
+        toMenuList.value,
+        langTag,
+        "Expected selected to-language to match the given language tag"
+      );
+    }
+    if (l10nId) {
+      is(
+        toMenuList.getAttribute("data-l10n-id"),
+        l10nId,
+        "Expected selected to-language to match the given l10n id"
+      );
+    }
+  }
+
+  /**
    * Asserts the visibility of the given elements based on the given expectations.
    *
    * @param {object} elements - An object containing the elements to be checked for visibility.
@@ -787,13 +839,10 @@ class FullPageTranslationsTestUtils {
    *
    * @param {string} langTag - A BCP-47 language tag.
    */
-  static assertSelectedFromLanguage(langTag) {
-    info(`Checking that the selected from-language matches ${langTag}`);
-    const { fromMenuList } = FullPageTranslationsPanel.elements;
-    is(
-      fromMenuList.value,
-      langTag,
-      "Expected selected from-language to match the given language tag"
+  static assertSelectedFromLanguage({ langTag, l10nId }) {
+    SharedTranslationsTestUtils._assertSelectedFromLanguage(
+      FullPageTranslationsPanel,
+      { langTag, l10nId }
     );
   }
 
@@ -802,13 +851,10 @@ class FullPageTranslationsTestUtils {
    *
    * @param {string} langTag - A BCP-47 language tag.
    */
-  static assertSelectedToLanguage(langTag) {
-    info(`Checking that the selected to-language matches ${langTag}`);
-    const { toMenuList } = FullPageTranslationsPanel.elements;
-    is(
-      toMenuList.value,
-      langTag,
-      "Expected selected to-language to match the given language tag"
+  static assertSelectedToLanguage({ langTag, l10nId }) {
+    SharedTranslationsTestUtils._assertSelectedToLanguage(
+      FullPageTranslationsPanel,
+      { langTag, l10nId }
     );
   }
 
@@ -1394,6 +1440,30 @@ class SelectTranslationsTestUtils {
       doneButton: true,
       translateFullPageButton: true,
     });
+  }
+
+  /**
+   * Asserts that the selected from-language matches the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static assertSelectedFromLanguage({ langTag, l10nId }) {
+    SharedTranslationsTestUtils._assertSelectedFromLanguage(
+      SelectTranslationsPanel,
+      { langTag, l10nId }
+    );
+  }
+
+  /**
+   * Asserts that the selected to-language matches the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static assertSelectedToLanguage({ langTag, l10nId }) {
+    SharedTranslationsTestUtils._assertSelectedToLanguage(
+      SelectTranslationsPanel,
+      { langTag, l10nId }
+    );
   }
 
   /**

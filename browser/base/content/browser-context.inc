@@ -359,7 +359,7 @@
                 oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, true, this.principal, this.csp, event);"/>
       <menuitem id="context-translate-selection"
                 data-l10n-id="main-context-menu-translate-selection"
-                oncommand="SelectTranslationsPanel.open(event);"/>
+                oncommand="gContextMenu.openSelectTranslationsPanel(event);"/>
 
       <menuseparator id="frame-sep"/>
       <menu id="frame" data-l10n-id="main-context-menu-frame">

@@ -27,8 +27,8 @@ add_task(async function test_translations_panel_switch_language() {
 
   ok(!translateButton.disabled, "The translate button starts as enabled");
 
-  FullPageTranslationsTestUtils.assertSelectedFromLanguage("es");
-  FullPageTranslationsTestUtils.assertSelectedToLanguage("en");
+  FullPageTranslationsTestUtils.assertSelectedFromLanguage({ langTag: "es" });
+  FullPageTranslationsTestUtils.assertSelectedToLanguage({ langTag: "en" });
 
   FullPageTranslationsTestUtils.switchSelectedFromLanguage("en");
 

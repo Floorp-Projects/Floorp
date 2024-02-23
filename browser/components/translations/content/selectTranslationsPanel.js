@@ -5,6 +5,8 @@
 /* eslint-env mozilla/browser-window */
 
 ChromeUtils.defineESModuleGetters(this, {
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
   TranslationsPanelShared:
     "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs",
 });
@@ -89,6 +91,30 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Detects the language of the provided text and retrieves a language pair for translation
+   * based on user settings.
+   *
+   * @param {string} textToTranslate - The text for which the language detection and target language retrieval are performed.
+   * @returns {Promise<{fromLang?: string, toLang?: string}>} - An object containing the language pair for the translation.
+   *   The `fromLang` property is omitted if it is a language that is not currently supported by Firefox Translations.
+   *   The `toLang` property is omitted if it is the same as `fromLang`.
+   */
+  async getLangPairPromise(textToTranslate) {
+    const [fromLang, toLang] = await Promise.all([
+      LanguageDetector.detectLanguage(textToTranslate).then(
+        ({ language }) => language
+      ),
+      TranslationsParent.getTopPreferredSupportedToLang(),
+    ]);
+
+    return {
+      fromLang,
+      // If the fromLang and toLang are the same, discard the toLang.
+      toLang: fromLang === toLang ? undefined : toLang,
+    };
+  }
+
+  /**
    * Close the Select Translations Panel.
    */
   close() {
@@ -112,10 +138,68 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Open the Select Translations Panel.
+   * Updates the language dropdown based on the provided language tag.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   * @param {Element} menuList - The dropdown menu element that will be updated based on language support.
+   * @returns {Promise<void>}
    */
-  async open(event) {
+  async #updateLanguageDropdown(langTag, menuList) {
+    const langTagIsSupported =
+      menuList.id === this.elements.fromMenuList.id
+        ? await TranslationsParent.isSupportedAsFromLang(langTag)
+        : await TranslationsParent.isSupportedAsToLang(langTag);
+
+    if (langTagIsSupported) {
+      // Remove the data-l10n-id because the menulist label will
+      // be populated from the supported language's display name.
+      menuList.value = langTag;
+      menuList.removeAttribute("data-l10n-id");
+    } else {
+      // Set the data-l10n-id placeholder because no valid
+      // language will be selected when the panel opens.
+      menuList.value = undefined;
+      document.l10n.setAttributes(
+        menuList,
+        "translations-panel-choose-language"
+      );
+      await document.l10n.translateElements([menuList]);
+    }
+  }
+
+  /**
+   * Updates the language selection dropdowns based on the given langPairPromise.
+   *
+   * @param {Promise<{fromLang?: string, toLang?: string}>} langPairPromise
+   * @returns {Promise<void>}
+   */
+  async #updateLanguageDropdowns(langPairPromise) {
+    const { fromLang, toLang } = await langPairPromise;
+
+    this.console?.debug(`fromLang(${fromLang})`);
+    this.console?.debug(`toLang(${toLang})`);
+
+    const { fromMenuList, toMenuList } = this.elements;
+
+    await Promise.all([
+      this.#updateLanguageDropdown(fromLang, fromMenuList),
+      this.#updateLanguageDropdown(toLang, toMenuList),
+    ]);
+  }
+
+  /**
+   * Opens the panel and populates the currently selected fromLang and toLang based
+   * on the result of the langPairPromise.
+   *
+   * @param {Event} event - The triggering event for opening the panel.
+   * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
+   * @returns {Promise<void>}
+   */
+  async open(event, langPairPromise) {
+    this.console?.log("Showing a translation panel.");
+
     await this.#ensureLangListsBuilt();
+    await this.#updateLanguageDropdowns(langPairPromise);
 
     // TODO(Bug 1878721) Rework the logic of where to open the panel.
     //

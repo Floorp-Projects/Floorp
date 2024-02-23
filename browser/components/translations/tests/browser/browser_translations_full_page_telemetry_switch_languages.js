@@ -23,7 +23,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
-  FullPageTranslationsTestUtils.assertSelectedFromLanguage("es");
+  FullPageTranslationsTestUtils.assertSelectedFromLanguage({ langTag: "es" });
   FullPageTranslationsTestUtils.switchSelectedFromLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
@@ -99,7 +99,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
-  FullPageTranslationsTestUtils.assertSelectedToLanguage("en");
+  FullPageTranslationsTestUtils.assertSelectedToLanguage({ langTag: "en" });
   FullPageTranslationsTestUtils.switchSelectedToLanguage("fr");
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
