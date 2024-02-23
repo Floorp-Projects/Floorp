@@ -467,7 +467,7 @@ gfxMatrix SVGPatternFrame::GetPatternTransform() {
   SVGAnimatedTransformList* animTransformList =
       GetPatternTransformList(GetContent());
   if (!animTransformList) {
-    return gfxMatrix();
+    return SVGUtils::GetTransformMatrixInUserSpace(this);
   }
 
   return animTransformList->GetAnimValue().GetConsolidationMatrix();
