@@ -40,7 +40,7 @@ def slurper = new JsonSlurper()
 def json = slurper.parseText(standardOutput.toString())
 
 if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
-    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.")
+    throw new GradleException("Building with Gradle is only supported for Firefox for Android, i.e., MOZ_BUILD_APP == 'mobile/android'.")
 }
 
 // The Gradle instance is shared between settings.gradle and all the
