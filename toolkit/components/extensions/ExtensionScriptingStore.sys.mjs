@@ -33,9 +33,10 @@ class Store {
     ]);
     // Make sure the folder exists.
     await IOUtils.makeDirectory(storePath, { ignoreExisting: true });
-    this._store = await lazy.KeyValueService.getOrCreate(
+    this._store = await lazy.KeyValueService.getOrCreateWithOptions(
       storePath,
-      "scripting-contentScripts"
+      "scripting-contentScripts",
+      { strategy: lazy.KeyValueService.RecoveryStrategy.RENAME }
     );
   }
 
@@ -45,6 +46,11 @@ class Store {
     }
 
     return this._initPromise;
+  }
+
+  _uninitForTesting() {
+    this._store = null;
+    this._initPromise = null;
   }
 
   /**

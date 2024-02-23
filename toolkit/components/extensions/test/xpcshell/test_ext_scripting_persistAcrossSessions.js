@@ -18,6 +18,18 @@ const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
+add_task(async function test_scriptingstore_rkv_recovery_rename() {
+  ExtensionScriptingStore._getStoreForTesting()._uninitForTesting();
+  const databaseDir = await makeRkvDatabaseDir("extension-store", {
+    mockCorrupted: true,
+  });
+  await ExtensionScriptingStore._getStoreForTesting().lazyInit();
+  Assert.ok(
+    await IOUtils.exists(PathUtils.join(databaseDir, "data.safe.bin.corrupt")),
+    "Expect corrupt file to be found"
+  );
+});
+
 const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
   return ExtensionTestUtils.loadExtension({
     manifest: {
