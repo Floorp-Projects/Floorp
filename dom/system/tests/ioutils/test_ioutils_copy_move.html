@@ -24,7 +24,7 @@
       info("Test moving a file to a relative destination");
       await Assert.rejects(
         IOUtils.move(tmpFileName, dest),
-        /Could not parse path/,
+        /OperationError: Could not move `.*' to `.*': could not parse path \(NS_ERROR_FILE_UNRECOGNIZED_PATH\)/,
         "IOUtils::move only works with absolute paths"
       );
       ok(
