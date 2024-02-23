@@ -15,7 +15,6 @@ define(function (require, exports, module) {
 
   // Utils
   const {
-    appendRTLClassNameIfNeeded,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
   const {
@@ -166,7 +165,7 @@ define(function (require, exports, module) {
 
     const nodeNameElement = span(
       {
-        className: appendRTLClassNameIfNeeded("tag-name", nodeName),
+        className: "tag-name",
       },
       nodeName
     );
@@ -190,12 +189,7 @@ define(function (require, exports, module) {
 
       const attribute = span(
         {},
-        span(
-          {
-            className: appendRTLClassNameIfNeeded("attrName", name),
-          },
-          name
-        ),
+        span({ className: "attrName" }, name),
         span({ className: "attrEqual" }, "="),
         StringRep({
           className: "attrValue",
@@ -222,9 +216,7 @@ define(function (require, exports, module) {
     // Initialize elements array
     const elements = [
       {
-        config: {
-          className: appendRTLClassNameIfNeeded("tag-name", nodeName),
-        },
+        config: { className: "tag-name" },
         content: nodeName,
       },
     ];
@@ -232,9 +224,7 @@ define(function (require, exports, module) {
     // Push ID element
     if (attributes.id) {
       elements.push({
-        config: {
-          className: appendRTLClassNameIfNeeded("attrName", attributes.id),
-        },
+        config: { className: "attrName" },
         content: `#${attributes.id}`,
       });
     }
@@ -247,9 +237,7 @@ define(function (require, exports, module) {
         .map(cls => `.${cls}`)
         .join("");
       elements.push({
-        config: {
-          className: appendRTLClassNameIfNeeded("attrName", elementClasses),
-        },
+        config: { className: "attrName" },
         content: elementClasses,
       });
     }
