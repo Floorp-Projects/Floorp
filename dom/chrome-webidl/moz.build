@@ -50,6 +50,7 @@ WEBIDL_FILES = [
     "ChromeNodeList.webidl",
     "ClonedErrorHolder.webidl",
     "CommandEvent.webidl",
+    "ConsoleInstance.webidl",
     "CSSCustomPropertyRegisteredEvent.webidl",
     "DebuggerNotification.webidl",
     "DebuggerNotificationObserver.webidl",

@@ -9,6 +9,7 @@
 
 #include "domstubs.h"
 #include "mozilla/dom/ConsoleBinding.h"
+#include "mozilla/dom/ConsoleInstanceBinding.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTHashMap.h"
