@@ -193,7 +193,7 @@ class CheckboxPageAction {
  * (the Translations actor). This class reacts to state changes coming from the
  * Translations actor.
  */
-var TranslationsPanel = new (class {
+var FullPageTranslationsPanel = new (class {
   /** @type {Console?} */
   #console;
 
@@ -972,7 +972,7 @@ var TranslationsPanel = new (class {
    */
   onLearnMoreLink() {
     TranslationsParent.telemetry().panel().onLearnMoreLink();
-    TranslationsPanel.close();
+    FullPageTranslationsPanel.close();
   }
 
   /*
@@ -1186,7 +1186,7 @@ var TranslationsPanel = new (class {
   #openPromise = null;
 
   /**
-   * Opens the TranslationsPanel.
+   * Opens the FullPageTranslationsPanel.
    *
    * @param {Event} event
    * @param {boolean} reportAsAutoShow
@@ -1205,7 +1205,7 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Implementation function for opening the panel. Prefer TranslationsPanel.open.
+   * Implementation function for opening the panel. Prefer FullPageTranslationsPanel.open.
    *
    * @param {Event} event
    */
@@ -1461,7 +1461,7 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * An event handler that allows the TranslationsPanel object
+   * An event handler that allows the FullPageTranslationsPanel object
    * to be compatible with the addTabsProgressListener function.
    *
    * @param {tabbrowser} browser
@@ -1533,7 +1533,7 @@ var TranslationsPanel = new (class {
         if (detectedLanguages) {
           // Ensure the cached detected languages are up to date, for instance whenever
           // the user switches tabs.
-          TranslationsPanel.detectedLanguages = detectedLanguages;
+          FullPageTranslationsPanel.detectedLanguages = detectedLanguages;
         }
 
         if (this.#isPopupOpen) {
@@ -1643,7 +1643,7 @@ var TranslationsPanel = new (class {
 })();
 
 XPCOMUtils.defineLazyPreferenceGetter(
-  TranslationsPanel,
+  FullPageTranslationsPanel,
   "_hasShownPanel",
   "browser.translations.panelShown",
   false

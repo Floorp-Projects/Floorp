@@ -625,38 +625,38 @@
   </menupopup>
 
   <menupopup id="translations-panel-settings-menupopup"
-             onpopupshown="TranslationsPanel.handleSettingsPopupShownEvent()"
-             onpopuphidden="TranslationsPanel.handleSettingsPopupHiddenEvent()">
+             onpopupshown="FullPageTranslationsPanel.handleSettingsPopupShownEvent()"
+             onpopuphidden="FullPageTranslationsPanel.handleSettingsPopupHiddenEvent()">
     <menuitem class="always-offer-translations-menuitem"
               data-l10n-id="translations-panel-settings-always-offer-translation"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="TranslationsPanel.onAlwaysOfferTranslations()"/>
+              oncommand="FullPageTranslationsPanel.onAlwaysOfferTranslations()"/>
     <menuitem class="always-translate-language-menuitem"
               data-l10n-id="translations-panel-settings-always-translate-unknown-language"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="TranslationsPanel.onAlwaysTranslateLanguage()"/>
+              oncommand="FullPageTranslationsPanel.onAlwaysTranslateLanguage()"/>
     <menuitem class="never-translate-language-menuitem"
               data-l10n-id="translations-panel-settings-never-translate-unknown-language"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="TranslationsPanel.onNeverTranslateLanguage()"/>
+              oncommand="FullPageTranslationsPanel.onNeverTranslateLanguage()"/>
     <menuseparator/>
     <menuitem class="never-translate-site-menuitem"
               data-l10n-id="translations-panel-settings-never-translate-site"
               type="checkbox"
               checked="false"
               autocheck="false"
-              oncommand="TranslationsPanel.onNeverTranslateSite()"/>
+              oncommand="FullPageTranslationsPanel.onNeverTranslateSite()"/>
     <menuseparator/>
     <menuitem class="manage-languages-menuitem"
               data-l10n-id="translations-panel-settings-manage-languages"
-              oncommand="TranslationsPanel.openManageLanguages()"/>
+              oncommand="FullPageTranslationsPanel.openManageLanguages()"/>
     <menuitem data-l10n-id="translations-panel-settings-about2"
-              oncommand="TranslationsPanel.onAboutTranslations()"/>
+              oncommand="FullPageTranslationsPanel.onAboutTranslations()"/>
   </menupopup>
 </popupset>
