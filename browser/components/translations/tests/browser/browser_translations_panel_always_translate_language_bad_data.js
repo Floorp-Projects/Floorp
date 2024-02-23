@@ -23,8 +23,7 @@ add_task(async function test_always_translate_with_bad_data() {
     checked: false,
     disabled: true,
   });
-  await closeSettingsMenuIfOpen();
-  await closeTranslationsPanelIfOpen();
+  await closeAllOpenPanelsAndMenus();
 
   info("Checking that the page is untranslated");
   await runInPage(async TranslationsTest => {

@@ -347,11 +347,22 @@ function getTranslationsParent() {
 }
 
 /**
- * Closes the context menu if it is open.
+ * Closes all open panels and menu popups related to Translations.
  */
-function closeContextMenuIfOpen() {
-  return waitForCondition(async () => {
-    const contextMenu = document.getElementById("contentAreaContextMenu");
+async function closeAllOpenPanelsAndMenus() {
+  await closeSettingsMenuIfOpen();
+  await closeTranslationsPanelIfOpen();
+  await closeSelectTranslationsPanelIfOpen();
+  await closeContextMenuIfOpen();
+}
+
+/**
+ * Closes the popup element with the given Id if it is open.
+ * @param {string} popupElementId
+ */
+async function closePopupIfOpen(popupElementId) {
+  await waitForCondition(async () => {
+    const contextMenu = document.getElementById(popupElementId);
     if (!contextMenu) {
       return true;
     }
@@ -369,50 +380,31 @@ function closeContextMenuIfOpen() {
 }
 
 /**
+ * Closes the context menu if it is open.
+ */
+async function closeContextMenuIfOpen() {
+  await closePopupIfOpen("contentAreaContextMenu");
+}
+
+/**
  * Closes the translations panel settings menu if it is open.
  */
-function closeSettingsMenuIfOpen() {
-  return waitForCondition(async () => {
-    const settings = document.getElementById(
-      "translations-panel-settings-menupopup"
-    );
-    if (!settings) {
-      return true;
-    }
-    if (settings.state === "closed") {
-      return true;
-    }
-    let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-      settings,
-      "popuphidden"
-    );
-    PanelMultiView.hidePopup(settings);
-    await popuphiddenPromise;
-    return false;
-  });
+async function closeSettingsMenuIfOpen() {
+  await closePopupIfOpen("translations-panel-settings-menupopup");
 }
 
 /**
  * Closes the translations panel if it is open.
  */
 async function closeTranslationsPanelIfOpen() {
-  await closeSettingsMenuIfOpen();
-  return waitForCondition(async () => {
-    const panel = document.getElementById("translations-panel");
-    if (!panel) {
-      return true;
-    }
-    if (panel.state === "closed") {
-      return true;
-    }
-    let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-      panel,
-      "popuphidden"
-    );
-    PanelMultiView.hidePopup(panel);
-    await popuphiddenPromise;
-    return false;
-  });
+  await closePopupIfOpen("translations-panel");
+}
+
+/**
+ * Closes the translations panel if it is open.
+ */
+async function closeSelectTranslationsPanelIfOpen() {
+  await closePopupIfOpen("select-translations-panel");
 }
 
 /**
@@ -449,10 +441,9 @@ async function setupActorTest({
     actor,
     remoteClients,
     async cleanup() {
+      await closeAllOpenPanelsAndMenus();
       await loadBlankPage();
       await EngineProcess.destroyTranslationsEngine();
-      await closeTranslationsPanelIfOpen();
-      await closeContextMenuIfOpen();
       BrowserTestUtils.removeTab(tab);
       await removeMocks();
       TestTranslationsTelemetry.reset();
@@ -592,10 +583,9 @@ async function loadTestPage({
      * @returns {Promise<void>}
      */
     async cleanup() {
+      await closeAllOpenPanelsAndMenus();
       await loadBlankPage();
       await EngineProcess.destroyTranslationsEngine();
-      await closeTranslationsPanelIfOpen();
-      await closeContextMenuIfOpen();
       await removeMocks();
       Services.fog.testResetFOG();
       TranslationsParent.testAutomaticPopup = false;
@@ -1077,10 +1067,9 @@ async function setupAboutPreferences(
   const elements = await selectAboutPreferencesElements();
 
   async function cleanup() {
+    await closeAllOpenPanelsAndMenus();
     await loadBlankPage();
     await EngineProcess.destroyTranslationsEngine();
-    await closeTranslationsPanelIfOpen();
-    await closeContextMenuIfOpen();
     BrowserTestUtils.removeTab(tab);
     await removeMocks();
     await SpecialPowers.popPrefEnv();

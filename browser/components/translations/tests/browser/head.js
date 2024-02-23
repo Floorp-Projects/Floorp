@@ -206,7 +206,7 @@ async function navigate(
   // it doesn't close on navigate the way that it does when it's
   // open from the translations button, so ensure that we always
   // close it when we navigate to a new page.
-  await closeTranslationsPanelIfOpen();
+  await closeAllOpenPanelsAndMenus();
 
   info(message);
 
@@ -992,7 +992,7 @@ class FullPageTranslationsTestUtils {
     openWithKeyboard = false,
   }) {
     logAction();
-    await closeTranslationsPanelIfOpen();
+    await closeAllOpenPanelsAndMenus();
     if (openFromAppMenu) {
       await FullPageTranslationsTestUtils.#openTranslationsPanelViaAppMenu({
         onOpenPanel,
@@ -1210,8 +1210,7 @@ class SelectTranslationsTestUtils {
       info(message);
     }
 
-    await closeTranslationsPanelIfOpen();
-    await closeContextMenuIfOpen();
+    await closeAllOpenPanelsAndMenus();
 
     await SelectTranslationsTestUtils.openContextMenu(runInPage, {
       selectFirstParagraph,
