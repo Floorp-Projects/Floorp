@@ -1068,6 +1068,17 @@ pref("privacy.cpd.offlineApps",             false);
 pref("privacy.cpd.siteSettings",            false);
 pref("privacy.cpd.openWindows",             false);
 
+// clearHistory and clearSiteData pref branches are used to
+// remember user pref options based on the two different entry points
+pref("privacy.clearHistory.historyFormDataAndDownloads", true);
+pref("privacy.clearHistory.cookiesAndStorage", true);
+pref("privacy.clearHistory.cache", true);
+pref("privacy.clearHistory.siteSettings", false);
+pref("privacy.clearSiteData.historyFormDataAndDownloads", false);
+pref("privacy.clearSiteData.cookiesAndStorage", true);
+pref("privacy.clearSiteData.cache", true);
+pref("privacy.clearSiteData.siteSettings", false);
+
 pref("privacy.history.custom",              false);
 
 // What default should we use for the time span in the sanitizer:
