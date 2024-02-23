@@ -62,8 +62,6 @@ const { OS } = Services.appinfo;
 
 const CM_BUNDLE =
   "chrome://devtools/content/shared/sourceeditor/codemirror/codemirror.bundle.js";
-const CM6_BUNDLE =
-  "resource://devtools/client/shared/sourceeditor/codemirror6/codemirror6.bundle.js";
 
 const CM_IFRAME =
   "chrome://devtools/content/shared/sourceeditor/codemirror/cmiframe.html";
@@ -161,6 +159,7 @@ class Editor extends EventEmitter {
   config = null;
   Doc = null;
 
+  #CodeMirror6;
   #compartments;
   #lastDirty;
   #loadedKeyMaps;
@@ -596,9 +595,12 @@ class Editor extends EventEmitter {
   #setupCm6(el, doc) {
     this.#ownerDoc = doc || el.ownerDocument;
     const win = el.ownerDocument.defaultView;
-
-    Services.scriptloader.loadSubScript(CM6_BUNDLE, win);
     this.#win = win;
+
+    this.#CodeMirror6 = win.ChromeUtils.importESModule(
+      "resource://devtools/client/shared/sourceeditor/codemirror6/codemirror6.bundle.mjs",
+      { global: "current" }
+    );
 
     const {
       codemirror,
@@ -607,7 +609,7 @@ class Editor extends EventEmitter {
       codemirrorLanguage,
       codemirrorLangJavascript,
       lezerHighlight,
-    } = win.CodeMirror;
+    } = this.#CodeMirror6;
 
     const tabSizeCompartment = new Compartment();
     const indentCompartment = new Compartment();
@@ -921,7 +923,7 @@ class Editor extends EventEmitter {
       const {
         codemirrorState: { EditorState },
         codemirrorLanguage,
-      } = this.#win.CodeMirror;
+      } = this.#CodeMirror6;
 
       cm.dispatch({
         effects: this.#compartments.tabSizeCompartment.reconfigure(
@@ -1498,7 +1500,7 @@ class Editor extends EventEmitter {
     if (this.config.cm6) {
       const {
         codemirrorView: { EditorView },
-      } = this.#win.CodeMirror;
+      } = this.#CodeMirror6;
       cm.dispatch({
         effects: this.#compartments.lineWrapCompartment.reconfigure(
           value ? EditorView.lineWrapping : []
