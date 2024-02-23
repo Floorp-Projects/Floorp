@@ -28,3 +28,24 @@ main-context-menu-translate-link-text =
 #   $language (string) - The localized display name of the target language
 main-context-menu-translate-link-text-to-language =
     .label = Translate Link Text to { $language }
+
+# Text displayed in the select translations panel header.
+select-translations-panel-header = Translation
+
+# Text displayed above the from-language dropdown menu.
+select-translations-panel-from-label = From
+
+# Text displayed above the to-language dropdown menu.
+select-translations-panel-to-label = To
+
+# Text displayed on the copy button.
+select-translations-panel-copy-button = Copy
+
+# Text displayed on the done button.
+select-translations-panel-done-button = Done
+
+# Text displayed on translate-full-page button.
+select-translations-panel-translate-full-page-button = Translate full page
+
+# Text displayed as a placeholder in the translated text area.
+select-translations-panel-placeholder-text = Translated text will appear here.

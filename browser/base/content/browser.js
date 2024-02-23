@@ -184,6 +184,11 @@ XPCOMUtils.defineLazyScriptGetter(
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
+  "SelectTranslationsPanel",
+  "chrome://browser/content/translations/selectTranslationsPanel.js"
+);
+XPCOMUtils.defineLazyScriptGetter(
+  this,
   "TranslationsPanel",
   "chrome://browser/content/translations/translationsPanel.js"
 );
