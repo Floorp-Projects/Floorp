@@ -49,6 +49,32 @@ add_setup(async () => {
   AddonTestUtils.usePrivilegedSignatures = false;
 });
 
+add_task(
+  {
+    skip_if: () => ExtensionPermissions._useLegacyStorageBackend,
+  },
+  async function test_permissions_rkv_recovery_rename() {
+    const databaseDir = await makeRkvDatabaseDir(
+      "extension-store-permissions",
+      {
+        mockCorrupted: true,
+      }
+    );
+    const res = await ExtensionPermissions.get("@testextension");
+    Assert.deepEqual(
+      res,
+      { permissions: [], origins: [] },
+      "Expect ExtensionPermissions get promise to be resolved"
+    );
+    Assert.ok(
+      await IOUtils.exists(
+        PathUtils.join(databaseDir, "data.safe.bin.corrupt")
+      ),
+      "Expect corrupt file to be found"
+    );
+  }
+);
+
 add_task(async function test_permissions_on_startup() {
   let extensionId = "@permissionTest";
   let extension = ExtensionTestUtils.loadExtension({

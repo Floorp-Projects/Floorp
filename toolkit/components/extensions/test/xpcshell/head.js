@@ -3,8 +3,9 @@
             promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
             runWithPrefs, testEnv, withHandlingUserInput, resetHandlingUserInput,
             assertPersistentListeners, promiseExtensionEvent, assertHasPersistedScriptsCachedFlag,
-            assertIsPersistedScriptsCachedFlag
-            setup_crash_reporter_override_and_cleaner crashFrame crashExtensionBackground
+            assertIsPersistedScriptsCachedFlag,
+            setup_crash_reporter_override_and_cleaner, crashFrame, crashExtensionBackground,
+            makeRkvDatabaseDir
 */
 
 var { AppConstants } = ChromeUtils.importESModule(
@@ -80,6 +81,19 @@ var createHttpServer = (...args) => {
   AddonTestUtils.maybeInit(this);
   return AddonTestUtils.createHttpServer(...args);
 };
+
+async function makeRkvDatabaseDir(name, { mockCorrupted = false } = {}) {
+  const databaseDir = PathUtils.join(PathUtils.profileDir, name);
+  await IOUtils.makeDirectory(databaseDir);
+  if (mockCorrupted) {
+    // Mock a corrupted db.
+    await IOUtils.write(
+      PathUtils.join(databaseDir, "data.safe.bin"),
+      new Uint8Array([0x00, 0x00, 0x00, 0x00])
+    );
+  }
+  return databaseDir;
+}
 
 // Some tests load non-moz-extension:-URLs in their extension document. When
 // extensions run in-process (extensions.webextensions.remote set to false),
