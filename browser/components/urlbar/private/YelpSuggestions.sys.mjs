@@ -108,7 +108,7 @@ export class YelpSuggestions extends BaseFeature {
       ),
       {
         isRichSuggestion: true,
-        richSuggestionIconSize: suggestion.is_top_pick ? 38 : 24,
+        richSuggestionIconSize: suggestion.is_top_pick ? 38 : 16,
         showFeedbackMenu: true,
       }
     );
