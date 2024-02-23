@@ -52,7 +52,7 @@
     <command id="cmd_findSelection" oncommand="gLazyFindCommand('onFindSelectionCommand')"/>
 #endif
     <command id="cmd_reportBrokenSite" oncommand="ReportBrokenSite.open(event);"/>
-    <command id="cmd_translate" oncommand="TranslationsPanel.open(event);"/>
+    <command id="cmd_translate" oncommand="FullPageTranslationsPanel.open(event);"/>
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs"
              oncommand="PlacesCommandHook.bookmarkPage();"/>

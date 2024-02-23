@@ -23,7 +23,7 @@ add_task(async function test_translations_panel_switch_language() {
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
-  const { translateButton } = TranslationsPanel.elements;
+  const { translateButton } = FullPageTranslationsPanel.elements;
 
   ok(!translateButton.disabled, "The translate button starts as enabled");
 

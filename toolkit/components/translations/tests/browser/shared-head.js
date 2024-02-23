@@ -351,7 +351,7 @@ function getTranslationsParent() {
  */
 async function closeAllOpenPanelsAndMenus() {
   await closeSettingsMenuIfOpen();
-  await closeTranslationsPanelIfOpen();
+  await closeFullPageTranslationsPanelIfOpen();
   await closeSelectTranslationsPanelIfOpen();
   await closeContextMenuIfOpen();
 }
@@ -396,7 +396,7 @@ async function closeSettingsMenuIfOpen() {
 /**
  * Closes the translations panel if it is open.
  */
-async function closeTranslationsPanelIfOpen() {
+async function closeFullPageTranslationsPanelIfOpen() {
   await closePopupIfOpen("full-page-translations-panel");
 }
 

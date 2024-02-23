@@ -287,7 +287,7 @@ class SharedTranslationsTestUtils {
   /**
    * Asserts that the mainViewId of the panel matches the given string.
    *
-   * @param {TranslationsPanel | SelectTranslationsPanel} panel
+   * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
    * @param {string} expectedId - The expected id that mainViewId is set to.
    */
   static _assertPanelMainViewId(panel, expectedId) {
@@ -603,14 +603,14 @@ class FullPageTranslationsTestUtils {
 
   /**
    * Asserts that for each provided expectation, the visible state of the corresponding
-   * element in TranslationsPanel.elements both exists and matches the visibility expectation.
+   * element in FullPageTranslationsPanel.elements both exists and matches the visibility expectation.
    *
    * @param {object} expectations
-   *   A list of expectations for the visibility of any subset of TranslationsPanel.elements
+   *   A list of expectations for the visibility of any subset of FullPageTranslationsPanel.elements
    */
   static #assertPanelElementVisibility(expectations = {}) {
     SharedTranslationsTestUtils._assertPanelElementVisibility(
-      TranslationsPanel.elements,
+      FullPageTranslationsPanel.elements,
       {
         cancelButton: false,
         changeSourceLanguageButton: false,
@@ -636,12 +636,12 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
-   * Asserts that the TranslationsPanel header has the expected l10nId.
+   * Asserts that the FullPageTranslationsPanel header has the expected l10nId.
    *
    * @param {string} l10nId - The expected data-l10n-id of the header.
    */
   static #assertPanelHeaderL10nId(l10nId) {
-    const { header } = TranslationsPanel.elements;
+    const { header } = FullPageTranslationsPanel.elements;
     is(
       header.getAttribute("data-l10n-id"),
       l10nId,
@@ -656,7 +656,7 @@ class FullPageTranslationsTestUtils {
    */
   static #assertPanelMainViewId(expectedId) {
     SharedTranslationsTestUtils._assertPanelMainViewId(
-      TranslationsPanel,
+      FullPageTranslationsPanel,
       expectedId
     );
   }
@@ -789,7 +789,7 @@ class FullPageTranslationsTestUtils {
    */
   static assertSelectedFromLanguage(langTag) {
     info(`Checking that the selected from-language matches ${langTag}`);
-    const { fromMenuList } = TranslationsPanel.elements;
+    const { fromMenuList } = FullPageTranslationsPanel.elements;
     is(
       fromMenuList.value,
       langTag,
@@ -804,7 +804,7 @@ class FullPageTranslationsTestUtils {
    */
   static assertSelectedToLanguage(langTag) {
     info(`Checking that the selected to-language matches ${langTag}`);
-    const { toMenuList } = TranslationsPanel.elements;
+    const { toMenuList } = FullPageTranslationsPanel.elements;
     is(
       toMenuList.value,
       langTag,
@@ -896,7 +896,7 @@ class FullPageTranslationsTestUtils {
    */
   static async clickCancelButton() {
     logAction();
-    const { cancelButton } = TranslationsPanel.elements;
+    const { cancelButton } = FullPageTranslationsPanel.elements;
     assertVisibility({ visible: { cancelButton } });
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
@@ -916,7 +916,7 @@ class FullPageTranslationsTestUtils {
    */
   static async clickChangeSourceLanguageButton({ firstShow = false } = {}) {
     logAction();
-    const { changeSourceLanguageButton } = TranslationsPanel.elements;
+    const { changeSourceLanguageButton } = FullPageTranslationsPanel.elements;
     assertVisibility({ visible: { changeSourceLanguageButton } });
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
@@ -937,7 +937,7 @@ class FullPageTranslationsTestUtils {
    */
   static async clickDismissErrorButton() {
     logAction();
-    const { dismissErrorButton } = TranslationsPanel.elements;
+    const { dismissErrorButton } = FullPageTranslationsPanel.elements;
     assertVisibility({ visible: { dismissErrorButton } });
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
@@ -988,7 +988,7 @@ class FullPageTranslationsTestUtils {
    */
   static async clickRestoreButton() {
     logAction();
-    const { restoreButton } = TranslationsPanel.elements;
+    const { restoreButton } = FullPageTranslationsPanel.elements;
     assertVisibility({ visible: { restoreButton } });
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
@@ -1026,7 +1026,7 @@ class FullPageTranslationsTestUtils {
     pivotTranslation = false,
   } = {}) {
     logAction();
-    const { translateButton } = TranslationsPanel.elements;
+    const { translateButton } = FullPageTranslationsPanel.elements;
     assertVisibility({ visible: { translateButton } });
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
@@ -1181,7 +1181,7 @@ class FullPageTranslationsTestUtils {
    */
   static switchSelectedFromLanguage(langTag) {
     logAction(langTag);
-    const { fromMenuList } = TranslationsPanel.elements;
+    const { fromMenuList } = FullPageTranslationsPanel.elements;
     fromMenuList.value = langTag;
     fromMenuList.dispatchEvent(new Event("command"));
   }
@@ -1193,7 +1193,7 @@ class FullPageTranslationsTestUtils {
    */
   static switchSelectedToLanguage(langTag) {
     logAction(langTag);
-    const { toMenuList } = TranslationsPanel.elements;
+    const { toMenuList } = FullPageTranslationsPanel.elements;
     toMenuList.value = langTag;
     toMenuList.dispatchEvent(new Event("command"));
   }
@@ -1215,7 +1215,7 @@ class FullPageTranslationsTestUtils {
     postEventAssertion = null
   ) {
     // De-lazify the panel elements.
-    TranslationsPanel.elements;
+    FullPageTranslationsPanel.elements;
     await SharedTranslationsTestUtils._waitForPopupEvent(
       "full-page-translations-panel",
       eventName,
@@ -1337,7 +1337,7 @@ class SelectTranslationsTestUtils {
 
   /**
    * Asserts that for each provided expectation, the visible state of the corresponding
-   * element in TranslationsPanel.elements both exists and matches the visibility expectation.
+   * element in FullPageTranslationsPanel.elements both exists and matches the visibility expectation.
    *
    * @param {object} expectations
    *   A list of expectations for the visibility of any subset of SelectTranslationsPanel.elements
