@@ -80,7 +80,9 @@ add_task(async function test_install_duplicate_engine() {
   let submission = engine.getSubmission("foo");
   Assert.equal(
     submission.uri.spec,
-    "https://duckduckgo.com/?q=foo&t=ffsb",
+    SearchUtils.newSearchConfigEnabled
+      ? "https://duckduckgo.com/?t=ffsb&q=foo"
+      : "https://duckduckgo.com/?q=foo&t=ffsb",
     "Should have not changed the app provided engine."
   );
 

@@ -1,9 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * Tests the removal of an engine is persisted in search settings.
+ */
+
 "use strict";
 
-const CONFIG_DEFAULT = [
+const CONFIG_UPDATED = [
   {
     webExtension: {
       id: "plainengine@search.mozilla.org",
@@ -18,25 +22,37 @@ const CONFIG_DEFAULT = [
     },
     appliesTo: [{ included: { everywhere: true } }],
   },
-  {
-    webExtension: {
-      id: "special-engine@search.mozilla.org",
-      name: "Special",
-      search_url: "https://www.google.com/search",
-      params: [
-        {
-          name: "q",
-          value: "{searchTerms}",
-        },
-      ],
-    },
-    appliesTo: [{ included: { everywhere: true } }],
-  },
 ];
 
-const CONFIG_UPDATED = CONFIG_DEFAULT.filter(r =>
-  r.webExtension.id.startsWith("plainengine")
-);
+const SEARCH_CONFIG_V2_UPDATED = [
+  {
+    recordType: "engine",
+    identifier: "plainengine",
+    base: {
+      name: "Plain",
+      urls: {
+        search: {
+          base: "https://duckduckgo.com/",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "plainengine",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
 
 async function startup() {
   let settingsFileWritten = promiseAfterSettings();
@@ -50,7 +66,10 @@ async function startup() {
 async function updateConfig(config) {
   const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
   settings.get.restore();
-  sinon.stub(settings, "get").returns(config);
+
+  config == "test-extensions"
+    ? await SearchTestUtils.useTestEngines("test-extensions")
+    : sinon.stub(settings, "get").returns(config);
 }
 
 async function visibleEngines(ss) {
@@ -58,7 +77,7 @@ async function visibleEngines(ss) {
 }
 
 add_setup(async function () {
-  await SearchTestUtils.useTestEngines("test-extensions", null, CONFIG_DEFAULT);
+  await SearchTestUtils.useTestEngines("test-extensions");
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
   await AddonTestUtils.promiseStartupManager();
   // This is only needed as otherwise events will not be properly notified
@@ -87,7 +106,11 @@ add_task(async function () {
   );
 
   ss._removeObservers();
-  updateConfig(CONFIG_UPDATED);
+  updateConfig(
+    SearchUtils.newSearchConfigEnabled
+      ? SEARCH_CONFIG_V2_UPDATED
+      : CONFIG_UPDATED
+  );
   ss = await startup();
 
   Assert.ok(
@@ -96,7 +119,8 @@ add_task(async function () {
   );
 
   ss._removeObservers();
-  updateConfig(CONFIG_DEFAULT);
+  updateConfig("test-extensions");
+
   ss = await startup();
 
   Assert.ok(
