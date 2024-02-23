@@ -87,22 +87,32 @@ function parse_units(v) {
 }
 
 var Graph = class {
-  constructor(ctx) {
-    this.ctx = ctx;
+  constructor(canvas) {
+    this.ctx = canvas.getContext('2d');
 
-    var { height } = ctx.canvas;
+    // Adjust scale for high-DPI displays.
+    this.scale = window.devicePixelRatio || 1;
+    let rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * this.scale);
+    canvas.height = Math.floor(rect.height * this.scale);
+    canvas.style.width = rect.width;
+    canvas.style.height = rect.height;
+
+    // Record canvas size to draw into.
+    this.width = canvas.width;
+    this.height = canvas.height;
+
     this.layout = {
-      xAxisLabel_Y: height - 20,
+      xAxisLabel_Y: this.height - 20 * this.scale,
     };
   }
 
   xpos(index) {
-    return index * 2;
+    return (index / numSamples) * (this.width - 80 * this.scale);
   }
 
   clear() {
-    const { width, height } = this.ctx.canvas;
-    this.ctx.clearRect(0, 0, width, height);
+    this.ctx.clearRect(0, 0, this.width, this.height);
   }
 
   drawScale(delay) {
@@ -119,20 +129,22 @@ var Graph = class {
 
   drawAxisLabels(x_label, y_label) {
     const ctx = this.ctx;
-    const { width, height } = ctx.canvas;
 
-    ctx.fillText(x_label, width / 2, this.layout.xAxisLabel_Y);
+    ctx.font = `${10 * this.scale}px sans-serif`;
+
+    ctx.fillText(x_label, this.width / 2, this.layout.xAxisLabel_Y);
 
     ctx.save();
     ctx.rotate(Math.PI / 2);
-    var start = height / 2 - ctx.measureText(y_label).width / 2;
-    ctx.fillText(y_label, start, -width + 20);
+    var start = this.height / 2 - ctx.measureText(y_label).width / 2;
+    ctx.fillText(y_label, start, -this.width + 20 * this.scale);
     ctx.restore();
   }
 
   drawFrame() {
     const ctx = this.ctx;
-    const { width, height } = ctx.canvas;
+    const width = this.width;
+    const height = this.height;
 
     // Draw frame to show size
     ctx.strokeStyle = "rgb(0,0,0)";
@@ -150,21 +162,16 @@ var Graph = class {
 var LatencyGraph = class extends Graph {
   constructor(ctx) {
     super(ctx);
-    console.log(this.ctx);
   }
 
   ypos(delay) {
-    const { height } = this.ctx.canvas;
-
-    const r = height + 100 - Math.log(delay) * 64;
-    if (r < 5) {
-      return 5;
-    }
-    return r;
+    return this.height + this.scale * (100 - Math.log(delay) * 64);
   }
 
   drawHBar(delay, label, color = "rgb(0,0,0)", label_offset = 0) {
     const ctx = this.ctx;
+
+    let y = this.ypos(delay);
 
     ctx.fillStyle = color;
     ctx.strokeStyle = color;
@@ -284,12 +291,10 @@ var MemoryGraph = class extends Graph {
   }
 
   ypos(size) {
-    const { height } = this.ctx.canvas;
-
     const range = this.limit - this.bestEver;
     const percent = (size - this.bestEver) / range;
 
-    return (1 - percent) * height * 0.9 + 20;
+    return (1 - percent) * this.height * 0.9 + this.scale * 20;
   }
 
   drawHBar(size, label, color = "rgb(150,150,150)") {
@@ -381,6 +386,7 @@ var MemoryGraph = class extends Graph {
       }
     }
     ctx.stroke();
+    ctx.fillStyle = "rgb(0,0,0)";
 
     this.drawAxisLabels("Time", "Heap Memory Usage");
   }
@@ -526,7 +532,7 @@ async function onload() {
 
   // Acquire our canvas.
   var canvas = document.getElementById("graph");
-  latencyGraph = new LatencyGraph(canvas.getContext("2d"));
+  latencyGraph = new LatencyGraph(canvas);
 
   if (!gHost.features.haveMemorySizes) {
     document.getElementById("memgraph-disabled").style.display = "block";
@@ -701,7 +707,7 @@ function trackHeapSizes(track) {
 
   if (enabled.trackingSizes) {
     canvas.style.display = "block";
-    memoryGraph = new MemoryGraph(canvas.getContext("2d"));
+    memoryGraph = new MemoryGraph(canvas);
   } else {
     canvas.style.display = "none";
     memoryGraph = null;
