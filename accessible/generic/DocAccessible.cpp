@@ -1018,6 +1018,11 @@ void DocAccessible::ElementStateChanged(dom::Document* aDocument,
         new AccStateChangeEvent(accessible, states::DEFAULT);
     FireDelayedEvent(event);
   }
+
+  if (aStateMask.HasState(dom::ElementState::INDETERMINATE)) {
+    RefPtr<AccEvent> event = new AccStateChangeEvent(accessible, states::MIXED);
+    FireDelayedEvent(event);
+  }
 }
 
 void DocAccessible::CharacterDataWillChange(nsIContent* aContent,
