@@ -29,6 +29,7 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowserDirection
@@ -212,7 +213,11 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                 onSettingClicked = onSettingClicked,
                 onLearnMoreClicked = { openBrowserAndLoad(learnMoreUrl) },
                 onPositiveButtonClicked = {
-                    translationsDialogStore.dispatch(TranslationsDialogAction.TranslateAction)
+                    if (state.error is TranslationError.CouldNotLoadLanguagesError) {
+                        translationsDialogStore.dispatch(TranslationsDialogAction.FetchSupportedLanguages)
+                    } else {
+                        translationsDialogStore.dispatch(TranslationsDialogAction.TranslateAction)
+                    }
                 },
                 onNegativeButtonClicked = {
                     if (state.isTranslated) {
