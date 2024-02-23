@@ -53,6 +53,7 @@ class MediaSessionInfo {
   Maybe<MediaMetadataBase> mMetadata;
   MediaSessionPlaybackState mDeclaredPlaybackState =
       MediaSessionPlaybackState::None;
+  Maybe<PositionState> mPositionState;
   // Use bitwise to store the supported actions.
   uint32_t mSupportedActions = 0;
 };
@@ -245,6 +246,10 @@ class MediaStatusManager : public IMediaInfoUpdater {
   // Return the active media session's declared playback state. If the active
   // media session doesn't exist, return  'None' instead.
   MediaSessionPlaybackState GetCurrentDeclaredPlaybackState() const;
+
+  // Return the active media session's position state. If the active media
+  // session doesn't exist or doesn't have any state, Nothing is returned.
+  Maybe<PositionState> GetCurrentPositionState() const;
 
   // This state can match to the `guessed playback state` in the spec [1], it
   // indicates if we have any media element playing within the tab which this
