@@ -140,6 +140,8 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Prekliči</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Namesti dodatek</string>
+    <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_install_addon_content_description_2">Namesti %1$s</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Prekliči</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->

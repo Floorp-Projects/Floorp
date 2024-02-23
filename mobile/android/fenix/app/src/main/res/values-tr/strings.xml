@@ -714,7 +714,7 @@
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Son eşitleme: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">Son eşitleme: hiç</string>
+    <string name="sync_never_synced_summary">Son eşitleme: yok</string>
 
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name

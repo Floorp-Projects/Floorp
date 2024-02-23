@@ -923,20 +923,137 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">آچیق تاغلاریْ اوْتوماتیک باغلا</string>
 
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">آچیلیش اکرانی</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">آنایارپاق</string>
 
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">سوْن تاغ</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">دؤرد ساعاتلیق حرکتسیزلیکدن سونرا آچیلان اصلی صفحه</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ال‌ ایله باغلاییْن</string>
 
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
     <string name="close_tabs_after_one_day_summary">بیر گۆندن سوْنرا باغلایین</string>
 
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">بیر هفته سونرا باغلا</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">بیر آی سونرا باغلا</string>
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">آنایارپاق‌دا آچ</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">سون تاغدا آچ</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">دؤرد ساعاتدان سونرا آنایارپاق‌دا آچ</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">کؤهنه تاغلاری ایشده اولمایان تاغا آپار</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">ایکی هفته‌ده باخمادیغینیز تاغلار ایشده اولمایان بؤلومه آپاریلیر.</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">قالدیر</string>
 
 
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ایشده</string>
+
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s ایمکانی وار هردن بیر آراشدیرمالاری نصب ائلیه و چالیشدیرا.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">آرتیق بیلین</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیخاجاق</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">تامام</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">لغو</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">دگیشمه‌لری یئرینه سالماق اوچون اپلیکیشن‌دن چیْخیلیر…</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">آچیْق تاغ‌لار</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">گیزلی تاغ‌لار</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">دؤنگل‌لنمیش تاغ‌لار</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">تاغ آرتیر</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">گیزلی تاغ آرتیر</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">گیزلی</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">دؤنگل</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">بوتون تاغ‌لاری پایلاش</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">سوْن باغلانان تاغ‌لار</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">سون باغلانان‌لار</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">حساب تنظیم‌لری</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">تاغ تنظیم‌لری</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">بوتون تاغ‌لاریْ باغلا</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">بوکمارک</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">باغلا</string>
+
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">سئچیلمیش تاغ‌لاری پایلاش</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">سئچیلن تاغ‌لار منوسو</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">تاغی مجموعه‌دن چیخار</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">تاغ‌لاری سئچین</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">تاغی باغلا</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s تاغی باغلا</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">آچیق تاغ‌لار منوسونو آچ</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">تاغ‌لاریْ مجموعه‌ده ساخلاییْن</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">مجموعه‌نی سیل</string>
+
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">مجموعه‌نی یئنی‌دن آدلاندیْر</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">تاغ‌لاریْ آچ</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">مجموعه آدیْ</string>
+    <!-- Text for the menu button to rename a top site -->
+    <string name="rename_top_site">یئنی‌دن آدلاندیْر</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">قالدیر</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">گئچمیش‌دن سیل</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (گیزلی حالت)</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">آختاریش شرطلرینی گیر</string>
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">گئچمیشی سیل</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">گئچمیش سیلیندی</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s سیلیندی</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">سیل</string>
     <!-- History multi select title in app bar
@@ -975,10 +1092,154 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">باغیشلایین، %1$s بو صفحه‌نی دولدورا بیلمه‌دی.</string>
 
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">سیْنماق راپورتونو موْزیلایا گؤندر</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">تاغی باغلا</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">تاغی گئنه آل</string>
+
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">بو قوْولوغو سیلمک ایسته‌دیگینیزه آرخایینسیز؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s سئچیلن موریدلری سیله‌جک.</string>
     <!-- Text for the cancel button on delete bookmark dialog -->
     <string name="bookmark_delete_negative">لغو</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">قوْولوق اکله</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">بوکمارک ساخلاندی!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">دوزه‌لیش</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">دوزه‌لیش</string>
+
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">کوْپی</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">پایلاش</string>
+
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">یئنی تاغدا آچ</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">گیزلی تاغدا آچ</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">هامیْسینی یئنی تاغ‌لاردا آچ</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">هامیْسینی گیزلی تاغ‌لاردا آچ</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">سیل</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">ساخلا</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d سئچیلیدی</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">بوکمارک دوز‌ه‌لیشی</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">قوْولوق دوزه‌لیشی</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">دؤنگل ائدیلن بوکمارک‌لاری گؤرمک اوچون اوْتوروُم آچین</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">قوْولوق</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">آد</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">قوْولوق اکله</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">قوْولوق سئچ</string>
+
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">بیر عنوان وئرمه‌لیسیز</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">گئچرسیز URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">هئچ بوکمارک بوردا یوخ</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s سیلیندی</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">بوکمارک‌لار سیلیندی</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">سئچیلن قوْولوق سیلینیر</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">لغو</string>
+
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">آختاریش شرطلرینی گیر</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">تنظیم‌لره گئدین</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">یئیین تنظیم‌لر صفحه‌سی</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">توصیه اولموش</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">ایجازه‌لری پوز</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">تامام</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">لغو</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">ایجازه‌‌نی پوْز</string>
+
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">تامام</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">لغو</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">بوتون سایتلارداکی ایجازه‌لری پوْز</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">اؤزاؤزونه چالما</string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">کامرا</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">میکروفون</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">قونوم</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">بیلدیریش‌</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">قالیجی ساخلاما</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">سایتلار آراسی کوکی‌لر</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM ایله کونترول اولونان موحتوا</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ایجازه ایسته‌یین</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">مسدود اوْلوندو</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ایجازه وئریلدی</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">اندروید طرفیندن مسدود اوْلوندو</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">آیریْ توُتمالار</string>
+
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">باغلیْ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">استاندارد</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">بَرک</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">اؤزل</string>
+
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">سس و ویدئویا ایجازه وئر</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">سس و ویدئویا ایجازه وئر</string>
+
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">سیزین اوچون اؤنملی اولان شئی‌لری یئغین. \n داها سوْنرا یئیین گیریش اوچون اوْخشار آختاریش‌لاریْ، سایتلاریْ و تاغ‌لاریْ قروُپلاشدیرین.</string>
 
     <!-- Translations feature-->
 
