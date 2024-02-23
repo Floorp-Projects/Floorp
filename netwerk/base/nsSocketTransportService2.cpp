@@ -652,7 +652,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
 
     n = PR_Poll(firstPollEntry, pollCount, pollTimeout);
 
-#if defined(MOZ_GECKO_PROFILER) && (defined(DEBUG) || defined(POLL_MARKERS))
+#ifdef MOZ_GECKO_PROFILER
     if (pollTimeout != PR_INTERVAL_NO_WAIT) {
       profiler_thread_wake();
     }
