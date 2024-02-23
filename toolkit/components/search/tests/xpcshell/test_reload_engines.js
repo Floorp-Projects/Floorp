@@ -318,16 +318,14 @@ const CONFIG_V2 = [
         environment: { regions: ["FR"] },
         urls: {
           search: {
+            base: "https://www.google.com/search",
             params: [
               {
                 name: "c",
                 value: "my-test",
               },
-              {
-                name: "q1",
-                value: "{searchTerms}",
-              },
             ],
+            searchTermParamName: "q1",
           },
         },
       },
@@ -457,7 +455,7 @@ const CONFIG_V2 = [
       name: "engine-same-name-gd",
       urls: {
         search: {
-          base: "https://www.google.com/search",
+          base: "https://www.example.com/search",
           searchTermParamName: "q",
         },
       },
@@ -585,23 +583,47 @@ add_task(async function test_config_updated_engine_changes() {
   await reloadObserved;
   Services.obs.removeObserver(enginesObs, SearchUtils.TOPIC_ENGINE_MODIFIED);
 
-  Assert.deepEqual(
-    enginesAdded,
-    ["engine-resourceicon-gd", "engine-reordered"],
-    "Should have added the correct engines"
-  );
+  if (SearchUtils.newSearchConfigEnabled) {
+    Assert.deepEqual(
+      enginesAdded,
+      ["engine-resourceicon-gd", "engine-reordered", "engine-same-name-gd"],
+      "Should have added the correct engines"
+    );
 
-  Assert.deepEqual(
-    enginesModified.sort(),
-    ["engine", "engine-chromeicon", "engine-pref", "engine-same-name-gd"],
-    "Should have modified the expected engines"
-  );
+    Assert.deepEqual(
+      enginesModified.sort(),
+      ["engine", "engine-chromeicon", "engine-pref"],
+      "Should have modified the expected engines"
+    );
 
-  Assert.deepEqual(
-    enginesRemoved,
-    ["engine-rel-searchform-purpose", "engine-resourceicon"],
-    "Should have removed the expected engine"
-  );
+    Assert.deepEqual(
+      enginesRemoved,
+      [
+        "engine-rel-searchform-purpose",
+        "engine-resourceicon",
+        "engine-same-name",
+      ],
+      "Should have removed the expected engine"
+    );
+  } else {
+    Assert.deepEqual(
+      enginesAdded,
+      ["engine-resourceicon-gd", "engine-reordered"],
+      "Should have added the correct engines"
+    );
+
+    Assert.deepEqual(
+      enginesModified.sort(),
+      ["engine", "engine-chromeicon", "engine-pref", "engine-same-name-gd"],
+      "Should have modified the expected engines"
+    );
+
+    Assert.deepEqual(
+      enginesRemoved,
+      ["engine-rel-searchform-purpose", "engine-resourceicon"],
+      "Should have removed the expected engine"
+    );
+  }
 
   const installedEngines = await Services.search.getAppProvidedEngines();
 
@@ -642,7 +664,9 @@ add_task(async function test_config_updated_engine_changes() {
   );
 
   const engineWithSameName = await Services.search.getEngineByName(
-    "engine-same-name"
+    SearchUtils.newSearchConfigEnabled
+      ? "engine-same-name-gd"
+      : "engine-same-name"
   );
   Assert.equal(
     engineWithSameName.getSubmission("test").uri.spec,
