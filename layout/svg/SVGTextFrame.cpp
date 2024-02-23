@@ -800,18 +800,18 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
     return r;
   }
 
-  // Determine the amount of overflow around frame's mRect.
+  // Determine the amount of overflow above and below the frame's mRect.
   //
   // We need to call InkOverflowRectRelativeToSelf because this includes
-  // overflowing decorations, which the MeasureText call below does not.
+  // overflowing decorations, which the MeasureText call below does not.  We
+  // assume here the decorations only overflow above and below the frame, never
+  // horizontally.
   nsRect self = mFrame->InkOverflowRectRelativeToSelf();
   nsRect rect = mFrame->GetRect();
   bool vertical = IsVertical();
-  nsMargin inkOverflow(
-      vertical ? -self.x : -self.y,
-      vertical ? self.YMost() - rect.height : self.XMost() - rect.width,
-      vertical ? self.XMost() - rect.width : self.YMost() - rect.height,
-      vertical ? -self.y : -self.x);
+  nscoord above = vertical ? -self.x : -self.y;
+  nscoord below =
+      vertical ? self.XMost() - rect.width : self.YMost() - rect.height;
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxSkipCharsIterator start = it;
@@ -838,7 +838,8 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   metrics.mBoundingBox.UnionRect(metrics.mBoundingBox, fontBox);
 
   // Determine the rectangle that covers the rendered run's fill,
-  // taking into account the measured overflow due to decorations.
+  // taking into account the measured vertical overflow due to
+  // decorations.
   nscoord baseline =
       NSToCoordRoundWithClamp(metrics.mBoundingBox.y + metrics.mAscent);
   gfxFloat x, width;
@@ -853,10 +854,10 @@ SVGBBox TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
     x = metrics.mBoundingBox.x;
     width = metrics.mBoundingBox.width;
   }
-  nsRect fillInAppUnits(NSToCoordRoundWithClamp(x), baseline,
-                        NSToCoordRoundWithClamp(width),
-                        NSToCoordRoundWithClamp(metrics.mBoundingBox.height));
-  fillInAppUnits.Inflate(inkOverflow);
+  nsRect fillInAppUnits(
+      NSToCoordRoundWithClamp(x), baseline - above,
+      NSToCoordRoundWithClamp(width),
+      NSToCoordRoundWithClamp(metrics.mBoundingBox.height) + above + below);
   if (textRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     std::swap(fillInAppUnits.x, fillInAppUnits.y);
@@ -2414,7 +2415,7 @@ class SVGTextDrawPathCallbacks final : public nsTextFrame::DrawPathCallbacks {
                                           DrawTarget& aDrawTarget) override;
   void PaintDecorationLine(Rect aPath, nscolor aColor) override;
   void PaintSelectionDecorationLine(Rect aPath, nscolor aColor) override;
-  void NotifyBeforeText(bool aPaintingShadows, nscolor aColor) override;
+  void NotifyBeforeText(nscolor aColor) override;
   void NotifyGlyphPathEmitted() override;
   void NotifyAfterText() override;
 
@@ -2453,12 +2454,6 @@ class SVGTextDrawPathCallbacks final : public nsTextFrame::DrawPathCallbacks {
    */
   void StrokeGeometry();
 
-  /*
-   * Takes a colour and modifies it to account for opacity properties.
-   */
-  void ApplyOpacity(sRGBColor& aColor, const StyleSVGPaint& aPaint,
-                    const StyleSVGOpacity& aOpacity) const;
-
   SVGTextFrame* const mSVGTextFrame;
   gfxContext& mContext;
   nsTextFrame* const mFrame;
@@ -2472,11 +2467,6 @@ class SVGTextDrawPathCallbacks final : public nsTextFrame::DrawPathCallbacks {
    * painting selections or IME decorations.
    */
   nscolor mColor;
-
-  /**
-   * Whether we're painting text shadows.
-   */
-  bool mPaintingShadows;
 };
 
 void SVGTextDrawPathCallbacks::NotifySelectionBackgroundNeedsFill(
@@ -2497,10 +2487,8 @@ void SVGTextDrawPathCallbacks::NotifySelectionBackgroundNeedsFill(
   }
 }
 
-void SVGTextDrawPathCallbacks::NotifyBeforeText(bool aPaintingShadows,
-                                                nscolor aColor) {
+void SVGTextDrawPathCallbacks::NotifyBeforeText(nscolor aColor) {
   mColor = aColor;
-  mPaintingShadows = aPaintingShadows;
   SetupContext();
   mContext.NewPath();
 }
@@ -2573,17 +2561,6 @@ void SVGTextDrawPathCallbacks::HandleTextGeometry() {
   }
 }
 
-void SVGTextDrawPathCallbacks::ApplyOpacity(
-    sRGBColor& aColor, const StyleSVGPaint& aPaint,
-    const StyleSVGOpacity& aOpacity) const {
-  if (aPaint.kind.tag == StyleSVGPaintKind::Tag::Color) {
-    aColor.a *=
-        sRGBColor::FromABGR(aPaint.kind.AsColor().CalcColor(*mFrame->Style()))
-            .a;
-  }
-  aColor.a *= SVGUtils::GetOpacity(aOpacity, /*aContextPaint*/ nullptr);
-}
-
 void SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern) {
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
@@ -2595,12 +2572,7 @@ void SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern) {
     return;
   }
 
-  sRGBColor color(sRGBColor::FromABGR(mColor));
-  if (mPaintingShadows) {
-    ApplyOpacity(color, mFrame->StyleSVG()->mFill,
-                 mFrame->StyleSVG()->mFillOpacity);
-  }
-  aOutPattern->InitColorPattern(ToDeviceColor(color));
+  aOutPattern->InitColorPattern(ToDeviceColor(mColor));
 }
 
 void SVGTextDrawPathCallbacks::FillAndStrokeGeometry() {
@@ -2635,9 +2607,6 @@ void SVGTextDrawPathCallbacks::FillAndStrokeGeometry() {
 }
 
 void SVGTextDrawPathCallbacks::FillGeometry() {
-  if (mFrame->StyleSVG()->mFill.kind.IsNone()) {
-    return;
-  }
   GeneralPattern fillPattern;
   MakeFillPattern(&fillPattern);
   if (fillPattern.GetPattern()) {
@@ -2653,44 +2622,39 @@ void SVGTextDrawPathCallbacks::FillGeometry() {
 
 void SVGTextDrawPathCallbacks::StrokeGeometry() {
   // We don't paint the stroke when we are filling with a selection color.
-  if (!(mColor == NS_SAME_AS_FOREGROUND_COLOR ||
-        mColor == NS_40PERCENT_FOREGROUND_COLOR || mPaintingShadows)) {
-    return;
-  }
+  if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
+      mColor == NS_40PERCENT_FOREGROUND_COLOR) {
+    if (SVGUtils::HasStroke(mFrame, /*aContextPaint*/ nullptr)) {
+      GeneralPattern strokePattern;
+      SVGUtils::MakeStrokePatternFor(mFrame, &mContext, &strokePattern,
+                                     mImgParams, /*aContextPaint*/ nullptr);
+      if (strokePattern.GetPattern()) {
+        if (!mFrame->GetParent()->GetContent()->IsSVGElement()) {
+          // The cast that follows would be unsafe
+          MOZ_ASSERT(false, "Our nsTextFrame's parent's content should be SVG");
+          return;
+        }
+        SVGElement* svgOwner =
+            static_cast<SVGElement*>(mFrame->GetParent()->GetContent());
 
-  if (!SVGUtils::HasStroke(mFrame, /*aContextPaint*/ nullptr)) {
-    return;
-  }
+        // Apply any stroke-specific transform
+        gfxMatrix outerSVGToUser;
+        if (SVGUtils::GetNonScalingStrokeTransform(mFrame, &outerSVGToUser) &&
+            outerSVGToUser.Invert()) {
+          mContext.Multiply(outerSVGToUser);
+        }
 
-  GeneralPattern strokePattern;
-  if (mPaintingShadows) {
-    sRGBColor color(sRGBColor::FromABGR(mColor));
-    ApplyOpacity(color, mFrame->StyleSVG()->mStroke,
-                 mFrame->StyleSVG()->mStrokeOpacity);
-    strokePattern.InitColorPattern(ToDeviceColor(color));
-  } else {
-    SVGUtils::MakeStrokePatternFor(mFrame, &mContext, &strokePattern,
-                                   mImgParams, /*aContextPaint*/ nullptr);
-  }
-  if (strokePattern.GetPattern()) {
-    SVGElement* svgOwner =
-        SVGElement::FromNode(mFrame->GetParent()->GetContent());
-
-    // Apply any stroke-specific transform
-    gfxMatrix outerSVGToUser;
-    if (SVGUtils::GetNonScalingStrokeTransform(mFrame, &outerSVGToUser) &&
-        outerSVGToUser.Invert()) {
-      mContext.Multiply(outerSVGToUser);
+        RefPtr<Path> path = mContext.GetPath();
+        SVGContentUtils::AutoStrokeOptions strokeOptions;
+        SVGContentUtils::GetStrokeOptions(&strokeOptions, svgOwner,
+                                          mFrame->Style(),
+                                          /*aContextPaint*/ nullptr);
+        DrawOptions drawOptions;
+        drawOptions.mAntialiasMode =
+            SVGUtils::ToAntialiasMode(mFrame->StyleText()->mTextRendering);
+        mContext.GetDrawTarget()->Stroke(path, strokePattern, strokeOptions);
+      }
     }
-
-    RefPtr<Path> path = mContext.GetPath();
-    SVGContentUtils::AutoStrokeOptions strokeOptions;
-    SVGContentUtils::GetStrokeOptions(&strokeOptions, svgOwner, mFrame->Style(),
-                                      /*aContextPaint*/ nullptr);
-    DrawOptions drawOptions;
-    drawOptions.mAntialiasMode =
-        SVGUtils::ToAntialiasMode(mFrame->StyleText()->mTextRendering);
-    mContext.GetDrawTarget()->Stroke(path, strokePattern, strokeOptions);
   }
 }
 
@@ -4947,20 +4911,11 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
 
   const nsStyleSVG* style = aFrame->StyleSVG();
 
-  // Fill is a non-solid paint or is not opaque.
+  // Fill is a non-solid paint, has a non-default fill-rule or has
+  // non-1 opacity.
   if (!(style->mFill.kind.IsNone() ||
-        (style->mFill.kind.IsColor() &&
-         SVGUtils::GetOpacity(style->mFillOpacity, /*aContextPaint*/ nullptr) ==
-             1.0f))) {
-    return true;
-  }
-
-  // If we're going to need to draw a non-opaque shadow.
-  // It's possible nsTextFrame will support non-opaque shadows in the future,
-  // in which case this test can be removed.
-  if (style->mFill.kind.IsColor() && aFrame->StyleText()->HasTextShadow() &&
-      NS_GET_A(style->mFill.kind.AsColor().CalcColor(*aFrame->Style())) !=
-          0xFF) {
+        (style->mFill.kind.IsColor() && style->mFillOpacity.IsOpacity() &&
+         style->mFillOpacity.AsOpacity() == 1))) {
     return true;
   }
 

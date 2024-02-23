@@ -526,7 +526,7 @@ class nsTextFrame : public nsIFrame {
      * Called just before any paths have been emitted to the gfxContext
      * for the glyphs of the frame's text.
      */
-    virtual void NotifyBeforeText(bool aPaintingShadows, nscolor aColor) {}
+    virtual void NotifyBeforeText(nscolor aColor) {}
 
     /**
      * Called just after all the paths have been emitted to the gfxContext
