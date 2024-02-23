@@ -165,7 +165,8 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = false;
-    return nsLayoutUtils::GetTextShadowRectsUnion(mRect, mFrame);
+    nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(mRect, mFrame);
+    return mRect.Union(shadowRect);
   }
 
   virtual nsRect GetComponentAlphaBounds(
