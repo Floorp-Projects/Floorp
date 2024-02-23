@@ -2048,6 +2048,46 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Checks if a given language tag is supported for translation
+   * when translating from this language into other languages.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   * @returns {Promise<boolean>}
+   */
+  static async isSupportedAsFromLang(langTag) {
+    if (!langTag) {
+      return false;
+    }
+    let languagePairs = await TranslationsParent.getLanguagePairs();
+    return Boolean(languagePairs.find(({ fromLang }) => fromLang === langTag));
+  }
+
+  /**
+   * Checks if a given language tag is supported for translation
+   * when translating from other languages into this language.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   * @returns {Promise<boolean>}
+   */
+  static async isSupportedAsToLang(langTag) {
+    if (!langTag) {
+      return false;
+    }
+    let languagePairs = await TranslationsParent.getLanguagePairs();
+    return Boolean(languagePairs.find(({ fromLang }) => fromLang === langTag));
+  }
+
+  /**
+   * Retrieves the top preferred user language for which translation
+   * is supported when translating to that language.
+   */
+  static async getTopPreferredSupportedToLang() {
+    return TranslationsParent.getPreferredLanguages().find(
+      async langTag => await TranslationsParent.isSupportedAsToLang(langTag)
+    );
+  }
+
+  /**
    * Returns the lang tags that should be offered for translation. This is in the parent
    * rather than the child to remove the per-content process memory allocation amount.
    *
