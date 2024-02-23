@@ -57,7 +57,7 @@ job-defaults:
                             - macosx64-custom-car
                             - macosx64-minidump-stackwalk
                             - macosx64-fix-stacks
-                        macosx1300.*:
+                        macosx1400.*:
                             - macosx-arm64-custom-car
                             - macosx64-aarch64-minidump-stackwalk
                             - macosx64-aarch64-fix-stacks
@@ -217,7 +217,7 @@ browsertime-tp6-essential:
             test: tp6
             run-visual-metrics:
                 by-test-platform:
-                    macosx1300.*shippable.*: false
+                    macosx1400.*shippable.*: false
                     # Bug 1845014 Resolve osx 1300 vismet permafails
                     default: true
             subtests:
@@ -301,13 +301,9 @@ browsertime-benchmark:
         apps: [firefox, chrome, safari, custom-car]
         subtests:
             by-test-platform:
-                macosx1300.*shippable.*:
-                    by-app:
-                        chromium: []
-                        safari: []  # Bug 1848400 safari perma-fails on osx1300
-                        default:
-                            - [speedometer, sp]
-                            - [speedometer3, sp3]
+                macosx1400.*shippable.*:
+                    - [speedometer, sp]
+                    - [speedometer3, sp3]
                 default:
                     by-app:
                         firefox:
@@ -469,14 +465,14 @@ browsertime-benchmark:
             unity-webgl: 2400
             speedometer3:
                 by-test-platform:
-                    macosx1300.*shippable.*: 4200
+                    macosx1400.*shippable.*: 4200
                     default: 2100
             speedometer: 2100
             default: 900
     mozharness:
         extra-options:
             by-test-platform:
-                macosx1300.*shippable.*:
+                macosx1400.*shippable.*:
                     - --extra-profiler-run
                     - --page-timeout=900000
                 default:
