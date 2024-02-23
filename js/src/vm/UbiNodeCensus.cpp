@@ -6,8 +6,6 @@
 
 #include "js/UbiNodeCensus.h"
 
-#include "mozilla/ScopeExit.h"
-
 #include "builtin/MapObject.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printer.h"
@@ -1064,19 +1062,17 @@ JS_PUBLIC_API bool CensusHandler::operator()(
 
 /*** Parsing Breakdowns *****************************************************/
 
-static CountTypePtr ParseChildBreakdown(
-    JSContext* cx, HandleObject breakdown, PropertyName* prop,
-    MutableHandle<GCVector<JSLinearString*>> seen) {
+static CountTypePtr ParseChildBreakdown(JSContext* cx, HandleObject breakdown,
+                                        PropertyName* prop) {
   RootedValue v(cx);
   if (!GetProperty(cx, breakdown, breakdown, prop, &v)) {
     return nullptr;
   }
-  return ParseBreakdown(cx, v, seen);
+  return ParseBreakdown(cx, v);
 }
 
-JS_PUBLIC_API CountTypePtr
-ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
-               MutableHandle<GCVector<JSLinearString*>> seen) {
+JS_PUBLIC_API CountTypePtr ParseBreakdown(JSContext* cx,
+                                          HandleValue breakdownValue) {
   if (breakdownValue.isUndefined()) {
     // Construct the default type, { by: 'count' }
     CountTypePtr simple(cx->new_<SimpleCount>());
@@ -1100,24 +1096,6 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
   if (!by) {
     return nullptr;
   }
-
-  for (auto seen : seen.get()) {
-    if (EqualStrings(by, seen)) {
-      UniqueChars byBytes = QuoteString(cx, by, '"');
-      if (!byBytes) {
-        return nullptr;
-      }
-
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DEBUG_CENSUS_BREAKDOWN_NESTED,
-                                byBytes.get());
-      return nullptr;
-    }
-  }
-  if (!seen.append(by)) {
-    return nullptr;
-  }
-  auto popper = mozilla::MakeScopeExit([&]() { seen.popBack(); });
 
   if (StringEqualsLiteral(by, "count")) {
     RootedValue countValue(cx), bytesValue(cx);
@@ -1162,14 +1140,13 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
   }
 
   if (StringEqualsLiteral(by, "objectClass")) {
-    CountTypePtr thenType(
-        ParseChildBreakdown(cx, breakdown, cx->names().then, seen));
+    CountTypePtr thenType(ParseChildBreakdown(cx, breakdown, cx->names().then));
     if (!thenType) {
       return nullptr;
     }
 
     CountTypePtr otherType(
-        ParseChildBreakdown(cx, breakdown, cx->names().other, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().other));
     if (!otherType) {
       return nullptr;
     }
@@ -1179,27 +1156,27 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
 
   if (StringEqualsLiteral(by, "coarseType")) {
     CountTypePtr objectsType(
-        ParseChildBreakdown(cx, breakdown, cx->names().objects, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().objects));
     if (!objectsType) {
       return nullptr;
     }
     CountTypePtr scriptsType(
-        ParseChildBreakdown(cx, breakdown, cx->names().scripts, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().scripts));
     if (!scriptsType) {
       return nullptr;
     }
     CountTypePtr stringsType(
-        ParseChildBreakdown(cx, breakdown, cx->names().strings, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().strings));
     if (!stringsType) {
       return nullptr;
     }
     CountTypePtr otherType(
-        ParseChildBreakdown(cx, breakdown, cx->names().other, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().other));
     if (!otherType) {
       return nullptr;
     }
     CountTypePtr domNodeType(
-        ParseChildBreakdown(cx, breakdown, cx->names().domNode, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().domNode));
     if (!domNodeType) {
       return nullptr;
     }
@@ -1209,8 +1186,7 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
   }
 
   if (StringEqualsLiteral(by, "internalType")) {
-    CountTypePtr thenType(
-        ParseChildBreakdown(cx, breakdown, cx->names().then, seen));
+    CountTypePtr thenType(ParseChildBreakdown(cx, breakdown, cx->names().then));
     if (!thenType) {
       return nullptr;
     }
@@ -1219,8 +1195,7 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
   }
 
   if (StringEqualsLiteral(by, "descriptiveType")) {
-    CountTypePtr thenType(
-        ParseChildBreakdown(cx, breakdown, cx->names().then, seen));
+    CountTypePtr thenType(ParseChildBreakdown(cx, breakdown, cx->names().then));
     if (!thenType) {
       return nullptr;
     }
@@ -1228,13 +1203,12 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
   }
 
   if (StringEqualsLiteral(by, "allocationStack")) {
-    CountTypePtr thenType(
-        ParseChildBreakdown(cx, breakdown, cx->names().then, seen));
+    CountTypePtr thenType(ParseChildBreakdown(cx, breakdown, cx->names().then));
     if (!thenType) {
       return nullptr;
     }
     CountTypePtr noStackType(
-        ParseChildBreakdown(cx, breakdown, cx->names().noStack, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().noStack));
     if (!noStackType) {
       return nullptr;
     }
@@ -1243,14 +1217,13 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue,
   }
 
   if (StringEqualsLiteral(by, "filename")) {
-    CountTypePtr thenType(
-        ParseChildBreakdown(cx, breakdown, cx->names().then, seen));
+    CountTypePtr thenType(ParseChildBreakdown(cx, breakdown, cx->names().then));
     if (!thenType) {
       return nullptr;
     }
 
     CountTypePtr noFilenameType(
-        ParseChildBreakdown(cx, breakdown, cx->names().noFilename, seen));
+        ParseChildBreakdown(cx, breakdown, cx->names().noFilename));
     if (!noFilenameType) {
       return nullptr;
     }
@@ -1334,9 +1307,8 @@ JS_PUBLIC_API bool ParseCensusOptions(JSContext* cx, Census& census,
     return false;
   }
 
-  Rooted<GCVector<JSLinearString*>> seen(cx, cx);
   outResult = breakdown.isUndefined() ? GetDefaultBreakdown(cx)
-                                      : ParseBreakdown(cx, breakdown, &seen);
+                                      : ParseBreakdown(cx, breakdown);
   return !!outResult;
 }
 
