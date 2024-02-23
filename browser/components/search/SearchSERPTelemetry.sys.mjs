@@ -1630,8 +1630,8 @@ class ContentHandler {
    *
    * @param {object} info
    *   The search provider infomation for the page.
-   * @param {string} info.type
-   *   The component type that was clicked on.
+   * @param {string} info.target
+   *   The target component that was interacted with.
    * @param {string} info.action
    *   The action taken on the page.
    * @param {object} browser
@@ -1644,22 +1644,23 @@ class ContentHandler {
     }
     let telemetryState = item.browserTelemetryStateMap.get(browser);
     let impressionId = telemetryState?.impressionId;
-    if (info.type && impressionId) {
+    if (info.target && impressionId) {
       lazy.logConsole.debug(`Recorded page action:`, {
         impressionId: telemetryState.impressionId,
-        type: info.type,
+        target: info.target,
         action: info.action,
       });
       Glean.serp.engagement.record({
         impression_id: impressionId,
         action: info.action,
-        target: info.type,
+        target: info.target,
       });
       impressionIdsWithoutEngagementsSet.delete(impressionId);
       // In-content searches are not be categorized with a type, so they will
       // not be picked up in the network processes.
       if (
-        info.type == SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX &&
+        info.target ==
+          SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX &&
         info.action == SearchSERPTelemetryUtils.ACTIONS.SUBMITTED
       ) {
         telemetryState.searchBoxSubmitted = true;
@@ -1668,6 +1669,7 @@ class ContentHandler {
           SearchSERPTelemetryUtils.INCONTENT_SOURCES.SEARCHBOX
         );
       }
+      Services.obs.notifyObservers(null, "reported-page-with-action");
     } else {
       lazy.logConsole.warn(
         "Expected to report a",
