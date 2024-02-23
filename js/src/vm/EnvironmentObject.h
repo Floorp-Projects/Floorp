@@ -622,6 +622,8 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static const JSClassOps classOps_;
 
  public:
+  using EnvironmentObject::setAliasedBinding;
+
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
@@ -630,6 +632,9 @@ class ModuleEnvironmentObject : public EnvironmentObject {
 
   static ModuleEnvironmentObject* create(JSContext* cx,
                                          Handle<ModuleObject*> module);
+  static ModuleEnvironmentObject* createSynthetic(JSContext* cx,
+                                                  Handle<ModuleObject*> module);
+
   ModuleObject& module() const;
   IndirectBindingMap& importBindings() const;
 
@@ -647,6 +652,8 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   //
   // `env` may be a DebugEnvironmentProxy, but not a hollow environment.
   static ModuleEnvironmentObject* find(JSObject* env);
+
+  uint32_t firstSyntheticValueSlot() { return RESERVED_SLOTS; }
 
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,

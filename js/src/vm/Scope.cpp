@@ -148,6 +148,33 @@ SharedShape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                                                map, mapLength, objectFlags);
 }
 
+SharedShape* js::CreateEnvironmentShapeForSyntheticModule(
+    JSContext* cx, const JSClass* cls, uint32_t numSlots,
+    Handle<ModuleObject*> module) {
+  Rooted<SharedPropMap*> map(cx);
+  uint32_t mapLength = 0;
+
+  PropertyFlags propFlags = {PropertyFlag::Enumerable};
+  ObjectFlags objectFlags = ModuleEnvironmentObject::OBJECT_FLAGS;
+
+  RootedId id(cx);
+  uint32_t slotIndex = numSlots;
+  for (JSAtom* exportName : module->syntheticExportNames()) {
+    id = NameToId(exportName->asPropertyName());
+    if (!SharedPropMap::addPropertyWithKnownSlot(cx, cls, &map, &mapLength, id,
+                                                 propFlags, slotIndex,
+                                                 &objectFlags)) {
+      return nullptr;
+    }
+    slotIndex++;
+  }
+
+  uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
+  return SharedShape::getInitialOrPropMapShape(cx, cls, cx->realm(),
+                                               TaggedProto(nullptr), numFixed,
+                                               map, mapLength, objectFlags);
+}
+
 template <class DataT>
 inline size_t SizeOfAllocatedData(DataT* data) {
   return SizeOfScopeData<DataT>(data->length);

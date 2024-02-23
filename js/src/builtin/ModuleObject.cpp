@@ -20,7 +20,7 @@
 #include "gc/Tracer.h"
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin, JS::LimitedColumnNumberOneOrigin
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
-#include "js/Modules.h"  // JS::GetModulePrivate, JS::ModuleDynamicImportHook
+#include "js/Modules.h"  // JS::GetModulePrivate, JS::ModuleDynamicImportHook, JS::ModuleType
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/Interpreter.h"    // Execute, Lambda, ReportRuntimeLexicalError
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
@@ -31,6 +31,7 @@
 
 #include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
 #include "gc/GCContext-inl.h"
+#include "vm/EnvironmentObject-inl.h"  // EnvironmentObject::setAliasedBinding
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/List-inl.h"
@@ -191,6 +192,52 @@ ArrayObject* ModuleRequestObject::attributes() const {
   }
 
   return &obj->as<ArrayObject>();
+}
+
+bool ModuleRequestObject::hasAttributes() const {
+  return !getReservedSlot(ModuleRequestObject::AttributesSlot)
+              .isNullOrUndefined();
+}
+
+/* static */
+bool ModuleRequestObject::getModuleType(
+    JSContext* cx, const Handle<ModuleRequestObject*> moduleRequest,
+    JS::ModuleType& moduleType) {
+  if (!moduleRequest->hasAttributes()) {
+    moduleType = JS::ModuleType::JavaScript;
+    return true;
+  }
+
+  Rooted<ArrayObject*> attributesArray(cx, moduleRequest->attributes());
+  RootedObject attributeObject(cx);
+  RootedId typeId(cx, NameToId(cx->names().type));
+  RootedValue value(cx);
+
+  uint32_t numberOfAttributes = attributesArray->length();
+  for (uint32_t i = 0; i < numberOfAttributes; i++) {
+    attributeObject = &attributesArray->getDenseElement(i).toObject();
+
+    if (!GetProperty(cx, attributeObject, attributeObject, typeId, &value)) {
+      continue;
+    }
+
+    int32_t isJsonString;
+    if (!js::CompareStrings(cx, cx->names().json, value.toString(),
+                            &isJsonString)) {
+      return false;
+    }
+
+    if (isJsonString == 0) {
+      moduleType = JS::ModuleType::JSON;
+      return true;
+    }
+
+    moduleType = JS::ModuleType::Unknown;
+    return true;
+  }
+
+  moduleType = JS::ModuleType::JavaScript;
+  return true;
 }
 
 /* static */
@@ -618,6 +665,21 @@ void ModuleNamespaceObject::ProxyHandler::finalize(JS::GCContext* gcx,
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// SyntheticModuleFields
+
+// The fields of a synthetic module record, as described in:
+// https://tc39.es/proposal-json-modules/#sec-synthetic-module-records
+class js::SyntheticModuleFields {
+ public:
+  ExportNameVector exportNames;
+
+ public:
+  void trace(JSTracer* trc);
+};
+
+void SyntheticModuleFields::trace(JSTracer* trc) { exportNames.trace(trc); }
+
+///////////////////////////////////////////////////////////////////////////
 // CyclicModuleFields
 
 // The fields of a cyclic module record, as described in:
@@ -857,6 +919,10 @@ Span<const ExportEntry> ModuleObject::starExportEntries() const {
   return cyclicModuleFields()->starExportEntries();
 }
 
+const ExportNameVector& ModuleObject::syntheticExportNames() const {
+  return syntheticModuleFields()->exportNames;
+}
+
 void ModuleObject::initFunctionDeclarations(
     UniquePtr<FunctionDeclarationVector> decls) {
   cyclicModuleFields()->functionDeclarations = std::move(decls);
@@ -883,11 +949,38 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
 }
 
 /* static */
+ModuleObject* ModuleObject::createSynthetic(
+    JSContext* cx, MutableHandle<ExportNameVector> exportNames) {
+  Rooted<UniquePtr<SyntheticModuleFields>> syntheticFields(cx);
+  syntheticFields = cx->make_unique<SyntheticModuleFields>();
+  if (!syntheticFields) {
+    return nullptr;
+  }
+
+  Rooted<ModuleObject*> self(
+      cx, NewObjectWithGivenProto<ModuleObject>(cx, nullptr));
+  if (!self) {
+    return nullptr;
+  }
+
+  InitReservedSlot(self, SyntheticModuleFieldsSlot, syntheticFields.release(),
+                   MemoryUse::ModuleSyntheticFields);
+
+  self->syntheticModuleFields()->exportNames = std::move(exportNames.get());
+
+  return self;
+}
+
+/* static */
 void ModuleObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   ModuleObject* self = &obj->as<ModuleObject>();
   if (self->hasCyclicModuleFields()) {
     gcx->delete_(obj, self->cyclicModuleFields(),
                  MemoryUse::ModuleCyclicFields);
+  }
+  if (self->hasSyntheticModuleFields()) {
+    gcx->delete_(obj, self->syntheticModuleFields(),
+                 MemoryUse::ModuleSyntheticFields);
   }
 }
 
@@ -1022,10 +1115,12 @@ static inline void AssertValidModuleStatus(ModuleStatus status) {
 }
 
 ModuleStatus ModuleObject::status() const {
-  // TODO: When implementing synthetic module records it may be convenient to
-  // make this method always return a ModuleStatus::Evaluated for such a module
-  // so we can assert a module's status without checking which kind it is, even
-  // though synthetic modules don't have this field according to the spec.
+  // Always return `ModuleStatus::Evaluated` so we can assert a module's status
+  // without checking which kind it is, even though synthetic modules don't have
+  // this field according to the spec.
+  if (hasSyntheticModuleFields()) {
+    return ModuleStatus::Evaluated;
+  }
 
   ModuleStatus status = cyclicModuleFields()->status;
   AssertValidModuleStatus(status);
@@ -1162,6 +1257,22 @@ ModuleObject* ModuleObject::getCycleRoot() const {
   return cyclicModuleFields()->cycleRoot;
 }
 
+bool ModuleObject::hasSyntheticModuleFields() const {
+  bool result = !getReservedSlot(SyntheticModuleFieldsSlot).isUndefined();
+  MOZ_ASSERT_IF(result, !hasCyclicModuleFields());
+  return result;
+}
+
+SyntheticModuleFields* ModuleObject::syntheticModuleFields() {
+  MOZ_ASSERT(!hasCyclicModuleFields());
+  void* ptr = getReservedSlot(SyntheticModuleFieldsSlot).toPrivate();
+  MOZ_ASSERT(ptr);
+  return static_cast<SyntheticModuleFields*>(ptr);
+}
+const SyntheticModuleFields* ModuleObject::syntheticModuleFields() const {
+  return const_cast<ModuleObject*>(this)->syntheticModuleFields();
+}
+
 bool ModuleObject::hasTopLevelCapability() const {
   return cyclicModuleFields()->topLevelCapability;
 }
@@ -1206,6 +1317,9 @@ void ModuleObject::trace(JSTracer* trc, JSObject* obj) {
   ModuleObject& module = obj->as<ModuleObject>();
   if (module.hasCyclicModuleFields()) {
     module.cyclicModuleFields()->trace(trc);
+  }
+  if (module.hasSyntheticModuleFields()) {
+    module.syntheticModuleFields()->trace(trc);
   }
 }
 
@@ -1326,6 +1440,27 @@ bool ModuleObject::createEnvironment(JSContext* cx,
   }
 
   self->setInitialEnvironment(env);
+  return true;
+}
+
+/*static*/
+bool ModuleObject::createSyntheticEnvironment(JSContext* cx,
+                                              Handle<ModuleObject*> self,
+                                              Handle<GCVector<Value>> values) {
+  Rooted<ModuleEnvironmentObject*> env(
+      cx, ModuleEnvironmentObject::createSynthetic(cx, self));
+  if (!env) {
+    return false;
+  }
+
+  MOZ_ASSERT(env->shape()->propMapLength() == values.length());
+
+  for (uint32_t i = 0; i < values.length(); i++) {
+    env->setAliasedBinding(env->firstSyntheticValueSlot() + i, values[i]);
+  }
+
+  self->setInitialEnvironment(env);
+
   return true;
 }
 
@@ -2543,10 +2678,11 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
     return RejectPromiseWithPendingError(cx, promise);
   }
 
-  MOZ_ASSERT(module->getCycleRoot()
-                 ->topLevelCapability()
-                 ->as<PromiseObject>()
-                 .state() == JS::PromiseState::Fulfilled);
+  MOZ_ASSERT_IF(module->hasCyclicModuleFields(),
+                module->getCycleRoot()
+                        ->topLevelCapability()
+                        ->as<PromiseObject>()
+                        .state() == JS::PromiseState::Fulfilled);
 
   RootedObject ns(cx, GetOrCreateModuleNamespace(cx, module));
   if (!ns) {
