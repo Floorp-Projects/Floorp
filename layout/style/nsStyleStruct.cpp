@@ -2020,7 +2020,7 @@ StyleTransition::StyleTransition(const StyleTransition& aCopy) = default;
 bool StyleTransition::operator==(const StyleTransition& aOther) const {
   return mTimingFunction == aOther.mTimingFunction &&
          mDuration == aOther.mDuration && mDelay == aOther.mDelay &&
-         mProperty == aOther.mProperty;
+         mProperty == aOther.mProperty && mBehavior == aOther.mBehavior;
 }
 
 StyleAnimation::StyleAnimation(const StyleAnimation& aCopy) = default;
@@ -3079,6 +3079,7 @@ nsStyleUIReset::nsStyleUIReset()
       mTransitionDurationCount(1),
       mTransitionDelayCount(1),
       mTransitionPropertyCount(1),
+      mTransitionBehaviorCount(1),
       mAnimations(
           nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT),
       mAnimationTimingFunctionCount(1),
@@ -3120,6 +3121,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mTransitionDurationCount(aSource.mTransitionDurationCount),
       mTransitionDelayCount(aSource.mTransitionDelayCount),
       mTransitionPropertyCount(aSource.mTransitionPropertyCount),
+      mTransitionBehaviorCount(aSource.mTransitionBehaviorCount),
       mAnimations(aSource.mAnimations.Clone()),
       mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount),
       mAnimationDurationCount(aSource.mAnimationDurationCount),
@@ -3178,6 +3180,7 @@ nsChangeHint nsStyleUIReset::CalcDifference(
        mTransitionDurationCount != aNewData.mTransitionDurationCount ||
        mTransitionDelayCount != aNewData.mTransitionDelayCount ||
        mTransitionPropertyCount != aNewData.mTransitionPropertyCount ||
+       mTransitionBehaviorCount != aNewData.mTransitionBehaviorCount ||
        mAnimations != aNewData.mAnimations ||
        mAnimationTimingFunctionCount !=
            aNewData.mAnimationTimingFunctionCount ||

@@ -1133,6 +1133,7 @@ struct StyleTransition {
   StyleTime mDelay{0.0};
   StyleTransitionProperty mProperty{StyleTransitionProperty::NonCustom(
       StyleNonCustomPropertyId{uint16_t(eCSSProperty_all)})};
+  StyleTransitionBehavior mBehavior = StyleTransitionBehavior::Normal;
 };
 
 struct StyleAnimation {
@@ -1708,6 +1709,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   uint32_t mTransitionDurationCount;
   uint32_t mTransitionDelayCount;
   uint32_t mTransitionPropertyCount;
+  uint32_t mTransitionBehaviorCount;
   nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.

@@ -33,7 +33,7 @@ pub use self::angle::{AllowUnitlessZeroAngle, Angle};
 pub use self::animation::{
     AnimationIterationCount, AnimationName, AnimationTimeline, AnimationPlayState,
     AnimationFillMode, AnimationComposition, AnimationDirection, ScrollAxis,
-    ScrollTimelineName, TransitionProperty, ViewTimelineInset
+    ScrollTimelineName, TransitionBehavior, TransitionProperty, ViewTimelineInset
 };
 pub use self::background::{BackgroundRepeat, BackgroundSize};
 pub use self::basic_shape::FillRule;

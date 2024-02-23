@@ -199,6 +199,20 @@ ${helpers.predefined_type(
     affects="",
 )}
 
+${helpers.predefined_type(
+    "transition-behavior",
+    "TransitionBehavior",
+    "computed::TransitionBehavior::normal()",
+    engines="gecko",
+    initial_specified_value="specified::TransitionBehavior::normal()",
+    vector=True,
+    need_index=True,
+    animation_value_type="none",
+    gecko_pref="layout.css.transition-behavior.enabled",
+    spec="https://drafts.csswg.org/css-transitions-2/#transition-behavior-property",
+    affects="",
+)}
+
 <% animation_extra_prefixes = "moz:layout.css.prefixes.animations webkit" %>
 
 ${helpers.predefined_type(
