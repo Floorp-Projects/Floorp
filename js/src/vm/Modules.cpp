@@ -15,7 +15,9 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
+#include "builtin/JSON.h"  // js::ParseJSONWithReviver
 #include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
+#include "builtin/Promise.h"  // js::CreatePromiseObjectForAsync, js::AsyncFunctionReturned
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "frontend/FrontendContext.h"   // js::AutoReportFrontendContext
@@ -33,6 +35,8 @@
 
 #include "vm/JSAtomUtils-inl.h"  // AtomToId
 #include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
+#include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
@@ -120,6 +124,46 @@ JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,
   return CompileModuleHelper(cx, options, srcBuf);
 }
 
+JS_PUBLIC_API JSObject* JS::CompileJsonModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf) {
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  JS::RootedValue jsonValue(cx);
+  auto charRange =
+      mozilla::Range<const char16_t>(srcBuf.get(), srcBuf.length());
+  if (!js::ParseJSONWithReviver(cx, charRange, NullHandleValue, &jsonValue)) {
+    return nullptr;
+  }
+
+  Rooted<ExportNameVector> exportNames(cx);
+  if (!exportNames.reserve(1)) {
+    return nullptr;
+  }
+  exportNames.infallibleAppend(cx->names().default_);
+
+  Rooted<ModuleObject*> moduleObject(
+      cx, ModuleObject::createSynthetic(cx, &exportNames));
+  if (!moduleObject) {
+    return nullptr;
+  }
+
+  Rooted<GCVector<Value>> exportValues(cx, GCVector<Value>(cx));
+  if (!exportValues.reserve(1)) {
+    return nullptr;
+  }
+  exportValues.infallibleAppend(jsonValue);
+
+  if (!ModuleObject::createSyntheticEnvironment(cx, moduleObject,
+                                                exportValues)) {
+    return nullptr;
+  }
+
+  return moduleObject;
+}
+
 JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module, const Value& value) {
   JSRuntime* rt = module->zone()->runtimeFromMainThread();
   module->as<ModuleObject>().scriptSourceObject()->setPrivate(rt, value);
@@ -149,6 +193,10 @@ JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleRecord);
+
+  if (moduleRecord.as<ModuleObject>()->hasSyntheticModuleFields()) {
+    return SyntheticModuleEvaluate(cx, moduleRecord.as<ModuleObject>(), rval);
+  }
 
   return js::ModuleEvaluate(cx, moduleRecord.as<ModuleObject>(), rval);
 }
@@ -312,6 +360,10 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                                 Handle<JSAtom*> exportName,
                                 MutableHandle<ResolveSet> resolveSet,
                                 MutableHandle<Value> result);
+static bool SyntheticModuleResolveExport(JSContext* cx,
+                                         Handle<ModuleObject*> module,
+                                         Handle<JSAtom*> exportName,
+                                         MutableHandle<Value> result);
 static ModuleNamespaceObject* ModuleNamespaceCreate(
     JSContext* cx, Handle<ModuleObject*> module,
     MutableHandle<UniquePtr<ExportNameVector>> exports);
@@ -345,7 +397,7 @@ static const char* ModuleStatusName(ModuleStatus status) {
   }
 }
 
-static bool ContainsElement(Handle<ExportNameVector> list, JSAtom* atom) {
+static bool ContainsElement(const ExportNameVector& list, JSAtom* atom) {
   for (JSAtom* a : list) {
     if (a == atom) {
       return true;
@@ -378,6 +430,20 @@ static size_t CountElements(Handle<ModuleVector> stack, ModuleObject* module) {
 }
 #endif
 
+// https://tc39.es/proposal-json-modules/#sec-smr-getexportednames
+static bool SyntheticModuleGetExportedNames(
+    JSContext* cx, Handle<ModuleObject*> module,
+    MutableHandle<ExportNameVector> exportedNames) {
+  MOZ_ASSERT(exportedNames.empty());
+
+  if (!exportedNames.appendAll(module->syntheticExportNames())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
+}
+
 // https://tc39.es/ecma262/#sec-getexportednames
 // ES2023 16.2.1.6.2 GetExportedNames
 static bool ModuleGetExportedNames(
@@ -386,6 +452,10 @@ static bool ModuleGetExportedNames(
     MutableHandle<ExportNameVector> exportedNames) {
   // Step 4. Let exportedNames be a new empty List.
   MOZ_ASSERT(exportedNames.empty());
+
+  if (module->hasSyntheticModuleFields()) {
+    return SyntheticModuleGetExportedNames(cx, module, exportedNames);
+  }
 
   // Step 2. If exportStarSet contains module, then:
   if (exportStarSet.has(module)) {
@@ -482,12 +552,10 @@ static ModuleObject* HostResolveImportedModule(
   if (!requestedModule) {
     return nullptr;
   }
-
   if (requestedModule->status() < expectedMinimumStatus) {
     ThrowUnexpectedModuleStatus(cx, requestedModule->status());
     return nullptr;
   }
-
   return requestedModule;
 }
 
@@ -510,6 +578,10 @@ static ModuleObject* HostResolveImportedModule(
 bool js::ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                              Handle<JSAtom*> exportName,
                              MutableHandle<Value> result) {
+  if (module->hasSyntheticModuleFields()) {
+    return ::SyntheticModuleResolveExport(cx, module, exportName, result);
+  }
+
   // Step 1. If resolveSet is not present, set resolveSet to a new empty List.
   Rooted<ResolveSet> resolveSet(cx);
 
@@ -681,6 +753,22 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
   // Step 9. Return starResolution.
   result.setObjectOrNull(starResolution);
   return true;
+}
+
+// https://tc39.es/proposal-json-modules/#sec-smr-resolveexport
+static bool SyntheticModuleResolveExport(JSContext* cx,
+                                         Handle<ModuleObject*> module,
+                                         Handle<JSAtom*> exportName,
+                                         MutableHandle<Value> result) {
+  // Step 2. If module.[[ExportNames]] does not contain exportName, return null.
+  if (!ContainsElement(module->syntheticExportNames(), exportName)) {
+    result.setNull();
+    return true;
+  }
+
+  // Step 3. Return ResolvedBinding Record { [[Module]]: module,
+  // [[BindingName]]: exportName }.
+  return CreateResolvedBindingObject(cx, module, exportName, result);
 }
 
 // https://tc39.es/ecma262/#sec-getmodulenamespace
@@ -1097,6 +1185,14 @@ bool js::ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
 static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
                                MutableHandle<ModuleVector> stack, size_t index,
                                size_t* indexOut) {
+  // Step 1. If module is not a Cyclic Module Record, then
+  if (!module->hasCyclicModuleFields()) {
+    // Step 1.a. Perform ? module.Link(). (Skipped)
+    // Step 2.b. Return index.
+    *indexOut = index;
+    return true;
+  }
+
   // Step 2. If module.[[Status]] is linking, linked, evaluating-async, or
   //         evaluated, then:
   if (module->status() == ModuleStatus::Linking ||
@@ -1155,25 +1251,29 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
     }
 
     // Step 9.c. If requiredModule is a Cyclic Module Record, then:
-    // Step 9.c.i. Assert: requiredModule.[[Status]] is either linking, linked,
-    //             evaluating-async, or evaluated.
-    MOZ_ASSERT(requiredModule->status() == ModuleStatus::Linking ||
-               requiredModule->status() == ModuleStatus::Linked ||
-               requiredModule->status() == ModuleStatus::EvaluatingAsync ||
-               requiredModule->status() == ModuleStatus::Evaluated);
+    if (requiredModule->hasCyclicModuleFields()) {
+      // Step 9.c.i. Assert: requiredModule.[[Status]] is either linking,
+      // linked,
+      //             evaluating-async, or evaluated.
+      MOZ_ASSERT(requiredModule->status() == ModuleStatus::Linking ||
+                 requiredModule->status() == ModuleStatus::Linked ||
+                 requiredModule->status() == ModuleStatus::EvaluatingAsync ||
+                 requiredModule->status() == ModuleStatus::Evaluated);
 
-    // Step 9.c.ii. Assert: requiredModule.[[Status]] is linking if and only if
-    //              requiredModule is in stack.
-    MOZ_ASSERT((requiredModule->status() == ModuleStatus::Linking) ==
-               ContainsElement(stack, requiredModule));
+      // Step 9.c.ii. Assert: requiredModule.[[Status]] is linking if and only
+      // if
+      //              requiredModule is in stack.
+      MOZ_ASSERT((requiredModule->status() == ModuleStatus::Linking) ==
+                 ContainsElement(stack, requiredModule));
 
-    // Step 9.c.iii. If requiredModule.[[Status]] is linking, then:
-    if (requiredModule->status() == ModuleStatus::Linking) {
-      // Step 9.c.iii.1. Set module.[[DFSAncestorIndex]] to
-      //                 min(module.[[DFSAncestorIndex]],
-      //                 requiredModule.[[DFSAncestorIndex]]).
-      module->setDfsAncestorIndex(std::min(module->dfsAncestorIndex(),
-                                           requiredModule->dfsAncestorIndex()));
+      // Step 9.c.iii. If requiredModule.[[Status]] is linking, then:
+      if (requiredModule->status() == ModuleStatus::Linking) {
+        // Step 9.c.iii.1. Set module.[[DFSAncestorIndex]] to
+        //                 min(module.[[DFSAncestorIndex]],
+        //                 requiredModule.[[DFSAncestorIndex]]).
+        module->setDfsAncestorIndex(std::min(
+            module->dfsAncestorIndex(), requiredModule->dfsAncestorIndex()));
+      }
     }
   }
 
@@ -1210,6 +1310,28 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
 
   // Step 14. Return index.
   *indexOut = index;
+  return true;
+}
+
+bool js::SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
+                                 MutableHandle<Value> result) {
+  // Steps 1-12 happens elsewhere in the engine.
+
+  // Step 13. Let pc be ! NewPromiseCapability(%Promise%).
+  Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx));
+  if (!resultPromise) {
+    return false;
+  }
+
+  // Step 14. IfAbruptRejectPromise(result, pc) (Skipped)
+
+  // 15. Perform ! pc.[[Resolve]](result).
+  if (!AsyncFunctionReturned(cx, resultPromise, result)) {
+    return false;
+  }
+
+  // 16. Return pc.[[Promise]].
+  result.set(ObjectValue(*resultPromise));
   return true;
 }
 
@@ -1349,6 +1471,17 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
 static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
                                   MutableHandle<ModuleVector> stack,
                                   size_t index, size_t* indexOut) {
+  // Step 1: If module is not a Cyclic Module Record, then
+  if (!module->hasCyclicModuleFields()) {
+    // Step 1.a. Let promise be ! module.Evaluate(). (Skipped)
+    // Step 1.b. Assert: promise.[[PromiseState]] is not pending. (Skipped)
+    // Step 1.c. If promise.[[PromiseState]] is rejected, then (Skipped)
+    //   Step 1.c.i Return ThrowCompletion(promise.[[PromiseResult]]). (Skipped)
+    // Step 1.d. Return index.
+    *indexOut = index;
+    return true;
+  }
+
   // Step 2. If module.[[Status]] is evaluating-async or evaluated, then:
   if (module->status() == ModuleStatus::EvaluatingAsync ||
       module->status() == ModuleStatus::Evaluated) {
@@ -1419,55 +1552,59 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
     }
 
     // Step 11.d. If requiredModule is a Cyclic Module Record, then:
-    // Step 11.d.i. Assert: requiredModule.[[Status]] is either evaluating,
-    //              evaluating-async, or evaluated.
-    MOZ_ASSERT(requiredModule->status() == ModuleStatus::Evaluating ||
-               requiredModule->status() == ModuleStatus::EvaluatingAsync ||
-               requiredModule->status() == ModuleStatus::Evaluated);
-
-    // Step 11.d.ii. Assert: requiredModule.[[Status]] is evaluating if and only
-    //               if requiredModule is in stack.
-    MOZ_ASSERT((requiredModule->status() == ModuleStatus::Evaluating) ==
-               ContainsElement(stack, requiredModule));
-
-    // Step 11.d.iii. If requiredModule.[[Status]] is evaluating, then:
-    if (requiredModule->status() == ModuleStatus::Evaluating) {
-      // Step 11.d.iii.1. Set module.[[DFSAncestorIndex]] to
-      //                  min(module.[[DFSAncestorIndex]],
-      //                  requiredModule.[[DFSAncestorIndex]]).
-      module->setDfsAncestorIndex(std::min(module->dfsAncestorIndex(),
-                                           requiredModule->dfsAncestorIndex()));
-    } else {
-      // Step 11.d.iv. Else:
-      // Step 11.d.iv.1. Set requiredModule to requiredModule.[[CycleRoot]].
-      requiredModule = requiredModule->getCycleRoot();
-
-      // Step 11.d.iv.2. Assert: requiredModule.[[Status]] is evaluating-async
-      //                 or evaluated.
-      MOZ_ASSERT(requiredModule->status() >= ModuleStatus::EvaluatingAsync ||
+    if (requiredModule->hasCyclicModuleFields()) {
+      // Step 11.d.i. Assert: requiredModule.[[Status]] is either evaluating,
+      //              evaluating-async, or evaluated.
+      MOZ_ASSERT(requiredModule->status() == ModuleStatus::Evaluating ||
+                 requiredModule->status() == ModuleStatus::EvaluatingAsync ||
                  requiredModule->status() == ModuleStatus::Evaluated);
 
-      // Step 11.d.iv.3. If requiredModule.[[EvaluationError]] is not empty,
-      //                 return ? requiredModule.[[EvaluationError]].
-      if (requiredModule->hadEvaluationError()) {
-        Rooted<Value> error(cx, requiredModule->evaluationError());
-        cx->setPendingException(error, ShouldCaptureStack::Maybe);
-        return false;
-      }
-    }
+      // Step 11.d.ii. Assert: requiredModule.[[Status]] is evaluating if and
+      //               only if requiredModule is in stack.
+      MOZ_ASSERT((requiredModule->status() == ModuleStatus::Evaluating) ==
+                 ContainsElement(stack, requiredModule));
 
-    // Step 11.d.v. If requiredModule.[[AsyncEvaluation]] is true, then:
-    if (requiredModule->isAsyncEvaluating() &&
-        requiredModule->status() != ModuleStatus::Evaluated) {
-      // Step 11.d.v.2. Append module to requiredModule.[[AsyncParentModules]].
-      if (!ModuleObject::appendAsyncParentModule(cx, requiredModule, module)) {
-        return false;
+      // Step 11.d.iii. If requiredModule.[[Status]] is evaluating, then:
+      if (requiredModule->status() == ModuleStatus::Evaluating) {
+        // Step 11.d.iii.1. Set module.[[DFSAncestorIndex]] to
+        //                  min(module.[[DFSAncestorIndex]],
+        //                  requiredModule.[[DFSAncestorIndex]]).
+        module->setDfsAncestorIndex(std::min(
+            module->dfsAncestorIndex(), requiredModule->dfsAncestorIndex()));
+      } else {
+        // Step 11.d.iv. Else:
+        // Step 11.d.iv.1. Set requiredModule to requiredModule.[[CycleRoot]].
+        requiredModule = requiredModule->getCycleRoot();
+
+        // Step 11.d.iv.2. Assert: requiredModule.[[Status]] is evaluating-async
+        //                 or evaluated.
+        MOZ_ASSERT(requiredModule->status() >= ModuleStatus::EvaluatingAsync ||
+                   requiredModule->status() == ModuleStatus::Evaluated);
+
+        // Step 11.d.iv.3. If requiredModule.[[EvaluationError]] is not empty,
+        //                 return ? requiredModule.[[EvaluationError]].
+        if (requiredModule->hadEvaluationError()) {
+          Rooted<Value> error(cx, requiredModule->evaluationError());
+          cx->setPendingException(error, ShouldCaptureStack::Maybe);
+          return false;
+        }
       }
 
-      // Step 11.d.v.1. Set module.[[PendingAsyncDependencies]] to
-      //                module.[[PendingAsyncDependencies]] + 1.
-      module->setPendingAsyncDependencies(module->pendingAsyncDependencies() +
-                                          1);
+      // Step 11.d.v. If requiredModule.[[AsyncEvaluation]] is true, then:
+      if (requiredModule->isAsyncEvaluating() &&
+          requiredModule->status() != ModuleStatus::Evaluated) {
+        // Step 11.d.v.2. Append module to
+        // requiredModule.[[AsyncParentModules]].
+        if (!ModuleObject::appendAsyncParentModule(cx, requiredModule,
+                                                   module)) {
+          return false;
+        }
+
+        // Step 11.d.v.1. Set module.[[PendingAsyncDependencies]] to
+        //                module.[[PendingAsyncDependencies]] + 1.
+        module->setPendingAsyncDependencies(module->pendingAsyncDependencies() +
+                                            1);
+      }
     }
   }
 

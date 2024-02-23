@@ -122,7 +122,7 @@ bool ModuleLoader::ImportModuleDynamically(JSContext* cx,
 
 bool ModuleLoader::loadRootModule(JSContext* cx, HandleString path) {
   RootedValue rval(cx);
-  if (!loadAndExecute(cx, path, &rval)) {
+  if (!loadAndExecute(cx, path, nullptr, &rval)) {
     return false;
   }
 
@@ -156,8 +156,9 @@ void ModuleLoader::clearModules(JSContext* cx) {
 }
 
 bool ModuleLoader::loadAndExecute(JSContext* cx, HandleString path,
+                                  HandleObject moduleRequestArg,
                                   MutableHandleValue rval) {
-  RootedObject module(cx, loadAndParse(cx, path));
+  RootedObject module(cx, loadAndParse(cx, path, moduleRequestArg));
   if (!module) {
     return false;
   }
@@ -178,7 +179,7 @@ JSObject* ModuleLoader::resolveImportedModule(
     return nullptr;
   }
 
-  return loadAndParse(cx, path);
+  return loadAndParse(cx, path, moduleRequest);
 }
 
 bool ModuleLoader::populateImportMeta(JSContext* cx,
@@ -328,7 +329,7 @@ bool ModuleLoader::tryDynamicImport(JSContext* cx,
     return false;
   }
 
-  return loadAndExecute(cx, path, rval);
+  return loadAndExecute(cx, path, moduleRequest, rval);
 }
 
 JSLinearString* ModuleLoader::resolve(JSContext* cx,
@@ -418,7 +419,8 @@ JSLinearString* ModuleLoader::resolve(JSContext* cx, HandleString specifier,
   return normalizePath(cx, linear);
 }
 
-JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg) {
+JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg,
+                                     JS::HandleObject moduleRequestArg) {
   Rooted<JSLinearString*> path(cx, JS_EnsureLinearString(cx, pathArg));
   if (!path) {
     return nullptr;
@@ -461,17 +463,40 @@ JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg) {
     return nullptr;
   }
 
-  module = JS::CompileModule(cx, options, srcBuf);
-  if (!module) {
-    return nullptr;
+  JS::ModuleType moduleType = JS::ModuleType::JavaScript;
+  if (moduleRequestArg) {
+    Rooted<ModuleRequestObject*> moduleRequest(
+        cx, &moduleRequestArg->as<ModuleRequestObject>());
+    if (!ModuleRequestObject::getModuleType(cx, moduleRequest, moduleType)) {
+      return nullptr;
+    }
   }
 
-  RootedObject info(cx, js::CreateScriptPrivate(cx, path));
-  if (!info) {
-    return nullptr;
-  }
+  switch (moduleType) {
+    case JS::ModuleType::Unknown:
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_BAD_MODULE_TYPE);
+      return nullptr;
+    case JS::ModuleType::JavaScript: {
+      module = JS::CompileModule(cx, options, srcBuf);
+      if (!module) {
+        return nullptr;
+      }
 
-  JS::SetModulePrivate(module, ObjectValue(*info));
+      RootedObject info(cx, js::CreateScriptPrivate(cx, path));
+      if (!info) {
+        return nullptr;
+      }
+
+      JS::SetModulePrivate(module, ObjectValue(*info));
+    } break;
+    case JS::ModuleType::JSON:
+      module = JS::CompileJsonModule(cx, options, srcBuf);
+      if (!module) {
+        return nullptr;
+      }
+      break;
+  }
 
   if (!addModuleToRegistry(cx, path, module)) {
     return nullptr;

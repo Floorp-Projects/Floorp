@@ -34,6 +34,8 @@ bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module);
 // Start evaluating the module. If TLA is enabled, result will be a promise.
 bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
                     MutableHandle<Value> result);
+bool SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
+                             MutableHandle<Value> result);
 
 void AsyncModuleExecutionFulfilled(JSContext* cx, Handle<ModuleObject*> module);
 

@@ -36,6 +36,8 @@ union Utf8Unit;
 
 namespace JS {
 
+enum class ModuleType : uint32_t { Unknown = 0, JavaScript, JSON };
+
 /**
  * The HostResolveImportedModule hook.
  *
@@ -168,6 +170,14 @@ extern JS_PUBLIC_API JSObject* CompileModule(
 extern JS_PUBLIC_API JSObject* CompileModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<mozilla::Utf8Unit>& srcBuf);
+
+/**
+ * Parse the given source buffer as a JSON module in the scope of the current
+ * global of cx and return a synthetic module record.
+ */
+extern JS_PUBLIC_API JSObject* CompileJsonModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf);
 
 /**
  * Set a private value associated with a source text module record.

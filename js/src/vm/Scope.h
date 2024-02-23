@@ -1765,6 +1765,10 @@ SharedShape* CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                                     const JSClass* cls, uint32_t numSlots,
                                     ObjectFlags objectFlags);
 
+SharedShape* CreateEnvironmentShapeForSyntheticModule(
+    JSContext* cx, const JSClass* cls, uint32_t numSlots,
+    Handle<ModuleObject*> module);
+
 SharedShape* EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                                    uint32_t numSlots, ObjectFlags objectFlags);
 

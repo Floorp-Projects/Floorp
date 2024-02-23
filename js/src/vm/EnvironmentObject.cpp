@@ -416,6 +416,40 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
   return env;
 }
 
+/* static */
+ModuleEnvironmentObject* ModuleEnvironmentObject::createSynthetic(
+    JSContext* cx, Handle<ModuleObject*> module) {
+  Rooted<SharedShape*> shape(cx,
+                             CreateEnvironmentShapeForSyntheticModule(
+                                 cx, &class_, JSSLOT_FREE(&class_), module));
+  MOZ_ASSERT(shape->getObjectClass() == &class_);
+
+  Rooted<ModuleEnvironmentObject*> env(
+      cx, CreateEnvironmentObject<ModuleEnvironmentObject>(cx, shape,
+                                                           TenuredObject));
+  if (!env) {
+    return nullptr;
+  }
+
+  env->initReservedSlot(MODULE_SLOT, ObjectValue(*module));
+
+  // Initialize this early so that we can manipulate the env object without
+  // causing assertions.
+  env->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
+
+  // It is not be possible to add or remove bindings from a module environment
+  // after this point as module code is always strict.
+#ifdef DEBUG
+  for (ShapePropertyIter<NoGC> iter(env->shape()); !iter.done(); iter++) {
+    MOZ_ASSERT(!iter->configurable());
+  }
+  MOZ_ASSERT(env->hasFlag(ObjectFlag::NotExtensible));
+  MOZ_ASSERT(!env->inDictionaryMode());
+#endif
+
+  return env;
+}
+
 ModuleObject& ModuleEnvironmentObject::module() const {
   return getReservedSlot(MODULE_SLOT).toObject().as<ModuleObject>();
 }
