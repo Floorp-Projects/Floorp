@@ -1120,6 +1120,7 @@ struct StyleTransition {
   const StyleTime& GetDelay() const { return mDelay; }
   const StyleTime& GetDuration() const { return mDuration; }
   const StyleTransitionProperty& GetProperty() const { return mProperty; }
+  StyleTransitionBehavior GetBehavior() const { return mBehavior; }
 
   bool operator==(const StyleTransition& aOther) const;
   bool operator!=(const StyleTransition& aOther) const {
@@ -1647,6 +1648,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
       uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionTimingFunctionCount]
         .GetTimingFunction();
+  }
+  mozilla::StyleTransitionBehavior GetTransitionBehavior(
+      uint32_t aIndex) const {
+    return mTransitions[aIndex % mTransitionBehaviorCount].GetBehavior();
   }
   mozilla::StyleTime GetTransitionCombinedDuration(uint32_t aIndex) const {
     // https://drafts.csswg.org/css-transitions/#transition-combined-duration
