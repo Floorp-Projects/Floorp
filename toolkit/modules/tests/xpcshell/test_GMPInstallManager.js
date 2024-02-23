@@ -1257,7 +1257,7 @@ add_task(async function test_GMPExtractor_paths() {
   if (AppConstants.platform == "macosx") {
     await Assert.rejects(
       IOUtils.getMacXAttr(extractedFile, "com.apple.quarantine"),
-      /NotFoundError: The file `.+' does not have an extended attribute `com.apple.quarantine'/,
+      /NotFoundError: Could not get extended attribute `com.apple.quarantine' from `.+': the file does not have the attribute/,
       "The 'com.apple.quarantine' attribute should not be present"
     );
   }
