@@ -943,8 +943,8 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
     // For arrays with writable length, and all non-Array objects, call
     // `NativeObject::goodElementsAllocationAmount()` to determine the
     // amount to allocate from the the requested capacity and existing length.
-    if (!goodElementsAllocationAmount(cx, reqCapacity + numShifted,
-                                      getElementsHeader()->length,
+    uint32_t length = is<ArrayObject>() ? as<ArrayObject>().length() : 0;
+    if (!goodElementsAllocationAmount(cx, reqCapacity + numShifted, length,
                                       &newAllocated)) {
       return false;
     }
