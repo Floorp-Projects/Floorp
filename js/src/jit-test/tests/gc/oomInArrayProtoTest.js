@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 function arrayProtoOutOfRange() {
     function f(obj) {
         return typeof obj[15];

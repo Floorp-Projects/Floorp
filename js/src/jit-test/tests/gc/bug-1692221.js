@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomAtAllocation' in this)
+// |jit-test| allow-oom
 
 // Test TenuredChunk::decommitFreeArenasWithoutUnlocking updates chunk
 // metadata correctly. The data is checked by assertions so this test is about

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomAfterAllocations' in this); allow-oom
+// |jit-test| allow-oom
 
 gcslice(0); // Start IGC, but don't mark anything.
 function f(str) {

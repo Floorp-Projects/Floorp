@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomTest' in this)
+// |jit-test| allow-oom
 
 var dbg = new Debugger;
 dbg.onNewGlobalObject = function(global) {

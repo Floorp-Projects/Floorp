@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this); slow
-
 function test(lfVarx) {
     try {
         oomTest(function() {

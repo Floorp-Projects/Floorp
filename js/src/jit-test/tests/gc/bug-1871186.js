@@ -1,4 +1,4 @@
-// |jit-test| --blinterp-eager; skip-if: !('oomTest' in this)
+// |jit-test| --blinterp-eager
 
 gc();
 function f(x) {

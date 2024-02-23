@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomTest' in this)
+// |jit-test| allow-oom
 
 // We need allow-oom here because the debugger reports an uncaught exception if
 // it hits OOM calling the exception unwind hook. This causes the shell to exit

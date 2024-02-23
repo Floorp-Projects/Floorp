@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 function loadFile(lfVarx) {
   oomTest(() => eval(lfVarx));
 }

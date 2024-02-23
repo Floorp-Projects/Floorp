@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 // Bug 1527862: Don't assert that the Debugger drained its job queue unless we
 // actually saved the debuggee's queue.
 

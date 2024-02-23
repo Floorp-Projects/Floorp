@@ -1,4 +1,4 @@
-// |jit-test| slow; skip-if: !('oomTest' in this); allow-oom
+// |jit-test| slow; allow-oom
 
 var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);

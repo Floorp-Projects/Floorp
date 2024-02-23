@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 oomTest(() => {
     var max = 400;
     function f(b) {

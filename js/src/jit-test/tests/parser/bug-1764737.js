@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this); --fuzzing-safe; --ion-offthread-compile=off
+// |jit-test| --fuzzing-safe; --ion-offthread-compile=off
 
 function r(src) {
   oomTest(function() {

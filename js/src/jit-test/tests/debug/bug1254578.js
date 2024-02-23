@@ -1,5 +1,3 @@
-// |jit-test| slow; skip-if: !('oomTest' in this)
-
 var g = newGlobal({newCompartment: true});
 g.debuggeeGlobal = this;
 g.eval("(" + function() {

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 oomTest(function() {
   eval(`
     var argObj = function () { return arguments }()

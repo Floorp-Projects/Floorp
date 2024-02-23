@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 a = [];
 minorgc();
 Object.defineProperty(a, 12, {}).push(1);

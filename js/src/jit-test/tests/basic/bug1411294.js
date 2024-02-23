@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 oomTest(function() {
   eval(`var clonebuffer = serialize("abc");
   clonebuffer.clonebuffer = "\

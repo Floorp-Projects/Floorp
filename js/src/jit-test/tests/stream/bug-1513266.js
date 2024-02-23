@@ -1,4 +1,4 @@
-// |jit-test| --no-ion; --no-baseline; skip-if: !('oomTest' in this && this.hasOwnProperty("ReadableStream"))
+// |jit-test| --no-ion; --no-baseline; skip-if: !this.hasOwnProperty("ReadableStream")
 
 ignoreUnhandledRejections();
 

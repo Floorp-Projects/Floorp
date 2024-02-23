@@ -1,4 +1,4 @@
-// |jit-test| slow; skip-if: !('oomTest' in this) || helperThreadCount() === 0
+// |jit-test| slow; skip-if: helperThreadCount() === 0
 
 enableGeckoProfiling();
 var lfGlobal = newGlobal();

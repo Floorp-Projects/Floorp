@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; allow-unhandlable-oom; skip-if: !('oomTest' in this)
+// |jit-test| allow-oom; allow-unhandlable-oom
 oomTest(
   function() {
     evaluate(`

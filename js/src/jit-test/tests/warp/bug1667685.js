@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this); --fast-warmup
+// |jit-test| --fast-warmup
 
 // Prevent slowness with --ion-eager.
 setJitCompilerOption("ion.warmup.trigger", 100);

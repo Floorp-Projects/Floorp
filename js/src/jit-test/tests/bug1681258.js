@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this);--fast-warmup;--blinterp-warmup-threshold=10
+// |jit-test| --fast-warmup;--blinterp-warmup-threshold=10
 ignoreUnhandledRejections();
 
 oomTest(async function() {

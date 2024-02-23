@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 gczeal(0);
 
 var x1 = [];

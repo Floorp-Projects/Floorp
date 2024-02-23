@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomAfterAllocations' in this)
+// |jit-test| allow-oom
 
 var g = newGlobal({newCompartment: true});
 x = Debugger(g);

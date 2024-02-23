@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 var patchSet = new Set();
 
 function checkSet(str) {

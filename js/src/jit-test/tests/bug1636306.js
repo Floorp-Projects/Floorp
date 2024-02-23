@@ -1,4 +1,4 @@
-// |jit-test| --no-ion; skip-if: !('oomTest' in this)
+// |jit-test| --no-ion
 
 oomTest(() => { eval(`
     function getCallee() { return getCallee.caller; }

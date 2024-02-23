@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 enableShapeConsistencyChecks();
 oomTest(() => {
   var obj = {a: 1, b: 2, c: 3};

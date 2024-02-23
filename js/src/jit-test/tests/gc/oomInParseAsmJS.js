@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 function parseAsmJS() {
     eval(`function m(stdlib)
           {

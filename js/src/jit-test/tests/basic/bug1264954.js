@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 function f(x) {
     oomTest(() => eval(x));
 }

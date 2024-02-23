@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0 || !('oomTest' in this)
+// |jit-test| skip-if: helperThreadCount() === 0
 
 offThreadCompileToStencil(`
  oomTest(() => "".search(/d/));

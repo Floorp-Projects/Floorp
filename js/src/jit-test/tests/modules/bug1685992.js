@@ -1,4 +1,4 @@
-// |jit-test| --ion-offthread-compile=off; skip-if: !('oomTest' in this)
+// |jit-test| --ion-offthread-compile=off
 
 function oomModule(lfMod) {
   oomTest(function () {

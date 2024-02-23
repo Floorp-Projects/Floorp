@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 evaluate(`
 function ERROR(msg) {
   throw new Error("boom");

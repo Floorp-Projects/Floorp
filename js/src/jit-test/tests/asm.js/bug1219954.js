@@ -1,4 +1,4 @@
-// |jit-test| slow; skip-if: !('oomTest' in this)
+// |jit-test| slow
 "use strict";
 
 let g = (function() {
