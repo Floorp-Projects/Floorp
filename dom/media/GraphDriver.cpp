@@ -482,11 +482,12 @@ AudioCallbackDriver::AudioCallbackDriver(
                        "Invalid output channel count");
   MOZ_ASSERT(mOutputChannelCount <= 8);
 
-  bool allowVoice = true;
+  bool allowVoice = StaticPrefs::
+      media_getusermedia_microphone_prefer_voice_stream_with_processing_enabled();
 #ifdef MOZ_WIDGET_COCOA
   // Using the VoiceProcessingIO audio unit on MacOS 12 causes crashes in
-  // platform code.
-  allowVoice = nsCocoaFeatures::macOSVersionMajor() != 12;
+  // OS code.
+  allowVoice = allowVoice && nsCocoaFeatures::macOSVersionMajor() != 12;
 #endif
 
   if (aAudioInputType == AudioInputType::Voice && allowVoice) {
