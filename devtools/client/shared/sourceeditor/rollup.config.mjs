@@ -15,8 +15,9 @@ export default function (commandLineArgs) {
   return {
     input: "codemirror6/index.mjs",
     output: {
-      file: "codemirror6/codemirror6.bundle.mjs",
-      format: "esm",
+      file: "codemirror6/codemirror6.bundle.js",
+      format: "iife",
+      name: "CodeMirror",
     },
     plugins,
   };

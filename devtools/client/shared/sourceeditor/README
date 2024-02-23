@@ -8,7 +8,7 @@ code, and optionally help with indentation.
 We're currently migrating to CodeMirror 6, which means we have bundle for version 6 _and_ 5,
 until we successfully migrated all consumers to CodeMirror 6.
 
-For version 6, we're generating a bundle (codemirror6/codemirror6.bundle.mjs) using rollup.
+For version 6, we're generating a bundle (codemirror6/codemirror6.bundle.js) using rollup.
 The entry point for the bundle is codemirror6/index.mjs, where we export all the classes
 and functions that the editor needs. When adding new exported item, the bundle needs to
 be updated, which can be done by running:
