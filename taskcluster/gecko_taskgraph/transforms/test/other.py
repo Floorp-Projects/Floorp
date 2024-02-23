@@ -12,7 +12,11 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import Schema, resolve_keyed_by
-from taskgraph.util.taskcluster import get_artifact_path, get_index_url
+from taskgraph.util.taskcluster import (
+    get_artifact_path,
+    get_artifact_url,
+    get_index_url,
+)
 from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
@@ -246,6 +250,7 @@ def handle_keyed_by(config, tasks):
         "webrender-run-on-projects",
         "mozharness.requires-signed-builds",
         "build-signing-label",
+        "dependencies",
     ]
     for task in tasks:
         for field in fields:
@@ -292,10 +297,17 @@ def set_target(config, tasks):
                 target = "target.tar.bz2"
 
         if isinstance(target, dict):
-            # TODO Remove hardcoded mobile artifact prefix
-            index_url = get_index_url(target["index"])
-            installer_url = "{}/artifacts/public/{}".format(index_url, target["name"])
-            task["mozharness"]["installer-url"] = installer_url
+            if "index" in target:
+                # TODO Remove hardcoded mobile artifact prefix
+                index_url = get_index_url(target["index"])
+                installer_url = "{}/artifacts/public/{}".format(
+                    index_url, target["name"]
+                )
+                task["mozharness"]["installer-url"] = installer_url
+            else:
+                task["mozharness"]["installer-url"] = get_artifact_url(
+                    f'<{target["upstream-task"]}>', target["name"]
+                )
         else:
             task["mozharness"]["build-artifact-name"] = get_artifact_path(task, target)
 
