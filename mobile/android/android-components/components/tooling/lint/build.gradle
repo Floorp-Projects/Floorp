@@ -7,9 +7,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
-targetCompatibility = JavaVersion.VERSION_17
-sourceCompatibility = JavaVersion.VERSION_17
-
 dependencies {
   compileOnly ComponentsDependencies.tools_lintapi
   compileOnly ComponentsDependencies.tools_lintchecks
@@ -42,8 +39,4 @@ tasks.register("assembleAndroidTest") {
     // Do nothing. Like the `lint` task above this is just a dummy task so that this module
     // behaves like our others and we do not need to special case it in automation.
   }
-}
-
-tasks.withType(KotlinCompile).configureEach {
-  kotlinOptions.jvmTarget = "17"
 }

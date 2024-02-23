@@ -219,11 +219,6 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-
     bundle {
         // Profiler issues require us to temporarily package native code compressed to
         // match the previous APK packaging.

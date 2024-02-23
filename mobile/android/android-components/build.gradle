@@ -202,6 +202,10 @@ subprojects {
                 lintChecks project(':tooling-lint')
             }
 
+            kotlin {
+                jvmToolchain(config.jvmTargetCompatibility)
+            }
+
             android {
                 testOptions {
                     unitTests {
@@ -224,13 +228,7 @@ subprojects {
                     ignoreAssetsPattern "manifest.template.json"
                 }
 
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-
                 tasks.withType(KotlinCompile).configureEach {
-                    kotlinOptions.jvmTarget = "17"
                     kotlinOptions.freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
                 }
             }

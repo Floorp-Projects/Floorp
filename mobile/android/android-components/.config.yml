@@ -2,6 +2,7 @@
 componentsGroupId: "org.mozilla.components"
 
 # Synchronized build configuration for all modules
+jvmTargetCompatibility: 17
 compileSdkVersion: 34
 minSdkVersion: 21
 targetSdkVersion: 34
