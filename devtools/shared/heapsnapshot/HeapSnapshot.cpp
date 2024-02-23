@@ -36,6 +36,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/GCVector.h"
 #include "js/MapAndSet.h"
 #include "js/Object.h"                // JS::GetCompartment
 #include "nsComponentManagerUtils.h"  // do_CreateInstance
@@ -482,7 +483,9 @@ void HeapSnapshot::DescribeNode(JSContext* cx, JS::Handle<JSObject*> breakdown,
                                 ErrorResult& rv) {
   MOZ_ASSERT(breakdown);
   JS::Rooted<JS::Value> breakdownVal(cx, JS::ObjectValue(*breakdown));
-  JS::ubi::CountTypePtr rootType = JS::ubi::ParseBreakdown(cx, breakdownVal);
+  JS::Rooted<JS::GCVector<JSLinearString*>> seen(cx, cx);
+  JS::ubi::CountTypePtr rootType =
+      JS::ubi::ParseBreakdown(cx, breakdownVal, &seen);
   if (NS_WARN_IF(!rootType)) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return;

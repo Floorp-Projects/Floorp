@@ -305,7 +305,7 @@ which produces a result like this:
 
 In general, a `breakdown` value has one of the following forms:
 
-* <code>{ by: "count", count:<i>count<i>, bytes:<i>bytes</i> }</code>
+* <code>{ by: "count", count:<i>count</i>, bytes:<i>bytes</i> }</code>
 
   The trivial categorization: none whatsoever. Simply tally up the items
   visited. If <i>count</i> is true, count the number of items visited; if
@@ -409,6 +409,16 @@ In general, a `breakdown` value has one of the following forms:
   breakdown value produces. All breakdown values are optional, and default
   to `{ type: "count" }`.
 
+* `{ by: "filename", then:breakdown, noFilename:noFilenameBreakdown }`
+
+  For scripts only, group by the filename of the script.
+
+  Further categorize all of the scripts from each distinct filename
+  using breakdown.
+
+  Scripts that lack a filename are counted using noFilenameBreakdown.
+  These appear in the result `Map` under the key string `"noFilename"`.
+
 * `{ by: "internalType", then: breakdown }`
 
   Group items by the names given their types internally by SpiderMonkey.
@@ -440,6 +450,9 @@ In general, a `breakdown` value has one of the following forms:
 
 To simplify breakdown values, all `then` and `other` properties are optional.
 If omitted, they are treated as if they were `{ type: "count" }`.
+
+Breakdown groupings cannot be nested within themselves. This would not be
+useful, and forbidding this prevents infinite recursion.
 
 If the `options` argument has no `breakdown` property, `takeCensus` defaults
 to the following:
