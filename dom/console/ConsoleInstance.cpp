@@ -71,7 +71,7 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
       return;
     }
 
-    CopyUTF16toUTF8(aOptions.mMaxLogLevelPref, mMaxLogLevelPref);
+    mMaxLogLevelPref = aOptions.mMaxLogLevelPref;
 
     Preferences::RegisterCallback(MaxLogLevelPrefChangedCallback,
                                   mMaxLogLevelPref, this);

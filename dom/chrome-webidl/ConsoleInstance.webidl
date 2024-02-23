@@ -164,7 +164,7 @@ dictionary ConsoleInstanceOptions {
   // pref doesn't exist, gets removed or it is used in workers, the maxLogLevel
   // will default to the value passed to this constructor (or "all" if it wasn't
   // specified).
-  DOMString maxLogLevelPref = "";
+  UTF8String maxLogLevelPref = "";
 };
 
 enum ConsoleLevel { "log", "warning", "error" };
