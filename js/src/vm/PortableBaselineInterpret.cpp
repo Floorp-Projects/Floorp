@@ -1412,8 +1412,10 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
     DISPATCH_CACHEOP();                                           \
   }
 
+  // clang-format off
   INT32_OP(Add, +, {});
   INT32_OP(Sub, -, {});
+  // clang-format on
   INT32_OP(Mul, *, {
     if (rhs * lhs == 0 && ((rhs < 0) ^ (lhs < 0))) {
       return ICInterpretOpResult::NextIC;
@@ -1438,8 +1440,10 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
       return ICInterpretOpResult::NextIC;
     }
   });
+  // clang-format off
   INT32_OP(BitOr, |, {});
   INT32_OP(BitAnd, &, {});
+  // clang-format on
 
   CACHEOP_CASE(Int32PowResult) {
     Int32OperandId lhsId = icregs.cacheIRReader.int32OperandId();
