@@ -46,7 +46,7 @@ h1.translations-panel-header-wrapper {
   line-height: 1.6;
 }
 
-#translations-panel-settings > image {
+.translations-panel-settings-gear-icon > image {
   /* Override the panel-info-button with a gear icon. */
   list-style-image: url(chrome://global/skin/icons/settings.svg);
 }
@@ -54,7 +54,6 @@ h1.translations-panel-header-wrapper {
 .translations-panel-content {
   padding: var(--arrowpanel-padding);
   padding-block-end: 8px;
-  gap: var(--arrowpanel-padding);
 }
 
 #translations-panel-lang-selection > label {
@@ -115,4 +114,58 @@ h1.translations-panel-header-wrapper {
   border: 1px solid currentColor;
   border-radius: 4px;
   padding: 12px;
+}
+
+.select-translations-panel-button {
+  align-items: center;
+  justify-content: center;
+  margin-inline: 0;
+}
+
+.select-translations-panel-content {
+  padding: var(--arrowpanel-padding);
+  padding-block: 4px;
+}
+
+.select-translations-panel-copy-button {
+  background-color: transparent;
+  font: message-box;
+  font-weight: var(--font-weight-bold);
+  &::before {
+    content: url(chrome://global/skin/icons/edit-copy.svg);
+    fill: currentColor;
+    margin-inline-end: 5px;
+    -moz-context-properties: fill;
+  }
+}
+
+.select-translations-panel-header {
+  padding: var(--arrowpanel-padding);
+  text-align: initial;
+}
+
+.select-translations-panel-label {
+  margin-inline: 2px;
+}
+
+#select-translations-panel-lang-selection {
+  gap: 6px;
+}
+
+#select-translations-panel-translation-area {
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  height: 8em;
+  margin-inline: 5px;
+  outline: 2px solid var(--arrowpanel-dimmed);
+  overflow: auto;
+  padding: 4px;
+  resize: none;
+  /* This manual focus styling may no longer be needed after Bug 1881256 lands.
+     https://bugzilla.mozilla.org/show_bug.cgi?id=1881256 */
+  &:focus {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-offset);
+  }
 }

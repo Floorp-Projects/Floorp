@@ -1,0 +1,102 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html:template id="template-select-translations-panel">
+  <panel id="select-translations-panel"
+         class="panel-no-padding translations-panel"
+         type="arrow"
+         role="alertdialog"
+         noautofocus="true"
+         aria-labelledby="translations-panel-header"
+         orient="vertical">
+    <panelmultiview id="select-translations-panel-multiview" mainViewId="select-translations-panel-view-default">
+      <panelview id="select-translations-panel-view-default"
+                 class="PanelUI-subView translations-panel-view"
+                 role="document"
+                 mainview-with-header="true"
+                 has-custom-header="true">
+        <hbox class="panel-header select-translations-panel-header">
+          <html:h1 class="translations-panel-header-wrapper">
+            <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
+            </html:span>
+          </html:h1>
+          <hbox class="translations-panel-beta">
+            <image id="select-translations-panel-beta-icon"
+                   class="translations-panel-beta-icon">
+            </image>
+          </hbox>
+          <toolbarbutton id="select-translations-panel-settings"
+                         class="panel-info-button translations-panel-settings-gear-icon"
+                         data-l10n-id="translations-panel-settings-button"
+                         closemenu="none" />
+        </hbox>
+        <vbox class="select-translations-panel-content">
+          <hbox id="select-translations-panel-lang-selection">
+            <vbox flex="1">
+              <label id="select-translations-panel-from-label"
+                     class="select-translations-panel-label"
+                     data-l10n-id="select-translations-panel-from-label">
+              </label>
+              <menulist id="select-translations-panel-from"
+                        flex="1"
+                        value="detect"
+                        size="large"
+                        data-l10n-id="translations-panel-choose-language"
+                        aria-labelledby="translations-panel-from-label">
+                <menupopup id="select-translations-panel-from-menupopup"
+                           class="translations-panel-language-menupopup-from">
+                  <!-- The list of <menuitem> will be dynamically inserted. -->
+                </menupopup>
+              </menulist>
+            </vbox>
+            <vbox flex="1">
+              <label id="select-translations-panel-to-label"
+                     class="select-translations-panel-label"
+                     data-l10n-id="select-translations-panel-to-label">
+              </label>
+              <menulist id="select-translations-panel-to"
+                        flex="1"
+                        value="detect"
+                        size="large"
+                        data-l10n-id="translations-panel-choose-language"
+                        aria-labelledby="translations-panel-to-label">
+                <menupopup id="select-translations-panel-to-menupopup"
+                           class="translations-panel-language-menupopup-to">
+                  <!-- The list of <menuitem> will be dynamically inserted. -->
+                </menupopup>
+              </menulist>
+            </vbox>
+          </hbox>
+        </vbox>
+        <vbox class="select-translations-panel-content">
+          <html:textarea id="select-translations-panel-translation-area"
+                         data-l10n-id="select-translations-panel-placeholder-text"
+                         readonly="true"
+                         tabindex="0">
+          </html:textarea>
+        </vbox>
+
+        <hbox class="select-translations-panel-content">
+          <button id="select-translations-panel-copy-button"
+                  class="footer-button select-translations-panel-button select-translations-panel-copy-button"
+                  data-l10n-id="select-translations-panel-copy-button">
+          </button>
+        </hbox>
+
+        <html:moz-button-group class="panel-footer translations-panel-footer">
+          <button id="select-translations-panel-translate-full-page-button"
+                  class="footer-button select-translations-panel-button"
+                  data-l10n-id="select-translations-panel-translate-full-page-button">
+          </button>
+          <button id="select-translations-panel-done-button"
+                  class="footer-button select-translations-panel-button"
+                  data-l10n-id="select-translations-panel-done-button"
+                  default="true"
+                  oncommand = "SelectTranslationsPanel.close()">
+          </button>
+        </html:moz-button-group>
+      </panelview>
+    </panelmultiview>
+  </panel>
+</html:template>
