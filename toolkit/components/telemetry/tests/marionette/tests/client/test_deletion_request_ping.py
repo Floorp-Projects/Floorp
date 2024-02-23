@@ -55,8 +55,8 @@ class TestDeletionRequestPing(TelemetryTestCase):
             return self.marionette.execute_async_script(
                 """
                 let [resolve] = arguments;
-                const { ClientID } = ChromeUtils.import(
-                  "resource://gre/modules/ClientID.jsm"
+                const { ClientID } = ChromeUtils.importESModule(
+                  "resource://gre/modules/ClientID.sys.mjs"
                 );
                 ClientID.getClientID().then(resolve);
                 """,

@@ -288,7 +288,9 @@ no_such_var = "foo"; // assignment to undeclared variable
 # A test that crashes outright.
 TEST_CRASHING = """
 function run_test () {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let zero = new ctypes.intptr_t(8);
   let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
   badptr.contents;

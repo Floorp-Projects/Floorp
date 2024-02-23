@@ -32,8 +32,8 @@ class TestAddons(MarionetteTestCase):
             addons = self.marionette.execute_async_script(
                 """
               const [resolve] = arguments;
-              const { AddonManager } = ChromeUtils.import(
-                "resource://gre/modules/AddonManager.jsm"
+              const { AddonManager } = ChromeUtils.importESModule(
+                "resource://gre/modules/AddonManager.sys.mjs"
               );
 
               async function getAllAddons() {
@@ -54,8 +54,8 @@ class TestAddons(MarionetteTestCase):
                 addon_id = self.marionette.execute_async_script(
                     """
                   const [addonId, resolve] = arguments;
-                  const { AddonManager } = ChromeUtils.import(
-                    "resource://gre/modules/AddonManager.jsm"
+                  const { AddonManager } = ChromeUtils.importESModule(
+                    "resource://gre/modules/AddonManager.sys.mjs"
                   );
 
                   async function uninstall() {
