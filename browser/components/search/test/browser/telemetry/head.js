@@ -451,6 +451,10 @@ function assertCategorizationValues(expectedResults) {
   }
 }
 
+function waitForPageWithAction() {
+  return TestUtils.topicObserved("reported-page-with-action");
+}
+
 function waitForPageWithAdImpressions() {
   return TestUtils.topicObserved("reported-page-with-ad-impressions");
 }
