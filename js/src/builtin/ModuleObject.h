@@ -51,16 +51,16 @@ class ScriptSourceObject;
 
 class ModuleRequestObject : public NativeObject {
  public:
-  enum { SpecifierSlot = 0, AssertionSlot, SlotCount };
+  enum { SpecifierSlot = 0, AttributesSlot, SlotCount };
 
   static const JSClass class_;
   static bool isInstance(HandleValue value);
   [[nodiscard]] static ModuleRequestObject* create(
       JSContext* cx, Handle<JSAtom*> specifier,
-      Handle<ArrayObject*> maybeAssertions);
+      Handle<ArrayObject*> maybeAttributes);
 
   JSAtom* specifier() const;
-  ArrayObject* assertions() const;
+  ArrayObject* attributes() const;
 };
 
 using ModuleRequestVector =
