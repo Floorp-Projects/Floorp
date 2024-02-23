@@ -140,6 +140,7 @@ include = [
   "ScrollSnapStrictness",
   "ScrollSnapType",
   "ScrollTimelineName",
+  "TransitionBehavior",
   "ViewTimelineInset",
   "OverflowAnchor",
   "OverflowClipBox",

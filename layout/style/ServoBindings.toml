@@ -430,6 +430,7 @@ opaque-types = [
 cbindgen-types = [
     { gecko = "StyleAnimationIterationCount", servo = "crate::values::computed::AnimationIterationCount" },
     { gecko = "StyleAnimationTimeline", servo = "crate::values::computed::AnimationTimeline" },
+    { gecko = "StyleTransitionBehavior", servo = "crate::values::computed::TransitionBehavior" },
     { gecko = "StyleAppearance", servo = "crate::values::specified::Appearance" },
     { gecko = "StyleAspectRatio", servo = "crate::values::computed::position::AspectRatio" },
     { gecko = "StyleAtom", servo = "crate::Atom" },

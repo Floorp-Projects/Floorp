@@ -112,6 +112,37 @@ impl TransitionProperty {
     }
 }
 
+/// A specified value for <transition-behavior-value>.
+///
+/// https://drafts.csswg.org/css-transitions-2/#transition-behavior-property
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum TransitionBehavior {
+    /// Transitions will not be started for discrete properties, only for interpolable properties.
+    Normal,
+    /// Transitions will be started for discrete properties as well as interpolable properties.
+    AllowDiscrete,
+}
+
+impl TransitionBehavior {
+    /// Return normal, the initial value.
+    #[inline]
+    pub fn normal() -> Self {
+        Self::Normal
+    }
+}
+
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count
 #[derive(Copy, Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem)]
 pub enum AnimationIterationCount {
