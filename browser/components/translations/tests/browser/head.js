@@ -277,6 +277,94 @@ async function toggleReaderMode() {
 }
 
 /**
+ * A collection of shared functionality utilized by
+ * FullPageTranslationsTestUtils and SelectTranslationsTestUtils.
+ *
+ * Using functions from the aforementioned classes is preferred over
+ * using functions from this class directly.
+ */
+class SharedTranslationsTestUtils {
+  /**
+   * Asserts that the mainViewId of the panel matches the given string.
+   *
+   * @param {TranslationsPanel | SelectTranslationsPanel} panel
+   * @param {string} expectedId - The expected id that mainViewId is set to.
+   */
+  static _assertPanelMainViewId(panel, expectedId) {
+    const mainViewId = panel.elements.multiview.getAttribute("mainViewId");
+    is(
+      mainViewId,
+      expectedId,
+      "The mainViewId should match its expected value"
+    );
+  }
+
+  /**
+   * Asserts the visibility of the given elements based on the given expectations.
+   *
+   * @param {object} elements - An object containing the elements to be checked for visibility.
+   * @param {object} expectations - An object where each property corresponds to a property in elements,
+   *                                and its value is a boolean indicating whether the element should
+   *                                be visible (true) or hidden (false).
+   * @throws Throws if elements does not contain a property for each property in expectations.
+   */
+  static _assertPanelElementVisibility(elements, expectations) {
+    const hidden = {};
+    const visible = {};
+
+    for (const propertyName in expectations) {
+      ok(
+        elements.hasOwnProperty(propertyName),
+        `Expected panel elements to have property ${propertyName}`
+      );
+      if (expectations[propertyName]) {
+        visible[propertyName] = elements[propertyName];
+      } else {
+        hidden[propertyName] = elements[propertyName];
+      }
+    }
+
+    assertVisibility({ hidden, visible });
+  }
+
+  /**
+   * Executes the provided callback before waiting for the event and then waits for the given event
+   * to be fired for the element corresponding to the provided elementId.
+   *
+   * Optionally executes a postEventAssertion function once the event occurs.
+   *
+   * @param {string} elementId - The Id of the element to wait for the event on.
+   * @param {string} eventName - The name of the event to wait for.
+   * @param {Function} callback - A callback function to execute immediately before waiting for the event.
+   *                              This is often used to trigger the event on the expected element.
+   * @param {Function|null} [postEventAssertion=null] - An optional callback function to execute after
+   *                                                    the event has occurred.
+   * @throws Throws if the element with the specified `elementId` does not exist.
+   * @returns {Promise<void>}
+   */
+  static async _waitForPopupEvent(
+    elementId,
+    eventName,
+    callback,
+    postEventAssertion = null
+  ) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+      throw new Error("Unable to find the translations panel element.");
+    }
+    const promise = BrowserTestUtils.waitForEvent(element, eventName);
+    await callback();
+    info("Waiting for the translations panel popup to be shown");
+    await promise;
+    if (postEventAssertion) {
+      postEventAssertion();
+    }
+    // Wait a single tick on the event loop.
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+}
+
+/**
  * A class containing test utility functions specific to testing full-page translations.
  */
 class FullPageTranslationsTestUtils {
@@ -1273,8 +1361,82 @@ class SelectTranslationsTestUtils {
         );
       }
     }
+  }
 
-    await closeContextMenuIfOpen();
+  /**
+   * Asserts that for each provided expectation, the visible state of the corresponding
+   * element in TranslationsPanel.elements both exists and matches the visibility expectation.
+   *
+   * @param {object} expectations
+   *   A list of expectations for the visibility of any subset of SelectTranslationsPanel.elements
+   */
+  static #assertPanelElementVisibility(expectations = {}) {
+    SharedTranslationsTestUtils._assertPanelElementVisibility(
+      SelectTranslationsPanel.elements,
+      {
+        betaIcon: false,
+        copyButton: false,
+        doneButton: false,
+        fromLabel: false,
+        fromMenuList: false,
+        header: false,
+        textArea: false,
+        toLabel: false,
+        toMenuList: false,
+        translateFullPageButton: false,
+        // Overwrite any of the above defaults with the passed in expectations.
+        ...expectations,
+      }
+    );
+  }
+
+  /**
+   * Asserts that the mainViewId of the panel matches the given string.
+   *
+   * @param {string} expectedId
+   */
+  static #assertPanelMainViewId(expectedId) {
+    SharedTranslationsTestUtils._assertPanelMainViewId(
+      SelectTranslationsPanel,
+      expectedId
+    );
+  }
+
+  /**
+   * Asserts that panel element visibility matches the default panel view.
+   */
+  static assertPanelViewDefault() {
+    info("Checking that the select-translations panel shows the default view");
+    SelectTranslationsTestUtils.#assertPanelMainViewId(
+      "select-translations-panel-view-default"
+    );
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      betaIcon: true,
+      fromLabel: true,
+      fromMenuList: true,
+      header: true,
+      textArea: true,
+      toLabel: true,
+      toMenuList: true,
+      copyButton: true,
+      doneButton: true,
+      translateFullPageButton: true,
+    });
+  }
+
+  /**
+   * Simulates clicking the done button and waits for the panel to close.
+   */
+  static async clickDoneButton() {
+    logAction();
+    const { doneButton } = SelectTranslationsPanel.elements;
+    assertVisibility({ visible: { doneButton } });
+    await SelectTranslationsTestUtils.waitForPanelPopupEvent(
+      "popuphidden",
+      () => {
+        click(doneButton, "Clicking the done button");
+      }
+    );
   }
 
   /**
@@ -1361,6 +1523,96 @@ class SelectTranslationsTestUtils {
 
     throw new Error(
       "openContextMenu() was not provided a declaration for which element to open the menu at."
+    );
+  }
+
+  /**
+   * Opens the Select Translations panel via the context menu based on specified options.
+   *
+   * @param {Function} runInPage - A content-exposed function to run within the context of the page.
+   * @param {object} options - Options for selecting paragraphs and opening the context menu.
+   * @param {boolean} options.selectFirstParagraph - Selects the first paragraph before opening the context menu.
+   * @param {boolean} options.selectSpanishParagraph - Selects the Spanish paragraph before opening the context menu.
+   *                                                   This is only available in SPANISH_TEST_PAGE.
+   * @param {string} options.expectedTargetLanguage - The target language for translation.
+   * @param {boolean} options.openAtFirstParagraph - Opens the context menu at the first paragraph.
+   * @param {boolean} options.openAtSpanishParagraph - Opens at the Spanish paragraph.
+   *                                                   This is only available in SPANISH_TEST_PAGE.
+   * @param {boolean} options.openAtEnglishHyperlink - Opens at the English hyperlink.
+   *                                                   This is only available in SPANISH_TEST_PAGE.
+   * @param {boolean} options.openAtSpanishHyperlink - Opens at the Spanish hyperlink.
+   *                                                   This is only available in SPANISH_TEST_PAGE.
+   * @param {Function|null} [options.onOpenPanel=null] - An optional callback function to execute after the panel opens.
+   * @param {string|null} [message=null] - An optional message to log to info.
+   * @throws Throws an error if the context menu could not be opened with the provided options.
+   * @returns {Promise<void>}
+   */
+  static async openPanel(
+    runInPage,
+    {
+      selectFirstParagraph,
+      selectSpanishParagraph,
+      expectedTargetLanguage,
+      openAtFirstParagraph,
+      openAtSpanishParagraph,
+      openAtEnglishHyperlink,
+      openAtSpanishHyperlink,
+      onOpenPanel,
+    },
+    message
+  ) {
+    logAction();
+
+    if (message) {
+      info(message);
+    }
+
+    await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
+      runInPage,
+      {
+        selectFirstParagraph,
+        selectSpanishParagraph,
+        expectedTargetLanguage,
+        openAtFirstParagraph,
+        openAtSpanishParagraph,
+        openAtEnglishHyperlink,
+        openAtSpanishHyperlink,
+      },
+      message
+    );
+
+    const menuItem = getById("context-translate-selection");
+
+    await SelectTranslationsTestUtils.waitForPanelPopupEvent(
+      "popupshown",
+      () => click(menuItem),
+      onOpenPanel
+    );
+  }
+
+  /**
+   * XUL popups will fire the popupshown and popuphidden events. These will fire for
+   * any type of popup in the browser. This function waits for one of those events, and
+   * checks that the viewId of the popup is PanelUI-profiler
+   *
+   * @param {"popupshown" | "popuphidden"} eventName
+   * @param {Function} callback
+   * @param {Function} postEventAssertion
+   *   An optional assertion to be made immediately after the event occurs.
+   * @returns {Promise<void>}
+   */
+  static async waitForPanelPopupEvent(
+    eventName,
+    callback,
+    postEventAssertion = null
+  ) {
+    // De-lazify the panel elements.
+    SelectTranslationsPanel.elements;
+    await SharedTranslationsTestUtils._waitForPopupEvent(
+      "select-translations-panel",
+      eventName,
+      callback,
+      postEventAssertion
     );
   }
 }
