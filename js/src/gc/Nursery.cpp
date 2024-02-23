@@ -1058,7 +1058,7 @@ TimeStamp js::Nursery::lastCollectionEndTime() const {
   return previousGC.endTime;
 }
 
-bool js::Nursery::shouldCollect() const {
+bool js::Nursery::wantEagerCollection() const {
   if (!isEnabled()) {
     return false;
   }
@@ -1071,8 +1071,7 @@ bool js::Nursery::shouldCollect() const {
     return true;
   }
 
-  // Eagerly collect the nursery in idle time if it's nearly full.
-  if (isNearlyFull()) {
+  if (freeSpaceIsBelowEagerThreshold()) {
     return true;
   }
 
@@ -1081,32 +1080,27 @@ bool js::Nursery::shouldCollect() const {
   return isUnderused();
 }
 
-inline bool js::Nursery::isNearlyFull() const {
-  bool belowBytesThreshold =
-      freeSpace() < tunables().nurseryFreeThresholdForIdleCollection();
-  bool belowFractionThreshold =
-      double(freeSpace()) / double(capacity()) <
-      tunables().nurseryFreeThresholdForIdleCollectionFraction();
+inline bool js::Nursery::freeSpaceIsBelowEagerThreshold() const {
+  // The threshold is specified in terms of free space so that it doesn't depend
+  // on the size of the nursery.
+  //
+  // There two thresholds, an absolute free bytes threshold and a free space
+  // fraction threshold. Two thresholds are used so that we don't collect too
+  // eagerly for small nurseries (or even all the time if nursery size is less
+  // than the free bytes threshold) or too eagerly for large nurseries (where a
+  // fractional threshold may leave a significant amount of nursery unused).
+  //
+  // Since the aim is making this less eager we require both thresholds to be
+  // met.
 
-  // We want to use belowBytesThreshold when the nursery is sufficiently large,
-  // and belowFractionThreshold when it's small.
-  //
-  // When the nursery is small then belowBytesThreshold is a lower threshold
-  // (triggered earlier) than belowFractionThreshold. So if the fraction
-  // threshold is true, the bytes one will be true also. The opposite is true
-  // when the nursery is large.
-  //
-  // Therefore, by the time we cross the threshold we care about, we've already
-  // crossed the other one, and we can boolean AND to use either condition
-  // without encoding any "is the nursery big/small" test/threshold. The point
-  // at which they cross is when the nursery is: BytesThreshold /
-  // FractionThreshold large.
-  //
-  // With defaults that's:
-  //
-  //   1MB = 256KB / 0.25
-  //
-  return belowBytesThreshold && belowFractionThreshold;
+  size_t freeBytes = freeSpace();
+  double freeFraction = double(freeBytes) / double(capacity());
+
+  size_t bytesThreshold = tunables().nurseryEagerCollectionThresholdBytes();
+  double fractionThreshold =
+      tunables().nurseryEagerCollectionThresholdPercent();
+
+  return freeBytes < bytesThreshold && freeFraction < fractionThreshold;
 }
 
 inline bool js::Nursery::isUnderused() const {
@@ -1124,7 +1118,7 @@ inline bool js::Nursery::isUnderused() const {
   // simplest.
   TimeDuration timeSinceLastCollection =
       TimeStamp::NowLoRes() - previousGC.endTime;
-  return timeSinceLastCollection > tunables().nurseryTimeoutForIdleCollection();
+  return timeSinceLastCollection > tunables().nurseryEagerCollectionTimeout();
 }
 
 void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
@@ -1874,7 +1868,7 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   // If the nursery is completely unused then minimise it.
   if (hasRecentGrowthData && previousGC.nurseryUsedBytes == 0 &&
       now - lastCollectionEndTime() >
-          tunables().nurseryTimeoutForIdleCollection() &&
+          tunables().nurseryEagerCollectionTimeout() &&
       !js::SupportDifferentialTesting()) {
     clearRecentGrowthData();
     return 0;

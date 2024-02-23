@@ -328,9 +328,7 @@ class Nursery {
   }
   JS::GCReason minorGCTriggerReason() const { return minorGCTriggerReason_; }
 
-  bool shouldCollect() const;
-  bool isNearlyFull() const;
-  bool isUnderused() const;
+  bool wantEagerCollection() const;
 
   bool enableProfiling() const { return enableProfiling_; }
 
@@ -444,6 +442,9 @@ class Nursery {
   inline void* tryAllocate(size_t size);
 
   [[nodiscard]] bool moveToNextChunk();
+
+  bool freeSpaceIsBelowEagerThreshold() const;
+  bool isUnderused() const;
 
   struct CollectionResult {
     size_t tenuredBytes;
