@@ -30,8 +30,8 @@
       } else {
         const namespaceURI = "http://www.w3.org/2000/svg";
         scriptElement = document.createElementNS(namespaceURI, "script");
-        // Use setAttribute as SVGURIReference's href property is read-only
-        // and SVGScriptElement has no fetchPriority property.
+        scriptElement.href.baseVal = data.src;
+        // Use setAttribute as SVGScriptElement has no fetchPriority property.
         scriptElement.setAttribute("href", data.src);
         if ("fetchPriority" in data) {
           scriptElement.setAttribute("fetchPriority", data.fetchPriority);
