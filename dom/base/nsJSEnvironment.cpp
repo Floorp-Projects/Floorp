@@ -2227,6 +2227,21 @@ void nsJSContext::EnsureStatics() {
       "javascript.options.mem.gc_max_helper_threads",
       (void*)JSGC_MAX_HELPER_THREADS);
 
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.nursery_eager_collection_threshold_kb",
+      (void*)JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_KB);
+
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.nursery_eager_collection_threshold_percent",
+      (void*)JSGC_NURSERY_EAGER_COLLECTION_THRESHOLD_PERCENT);
+
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.nursery_eager_collection_timeout_ms",
+      (void*)JSGC_NURSERY_EAGER_COLLECTION_TIMEOUT_MS);
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {
     MOZ_CRASH();

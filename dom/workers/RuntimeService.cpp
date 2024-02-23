@@ -372,6 +372,11 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       PREF("gc_parallel_marking", JSGC_PARALLEL_MARKING_ENABLED),
       PREF("gc_parallel_marking_threshold_mb",
            JSGC_PARALLEL_MARKING_THRESHOLD_MB),
+      // Note: Workers do not currently trigger eager minor GC, but if that is
+      // desired the following parameters should be added:
+      // javascript.options.mem.nursery_eager_collection_threshold_kb
+      // javascript.options.mem.nursery_eager_collection_threshold_percent
+      // javascript.options.mem.nursery_eager_collection_timeout_ms
   };
 #undef PREF
 
