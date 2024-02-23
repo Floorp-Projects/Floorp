@@ -35,7 +35,7 @@ add_task(
       "The translate-selection context menu item should be available while full-page translations is inactive."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
@@ -59,7 +59,7 @@ add_task(
       "The translate-selection context menu item should be unavailable while full-page translations is active."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
 
@@ -114,7 +114,7 @@ add_task(
       "The translate-selection context menu item should be available while full-page translations is inactive."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
@@ -138,7 +138,7 @@ add_task(
       "The translate-selection context menu item should be unavailable while full-page translations is active."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
 

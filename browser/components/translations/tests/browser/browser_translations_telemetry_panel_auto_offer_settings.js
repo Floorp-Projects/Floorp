@@ -24,7 +24,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     expectedEventCount: 0,
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -54,7 +54,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     }
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.assertIsAlwaysOfferTranslationsEnabled(

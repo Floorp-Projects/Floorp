@@ -12,7 +12,7 @@ add_task(async function test_translations_panel_manage_languages() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 

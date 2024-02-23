@@ -21,13 +21,13 @@ add_task(async function test_translations_panel_firstrun() {
     "The button is available."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
   await FullPageTranslationsTestUtils.clickCancelButton();
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewFirstShow,
   });
 
@@ -37,7 +37,7 @@ add_task(async function test_translations_panel_firstrun() {
     url: SPANISH_PAGE_URL_DOT_ORG,
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
@@ -47,7 +47,7 @@ add_task(async function test_translations_panel_firstrun() {
     url: SPANISH_PAGE_URL,
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 

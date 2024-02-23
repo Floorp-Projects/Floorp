@@ -22,7 +22,7 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -82,7 +82,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 
@@ -96,7 +96,7 @@ add_task(
       runInPage
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -161,7 +161,7 @@ add_task(
       "The button is available."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -192,7 +192,7 @@ add_task(
       runInPage
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();

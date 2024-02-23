@@ -17,7 +17,7 @@ add_task(async function test_translations_panel_a11y_focus() {
     "The button is available."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     openWithKeyboard: true,
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });

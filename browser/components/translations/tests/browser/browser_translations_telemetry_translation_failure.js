@@ -44,7 +44,7 @@ add_task(
       }
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
 

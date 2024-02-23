@@ -22,7 +22,7 @@ add_task(async function test_translations_panel_basics() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
@@ -38,7 +38,7 @@ add_task(async function test_translations_panel_basics() {
     "The icon presents the loading indicator."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewLoading,
   });
 
@@ -52,7 +52,7 @@ add_task(async function test_translations_panel_basics() {
     runInPage
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
   });
 

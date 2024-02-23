@@ -16,7 +16,7 @@ add_task(async function test_translations_engine_destroy() {
     { button: true },
     "The button is available."
   );
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 

@@ -22,7 +22,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -56,7 +56,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
 
@@ -69,7 +69,7 @@ add_task(
 
     await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();

@@ -16,7 +16,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_language() {
     "The translations button is available"
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     openFromAppMenu: true,
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
@@ -26,7 +26,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_language() {
   await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
     checked: false,
   });
-  await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+  await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
     "popuphidden",
     async () => {
       await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();
@@ -52,7 +52,7 @@ add_task(
       "The translations button is available"
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -69,7 +69,7 @@ add_task(
       { checked: true }
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -82,7 +82,7 @@ add_task(
     await FullPageTranslationsTestUtils.assertIsNeverTranslateLanguage("es", {
       checked: false,
     });
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       async () => {
         await FullPageTranslationsTestUtils.clickNeverTranslateLanguage();

@@ -16,7 +16,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_site() {
     "The translations button is available"
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     openFromAppMenu: true,
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
@@ -27,7 +27,7 @@ add_task(async function test_panel_closes_on_toggle_never_translate_site() {
     SPANISH_PAGE_URL,
     { checked: false }
   );
-  await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+  await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
     "popuphidden",
     async () => {
       await FullPageTranslationsTestUtils.clickNeverTranslateSite();
@@ -54,7 +54,7 @@ add_task(
       "The translations button is available"
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -78,7 +78,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
     });
     await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -91,7 +91,7 @@ add_task(
       { checked: false }
     );
 
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       async () => {
         await FullPageTranslationsTestUtils.clickNeverTranslateSite();
@@ -119,7 +119,7 @@ add_task(
       "The translations button is available"
     );
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -134,7 +134,7 @@ add_task(
       checked: true,
     });
 
-    await FullPageTranslationsTestUtils.openTranslationsPanel({
+    await FullPageTranslationsTestUtils.openPanel({
       openFromAppMenu: true,
       onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
     });
@@ -147,7 +147,7 @@ add_task(
       SPANISH_PAGE_URL,
       { checked: false }
     );
-    await FullPageTranslationsTestUtils.waitForTranslationsPopupEvent(
+    await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       async () => {
         await FullPageTranslationsTestUtils.clickNeverTranslateSite();

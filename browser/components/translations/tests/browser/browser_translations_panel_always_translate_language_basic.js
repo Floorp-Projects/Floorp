@@ -21,7 +21,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
 
   await FullPageTranslationsTestUtils.assertPageIsUntranslated(runInPage);
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();
@@ -55,7 +55,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "The page should be automatically translated."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
   });
   await FullPageTranslationsTestUtils.openTranslationsSettingsMenu();

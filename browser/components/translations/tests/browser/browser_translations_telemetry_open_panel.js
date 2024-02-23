@@ -21,7 +21,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     "The button is available."
   );
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
@@ -51,7 +51,7 @@ add_task(async function test_translations_telemetry_open_panel() {
     expectNewFlowId: false,
   });
 
-  await FullPageTranslationsTestUtils.openTranslationsPanel({
+  await FullPageTranslationsTestUtils.openPanel({
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewDefault,
   });
 
