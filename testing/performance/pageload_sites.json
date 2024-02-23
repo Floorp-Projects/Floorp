@@ -20,6 +20,11 @@
     },
     {
       "login": false,
+      "name": "bild-de",
+      "test_url": "https://www.bild.de/sport/american-football/nfl/super-bowl-rekordquote-fuer-die-nfl-87139668.bild.html"
+    },
+    {
+      "login": false,
       "name": "bing",
       "test_url": "https://www.bing.com/",
       "dismiss_cookie_prompt": [
@@ -145,15 +150,6 @@
       "login": false,
       "name": "stackoverflow",
       "test_url": "https://stackoverflow.com/"
-    },
-    {
-      "login": false,
-      "name": "web-de",
-      "test_url": "https://web.de/magazine/politik/politologe-glaubt-grossen-koalition-herbst-knallen-33563566",
-      "dismiss_cookie_prompt": [
-        ["click.byXpathAndWait", "//*[@id='edit-purpose-settings']"],
-        ["click.byXpathAndWait", "//*[@id='save-purpose-settings']"]
-      ]
     },
     {
       "login": false,

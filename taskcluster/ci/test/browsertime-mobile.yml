@@ -115,7 +115,7 @@ browsertime-tp6m:
             - reddit
             - sina
             - [stackoverflow, stacko]
-            - web-de
+            - bild-de
             - wikipedia
             - youtube
     run-on-projects:
@@ -292,7 +292,7 @@ browsertime-tp6m-live:
             - [stackoverflow, stacko]
             - [stackoverflow-question, stack-q]
             - [urbandictionary-define, urbict-def]
-            - web-de
+            - bild-de
             - [wikia-marvel, wikia-m]
             - wikipedia
             - youtube

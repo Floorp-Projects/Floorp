@@ -87,7 +87,7 @@ suites:
             reddit: "BT, GV, FE, RB, CH-M"
             stackoverflow: "BT, GV, FE, RB, CH-M"
             sina: "BT, GV, FE, RB, CH-M"
-            web-de: "BT, GV, FE, RB, CH-M"
+            bild-de: "BT, GV, FE, RB, CH-M"
             wikipedia: "BT, GV, FE, RB, CH-M"
             youtube-watch: "BT, GV, FE, RB, CH-M"
     live:

@@ -27,6 +27,10 @@ test_url = "https://www.amazon.com"
 ["amazon-search"]
 test_url = "https://www.amazon.com/s/ref=nb_sb_noss_2/139-6317191-5622045?url=search-alias%3Daps&field-keywords=mobile+phone"
 
+["bild-de"]
+playback_pageset_manifest = "mitm8-android-fenix-{subtest}.manifest"
+test_url = "https://www.bild.de/sport/american-football/nfl/super-bowl-rekordquote-fuer-die-nfl-87139668.bild.html"
+
 ["bing"]
 test_url = "https://www.bing.com/"
 
@@ -94,10 +98,6 @@ test_url = "https://www.sina.com.cn/"
 
 ["stackoverflow"]
 test_url = "https://stackoverflow.com/"
-
-["web-de"]
-playback_pageset_manifest = "mitm7-android-gve-p2-web-de.manifest"
-test_url = "https://web.de/magazine/politik/politologe-glaubt-grossen-koalition-herbst-knallen-33563566"
 
 ["wikipedia"]
 test_url = "https://en.m.wikipedia.org/wiki/Main_Page"
