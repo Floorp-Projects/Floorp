@@ -297,38 +297,11 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                   nsContainerFrame* aParentFrame,
                                   bool aIsFluid = true);
 
-  /**
-   * Sets the page name when a page break is being generated due to a change
-   * in page name.
-   *
-   * Should only be used during paginated reflow, to signal what page value
-   * the next page content frame should have.
-   *
-   * It is an error to set this if a new page name has already been set, either
-   * through SetNextPageContentFramePageName or
-   * MaybeSetNextPageContentFramePageName.
-   */
-  void SetNextPageContentFramePageName(const nsAtom* aPageName) {
-    MOZ_ASSERT(aPageName, "New page name should never be null");
+  void SetNextPageContentFramePageName(const nsAtom* aAtom) {
     MOZ_ASSERT(!mNextPageContentFramePageName,
                "PageContentFrame page name was already set");
-    mNextPageContentFramePageName = aPageName;
+    mNextPageContentFramePageName = aAtom;
   }
-
-  /**
-   * If a new page name has not been set for the next page, sets the value
-   * using the given frame.
-   *
-   * |aFrame| should be a frame to be placed on the new page.
-   *
-   * This function handles the work of resolving an atom for the frame, and
-   * avoids doing this extra work when not necessary.
-   *
-   * This is used during block reflow when a page break has occurred but it was
-   * not caused by a change in page name. It should only be used during
-   * paginated reflow.
-   */
-  void MaybeSetNextPageContentFramePageName(const nsIFrame* aFrame);
 
   // Copy over fixed frames from aParentFrame's prev-in-flow
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
