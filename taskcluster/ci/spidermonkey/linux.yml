@@ -202,6 +202,28 @@ sm-pbl-linux64/opt:
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
 
+sm-pbl-linux64/debug:
+    description: "Spidermonkey PBL Debug"
+    index:
+        job-name: sm-pbl-linux64-debug
+    treeherder:
+        symbol: SM(pbl)
+        platform: linux64/debug
+        tier: 2
+    run:
+        spidermonkey-variant: pbl-debug
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-pkgconf
+            - sysroot-x86_64-linux-gnu
+
 sm-plain-linux32/debug:
     description: "Spidermonkey Plain"
     index:
