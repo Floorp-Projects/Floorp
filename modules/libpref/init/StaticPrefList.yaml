@@ -10682,6 +10682,14 @@
   value: true
   mirror: once
 
+# Tell the audio backend to prefer a stream adapted for voice when processing is
+# enabled through constraints (possibly defaults). Whether it has any effect
+# depends on the backend.
+- name: media.getusermedia.microphone.prefer_voice_stream_with_processing.enabled
+  type: bool
+  value: True
+  mirror: always
+
 # This pref turns on legacy (non-spec) exposure of camera and microphone
 # information from enumerateDevices and devicechange ahead of successful
 # getUserMedia calls. Should only be turned on to resolve web compat issues,
