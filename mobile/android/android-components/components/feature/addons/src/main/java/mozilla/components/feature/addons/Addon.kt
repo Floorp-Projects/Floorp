@@ -32,6 +32,8 @@ val logger = Logger("Addon")
  * @property downloadUrl The (absolute) URL to download the latest version of the add-on file.
  * @property version The add-on version e.g "1.23.0".
  * @property permissions List of the add-on permissions for this File.
+ * @property optionalPermissions Optional permissions requested or granted to this add-on.
+ * @property optionalOrigins Optional origin permissions requested or granted to this add-on.
  * @property translatableName A map containing the different translations for the add-on name,
  * where the key is the language and the value is the actual translated text.
  * @property translatableDescription A map containing the different translations for the add-on description,
@@ -59,6 +61,8 @@ data class Addon(
     val downloadUrl: String = "",
     val version: String = "",
     val permissions: List<String> = emptyList(),
+    val optionalPermissions: List<String> = emptyList(),
+    val optionalOrigins: List<String> = emptyList(),
     val translatableName: Map<String, String> = emptyMap(),
     val translatableDescription: Map<String, String> = emptyMap(),
     val translatableSummary: Map<String, String> = emptyMap(),
@@ -351,6 +355,8 @@ data class Addon(
                 author = author,
                 version = metadata?.version.orEmpty(),
                 permissions = permissions,
+                optionalPermissions = metadata?.optionalPermissions.orEmpty(),
+                optionalOrigins = metadata?.optionalOrigins.orEmpty(),
                 downloadUrl = metadata?.downloadUrl.orEmpty(),
                 rating = Rating(averageRating, reviewCount),
                 homepageUrl = homepageUrl,

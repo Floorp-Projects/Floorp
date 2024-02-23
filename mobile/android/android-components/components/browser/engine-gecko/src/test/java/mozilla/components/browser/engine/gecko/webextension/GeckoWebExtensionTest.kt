@@ -415,6 +415,8 @@ class GeckoWebExtensionTest {
                 disabledFlags = DisabledFlags.USER,
                 temporary = true,
                 permissions = arrayOf("p1", "p2"),
+                optionalPermissions = arrayOf("clipboardRead"),
+                optionalOrigins = arrayOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"),
                 fullDescription = "fullDescription",
                 downloadUrl = "downloadUrl",
                 reviewUrl = "reviewUrl",
@@ -429,6 +431,8 @@ class GeckoWebExtensionTest {
         assertNotNull(metadata)
 
         assertEquals("1.0", metadata.version)
+        assertEquals(listOf("clipboardRead"), metadata.optionalPermissions)
+        assertEquals(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"), metadata.optionalOrigins)
         assertEquals(listOf("p1", "p2"), metadata.permissions)
         assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
         assertEquals("desc", metadata.description)
