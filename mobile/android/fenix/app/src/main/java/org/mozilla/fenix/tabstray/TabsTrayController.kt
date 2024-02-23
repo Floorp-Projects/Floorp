@@ -536,7 +536,9 @@ class DefaultTabsTrayController(
             selected.isEmpty() && tabsTrayStore.state.mode.isSelect().not() -> {
                 TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))
                 tabsUseCases.selectTab(tab.id)
-                browsingModeManager.mode = BrowsingMode.fromBoolean(tab.content.private)
+                val mode = BrowsingMode.fromBoolean(tab.content.private)
+                browsingModeManager.mode = mode
+                appStore.dispatch(AppAction.ModeChange(mode))
                 handleNavigateToBrowser()
             }
             tab.id in selected.map { it.id } -> handleTabUnselected(tab)
