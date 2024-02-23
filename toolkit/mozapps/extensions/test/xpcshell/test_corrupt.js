@@ -196,7 +196,7 @@ add_task(async function test_after_corruption() {
 
   await Assert.rejects(
     promiseShutdownManager(),
-    /NotAllowedError: Could not open the file at .+ for writing/
+    /NotAllowedError: Could not write to `.+'/
   );
 });
 
@@ -211,6 +211,6 @@ add_task(async function test_after_second_restart() {
 
   await Assert.rejects(
     promiseShutdownManager(),
-    /NotAllowedError: Could not open the file at .+ for writing/
+    /NotAllowedError: Could not write to `.+'/
   );
 });
