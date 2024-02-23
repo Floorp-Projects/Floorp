@@ -2170,8 +2170,13 @@ void ShapeListObject::trace(JSTracer* trc, JSObject* obj) {
 }
 
 bool ShapeListObject::traceWeak(JSTracer* trc) {
+  uint32_t length = getDenseInitializedLength();
+  if (length == 0) {
+    return false;  // Object may be uninitialized.
+  }
+
   const HeapSlot* src = elements_;
-  const HeapSlot* end = src + getDenseInitializedLength();
+  const HeapSlot* end = src + length;
   HeapSlot* dst = elements_;
   while (src != end) {
     Shape* shape = static_cast<Shape*>(src->toPrivate());
@@ -2184,7 +2189,7 @@ bool ShapeListObject::traceWeak(JSTracer* trc) {
   }
 
   MOZ_ASSERT(dst <= end);
-  size_t length = dst - elements_;
+  length = dst - elements_;
   setDenseInitializedLength(length);
 
   return length != 0;
