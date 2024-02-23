@@ -7,6 +7,7 @@ loader: gecko_taskgraph.loader.test:loader
 kind-dependencies:
     - build
     - build-signing
+    - signing-apk
     - repackage-signing-shippable-l10n-msix
     - repackage-signing-msix
     - repackage-signing
