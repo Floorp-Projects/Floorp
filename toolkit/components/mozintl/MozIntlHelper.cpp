@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MozIntlHelper.h"
+#include "nsBidiUtils.h"
+#include "nsJSUtils.h"
 #include "jsapi.h"
 #include "js/experimental/Intl.h"   // JS::AddMozDateTimeFormatConstructor
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions
@@ -92,5 +94,22 @@ MozIntlHelper::AddDisplayNamesConstructor(JS::Handle<JS::Value> val,
     return NS_ERROR_FAILURE;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MozIntlHelper::StringHasRTLChars(JS::Handle<JS::Value> str, JSContext* cx,
+                                 bool* res) {
+  if (!str.isString()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsAutoJSString string;
+  if (!string.init(cx, str)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *res = HasRTLChars(
+      Span(static_cast<const char16_t*>(string.get()), string.Length()));
   return NS_OK;
 }

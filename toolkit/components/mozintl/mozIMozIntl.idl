@@ -92,6 +92,8 @@ interface mozIMozIntl : nsISupports
    */
   jsval getScriptDirection(in jsval locale);
 
+  boolean stringHasRTLChars(in jsval str);
+
   readonly attribute jsval Collator;
   readonly attribute jsval DateTimeFormat;
   readonly attribute jsval DisplayNames;
