@@ -7,7 +7,7 @@
   width: 31em;
 }
 
-:where(#translations-panel) :is(description, label, menulist) {
+:where(#full-page-translations-panel) :is(description, label, menulist) {
   margin: 0;
 }
 
@@ -42,7 +42,7 @@ h1.translations-panel-header-wrapper {
   }
 }
 
-#translations-panel-intro {
+#full-page-translations-panel-intro {
   line-height: 1.6;
 }
 
@@ -56,7 +56,7 @@ h1.translations-panel-header-wrapper {
   padding-block-end: 8px;
 }
 
-#translations-panel-lang-selection > label {
+#full-page-translations-panel-lang-selection > label {
   margin-block: var(--arrowpanel-padding) 6px;
 }
 
@@ -67,7 +67,7 @@ h1.translations-panel-header-wrapper {
   background-color: var(--button-primary-bgcolor);
 }
 
-#translations-panel-translate-hint-action {
+#full-page-translations-panel-translate-hint-action {
   appearance: none;
   background-color: var(--button-bgcolor);
   border-radius: 4px;
@@ -76,25 +76,25 @@ h1.translations-panel-header-wrapper {
   font-size: 0.9em;
 }
 
-#translations-panel-translate-hint-action:hover {
+#full-page-translations-panel-translate-hint-action:hover {
   background-color: var(--button-hover-bgcolor);
 }
 
-#translations-panel-translate-hint-action:hover:active {
+#full-page-translations-panel-translate-hint-action:hover:active {
   background-color: var(--button-active-bgcolor);
 }
 
-#translations-panel-translate-hint-action:focus-visible {
+#full-page-translations-panel-translate-hint-action:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-offset);
 }
 
-#translations-panel-error-message-hint {
+#full-page-translations-panel-error-message-hint {
   margin-inline-start: 21px;
   margin-block: 8px;
 }
 
-#translations-panel-error-message {
+#full-page-translations-panel-error-message {
   font-weight: 600;
 }
 
@@ -110,7 +110,7 @@ h1.translations-panel-header-wrapper {
   align-items: start;
 }
 
-#translations-panel-error {
+#full-page-translations-panel-error {
   border: 1px solid currentColor;
   border-radius: 4px;
   padding: 12px;
