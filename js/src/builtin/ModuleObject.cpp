@@ -184,8 +184,8 @@ ResolvedBindingObject* ResolvedBindingObject::create(
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ModuleRequestObject, specifier,
                                     SpecifierSlot)
 
-ArrayObject* ModuleRequestObject::assertions() const {
-  JSObject* obj = getReservedSlot(AssertionSlot).toObjectOrNull();
+ArrayObject* ModuleRequestObject::attributes() const {
+  JSObject* obj = getReservedSlot(AttributesSlot).toObjectOrNull();
   if (!obj) {
     return nullptr;
   }
@@ -201,7 +201,7 @@ bool ModuleRequestObject::isInstance(HandleValue value) {
 /* static */
 ModuleRequestObject* ModuleRequestObject::create(
     JSContext* cx, Handle<JSAtom*> specifier,
-    Handle<ArrayObject*> maybeAssertions) {
+    Handle<ArrayObject*> maybeAttributes) {
   ModuleRequestObject* self =
       NewObjectWithGivenProto<ModuleRequestObject>(cx, nullptr);
   if (!self) {
@@ -209,7 +209,7 @@ ModuleRequestObject* ModuleRequestObject::create(
   }
 
   self->initReservedSlot(SpecifierSlot, StringOrNullValue(specifier));
-  self->initReservedSlot(AssertionSlot, ObjectOrNullValue(maybeAssertions));
+  self->initReservedSlot(AttributesSlot, ObjectOrNullValue(maybeAttributes));
   return self;
 }
 

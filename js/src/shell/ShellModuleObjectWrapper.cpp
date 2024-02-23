@@ -315,12 +315,12 @@ bool ShellModuleNativeWrapperGetter(JSContext* cx, const JS::CallArgs& args,
 
 DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, specifier, StringOrNullValue,
                         IdentFilter)
-DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, assertions, ObjectOrNullValue,
+DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, attributes, ObjectOrNullValue,
                         IdentFilter)
 
 static const JSPropertySpec ShellModuleRequestObjectWrapper_accessors[] = {
     JS_PSG("specifier", ShellModuleRequestObjectWrapper_specifierGetter, 0),
-    JS_PSG("assertions", ShellModuleRequestObjectWrapper_assertionsGetter, 0),
+    JS_PSG("assertions", ShellModuleRequestObjectWrapper_attributesGetter, 0),
     JS_PS_END};
 
 DEFINE_GETTER_FUNCTIONS(ImportEntry, moduleRequest, ObjectOrNullValue,
