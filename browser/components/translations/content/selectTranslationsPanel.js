@@ -96,9 +96,27 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Builds the <menulist> of languages for both the "from" and "to". This can be
+   * called every time the popup is shown, as it will retry when there is an error
+   * (such as a network error) or be a noop if it's already initialized.
+   */
+  async #ensureLangListsBuilt() {
+    try {
+      await TranslationsPanelShared.ensureLangListsBuilt(
+        document,
+        this.elements.panel
+      );
+    } catch (error) {
+      this.console?.error(error);
+    }
+  }
+
+  /**
    * Open the Select Translations Panel.
    */
   async open(event) {
+    await this.#ensureLangListsBuilt();
+
     // TODO(Bug 1878721) Rework the logic of where to open the panel.
     //
     // For the moment, the Select Translations panel opens at the
