@@ -21,7 +21,7 @@ job-defaults:
     treeherder:
         kind: build
         symbol: AB
-        tier: 2
+        tier: 1
     run-on-projects: ['mozilla-central']
     worker-type: b-linux-gcp
     worker:
