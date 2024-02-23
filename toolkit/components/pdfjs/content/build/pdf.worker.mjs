@@ -25295,6 +25295,10 @@ class Font {
         locaEntries[i].endOffset = nextOffset;
         break;
       }
+      const last = locaEntries.at(-2);
+      if (last.offset !== 0 && last.endOffset === 0) {
+        last.endOffset = oldGlyfDataLength;
+      }
       const missingGlyphs = Object.create(null);
       let writeOffset = 0;
       itemEncode(locaData, 0, writeOffset);
@@ -32446,6 +32450,7 @@ class PartialEvaluator {
           case OPS.beginMarkedContentProps:
             if (!(args[0] instanceof Name)) {
               warn(`Expected name for beginMarkedContentProps arg0=${args[0]}`);
+              operatorList.addOp(OPS.beginMarkedContentProps, ["OC", null]);
               continue;
             }
             if (args[0].name === "OC") {
@@ -32457,6 +32462,7 @@ class PartialEvaluator {
                 }
                 if (self.options.ignoreErrors) {
                   warn(`getOperatorList - ignoring beginMarkedContentProps: "${reason}".`);
+                  operatorList.addOp(OPS.beginMarkedContentProps, ["OC", null]);
                   return;
                 }
                 throw reason;
@@ -33503,7 +33509,7 @@ class PartialEvaluator {
     if (!properties.composite) {
       return new ToUnicodeMap(this._simpleFontToUnicode(properties));
     }
-    if (properties.composite && (properties.cMap.builtInCMap && !(properties.cMap instanceof IdentityCMap) || properties.cidSystemInfo.registry === "Adobe" && (properties.cidSystemInfo.ordering === "GB1" || properties.cidSystemInfo.ordering === "CNS1" || properties.cidSystemInfo.ordering === "Japan1" || properties.cidSystemInfo.ordering === "Korea1"))) {
+    if (properties.composite && (properties.cMap.builtInCMap && !(properties.cMap instanceof IdentityCMap) || properties.cidSystemInfo?.registry === "Adobe" && (properties.cidSystemInfo.ordering === "GB1" || properties.cidSystemInfo.ordering === "CNS1" || properties.cidSystemInfo.ordering === "Japan1" || properties.cidSystemInfo.ordering === "Korea1"))) {
       const {
         registry,
         ordering
@@ -56652,7 +56658,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.1.181";
+    const workerVersion = "4.1.215";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -57214,8 +57220,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.1.181";
-const pdfjsBuild = "14874e50b";
+const pdfjsVersion = "4.1.215";
+const pdfjsBuild = "72b8b2914";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
