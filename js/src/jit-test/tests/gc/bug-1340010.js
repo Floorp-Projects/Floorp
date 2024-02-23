@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0 || !('deterministicgc' in this)
+// |jit-test| skip-if: helperThreadCount() === 0
 gczeal(0);
 
 gc();

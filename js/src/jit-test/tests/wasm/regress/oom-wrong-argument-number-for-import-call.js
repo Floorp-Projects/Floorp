@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 function f() {
   // Too many results returned.
   return [52, 10, 0, 0];

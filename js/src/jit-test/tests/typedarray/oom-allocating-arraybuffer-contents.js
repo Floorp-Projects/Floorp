@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 // Resolve ArrayBuffer before OOM-testing, so OOM-testing runs less code and is
 // less fragile.
 var AB = ArrayBuffer;

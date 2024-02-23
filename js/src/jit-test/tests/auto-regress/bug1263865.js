@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 loadFile("");
 loadFile("");
 loadFile("Array.prototype.splice.call(1)");

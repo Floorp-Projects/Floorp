@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 var sourceText = `
   function Outer() {
     var X00, X01, X02, X03, X04, X05, X06, X07;

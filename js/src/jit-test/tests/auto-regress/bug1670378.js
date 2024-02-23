@@ -1,4 +1,4 @@
-// |jit-test| allow-unhandlable-oom; skip-if: !('oomTest' in this)
+// |jit-test| allow-unhandlable-oom
 
 const otherGlobalNewCompartment = newGlobal({newCompartment: true});
 

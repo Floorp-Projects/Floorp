@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 oomTest(new Function(`
   let kJSEmbeddingMaxTypes = 1000000;
   let kJSEmbeddingMaxFunctions = 1000000;

@@ -1,4 +1,4 @@
-// |jit-test| --no-threads; --fast-warmup; skip-if: !('oomTest' in this)
+// |jit-test| --no-threads; --fast-warmup
 
 setJitCompilerOption("ion.warmup.trigger", 20);
 gczeal(0);

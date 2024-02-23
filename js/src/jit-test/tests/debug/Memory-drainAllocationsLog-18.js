@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('gczeal' in this)
-
 // Test drainAllocationsLog() entries' inNursery flag.
 
 gczeal(0);

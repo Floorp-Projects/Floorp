@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 var code = `
   (\`\${key}: \${args[1]?.toString()}\`)
 `;

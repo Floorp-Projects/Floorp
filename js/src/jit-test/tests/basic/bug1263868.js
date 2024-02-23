@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 function g(f, params) {
     entryPoints(params);
 }

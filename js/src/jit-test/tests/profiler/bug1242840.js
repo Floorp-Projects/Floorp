@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 enableGeckoProfiling();
 oomTest(() => {
     try {

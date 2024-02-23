@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('gczeal' in this); error: ReferenceError
+// |jit-test| error: ReferenceError
 
 gczeal(0);
 setMarkStackLimit(1);

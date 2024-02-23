@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this); --fuzzing-safe
+// |jit-test| --fuzzing-safe
 
 oomTest(Debugger);
 oomTest(Debugger);

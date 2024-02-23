@@ -1,4 +1,3 @@
-if ('gczeal' in this)
 (function () {
    (eval("\
        (function () {\

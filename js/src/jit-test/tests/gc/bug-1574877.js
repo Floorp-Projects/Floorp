@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 function parseModule(source) {
     offThreadCompileModuleToStencil(source);
     var stencil = finishOffThreadStencil();

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomAfterAllocations' in this)
-
 try {
 function varying(mapColor, keyColor) {
   enqueueMark(`set-color-${keyColor}`);

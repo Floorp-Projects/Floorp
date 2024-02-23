@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; allow-unhandlable-oom; skip-if: !("oomAtAllocation" in this && "resetOOMFailure" in this)
+// |jit-test| allow-oom; allow-unhandlable-oom
 
 function oomTest(f) {
     var i = 1;

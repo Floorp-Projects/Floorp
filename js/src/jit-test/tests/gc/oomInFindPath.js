@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 var o = { w: { x: { y: { z: {} } } } };
 oomTest(() => findPath(o, o.w.x.y.z));
 

@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 oomTest(() => {
   let memory = new WebAssembly.Memory({initial: 0});
   assertEq(Object.getPrototypeOf(memory), WebAssembly.Memory.prototype, "prototype");

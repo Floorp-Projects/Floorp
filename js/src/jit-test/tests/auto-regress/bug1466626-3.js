@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 var g = newGlobal();
 
 var i = 0;

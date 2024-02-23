@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0 || !('oomTest' in this)
+// |jit-test| skip-if: helperThreadCount() === 0
 
 for (let j = 0; j < 50; j++) {
     if (j === 1)

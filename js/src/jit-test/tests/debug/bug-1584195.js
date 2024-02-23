@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('gczeal' in this)
 // Bug 1584195: Debugger.Frame finalizer should't try to apply
 // IsAboutToBeFinalized to cells of other alloc kinds, whose arenas may have
 // been turned over to fresh allocations.

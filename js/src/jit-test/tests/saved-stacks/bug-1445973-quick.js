@@ -1,4 +1,4 @@
-// |jit-test| --no-baseline; skip-if: !('oomTest' in this)
+// |jit-test| --no-baseline
 //
 // For background, see the comments for LiveSavedFrameCache in js/src/vm/Stack.h.
 //

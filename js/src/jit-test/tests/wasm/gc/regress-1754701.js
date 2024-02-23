@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || !('oomTest' in this)
+// |jit-test| skip-if: !wasmGcEnabled()
 
 let { testArray, testStructInline, testStructOutline } = wasmEvalText(`
   (module

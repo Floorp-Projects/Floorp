@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 oomTest(function() {
   var f = Function(`
     // Don't actually enter the loop. This still causes the original bug and

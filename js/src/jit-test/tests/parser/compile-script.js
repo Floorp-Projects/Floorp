@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 load(libdir + "asserts.js");
 
 let stencil = compileToStencil('314;');

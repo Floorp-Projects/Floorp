@@ -1,4 +1,4 @@
-// |jit-test| slow; skip-if: !('oomTest' in this)
+// |jit-test| slow
 
 // Test baseline compiler only.
 if (typeof wasmCompileMode === 'undefined' || wasmCompileMode() != 'baseline')

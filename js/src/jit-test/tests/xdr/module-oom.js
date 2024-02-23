@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 // OOM tests for xdr module parsing.
 
 const sa =

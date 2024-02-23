@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 var c = 0;
 var dbg = new Debugger();
 oomTest(function () {

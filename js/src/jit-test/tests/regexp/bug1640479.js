@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 var failures = 0;
 var i = 0;
 

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: typeof oomTest !== 'function' || typeof Intl !== 'object'
+// |jit-test| skip-if: typeof Intl !== 'object'
 
 oomTest(() => {
     try {

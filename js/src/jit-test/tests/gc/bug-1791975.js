@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomAtAllocation' in this)
-
 gczeal(10, 10);
 try {
   throw 0;

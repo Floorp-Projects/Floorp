@@ -1,4 +1,4 @@
-// |jit-test| --no-threads; --no-ion; --no-baseline; skip-if: !('gczeal' in this)
+// |jit-test| --no-threads; --no-ion; --no-baseline
 
 gczeal(2);
 (function() {

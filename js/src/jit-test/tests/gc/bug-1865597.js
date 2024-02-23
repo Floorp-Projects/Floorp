@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 oomTest(() => {
   gcparam('parallelMarkingEnabled', false);
   assertEq(gcparam('parallelMarkingEnabled'), 0);

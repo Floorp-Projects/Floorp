@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0 || !('oomAtAllocation' in this)
+// |jit-test| skip-if: helperThreadCount() === 0
 
 if ("gczeal" in this)
     gczeal(0);

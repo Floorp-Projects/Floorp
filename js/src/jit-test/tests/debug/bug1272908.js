@@ -1,4 +1,4 @@
-// |jit-test| slow; skip-if: !('oomTest' in this)
+// |jit-test| slow
 
 // Adapted from randomly chosen test: js/src/jit-test/tests/modules/bug-1233915.js
 g = newGlobal({newCompartment: true});

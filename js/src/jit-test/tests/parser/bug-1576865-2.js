@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 var sourceText = `
   function Outer() {
     function LazyFunction() {

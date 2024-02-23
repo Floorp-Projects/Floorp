@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this);
 // Check for proxy expando OOM issues.
 
 function assertThrowsTypeError(f) {

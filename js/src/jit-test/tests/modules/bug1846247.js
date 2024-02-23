@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomTest' in this); allow-unhandlable-oom
+// |jit-test| allow-unhandlable-oom
 ignoreUnhandledRejections();
 oomTest(() => {
   gc();

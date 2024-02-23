@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 var i = 0;
 oomTest(function() {
     for (var j = 0; j < 10; ++j) {

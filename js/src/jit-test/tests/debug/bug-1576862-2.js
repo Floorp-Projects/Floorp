@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('stackTest' in this)
 // Failure to rewrap an exception in Completion::fromJSResult should be propagated.
 
 var dbgGlobal = newGlobal({ newCompartment: true });

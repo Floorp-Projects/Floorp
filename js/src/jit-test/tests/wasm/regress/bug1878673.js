@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 // Check proper handling of OOM in SIMD loads.
 
 oomTest(function () {

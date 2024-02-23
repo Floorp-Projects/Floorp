@@ -1,2 +1,2 @@
-// |jit-test| allow-unhandlable-oom; allow-oom; skip-if: !('oomTest' in this)
+// |jit-test| allow-unhandlable-oom; allow-oom
 oomTest(() => evaluate(`meta: { with({}) {} }`));

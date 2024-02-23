@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomAtAllocation' in this); allow-oom
+// |jit-test| allow-oom
 try {
     for (let i = 0; i < 5; i++) {
         WebAssembly.instantiateStreaming(

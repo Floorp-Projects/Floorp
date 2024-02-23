@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 const g = newGlobal({ newCompartment: true });
 const dbg = new Debugger(g);
 

@@ -1,4 +1,4 @@
-// |jit-test| allow-oom; skip-if: !('oomTest' in this)
+// |jit-test| allow-oom
 
 // Adapted from randomly chosen test: js/src/jit-test/tests/debug/Debugger-onNewGlobalObject-01.js
 for (var i = 0; i < 9; ++i) {

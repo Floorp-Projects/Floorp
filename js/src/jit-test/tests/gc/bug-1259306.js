@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 let runCount = 0;
 oomTest(() => {
     if (runCount < 5) {

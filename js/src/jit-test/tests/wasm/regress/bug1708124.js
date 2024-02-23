@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
 // Ensure that trap reporting mechanism doesn't crash under OOM conditions.
 
 oomTest(

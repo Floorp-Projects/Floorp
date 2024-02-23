@@ -1,4 +1,3 @@
-// |jit-test| skip-if: !('stackTest' in this)
 stackTest(new Function(`
     var g = newGlobal();
     var dbg = new Debugger(g);

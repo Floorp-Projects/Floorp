@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 loadFile(`
   function SwitchTest(){
     switch(value) {

@@ -1,3 +1,3 @@
-// |jit-test| module; skip-if: !('oomTest' in this)
+// |jit-test| module
 
 oomTest(() => import.meta);

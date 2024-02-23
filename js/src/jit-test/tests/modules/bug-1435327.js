@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !('oomTest' in this)
-
 lfLogBuffer = `
   let c = registerModule('c', parseModule(""));
   let d = registerModule('d', parseModule("import { a } from 'c'; a;"));
