@@ -1179,7 +1179,7 @@ class FullPageTranslationsTestUtils {
     logAction();
     const gearIcons = getAllByL10nId("translations-panel-settings-button");
     for (const gearIcon of gearIcons) {
-      if (gearIcon.hidden) {
+      if (BrowserTestUtils.isHidden(gearIcon)) {
         continue;
       }
       click(gearIcon, "Open the settings menu");
@@ -1486,38 +1486,62 @@ class SelectTranslationsTestUtils {
     }
 
     if (openAtFirstParagraph === true) {
-      await runInPage(async TranslationsTest => {
-        const { getFirstParagraph } = TranslationsTest.getSelectors();
-        const paragraph = getFirstParagraph();
-        await TranslationsTest.rightClickContentElement(paragraph);
-      });
+      await SharedTranslationsTestUtils._waitForPopupEvent(
+        "contentAreaContextMenu",
+        "popupshown",
+        async () => {
+          await runInPage(async TranslationsTest => {
+            const { getFirstParagraph } = TranslationsTest.getSelectors();
+            const paragraph = getFirstParagraph();
+            await TranslationsTest.rightClickContentElement(paragraph);
+          });
+        }
+      );
       return;
     }
 
     if (openAtSpanishParagraph === true) {
-      await runInPage(async TranslationsTest => {
-        const { getSpanishParagraph } = TranslationsTest.getSelectors();
-        const paragraph = getSpanishParagraph();
-        await TranslationsTest.rightClickContentElement(paragraph);
-      });
+      await SharedTranslationsTestUtils._waitForPopupEvent(
+        "contentAreaContextMenu",
+        "popupshown",
+        async () => {
+          await runInPage(async TranslationsTest => {
+            const { getSpanishParagraph } = TranslationsTest.getSelectors();
+            const paragraph = getSpanishParagraph();
+            await TranslationsTest.rightClickContentElement(paragraph);
+          });
+        }
+      );
       return;
     }
 
     if (openAtEnglishHyperlink === true) {
-      await runInPage(async TranslationsTest => {
-        const { getEnglishHyperlink } = TranslationsTest.getSelectors();
-        const hyperlink = getEnglishHyperlink();
-        await TranslationsTest.rightClickContentElement(hyperlink);
-      });
+      await SharedTranslationsTestUtils._waitForPopupEvent(
+        "contentAreaContextMenu",
+        "popupshown",
+        async () => {
+          await runInPage(async TranslationsTest => {
+            const { getEnglishHyperlink } = TranslationsTest.getSelectors();
+            const hyperlink = getEnglishHyperlink();
+            await TranslationsTest.rightClickContentElement(hyperlink);
+          });
+        }
+      );
       return;
     }
 
     if (openAtSpanishHyperlink === true) {
-      await runInPage(async TranslationsTest => {
-        const { getSpanishHyperlink } = TranslationsTest.getSelectors();
-        const hyperlink = getSpanishHyperlink();
-        await TranslationsTest.rightClickContentElement(hyperlink);
-      });
+      await SharedTranslationsTestUtils._waitForPopupEvent(
+        "contentAreaContextMenu",
+        "popupshown",
+        async () => {
+          await runInPage(async TranslationsTest => {
+            const { getSpanishHyperlink } = TranslationsTest.getSelectors();
+            const hyperlink = getSpanishHyperlink();
+            await TranslationsTest.rightClickContentElement(hyperlink);
+          });
+        }
+      );
       return;
     }
 
