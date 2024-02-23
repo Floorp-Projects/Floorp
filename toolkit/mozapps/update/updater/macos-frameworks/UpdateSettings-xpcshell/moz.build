@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Framework("UpdateSettings-xpcshell")
+FINAL_TARGET = "_tests/xpcshell/toolkit/mozapps/update/tests"
 
 DEFINES["ACCEPTED_MAR_CHANNEL_IDS"] = '"xpcshell-test"'
 

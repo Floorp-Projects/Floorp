@@ -32,7 +32,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(NSINSTALL) $(FINAL_TARGET)/updater-xpcshell $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/MacOS
 	$(NSINSTALL) -D  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks
 	$(NSINSTALL) -D $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework
-	cp $(DIST)/bin/UpdateSettings-xpcshell  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings
+	cp $(XPCSHELLTESTDIR)/UpdateSettings-xpcshell  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings
 	$(NSINSTALL) $(srcdir)/../macos-frameworks/UpdateSettings/Info.plist  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework/Resources
 	rm -Rf $(XPCSHELLTESTDIR)/data/updater.app
 	mv $(XPCSHELLTESTDIR)/data/updater-xpcshell.app $(XPCSHELLTESTDIR)/data/updater.app
