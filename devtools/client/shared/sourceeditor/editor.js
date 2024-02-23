@@ -628,6 +628,9 @@ class Editor extends EventEmitter {
     const extensions = [
       indentCompartment.of(codemirrorLanguage.indentUnit.of(indentStr)),
       tabSizeCompartment.of(EditorState.tabSize.of(this.config.tabSize)),
+      lineWrapCompartment.of(
+        this.config.lineWrapping ? EditorView.lineWrapping : []
+      ),
       EditorState.readOnly.of(this.config.readOnly),
       codemirrorLanguage.codeFolding({
         placeholderText: "↔",
@@ -652,10 +655,6 @@ class Editor extends EventEmitter {
 
     if (this.config.lineNumbers) {
       extensions.push(lineNumbers());
-    }
-
-    if (this.config.lineWrapping) {
-      extensions.push(lineWrapCompartment.of(EditorView.lineWrapping));
     }
 
     const cm = new EditorView({
