@@ -401,12 +401,8 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   }
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
-  // Now proceed with setting up the parameters for process creation.
-  constexpr static const wchar_t* extraArgs[] = {
-      L"/prefetch:1",  // for APFL; see ipc/glue/GeckoChildProcessHost.cpp
-  };
-  UniquePtr<wchar_t[]> cmdLine(
-      MakeCommandLine(argc, argv, ARRAYSIZE(extraArgs), extraArgs));
+  // Now proceed with setting up the parameters for process creation
+  UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
   if (!cmdLine) {
     HandleLauncherError(LAUNCHER_ERROR_GENERIC());
     return Nothing();
