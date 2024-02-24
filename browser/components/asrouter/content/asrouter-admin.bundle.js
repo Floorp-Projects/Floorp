@@ -14,7 +14,7 @@ var ASRouterAdminRenderUtils;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ASRouterUtils": () => (/* binding */ ASRouterUtils)
+/* harmony export */   ASRouterUtils: () => (/* binding */ ASRouterUtils)
 /* harmony export */ });
 /* harmony import */ var _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var _newtab_common_Actions_sys_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
@@ -107,8 +107,8 @@ const ASRouterUtils = {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MESSAGE_TYPE_LIST": () => (/* binding */ MESSAGE_TYPE_LIST),
-/* harmony export */   "MESSAGE_TYPE_HASH": () => (/* binding */ MESSAGE_TYPE_HASH)
+/* harmony export */   MESSAGE_TYPE_HASH: () => (/* binding */ MESSAGE_TYPE_HASH),
+/* harmony export */   MESSAGE_TYPE_LIST: () => (/* binding */ MESSAGE_TYPE_LIST)
 /* harmony export */ });
 /* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -167,15 +167,15 @@ const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MAIN_MESSAGE_TYPE": () => (/* binding */ MAIN_MESSAGE_TYPE),
-/* harmony export */   "CONTENT_MESSAGE_TYPE": () => (/* binding */ CONTENT_MESSAGE_TYPE),
-/* harmony export */   "PRELOAD_MESSAGE_TYPE": () => (/* binding */ PRELOAD_MESSAGE_TYPE),
-/* harmony export */   "UI_CODE": () => (/* binding */ UI_CODE),
-/* harmony export */   "BACKGROUND_PROCESS": () => (/* binding */ BACKGROUND_PROCESS),
-/* harmony export */   "globalImportContext": () => (/* binding */ globalImportContext),
-/* harmony export */   "actionTypes": () => (/* binding */ actionTypes),
-/* harmony export */   "actionCreators": () => (/* binding */ actionCreators),
-/* harmony export */   "actionUtils": () => (/* binding */ actionUtils)
+/* harmony export */   BACKGROUND_PROCESS: () => (/* binding */ BACKGROUND_PROCESS),
+/* harmony export */   CONTENT_MESSAGE_TYPE: () => (/* binding */ CONTENT_MESSAGE_TYPE),
+/* harmony export */   MAIN_MESSAGE_TYPE: () => (/* binding */ MAIN_MESSAGE_TYPE),
+/* harmony export */   PRELOAD_MESSAGE_TYPE: () => (/* binding */ PRELOAD_MESSAGE_TYPE),
+/* harmony export */   UI_CODE: () => (/* binding */ UI_CODE),
+/* harmony export */   actionCreators: () => (/* binding */ actionCreators),
+/* harmony export */   actionTypes: () => (/* binding */ actionTypes),
+/* harmony export */   actionUtils: () => (/* binding */ actionUtils),
+/* harmony export */   globalImportContext: () => (/* binding */ globalImportContext)
 /* harmony export */ });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -654,7 +654,7 @@ module.exports = ReactDOM;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SimpleHashRouter": () => (/* binding */ SimpleHashRouter)
+/* harmony export */   SimpleHashRouter: () => (/* binding */ SimpleHashRouter)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -699,7 +699,7 @@ class SimpleHashRouter extends (react__WEBPACK_IMPORTED_MODULE_0___default().Pur
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CopyButton": () => (/* binding */ CopyButton)
+/* harmony export */   CopyButton: () => (/* binding */ CopyButton)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -741,7 +741,7 @@ const CopyButton = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ImpressionsSection": () => (/* binding */ ImpressionsSection)
+/* harmony export */   ImpressionsSection: () => (/* binding */ ImpressionsSection)
 /* harmony export */ });
 /* harmony import */ var _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
@@ -956,12 +956,12 @@ var __webpack_exports__ = {};
 (() => {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ToggleStoryButton": () => (/* binding */ ToggleStoryButton),
-/* harmony export */   "ToggleMessageJSON": () => (/* binding */ ToggleMessageJSON),
-/* harmony export */   "TogglePrefCheckbox": () => (/* binding */ TogglePrefCheckbox),
-/* harmony export */   "ASRouterAdminInner": () => (/* binding */ ASRouterAdminInner),
-/* harmony export */   "ASRouterAdmin": () => (/* binding */ ASRouterAdmin),
-/* harmony export */   "renderASRouterAdmin": () => (/* binding */ renderASRouterAdmin)
+/* harmony export */   ASRouterAdmin: () => (/* binding */ ASRouterAdmin),
+/* harmony export */   ASRouterAdminInner: () => (/* binding */ ASRouterAdminInner),
+/* harmony export */   ToggleMessageJSON: () => (/* binding */ ToggleMessageJSON),
+/* harmony export */   TogglePrefCheckbox: () => (/* binding */ TogglePrefCheckbox),
+/* harmony export */   ToggleStoryButton: () => (/* binding */ ToggleStoryButton),
+/* harmony export */   renderASRouterAdmin: () => (/* binding */ renderASRouterAdmin)
 /* harmony export */ });
 /* harmony import */ var _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);

@@ -25,8 +25,8 @@ module.exports = ReactDOM;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "AboutWelcomeUtils": () => (/* binding */ AboutWelcomeUtils),
-/* harmony export */   "DEFAULT_RTAMO_CONTENT": () => (/* binding */ DEFAULT_RTAMO_CONTENT)
+/* harmony export */   AboutWelcomeUtils: () => (/* binding */ AboutWelcomeUtils),
+/* harmony export */   DEFAULT_RTAMO_CONTENT: () => (/* binding */ DEFAULT_RTAMO_CONTENT)
 /* harmony export */ });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -158,11 +158,11 @@ const DEFAULT_RTAMO_CONTENT = {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MultiStageAboutWelcome": () => (/* binding */ MultiStageAboutWelcome),
-/* harmony export */   "SecondaryCTA": () => (/* binding */ SecondaryCTA),
-/* harmony export */   "StepsIndicator": () => (/* binding */ StepsIndicator),
-/* harmony export */   "ProgressBar": () => (/* binding */ ProgressBar),
-/* harmony export */   "WelcomeScreen": () => (/* binding */ WelcomeScreen)
+/* harmony export */   MultiStageAboutWelcome: () => (/* binding */ MultiStageAboutWelcome),
+/* harmony export */   ProgressBar: () => (/* binding */ ProgressBar),
+/* harmony export */   SecondaryCTA: () => (/* binding */ SecondaryCTA),
+/* harmony export */   StepsIndicator: () => (/* binding */ StepsIndicator),
+/* harmony export */   WelcomeScreen: () => (/* binding */ WelcomeScreen)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -646,8 +646,8 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CONFIGURABLE_STYLES": () => (/* binding */ CONFIGURABLE_STYLES),
-/* harmony export */   "Localized": () => (/* binding */ Localized)
+/* harmony export */   CONFIGURABLE_STYLES: () => (/* binding */ CONFIGURABLE_STYLES),
+/* harmony export */   Localized: () => (/* binding */ Localized)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -758,9 +758,9 @@ const Localized = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MultiStageProtonScreen": () => (/* binding */ MultiStageProtonScreen),
-/* harmony export */   "ProtonScreenActionButtons": () => (/* binding */ ProtonScreenActionButtons),
-/* harmony export */   "ProtonScreen": () => (/* binding */ ProtonScreen)
+/* harmony export */   MultiStageProtonScreen: () => (/* binding */ MultiStageProtonScreen),
+/* harmony export */   ProtonScreen: () => (/* binding */ ProtonScreen),
+/* harmony export */   ProtonScreenActionButtons: () => (/* binding */ ProtonScreenActionButtons)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1231,8 +1231,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MarketplaceButtons": () => (/* binding */ MarketplaceButtons),
-/* harmony export */   "MobileDownloads": () => (/* binding */ MobileDownloads)
+/* harmony export */   MarketplaceButtons: () => (/* binding */ MarketplaceButtons),
+/* harmony export */   MobileDownloads: () => (/* binding */ MobileDownloads)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1293,7 +1293,7 @@ const MobileDownloads = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MultiSelect": () => (/* binding */ MultiSelect)
+/* harmony export */   MultiSelect: () => (/* binding */ MultiSelect)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1392,7 +1392,7 @@ const MultiSelect = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Themes": () => (/* binding */ Themes)
+/* harmony export */   Themes: () => (/* binding */ Themes)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1447,8 +1447,8 @@ const Themes = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "useLanguageSwitcher": () => (/* binding */ useLanguageSwitcher),
-/* harmony export */   "LanguageSwitcher": () => (/* binding */ LanguageSwitcher)
+/* harmony export */   LanguageSwitcher: () => (/* binding */ LanguageSwitcher),
+/* harmony export */   useLanguageSwitcher: () => (/* binding */ useLanguageSwitcher)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1705,7 +1705,7 @@ function LanguageSwitcher(props) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "CTAParagraph": () => (/* binding */ CTAParagraph)
+/* harmony export */   CTAParagraph: () => (/* binding */ CTAParagraph)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1748,7 +1748,7 @@ const CTAParagraph = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "HeroImage": () => (/* binding */ HeroImage)
+/* harmony export */   HeroImage: () => (/* binding */ HeroImage)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1787,7 +1787,7 @@ const HeroImage = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "OnboardingVideo": () => (/* binding */ OnboardingVideo)
+/* harmony export */   OnboardingVideo: () => (/* binding */ OnboardingVideo)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1826,7 +1826,7 @@ const OnboardingVideo = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "AdditionalCTA": () => (/* binding */ AdditionalCTA)
+/* harmony export */   AdditionalCTA: () => (/* binding */ AdditionalCTA)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1875,7 +1875,7 @@ const AdditionalCTA = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SubmenuButton": () => (/* binding */ SubmenuButton)
+/* harmony export */   SubmenuButton: () => (/* binding */ SubmenuButton)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -2032,7 +2032,7 @@ const SubmenuButtonInner = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "EmbeddedMigrationWizard": () => (/* binding */ EmbeddedMigrationWizard)
+/* harmony export */   EmbeddedMigrationWizard: () => (/* binding */ EmbeddedMigrationWizard)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -2084,9 +2084,9 @@ const EmbeddedMigrationWizard = ({
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Loader": () => (/* binding */ Loader),
-/* harmony export */   "InstallButton": () => (/* binding */ InstallButton),
-/* harmony export */   "AddonsPicker": () => (/* binding */ AddonsPicker)
+/* harmony export */   AddonsPicker: () => (/* binding */ AddonsPicker),
+/* harmony export */   InstallButton: () => (/* binding */ InstallButton),
+/* harmony export */   Loader: () => (/* binding */ Loader)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -2210,7 +2210,7 @@ const AddonsPicker = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LinkParagraph": () => (/* binding */ LinkParagraph)
+/* harmony export */   LinkParagraph: () => (/* binding */ LinkParagraph)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -2264,8 +2264,8 @@ const LinkParagraph = props => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "BASE_PARAMS": () => (/* binding */ BASE_PARAMS),
-/* harmony export */   "addUtmParams": () => (/* binding */ addUtmParams)
+/* harmony export */   BASE_PARAMS: () => (/* binding */ BASE_PARAMS),
+/* harmony export */   addUtmParams: () => (/* binding */ addUtmParams)
 /* harmony export */ });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -2307,7 +2307,7 @@ function addUtmParams(url, utmTerm) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ReturnToAMO": () => (/* binding */ ReturnToAMO)
+/* harmony export */   ReturnToAMO: () => (/* binding */ ReturnToAMO)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);

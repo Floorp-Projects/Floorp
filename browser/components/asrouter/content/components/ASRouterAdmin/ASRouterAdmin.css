@@ -5,9 +5,9 @@
 :root {
   --newtab-background-color: #F9F9FB;
   --newtab-background-color-secondary: #FFF;
-  --newtab-text-primary-color: #15141a;
-  --newtab-primary-action-background: #0061e0;
-  --newtab-primary-action-background-pocket: #008078;
+  --newtab-text-primary-color: rgb(21, 20, 26);
+  --newtab-primary-action-background: rgb(0, 97, 224);
+  --newtab-primary-action-background-pocket: rgb(0, 128, 120);
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
@@ -32,10 +32,10 @@
 }
 :root[lwt-newtab-brighttext] {
   --newtab-background-color: #2B2A33;
-  --newtab-background-color-secondary: #42414d;
-  --newtab-text-primary-color: #fbfbfe;
-  --newtab-primary-action-background: #00ddff;
-  --newtab-primary-action-background-pocket: #00ddff;
+  --newtab-background-color-secondary: rgb(66, 65, 77);
+  --newtab-text-primary-color: rgb(251, 251, 254);
+  --newtab-primary-action-background: rgb(0, 221, 255);
+  --newtab-primary-action-background-pocket: rgb(0, 221, 255);
   --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
   --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #FFF);
   --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 55%, #FFF);
@@ -45,8 +45,8 @@
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 17%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
   --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #FFF);
-  --newtab-primary-element-text-color: #2b2a33;
-  --newtab-wordmark-color: #fbfbfe;
+  --newtab-primary-element-text-color: rgb(43, 42, 51);
+  --newtab-wordmark-color: rgb(251, 251, 254);
   --newtab-status-success: #7C6;
 }
 
