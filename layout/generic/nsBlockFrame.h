@@ -849,12 +849,23 @@ class nsBlockFrame : public nsContainerFrame {
                                       bool* aKeepReflowGoing);
 
   /**
+   * Indicates if we need to compute a page name for the next page when pushing
+   * a truncated line.
+   *
+   * Using a value of No saves work when a new page name has already been set
+   * with nsCSSFrameConstructor::SetNextPageContentFramePageName.
+   */
+  enum class ComputeNewPageNameIfNeeded : uint8_t { Yes, No };
+
+  /**
    * Push aLine (and any after it), since it cannot be placed on this
    * page/column.  Set aKeepReflowGoing to false and set
    * flag aState.mReflowStatus as incomplete.
    */
   void PushTruncatedLine(BlockReflowState& aState, LineIterator aLine,
-                         bool* aKeepReflowGoing);
+                         bool* aKeepReflowGoing,
+                         ComputeNewPageNameIfNeeded aComputeNewPageName =
+                             ComputeNewPageNameIfNeeded::Yes);
 
   void SplitLine(BlockReflowState& aState, nsLineLayout& aLineLayout,
                  LineIterator aLine, nsIFrame* aFrame,

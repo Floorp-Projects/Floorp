@@ -3153,9 +3153,12 @@ bool nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
         // Immediately fragment for page-name. It is possible we could break
         // out of the loop right here, but this should make it more similar to
         // what happens when reflow causes fragmentation.
-        PushTruncatedLine(aState, line, &keepGoing);
+        // Set the page name, so that PushTruncatedLine does not need to
+        // recalculate the new page name.
         PresShell()->FrameConstructor()->SetNextPageContentFramePageName(
             nextPageName ? nextPageName : GetAutoPageValue());
+        PushTruncatedLine(aState, line, &keepGoing,
+                          ComputeNewPageNameIfNeeded::No);
       } else {
         // Reflow the dirty line. If it's an incremental reflow, then force
         // it to invalidate the dirty area if necessary
@@ -4730,11 +4733,25 @@ void nsBlockFrame::SetBreakBeforeStatusBeforeLine(BlockReflowState& aState,
   *aKeepReflowGoing = false;
 }
 
-void nsBlockFrame::PushTruncatedLine(BlockReflowState& aState,
-                                     LineIterator aLine,
-                                     bool* aKeepReflowGoing) {
+void nsBlockFrame::PushTruncatedLine(
+    BlockReflowState& aState, LineIterator aLine, bool* aKeepReflowGoing,
+    ComputeNewPageNameIfNeeded aComputeNewPageName) {
   PushLines(aState, aLine.prev());
   *aKeepReflowGoing = false;
+
+  if (aComputeNewPageName == ComputeNewPageNameIfNeeded::Yes) {
+    // mCanHaveClassABreakpoints can only be true during paginated reflow, and
+    // we expect this function to only be called when the available bsize is
+    // constrained.
+    const WritingMode wm = GetWritingMode();
+    const bool canBreakForPageNames =
+        aState.mReflowInput.mFlags.mCanHaveClassABreakpoints &&
+        !PresShell()->GetRootFrame()->GetWritingMode().IsOrthogonalTo(wm);
+    if (canBreakForPageNames) {
+      PresShell()->FrameConstructor()->MaybeSetNextPageContentFramePageName(
+          aLine->mFirstChild);
+    }
+  }
   aState.mReflowStatus.SetIncomplete();
 }
 
