@@ -9,7 +9,7 @@ on:
     workflow_call:
     workflow_dispatch:
 jobs:
-   macOS-Universal-gen-profdata-and-jarlog:
+  macOS-Universal-gen-profdata-and-jarlog:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
@@ -23,7 +23,7 @@ jobs:
           echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
           mkdir -p ~/downloads/artifacts
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Clone 🧬
         with:
           submodules: 'recursive'
@@ -41,14 +41,14 @@ jobs:
         env:
           GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         id: download-artifacts-mac-enable-profgen
         name: Download artifact 📥
         with:
           name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
           path: ~/downloads/artifacts
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         if: ${{ env.ARCH_TYPE == 'x86_64' }}
         with:
           python-version: '3.11' 
@@ -76,9 +76,9 @@ jobs:
           LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
         env:
           GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
-      
+
       - name: Publish 🎁
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: floorp-${{ env.ARCH_TYPE }}-apple-darwin-profdata-and-jarlog
           path: |

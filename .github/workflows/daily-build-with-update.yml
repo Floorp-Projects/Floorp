@@ -27,7 +27,7 @@ jobs:
     outputs:
       display-version: ${{ steps.get.outputs.display-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         sparse-checkout: 'browser/config/version_display.txt'
     - name: Get Display Version
@@ -40,7 +40,7 @@ jobs:
     outputs:
       inside-version: ${{ steps.get.outputs.inside-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         sparse-checkout: 'browser/config/version.txt'
     - name: Get Inside Version
@@ -74,11 +74,11 @@ jobs:
     needs: Part1-win-x86_64-build-with-profgen-zstd
     uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
     with:
-     browser-artifact-name: floorp-windows-x86_64-build-with-profgen-zstd
-     arch: x86_64
+      browser-artifact-name: floorp-windows-x86_64-build-with-profgen-zstd
+      arch: x86_64
 
   Part3-win-x86_64-build-with-profdata-and-jarlog:
-    needs: [Part2-win-x86_64-gen-profdata-and-jarlog ,get-buildid]
+    needs: [Part2-win-x86_64-gen-profdata-and-jarlog, get-buildid]
     uses: ./.github/workflows/windows-build.yml
     with:
       aarch64: false
@@ -89,7 +89,7 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
   Part4-win-x86_64-gen-update-xml:
-    needs: [get-display-version, get-buildid, get-inside-version,Part3-win-x86_64-build-with-profdata-and-jarlog]
+    needs: [get-display-version, get-buildid, get-inside-version, Part3-win-x86_64-build-with-profdata-and-jarlog]
     runs-on: ubuntu-latest
     steps:
     - name: generate update XML file
@@ -120,7 +120,7 @@ jobs:
         MAR_SIZE: ${{needs.Part3-win-x86_64-build-with-profdata-and-jarlog.outputs.mar_size}}
 
     - name: Publish 🎁
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: update-xml-floorp-win-x86_64
         path: |
@@ -167,7 +167,7 @@ jobs:
           MAR_NAME: ${{needs.Part1-build-linux-x86_64-PGO.outputs.mar_name}}
           MAR_SIZE: ${{needs.Part1-build-linux-x86_64-PGO.outputs.mar_size}}
       - name: Publish 🎁
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: update-xml-floorp-linux-x86_64
           path: |
@@ -234,31 +234,31 @@ jobs:
         mkdir -p ~/downloads/artifacts/macOS-x64
 
     - name: download Linux x86_64 build artifact 📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: floorp-linux-x64
         path: ~/downloads/artifacts/linux-x64
 
     - name: download Linux x86_64 build artifact 📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: update-xml-floorp-linux-x86_64
         path: ~/downloads/artifacts/linux-x64
 
     - name: download Windows x86_64 build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x64
 
     - name: download Windows x86_64 update xml📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: update-xml-floorp-win-x86_64
         path: ~/downloads/artifacts/windows-x64
 
     - name: download macOS Universal build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Universal-Artifact
         path: ~/downloads/artifacts/macOS-x64
@@ -278,7 +278,7 @@ jobs:
 
     - name: Deploy to GitHub Releases 🚀
       id: create_release
-      uses: "softprops/action-gh-release@v1"
+      uses: softprops/action-gh-release@v1
       with:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
@@ -301,7 +301,7 @@ jobs:
         prerelease: true
         token: ${{ github.token }}
       env:
-       GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
 
     - name: Upload update.xml file to Ablaze server 📤
       run: |

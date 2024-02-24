@@ -34,7 +34,7 @@ jobs:
     outputs:
       display-version: ${{ steps.get.outputs.display-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         sparse-checkout: 'browser/config/version_display.txt'
     - name: Get Display Version
@@ -47,7 +47,7 @@ jobs:
     outputs:
       inside-version: ${{ steps.get.outputs.inside-version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         sparse-checkout: 'browser/config/version.txt'
     - name: Get Inside Version
@@ -113,7 +113,7 @@ jobs:
     with:
       browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
       arch: x86
-    
+
   Part3-win-x86-build-with-profdata-and-jarlog:
     needs: [get-buildid, Part2-win-x86-gen-profdata-and-jarlog]
     uses: ./.github/workflows/windows-build.yml
@@ -153,7 +153,7 @@ jobs:
 
 ################################################ ↑ Linux AArch64 Build ################################################
 
- #----------------------------------------- macOS -----------------------------------------#
+#----------------------------------------- macOS -----------------------------------------#
 
   Part1-macOS-Universal-build-with-profgen:
     uses: ./.github/workflows/macOS-Universal.yml
@@ -165,7 +165,7 @@ jobs:
   Part2-macOS-Universal-gen-profdata-and-jarlog:
     needs: Part1-macOS-Universal-build-with-profgen
     uses: ./.github/workflows/macOS-generate-profile-data-and-jarlog.yml
-  
+
   Part3-macOS-Universal-build-with-profdata-and-jarlog:
     uses: ./.github/workflows/macOS-Universal.yml
     needs: [get-buildid,  Part2-macOS-Universal-gen-profdata-and-jarlog]
@@ -217,31 +217,31 @@ jobs:
         mkdir -p ~/downloads/artifacts/macOS-x64
 
     - name: download Linux x86_64 build artifact 📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: floorp-linux-x64
         path: ~/downloads/artifacts/linux-x64
 
     - name: download Linux aarch64 build artifact 📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: floorp-linux-aarch64
         path: ~/downloads/artifacts/linux-aarch64
 
     - name: download Windows x86_64 build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x64
 
     - name: download Windows x86 build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
         path: ~/downloads/artifacts/windows-x86
 
     - name: download macOS Universal build artifact📥
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: Universal-Artifact
         path: ~/downloads/artifacts/macOS-x64
@@ -256,7 +256,7 @@ jobs:
 
     - name: Deploy to GitHub Releases for Stable Version 🚀
       id: create_release
-      uses: "softprops/action-gh-release@v1"
+      uses: softprops/action-gh-release@v1
       with:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
