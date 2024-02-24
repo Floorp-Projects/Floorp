@@ -2,23 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.sys.mjs";
-import { actionCreators as ac } from "common/Actions.sys.mjs";
+// eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
+import { MESSAGE_TYPE_HASH as msg } from "../modules/ActorConstants.sys.mjs";
+// eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
+import { actionCreators as ac } from "../../newtab/common/Actions.sys.mjs";
 
 export const ASRouterUtils = {
   addListener(listener) {
-    if (global.ASRouterAddParentListener) {
-      global.ASRouterAddParentListener(listener);
+    if (globalThis.ASRouterAddParentListener) {
+      globalThis.ASRouterAddParentListener(listener);
     }
   },
   removeListener(listener) {
-    if (global.ASRouterRemoveParentListener) {
-      global.ASRouterRemoveParentListener(listener);
+    if (globalThis.ASRouterRemoveParentListener) {
+      globalThis.ASRouterRemoveParentListener(listener);
     }
   },
   sendMessage(action) {
-    if (global.ASRouterMessage) {
-      return global.ASRouterMessage(action);
+    if (globalThis.ASRouterMessage) {
+      return globalThis.ASRouterMessage(action);
     }
     throw new Error(`Unexpected call:\n${JSON.stringify(action, null, 3)}`);
   },

@@ -1,30 +1,22 @@
-import { ASRouterUtils } from "content-src/asrouter-utils";
-import { GlobalOverrider } from "test/unit/utils";
+import { ASRouterUtils } from "../../content-src/asrouter-utils.mjs";
 
 describe("ASRouterUtils", () => {
-  let globals = null;
-  let overrider = null;
   let sandbox = null;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    globals = {
-      ASRouterMessage: sandbox.stub().resolves({}),
-    };
-    overrider = new GlobalOverrider();
-    overrider.set(globals);
+    globalThis.ASRouterMessage = sandbox.stub().resolves({});
   });
   afterEach(() => {
     sandbox.restore();
-    overrider.restore();
   });
   describe("sendMessage", () => {
     it("default", () => {
       ASRouterUtils.sendMessage({ foo: "bar" });
-      assert.calledOnce(globals.ASRouterMessage);
-      assert.calledWith(globals.ASRouterMessage, { foo: "bar" });
+      assert.calledOnce(globalThis.ASRouterMessage);
+      assert.calledWith(globalThis.ASRouterMessage, { foo: "bar" });
     });
     it("throws if ASRouterMessage is not defined", () => {
-      overrider.set("ASRouterMessage", undefined);
+      globalThis.ASRouterMessage = null;
       assert.throws(() => ASRouterUtils.sendMessage({ foo: "bar" }));
     });
     it("can accept the legacy NEWTAB_MESSAGE_REQUEST message without throwing", async () => {
@@ -41,7 +33,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.blockById(1, { foo: "bar" });
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { foo: "bar", id: 1 } })
       );
     });
@@ -50,7 +42,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.modifyMessageJson({ foo: "bar" });
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { content: { foo: "bar" } } })
       );
     });
@@ -59,7 +51,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.executeAction({ foo: "bar" });
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { foo: "bar" } })
       );
     });
@@ -68,7 +60,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.unblockById(2);
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { id: 2 } })
       );
     });
@@ -77,7 +69,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.blockBundle(2);
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { bundle: 2 } })
       );
     });
@@ -86,7 +78,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.unblockBundle(2);
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { bundle: 2 } })
       );
     });
@@ -95,7 +87,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.overrideMessage(12);
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { id: 12 } })
       );
     });
@@ -104,7 +96,7 @@ describe("ASRouterUtils", () => {
     it("default", () => {
       ASRouterUtils.editState("foo", "bar");
       assert.calledWith(
-        globals.ASRouterMessage,
+        globalThis.ASRouterMessage,
         sinon.match({ data: { foo: "bar" } })
       );
     });
@@ -112,7 +104,7 @@ describe("ASRouterUtils", () => {
   describe("sendTelemetry", () => {
     it("default", () => {
       ASRouterUtils.sendTelemetry({ foo: "bar" });
-      assert.calledOnce(globals.ASRouterMessage);
+      assert.calledOnce(globalThis.ASRouterMessage);
     });
   });
 });
