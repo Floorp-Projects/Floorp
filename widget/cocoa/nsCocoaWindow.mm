@@ -2220,6 +2220,7 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
   }
 
   mBackingScaleFactor = newScale;
+  NotifyAPZOfDPIChange();
 
   if (!mWidgetListener || mWidgetListener->GetAppWindow()) {
     return;

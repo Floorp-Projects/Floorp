@@ -547,6 +547,12 @@ nsIWidget* nsBaseWidget::GetSheetWindowParent(void) { return nullptr; }
 
 float nsBaseWidget::GetDPI() { return 96.0f; }
 
+void nsBaseWidget::NotifyAPZOfDPIChange() {
+  if (mAPZC) {
+    mAPZC->SetDPI(GetDPI());
+  }
+}
+
 CSSToLayoutDeviceScale nsIWidget::GetDefaultScale() {
   double devPixelsPerCSSPixel = StaticPrefs::layout_css_devPixelsPerPx();
 
