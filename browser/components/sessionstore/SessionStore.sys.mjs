@@ -881,7 +881,7 @@ var SessionStoreInternal = {
           LastSession.setState(state.lastSessionState);
 
           let restoreAsCrashed = ss.willRestoreAsCrashed();
-          if (restoreAsCrashed || /*Floorp Injections*/ state.windows[0] == undefined /*End Floorp Injections*/) {
+          if (restoreAsCrashed) {
             this._recentCrashes =
               ((state.session && state.session.recentCrashes) || 0) + 1;
 
@@ -915,6 +915,25 @@ var SessionStoreInternal = {
               restoreAsCrashed = false;
             }
           }
+          
+          // Floorp injections
+          if (
+            state.windows[0] == undefined
+          ) {
+            let lastSessionWindows = state._closedWindows;
+            let closedTime = lastSessionWindows[0].closedAt;
+            for (let i = 0; i < lastSessionWindows.length; i++) {
+              let closedWindow = state._closedWindows[i];
+              let closedWindowTime = closedWindow.closedAt;
+              // If the last closed window is closed in +-100, we will restore it
+              if (closedWindowTime > closedTime - 100 && closedWindowTime < closedTime + 100) {
+                state.windows.push(closedWindow);
+                // Remove the closed window from the closed windows
+                state._closedWindows.splice(i, 1);
+              }
+            }            
+          }
+          // End of floorp injections
 
           // If we didn't use about:sessionrestore, record that:
           if (!restoreAsCrashed) {
