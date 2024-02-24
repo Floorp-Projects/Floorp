@@ -2117,8 +2117,8 @@ nsIFrame::CaretBlockAxisMetrics nsIFrame::GetCaretBlockAxisMetrics(
   return CaretBlockAxisMetrics{.mOffset = baseline - ascent, .mExtent = height};
 }
 
-const nsAtom* nsIFrame::ComputePageValue() const {
-  const nsAtom* value = nsGkAtoms::_empty;
+const nsAtom* nsIFrame::ComputePageValue(const nsAtom* aAutoValue) const {
+  const nsAtom* value = aAutoValue ? aAutoValue : nsGkAtoms::_empty;
   const nsIFrame* frame = this;
   // Find what CSS page name value this frame's subtree has, if any.
   // Starting with this frame, check if a page name other than auto is present,
