@@ -24,17 +24,17 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     mut dest: *mut u8,
     mut length: usize,
 ) {
-    let mat: *const [f32; 4] = (*transform).matrix.as_ptr();
+    let mat: *const [f32; 4] = transform.matrix.as_ptr();
     let mut input: Output = std::mem::zeroed();
     /* share input and output locations to save having to keep the
      * locations in separate registers */
     let output: *const u32 = &mut input as *mut Output as *mut u32;
     /* deref *transform now to avoid it in loop */
-    let igtbl_r: *const f32 = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
-    let igtbl_g: *const f32 = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
-    let igtbl_b: *const f32 = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
+    let igtbl_r: *const f32 = transform.input_gamma_table_r.as_ref().unwrap().as_ptr();
+    let igtbl_g: *const f32 = transform.input_gamma_table_g.as_ref().unwrap().as_ptr();
+    let igtbl_b: *const f32 = transform.input_gamma_table_b.as_ref().unwrap().as_ptr();
     /* deref *transform now to avoid it in loop */
-    let otdata_r: *const u8 = (*transform)
+    let otdata_r: *const u8 = transform
         .output_table_r
         .as_deref()
         .unwrap()
