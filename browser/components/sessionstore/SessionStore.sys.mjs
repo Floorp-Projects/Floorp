@@ -881,7 +881,7 @@ var SessionStoreInternal = {
           LastSession.setState(state.lastSessionState);
 
           let restoreAsCrashed = ss.willRestoreAsCrashed();
-          if (restoreAsCrashed || /*Floorp Injections*/ !state.windows[0] /*End Floorp Injections*/) {
+          if (restoreAsCrashed || /*Floorp Injections*/ state.windows[0] == undefined /*End Floorp Injections*/) {
             this._recentCrashes =
               ((state.session && state.session.recentCrashes) || 0) + 1;
 
@@ -951,6 +951,7 @@ var SessionStoreInternal = {
         state?.windows?.forEach(win => delete win._maybeDontRestoreTabs);
         state?._closedWindows?.forEach(win => delete win._maybeDontRestoreTabs);
       } catch (ex) {
+        console.error(ex);
         this._log.error("The session file is invalid: " + ex);
       }
     }
