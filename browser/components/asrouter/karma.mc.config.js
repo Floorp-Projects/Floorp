@@ -124,7 +124,7 @@ module.exports = function (config) {
       devtool: "inline-source-map",
       // This resolve config allows us to import with paths relative to the root directory
       resolve: {
-        extensions: [".js", ".jsx"],
+        extensions: [".mjs", ".js", ".jsx"],
         modules: [
           PATHS.moduleResolveDirectory,
           "node_modules",
@@ -181,7 +181,7 @@ module.exports = function (config) {
           },
           {
             enforce: "post",
-            test: /\.js[mx]?$/,
+            test: /\.js[x]?$/,
             loader: "@jsdevtools/coverage-istanbul-loader",
             options: { esModules: true },
             include: [path.resolve("content-src"), path.resolve("modules")],
