@@ -50,9 +50,6 @@ module.exports = (env = {}) => ({
   resolve: {
     extensions: [".js", ".jsx"],
     modules: ["node_modules", "."],
-    fallback: {
-      stream: require.resolve("stream-browserify"),
-    },
   },
   externals: {
     "prop-types": "PropTypes",

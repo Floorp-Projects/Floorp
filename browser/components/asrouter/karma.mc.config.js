@@ -136,10 +136,6 @@ module.exports = function (config) {
           "node_modules",
           PATHS.newtabResolveDirectory,
         ],
-        fallback: {
-          stream: require.resolve("stream-browserify"),
-          buffer: require.resolve("buffer"),
-        },
         alias: {
           newtab: path.join(__dirname, "../newtab"),
         },
