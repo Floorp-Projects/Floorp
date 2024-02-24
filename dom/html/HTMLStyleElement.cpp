@@ -100,6 +100,20 @@ void HTMLStyleElement::UnbindFromTree(UnbindContext& aContext) {
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
+bool HTMLStyleElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                      const nsAString& aValue,
+                                      nsIPrincipal* aMaybeScriptedPrincipal,
+                                      nsAttrValue& aResult) {
+  if (aNamespaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::blocking &&
+      StaticPrefs::dom_element_blocking_enabled()) {
+    aResult.ParseAtomArray(aValue);
+    return true;
+  }
+
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aMaybeScriptedPrincipal, aResult);
+}
+
 void HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                     const nsAttrValue* aValue,
                                     const nsAttrValue* aOldValue,
@@ -197,6 +211,15 @@ nsDOMTokenList* HTMLStyleElement::Blocking() {
         new nsDOMTokenList(this, nsGkAtoms::blocking, sSupportedBlockingValues);
   }
   return mBlocking;
+}
+
+bool HTMLStyleElement::IsPotentiallyRenderBlocking() {
+  return BlockingContainsRender();
+
+  // TODO: handle implicitly potentially render blocking
+  // https://html.spec.whatwg.org/#implicitly-potentially-render-blocking
+  // A style element is implicitly potentially render-blocking if the element
+  // was created by its node document's parser.
 }
 
 }  // namespace mozilla::dom

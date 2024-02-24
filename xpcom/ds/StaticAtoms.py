@@ -1064,6 +1064,7 @@ STATIC_ATOMS = [
     Atom("rem", "rem"),
     Atom("remote", "remote"),
     Atom("removeelement", "removeelement"),
+    Atom("render", "render"),
     Atom("renderingobserverset", "renderingobserverset"),
     Atom("repeat", "repeat"),
     Atom("replace", "replace"),

@@ -48,6 +48,10 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(UnbindContext&) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
   virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                             const nsAttrValue* aValue,
                             const nsAttrValue* aOldValue,
@@ -74,6 +78,7 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
   }
 
   nsDOMTokenList* Blocking();
+  bool IsPotentiallyRenderBlocking() override;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;

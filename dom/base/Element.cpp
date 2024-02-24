@@ -5079,4 +5079,14 @@ void Element::SetHTMLUnsafe(const nsAString& aHTML) {
   nsContentUtils::SetHTMLUnsafe(this, this, aHTML);
 }
 
+bool Element::BlockingContainsRender() const {
+  const nsAttrValue* attrValue = GetParsedAttr(nsGkAtoms::blocking);
+  if (!attrValue || !StaticPrefs::dom_element_blocking_enabled()) {
+    return false;
+  }
+  MOZ_ASSERT(attrValue->Type() == nsAttrValue::eAtomArray,
+             "Checking blocking attribute on element that doesn't parse it?");
+  return attrValue->Contains(nsGkAtoms::render, eIgnoreCase);
+}
+
 }  // namespace mozilla::dom

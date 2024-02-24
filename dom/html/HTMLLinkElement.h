@@ -167,6 +167,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   }
 
   nsDOMTokenList* Blocking();
+  bool IsPotentiallyRenderBlocking() override;
 
   void NodeInfoChanged(Document* aOldDoc) final {
     mCachedURI = nullptr;
