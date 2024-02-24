@@ -339,6 +339,8 @@ def print_header(idl, fd, filename, relpath):
             write_interface(p, fd)
             continue
         if p.kind == "typedef":
+            if p.substitute:
+                continue
             printComments(fd, p.doccomments, "")
             fd.write("typedef %s %s;\n\n" % (p.realtype.nativeType("in"), p.name))
 

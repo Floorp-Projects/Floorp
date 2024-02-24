@@ -363,8 +363,8 @@ def print_rust_bindings(idl, fd, relpath):
 
         if p.kind == "typedef":
             try:
-                # We have to skip the typedef of bool to bool (it doesn't make any sense anyways)
-                if p.name == "bool":
+                # Skip bool and C++ stdint typedefs marked with [substitute].
+                if p.substitute:
                     continue
 
                 if printdoccomments:
