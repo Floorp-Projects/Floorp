@@ -226,7 +226,6 @@ struct nsTextFrame::DrawTextRunParams {
   float textStrokeWidth = 0.0f;
   bool drawSoftHyphen = false;
   bool hasTextShadow = false;
-  bool paintingShadows = false;
   DrawTextRunParams(gfxContext* aContext,
                     mozilla::gfx::PaletteCache& aPaletteCache)
       : context(aContext), paletteCache(aPaletteCache) {}
@@ -277,7 +276,6 @@ struct nsTextFrame::PaintShadowParams {
   Point framePt;
   Point textBaselinePt;
   gfxContext* context;
-  DrawPathCallbacks* callbacks = nullptr;
   nscolor foregroundColor = NS_RGBA(0, 0, 0, 0);
   const ClipEdges* clipEdges = nullptr;
   PropertyProvider* provider = nullptr;
@@ -5376,8 +5374,9 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
   // Text-shadow overflows
   if (aIncludeShadows) {
-    *aInkOverflowRect =
+    nsRect shadowRect =
         nsLayoutUtils::GetTextShadowRectsUnion(*aInkOverflowRect, this);
+    aInkOverflowRect->UnionRect(*aInkOverflowRect, shadowRect);
   }
 
   // When this frame is not selected, the text-decoration area must be in
@@ -5461,7 +5460,6 @@ struct nsTextFrame::PaintDecorationLineParams
   gfxFloat baselineOffset = 0.0f;
   DecorationType decorationType = DecorationType::Normal;
   DrawPathCallbacks* callbacks = nullptr;
-  bool paintingShadows = false;
 };
 
 void nsTextFrame::PaintDecorationLine(
@@ -5476,11 +5474,9 @@ void nsTextFrame::PaintDecorationLine(
   if (aParams.callbacks) {
     Rect path = nsCSSRendering::DecorationLineToPath(params);
     if (aParams.decorationType == DecorationType::Normal) {
-      aParams.callbacks->PaintDecorationLine(path, aParams.paintingShadows,
-                                             params.color);
+      aParams.callbacks->PaintDecorationLine(path, params.color);
     } else {
-      aParams.callbacks->PaintSelectionDecorationLine(
-          path, aParams.paintingShadows, params.color);
+      aParams.callbacks->PaintSelectionDecorationLine(path, params.color);
     }
   } else {
     nsCSSRendering::PaintDecorationLine(this, *aParams.context->GetDrawTarget(),
@@ -5942,7 +5938,6 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   gfxFloat advanceWidth;
   nsTextPaintStyle textPaintStyle(this);
   DrawTextParams params(shadowContext, PresContext()->FontPaletteCache());
-  params.paintingShadows = true;
   params.advanceWidth = &advanceWidth;
   params.dirtyRect = aParams.dirtyRect;
   params.framePt = aParams.framePt + shadowGfxOffset;
@@ -5950,10 +5945,9 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   params.textStyle = &textPaintStyle;
   params.textColor =
       aParams.context == shadowContext ? shadowColor : NS_RGB(0, 0, 0);
-  params.callbacks = aParams.callbacks;
   params.clipEdges = aParams.clipEdges;
   params.drawSoftHyphen = HasAnyStateBits(TEXT_HYPHEN_BREAK);
-  // Multi-color shadow is not allowed, so we use the same color as the text
+  // Multi-color shadow is not allowed, so we use the same color of the text
   // color.
   params.decorationOverrideColor = &params.textColor;
   params.fontPalette = StyleFont()->GetFontPaletteAtom();
@@ -6259,7 +6253,6 @@ bool nsTextFrame::PaintTextWithSelectionColors(
 
   PaintShadowParams shadowParams(aParams);
   shadowParams.provider = aParams.provider;
-  shadowParams.callbacks = aParams.callbacks;
   shadowParams.clipEdges = &aClipEdges;
 
   // Draw text
@@ -6822,7 +6815,6 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
     shadowParams.textBaselinePt = textBaselinePt;
     shadowParams.leftSideOffset = snappedStartEdge;
     shadowParams.provider = &provider;
-    shadowParams.callbacks = aParams.callbacks;
     shadowParams.foregroundColor = foregroundColor;
     shadowParams.clipEdges = &clipEdges;
     PaintShadows(textStyle->mTextShadow.AsSpan(), shadowParams);
@@ -6862,8 +6854,7 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
   params.callbacks = aParams.callbacks;
   params.hasTextShadow = aParams.hasTextShadow;
   if (aParams.callbacks) {
-    aParams.callbacks->NotifyBeforeText(aParams.paintingShadows,
-                                        aParams.textColor);
+    aParams.callbacks->NotifyBeforeText(aParams.textColor);
     params.drawMode = DrawMode::GLYPH_PATH;
     aTextRun->Draw(aRange, aTextBaselinePt, params);
     aParams.callbacks->NotifyAfterText();
@@ -7004,7 +6995,6 @@ void nsTextFrame::DrawTextRunAndDecorations(
   params.callbacks = aParams.callbacks;
   params.glyphRange = aParams.glyphRange;
   params.provider = aParams.provider;
-  params.paintingShadows = aParams.paintingShadows;
   // pt is the physical point where the decoration is to be drawn,
   // relative to the frame; one of its coordinates will be updated below.
   params.pt = Point(x / app, y / app);

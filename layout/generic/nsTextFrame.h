@@ -513,22 +513,20 @@ class nsTextFrame : public nsIFrame {
      * Called before (for under/over-line) or after (for line-through) the text
      * is drawn to have a text decoration line drawn.
      */
-    virtual void PaintDecorationLine(Rect aPath, bool aPaintingShadows,
-                                     nscolor aColor) {}
+    virtual void PaintDecorationLine(Rect aPath, nscolor aColor) {}
 
     /**
      * Called after selected text is drawn to have a decoration line drawn over
      * the text. (All types of text decoration are drawn after the text when
      * text is selected.)
      */
-    virtual void PaintSelectionDecorationLine(Rect aPath, bool aPaintingShadows,
-                                              nscolor aColor) {}
+    virtual void PaintSelectionDecorationLine(Rect aPath, nscolor aColor) {}
 
     /**
      * Called just before any paths have been emitted to the gfxContext
      * for the glyphs of the frame's text.
      */
-    virtual void NotifyBeforeText(bool aPaintingShadows, nscolor aColor) {}
+    virtual void NotifyBeforeText(nscolor aColor) {}
 
     /**
      * Called just after all the paths have been emitted to the gfxContext
