@@ -89,6 +89,8 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
   // data, which we actually don't need that many.
   bool ShouldDelayVideoDecodeBeforeDcompReady();
 
+  void SendRequestSampleEvent(bool aIsEnough) override;
+
   // Task queue only members.
   HANDLE mDCompSurfaceHandle;
   bool mNeedRecreateImage;

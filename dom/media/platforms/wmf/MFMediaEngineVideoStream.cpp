@@ -287,6 +287,16 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineVideoStream::Drain() {
   MediaDataDecoder::DecodedData outputs;
   if (!IsDCompImageReady()) {
     LOGV("Waiting for dcomp image for draining");
+    // A workaround for a special case where we have sent all input data to the
+    // media engine, and waiting for an output. Sometime media engine would
+    // never return the first frame to us, unless we notify it the end event,
+    // which happens on the case where the video only contains one frame. If we
+    // don't send end event to the media engine, the drain promise would be
+    // pending forever.
+    if (!mSampleRequestTokens.empty() &&
+        mRawDataQueueForFeedingEngine.GetSize() == 0) {
+      NotifyEndEvent();
+    }
     return mPendingDrainPromise.Ensure(__func__);
   }
   return MFMediaEngineStream::Drain();
@@ -388,6 +398,18 @@ void MFMediaEngineVideoStream::ShutdownCleanUpOnTaskQueue() {
   mPendingDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mVideoDecodeBeforeDcompPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED,
                                                 __func__);
+}
+
+void MFMediaEngineVideoStream::SendRequestSampleEvent(bool aIsEnough) {
+  AssertOnTaskQueue();
+  MFMediaEngineStream::SendRequestSampleEvent(aIsEnough);
+  // We need more data to be sent in, we should resolve the promise to allow
+  // more input data to be sent.
+  if (!aIsEnough && !mVideoDecodeBeforeDcompPromise.IsEmpty()) {
+    LOG("Resolved pending input promise to allow more input be sent in");
+    mVideoDecodeBeforeDcompPromise.Resolve(MediaDataDecoder::DecodedData{},
+                                           __func__);
+  }
 }
 
 bool MFMediaEngineVideoStream::IsEnded() const {
