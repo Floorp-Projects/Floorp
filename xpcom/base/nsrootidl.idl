@@ -35,18 +35,21 @@ class Promise;
 #if 0
 %}
 
-typedef boolean             bool   ;
-typedef octet               uint8_t  ;
-typedef unsigned short      uint16_t ;
-typedef unsigned short      char16_t;
-typedef unsigned long       uint32_t ;
-typedef unsigned long long  uint64_t ;
-typedef long long           PRTime   ;
-typedef short               int16_t  ;
-typedef long                int32_t  ;
-typedef long long           int64_t  ;
+// [substitute] typedefs emit the underlying builtin type directly, and
+// avoid polluting bindings for other languages with C++ stdint types.
 
-typedef unsigned long       nsresult ;
+[substitute]  typedef boolean             bool     ;
+[substitute]  typedef octet               uint8_t  ;
+[substitute]  typedef unsigned short      uint16_t ;
+[substitute]  typedef unsigned long       uint32_t ;
+[substitute]  typedef unsigned long long  uint64_t ;
+[substitute]  typedef short               int16_t  ;
+[substitute]  typedef long                int32_t  ;
+[substitute]  typedef long long           int64_t  ;
+
+              typedef unsigned short      char16_t ;
+              typedef unsigned long       nsresult ;
+              typedef long long           PRTime   ;
 
 // If we ever want to use `size_t` in scriptable interfaces, this will need to
 // be built into the xpidl compiler, as the size varies based on platform.

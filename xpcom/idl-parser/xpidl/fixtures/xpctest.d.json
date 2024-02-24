@@ -1,0 +1,1376 @@
+[
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestObjectReadOnly",
+        "members": [
+          {
+            "name": "strReadOnly",
+            "readonly": true,
+            "type": "string"
+          },
+          {
+            "name": "boolReadOnly",
+            "readonly": true,
+            "type": "boolean"
+          },
+          {
+            "name": "shortReadOnly",
+            "readonly": true,
+            "type": "i16"
+          },
+          {
+            "name": "longReadOnly",
+            "readonly": true,
+            "type": "i32"
+          },
+          {
+            "name": "floatReadOnly",
+            "readonly": true,
+            "type": "float"
+          },
+          {
+            "name": "charReadOnly",
+            "readonly": true,
+            "type": "string"
+          },
+          {
+            "name": "timeReadOnly",
+            "readonly": true,
+            "type": "PRTime"
+          }
+        ]
+      },
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestObjectReadWrite",
+        "members": [
+          {
+            "name": "stringProperty",
+            "readonly": false,
+            "type": "string"
+          },
+          {
+            "name": "booleanProperty",
+            "readonly": false,
+            "type": "boolean"
+          },
+          {
+            "name": "shortProperty",
+            "readonly": false,
+            "type": "i16"
+          },
+          {
+            "name": "longProperty",
+            "readonly": false,
+            "type": "i32"
+          },
+          {
+            "name": "floatProperty",
+            "readonly": false,
+            "type": "float"
+          },
+          {
+            "name": "charProperty",
+            "readonly": false,
+            "type": "string"
+          },
+          {
+            "name": "timeProperty",
+            "readonly": false,
+            "type": "PRTime"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_attributes.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  },
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestBug809674",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "x",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "y",
+                "optional": false,
+                "type": "u32"
+              }
+            ],
+            "iid_is": null,
+            "name": "addArgs",
+            "type": "u32"
+          },
+          {
+            "args": [
+              {
+                "name": "x",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "y",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "subOut",
+                "optional": false,
+                "type": "OutParam<u32>"
+              },
+              {
+                "name": "mulOut",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "addSubMulArgs",
+            "type": "u32"
+          },
+          {
+            "args": [
+              {
+                "name": "x",
+                "optional": false,
+                "type": "any"
+              },
+              {
+                "name": "y",
+                "optional": false,
+                "type": "any"
+              }
+            ],
+            "iid_is": null,
+            "name": "addVals",
+            "type": "any"
+          },
+          {
+            "args": [],
+            "iid_is": null,
+            "name": "methodNoArgs",
+            "type": "u32"
+          },
+          {
+            "args": [],
+            "iid_is": null,
+            "name": "methodNoArgsNoRetVal",
+            "type": "void"
+          },
+          {
+            "args": [
+              {
+                "name": "x1",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x2",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x3",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x4",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x5",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x6",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x7",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "x8",
+                "optional": false,
+                "type": "u32"
+              }
+            ],
+            "iid_is": null,
+            "name": "addMany",
+            "type": "u32"
+          },
+          {
+            "name": "valProperty",
+            "readonly": false,
+            "type": "any"
+          },
+          {
+            "name": "uintProperty",
+            "readonly": false,
+            "type": "u32"
+          },
+          {
+            "args": [],
+            "iid_is": null,
+            "name": "methodWithOptionalArgc",
+            "type": "void"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_bug809674.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  },
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [
+          {
+            "name": "testConst",
+            "value": 1
+          }
+        ],
+        "enums": [
+          {
+            "id": "testFlagsExplicit",
+            "variants": [
+              {
+                "name": "shouldBe1Explicit",
+                "value": 1
+              },
+              {
+                "name": "shouldBe2Explicit",
+                "value": 2
+              },
+              {
+                "name": "shouldBe4Explicit",
+                "value": 4
+              },
+              {
+                "name": "shouldBe8Explicit",
+                "value": 8
+              },
+              {
+                "name": "shouldBe12Explicit",
+                "value": 12
+              }
+            ]
+          },
+          {
+            "id": "testFlagsImplicit",
+            "variants": [
+              {
+                "name": "shouldBe0Implicit",
+                "value": 0
+              },
+              {
+                "name": "shouldBe1Implicit",
+                "value": 1
+              },
+              {
+                "name": "shouldBe2Implicit",
+                "value": 2
+              },
+              {
+                "name": "shouldBe3Implicit",
+                "value": 3
+              },
+              {
+                "name": "shouldBe5Implicit",
+                "value": 5
+              },
+              {
+                "name": "shouldBe6Implicit",
+                "value": 6
+              },
+              {
+                "name": "shouldBe2AgainImplicit",
+                "value": 2
+              },
+              {
+                "name": "shouldBe3AgainImplicit",
+                "value": 3
+              }
+            ]
+          }
+        ],
+        "id": "nsIXPCTestCEnums",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "abc",
+                "optional": false,
+                "type": "nsIXPCTestCEnums.testFlagsExplicit"
+              }
+            ],
+            "iid_is": null,
+            "name": "testCEnumInput",
+            "type": "void"
+          },
+          {
+            "args": [],
+            "iid_is": null,
+            "name": "testCEnumOutput",
+            "type": "nsIXPCTestCEnums.testFlagsExplicit"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_cenums.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  },
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestInterfaceA",
+        "members": [
+          {
+            "name": "name",
+            "readonly": false,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestInterfaceB",
+        "members": [
+          {
+            "name": "name",
+            "readonly": false,
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestInterfaceC",
+        "members": [
+          {
+            "name": "someInteger",
+            "readonly": false,
+            "type": "i32"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_interfaces.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  },
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestParams",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<boolean>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testBoolean",
+            "type": "boolean"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "u8"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<u8>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testOctet",
+            "type": "u8"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "i16"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<i16>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testShort",
+            "type": "i16"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "i32"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<i32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testLong",
+            "type": "i32"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "i64"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<i64>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testLongLong",
+            "type": "i64"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "u16"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<u16>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testUnsignedShort",
+            "type": "u16"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testUnsignedLong",
+            "type": "u32"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "u64"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<u64>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testUnsignedLongLong",
+            "type": "u64"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "float"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<float>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testFloat",
+            "type": "float"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "double"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<float>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testDouble",
+            "type": "double"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testChar",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testString",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testWchar",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testWstring",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testAString",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testAUTF8String",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testACString",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "any"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<any>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testJsval",
+            "type": "any"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "i16[]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<i16[]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testShortSequence",
+            "type": "i16[]"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "double[]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<double[]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testDoubleSequence",
+            "type": "double[]"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "nsIXPCTestInterfaceA[]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<nsIXPCTestInterfaceA[]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testInterfaceSequence",
+            "type": "nsIXPCTestInterfaceA[]"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string[]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string[]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testAStringSequence",
+            "type": "string[]"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string[]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string[]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testACStringSequence",
+            "type": "string[]"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "any[]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<any[]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testJsvalSequence",
+            "type": "any[]"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "i16[][]"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<i16[][]>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testSequenceSequence",
+            "type": "i16[][]"
+          },
+          {
+            "args": [
+              {
+                "name": "arr",
+                "optional": true,
+                "type": "u8[]"
+              }
+            ],
+            "iid_is": null,
+            "name": "testOptionalSequence",
+            "type": "u8[]"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "i16[]"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<i16[]>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testShortArray",
+            "type": "OutParam<i16[]>"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "double[]"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<double[]>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testDoubleArray",
+            "type": "OutParam<double[]>"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string[]"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string[]>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testStringArray",
+            "type": "OutParam<string[]>"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string[]"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string[]>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testWstringArray",
+            "type": "OutParam<string[]>"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "nsIXPCTestInterfaceA[]"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<nsIXPCTestInterfaceA[]>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testInterfaceArray",
+            "type": "OutParam<nsIXPCTestInterfaceA[]>"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "u8[]"
+              },
+              {
+                "name": "aLength",
+                "optional": true,
+                "type": "u32"
+              }
+            ],
+            "iid_is": null,
+            "name": "testByteArrayOptionalLength",
+            "type": "u32"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testSizedString",
+            "type": "OutParam<string>"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<string>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testSizedWstring",
+            "type": "OutParam<string>"
+          },
+          {
+            "args": [
+              {
+                "name": "aLength",
+                "optional": false,
+                "type": "u32"
+              },
+              {
+                "name": "a",
+                "optional": false,
+                "type": "any[]"
+              },
+              {
+                "name": "bLength",
+                "optional": false,
+                "type": "InOutParam<u32>"
+              },
+              {
+                "name": "b",
+                "optional": false,
+                "type": "InOutParam<any[]>"
+              },
+              {
+                "name": "rvLength",
+                "optional": false,
+                "type": "OutParam<u32>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testJsvalArray",
+            "type": "OutParam<any[]>"
+          },
+          {
+            "args": [
+              {
+                "name": "o",
+                "optional": false,
+                "type": "OutParam<string>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testOutAString",
+            "type": "void"
+          },
+          {
+            "args": [
+              {
+                "name": "a",
+                "optional": false,
+                "type": "string[]"
+              },
+              {
+                "name": "aLength",
+                "optional": true,
+                "type": "u32"
+              }
+            ],
+            "iid_is": null,
+            "name": "testStringArrayOptionalSize",
+            "type": "string"
+          },
+          {
+            "args": [
+              {
+                "name": "aJSObj",
+                "optional": false,
+                "type": "nsIXPCTestParams"
+              },
+              {
+                "name": "aOut",
+                "optional": true,
+                "type": "OutParam<nsIURI>"
+              }
+            ],
+            "iid_is": null,
+            "name": "testOmittedOptionalOut",
+            "type": "void"
+          },
+          {
+            "name": "testNaN",
+            "readonly": true,
+            "type": "double"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_params.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  },
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestReturnCodeParent",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "childBehavior",
+                "optional": false,
+                "type": "i32"
+              }
+            ],
+            "iid_is": null,
+            "name": "callChild",
+            "type": "nsresult"
+          }
+        ]
+      },
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [
+          {
+            "name": "CHILD_SHOULD_THROW",
+            "value": 0
+          },
+          {
+            "name": "CHILD_SHOULD_RETURN_SUCCESS",
+            "value": 1
+          },
+          {
+            "name": "CHILD_SHOULD_RETURN_RESULTCODE",
+            "value": 2
+          },
+          {
+            "name": "CHILD_SHOULD_NEST_RESULTCODES",
+            "value": 3
+          }
+        ],
+        "enums": [],
+        "id": "nsIXPCTestReturnCodeChild",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "behavior",
+                "optional": false,
+                "type": "i32"
+              }
+            ],
+            "iid_is": null,
+            "name": "doIt",
+            "type": "void"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_returncode.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  },
+  {
+    "interfaces": [
+      {
+        "base": "nsISupports",
+        "callable": true,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestFunctionInterface",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "arg",
+                "optional": false,
+                "type": "string"
+              }
+            ],
+            "iid_is": null,
+            "name": "echo",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestUtils",
+        "members": [
+          {
+            "args": [
+              {
+                "name": "f",
+                "optional": false,
+                "type": "nsIXPCTestFunctionInterface"
+              }
+            ],
+            "iid_is": null,
+            "name": "doubleWrapFunction",
+            "type": "nsIXPCTestFunctionInterface"
+          }
+        ]
+      }
+    ],
+    "path": "js/xpconnect/tests/idl/xpctest_utils.idl",
+    "typedefs": [
+      [
+        "PRTime",
+        "i64"
+      ],
+      [
+        "char16_t",
+        "u16"
+      ],
+      [
+        "nsresult",
+        "u32"
+      ]
+    ]
+  }
+]
