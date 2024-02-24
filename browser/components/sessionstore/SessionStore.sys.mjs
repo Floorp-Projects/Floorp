@@ -876,20 +876,12 @@ var SessionStoreInternal = {
             1
           );
         } else {
-          if (state && state.windows) {
-            for (let win of state.windows) {
-              if(win.floorpWebPanelWindow) {
-                state.windows.splice(state.windows.indexOf(win), 1);
-              }
-            }
-          }
-
           // Get the last deferred session in case the user still wants to
           // restore it
           LastSession.setState(state.lastSessionState);
 
           let restoreAsCrashed = ss.willRestoreAsCrashed();
-          if (restoreAsCrashed) {
+          if (restoreAsCrashed || /*Floorp Injections*/ !state.windows[0] /*End Floorp Injections*/) {
             this._recentCrashes =
               ((state.session && state.session.recentCrashes) || 0) + 1;
 
@@ -909,11 +901,6 @@ var SessionStoreInternal = {
             } else if (
               this._hasSingleTabWithURL(state.windows, "about:welcomeback")
             ) {
-              if (state.windows[0] === undefined) {
-                state.windows[0] = state.windows[1];
-                delete state.windows[1];
-              }
-
               Services.telemetry.keyedScalarAdd(
                 "browser.engagement.sessionrestore_interstitial",
                 "shown_only_about_welcomeback",
