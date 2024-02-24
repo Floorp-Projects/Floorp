@@ -49,7 +49,7 @@ void MFMediaEngineVideoStream::SetKnowsCompositor(
        this]() {
         mKnowsCompositor = knowCompositor;
         LOG("Set SetKnowsCompositor=%p", mKnowsCompositor.get());
-        ResolvePendingDrainPromiseIfNeeded();
+        ResolvePendingPromisesIfNeeded();
       }));
 }
 
@@ -74,7 +74,7 @@ void MFMediaEngineVideoStream::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle,
           }
         }
         LOG("Set DCompSurfaceHandle, handle=%p", mDCompSurfaceHandle);
-        ResolvePendingDrainPromiseIfNeeded();
+        ResolvePendingPromisesIfNeeded();
       }));
 }
 
@@ -240,6 +240,32 @@ bool MFMediaEngineVideoStream::IsDCompImageReady() {
   return true;
 }
 
+RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineVideoStream::OutputData(
+    RefPtr<MediaRawData> aSample) {
+  if (IsShutdown()) {
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_FAILURE,
+                    RESULT_DETAIL("MFMediaEngineStream is shutdown")),
+        __func__);
+  }
+  AssertOnTaskQueue();
+  NotifyNewData(aSample);
+  MediaDataDecoder::DecodedData outputs;
+  if (RefPtr<MediaData> outputData = OutputDataInternal()) {
+    outputs.AppendElement(outputData);
+    LOGV("Output data [%" PRId64 ",%" PRId64 "]",
+         outputData->mTime.ToMicroseconds(),
+         outputData->GetEndTime().ToMicroseconds());
+  }
+  if (ShouldDelayVideoDecodeBeforeDcompReady()) {
+    LOG("Dcomp isn't ready and we already have enough video data. We will send "
+        "them back together at one when Dcomp is ready");
+    return mVideoDecodeBeforeDcompPromise.Ensure(__func__);
+  }
+  return MediaDataDecoder::DecodePromise::CreateAndResolve(std::move(outputs),
+                                                           __func__);
+}
+
 already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputDataInternal() {
   AssertOnTaskQueue();
   if (mRawDataQueueForGeneratingOutput.GetSize() == 0 || !IsDCompImageReady()) {
@@ -266,23 +292,47 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineVideoStream::Drain() {
   return MFMediaEngineStream::Drain();
 }
 
-void MFMediaEngineVideoStream::ResolvePendingDrainPromiseIfNeeded() {
+RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineVideoStream::Flush() {
   AssertOnTaskQueue();
-  if (mPendingDrainPromise.IsEmpty()) {
-    return;
-  }
+  auto promise = MFMediaEngineStream::Flush();
+  mPendingDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  mVideoDecodeBeforeDcompPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED,
+                                                __func__);
+  return promise;
+}
+
+void MFMediaEngineVideoStream::ResolvePendingPromisesIfNeeded() {
+  AssertOnTaskQueue();
   if (!IsDCompImageReady()) {
     return;
   }
-  MediaDataDecoder::DecodedData outputs;
-  while (RefPtr<MediaData> outputData = OutputDataInternal()) {
-    outputs.AppendElement(outputData);
-    LOGV("Output data [%" PRId64 ",%" PRId64 "]",
-         outputData->mTime.ToMicroseconds(),
-         outputData->GetEndTime().ToMicroseconds());
+
+  // Resolve decoding promise first, then drain promise
+  if (!mVideoDecodeBeforeDcompPromise.IsEmpty()) {
+    MediaDataDecoder::DecodedData outputs;
+    while (RefPtr<MediaData> outputData = OutputDataInternal()) {
+      outputs.AppendElement(outputData);
+      LOGV("Output data [%" PRId64 ",%" PRId64 "]",
+           outputData->mTime.ToMicroseconds(),
+           outputData->GetEndTime().ToMicroseconds());
+    }
+    mVideoDecodeBeforeDcompPromise.Resolve(std::move(outputs), __func__);
+    LOG("Resolved video decode before Dcomp promise");
   }
-  mPendingDrainPromise.Resolve(std::move(outputs), __func__);
-  LOG("Resolved pending drain promise");
+
+  // This drain promise could return no data, if all data has been processed in
+  // the decoding promise.
+  if (!mPendingDrainPromise.IsEmpty()) {
+    MediaDataDecoder::DecodedData outputs;
+    while (RefPtr<MediaData> outputData = OutputDataInternal()) {
+      outputs.AppendElement(outputData);
+      LOGV("Output data [%" PRId64 ",%" PRId64 "]",
+           outputData->mTime.ToMicroseconds(),
+           outputData->GetEndTime().ToMicroseconds());
+    }
+    mPendingDrainPromise.Resolve(std::move(outputs), __func__);
+    LOG("Resolved pending drain promise");
+  }
 }
 
 MediaDataDecoder::ConversionRequired MFMediaEngineVideoStream::NeedsConversion()
@@ -336,6 +386,8 @@ void MFMediaEngineVideoStream::UpdateConfig(const VideoInfo& aInfo) {
 void MFMediaEngineVideoStream::ShutdownCleanUpOnTaskQueue() {
   AssertOnTaskQueue();
   mPendingDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+  mVideoDecodeBeforeDcompPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED,
+                                                __func__);
 }
 
 bool MFMediaEngineVideoStream::IsEnded() const {
@@ -351,6 +403,10 @@ bool MFMediaEngineVideoStream::IsEnded() const {
 }
 
 bool MFMediaEngineVideoStream::IsEncrypted() const { return mIsEncrypted; }
+
+bool MFMediaEngineVideoStream::ShouldDelayVideoDecodeBeforeDcompReady() {
+  return HasEnoughRawData() && !IsDCompImageReady();
+}
 
 nsCString MFMediaEngineVideoStream::GetCodecName() const {
   switch (mStreamType) {

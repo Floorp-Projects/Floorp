@@ -19,6 +19,7 @@ class DcompSurfaceImage;
 }  // namespace layers
 
 class MFMediaSource;
+class MediaRawData;
 
 class MFMediaEngineVideoStream final : public MFMediaEngineStream {
  public:
@@ -50,7 +51,12 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
   // change happens during playback.
   void SetConfig(const TrackInfo& aConfig);
 
+  RefPtr<MediaDataDecoder::DecodePromise> OutputData(
+      RefPtr<MediaRawData> aSample) override;
+
   RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
+
+  RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
 
   bool IsEncrypted() const override;
 
@@ -66,11 +72,22 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   bool IsDCompImageReady();
 
-  void ResolvePendingDrainPromiseIfNeeded();
+  // Those promises are used to handle decode/drain which happens before the
+  // Dcomp surface is ready.
+  void ResolvePendingPromisesIfNeeded();
 
   void ShutdownCleanUpOnTaskQueue() override;
 
   bool IsEnded() const override;
+
+  // Before Dcomp surface is ready, we can't return any video data due to
+  // lacking of the image, which should only happen on the beginning of the
+  // video playback. In that situation, once we have enough video raw data, we
+  // can stop delaying the decode promise by waiting the Dcomp surface and
+  // resolveing the promise when Dcomp surface is ready. Doing so helps to keep
+  // the decode promise pending, so that the MFR won't keep sending more input
+  // data, which we actually don't need that many.
+  bool ShouldDelayVideoDecodeBeforeDcompReady();
 
   // Task queue only members.
   HANDLE mDCompSurfaceHandle;
@@ -97,6 +114,12 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
   // return. This promise is used for that case, and will be resolved once we
   // have dcomp image.
   MozPromiseHolder<MediaDataDecoder::DecodePromise> mPendingDrainPromise;
+
+  // The promise used to return all video output which are requested before the
+  // Dcomp surface is ready. This should only be used once in entire playback,
+  // typically happening around the beginning of the playback.
+  MozPromiseHolder<MediaDataDecoder::DecodePromise>
+      mVideoDecodeBeforeDcompPromise;
 
   // Set when `CreateMediaType()` is called.
   bool mIsEncrypted = false;
