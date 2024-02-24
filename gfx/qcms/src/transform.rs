@@ -414,15 +414,15 @@ unsafe extern "C" fn qcms_transform_data_gray_template_lut<I: GrayFormat, F: For
 
         let out_device_r: f32 = lut_interp_linear(
             linear as f64,
-            &(*transform).output_gamma_lut_r.as_ref().unwrap(),
+            &transform.output_gamma_lut_r.as_ref().unwrap(),
         );
         let out_device_g: f32 = lut_interp_linear(
             linear as f64,
-            &(*transform).output_gamma_lut_g.as_ref().unwrap(),
+            &transform.output_gamma_lut_g.as_ref().unwrap(),
         );
         let out_device_b: f32 = lut_interp_linear(
             linear as f64,
-            &(*transform).output_gamma_lut_b.as_ref().unwrap(),
+            &transform.output_gamma_lut_b.as_ref().unwrap(),
         );
         *dest.add(F::kRIndex) = clamp_u8(out_device_r * 255f32);
         *dest.add(F::kGIndex) = clamp_u8(out_device_g * 255f32);
@@ -475,17 +475,17 @@ unsafe fn qcms_transform_data_graya_bgra_out_lut(
     qcms_transform_data_gray_template_lut::<GrayAlpha, BGRA>(transform, src, dest, length);
 }
 unsafe fn qcms_transform_data_gray_template_precache<I: GrayFormat, F: Format>(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
-    let output_table_r = ((*transform).output_table_r).as_deref().unwrap();
-    let output_table_g = ((*transform).output_table_g).as_deref().unwrap();
-    let output_table_b = ((*transform).output_table_b).as_deref().unwrap();
+    let output_table_r = transform.output_table_r.as_deref().unwrap();
+    let output_table_g = transform.output_table_g.as_deref().unwrap();
+    let output_table_b = transform.output_table_b.as_deref().unwrap();
 
-    let input_gamma_table_gray = (*transform)
+    let input_gamma_table_gray = transform
         .input_gamma_table_gray
         .as_ref()
         .unwrap()
@@ -563,12 +563,12 @@ unsafe fn qcms_transform_data_template_lut_precache<F: Format>(
     length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
-    let output_table_r = ((*transform).output_table_r).as_deref().unwrap();
-    let output_table_g = ((*transform).output_table_g).as_deref().unwrap();
-    let output_table_b = ((*transform).output_table_b).as_deref().unwrap();
-    let input_gamma_table_r = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
-    let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
-    let input_gamma_table_b = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
+    let output_table_r = transform.output_table_r.as_deref().unwrap();
+    let output_table_g = transform.output_table_g.as_deref().unwrap();
+    let output_table_b = transform.output_table_b.as_deref().unwrap();
+    let input_gamma_table_r = transform.input_gamma_table_r.as_ref().unwrap().as_ptr();
+    let input_gamma_table_g = transform.input_gamma_table_g.as_ref().unwrap().as_ptr();
+    let input_gamma_table_b = transform.input_gamma_table_b.as_ref().unwrap().as_ptr();
 
     let mat = &transform.matrix;
     let mut i: u32 = 0;
@@ -695,7 +695,7 @@ fn int_div_ceil(value: i32, div: i32) -> i32 {
 }
 // Using lcms' tetra interpolation algorithm.
 unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
-    transform: *const qcms_transform,
+    transform: &qcms_transform,
     mut src: *const u8,
     mut dest: *mut u8,
     length: usize,
@@ -703,9 +703,9 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
 
     let xy_len: i32 = 1;
-    let x_len: i32 = (*transform).grid_size as i32;
+    let x_len: i32 = transform.grid_size as i32;
     let len: i32 = x_len * x_len;
-    let table = (*transform).clut.as_ref().unwrap().as_ptr();
+    let table = transform.clut.as_ref().unwrap().as_ptr();
     let r_table: *const f32 = table;
     let g_table: *const f32 = table.offset(1);
     let b_table: *const f32 = table.offset(2);
@@ -735,15 +735,15 @@ unsafe extern "C" fn qcms_transform_data_tetra_clut_template<F: Format>(
         let linear_r: f32 = in_r as i32 as f32 / 255.0;
         let linear_g: f32 = in_g as i32 as f32 / 255.0;
         let linear_b: f32 = in_b as i32 as f32 / 255.0;
-        let x: i32 = in_r as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let y: i32 = in_g as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let z: i32 = in_b as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let x_n: i32 = int_div_ceil(in_r as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let y_n: i32 = int_div_ceil(in_g as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let z_n: i32 = int_div_ceil(in_b as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let rx: f32 = linear_r * ((*transform).grid_size as i32 - 1) as f32 - x as f32;
-        let ry: f32 = linear_g * ((*transform).grid_size as i32 - 1) as f32 - y as f32;
-        let rz: f32 = linear_b * ((*transform).grid_size as i32 - 1) as f32 - z as f32;
+        let x: i32 = in_r as i32 * (transform.grid_size as i32 - 1) / 255;
+        let y: i32 = in_g as i32 * (transform.grid_size as i32 - 1) / 255;
+        let z: i32 = in_b as i32 * (transform.grid_size as i32 - 1) / 255;
+        let x_n: i32 = int_div_ceil(in_r as i32 * (transform.grid_size as i32 - 1), 255);
+        let y_n: i32 = int_div_ceil(in_g as i32 * (transform.grid_size as i32 - 1), 255);
+        let z_n: i32 = int_div_ceil(in_b as i32 * (transform.grid_size as i32 - 1), 255);
+        let rx: f32 = linear_r * (transform.grid_size as i32 - 1) as f32 - x as f32;
+        let ry: f32 = linear_g * (transform.grid_size as i32 - 1) as f32 - y as f32;
+        let rz: f32 = linear_b * (transform.grid_size as i32 - 1) as f32 - z as f32;
         let CLU = |table: *const f32, x, y, z| {
             *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize)
         };
@@ -848,17 +848,17 @@ unsafe fn tetra(
     let linear_g: f32 = in_g as i32 as f32 / 255.0;
     let linear_b: f32 = in_b as i32 as f32 / 255.0;
     let xy_len: i32 = 1;
-    let x_len: i32 = (*transform).grid_size as i32;
+    let x_len: i32 = transform.grid_size as i32;
     let len: i32 = x_len * x_len;
-    let x: i32 = in_r as i32 * ((*transform).grid_size as i32 - 1) / 255;
-    let y: i32 = in_g as i32 * ((*transform).grid_size as i32 - 1) / 255;
-    let z: i32 = in_b as i32 * ((*transform).grid_size as i32 - 1) / 255;
-    let x_n: i32 = int_div_ceil(in_r as i32 * ((*transform).grid_size as i32 - 1), 255);
-    let y_n: i32 = int_div_ceil(in_g as i32 * ((*transform).grid_size as i32 - 1), 255);
-    let z_n: i32 = int_div_ceil(in_b as i32 * ((*transform).grid_size as i32 - 1), 255);
-    let rx: f32 = linear_r * ((*transform).grid_size as i32 - 1) as f32 - x as f32;
-    let ry: f32 = linear_g * ((*transform).grid_size as i32 - 1) as f32 - y as f32;
-    let rz: f32 = linear_b * ((*transform).grid_size as i32 - 1) as f32 - z as f32;
+    let x: i32 = in_r as i32 * (transform.grid_size as i32 - 1) / 255;
+    let y: i32 = in_g as i32 * (transform.grid_size as i32 - 1) / 255;
+    let z: i32 = in_b as i32 * (transform.grid_size as i32 - 1) / 255;
+    let x_n: i32 = int_div_ceil(in_r as i32 * (transform.grid_size as i32 - 1), 255);
+    let y_n: i32 = int_div_ceil(in_g as i32 * (transform.grid_size as i32 - 1), 255);
+    let z_n: i32 = int_div_ceil(in_b as i32 * (transform.grid_size as i32 - 1), 255);
+    let rx: f32 = linear_r * (transform.grid_size as i32 - 1) as f32 - x as f32;
+    let ry: f32 = linear_g * (transform.grid_size as i32 - 1) as f32 - y as f32;
+    let rz: f32 = linear_b * (transform.grid_size as i32 - 1) as f32 - z as f32;
     let CLU = |table: *const f32, x, y, z| {
         *table.offset(((x * len + y * x_len + z * xy_len) * 3) as isize)
     };
@@ -966,9 +966,9 @@ unsafe fn qcms_transform_data_tetra_clut_cmyk(
     mut dest: *mut u8,
     length: usize,
 ) {
-    let table = (*transform).clut.as_ref().unwrap().as_ptr();
+    let table = transform.clut.as_ref().unwrap().as_ptr();
     assert!(
-        (*transform).clut.as_ref().unwrap().len()
+        transform.clut.as_ref().unwrap().len()
             >= ((transform.grid_size as i32).pow(4) * 3) as usize
     );
     for _ in 0..length {
@@ -978,10 +978,10 @@ unsafe fn qcms_transform_data_tetra_clut_cmyk(
         let k: u8 = *src.add(3);
         src = src.offset(4);
         let linear_k: f32 = k as i32 as f32 / 255.0;
-        let grid_size = (*transform).grid_size as i32;
-        let w: i32 = k as i32 * ((*transform).grid_size as i32 - 1) / 255;
-        let w_n: i32 = int_div_ceil(k as i32 * ((*transform).grid_size as i32 - 1), 255);
-        let t: f32 = linear_k * ((*transform).grid_size as i32 - 1) as f32 - w as f32;
+        let grid_size = transform.grid_size as i32;
+        let w: i32 = k as i32 * (transform.grid_size as i32 - 1) / 255;
+        let w_n: i32 = int_div_ceil(k as i32 * (transform.grid_size as i32 - 1), 255);
+        let t: f32 = linear_k * (transform.grid_size as i32 - 1) as f32 - w as f32;
 
         let table1 = table.offset((w * grid_size * grid_size * grid_size * 3) as isize);
         let table2 = table.offset((w_n * grid_size * grid_size * grid_size * 3) as isize);
@@ -1032,9 +1032,9 @@ unsafe fn qcms_transform_data_template_lut<F: Format>(
 
     let mat = &transform.matrix;
     let mut i: u32 = 0;
-    let input_gamma_table_r = (*transform).input_gamma_table_r.as_ref().unwrap().as_ptr();
-    let input_gamma_table_g = (*transform).input_gamma_table_g.as_ref().unwrap().as_ptr();
-    let input_gamma_table_b = (*transform).input_gamma_table_b.as_ref().unwrap().as_ptr();
+    let input_gamma_table_r = transform.input_gamma_table_r.as_ref().unwrap().as_ptr();
+    let input_gamma_table_g = transform.input_gamma_table_g.as_ref().unwrap().as_ptr();
+    let input_gamma_table_b = transform.input_gamma_table_b.as_ref().unwrap().as_ptr();
     while (i as usize) < length {
         let device_r: u8 = *src.add(F::kRIndex);
         let device_g: u8 = *src.add(F::kGIndex);
@@ -1057,15 +1057,15 @@ unsafe fn qcms_transform_data_template_lut<F: Format>(
 
         let out_device_r: f32 = lut_interp_linear(
             out_linear_r as f64,
-            &(*transform).output_gamma_lut_r.as_ref().unwrap(),
+            &transform.output_gamma_lut_r.as_ref().unwrap(),
         );
         let out_device_g: f32 = lut_interp_linear(
             out_linear_g as f64,
-            (*transform).output_gamma_lut_g.as_ref().unwrap(),
+            transform.output_gamma_lut_g.as_ref().unwrap(),
         );
         let out_device_b: f32 = lut_interp_linear(
             out_linear_b as f64,
-            (*transform).output_gamma_lut_b.as_ref().unwrap(),
+            transform.output_gamma_lut_b.as_ref().unwrap(),
         );
         *dest.add(F::kRIndex) = clamp_u8(out_device_r * 255f32);
         *dest.add(F::kGIndex) = clamp_u8(out_device_g * 255f32);
@@ -1225,16 +1225,16 @@ fn transform_precacheLUT_float(
     }
     let lut = chain_transform(input, output, src, dest, lutSize as usize);
     if let Some(lut) = lut {
-        (*transform).clut = Some(lut);
-        (*transform).grid_size = samples as u16;
+        transform.clut = Some(lut);
+        transform.grid_size = samples as u16;
         if in_type == RGBA8 {
-            (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgba)
+            transform.transform_fn = Some(qcms_transform_data_tetra_clut_rgba)
         } else if in_type == BGRA8 {
-            (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_bgra)
+            transform.transform_fn = Some(qcms_transform_data_tetra_clut_bgra)
         } else if in_type == RGB8 {
-            (*transform).transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
+            transform.transform_fn = Some(qcms_transform_data_tetra_clut_rgb)
         }
-        debug_assert!((*transform).transform_fn.is_some());
+        debug_assert!(transform.transform_fn.is_some());
     } else {
         return None;
     }
