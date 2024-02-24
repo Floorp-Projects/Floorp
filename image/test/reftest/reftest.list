@@ -19,6 +19,9 @@ include pngsuite-palettes/reftest.list
 include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
 
+# PNG tests
+include png/reftest.list
+
 # BMP tests
 skip-if(Android) include bmp/reftest.list
 
