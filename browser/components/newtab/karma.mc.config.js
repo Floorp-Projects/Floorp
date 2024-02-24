@@ -217,10 +217,6 @@ module.exports = function (config) {
       resolve: {
         extensions: [".js", ".jsx"],
         modules: [PATHS.moduleResolveDirectory, "node_modules"],
-        fallback: {
-          stream: require.resolve("stream-browserify"),
-          buffer: require.resolve("buffer"),
-        },
         alias: {
           asrouter: path.join(__dirname, "../asrouter"),
         },
