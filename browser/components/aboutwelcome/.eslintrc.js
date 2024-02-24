@@ -126,7 +126,6 @@ module.exports = {
     "func-name-matching": "error",
     "getter-return": "error",
     "guard-for-in": "error",
-    "max-depth": ["error", 4],
     "max-nested-callbacks": ["error", 4],
     "max-params": ["error", 6],
     "max-statements": ["error", 50],

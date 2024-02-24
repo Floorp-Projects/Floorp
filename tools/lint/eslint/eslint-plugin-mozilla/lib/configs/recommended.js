@@ -21,6 +21,9 @@
  *   no-inner-declarations - bug 1487642
  *     - Would be interested if this could apply to just vars, but at the moment
  *       it doesn't.
+ *   max-depth
+ *      - Don't enforce the maximum depth that blocks can be nested. The
+ *        complexity rule is a better rule to check this.
  */
 module.exports = {
   env: {
@@ -165,10 +168,6 @@ module.exports = {
     // XXX This rule line should be removed to enable it. See bug 1487642.
     // Enforce return statements in getters
     "getter-return": "off",
-
-    // Don't enforce the maximum depth that blocks can be nested. The complexity
-    // rule is a better rule to check this.
-    "max-depth": "off",
 
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 10],

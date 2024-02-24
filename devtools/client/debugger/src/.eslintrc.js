@@ -108,9 +108,6 @@ module.exports = {
     "global-strict": 0,
     // Only useful in a node environment.
     "handle-callback-err": 0,
-    // Don't enforce the maximum depth that blocks can be nested. The complexity
-    // rule is a better rule to check this.
-    "max-depth": 0,
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": [2, 4],
     // Don't limit the number of parameters that can be used in a function.

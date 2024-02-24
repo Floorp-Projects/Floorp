@@ -24,7 +24,7 @@
  * };
  */
 
-/* eslint-disable max-depth, no-console */
+/* eslint-disable no-console */
 const chalk = require("chalk");
 const https = require("https");
 const path = require("path");
