@@ -88,6 +88,12 @@ bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       ParseFetchPriority(aValue, aResult);
       return true;
     }
+
+    if (aAttribute == nsGkAtoms::blocking &&
+        StaticPrefs::dom_element_blocking_enabled()) {
+      aResult.ParseAtomArray(aValue);
+      return true;
+    }
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
@@ -249,6 +255,16 @@ nsDOMTokenList* HTMLScriptElement::Blocking() {
         new nsDOMTokenList(this, nsGkAtoms::blocking, sSupportedBlockingValues);
   }
   return mBlocking;
+}
+
+bool HTMLScriptElement::IsPotentiallyRenderBlocking() {
+  return BlockingContainsRender();
+
+  // TODO: handle implicitly potentially render blocking
+  // https://html.spec.whatwg.org/#implicitly-potentially-render-blocking
+  // A script element el is implicitly potentially render-blocking if el's type
+  // is "classic", el is parser-inserted, and el does not have an async or defer
+  // attribute.
 }
 
 }  // namespace mozilla::dom

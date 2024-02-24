@@ -138,6 +138,7 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
   }
 
   nsDOMTokenList* Blocking();
+  bool IsPotentiallyRenderBlocking() override;
 
   // Required for the webidl-binding because `GetFetchPriority` is overloaded.
   using nsGenericHTMLElement::GetFetchPriority;

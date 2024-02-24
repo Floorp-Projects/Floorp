@@ -1344,6 +1344,10 @@ class Element : public FragmentOrElement {
   void GetLoading(nsAString& aValue) const;
   bool ParseLoadingAttribute(const nsAString& aValue, nsAttrValue& aResult);
 
+  // https://html.spec.whatwg.org/#potentially-render-blocking
+  virtual bool IsPotentiallyRenderBlocking() { return false; }
+  bool BlockingContainsRender() const;
+
   // Shadow DOM v1
   enum class ShadowRootDeclarative : bool { No, Yes };
 
