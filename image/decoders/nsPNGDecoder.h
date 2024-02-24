@@ -103,6 +103,7 @@ class nsPNGDecoder : public Decoder {
   bool mDisablePremultipliedAlpha;
   bool mGotInfoCallback;
   bool mUsePipeTransform;
+  bool mErrorIsRecoverable;
 
   struct AnimFrameInfo {
     AnimFrameInfo();
