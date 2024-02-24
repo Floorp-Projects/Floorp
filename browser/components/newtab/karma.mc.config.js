@@ -209,10 +209,6 @@ module.exports = function (config) {
     webpack: {
       mode: "none",
       devtool: "inline-source-map",
-      // This loader allows us to override required files in tests
-      resolveLoader: {
-        alias: { inject: path.join(__dirname, "loaders/inject-loader") },
-      },
       // This resolve config allows us to import with paths relative to the root directory, e.g. "lib/ActivityStream.sys.mjs"
       resolve: {
         extensions: [".js", ".jsx"],
