@@ -5375,6 +5375,7 @@ void nsWindow::OnDPIChanged() {
     }
     mWidgetListener->UIResolutionChanged();
   }
+  NotifyAPZOfDPIChange();
 }
 
 void nsWindow::OnCheckResize() { mPendingConfigures++; }
@@ -5407,6 +5408,8 @@ void nsWindow::OnScaleChanged(bool aNotify) {
       mFractionalScaleFactor == newFractional) {
     return;
   }
+
+  NotifyAPZOfDPIChange();
 
   LOG("OnScaleChanged %d, %f -> %d, %f\n", int(mCeiledScaleFactor),
       mFractionalScaleFactor, newCeiled, newFractional);

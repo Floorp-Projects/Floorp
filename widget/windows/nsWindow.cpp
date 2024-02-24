@@ -8536,6 +8536,7 @@ void nsWindow::ChangedDPI() {
       presShell->BackingScaleFactorChanged();
     }
   }
+  NotifyAPZOfDPIChange();
 }
 
 static Result<POINTER_FLAGS, nsresult> PointerStateToFlag(
