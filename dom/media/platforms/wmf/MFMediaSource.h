@@ -132,8 +132,6 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   void AssertOnManagerThread() const;
   void AssertOnMFThreadPool() const;
 
-  void NotifyEndOfStreamInternal(TrackInfo::TrackType aType);
-
   bool IsSeekable() const;
 
   // A thread-safe event queue.
