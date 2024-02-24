@@ -250,6 +250,9 @@
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">ล้างประวัติการเรียกดู</string>
 
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">แปลหน้า</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ภาษาที่เลือก</string>
@@ -1714,8 +1717,12 @@
     <string name="preferences_passwords_exceptions">ข้อยกเว้น</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty">การเข้าสู่ระบบและรหัสผ่านที่ไม่ได้บันทึกจะถูกแสดงที่นี่</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์ที่แสดงอยู่ที่นี่</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">การเข้าสู่ระบบและรหัสผ่านจะไม่ถูกบันทึกสำหรับไซต์เหล่านี้</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์เหล่านี้</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ลบข้อยกเว้นทั้งหมด</string>
     <!-- Hint for search box in logins list -->
@@ -1754,8 +1761,12 @@
     <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">ปลดล็อกเพื่อดูรหัสผ่านที่บันทึกไว้ของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">รักษาความปลอดภัยการเข้าสู่ระบบและรหัสผ่านของคุณ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">รักษาความปลอดภัยให้กับรหัสผ่านที่บันทึกไว้ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงการเข้าสู่ระบบและรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">ภายหลัง</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1775,6 +1786,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">เรียงเมนูเข้าสู่ระบบ</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">เมนูเรียงลำดับรหัสผ่าน</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">การเติมอัตโนมัติ</string>
@@ -1790,6 +1804,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">บันทึกและเติมวิธีการชำระเงิน</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">ข้อมูลถูกเข้ารหัส</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s จะเข้ารหัสลับวิธีการชำระเงินทั้งหมดที่คุณบันทึกไว้</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ซิงค์บัตรระหว่างอุปกรณ์</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1864,8 +1880,12 @@
     <string name="credit_cards_biometric_prompt_message">ปลดล็อกเพื่อดูบัตรเครดิตที่บันทึกไว้ของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">รักษาความปลอดภัยให้กับบัตรเครดิตของคุณ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">รักษาความปลอดภัยให้กับวิธีการชำระเงินที่บันทึกไว้ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงบัตรเครดิตที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงวิธีการชำระเงินที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">ตั้งค่าตอนนี้</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1875,6 +1895,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">ปลดล็อกเพื่อใช้ข้อมูลบัตรเครดิตที่เก็บไว้</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">ปลดล็อกเพื่อใช้วิธีการชำระเงินที่บันทึกไว้</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">เพิ่มที่อยู่</string>
     <!-- Title of the "Edit address" screen -->
@@ -1912,6 +1934,8 @@
 
     <!-- The title for the "Delete address" confirmation dialog -->
     <string name="addressess_confirm_dialog_message">คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">ลบที่อยู่นี้หรือไม่?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">ลบ</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2010,18 +2034,28 @@
     <string name="login_menu_edit_button">แก้ไข</string>
     <!-- Message in delete confirmation dialog for logins -->
     <string name="login_deletion_confirmation">คุณแน่ใจหรือไม่ที่ต้องการจะลบการเข้าสู่ระบบนี้?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการลบรหัสผ่านนี้?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ลบ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ยกเลิก</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">ตัวเลือกการเข้าสู่ระบบ</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">ตัวเลือกรหัสผ่าน</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บของการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บไซต์</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้ของการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่านของการเข้าสู่ระบบ</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่าน</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
     <!--  The button description to save changes to an edited password. -->
@@ -2040,6 +2074,8 @@
     <string name="saved_login_password_required_2" tools:ignore="UnusedResources">ใส่รหัสผ่าน</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">ต้องการชื่อผู้ใช้</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">ป้อนชื่อผู้ใช้</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ต้องการชื่อโฮสต์</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2140,6 +2176,9 @@
     <string name="other_default_search_engine_suggestion_header">ค้นหาด้วย %s</string>
 
     <!-- Default browser experiment -->
+    <!-- Default browser card title -->
+    <string name="default_browser_experiment_card_title">เปลี่ยนเบราว์เซอร์เริ่มต้นของคุณ</string>
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">ตั้งลิงก์จากเว็บไซต์ อีเมล และข้อความให้เปิดโดยอัตโนมัติใน Firefox</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2395,6 +2434,8 @@
     <string name="translations_bottom_sheet_translating_in_progress">กำลังแปล</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">อยู่ระหว่างการแปล</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">เลือกภาษา</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">เกิดปัญหาในการแปล โปรดลองอีกครั้ง</string>
 
@@ -2416,6 +2457,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">ไม่ต้องแปล %1$s เลย</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">ไม่ต้องแปลไซต์นี้เลย</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">แทนที่การตั้งค่าอื่นๆ ทั้งหมด</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">แทนที่การเสนอให้แปล</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">การตั้งค่าการแปล</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->

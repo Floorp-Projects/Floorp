@@ -85,7 +85,11 @@
 
     <string name="notification_erase_title_android_14">Шолу тарихын өшіру керек пе?</string>
 
-    <string name="notification_erase_text_android_14">Шолу журналын қауіпсіз түрде өшіру үшін осы хабарландыруды шертіңіз немесе тазартыңыз.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Шолу журналын қауіпсіз түрде өшіру үшін осы хабарландыруды шертіңіз немесе тазартыңыз.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Шолу журналын қауіпсіз түрде өшіру үшін осы хабарландыруды шертіңіз немесе сырғытыңыз.</string>
 
     <string name="notification_erase_text">Шолу тарихын өшіру</string>
 

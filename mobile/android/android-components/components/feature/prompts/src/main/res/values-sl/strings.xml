@@ -93,6 +93,8 @@
     <string name="mozac_feature_prompts_set_time">Nastavi čas</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Upravljanje prijav</string>
+    <!-- Option in expanded select password prompt that links to password settings -->
+    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Upravljanje gesel</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description">Razširi predlagane prijave</string>
     <!-- Content description for expanding the saved passwords options in the select password prompt -->

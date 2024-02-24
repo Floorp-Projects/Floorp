@@ -2258,7 +2258,7 @@
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Ayarlar</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
-    <string name="review_quality_check_settings_recommended_products">Değerlendirme denetleyicisinde reklamları göster</string>
+    <string name="review_quality_check_settings_recommended_products">Değerlendirme kontrolcüsünde reklamları göster</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Ara sıra ilgili ürünlerin reklamlarını görebilirsiniz. Yalnızca güvenilir değerlendirmeleri olan ürünlerin reklamlarını kabul ediyoruz. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
@@ -2284,7 +2284,7 @@
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title">Ürün mevcut değil</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
-    <string name="review_quality_check_product_availability_warning_body">Bu ürünün yeniden stoğa girdiğini görürseniz bize bildirin, biz de değerlendirmeleri kontrol etmeye çalışalım.</string>
+    <string name="review_quality_check_product_availability_warning_body">Bu ürünün yeniden stoka girdiğini görürseniz bize bildirin, biz de değerlendirmeleri kontrol etmeye çalışalım.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Ürünün stokta olduğunu bildir</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->

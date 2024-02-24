@@ -15,7 +15,7 @@
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">Pesquise ou digite um endereço</string>
 
-    <string name="teaser">Navegação privativa automática.\nNavegar. Apagar. Repetir.</string>
+    <string name="teaser">Navegação privativa automática.\nNavegar. Limpar. Repetir.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
@@ -84,36 +84,40 @@
     <string name="share_dialog_title">Compartilhar via</string>
 
     <string name="notification_erase_title_android_14">Limpar histórico de navegação?</string>
-    <string name="notification_erase_text_android_14">Toque ou remova esta notificação para limpar com segurança o histórico de navegação.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Toque ou remova esta notificação para limpar com segurança o histórico de navegação.</string>
 
-    <string name="notification_erase_text">Apagar histórico de navegação</string>
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Toque ou deslize esta notificação para limpar com segurança o histórico de navegação.</string>
+
+    <string name="notification_erase_text">Limpar histórico de navegação</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Abrir</string>
 
     <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
          to the foreground) -->
-    <string name="notification_action_erase_and_open">Apagar e abrir</string>
+    <string name="notification_action_erase_and_open">Limpar e abrir</string>
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
-    <string name="shortcut_erase_short_label">Apagar</string>
+    <string name="shortcut_erase_short_label">Limpar</string>
 
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters. -->
-    <string name="shortcut_erase_long_label">Apagar histórico de navegação</string>
+    <string name="shortcut_erase_long_label">Limpar histórico de navegação</string>
 
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
-    <string name="shortcut_erase_and_open_short_label">Apagar e abrir</string>
+    <string name="shortcut_erase_and_open_short_label">Limpar e abrir</string>
 
     <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
          instead of the short title when it has enough space. Android recommends a maximum length
          of 25 characters.
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="shortcut_erase_and_open_long_label">Apagar e abrir %1$s</string>
+    <string name="shortcut_erase_and_open_long_label">Limpar e abrir %1$s</string>
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
@@ -412,7 +416,7 @@
 
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
      history and go back to the home screen. -->
-    <string name="content_description_erase">Apagar histórico de navegação</string>
+    <string name="content_description_erase">Limpar histórico de navegação</string>
 
     <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
      This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This

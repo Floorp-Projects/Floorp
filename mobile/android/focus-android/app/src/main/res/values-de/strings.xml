@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Teilen über</string>
 
     <string name="notification_erase_title_android_14">Browser-Chronik löschen?</string>
-    <string name="notification_erase_text_android_14">Tippen oder löschen Sie diese Benachrichtigung, um Ihre Browser-Chronik sicher zu löschen.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tippen oder löschen Sie diese Benachrichtigung, um Ihre Browser-Chronik sicher zu löschen.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tippen oder wischen Sie diese Benachrichtigung, um Ihre Browser-Chronik sicher zu löschen.</string>
 
     <string name="notification_erase_text">Browser-Chronik löschen</string>
 

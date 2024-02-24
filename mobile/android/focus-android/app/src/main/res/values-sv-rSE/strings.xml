@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Dela via</string>
 
     <string name="notification_erase_title_android_14">Radera webbhistorik?</string>
-    <string name="notification_erase_text_android_14">Tryck på eller rensa den här aviseringen för att säkert radera din webbhistorik.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tryck på eller rensa den här aviseringen för att säkert radera din webbhistorik.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tryck på eller svep den här aviseringen för att säkert radera din webbhistorik.</string>
 
     <string name="notification_erase_text">Radera webbhistorik</string>
 

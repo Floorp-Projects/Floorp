@@ -1562,7 +1562,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Απομόνωση cookie μεταξύ ιστοτόπων</string>
     <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
-    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Αποστολή αιτήματος μη πώλησης και κοινοποίησης των δεδομένων μου στους ιστοτόπους</string>
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Αποστολή αιτήματος μη πώλησης και κοινοποίησης δεδομένων στους ιστοτόπους</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Περιεχόμενο καταγραφής</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->

@@ -85,7 +85,11 @@
     <string name="share_dialog_title">Partager avec</string>
 
     <string name="notification_erase_title_android_14">Effacer l’historique de navigation ?</string>
-    <string name="notification_erase_text_android_14">Appuyez sur cette notification ou supprimez-la pour effacer votre historique de navigation de façon sécurisée.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Appuyez sur cette notification ou supprimez-la pour effacer votre historique de navigation de façon sécurisée.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Appuyez sur cette notification ou faites-la glisser pour effacer votre historique de navigation de façon sécurisée.</string>
 
     <string name="notification_erase_text">Effacer l’historique de navigation</string>
 

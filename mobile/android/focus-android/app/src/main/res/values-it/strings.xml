@@ -85,7 +85,11 @@
     <string name="share_dialog_title">Condividi con</string>
 
     <string name="notification_erase_title_android_14">Eliminare la cronologia di navigazione?</string>
-    <string name="notification_erase_text_android_14">Tocca o cancella questa notifica per eliminare in modo sicuro la cronologia di navigazione.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tocca o cancella questa notifica per eliminare in modo sicuro la cronologia di navigazione.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tocca o fai scorrere questa notifica per eliminare in modo sicuro la cronologia di navigazione.</string>
 
     <string name="notification_erase_text">Elimina cronologia di navigazione</string>
 
