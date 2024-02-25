@@ -559,8 +559,12 @@ export const URILoadingHelper = {
           !lazy.AboutNewTab.willNotifyUser;
         
         // Floorp Injection
-        if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
-          var { FloorpServices } = ChromeUtils.importESModule("resource:///modules/FloorpServices.sys.mjs");
+        var { FloorpServices } = ChromeUtils.importESModule("resource:///modules/FloorpServices.sys.mjs");
+        let IsWindowFloorpSpecial = FloorpServices.wm.IsFloorpSpecialWindow(w);
+        if (
+          Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled") &&
+          !IsWindowFloorpSpecial
+        ) {
           if (FloorpServices.wm.getRecentWindowExcludeFloorpSpecialWindows()) {
             w = FloorpServices.wm.getRecentWindowExcludeFloorpSpecialWindows();
           }
