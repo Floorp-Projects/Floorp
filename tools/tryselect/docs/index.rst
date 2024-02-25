@@ -56,6 +56,41 @@ line instead, such as by using ``curl``:
 
 .. _attach-job-review:
 
+Profiler symbols for try builds
+-------------------------------
+
+When profiling a tryserver build, you don't get symbols by default. You have to trigger
+an additional `upload-symbols` job on your try push so that the symbols are available
+on the symbol server.
+
+You can trigger this job manually in the Treeherder UI, using "Add new jobs (Search)...".
+
+Assuming you want to profile a "shippable" build (recommended), follow these steps:
+
+ 1. On the treeherder push, click the dropdown triangle in the top right corner.
+ 2. Select "Add new jobs (Search)..."
+ 3. Enter "shippable sym" in the search box and press enter.
+ 4. Important: Check the "Use full job list" checkbox.
+ 5. Pick the job for your try build. For Windows 64 bit builds, the job name is ``build-win64-shippable/opt-upload-symbols`` (this was written in February 2024).
+ 6. Click "Add selected", scroll down, and click "Trigger (1) Selected Jobs".
+
+Around ten minutes later, the symbols will be available on the symbol server, and profile symbolication will succeed.
+
+For other build types, choose the corresponding job for your build type. The job names all
+end in ``-upload-symbols``, and share a prefix with the build job.
+
+.. image:: img/treeherder-trigger-symbols.png
+
+If you've already captured a profile from a try build before the symbols were available, you can
+fix up the collected profile once the symbols are available. To do so, in the Firefox Profiler UI,
+click the "Profile Info" button in the top right corner, and then click the "Re-symbolicate profile"
+button in the panel.
+
+If you want to trigger the upload-symbol job when pushing to try, you can pick it in the list
+when running ``./mach try fuzzy --full`` - the ``--full`` part is necessary.
+The ``-upload-symbols`` task has a dependency on the build task, so you don't have to trigger
+the build task separately if you do this.
+
 Adding Try jobs to a Phabricator patch
 --------------------------------------
 
