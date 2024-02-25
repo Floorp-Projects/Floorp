@@ -117,7 +117,7 @@ tasks:
             - reddit
             - sina
             - [stackoverflow, stacko]
-            - web-de
+            - bild-de
             - cnn
             - [google-search-restaurants, gsearch-r]
 
