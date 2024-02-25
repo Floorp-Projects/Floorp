@@ -186,7 +186,7 @@ pub struct EmptyTask {
 pub struct PrimTask {
     pub device_pixel_scale: DevicePixelScale,
     pub content_origin: DevicePoint,
-    pub prim_address: GpuBufferAddress,
+    pub prim_address_f: GpuBufferAddress,
     pub prim_spatial_node_index: SpatialNodeIndex,
     pub raster_spatial_node_index: SpatialNodeIndex,
     pub transform_id: TransformPaletteId,
@@ -520,7 +520,7 @@ impl RenderTaskKind {
         raster_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
         content_origin: DevicePoint,
-        prim_address: GpuBufferAddress,
+        prim_address_f: GpuBufferAddress,
         transform_id: TransformPaletteId,
         edge_flags: EdgeAaSegmentMask,
         quad_flags: QuadFlags,
@@ -532,7 +532,7 @@ impl RenderTaskKind {
             raster_spatial_node_index,
             device_pixel_scale,
             content_origin,
-            prim_address,
+            prim_address_f,
             transform_id,
             edge_flags,
             quad_flags,
@@ -883,7 +883,7 @@ pub type TaskDependencies = SmallVec<[RenderTaskId;2]>;
 pub struct MaskSubPass {
     pub clip_node_range: ClipNodeRange,
     pub prim_spatial_node_index: SpatialNodeIndex,
-    pub main_prim_address: GpuBufferAddress,
+    pub prim_address_f: GpuBufferAddress,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

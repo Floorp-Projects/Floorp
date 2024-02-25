@@ -81,37 +81,51 @@ QuadPrimitive fetch_primitive(int index) {
     return prim;
 }
 
+struct QuadHeader {
+    int transform_id;
+    int z_id;
+};
+
+QuadHeader fetch_header(int address) {
+    ivec4 header = fetch_from_gpu_buffer_1i(address);
+
+    QuadHeader qh = QuadHeader(
+        header.x,
+        header.y
+    );
+
+    return qh;
+}
+
 struct QuadInstance {
     // x
-    int prim_address;
+    int prim_address_i;
 
     // y
-    int quad_flags;
-    int edge_flags;
-    int picture_task_address;
+    int prim_address_f;
 
     // z
+    int quad_flags;
+    int edge_flags;
     int part_index;
-    int z_id;
+    int segment_index;
 
     // w
-    int segment_index;
-    int transform_id;
+    int picture_task_address;
 };
 
 QuadInstance decode_instance() {
     QuadInstance qi = QuadInstance(
         aData.x,
 
-        (aData.y >> 24) & 0xff,
-        (aData.y >> 16) & 0xff,
-        aData.y & 0xffff,
+        aData.y,
 
         (aData.z >> 24) & 0xff,
-        aData.z & 0xffffff,
+        (aData.z >> 16) & 0xff,
+        (aData.z >>  8) & 0xff,
+        (aData.z >>  0) & 0xff,
 
-        (aData.w >> 24) & 0xff,
-        aData.w & 0xffffff
+        aData.w
     );
 
     return qi;
@@ -165,17 +179,18 @@ float edge_aa_offset(int edge, int flags) {
 PrimitiveInfo ps_quad_main(void) {
     QuadInstance qi = decode_instance();
 
-    Transform transform = fetch_transform(qi.transform_id);
+    QuadHeader qh = fetch_header(qi.prim_address_i);
+    Transform transform = fetch_transform(qh.transform_id);
     PictureTask task = fetch_picture_task(qi.picture_task_address);
-    QuadPrimitive prim = fetch_primitive(qi.prim_address);
-    float z = float(qi.z_id);
+    QuadPrimitive prim = fetch_primitive(qi.prim_address_f);
+    float z = float(qh.z_id);
 
     QuadSegment seg;
     if (qi.segment_index == INVALID_SEGMENT_INDEX) {
         seg.rect = prim.bounds;
         seg.uv_rect = vec4(0.0);
     } else {
-        seg = fetch_segment(qi.prim_address, qi.segment_index);
+        seg = fetch_segment(qi.prim_address_f, qi.segment_index);
     }
 
     // The local space rect that we will draw, which is effectively:

@@ -24,7 +24,7 @@ use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
     ConicGradientInstance,
 };
-use crate::renderer::{GpuBufferBuilderF, GpuBufferAddress};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress, SubPass};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo, MaskSubPass};
@@ -104,6 +104,7 @@ pub trait RenderTarget {
         _z_generator: &mut ZBufferIdGenerator,
         _prim_instances: &[PrimitiveInstance],
         _cmd_buffers: &CommandBufferList,
+        _gpu_buffer_builder: &mut GpuBufferBuilder,
     ) {
     }
 
@@ -121,7 +122,7 @@ pub trait RenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
@@ -183,6 +184,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
         cmd_buffers: &CommandBufferList,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
     ) {
         if self.targets.is_empty() {
             return;
@@ -198,6 +200,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 z_generator,
                 prim_instances,
                 cmd_buffers,
+                gpu_buffer_builder,
             );
         }
     }
@@ -274,10 +277,10 @@ impl RenderTarget for ColorRenderTarget {
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
         cmd_buffers: &CommandBufferList,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
     ) {
         profile_scope!("build");
         let mut merged_batches = AlphaBatchContainer::new(None);
-        let mut gpu_buffer_builder = GpuBufferBuilderF::new();
 
         for task_id in &self.alpha_tasks {
             profile_scope!("alpha_task");
@@ -326,7 +329,7 @@ impl RenderTarget for ColorRenderTarget {
                             pic_task.surface_spatial_node_index,
                             z_generator,
                             prim_instances,
-                            &mut gpu_buffer_builder,
+                            gpu_buffer_builder,
                             segments,
                         );
                     });
@@ -360,7 +363,7 @@ impl RenderTarget for ColorRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         _: &ClipStore,
         transforms: &mut TransformPalette,
@@ -376,13 +379,14 @@ impl RenderTarget for ColorRenderTarget {
                 add_quad_to_batch(
                     render_task_address,
                     info.transform_id,
-                    info.prim_address,
+                    info.prim_address_f,
                     info.quad_flags,
                     info.edge_flags,
                     INVALID_SEGMENT_INDEX as u8,
                     RenderTaskId::INVALID,
                     ZBufferId(0),
                     render_tasks,
+                    gpu_buffer_builder,
                     |_, instance| {
                         if info.prim_needs_scissor_rect {
                             self.prim_instances_with_scissor
@@ -528,7 +532,7 @@ impl RenderTarget for AlphaRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
@@ -966,7 +970,7 @@ fn build_mask_tasks(
     clip_store: &ClipStore,
     data_stores: &DataStores,
     spatial_tree: &SpatialTree,
-    gpu_buffer_builder: &mut GpuBufferBuilderF,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     transforms: &mut TransformPalette,
     render_tasks: &RenderTaskGraph,
     results: &mut ClipMaskInstanceList,
@@ -978,7 +982,7 @@ fn build_mask_tasks(
         let (clip_address, fast_path) = match clip_node.item.kind {
             ClipItemKind::RoundedRectangle { rect, radius, mode } => {
                 let (fast_path, clip_address) = if radius.is_uniform().is_some() {
-                    let mut writer = gpu_buffer_builder.write_blocks(3);
+                    let mut writer = gpu_buffer_builder.f32.write_blocks(3);
                     writer.push_one(rect);
                     writer.push_one([radius.top_left.width, 0.0, 0.0, 0.0]);
                     writer.push_one([mode as i32 as f32, 0.0, 0.0, 0.0]);
@@ -986,7 +990,7 @@ fn build_mask_tasks(
 
                     (true, clip_address)
                 } else {
-                    let mut writer = gpu_buffer_builder.write_blocks(4);
+                    let mut writer = gpu_buffer_builder.f32.write_blocks(4);
                     writer.push_one(rect);
                     writer.push_one([
                         radius.top_left.width,
@@ -1011,7 +1015,7 @@ fn build_mask_tasks(
             ClipItemKind::Rectangle { rect, mode, .. } => {
                 assert_eq!(mode, ClipMode::Clip);
 
-                let mut writer = gpu_buffer_builder.write_blocks(3);
+                let mut writer = gpu_buffer_builder.f32.write_blocks(3);
                 writer.push_one(rect);
                 writer.push_one([0.0, 0.0, 0.0, 0.0]);
                 writer.push_one([mode as i32 as f32, 0.0, 0.0, 0.0]);
@@ -1043,7 +1047,7 @@ fn build_mask_tasks(
 
                 for tile in clip_store.visible_mask_tiles(&clip_instance) {
                     let clip_prim_address = write_prim_blocks(
-                        gpu_buffer_builder,
+                        &mut gpu_buffer_builder.f32,
                         rect,
                         rect,
                         PremultipliedColorF::WHITE,
@@ -1067,6 +1071,7 @@ fn build_mask_tasks(
                         tile.task_id,
                         ZBufferId(0),
                         render_tasks,
+                        gpu_buffer_builder,
                         |_, prim| {
                             if clip_needs_scissor_rect {
                                 results
@@ -1107,7 +1112,7 @@ fn build_mask_tasks(
             );
 
             let main_prim_address = write_prim_blocks(
-                gpu_buffer_builder,
+                &mut gpu_buffer_builder.f32,
                 task_world_rect.cast_unit(),
                 task_world_rect.cast_unit(),
                 PremultipliedColorF::WHITE,
@@ -1162,6 +1167,7 @@ fn build_mask_tasks(
             RenderTaskId::INVALID,
             ZBufferId(0),
             render_tasks,
+            gpu_buffer_builder,
             |_, prim| {
                 let instance = MaskInstance {
                     prim,
@@ -1198,7 +1204,7 @@ fn build_mask_tasks(
 fn build_sub_pass(
     task_id: RenderTaskId,
     task: &RenderTask,
-    gpu_buffer_builder: &mut GpuBufferBuilderF,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     render_tasks: &RenderTaskGraph,
     transforms: &mut TransformPalette,
     ctx: &RenderTargetContext,
@@ -1235,7 +1241,7 @@ fn build_sub_pass(
                     render_task_address,
                     content_rect / device_pixel_scale,
                     target_rect,
-                    masks.main_prim_address,
+                    masks.prim_address_f,
                     masks.prim_spatial_node_index,
                     raster_spatial_node_index,
                     ctx.clip_store,
