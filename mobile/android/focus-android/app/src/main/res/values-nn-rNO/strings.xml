@@ -86,6 +86,12 @@
 
     <string name="notification_erase_title_android_14">Slette nettlesarhistorikk?</string>
 
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Trykk eller fjern dette varselet for å slette nettlesarhistorikken din på ein trygg måte.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Trykk eller sveip dette varselet for å slette nettlesarhistorikken din på ein trygg måte.</string>
+
     <string name="notification_erase_text">Slett nettlesarhistorikk</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

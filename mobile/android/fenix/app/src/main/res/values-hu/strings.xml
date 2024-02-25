@@ -799,9 +799,9 @@
     <string name="preference_gestures_dynamic_toolbar">Görgetés az eszköztár elrejtéséhez</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eszköztár oldalra seprése a lapok közti váltáshoz</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eszköztár oldalra csúsztatása a lapok közti váltáshoz</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Eszköztár felfelé seprése a lapok megnyitásához</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Eszköztár felfelé csúsztatása a lapok megnyitásához</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

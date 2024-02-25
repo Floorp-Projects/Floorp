@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">Retirar dos atallos</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Novidades</string>
     <string name="menu_settings">Axustes</string>
     <string name="menu_about">Sobre</string>
     <string name="menu_help">Axuda</string>
@@ -85,10 +84,13 @@
          sharing an URL. -->
     <string name="share_dialog_title">Compartir por</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Quere borrar o historial de navegación?</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tocar ou borrar esta notificación para borrar de forma segura o seu historial de navegación.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tocar ou deslizar esta notificación para borrar de forma segura o seu historial de navegación.</string>
+
     <string name="notification_erase_text">Borrar o historial de navegación</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

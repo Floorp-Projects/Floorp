@@ -85,7 +85,11 @@
     <string name="share_dialog_title">ਇਸ ਰਾਹੀਂ ਸਾਂਝਾ ਕਰੋ</string>
 
     <string name="notification_erase_title_android_14">ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਮਿਟਾਉਣਾ ਹੈ?</string>
-    <string name="notification_erase_text_android_14">ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਮਿਟਾਉਣ ਲਈ ਇਸ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨੂੰ ਛੂਹੋ ਜਾਂ ਸਾਫ਼ ਕਰੋ।</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਮਿਟਾਉਣ ਲਈ ਇਸ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨੂੰ ਛੂਹੋ ਜਾਂ ਸਾਫ਼ ਕਰੋ।</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਮਿਟਾਉਣ ਲਈ ਇਸ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨੂੰ ਛੂਹੋ ਜਾਂ ਸਰਕਾਓ।</string>
 
     <string name="notification_erase_text">ਬਰਾਊਜ਼ਰ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਮਿਟਾਓ</string>
 

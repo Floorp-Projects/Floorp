@@ -84,7 +84,11 @@
     <string name="share_dialog_title">透過下列程式分享</string>
 
     <string name="notification_erase_title_android_14">要清除瀏覽紀錄嗎？</string>
-    <string name="notification_erase_text_android_14">點擊或滑掉這則通知，即可安全地清除您的瀏覽紀錄。</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">點擊或滑掉這則通知，即可安全地清除您的瀏覽紀錄。</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">點擊或滑掉這則通知，即可安全地清除您的瀏覽紀錄。</string>
 
     <string name="notification_erase_text">清除瀏覽紀錄</string>
 

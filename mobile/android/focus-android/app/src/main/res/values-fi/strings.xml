@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Jaa palvelulla</string>
 
     <string name="notification_erase_title_android_14">Poistetaanko selaushistoria?</string>
-    <string name="notification_erase_text_android_14">Napauta tai tyhjennä tämä ilmoitus tyhjentääksesi selaushistoriasi turvallisesti.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Napauta tai tyhjennä tämä ilmoitus tyhjentääksesi selaushistoriasi turvallisesti.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Napauta tai pyyhkäise tämä ilmoitus tyhjentääksesi selaushistoriasi turvallisesti.</string>
 
     <string name="notification_erase_text">Tyhjennä selaushistoria</string>
 
