@@ -26,8 +26,8 @@ use crate::prim_store::{VECS_PER_SEGMENT, PrimitiveInstanceIndex};
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::{RenderTaskAddress, RenderTaskKind, SubPass};
-use crate::renderer::{BlendMode, ShaderColorMode};
-use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilderF, GpuBufferAddress};
+use crate::renderer::{BlendMode, GpuBufferBuilder, ShaderColorMode};
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferAddress};
 use crate::resource_cache::{GlyphFetchResult, ImageProperties};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
@@ -803,7 +803,7 @@ impl BatchBuilder {
         &mut self,
         prim_instance_index: PrimitiveInstanceIndex,
         transform_id: TransformPaletteId,
-        gpu_buffer_address: GpuBufferAddress,
+        prim_address_f: GpuBufferAddress,
         quad_flags: QuadFlags,
         edge_flags: EdgeAaSegmentMask,
         segment_index: u8,
@@ -811,6 +811,7 @@ impl BatchBuilder {
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
         render_tasks: &RenderTaskGraph,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
     ) {
         let prim_instance = &prim_instances[prim_instance_index.0 as usize];
         let prim_info = &prim_instance.vis;
@@ -820,13 +821,14 @@ impl BatchBuilder {
         add_quad_to_batch(
             self.batcher.render_task_address,
             transform_id,
-            gpu_buffer_address,
+            prim_address_f,
             quad_flags,
             edge_flags,
             segment_index,
             task_id,
             z_id,
             render_tasks,
+            gpu_buffer_builder,
             |key, instance| {
                 let batch = self.batcher.set_params_and_get_batch(
                     key,
@@ -857,7 +859,7 @@ impl BatchBuilder {
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
-        _gpu_buffer_builder: &mut GpuBufferBuilderF,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         segments: &[RenderTaskId],
     ) {
         let (prim_instance_index, extra_prim_gpu_address) = match cmd {
@@ -883,6 +885,7 @@ impl BatchBuilder {
                         z_generator,
                         prim_instances,
                         render_tasks,
+                        gpu_buffer_builder,
                     );
                 } else {
                     for (i, task_id) in segments.iter().enumerate() {
@@ -900,6 +903,7 @@ impl BatchBuilder {
                             z_generator,
                             prim_instances,
                             render_tasks,
+                            gpu_buffer_builder,
                         );
                     }
                 }
@@ -3837,13 +3841,14 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
 pub fn add_quad_to_batch<F>(
     render_task_address: RenderTaskAddress,
     transform_id: TransformPaletteId,
-    gpu_buffer_address: GpuBufferAddress,
+    prim_address_f: GpuBufferAddress,
     quad_flags: QuadFlags,
     edge_flags: EdgeAaSegmentMask,
     segment_index: u8,
     task_id: RenderTaskId,
     z_id: ZBufferId,
     render_tasks: &RenderTaskGraph,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     mut f: F,
 ) where F: FnMut(BatchKey, PrimitiveInstanceData) {
 
@@ -3856,6 +3861,15 @@ pub fn add_quad_to_batch<F>(
         Bottom = 4,
         All = 5,
     }
+
+    let mut writer = gpu_buffer_builder.i32.write_blocks(1);
+    writer.push_one([
+        transform_id.0 as i32,
+        z_id.0,
+        0,
+        0,
+    ]);
+    let prim_address_i = writer.finish();
 
     let texture = match task_id {
         RenderTaskId::INVALID => {
@@ -3898,7 +3912,8 @@ pub fn add_quad_to_batch<F>(
     if edge_flags.is_empty() {
         let instance = QuadInstance {
             render_task_address,
-            prim_address: gpu_buffer_address,
+            prim_address_i,
+            prim_address_f,
             z_id,
             transform_id,
             edge_flags: edge_flags_bits,
@@ -3911,7 +3926,8 @@ pub fn add_quad_to_batch<F>(
     } else if quad_flags.contains(QuadFlags::USE_AA_SEGMENTS) {
         let main_instance = QuadInstance {
             render_task_address,
-            prim_address: gpu_buffer_address,
+            prim_address_i,
+            prim_address_f,
             z_id,
             transform_id,
             edge_flags: edge_flags_bits,
@@ -3956,7 +3972,8 @@ pub fn add_quad_to_batch<F>(
     } else {
         let instance = QuadInstance {
             render_task_address,
-            prim_address: gpu_buffer_address,
+            prim_address_i,
+            prim_address_f,
             z_id,
             transform_id,
             edge_flags: edge_flags_bits,

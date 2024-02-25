@@ -452,7 +452,7 @@ fn prepare_interned_prim_for_render(
                         kind: RenderTaskCacheKeyKind::LineDecoration(cache_key.clone()),
                     },
                     frame_state.gpu_cache,
-                    frame_state.frame_gpu_data_f,
+                    &mut frame_state.frame_gpu_data.f32,
                     frame_state.rg_builder,
                     None,
                     false,
@@ -607,7 +607,7 @@ fn prepare_interned_prim_for_render(
                 handles.push(frame_state.resource_cache.request_render_task(
                     cache_key,
                     frame_state.gpu_cache,
-                    frame_state.frame_gpu_data_f,
+                    &mut frame_state.frame_gpu_data.f32,
                     frame_state.rg_builder,
                     None,
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
@@ -764,7 +764,7 @@ fn prepare_interned_prim_for_render(
                 //           the written block count) to gpu-buffer, we could add a trait for
                 //           writing typed data?
                 let main_prim_address = write_prim_blocks(
-                    frame_state.frame_gpu_data_f,
+                    &mut frame_state.frame_gpu_data.f32,
                     prim_data.common.prim_rect,
                     prim_instance.vis.clip_chain.local_clip_rect,
                     premul_color,
@@ -1138,7 +1138,7 @@ fn prepare_interned_prim_for_render(
 
             let stops_address = GradientGpuBlockBuilder::build(
                 prim_data.reverse_stops,
-                frame_state.frame_gpu_data_f,
+                &mut frame_state.frame_gpu_data.f32,
                 &prim_data.stops,
             );
 
@@ -1296,8 +1296,8 @@ fn prepare_interned_prim_for_render(
                     .clipped_local_rect
                     .cast_unit();
 
-                let main_prim_address = write_prim_blocks(
-                    frame_state.frame_gpu_data_f,
+                let prim_address_f = write_prim_blocks(
+                    &mut frame_state.frame_gpu_data.f32,
                     prim_local_rect,
                     prim_instance.vis.clip_chain.local_clip_rect,
                     PremultipliedColorF::WHITE,
@@ -1333,7 +1333,7 @@ fn prepare_interned_prim_for_render(
                     let masks = MaskSubPass {
                         clip_node_range,
                         prim_spatial_node_index,
-                        main_prim_address,
+                        prim_address_f,
                     };
 
                     // Add the mask as a sub-pass of the picture
@@ -1406,7 +1406,7 @@ fn prepare_interned_prim_for_render(
                     let masks = MaskSubPass {
                         clip_node_range,
                         prim_spatial_node_index,
-                        main_prim_address,
+                        prim_address_f,
                     };
 
                     let clip_task = frame_state.rg_builder.get_task_mut(clip_task_id);
@@ -1820,7 +1820,7 @@ pub fn update_clip_task(
             root_spatial_node_index,
             frame_state.clip_store,
             frame_state.gpu_cache,
-            frame_state.frame_gpu_data_f,
+            &mut frame_state.frame_gpu_data.f32,
             frame_state.resource_cache,
             frame_state.rg_builder,
             &mut data_stores.clip,
@@ -1881,7 +1881,7 @@ pub fn update_brush_segment_clip_task(
         root_spatial_node_index,
         frame_state.clip_store,
         frame_state.gpu_cache,
-        frame_state.frame_gpu_data_f,
+        &mut frame_state.frame_gpu_data.f32,
         frame_state.resource_cache,
         frame_state.rg_builder,
         clip_data_store,
@@ -2153,7 +2153,7 @@ fn add_segment(
     prim_instance: &PrimitiveInstance,
     prim_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
-    main_prim_address: GpuBufferAddress,
+    prim_address_f: GpuBufferAddress,
     transform_id: TransformPaletteId,
     aa_flags: EdgeAaSegmentMask,
     quad_flags: QuadFlags,
@@ -2177,7 +2177,7 @@ fn add_segment(
                 raster_spatial_node_index,
                 device_pixel_scale,
                 content_origin,
-                main_prim_address,
+                prim_address_f,
                 transform_id,
                 aa_flags,
                 quad_flags,
@@ -2189,7 +2189,7 @@ fn add_segment(
         let masks = MaskSubPass {
             clip_node_range: prim_instance.vis.clip_chain.clips_range,
             prim_spatial_node_index,
-            main_prim_address,
+            prim_address_f,
         };
 
         let task = frame_state.rg_builder.get_task_mut(task_id);
@@ -2223,7 +2223,7 @@ fn add_composite_prim(
     segments: &[QuadSegment],
 ) {
     let composite_prim_address = write_prim_blocks(
-        frame_state.frame_gpu_data_f,
+        &mut frame_state.frame_gpu_data.f32,
         rect,
         rect,
         color,

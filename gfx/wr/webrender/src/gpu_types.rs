@@ -547,7 +547,8 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct QuadInstance {
     pub render_task_address: RenderTaskAddress,
-    pub prim_address: GpuBufferAddress,
+    pub prim_address_i: GpuBufferAddress,
+    pub prim_address_f: GpuBufferAddress,
     pub z_id: ZBufferId,
     pub transform_id: TransformPaletteId,
     pub quad_flags: u8,
@@ -559,19 +560,23 @@ pub struct QuadInstance {
 impl From<QuadInstance> for PrimitiveInstanceData {
     fn from(instance: QuadInstance) -> Self {
         /*
-            [32 bits prim address]
-            [8 bits quad flags] [8 bits edge flags] [16 bits render task address]
-            [8 bits segment flags] [24 bits z_id]
-            [8 bits segment index] [24 bits xf_id]
-         */
+            [32 prim address_i]
+            [32 prim address_f]
+            [8888 qf ef pi si]
+            [32 render task address]
+        */
+
         PrimitiveInstanceData {
             data: [
-                instance.prim_address.as_int(),
-                ((instance.quad_flags as i32) << 24) |
-                ((instance.edge_flags as i32) << 16) |
+                instance.prim_address_i.as_int(),
+                instance.prim_address_f.as_int(),
+
+                ((instance.quad_flags as i32)    << 24) |
+                ((instance.edge_flags as i32)    << 16) |
+                ((instance.part_index as i32)    <<  8) |
+                ((instance.segment_index as i32) <<  0),
+
                 instance.render_task_address.0 as i32,
-                ((instance.part_index as i32) << 24) | instance.z_id.0,
-                ((instance.segment_index as i32) << 24) | instance.transform_id.0 as i32,
             ],
         }
     }

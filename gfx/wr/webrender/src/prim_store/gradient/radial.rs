@@ -220,7 +220,7 @@ impl RadialGradientTemplate {
                 kind: RenderTaskCacheKeyKind::RadialGradient(cache_key),
             },
             frame_state.gpu_cache,
-            frame_state.frame_gpu_data_f,
+            &mut frame_state.frame_gpu_data.f32,
             frame_state.rg_builder,
             None,
             false,
