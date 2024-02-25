@@ -64,29 +64,22 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
 
   nsTextControlFrame::CreateAnonymousContent(aElements);
 
-#if defined(MOZ_WIDGET_ANDROID)
-  // We don't want spin buttons on Android
-  return NS_OK;
-#else
   // The author has elected to hide the spinner by setting this
   // -moz-appearance. We will reframe if it changes.
-  if (StyleDisplay()->EffectiveAppearance() == StyleAppearance::Textfield) {
-    return NS_OK;
+  if (StyleDisplay()->EffectiveAppearance() != StyleAppearance::Textfield) {
+    // Create the ::-moz-number-spin-box pseudo-element:
+    mSpinBox = MakeAnonElement(PseudoStyleType::mozNumberSpinBox);
+
+    // Create the ::-moz-number-spin-up pseudo-element:
+    mSpinUp = MakeAnonElement(PseudoStyleType::mozNumberSpinUp, mSpinBox);
+
+    // Create the ::-moz-number-spin-down pseudo-element:
+    mSpinDown = MakeAnonElement(PseudoStyleType::mozNumberSpinDown, mSpinBox);
+
+    aElements.AppendElement(mSpinBox);
   }
 
-  // Create the ::-moz-number-spin-box pseudo-element:
-  mSpinBox = MakeAnonElement(PseudoStyleType::mozNumberSpinBox);
-
-  // Create the ::-moz-number-spin-up pseudo-element:
-  mSpinUp = MakeAnonElement(PseudoStyleType::mozNumberSpinUp, mSpinBox);
-
-  // Create the ::-moz-number-spin-down pseudo-element:
-  mSpinDown = MakeAnonElement(PseudoStyleType::mozNumberSpinDown, mSpinBox);
-
-  aElements.AppendElement(mSpinBox);
-
   return NS_OK;
-#endif
 }
 
 /* static */
