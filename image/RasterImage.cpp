@@ -480,12 +480,7 @@ void RasterImage::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) {
   bool animatedFramesDiscarded =
       mAnimationState && aSurfaceKey.Playback() == PlaybackType::eAnimated;
 
-  nsCOMPtr<nsIEventTarget> eventTarget;
-  if (mProgressTracker) {
-    eventTarget = mProgressTracker->GetEventTarget();
-  } else {
-    eventTarget = do_GetMainThread();
-  }
+  nsCOMPtr<nsIEventTarget> eventTarget = do_GetMainThread();
 
   RefPtr<RasterImage> image = this;
   nsCOMPtr<nsIRunnable> ev =

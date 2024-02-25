@@ -408,10 +408,6 @@ void ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver) {
   }
 }
 
-already_AddRefed<nsIEventTarget> ProgressTracker::GetEventTarget() const {
-  return do_AddRef(GetMainThreadSerialEventTarget());
-}
-
 void ProgressTracker::AddObserver(IProgressObserver* aObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<IProgressObserver> observer = aObserver;
