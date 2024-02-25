@@ -315,7 +315,15 @@ void MockCubebStream::SetDriftFactor(float aDriftFactor) {
 
 void MockCubebStream::ForceError() { mForceErrorState = true; }
 
-void MockCubebStream::ForceDeviceChanged() { mForceDeviceChanged = true; };
+void MockCubebStream::ForceDeviceChanged() {
+  MOZ_ASSERT(mRunningMode == RunningMode::Automatic);
+  mForceDeviceChanged = true;
+};
+
+void MockCubebStream::NotifyDeviceChangedNow() {
+  MOZ_ASSERT(mRunningMode == RunningMode::Manual);
+  NotifyDeviceChanged();
+}
 
 void MockCubebStream::Thaw() {
   MOZ_ASSERT(mRunningMode == RunningMode::Automatic);
@@ -408,10 +416,7 @@ KeepProcessing MockCubebStream::Process(long aNrFrames) {
     // control over them. Fire the device-changed callback in another thread to
     // simulate this.
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-        __func__, [this, self = RefPtr<SmartMockCubebStream>(mSelf)] {
-          mDeviceChangedCallback(this->mUserPtr);
-          mDeviceChangedForcedEvent.Notify();
-        }));
+        __func__, [this, self = RefPtr(mSelf)] { NotifyDeviceChanged(); }));
   }
   return KeepProcessing::Yes;
 }
@@ -428,6 +433,11 @@ KeepProcessing MockCubebStream::Process10Ms() {
 void MockCubebStream::NotifyState(cubeb_state aState) {
   mStateCallback(AsCubebStream(), mUserPtr, aState);
   mStateEvent.Notify(aState);
+}
+
+void MockCubebStream::NotifyDeviceChanged() {
+  mDeviceChangedCallback(this->mUserPtr);
+  mDeviceChangedForcedEvent.Notify();
 }
 
 MockCubeb::MockCubeb() : MockCubeb(MockCubeb::RunningMode::Automatic) {}
