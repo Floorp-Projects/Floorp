@@ -218,7 +218,7 @@ void ImageResource::SendOnUnlockedDraw(uint32_t aFlags) {
     mProgressTracker->OnUnlockedDraw();
   } else {
     NotNull<RefPtr<ImageResource>> image = WrapNotNull(this);
-    nsCOMPtr<nsIEventTarget> eventTarget = mProgressTracker->GetEventTarget();
+    nsCOMPtr<nsIEventTarget> eventTarget = GetMainThreadSerialEventTarget();
     nsCOMPtr<nsIRunnable> ev = NS_NewRunnableFunction(
         "image::ImageResource::SendOnUnlockedDraw", [=]() -> void {
           RefPtr<ProgressTracker> tracker = image->GetProgressTracker();

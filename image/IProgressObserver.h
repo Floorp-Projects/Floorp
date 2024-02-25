@@ -10,8 +10,6 @@
 #include "nsISupports.h"
 #include "nsRect.h"
 
-class nsIEventTarget;
-
 namespace mozilla {
 namespace image {
 

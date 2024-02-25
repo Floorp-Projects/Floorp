@@ -334,8 +334,7 @@ void imgRequest::Cancel(nsresult aStatus) {
   if (NS_IsMainThread()) {
     ContinueCancel(aStatus);
   } else {
-    RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-    nsCOMPtr<nsIEventTarget> eventTarget = progressTracker->GetEventTarget();
+    nsCOMPtr<nsIEventTarget> eventTarget = GetMainThreadSerialEventTarget();
     nsCOMPtr<nsIRunnable> ev = new imgRequestMainThreadCancel(this, aStatus);
     eventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
   }
@@ -1027,24 +1026,21 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
 
     if (result.mImage) {
       image = result.mImage;
-      nsCOMPtr<nsIEventTarget> eventTarget;
 
       // Update our state to reflect this new part.
       {
         MutexAutoLock lock(mMutex);
         mImage = image;
 
-        // We only get an event target if we are not on the main thread, because
-        // we have to dispatch in that case. If we are on the main thread, but
-        // on a different scheduler group than ProgressTracker would give us,
-        // that is okay because nothing in imagelib requires that, just our
-        // listeners (which have their own checks).
-        if (!NS_IsMainThread()) {
-          eventTarget = mProgressTracker->GetEventTarget();
-          MOZ_ASSERT(eventTarget);
-        }
-
         mProgressTracker = nullptr;
+      }
+
+      // We only get an event target if we are not on the main thread, because
+      // we have to dispatch in that case.
+      nsCOMPtr<nsIEventTarget> eventTarget;
+      if (!NS_IsMainThread()) {
+        eventTarget = GetMainThreadSerialEventTarget();
+        MOZ_ASSERT(eventTarget);
       }
 
       // Some property objects are not threadsafe, and we need to send

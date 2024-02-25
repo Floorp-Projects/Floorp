@@ -179,9 +179,6 @@ class ProgressTracker : public mozilla::SupportsWeakPtr {
   bool RemoveObserver(IProgressObserver* aObserver);
   uint32_t ObserverCount() const;
 
-  // Get the event target we should currently dispatch events to.
-  already_AddRefed<nsIEventTarget> GetEventTarget() const;
-
   // Resets our weak reference to our image. Image subclasses should call this
   // in their destructor.
   void ResetImage();
