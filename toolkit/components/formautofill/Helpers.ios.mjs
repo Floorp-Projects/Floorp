@@ -45,6 +45,12 @@ HTMLElement.prototype.getAutocompleteInfo = function () {
   };
 };
 
+// Bug 1835024. Webkit doesn't support `checkVisibility` API
+// https://drafts.csswg.org/cssom-view-1/#dom-element-checkvisibility
+HTMLElement.prototype.checkVisibility = function (options) {
+  throw new Error(`Not implemented: WebKit doesn't support checkVisibility `);
+};
+
 // This function  helps us debug better when an error occurs because a certain mock is missing
 const withNotImplementedError = obj =>
   new Proxy(obj, {
@@ -137,23 +143,10 @@ export const OSKeyStore = withNotImplementedError({
   ensureLoggedIn: () => true,
 });
 
-// Checks an element's focusability and accessibility via keyboard navigation
-const checkFocusability = element => {
-  return (
-    !element.disabled &&
-    !element.hidden &&
-    element.style.display != "none" &&
-    element.tabIndex != "-1"
-  );
-};
-
 // Define mock for Services
 // NOTE: Services is a global so we need to attach it to the window
 // eslint-disable-next-line no-shadow
 export const Services = withNotImplementedError({
-  focus: withNotImplementedError({
-    elementIsFocusable: checkFocusability,
-  }),
   locale: withNotImplementedError({ isAppLocaleRTL: false }),
   prefs: withNotImplementedError({ prefIsLocked: () => false }),
   strings: withNotImplementedError({
