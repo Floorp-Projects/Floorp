@@ -207,10 +207,6 @@ module.exports = {
     "no-caller": "error",
 
     // XXX Bug 1487642 - decide if we want to enable this or not.
-    // Disallow lexical declarations in case clauses
-    "no-case-declarations": "off",
-
-    // XXX Bug 1487642 - decide if we want to enable this or not.
     // Disallow the use of console
     "no-console": "off",
 
