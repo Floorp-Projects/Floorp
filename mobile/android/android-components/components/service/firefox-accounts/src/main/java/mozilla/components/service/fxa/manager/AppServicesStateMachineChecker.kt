@@ -57,7 +57,22 @@ object AppServicesStateMachineChecker {
                 val pairingUrl = event.pairingUrl ?: "<null>"
                 FxaEvent.BeginPairingFlow(pairingUrl, ArrayList(scopes), event.entrypoint.entryName)
             }
-            is Event.Account.AuthenticationError -> FxaEvent.CheckAuthorizationStatus
+            is Event.Account.AuthenticationError -> {
+                // There are basically 2 ways for this to happen:
+                //
+                // - Another component called `FxaAccountManager.encounteredAuthError()`.  In this
+                //   case, we should initiate the state transition by sending the state machine the
+                //   `FxaEvent.CheckAuthorizationStatus`
+                // - `FxaAccountManager` sent it to itself, because there was an error when
+                //   `internalStateSideEffects` called `finalizeDevice()`.  In this case, we're
+                //   already in the middle of a state transition and already sent the state machine
+                //   the `EnsureCapabilitiesAuthError` event, so we should ignore it.
+                if (event.operation == "finalizeDevice") {
+                    return
+                } else {
+                    FxaEvent.CheckAuthorizationStatus
+                }
+            }
             Event.Account.AccessTokenKeyError -> FxaEvent.CheckAuthorizationStatus
             Event.Account.Logout -> FxaEvent.Disconnect
             // This is the one ProgressEvent that's considered a "public event" in app-services
