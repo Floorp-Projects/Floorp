@@ -3,6 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //! The UI model.
+//!
+//! Model elements should generally be declared as types with all fields `pub` (to be accessed by
+//! UI implementations), though accessor methods are acceptable if needed. An
+//! `ElementBuilder<TYPE>` impl should be provided to create methods that will be used in the
+//! [`ui!`] macro. The model types are accessible when being _consumed_ by a UI implementation,
+//! whereas the `ElementBuilder` types are accessible when the model is being _created_.
+//!
+//! All elements should be listed in the `element_types!` macro in this file (note that [`Window`],
+//! while an element, isn't listed here as it cannot be a child element). This populates the
+//! `ElementType` enum and generates `From<Element>` for `ElementType`, and `TryFrom<ElementType>`
+//! for the element (as well as reference `TryFrom`).
+//!
+//! The model is written to accommodate layout and text direction differences (e.g. for RTL
+//! languages), and UI implementations are expected to account for this correctly.
 
 use crate::data::Property;
 pub use button::Button;
@@ -26,6 +40,8 @@ mod vbox;
 mod window;
 
 /// A GUI element, including general style attributes and a more specific type.
+///
+/// `From<ElementBuilder<...>>` is implemented for all elements listed in `element_types!`.
 #[derive(Debug)]
 pub struct Element {
     pub style: ElementStyle,
@@ -119,6 +135,8 @@ impl Default for ElementStyle {
 }
 
 /// A builder for `Element`s.
+///
+/// Each element should add an `impl ElementBuilder<TYPE>` to add methods to their builder.
 #[derive(Debug, Default)]
 pub struct ElementBuilder<T> {
     pub style: ElementStyle,
@@ -215,7 +233,11 @@ impl<T> ElementBuilder<T> {
     }
 }
 
-/// A typed `Element`.
+/// A typed [`Element`].
+///
+/// This is useful for the [`ui!`] macro when a method should accept a specific element type, since
+/// the macro always creates [`ElementBuilder<T>`](ElementBuilder) and ends with a `.into()` (and this implements
+/// `From<ElementBuilder<T>>`).
 #[derive(Debug, Default)]
 pub struct TypedElement<T> {
     pub style: ElementStyle,
@@ -232,6 +254,9 @@ impl<T> From<ElementBuilder<T>> for TypedElement<T> {
 }
 
 /// The alignment of an element in one direction.
+///
+/// Note that rather than `Left`/`Right`, this class has `Start`/`End` as it is meant to be
+/// layout-direction-aware.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum Alignment {
@@ -272,6 +297,9 @@ pub struct Margin {
 /// mutable reference. This means that element types must implement Default and must implement
 /// builder methods on `ElementBuilder<ElementTypeName>`. The children block is optional, and calls
 /// `add_child(child: Element)` for each provided child (so implement this method if desired).
+///
+/// For testing, a string identifier can be set on any element with a `["my_identifier"]` following
+/// the element type.
 macro_rules! ui {
     ( $el:ident
         $([ $id:literal ])?
