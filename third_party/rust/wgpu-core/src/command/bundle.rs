@@ -97,7 +97,7 @@ use crate::{
     id,
     init_tracker::{BufferInitTrackerAction, MemoryInitKind, TextureInitTrackerAction},
     pipeline::{PipelineFlags, RenderPipeline, VertexStep},
-    resource::{Buffer, Resource, ResourceInfo, ResourceType},
+    resource::{Resource, ResourceInfo, ResourceType},
     resource_log,
     track::RenderBundleScope,
     validation::check_buffer_usage,
@@ -110,11 +110,9 @@ use thiserror::Error;
 
 use hal::CommandEncoder as _;
 
-use super::ArcRenderCommand;
-
 /// https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-draw
-fn validate_draw<A: HalApi>(
-    vertex: &[Option<VertexState<A>>],
+fn validate_draw(
+    vertex: &[Option<VertexState>],
     step: &[VertexStep],
     first_vertex: u32,
     vertex_count: u32,
@@ -154,10 +152,10 @@ fn validate_draw<A: HalApi>(
 }
 
 // See https://gpuweb.github.io/gpuweb/#dom-gpurendercommandsmixin-drawindexed
-fn validate_indexed_draw<A: HalApi>(
-    vertex: &[Option<VertexState<A>>],
+fn validate_indexed_draw(
+    vertex: &[Option<VertexState>],
     step: &[VertexStep],
-    index_state: &IndexState<A>,
+    index_state: &IndexState,
     first_index: u32,
     index_count: u32,
     first_instance: u32,
@@ -262,9 +260,6 @@ impl RenderBundleEncoder {
             None => (true, true),
         };
 
-        // TODO: should be device.limits.max_color_attachments
-        let max_color_attachments = hal::MAX_COLOR_ATTACHMENTS;
-
         //TODO: validate that attachment formats are renderable,
         // have expected aspects, support multisampling.
         Ok(Self {
@@ -272,11 +267,11 @@ impl RenderBundleEncoder {
             parent_id,
             context: RenderPassContext {
                 attachments: AttachmentData {
-                    colors: if desc.color_formats.len() > max_color_attachments {
+                    colors: if desc.color_formats.len() > hal::MAX_COLOR_ATTACHMENTS {
                         return Err(CreateRenderBundleError::ColorAttachment(
                             ColorAttachmentError::TooMany {
                                 given: desc.color_formats.len(),
-                                limit: max_color_attachments,
+                                limit: hal::MAX_COLOR_ATTACHMENTS,
                             },
                         ));
                     } else {
@@ -476,7 +471,7 @@ impl RenderBundleEncoder {
 
                     let pipeline_state = PipelineState::new(pipeline);
 
-                    commands.push(ArcRenderCommand::SetPipeline(pipeline.clone()));
+                    commands.push(command);
 
                     // If this pipeline uses push constants, zero out their values.
                     if let Some(iter) = pipeline_state.zero_push_constants() {
@@ -501,7 +496,7 @@ impl RenderBundleEncoder {
                         .map_pass_err(scope)?;
                     self.check_valid_to_use(buffer.device.info.id())
                         .map_pass_err(scope)?;
-                    check_buffer_usage(buffer_id, buffer.usage, wgt::BufferUsages::INDEX)
+                    check_buffer_usage(buffer.usage, wgt::BufferUsages::INDEX)
                         .map_pass_err(scope)?;
 
                     let end = match size {
@@ -513,7 +508,7 @@ impl RenderBundleEncoder {
                         offset..end,
                         MemoryInitKind::NeedsInitializedMemory,
                     ));
-                    state.set_index_buffer(buffer.clone(), index_format, offset..end);
+                    state.set_index_buffer(buffer_id, index_format, offset..end);
                 }
                 RenderCommand::SetVertexBuffer {
                     slot,
@@ -540,7 +535,7 @@ impl RenderBundleEncoder {
                         .map_pass_err(scope)?;
                     self.check_valid_to_use(buffer.device.info.id())
                         .map_pass_err(scope)?;
-                    check_buffer_usage(buffer_id, buffer.usage, wgt::BufferUsages::VERTEX)
+                    check_buffer_usage(buffer.usage, wgt::BufferUsages::VERTEX)
                         .map_pass_err(scope)?;
 
                     let end = match size {
@@ -552,13 +547,13 @@ impl RenderBundleEncoder {
                         offset..end,
                         MemoryInitKind::NeedsInitializedMemory,
                     ));
-                    state.vertex[slot as usize] = Some(VertexState::new(buffer.clone(), offset..end));
+                    state.vertex[slot as usize] = Some(VertexState::new(buffer_id, offset..end));
                 }
                 RenderCommand::SetPushConstant {
                     stages,
                     offset,
                     size_bytes,
-                    values_offset,
+                    values_offset: _,
                 } => {
                     let scope = PassErrorScope::SetPushConstant;
                     let end_offset = offset + size_bytes;
@@ -569,7 +564,7 @@ impl RenderBundleEncoder {
                         .validate_push_constant_ranges(stages, offset, end_offset)
                         .map_pass_err(scope)?;
 
-                    commands.push(ArcRenderCommand::SetPushConstant { stages, offset, size_bytes, values_offset });
+                    commands.push(command);
                 }
                 RenderCommand::Draw {
                     vertex_count,
@@ -597,19 +592,14 @@ impl RenderBundleEncoder {
                     if instance_count > 0 && vertex_count > 0 {
                         commands.extend(state.flush_vertices());
                         commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                        commands.push(ArcRenderCommand::Draw {
-                            vertex_count,
-                            instance_count,
-                            first_vertex,
-                            first_instance,
-                        });
+                        commands.push(command);
                     }
                 }
                 RenderCommand::DrawIndexed {
                     index_count,
                     instance_count,
                     first_index,
-                    base_vertex,
+                    base_vertex: _,
                     first_instance,
                 } => {
                     let scope = PassErrorScope::Draw {
@@ -638,7 +628,7 @@ impl RenderBundleEncoder {
                         commands.extend(state.flush_index());
                         commands.extend(state.flush_vertices());
                         commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                        commands.push(ArcRenderCommand::DrawIndexed { index_count, instance_count, first_index, base_vertex, first_instance });
+                        commands.push(command);
                     }
                 }
                 RenderCommand::MultiDrawIndirect {
@@ -667,7 +657,7 @@ impl RenderBundleEncoder {
                         .map_pass_err(scope)?;
                     self.check_valid_to_use(buffer.device.info.id())
                         .map_pass_err(scope)?;
-                    check_buffer_usage(buffer_id, buffer.usage, wgt::BufferUsages::INDIRECT)
+                    check_buffer_usage(buffer.usage, wgt::BufferUsages::INDIRECT)
                         .map_pass_err(scope)?;
 
                     buffer_memory_init_actions.extend(buffer.initialization_status.read().create_action(
@@ -678,7 +668,7 @@ impl RenderBundleEncoder {
 
                     commands.extend(state.flush_vertices());
                     commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                    commands.push(ArcRenderCommand::MultiDrawIndirect { buffer: buffer.clone(), offset, count: None, indexed: false });
+                    commands.push(command);
                 }
                 RenderCommand::MultiDrawIndirect {
                     buffer_id,
@@ -706,7 +696,7 @@ impl RenderBundleEncoder {
                         .map_pass_err(scope)?;
                     self.check_valid_to_use(buffer.device.info.id())
                         .map_pass_err(scope)?;
-                    check_buffer_usage(buffer_id, buffer.usage, wgt::BufferUsages::INDIRECT)
+                    check_buffer_usage(buffer.usage, wgt::BufferUsages::INDIRECT)
                         .map_pass_err(scope)?;
 
                     buffer_memory_init_actions.extend(buffer.initialization_status.read().create_action(
@@ -723,7 +713,7 @@ impl RenderBundleEncoder {
                     commands.extend(index.flush());
                     commands.extend(state.flush_vertices());
                     commands.extend(state.flush_binds(used_bind_groups, base.dynamic_offsets));
-                    commands.push(ArcRenderCommand::MultiDrawIndirect { buffer: buffer.clone(), offset, count: None, indexed: true });
+                    commands.push(command);
                 }
                 RenderCommand::MultiDrawIndirect { .. }
                 | RenderCommand::MultiDrawIndirectCount { .. } => unimplemented!(),
@@ -834,7 +824,7 @@ pub type RenderBundleDescriptor<'a> = wgt::RenderBundleDescriptor<Label<'a>>;
 pub struct RenderBundle<A: HalApi> {
     // Normalized command stream. It can be executed verbatim,
     // without re-binding anything on the pipeline change.
-    base: BasePass<ArcRenderCommand<A>>,
+    base: BasePass<RenderCommand>,
     pub(super) is_depth_read_only: bool,
     pub(super) is_stencil_read_only: bool,
     pub(crate) device: Arc<Device<A>>,
@@ -873,6 +863,7 @@ impl<A: HalApi> RenderBundle<A> {
     /// All the validation has already been done by this point.
     /// The only failure condition is if some of the used buffers are destroyed.
     pub(super) unsafe fn execute(&self, raw: &mut A::CommandEncoder) -> Result<(), ExecutionError> {
+        let trackers = &self.used;
         let mut offsets = self.base.dynamic_offsets.as_slice();
         let mut pipeline_layout = None::<Arc<PipelineLayout<A>>>;
         if !self.discard_hal_labels {
@@ -883,65 +874,74 @@ impl<A: HalApi> RenderBundle<A> {
 
         let snatch_guard = self.device.snatchable_lock.read();
 
-        use ArcRenderCommand as Cmd;
         for command in self.base.commands.iter() {
-            match command {
-                Cmd::SetBindGroup {
+            match *command {
+                RenderCommand::SetBindGroup {
                     index,
                     num_dynamic_offsets,
-                    bind_group,
+                    bind_group_id,
                 } => {
+                    let bind_groups = trackers.bind_groups.read();
+                    let bind_group = bind_groups.get(bind_group_id).unwrap();
                     let raw_bg = bind_group
                         .raw(&snatch_guard)
-                        .ok_or(ExecutionError::InvalidBindGroup(bind_group.info.id()))?;
+                        .ok_or(ExecutionError::InvalidBindGroup(bind_group_id))?;
                     unsafe {
                         raw.set_bind_group(
                             pipeline_layout.as_ref().unwrap().raw(),
-                            *index,
+                            index,
                             raw_bg,
-                            &offsets[..*num_dynamic_offsets],
+                            &offsets[..num_dynamic_offsets],
                         )
                     };
-                    offsets = &offsets[*num_dynamic_offsets..];
+                    offsets = &offsets[num_dynamic_offsets..];
                 }
-                Cmd::SetPipeline(pipeline) => {
+                RenderCommand::SetPipeline(pipeline_id) => {
+                    let render_pipelines = trackers.render_pipelines.read();
+                    let pipeline = render_pipelines.get(pipeline_id).unwrap();
                     unsafe { raw.set_render_pipeline(pipeline.raw()) };
 
                     pipeline_layout = Some(pipeline.layout.clone());
                 }
-                Cmd::SetIndexBuffer {
-                    buffer,
+                RenderCommand::SetIndexBuffer {
+                    buffer_id,
                     index_format,
                     offset,
                     size,
                 } => {
-                    let buffer: &A::Buffer = buffer
+                    let buffers = trackers.buffers.read();
+                    let buffer: &A::Buffer = buffers
+                        .get(buffer_id)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?
                         .raw(&snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))?;
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?;
                     let bb = hal::BufferBinding {
                         buffer,
-                        offset: *offset,
-                        size: *size,
+                        offset,
+                        size,
                     };
-                    unsafe { raw.set_index_buffer(bb, *index_format) };
+                    unsafe { raw.set_index_buffer(bb, index_format) };
                 }
-                Cmd::SetVertexBuffer {
+                RenderCommand::SetVertexBuffer {
                     slot,
-                    buffer,
+                    buffer_id,
                     offset,
                     size,
                 } => {
-                    let buffer = buffer
+                    let buffers = trackers.buffers.read();
+                    let buffer = buffers
+                        .get(buffer_id)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?
                         .raw(&snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))?;
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?;
                     let bb = hal::BufferBinding {
                         buffer,
-                        offset: *offset,
-                        size: *size,
+                        offset,
+                        size,
                     };
-                    unsafe { raw.set_vertex_buffer(*slot, bb) };
+                    unsafe { raw.set_vertex_buffer(slot, bb) };
                 }
-                Cmd::SetPushConstant {
+                RenderCommand::SetPushConstant {
                     stages,
                     offset,
                     size_bytes,
@@ -949,7 +949,7 @@ impl<A: HalApi> RenderBundle<A> {
                 } => {
                     let pipeline_layout = pipeline_layout.as_ref().unwrap();
 
-                    if let Some(values_offset) = *values_offset {
+                    if let Some(values_offset) = values_offset {
                         let values_end_offset =
                             (values_offset + size_bytes / wgt::PUSH_CONSTANT_ALIGNMENT) as usize;
                         let data_slice = &self.base.push_constant_data
@@ -958,20 +958,20 @@ impl<A: HalApi> RenderBundle<A> {
                         unsafe {
                             raw.set_push_constants(
                                 pipeline_layout.raw(),
-                                *stages,
-                                *offset,
+                                stages,
+                                offset,
                                 data_slice,
                             )
                         }
                     } else {
                         super::push_constant_clear(
-                            *offset,
-                            *size_bytes,
+                            offset,
+                            size_bytes,
                             |clear_offset, clear_data| {
                                 unsafe {
                                     raw.set_push_constants(
                                         pipeline_layout.raw(),
-                                        *stages,
+                                        stages,
                                         clear_offset,
                                         clear_data,
                                     )
@@ -980,22 +980,15 @@ impl<A: HalApi> RenderBundle<A> {
                         );
                     }
                 }
-                Cmd::Draw {
+                RenderCommand::Draw {
                     vertex_count,
                     instance_count,
                     first_vertex,
                     first_instance,
                 } => {
-                    unsafe {
-                        raw.draw(
-                            *first_vertex,
-                            *vertex_count,
-                            *first_instance,
-                            *instance_count,
-                        )
-                    };
+                    unsafe { raw.draw(first_vertex, vertex_count, first_instance, instance_count) };
                 }
-                Cmd::DrawIndexed {
+                RenderCommand::DrawIndexed {
                     index_count,
                     instance_count,
                     first_index,
@@ -1004,54 +997,63 @@ impl<A: HalApi> RenderBundle<A> {
                 } => {
                     unsafe {
                         raw.draw_indexed(
-                            *first_index,
-                            *index_count,
-                            *base_vertex,
-                            *first_instance,
-                            *instance_count,
+                            first_index,
+                            index_count,
+                            base_vertex,
+                            first_instance,
+                            instance_count,
                         )
                     };
                 }
-                Cmd::MultiDrawIndirect {
-                    buffer,
+                RenderCommand::MultiDrawIndirect {
+                    buffer_id,
                     offset,
                     count: None,
                     indexed: false,
                 } => {
-                    let buffer = buffer
+                    let buffers = trackers.buffers.read();
+                    let buffer = buffers
+                        .get(buffer_id)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?
                         .raw(&snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))?;
-                    unsafe { raw.draw_indirect(buffer, *offset, 1) };
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?;
+                    unsafe { raw.draw_indirect(buffer, offset, 1) };
                 }
-                Cmd::MultiDrawIndirect {
-                    buffer,
+                RenderCommand::MultiDrawIndirect {
+                    buffer_id,
                     offset,
                     count: None,
                     indexed: true,
                 } => {
-                    let buffer = buffer
+                    let buffers = trackers.buffers.read();
+                    let buffer = buffers
+                        .get(buffer_id)
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?
                         .raw(&snatch_guard)
-                        .ok_or(ExecutionError::DestroyedBuffer(buffer.info.id()))?;
-                    unsafe { raw.draw_indexed_indirect(buffer, *offset, 1) };
+                        .ok_or(ExecutionError::DestroyedBuffer(buffer_id))?;
+                    unsafe { raw.draw_indexed_indirect(buffer, offset, 1) };
                 }
-                Cmd::MultiDrawIndirect { .. } | Cmd::MultiDrawIndirectCount { .. } => {
+                RenderCommand::MultiDrawIndirect { .. }
+                | RenderCommand::MultiDrawIndirectCount { .. } => {
                     return Err(ExecutionError::Unimplemented("multi-draw-indirect"))
                 }
-                Cmd::PushDebugGroup { .. } | Cmd::InsertDebugMarker { .. } | Cmd::PopDebugGroup => {
+                RenderCommand::PushDebugGroup { .. }
+                | RenderCommand::InsertDebugMarker { .. }
+                | RenderCommand::PopDebugGroup => {
                     return Err(ExecutionError::Unimplemented("debug-markers"))
                 }
-                Cmd::WriteTimestamp { .. }
-                | Cmd::BeginOcclusionQuery { .. }
-                | Cmd::EndOcclusionQuery
-                | Cmd::BeginPipelineStatisticsQuery { .. }
-                | Cmd::EndPipelineStatisticsQuery => {
+                RenderCommand::WriteTimestamp { .. }
+                | RenderCommand::BeginOcclusionQuery { .. }
+                | RenderCommand::EndOcclusionQuery
+                | RenderCommand::BeginPipelineStatisticsQuery { .. }
+                | RenderCommand::EndPipelineStatisticsQuery => {
                     return Err(ExecutionError::Unimplemented("queries"))
                 }
-                Cmd::ExecuteBundle(_)
-                | Cmd::SetBlendConstant(_)
-                | Cmd::SetStencilReference(_)
-                | Cmd::SetViewport { .. }
-                | Cmd::SetScissor(_) => unreachable!(),
+                RenderCommand::ExecuteBundle(_)
+                | RenderCommand::SetBlendConstant(_)
+                | RenderCommand::SetStencilReference(_)
+                | RenderCommand::SetViewport { .. }
+                | RenderCommand::SetScissor(_) => unreachable!(),
             }
         }
 
@@ -1085,14 +1087,14 @@ impl<A: HalApi> Resource for RenderBundle<A> {
 /// and calls [`State::flush_index`] before any indexed draw command to produce
 /// a `SetIndexBuffer` command if one is necessary.
 #[derive(Debug)]
-struct IndexState<A: HalApi> {
-    buffer: Arc<Buffer<A>>,
+struct IndexState {
+    buffer: id::BufferId,
     format: wgt::IndexFormat,
     range: Range<wgt::BufferAddress>,
     is_dirty: bool,
 }
 
-impl<A: HalApi> IndexState<A> {
+impl IndexState {
     /// Return the number of entries in the current index buffer.
     ///
     /// Panic if no index buffer has been set.
@@ -1107,11 +1109,11 @@ impl<A: HalApi> IndexState<A> {
 
     /// Generate a `SetIndexBuffer` command to prepare for an indexed draw
     /// command, if needed.
-    fn flush(&mut self) -> Option<ArcRenderCommand<A>> {
+    fn flush(&mut self) -> Option<RenderCommand> {
         if self.is_dirty {
             self.is_dirty = false;
-            Some(ArcRenderCommand::SetIndexBuffer {
-                buffer: self.buffer.clone(),
+            Some(RenderCommand::SetIndexBuffer {
+                buffer_id: self.buffer,
                 index_format: self.format,
                 offset: self.range.start,
                 size: wgt::BufferSize::new(self.range.end - self.range.start),
@@ -1132,14 +1134,14 @@ impl<A: HalApi> IndexState<A> {
 ///
 /// [`flush`]: IndexState::flush
 #[derive(Debug)]
-struct VertexState<A: HalApi> {
-    buffer: Arc<Buffer<A>>,
+struct VertexState {
+    buffer: id::BufferId,
     range: Range<wgt::BufferAddress>,
     is_dirty: bool,
 }
 
-impl<A: HalApi> VertexState<A> {
-    fn new(buffer: Arc<Buffer<A>>, range: Range<wgt::BufferAddress>) -> Self {
+impl VertexState {
+    fn new(buffer: id::BufferId, range: Range<wgt::BufferAddress>) -> Self {
         Self {
             buffer,
             range,
@@ -1150,12 +1152,12 @@ impl<A: HalApi> VertexState<A> {
     /// Generate a `SetVertexBuffer` command for this slot, if necessary.
     ///
     /// `slot` is the index of the vertex buffer slot that `self` tracks.
-    fn flush(&mut self, slot: u32) -> Option<ArcRenderCommand<A>> {
+    fn flush(&mut self, slot: u32) -> Option<RenderCommand> {
         if self.is_dirty {
             self.is_dirty = false;
-            Some(ArcRenderCommand::SetVertexBuffer {
+            Some(RenderCommand::SetVertexBuffer {
                 slot,
-                buffer: self.buffer.clone(),
+                buffer_id: self.buffer,
                 offset: self.range.start,
                 size: wgt::BufferSize::new(self.range.end - self.range.start),
             })
@@ -1217,7 +1219,7 @@ impl<A: HalApi> PipelineState<A> {
 
     /// Return a sequence of commands to zero the push constant ranges this
     /// pipeline uses. If no initialization is necessary, return `None`.
-    fn zero_push_constants(&self) -> Option<impl Iterator<Item = ArcRenderCommand<A>>> {
+    fn zero_push_constants(&self) -> Option<impl Iterator<Item = RenderCommand>> {
         if !self.push_constant_ranges.is_empty() {
             let nonoverlapping_ranges =
                 super::bind::compute_nonoverlapping_ranges(&self.push_constant_ranges);
@@ -1225,7 +1227,7 @@ impl<A: HalApi> PipelineState<A> {
             Some(
                 nonoverlapping_ranges
                     .into_iter()
-                    .map(|range| ArcRenderCommand::SetPushConstant {
+                    .map(|range| RenderCommand::SetPushConstant {
                         stages: range.stages,
                         offset: range.range.start,
                         size_bytes: range.range.end - range.range.start,
@@ -1259,11 +1261,11 @@ struct State<A: HalApi> {
     bind: ArrayVec<Option<BindState<A>>, { hal::MAX_BIND_GROUPS }>,
 
     /// The state of each vertex buffer slot.
-    vertex: ArrayVec<Option<VertexState<A>>, { hal::MAX_VERTEX_BUFFERS }>,
+    vertex: ArrayVec<Option<VertexState>, { hal::MAX_VERTEX_BUFFERS }>,
 
     /// The current index buffer, if one has been set. We flush this state
     /// before indexed draw commands.
-    index: Option<IndexState<A>>,
+    index: Option<IndexState>,
 
     /// Dynamic offset values used by the cleaned-up command sequence.
     ///
@@ -1373,13 +1375,13 @@ impl<A: HalApi> State<A> {
     /// Set the bundle's current index buffer and its associated parameters.
     fn set_index_buffer(
         &mut self,
-        buffer: Arc<Buffer<A>>,
+        buffer: id::BufferId,
         format: wgt::IndexFormat,
         range: Range<wgt::BufferAddress>,
     ) {
         match self.index {
             Some(ref current)
-                if Arc::ptr_eq(&current.buffer, &buffer)
+                if current.buffer == buffer
                     && current.format == format
                     && current.range == range =>
             {
@@ -1398,11 +1400,11 @@ impl<A: HalApi> State<A> {
 
     /// Generate a `SetIndexBuffer` command to prepare for an indexed draw
     /// command, if needed.
-    fn flush_index(&mut self) -> Option<ArcRenderCommand<A>> {
+    fn flush_index(&mut self) -> Option<RenderCommand> {
         self.index.as_mut().and_then(|index| index.flush())
     }
 
-    fn flush_vertices(&mut self) -> impl Iterator<Item = ArcRenderCommand<A>> + '_ {
+    fn flush_vertices(&mut self) -> impl Iterator<Item = RenderCommand> + '_ {
         self.vertex
             .iter_mut()
             .enumerate()
@@ -1414,7 +1416,7 @@ impl<A: HalApi> State<A> {
         &mut self,
         used_bind_groups: usize,
         dynamic_offsets: &[wgt::DynamicOffset],
-    ) -> impl Iterator<Item = ArcRenderCommand<A>> + '_ {
+    ) -> impl Iterator<Item = RenderCommand> + '_ {
         // Append each dirty bind group's dynamic offsets to `flat_dynamic_offsets`.
         for contents in self.bind[..used_bind_groups].iter().flatten() {
             if contents.is_dirty {
@@ -1433,9 +1435,9 @@ impl<A: HalApi> State<A> {
                     if contents.is_dirty {
                         contents.is_dirty = false;
                         let offsets = &contents.dynamic_offsets;
-                        return Some(ArcRenderCommand::SetBindGroup {
+                        return Some(RenderCommand::SetBindGroup {
                             index: i.try_into().unwrap(),
-                            bind_group: contents.bind_group.clone(),
+                            bind_group_id: contents.bind_group.as_info().id(),
                             num_dynamic_offsets: offsets.end - offsets.start,
                         });
                     }

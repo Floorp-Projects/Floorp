@@ -9,7 +9,10 @@ When this texture is presented, we remove it from the device tracker as well as
 extract it from the hub.
 !*/
 
-use std::borrow::Borrow;
+use std::{
+    borrow::Borrow,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 #[cfg(feature = "trace")]
 use crate::device::trace::Action;
@@ -210,6 +213,7 @@ impl Global {
                     inner: Snatchable::new(resource::TextureInner::Surface {
                         raw: Some(ast.texture),
                         parent_id: surface_id,
+                        has_work: AtomicBool::new(false),
                     }),
                     device: device.clone(),
                     desc: texture_desc,
@@ -294,7 +298,8 @@ impl Global {
         if !device.is_valid() {
             return Err(DeviceError::Lost.into());
         }
-        let queue = device.get_queue().unwrap();
+        let queue_id = device.queue_id.read().unwrap();
+        let queue = hub.queues.get(queue_id).unwrap();
 
         #[cfg(feature = "trace")]
         if let Some(ref mut trace) = *device.trace.lock() {
@@ -326,10 +331,15 @@ impl Global {
                     resource::TextureInner::Surface {
                         ref mut raw,
                         ref parent_id,
+                        ref has_work,
                     } => {
                         if surface_id != *parent_id {
                             log::error!("Presented frame is from a different surface");
                             Err(hal::SurfaceError::Lost)
+                        } else if !has_work.load(Ordering::Relaxed) {
+                            log::error!("No work has been submitted for this frame");
+                            unsafe { suf.unwrap().discard_texture(raw.take().unwrap()) };
+                            Err(hal::SurfaceError::Outdated)
                         } else {
                             unsafe {
                                 queue
@@ -410,7 +420,11 @@ impl Global {
                 let suf = A::get_surface(&surface);
                 let exclusive_snatch_guard = device.snatchable_lock.write();
                 match texture.inner.snatch(exclusive_snatch_guard).unwrap() {
-                    resource::TextureInner::Surface { mut raw, parent_id } => {
+                    resource::TextureInner::Surface {
+                        mut raw,
+                        parent_id,
+                        has_work: _,
+                    } => {
                         if surface_id == parent_id {
                             unsafe { suf.unwrap().discard_texture(raw.take().unwrap()) };
                         } else {
