@@ -40,25 +40,33 @@ for (let i of [
   )`, /(type mismatch|table with non-nullable references requires initializer)/);
 }
 
-var t1 = new WebAssembly.Table({initial: 10, element: {ref: 'func', nullable: false }}, sampleWasmFunction);
+let values = "10 funcref (ref.func $dummy)";
+let t1 = new wasmEvalText(`(module (func $dummy) (table (export "t1") ${values}))`).exports.t1;
 assertEq(t1.get(2) != null, true);
-assertThrows(() => {
-  new WebAssembly.Table({initial: 10, element: {ref: 'func', nullable: false }});
-});
-assertThrows(() => {
-  new WebAssembly.Table({initial: 10, element: {ref: 'func', nullable: false }}, null);
-});
 
-var t2 = new WebAssembly.Table({initial: 6, maximum: 20, element: {ref: 'extern', nullable: false }}, {foo: "bar"});
-assertEq(t2.get(1).foo, "bar");
+wasmFailValidateText(`(module
+  (table $t 10 (ref func))
+)`, /table with non-nullable references requires initializer/);
+
+wasmFailValidateText(`
+(module
+  (func $dummy)
+  (table (export "t") 10 funcref (ref.null none))
+)`, /type mismatch/);
+
+const foo = "bar";
+const { t2, get } = wasmEvalText(`
+(module
+  (global (import "" "foo") externref)
+  (table (export "t2") 6 20 externref (global.get 0))
+)`, { "": { "foo": foo } }).exports;
+
+assertEq(t2.get(5), "bar");
 assertThrows(() => { t2.get(7) });
-assertThrows(() => { t2.grow(9, null) });
+assertThrows(() => { t2.grow(30, null) });
 t2.grow(8, {t: "test"});
-assertEq(t2.get(3).foo, "bar");
+assertEq(t2.get(3), "bar");
 assertEq(t2.get(7).t, "test");
-assertThrows(() => {
-  new WebAssembly.Table({initial: 10, element: {ref: 'extern', nullable: false }}, null);
-});
 
 // Fail because tables come before globals in the binary format, so tables
 // cannot refer to globals.
