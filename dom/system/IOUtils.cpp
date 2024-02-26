@@ -1399,21 +1399,6 @@ Result<uint32_t, IOUtils::IOError> IOUtils::WriteSync(
 
   // If backupFile was specified, perform the backup as a move.
   if (exists && backupFile) {
-    bool isDirectory = false;
-    IOUTILS_TRY_WITH_CONTEXT(
-        backupFile->IsDirectory(&isDirectory),
-        "Could not write to `%s': could not stat backup file `%s'",
-        aFile->HumanReadablePath().get(),
-        backupFile->HumanReadablePath().get());
-
-    if (isDirectory) {
-      return Err(
-          IOError(NS_ERROR_FILE_IS_DIRECTORY,
-                  "Could not write to `%s': backup file `%s' is a directory",
-                  aFile->HumanReadablePath().get(),
-                  backupFile->HumanReadablePath().get()));
-    }
-
     // We copy `destFile` here to a new `nsIFile` because
     // `nsIFile::MoveToFollowingLinks` will update the path of the file. If we
     // did not do this, we would end up having `destFile` point to the same
