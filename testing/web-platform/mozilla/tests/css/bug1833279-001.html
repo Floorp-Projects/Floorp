@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Test for bug 1833279</title>
+<link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1833279">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+  setup({ single_test: true });
+
+  // The following callback-function gets called twice by our iframe inner-doc:
+  // 1. when the iframe's document finishes printing.
+  // 2. when the iframe's document finishes loading its own <object> child-document.
+  // When those two steps have completed, we're past the situation that would
+  // trigger a fatal assertion when the object document gets cycle-collected.
+  // So at that point we remove our iframe, and (after a rAF tick) trigger a
+  // GC and CC, and then consider the test as having passed if we're still
+  // alive at that point.
+  const MAX_STEPS = 2;
+  let stepsComplete = 0;
+
+  function iframeStepComplete() {
+    stepsComplete++;
+    if (stepsComplete < MAX_STEPS) {
+      return;
+    }
+    requestAnimationFrame(()=> {
+      myIframe.remove();
+      requestAnimationFrame(()=> {
+        SpecialPowers.DOMWindowUtils.garbageCollect();
+        SpecialPowers.DOMWindowUtils.cycleCollect();
+        assert_true(true, "successfully completed without crashing");
+        done();
+      });
+    });
+  }
+</script>
+<iframe id="myIframe" src="resources/bug1833279-iframe.html"></iframe>
