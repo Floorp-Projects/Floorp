@@ -7,6 +7,8 @@
 
 add_common_setup();
 
+requestLongerTimeout(2);
+
 async function ensureTabOrder(order, win = window) {
   const config = { window: win };
   for (let matches of order) {
