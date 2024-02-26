@@ -1305,6 +1305,8 @@ class AsyncPanZoomController {
    */
   CSSRect GetCurrentScrollRangeInCssPixels() const;
 
+  bool AllowOneTouchPinch() const;
+
  private:
   /**
    * Advances to the next sample, if there is one, the list of sampled states

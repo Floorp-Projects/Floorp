@@ -5,13 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GestureEventListener.h"
-#include <algorithm>                 // for max
+#include <algorithm>  // for max
+#include <ostream>
 #include <math.h>                    // for fabsf
 #include <stddef.h>                  // for size_t
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "InputBlockState.h"         // for TouchBlockState
 #include "base/task.h"               // for CancelableTask, etc
 #include "InputBlockState.h"         // for TouchBlockState
+#include "mozilla/Assertions.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "nsDebug.h"      // for NS_WARNING
@@ -83,8 +86,8 @@ GestureEventListener::~GestureEventListener() = default;
 
 nsEventStatus GestureEventListener::HandleInputEvent(
     const MultiTouchInput& aEvent) {
-  GEL_LOG("Receiving event type %d with %zu touches in state %d\n",
-          aEvent.mType, aEvent.mTouches.Length(), mState);
+  GEL_LOG("Receiving event type %d with %zu touches in state %s\n",
+          aEvent.mType, aEvent.mTouches.Length(), ToString(mState).c_str());
 
   nsEventStatus rv = nsEventStatus_eIgnore;
 
@@ -175,16 +178,15 @@ nsEventStatus GestureEventListener::HandleInputTouchSingleStart() {
       EnterFirstSingleTouchDown();
       break;
     case GESTURE_FIRST_SINGLE_TOUCH_UP:
+      // Bail out of any gesture that includes the first tap.
+      CancelLongTapTimeoutTask();
+      CancelMaxTapTimeoutTask();
       if (SecondTapIsFar()) {
-        // If the second tap goes down far away from the first, then bail out
-        // of any gesture that includes the first tap.
-        CancelLongTapTimeoutTask();
-        CancelMaxTapTimeoutTask();
-        mSingleTapSent = Nothing();
-
-        // But still allow the second tap to participate in a gesture
+        // If the second tap goes down far away from the first,
+        // allow the second tap to participate in a gesture
         // (e.g. lead to a single tap, or a double tap if an additional
         // tap occurs near the same location).
+        mSingleTapSent = Nothing();
         EnterFirstSingleTouchDown();
       } else {
         // Otherwise, reset the touch start position so that, if this turns into
@@ -225,9 +227,10 @@ nsEventStatus GestureEventListener::HandleInputTouchMultiStart() {
       rv = nsEventStatus_eConsumeNoDefault;
       break;
     case GESTURE_FIRST_SINGLE_TOUCH_UP:
-    case GESTURE_SECOND_SINGLE_TOUCH_DOWN:
       // Cancel wait for double tap
       CancelMaxTapTimeoutTask();
+      [[fallthrough]];
+    case GESTURE_SECOND_SINGLE_TOUCH_DOWN:
       MOZ_ASSERT(mSingleTapSent.isSome());
       if (!mSingleTapSent.value()) {
         TriggerSingleTapConfirmedEvent();
@@ -307,12 +310,8 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
       // If touch has moved noticeably (within StaticPrefs::apz_max_tap_time()),
       // change state.
       if (MoveDistanceIsLarge()) {
-        CancelLongTapTimeoutTask();
-        CancelMaxTapTimeoutTask();
         mSingleTapSent = Nothing();
-        if (!StaticPrefs::apz_one_touch_pinch_enabled()) {
-          // If the one-touch-pinch feature is disabled, bail out of the double-
-          // tap gesture instead.
+        if (!mAsyncPanZoomController->AllowOneTouchPinch()) {
           SetState(GESTURE_NONE);
           break;
         }
@@ -451,7 +450,6 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd() {
     }
 
     case GESTURE_SECOND_SINGLE_TOUCH_DOWN: {
-      CancelMaxTapTimeoutTask();
       MOZ_ASSERT(mSingleTapSent.isSome());
       mAsyncPanZoomController->HandleGestureEvent(CreateTapEvent(
           mLastTouchInput, mSingleTapSent.value()
@@ -535,7 +533,9 @@ nsEventStatus GestureEventListener::HandleInputTouchCancel() {
 }
 
 void GestureEventListener::HandleInputTimeoutLongTap() {
-  GEL_LOG("Running long-tap timeout task in state %d\n", mState);
+  MOZ_ASSERT(mState != GESTURE_SECOND_SINGLE_TOUCH_DOWN);
+  GEL_LOG("Running long-tap timeout task in state %s\n",
+          ToString(mState).c_str());
 
   mLongTapTimeoutTask = nullptr;
 
@@ -559,14 +559,15 @@ void GestureEventListener::HandleInputTimeoutLongTap() {
 }
 
 void GestureEventListener::HandleInputTimeoutMaxTap(bool aDuringFastFling) {
-  GEL_LOG("Running max-tap timeout task in state %d\n", mState);
+  MOZ_ASSERT(mState != GESTURE_SECOND_SINGLE_TOUCH_DOWN);
+  GEL_LOG("Running max-tap timeout task in state %s\n",
+          ToString(mState).c_str());
 
   mMaxTapTimeoutTask = nullptr;
 
   if (mState == GESTURE_FIRST_SINGLE_TOUCH_DOWN) {
     SetState(GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN);
-  } else if (mState == GESTURE_FIRST_SINGLE_TOUCH_UP ||
-             mState == GESTURE_SECOND_SINGLE_TOUCH_DOWN) {
+  } else if (mState == GESTURE_FIRST_SINGLE_TOUCH_UP) {
     MOZ_ASSERT(mSingleTapSent.isSome());
     if (!aDuringFastFling && !mSingleTapSent.value()) {
       TriggerSingleTapConfirmedEvent();
@@ -585,6 +586,8 @@ void GestureEventListener::TriggerSingleTapConfirmedEvent() {
 }
 
 void GestureEventListener::SetState(GestureState aState) {
+  GEL_LOG("State change from %s to %s", ToString(mState).c_str(),
+          ToString(aState).c_str());
   mState = aState;
 
   if (mState == GESTURE_NONE) {
@@ -598,10 +601,7 @@ void GestureEventListener::SetState(GestureState aState) {
 }
 
 void GestureEventListener::CancelLongTapTimeoutTask() {
-  if (mState == GESTURE_SECOND_SINGLE_TOUCH_DOWN) {
-    // being in this state means the task has been canceled already
-    return;
-  }
+  MOZ_ASSERT(mState != GESTURE_SECOND_SINGLE_TOUCH_DOWN);
 
   if (mLongTapTimeoutTask) {
     mLongTapTimeoutTask->Cancel();
@@ -628,6 +628,8 @@ void GestureEventListener::CreateLongTapTimeoutTask() {
 }
 
 void GestureEventListener::CancelMaxTapTimeoutTask() {
+  MOZ_ASSERT(mState != GESTURE_SECOND_SINGLE_TOUCH_DOWN);
+
   if (mState == GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN) {
     // being in this state means the timer has just been triggered
     return;
@@ -657,6 +659,41 @@ void GestureEventListener::CreateMaxTapTimeoutTask() {
   long remainingDelay = StaticPrefs::apz_max_tap_time() - alreadyElapsed;
   mAsyncPanZoomController->PostDelayedTask(task.forget(),
                                            std::max(0L, remainingDelay));
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         GestureEventListener::GestureState aState) {
+  switch (aState) {
+    case GestureEventListener::GESTURE_NONE:
+      os << "GESTURE_NONE";
+      break;
+    case GestureEventListener::GESTURE_FIRST_SINGLE_TOUCH_DOWN:
+      os << "GESTURE_FIRST_SINGLE_TOUCH_DOWN";
+      break;
+    case GestureEventListener::GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN:
+      os << "GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN";
+      break;
+    case GestureEventListener::GESTURE_FIRST_SINGLE_TOUCH_UP:
+      os << "GESTURE_FIRST_SINGLE_TOUCH_UP";
+      break;
+    case GestureEventListener::GESTURE_SECOND_SINGLE_TOUCH_DOWN:
+      os << "GESTURE_SECOND_SINGLE_TOUCH_DOWN";
+      break;
+    case GestureEventListener::GESTURE_LONG_TOUCH_DOWN:
+      os << "GESTURE_LONG_TOUCH_DOWN";
+      break;
+    case GestureEventListener::GESTURE_MULTI_TOUCH_DOWN:
+      os << "GESTURE_MULTI_TOUCH_DOWN";
+      break;
+    case GestureEventListener::GESTURE_PINCH:
+      os << "GESTURE_PINCH";
+      break;
+    case GestureEventListener::GESTURE_ONE_TOUCH_PINCH:
+      os << "GESTURE_ONE_TOUCH_PINCH";
+      break;
+  }
+
+  return os;
 }
 
 }  // namespace layers
