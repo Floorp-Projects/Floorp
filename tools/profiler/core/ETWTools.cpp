@@ -11,13 +11,24 @@
 namespace ETW {
 std::atomic<ULONGLONG> gETWCollectionMask = 0;
 
-// Define a handle to a TraceLogging provider
+// Define a handle to a TraceLogging provider.
+//
+// > All ETW providers are identified by both provider name and provider ID.
+// > [...]
+// > Microsoft recommends generating the provider ID from the provider name
+// > using the ETW name-hashing algorithm described below. This provides
+// > several benefits: it's easier to remember just the name; the ID and the
+// > name are automatically linked; tools such as tracelog, traceview,
+// > EventSource, and WPR have special support for providers that use IDs
+// > generated using this algorithm.
+//
+// https://learn.microsoft.com/en-us/windows/win32/api/traceloggingprovider/nf-traceloggingprovider-tracelogging_define_provider
+//
+// The GUID generated for "Mozilla.FirefoxTraceLogger" is:
+// {c923f508-96e4-5515-e32c-7539d1b10504}
 TRACELOGGING_DEFINE_PROVIDER(kFirefoxTraceLoggingProvider,
                              "Mozilla.FirefoxTraceLogger",
-                             // This GUID is a hash generated based on the
-                             // above string.
-                             // {c923f508-96e4-5515-e32c-7539d1b10504}
-                             (0xc923f508, 0x96e4, 0x5515, 0xe3, 0x3c, 0x75,
+                             (0xc923f508, 0x96e4, 0x5515, 0xe3, 0x2c, 0x75,
                               0x39, 0xd1, 0xb1, 0x05, 0x04));
 
 static void NTAPI ETWEnableCallback(LPCGUID aSourceId, ULONG aIsEnabled,
