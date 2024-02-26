@@ -19,7 +19,7 @@ unset MOZ_AUTOMATION
 
 MOZCONFIG=mozconfig.in
 
-USE_SNAP_FROM_STORE=${USE_SNAP_FROM_STORE:-0}
+USE_SNAP_FROM_STORE_OR_MC=${USE_SNAP_FROM_STORE_OR_MC:-0}
 
 TRY=0
 if [ "${BRANCH}" = "try" ]; then
@@ -27,7 +27,7 @@ if [ "${BRANCH}" = "try" ]; then
   TRY=1
 fi
 
-if [ "${USE_SNAP_FROM_STORE}" = "0" ]; then
+if [ "${USE_SNAP_FROM_STORE_OR_MC}" = "0" ]; then
   # ESR currently still has a hard dependency against zstandard==0.17.0 so
   # install this specific version here
   if [ "${BRANCH}" = "esr" ]; then
@@ -91,7 +91,7 @@ if [ "${USE_SNAP_FROM_STORE}" = "0" ]; then
   SNAPCRAFT_BUILD_ENVIRONMENT_CPU=$(nproc) \
   CRAFT_PARTS_PACKAGE_REFRESH=0 \
     snapcraft --destructive-mode --verbose
-else
+elif [ "${USE_SNAP_FROM_STORE_OR_MC}" = "store" ]; then
   mkdir from-snap-store && cd from-snap-store
 
   CHANNEL="${BRANCH}"
@@ -102,6 +102,45 @@ else
   snap download --channel="${CHANNEL}" firefox
   SNAP_DEBUG_NAME=$(find . -maxdepth 1 -type f -name "firefox*.snap" | sed -e 's/\.snap$/.debug/g')
   touch "${SNAP_DEBUG_NAME}"
+else
+  mkdir from-mc && cd from-mc
+
+  # index.gecko.v2.mozilla-central.latest.firefox.amd64-esr-debug
+  #  => https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.latest.firefox.amd64-esr-debug/artifacts/public%2Fbuild%2Ffirefox.snap
+  # index.gecko.v2.mozilla-central.revision.bf0897ec442e625c185407cc615a6adc0e40fa75.firefox.amd64-esr-debug
+  #  => https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.revision.bf0897ec442e625c185407cc615a6adc0e40fa75.firefox.amd64-esr-debug/artifacts/public%2Fbuild%2Ffirefox.snap
+  # index.gecko.v2.mozilla-central.latest.firefox.amd64-nightly
+  #  => https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.latest.firefox.amd64-nightly/artifacts/public%2Fbuild%2Ffirefox.snap
+  # index.gecko.v2.mozilla-central.revision.bf0897ec442e625c185407cc615a6adc0e40fa75.firefox.amd64-nightly
+  #  => https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.v2.mozilla-central.revision.bf0897ec442e625c185407cc615a6adc0e40fa75.firefox.amd64-nightly/artifacts/public%2Fbuild%2Ffirefox.snap
+
+  INDEX_NAME="${BRANCH}"
+  if [ "${INDEX_NAME}" = "try" ]; then
+    INDEX_NAME=nightly
+  fi;
+
+  if [ "${DEBUG}" = "1" ]; then
+    INDEX_NAME="${INDEX_NAME}-debug"
+  fi;
+
+  TASKCLUSTER_API_ROOT="https://firefox-ci-tc.services.mozilla.com/api"
+
+  URL_TASK="${TASKCLUSTER_API_ROOT}/index/v1/task/gecko.v2.mozilla-central.${USE_SNAP_FROM_STORE_OR_MC}.firefox.amd64-${INDEX_NAME}"
+  PKGS_TASK_ID=$(curl "${URL_TASK}" | jq -r '.taskId')
+
+  if [ -z "${PKGS_TASK_ID}" ]; then
+    echo "Failure to find matching taskId for ${USE_SNAP_FROM_STORE_OR_MC} + ${INDEX_NAME}"
+    exit 1
+  fi
+
+  PKGS_URL="${TASKCLUSTER_API_ROOT}/queue/v1/task/${PKGS_TASK_ID}/artifacts"
+  for pkg in $(curl "${PKGS_URL}" | jq -r '.artifacts | . [] | select(.name | contains("public/build/firefox_")) | .name');
+  do
+    url="${TASKCLUSTER_API_ROOT}/queue/v1/task/${PKGS_TASK_ID}/artifacts/${pkg}"
+    target_name="$(basename "${pkg}")"
+    echo "$url => $target_name"
+    curl -SL "${url}" -o "${target_name}"
+  done;
 fi
 
 cp ./*.snap ./*.debug /builds/worker/artifacts/
