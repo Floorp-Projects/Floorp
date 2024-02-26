@@ -118,7 +118,7 @@ geckoview-fission-isolate-high-value:
 no-fission:
     description: "{description} without fission enabled"
     component: "Core::DOM: Content Processes"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "nofis"
     mozinfo: "fission"
     when:
