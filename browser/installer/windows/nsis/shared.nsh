@@ -1265,12 +1265,11 @@ ${RemoveDefaultBrowserAgentShortcut}
 
 !define GetPinningSupportedByWindowsVersionWithoutSystemPopup "!insertmacro GetPinningSupportedByWindowsVersionWithoutSystemPopup "
 
-; Starting with a version of Windows 11 (10.0.22621), the OS will show a system popup
-; when trying to pin to the taskbar.
+; Starting with Windows 10 (> 10.0.19045.3996) and Windows 11 (> 10.0.22621.2361),
+; the OS will show a system popup when trying to pin to the taskbar.
 ;
 ; Pass in the variable to put the output into. A '1' means pinning is supported on this
 ; OS without generating a popup, a '0' means pinning will generate a system popup.
-;
 ;
 ; More info: a version of Windows was released that introduced a system popup when
 ; an exe (such as setup.exe) attempts to pin an app to the taskbar.
@@ -1280,8 +1279,16 @@ ${RemoveDefaultBrowserAgentShortcut}
 ;
 ; The number for that version of windows is still unclear (it might be 22H2 or 23H2)
 ; and it's not supported by the version of WinVer.nsh we have anyways,
-; so instead we are confirming that it's a build of Windows that is less
-; than 10.0 BuildNumber: 22621 to do pinning in the installer.
+; so instead we are manually retrieving the major, minor, build and ubr numbers
+; (Update Build Revision) and confirming that the build numbers work to do pinning
+; in the installer.
+;
+; NOTE: there are currently running Windows where pinning fails and is a no-op. We haven't quite
+; determined how to identify when that will happen, and it's so far only been reported
+; on the newest versions of Windows. GetPinningSupportedByWindowsVersionWithoutSystemPopup
+; will current report that pinning is not supported in these cases, due to reporting
+; pinning as not supported on the newest builds of Windows.
+;
 !macro GetPinningSupportedByWindowsVersionWithoutSystemPopup outvar
   !define pin_lbl lbl_GPSBWVWSP_${__COUNTER__}
 
@@ -1304,14 +1311,25 @@ ${RemoveDefaultBrowserAgentShortcut}
   ; operator, so we do everything by hand with `IntCmp`.  The below lines
   ; translate to:
   ; StrCpy ${outvar} '0'  ; default to false
-  ; ${If} $0 <= 10
-  ;   ${If} $1 <= 0
-  ;     ${If} $2 < 22621
+  ; ${If} $0 == 10
+  ;   ${If} $1 == 0
+  ;     ${If} $2 < 19045
   ;       StrCpy ${outvar} '1'
-  ;     ${ElseIf} $2 == 22621
-  ;       ${If} $3 < 2361
+  ;     ${ElseIf} $2 == 19045
+  ;       ; Test Windows 10
+  ;       ${If} $3 < 3996
   ;         StrCpy ${outvar} '1'
   ;       ${Endif}
+  ;     ; 22000 is the version number that splits between Win 10 and 11
+  ;     ${ElseIf} $2 >= 22000
+  ;       ; Test Windows 11
+  ;       ${If} $2 < 22621
+  ;         StrCpy ${outvar} '1'
+  ;       ${ElseIf} $2 == 22621
+  ;         ${If} $3 < 2361
+  ;           StrCpy ${outvar} '1'
+  ;         ${EndIf}
+  ;       ${EndIf}
   ;     ${EndIf}
   ;  ${Endif}
   ; ${EndIf}
@@ -1324,12 +1342,32 @@ ${RemoveDefaultBrowserAgentShortcut}
   ; If the minor version is greater than 0, no pinning in setup
   IntCmp $1 0 "" "" ${pin_lbl}_bad
 
+  ; If the build number equals 19045, we have to test the UBR
+  ; If it's greater than 19045, then we have to check if
+  ; it's a Windows 11 build or not to determine if more testing
+  ; is needed
+  IntCmp $2 19045 ${pin_lbl}_test_win10 ${pin_lbl}_good ""
+
+  ; If the major number is less than 22000, then we're between
+  ; 19046 and 22000, meaning pinning will produce a popup
+  IntCmp $2 22000 "" ${pin_lbl}_bad ""
+
+  ${pin_lbl}_test_win11:
+
   ; If the build number is less than 22621, jump to pinning; if greater than, no pinning
   IntCmp $2 22621 "" ${pin_lbl}_good ${pin_lbl}_bad
 
   ; Only if the version is 10.0.22621 do we fall through to here
   ; If the UBR is greater than or equal to 2361, jump to no pinning
-  IntCmp $3 2361 ${pin_lbl}_bad "" ${pin_lbl}_bad
+  ; Otherwise jump to pinning
+  IntCmp $3 2361 ${pin_lbl}_bad ${pin_lbl}_good ${pin_lbl}_bad
+
+  ${pin_lbl}_test_win10:
+
+  ; Only if the version is 10.0.19045 or greater (but not Windows 11) do we fall
+  ; through to here.
+  ; If the UBR is greater than or equal to 3996, jump to no pinning
+  IntCmp $3 3996 ${pin_lbl}_bad ${pin_lbl}_good ${pin_lbl}_bad
 
   ${pin_lbl}_good:
 
