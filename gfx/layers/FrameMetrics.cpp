@@ -168,7 +168,7 @@ CSSPoint FrameMetrics::ApplyRelativeScrollUpdateFrom(
   MOZ_ASSERT(aUpdate.GetType() == ScrollUpdateType::Relative);
   CSSPoint origin = GetVisualScrollOffset();
   CSSPoint delta = (aUpdate.GetDestination() - aUpdate.GetSource());
-  ClampAndSetVisualScrollOffset(origin + delta);
+  SetVisualScrollOffset(origin + delta);
   return GetVisualScrollOffset() - origin;
 }
 

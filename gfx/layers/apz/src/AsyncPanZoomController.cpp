@@ -5586,17 +5586,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         aScrollMetadata.GetOverscrollBehavior());
   }
 
-  if (needToReclampScroll) {
-    // Whenever scrollable rect or composition bounds has changed, we need to
-    // re-clamp the scroll offset since it may be out of bounds. Also note that
-    // we need to re-clamp before updating new scroll offsets from content since
-    // we will use the last scroll offset to reflect the new offsets.
-    ClampAndSetVisualScrollOffset(Metrics().GetVisualScrollOffset());
-    for (auto& sampledState : mSampledState) {
-      sampledState.ClampVisualScrollOffset(Metrics());
-    }
-  }
-
   bool instantScrollMayTriggerTransform = false;
   bool scrollOffsetUpdated = false;
   bool smoothScrollRequested = false;
@@ -5790,6 +5779,15 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // in a state where things are out of sync.
       CancelAnimation();
       didCancelAnimation = true;
+    }
+  }
+
+  if (aIsFirstPaint || needToReclampScroll) {
+    // The scrollable rect or composition bounds may have changed in a way that
+    // makes our local scroll offset out of bounds, so clamp it.
+    ClampAndSetVisualScrollOffset(Metrics().GetVisualScrollOffset());
+    for (auto& sampledState : mSampledState) {
+      sampledState.ClampVisualScrollOffset(Metrics());
     }
   }
 
