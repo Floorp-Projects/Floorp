@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_42 Your_png_h_is_not_version_1_6_42;
+typedef png_libpng_version_1_6_43 Your_png_h_is_not_version_1_6_43;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -794,7 +794,7 @@ png_get_copyright(png_const_structrp png_ptr)
    return PNG_STRING_COPYRIGHT
 #else
    return PNG_STRING_NEWLINE \
-      "libpng version 1.6.42" PNG_STRING_NEWLINE \
+      "libpng version 1.6.43" PNG_STRING_NEWLINE \
       "Copyright (c) 2018-2024 Cosmin Truta" PNG_STRING_NEWLINE \
       "Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson" \
       PNG_STRING_NEWLINE \
@@ -1821,14 +1821,14 @@ png_icc_profile_error(png_const_structrp png_ptr, png_colorspacerp colorspace,
    }
 #  ifdef PNG_WARNINGS_SUPPORTED
    else
-      {
-         char number[PNG_NUMBER_BUFFER_SIZE]; /* +24 = 114 */
+   {
+      char number[PNG_NUMBER_BUFFER_SIZE]; /* +24 = 114 */
 
-         pos = png_safecat(message, (sizeof message), pos,
-             png_format_number(number, number+(sizeof number),
-             PNG_NUMBER_FORMAT_x, value));
-         pos = png_safecat(message, (sizeof message), pos, "h: "); /* +2 = 116 */
-      }
+      pos = png_safecat(message, (sizeof message), pos,
+          png_format_number(number, number+(sizeof number),
+          PNG_NUMBER_FORMAT_x, value));
+      pos = png_safecat(message, (sizeof message), pos, "h: "); /* +2 = 116 */
+   }
 #  endif
    /* The 'reason' is an arbitrary message, allow +79 maximum 195 */
    pos = png_safecat(message, (sizeof message), pos, reason);
@@ -2511,17 +2511,6 @@ png_colorspace_set_rgb_coefficients(png_structrp png_ptr)
 
 #endif /* COLORSPACE */
 
-#ifdef __GNUC__
-/* This exists solely to work round a warning from GNU C. */
-static int /* PRIVATE */
-png_gt(size_t a, size_t b)
-{
-   return a > b;
-}
-#else
-#   define png_gt(a,b) ((a) > (b))
-#endif
-
 void /* PRIVATE */
 png_check_IHDR(png_const_structrp png_ptr,
     png_uint_32 width, png_uint_32 height, int bit_depth,
@@ -2543,8 +2532,16 @@ png_check_IHDR(png_const_structrp png_ptr,
       error = 1;
    }
 
-   if (png_gt(((width + 7) & (~7U)),
-       ((PNG_SIZE_MAX
+   /* The bit mask on the first line below must be at least as big as a
+    * png_uint_32.  "~7U" is not adequate on 16-bit systems because it will
+    * be an unsigned 16-bit value.  Casting to (png_alloc_size_t) makes the
+    * type of the result at least as bit (in bits) as the RHS of the > operator
+    * which also avoids a common warning on 64-bit systems that the comparison
+    * of (png_uint_32) against the constant value on the RHS will always be
+    * false.
+    */
+   if (((width + 7) & ~(png_alloc_size_t)7) >
+       (((PNG_SIZE_MAX
            - 48        /* big_row_buf hack */
            - 1)        /* filter byte */
            / 8)        /* 8-byte RGBA pixels */
