@@ -204,6 +204,9 @@ void MPI_ASM_DECL s_mpv_mul_d_add(const mp_digit *a, mp_size a_len,
 void MPI_ASM_DECL s_mpv_mul_d_add_prop(const mp_digit *a,
                                        mp_size a_len, mp_digit b,
                                        mp_digit *c);
+void MPI_ASM_DECL s_mpv_mul_d_add_propCT(const mp_digit *a,
+                                         mp_size a_len, mp_digit b,
+                                         mp_digit *c, mp_size c_len);
 void MPI_ASM_DECL s_mpv_sqr_add_prop(const mp_digit *a,
                                      mp_size a_len,
                                      mp_digit *sqrs);
