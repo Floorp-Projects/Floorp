@@ -226,8 +226,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
         break;
     }
   } else if (aAs.LowerCaseEqualsASCII("image")) {
-    PreloadImage(uri, aCORS, aReferrerPolicy, isImgSet, aEarlyHintPreloaderId,
-                 aFetchPriority);
+    PreloadImage(uri, aCORS, aReferrerPolicy, isImgSet, aEarlyHintPreloaderId);
   } else if (aAs.LowerCaseEqualsASCII("font")) {
     PreloadFont(uri, aCORS, aReferrerPolicy, aEarlyHintPreloaderId,
                 aFetchPriority);
@@ -259,11 +258,10 @@ void PreloadService::PreloadScript(
 void PreloadService::PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                                   const nsAString& aImageReferrerPolicy,
                                   bool aIsImgSet,
-                                  uint64_t aEarlyHintPreloaderId,
-                                  const nsAString& aFetchPriority) {
-  mDocument->PreLoadImage(
-      aURI, aCrossOrigin, PreloadReferrerPolicy(aImageReferrerPolicy),
-      aIsImgSet, true, aEarlyHintPreloaderId, aFetchPriority);
+                                  uint64_t aEarlyHintPreloaderId) {
+  mDocument->PreLoadImage(aURI, aCrossOrigin,
+                          PreloadReferrerPolicy(aImageReferrerPolicy),
+                          aIsImgSet, true, aEarlyHintPreloaderId);
 }
 
 void PreloadService::PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,

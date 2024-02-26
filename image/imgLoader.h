@@ -37,7 +37,6 @@ class imgMemoryReporter;
 namespace mozilla {
 namespace dom {
 class Document;
-enum class FetchPriority : uint8_t;
 }
 }  // namespace mozilla
 
@@ -239,8 +238,7 @@ class imgLoader final : public imgILoader,
       nsLoadFlags aLoadFlags, nsISupports* aCacheKey,
       nsContentPolicyType aContentPolicyType, const nsAString& initiatorType,
       bool aUseUrgentStartForChannel, bool aLinkPreload,
-      uint64_t aEarlyHintPreloaderId,
-      mozilla::dom::FetchPriority aFetchPriority, imgRequestProxy** _retval);
+      uint64_t aEarlyHintPreloaderId, imgRequestProxy** _retval);
 
   [[nodiscard]] nsresult LoadImageWithChannel(
       nsIChannel* channel, imgINotificationObserver* aObserver,
@@ -351,8 +349,7 @@ class imgLoader final : public imgILoader,
                      bool aCanMakeNewChannel, bool* aNewChannelCreated,
                      imgRequestProxy** aProxyRequest,
                      nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode,
-                     bool aLinkPreload, uint64_t aEarlyHintPreloaderId,
-                     mozilla::dom::FetchPriority aFetchPriority);
+                     bool aLinkPreload, uint64_t aEarlyHintPreloaderId);
 
   bool ValidateRequestWithNewChannel(
       imgRequest* request, nsIURI* aURI, nsIURI* aInitialDocumentURI,
@@ -362,14 +359,15 @@ class imgLoader final : public imgILoader,
       nsLoadFlags aLoadFlags, nsContentPolicyType aContentPolicyType,
       imgRequestProxy** aProxyRequest, nsIPrincipal* aLoadingPrincipal,
       mozilla::CORSMode, bool aLinkPreload, uint64_t aEarlyHintPreloaderId,
-      mozilla::dom::FetchPriority aFetchPriority, bool* aNewChannelCreated);
+      bool* aNewChannelCreated);
 
-  void NotifyObserversForCachedImage(
-      imgCacheEntry* aEntry, imgRequest* request, nsIURI* aURI,
-      nsIReferrerInfo* aReferrerInfo, mozilla::dom::Document* aLoadingDocument,
-      nsIPrincipal* aTriggeringPrincipal, mozilla::CORSMode,
-      uint64_t aEarlyHintPreloaderId,
-      mozilla::dom::FetchPriority aFetchPriority);
+  void NotifyObserversForCachedImage(imgCacheEntry* aEntry, imgRequest* request,
+                                     nsIURI* aURI,
+                                     nsIReferrerInfo* aReferrerInfo,
+                                     mozilla::dom::Document* aLoadingDocument,
+                                     nsIPrincipal* aLoadingPrincipal,
+                                     mozilla::CORSMode,
+                                     uint64_t aEarlyHintPreloaderId);
   // aURI may be different from imgRequest's URI in the case of blob URIs, as we
   // can share requests with different URIs.
   nsresult CreateNewProxyForRequest(imgRequest* aRequest, nsIURI* aURI,

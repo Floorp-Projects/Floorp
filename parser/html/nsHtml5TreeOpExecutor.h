@@ -260,8 +260,7 @@ class nsHtml5TreeOpExecutor final
   void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin,
                     const nsAString& aMedia, const nsAString& aSrcset,
                     const nsAString& aSizes,
-                    const nsAString& aImageReferrerPolicy, bool aLinkPreload,
-                    const nsAString& aFetchPriority);
+                    const nsAString& aImageReferrerPolicy, bool aLinkPreload);
 
   void PreloadOpenPicture();
 

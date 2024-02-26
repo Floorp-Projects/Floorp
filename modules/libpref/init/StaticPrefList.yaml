@@ -12004,26 +12004,6 @@
   value: 0
   mirror: always
 
-# Adjustments to apply to the internal priority of <link rel=preload as=images
-# fetchpriority=low/high/auto> and <img fetchpriority=low/high/auto> with
-# respect to the case when network.fetchpriority is disabled.
-# - When the flag is disabled, Gecko currently sets priority to LOW.
-# - When the flag is enabled, it respectively maps to LOW/LOW/HIGH.
-# The image code can currently further adjust the priority for image load, see
-# imgRequest::BoostPriority and AdjustPriorityForImages.
-- name: network.fetchpriority.adjustments.images.low
-  type: int32_t
-  value: 0
-  mirror: always
-- name: network.fetchpriority.adjustments.images.high
-  type: int32_t
-  value: -20
-  mirror: always
-- name: network.fetchpriority.adjustments.images.auto
-  type: int32_t
-  value: 0
-  mirror: always
-
 # Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
 # handling.
 - name: network.preconnect
