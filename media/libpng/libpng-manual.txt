@@ -9,7 +9,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng version 1.6.36, December 2018, through 1.6.42 - January 2024
+ libpng version 1.6.36, December 2018, through 1.6.43 - February 2024
  Updated and distributed by Cosmin Truta
  Copyright (c) 2018-2024 Cosmin Truta
 
@@ -1178,11 +1178,11 @@ where row_pointers is an array of pointers to the pixel data for each row:
 If you know your image size and pixel size ahead of time, you can allocate
 row_pointers prior to calling png_read_png() with
 
-   if (height > PNG_UINT_32_MAX/(sizeof (png_byte)))
+   if (height > PNG_UINT_32_MAX / (sizeof (png_bytep)))
       png_error(png_ptr,
           "Image is too tall to process in memory");
 
-   if (width > PNG_UINT_32_MAX/pixel_size)
+   if (width > PNG_UINT_32_MAX / pixel_size)
       png_error(png_ptr,
           "Image is too wide to process in memory");
 

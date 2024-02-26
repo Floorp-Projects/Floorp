@@ -11,9 +11,9 @@ origin:
   url: "http://www.libpng.org/pub/png/libpng.html"
   license: libpng
 
-  release: v1.6.42 (2024-01-29T22:51:33+02:00).
+  release: v1.6.43 (2024-02-23T11:51:40+02:00).
 
-  revision: "v1.6.42"
+  revision: "v1.6.43"
 
   license-file: LICENSE
 
@@ -31,6 +31,7 @@ vendoring:
 
   exclude:
     - "**"
+    - "*/.editorconfig"
 
   include:
     - arm
