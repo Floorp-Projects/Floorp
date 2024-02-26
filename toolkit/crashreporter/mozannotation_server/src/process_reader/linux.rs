@@ -261,8 +261,10 @@ enum PTraceOperation {
     PeekData,
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 type PTraceOperationNative = libc::c_uint;
+#[cfg(all(target_os = "linux", target_env = "musl"))]
+type PTraceOperationNative = libc::c_int;
 #[cfg(target_os = "android")]
 type PTraceOperationNative = c_int;
 
