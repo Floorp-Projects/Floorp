@@ -1,0 +1,49 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Web Audio"
+
+origin:
+  name: kiss_fft
+  description: A mixed-radix Fast Fourier Transform
+
+  url: https://github.com/mborgerding/kissfft
+
+  release: 1c3d6f5aa9eb2bf2f18641f0a7e3e6f5e523a156 (2017-10-25T13:50:40Z).
+  revision: 1c3d6f5aa9eb2bf2f18641f0a7e3e6f5e523a156
+
+  license: BSD-3-Clause
+  license-file: COPYING
+
+vendoring:
+  url: https://github.com/mborgerding/kissfft
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - test
+    - tools/fftutil.c
+    - tools/psdpng.c
+    - "tools/kiss_fftnd*"
+    - tools/kiss_fastfir.c
+    - "tools/kfc.*"
+    - "tools/.*"
+    - TIPS
+    - kissfft.hh
+    - tools/Makefile
+    - Makefile
+
+  keep:
+    - COPYING
+    - _kiss_fft_guts.h
+    - kiss_fft.c
+    - kiss_fft.h
+    - tools/kiss_fftr.c
+    - tools/kiss_fftr.h
+
+  update-actions:
+    - action: move-dir
+      from: '{vendor_dir}/tools'
+      to: '{vendor_dir}'
