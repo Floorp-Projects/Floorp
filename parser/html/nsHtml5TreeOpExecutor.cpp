@@ -1261,7 +1261,8 @@ void nsHtml5TreeOpExecutor::PreloadStyle(
 void nsHtml5TreeOpExecutor::PreloadImage(
     const nsAString& aURL, const nsAString& aCrossOrigin,
     const nsAString& aMedia, const nsAString& aSrcset, const nsAString& aSizes,
-    const nsAString& aImageReferrerPolicy, bool aLinkPreload) {
+    const nsAString& aImageReferrerPolicy, bool aLinkPreload,
+    const nsAString& aFetchPriority) {
   nsCOMPtr<nsIURI> baseURI = BaseURIForPreload();
   bool isImgSet = false;
   nsCOMPtr<nsIURI> uri =
@@ -1270,7 +1271,7 @@ void nsHtml5TreeOpExecutor::PreloadImage(
     // use document wide referrer policy
     mDocument->MaybePreLoadImage(uri, aCrossOrigin,
                                  GetPreloadReferrerPolicy(aImageReferrerPolicy),
-                                 isImgSet, aLinkPreload);
+                                 isImgSet, aLinkPreload, aFetchPriority);
   }
 }
 

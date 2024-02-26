@@ -215,9 +215,16 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 nsHtml5AttributeName::ATTR_REFERRERPOLICY);
             nsHtml5String sizes =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
+
+            // TODO: support the fetchpriority attribute in bug 1839313.
+            //       Meanwhile the empty string is used since it's mapped to the
+            //       auto state
+            //       (https://html.spec.whatwg.org/#fetch-priority-attribute).
+            auto fetchPriority = nsHtml5String::EmptyString();
+
             mSpeculativeLoadQueue.AppendElement()->InitImage(
                 url, crossOrigin, /* aMedia = */ nullptr, referrerPolicy,
-                srcset, sizes, false);
+                srcset, sizes, false, fetchPriority);
           }
         } else if (nsGkAtoms::source == aName) {
           nsHtml5String srcset =
@@ -435,7 +442,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       nsHtml5AttributeName::ATTR_IMAGESIZES);
                   mSpeculativeLoadQueue.AppendElement()->InitImage(
                       url, crossOrigin, media, referrerPolicy, srcset, sizes,
-                      true);
+                      true, fetchPriority);
                 } else if (as.LowerCaseEqualsASCII("font")) {
                   mSpeculativeLoadQueue.AppendElement()->InitFont(
                       url, crossOrigin, media, referrerPolicy, fetchPriority);
@@ -487,8 +494,14 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
           nsHtml5String url =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_POSTER);
           if (url) {
+            // Fetch priority is not supported for video. Nullptr will map to
+            // the auto state
+            // (https://html.spec.whatwg.org/#fetch-priority-attribute).
+            auto fetchPriority = nullptr;
+
             mSpeculativeLoadQueue.AppendElement()->InitImage(
-                url, nullptr, nullptr, nullptr, nullptr, nullptr, false);
+                url, nullptr, nullptr, nullptr, nullptr, nullptr, false,
+                fetchPriority);
           }
         } else if (nsGkAtoms::style == aName) {
           mImportScanner.Start();
@@ -543,8 +556,15 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
             url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           }
           if (url) {
+            // Currently SVG's `<image>` element lacks support for
+            // `fetchpriority`, see bug 1847712. Hence passing nullptr which
+            // maps to the auto state
+            // (https://html.spec.whatwg.org/#fetch-priority-attribute).
+            auto fetchPriority = nullptr;
+
             mSpeculativeLoadQueue.AppendElement()->InitImage(
-                url, nullptr, nullptr, nullptr, nullptr, nullptr, false);
+                url, nullptr, nullptr, nullptr, nullptr, nullptr, false,
+                fetchPriority);
           }
         } else if (nsGkAtoms::script == aName) {
           nsHtml5TreeOperation* treeOp =
