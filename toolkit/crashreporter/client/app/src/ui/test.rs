@@ -4,6 +4,14 @@
 
 //! A renderer for use in tests, which doesn't actually render a GUI but allows programmatic
 //! interaction.
+//!
+//! The [`ui!`](super::ui) macro supports labeling any element with a string identifier, which can
+//! be used to access the element in this UI.
+//!
+//! The [`Interact`] hook must be created to interact with the test UI, before the UI is run and on
+//! the same thread as the UI.
+//!
+//! See how this UI is used in [`crate::test`].
 
 use super::model::{self, Application, Element};
 use std::cell::RefCell;

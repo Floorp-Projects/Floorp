@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! Support for legacy telemetry ping creation. The ping support serialization which should be used
+//! when submitting.
+
 use anyhow::Context;
 use serde::Serialize;
 use std::collections::BTreeMap;

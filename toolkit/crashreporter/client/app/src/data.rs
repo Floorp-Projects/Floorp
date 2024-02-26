@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! Data binding types are used to implement dynamic behaviors in UIs. [`Event`] is the primitive
+//! type underlying most others. [Properties](Property) are what should usually be used in UI
+//! models, since they have `From` impls allowing different binding behaviors to be set.
+
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -141,7 +145,11 @@ impl<T> Synchronized<T> {
 
 /// A runtime value that can be fetched on-demand (read-only).
 ///
-/// Consumers call `read` or `get` to retrieve the value.
+/// Consumers call [`read`] or [`get`] to retrieve the value, while producers call [`register`] to
+/// set the function which is called to retrieve the value. This is of most use for things like
+/// editable text strings, where it would be unnecessarily expensive to e.g. update a
+/// `Synchronized` property as the text string is changed (debouncing could be used, but if change
+/// notification isn't needed then it's still unnecessary).
 pub struct OnDemand<T> {
     get: Rc<RefCell<Option<Box<dyn Fn(&mut T) + 'static>>>>,
 }
@@ -213,8 +221,8 @@ impl<T> OnDemand<T> {
 /// * `T` can be converted to static bindings.
 /// * `Synchronized<T>` can be converted to dynamic bindings which will be updated
 /// bidirectionally.
-/// * `OnDemand<T>` can be converted to dynamic bindings which can be read from the property
-/// owner.
+/// * `OnDemand<T>` can be converted to dynamic bindings which can be queried on an as-needed
+/// basis.
 #[derive(Clone, Debug)]
 pub enum Property<T> {
     Static(T),
