@@ -218,10 +218,6 @@ module.exports = {
     // TODO: This is enabled by default in ESLint's v9 recommended configuration.
     "no-constant-binary-expression": "error",
 
-    // XXX Bug 1487642 - decide if we want to enable this or not.
-    // Disallow constant expressions in conditions
-    "no-constant-condition": "off",
-
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
 
