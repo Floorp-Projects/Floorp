@@ -18,7 +18,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/HTMLEditor.h"
-#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -269,7 +268,7 @@ BrokenImageIcon::BrokenImageIcon(const nsImageFrame& aFrame) {
                     loadFlags, nullptr, contentPolicyType, u""_ns,
                     false, /* aUseUrgentStartForChannel */
                     false, /* aLinkPreload */
-                    0, FetchPriority::Auto, getter_AddRefs(mImage));
+                    0, getter_AddRefs(mImage));
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 

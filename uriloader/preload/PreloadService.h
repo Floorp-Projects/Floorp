@@ -90,8 +90,7 @@ class PreloadService {
 
   void PreloadImage(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aImageReferrerPolicy, bool aIsImgSet,
-                    uint64_t aEarlyHintPreloaderId,
-                    const nsAString& aFetchPriority);
+                    uint64_t aEarlyHintPreloaderId);
 
   void PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
                    const nsAString& aReferrerPolicy,

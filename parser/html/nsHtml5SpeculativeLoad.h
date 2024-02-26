@@ -75,7 +75,7 @@ class nsHtml5SpeculativeLoad {
   inline void InitImage(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
                         nsHtml5String aMedia, nsHtml5String aReferrerPolicy,
                         nsHtml5String aSrcset, nsHtml5String aSizes,
-                        bool aLinkPreload, nsHtml5String aFetchPriority) {
+                        bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadImage;
@@ -92,7 +92,6 @@ class nsHtml5SpeculativeLoad {
     aSizes.ToString(
         mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
     mIsLinkPreload = aLinkPreload;
-    aFetchPriority.ToString(mFetchPriority);
   }
 
   inline void InitFont(nsHtml5String aUrl, nsHtml5String aCrossOrigin,

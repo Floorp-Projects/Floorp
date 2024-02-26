@@ -45,7 +45,7 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
       aExecutor->PreloadImage(
           mUrlOrSizes, mCrossOrigin, mMedia, mCharsetOrSrcset,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-          mReferrerPolicyOrIntegrity, mIsLinkPreload, mFetchPriority);
+          mReferrerPolicyOrIntegrity, mIsLinkPreload);
       break;
     case eSpeculativeLoadOpenPicture:
       aExecutor->PreloadOpenPicture();
