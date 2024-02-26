@@ -3,6 +3,25 @@
     {
       "stash": {
         "blocked": [
+          "{baf760b3-2a5b-4e38-878a-139bf10380c2}:1.0.1",
+          "purebrowse@ext:1.0.1",
+          "purebrowse@ext:1.0.0",
+          "purebrowse@ext:1.0.2",
+          "autoadsoff@addon:1.0.0",
+          "purebrowse@ext:1.0.3",
+          "{798674d6-2dd2-43e3-bccc-2080301379bb}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1708699544620,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1708713304742,
+      "id": "82b01b1f-d543-4966-b48d-0fac1fec9b06",
+      "last_modified": 1708713360745
+    },
+    {
+      "stash": {
+        "blocked": [
           "Aternity-WebExt-12.2.3@aternity.com:12.2.3.36",
           "Aternity-WebExt-12.2.3@aternity.com:12.2.3.55",
           "Aternity-WebExt-12.2.3@aternity.com:12.2.3.31",
@@ -112,5 +131,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1708000561099
+  "timestamp": 1708713360745
 }
