@@ -954,6 +954,9 @@ def gen_substs(manifests):
     substs["component_jsms"] = (
         "\n".join(" %s," % strings.entry_to_cxx(jsm) for jsm in sorted(jsms)) + "\n"
     )
+    substs["define_has_component_jsms"] = (
+        "#define HAS_COMPONENT_JSMS" if len(jsms) > 0 else ""
+    )
     substs["component_esmodules"] = (
         "\n".join(
             " %s," % strings.entry_to_cxx(esModule) for esModule in sorted(esModules)

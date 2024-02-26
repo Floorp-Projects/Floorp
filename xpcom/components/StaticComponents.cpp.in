@@ -83,9 +83,13 @@ const nsXPTInterface gInterfaces[] = {
 //# @interfaces@
 };
 
+//# @define_has_component_jsms@
+
+#ifdef HAS_COMPONENT_JSMS
 const StringOffset gComponentJSMs[] = {
 //# @component_jsms@
 };
+#endif
 
 const StringOffset gComponentESModules[] = {
 //# @component_esmodules@
@@ -148,9 +152,9 @@ static nsresult ConstructJSMOrESMComponent(const nsACString& aURI,
                                              (void**)aResult);
 }
 
-static nsresult ConstructJSMComponent(const nsACString& aURI,
-                                      const char* aConstructor,
-                                      nsISupports** aResult) {
+[[maybe_unused]] static nsresult ConstructJSMComponent(const nsACString& aURI,
+                                                       const char* aConstructor,
+                                                       nsISupports** aResult) {
   return ConstructJSMOrESMComponent<ComponentType::JSM>(
     aURI, aConstructor, aResult);
 }
@@ -351,11 +355,15 @@ const StaticProtocolHandler* StaticProtocolHandler::Lookup(const nsACString& aSc
 
 /* static */ already_AddRefed<nsIUTF8StringEnumerator>
 StaticComponents::GetComponentJSMs() {
+#ifdef HAS_COMPONENT_JSMS
   auto jsms = MakeUnique<nsTArray<nsCString>>(MOZ_ARRAY_LENGTH(gComponentJSMs));
 
   for (const auto& entry : gComponentJSMs) {
     jsms->AppendElement(GetString(entry));
   }
+#else
+  auto jsms = MakeUnique<nsTArray<nsCString>>(0);
+#endif
 
   nsCOMPtr<nsIUTF8StringEnumerator> result;
   MOZ_ALWAYS_SUCCEEDS(NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(result),
