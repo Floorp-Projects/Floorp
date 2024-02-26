@@ -19,9 +19,12 @@ exclude: true
 - Added [`GeckoSession.NavigationDelegate.onLocationChange#hasUserGesture`][125.2]. This indicates if a location change was requested
 while a user gesture was active (e.g., a tap).
 ([bug 1837601]({{bugzilla}}1837601))
+- Added [`WebExtension.MetaData.optionalPermissions`][125.3] and [`WebExtension.MetaData.optionalOrigins`][125.4] which expose the optional and origin optional permissions of an extension ([bug 1811900]({{bugzilla}}1811900)).
 
 [125.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
 [125.2]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List,boolean)
+[125.3]: {{javadoc_uri}}/WebExtension.MetaData.html#optionalPermissions
+[125.4]: {{javadoc_uri}}/WebExtension.MetaData.html#optionalOrigins
 
 ## v124
 
@@ -1529,4 +1532,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f3786e0fcd543773be728be1ff2bf27ac23566d5
+[api-version]: 9a832c4f0796f8b484d67f163d10ffe6dfbe51d6

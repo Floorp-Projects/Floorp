@@ -90,6 +90,14 @@ class WebExtensionTest : BaseSessionTest() {
 
         assertTrue(borderify.isBuiltIn)
 
+        assertArrayEquals(
+            arrayOf("*://developer.mozilla.org/*"),
+            borderify.metaData.optionalOrigins,
+        )
+        assertArrayEquals(
+            arrayOf("clipboardRead"),
+            borderify.metaData.optionalPermissions,
+        )
         mainSession.reload()
         sessionRule.waitForPageStop()
 
@@ -98,6 +106,57 @@ class WebExtensionTest : BaseSessionTest() {
 
         // Check some of the metadata
         assertEquals(borderify.metaData.incognito, "spanning")
+
+        // Uninstall WebExtension and check again
+        sessionRule.waitForResult(controller.uninstall(borderify))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being uninstalled
+        assertBodyBorderEqualTo("")
+    }
+
+    @Test
+    fun verifyOptionalAndOriginsPermissionsMV3() {
+        mainSession.loadUri("https://example.com")
+        sessionRule.waitForPageStop()
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        // Load the WebExtension that will add a border to the body
+        val borderify = sessionRule.waitForResult(
+            controller.installBuiltIn(
+                "resource://android/assets/web_extensions/borderify-mv3/",
+            ),
+        )
+
+        assertArrayEquals(
+            arrayOf("clipboardRead"),
+            borderify.metaData.optionalPermissions,
+        )
+
+        val expectedOptionalOrigins = arrayOf(
+            "*://*.example.com/*",
+            "*://opt-host-perm.example.com/*",
+            "*://host-perm.example.com/*",
+        )
+
+        expectedOptionalOrigins.sort()
+        borderify.metaData.optionalOrigins.sort()
+
+        assertArrayEquals(
+            expectedOptionalOrigins,
+            borderify.metaData.optionalOrigins,
+        )
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was applied by checking the border color
+        assertBodyBorderEqualTo("red")
 
         // Uninstall WebExtension and check again
         sessionRule.waitForResult(controller.uninstall(borderify))

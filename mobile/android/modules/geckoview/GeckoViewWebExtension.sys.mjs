@@ -360,6 +360,8 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     updateDate = null;
   }
 
+  const optionalPermissions = aAddon.optionalPermissions?.permissions ?? [];
+  const optionalOrigins = aAddon.optionalPermissions?.origins ?? [];
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
@@ -393,6 +395,8 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
       temporary: temporarilyInstalled,
       updateDate,
       version,
+      optionalPermissions,
+      optionalOrigins,
     },
   };
 }

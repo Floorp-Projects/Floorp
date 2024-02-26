@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Borderify",
   "version": "1.0",
   "description": "Adds a red border to all webpages matching example.com.",
@@ -20,5 +20,7 @@
   "options_ui": {
     "page": "dummy.html"
   },
-  "optional_permissions": ["clipboardRead", "*://developer.mozilla.org/*"]
+  "granted_host_permissions": true,
+  "optional_permissions": ["clipboardRead", "*://opt-host-perm.example.com/*"],
+  "host_permissions": ["*://host-perm.example.com/*"]
 }
