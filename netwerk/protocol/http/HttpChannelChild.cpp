@@ -3090,30 +3090,19 @@ HttpChannelChild::GetDeliveryTarget(nsISerialEventTarget** aEventTarget) {
 
 void HttpChannelChild::TrySendDeletingChannel() {
   AUTO_PROFILER_LABEL("HttpChannelChild::TrySendDeletingChannel", NETWORK);
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mDeletingChannelSent.compareExchange(false, true)) {
     // SendDeletingChannel is already sent.
     return;
   }
 
-  if (NS_IsMainThread()) {
-    if (NS_WARN_IF(!CanSend())) {
-      // IPC actor is destroyed already, do not send more messages.
-      return;
-    }
-
-    Unused << PHttpChannelChild::SendDeletingChannel();
+  if (NS_WARN_IF(!CanSend())) {
+    // IPC actor is destroyed already, do not send more messages.
     return;
   }
 
-  nsCOMPtr<nsISerialEventTarget> neckoTarget = GetNeckoTarget();
-  MOZ_ASSERT(neckoTarget);
-
-  DebugOnly<nsresult> rv = neckoTarget->Dispatch(
-      NewNonOwningRunnableMethod(
-          "net::HttpChannelChild::TrySendDeletingChannel", this,
-          &HttpChannelChild::TrySendDeletingChannel),
-      NS_DISPATCH_NORMAL);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  Unused << PHttpChannelChild::SendDeletingChannel();
 }
 
 nsresult HttpChannelChild::AsyncCallImpl(
