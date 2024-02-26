@@ -33,6 +33,7 @@ namespace InspectorUtils {
   [Throws] sequence<DOMString> getCSSValuesForProperty(UTF8String property);
   UTF8String rgbToColorName(octet r, octet g, octet b);
   InspectorRGBATuple? colorToRGBA(UTF8String colorString, optional Document? doc = null);
+  InspectorColorToResult? colorTo(UTF8String fromColor, UTF8String toColorSpace);
   boolean isValidCSSColor(UTF8String colorString);
   [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(UTF8String property);
   [Throws] boolean cssPropertyIsShorthand(UTF8String property);
@@ -117,6 +118,12 @@ dictionary InspectorRGBATuple {
   double g = 0;
   double b = 0;
   double a = 1;
+};
+
+dictionary InspectorColorToResult {
+  required DOMString color;
+  required sequence<float> components;
+  required boolean adjusted;
 };
 
 // Any update to this enum should probably also update

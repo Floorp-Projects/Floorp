@@ -33,6 +33,8 @@ support-files = [
 
 ["test_bug1006595.html"]
 
+["test_color_to.html"]
+
 ["test_color_to_rgba.html"]
 
 ["test_containing_block_of.html"]

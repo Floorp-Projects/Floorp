@@ -602,6 +602,26 @@ void InspectorUtils::ColorToRGBA(GlobalObject&, const nsACString& aColorString,
 }
 
 /* static */
+void InspectorUtils::ColorTo(GlobalObject&, const nsACString& aFromColor,
+                             const nsACString& aToColorSpace,
+                             Nullable<InspectorColorToResult>& aResult) {
+  nsCString resultColor;
+  nsTArray<float> resultComponents;
+  bool resultAdjusted = false;
+
+  if (!ServoCSSParser::ColorTo(aFromColor, aToColorSpace, &resultColor,
+                               &resultComponents, &resultAdjusted)) {
+    aResult.SetNull();
+    return;
+  }
+
+  auto& result = aResult.SetValue();
+  result.mColor.AssignASCII(resultColor);
+  result.mComponents = std::move(resultComponents);
+  result.mAdjusted = resultAdjusted;
+}
+
+/* static */
 bool InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
                                      const nsACString& aColorString) {
   return ServoCSSParser::IsValidCSSColor(aColorString);
