@@ -221,9 +221,10 @@ MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine(
   mReader = DecoderTraits::CreateReader(ContainerType(), init);
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  // TODO : Only for testing development for now. In the future this should be
-  // used for encrypted content only.
-  if (StaticPrefs::media_wmf_media_engine_enabled() &&
+  // only use it when the pref allows media engine non-encrypted playback
+  // 1=enabled encrypted and clear, 3=enabled clear
+  if ((StaticPrefs::media_wmf_media_engine_enabled() == 1 ||
+       StaticPrefs::media_wmf_media_engine_enabled() == 3) &&
       StaticPrefs::media_wmf_media_engine_channel_decoder_enabled() &&
       !aDisableExternalEngine) {
     return new ExternalEngineStateMachine(this, mReader);
