@@ -770,9 +770,8 @@ pub struct ComputePassTimestampWrites<'a> {
 
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_command_encoder_begin_compute_pass(
-    encoder_id: id::CommandEncoderId,
     desc: &ComputePassDescriptor,
-) -> *mut wgc::command::ComputePass {
+) -> *mut crate::command::RecordedComputePass {
     let &ComputePassDescriptor {
         label,
         timestamp_writes,
@@ -796,8 +795,7 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_compute_pass(
     });
     let timestamp_writes = timestamp_writes.as_ref();
 
-    let pass = wgc::command::ComputePass::new(
-        encoder_id,
+    let pass = crate::command::RecordedComputePass::new(
         &wgc::command::ComputePassDescriptor {
             label,
             timestamp_writes,
@@ -808,15 +806,15 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_compute_pass(
 
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_compute_pass_finish(
-    pass: *mut wgc::command::ComputePass,
+    pass: *mut crate::command::RecordedComputePass,
     output: &mut ByteBuf,
 ) {
-    let command = Box::from_raw(pass).into_command();
+    let command = Box::from_raw(pass);
     *output = make_byte_buf(&command);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wgpu_compute_pass_destroy(pass: *mut wgc::command::ComputePass) {
+pub unsafe extern "C" fn wgpu_compute_pass_destroy(pass: *mut crate::command::RecordedComputePass) {
     let _ = Box::from_raw(pass);
 }
 
