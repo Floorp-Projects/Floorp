@@ -6,6 +6,9 @@ skip-if = [
 firefox-appdir = "browser"
 head = "head.js"
 support-files = ["../fixtures/**"]
+prefs = [
+  "extensions.formautofill.test.ignoreVisibilityCheck=true",
+]
 
 ["test_activeStatus.js"]
 
