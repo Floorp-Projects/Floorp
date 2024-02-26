@@ -6,14 +6,10 @@ package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -22,6 +18,7 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -40,28 +37,13 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  - Verifying Enhanced Tracking Protection site exceptions
  */
 
-class EnhancedTrackingProtectionTest {
-    private lateinit var mockWebServer: MockWebServer
-
+class EnhancedTrackingProtectionTest : TestSetup() {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule(
         isJumpBackInCFREnabled = false,
         isTCPCFREnabled = false,
         isWallpaperOnboardingEnabled = false,
     )
-
-    @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416046
     @Test

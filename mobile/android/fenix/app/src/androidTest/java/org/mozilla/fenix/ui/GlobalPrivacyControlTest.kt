@@ -4,15 +4,13 @@
 
 package org.mozilla.fenix.ui
 
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.TestAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGPCTestAsset
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -20,8 +18,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  * Tests for Global Privacy Control setting.
  */
 
-class GlobalPrivacyControlTest {
-    private lateinit var mockWebServer: MockWebServer
+class GlobalPrivacyControlTest : TestSetup() {
     private lateinit var gpcPage: TestAsset
 
     @get:Rule
@@ -33,18 +30,9 @@ class GlobalPrivacyControlTest {
     )
 
     @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-
+    override fun setUp() {
+        super.setUp()
         gpcPage = getGPCTestAsset(mockWebServer)
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2429327

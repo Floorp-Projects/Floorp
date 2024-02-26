@@ -5,14 +5,13 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AppAndSystemHelper.clearDownloadsFolder
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.downloadRobot
 
 /**
@@ -22,19 +21,13 @@ import org.mozilla.fenix.ui.robots.downloadRobot
  *  - Verifies downloading of varying file types and the appearance inside the Downloads listing.
  **/
 @RunWith(Parameterized::class)
-class DownloadFileTypesTest(fileName: String) {
+class DownloadFileTypesTest(fileName: String) : TestSetup() {
     /* Remote test page managed by Mozilla Mobile QA team at https://github.com/mozilla-mobile/testapp */
     private val downloadTestPage = "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
     private var downloadFile: String = fileName
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
-
-    @After
-    fun tearDown() {
-        // Check and clear the downloads folder
-        clearDownloadsFolder()
-    }
 
     companion object {
         // Creating test data. The test will take each file name as a parameter and run it individually.

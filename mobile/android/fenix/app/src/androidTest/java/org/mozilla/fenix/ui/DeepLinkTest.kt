@@ -5,16 +5,12 @@
 package org.mozilla.fenix.ui
 
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.DeepLinkRobot
 
 /**
@@ -31,28 +27,11 @@ import org.mozilla.fenix.ui.robots.DeepLinkRobot
  **/
 
 @Ignore("All tests perma-failing, see: https://github.com/mozilla-mobile/fenix/issues/13491")
-class DeepLinkTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
-
+class DeepLinkTest : TestSetup() {
     private val robot = DeepLinkRobot()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     @Test
     fun openHomeScreen() {
