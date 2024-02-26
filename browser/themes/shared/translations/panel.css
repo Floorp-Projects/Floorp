@@ -153,19 +153,7 @@ h1.translations-panel-header-wrapper {
 }
 
 #select-translations-panel-translation-area {
-  background-color: transparent;
-  border: none;
-  border-radius: 4px;
   height: 8em;
   margin-inline: 5px;
-  outline: 2px solid var(--arrowpanel-dimmed);
-  overflow: auto;
-  padding: 4px;
   resize: none;
-  /* This manual focus styling may no longer be needed after Bug 1881256 lands.
-     https://bugzilla.mozilla.org/show_bug.cgi?id=1881256 */
-  &:focus {
-    outline: var(--focus-outline);
-    outline-offset: var(--focus-outline-offset);
-  }
 }

@@ -2085,67 +2085,6 @@ panelview {
     resize: vertical;
   }
 
-  select {
-    /* copied/adapted from toolkit/themes/shared/menulist-shared.css */
-    appearance: none;
-    background-color: var(--button-bgcolor, ButtonFace);
-    color: var(--button-color, ButtonText);
-    border-radius: 4px;
-    padding: 6px 16px;
-    margin: 5px 2px 3px;
-
-    font: menu;
-    font-weight: 600;
-    border: none;
-
-    background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
-    background-position: right 10px center;
-    padding-inline-end: 32px; /* 2 * 10px padding + image's 12px width */
-    background-repeat: no-repeat;
-    -moz-context-properties: fill;
-    fill: currentColor;
-
-    &:-moz-locale-dir(rtl) {
-      background-position: left 10px center;
-    }
-
-    &:hover {
-      background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 10%, ButtonFace));
-    }
-
-    &:hover:active {
-      background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 20%, ButtonFace));
-    }
-
-    &:focus-visible {
-      outline: var(--focus-outline);
-      outline-offset: var(--focus-outline-offset);
-    }
-  }
-
-  input,
-  textarea {
-    appearance: none;
-    background-color: var(--panel-background);
-    padding: 0.25em;
-    border: 1px solid var(--panel-separator-color);
-    border-radius: 4px;
-
-    &:focus-visible {
-      border-color: transparent;
-      outline: var(--focus-outline);
-      outline-offset: var(--focus-outline-offset);
-    }
-  }
-
-  input:user-invalid:not(:focus-visible),
-  select:user-invalid:not(:focus-visible) {
-    border-color: transparent;
-    outline: var(--focus-outline);
-    outline-offset: var(--focus-outline-offset);
-    outline-color: var(--color-error-outline);
-  }
-
   > .panel-subview-body > label {
     margin-block: 1.5em 0.5em;
 
