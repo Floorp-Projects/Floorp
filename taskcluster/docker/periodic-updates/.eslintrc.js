@@ -45,9 +45,6 @@ module.exports = {
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 
-    // Disallow unnecessary escape usage in strings and regular expressions.
-    "no-useless-escape": "error",
-
     // Require "use strict" to be defined globally in the script.
     strict: ["error", "global"],
 

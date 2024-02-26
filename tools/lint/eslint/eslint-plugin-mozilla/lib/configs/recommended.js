@@ -18,12 +18,14 @@
  *   require-atomic-updates - bug 1551829.
  *     - This generates too many false positives that are not easy to work
  *       around, and false positives seem to be inherent in the rule.
- *   no-inner-declarations - bug 1487642
+ *   no-inner-declarations - bug 1487642.
  *     - Would be interested if this could apply to just vars, but at the moment
  *       it doesn't.
  *   max-depth
  *      - Don't enforce the maximum depth that blocks can be nested. The
  *        complexity rule is a better rule to check this.
+ *   no-useless-escape - bug 1881262.
+ *     - This doesn't reveal any actual errors, and is a lot of work to address.
  */
 module.exports = {
   env: {
@@ -331,8 +333,7 @@ module.exports = {
     // lines)
     "no-useless-concat": "error",
 
-    // XXX Bug 1487642 - decide if we want to enable this or not.
-    // Disallow unnecessary escape characters
+    // See explicit decisions at top of file.
     "no-useless-escape": "off",
 
     // Disallow redundant return statements
