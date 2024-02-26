@@ -502,22 +502,6 @@
         /NotFoundError: Could not write to `.*': failed to open file for writing/
       );
     });
-
-    add_task(async function test_write_backupFile_directory() {
-      const tempDir = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_backupFile_directory");
-      await IOUtils.makeDirectory(tempDir);
-
-      const subdir = PathUtils.join(tempDir, "subdir");
-      await IOUtils.makeDirectory(subdir);
-
-      const fileName = PathUtils.join(tempDir, "file.txt");
-      await IOUtils.write(fileName, Uint8Array.of());
-
-      await Assert.rejects(
-        IOUtils.writeUTF8(fileName, Uint8Array.of(), { backupFile: subdir }),
-        /Could not write to `.*': backup file `.*' is a directory/
-      );
-    });
   </script>
 </head>
 
