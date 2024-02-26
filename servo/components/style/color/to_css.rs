@@ -4,11 +4,11 @@
 
 //! Write colors into CSS strings.
 
-use cssparser::color::PredefinedColorSpace;
+use super::{parsing, AbsoluteColor, ColorFlags, ColorSpace};
+use crate::values::normalize;
+use cssparser::color::{serialize_color_alpha, PredefinedColorSpace};
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
-
-use super::{parsing, AbsoluteColor, ColorFlags, ColorSpace};
 
 impl ToCss for AbsoluteColor {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
@@ -76,6 +76,138 @@ impl ToCss for AbsoluteColor {
                 };
                 let color = parsing::Color::ColorFunction(color_function);
                 cssparser::ToCss::to_css(&color, dest)
+            },
+        }
+    }
+}
+
+impl AbsoluteColor {
+    /// Write a string to `dest` that represents a color as an author would
+    /// enter it.
+    /// NOTE: The format of the output is NOT according to any specification,
+    /// but makes assumptions about the best ways that authors would want to
+    /// enter color values in style sheets, devtools, etc.
+    pub fn write_author_preferred_value<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        macro_rules! precision {
+            ($v:expr) => {{
+                ($v * 100.0).round() / 100.0
+            }};
+        }
+        macro_rules! number {
+            ($c:expr) => {{
+                if let Some(v) = $c.map(normalize) {
+                    precision!(v).to_css(dest)?;
+                } else {
+                    write!(dest, "none")?;
+                }
+            }};
+        }
+        macro_rules! percentage {
+            ($c:expr) => {{
+                if let Some(v) = $c.map(normalize) {
+                    precision!(v).to_css(dest)?;
+                    dest.write_char('%')?;
+                } else {
+                    write!(dest, "none")?;
+                }
+            }};
+        }
+        macro_rules! unit_percentage {
+            ($c:expr) => {{
+                if let Some(v) = $c.map(normalize) {
+                    precision!(v * 100.0).to_css(dest)?;
+                    dest.write_char('%')?;
+                } else {
+                    write!(dest, "none")?;
+                }
+            }};
+        }
+        macro_rules! angle {
+            ($c:expr) => {{
+                if let Some(v) = $c.map(normalize) {
+                    precision!(v).to_css(dest)?;
+                    dest.write_str("deg")?;
+                } else {
+                    write!(dest, "none")?;
+                }
+            }};
+        }
+
+        match self.color_space {
+            ColorSpace::Srgb => {
+                write!(dest, "rgb(")?;
+                unit_percentage!(self.c0());
+                dest.write_char(' ')?;
+                unit_percentage!(self.c1());
+                dest.write_char(' ')?;
+                unit_percentage!(self.c2());
+                serialize_color_alpha(dest, self.alpha(), false)?;
+                dest.write_char(')')
+            },
+            ColorSpace::Hsl | ColorSpace::Hwb => {
+                dest.write_str(if self.color_space == ColorSpace::Hsl {
+                    "hsl("
+                } else {
+                    "hwb("
+                })?;
+                angle!(self.c0());
+                dest.write_char(' ')?;
+                percentage!(self.c1());
+                dest.write_char(' ')?;
+                percentage!(self.c2());
+                serialize_color_alpha(dest, self.alpha(), false)?;
+                dest.write_char(')')
+            },
+            ColorSpace::Lab | ColorSpace::Oklab => {
+                if self.color_space == ColorSpace::Oklab {
+                    dest.write_str("ok")?;
+                }
+                dest.write_str("lab(")?;
+                if self.color_space == ColorSpace::Lab {
+                    percentage!(self.c0())
+                } else {
+                    unit_percentage!(self.c0())
+                }
+                dest.write_char(' ')?;
+                number!(self.c1());
+                dest.write_char(' ')?;
+                number!(self.c2());
+                serialize_color_alpha(dest, self.alpha(), false)?;
+                dest.write_char(')')
+            },
+            ColorSpace::Lch | ColorSpace::Oklch => {
+                if self.color_space == ColorSpace::Oklch {
+                    dest.write_str("ok")?;
+                }
+                dest.write_str("lch(")?;
+                number!(self.c0());
+                dest.write_char(' ')?;
+                number!(self.c1());
+                dest.write_char(' ')?;
+                angle!(self.c2());
+                serialize_color_alpha(dest, self.alpha(), false)?;
+                dest.write_char(')')
+            },
+            ColorSpace::SrgbLinear |
+            ColorSpace::DisplayP3 |
+            ColorSpace::A98Rgb |
+            ColorSpace::ProphotoRgb |
+            ColorSpace::Rec2020 |
+            ColorSpace::XyzD50 |
+            ColorSpace::XyzD65 => {
+                dest.write_str("color(")?;
+                self.color_space.to_css(dest)?;
+                dest.write_char(' ')?;
+                number!(self.c0());
+                dest.write_char(' ')?;
+                number!(self.c1());
+                dest.write_char(' ')?;
+                number!(self.c2());
+                serialize_color_alpha(dest, self.alpha(), false)?;
+                dest.write_char(')')
             },
         }
     }
