@@ -101,7 +101,7 @@
     --link-focus-outline-offset: 1px;
 
     /** Text **/
-    --text-color-deemphasized: color-mix(in srgb, currentColor 60%, transparent);
+    --text-color-deemphasized: color-mix(in srgb, currentColor 69%, transparent);
     --text-color-error: light-dark(var(--color-red-50), var(--color-red-20));
 
     /** Size **/
