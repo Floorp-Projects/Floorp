@@ -22,9 +22,6 @@ ChromeUtils.defineESModuleGetters(this, {
   Timer: "resource://gre/modules/Timer.sys.mjs",
 });
 
-const kMsecPerMin = 60 * 1000;
-const kUsecPerMin = 60 * 1000000;
-
 /**
  * Ensures that the specified URIs are either cleared or not.
  *
@@ -694,10 +691,6 @@ DialogHelper.prototype = {
   },
 };
 
-function promiseSanitizationComplete() {
-  return TestUtils.topicObserved("sanitizer-sanitization-complete");
-}
-
 /**
  * Adds a download to history.
  *
@@ -749,21 +742,6 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
  */
 async function formNameExists(name) {
   return !!(await FormHistory.count({ fieldname: name }));
-}
-
-/**
- * Removes all history visits, downloads, and form entries.
- */
-async function blankSlate() {
-  let publicList = await Downloads.getList(Downloads.PUBLIC);
-  let downloads = await publicList.getAll();
-  for (let download of downloads) {
-    await publicList.remove(download);
-    await download.finalize(true);
-  }
-
-  await FormHistory.update({ op: "remove" });
-  await PlacesUtils.history.clear();
 }
 
 /**

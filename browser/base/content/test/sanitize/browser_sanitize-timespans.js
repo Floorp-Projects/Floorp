@@ -8,9 +8,6 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
 var now_mSec = Date.now();
 var now_uSec = now_mSec * 1000;
 
-const kMsecPerMin = 60 * 1000;
-const kUsecPerMin = 60 * 1000000;
-
 function promiseFormHistoryRemoved() {
   return new Promise(resolve => {
     Services.obs.addObserver(function onfh() {
