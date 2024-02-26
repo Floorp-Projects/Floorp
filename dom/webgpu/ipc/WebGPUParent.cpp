@@ -1359,6 +1359,15 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderAction(
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvRenderPass(RawId aEncoderId, RawId aDeviceId,
+                                            const ipc::ByteBuf& aByteBuf) {
+  ErrorBuffer error;
+  ffi::wgpu_server_render_pass(mContext.get(), aEncoderId, ToFFI(&aByteBuf),
+                               error.ToFFI());
+  ForwardError(aDeviceId, error);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
                                                              bool aIsCompute,
                                                              uint32_t aIndex,
