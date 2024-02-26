@@ -113,15 +113,19 @@ class DateTimeTestHelper {
     EventUtils.synthesizeMouseAtCenter(element, {}, this.frame.contentWindow);
   }
 
-  /**
-   * Close the panel and the tab
-   */
-  async tearDown() {
+  async closePicker() {
     if (this.panel.state != "closed") {
       let pickerClosePromise = this.promisePickerClosed();
       this.panel.hidePopup();
       await pickerClosePromise;
     }
+  }
+
+  /**
+   * Close the panel and the tab
+   */
+  async tearDown() {
+    await this.closePicker();
     BrowserTestUtils.removeTab(this.tab);
     this.tab = null;
   }
