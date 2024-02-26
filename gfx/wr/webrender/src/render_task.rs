@@ -940,6 +940,7 @@ impl RenderTask {
         size: DeviceIntSize,
         kind: RenderTaskKind,
     ) -> Self {
+        assert!(!size.is_empty());
         RenderTask::new(
             RenderTaskLocation::Unallocated { size },
             kind,
