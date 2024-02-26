@@ -165,10 +165,6 @@ module.exports = {
     // No credentials submitted with fetch calls
     "fetch-options/no-fetch-credentials": "off",
 
-    // XXX This rule line should be removed to enable it. See bug 1487642.
-    // Enforce return statements in getters
-    "getter-return": "off",
-
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 10],
 

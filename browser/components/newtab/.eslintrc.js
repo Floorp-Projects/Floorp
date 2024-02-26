@@ -123,7 +123,6 @@ module.exports = {
     "consistent-this": ["error", "use-bind"],
     eqeqeq: "error",
     "func-name-matching": "error",
-    "getter-return": "error",
     "guard-for-in": "error",
     "max-nested-callbacks": ["error", 4],
     "max-params": ["error", 6],

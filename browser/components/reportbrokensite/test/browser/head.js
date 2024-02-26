@@ -558,11 +558,17 @@ class MenuHelper {
     return true;
   }
 
-  get reportBrokenSite() {}
+  get reportBrokenSite() {
+    throw new Error("Should be defined in derived class");
+  }
 
-  get reportSiteIssue() {}
+  get reportSiteIssue() {
+    throw new Error("Should be defined in derived class");
+  }
 
-  get popup() {}
+  get popup() {
+    throw new Error("Should be defined in derived class");
+  }
 
   get opened() {
     return this.popup?.hasAttribute("panelopen");

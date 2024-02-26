@@ -175,6 +175,7 @@ add_task(async function testThenableJobAccessError() {
   sandbox.thenable = {
     get then() {
       accessed = true;
+      return undefined;
     },
   };
 

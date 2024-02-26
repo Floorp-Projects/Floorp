@@ -141,6 +141,7 @@ add_task(async function test_api_listener_call_exception() {
         // catch with a failure if we are running the extension code as a side effect
         // of logging the error to the console service.
         const nonError = {
+          // eslint-disable-next-line getter-return
           get message() {
             browser.test.fail(`Unexpected extension code executed`);
           },

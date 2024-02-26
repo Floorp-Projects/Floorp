@@ -212,6 +212,7 @@ class DownloadItem {
       let timeLeftInSeconds = sizeLeft / this.download.speed;
       return new Date(Date.now() + timeLeftInSeconds * 1000);
     }
+    return undefined;
   }
 
   get state() {

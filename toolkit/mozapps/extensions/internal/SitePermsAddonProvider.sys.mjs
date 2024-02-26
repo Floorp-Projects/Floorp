@@ -148,20 +148,30 @@ class SitePermsAddonWrapper {
     });
   }
 
-  get creator() {}
+  get creator() {
+    return undefined;
+  }
 
-  get homepageURL() {}
+  get homepageURL() {
+    return undefined;
+  }
 
-  get description() {}
+  get description() {
+    return undefined;
+  }
 
-  get fullDescription() {}
+  get fullDescription() {
+    return undefined;
+  }
 
   get version() {
     // We consider the previous implementation attempt (signed addons) to be the initial version,
     // hence the 2.0 for this approach.
     return "2.0";
   }
-  get updateDate() {}
+  get updateDate() {
+    return undefined;
+  }
 
   get isActive() {
     return true;
