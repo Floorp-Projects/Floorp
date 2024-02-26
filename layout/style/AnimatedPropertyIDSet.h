@@ -10,6 +10,7 @@
 #include "mozilla/ServoBindings.h"
 
 #include "AnimatedPropertyID.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsTHashSet.h"
 
 namespace mozilla {
@@ -63,10 +64,8 @@ class AnimatedPropertyIDSet {
     }
   }
 
- private:
   using CustomNameSet = nsTHashSet<RefPtr<nsAtom>>;
 
- public:
   // Iterator for use in range-based for loops
   class Iterator {
    public:
@@ -123,9 +122,9 @@ class AnimatedPropertyIDSet {
     }
 
    private:
-    explicit Iterator(const AnimatedPropertyIDSet& aPropertySet,
-                      nsCSSPropertyIDSet::Iterator aIDIterator,
-                      CustomNameSet::const_iterator aCustomNameIterator)
+    Iterator(const AnimatedPropertyIDSet& aPropertySet,
+             nsCSSPropertyIDSet::Iterator aIDIterator,
+             CustomNameSet::const_iterator aCustomNameIterator)
         : mPropertySet(aPropertySet),
           mIDIterator(std::move(aIDIterator)),
           mCustomNameIterator(std::move(aCustomNameIterator)),
