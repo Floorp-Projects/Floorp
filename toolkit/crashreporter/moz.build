@@ -62,7 +62,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         DIRS += ["minidump-analyzer"]
 
     DIRS += [
-        "client",
+        "client-rust/app",
         "mozannotation_client",
         "mozannotation_server",
     ]

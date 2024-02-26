@@ -13,6 +13,20 @@ def generate_bool(name):
     return f"pub const {name}: bool = {'true' if value else 'false'};\n"
 
 
+def generate_string_array(name):
+    value = buildconfig.substs.get(name) or []
+    return (
+        f"pub const {name}: [&str; {len(value)}] = ["
+        + ",".join(map(escape_rust_string, value))
+        + "];\n"
+    )
+
+
+def generate_string(name):
+    value = buildconfig.substs.get(name) or ""
+    return f"pub const {name}: &str = {escape_rust_string(value)};\n"
+
+
 def escape_rust_string(value):
     """escape the string into a Rust literal"""
     # This could be more generous, but we're only escaping paths with it.
@@ -85,7 +99,7 @@ def generate(output):
             )
         )
 
-    # Finally, write out some useful booleans from the buildconfig.
+    # Finally, write out some useful values from the buildconfig.
     output.write(generate_bool("MOZ_FOLD_LIBS"))
     output.write(generate_bool("NIGHTLY_BUILD"))
     output.write(generate_bool("RELEASE_OR_BETA"))
@@ -93,3 +107,10 @@ def generate(output):
     output.write(generate_bool("MOZ_DEV_EDITION"))
     output.write(generate_bool("MOZ_ESR"))
     output.write(generate_bool("MOZ_DIAGNOSTIC_ASSERT_ENABLED"))
+
+    # Used by toolkit/crashreporter/client
+    output.write(generate_bool("MOZ_CRASHREPORTER_MOCK"))
+    output.write(generate_string_array("CC_BASE_FLAGS"))
+    output.write(generate_string_array("MOZ_GTK3_CFLAGS"))
+    output.write(generate_string_array("MOZ_GTK3_LIBS"))
+    output.write(generate_string("MOZ_APP_NAME"))

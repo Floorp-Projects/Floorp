@@ -162,6 +162,8 @@ optional = true
 features = [
     "Wdk_System_Threading",
     "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Graphics_Gdi",
     "Win32_Security",
     "Win32_Storage_FileSystem",
     "Win32_System_Com",
@@ -175,6 +177,8 @@ features = [
     "Win32_System_SystemInformation",
     "Win32_System_SystemServices",
     "Win32_System_Threading",
+    "Win32_UI_Controls",
+    "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
 ]
@@ -182,6 +186,7 @@ features = [
 
 [features]
 builtins-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]
+crashreporter = ["dep:env_logger", "dep:hyper", "dep:log", "dep:serde_json", "dep:time", "dep:uuid", "dep:windows-sys"]
 geckodriver = ["dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid", "dep:windows-sys"]
 gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:url", "dep:uuid", "dep:windows-sys"]
 gkrust-gtest = ["gkrust"]
