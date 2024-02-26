@@ -5413,7 +5413,15 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
                                             const nsPoint& aPoint,
                                             uint32_t aFlags);
 
-static bool SelfIsSelectable(nsIFrame* aFrame, uint32_t aFlags) {
+static bool SelfIsSelectable(nsIFrame* aFrame, nsIFrame* aParentFrame,
+                             uint32_t aFlags) {
+  // We should not move selection into a native anonymous subtree when handling
+  // selection outside it.
+  if ((aFlags & nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE) &&
+      aParentFrame->GetClosestNativeAnonymousSubtreeRoot() !=
+          aFrame->GetClosestNativeAnonymousSubtreeRoot()) {
+    return false;
+  }
   if ((aFlags & nsIFrame::SKIP_HIDDEN) &&
       !aFrame->StyleVisibility()->IsVisible()) {
     return false;
@@ -5476,21 +5484,28 @@ static FrameTarget DrillDownToSelectionFrame(nsIFrame* aFrame, bool aEndFrame,
     nsIFrame* result = nullptr;
     nsIFrame* frame = aFrame->PrincipalChildList().FirstChild();
     if (!aEndFrame) {
-      while (frame && (!SelfIsSelectable(frame, aFlags) || frame->IsEmpty()))
+      while (frame &&
+             (!SelfIsSelectable(frame, aFrame, aFlags) || frame->IsEmpty())) {
         frame = frame->GetNextSibling();
-      if (frame) result = frame;
+      }
+      if (frame) {
+        result = frame;
+      }
     } else {
       // Because the frame tree is singly linked, to find the last frame,
       // we have to iterate through all the frames
       // XXX I have a feeling this could be slow for long blocks, although
       //     I can't find any slowdowns
       while (frame) {
-        if (!frame->IsEmpty() && SelfIsSelectable(frame, aFlags))
+        if (!frame->IsEmpty() && SelfIsSelectable(frame, aFrame, aFlags)) {
           result = frame;
+        }
         frame = frame->GetNextSibling();
       }
     }
-    if (result) return DrillDownToSelectionFrame(result, aEndFrame, aFlags);
+    if (result) {
+      return DrillDownToSelectionFrame(result, aEndFrame, aFlags);
+    }
   }
   // If the current frame has no targetable children, target the current frame
   return FrameTarget{aFrame, true, aEndFrame};
@@ -5502,8 +5517,9 @@ static FrameTarget GetSelectionClosestFrameForLine(
     nsBlockFrame* aParent, nsBlockFrame::LineIterator aLine,
     const nsPoint& aPoint, uint32_t aFlags) {
   // Account for end of lines (any iterator from the block is valid)
-  if (aLine == aParent->LinesEnd())
+  if (aLine == aParent->LinesEnd()) {
     return DrillDownToSelectionFrame(aParent, true, aFlags);
+  }
   nsIFrame* frame = aLine->mFirstChild;
   nsIFrame* closestFromIStart = nullptr;
   nsIFrame* closestFromIEnd = nullptr;
@@ -5519,7 +5535,7 @@ static FrameTarget GetSelectionClosestFrameForLine(
     // the previous thing had a different editableness than us, since then we
     // may end up not being able to select after it if the br is the last thing
     // on the line.
-    if (!SelfIsSelectable(frame, aFlags) || frame->IsEmpty() ||
+    if (!SelfIsSelectable(frame, aParent, aFlags) || frame->IsEmpty() ||
         (canSkipBr && frame->IsBrFrame() &&
          lastFrameWasEditable == frame->GetContent()->IsEditable())) {
       continue;
@@ -5699,7 +5715,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     // Go through all the child frames to find the closest one
     nsIFrame::FrameWithDistance closest = {nullptr, nscoord_MAX, nscoord_MAX};
     for (; kid; kid = kid->GetNextSibling()) {
-      if (!SelfIsSelectable(kid, aFlags) || kid->IsEmpty()) {
+      if (!SelfIsSelectable(kid, aFrame, aFlags) || kid->IsEmpty()) {
         continue;
       }
 
@@ -9391,7 +9407,8 @@ nsresult nsIFrame::PeekOffsetForLineEdge(PeekOffsetStruct* aPos) {
       }
     }
   }
-  FrameTarget targetFrame = DrillDownToSelectionFrame(baseFrame, endOfLine, 0);
+  FrameTarget targetFrame = DrillDownToSelectionFrame(
+      baseFrame, endOfLine, nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE);
   SetPeekResultFromFrame(*aPos, targetFrame.frame, endOfLine ? -1 : 0,
                          OffsetIsAtLineEdge::Yes);
   if (endOfLine && targetFrame.frame->HasSignificantTerminalNewline()) {
