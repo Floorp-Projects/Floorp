@@ -13,7 +13,6 @@ import shutil
 import tempfile
 import time
 from contextlib import AsyncExitStack
-from distutils.util import strtobool
 from pathlib import Path
 
 import aiohttp
@@ -49,6 +48,22 @@ BCJ_OPTIONS = {
     # macOS Universal Builds
     "macos-x86_64-aarch64": [],
 }
+
+
+def strtobool(value: str):
+    # Copied from `mach.util` since this script runs outside of a mach environment
+    # Reimplementation of distutils.util.strtobool
+    # https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool
+    true_vals = ("y", "yes", "t", "true", "on", "1")
+    false_vals = ("n", "no", "f", "false", "off", "0")
+
+    value = value.lower()
+    if value in true_vals:
+        return 1
+    if value in false_vals:
+        return 0
+
+    raise ValueError(f'Expected one of: {", ".join(true_vals + false_vals)}')
 
 
 def verify_signature(mar, cert):

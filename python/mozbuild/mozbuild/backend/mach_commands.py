@@ -409,7 +409,7 @@ def get_clang_tools(command_context, clang_tools_path):
 
 def prompt_bool(prompt, limit=5):
     """Prompts the user with prompt and requires a boolean value."""
-    from distutils.util import strtobool
+    from mach.util import strtobool
 
     for _ in range(limit):
         try:
