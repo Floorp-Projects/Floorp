@@ -18,32 +18,41 @@ var httpbody = "0123456789";
 
 var live_channels = [];
 
-function run_test() {
+add_task(async function test() {
   httpserver.registerPathHandler(testpath, serverHandler);
   httpserver.start(-1);
+  registerCleanupFunction(async () => {
+    if (httpserver) {
+      await httpserver.stop();
+    }
+  });
 
-  httpProtocolHandler.EnsureHSTSDataReady().then(function () {
-    var local_channel;
+  await httpProtocolHandler.EnsureHSTSDataReady();
 
-    // Opened channel that has no remaining references on shutdown
-    local_channel = setupChannel(testpath);
-    local_channel.asyncOpen(new ChannelListener(checkRequest, local_channel));
+  // Opened channel that has no remaining references on shutdown
+  let local_channel = setupChannel(testpath);
+  local_channel.asyncOpen(new SimpleChannelListener());
 
-    // Opened channel that has no remaining references after being opened
-    setupChannel(testpath).asyncOpen(new ChannelListener(function () {}, null));
+  // Opened channel that has no remaining references after being opened
+  setupChannel(testpath).asyncOpen(new SimpleChannelListener());
 
-    // Unopened channel that has remaining references on shutdown
-    live_channels.push(setupChannel(testpath));
+  // Unopened channel that has remaining references on shutdown
+  live_channels.push(setupChannel(testpath));
 
-    // Opened channel that has remaining references on shutdown
-    live_channels.push(setupChannel(testpath));
+  // Opened channel that has remaining references on shutdown
+  live_channels.push(setupChannel(testpath));
+  await new Promise(resolve => {
     live_channels[1].asyncOpen(
-      new ChannelListener(checkRequestFinish, live_channels[1])
+      new SimpleChannelListener((req, data) => {
+        Assert.equal(data, httpbody);
+        resolve();
+      })
     );
   });
 
-  do_test_pending();
-}
+  await httpserver.stop();
+  httpserver = null;
+});
 
 function setupChannel(path) {
   var chan = NetUtil.newChannel({
@@ -58,13 +67,4 @@ function setupChannel(path) {
 function serverHandler(metadata, response) {
   response.setHeader("Content-Type", "text/plain", false);
   response.bodyOutputStream.write(httpbody, httpbody.length);
-}
-
-function checkRequest(request, data, context) {
-  Assert.equal(data, httpbody);
-}
-
-function checkRequestFinish(request, data, context) {
-  checkRequest(request, data, context);
-  httpserver.stop(do_test_finished);
 }
