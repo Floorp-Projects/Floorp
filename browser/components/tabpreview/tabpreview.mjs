@@ -11,7 +11,6 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 
 const TAB_PREVIEW_USE_THUMBNAILS_PREF =
   "browser.tabs.cardPreview.showThumbnails";
-const TAB_PREVIEW_DELAY_PREF = "browser.tabs.cardPreview.delayMs";
 
 /**
  * Detailed preview card that displays when hovering a tab
@@ -37,8 +36,7 @@ export default class TabPreview extends MozLitElement {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_prefPreviewDelay",
-      TAB_PREVIEW_DELAY_PREF,
-      1000
+      "ui.tooltip.delay_ms"
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
