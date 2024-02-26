@@ -191,14 +191,38 @@ void APZUpdater::UpdateScrollDataAndTreeState(
             auto isFirstPaint = aScrollData.IsFirstPaint();
             auto paintSequenceNumber = aScrollData.GetPaintSequenceNumber();
 
+            auto previous = self->mScrollData.find(aOriginatingLayersId);
+            // If there's the previous scroll data which hasn't yet been
+            // processed, we need to merge the previous scroll position updates
+            // into the latest one.
+            if (previous != self->mScrollData.end()) {
+              WebRenderScrollData& previousData = previous->second;
+              if (previousData.GetWasUpdateSkipped()) {
+                MOZ_ASSERT(previousData.IsFirstPaint());
+                aScrollData.PrependUpdates(previousData);
+              }
+            }
+
             self->mScrollData[aOriginatingLayersId] = std::move(aScrollData);
             auto root = self->mScrollData.find(aRootLayerTreeId);
             if (root == self->mScrollData.end()) {
               return;
             }
-            self->mApz->UpdateHitTestingTree(
-                WebRenderScrollDataWrapper(*self, &(root->second)),
-                isFirstPaint, aOriginatingLayersId, paintSequenceNumber);
+            if ((self->mApz->UpdateHitTestingTree(
+                     WebRenderScrollDataWrapper(*self, &(root->second)),
+                     isFirstPaint, aOriginatingLayersId, paintSequenceNumber) ==
+                 APZCTreeManager::OriginatingLayersIdUpdated::No) &&
+                isFirstPaint) {
+              // If the given |aOriginatingLayersId| data wasn't used for
+              // updating, it's likly that the parent process hasn't yet
+              // received the LayersId as "ReferentId", thus we need to process
+              // it in a subsequent update where we got the "ReferentId".
+              //
+              // NOTE: We restrict the above previous scroll data prepending to
+              // the first paint case, otherwise the cumulative scroll data may
+              // be exploded if we have never received the "ReferenceId".
+              self->mScrollData[aOriginatingLayersId].SetWasUpdateSkipped();
+            }
           }));
 }
 

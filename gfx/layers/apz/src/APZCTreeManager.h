@@ -190,10 +190,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *                             this layer update. Note that every child
    *                             process' layer subtree has its own sequence
    *                             numbers.
+   * @return OriginatingLayersIdUpdated whether the given
+   * |aOriginatingLayersId|'s data was processed.
    */
-  void UpdateHitTestingTree(const WebRenderScrollDataWrapper& aRoot,
-                            bool aIsFirstPaint, LayersId aOriginatingLayersId,
-                            uint32_t aPaintSequenceNumber);
+  enum class OriginatingLayersIdUpdated : bool { No, Yes };
+  OriginatingLayersIdUpdated UpdateHitTestingTree(
+      const WebRenderScrollDataWrapper& aRoot, bool aIsFirstPaint,
+      LayersId aOriginatingLayersId, uint32_t aPaintSequenceNumber);
 
   /**
    * Called when webrender is enabled, from the sampler thread. This function

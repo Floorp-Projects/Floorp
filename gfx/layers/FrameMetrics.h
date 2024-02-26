@@ -893,6 +893,12 @@ struct ScrollMetadata {
     mScrollUpdates.AppendElements(std::move(aUpdates));
   }
 
+  void PrependUpdates(const nsTArray<ScrollPositionUpdate>& aUpdates) {
+    MOZ_ASSERT(!aUpdates.IsEmpty());
+
+    mScrollUpdates.InsertElementsAt(0, aUpdates);
+  }
+
  private:
   FrameMetrics mMetrics;
 

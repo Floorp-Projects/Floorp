@@ -276,6 +276,13 @@ class WebRenderScrollData {
 
   void ApplyUpdates(ScrollUpdatesMap&& aUpdates, uint32_t aPaintSequenceNumber);
 
+  // Prepend the scroll position updates in the previous data to this data so
+  // that we can handle all scroll position updates in the proper order.
+  void PrependUpdates(const WebRenderScrollData& aPreviousData);
+
+  void SetWasUpdateSkipped() { mWasUpdateSkipped = true; }
+  bool GetWasUpdateSkipped() const { return mWasUpdateSkipped; }
+
   friend struct IPC::ParamTraits<WebRenderScrollData>;
 
   friend std::ostream& operator<<(std::ostream& aOut,
@@ -328,6 +335,12 @@ class WebRenderScrollData {
 
   bool mIsFirstPaint;
   uint32_t mPaintSequenceNumber;
+
+  // Wether this data was skipped to updated because the parent process hasn't
+  // yet gotten the referent LayersId for this data.
+  //
+  // Note this variable is not copied over IPC.
+  bool mWasUpdateSkipped = false;
 };
 
 }  // namespace layers
