@@ -21,12 +21,12 @@ class APZCGestureDetectorTester : public APZCBasicTester {
       : APZCBasicTester(AsyncPanZoomController::USE_GESTURE_DETECTOR) {}
 
  protected:
-  FrameMetrics GetPinchableFrameMetrics() {
+  FrameMetrics GetPinchableFrameMetrics(float aZoom = 2.0f) {
     FrameMetrics fm;
     fm.SetCompositionBounds(ParentLayerRect(200, 200, 100, 200));
     fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
     fm.SetVisualScrollOffset(CSSPoint(300, 300));
-    fm.SetZoom(CSSToParentLayerScale(2.0));
+    fm.SetZoom(CSSToParentLayerScale(aZoom));
     // APZC only allows zooming on the root scrollable frame.
     fm.SetIsRootContent(true);
     // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
@@ -842,4 +842,236 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay3) {
   check.Call("pre long-tap dispatch");
   mcc->AdvanceByMillis(1);
   check.Call("post long-tap dispatch");
+}
+
+TEST_F(APZCGestureDetectorTester, OneTouchPinchGestureShort) {
+  // Take less than StaticPrefs::apz_max_tap_time() until second touch down,
+  // hold second touch down for a very short time, then move
+  // and expect a successful one touch pinch gesture
+  SCOPED_GFX_PREF_BOOL("apz.one_touch_pinch.enabled", true);
+
+  MakeApzcZoomable();
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  const auto oldZoom = apzc->GetFrameMetrics().GetZoom().scale;
+
+  const auto tapResult =
+      Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(10));
+  apzc->SetAllowedTouchBehavior(tapResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(10);
+  const auto touchResult = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  apzc->SetAllowedTouchBehavior(touchResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  // We should be able to hold down the second touch as long as we like
+  // before beginning to move
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 50), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchUp(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  const auto newZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  EXPECT_NE(newZoom, oldZoom);
+}
+
+TEST_F(APZCGestureDetectorTester, OneTouchPinchGestureLong) {
+  // Take less than StaticPrefs::apz_max_tap_time() until second touch down,
+  // hold second touch down for a long time, then move
+  // and expect a successful one touch pinch gesture
+  SCOPED_GFX_PREF_BOOL("apz.one_touch_pinch.enabled", true);
+
+  MakeApzcZoomable();
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  const auto oldZoom = apzc->GetFrameMetrics().GetZoom().scale;
+
+  const auto tapResult =
+      Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(10));
+  apzc->SetAllowedTouchBehavior(tapResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() - 20);
+  const auto touchResult = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  apzc->SetAllowedTouchBehavior(touchResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  // We should be able to hold down the second touch as long as we like
+  // before beginning to move
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() + 100);
+  TouchMove(apzc, ScreenIntPoint(10, 50), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchUp(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  const auto newZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  EXPECT_NE(newZoom, oldZoom);
+}
+
+TEST_F(APZCGestureDetectorTester, OneTouchPinchGestureNoMoveTriggersDoubleTap) {
+  // Take less than StaticPrefs::apz_max_tap_time() until second touch down,
+  // then wait longer than StaticPrefs::apz_max_tap_time(), lift finger up
+  // and expect a successful double tap. No zooming should be performed
+  // by the one-touch pinch codepath.
+  SCOPED_GFX_PREF_BOOL("apz.one_touch_pinch.enabled", true);
+
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  const auto oldZoom = apzc->GetFrameMetrics().GetZoom().scale;
+
+  MakeApzcZoomable();
+
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _, _))
+      .Times(0);
+  EXPECT_CALL(*mcc,
+              HandleTap(TapType::eDoubleTap, _, 0, apzc->GetGuid(), _, _));
+
+  const auto tapResult =
+      Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(10));
+  apzc->SetAllowedTouchBehavior(tapResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() - 20);
+  const auto touchResult = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  apzc->SetAllowedTouchBehavior(touchResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  // We should be able to hold down the second touch as long as we like
+  // before lifting the finger
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() + 100);
+  TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());
+
+  const auto newZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  EXPECT_EQ(newZoom, oldZoom);
+}
+
+TEST_F(APZCGestureDetectorTester, OneTouchPinchGestureNonZoomablePage) {
+  // Use a non-zoomable page. Perform a tap and a touch-drag
+  // which on a zoomable page trigger a one touch pinch gesture,
+  // and expect a single tap followed by a touch-scroll
+  SCOPED_GFX_PREF_BOOL("apz.one_touch_pinch.enabled", true);
+
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics(1.0f));
+  const auto oldZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  const auto oldScrollOffset = apzc->GetFrameMetrics().GetVisualScrollOffset();
+  MakeApzcUnzoomable();
+
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _, _))
+      .Times(1);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eDoubleTap, _, 0, apzc->GetGuid(), _, _))
+      .Times(0);
+
+  const auto tapResult =
+      Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(10));
+  apzc->SetAllowedTouchBehavior(tapResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() - 20);
+  const auto touchResult = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  apzc->SetAllowedTouchBehavior(touchResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  // We should be able to hold down the second touch as long as we like
+  // before beginning to move
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() + 100);
+  TouchMove(apzc, ScreenIntPoint(10, 50), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 100), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchUp(apzc, ScreenIntPoint(10, 100), mcc->Time());
+
+  const auto newZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  EXPECT_EQ(newZoom, oldZoom);
+
+  const auto newScrollOffset = apzc->GetFrameMetrics().GetVisualScrollOffset();
+  EXPECT_NE(newScrollOffset, oldScrollOffset);
+}
+
+TEST_F(APZCGestureDetectorTester, OneTouchPinchGestureTimeout) {
+  // Take longer than StaticPrefs::apz_max_tap_time() until second touch down
+  // and expect no one touch pinch gesture being performed
+  SCOPED_GFX_PREF_BOOL("apz.one_touch_pinch.enabled", true);
+
+  MakeApzcZoomable();
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  const auto oldZoom = apzc->GetFrameMetrics().GetZoom().scale;
+
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _, _))
+      .Times(1);
+
+  const auto tapResult =
+      Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(10));
+  apzc->SetAllowedTouchBehavior(tapResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time());
+  const auto touchResult = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  apzc->SetAllowedTouchBehavior(touchResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 50), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchUp(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  const auto newZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  EXPECT_EQ(newZoom, oldZoom);
+}
+
+TEST_F(APZCGestureDetectorTester, OneTouchPinchGestureDisabled) {
+  // With apz.one_touch_pinch disabled,
+  // perform one touch pinch gesture within the time threshold,
+  // and expect no zooming.
+  SCOPED_GFX_PREF_BOOL("apz.one_touch_pinch.enabled", false);
+
+  MakeApzcZoomable();
+  apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+  const auto oldZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  const auto oldScrollOffset = apzc->GetFrameMetrics().GetVisualScrollOffset();
+
+  // todo: enable following EXPECT_CALLs when fixing bug 1881794
+  // EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _,
+  // _))
+  //     .Times(1);
+  // EXPECT_CALL(*mcc, HandleTap(TapType::eDoubleTap, _, 0, apzc->GetGuid(), _,
+  // _))
+  //     .Times(0);
+
+  const auto tapResult =
+      Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(10));
+  apzc->SetAllowedTouchBehavior(tapResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() - 20);
+  const auto touchResult = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
+  apzc->SetAllowedTouchBehavior(touchResult.mInputBlockId,
+                                {kDefaultTouchBehavior});
+
+  // We should be able to hold down the second touch as long as we like
+  // before beginning to move
+  mcc->AdvanceByMillis(StaticPrefs::apz_max_tap_time() + 100);
+  TouchMove(apzc, ScreenIntPoint(10, 50), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchMove(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  mcc->AdvanceByMillis(10);
+  TouchUp(apzc, ScreenIntPoint(10, 150), mcc->Time());
+
+  const auto newZoom = apzc->GetFrameMetrics().GetZoom().scale;
+  EXPECT_EQ(newZoom, oldZoom);
+
+  const auto newScrollOffset = apzc->GetFrameMetrics().GetVisualScrollOffset();
+  EXPECT_NE(newScrollOffset, oldScrollOffset);
 }
