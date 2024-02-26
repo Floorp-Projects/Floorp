@@ -69,6 +69,7 @@ import mozilla.components.support.ktx.android.content.res.getSpanned
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.widgets.withCenterAlignedButtons
@@ -166,6 +167,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 val updatedUrl = toolbarView.view.edit.updateUrl(url = it, shouldHighlight = false, shouldAppend = true)
                 interactor.onTextChanged(updatedUrl)
                 toolbarView.view.edit.focus()
+                // When using voice input, show keyboard after for user convenience.
+                toolbarView.view.showKeyboard()
             }
         }
     }
