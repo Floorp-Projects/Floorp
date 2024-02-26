@@ -1641,7 +1641,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onbeforeprint", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "onbeforetoggle", insecureContext: true, nightly: true },
+  { name: "onbeforetoggle", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onbeforeunload", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
