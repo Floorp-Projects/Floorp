@@ -579,6 +579,8 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void DNSThreadShutdown() {}
+
 #endif  // MOZ_NO_HTTPS_IMPL
 
 }  // namespace mozilla::net
