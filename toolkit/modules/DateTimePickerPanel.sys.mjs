@@ -68,8 +68,6 @@ export var DateTimePickerPanel = class {
   closePicker(clear) {
     if (clear) {
       this.element.dispatchEvent(new CustomEvent("DateTimePickerValueCleared"));
-    } else {
-      this.setInputBoxValue(true);
     }
     this.pickerState = {};
     this.type = undefined;
