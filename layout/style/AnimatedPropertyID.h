@@ -45,6 +45,17 @@ struct AnimatedPropertyID {
     return IsCustom() == !!mCustomName;
   }
 
+  void ToString(nsACString& aString) const {
+    if (IsCustom()) {
+      MOZ_ASSERT(mCustomName, "Custom property should have a name");
+      // mCustomName does not include the "--" prefix
+      aString.AssignLiteral("--");
+      AppendUTF16toUTF8(nsDependentAtomString(mCustomName), aString);
+    } else {
+      aString.Assign(nsCSSProps::GetStringValue(mID));
+    }
+  }
+
   void ToString(nsAString& aString) const {
     if (IsCustom()) {
       MOZ_ASSERT(mCustomName, "Custom property should have a name");

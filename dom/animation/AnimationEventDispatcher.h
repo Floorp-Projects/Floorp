@@ -7,107 +7,19 @@
 #ifndef mozilla_AnimationEventDispatcher_h
 #define mozilla_AnimationEventDispatcher_h
 
-#include <algorithm>  // For <std::stable_sort>
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Variant.h"
-#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/ProfilerMarkers.h"
-#include "nsCSSProps.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPresContext.h"
 
 class nsRefreshDriver;
-
-namespace geckoprofiler::markers {
-
-using namespace mozilla;
-
-struct CSSAnimationMarker {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("CSSAnimation");
-  }
-  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
-                                   const nsCString& aName,
-                                   const nsCString& aTarget,
-                                   nsCSSPropertyIDSet aPropertySet) {
-    aWriter.StringProperty("Name", aName);
-    aWriter.StringProperty("Target", aTarget);
-    nsAutoCString properties;
-    nsAutoCString oncompositor;
-    for (nsCSSPropertyID property : aPropertySet) {
-      if (!properties.IsEmpty()) {
-        properties.AppendLiteral(", ");
-        oncompositor.AppendLiteral(", ");
-      }
-      properties.Append(nsCSSProps::GetStringValue(property));
-      oncompositor.Append(
-          property != eCSSPropertyExtra_variable &&
-                  nsCSSProps::PropHasFlags(property,
-                                           CSSPropFlags::CanAnimateOnCompositor)
-              ? "true"
-              : "false");
-    }
-
-    aWriter.StringProperty("properties", properties);
-    aWriter.StringProperty("oncompositor", oncompositor);
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyFormatSearchable("Name", MS::Format::String,
-                                  MS::Searchable::Searchable);
-    schema.AddKeyLabelFormat("properties", "Animated Properties",
-                             MS::Format::String);
-    schema.AddKeyLabelFormat("oncompositor", "Can Run on Compositor",
-                             MS::Format::String);
-    schema.AddKeyFormat("Target", MS::Format::String);
-    schema.SetChartLabel("{marker.data.Name}");
-    schema.SetTableLabel(
-        "{marker.name} - {marker.data.Name}: {marker.data.properties}");
-    return schema;
-  }
-};
-
-struct CSSTransitionMarker {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("CSSTransition");
-  }
-  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
-                                   const nsCString& aTarget,
-                                   nsCSSPropertyID aProperty, bool aCanceled) {
-    aWriter.StringProperty("Target", aTarget);
-    aWriter.StringProperty("property", nsCSSProps::GetStringValue(aProperty));
-    aWriter.BoolProperty(
-        "oncompositor",
-        aProperty != eCSSPropertyExtra_variable &&
-            nsCSSProps::PropHasFlags(aProperty,
-                                     CSSPropFlags::CanAnimateOnCompositor));
-    if (aCanceled) {
-      aWriter.BoolProperty("Canceled", aCanceled);
-    }
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyLabelFormat("property", "Animated Property",
-                             MS::Format::String);
-    schema.AddKeyLabelFormat("oncompositor", "Can Run on Compositor",
-                             MS::Format::String);
-    schema.AddKeyFormat("Canceled", MS::Format::String);
-    schema.AddKeyFormat("Target", MS::Format::String);
-    schema.SetChartLabel("{marker.data.property}");
-    schema.SetTableLabel("{marker.name} - {marker.data.property}");
-    return schema;
-  }
-};
-
-}  // namespace geckoprofiler::markers
 
 namespace mozilla {
 
