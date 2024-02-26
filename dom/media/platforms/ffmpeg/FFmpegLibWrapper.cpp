@@ -177,9 +177,6 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(av_packet_alloc, (AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
   AV_FUNC(av_packet_unref, (AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
   AV_FUNC(av_packet_free, (AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60))
-  AV_FUNC_OPTION(av_rdft_init, AV_FUNC_AVCODEC_ALL)
-  AV_FUNC_OPTION(av_rdft_calc, AV_FUNC_AVCODEC_ALL)
-  AV_FUNC_OPTION(av_rdft_end, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_descriptor_get, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_log_set_level, AV_FUNC_AVUTIL_ALL)
   AV_FUNC(av_malloc, AV_FUNC_AVUTIL_ALL)
@@ -254,6 +251,10 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                                                    AV_FUNC_AVUTIL_59 |
                                                    AV_FUNC_AVUTIL_60)
 #endif
+
+  AV_FUNC_OPTION(av_tx_init, AV_FUNC_AVUTIL_ALL)
+  AV_FUNC_OPTION(av_tx_uninit, AV_FUNC_AVUTIL_ALL)
+
 #undef AV_FUNC
 #undef AV_FUNC_OPTION
 
