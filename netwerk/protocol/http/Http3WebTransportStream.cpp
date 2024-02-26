@@ -527,6 +527,10 @@ nsresult Http3WebTransportStream::WriteSegments() {
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         rv = NS_OK;
       }
+      if (rv == NS_BASE_STREAM_CLOSED) {
+        mReceiveStreamPipeOut->Close();
+        rv = NS_OK;
+      }
       again = false;
     } else if (NS_FAILED(mSocketInCondition)) {
       if (mSocketInCondition != NS_BASE_STREAM_WOULD_BLOCK) {
