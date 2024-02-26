@@ -1054,6 +1054,19 @@ pub unsafe extern "C" fn wgpu_server_command_encoder_action(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wgpu_server_render_pass(
+    global: &Global,
+    encoder_id: id::CommandEncoderId,
+    byte_buf: &ByteBuf,
+    error_buf: ErrorBuffer,
+) {
+    let pass = bincode::deserialize(byte_buf.as_slice()).unwrap();
+    let action = crate::command::replay_render_pass(encoder_id, &pass).into_command();
+
+    gfx_select!(encoder_id => global.command_encoder_action(encoder_id, action, error_buf));
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_server_device_create_encoder(
     global: &Global,
     self_id: id::DeviceId,

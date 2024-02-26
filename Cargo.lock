@@ -6549,6 +6549,7 @@ dependencies = [
 name = "wgpu_bindings"
 version = "0.1.0"
 dependencies = [
+ "arrayvec",
  "bincode",
  "d3d12",
  "log",
