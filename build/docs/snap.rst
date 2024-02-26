@@ -130,3 +130,12 @@ So pushing to try is basically just:
 Because of the build process, a full opt build will take around 1h45-2h while a
 debug build will be around 60 minutes, the difference coming from the use of
 PGO on opt builds.
+
+If you need to reuse a package from the Snap Store or from the latest
+mozilla-central or a specific successful build, you can use ``USE_SNAP_FROM_STORE_OR_MC`` en
+variable ; setting it to ``store`` will download from the Snap Store (warning:
+no debug builds on the Snap Store, so whatever ``debug`` variants we have will
+be an ``opt`` build in fact), and setting to a TaskCluster index value will
+download from the index. Set it to ``latest`` if you want latest, or explore
+the TaskCluster index for others. Any ``try`` will be pulled from latest
+``nightly`` while others will be fetched from their respective branches.
