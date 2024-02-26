@@ -63,6 +63,7 @@ export default class TabPreview extends MozLitElement {
     this.panel.setAttribute("norolluponanchor", true);
     this.panel.setAttribute("consumeoutsideclicks", "never");
     this.panel.setAttribute("level", "parent");
+    this.panel.setAttribute("type", "arrow");
     this.shadowRoot.append(this.panel);
     return this.panel;
   }
