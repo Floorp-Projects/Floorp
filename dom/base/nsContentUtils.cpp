@@ -4004,7 +4004,8 @@ nsresult nsContentUtils::LoadImage(
     int32_t aLoadFlags, const nsAString& initiatorType,
     imgRequestProxy** aRequest, nsContentPolicyType aContentPolicyType,
     bool aUseUrgentStartForChannel, bool aLinkPreload,
-    uint64_t aEarlyHintPreloaderId) {
+    uint64_t aEarlyHintPreloaderId,
+    mozilla::dom::FetchPriority aFetchPriority) {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aContext, "Must have a context");
   MOZ_ASSERT(aLoadingDocument, "Must have a document");
@@ -4041,7 +4042,7 @@ nsresult nsContentUtils::LoadImage(
                               initiatorType,      /* the load initiator */
                               aUseUrgentStartForChannel, /* urgent-start flag */
                               aLinkPreload, /* <link preload> initiator */
-                              aEarlyHintPreloaderId, aRequest);
+                              aEarlyHintPreloaderId, aFetchPriority, aRequest);
 }
 
 // static
