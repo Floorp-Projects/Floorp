@@ -10194,7 +10194,11 @@
 # 2 : enable for encrypted only, 3 : enable for clear only
 -   name: media.wmf.media-engine.enabled
     type: RelaxedAtomicUint32
+#if defined(IS_NIGHTLY_OR_DEV_EDITION)
+    value: 2
+#else
     value: 0
+#endif
     mirror: always
 
 # Testing purpose, enable media engine on channel decoder as well.
