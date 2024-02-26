@@ -86,6 +86,7 @@ class TelemetryMiddlewareTest {
         val engine: Engine = mockk()
         every { engine.enableExtensionProcessSpawning() } just runs
         every { engine.disableExtensionProcessSpawning() } just runs
+        every { engine.getSupportedTranslationLanguages(any(), any()) } just runs
         every { engine.isTranslationsEngineSupported(any(), any()) } just runs
         store = BrowserStore(
             middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine),

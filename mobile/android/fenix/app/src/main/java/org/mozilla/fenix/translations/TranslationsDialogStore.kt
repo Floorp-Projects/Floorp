@@ -25,11 +25,7 @@ class TranslationsDialogStore(
     initialState,
     TranslationsDialogReducer::reduce,
     middlewares,
-) {
-    init {
-        dispatch(TranslationsDialogAction.FetchSupportedLanguages)
-    }
-}
+)
 
 /**
  * The current state of the Translations bottom sheet dialog.

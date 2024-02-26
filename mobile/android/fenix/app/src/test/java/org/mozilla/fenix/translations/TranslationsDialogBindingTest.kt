@@ -88,7 +88,6 @@ class TranslationsDialogBindingTest {
 
             browserStore.dispatch(
                 TranslationsAction.SetSupportedLanguagesAction(
-                    tabId = tab.id,
                     supportedLanguages = supportLanguages,
                 ),
             ).joinBlocking()
@@ -199,7 +198,6 @@ class TranslationsDialogBindingTest {
             val supportedLanguages = TranslationSupport(listOf(fromLanguage), listOf(toLanguage))
             browserStore.dispatch(
                 TranslationsAction.SetSupportedLanguagesAction(
-                    tabId = tab.id,
                     supportedLanguages = supportedLanguages,
                 ),
             ).joinBlocking()

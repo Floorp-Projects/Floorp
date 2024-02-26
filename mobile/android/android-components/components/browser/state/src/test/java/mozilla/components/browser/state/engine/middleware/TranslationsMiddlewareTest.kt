@@ -95,28 +95,30 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
-    fun `WHEN OperationRequestedAction is dispatched to fetch languages AND succeeds THEN SetSupportedLanguagesAction is dispatched`() = runTest {
-        val supportedLanguages = TranslationSupport(
-            fromLanguages = listOf(Language("en", "English")),
-            toLanguages = listOf(Language("en", "English")),
-        )
-        val languageCallback = argumentCaptor<((TranslationSupport) -> Unit)>()
-
+    fun `WHEN OperationRequestedAction is dispatched for FETCH_SUPPORTED_LANGUAGES AND succeeds THEN SetSupportedLanguagesAction is dispatched`() = runTest {
+        // Initial Action
         val action =
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
             )
 
-        translationsMiddleware.invoke(context, {}, action)
-        verify(engine).getSupportedTranslationLanguages(onSuccess = languageCallback.capture(), onError = any())
+        translationsMiddleware.invoke(context = context, next = {}, action = action)
+
+        // Verify results
+        val languageCallback = argumentCaptor<((TranslationSupport) -> Unit)>()
+        // Verifying at least once because `InitAction` also occurred
+        verify(engine, atLeastOnce()).getSupportedTranslationLanguages(onSuccess = languageCallback.capture(), onError = any())
+        val supportedLanguages = TranslationSupport(
+            fromLanguages = listOf(Language("en", "English")),
+            toLanguages = listOf(Language("en", "English")),
+        )
         languageCallback.value.invoke(supportedLanguages)
 
         waitForIdle()
 
-        verify(context.store).dispatch(
+        verify(context.store, atLeastOnce()).dispatch(
             TranslationsAction.SetSupportedLanguagesAction(
-                tabId = tab.id,
                 supportedLanguages = supportedLanguages,
             ),
         )
@@ -125,21 +127,82 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
-    fun `WHEN OperationRequestedAction is dispatched with FETCH_SUPPORTED_LANGUAGES AND fails THEN TranslateExceptionAction is dispatched`() = runTest {
-        store.dispatch(
+    fun `WHEN OperationRequestedAction is dispatched for FETCH_SUPPORTED_LANGUAGES AND fails THEN EngineExceptionAction is dispatched`() {
+        // Initial Action
+        val action =
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
-            ),
-        ).joinBlocking()
+            )
+
+        translationsMiddleware.invoke(context = context, next = {}, action = action)
+
+        // Verify results
+        val errorCaptor = argumentCaptor<((Throwable) -> Unit)>()
+        // Verifying at least once because `InitAction` also occurred
+        verify(engine, atLeastOnce()).getSupportedTranslationLanguages(onSuccess = any(), onError = errorCaptor.capture())
+        errorCaptor.value.invoke(Throwable())
 
         waitForIdle()
 
-        verify(store).dispatch(
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.EngineExceptionAction(
+                error = TranslationError.CouldNotLoadLanguagesError(any()),
+            ),
+        )
+
+        verify(store, atLeastOnce()).dispatch(
             TranslationsAction.TranslateExceptionAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
                 translationError = TranslationError.CouldNotLoadLanguagesError(any()),
+            ),
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN InitAction is dispatched AND the translations engine is supported THEN InitTranslationsBrowserState is also dispatched`() = runTest {
+        // Will invoke a double InitAction
+        translationsMiddleware.invoke(context = context, next = {}, action = InitAction)
+
+        // Set the engine to support
+        val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = engineSupportedCallback.capture(),
+            onError = any(),
+        )
+        engineSupportedCallback.value.invoke(true)
+
+        // Verifying at least once due to double InitAction
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.InitTranslationsBrowserState,
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN InitTranslationsBrowserState is dispatched THEN SetSupportedLanguagesAction is also dispatched`() = runTest {
+        // Will invoke a double InitAction
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+
+        // Verify results for language query
+        val languageCallback = argumentCaptor<((TranslationSupport) -> Unit)>()
+        verify(engine, atLeastOnce()).getSupportedTranslationLanguages(onSuccess = languageCallback.capture(), onError = any())
+        val supportedLanguages = TranslationSupport(
+            fromLanguages = listOf(Language("en", "English")),
+            toLanguages = listOf(Language("en", "English")),
+        )
+        languageCallback.value.invoke(supportedLanguages)
+
+        waitForIdle()
+
+        // Verifying at least once
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.SetSupportedLanguagesAction(
+                supportedLanguages = supportedLanguages,
             ),
         )
 

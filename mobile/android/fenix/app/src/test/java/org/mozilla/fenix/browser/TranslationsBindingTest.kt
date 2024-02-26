@@ -83,7 +83,6 @@ class TranslationsBindingTest {
 
             browserStore.dispatch(
                 TranslationsAction.SetSupportedLanguagesAction(
-                    tabId = tab.id,
                     supportedLanguages = supportLanguages,
                 ),
             ).joinBlocking()

@@ -20,6 +20,11 @@ internal object TranslationsStateReducer {
      */
     @Suppress("LongMethod")
     fun reduce(state: BrowserState, action: TranslationsAction): BrowserState = when (action) {
+        TranslationsAction.InitTranslationsBrowserState -> {
+            // No state change on this operation
+            state
+        }
+
         is TranslationsAction.TranslateExpectedAction -> {
             state.copyWithTranslationsState(action.tabId) {
                 it.copy(
@@ -166,7 +171,6 @@ internal object TranslationsStateReducer {
                 TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            supportedLanguages = null,
                             translationError = action.translationError,
                         )
                     }
@@ -197,12 +201,12 @@ internal object TranslationsStateReducer {
         }
 
         is TranslationsAction.SetSupportedLanguagesAction ->
-            state.copyWithTranslationsState(action.tabId) {
-                it.copy(
+            state.copy(
+                translationEngine = state.translationEngine.copy(
                     supportedLanguages = action.supportedLanguages,
-                    translationError = null,
-                )
-            }
+                    engineError = null,
+                ),
+            )
 
         is TranslationsAction.SetPageSettingsAction ->
             state.copyWithTranslationsState(action.tabId) {
@@ -232,11 +236,11 @@ internal object TranslationsStateReducer {
         is TranslationsAction.OperationRequestedAction ->
             when (action.operation) {
                 TranslationOperation.FETCH_SUPPORTED_LANGUAGES -> {
-                    state.copyWithTranslationsState(action.tabId) {
-                        it.copy(
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
                             supportedLanguages = null,
-                        )
-                    }
+                        ),
+                    )
                 }
                 TranslationOperation.FETCH_PAGE_SETTINGS -> {
                     state.copyWithTranslationsState(action.tabId) {

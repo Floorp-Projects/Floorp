@@ -854,6 +854,13 @@ sealed class ContentAction : BrowserAction() {
  * [BrowserAction] implementations related to translating a web content page.
  */
 sealed class TranslationsAction : BrowserAction() {
+
+    /**
+     * Requests that the initialization data for the global translations engine state
+     * be fetched from the translations engine and set on [BrowserState.translationEngine].
+     */
+    object InitTranslationsBrowserState : TranslationsAction()
+
     /**
      * Indicates that the translations engine expects the user may want to translate the page on
      * the given [tabId].
@@ -1002,15 +1009,14 @@ sealed class TranslationsAction : BrowserAction() {
     ) : TranslationsAction()
 
     /**
-     * Sets the languages that are supported by the translations engine.
+     * Sets the languages that are supported by the translations engine on the
+     * [BrowserState.translationEngine].
      *
-     * @property tabId The ID of the tab the [EngineSession] that requested the list.
      * @property supportedLanguages The languages the engine supports for translation.
      */
     data class SetSupportedLanguagesAction(
-        override val tabId: String,
         val supportedLanguages: TranslationSupport?,
-    ) : TranslationsAction(), ActionWithTab
+    ) : TranslationsAction()
 
     /**
      * Sets the given page settings on the page on the given [tabId]'s store.

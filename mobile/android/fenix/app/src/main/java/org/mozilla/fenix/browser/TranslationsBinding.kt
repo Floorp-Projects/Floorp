@@ -5,6 +5,7 @@
 package org.mozilla.fenix.browser
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findTab
@@ -15,6 +16,7 @@ import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.initialFromLanguage
 import mozilla.components.concept.engine.translate.initialToLanguage
 import mozilla.components.lib.state.helpers.AbstractBinding
+import org.mozilla.fenix.translations.TranslationsFlowState
 
 /**
  * A binding for observing [TranslationsState] changes
@@ -36,37 +38,62 @@ class TranslationsBinding(
 ) : AbstractBinding<BrowserState>(browserStore) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {
-        flow.mapNotNull { state -> state.findTab(sessionId) }.distinctUntilChangedBy {
-            it.translationsState
-        }.collect { sessionState ->
-            val translationsState = sessionState.translationsState
+        // Browser level flows
+        val browserFlow = flow.mapNotNull { state -> state }
+            .distinctUntilChangedBy {
+                it.translationEngine
+            }
 
-            if (translationsState.isTranslated) {
-                val fromSelected = translationsState.translationEngineState?.initialFromLanguage(
-                    translationsState.supportedLanguages?.fromLanguages,
-                )
-                val toSelected = translationsState.translationEngineState?.initialToLanguage(
-                    translationsState.supportedLanguages?.toLanguages,
-                )
+        // Session level flows
+        val sessionFlow = flow.mapNotNull { state -> state.findTab(sessionId) }
+            .distinctUntilChangedBy {
+                it.translationsState
+            }
 
-                if (fromSelected != null && toSelected != null) {
+        // Applying the flows together
+        sessionFlow
+            .combine(browserFlow) { sessionState, browserState ->
+                TranslationsFlowState(
+                    sessionState,
+                    browserState,
+                )
+            }
+            .collect { state ->
+                // Browser Translations State Behavior (Global)
+                val browserTranslationsState = state.browserState.translationEngine
+                val translateFromLanguages =
+                    browserTranslationsState.supportedLanguages?.fromLanguages
+                val translateToLanguages =
+                    browserTranslationsState.supportedLanguages?.toLanguages
+
+                // Session Translations State Behavior (Tab)
+                val sessionTranslationsState = state.sessionState.translationsState
+                if (sessionTranslationsState.isTranslated) {
+                    val fromSelected = sessionTranslationsState.translationEngineState?.initialFromLanguage(
+                        translateFromLanguages,
+                    )
+                    val toSelected = sessionTranslationsState.translationEngineState?.initialToLanguage(
+                        translateToLanguages,
+                    )
+
+                    if (fromSelected != null && toSelected != null) {
+                        onStateUpdated(
+                            true,
+                            true,
+                            fromSelected,
+                            toSelected,
+                        )
+                    }
+                } else if (sessionTranslationsState.isExpectedTranslate) {
                     onStateUpdated(
                         true,
-                        true,
-                        fromSelected,
-                        toSelected,
+                        false,
+                        null,
+                        null,
                     )
+                } else {
+                    onStateUpdated(false, false, null, null)
                 }
-            } else if (translationsState.isExpectedTranslate) {
-                onStateUpdated(
-                    true,
-                    false,
-                    null,
-                    null,
-                )
-            } else {
-                onStateUpdated(false, false, null, null)
             }
-        }
     }
 }
