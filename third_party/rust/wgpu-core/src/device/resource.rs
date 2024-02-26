@@ -13,6 +13,7 @@ use crate::{
     hal_api::HalApi,
     hal_label,
     hub::Hub,
+    id::QueueId,
     init_tracker::{
         BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
         TextureInitTracker, TextureInitTrackerAction,
@@ -29,15 +30,12 @@ use crate::{
     snatch::{SnatchGuard, SnatchLock, Snatchable},
     storage::Storage,
     track::{BindGroupStates, TextureSelector, Tracker},
-    validation::{
-        self, check_buffer_usage, check_texture_usage, validate_color_attachment_bytes_per_sample,
-    },
+    validation::{self, check_buffer_usage, check_texture_usage},
     FastHashMap, LabelHelpers as _, SubmissionIndex,
 };
 
 use arrayvec::ArrayVec;
 use hal::{CommandEncoder as _, Device as _};
-use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, MutexGuard, RwLock};
 
 use smallvec::SmallVec;
@@ -56,7 +54,7 @@ use std::{
 
 use super::{
     life::{self, ResourceMaps},
-    queue::{self, Queue},
+    queue::{self},
     DeviceDescriptor, DeviceError, ImplicitPipelineContext, UserClosures, ENTRYPOINT_FAILURE_ERROR,
     IMPLICIT_BIND_GROUP_LAYOUT_ERROR_LABEL, ZERO_BUFFER_SIZE,
 };
@@ -89,8 +87,8 @@ use super::{
 pub struct Device<A: HalApi> {
     raw: Option<A::Device>,
     pub(crate) adapter: Arc<Adapter<A>>,
-    pub(crate) queue: OnceCell<Weak<Queue<A>>>,
-    queue_to_drop: OnceCell<A::Queue>,
+    pub(crate) queue_id: RwLock<Option<QueueId>>,
+    queue_to_drop: RwLock<Option<A::Queue>>,
     pub(crate) zero_buffer: Option<A::Buffer>,
     pub(crate) info: ResourceInfo<Device<A>>,
 
@@ -162,7 +160,7 @@ impl<A: HalApi> Drop for Device<A> {
         unsafe {
             raw.destroy_buffer(self.zero_buffer.take().unwrap());
             raw.destroy_fence(self.fence.write().take().unwrap());
-            let queue = self.queue_to_drop.take().unwrap();
+            let queue = self.queue_to_drop.write().take().unwrap();
             raw.exit(queue);
         }
     }
@@ -260,8 +258,8 @@ impl<A: HalApi> Device<A> {
         Ok(Self {
             raw: Some(raw_device),
             adapter: adapter.clone(),
-            queue: OnceCell::new(),
-            queue_to_drop: OnceCell::new(),
+            queue_id: RwLock::new(None),
+            queue_to_drop: RwLock::new(None),
             zero_buffer: Some(zero_buffer),
             info: ResourceInfo::new("<device>"),
             command_allocator: Mutex::new(Some(com_alloc)),
@@ -302,7 +300,7 @@ impl<A: HalApi> Device<A> {
     }
 
     pub(crate) fn release_queue(&self, queue: A::Queue) {
-        assert!(self.queue_to_drop.set(queue).is_ok());
+        self.queue_to_drop.write().replace(queue);
     }
 
     pub(crate) fn lock_life<'a>(&'a self) -> MutexGuard<'a, LifetimeTracker<A>> {
@@ -357,14 +355,6 @@ impl<A: HalApi> Device<A> {
                 }
             }
         }
-    }
-
-    pub fn get_queue(&self) -> Option<Arc<Queue<A>>> {
-        self.queue.get().as_ref()?.upgrade()
-    }
-
-    pub fn set_queue(&self, queue: Arc<Queue<A>>) {
-        assert!(self.queue.set(Arc::downgrade(&queue)).is_ok());
     }
 
     /// Check this device for completed commands.
@@ -1714,23 +1704,10 @@ impl<A: HalApi> Device<A> {
                             BindGroupLayoutEntryError::SampleTypeFloatFilterableBindingMultisampled,
                     });
                 }
-                Bt::Texture {
-                    multisampled,
-                    view_dimension,
-                    ..
-                } => {
-                    if multisampled && view_dimension != TextureViewDimension::D2 {
-                        return Err(binding_model::CreateBindGroupLayoutError::Entry {
-                            binding: entry.binding,
-                            error: BindGroupLayoutEntryError::Non2DMultisampled(view_dimension),
-                        });
-                    }
-
-                    (
-                        Some(wgt::Features::TEXTURE_BINDING_ARRAY),
-                        WritableStorage::No,
-                    )
-                }
+                Bt::Texture { .. } => (
+                    Some(wgt::Features::TEXTURE_BINDING_ARRAY),
+                    WritableStorage::No,
+                ),
                 Bt::StorageTexture {
                     access,
                     view_dimension,
@@ -1928,7 +1905,7 @@ impl<A: HalApi> Device<A> {
             .add_single(storage, bb.buffer_id, internal_use)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))?;
 
-        check_buffer_usage(bb.buffer_id, buffer.usage, pub_usage)?;
+        check_buffer_usage(buffer.usage, pub_usage)?;
         let raw_buffer = buffer
             .raw
             .get(snatch_guard)
@@ -2772,12 +2749,11 @@ impl<A: HalApi> Device<A> {
         let mut shader_binding_sizes = FastHashMap::default();
 
         let num_attachments = desc.fragment.as_ref().map(|f| f.targets.len()).unwrap_or(0);
-        let max_attachments = self.limits.max_color_attachments as usize;
-        if num_attachments > max_attachments {
+        if num_attachments > hal::MAX_COLOR_ATTACHMENTS {
             return Err(pipeline::CreateRenderPipelineError::ColorAttachment(
                 command::ColorAttachmentError::TooMany {
                     given: num_attachments,
-                    limit: max_attachments,
+                    limit: hal::MAX_COLOR_ATTACHMENTS,
                 },
             ));
         }
@@ -2983,23 +2959,12 @@ impl<A: HalApi> Device<A> {
                             }
                         }
                     }
-
                     break None;
                 };
                 if let Some(e) = error {
                     return Err(pipeline::CreateRenderPipelineError::ColorState(i as u8, e));
                 }
             }
-        }
-
-        let limit = self.limits.max_color_attachment_bytes_per_sample;
-        let formats = color_targets
-            .iter()
-            .map(|cs| cs.as_ref().map(|cs| cs.format));
-        if let Err(total) = validate_color_attachment_bytes_per_sample(formats, limit) {
-            return Err(pipeline::CreateRenderPipelineError::ColorAttachment(
-                command::ColorAttachmentError::TooManyBytesPerSample { total, limit },
-            ));
         }
 
         if let Some(ds) = depth_stencil_state {
