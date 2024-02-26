@@ -34,9 +34,18 @@ add_task(async function test_maximum_reported_blocks() {
   );
 
   // Wait for the popup-blocked notification.
-  let notification = await TestUtils.waitForCondition(() =>
-    gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked")
-  );
+  let notification = await TestUtils.waitForCondition(() => {
+    let tempNotif = gBrowser
+      .getNotificationBox()
+      .getNotificationWithValue("popup-blocked");
+
+    // The textContent in the notification object is contains
+    // blank spaces as placeholder if there is no value in it
+    if (tempNotif?.messageText.textContent.trim().length) {
+      return tempNotif;
+    }
+    return false;
+  });
 
   // Slightly hacky way to ensure we show the correct message in this case.
   ok(
