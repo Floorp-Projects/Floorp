@@ -397,32 +397,38 @@ export var Sanitizer = {
   },
 
   /**
-   * Migrate old sanitize on shutdown prefs to the new prefs for the new
-   * clear on shutdown dialog. Does nothing if the migration was completed before
-   * based on the pref privacy.sanitize.sanitizeOnShutdown.hasMigratedToNewPrefs
+   * Migrate old sanitize prefs to the new prefs for the new
+   * clear history dialog. Does nothing if the migration was completed before
+   * based on the pref privacy.sanitize.cpd.hasMigratedToNewPrefs or
+   * privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs
    *
+   * @param {string} context - one of "clearOnShutdown" or "cpd", which indicates which
+   *      pref branch to migrate prefs from based on the dialog context
    */
-  maybeMigrateSanitizeOnShutdownPrefs() {
+  maybeMigratePrefs(context) {
     if (
       Services.prefs.getBoolPref(
-        "privacy.sanitize.sanitizeOnShutdown.hasMigratedToNewPrefs"
+        `privacy.sanitize.${context}.hasMigratedToNewPrefs`
       )
     ) {
       return;
     }
 
-    let cookies = Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
-    let history = Services.prefs.getBoolPref("privacy.clearOnShutdown.history");
-    let cache = Services.prefs.getBoolPref("privacy.clearOnShutdown.cache");
+    let cookies = Services.prefs.getBoolPref(`privacy.${context}.cookies`);
+    let history = Services.prefs.getBoolPref(`privacy.${context}.history`);
+    let cache = Services.prefs.getBoolPref(`privacy.${context}.cache`);
     let siteSettings = Services.prefs.getBoolPref(
-      "privacy.clearOnShutdown.siteSettings"
+      `privacy.${context}.siteSettings`
     );
+
+    let newContext =
+      context == "clearOnShutdown" ? "clearOnShutdown_v2" : "clearHistory";
 
     // We set cookiesAndStorage to true if cookies are enabled for clearing on shutdown
     // regardless of what sessions and offlineApps are set to
     // This is because cookie clearing behaviour takes precedence over sessions and offlineApps clearing.
     Services.prefs.setBoolPref(
-      "privacy.clearOnShutdown_v2.cookiesAndStorage",
+      `privacy.${newContext}.cookiesAndStorage`,
       cookies
     );
 
@@ -430,20 +436,20 @@ export var Sanitizer = {
     // shutdown, regardless of what form data is set to.
     // This is because history clearing behavious takes precedence over formdata clearing.
     Services.prefs.setBoolPref(
-      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads",
+      `privacy.${newContext}.historyFormDataAndDownloads`,
       history
     );
 
     // cache and siteSettings follow the old dialog prefs
-    Services.prefs.setBoolPref("privacy.clearOnShutdown_v2.cache", cache);
+    Services.prefs.setBoolPref(`privacy.${newContext}.cache`, cache);
 
     Services.prefs.setBoolPref(
-      "privacy.clearOnShutdown_v2.siteSettings",
+      `privacy.${newContext}.siteSettings`,
       siteSettings
     );
 
     Services.prefs.setBoolPref(
-      "privacy.sanitize.sanitizeOnShutdown.hasMigratedToNewPrefs",
+      `privacy.sanitize.${context}.hasMigratedToNewPrefs`,
       true
     );
   },
@@ -1089,7 +1095,7 @@ async function sanitizeOnShutdown(progress) {
   } else {
     // Perform a migration if this is the first time sanitizeOnShutdown is
     // running for the user with the new dialog
-    Sanitizer.maybeMigrateSanitizeOnShutdownPrefs();
+    Sanitizer.maybeMigratePrefs("clearOnShutdown");
 
     progress.sanitizationPrefs = {
       privacy_sanitize_sanitizeOnShutdown: Services.prefs.getBoolPref(

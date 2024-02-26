@@ -144,14 +144,19 @@ var gSanitizePromptDialog = {
       clearSiteDataGroupbox.remove();
       // If this is the first time the user is opening the new clear on shutdown
       // dialog, migrate their prefs
-      Sanitizer.maybeMigrateSanitizeOnShutdownPrefs();
+      Sanitizer.maybeMigratePrefs("clearOnShutdown");
     } else if (!lazy.USE_OLD_DIALOG) {
       okButtonl10nID = "sanitize-button-ok2";
       clearOnShutdownGroupbox.remove();
       if (this._inClearSiteDataNewDialog) {
         clearPrivateDataGroupbox.remove();
+        // we do not need to migrate prefs for clear site data,
+        // since we decided to keep the default options for
+        // privacy.clearSiteData.* to stay consistent with old behaviour
+        // of the clear site data dialog box
       } else {
         clearSiteDataGroupbox.remove();
+        Sanitizer.maybeMigratePrefs("cpd");
       }
     }
     document.l10n.setAttributes(OKButton, okButtonl10nID);
