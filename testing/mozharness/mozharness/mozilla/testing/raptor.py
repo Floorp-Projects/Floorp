@@ -1193,7 +1193,7 @@ class Raptor(
                     "Pillow==9.2.0",
                     "scipy==1.9.3",
                     "pyssim==0.4",
-                    "opencv-python==4.7.0.72",
+                    "opencv-python==4.6.0.66",
                 ]
             )
 
