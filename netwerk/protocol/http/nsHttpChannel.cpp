@@ -6963,7 +6963,7 @@ nsHttpChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
       mProxyInfo->GetType(type);
       uint32_t flags = 0;
       mProxyInfo->GetFlags(&flags);
-      printf("type=%s, flags=%i\n", type.get(), flags);
+
       if (type.EqualsLiteral("socks")) {
         if (flags & nsIProxyInfo::TRANSPARENT_PROXY_RESOLVES_HOST) {
           glean::networking::proxy_info_type
