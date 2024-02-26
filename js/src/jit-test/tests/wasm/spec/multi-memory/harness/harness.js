@@ -19,6 +19,15 @@ if (!wasmIsSupported()) {
   quit();
 }
 
+function partialOobWriteMayWritePartialData() {
+  let arm_native = getBuildConfiguration("arm") && !getBuildConfiguration("arm-simulator");
+  let arm64_native = getBuildConfiguration("arm64") && !getBuildConfiguration("arm64-simulator");
+  return arm_native || arm64_native;
+}
+
+let native_arm = getBuildConfiguration("arm") && !getBuildConfiguration("arm-simulator");
+let native_arm64 = getBuildConfiguration("arm64") && !getBuildConfiguration("arm64-simulator");
+
 function bytes(type, bytes) {
   var typedBuffer = new Uint8Array(bytes);
   return wasmGlobalFromArrayBuffer(type, typedBuffer.buffer);

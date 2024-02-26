@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.19"
-wast = { path = "../../../../../../../../wasm-tools/crates/wast" }
+wast = "71.0.1"
