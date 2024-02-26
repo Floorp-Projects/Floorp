@@ -202,7 +202,9 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
     MOZ_ASSERT(mEncoder);
 
     const layers::PlanarYCbCrImage* image = aData->mImage->AsPlanarYCbCrImage();
-    MOZ_ASSERT(image);
+    // TODO: Take care non planar Y-Cb-Cr image (Bug 1881647).
+    NS_ENSURE_TRUE(image, nullptr);
+
     const layers::PlanarYCbCrData* yuv = image->GetData();
     auto ySize = yuv->YDataSize();
     auto cbcrSize = yuv->CbCrDataSize();
@@ -223,6 +225,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
     LockBuffer lockBuffer(buffer);
     NS_ENSURE_TRUE(SUCCEEDED(lockBuffer.Result()), nullptr);
 
+    // TODO: Take care non I420 image (Bug 1881647).
     bool ok = libyuv::I420ToNV12(
                   yuv->mYChannel, yuv->mYStride, yuv->mCbChannel,
                   yuv->mCbCrStride, yuv->mCrChannel, yuv->mCbCrStride,
