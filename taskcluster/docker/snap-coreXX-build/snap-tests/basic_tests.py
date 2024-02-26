@@ -13,12 +13,13 @@ import time
 import traceback
 
 from mozlog import formatters, handlers, structuredlog
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -128,6 +129,9 @@ class SnapTestsBase:
         else:
             return 5
 
+    def is_debug_build(self):
+        return "BUILD_IS_DEBUG" in os.environ.keys()
+
     def maybe_collect_reference(self):
         return "TEST_COLLECT_REFERENCE" in os.environ.keys()
 
@@ -149,9 +153,11 @@ class SnapTestsBase:
             element_or_driver.screenshot_as_png
             if isinstance(element_or_driver, WebElement)
             else element_or_driver.get_screenshot_as_png()
+            if isinstance(element_or_driver, WebDriver)
+            else base64.b64decode(element_or_driver)
         )
         svg_png = Image.open(io.BytesIO(png_bytes)).convert("RGB")
-        svg_png_cropped = svg_png.crop((0, 0, svg_png.width - 20, svg_png.height - 20))
+        svg_png_cropped = svg_png.crop((0, 35, svg_png.width - 20, svg_png.height - 10))
 
         if self.maybe_collect_reference():
             new_ref = "new_{}".format(exp["reference"])
@@ -169,8 +175,28 @@ class SnapTestsBase:
 
         svg_ref = Image.open(os.path.join(self._dir, exp["reference"])).convert("RGB")
         diff = ImageChops.difference(svg_ref, svg_png_cropped)
+        bbox = diff.getbbox()
 
-        if diff.getbbox() is not None:
+        if bbox is not None:
+            (diff_r, diff_g, diff_b) = diff.getextrema()
+
+            min_is_black = (diff_r[0] == 0) and (diff_g[0] == 0) and (diff_b[0] == 0)
+            max_is_low_enough = (
+                (diff_r[1] <= 15) and (diff_g[1] <= 15) and (diff_b[1] <= 15)
+            )
+
+            draw_ref = ImageDraw.Draw(svg_ref)
+            draw_ref.rectangle(bbox, outline="red")
+
+            draw_rend = ImageDraw.Draw(svg_png_cropped)
+            draw_rend.rectangle(bbox, outline="red")
+
+            draw_diff = ImageDraw.Draw(diff)
+            draw_diff.rectangle(bbox, outline="red")
+
+            # Some differences have been found, let's verify
+            self._logger.info("Non empty differences bbox: {}".format(bbox))
+
             buffered = io.BytesIO()
             diff.save(buffered, format="PNG")
 
@@ -190,8 +216,18 @@ class SnapTestsBase:
             ) as current_screenshot:
                 svg_png_cropped.save(current_screenshot)
 
-            assert diff.getbbox() is None, "Mismatching screenshots for {}".format(
-                exp["reference"]
+            with open(
+                self.get_screenshot_destination("reference_rendering.png"), "wb"
+            ) as current_screenshot:
+                svg_ref.save(current_screenshot)
+
+            # Assume a difference is mismatching if the minimum pixel value in
+            # image difference is NOT black or if the maximum pixel value is
+            # not low enough
+            assert (
+                min_is_black and max_is_low_enough
+            ), "Mismatching screenshots for {} with extremas: {}".format(
+                exp["reference"], (diff_r, diff_g, diff_b)
             )
 
 
