@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="foo" type="text/javascript"></script>
+<script>
+// Note: this file gets loaded twice in the course of this test: first, in an
+// iframe hosted in the top-level test; and second, in an <object> inside that
+// iframe's document. (The object element gets created dynamically in the
+// script below.)
+window.onload = () => {
+  // For efficiency: check our window.location, to be sure we only run this
+  // logic in the iframe, and *not* in the <object> that ends up getting loaded
+  // with the same URL plus a "?" at the end:
+  let locationStr = "" + location;
+  if (!locationStr.endsWith("?")) {
+    window.print();
+
+    // Add an object whose location is set to '?' (which means our same
+    // base URL plus a "?" character):
+    let a = document.createElement("object");
+    a.data = "?";
+    document.documentElement.appendChild(a)
+  } else if (parent.parent && parent.parent.iframeStepComplete) {
+    // We're the nested document in the `<object>` tag that was created above.
+    // Signal the outer document (our grandparent) that we've completed the
+    // step of loading this inner object document.
+    parent.parent.iframeStepComplete();
+  }
+}
+
+window.onafterprint = () => {
+  // We've finished printing; signal to our outer document that we've completed
+  // that step.
+  parent.iframeStepComplete();
+}
+</script>
