@@ -8,8 +8,8 @@
 import re
 from operator import itemgetter
 
-RE_DOCSHELL = re.compile("I\/DocShellAndDOMWindowLeak ([+\-]{2})DOCSHELL")
-RE_DOMWINDOW = re.compile("I\/DocShellAndDOMWindowLeak ([+\-]{2})DOMWINDOW")
+RE_DOCSHELL = re.compile(r"I\/DocShellAndDOMWindowLeak ([+\-]{2})DOCSHELL")
+RE_DOMWINDOW = re.compile(r"I\/DocShellAndDOMWindowLeak ([+\-]{2})DOMWINDOW")
 
 
 class ShutdownLeaks(object):
@@ -233,7 +233,7 @@ class ShutdownLeaks(object):
                 self.hiddenDocShellsCount += 1
 
     def _parseValue(self, line, name):
-        match = re.search("\[%s = (.+?)\]" % name, line)
+        match = re.search(r"\[%s = (.+?)\]" % name, line)
         if match:
             return match.group(1)
         return None
@@ -329,17 +329,17 @@ class LSANLeaks(object):
         )
 
         self.startRegExp = re.compile(
-            "==\d+==ERROR: LeakSanitizer: detected memory leaks"
+            r"==\d+==ERROR: LeakSanitizer: detected memory leaks"
         )
         self.fatalErrorRegExp = re.compile(
-            "==\d+==LeakSanitizer has encountered a fatal error."
+            r"==\d+==LeakSanitizer has encountered a fatal error."
         )
         self.symbolizerOomRegExp = re.compile(
             "LLVMSymbolizer: error reading file: Cannot allocate memory"
         )
-        self.stackFrameRegExp = re.compile("    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
+        self.stackFrameRegExp = re.compile(r"    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
         self.sysLibStackFrameRegExp = re.compile(
-            "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
+            r"    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
         )
 
     def log(self, line, path=""):

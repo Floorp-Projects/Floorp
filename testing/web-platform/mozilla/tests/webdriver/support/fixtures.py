@@ -234,7 +234,7 @@ class Browser:
 
 
 class Geckodriver:
-    PORT_RE = re.compile(b".*Listening on [^ :]*:(\d+)")
+    PORT_RE = re.compile(rb".*Listening on [^ :]*:(\d+)")
 
     def __init__(self, configuration, hostname=None, extra_args=None):
         self.config = configuration["webdriver"]

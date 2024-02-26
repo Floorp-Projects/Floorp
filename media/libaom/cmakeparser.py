@@ -83,7 +83,7 @@ def substs(variables, values):
 
         # Safe substitute leaves unrecognized variables in place.
         # We replace them with the empty string.
-        new_values.append(re.sub('\$\{\w+\}', '', new_value))
+        new_values.append(re.sub(r'\$\{\w+\}', '', new_value))
     return new_values
 
 
@@ -240,7 +240,7 @@ def evaluate_boolean(variables, arguments):
         # If statements can have old-style variables which are not demarcated
         # like ${VARIABLE}. Attempt to look up the variable both ways.
         try:
-            if re.search('\$\{\w+\}', argument):
+            if re.search(r'\$\{\w+\}', argument):
                 try:
                     t = Template(argument)
                     value = t.substitute(variables)

@@ -21,8 +21,8 @@ def ip_addresses():
     # Regex to match IPv4 addresses.
     # 0-255.0-255.0-255.0-255, note order is important here.
     regexip = re.compile(
-        "((25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.){3}"
-        "(25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)"
+        r"((25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.){3}"
+        r"(25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)"
     )
 
     commands = (

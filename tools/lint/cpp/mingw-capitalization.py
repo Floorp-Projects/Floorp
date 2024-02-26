@@ -18,7 +18,7 @@ class MinGWCapitalization(LineType):
         super(MinGWCapitalization, self).__init__(*args, **kwargs)
         with open(HEADERS_FILE, "r") as fh:
             self.headers = fh.read().strip().splitlines()
-        self.regex = re.compile("^#include\s*<(" + "|".join(self.headers) + ")>")
+        self.regex = re.compile(r"^#include\s*<(" + "|".join(self.headers) + ")>")
 
     def condition(self, payload, line, config):
         if not line.startswith("#include"):

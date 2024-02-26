@@ -38,7 +38,7 @@ class DotProperties:
             line = l.strip()
             if not line or line.startswith("#"):
                 continue
-            (k, v) = re.split("\s*=\s*", line, 1)
+            (k, v) = re.split(r"\s*=\s*", line, 1)
             self._properties[k] = v
 
     def get(self, key, default=None):

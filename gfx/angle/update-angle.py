@@ -5,7 +5,7 @@
 
 assert __name__ == "__main__"
 
-"""
+r"""
 To update ANGLE in Gecko, use Windows with git-bash, and setup depot_tools, python2, and
 python3. Because depot_tools expects `python` to be `python2` (shame!), python2 must come
 before python3 in your path.

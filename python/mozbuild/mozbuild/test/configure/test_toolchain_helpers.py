@@ -22,16 +22,16 @@ class CompilerPreprocessor(Preprocessor):
     # For now, we don't look very hard for C strings because they don't matter
     # that much for our unit tests, but we at least avoid expanding in the
     # simple "FOO" case.
-    VARSUBST = re.compile('(?<!")(?P<VAR>\w+)(?!")', re.U)
-    NON_WHITESPACE = re.compile("\S")
+    VARSUBST = re.compile(r'(?<!")(?P<VAR>\w+)(?!")', re.U)
+    NON_WHITESPACE = re.compile(r"\S")
     HAS_FEATURE_OR_BUILTIN = re.compile(
-        '(__has_(?:feature|builtin|attribute|warning))\("?([^"\)]*)"?\)'
+        r'(__has_(?:feature|builtin|attribute|warning))\("?([^"\)]*)"?\)'
     )
 
     def __init__(self, *args, **kwargs):
         Preprocessor.__init__(self, *args, **kwargs)
         self.do_filter("c_substitution")
-        self.setMarker("#\s*")
+        self.setMarker(r"#\s*")
 
     def do_if(self, expression, **kwargs):
         # The C preprocessor handles numbers following C rules, which is a

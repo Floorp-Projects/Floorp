@@ -45,7 +45,7 @@ def test_filelist(httpd, docroot, path):
 
     filelist = os.listdir(docroot)
 
-    pattern = "\<[a-zA-Z0-9\-\_\.\=\"'\/\\\%\!\@\#\$\^\&\*\(\) :;]*\>"
+    pattern = r"""\<[a-zA-Z0-9\-\_\.\="'\/\\%\!\@\#\$\^\&\*\(\) :;]*\>"""
 
     for line in f.readlines():
         subbed_lined = re.sub(pattern, "", ensure_str(line).strip("\n"))

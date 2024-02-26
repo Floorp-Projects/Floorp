@@ -375,7 +375,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 ###
 def get_version_maybe_buildid(app_version):
     def _extract_numeric_part(part):
-        matches = re.compile("[^\d]").search(part)
+        matches = re.compile(r"[^\d]").search(part)
         if matches:
             part = part[0 : matches.start()]
         if len(part) == 0:

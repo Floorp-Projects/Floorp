@@ -822,7 +822,7 @@ def edit_moz_build_file_to_remove_file(
     """
 
     simple_file_line = re.compile(
-        "^\s*['\"]" + unnormalized_filename_to_remove + "['\"],*$"
+        "^\\s*['\"]" + unnormalized_filename_to_remove + "['\"],*$"
     )
     did_replace = False
 

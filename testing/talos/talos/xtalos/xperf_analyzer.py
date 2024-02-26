@@ -671,7 +671,7 @@ class SessionStoreWindowRestored(ClassicEvent):
 class ProcessStart(XPerfEvent):
     cmd_line_index = None
     process_index = None
-    extractor = re.compile("^(.+) \(\s*(\d+)\)$")
+    extractor = re.compile(r"^(.+) \(\s*(\d+)\)$")
 
     def __init__(self, leafname):
         super(ProcessStart, self).__init__("P-Start")
@@ -746,7 +746,7 @@ class ThreadStart(XPerfEvent):
 
     process_index = None
     tid_index = None
-    pid_extractor = re.compile("^.+ \(\s*(\d+)\)$")
+    pid_extractor = re.compile(r"^.+ \(\s*(\d+)\)$")
 
     def __init__(self):
         super(ThreadStart, self).__init__("T-Start")

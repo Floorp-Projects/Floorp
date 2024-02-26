@@ -265,8 +265,8 @@ class RaptorGatherer(FrameworkGatherer):
                 sub_title = key.replace("_", " ")
                 if key == "test_url":
                     if "<" in description[key] or ">" in description[key]:
-                        description[key] = description[key].replace("<", "\<")
-                        description[key] = description[key].replace(">", "\>")
+                        description[key] = description[key].replace("<", r"\<")
+                        description[key] = description[key].replace(">", r"\>")
                     result += f"   * **{sub_title}**: `<{description[key]}>`__\n"
                 elif key == "secondary_url":
                     result += f"   * **{sub_title}**: `<{description[key]}>`__\n"

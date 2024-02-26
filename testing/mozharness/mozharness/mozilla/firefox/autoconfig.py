@@ -56,7 +56,7 @@ def _autoconfig_path(fx_install_dir):
 
 
 def _cfg_file_path(fx_install_dir):
-    """
+    r"""
     Windows:        defaults\pref
     Mac:            Firefox.app/Contents/Resources/defaults/pref
     Linux:          defaults/pref

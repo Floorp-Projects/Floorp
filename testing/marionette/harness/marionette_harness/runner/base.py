@@ -730,7 +730,7 @@ class BaseMarionetteTestRunner(object):
     @property
     def filename_pattern(self):
         if self._filename_pattern is None:
-            self._filename_pattern = re.compile("^test(((_.+?)+?\.((py))))$")
+            self._filename_pattern = re.compile(r"^test(((_.+?)+?\.((py))))$")
 
         return self._filename_pattern
 

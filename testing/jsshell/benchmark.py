@@ -157,7 +157,7 @@ class Ares6(Benchmark):
         self.scores = defaultdict(lambda: defaultdict(list))
 
     def _try_find_score(self, score_name, line):
-        m = re.search(score_name + ":\s*(\d+\.?\d*?) (\+-)?.+", line)
+        m = re.search(score_name + r":\s*(\d+\.?\d*?) (\+-)?.+", line)
         if not m:
             return False
 
@@ -168,7 +168,7 @@ class Ares6(Benchmark):
     def process_line(self, proc, line):
         line = line.strip("\n")
         print(line)
-        m = re.search("Running... (.+) \(.+\)", line)
+        m = re.search(r"Running... (.+) \(.+\)", line)
         if m:
             self.bench_name = m.group(1)
             return
@@ -182,7 +182,7 @@ class Ares6(Benchmark):
         if self._try_find_score("steadyState", line):
             return
 
-        m = re.search("summary:\s*(\d+\.?\d*?) (\+-)?.+", line)
+        m = re.search(r"summary:\s*(\d+\.?\d*?) (\+-)?.+", line)
         if m:
             self.last_summary = float(m.group(1))
 
@@ -218,7 +218,7 @@ class SixSpeed(RunOnceBenchmark):
     def process_line(self, proc, output):
         output = output.strip("\n")
         print(output)
-        m = re.search("(.+): (\d+)", output)
+        m = re.search(r"(.+): (\d+)", output)
         if not m:
             return
         subtest = m.group(1)
@@ -250,7 +250,7 @@ class SunSpider(RunOnceBenchmark):
     def process_line(self, proc, output):
         output = output.strip("\n")
         print(output)
-        m = re.search("(.+): (\d+)", output)
+        m = re.search(r"(.+): (\d+)", output)
         if not m:
             return
         subtest = m.group(1)
@@ -339,7 +339,7 @@ class Octane(RunOnceBenchmark):
     def process_line(self, proc, output):
         output = output.strip("\n")
         print(output)
-        m = re.search("(.+): (\d+)", output)
+        m = re.search(r"(.+): (\d+)", output)
         if not m:
             return
         subtest = m.group(1)

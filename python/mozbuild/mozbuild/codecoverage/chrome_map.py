@@ -25,7 +25,7 @@ from mozbuild.frontend.data import (
 
 from .manifest_handler import ChromeManifestHandler
 
-_line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
+_line_comment_re = re.compile(r'^//@line (\d+) "(.+)"$')
 
 
 def generate_pp_info(path, topsrcdir):

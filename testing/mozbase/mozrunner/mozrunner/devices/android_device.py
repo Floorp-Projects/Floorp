@@ -260,7 +260,7 @@ def _maybe_update_host_utils(build_obj):
 
     # Compare, prompt, update
     if existing_version and manifest_version:
-        hu_version_regex = "host-utils-([\d\.]*)"
+        hu_version_regex = r"host-utils-([\d\.]*)"
         manifest_version = float(re.search(hu_version_regex, manifest_version).group(1))
         existing_version = float(re.search(hu_version_regex, existing_version).group(1))
         if existing_version < manifest_version:

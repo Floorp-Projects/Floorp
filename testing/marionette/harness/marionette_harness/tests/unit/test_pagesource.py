@@ -47,6 +47,6 @@ class TestPageSource(MarionetteTestCase):
         import re
 
         self.assertEqual(
-            re.sub("\s", "", source), "<xml><foo><bar>baz</bar></foo></xml>"
+            re.sub(r"\s", "", source), "<xml><foo><bar>baz</bar></foo></xml>"
         )
         self.assertEqual(source, from_web_api)

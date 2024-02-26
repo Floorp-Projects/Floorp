@@ -18,7 +18,7 @@ import build
 
 # Matches lines like `GK_ATOM(foo, "foo", 0x12345678, true, nsStaticAtom, PseudoElementAtom)`.
 PATTERN = re.compile(
-    '^GK_ATOM\(([^,]*),[^"]*"([^"]*)",\s*(0x[0-9a-f]+),\s*[^,]*,\s*([^,]*),\s*([^)]*)\)',
+    r'^GK_ATOM\(([^,]*),[^"]*"([^"]*)",\s*(0x[0-9a-f]+),\s*[^,]*,\s*([^,]*),\s*([^)]*)\)',
     re.MULTILINE,
 )
 FILE = "include/nsGkAtomList.h"

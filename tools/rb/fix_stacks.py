@@ -16,7 +16,7 @@ from subprocess import PIPE, Popen
 
 # Matches lines produced by MozFormatCodeAddress(), e.g.
 # `#01: ???[tests/example +0x43a0]`.
-line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
+line_re = re.compile(r"#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
 
 fix_stacks = None
 
