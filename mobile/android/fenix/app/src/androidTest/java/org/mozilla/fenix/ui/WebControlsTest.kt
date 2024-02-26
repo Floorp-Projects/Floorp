@@ -4,12 +4,8 @@
 
 package org.mozilla.fenix.ui
 
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
@@ -19,6 +15,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getHTMLControlsFormAsset
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import java.time.LocalDate
@@ -28,9 +25,7 @@ import java.time.LocalDate
  *
  */
 
-class WebControlsTest {
-    private lateinit var mockWebServer: MockWebServer
-
+class WebControlsTest : TestSetup() {
     private val hour = 10
     private val minute = 10
     private val colorHexValue = "#5b2067"
@@ -42,19 +37,6 @@ class WebControlsTest {
         isJumpBackInCFREnabled = false,
         isTCPCFREnabled = false,
     )
-
-    @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2316067
     @Test

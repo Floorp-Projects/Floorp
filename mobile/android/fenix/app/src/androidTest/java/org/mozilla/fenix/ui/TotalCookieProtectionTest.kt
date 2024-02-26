@@ -5,16 +5,15 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.toolbar.CFR_MINIMUM_NUMBER_OPENED_TABS
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -22,9 +21,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  Note: This involves setting the feature flags On for CFRs which are disabled elsewhere.
  *
  */
-class TotalCookieProtectionTest {
-    private lateinit var mockWebServer: MockWebServer
-
+class TotalCookieProtectionTest : TestSetup() {
     @get:Rule
     val composeTestRule = AndroidComposeTestRule(
         HomeActivityTestRule(
@@ -33,17 +30,14 @@ class TotalCookieProtectionTest {
     ) { it.activity }
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         CFR_MINIMUM_NUMBER_OPENED_TABS = 0
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
     }
 
     @After
-    fun tearDown() {
-        mockWebServer.shutdown()
+    override fun tearDown() {
+        super.tearDown()
         CFR_MINIMUM_NUMBER_OPENED_TABS = 5
     }
 

@@ -10,6 +10,7 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.relaunchCleanApp
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
@@ -17,7 +18,7 @@ import org.mozilla.fenix.ui.robots.homeScreen
  *  Note: This involves setting the feature flag On for the onboarding cards
  *
  */
-class UpgradingUsersOnboardingTest {
+class UpgradingUsersOnboardingTest : TestSetup() {
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(

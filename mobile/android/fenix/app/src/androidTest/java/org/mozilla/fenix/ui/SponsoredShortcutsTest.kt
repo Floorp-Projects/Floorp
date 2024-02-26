@@ -4,49 +4,26 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredShortcutTitle
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
  * Tests Sponsored shortcuts functionality
  */
 
-class SponsoredShortcutsTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
-    private val defaultSearchEngine = "Amazon.com"
+class SponsoredShortcutsTest : TestSetup() {
     private lateinit var sponsoredShortcutTitle: String
     private lateinit var sponsoredShortcutTitle2: String
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729331
     // Expected for en-us defaults
