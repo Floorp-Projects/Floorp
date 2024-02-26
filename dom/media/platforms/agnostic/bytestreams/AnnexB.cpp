@@ -256,21 +256,21 @@ static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
   while (aBr.Remaining() >= 6) {
     uint32_t x32;
     MOZ_TRY_VAR(x32, aBr.PeekU32());
-    if ((x32 - 0x01010101) & (~x32) & 0x80808080) {
-      if ((x32 >> 8) == 0x000001) {
+    if ((x32 - 0x01010101) & (~x32) & 0x80808080) {  // Has 0x00 byte(s).
+      if ((x32 >> 8) == 0x000001) {                  // 0x000001??
         return Ok();
       }
-      if (x32 == 0x000001) {
+      if ((x32 & 0xffffff) == 0x000001) {  // 0x??000001
         mozilla::Unused << aBr.Read(1);
         return Ok();
       }
-      if ((x32 & 0xff) == 0) {
+      if ((x32 & 0xff) == 0) {  // 0x??????00
         const uint8_t* p = aBr.Peek(1);
-        if ((x32 & 0xff00) == 0 && p[4] == 1) {
+        if ((x32 & 0xff00) == 0 && p[4] == 1) {  // 0x????0000,01
           mozilla::Unused << aBr.Read(2);
           return Ok();
         }
-        if (p[4] == 0 && p[5] == 1) {
+        if (p[4] == 0 && p[5] == 1) {  // 0x??????00,00,01
           mozilla::Unused << aBr.Read(3);
           return Ok();
         }
