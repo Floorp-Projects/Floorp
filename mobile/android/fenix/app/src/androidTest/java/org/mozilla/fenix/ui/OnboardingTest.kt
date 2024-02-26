@@ -6,9 +6,10 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithLauncherIntent
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 
-class OnboardingTest {
+class OnboardingTest : TestSetup() {
 
     @get:Rule
     val activityTestRule =

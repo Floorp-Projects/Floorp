@@ -21,7 +21,6 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AppAndSystemHelper
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.AppAndSystemHelper.denyPermission
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
@@ -45,6 +44,7 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -64,7 +64,7 @@ import java.util.Locale
  *
  */
 
-class SearchTest {
+class SearchTest : TestSetup() {
     private lateinit var searchMockServer: MockWebServer
     private var queryString = "firefox"
     private val generalEnginesList = listOf("DuckDuckGo", "Google", "Bing")
@@ -84,7 +84,8 @@ class SearchTest {
     ) { it.activity }
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         searchMockServer = MockWebServer().apply {
             dispatcher = SearchDispatcher()
             start()
@@ -92,9 +93,8 @@ class SearchTest {
     }
 
     @After
-    fun tearDown() {
+    override fun tearDown() {
         searchMockServer.shutdown()
-        AppAndSystemHelper.resetSystemLocaleToEnUS()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2154189

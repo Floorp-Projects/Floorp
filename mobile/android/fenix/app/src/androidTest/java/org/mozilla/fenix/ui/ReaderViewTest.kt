@@ -5,20 +5,16 @@
 package org.mozilla.fenix.ui
 
 import android.view.View
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -32,9 +28,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 
-class ReaderViewTest {
-    private lateinit var mockWebServer: MockWebServer
-    private lateinit var mDevice: UiDevice
+class ReaderViewTest : TestSetup() {
     private val estimatedReadingTime = "1 - 2 minutes"
 
     @get:Rule
@@ -43,20 +37,6 @@ class ReaderViewTest {
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     /**
      *  Verify that Reader View capable pages

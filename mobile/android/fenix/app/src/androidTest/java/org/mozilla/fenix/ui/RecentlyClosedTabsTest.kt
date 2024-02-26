@@ -6,21 +6,17 @@ package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
-import androidx.test.espresso.intent.Intents
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -29,30 +25,13 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  Tests for verifying basic functionality of recently closed tabs history
  *
  */
-class RecentlyClosedTabsTest {
-    private lateinit var mockWebServer: MockWebServer
-
+class RecentlyClosedTabsTest : TestSetup() {
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
-        HomeActivityTestRule.withDefaultSettingsOverrides(
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(
             tabsTrayRewriteEnabled = true,
         ),
     ) { it.activity }
-
-    @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-
-        Intents.init()
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1065414
     // Verifies that a recently closed item is properly opened

@@ -1,22 +1,20 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
  *  Tests for verifying the presence of the Pocket section and its elements
  */
 
-class PocketTest {
-    private lateinit var mDevice: UiDevice
+class PocketTest : TestSetup() {
     private lateinit var firstPocketStoryPublisher: String
 
     @get:Rule(order = 0)
@@ -28,9 +26,8 @@ class PocketTest {
     val retryTestRule = RetryTestRule(3)
 
     @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
+    override fun setUp() {
+        super.setUp()
         // Workaround to make sure the Pocket articles are populated before starting the tests.
         homeScreen {
         }.openThreeDotMenu {

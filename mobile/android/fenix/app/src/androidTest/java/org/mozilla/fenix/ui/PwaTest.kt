@@ -11,12 +11,13 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.pwaScreen
 
-class PwaTest {
+class PwaTest : TestSetup() {
     /* Updated externalLinks.html to v2.0,
        changed the hypertext reference to mozilla-mobile.github.io/testapp/downloads for "External link"
      */
