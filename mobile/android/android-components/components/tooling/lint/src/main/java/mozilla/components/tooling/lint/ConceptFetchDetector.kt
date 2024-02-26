@@ -218,11 +218,11 @@ class ConceptFetchDetector : Detector(), SourceCodeScanner {
             id = "FetchResponseClose",
             briefDescription = "Response stream fetched but not closed.",
             explanation = """
-                A `Client.fetch` returns a `Response` that, on success, is consumed typically with 
-                a `use` stream in Kotlin or a try-with-resources in Java. In the failure or manual 
+                A `Client.fetch` returns a `Response` that, on success, is consumed typically with
+                a `use` stream in Kotlin or a try-with-resources in Java. In the failure or manual
                 resource managed cases, we need to ensure that `Response.close` is always called.
-                
-                Additionally, all methods on `Response.body` are AutoCloseable so using any of 
+
+                Additionally, all methods on `Response.body` are AutoCloseable so using any of
                 those will release those resources after execution.
             """.trimIndent(),
             category = Category.CORRECTNESS,

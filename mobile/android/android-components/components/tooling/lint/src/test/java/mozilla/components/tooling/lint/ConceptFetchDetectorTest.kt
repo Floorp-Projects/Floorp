@@ -24,7 +24,7 @@ class ConceptFetchDetectorTest {
                         package test
 
                         import mozilla.components.concept.fetch.*
-                        
+
                         val client = Client()
 
                         fun isSuccessful() : Boolean {
@@ -55,7 +55,7 @@ class ConceptFetchDetectorTest {
                 kotlin(
                     """
                         package test
-                            
+
                         import mozilla.components.concept.fetch.*
 
                         val client = Client()
@@ -68,7 +68,7 @@ class ConceptFetchDetectorTest {
                                 null
                             }
                         }
-                            
+
                         data class Result(
                             val name: String,
                         )
@@ -105,12 +105,12 @@ class ConceptFetchDetectorTest {
                 kotlin(
                     """
                         package test
-                        
+
                         import mozilla.components.concept.fetch.*
                         import kotlin.io.*
 
                         val client = Client()
-                
+
                         fun getResult() {
                             client.fetch(request).use { response ->
                                 response.hashCode()
@@ -133,21 +133,21 @@ class ConceptFetchDetectorTest {
                 kotlin(
                     """
                         package test
-                        
+
                         import mozilla.components.concept.fetch.*
                         import kotlin.io.*
 
                         val client = Client()
-                
+
                         fun getResult() { // OK
                             val response = client.fetch(request)
                             response?.body.string(Charset.UTF_8)
                         }
-            
+
                         fun getResult2() { // OK
                             client.fetch(request).body.useStream()
                         }
-                        
+
                         fun getResult3() { // OK; escaped.
                             val response = client.fetch(request)
                             process(response)
@@ -233,10 +233,10 @@ class ConceptFetchDetectorTest {
         )
 
         class Client {
-            fun fetch(request: Request): Response { 
+            fun fetch(request: Request): Response {
                 return Response(
                     url = "https://mozilla.org",
-                ) 
+                )
             }
         }
         """.trimIndent(),
