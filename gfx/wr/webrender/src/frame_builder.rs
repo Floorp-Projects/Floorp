@@ -764,7 +764,6 @@ impl FrameBuilder {
             const LAYOUT_PORT_COLOR: ColorF = debug_colors::RED;
             const VISUAL_PORT_COLOR: ColorF = debug_colors::BLUE;
             const DISPLAYPORT_COLOR: ColorF = debug_colors::LIME;
-            const NOTHING: ColorF = ColorF { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
 
             let viewport = scroll_frame_info.viewport_rect;
 
@@ -810,9 +809,10 @@ impl FrameBuilder {
             }
 
             let mut add_rect = |rect, border, fill| -> Option<()> {
+              const STROKE_WIDTH: f32 = 2.0;
               // Place rect in scroll frame's local coordinate space
               let transformed_rect = transform.outer_transformed_box2d(&rect)?;
-              
+
               // Transform to world coordinates, using root-content coords as an intermediate step.
               let mut root_content_rect = local_to_root_content.outer_transformed_box2d(&transformed_rect)?;
               // In root-content coords, apply the root content node's viewport clip.
@@ -825,21 +825,28 @@ impl FrameBuilder {
               }
               let world_rect = root_content_to_world.outer_transformed_box2d(&root_content_rect)?;
 
+              scratch.push_debug_rect_with_stroke_width(world_rect, border, STROKE_WIDTH);
+
               // Add world coordinate rects to scratch.debug_items
-              // TODO: Add a parameter to control the border thickness of the rects, and make them a bit thicker. 
-              scratch.push_debug_rect(world_rect * DevicePixelScale::new(1.0), border, fill);
+              if let Some(fill_color) = fill {
+                let interior_world_rect = WorldRect::new(
+                    world_rect.min + WorldVector2D::new(STROKE_WIDTH, STROKE_WIDTH),
+                    world_rect.max - WorldVector2D::new(STROKE_WIDTH, STROKE_WIDTH)
+                );
+                scratch.push_debug_rect(interior_world_rect * DevicePixelScale::new(1.0), border, fill_color);
+              }
 
               Some(())
             };
 
-            add_rect(minimap_data.scrollable_rect, PAGE_BORDER_COLOR, BACKGROUND_COLOR);
-            add_rect(minimap_data.visual_viewport, VISUAL_PORT_COLOR, NOTHING);
-            add_rect(minimap_data.displayport, DISPLAYPORT_COLOR, DISPLAYPORT_BACKGROUND_COLOR);
+            add_rect(minimap_data.scrollable_rect, PAGE_BORDER_COLOR, Some(BACKGROUND_COLOR));
+            add_rect(minimap_data.displayport, DISPLAYPORT_COLOR, Some(DISPLAYPORT_BACKGROUND_COLOR));
             // Only render a distinct layout viewport for the root content.
             // For other scroll frames, the visual and layout viewports coincide.
             if minimap_data.is_root_content {
-              add_rect(minimap_data.layout_viewport, LAYOUT_PORT_COLOR, NOTHING);
+              add_rect(minimap_data.layout_viewport, LAYOUT_PORT_COLOR, None);
             }
+            add_rect(minimap_data.visual_viewport, VISUAL_PORT_COLOR, None);
           }
         }
       });
