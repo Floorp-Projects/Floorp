@@ -872,6 +872,7 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
 
   if (!datachannelTransceiver ||
       !datachannelTransceiver->mTransport.mComponents ||
+      !datachannelTransceiver->mTransport.mDtls ||
       !datachannelTransceiver->mSendTrack.GetNegotiatedDetails()) {
     return NS_ERROR_FAILURE;
   }
