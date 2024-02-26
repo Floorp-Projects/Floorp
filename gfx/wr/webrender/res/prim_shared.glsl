@@ -44,7 +44,6 @@ PER_INSTANCE in ivec4 aData;
 struct Instance
 {
     int prim_header_address;
-    int picture_task_address;
     int clip_address;
     int segment_index;
     int flags;
@@ -56,8 +55,7 @@ Instance decode_instance_attributes() {
     Instance instance;
 
     instance.prim_header_address = aData.x;
-    instance.picture_task_address = aData.y >> 16;
-    instance.clip_address = aData.y & 0xffff;
+    instance.clip_address = aData.y;
     instance.segment_index = aData.z & 0xffff;
     instance.flags = aData.z >> 16;
     instance.resource_address = aData.w & 0xffffff;
@@ -72,6 +70,7 @@ struct PrimitiveHeader {
     float z;
     int specific_prim_address;
     int transform_id;
+    int picture_task_address;
     ivec4 user_data;
 };
 
@@ -90,6 +89,7 @@ PrimitiveHeader fetch_prim_header(int index) {
     ph.z = float(data0.x);
     ph.specific_prim_address = data0.y;
     ph.transform_id = data0.z;
+    ph.picture_task_address = data0.w;
     ph.user_data = data1;
 
     return ph;

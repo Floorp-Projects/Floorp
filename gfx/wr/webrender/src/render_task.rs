@@ -46,11 +46,11 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct RenderTaskAddress(pub u16);
+pub struct RenderTaskAddress(pub i32);
 
 impl Into<RenderTaskAddress> for RenderTaskId {
     fn into(self) -> RenderTaskAddress {
-        RenderTaskAddress(self.index as u16)
+        RenderTaskAddress(self.index as i32)
     }
 }
 

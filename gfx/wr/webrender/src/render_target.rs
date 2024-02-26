@@ -925,6 +925,7 @@ fn add_svg_filter_instances(
         kind,
         input_count,
         generic_int,
+        padding: 0,
         extra_data_address: extra_data_address.unwrap_or(GpuCacheAddress::INVALID),
     };
 

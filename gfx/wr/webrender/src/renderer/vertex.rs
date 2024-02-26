@@ -49,12 +49,12 @@ pub mod desc {
             VertexAttribute {
                 name: "aBlurRenderTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::U16,
+                kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
                 name: "aBlurSourceTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::U16,
+                kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
                 name: "aBlurDirection",
@@ -574,17 +574,17 @@ pub mod desc {
             VertexAttribute {
                 name: "aFilterRenderTaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::U16,
+                kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
                 name: "aFilterInput1TaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::U16,
+                kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
                 name: "aFilterInput2TaskAddress",
                 count: 1,
-                kind: VertexAttributeKind::U16,
+                kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
                 name: "aFilterKind",
@@ -598,6 +598,11 @@ pub mod desc {
             },
             VertexAttribute {
                 name: "aFilterGenericInt",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aUnused",
                 count: 1,
                 kind: VertexAttributeKind::U16,
             },

@@ -38,7 +38,7 @@ use crate::segment::EdgeAaSegmentMask;
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
-const OPAQUE_TASK_ADDRESS: RenderTaskAddress = RenderTaskAddress(0x7fff);
+const OPAQUE_TASK_ADDRESS: RenderTaskAddress = RenderTaskAddress(0x7fffffff);
 
 /// Used to signal there are no segments provided with this primitive.
 pub const INVALID_SEGMENT_INDEX: i32 = 0xffff;
@@ -745,13 +745,10 @@ impl BatchBuilder {
         prim_header_index: PrimitiveHeaderIndex,
         resource_address: i32,
     ) {
-        let render_task_address = self.batcher.render_task_address;
-
         let instance = BrushInstance {
             segment_index,
             edge_flags,
             clip_task_address,
-            render_task_address,
             brush_flags,
             prim_header_index,
             resource_address,
@@ -1009,6 +1006,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     [get_shader_opacity(1.0), 0, 0, 0],
                 );
 
@@ -1087,6 +1085,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     batch_params.prim_user_data,
                 );
 
@@ -1141,6 +1140,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     [
                         (run.raster_scale * 65535.0).round() as i32,
                         0,
@@ -1316,7 +1316,6 @@ impl BatchBuilder {
 
                         let key = BatchKey::new(kind, blend_mode, textures);
 
-                        let render_task_address = batcher.render_task_address;
                         let batch = batcher.alpha_batch_list.set_params_and_get_batch(
                             key,
                             batch_features,
@@ -1327,7 +1326,6 @@ impl BatchBuilder {
                         batch.reserve(glyphs.len());
                         for glyph in glyphs {
                             batch.push(base_instance.build(
-                                render_task_address,
                                 clip_task_address,
                                 subpx_dir,
                                 glyph.index_in_text_run,
@@ -1401,6 +1399,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     prim_user_data,
                 );
 
@@ -1535,6 +1534,7 @@ impl BatchBuilder {
                                         let prim_header_index = prim_headers.push(
                                             &prim_header,
                                             z_id,
+                                            self.batcher.render_task_address,
                                             ImageBrushData {
                                                 color_mode: ShaderColorMode::Image,
                                                 alpha_type: AlphaType::PremultipliedAlpha,
@@ -1620,6 +1620,7 @@ impl BatchBuilder {
                                             let shadow_prim_header_index = prim_headers.push(
                                                 &shadow_prim_header,
                                                 z_id,
+                                                self.batcher.render_task_address,
                                                 ImageBrushData {
                                                     color_mode: ShaderColorMode::Alpha,
                                                     alpha_type: AlphaType::PremultipliedAlpha,
@@ -1646,6 +1647,7 @@ impl BatchBuilder {
                                         let content_prim_header_index = prim_headers.push(
                                             &prim_header,
                                             z_id_content,
+                                            self.batcher.render_task_address,
                                             ImageBrushData {
                                                 color_mode: ShaderColorMode::Image,
                                                 alpha_type: AlphaType::PremultipliedAlpha,
@@ -1691,12 +1693,17 @@ impl BatchBuilder {
                                             textures,
                                         );
 
-                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                            uv_rect_address.as_int(),
-                                            amount,
-                                            0,
-                                            0,
-                                        ]);
+                                        let prim_header_index = prim_headers.push(
+                                            &prim_header,
+                                            z_id,
+                                            self.batcher.render_task_address,
+                                            [
+                                                uv_rect_address.as_int(),
+                                                amount,
+                                                0,
+                                                0,
+                                            ]
+                                        );
 
                                         self.add_brush_instance_to_batches(
                                             key,
@@ -1775,12 +1782,17 @@ impl BatchBuilder {
                                             textures,
                                         );
 
-                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                            uv_rect_address.as_int(),
-                                            filter_mode,
-                                            user_data,
-                                            0,
-                                        ]);
+                                        let prim_header_index = prim_headers.push(
+                                            &prim_header,
+                                            z_id,
+                                            self.batcher.render_task_address,
+                                            [
+                                                uv_rect_address.as_int(),
+                                                filter_mode,
+                                                user_data,
+                                                0,
+                                            ]
+                                        );
 
                                         self.add_brush_instance_to_batches(
                                             key,
@@ -1830,12 +1842,17 @@ impl BatchBuilder {
                                     textures,
                                 );
 
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    uv_rect_address.as_int(),
-                                    filter_mode,
-                                    user_data,
-                                    0,
-                                ]);
+                                let prim_header_index = prim_headers.push(
+                                    &prim_header,
+                                    z_id,
+                                    self.batcher.render_task_address,
+                                    [
+                                        uv_rect_address.as_int(),
+                                        filter_mode,
+                                        user_data,
+                                        0,
+                                    ]
+                                );
 
                                 self.add_brush_instance_to_batches(
                                     key,
@@ -1886,6 +1903,7 @@ impl BatchBuilder {
                                 let prim_header_index = prim_headers.push(
                                     &prim_header,
                                     z_id,
+                                    self.batcher.render_task_address,
                                     ImageBrushData {
                                         color_mode: match key.blend_mode {
                                             BlendMode::MultiplyDualSource => ShaderColorMode::MultiplyDualSource,
@@ -1928,8 +1946,6 @@ impl BatchBuilder {
                                 // and allow mix-blends to operate on picture cache surfaces without
                                 // a separate isolated intermediate surface.
 
-                                let render_task_address = self.batcher.render_task_address;
-
                                 let batch_key = BatchKey::new(
                                     BatchKind::Brush(
                                         BrushBatchKind::MixBlend {
@@ -1957,18 +1973,22 @@ impl BatchBuilder {
                                 );
                                 let src_uv_address = render_tasks[pic_task_id].get_texture_address(gpu_cache);
                                 let readback_uv_address = render_tasks[backdrop_id].get_texture_address(gpu_cache);
-                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                    mode as u32 as i32,
-                                    readback_uv_address.as_int(),
-                                    src_uv_address.as_int(),
-                                    0,
-                                ]);
+                                let prim_header_index = prim_headers.push(
+                                    &prim_header,
+                                    z_id,
+                                    self.batcher.render_task_address,
+                                    [
+                                        mode as u32 as i32,
+                                        readback_uv_address.as_int(),
+                                        src_uv_address.as_int(),
+                                        0,
+                                    ]
+                                );
 
                                 let instance = BrushInstance {
                                     segment_index: INVALID_SEGMENT_INDEX,
                                     edge_flags: EdgeAaSegmentMask::all(),
                                     clip_task_address,
-                                    render_task_address,
                                     brush_flags,
                                     prim_header_index,
                                     resource_address: 0,
@@ -2034,12 +2054,17 @@ impl BatchBuilder {
                                         // by this inner loop.
                                         let z_id = z_generator.next();
 
-                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
-                                            uv_rect_address.as_int(),
-                                            BrushFlags::PERSPECTIVE_INTERPOLATION.bits() as i32,
-                                            0,
-                                            child_clip_task_address.0 as i32,
-                                        ]);
+                                        let prim_header_index = prim_headers.push(
+                                            &prim_header,
+                                            z_id,
+                                            self.batcher.render_task_address,
+                                            [
+                                                uv_rect_address.as_int(),
+                                                BrushFlags::PERSPECTIVE_INTERPOLATION.bits() as i32,
+                                                0,
+                                                child_clip_task_address.0 as i32,
+                                            ]
+                                        );
 
                                         let key = BatchKey::new(
                                             BatchKind::SplitComposite,
@@ -2092,6 +2117,7 @@ impl BatchBuilder {
                                         let prim_header_index = prim_headers.push(
                                             &prim_header,
                                             z_id,
+                                            self.batcher.render_task_address,
                                             batch_params.prim_user_data,
                                         );
 
@@ -2145,6 +2171,7 @@ impl BatchBuilder {
                                 let prim_header_index = prim_headers.push(
                                     &prim_header,
                                     z_id,
+                                    self.batcher.render_task_address,
                                     ImageBrushData {
                                         color_mode: ShaderColorMode::Image,
                                         alpha_type: AlphaType::PremultipliedAlpha,
@@ -2219,6 +2246,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     batch_params.prim_user_data,
                 );
 
@@ -2278,6 +2306,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     batch_params.prim_user_data,
                 );
 
@@ -2398,6 +2427,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     batch_params.prim_user_data,
                 );
 
@@ -2502,6 +2532,7 @@ impl BatchBuilder {
                     let prim_header_index = prim_headers.push(
                         &prim_header,
                         z_id,
+                        self.batcher.render_task_address,
                         batch_params.prim_user_data,
                     );
 
@@ -2551,7 +2582,12 @@ impl BatchBuilder {
                             specific_prim_address: gpu_cache.get_address(&gpu_handle),
                             transform_id,
                         };
-                        let prim_header_index = prim_headers.push(&prim_header, z_id, prim_user_data);
+                        let prim_header_index = prim_headers.push(
+                            &prim_header,
+                            z_id,
+                            self.batcher.render_task_address,
+                            prim_user_data,
+                        );
 
                         for (i, tile) in chunk.iter().enumerate() {
                             let (uv_rect_address, texture) = match render_tasks.resolve_location(tile.src_color, gpu_cache) {
@@ -2620,7 +2656,12 @@ impl BatchBuilder {
 
                     prim_header.specific_prim_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
 
-                    let prim_header_index = prim_headers.push(&prim_header, z_id, user_data);
+                    let prim_header_index = prim_headers.push(
+                        &prim_header,
+                        z_id,
+                        self.batcher.render_task_address,
+                        user_data,
+                    );
 
                     let segments = if prim_data.brush_segments.is_empty() {
                         None
@@ -2664,7 +2705,12 @@ impl BatchBuilder {
                             local_clip_rect: tile.local_clip_rect,
                             ..prim_header
                         };
-                        let prim_header_index = prim_headers.push(&tile_prim_header, z_id, user_data);
+                        let prim_header_index = prim_headers.push(
+                            &tile_prim_header,
+                            z_id,
+                            self.batcher.render_task_address,
+                            user_data,
+                        );
 
                         self.add_brush_instance_to_batches(
                             key,
@@ -2739,6 +2785,7 @@ impl BatchBuilder {
                     let prim_header_index = prim_headers.push(
                         &prim_header,
                         z_id,
+                        self.batcher.render_task_address,
                         batch_params.prim_user_data,
                     );
 
@@ -2781,7 +2828,12 @@ impl BatchBuilder {
                             local_clip_rect: tile.local_clip_rect,
                             ..prim_header
                         };
-                        let prim_header_index = prim_headers.push(&tile_prim_header, z_id, prim_user_data);
+                        let prim_header_index = prim_headers.push(
+                            &tile_prim_header,
+                            z_id,
+                            self.batcher.render_task_address,
+                            prim_user_data,
+                        );
 
                         self.add_brush_instance_to_batches(
                             batch_key,
@@ -2857,6 +2909,7 @@ impl BatchBuilder {
                     let prim_header_index = prim_headers.push(
                         &prim_header,
                         z_id,
+                        self.batcher.render_task_address,
                         batch_params.prim_user_data,
                     );
 
@@ -2899,7 +2952,12 @@ impl BatchBuilder {
                             local_clip_rect: tile.local_clip_rect,
                             ..prim_header
                         };
-                        let prim_header_index = prim_headers.push(&tile_prim_header, z_id, prim_user_data);
+                        let prim_header_index = prim_headers.push(
+                            &tile_prim_header,
+                            z_id,
+                            self.batcher.render_task_address,
+                            prim_user_data,
+                        );
 
                         self.add_brush_instance_to_batches(
                             batch_key,
@@ -2976,6 +3034,7 @@ impl BatchBuilder {
                     let prim_header_index = prim_headers.push(
                         &prim_header,
                         z_id,
+                        self.batcher.render_task_address,
                         batch_params.prim_user_data,
                     );
 
@@ -3018,7 +3077,12 @@ impl BatchBuilder {
                             local_clip_rect: tile.local_clip_rect,
                             ..prim_header
                         };
-                        let prim_header_index = prim_headers.push(&tile_prim_header, z_id, prim_user_data);
+                        let prim_header_index = prim_headers.push(
+                            &tile_prim_header,
+                            z_id,
+                            self.batcher.render_task_address,
+                            prim_user_data,
+                        );
 
                         self.add_brush_instance_to_batches(
                             batch_key,
@@ -3072,6 +3136,7 @@ impl BatchBuilder {
                 let prim_header_index = prim_headers.push(
                     &prim_header,
                     z_id,
+                    self.batcher.render_task_address,
                     ImageBrushData {
                         color_mode: ShaderColorMode::Image,
                         alpha_type: AlphaType::PremultipliedAlpha,
@@ -3183,6 +3248,7 @@ impl BatchBuilder {
         let prim_header_index = prim_headers.push(
             &prim_header,
             z_id,
+            self.batcher.render_task_address,
             [get_shader_opacity(1.0), 0, 0, 0],
         );
 

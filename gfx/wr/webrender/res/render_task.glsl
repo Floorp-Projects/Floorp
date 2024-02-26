@@ -73,7 +73,7 @@ PictureTask fetch_picture_task(int address) {
     return task;
 }
 
-#define CLIP_TASK_EMPTY 0x7FFF
+#define CLIP_TASK_EMPTY 0x7FFFFFFF
 
 struct ClipArea {
     RectWithEndpoint task_rect;
