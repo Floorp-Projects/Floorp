@@ -11,12 +11,8 @@
 #include "PlatformEncoderModule.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadSafety.h"
-#include "ffvpx/tx.h"
 
-struct FFmpegFFTFuncs {
-  decltype(av_tx_init)* init;
-  decltype(av_tx_uninit)* uninit;
-};
+struct FFmpegRDFTFuncs;
 
 namespace mozilla {
 
@@ -27,7 +23,7 @@ class FFVPXRuntimeLinker {
   static already_AddRefed<PlatformEncoderModule> CreateEncoder();
 
   // Call (on any thread) after Init().
-  static void GetFFTFuncs(FFmpegFFTFuncs* aOutFuncs);
+  static void GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs);
 
  private:
   // Provide critical-section for Init() and sLinkStatus.

@@ -2377,6 +2377,17 @@ with only_when(compile_environment):
 
 # FFmpeg's ffvpx configuration
 # ==============================================================
+with only_when(compile_environment):
+
+    @depends(target)
+    def libav_fft(target):
+        if target.os == "Android" and target.cpu != "arm":
+            return True
+        return target.kernel in ("WINNT", "Darwin") or target.cpu == "x86_64"
+
+    set_config("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
+    set_define("MOZ_LIBAV_FFT", depends(when=libav_fft)(lambda: True))
+
 
 # Artifact builds need MOZ_FFVPX defined as if compilation happened.
 with only_when(compile_environment | artifact_builds):

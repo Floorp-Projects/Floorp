@@ -266,7 +266,7 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
 
   // Apply an inverse FFT to generate the time-domain table data.
   float* data = m_bandLimitedTables[rangeIndex]->Elements();
-  frame.GetInverse(data);
+  frame.GetInverseWithoutScaling(data);
 
   // For the first range (which has the highest power), calculate
   // its peak value then compute normalization scale.
