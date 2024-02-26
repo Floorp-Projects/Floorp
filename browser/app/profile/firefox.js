@@ -1096,7 +1096,10 @@ pref("privacy.sanitize.useOldClearHistoryDialog", false);
 pref("privacy.sanitize.useOldClearHistoryDialog", true);
 #endif
 
-pref("privacy.sanitize.sanitizeOnShutdown.hasMigratedToNewPrefs", false);
+pref("privacy.sanitize.clearOnShutdown.hasMigratedToNewPrefs", false);
+// flag to track migration of clear history dialog prefs, where cpd stands for
+// clear private data
+pref("privacy.sanitize.cpd.hasMigratedToNewPrefs", false);
 
 pref("privacy.panicButton.enabled",         true);
 

@@ -891,3 +891,50 @@ add_task(async function testClearingOptionsTelemetry() {
     `Expected ${telemetryObject} to be the same as ${expectedObject}`
   );
 });
+
+add_task(async function testClearHistoryCheckboxStatesAfterMigration() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.cpd.history", false],
+      ["privacy.cpd.formdata", true],
+      ["privacy.cpd.cookies", true],
+      ["privacy.cpd.offlineApps", false],
+      ["privacy.cpd.sessions", false],
+      ["privacy.cpd.siteSettings", false],
+      ["privacy.cpd.cache", true],
+      // Set cookiesAndStorage to verify that the pref is flipped in the test
+      ["privacy.clearHistory.cookiesAndStorage", false],
+      ["privacy.sanitize.cpd.hasMigratedToNewPrefs", false],
+    ],
+  });
+
+  let dh = new ClearHistoryDialogHelper("clearHistory");
+  dh.onload = function () {
+    this.validateCheckbox("cookiesAndStorage", true);
+    this.validateCheckbox("historyFormDataAndDownloads", false);
+    this.validateCheckbox("cache", true);
+    this.validateCheckbox("siteSettings", false);
+
+    this.checkPrefCheckbox("siteSettings", true);
+    this.checkPrefCheckbox("cookiesAndStorage", false);
+    this.acceptDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  is(
+    Services.prefs.getBoolPref("privacy.sanitize.cpd.hasMigratedToNewPrefs"),
+    true,
+    "Migration is complete for cpd branch"
+  );
+
+  // make sure the migration doesn't run again
+  dh = new ClearHistoryDialogHelper("clearHistory");
+  dh.onload = function () {
+    this.validateCheckbox("siteSettings", true);
+    this.validateCheckbox("cookiesAndStorage", false);
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+});
