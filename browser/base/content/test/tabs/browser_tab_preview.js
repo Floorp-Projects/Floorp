@@ -34,7 +34,7 @@ add_setup(async function () {
     set: [
       ["browser.tabs.cardPreview.enabled", true],
       ["browser.tabs.cardPreview.showThumbnails", false],
-      ["browser.tabs.cardPreview.delayMs", 0],
+      ["ui.tooltip.delay_ms", 0],
     ],
   });
 });
