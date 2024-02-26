@@ -18,6 +18,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SetClipboardSearchString: "resource://gre/modules/Finder.sys.mjs",
 });
@@ -66,6 +67,8 @@ export class PdfjsParent extends JSWindowActorParent {
         return this._addEventListener();
       case "PDFJS:Parent:saveURL":
         return this._saveURL(aMsg);
+      case "PDFJS:Parent:recordExposure":
+        return this._recordExposure();
     }
     return undefined;
   }
@@ -76,6 +79,10 @@ export class PdfjsParent extends JSWindowActorParent {
 
   get browser() {
     return this.browsingContext.top.embedderElement;
+  }
+
+  _recordExposure() {
+    lazy.NimbusFeatures.pdfjs.recordExposureEvent({ once: true });
   }
 
   _saveURL(aMsg) {
