@@ -8,4 +8,3 @@ skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesske
 fuzzy(0-1,0-4) skip-if(cocoaWidget||Android) == chrome://reftest/content/forms/textbox/accesskey-4.xhtml chrome://reftest/content/forms/textbox/accesskey-4-ref.xhtml
 skip-if(cocoaWidget||Android) != chrome://reftest/content/forms/textbox/accesskey-4.xhtml chrome://reftest/content/forms/textbox/accesskey-4-notref.xhtml
 skip-if(Android) == chrome://reftest/content/forms/textbox/align-baseline-1.xhtml chrome://reftest/content/forms/textbox/align-baseline-1-ref.xhtml # test for bug 494901
-skip-if(Android) == chrome://reftest/content/forms/textbox/setsize.xhtml chrome://reftest/content/forms/textbox/setsize-ref.xhtml
