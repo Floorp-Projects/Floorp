@@ -716,6 +716,7 @@ class ExtensionPageContextParent extends ProxyContextParent {
     if (this.viewType !== "background") {
       return this.appWindow;
     }
+    return undefined;
   }
 
   get tabId() {
@@ -724,6 +725,7 @@ class ExtensionPageContextParent extends ProxyContextParent {
     if (data.tabId >= 0) {
       return data.tabId;
     }
+    return undefined;
   }
 
   unload() {

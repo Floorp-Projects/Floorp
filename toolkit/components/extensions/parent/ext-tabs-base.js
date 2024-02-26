@@ -199,15 +199,16 @@ class TabBase {
   }
 
   /**
-   * @property {string | null} url
+   * @property {string | undefined} url
    *        Returns the current URL of this tab if the extension has permission
-   *        to read it, or null otherwise.
+   *        to read it, or undefined otherwise.
    *        @readonly
    */
   get url() {
     if (this.hasTabPermission) {
       return this._url;
     }
+    return undefined;
   }
 
   /**
@@ -230,15 +231,16 @@ class TabBase {
   }
 
   /**
-   * @property {nsIURI | null} title
+   * @property {nsIURI | undefined} title
    *        Returns the current title of this tab if the extension has permission
-   *        to read it, or null otherwise.
+   *        to read it, or undefined otherwise.
    *        @readonly
    */
   get title() {
     if (this.hasTabPermission) {
       return this._title;
     }
+    return undefined;
   }
 
   /**
@@ -253,15 +255,16 @@ class TabBase {
   }
 
   /**
-   * @property {nsIURI | null} faviconUrl
+   * @property {nsIURI | undefined} faviconUrl
    *        Returns the current faviron URL of this tab if the extension has permission
-   *        to read it, or null otherwise.
+   *        to read it, or undefined otherwise.
    *        @readonly
    */
   get favIconUrl() {
     if (this.hasTabPermission) {
       return this._favIconUrl;
     }
+    return undefined;
   }
 
   /**
@@ -1165,9 +1168,9 @@ class WindowBase {
   }
 
   /**
-   * @property {nsIURI | null} title
+   * @property {nsIURI | undefined} title
    *        Returns the current title of this window if the extension has permission
-   *        to read it, or null otherwise.
+   *        to read it, or undefined otherwise.
    *        @readonly
    */
   get title() {
@@ -1176,6 +1179,7 @@ class WindowBase {
     if (this.activeTab && this.activeTab.hasTabPermission) {
       return this._title;
     }
+    return undefined;
   }
 
   // The JSDoc validator does not support @returns tags in abstract functions or

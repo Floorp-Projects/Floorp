@@ -800,7 +800,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     checkThrows(function() { trickyObject.hasOwnProperty = 33; }, /shadow/,
                 "Should reject shadowing of pre-existing inherited properties over Xrays");
 
-    checkThrows(function() { Object.defineProperty(trickyObject, 'rejectedProp', { get() {}}); },
+    checkThrows(function() { Object.defineProperty(trickyObject, 'rejectedProp', { get() { return undefined; }}); },
                 /accessor property/, "Should reject accessor property definition");
   }
 
