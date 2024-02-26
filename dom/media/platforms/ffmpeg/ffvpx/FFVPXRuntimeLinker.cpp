@@ -145,19 +145,13 @@ already_AddRefed<PlatformEncoderModule> FFVPXRuntimeLinker::CreateEncoder() {
 }
 
 /* static */
-void FFVPXRuntimeLinker::GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs) {
+void FFVPXRuntimeLinker::GetFFTFuncs(FFmpegFFTFuncs* aOutFuncs) {
   []() MOZ_NO_THREAD_SAFETY_ANALYSIS {
     MOZ_ASSERT(sLinkStatus != LinkStatus_INIT);
   }();
-  if (sFFVPXLib.av_rdft_init && sFFVPXLib.av_rdft_calc &&
-      sFFVPXLib.av_rdft_end) {
-    aOutFuncs->init = sFFVPXLib.av_rdft_init;
-    aOutFuncs->calc = sFFVPXLib.av_rdft_calc;
-    aOutFuncs->end = sFFVPXLib.av_rdft_end;
-  } else {
-    NS_WARNING("RDFT functions expected but not found");
-    *aOutFuncs = FFmpegRDFTFuncs();  // zero
-  }
+  MOZ_ASSERT(sFFVPXLib.av_tx_init && sFFVPXLib.av_tx_uninit);
+  aOutFuncs->init = sFFVPXLib.av_tx_init;
+  aOutFuncs->uninit = sFFVPXLib.av_tx_uninit;
 }
 
 }  // namespace mozilla
