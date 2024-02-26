@@ -370,6 +370,22 @@ void WebRenderScrollData::ApplyUpdates(ScrollUpdatesMap&& aUpdates,
   mPaintSequenceNumber = aPaintSequenceNumber;
 }
 
+void WebRenderScrollData::PrependUpdates(
+    const WebRenderScrollData& aPreviousData) {
+  for (auto previousMetadata : aPreviousData.mScrollMetadatas) {
+    const nsTArray<ScrollPositionUpdate>& previousUpdates =
+        previousMetadata.GetScrollUpdates();
+    if (previousUpdates.IsEmpty()) {
+      continue;
+    }
+
+    if (Maybe<size_t> index =
+            HasMetadataFor(previousMetadata.GetMetrics().GetScrollId())) {
+      mScrollMetadatas[*index].PrependUpdates(previousUpdates);
+    }
+  }
+}
+
 void WebRenderScrollData::DumpSubtree(std::ostream& aOut, size_t aIndex,
                                       const std::string& aIndent) const {
   aOut << aIndent;
