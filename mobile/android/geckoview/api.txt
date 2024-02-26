@@ -2683,6 +2683,8 @@ package org.mozilla.geckoview {
     field public final boolean isRecommended;
     field @Nullable public final String name;
     field public final boolean openOptionsPageInTab;
+    field @NonNull public final String[] optionalOrigins;
+    field @NonNull public final String[] optionalPermissions;
     field @Nullable public final String optionsPageUrl;
     field @NonNull public final String[] origins;
     field @NonNull public final String[] permissions;
