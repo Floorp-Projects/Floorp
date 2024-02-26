@@ -214,7 +214,7 @@ void main(void) {
     Instance instance = decode_instance_attributes();
     PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
     Transform transform = fetch_transform(ph.transform_id);
-    PictureTask task = fetch_picture_task(instance.picture_task_address);
+    PictureTask task = fetch_picture_task(ph.picture_task_address);
     ClipArea clip_area = fetch_clip_area(instance.clip_address);
 
     WR_VERTEX_SHADER_MAIN_FUNCTION(instance, ph, transform, task, clip_area);
