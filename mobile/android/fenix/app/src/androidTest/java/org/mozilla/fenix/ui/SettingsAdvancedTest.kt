@@ -5,16 +5,10 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -22,6 +16,8 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -31,30 +27,13 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 
-class SettingsAdvancedTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
+class SettingsAdvancedTest : TestSetup() {
     private val youTubeSchemaLink = itemContainingText("Youtube schema link")
-    private val youTubeFullLink = itemContainingText("Youtube full link")
     private val playStoreLink = itemContainingText("Playstore link")
     private val playStoreUrl = "play.google.com"
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2092699
     // Walks through settings menu and sub-menus to ensure all items are present

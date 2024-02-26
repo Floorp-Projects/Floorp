@@ -13,8 +13,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.AppAndSystemHelper.resetSystemLocaleToEnUS
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.AppAndSystemHelper.setSystemLocale
 import org.mozilla.fenix.helpers.DataGenerationHelper.setTextToClipBoard
@@ -28,14 +26,14 @@ import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.EngineShortcut
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
 import java.util.Locale
 
-class SettingsSearchTest {
-    private lateinit var mockWebServer: MockWebServer
+class SettingsSearchTest : TestSetup() {
     private lateinit var searchMockServer: MockWebServer
     private val defaultSearchEngineList =
         listOf(
@@ -50,12 +48,8 @@ class SettingsSearchTest {
     ) { it.activity }
 
     @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-
+    override fun setUp() {
+        super.setUp()
         searchMockServer = MockWebServer().apply {
             dispatcher = SearchDispatcher()
             start()
@@ -63,9 +57,9 @@ class SettingsSearchTest {
     }
 
     @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-        resetSystemLocaleToEnUS()
+    override fun tearDown() {
+        super.tearDown()
+        searchMockServer.shutdown()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2203333

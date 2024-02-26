@@ -11,11 +11,12 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
-class SettingsHTTPSOnlyModeTest {
+class SettingsHTTPSOnlyModeTest : TestSetup() {
     private val httpPageUrl = "http://example.com/"
     private val httpsPageUrl = "https://example.com/"
     private val insecureHttpPage = "http.badssl.com"

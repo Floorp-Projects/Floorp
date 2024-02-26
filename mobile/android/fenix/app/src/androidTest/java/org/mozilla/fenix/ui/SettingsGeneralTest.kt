@@ -4,17 +4,12 @@
 
 package org.mozilla.fenix.ui
 
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.AppAndSystemHelper
 import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
@@ -23,6 +18,7 @@ import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
@@ -35,25 +31,9 @@ import java.util.Locale
  *  Tests for verifying the General section of the Settings menu
  *
  */
-class SettingsGeneralTest {
-    private lateinit var mockWebServer: MockWebServer
-
+class SettingsGeneralTest : TestSetup() {
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
-
-    @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-        AppAndSystemHelper.resetSystemLocaleToEnUS()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2092697
     @Test

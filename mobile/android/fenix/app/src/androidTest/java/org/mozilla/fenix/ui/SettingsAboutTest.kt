@@ -4,18 +4,13 @@
 
 package org.mozilla.fenix.ui
 
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.clickRateButtonGooglePlay
 import org.mozilla.fenix.ui.robots.homeScreen
 
@@ -24,30 +19,13 @@ import org.mozilla.fenix.ui.robots.homeScreen
  *
  */
 
-class SettingsAboutTest {
-    private lateinit var mDevice: UiDevice
-    private lateinit var mockWebServer: MockWebServer
-
+class SettingsAboutTest : TestSetup() {
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
 
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
-
-    @Before
-    fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // Walks through the About settings menu to ensure all items are present
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2092700

@@ -7,17 +7,11 @@ package org.mozilla.fenix.ui
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.filters.SdkSuppress
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
@@ -25,6 +19,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getMutedVideoPageAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getVideoPageAsset
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -36,13 +31,11 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  - the settings effects on the app behavior
  *
  */
-class SettingsSitePermissionsTest {
+class SettingsSitePermissionsTest : TestSetup() {
     /* Test page created and handled by the Mozilla mobile test-eng team */
     private val permissionsTestPage = "https://mozilla-mobile.github.io/testapp/v2.0/permissions"
     private val permissionsTestPageHost = "https://mozilla-mobile.github.io"
     private val testPageSubstring = "https://mozilla-mobile.github.io:443"
-    private lateinit var mockWebServer: MockWebServer
-    private lateinit var browserStore: BrowserStore
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule(
@@ -51,23 +44,6 @@ class SettingsSitePermissionsTest {
         isTCPCFREnabled = false,
         isDeleteSitePermissionsEnabled = true,
     )
-
-    @Before
-    fun setUp() {
-        // Initializing this as part of class construction, below the rule would throw a NPE
-        // So we are initializing this here instead of in all tests.
-        browserStore = activityTestRule.activity.components.core.store
-
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/246974
     @Test

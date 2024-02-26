@@ -5,38 +5,20 @@
 package org.mozilla.fenix.ui
 
 import android.content.res.Configuration
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
 import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
+import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
-class SettingsCustomizeTest {
-    private lateinit var mockWebServer: MockWebServer
-
+class SettingsCustomizeTest : TestSetup() {
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
-
-    @Before
-    fun setUp() {
-        mockWebServer = MockWebServer().apply {
-            dispatcher = AndroidAssetDispatcher()
-            start()
-        }
-    }
-
-    @After
-    fun tearDown() {
-        mockWebServer.shutdown()
-    }
 
     private fun getUiTheme(): Boolean {
         val mode =
