@@ -259,6 +259,15 @@ class QATests(SnapTestsBase):
         self._wait.until(lambda d: pdf_div.is_displayed() is True)
         return pdf_div
 
+    def is_esr(self):
+        self._driver.set_context("chrome")
+        update_channel = self._driver.execute_script(
+            "return Services.prefs.getStringPref('app.update.channel');"
+        )
+        self._logger.info("Update channel: {}".format(update_channel))
+        self._driver.set_context("content")
+        return update_channel == "esr"
+
     def pdf_get_page(self, page, long=False):
         waiter = self._longwait if long is True else self._wait
         page = waiter.until(
@@ -267,16 +276,26 @@ class QATests(SnapTestsBase):
             )
         )
 
-        self._wait.until(
-            lambda d: d.execute_script(
-                'return window.getComputedStyle(document.querySelector(".loadingInput.start"), "::after").getPropertyValue("visibility");'
+        if not self.is_esr():
+            self._wait.until(
+                lambda d: d.execute_script(
+                    'return window.getComputedStyle(document.querySelector(".loadingInput.start"), "::after").getPropertyValue("visibility");'
+                )
+                != "visible"
             )
-            != "visible"
-        )
+            # PDF.js can take time to settle and we don't have a nice way to wait
+            # for an event on it
+            time.sleep(1)
+        else:
+            self._logger.info("Running against ESR, just wait too much.")
+            # Big but let's be safe, this is only for ESR because its PDF.js
+            # does not have "<span class='loadingInput start'>"
+            time.sleep(10)
 
-        # PDF.js can take time to settle and we don't have a nice way to wait
-        # for an event on it
-        time.sleep(1)
+        # Rendering can be slower on debug build so give more time to settle
+        if self.is_debug_build():
+            time.sleep(3)
+
         return page
 
     def pdf_go_to_page(self, page):
@@ -390,10 +409,37 @@ class QATests(SnapTestsBase):
             if menu_id == "pageRotateCw" or menu_id == "pageRotateCcw":
                 secondary_menu.click()
 
-            time.sleep(0.2)
+            time.sleep(0.75)
 
             self._logger.info("assert {}".format(menu_id))
-            self.assert_rendering(exp[menu_id], self._driver)
+            if self.is_esr() and menu_id == "documentProperties":
+                # on ESR pdf.js misreports in mm instead of inches
+                title = self._wait.until(
+                    EC.visibility_of_element_located((By.ID, "titleField"))
+                )
+                author = self._wait.until(
+                    EC.visibility_of_element_located((By.ID, "authorField"))
+                )
+                subject = self._wait.until(
+                    EC.visibility_of_element_located((By.ID, "subjectField"))
+                )
+                version = self._wait.until(
+                    EC.visibility_of_element_located((By.ID, "versionField"))
+                )
+                assert title.text == "PDF", "Incorrect PDF title reported: {}".format(
+                    title
+                )
+                assert (
+                    author.text == "Software 995"
+                ), "Incorrect PDF author reported: {}".format(author)
+                assert (
+                    subject.text == "Create PDF with Pdf 995"
+                ), "Incorrect PDF subject reported: {}".format(subject)
+                assert (
+                    version.text == "1.3"
+                ), "Incorrect PDF version reported: {}".format(version)
+            else:
+                self.assert_rendering(exp[menu_id], self._driver)
 
             if menu_id == "documentProperties":
                 close = self._wait.until(
@@ -459,7 +505,7 @@ class QATests(SnapTestsBase):
 
         for zoom, page, ref in zoom_levels:
             self.pdf_select_zoom(zoom)
-            self.pdf_get_page(page)
+            self.pdf_get_page(page, long=True)
             self._logger.info("assert {}".format(ref))
             self.assert_rendering(exp[ref], self._driver)
 
