@@ -9,9 +9,6 @@ JAR_MANIFESTS += ["jar.mn"]
 # If DIST_SUBDIR ever gets unset in browser this path might be wrong due to PREF_DIR changing.
 LOCALIZED_PP_FILES.defaults.preferences += ["en-US/firefox-l10n.js"]
 
-if CONFIG["MOZ_CRASHREPORTER"]:
-    LOCALIZED_FILES += ["en-US/crashreporter/crashreporter-override.ini"]
-
 if CONFIG["MOZ_UPDATER"]:
     LOCALIZED_GENERATED_FILES += ["updater.ini"]
     updater = LOCALIZED_GENERATED_FILES["updater.ini"]
