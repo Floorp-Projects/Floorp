@@ -9223,12 +9223,6 @@
   value: true
   mirror: always
 
-# Handle scroll-anchoring adjustments as absolute scroll position updates.
-- name: layout.css.scroll-anchoring.absolute-update
-  type: bool
-  value: true
-  mirror: always
-
 # Are shared memory User Agent style sheets enabled?
 - name: layout.css.shared-memory-ua-sheets.enabled
   type: bool

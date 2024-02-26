@@ -520,7 +520,7 @@ template <>
 struct ParamTraits<mozilla::ScrollUpdateType>
     : public ContiguousEnumSerializerInclusive<
           mozilla::ScrollUpdateType, mozilla::ScrollUpdateType::Absolute,
-          mozilla::ScrollUpdateType::MergeableAbsolute> {};
+          mozilla::ScrollUpdateType::PureRelative> {};
 
 template <>
 struct ParamTraits<mozilla::ScrollMode>

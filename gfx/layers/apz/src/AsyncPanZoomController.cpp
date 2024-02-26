@@ -5732,20 +5732,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       relativeDelta =
           Some(Metrics().ApplyPureRelativeScrollUpdateFrom(scrollUpdate));
       Metrics().RecalculateLayoutViewportOffset();
-    } else if (scrollUpdate.GetType() == ScrollUpdateType::MergeableAbsolute) {
-      APZC_LOG("%p mergeable updating scroll offset from %s to %s\n", this,
-               ToString(Metrics().GetVisualScrollOffset()).c_str(),
-               ToString(scrollUpdate.GetDestination()).c_str());
-      relativeDelta =
-          Some(Metrics().ApplyAbsoluteScrollUpdateFrom(scrollUpdate).second);
-      Metrics().RecalculateLayoutViewportOffset();
-      scrollOffsetUpdated = true;
     } else {
       APZC_LOG("%p updating scroll offset from %s to %s\n", this,
                ToString(Metrics().GetVisualScrollOffset()).c_str(),
                ToString(scrollUpdate.GetDestination()).c_str());
-      auto [offsetChanged, _] =
-          Metrics().ApplyAbsoluteScrollUpdateFrom(scrollUpdate);
+      bool offsetChanged = Metrics().ApplyScrollUpdateFrom(scrollUpdate);
       Metrics().RecalculateLayoutViewportOffset();
 
       if (offsetChanged || scrollUpdate.GetMode() != ScrollMode::Instant ||
