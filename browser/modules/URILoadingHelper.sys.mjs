@@ -563,7 +563,7 @@ export const URILoadingHelper = {
         let IsWindowFloorpSpecial = FloorpServices.wm.IsFloorpSpecialWindow(w);
         if (
           Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled") &&
-          !IsWindowFloorpSpecial
+          IsWindowFloorpSpecial
         ) {
           if (FloorpServices.wm.getRecentWindowExcludeFloorpSpecialWindows()) {
             w = FloorpServices.wm.getRecentWindowExcludeFloorpSpecialWindows();
