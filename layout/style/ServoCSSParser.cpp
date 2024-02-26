@@ -33,6 +33,16 @@ bool ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
 }
 
 /* static */
+bool ServoCSSParser::ColorTo(const nsACString& aFromColor,
+                             const nsACString& aToColorSpace,
+                             nsACString* aResultColor,
+                             nsTArray<float>* aResultComponents,
+                             bool* aResultAdjusted, css::Loader* aLoader) {
+  return Servo_ColorTo(&aFromColor, &aToColorSpace, aResultColor,
+                       aResultComponents, aResultAdjusted, aLoader);
+}
+
+/* static */
 already_AddRefed<StyleLockedDeclarationBlock> ServoCSSParser::ParseProperty(
     nsCSSPropertyID aProperty, const nsACString& aValue,
     const ParsingEnvironment& aParsingEnvironment,

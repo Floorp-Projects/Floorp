@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test InspectorUtils::ColorTo</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  const kEpsilon = 0.001;
+
+  const chocolate = "color(srgb 0.8235294117647058 0.4117647058823529 0.11764705882352941)";
+  const chocolateAlpha = "color(srgb 0.8235294117647058 0.4117647058823529 0.11764705882352941 / 0.4)";
+  const noneColor = "color(srgb none none none / none)";
+
+  testColor(chocolate, "srgb", "rgb(82.35% 41.18% 11.76%)", [0.8235, 0.4118, 0.1176, 1], false);
+  testColor(chocolateAlpha, "srgb", "rgb(82.35% 41.18% 11.76% / 0.4)", [0.8235, 0.4118, 0.1176, 0.4], false);
+  testColor(noneColor, "srgb", "rgb(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "hsl", "hsl(25deg 75% 47.06%)", [25, 75, 47.0588, 1], false);
+  testColor(chocolateAlpha, "hsl", "hsl(25deg 75% 47.06% / 0.4)", [25, 75, 47.0588, 0.4], false);
+  testColor(noneColor, "hsl", "hsl(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "hwb", "hwb(25deg 11.76% 17.65%)", [25, 11.7647, 17.6471, 1], false);
+  testColor(chocolateAlpha, "hwb", "hwb(25deg 11.76% 17.65% / 0.4)", [25, 11.7647, 17.6471, 0.4], false);
+  testColor(noneColor, "hwb", "hwb(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "lab", "lab(56.63% 39.24 57.55)", [56.6293, 39.2371, 57.5538, 1], false);
+  testColor(chocolateAlpha, "lab", "lab(56.63% 39.24 57.55 / 0.4)", [56.6293, 39.2371, 57.5538, 0.4], false);
+  testColor(noneColor, "lab", "lab(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "lch", "lch(56.63 69.66 55.72deg)", [56.6293, 69.6562, 55.7159, 1], false);
+  testColor(chocolateAlpha, "lch", "lch(56.63 69.66 55.72deg / 0.4)", [56.6293, 69.6562, 55.7159, 0.4], false);
+  testColor(noneColor, "lch", "lch(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "oklab", "oklab(63.44% 0.1 0.12)", [0.6344, 0.0991, 0.1192, 1], false);
+  testColor(chocolateAlpha, "oklab", "oklab(63.44% 0.1 0.12 / 0.4)", [0.6344, 0.0991, 0.1192, 0.4], false);
+  testColor(noneColor, "oklab", "oklab(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "oklch", "oklch(0.63 0.15 50.27deg)", [0.6344, 0.1550, 50.2665, 1], false);
+  testColor(chocolateAlpha, "oklch", "oklch(0.63 0.15 50.27deg / 0.4)", [0.6344, 0.1550, 50.2665, 0.4], false);
+  testColor(noneColor, "oklch", "oklch(none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "srgb-linear", "color(srgb-linear 0.64 0.14 0.01)", [0.6445, 0.1413, 0.0130, 1], false);
+  testColor(chocolateAlpha, "srgb-linear", "color(srgb-linear 0.64 0.14 0.01 / 0.4)", [0.6445, 0.1413, 0.0130, 0.4], false);
+  testColor(noneColor, "srgb-linear", "color(srgb-linear none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "display-p3", "color(display-p3 0.77 0.43 0.2)", [0.7706, 0.434, 0.1998, 1], false);
+  testColor(chocolateAlpha, "display-p3", "color(display-p3 0.77 0.43 0.2 / 0.4)", [0.7706, 0.434, 0.1998, 0.4], false);
+  testColor(noneColor, "display-p3", "color(display-p3 none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "a98-rgb", "color(a98-rgb 0.73 0.41 0.16)", [0.7304, 0.4107, 0.162, 1], false);
+  testColor(chocolateAlpha, "a98-rgb", "color(a98-rgb 0.73 0.41 0.16 / 0.4)", [0.7304, 0.4107, 0.162, 0.4], false);
+  testColor(noneColor, "a98-rgb", "color(a98-rgb none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "prophoto-rgb", "color(prophoto-rgb 0.59 0.39 0.16)", [0.5923, 0.3941, 0.1643, 1], false);
+  testColor(chocolateAlpha, "prophoto-rgb", "color(prophoto-rgb 0.59 0.39 0.16 / 0.4)", [0.5923, 0.3941, 0.1643, 0.4], false);
+  testColor(noneColor, "prophoto-rgb", "color(prophoto-rgb none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "rec2020", "color(rec2020 0.67 0.4 0.14)", [0.6693, 0.4019, 0.1427, 1], false);
+  testColor(chocolateAlpha, "rec2020", "color(rec2020 0.67 0.4 0.14 / 0.4)", [0.6693, 0.4019, 0.1427, 0.4], false);
+  testColor(noneColor, "rec2020", "color(rec2020 none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "xyz-d50", "color(xyz-d50 0.34 0.25 0.03)", [0.3373, 0.2454, 0.032, 1], false);
+  testColor(chocolateAlpha, "xyz-d50", "color(xyz-d50 0.34 0.25 0.03 / 0.4)", [0.3373, 0.2454, 0.032, 0.4], false);
+  testColor(noneColor, "xyz-d50", "color(xyz-d50 none none none / none)", [0, 0, 0, 0], false);
+
+  testColor(chocolate, "xyz-d65", "color(xyz-d65 0.32 0.24 0.04)", [0.3186, 0.239, 0.0416, 1], false);
+  testColor(chocolateAlpha, "xyz-d65", "color(xyz-d65 0.32 0.24 0.04 / 0.4)", [0.3186, 0.239, 0.0416, 0.4], false);
+  testColor(noneColor, "xyz-d65", "color(xyz-d65 none none none / none)", [0, 0, 0, 0], false);
+
+  testColor("color(srgb calc(NaN) calc(NaN) calc(NaN) / calc(NaN))", "srgb", "rgb(0% 0% 0% / 0)", [NaN, NaN, NaN, 0], false);
+
+  // Invalid color.
+  testColor("darkblueorange", "srgb", null, null, null);
+  testColor("rgb(none, none, none)", "lab", null, null, null);
+  testColor(null, "lab", null, null, null);
+
+  // Invalid color spaces.
+  testColor(chocolate, "something", null, null, null);
+  testColor(chocolate, "", null, null, null);
+  testColor(chocolate, null, null, null, null);
+
+  function testColor(color, colorSpace, expected, expectedComponents, expectedAdjust) {
+    let actual = InspectorUtils.colorTo(color, colorSpace);
+
+    // If we only get 3 elements for the expected components, we just add the
+    // default alpha.
+    if (expectedComponents && expectedComponents.length === 3) {
+      expectedComponents.push(1);
+    }
+
+    if (actual === null) {
+      is(expected, null, "color: converting \"" + color + "\" to \"" + colorSpace + "\" returns null");
+      return;
+    }
+
+    is(actual.color, expected, "color is correctly converted to \"" + colorSpace + "\"");
+    for (let i = 0; i < 4; i++) {
+      if (isNaN(expectedComponents[i])) {
+        is(isNaN(actual.components[i]), true, "component " + i + " is NaN when converting to \"" + colorSpace + "\"");
+      } else {
+        isfuzzy(actual.components[i], expectedComponents[i], kEpsilon, "component " + i + " when converting to \"" + colorSpace + "\"");
+      }
+    }
+    is(actual.adjusted, expectedAdjust, "color adjusted status currect");
+  }
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

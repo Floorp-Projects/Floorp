@@ -80,6 +80,27 @@ class ServoCSSParser {
                            css::Loader* aLoader = nullptr);
 
   /**
+  * Takes a CSS <color> and convert it to another color space.
+  *
+  * @param aStyleSet The style set whose nsPresContext will be used to
+  *   compute system colors and other special color values.
+  * @param aFromColor The CSS <color> we use to convert from.
+  * @param aToColorSpace The CSS <color-space> to convert the color into.
+  * @param aResultColor The resulting converted color value.
+  * @param aResultAdjusted Whether the color was adjusted to fit into the SRGB
+      color space.
+  * @param aLoader The CSS loader for document we're parsing a color for,
+  *   so that parse errors can be reported to the console. If nullptr, errors
+  *   won't be reported to the console.
+  * @return Whether aFromColor and aToColorSpace was successfully parsed and
+  *   aResultColor and aResultAdjusted was set.
+  */
+  static bool ColorTo(const nsACString& aFromColor,
+                      const nsACString& aToColorSpace, nsACString* aResultColor,
+                      nsTArray<float>* aResultComponents, bool* aResultAdjusted,
+                      css::Loader* aLoader = nullptr);
+
+  /**
    * Parse a string representing a CSS property value into a
    * StyleLockedDeclarationBlock.
    *

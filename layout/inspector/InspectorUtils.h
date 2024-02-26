@@ -118,6 +118,11 @@ class InspectorUtils {
                           const Document*,
                           Nullable<InspectorRGBATuple>& aResult);
 
+  // Convert a given CSS color string to another color space.
+  static void ColorTo(GlobalObject&, const nsACString& aFromColor,
+                      const nsACString& aToColorSpace,
+                      Nullable<InspectorColorToResult>& aResult);
+
   // Check whether a given color is a valid CSS color.
   static bool IsValidCSSColor(GlobalObject& aGlobal,
                               const nsACString& aColorString);
