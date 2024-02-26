@@ -1086,6 +1086,20 @@ fullPageTranslationAutomaticPopup:
         branch: user
         pref: browser.translations.automaticallyPopup
 
+pdfjs:
+  description: The Firefox pdf reader.
+  owner: pdfjs-team@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    Exposure is sent each time a pdf is displayed.
+  variables:
+    addHighlight:
+      description: Set to true to highlight some text or something else in an existing pdf.
+      type: boolean
+      setPref:
+        branch: default
+        pref: pdfjs.enableHighlightEditor
+
 addAnImageInPDF:
   description: Add an image in an existing pdf.
   owner: cdenizet@mozilla.com
