@@ -132,8 +132,6 @@ module.exports = {
     "no-cond-assign": 2,
     // Allow using the console API.
     "no-console": 0,
-    // Allow using constant expressions in conditions like while (true)
-    "no-constant-condition": 0,
     // Allow use of the continue statement.
     "no-continue": 0,
     // Disallow control characters in regular expressions.

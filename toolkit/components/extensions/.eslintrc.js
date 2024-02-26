@@ -123,9 +123,6 @@ module.exports = {
     // Disallow using the console API.
     "no-console": "error",
 
-    // Allow using constant expressions in conditions like while (true)
-    "no-constant-condition": "off",
-
     // Allow use of the continue statement.
     "no-continue": "off",
 
