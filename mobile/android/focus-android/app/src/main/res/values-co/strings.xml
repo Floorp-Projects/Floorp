@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Sparte cù</string>
 
     <string name="notification_erase_title_android_14">Squassà a cronolugia di navigazione ?</string>
-    <string name="notification_erase_text_android_14">Picchichjate o spazzate sta nutificazione per squassà di manera sicura a vostra cronolugia di navigazione.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Picchichjate o spazzate sta nutificazione per squassà di manera sicura a vostra cronolugia di navigazione.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Picchichjate sta nutificazione o fatela sguillà per squassà di manera sicura a vostra cronolugia di navigazione.</string>
 
     <string name="notification_erase_text">Squassà a cronolugia di navigazione</string>
 
