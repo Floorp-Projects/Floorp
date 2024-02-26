@@ -52,7 +52,7 @@ def save_patch_stack(
     # remove the commit summary from the file name
     patches_to_rename = os.listdir(patch_directory)
     for file in patches_to_rename:
-        shortened_name = re.sub("^(\d\d\d\d)-.*\.patch", "\\1.patch", file)
+        shortened_name = re.sub(r"^(\d\d\d\d)-.*\.patch", "\\1.patch", file)
         os.rename(
             os.path.join(patch_directory, file),
             os.path.join(patch_directory, shortened_name),

@@ -1111,7 +1111,7 @@ def make_regexp_space_test(version, test_space_table, codepoint_table):
         test_space.write(",\n".join(map(hex_and_name, test_space_table)))
         test_space.write("\n);\n")
         test_space.write(
-            """
+            r"""
 assertEq(/^\s+$/.exec(onlySpace) !== null, true);
 assertEq(/^[\s]+$/.exec(onlySpace) !== null, true);
 assertEq(/^[^\s]+$/.exec(onlySpace) === null, true);

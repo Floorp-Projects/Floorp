@@ -378,8 +378,8 @@ def add_test_data(logger, wpt_meta, dir_path, test, subtest, test_data):
                     meta.set(test, subtest, product="firefox", bug_url=bug_link)
 
 
-bugzilla_re = re.compile("https://bugzilla\.mozilla\.org/show_bug\.cgi\?id=\d+")
-bug_re = re.compile("(?:[Bb][Uu][Gg])?\s*(\d+)")
+bugzilla_re = re.compile(r"https://bugzilla\.mozilla\.org/show_bug\.cgi\?id=\d+")
+bug_re = re.compile(r"(?:[Bb][Uu][Gg])?\s*(\d+)")
 
 
 def get_bug_link(value):

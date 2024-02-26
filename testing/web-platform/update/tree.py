@@ -157,13 +157,13 @@ class GeckoCommitMessage(CommitMessage):
     # than just enforce a general pattern.
 
     _bug_re = re.compile(
-        "^Bug (\d+)[^\w]*(?:Part \d+[^\w]*)?(.*?)\s*(?:r=(\w*))?$", re.IGNORECASE
+        r"^Bug (\d+)[^\w]*(?:Part \d+[^\w]*)?(.*?)\s*(?:r=(\w*))?$", re.IGNORECASE
     )
 
     _backout_re = re.compile(
-        "^(?:Back(?:ing|ed)\s+out)|Backout|(?:Revert|(?:ed|ing))", re.IGNORECASE
+        r"^(?:Back(?:ing|ed)\s+out)|Backout|(?:Revert|(?:ed|ing))", re.IGNORECASE
     )
-    _backout_sha1_re = re.compile("(?:\s|\:)(0-9a-f){12}")
+    _backout_sha1_re = re.compile(r"(?:\s|\:)(0-9a-f){12}")
 
     def _parse_message(self):
         CommitMessage._parse_message(self)

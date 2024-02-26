@@ -174,7 +174,7 @@ class LoadCommits(Step):
         )
 
         update_regexp = re.compile(
-            "Bug \d+ - Update web-platform-tests to revision [0-9a-f]{40}"
+            r"Bug \d+ - Update web-platform-tests to revision [0-9a-f]{40}"
         )
 
         state.has_backouts = False

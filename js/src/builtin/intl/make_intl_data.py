@@ -2213,7 +2213,7 @@ def listIANAFiles(tzdataDir):
 
 def readIANAFiles(tzdataDir, files):
     """Read all IANA time zone files from the given iterable."""
-    nameSyntax = "[\w/+\-]+"
+    nameSyntax = r"[\w/+\-]+"
     pZone = re.compile(r"Zone\s+(?P<name>%s)\s+.*" % nameSyntax)
     pLink = re.compile(
         r"Link\s+(?P<target>%s)\s+(?P<name>%s)(?:\s+#.*)?" % (nameSyntax, nameSyntax)
@@ -2310,7 +2310,7 @@ def readICUResourceFile(filename):
         maybeMultiComments = r"(?:/\*[^*]*\*/)*"
         maybeSingleComment = r"(?://.*)?"
         lineStart = "^%s" % maybeMultiComments
-        lineEnd = "%s\s*%s$" % (maybeMultiComments, maybeSingleComment)
+        lineEnd = r"%s\s*%s$" % (maybeMultiComments, maybeSingleComment)
         return re.compile(r"\s*".join(chain([lineStart], args, [lineEnd])))
 
     tableName = r'(?P<quote>"?)(?P<name>.+?)(?P=quote)'
@@ -2554,7 +2554,7 @@ def icuTzDataVersion(icuTzDir):
     zoneinfo = os.path.join(icuTzDir, "zoneinfo64.txt")
     if not os.path.isfile(zoneinfo):
         raise RuntimeError("file not found: %s" % zoneinfo)
-    version = searchInFile("^//\s+tz version:\s+([0-9]{4}[a-z])$", zoneinfo)
+    version = searchInFile(r"^//\s+tz version:\s+([0-9]{4}[a-z])$", zoneinfo)
     if version is None:
         raise RuntimeError(
             "%s does not contain a valid tzdata version string" % zoneinfo
@@ -3711,7 +3711,7 @@ const allUnits = {};
 """.format(
             all_units_array
         )
-        + """
+        + r"""
 // Test only sanctioned unit identifiers are allowed.
 
 for (const typeAndUnit of allUnits) {

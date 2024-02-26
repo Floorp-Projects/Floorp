@@ -112,12 +112,12 @@ def collect_jsm(files):
 
     # js files with EXPORTED_SYMBOLS
     if mode == "hg":
-        cmd = ["hg", "files", "set:grep('EXPORTED_SYMBOLS = \[') and glob:**/*.js"]
+        cmd = ["hg", "files", r"set:grep('EXPORTED_SYMBOLS = \[') and glob:**/*.js"]
         for line in run(cmd):
             put_file(files, kind, pathlib.Path(line))
     else:
         handled = {}
-        cmd = ["git", "grep", "EXPORTED_SYMBOLS = \[", "*.js"]
+        cmd = ["git", "grep", r"EXPORTED_SYMBOLS = \[", "*.js"]
         for line in run(cmd):
             m = re.search("^([^:]+):", line)
             if not m:

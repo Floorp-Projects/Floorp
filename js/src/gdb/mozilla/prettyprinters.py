@@ -271,7 +271,7 @@ def implemented_types(t):
         yield t2
 
 
-template_regexp = re.compile("([\w_:]+)<")
+template_regexp = re.compile(r"([\w_:]+)<")
 
 
 def is_struct_or_union(t):

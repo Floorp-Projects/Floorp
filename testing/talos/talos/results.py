@@ -311,7 +311,7 @@ class BrowserLogResults(object):
 
     # regular expression for responsiveness results
     RESULTS_RESPONSIVENESS_REGEX = re.compile(
-        "MOZ_EVENT_TRACE\ssample\s\d*?\s(\d*\.?\d*)$", re.DOTALL | re.MULTILINE
+        r"MOZ_EVENT_TRACE\ssample\s\d*?\s(\d*\.?\d*)$", re.DOTALL | re.MULTILINE
     )
 
     # classes for results types

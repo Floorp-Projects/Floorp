@@ -10,7 +10,7 @@ class STRIP_LABEL(TransformPattern):
     # Used to remove `<label data-l10n-name="remove-search-engine-article">` from a string
     def visit_TextElement(self, node):
         node.value = re.sub(
-            '\s?<label data-l10n-name="remove-search-engine-article">.+?</label>\s?',
+            r'\s?<label data-l10n-name="remove-search-engine-article">.+?</label>\s?',
             "",
             node.value,
         )

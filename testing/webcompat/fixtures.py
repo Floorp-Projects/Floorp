@@ -125,7 +125,7 @@ def config_file(request):
 
 @pytest.fixture
 def bug_number(request):
-    return re.findall("\d+", str(request.fspath.basename))[0]
+    return re.findall(r"\d+", str(request.fspath.basename))[0]
 
 
 @pytest.fixture

@@ -46,13 +46,13 @@ def toggle_beta_status(is_beta):
     check_files_exist()
     if (is_beta):
         print("adding Beta status to version numbers")
-        sed_inplace('s/^\(#define *PR_VERSION *\"[0-9.]\+\)\" *$/\\1 Beta\"/', prinit_h)
-        sed_inplace('s/^\(#define *PR_BETA *\)PR_FALSE *$/\\1PR_TRUE/', prinit_h)
+        sed_inplace('s/^\\(#define *PR_VERSION *\"[0-9.]\\+\\)\" *$/\\1 Beta\"/', prinit_h)
+        sed_inplace('s/^\\(#define *PR_BETA *\\)PR_FALSE *$/\\1PR_TRUE/', prinit_h)
 
     else:
         print("removing Beta status from version numbers")
-        sed_inplace('s/^\(#define *PR_VERSION *\"[0-9.]\+\) *Beta\" *$/\\1\"/', prinit_h)
-        sed_inplace('s/^\(#define *PR_BETA *\)PR_TRUE *$/\\1PR_FALSE/', prinit_h)
+        sed_inplace('s/^\\(#define *PR_VERSION *\"[0-9.]\\+\\) *Beta\" *$/\\1\"/', prinit_h)
+        sed_inplace('s/^\\(#define *PR_BETA *\\)PR_TRUE *$/\\1PR_FALSE/', prinit_h)
     print("please run 'hg stat' and 'hg diff' to verify the files have been verified correctly")
 
 def print_beta_versions():
@@ -81,22 +81,22 @@ def ensure_arguments_after_action(how_many, usage):
         exit_with_failure("incorrect number of arguments, expected parameters are:\n" + usage)
 
 def set_major_versions(major):
-    sed_inplace('s/^\(#define *PR_VMAJOR *\).*$/\\1' + major + '/', prinit_h)
+    sed_inplace('s/^\\(#define *PR_VMAJOR *\\).*$/\\1' + major + '/', prinit_h)
     sed_inplace('s/^MOD_MAJOR_VERSION=.*$/MOD_MAJOR_VERSION=' + major + '/', f_conf)
     sed_inplace('s/^MOD_MAJOR_VERSION=.*$/MOD_MAJOR_VERSION=' + major + '/', f_conf_in)
 
 def set_minor_versions(minor):
-    sed_inplace('s/^\(#define *PR_VMINOR *\).*$/\\1' + minor + '/', prinit_h)
+    sed_inplace('s/^\\(#define *PR_VMINOR *\\).*$/\\1' + minor + '/', prinit_h)
     sed_inplace('s/^MOD_MINOR_VERSION=.*$/MOD_MINOR_VERSION=' + minor + '/', f_conf)
     sed_inplace('s/^MOD_MINOR_VERSION=.*$/MOD_MINOR_VERSION=' + minor + '/', f_conf_in)
 
 def set_patch_versions(patch):
-    sed_inplace('s/^\(#define *PR_VPATCH *\).*$/\\1' + patch + '/', prinit_h)
+    sed_inplace('s/^\\(#define *PR_VPATCH *\\).*$/\\1' + patch + '/', prinit_h)
     sed_inplace('s/^MOD_PATCH_VERSION=.*$/MOD_PATCH_VERSION=' + patch + '/', f_conf)
     sed_inplace('s/^MOD_PATCH_VERSION=.*$/MOD_PATCH_VERSION=' + patch + '/', f_conf_in)
 
 def set_full_lib_versions(version):
-    sed_inplace('s/^\(#define *PR_VERSION *\"\)\([0-9.]\+\)\(.*\)$/\\1' + version + '\\3/', prinit_h)
+    sed_inplace('s/^\\(#define *PR_VERSION *\"\\)\\([0-9.]\\+\\)\\(.*\\)$/\\1' + version + '\\3/', prinit_h)
 
 def set_all_lib_versions(version, major, minor, patch):
     set_full_lib_versions(version)

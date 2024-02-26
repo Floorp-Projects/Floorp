@@ -60,20 +60,20 @@ class LSANLeaks(object):
         )
 
         self.startRegExp = re.compile(
-            "==\d+==ERROR: LeakSanitizer: detected memory leaks"
+            r"==\d+==ERROR: LeakSanitizer: detected memory leaks"
         )
         self.fatalErrorRegExp = re.compile(
-            "==\d+==LeakSanitizer has encountered a fatal error."
+            r"==\d+==LeakSanitizer has encountered a fatal error."
         )
         self.symbolizerOomRegExp = re.compile(
             "LLVMSymbolizer: error reading file: Cannot allocate memory"
         )
-        self.stackFrameRegExp = re.compile("    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
+        self.stackFrameRegExp = re.compile(r"    #\d+ 0x[0-9a-f]+ in ([^(</]+)")
         self.sysLibStackFrameRegExp = re.compile(
-            "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
+            r"    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
         )
         self.summaryRegexp = re.compile(
-            "SUMMARY: AddressSanitizer: (\d+) byte\(s\) leaked in (\d+) allocation\(s\)."
+            r"SUMMARY: AddressSanitizer: (\d+) byte\(s\) leaked in (\d+) allocation\(s\)."
         )
         self.rustRegexp = re.compile("::h[a-f0-9]{16}$")
         self.setAllowed(allowed)

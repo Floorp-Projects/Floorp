@@ -20,9 +20,9 @@ from mozfile import NamedTemporaryFile, TemporaryDirectory
 from mozprofile.permissions import ServerLocations
 
 dbFiles = [
-    re.compile("^cert[0-9]+\.db$"),
-    re.compile("^key[0-9]+\.db$"),
-    re.compile("^secmod\.db$"),
+    re.compile(r"^cert[0-9]+\.db$"),
+    re.compile(r"^key[0-9]+\.db$"),
+    re.compile(r"^secmod\.db$"),
 ]
 
 
@@ -77,7 +77,7 @@ def writeCertspecForServerLocations(fd):
         i for i in iter(locations) if i.scheme == "https" and "nocert" not in i.options
     ]:
         customCertOption = False
-        customCertRE = re.compile("^cert=(?:\w+)")
+        customCertRE = re.compile(r"^cert=(?:\w+)")
         for _ in [i for i in loc.options if customCertRE.match(i)]:
             customCertOption = True
             break

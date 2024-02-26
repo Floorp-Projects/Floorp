@@ -612,7 +612,7 @@ class VendorManifest(MozbuildObject):
                 if r[0] in l:
                     print("Found " + l)
                     replaced += 1
-                    yaml[i] = re.sub(r[0] + " [v\.a-f0-9]+.*$", r[0] + r[1], yaml[i])
+                    yaml[i] = re.sub(r[0] + r" [v\.a-f0-9]+.*$", r[0] + r[1], yaml[i])
 
         assert len(replacements) == replaced
 

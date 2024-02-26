@@ -18,7 +18,7 @@ def read(*parts):
 
 def get_version():
     return re.findall(
-        '__version__ = "([\d\.]+)"', read("firefox_ui_harness", "__init__.py"), re.M
+        r'__version__ = "([\d\.]+)"', read("firefox_ui_harness", "__init__.py"), re.M
     )[0]
 
 

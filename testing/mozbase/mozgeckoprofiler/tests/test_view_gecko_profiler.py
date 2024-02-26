@@ -85,7 +85,7 @@ class TestViewGeckoProfile(unittest.TestCase):
             "https://profiler.firefox.com/from-url/"
             "http%3A%2F%2F127.0.0.1%3A{PORT}%2Ffakeprofile.json"
         )
-        actual_url = re.sub("%3A\d+%2F", "%3A{PORT}%2F", self.firefox_profiler_url)
+        actual_url = re.sub(r"%3A\d+%2F", "%3A{PORT}%2F", self.firefox_profiler_url)
 
         self.assertEqual(
             actual_url,

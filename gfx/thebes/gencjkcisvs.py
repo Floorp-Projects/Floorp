@@ -9,7 +9,7 @@ import sys
 f = open(sys.argv[1] if len(sys.argv) > 1 else "StandardizedVariants.txt")
 
 line = f.readline()
-m = re.compile("^# (StandardizedVariants(-\d+(\.\d+)*)?\.txt)").search(line)
+m = re.compile(r"^# (StandardizedVariants(-\d+(\.\d+)*)?\.txt)").search(line)
 fileversion = m.group(1)
 vsdict = {}
 r = re.compile(

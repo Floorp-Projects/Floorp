@@ -813,7 +813,7 @@ def _sign_msix_win(output, force, log, verbose):
             thumbprint.strip()
             for thumbprint in powershell(
                 (
-                    "Get-ChildItem -Path Cert:\CurrentUser\My"
+                    r"Get-ChildItem -Path Cert:\CurrentUser\My"
                     '| Where-Object {{$_.Subject -Match "{}"}}'
                     '| Where-Object {{$_.FriendlyName -Match "{}"}}'
                     "| Select-Object -ExpandProperty Thumbprint"
@@ -838,7 +838,7 @@ def _sign_msix_win(output, force, log, verbose):
                     (
                         'New-SelfSignedCertificate -Type Custom -Subject "{}" '
                         '-KeyUsage DigitalSignature -FriendlyName "{}"'
-                        " -CertStoreLocation Cert:\CurrentUser\My"
+                        r" -CertStoreLocation Cert:\CurrentUser\My"
                         ' -TextExtension @("2.5.29.37={{text}}1.3.6.1.5.5.7.3.3", '
                         '"2.5.29.19={{text}}")'
                         "| Select-Object -ExpandProperty Thumbprint"
@@ -856,7 +856,7 @@ def _sign_msix_win(output, force, log, verbose):
             )
 
         powershell(
-            'Export-Certificate -Cert Cert:\CurrentUser\My\{} -FilePath "{}"'.format(
+            r'Export-Certificate -Cert Cert:\CurrentUser\My\{} -FilePath "{}"'.format(
                 thumbprint, crt_path
             )
         )
@@ -869,7 +869,7 @@ def _sign_msix_win(output, force, log, verbose):
 
         powershell(
             (
-                'Export-PfxCertificate -Cert Cert:\CurrentUser\My\{} -FilePath "{}"'
+                r'Export-PfxCertificate -Cert Cert:\CurrentUser\My\{} -FilePath "{}"'
                 ' -Password (ConvertTo-SecureString -String "{}" -Force -AsPlainText)'
             ).format(thumbprint, pfx_path, password)
         )
@@ -940,7 +940,7 @@ def _sign_msix_win(output, force, log, verbose):
         root_thumbprints = [
             root_thumbprint.strip()
             for root_thumbprint in powershell(
-                "Get-ChildItem -Path Cert:\LocalMachine\Root\{} "
+                r"Get-ChildItem -Path Cert:\LocalMachine\Root\{} "
                 "| Select-Object -ExpandProperty Thumbprint".format(thumbprint),
                 check=False,
             ).splitlines()

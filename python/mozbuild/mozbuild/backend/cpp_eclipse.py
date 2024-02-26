@@ -171,14 +171,14 @@ class CppEclipseBackend(CommonBackend):
         # Here we generate the code formatter that will show up in the UI with
         # the name "Mozilla".  The formatter is stored as a single line of XML
         # in the org.eclipse.cdt.ui.formatterprofiles pref.
-        cdt_ui_prefs += """org.eclipse.cdt.ui.formatterprofiles=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\\n<profiles version\="1">\\n<profile kind\="CodeFormatterProfile" name\="Mozilla" version\="1">\\n"""
-        XML_PREF_TEMPLATE = """<setting id\="@PREF_NAME@" value\="@PREF_VAL@"/>\\n"""
+        cdt_ui_prefs += r'org.eclipse.cdt.ui.formatterprofiles=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<profiles version\="1">\n<profile kind\="CodeFormatterProfile" name\="Mozilla" version\="1">\n'
+        XML_PREF_TEMPLATE = r'<setting id\="@PREF_NAME@" value\="@PREF_VAL@"/>\n'
         for line in FORMATTER_SETTINGS.splitlines():
             [pref, val] = line.split("=")
             cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@", pref).replace(
                 "@PREF_VAL@", val
             )
-        cdt_ui_prefs += "</profile>\\n</profiles>\\n"
+        cdt_ui_prefs += r"</profile>\n</profiles>\n"
         with open(cdt_ui_prefs_path, "w") as fh:
             fh.write(cdt_ui_prefs)
 

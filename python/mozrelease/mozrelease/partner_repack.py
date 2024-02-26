@@ -172,7 +172,7 @@ def parseRepackConfig(file: Path, platform: str):
             config[key] = value
             continue
         if key == "deb_section":
-            config["deb_section"] = re.sub("/", "\/", value)
+            config["deb_section"] = re.sub("/", r"\/", value)
             continue
         if isValidPlatform(key):
             ftp_platform = getFtpPlatform(key)

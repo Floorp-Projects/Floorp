@@ -160,7 +160,7 @@ do_test()
     #
     # The timeout command send a SIGTERM signal, which should return 143
     # (=128+15). However, due to a bug in tinybox, it returns 142.
-    if test \( $rc -eq 143 -o $rc -eq 142 \) -a $attempt -lt {retry}; then
+    if test \\( $rc -eq 143 -o $rc -eq 142 \\) -a $attempt -lt {retry}; then
       echo '\\n{tag}RETRY='$rc,$time
       attempt=$((attempt + 1))
       do_test $idx $attempt "$@"

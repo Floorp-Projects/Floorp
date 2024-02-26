@@ -94,7 +94,7 @@ class ActionsConfigExample(BaseScript):
 
     def _ship1(self):
         self.info(
-            """
+            r"""
      _~
   _~ )_)_~
   )_))_))_)
@@ -106,7 +106,7 @@ class ActionsConfigExample(BaseScript):
 
     def _ship2(self):
         self.info(
-            """
+            r"""
     _4 _4
    _)_))_)
   _)_)_)_)

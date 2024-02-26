@@ -221,7 +221,7 @@ def trackProcess(row, firstFirefoxPID):
     parentPID = int(row[PARENT_PID_INDEX])
     if parentPID == firstFirefoxPID:
         proc = row[PROCESS_INDEX]
-        gBrowserPID = int(re.search("^.* \(\s*(\d+)\)$", proc).group(1))
+        gBrowserPID = int(re.search(r"^.* \(\s*(\d+)\)$", proc).group(1))
 
 
 def getBrowserPID():
@@ -232,7 +232,7 @@ def getBrowserPID():
 def trackThread(row, browserPID):
     event, proc, tid = row[EVENTNAME_INDEX], row[PROCESS_INDEX], row[THREAD_ID_INDEX]
     if event in ["T-DCStart", "T-Start"]:
-        procName, procID = re.search("^(.*) \(\s*(\d+)\)$", proc).group(1, 2)
+        procName, procID = re.search(r"^(.*) \(\s*(\d+)\)$", proc).group(1, 2)
         if procID == str(browserPID):
             imgIdx = getIndex(event, IMAGEFUNC_COL)
             img = re.match("([^!]+)!", row[imgIdx]).group(1)
@@ -267,7 +267,7 @@ def trackThreadNetIO(row, io, stage):
         gConnectionIDs[connID] = tid
     origThread = gConnectionIDs[connID]
     if origThread in gThreads:
-        match = re.match("[\w-]+\/([\w-]+)?", event)
+        match = re.match(r"[\w-]+\/([\w-]+)?", event)
         if not match:
             raise xtalos.XTalosError(
                 "Could not find a regular expression match for event: {}".format(event)

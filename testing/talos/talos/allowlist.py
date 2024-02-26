@@ -85,7 +85,7 @@ class Allowlist:
                 if len(parts) >= 2:
                     filename = "%s%s" % (parts[0], new_name)
 
-        return filename.strip("/\\\ \t")
+        return filename.strip("/\\\\ \t")
 
     def check(self, test, file_name_index, event_source_index=None):
         errors = {}

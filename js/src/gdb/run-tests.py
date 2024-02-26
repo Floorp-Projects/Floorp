@@ -40,9 +40,9 @@ def _relpath(path, start=None):
 os.path.relpath = _relpath
 
 # Characters that need to be escaped when used in shell words.
-shell_need_escapes = re.compile("[^\w\d%+,-./:=@'\"]", re.DOTALL)
+shell_need_escapes = re.compile("[^\\w\\d%+,-./:=@'\"]", re.DOTALL)
 # Characters that need to be escaped within double-quoted strings.
-shell_dquote_escapes = re.compile('[^\w\d%+,-./:=@"]', re.DOTALL)
+shell_dquote_escapes = re.compile('[^\\w\\d%+,-./:=@"]', re.DOTALL)
 
 
 def make_shell_cmd(l):

@@ -252,7 +252,7 @@ class ReftestResolver(object):
                 rv = [
                     (
                         os.path.join(dirname, default_manifest),
-                        r".*%s(?:[#?].*)?$" % pathname.replace("?", "\?"),
+                        r".*%s(?:[#?].*)?$" % pathname.replace("?", r"\?"),
                     )
                 ]
 
