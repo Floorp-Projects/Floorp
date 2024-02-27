@@ -2172,12 +2172,11 @@ MInstruction* WarpCacheIRTranspiler::emitTypedArrayLength(
 }
 
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
-    ObjOperandId objId, IntPtrOperandId indexId) {
+    ObjOperandId objId, IntPtrOperandId indexId, ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   // Unsigned comparison to catch negative indices.
   auto* ins = MCompare::New(alloc(), index, length, JSOp::Lt,

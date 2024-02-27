@@ -2152,6 +2152,7 @@
   args:
     obj: ObjId
     index: IntPtrId
+    viewKind: ArrayBufferViewKindImm
 
 - name: LoadDenseElementHoleExistsResult
   shared: true
