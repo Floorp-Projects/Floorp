@@ -445,7 +445,6 @@ prefs = ["security.allow_eval_with_system_principal=true"]
 ["test_client_auth_with_proxy.js"]
 skip-if = [
   "os == 'android'",
-  "true", # bug 1881334
 ]
 
 ["test_coaleasing_h2_and_h3_connection.js"]
@@ -608,7 +607,9 @@ skip-if = ["!nightly_build"] # OHTTP Config manager not currently shipped to rel
 
 ["test_http2-proxy-failing.js"]
 run-sequentially = "node server exceptions dont replay well"
-skip-if = ["true"] # bug 1881334
+skip-if = [
+  "os == 'win'" # https://bugzilla.mozilla.org/show_bug.cgi?id=1881334
+]
 
 ["test_http2-proxy.js"]
 run-sequentially = "one http2 node proxy is used for all tests, this test is using global session counter"
@@ -619,7 +620,6 @@ run-sequentially = "node server exceptions dont replay well"
 head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js http2_test_common.js"
 
 ["test_http2_with_proxy.js"]
-skip-if = ["true"] # bug 1881334
 run-sequentially = "node server exceptions dont replay well"
 head = "head_channels.js head_cache.js head_cookies.js head_servers.js head_trr.js head_http3.js http2_test_common.js"
 
@@ -1157,7 +1157,6 @@ run-sequentially = "node server exceptions dont replay well"
 skip-if = [
   "socketprocess_networking", # confirmation state isn't passed cross-process
   "appname == 'thunderbird'", # bug 1760097
-  "true", # bug 1881334
 ]
 run-sequentially = "node server exceptions dont replay well"
 

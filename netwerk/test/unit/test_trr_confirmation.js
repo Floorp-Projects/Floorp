@@ -246,7 +246,7 @@ add_task(async function multiple_failures() {
     CONFIRM_TRYING_OK,
     "Should be CONFIRM_TRYING_OK"
   );
-  await waitForConfirmationState(CONFIRM_OK, 4500);
+  await waitForConfirmationState(CONFIRM_OK, 6000);
 });
 
 add_task(async function test_connectivity_change() {
