@@ -214,64 +214,70 @@
  * can swallow those events. */
 .titlebar-buttonbox {
   z-index: 1;
-  align-items: center;
+  align-items: stretch;
 }
 
-/* When using lightweight themes, use our own buttons since native ones might
- * assume a native background in order to be visible. */
-.titlebar-button:-moz-lwtheme {
-  appearance: none;
-  border-radius: 100%;
+@media (-moz-gtk-csd-reversed-placement) {
+  .titlebar-buttonbox-container {
+    order: -1;
+  }
+}
 
-  &:hover {
+.titlebar-button {
+  appearance: none;
+  align-items: center;
+  padding: 0;
+  padding-inline: calc(env(-moz-gtk-csd-titlebar-button-spacing) / 2);
+
+  > .toolbarbutton-icon {
+    appearance: auto;
+  }
+
+  /* When using lightweight themes, use our own buttons since native ones might
+   * assume a native background in order to be visible. */
+  &:-moz-lwtheme {
+    padding-inline: 3px;
+
+    > .toolbarbutton-icon {
+      appearance: none;
+      border-radius: 100%;
+      background-position: center center;
+      background-repeat: no-repeat;
+      -moz-context-properties: stroke;
+      stroke: currentColor;
+      /* Roughly the Adwaita size */
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &:hover > .toolbarbutton-icon {
     background-color: color-mix(in srgb, currentColor 12%, transparent);
   }
 
-  &:hover:active {
+  &:hover:active > .toolbarbutton-icon {
     background-color: color-mix(in srgb, currentColor 20%, transparent);
   }
 
-  &:focus-visible {
+  &:focus-visible > .toolbarbutton-icon {
     outline: var(--focus-outline);
     outline-offset: var(--focus-outline-inset);
   }
-
-  > .toolbarbutton-icon {
-    padding: 6px;
-    -moz-context-properties: stroke;
-    stroke: currentColor;
-  }
 }
 
-/* Render titlebar command buttons according to system config.
- * Use full scale icons here as the Gtk+ does. */
 .titlebar-max {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-maximize;
   order: env(-moz-gtk-csd-maximize-button-position);
-
-  &:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
+  > .toolbarbutton-icon {
+    -moz-default-appearance: -moz-window-button-maximize;
+    background-image: url(chrome://browser/skin/window-controls/maximize.svg);
   }
 }
 
 .titlebar-restore {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-restore;
   order: env(-moz-gtk-csd-maximize-button-position);
-
-  &:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
-  }
-}
-
-@media not (-moz-gtk-csd-minimize-button) {
-  .titlebar-min {
-    display: none;
-
-    &:-moz-lwtheme {
-      list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
-    }
+  > .toolbarbutton-icon {
+    -moz-default-appearance: -moz-window-button-restore;
+    background-image: url(chrome://browser/skin/window-controls/restore.svg);
   }
 }
 
@@ -283,21 +289,20 @@
 }
 
 .titlebar-close {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-close;
   order: env(-moz-gtk-csd-close-button-position);
 
-  &:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+  > .toolbarbutton-icon {
+    -moz-default-appearance: -moz-window-button-close;
+    background-image: url(chrome://browser/skin/window-controls/close.svg);
+  }
 
-    &:hover {
-      background-color: #d70022;
-      color: white;
-    }
+  &:hover > .toolbarbutton-icon {
+    background-color: #d70022;
+    color: white;
+  }
 
-    &:hover:active {
-      background-color: #ff0039;
-    }
+  &:hover:active > .toolbarbutton-icon {
+    background-color: #ff0039;
   }
 
   @media not (-moz-gtk-csd-close-button) {
@@ -306,21 +311,14 @@
 }
 
 .titlebar-min {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-minimize;
   order: env(-moz-gtk-csd-minimize-button-position);
 
-  &:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
+  > .toolbarbutton-icon {
+    -moz-default-appearance: -moz-window-button-minimize;
+    background-image: url(chrome://browser/skin/window-controls/minimize.svg);
   }
 
   @media not (-moz-gtk-csd-minimize-button) {
     display: none;
-  }
-}
-
-@media (-moz-gtk-csd-reversed-placement) {
-  .titlebar-buttonbox-container {
-    order: -1;
   }
 }

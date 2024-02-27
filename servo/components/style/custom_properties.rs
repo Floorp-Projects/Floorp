@@ -122,7 +122,12 @@ macro_rules! lnf_int_variable {
     }};
 }
 
-static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 7] = [
+static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 8] = [
+    lnf_int_variable!(
+        atom!("-moz-gtk-csd-titlebar-button-spacing"),
+        TitlebarButtonSpacing,
+        int_pixels
+    ),
     lnf_int_variable!(
         atom!("-moz-gtk-csd-titlebar-radius"),
         TitlebarRadius,
