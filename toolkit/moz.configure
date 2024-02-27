@@ -87,9 +87,14 @@ set_config("MOZ_JPROF", jprof)
 set_define("MOZ_JPROF", jprof)
 imply_option("--enable-profiling", jprof)
 
+option("--disable-gecko-profiler", help="Disable the Gecko profiler")
 
-@depends(target)
-def gecko_profiler(target):
+
+@depends("--disable-gecko-profiler", target)
+def gecko_profiler(enable_gecko_profiler, target):
+    if not enable_gecko_profiler:
+        return False
+
     if target.os == "Android":
         return target.cpu in ("aarch64", "arm", "x86", "x86_64")
     elif target.kernel == "Linux":
