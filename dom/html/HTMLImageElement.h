@@ -263,6 +263,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // element.
   const StyleLockedDeclarationBlock* GetMappedAttributesFromSource() const;
 
+  FetchPriority GetFetchPriorityForImage() const override;
+
  protected:
   virtual ~HTMLImageElement();
 

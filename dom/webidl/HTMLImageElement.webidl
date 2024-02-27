@@ -43,6 +43,8 @@ interface HTMLImageElement : HTMLElement {
            attribute DOMString decoding;
            [CEReactions, SetterThrows]
            attribute DOMString loading;
+           [Pref="network.fetchpriority.enabled", CEReactions]
+           attribute DOMString fetchPriority;
   readonly attribute unsigned long naturalWidth;
   readonly attribute unsigned long naturalHeight;
   readonly attribute boolean complete;
