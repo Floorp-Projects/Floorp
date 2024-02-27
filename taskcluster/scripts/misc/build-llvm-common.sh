@@ -130,9 +130,9 @@ case "$target" in
     ln -s "windows kits/10" $MOZ_FETCHES_DIR/vs/sdk
     EXTRA_CMAKE_FLAGS="
       $EXTRA_CMAKE_FLAGS
-      -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.39.33519
+      -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.29.30133
       -DWINSDK_BASE=$MOZ_FETCHES_DIR/vs/sdk
-      -DWINSDK_VER=10.0.22621.0
+      -DWINSDK_VER=10.0.19041.0
     "
   fi
   ;;
