@@ -268,7 +268,6 @@ class DataChannelRegistry {
     DeinitUsrSctp();
   }
 
-#ifdef SCTP_DTLS_SUPPORTED
   static int SctpDtlsOutput(void* addr, void* buffer, size_t length,
                             uint8_t tos, uint8_t set_df) {
     uintptr_t id = reinterpret_cast<uintptr_t>(addr);
@@ -278,7 +277,6 @@ class DataChannelRegistry {
     }
     return connection->SctpDtlsOutput(addr, buffer, length, tos, set_df);
   }
-#endif
 
   void InitUsrSctp() {
 #ifndef MOZ_PEERCONNECTION
@@ -1080,160 +1078,6 @@ int DataChannelConnection::SctpDtlsOutput(void* addr, void* buffer,
 
   SendPacket(std::move(packet));
   return 0;  // cheat!  Packets can always be dropped later anyways
-}
-#endif
-
-#ifdef ALLOW_DIRECT_SCTP_LISTEN_CONNECT
-// listen for incoming associations
-// Blocks! - Don't call this from main thread!
-
-bool DataChannelConnection::Listen(unsigned short port) {
-  struct sockaddr_in addr = {};
-  socklen_t addr_len;
-
-  NS_WARNING_ASSERTION(!NS_IsMainThread(),
-                       "Blocks, do not call from main thread!!!");
-
-  /* Acting as the 'server' */
-#  ifdef HAVE_SIN_LEN
-  addr.sin_len = sizeof(struct sockaddr_in);
-#  endif
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  DC_DEBUG(("Waiting for connections on port %u", ntohs(addr.sin_port)));
-  {
-    MutexAutoLock lock(mLock);
-    SetState(DataChannelConnectionState::Connecting);
-  }
-  if (usrsctp_bind(mMasterSocket, reinterpret_cast<struct sockaddr*>(&addr),
-                   sizeof(struct sockaddr_in)) < 0) {
-    DC_ERROR(("***Failed userspace_bind"));
-    return false;
-  }
-  if (usrsctp_listen(mMasterSocket, 1) < 0) {
-    DC_ERROR(("***Failed userspace_listen"));
-    return false;
-  }
-
-  DC_DEBUG(("Accepting connection"));
-  addr_len = 0;
-  if ((mSocket = usrsctp_accept(mMasterSocket, nullptr, &addr_len)) ==
-      nullptr) {
-    DC_ERROR(("***Failed accept"));
-    return false;
-  }
-
-  {
-    MutexAutoLock lock(mLock);
-    SetState(DataChannelConnectionState::Open);
-  }
-
-  struct linger l;
-  l.l_onoff = 1;
-  l.l_linger = 0;
-  if (usrsctp_setsockopt(mSocket, SOL_SOCKET, SO_LINGER, (const void*)&l,
-                         (socklen_t)sizeof(struct linger)) < 0) {
-    DC_WARN(("Couldn't set SO_LINGER on SCTP socket"));
-  }
-
-  // Notify Connection open
-  // XXX We need to make sure connection sticks around until the message is
-  // delivered
-  DC_DEBUG(("%s: sending ON_CONNECTION for %p", __FUNCTION__, this));
-  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::EventType::OnConnection, this,
-      (DataChannel*)nullptr)));
-  return true;
-}
-
-// Blocks! - Don't call this from main thread!
-bool DataChannelConnection::Connect(const char* addr, unsigned short port) {
-  struct sockaddr_in addr4 = {};
-  struct sockaddr_in6 addr6 = {};
-
-  NS_WARNING_ASSERTION(!NS_IsMainThread(),
-                       "Blocks, do not call from main thread!!!");
-
-  /* Acting as the connector */
-  DC_DEBUG(("Connecting to %s, port %u", addr, port));
-#  ifdef HAVE_SIN_LEN
-  addr4.sin_len = sizeof(struct sockaddr_in);
-#  endif
-#  ifdef HAVE_SIN6_LEN
-  addr6.sin6_len = sizeof(struct sockaddr_in6);
-#  endif
-  addr4.sin_family = AF_INET;
-  addr6.sin6_family = AF_INET6;
-  addr4.sin_port = htons(port);
-  addr6.sin6_port = htons(port);
-  {
-    MutexAutoLock lock(mLock);
-    SetState(DataChannelConnectionState::Connecting);
-  }
-#  if !defined(__Userspace_os_Windows)
-  if (inet_pton(AF_INET6, addr, &addr6.sin6_addr) == 1) {
-    if (usrsctp_connect(mMasterSocket,
-                        reinterpret_cast<struct sockaddr*>(&addr6),
-                        sizeof(struct sockaddr_in6)) < 0) {
-      DC_ERROR(("*** Failed userspace_connect"));
-      return false;
-    }
-  } else if (inet_pton(AF_INET, addr, &addr4.sin_addr) == 1) {
-    if (usrsctp_connect(mMasterSocket,
-                        reinterpret_cast<struct sockaddr*>(&addr4),
-                        sizeof(struct sockaddr_in)) < 0) {
-      DC_ERROR(("*** Failed userspace_connect"));
-      return false;
-    }
-  } else {
-    DC_ERROR(("*** Illegal destination address."));
-  }
-#  else
-  {
-    struct sockaddr_storage ss;
-    int sslen = sizeof(ss);
-
-    if (!WSAStringToAddressA(const_cast<char*>(addr), AF_INET6, nullptr,
-                             (struct sockaddr*)&ss, &sslen)) {
-      addr6.sin6_addr =
-          (reinterpret_cast<struct sockaddr_in6*>(&ss))->sin6_addr;
-      if (usrsctp_connect(mMasterSocket,
-                          reinterpret_cast<struct sockaddr*>(&addr6),
-                          sizeof(struct sockaddr_in6)) < 0) {
-        DC_ERROR(("*** Failed userspace_connect"));
-        return false;
-      }
-    } else if (!WSAStringToAddressA(const_cast<char*>(addr), AF_INET, nullptr,
-                                    (struct sockaddr*)&ss, &sslen)) {
-      addr4.sin_addr = (reinterpret_cast<struct sockaddr_in*>(&ss))->sin_addr;
-      if (usrsctp_connect(mMasterSocket,
-                          reinterpret_cast<struct sockaddr*>(&addr4),
-                          sizeof(struct sockaddr_in)) < 0) {
-        DC_ERROR(("*** Failed userspace_connect"));
-        return false;
-      }
-    } else {
-      DC_ERROR(("*** Illegal destination address."));
-    }
-  }
-#  endif
-
-  mSocket = mMasterSocket;
-
-  DC_DEBUG(("connect() succeeded!  Entering connected mode"));
-  {
-    MutexAutoLock lock(mLock);
-    SetState(DataChannelConnectionState::Open);
-  }
-  // Notify Connection open
-  // XXX We need to make sure connection sticks around until the message is
-  // delivered
-  DC_DEBUG(("%s: sending ON_CONNECTION for %p", __FUNCTION__, this));
-  Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::EventType::OnConnection, this,
-      (DataChannel*)nullptr)));
-  return true;
 }
 #endif
 

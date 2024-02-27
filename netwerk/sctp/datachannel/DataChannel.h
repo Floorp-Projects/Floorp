@@ -7,10 +7,6 @@
 #ifndef NETWERK_SCTP_DATACHANNEL_DATACHANNEL_H_
 #define NETWERK_SCTP_DATACHANNEL_DATACHANNEL_H_
 
-#ifdef MOZ_WEBRTC_SIGNALING
-#  define SCTP_DTLS_SUPPORTED 1
-#endif
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,10 +26,8 @@
 #include "mozilla/net/NeckoTargetHolder.h"
 #include "DataChannelLog.h"
 
-#ifdef SCTP_DTLS_SUPPORTED
-#  include "transport/sigslot.h"
-#  include "transport/transportlayer.h"  // For TransportLayer::State
-#endif
+#include "transport/sigslot.h"
+#include "transport/transportlayer.h"  // For TransportLayer::State
 
 #ifndef EALREADY
 #  define EALREADY WSAEALREADY
@@ -120,12 +114,8 @@ class QueuedDataMessage {
 };
 
 // One per PeerConnection
-class DataChannelConnection final : public net::NeckoTargetHolder
-#ifdef SCTP_DTLS_SUPPORTED
-    ,
-                                    public sigslot::has_slots<>
-#endif
-{
+class DataChannelConnection final : public net::NeckoTargetHolder,
+                                    public sigslot::has_slots<> {
   friend class DataChannel;
   friend class DataChannelOnMessageAvailable;
   friend class DataChannelConnectRunnable;
@@ -182,15 +172,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
   void AppendStatsToReport(const UniquePtr<dom::RTCStatsCollection>& aReport,
                            const DOMHighResTimeStamp aTimestamp) const;
-#ifdef ALLOW_DIRECT_SCTP_LISTEN_CONNECT
-  // These block; they require something to decide on listener/connector
-  // (though you can do simultaneous Connect()).  Do not call these from
-  // the main thread!
-  bool Listen(unsigned short port);
-  bool Connect(const char* addr, unsigned short port);
-#endif
 
-#ifdef SCTP_DTLS_SUPPORTED
   bool ConnectToTransport(const std::string& aTransportId, const bool aClient,
                           const uint16_t aLocalPort,
                           const uint16_t aRemotePort);
@@ -198,7 +180,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
                             TransportLayer::State aState);
   void CompleteConnect();
   void SetSignals(const std::string& aTransportId);
-#endif
 
   [[nodiscard]] already_AddRefed<DataChannel> Open(
       const nsACString& label, const nsACString& protocol,
@@ -235,10 +216,8 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
   bool SendDeferredMessages() MOZ_REQUIRES(mLock);
 
-#ifdef SCTP_DTLS_SUPPORTED
   int SctpDtlsOutput(void* addr, void* buffer, size_t length, uint8_t tos,
                      uint8_t set_df);
-#endif
 
   bool InShutdown() const {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -296,12 +275,10 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   static int OnThresholdEvent(struct socket* sock, uint32_t sb_free,
                               void* ulp_info);
 
-#ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void* data);
   void SendPacket(std::unique_ptr<MediaPacket>&& packet);
   void SctpDtlsInput(const std::string& aTransportId,
                      const MediaPacket& packet);
-#endif
   DataChannel* FindChannelByStream(uint16_t stream) MOZ_REQUIRES(mLock);
   uint16_t FindFreeStream() const MOZ_REQUIRES(mLock);
   bool RequestMoreStreams(int32_t aNeeded = 16) MOZ_REQUIRES(mLock);
@@ -373,7 +350,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   void HandleNotification(const union sctp_notification* notif, size_t n)
       MOZ_REQUIRES(mLock);
 
-#ifdef SCTP_DTLS_SUPPORTED
   bool IsSTSThread() const {
     bool on = false;
     if (mSTS) {
@@ -381,7 +357,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
     }
     return on;
   }
-#endif
 
   mutable Mutex mLock;
   // Avoid cycles with PeerConnectionImpl
@@ -420,12 +395,10 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   DataChannelConnectionState mState MOZ_GUARDED_BY(mLock) =
       DataChannelConnectionState::Closed;
 
-#ifdef SCTP_DTLS_SUPPORTED
   std::string mTransportId;
   bool mConnectedToTransportHandler = false;
   RefPtr<MediaTransportHandler> mTransportHandler;
   nsCOMPtr<nsIEventTarget> mSTS;
-#endif
   uint16_t mLocalPort = 0;  // Accessed from connect thread
   uint16_t mRemotePort = 0;
 
