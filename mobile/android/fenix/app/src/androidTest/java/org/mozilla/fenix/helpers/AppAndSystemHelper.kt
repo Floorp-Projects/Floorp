@@ -41,6 +41,7 @@ import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.helpers.Constants.PackageName.PIXEL_LAUNCHER
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
@@ -183,12 +184,31 @@ object AppAndSystemHelper {
         Log.i(TAG, "deleteBookmarksStorage before cleanup: Bookmarks storage contains: $bookmarks")
         if (bookmarks?.isNotEmpty() == true) {
             bookmarks.forEach {
-                Log.i(TAG, "deleteBookmarksStorage: Trying to delete $it bookmark from storage.")
+                Log.i(
+                    TAG,
+                    "deleteBookmarksStorage: Trying to delete $it bookmark from storage.",
+                )
                 bookmarksStorage.deleteNode(it.guid)
                 // TODO: Follow-up with a method to handle the DB update; the logs will still show the bookmarks in the storage before the test starts.
-                Log.i(TAG, "deleteBookmarksStorage: Bookmark deleted. Bookmarks storage contains: $bookmarks")
+                Log.i(
+                    TAG,
+                    "deleteBookmarksStorage: Bookmark deleted. Bookmarks storage contains: $bookmarks",
+                )
             }
         }
+    }
+
+    suspend fun deletePermissionsStorage() {
+        val permissionStorage = PermissionStorage(appContext.applicationContext)
+        Log.i(
+            TAG,
+            "deletePermissionsStorage: Trying to delete permissions. Permissions storage contains: ${permissionStorage.getSitePermissionsPaged()}",
+        )
+        permissionStorage.deleteAllSitePermissions()
+        Log.i(
+            TAG,
+            "deletePermissionsStorage: Permissions deleted. Permissions storage contains: ${permissionStorage.getSitePermissionsPaged()}",
+        )
     }
 
     fun setNetworkEnabled(enabled: Boolean) {

@@ -28,12 +28,14 @@ open class TestSetup {
         Log.i(TAG, "TestSetup: Starting the @Before setup")
         // Initializing this as part of class construction, below the rule would throw a NPE.
         // So we are initializing this here instead of in all related tests.
-        Log.i(TAG, "TestSetup: Initializing the browserStore instance")
+        Log.i(TAG, "TestSetup: Trying to initialize the browserStore instance")
         browserStore = appContext.components.core.store
+        Log.i(TAG, "TestSetup: Initialized the browserStore instance")
         // Clear pre-existing notifications.
         notificationShade {
             cancelAllShownNotifications()
         }
+
         runBlocking {
             // Reset locale to EN-US if needed.
             AppAndSystemHelper.resetSystemLocaleToEnUS()
@@ -46,7 +48,10 @@ open class TestSetup {
             AppAndSystemHelper.deleteBookmarksStorage()
             // Clear history left after a failed test, before a retry.
             AppAndSystemHelper.deleteHistoryStorage()
+            // Clear permissions left after a failed test, before a retry.
+            AppAndSystemHelper.deletePermissionsStorage()
         }
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
         }

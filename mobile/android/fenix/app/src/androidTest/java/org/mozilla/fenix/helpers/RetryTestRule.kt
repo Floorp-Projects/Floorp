@@ -9,16 +9,12 @@ import androidx.test.espresso.IdlingResourceTimeoutException
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.uiautomator.UiObjectNotFoundException
 import junit.framework.AssertionFailedError
-import kotlinx.coroutines.runBlocking
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AppAndSystemHelper.setNetworkEnabled
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.IdlingResourceHelper.unregisterAllIdlingResources
-import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 
 /**
  *  Rule to retry flaky tests for a given number of times, catching some of the more common exceptions.
@@ -27,9 +23,6 @@ import org.mozilla.fenix.helpers.TestHelper.appContext
  *
  */
 class RetryTestRule(private val retryCount: Int = 5) : TestRule {
-    // Used for clearing all permission data after each test try
-    private val permissionStorage = PermissionStorage(appContext.applicationContext)
-
     @Suppress("TooGenericExceptionCaught", "ComplexMethod")
     override fun apply(base: Statement, description: Description): Statement {
         return statement {
@@ -39,77 +32,50 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                     base.evaluate()
                     break
                 } catch (t: AssertionError) {
-                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
                     }
                 } catch (t: AssertionFailedError) {
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
                     }
                 } catch (t: UiObjectNotFoundException) {
-                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
                     }
                 } catch (t: NoMatchingViewException) {
-                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
                     }
                 } catch (t: IdlingResourceTimeoutException) {
-                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
                     }
                 } catch (t: RuntimeException) {
-                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
                     }
                 } catch (t: NullPointerException) {
-                    setNetworkEnabled(true)
                     unregisterAllIdlingResources()
-                    runBlocking {
-                        appContext.settings().alwaysOpenTheHomepageWhenOpeningTheApp = true
-                        permissionStorage.deleteAllSitePermissions()
-                    }
+                    exitMenu()
                     if (i == retryCount) {
                         Log.i(TAG, "RetryTestRule: Max numbers of retries reached.")
                         throw t
