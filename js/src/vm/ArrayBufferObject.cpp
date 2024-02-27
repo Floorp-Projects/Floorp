@@ -914,8 +914,6 @@ void ArrayBufferObject::detach(JSContext* cx,
 
   // Update all views of the buffer to account for the buffer having been
   // detached, and clear the buffer's data and list of views.
-  //
-  // Typed object buffers are not exposed and cannot be detached.
 
   auto& innerViews = ObjectRealm::get(buffer).innerViews.get();
   if (InnerViewTable::ViewVector* views =
@@ -962,6 +960,20 @@ void ResizableArrayBufferObject::resize(size_t newByteLength) {
   }
 
   setByteLength(newByteLength);
+
+  // Update all views of the buffer to account for the buffer having been
+  // resized.
+
+  auto& innerViews = ObjectRealm::get(this).innerViews.get();
+  if (InnerViewTable::ViewVector* views =
+          innerViews.maybeViewsUnbarriered(this)) {
+    for (auto& view : *views) {
+      view->notifyBufferResized();
+    }
+  }
+  if (auto* view = firstView()) {
+    view->as<ArrayBufferViewObject>().notifyBufferResized();
+  }
 }
 
 /* clang-format off */

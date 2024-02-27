@@ -775,6 +775,7 @@ class InnerViewTable {
 
  private:
   friend class ArrayBufferObject;
+  friend class ResizableArrayBufferObject;
   bool addView(JSContext* cx, ArrayBufferObject* buffer,
                ArrayBufferViewObject* view);
   ViewVector* maybeViewsUnbarriered(ArrayBufferObject* buffer);
