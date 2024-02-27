@@ -36,8 +36,6 @@ const TAB_RECENCY_CHANGE_EVENTS = Object.freeze([
   "TabAttrModified",
   "TabClose",
   "TabOpen",
-  "TabPinned",
-  "TabUnpinned",
   "TabSelect",
   "TabAttrModified",
 ]);
