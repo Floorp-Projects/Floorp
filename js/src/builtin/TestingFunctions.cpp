@@ -4523,7 +4523,9 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
         case JS::ProfilingFrameIterator::Frame_Ion:
           frameKindStr = "ion";
           break;
-        case JS::ProfilingFrameIterator::Frame_Wasm:
+        case JS::ProfilingFrameIterator::Frame_WasmBaseline:
+        case JS::ProfilingFrameIterator::Frame_WasmIon:
+        case JS::ProfilingFrameIterator::Frame_WasmOther:
           frameKindStr = "wasm";
           break;
         default:

@@ -193,9 +193,10 @@ void ProfileBufferCollector::CollectJitReturnAddr(void* aAddr) {
   mBuf.AddEntry(ProfileBufferEntry::JitReturnAddr(aAddr));
 }
 
-void ProfileBufferCollector::CollectWasmFrame(const char* aLabel) {
+void ProfileBufferCollector::CollectWasmFrame(
+    JS::ProfilingCategoryPair aCategory, const char* aLabel) {
   mBuf.CollectCodeLocation("", aLabel, 0, 0, Nothing(), Nothing(),
-                           Some(JS::ProfilingCategoryPair::JS_Wasm));
+                           Some(aCategory));
 }
 
 void ProfileBufferCollector::CollectProfilingStackFrame(

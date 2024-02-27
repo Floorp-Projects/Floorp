@@ -642,7 +642,20 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(
 
   if (isWasm()) {
     Frame frame;
-    frame.kind = Frame_Wasm;
+    switch (wasmIter().category()) {
+      case wasm::ProfilingFrameIterator::Baseline: {
+        frame.kind = FrameKind::Frame_WasmBaseline;
+        break;
+      }
+      case wasm::ProfilingFrameIterator::Ion: {
+        frame.kind = FrameKind::Frame_WasmIon;
+        break;
+      }
+      default: {
+        frame.kind = FrameKind::Frame_WasmOther;
+        break;
+      }
+    }
     frame.stackAddress = stackAddr;
     frame.returnAddress_ = nullptr;
     frame.activation = activation_;

@@ -1085,6 +1085,23 @@ bool Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const {
   return false;
 }
 
+bool Code::lookupFunctionTier(const CodeRange* codeRange, Tier* tier) const {
+  // This logic only works if the codeRange is a function, and therefore only
+  // exists in metadata and not a lazy stub tier. Generalizing to access lazy
+  // stubs would require taking a lock, which is undesirable for the profiler.
+  MOZ_ASSERT(codeRange->isFunction());
+  for (Tier t : tiers()) {
+    const CodeTier& code = codeTier(t);
+    const MetadataTier& metadata = code.metadata();
+    if (codeRange >= metadata.codeRanges.begin() &&
+        codeRange < metadata.codeRanges.end()) {
+      *tier = t;
+      return true;
+    }
+  }
+  return false;
+}
+
 struct UnwindInfoPCOffset {
   const CodeRangeUnwindInfoVector& info;
   explicit UnwindInfoPCOffset(const CodeRangeUnwindInfoVector& info)

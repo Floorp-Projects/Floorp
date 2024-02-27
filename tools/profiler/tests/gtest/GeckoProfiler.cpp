@@ -3913,7 +3913,10 @@ class GTestStackCollector final : public ProfilerStackCollector {
 
   virtual void CollectNativeLeafAddr(void* aAddr) { mFrames++; }
   virtual void CollectJitReturnAddr(void* aAddr) { mFrames++; }
-  virtual void CollectWasmFrame(const char* aLabel) { mFrames++; }
+  virtual void CollectWasmFrame(JS::ProfilingCategoryPair aCategory,
+                                const char* aLabel) {
+    mFrames++;
+  }
   virtual void CollectProfilingStackFrame(
       const js::ProfilingStackFrame& aFrame) {
     mFrames++;
