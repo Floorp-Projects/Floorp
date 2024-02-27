@@ -46,7 +46,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
         wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}")
     } else {
         wrapperTask = task("generateJNIWrappersFor${module}${variant.name.capitalize()}", type: JavaExec) {
-            classpath annotationProcessorsJarTask.archivePath
+            classpath annotationProcessorsJarTask.archiveFile
         
             // Configure the classpath at evaluation-time, not at
             // configuration-time: see above comment.
@@ -61,7 +61,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
             workingDir "${topobjdir}/widget/android"
 
             inputs.file(bundleJar)
-            inputs.file(annotationProcessorsJarTask.archivePath)
+            inputs.file(annotationProcessorsJarTask.archiveFile)
             inputs.property("module", module)
 
             outputs.file("${topobjdir}/widget/android/GeneratedJNINatives.h")
