@@ -30,7 +30,8 @@ jobs:
         index:
             by-build-type:
                 (focus-nightly|focus-release|klar-release|focus-beta|fenix-nightly|fenix-debug|fenix-nightly-simulation|fenix-beta|fenix-beta-mozillaonline|fenix-release|fenix-release-mozillaonline):
-                    type: signing
+                    type: generic
+                    product: mobile
                 default: {}
         run-on-projects: []
         treeherder:

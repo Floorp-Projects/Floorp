@@ -28,6 +28,7 @@ PRODUCTION_SIGNING_BUILD_TYPES = [
 def resolve_keys(config, tasks):
     for task in tasks:
         for key in (
+            "index",
             "signing-format",
             "notify",
             "treeherder.platform",
@@ -72,9 +73,10 @@ def add_signing_cert_scope(config, tasks):
 
 
 @transforms.add
-def set_index(config, tasks):
+def set_index_job_name(config, tasks):
     for task in tasks:
-        task["index"] = {"type": "signing"}
+        if task.get("index"):
+            task["index"]["job-name"] = task["attributes"]["build-type"]
         yield task
 
 
