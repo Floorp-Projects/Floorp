@@ -54,6 +54,45 @@ if (DEBUG_ALLOCATIONS) {
   });
 }
 
+// When DEBUG_STEP environment variable is set,
+// automatically start a tracer which will log all line being executed
+// in the running test (and nothing else) and also pause its execution
+// for the given amount of milliseconds.
+//
+// Be careful that these pause have significant side effect.
+// This will pause the test script event loop and allow running the other
+// tasks queued in the parent process's main thread event loop queue.
+//
+// Passing any non-number value, like `DEBUG_STEP=true` will still
+// log the executed lines without any pause, and without this side effect.
+//
+// For now, the tracer can only work once per thread.
+// So when using this feature you will not be able to use the JS tracer
+// in any other way on parent process's main thread.
+const DEBUG_STEP = Services.env.get("DEBUG_STEP");
+if (DEBUG_STEP) {
+  // Use a custom loader with `invisibleToDebugger` flag for the allocation tracker
+  // as it instantiates custom Debugger API instances and has to be running in a distinct
+  // compartments from DevTools and system scopes (JSMs, XPCOM,...)
+  const {
+    useDistinctSystemPrincipalLoader,
+    releaseDistinctSystemPrincipalLoader,
+  } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
+  const requester = {};
+  const loader = useDistinctSystemPrincipalLoader(requester);
+
+  const stepper = loader.require(
+    "resource://devtools/shared/test-helpers/test-stepper.js"
+  );
+  stepper.start(globalThis, gTestPath, DEBUG_STEP);
+  registerCleanupFunction(() => {
+    stepper.stop();
+    releaseDistinctSystemPrincipalLoader(requester);
+  });
+}
+
 const { loader, require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
