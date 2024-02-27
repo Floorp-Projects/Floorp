@@ -885,88 +885,122 @@ TEST(ThreadUtils, IdleTaskRunner)
 
 TEST(ThreadUtils, TypeTraits)
 {
-  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<int>>,
-                "RemoveSmartPointer<int> should be int");
-  static_assert(std::is_same_v<int*, mozilla::RemoveSmartPointer<int*>>,
-                "RemoveSmartPointer<int*> should be int*");
-  static_assert(std::is_same_v<UniquePtr<int>,
-                               mozilla::RemoveSmartPointer<UniquePtr<int>>>,
-                "RemoveSmartPointer<UniquePtr<int>> should be UniquePtr<int>");
-  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<RefPtr<int>>>,
-                "RemoveSmartPointer<RefPtr<int>> should be int");
+  static_assert(!mozilla::IsRefcountedSmartPointer<int>::value,
+                "IsRefcountedSmartPointer<int> should be false");
+  static_assert(mozilla::IsRefcountedSmartPointer<RefPtr<int>>::value,
+                "IsRefcountedSmartPointer<RefPtr<...>> should be true");
+  static_assert(mozilla::IsRefcountedSmartPointer<const RefPtr<int>>::value,
+                "IsRefcountedSmartPointer<const RefPtr<...>> should be true");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<const RefPtr<int>>>,
-      "RemoveSmartPointer<const RefPtr<int>> should be int");
+      mozilla::IsRefcountedSmartPointer<volatile RefPtr<int>>::value,
+      "IsRefcountedSmartPointer<volatile RefPtr<...>> should be true");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<volatile RefPtr<int>>>,
-      "RemoveSmartPointer<volatile RefPtr<int>> should be int");
+      mozilla::IsRefcountedSmartPointer<const volatile RefPtr<int>>::value,
+      "IsRefcountedSmartPointer<const volatile RefPtr<...>> should be true");
+  static_assert(mozilla::IsRefcountedSmartPointer<nsCOMPtr<int>>::value,
+                "IsRefcountedSmartPointer<nsCOMPtr<...>> should be true");
+  static_assert(mozilla::IsRefcountedSmartPointer<const nsCOMPtr<int>>::value,
+                "IsRefcountedSmartPointer<const nsCOMPtr<...>> should be true");
   static_assert(
-      std::is_same_v<int,
-                     mozilla::RemoveSmartPointer<const volatile RefPtr<int>>>,
-      "RemoveSmartPointer<const volatile RefPtr<int>> should be int");
-  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<nsCOMPtr<int>>>,
-                "RemoveSmartPointer<nsCOMPtr<int>> should be int");
+      mozilla::IsRefcountedSmartPointer<volatile nsCOMPtr<int>>::value,
+      "IsRefcountedSmartPointer<volatile nsCOMPtr<...>> should be true");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<const nsCOMPtr<int>>>,
-      "RemoveSmartPointer<const nsCOMPtr<int>> should be int");
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<volatile nsCOMPtr<int>>>,
-      "RemoveSmartPointer<volatile nsCOMPtr<int>> should be int");
-  static_assert(
-      std::is_same_v<int,
-                     mozilla::RemoveSmartPointer<const volatile nsCOMPtr<int>>>,
-      "RemoveSmartPointer<const volatile nsCOMPtr<int>> should be int");
+      mozilla::IsRefcountedSmartPointer<const volatile nsCOMPtr<int>>::value,
+      "IsRefcountedSmartPointer<const volatile nsCOMPtr<...>> should be true");
 
-  static_assert(std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int>>,
-                "RemoveRawOrSmartPointer<int> should be int");
+  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<int>::Type>,
+                "RemoveSmartPointer<int>::Type should be int");
+  static_assert(std::is_same_v<int*, mozilla::RemoveSmartPointer<int*>::Type>,
+                "RemoveSmartPointer<int*>::Type should be int*");
   static_assert(
       std::is_same_v<UniquePtr<int>,
-                     mozilla::RemoveRawOrSmartPointer<UniquePtr<int>>>,
-      "RemoveRawOrSmartPointer<UniquePtr<int>> should be UniquePtr<int>");
-  static_assert(std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int*>>,
-                "RemoveRawOrSmartPointer<int*> should be int");
+                     mozilla::RemoveSmartPointer<UniquePtr<int>>::Type>,
+      "RemoveSmartPointer<UniquePtr<int>>::Type should be UniquePtr<int>");
   static_assert(
-      std::is_same_v<const int, mozilla::RemoveRawOrSmartPointer<const int*>>,
-      "RemoveRawOrSmartPointer<const int*> should be const int");
+      std::is_same_v<int, mozilla::RemoveSmartPointer<RefPtr<int>>::Type>,
+      "RemoveSmartPointer<RefPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveSmartPointer<const RefPtr<int>>::Type>,
+      "RemoveSmartPointer<const RefPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int,
+                     mozilla::RemoveSmartPointer<volatile RefPtr<int>>::Type>,
+      "RemoveSmartPointer<volatile RefPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<
+          int, mozilla::RemoveSmartPointer<const volatile RefPtr<int>>::Type>,
+      "RemoveSmartPointer<const volatile RefPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveSmartPointer<nsCOMPtr<int>>::Type>,
+      "RemoveSmartPointer<nsCOMPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int,
+                     mozilla::RemoveSmartPointer<const nsCOMPtr<int>>::Type>,
+      "RemoveSmartPointer<const nsCOMPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int,
+                     mozilla::RemoveSmartPointer<volatile nsCOMPtr<int>>::Type>,
+      "RemoveSmartPointer<volatile nsCOMPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<
+          int, mozilla::RemoveSmartPointer<const volatile nsCOMPtr<int>>::Type>,
+      "RemoveSmartPointer<const volatile nsCOMPtr<int>>::Type should be int");
+
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int>::Type>,
+      "RemoveRawOrSmartPointer<int>::Type should be int");
+  static_assert(
+      std::is_same_v<UniquePtr<int>,
+                     mozilla::RemoveRawOrSmartPointer<UniquePtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<UniquePtr<int>>::Type should be UniquePtr<int>");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int*>::Type>,
+      "RemoveRawOrSmartPointer<int*>::Type should be int");
+  static_assert(
+      std::is_same_v<const int,
+                     mozilla::RemoveRawOrSmartPointer<const int*>::Type>,
+      "RemoveRawOrSmartPointer<const int*>::Type should be const int");
   static_assert(
       std::is_same_v<volatile int,
-                     mozilla::RemoveRawOrSmartPointer<volatile int*>>,
-      "RemoveRawOrSmartPointer<volatile int*> should be volatile int");
+                     mozilla::RemoveRawOrSmartPointer<volatile int*>::Type>,
+      "RemoveRawOrSmartPointer<volatile int*>::Type should be volatile int");
   static_assert(
-      std::is_same_v<const volatile int,
-                     mozilla::RemoveRawOrSmartPointer<const volatile int*>>,
-      "RemoveRawOrSmartPointer<const volatile int*> should be const "
+      std::is_same_v<const volatile int, mozilla::RemoveRawOrSmartPointer<
+                                             const volatile int*>::Type>,
+      "RemoveRawOrSmartPointer<const volatile int*>::Type should be const "
       "volatile int");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<RefPtr<int>>>,
-      "RemoveRawOrSmartPointer<RefPtr<int>> should be int");
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<const RefPtr<int>>>,
-      "RemoveRawOrSmartPointer<const RefPtr<int>> should be int");
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<RefPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<RefPtr<int>>::Type should be int");
   static_assert(
       std::is_same_v<int,
-                     mozilla::RemoveRawOrSmartPointer<volatile RefPtr<int>>>,
-      "RemoveRawOrSmartPointer<volatile RefPtr<int>> should be int");
+                     mozilla::RemoveRawOrSmartPointer<const RefPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<const RefPtr<int>>::Type should be int");
   static_assert(
       std::is_same_v<
-          int, mozilla::RemoveRawOrSmartPointer<const volatile RefPtr<int>>>,
-      "RemoveRawOrSmartPointer<const volatile RefPtr<int>> should be "
+          int, mozilla::RemoveRawOrSmartPointer<volatile RefPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<volatile RefPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<
+                              const volatile RefPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<const volatile RefPtr<int>>::Type should be "
       "int");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<nsCOMPtr<int>>>,
-      "RemoveRawOrSmartPointer<nsCOMPtr<int>> should be int");
-  static_assert(
       std::is_same_v<int,
-                     mozilla::RemoveRawOrSmartPointer<const nsCOMPtr<int>>>,
-      "RemoveRawOrSmartPointer<const nsCOMPtr<int>> should be int");
-  static_assert(
-      std::is_same_v<int,
-                     mozilla::RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>>,
-      "RemoveRawOrSmartPointer<volatile nsCOMPtr<int>> should be int");
+                     mozilla::RemoveRawOrSmartPointer<nsCOMPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<nsCOMPtr<int>>::Type should be int");
   static_assert(
       std::is_same_v<
-          int, mozilla::RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>>>,
-      "RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>> should be "
+          int, mozilla::RemoveRawOrSmartPointer<const nsCOMPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<const nsCOMPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<
+          int, mozilla::RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>::Type should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<
+                              const volatile nsCOMPtr<int>>::Type>,
+      "RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>>::Type should be "
       "int");
 }
 
@@ -1255,8 +1289,14 @@ TEST(ThreadUtils, main)
   static_assert(!IsParameterStorageClass<int>::value,
                 "'int' should not be recognized as Storage Class");
   static_assert(
+      IsParameterStorageClass<StoreCopyPassByValue<int>>::value,
+      "StoreCopyPassByValue<int> should be recognized as Storage Class");
+  static_assert(
       IsParameterStorageClass<StoreCopyPassByConstLRef<int>>::value,
       "StoreCopyPassByConstLRef<int> should be recognized as Storage Class");
+  static_assert(
+      IsParameterStorageClass<StoreCopyPassByLRef<int>>::value,
+      "StoreCopyPassByLRef<int> should be recognized as Storage Class");
   static_assert(
       IsParameterStorageClass<StoreCopyPassByRRef<int>>::value,
       "StoreCopyPassByRRef<int> should be recognized as Storage Class");
@@ -1275,6 +1315,12 @@ TEST(ThreadUtils, main)
   static_assert(
       IsParameterStorageClass<StoreConstPtrPassByConstPtr<int>>::value,
       "StoreConstPtrPassByConstPtr<int> should be recognized as Storage Class");
+  static_assert(
+      IsParameterStorageClass<StoreCopyPassByConstPtr<int>>::value,
+      "StoreCopyPassByConstPtr<int> should be recognized as Storage Class");
+  static_assert(
+      IsParameterStorageClass<StoreCopyPassByPtr<int>>::value,
+      "StoreCopyPassByPtr<int> should be recognized as Storage Class");
 
   RefPtr<ThreadUtilsObject> rpt(new ThreadUtilsObject);
   int count = 0;
@@ -1313,6 +1359,11 @@ TEST(ThreadUtils, main)
                                StoreCopyPassByConstLRef<int>>,
                 "detail::ParameterStorage<int>::Type should be "
                 "StoreCopyPassByConstLRef<int>");
+  static_assert(std::is_same_v<
+                    ::detail::ParameterStorage<StoreCopyPassByValue<int>>::Type,
+                    StoreCopyPassByValue<int>>,
+                "detail::ParameterStorage<StoreCopyPassByValue<int>>::Type "
+                "should be StoreCopyPassByValue<int>");
 
   r1 = NewRunnableMethod<int>("TestThreadUtils::ThreadUtilsObject::Test1i", rpt,
                               &ThreadUtilsObject::Test1i, 12);
@@ -1429,6 +1480,37 @@ TEST(ThreadUtils, main)
     EXPECT_EQ(i, rpt->mA0);
   }
 
+  // Raw pointer to copy.
+  static_assert(std::is_same_v<StoreCopyPassByPtr<int>::stored_type, int>,
+                "StoreCopyPassByPtr<int>::stored_type should be int");
+  static_assert(std::is_same_v<StoreCopyPassByPtr<int>::passed_type, int*>,
+                "StoreCopyPassByPtr<int>::passed_type should be int*");
+  {
+    int i = 1202;
+    r1 = NewRunnableMethod<StoreCopyPassByPtr<int>>(
+        "TestThreadUtils::ThreadUtilsObject::Test1pi", rpt,
+        &ThreadUtilsObject::Test1pi, i);
+    r1->Run();
+    EXPECT_EQ(count += 2, rpt->mCount);
+    EXPECT_EQ(i, rpt->mA0);
+  }
+
+  // Raw pointer to const copy.
+  static_assert(std::is_same_v<StoreCopyPassByConstPtr<int>::stored_type, int>,
+                "StoreCopyPassByConstPtr<int>::stored_type should be int");
+  static_assert(
+      std::is_same_v<StoreCopyPassByConstPtr<int>::passed_type, const int*>,
+      "StoreCopyPassByConstPtr<int>::passed_type should be const int*");
+  {
+    int i = 1203;
+    r1 = NewRunnableMethod<StoreCopyPassByConstPtr<int>>(
+        "TestThreadUtils::ThreadUtilsObject::Test1pci", rpt,
+        &ThreadUtilsObject::Test1pci, i);
+    r1->Run();
+    EXPECT_EQ(count += 2, rpt->mCount);
+    EXPECT_EQ(i, rpt->mA0);
+  }
+
   // nsRefPtr to pointer.
   static_assert(
       std::is_same_v<::detail::ParameterStorage<
@@ -1454,7 +1536,7 @@ TEST(ThreadUtils, main)
   // (more nsRefPtr tests below)
 
   // nsRefPtr for ref-countable classes that do not derive from ISupports.
-  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedFinal>,
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedFinal>::value,
                 "ThreadUtilsRefCountedFinal has AddRef() and Release()");
   static_assert(
       std::is_same_v<
@@ -1462,7 +1544,7 @@ TEST(ThreadUtils, main)
           StoreRefPtrPassByPtr<ThreadUtilsRefCountedFinal>>,
       "ParameterStorage<ThreadUtilsRefCountedFinal*>::Type should be "
       "StoreRefPtrPassByPtr<ThreadUtilsRefCountedFinal>");
-  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedBase>,
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedBase>::value,
                 "ThreadUtilsRefCountedBase has AddRef() and Release()");
   static_assert(
       std::is_same_v<
@@ -1470,8 +1552,9 @@ TEST(ThreadUtils, main)
           StoreRefPtrPassByPtr<ThreadUtilsRefCountedBase>>,
       "ParameterStorage<ThreadUtilsRefCountedBase*>::Type should be "
       "StoreRefPtrPassByPtr<ThreadUtilsRefCountedBase>");
-  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedDerived>,
-                "ThreadUtilsRefCountedDerived has AddRef() and Release()");
+  static_assert(
+      ::detail::HasRefCountMethods<ThreadUtilsRefCountedDerived>::value,
+      "ThreadUtilsRefCountedDerived has AddRef() and Release()");
   static_assert(
       std::is_same_v<
           ::detail::ParameterStorage<ThreadUtilsRefCountedDerived*>::Type,
@@ -1479,7 +1562,7 @@ TEST(ThreadUtils, main)
       "ParameterStorage<ThreadUtilsRefCountedDerived*>::Type should be "
       "StoreRefPtrPassByPtr<ThreadUtilsRefCountedDerived>");
 
-  static_assert(!::detail::HasRefCountMethods<ThreadUtilsNonRefCounted>,
+  static_assert(!::detail::HasRefCountMethods<ThreadUtilsNonRefCounted>::value,
                 "ThreadUtilsNonRefCounted doesn't have AddRef() and Release()");
   static_assert(!std::is_same_v<
                     ::detail::ParameterStorage<ThreadUtilsNonRefCounted*>::Type,
@@ -1652,6 +1735,126 @@ TEST(ThreadUtils, main)
   EXPECT_EQ(-1, rpt->mA0);
 
   // Verify copy/move assumptions.
+
+  Spy::ClearAll();
+  if (gDebug) {
+    printf("%d - Test: Store copy from lvalue, pass by value\n", __LINE__);
+  }
+  {  // Block around nsCOMPtr lifetime.
+    nsCOMPtr<nsIRunnable> r2;
+    {  // Block around Spy lifetime.
+      if (gDebug) {
+        printf("%d - Spy s(10)\n", __LINE__);
+      }
+      Spy s(10);
+      EXPECT_EQ(1, gConstructions);
+      EXPECT_EQ(1, gAlive);
+      if (gDebug) {
+        printf(
+            "%d - r2 = "
+            "NewRunnableMethod<StoreCopyPassByValue<Spy>>(&TestByValue, s)\n",
+            __LINE__);
+      }
+      r2 = NewRunnableMethod<StoreCopyPassByValue<Spy>>(
+          "TestThreadUtils::ThreadUtilsObject::TestByValue", rpt,
+          &ThreadUtilsObject::TestByValue, s);
+      EXPECT_EQ(2, gAlive);
+      EXPECT_LE(1, gCopyConstructions);  // At least 1 copy-construction.
+      Spy::ClearActions();
+      if (gDebug) {
+        printf("%d - End block with Spy s(10)\n", __LINE__);
+      }
+    }
+    EXPECT_EQ(1, gDestructions);
+    EXPECT_EQ(1, gAlive);
+    Spy::ClearActions();
+    if (gDebug) {
+      printf("%d - Run()\n", __LINE__);
+    }
+    r2->Run();
+    EXPECT_LE(1, gCopyConstructions);  // Another copy-construction in call.
+    EXPECT_EQ(10, rpt->mSpy.mID);
+    EXPECT_LE(1, gDestructions);
+    EXPECT_EQ(1, gAlive);
+    Spy::ClearActions();
+    if (gDebug) {
+      printf("%d - End block with r\n", __LINE__);
+    }
+  }
+  if (gDebug) {
+    printf("%d - After end block with r\n", __LINE__);
+  }
+  EXPECT_EQ(1, gDestructions);
+  EXPECT_EQ(0, gAlive);
+
+  Spy::ClearAll();
+  if (gDebug) {
+    printf("%d - Test: Store copy from prvalue, pass by value\n", __LINE__);
+  }
+  {
+    if (gDebug) {
+      printf(
+          "%d - r3 = "
+          "NewRunnableMethod<StoreCopyPassByValue<Spy>>(&TestByValue, "
+          "Spy(11))\n",
+          __LINE__);
+    }
+    nsCOMPtr<nsIRunnable> r3 = NewRunnableMethod<StoreCopyPassByValue<Spy>>(
+        "TestThreadUtils::ThreadUtilsObject::TestByValue", rpt,
+        &ThreadUtilsObject::TestByValue, Spy(11));
+    EXPECT_EQ(1, gAlive);
+    EXPECT_EQ(1, gConstructions);
+    EXPECT_LE(1, gMoveConstructions);
+    Spy::ClearActions();
+    if (gDebug) {
+      printf("%d - Run()\n", __LINE__);
+    }
+    r3->Run();
+    EXPECT_LE(1, gCopyConstructions);  // Another copy-construction in call.
+    EXPECT_EQ(11, rpt->mSpy.mID);
+    EXPECT_LE(1, gDestructions);
+    EXPECT_EQ(1, gAlive);
+    Spy::ClearActions();
+    if (gDebug) {
+      printf("%d - End block with r\n", __LINE__);
+    }
+  }
+  if (gDebug) {
+    printf("%d - After end block with r\n", __LINE__);
+  }
+  EXPECT_EQ(1, gDestructions);
+  EXPECT_EQ(0, gAlive);
+
+  Spy::ClearAll();
+  {  // Store copy from xvalue, pass by value.
+    nsCOMPtr<nsIRunnable> r4;
+    {
+      Spy s(12);
+      EXPECT_EQ(1, gConstructions);
+      EXPECT_EQ(1, gAlive);
+      Spy::ClearActions();
+      r4 = NewRunnableMethod<StoreCopyPassByValue<Spy>>(
+          "TestThreadUtils::ThreadUtilsObject::TestByValue", rpt,
+          &ThreadUtilsObject::TestByValue, std::move(s));
+      EXPECT_LE(1, gMoveConstructions);
+      EXPECT_EQ(1, gAlive);
+      EXPECT_EQ(1, gZombies);
+      Spy::ClearActions();
+    }
+    EXPECT_EQ(1, gDestructions);
+    EXPECT_EQ(1, gAlive);
+    EXPECT_EQ(0, gZombies);
+    Spy::ClearActions();
+    r4->Run();
+    EXPECT_LE(1, gCopyConstructions);  // Another copy-construction in call.
+    EXPECT_EQ(12, rpt->mSpy.mID);
+    EXPECT_LE(1, gDestructions);
+    EXPECT_EQ(1, gAlive);
+    Spy::ClearActions();
+  }
+  EXPECT_EQ(1, gDestructions);
+  EXPECT_EQ(0, gAlive);
+  // Won't test xvalues anymore, prvalues are enough to verify all rvalues.
 
   Spy::ClearAll();
   if (gDebug) {
