@@ -7,6 +7,7 @@
 #ifndef mozilla_BounceTrackingState_h
 #define mozilla_BounceTrackingState_h
 
+#include "BounceTrackingRecord.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/OriginAttributes.h"
 #include "nsIPrincipal.h"
@@ -22,7 +23,6 @@ class nsIPrincipal;
 namespace mozilla {
 
 class BounceTrackingProtection;
-class BounceTrackingRecord;
 
 namespace dom {
 class CanonicalBrowsingContext;
@@ -55,7 +55,7 @@ class BounceTrackingState : public nsIWebProgressListener,
   static void ResetAllForOriginAttributesPattern(
       const OriginAttributesPattern& aPattern);
 
-  BounceTrackingRecord* GetBounceTrackingRecord();
+  const Maybe<BounceTrackingRecord>& GetBounceTrackingRecord();
 
   void ResetBounceTrackingRecord();
 
@@ -113,7 +113,7 @@ class BounceTrackingState : public nsIWebProgressListener,
 
   // Record to keep track of extended navigation data. Reset on extended
   // navigation end.
-  RefPtr<BounceTrackingRecord> mBounceTrackingRecord;
+  Maybe<BounceTrackingRecord> mBounceTrackingRecord;
 
   // Timer to wait to wait for a client redirect after a navigation ends.
   RefPtr<nsITimer> mClientBounceDetectionTimeout;

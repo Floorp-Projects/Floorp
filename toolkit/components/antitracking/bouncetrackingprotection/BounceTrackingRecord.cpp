@@ -12,13 +12,11 @@ namespace mozilla {
 
 extern LazyLogModule gBounceTrackingProtectionLog;
 
-NS_IMPL_CYCLE_COLLECTION(BounceTrackingRecord);
-
 void BounceTrackingRecord::SetInitialHost(const nsACString& aHost) {
   mInitialHost = aHost;
 }
 
-const nsACString& BounceTrackingRecord::GetInitialHost() {
+const nsACString& BounceTrackingRecord::GetInitialHost() const {
   return mInitialHost;
 }
 
@@ -26,7 +24,9 @@ void BounceTrackingRecord::SetFinalHost(const nsACString& aHost) {
   mFinalHost = aHost;
 }
 
-const nsACString& BounceTrackingRecord::GetFinalHost() { return mFinalHost; }
+const nsACString& BounceTrackingRecord::GetFinalHost() const {
+  return mFinalHost;
+}
 
 void BounceTrackingRecord::AddBounceHost(const nsACString& aHost) {
   mBounceHosts.Insert(aHost);
@@ -57,11 +57,12 @@ void BounceTrackingRecord::AddStorageAccessHost(const nsACString& aHost) {
   mStorageAccessHosts.Insert(aHost);
 }
 
-const nsTHashSet<nsCString>& BounceTrackingRecord::GetBounceHosts() {
+const nsTHashSet<nsCString>& BounceTrackingRecord::GetBounceHosts() const {
   return mBounceHosts;
 }
 
-const nsTHashSet<nsCString>& BounceTrackingRecord::GetStorageAccessHosts() {
+const nsTHashSet<nsCString>& BounceTrackingRecord::GetStorageAccessHosts()
+    const {
   return mStorageAccessHosts;
 }
 

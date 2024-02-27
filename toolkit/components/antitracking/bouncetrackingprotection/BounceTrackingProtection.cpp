@@ -122,7 +122,7 @@ nsresult BounceTrackingProtection::RecordStatefulBounces(
            aBounceTrackingState->Describe().get()));
 
   // Assert: navigable’s bounce tracking record is not null.
-  BounceTrackingRecord* record =
+  const Maybe<BounceTrackingRecord>& record =
       aBounceTrackingState->GetBounceTrackingRecord();
   NS_ENSURE_TRUE(record, NS_ERROR_FAILURE);
 
