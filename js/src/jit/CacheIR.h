@@ -526,6 +526,8 @@ enum class GuardClassKind : uint8_t {
   Map,
 };
 
+const JSClass* ClassFor(GuardClassKind kind);
+
 }  // namespace jit
 }  // namespace js
 

@@ -11,8 +11,6 @@
 
 #include "jsmath.h"
 
-#include "builtin/DataViewObject.h"
-#include "builtin/MapObject.h"
 #include "jit/AtomicOp.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
@@ -26,7 +24,6 @@
 #include "jit/WarpBuilderShared.h"
 #include "jit/WarpSnapshot.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
-#include "vm/ArgumentsObject.h"
 #include "vm/BytecodeLocation.h"
 #include "wasm/WasmCode.h"
 
@@ -389,27 +386,18 @@ const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
     GuardClassKind kind) {
   switch (kind) {
     case GuardClassKind::Array:
-      return &ArrayObject::class_;
     case GuardClassKind::PlainObject:
-      return &PlainObject::class_;
     case GuardClassKind::FixedLengthArrayBuffer:
-      return &FixedLengthArrayBufferObject::class_;
     case GuardClassKind::FixedLengthSharedArrayBuffer:
-      return &FixedLengthSharedArrayBufferObject::class_;
     case GuardClassKind::FixedLengthDataView:
-      return &FixedLengthDataViewObject::class_;
     case GuardClassKind::MappedArguments:
-      return &MappedArgumentsObject::class_;
     case GuardClassKind::UnmappedArguments:
-      return &UnmappedArgumentsObject::class_;
+    case GuardClassKind::Set:
+    case GuardClassKind::Map:
+    case GuardClassKind::BoundFunction:
+      return ClassFor(kind);
     case GuardClassKind::WindowProxy:
       return mirGen().runtime->maybeWindowProxyClass();
-    case GuardClassKind::Set:
-      return &SetObject::class_;
-    case GuardClassKind::Map:
-      return &MapObject::class_;
-    case GuardClassKind::BoundFunction:
-      return &BoundFunctionObject::class_;
     case GuardClassKind::JSFunction:
       break;
   }
