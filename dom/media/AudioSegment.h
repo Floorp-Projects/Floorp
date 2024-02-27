@@ -318,7 +318,7 @@ struct AudioChunk {
  * A list of audio samples consisting of a sequence of slices of SharedBuffers.
  * The audio rate is determined by the track, not stored in this class.
  */
-class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
+class AudioSegment final : public MediaSegmentBase<AudioSegment, AudioChunk> {
   // The channel count that MaxChannelCount() returned last time it was called.
   uint32_t mMemoizedMaxChannelCount = 0;
 

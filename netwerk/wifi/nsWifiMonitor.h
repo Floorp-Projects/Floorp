@@ -69,7 +69,7 @@ class nsWifiMonitor final : public nsIWifiMonitor, public nsIObserver {
   nsresult DoScan();
 
   nsresult CallWifiListeners(
-      nsTArray<RefPtr<nsIWifiAccessPoint>>&& aAccessPoints,
+      const nsTArray<RefPtr<nsIWifiAccessPoint>>& aAccessPoints,
       bool aAccessPointsChanged);
 
   nsresult PassErrorToWifiListeners(nsresult rv);

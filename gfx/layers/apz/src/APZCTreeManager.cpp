@@ -394,8 +394,7 @@ void APZCTreeManager::SetAllowedTouchBehavior(
     uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aValues) {
   if (!APZThreadUtils::IsControllerThread()) {
     APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<uint64_t,
-                          StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(
+        NewRunnableMethod<uint64_t, nsTArray<TouchBehaviorFlags>>(
             "layers::APZCTreeManager::SetAllowedTouchBehavior", this,
             &APZCTreeManager::SetAllowedTouchBehavior, aInputBlockId,
             aValues.Clone()));

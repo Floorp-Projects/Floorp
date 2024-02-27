@@ -364,13 +364,13 @@ nsresult nsWifiMonitor::DoScan() {
   }
 
   return NS_DispatchToMainThread(
-      NewRunnableMethod<const nsTArray<RefPtr<nsIWifiAccessPoint>>&&, bool>(
+      NewRunnableMethod<nsTArray<RefPtr<nsIWifiAccessPoint>>, bool>(
           "CallWifiListeners", this, &nsWifiMonitor::CallWifiListeners,
           mLastAccessPoints.Clone(), accessPointsChanged));
 }
 
 nsresult nsWifiMonitor::CallWifiListeners(
-    nsTArray<RefPtr<nsIWifiAccessPoint>>&& aAccessPoints,
+    const nsTArray<RefPtr<nsIWifiAccessPoint>>& aAccessPoints,
     bool aAccessPointsChanged) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("Sending wifi access points to the listeners"));
