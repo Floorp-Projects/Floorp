@@ -205,11 +205,11 @@ var gSanitizePromptDialog = {
       this.warningBox.hidden = true;
     }
 
-    await this.dataSizesFinishedUpdatingPromise;
-
     if (!lazy.USE_OLD_DIALOG) {
       this.reportTelemetry("open");
     }
+
+    await this.dataSizesFinishedUpdatingPromise;
   },
 
   updateAcceptButtonState() {
