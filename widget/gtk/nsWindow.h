@@ -654,6 +654,7 @@ class nsWindow final : public nsBaseWidget {
   bool mIsDragPopup : 1;
   bool mCompositedScreen : 1;
   bool mIsAccelerated : 1;
+  bool mIsAlert : 1;
   bool mWindowShouldStartDragging : 1;
   bool mHasMappedToplevel : 1;
   bool mRetryPointerGrab : 1;

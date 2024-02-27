@@ -402,6 +402,7 @@ nsWindow::nsWindow()
       mIsDragPopup(false),
       mCompositedScreen(gdk_screen_is_composited(gdk_screen_get_default())),
       mIsAccelerated(false),
+      mIsAlert(false),
       mWindowShouldStartDragging(false),
       mHasMappedToplevel(false),
       mRetryPointerGrab(false),
@@ -5855,6 +5856,10 @@ void nsWindow::ConfigureGdkWindow() {
   EnsureGdkWindow();
   OnScaleChanged(/* aNotify = */ false);
 
+  if (mIsAlert) {
+    gdk_window_set_override_redirect(mGdkWindow, TRUE);
+  }
+
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
     GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
@@ -6003,6 +6008,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // and can be changed so we use WaylandPopupIsPermanent() to get
   // recent popup config (Bug 1728952).
   mNoAutoHide = aInitData && aInitData->mNoAutoHide;
+  mIsAlert = aInitData && aInitData->mIsAlert;
 
   // Popups that are not noautohide are only temporary. The are used
   // for menus and the like and disappear when another window is used.
@@ -6092,10 +6098,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (mIsPIPWindow) {
     LOG("    Is PIP window\n");
     gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_UTILITY);
-  } else if (aInitData && aInitData->mIsAlert) {
+  } else if (mIsAlert) {
     LOG("    Is alert window\n");
     gtk_window_set_type_hint(GTK_WINDOW(mShell),
                              GDK_WINDOW_TYPE_HINT_NOTIFICATION);
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(mShell), TRUE);
   } else if (mWindowType == WindowType::Dialog) {
     mGtkWindowRoleName = "Dialog";
 
