@@ -46,6 +46,8 @@ skip-if = ["tsan"]
 
 ["test_connection_idle_maintenance.js"]
 
+["test_connection_idle_maintenance_stop.js"]
+
 ["test_database_close_without_onclose.js"]
 
 ["test_database_onclose.js"]
