@@ -1262,6 +1262,20 @@
   args:
     obj: ObjId
 
+- name: GrowableSharedArrayBufferByteLengthInt32Result
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
+- name: GrowableSharedArrayBufferByteLengthDoubleResult
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: GuardHasAttachedArrayBuffer
   shared: true
   transpile: true

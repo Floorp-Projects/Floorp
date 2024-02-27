@@ -2300,11 +2300,6 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
   }
   auto* buf = &obj->as<ArrayBufferObjectMaybeShared>();
 
-  // TODO: Support resizable buffers. (bug 1842999)
-  if (buf->is<GrowableSharedArrayBufferObject>()) {
-    return AttachDecision::NoAction;
-  }
-
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
   }
@@ -2341,10 +2336,18 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, buf, holder, id, *prop, objId, mode_);
-  if (buf->byteLength() <= INT32_MAX) {
-    writer.loadArrayBufferByteLengthInt32Result(objId);
+  if (!buf->is<GrowableSharedArrayBufferObject>()) {
+    if (buf->byteLength() <= INT32_MAX) {
+      writer.loadArrayBufferByteLengthInt32Result(objId);
+    } else {
+      writer.loadArrayBufferByteLengthDoubleResult(objId);
+    }
   } else {
-    writer.loadArrayBufferByteLengthDoubleResult(objId);
+    if (buf->byteLength() <= INT32_MAX) {
+      writer.growableSharedArrayBufferByteLengthInt32Result(objId);
+    } else {
+      writer.growableSharedArrayBufferByteLengthDoubleResult(objId);
+    }
   }
   writer.returnFromIC();
 
