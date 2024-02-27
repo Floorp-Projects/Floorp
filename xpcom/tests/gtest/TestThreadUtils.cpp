@@ -885,122 +885,111 @@ TEST(ThreadUtils, IdleTaskRunner)
 
 TEST(ThreadUtils, TypeTraits)
 {
-  static_assert(!mozilla::IsRefcountedSmartPointer<int>::value,
+  static_assert(!mozilla::IsRefcountedSmartPointer<int>,
                 "IsRefcountedSmartPointer<int> should be false");
-  static_assert(mozilla::IsRefcountedSmartPointer<RefPtr<int>>::value,
+  static_assert(mozilla::IsRefcountedSmartPointer<RefPtr<int>>,
                 "IsRefcountedSmartPointer<RefPtr<...>> should be true");
-  static_assert(mozilla::IsRefcountedSmartPointer<const RefPtr<int>>::value,
+  static_assert(mozilla::IsRefcountedSmartPointer<const RefPtr<int>>,
                 "IsRefcountedSmartPointer<const RefPtr<...>> should be true");
   static_assert(
-      mozilla::IsRefcountedSmartPointer<volatile RefPtr<int>>::value,
+      mozilla::IsRefcountedSmartPointer<volatile RefPtr<int>>,
       "IsRefcountedSmartPointer<volatile RefPtr<...>> should be true");
   static_assert(
-      mozilla::IsRefcountedSmartPointer<const volatile RefPtr<int>>::value,
+      mozilla::IsRefcountedSmartPointer<const volatile RefPtr<int>>,
       "IsRefcountedSmartPointer<const volatile RefPtr<...>> should be true");
-  static_assert(mozilla::IsRefcountedSmartPointer<nsCOMPtr<int>>::value,
+  static_assert(mozilla::IsRefcountedSmartPointer<nsCOMPtr<int>>,
                 "IsRefcountedSmartPointer<nsCOMPtr<...>> should be true");
-  static_assert(mozilla::IsRefcountedSmartPointer<const nsCOMPtr<int>>::value,
+  static_assert(mozilla::IsRefcountedSmartPointer<const nsCOMPtr<int>>,
                 "IsRefcountedSmartPointer<const nsCOMPtr<...>> should be true");
   static_assert(
-      mozilla::IsRefcountedSmartPointer<volatile nsCOMPtr<int>>::value,
+      mozilla::IsRefcountedSmartPointer<volatile nsCOMPtr<int>>,
       "IsRefcountedSmartPointer<volatile nsCOMPtr<...>> should be true");
   static_assert(
-      mozilla::IsRefcountedSmartPointer<const volatile nsCOMPtr<int>>::value,
+      mozilla::IsRefcountedSmartPointer<const volatile nsCOMPtr<int>>,
       "IsRefcountedSmartPointer<const volatile nsCOMPtr<...>> should be true");
 
-  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<int>::Type>,
-                "RemoveSmartPointer<int>::Type should be int");
-  static_assert(std::is_same_v<int*, mozilla::RemoveSmartPointer<int*>::Type>,
-                "RemoveSmartPointer<int*>::Type should be int*");
+  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<int>>,
+                "RemoveSmartPointer<int> should be int");
+  static_assert(std::is_same_v<int*, mozilla::RemoveSmartPointer<int*>>,
+                "RemoveSmartPointer<int*> should be int*");
+  static_assert(std::is_same_v<UniquePtr<int>,
+                               mozilla::RemoveSmartPointer<UniquePtr<int>>>,
+                "RemoveSmartPointer<UniquePtr<int>> should be UniquePtr<int>");
+  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<RefPtr<int>>>,
+                "RemoveSmartPointer<RefPtr<int>> should be int");
   static_assert(
-      std::is_same_v<UniquePtr<int>,
-                     mozilla::RemoveSmartPointer<UniquePtr<int>>::Type>,
-      "RemoveSmartPointer<UniquePtr<int>>::Type should be UniquePtr<int>");
+      std::is_same_v<int, mozilla::RemoveSmartPointer<const RefPtr<int>>>,
+      "RemoveSmartPointer<const RefPtr<int>> should be int");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<RefPtr<int>>::Type>,
-      "RemoveSmartPointer<RefPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<const RefPtr<int>>::Type>,
-      "RemoveSmartPointer<const RefPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<int,
-                     mozilla::RemoveSmartPointer<volatile RefPtr<int>>::Type>,
-      "RemoveSmartPointer<volatile RefPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<
-          int, mozilla::RemoveSmartPointer<const volatile RefPtr<int>>::Type>,
-      "RemoveSmartPointer<const volatile RefPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveSmartPointer<nsCOMPtr<int>>::Type>,
-      "RemoveSmartPointer<nsCOMPtr<int>>::Type should be int");
+      std::is_same_v<int, mozilla::RemoveSmartPointer<volatile RefPtr<int>>>,
+      "RemoveSmartPointer<volatile RefPtr<int>> should be int");
   static_assert(
       std::is_same_v<int,
-                     mozilla::RemoveSmartPointer<const nsCOMPtr<int>>::Type>,
-      "RemoveSmartPointer<const nsCOMPtr<int>>::Type should be int");
+                     mozilla::RemoveSmartPointer<const volatile RefPtr<int>>>,
+      "RemoveSmartPointer<const volatile RefPtr<int>> should be int");
+  static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<nsCOMPtr<int>>>,
+                "RemoveSmartPointer<nsCOMPtr<int>> should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveSmartPointer<const nsCOMPtr<int>>>,
+      "RemoveSmartPointer<const nsCOMPtr<int>> should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveSmartPointer<volatile nsCOMPtr<int>>>,
+      "RemoveSmartPointer<volatile nsCOMPtr<int>> should be int");
   static_assert(
       std::is_same_v<int,
-                     mozilla::RemoveSmartPointer<volatile nsCOMPtr<int>>::Type>,
-      "RemoveSmartPointer<volatile nsCOMPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<
-          int, mozilla::RemoveSmartPointer<const volatile nsCOMPtr<int>>::Type>,
-      "RemoveSmartPointer<const volatile nsCOMPtr<int>>::Type should be int");
+                     mozilla::RemoveSmartPointer<const volatile nsCOMPtr<int>>>,
+      "RemoveSmartPointer<const volatile nsCOMPtr<int>> should be int");
 
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int>::Type>,
-      "RemoveRawOrSmartPointer<int>::Type should be int");
+  static_assert(std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int>>,
+                "RemoveRawOrSmartPointer<int> should be int");
   static_assert(
       std::is_same_v<UniquePtr<int>,
-                     mozilla::RemoveRawOrSmartPointer<UniquePtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<UniquePtr<int>>::Type should be UniquePtr<int>");
+                     mozilla::RemoveRawOrSmartPointer<UniquePtr<int>>>,
+      "RemoveRawOrSmartPointer<UniquePtr<int>> should be UniquePtr<int>");
+  static_assert(std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int*>>,
+                "RemoveRawOrSmartPointer<int*> should be int");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<int*>::Type>,
-      "RemoveRawOrSmartPointer<int*>::Type should be int");
-  static_assert(
-      std::is_same_v<const int,
-                     mozilla::RemoveRawOrSmartPointer<const int*>::Type>,
-      "RemoveRawOrSmartPointer<const int*>::Type should be const int");
+      std::is_same_v<const int, mozilla::RemoveRawOrSmartPointer<const int*>>,
+      "RemoveRawOrSmartPointer<const int*> should be const int");
   static_assert(
       std::is_same_v<volatile int,
-                     mozilla::RemoveRawOrSmartPointer<volatile int*>::Type>,
-      "RemoveRawOrSmartPointer<volatile int*>::Type should be volatile int");
+                     mozilla::RemoveRawOrSmartPointer<volatile int*>>,
+      "RemoveRawOrSmartPointer<volatile int*> should be volatile int");
   static_assert(
-      std::is_same_v<const volatile int, mozilla::RemoveRawOrSmartPointer<
-                                             const volatile int*>::Type>,
-      "RemoveRawOrSmartPointer<const volatile int*>::Type should be const "
+      std::is_same_v<const volatile int,
+                     mozilla::RemoveRawOrSmartPointer<const volatile int*>>,
+      "RemoveRawOrSmartPointer<const volatile int*> should be const "
       "volatile int");
   static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<RefPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<RefPtr<int>>::Type should be int");
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<RefPtr<int>>>,
+      "RemoveRawOrSmartPointer<RefPtr<int>> should be int");
+  static_assert(
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<const RefPtr<int>>>,
+      "RemoveRawOrSmartPointer<const RefPtr<int>> should be int");
   static_assert(
       std::is_same_v<int,
-                     mozilla::RemoveRawOrSmartPointer<const RefPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<const RefPtr<int>>::Type should be int");
+                     mozilla::RemoveRawOrSmartPointer<volatile RefPtr<int>>>,
+      "RemoveRawOrSmartPointer<volatile RefPtr<int>> should be int");
   static_assert(
       std::is_same_v<
-          int, mozilla::RemoveRawOrSmartPointer<volatile RefPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<volatile RefPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<
-                              const volatile RefPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<const volatile RefPtr<int>>::Type should be "
+          int, mozilla::RemoveRawOrSmartPointer<const volatile RefPtr<int>>>,
+      "RemoveRawOrSmartPointer<const volatile RefPtr<int>> should be "
       "int");
   static_assert(
+      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<nsCOMPtr<int>>>,
+      "RemoveRawOrSmartPointer<nsCOMPtr<int>> should be int");
+  static_assert(
       std::is_same_v<int,
-                     mozilla::RemoveRawOrSmartPointer<nsCOMPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<nsCOMPtr<int>>::Type should be int");
+                     mozilla::RemoveRawOrSmartPointer<const nsCOMPtr<int>>>,
+      "RemoveRawOrSmartPointer<const nsCOMPtr<int>> should be int");
+  static_assert(
+      std::is_same_v<int,
+                     mozilla::RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>>,
+      "RemoveRawOrSmartPointer<volatile nsCOMPtr<int>> should be int");
   static_assert(
       std::is_same_v<
-          int, mozilla::RemoveRawOrSmartPointer<const nsCOMPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<const nsCOMPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<
-          int, mozilla::RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>::Type should be int");
-  static_assert(
-      std::is_same_v<int, mozilla::RemoveRawOrSmartPointer<
-                              const volatile nsCOMPtr<int>>::Type>,
-      "RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>>::Type should be "
+          int, mozilla::RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>>>,
+      "RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>> should be "
       "int");
 }
 
@@ -1536,7 +1525,7 @@ TEST(ThreadUtils, main)
   // (more nsRefPtr tests below)
 
   // nsRefPtr for ref-countable classes that do not derive from ISupports.
-  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedFinal>::value,
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedFinal>,
                 "ThreadUtilsRefCountedFinal has AddRef() and Release()");
   static_assert(
       std::is_same_v<
@@ -1544,7 +1533,7 @@ TEST(ThreadUtils, main)
           StoreRefPtrPassByPtr<ThreadUtilsRefCountedFinal>>,
       "ParameterStorage<ThreadUtilsRefCountedFinal*>::Type should be "
       "StoreRefPtrPassByPtr<ThreadUtilsRefCountedFinal>");
-  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedBase>::value,
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedBase>,
                 "ThreadUtilsRefCountedBase has AddRef() and Release()");
   static_assert(
       std::is_same_v<
@@ -1552,9 +1541,8 @@ TEST(ThreadUtils, main)
           StoreRefPtrPassByPtr<ThreadUtilsRefCountedBase>>,
       "ParameterStorage<ThreadUtilsRefCountedBase*>::Type should be "
       "StoreRefPtrPassByPtr<ThreadUtilsRefCountedBase>");
-  static_assert(
-      ::detail::HasRefCountMethods<ThreadUtilsRefCountedDerived>::value,
-      "ThreadUtilsRefCountedDerived has AddRef() and Release()");
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedDerived>,
+                "ThreadUtilsRefCountedDerived has AddRef() and Release()");
   static_assert(
       std::is_same_v<
           ::detail::ParameterStorage<ThreadUtilsRefCountedDerived*>::Type,
@@ -1562,7 +1550,7 @@ TEST(ThreadUtils, main)
       "ParameterStorage<ThreadUtilsRefCountedDerived*>::Type should be "
       "StoreRefPtrPassByPtr<ThreadUtilsRefCountedDerived>");
 
-  static_assert(!::detail::HasRefCountMethods<ThreadUtilsNonRefCounted>::value,
+  static_assert(!::detail::HasRefCountMethods<ThreadUtilsNonRefCounted>,
                 "ThreadUtilsNonRefCounted doesn't have AddRef() and Release()");
   static_assert(!std::is_same_v<
                     ::detail::ParameterStorage<ThreadUtilsNonRefCounted*>::Type,
