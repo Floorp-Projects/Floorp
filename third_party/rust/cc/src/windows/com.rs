@@ -7,27 +7,31 @@
 
 #![allow(unused)]
 
-use crate::winapi::CoInitializeEx;
-use crate::winapi::IUnknown;
-use crate::winapi::Interface;
-use crate::winapi::BSTR;
-use crate::winapi::COINIT_MULTITHREADED;
-use crate::winapi::{SysFreeString, SysStringLen};
-use crate::winapi::{HRESULT, S_FALSE, S_OK};
-use std::ffi::{OsStr, OsString};
-use std::mem::forget;
-use std::ops::Deref;
-use std::os::windows::ffi::{OsStrExt, OsStringExt};
-use std::ptr::null_mut;
-use std::slice::from_raw_parts;
+use crate::windows::{
+    winapi::{IUnknown, Interface},
+    windows_sys::{
+        CoInitializeEx, SysFreeString, SysStringLen, BSTR, COINIT_MULTITHREADED, HRESULT, S_FALSE,
+        S_OK,
+    },
+};
+use std::{
+    convert::TryInto,
+    ffi::{OsStr, OsString},
+    mem::ManuallyDrop,
+    ops::Deref,
+    os::windows::ffi::{OsStrExt, OsStringExt},
+    ptr::{null, null_mut},
+    slice::from_raw_parts,
+};
 
 pub fn initialize() -> Result<(), HRESULT> {
-    let err = unsafe { CoInitializeEx(null_mut(), COINIT_MULTITHREADED) };
+    let err = unsafe { CoInitializeEx(null(), COINIT_MULTITHREADED.try_into().unwrap()) };
     if err != S_OK && err != S_FALSE {
         // S_FALSE just means COM is already initialized
-        return Err(err);
+        Err(err)
+    } else {
+        Ok(())
     }
-    Ok(())
 }
 
 pub struct ComPtr<T>(*mut T)
@@ -55,15 +59,13 @@ where
     /// Extracts the raw pointer.
     /// You are now responsible for releasing it yourself.
     pub fn into_raw(self) -> *mut T {
-        let p = self.0;
-        forget(self);
-        p
+        ManuallyDrop::new(self).0
     }
     /// For internal use only.
     fn as_unknown(&self) -> &IUnknown {
         unsafe { &*(self.0 as *mut IUnknown) }
     }
-    /// Performs QueryInterface fun.
+    /// Performs `QueryInterface` fun.
     pub fn cast<U>(&self) -> Result<ComPtr<U>, i32>
     where
         U: Interface,
