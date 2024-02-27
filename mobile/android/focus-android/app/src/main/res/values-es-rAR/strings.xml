@@ -88,7 +88,7 @@
 
     <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
     for Android 14+. -->
-    <string name="notification_erase_text_android_14_1">Toca o desliza esta notificación para borrar de forma segura tu historial de navegación.</string>
+    <string name="notification_erase_text_android_14_1">Tocá o deslizá esta notificación para eliminar de forma segura tu historial de navegación.</string>
 
     <string name="notification_erase_text">Borrar historial de navegación</string>
 

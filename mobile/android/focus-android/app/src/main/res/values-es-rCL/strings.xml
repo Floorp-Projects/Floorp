@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Compartir vía</string>
 
     <string name="notification_erase_title_android_14">¿Eliminar historial de navegación?</string>
-    <string name="notification_erase_text_android_14">Toca o elimina esta notificación para borrar de forma segura tu historial de navegación.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Toca o elimina esta notificación para borrar de forma segura tu historial de navegación.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Toca o desliza esta notificación para borrar de forma segura tu historial de navegación.</string>
 
     <string name="notification_erase_text">Eliminar historial de navegación</string>
 
