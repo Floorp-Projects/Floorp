@@ -228,7 +228,12 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path, head_repo, head_rev
             )
 
         subprocess.check_call(
-            [str(git), "checkout", "FETCH_HEAD" if head_rev else "bookmarks/central", "--"],
+            [
+                str(git),
+                "checkout",
+                "FETCH_HEAD" if head_rev else "bookmarks/central",
+                "--",
+            ],
             cwd=str(dest),
             env=env,
         )
