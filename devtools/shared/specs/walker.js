@@ -140,6 +140,13 @@ const walkerSpec = generateActorSpec({
       },
       response: RetVal("disconnectedNode"),
     },
+    getIdrefNode: {
+      request: {
+        node: Arg(0, "domnode"),
+        id: Arg(1),
+      },
+      response: RetVal("disconnectedNode"),
+    },
     querySelectorAll: {
       request: {
         node: Arg(0, "domnode"),

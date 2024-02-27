@@ -1218,19 +1218,15 @@ MarkupView.prototype = {
     } else if (type == "idref") {
       // Select the node in the same document.
       nodeFront.walkerFront
-        .document(nodeFront)
-        .then(doc => {
-          return nodeFront.walkerFront
-            .querySelector(doc, "#" + CSS.escape(link))
-            .then(node => {
-              if (!node) {
-                this.emit("idref-attribute-link-failed");
-                return;
-              }
-              this.inspector.selection.setNodeFront(node, {
-                reason: "markup-attribute-link",
-              });
-            });
+        .getIdrefNode(nodeFront, CSS.escape(link))
+        .then(node => {
+          if (!node) {
+            this.emitForTests("idref-attribute-link-failed");
+            return;
+          }
+          this.inspector.selection.setNodeFront(node, {
+            reason: "markup-attribute-link",
+          });
         })
         .catch(console.error);
     }
