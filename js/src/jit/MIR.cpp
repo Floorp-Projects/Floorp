@@ -6365,6 +6365,29 @@ AliasSet MGuardHasAttachedArrayBuffer::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot);
 }
 
+AliasSet MResizableTypedArrayLength::getAliasSet() const {
+  // Loads the length and byteOffset slots, the shared-elements flag, the
+  // auto-length fixed slot, and the shared raw-buffer length.
+  auto flags = AliasSet::ArrayBufferViewLengthOrOffset |
+               AliasSet::ObjectFields | AliasSet::FixedSlot |
+               AliasSet::SharedArrayRawBufferLength;
+
+  // When a barrier is needed make the instruction effectful by giving it a
+  // "store" effect. Also prevent reordering LoadUnboxedScalar before this
+  // instruction by including |UnboxedElement| in the alias set.
+  if (requiresMemoryBarrier() == MemoryBarrierRequirement::Required) {
+    return AliasSet::Store(flags | AliasSet::UnboxedElement);
+  }
+  return AliasSet::Load(flags);
+}
+
+bool MResizableTypedArrayLength::congruentTo(const MDefinition* ins) const {
+  if (requiresMemoryBarrier() == MemoryBarrierRequirement::Required) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
 AliasSet MArrayPush::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields | AliasSet::Element);
 }

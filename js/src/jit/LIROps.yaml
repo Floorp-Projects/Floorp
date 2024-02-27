@@ -1875,6 +1875,15 @@
   operands:
     object: WordSized
 
+# Read the length of a resizable typed array.
+- name: ResizableTypedArrayLength
+  result_type: WordSized
+  operands:
+    object: WordSized
+  arguments:
+    synchronization: js::jit::Synchronization
+  num_temps: 1
+
 - name: GuardHasAttachedArrayBuffer
   operands:
     object: WordSized

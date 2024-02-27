@@ -1215,28 +1215,28 @@
 
 - name: ResizableTypedArrayByteLengthInt32Result
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
 
 - name: ResizableTypedArrayByteLengthDoubleResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
 
 - name: ResizableTypedArrayLengthInt32Result
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
 
 - name: ResizableTypedArrayLengthDoubleResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
