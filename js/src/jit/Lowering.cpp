@@ -3938,6 +3938,28 @@ void LIRGenerator::visitResizableTypedArrayLength(
   define(lir, ins);
 }
 
+void LIRGenerator::visitResizableDataViewByteLength(
+    MResizableDataViewByteLength* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::IntPtr);
+
+  auto sync = SynchronizeLoad(ins->requiresMemoryBarrier());
+  auto* lir = new (alloc())
+      LResizableDataViewByteLength(useRegister(ins->object()), temp(), sync);
+  define(lir, ins);
+}
+
+void LIRGenerator::visitGuardResizableArrayBufferViewInBounds(
+    MGuardResizableArrayBufferViewInBounds* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LGuardResizableArrayBufferViewInBounds(
+      useRegister(ins->object()), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitGuardHasAttachedArrayBuffer(
     MGuardHasAttachedArrayBuffer* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

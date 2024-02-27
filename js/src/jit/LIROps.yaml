@@ -1884,6 +1884,21 @@
     synchronization: js::jit::Synchronization
   num_temps: 1
 
+# Read the byte length of a resizable data view.
+- name: ResizableDataViewByteLength
+  result_type: WordSized
+  operands:
+    object: WordSized
+  arguments:
+    synchronization: js::jit::Synchronization
+  num_temps: 1
+
+# Guard a resizable array buffer view is in-bounds.
+- name: GuardResizableArrayBufferViewInBounds
+  operands:
+    object: WordSized
+  num_temps: 1
+
 - name: GuardHasAttachedArrayBuffer
   operands:
     object: WordSized

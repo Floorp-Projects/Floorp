@@ -9669,6 +9669,26 @@ void CodeGenerator::visitResizableTypedArrayLength(
                                            temp);
 }
 
+void CodeGenerator::visitResizableDataViewByteLength(
+    LResizableDataViewByteLength* lir) {
+  Register obj = ToRegister(lir->object());
+  Register out = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  masm.loadResizableDataViewByteLengthIntPtr(lir->synchronization(), obj, out,
+                                             temp);
+}
+
+void CodeGenerator::visitGuardResizableArrayBufferViewInBounds(
+    LGuardResizableArrayBufferViewInBounds* lir) {
+  Register obj = ToRegister(lir->object());
+  Register temp = ToRegister(lir->temp0());
+
+  Label bail;
+  masm.branchIfResizableArrayBufferViewOutOfBounds(obj, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardHasAttachedArrayBuffer(
     LGuardHasAttachedArrayBuffer* lir) {
   Register obj = ToRegister(lir->object());

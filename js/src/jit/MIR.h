@@ -1289,6 +1289,7 @@ using MVariadicInstruction = MVariadicT<MInstruction>;
 // - MLoadUnboxedScalar
 // - MStoreUnboxedScalar
 // - MResizableTypedArrayLength
+// - MResizableDataViewByteLength
 //
 // Must have the following attributes:
 //
