@@ -637,6 +637,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachIsCrossRealmArrayConstructor();
   AttachDecision tryAttachGuardToClass(InlinableNative native);
   AttachDecision tryAttachGuardToClass(GuardClassKind kind);
+  AttachDecision tryAttachGuardToEitherClass(GuardClassKind kind1,
+                                             GuardClassKind kind2);
   AttachDecision tryAttachGuardToArrayBuffer();
   AttachDecision tryAttachGuardToSharedArrayBuffer();
   AttachDecision tryAttachHasClass(const JSClass* clasp,
