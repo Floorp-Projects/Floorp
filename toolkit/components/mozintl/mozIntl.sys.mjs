@@ -1055,6 +1055,10 @@ export class MozIntl {
     return "ltr";
   }
 
+  stringHasRTLChars(str) {
+    return mozIntlHelper.stringHasRTLChars(str);
+  }
+
   get DateTimeFormat() {
     if (!this._cache.hasOwnProperty("DateTimeFormat")) {
       mozIntlHelper.addDateTimeFormatConstructor(this._cache);
