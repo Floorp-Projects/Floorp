@@ -1959,6 +1959,25 @@ static WasmArrayObject* UncheckedCastToArrayI16(HandleAnyRef ref) {
 }
 
 /* static */
+int32_t Instance::stringTest(Instance* instance, void* stringArg) {
+  AnyRef string = AnyRef::fromCompiledCode(stringArg);
+  if (string.isNull() || !string.isJSString()) {
+    return 0;
+  }
+  return 1;
+}
+
+/* static */
+void* Instance::stringCast(Instance* instance, void* stringArg) {
+  AnyRef string = AnyRef::fromCompiledCode(stringArg);
+  if (string.isNull() || !string.isJSString()) {
+    ReportTrapError(instance->cx(), JSMSG_WASM_BAD_CAST);
+    return nullptr;
+  }
+  return string.forCompiledCode();
+}
+
+/* static */
 void* Instance::stringFromWTF16Array(Instance* instance, void* arrayArg,
                                      uint32_t arrayStart, uint32_t arrayCount) {
   JSContext* cx = instance->cx();

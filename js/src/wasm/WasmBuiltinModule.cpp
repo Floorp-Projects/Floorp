@@ -296,6 +296,8 @@ static BuiltinModuleFuncId IntGemmFuncs[] = {
 
 #ifdef ENABLE_WASM_JS_STRING_BUILTINS
 static BuiltinModuleFuncId JSStringFuncs[] = {
+    BuiltinModuleFuncId::StringTest,
+    BuiltinModuleFuncId::StringCast,
     BuiltinModuleFuncId::StringFromWTF16Array,
     BuiltinModuleFuncId::StringToWTF16Array,
     BuiltinModuleFuncId::StringFromCharCode,
