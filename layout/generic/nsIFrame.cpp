@@ -12517,26 +12517,6 @@ void nsIFrame::DisplayReflowShutdown() {
   DR_state = nullptr;
 }
 
-bool nsIFrame::HasUnreflowedContainerQueryAncestor() const {
-  // If this frame has done the first reflow, its ancestors are guaranteed to
-  // have as well.
-  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW) ||
-      !PresContext()->HasContainerQueryFrames()) {
-    return false;
-  }
-  for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
-    if (!cur->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-      // Done first reflow from this ancestor up, including query containers.
-      return false;
-    }
-    if (cur->StyleDisplay()->IsQueryContainer()) {
-      return true;
-    }
-  }
-  // No query container from this frame up to root.
-  return false;
-}
-
 void DR_cookie::Change() const {
   DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)mValue;
   if (treeNode && treeNode->mDisplay) {
