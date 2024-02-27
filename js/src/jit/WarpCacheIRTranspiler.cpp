@@ -4372,6 +4372,18 @@ bool WarpCacheIRTranspiler::emitGuardResizableArrayBufferViewInBounds(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardResizableArrayBufferViewInBoundsOrDetached(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins =
+      MGuardResizableArrayBufferViewInBoundsOrDetached::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitIsTypedArrayConstructorResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

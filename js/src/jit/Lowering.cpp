@@ -3980,6 +3980,17 @@ void LIRGenerator::visitGuardResizableArrayBufferViewInBounds(
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardResizableArrayBufferViewInBoundsOrDetached(
+    MGuardResizableArrayBufferViewInBoundsOrDetached* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LGuardResizableArrayBufferViewInBoundsOrDetached(
+      useRegister(ins->object()), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitGuardHasAttachedArrayBuffer(
     MGuardHasAttachedArrayBuffer* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

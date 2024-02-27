@@ -1571,6 +1571,16 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+# Guard a resizable typed array is in-bounds or detached.
+- name: GuardResizableArrayBufferViewInBoundsOrDetached
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 - name: GuardNumberToIntPtrIndex
   gen_boilerplate: false
 
