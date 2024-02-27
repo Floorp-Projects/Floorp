@@ -5,9 +5,11 @@ import { MultiSelect } from "content-src/components/MultiSelect";
 describe("MultiSelect component", () => {
   let sandbox;
   let MULTISELECT_SCREEN_PROPS;
+  let setScreenMultiSelects;
   let setActiveMultiSelect;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    setScreenMultiSelects = sandbox.stub();
     setActiveMultiSelect = sandbox.stub();
     MULTISELECT_SCREEN_PROPS = {
       id: "multiselect-screen",
@@ -22,9 +24,9 @@ describe("MultiSelect component", () => {
         progress_bar: true,
         logo: {},
         title: "Test Title",
-        subtitle: "Test SubTitle",
         tiles: {
           type: "multiselect",
+          label: "Test Subtitle",
           data: [
             {
               id: "checkbox-1",
@@ -73,19 +75,41 @@ describe("MultiSelect component", () => {
           has_arrow_icon: true,
         },
       },
+      setScreenMultiSelects,
+      setActiveMultiSelect,
     };
   });
   afterEach(() => {
     sandbox.restore();
   });
 
-  it("should call setActiveMultiSelect with ids of checkboxes with defaultValue true", () => {
-    const wrapper = mount(
-      <MultiSelect
-        setActiveMultiSelect={setActiveMultiSelect}
-        {...MULTISELECT_SCREEN_PROPS}
-      />
+  it("should call setScreenMultiSelects with all ids of checkboxes", () => {
+    mount(<MultiSelect {...MULTISELECT_SCREEN_PROPS} />);
+
+    assert.calledOnce(setScreenMultiSelects);
+    assert.calledWith(setScreenMultiSelects, [
+      "checkbox-1",
+      "checkbox-2",
+      "checkbox-3",
+    ]);
+  });
+
+  it("should not call setScreenMultiSelects if it's already set", () => {
+    let map = sandbox
+      .stub()
+      .returns(MULTISELECT_SCREEN_PROPS.content.tiles.data);
+
+    mount(
+      <MultiSelect screenMultiSelects={{ map }} {...MULTISELECT_SCREEN_PROPS} />
     );
+
+    assert.notCalled(setScreenMultiSelects);
+    assert.calledOnce(map);
+    assert.calledWith(map, sinon.match.func);
+  });
+
+  it("should call setActiveMultiSelect with ids of checkboxes with defaultValue true", () => {
+    const wrapper = mount(<MultiSelect {...MULTISELECT_SCREEN_PROPS} />);
 
     wrapper.setProps({ activeMultiSelect: null });
     assert.calledOnce(setActiveMultiSelect);
@@ -93,12 +117,7 @@ describe("MultiSelect component", () => {
   });
 
   it("should use activeMultiSelect ids to set checked state for respective checkbox", () => {
-    const wrapper = mount(
-      <MultiSelect
-        setActiveMultiSelect={setActiveMultiSelect}
-        {...MULTISELECT_SCREEN_PROPS}
-      />
-    );
+    const wrapper = mount(<MultiSelect {...MULTISELECT_SCREEN_PROPS} />);
 
     wrapper.setProps({ activeMultiSelect: ["checkbox-1", "checkbox-2"] });
     const checkBoxes = wrapper.find(".checkbox-container input");
@@ -110,14 +129,11 @@ describe("MultiSelect component", () => {
   });
 
   it("cover the randomize property", async () => {
-    MULTISELECT_SCREEN_PROPS.content.tiles.randomize = true;
-
-    const wrapper = mount(
-      <MultiSelect
-        setActiveMultiSelect={setActiveMultiSelect}
-        {...MULTISELECT_SCREEN_PROPS}
-      />
+    MULTISELECT_SCREEN_PROPS.content.tiles.data.forEach(
+      item => (item.randomize = true)
     );
+
+    const wrapper = mount(<MultiSelect {...MULTISELECT_SCREEN_PROPS} />);
 
     const checkBoxes = wrapper.find(".checkbox-container input");
     assert.strictEqual(checkBoxes.length, 3);
@@ -132,12 +148,7 @@ describe("MultiSelect component", () => {
   });
 
   it("should filter out id when checkbox is unchecked", () => {
-    const wrapper = mount(
-      <MultiSelect
-        setActiveMultiSelect={setActiveMultiSelect}
-        {...MULTISELECT_SCREEN_PROPS}
-      />
-    );
+    const wrapper = mount(<MultiSelect {...MULTISELECT_SCREEN_PROPS} />);
     wrapper.setProps({ activeMultiSelect: ["checkbox-1", "checkbox-2"] });
 
     const ckbx1 = wrapper.find(".checkbox-container input").at(0);
@@ -148,12 +159,7 @@ describe("MultiSelect component", () => {
   });
 
   it("should add id when checkbox is checked", () => {
-    const wrapper = mount(
-      <MultiSelect
-        setActiveMultiSelect={setActiveMultiSelect}
-        {...MULTISELECT_SCREEN_PROPS}
-      />
-    );
+    const wrapper = mount(<MultiSelect {...MULTISELECT_SCREEN_PROPS} />);
     wrapper.setProps({ activeMultiSelect: ["checkbox-1", "checkbox-2"] });
 
     const ckbx3 = wrapper.find(".checkbox-container input").at(2);
@@ -190,12 +196,7 @@ describe("MultiSelect component", () => {
         icon: { style: { color: "yellow" } },
       },
     ];
-    const wrapper = mount(
-      <MultiSelect
-        setActiveMultiSelect={setActiveMultiSelect}
-        {...SCREEN_PROPS}
-      />
-    );
+    const wrapper = mount(<MultiSelect {...SCREEN_PROPS} />);
 
     // wait for effect hook
     await new Promise(resolve => queueMicrotask(resolve));

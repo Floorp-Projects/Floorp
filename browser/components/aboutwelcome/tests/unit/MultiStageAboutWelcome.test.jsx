@@ -213,6 +213,7 @@ describe("MultiStageAboutWelcome module", () => {
           UTMTerm: DEFAULT_PROPS.utm_term,
           flowParams: null,
           totalNumberOfScreens: 1,
+          setScreenMultiSelects: sandbox.stub(),
           setActiveMultiSelect: sandbox.stub(),
         };
       });
@@ -711,6 +712,7 @@ describe("MultiStageAboutWelcome module", () => {
             },
           },
           navigate: sandbox.stub(),
+          setScreenMultiSelects: sandbox.stub(),
           setActiveMultiSelect: sandbox.stub(),
         };
 
