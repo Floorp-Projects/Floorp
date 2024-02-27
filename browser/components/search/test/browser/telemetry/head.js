@@ -401,6 +401,30 @@ async function openSerpInNewTab(url, expectedAds = true) {
   return { tab, cleanup };
 }
 
+async function synthesizePageAction({
+  selector,
+  event = {},
+  tab,
+  expectEngagement = true,
+} = {}) {
+  let promise;
+  if (expectEngagement) {
+    promise = waitForPageWithAction();
+  } else {
+    // Wait roughly around how much it might take for a possible page action
+    // to be registered in telemetry.
+    /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+    promise = new Promise(resolve => setTimeout(resolve, 50));
+  }
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    selector,
+    event,
+    tab.linkedBrowser
+  );
+
+  await promise;
+}
+
 function assertCategorizationValues(expectedResults) {
   // TODO Bug 1868476: Replace with calls to Glean telemetry.
   let actualResults = [...fakeTelemetryStorage];

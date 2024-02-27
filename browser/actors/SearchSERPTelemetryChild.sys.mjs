@@ -34,6 +34,13 @@ const SEARCH_TELEMETRY_SHARED = {
 };
 
 /**
+ * Standard events mapped to the telemetry action.
+ */
+const EVENT_TYPE_TO_ACTION = {
+  click: "clicked",
+};
+
+/**
  * SearchProviders looks after keeping track of the search provider information
  * received from the main process.
  *
@@ -103,6 +110,102 @@ class SearchProviders {
         break;
       }
     }
+  }
+}
+
+/**
+ * @typedef {object} EventListenerParam
+ * @property {string} eventType
+ *  The type of event the listener should listen for. If the event type is
+ *  is non-standard, it should correspond to a definition in
+ *  CUSTOM_EVENT_TYPE_TO_DATA that will re-map it to a standard type. TODO
+ * @property {string} target
+ *  The type of component that was the source of the event.
+ * @property {string | null} action
+ *  The action that should be reported in telemetry.
+ */
+
+/**
+ * Provides a way to add listeners to elements, as well as unload them.
+ */
+class ListenerHelper {
+  /**
+   * Adds each event listener in an array of event listeners to each element
+   * in an array of elements, and sets their unloading.
+   *
+   * @param {Array<Element>} elements
+   *  DOM elements to add event listeners to.
+   * @param {Array<EventListenerParam>} eventListenerParams
+   *  The type of event to add the listener to.
+   * @param {string} target
+   */
+  static addListeners(elements, eventListenerParams, target) {
+    if (!elements?.length || !eventListenerParams?.length) {
+      return;
+    }
+
+    let document = elements[0].ownerGlobal.document;
+    let callback = documentToEventCallbackMap.get(document);
+    if (!callback) {
+      return;
+    }
+
+    // The map might have entries from previous callers, so we must ensure
+    // we don't discard existing event listener callbacks.
+    let removeListenerCallbacks = [];
+    if (documentToRemoveEventListenersMap.has(document)) {
+      removeListenerCallbacks = documentToRemoveEventListenersMap.get(document);
+    }
+
+    for (let params of eventListenerParams) {
+      let removeListeners = ListenerHelper.addListener(
+        elements,
+        params,
+        target,
+        callback
+      );
+      removeListenerCallbacks = removeListenerCallbacks.concat(removeListeners);
+    }
+
+    documentToRemoveEventListenersMap.set(document, removeListenerCallbacks);
+  }
+
+  /**
+   * Add an event listener to each element in an array of elements.
+   *
+   * @param {Array<Element>} elements
+   *  DOM elements to add event listeners to.
+   * @param {EventListenerParam} eventListenerParam
+   * @param {string} target
+   * @param {Function} callback
+   * @returns {Array<function>} Array of remove event listener functions.
+   */
+  static addListener(elements, eventListenerParam, target, callback) {
+    let { action, eventType, target: customTarget } = eventListenerParam;
+
+    if (customTarget) {
+      target = customTarget;
+    }
+
+    if (!action) {
+      action = EVENT_TYPE_TO_ACTION[eventType];
+      if (!action) {
+        return [];
+      }
+    }
+
+    let eventCallback = () => {
+      callback({ action, target });
+    };
+
+    let removeListenerCallbacks = [];
+    for (let element of elements) {
+      element.addEventListener(eventType, eventCallback);
+      removeListenerCallbacks.push(() => {
+        element.removeEventListener(eventType, eventCallback);
+      });
+    }
+    return removeListenerCallbacks;
   }
 }
 
@@ -428,6 +531,10 @@ class SearchAdImpression {
         component.included.parent.selector
       );
       if (parents.length) {
+        let eventListeners = component.included.parent.eventListeners;
+        if (eventListeners?.length) {
+          ListenerHelper.addListeners(parents, eventListeners, component.type);
+        }
         for (let parent of parents) {
           if (component.included.related?.selector) {
             this.#addEventListenerToElements(
@@ -439,6 +546,14 @@ class SearchAdImpression {
             for (let child of component.included.children) {
               let childElements = parent.querySelectorAll(child.selector);
               if (childElements.length) {
+                if (child.eventListeners) {
+                  childElements = Array.from(childElements);
+                  ListenerHelper.addListeners(
+                    childElements,
+                    child.eventListeners,
+                    child.type ?? component.type
+                  );
+                }
                 if (!child.skipCount) {
                   this.#recordElementData(parent, {
                     type: component.type,
