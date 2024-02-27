@@ -693,10 +693,8 @@ class MozPromise : public MozPromiseBase {
       : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 =
-        typename RemoveSmartPointer<MethodReturnType<ResolveMethodType>>::Type;
-    using R2 =
-        typename RemoveSmartPointer<MethodReturnType<RejectMethodType>>::Type;
+    using R1 = RemoveSmartPointer<MethodReturnType<ResolveMethodType>>;
+    using R2 = RemoveSmartPointer<MethodReturnType<RejectMethodType>>;
     constexpr static bool SupportChaining =
         IsMozPromise<R1> && std::is_same_v<R1, R2>;
 
@@ -758,8 +756,7 @@ class MozPromise : public MozPromiseBase {
   class ThenValue<ThisType*, ResolveRejectMethodType> : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 = typename RemoveSmartPointer<
-        MethodReturnType<ResolveRejectMethodType>>::Type;
+    using R1 = RemoveSmartPointer<MethodReturnType<ResolveRejectMethodType>>;
     constexpr static bool SupportChaining = IsMozPromise<R1>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
@@ -814,10 +811,8 @@ class MozPromise : public MozPromiseBase {
   class ThenValue<ResolveFunction, RejectFunction> : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 =
-        typename RemoveSmartPointer<MethodReturnType<ResolveFunction>>::Type;
-    using R2 =
-        typename RemoveSmartPointer<MethodReturnType<RejectFunction>>::Type;
+    using R1 = RemoveSmartPointer<MethodReturnType<ResolveFunction>>;
+    using R2 = RemoveSmartPointer<MethodReturnType<RejectFunction>>;
     constexpr static bool SupportChaining =
         IsMozPromise<R1> && std::is_same_v<R1, R2>;
 
@@ -886,8 +881,7 @@ class MozPromise : public MozPromiseBase {
   class ThenValue<ResolveRejectFunction> : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 = typename RemoveSmartPointer<
-        MethodReturnType<ResolveRejectFunction>>::Type;
+    using R1 = RemoveSmartPointer<MethodReturnType<ResolveRejectFunction>>;
     constexpr static bool SupportChaining = IsMozPromise<R1>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
@@ -1712,13 +1706,11 @@ template <typename Function>
 static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
                         AllowInvokeAsyncFunctionLVRef, Function&& aFunction)
     -> decltype(aFunction()) {
-  static_assert(
-      IsRefcountedSmartPointer<decltype(aFunction())>::value &&
-          IsMozPromise<
-              typename RemoveSmartPointer<decltype(aFunction())>::Type>,
-      "Function object must return RefPtr<MozPromise>");
+  static_assert(IsRefcountedSmartPointer<decltype(aFunction())> &&
+                    IsMozPromise<RemoveSmartPointer<decltype(aFunction())>>,
+                "Function object must return RefPtr<MozPromise>");
   MOZ_ASSERT(aTarget);
-  typedef typename RemoveSmartPointer<decltype(aFunction())>::Type PromiseType;
+  typedef RemoveSmartPointer<decltype(aFunction())> PromiseType;
   typedef detail::ProxyFunctionRunnable<Function, PromiseType>
       ProxyRunnableType;
 
