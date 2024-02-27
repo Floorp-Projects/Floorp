@@ -2587,6 +2587,22 @@ bool CacheIRCompiler::emitGuardIsFixedLengthTypedArray(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardIsResizableTypedArray(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadObjClassUnsafe(obj, scratch);
+  masm.branchIfClassIsNotResizableTypedArray(scratch, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardIsNotDOMProxy(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
@@ -5053,6 +5069,46 @@ bool CacheIRCompiler::emitArrayBufferViewByteOffsetDoubleResult(
   ScratchDoubleScope fpscratch(masm);
   masm.loadArrayBufferViewByteOffsetIntPtr(obj, scratch);
   masm.convertIntPtrToDouble(scratch, fpscratch);
+  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+  return true;
+}
+
+bool CacheIRCompiler::
+    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result(
+        ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(obj, scratch1,
+                                                               scratch2);
+  masm.guardNonNegativeIntPtrToInt32(scratch1, failure->label());
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::
+    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult(
+        ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  ScratchDoubleScope fpscratch(masm);
+  masm.loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(obj, scratch1,
+                                                               scratch2);
+  masm.convertIntPtrToDouble(scratch1, fpscratch);
   masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
   return true;
 }

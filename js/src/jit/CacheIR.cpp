@@ -4028,6 +4028,15 @@ AttachDecision HasPropIRGenerator::tryAttachNative(NativeObject* obj,
   return AttachDecision::Attach;
 }
 
+static void EmitGuardTypedArray(CacheIRWriter& writer, TypedArrayObject* obj,
+                                ObjOperandId objId) {
+  if (obj->is<FixedLengthTypedArrayObject>()) {
+    writer.guardIsFixedLengthTypedArray(objId);
+  } else {
+    writer.guardIsResizableTypedArray(objId);
+  }
+}
+
 AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
                                                        ObjOperandId objId,
                                                        ValOperandId keyId) {
@@ -10318,12 +10327,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset() {
   MOZ_ASSERT(args_[0].isObject());
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
-  // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!args_[0].toObject().is<FixedLengthTypedArrayObject>()) {
-    return AttachDecision::NoAction;
-  }
-
-  auto* tarr = &args_[0].toObject().as<FixedLengthTypedArrayObject>();
+  auto* tarr = &args_[0].toObject().as<TypedArrayObject>();
 
   // Initialize the input operand.
   initializeInputOperand();
@@ -10332,12 +10336,25 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset() {
 
   ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   ObjOperandId objArgId = writer.guardToObject(argId);
-  writer.guardIsFixedLengthTypedArray(objArgId);
-  if (tarr->byteOffset() <= INT32_MAX) {
-    writer.arrayBufferViewByteOffsetInt32Result(objArgId);
+
+  EmitGuardTypedArray(writer, tarr, objArgId);
+
+  size_t byteOffset = tarr->byteOffsetMaybeOutOfBounds();
+  if (tarr->is<FixedLengthTypedArrayObject>()) {
+    if (byteOffset <= INT32_MAX) {
+      writer.arrayBufferViewByteOffsetInt32Result(objArgId);
+    } else {
+      writer.arrayBufferViewByteOffsetDoubleResult(objArgId);
+    }
   } else {
-    writer.arrayBufferViewByteOffsetDoubleResult(objArgId);
+    if (byteOffset <= INT32_MAX) {
+      writer.resizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result(objArgId);
+    } else {
+      writer.resizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult(
+          objArgId);
+    }
   }
+
   writer.returnFromIC();
 
   trackAttached("IntrinsicTypedArrayByteOffset");

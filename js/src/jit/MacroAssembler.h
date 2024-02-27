@@ -5290,9 +5290,25 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
   void branchIfClassIsNotFixedLengthTypedArray(Register clasp,
                                                Label* notTypedArray);
+  void branchIfClassIsNotResizableTypedArray(Register clasp,
+                                             Label* notTypedArray);
 
+ private:
+  enum class BranchIfDetached { No, Yes };
+
+  void branchIfHasDetachedArrayBuffer(BranchIfDetached branchIf, Register obj,
+                                      Register temp, Label* label);
+
+ public:
   void branchIfHasDetachedArrayBuffer(Register obj, Register temp,
-                                      Label* label);
+                                      Label* label) {
+    branchIfHasDetachedArrayBuffer(BranchIfDetached::Yes, obj, temp, label);
+  }
+
+  void branchIfHasAttachedArrayBuffer(Register obj, Register temp,
+                                      Label* label) {
+    branchIfHasDetachedArrayBuffer(BranchIfDetached::No, obj, temp, label);
+  }
 
   void branchIfResizableArrayBufferViewOutOfBounds(Register obj, Register temp,
                                                    Label* label);
@@ -5658,6 +5674,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
     loadResizableArrayBufferViewLengthIntPtr(ResizableArrayBufferView::DataView,
                                              sync, obj, output, scratch);
   }
+
+  void loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(
+      Register obj, Register output, Register scratch);
 
  private:
   void isCallableOrConstructor(bool isCallable, Register obj, Register output,
