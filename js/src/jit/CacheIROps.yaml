@@ -2185,6 +2185,7 @@
     littleEndian: BooleanId
     elementType: ScalarTypeImm
     forceDoubleForUint32: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: StoreDataViewValueResult
   shared: true
@@ -2196,6 +2197,7 @@
     value: RawId
     littleEndian: BooleanId
     elementType: ScalarTypeImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: LoadInt32ArrayLengthResult
   shared: true

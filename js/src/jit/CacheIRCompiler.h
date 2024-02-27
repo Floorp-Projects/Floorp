@@ -857,6 +857,10 @@ class MOZ_RAII CacheIRCompiler {
                                  mozilla::Maybe<Register> spectreScratch,
                                  Label* fail);
 
+  void emitDataViewBoundsCheck(ArrayBufferViewKind viewKind, size_t byteSize,
+                               Register obj, Register offset, Register scratch,
+                               Register maybeScratch, Label* fail);
+
   using AtomicsReadWriteModifyFn = int32_t (*)(FixedLengthTypedArrayObject*,
                                                size_t, int32_t);
 

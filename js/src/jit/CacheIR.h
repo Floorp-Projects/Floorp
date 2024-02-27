@@ -519,6 +519,7 @@ enum class GuardClassKind : uint8_t {
   FixedLengthSharedArrayBuffer,
   GrowableSharedArrayBuffer,
   FixedLengthDataView,
+  ResizableDataView,
   MappedArguments,
   UnmappedArguments,
   WindowProxy,
