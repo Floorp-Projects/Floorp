@@ -6978,15 +6978,7 @@ bool nsIFrame::IsContentRelevant() const {
   MOZ_ASSERT(element);
 
   Maybe<ContentRelevancy> relevancy = element->GetContentRelevancy();
-  if (relevancy.isSome()) {
-    return !relevancy->isEmpty();
-  }
-
-  // If there is no relevancy set, then this frame still has not received had
-  // the initial visibility callback call. In that case, only rely on whether
-  // or not it is inside a top layer element which will never change for this
-  // frame and allows proper rendering of the top layer.
-  return IsDescendantOfTopLayerElement();
+  return relevancy.isSome() && !relevancy->isEmpty();
 }
 
 bool nsIFrame::HidesContent(
@@ -7070,21 +7062,6 @@ bool nsIFrame::HasSelectionInSubtree() {
         range->GetRegisteredClosestCommonInclusiveAncestor();
     if (commonAncestorNode &&
         commonAncestorNode->IsInclusiveDescendantOf(GetContent())) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool nsIFrame::IsDescendantOfTopLayerElement() const {
-  if (!GetContent()) {
-    return false;
-  }
-
-  nsTArray<dom::Element*> topLayer = PresContext()->Document()->GetTopLayer();
-  for (auto* element : topLayer) {
-    if (GetContent()->IsInclusiveFlatTreeDescendantOf(element)) {
       return true;
     }
   }
