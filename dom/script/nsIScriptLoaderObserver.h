@@ -3,13 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#ifndef MOZILLA_DOM_SCRIPT_NSISCRIPTLOADEROBSERVER_H_
+#define MOZILLA_DOM_SCRIPT_NSISCRIPTLOADEROBSERVER_H_
 
-interface nsIScriptElement;
-interface nsIURI;
+#include "nsISupports.h"
+#include "js/GCAnnotations.h"
 
-[scriptable, uuid(7b787204-76fb-4764-96f1-fb7a666db4f4)]
-interface nsIScriptLoaderObserver : nsISupports {
+class nsIScriptElement;
+class nsIURI;
+
+#define NS_ISCRIPTLOADEROBSERVER_IID                 \
+  {                                                  \
+    0x7b787204, 0x76fb, 0x4764, {                    \
+      0x96, 0xf1, 0xfb, 0x7a, 0x66, 0x6d, 0xb4, 0xf4 \
+    }                                                \
+  }
+
+class NS_NO_VTABLE nsIScriptLoaderObserver : public nsISupports {
+ public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTLOADEROBSERVER_IID)
 
   /**
    * The script is available for evaluation. For inline scripts, this
@@ -27,11 +39,11 @@ interface nsIScriptLoaderObserver : nsISupports {
    * @param aLineNo At what line does the script appear (generally 1
    *        if it is a loaded script).
    */
-  void scriptAvailable(in nsresult aResult,
-                       in nsIScriptElement aElement,
-                       in boolean aIsInlineClassicScript,
-                       in nsIURI aURI,
-                       in uint32_t aLineNo);
+  JS_HAZ_CAN_RUN_SCRIPT NS_IMETHOD ScriptAvailable(nsresult aResult,
+                                                   nsIScriptElement* aElement,
+                                                   bool aIsInlineClassicScript,
+                                                   nsIURI* aURI,
+                                                   uint32_t aLineNo) = 0;
 
   /**
    * The script has been evaluated.
@@ -41,8 +53,18 @@ interface nsIScriptLoaderObserver : nsISupports {
    * @param aElement The element being processed.
    * @param aIsInline Is this an inline script or externally loaded?
    */
-  [can_run_script]
-  void scriptEvaluated(in nsresult aResult,
-                       in nsIScriptElement aElement,
-                       in boolean aIsInline);
+  JS_HAZ_CAN_RUN_SCRIPT MOZ_CAN_RUN_SCRIPT NS_IMETHOD ScriptEvaluated(
+      nsresult aResult, nsIScriptElement* aElement, bool aIsInline) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptLoaderObserver,
+                              NS_ISCRIPTLOADEROBSERVER_IID)
+
+#define NS_DECL_NSISCRIPTLOADEROBSERVER                                    \
+  NS_IMETHOD ScriptAvailable(nsresult aResult, nsIScriptElement* aElement, \
+                             bool aIsInlineClassicScript, nsIURI* aURI,    \
+                             uint32_t aLineNo) override;                   \
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD ScriptEvaluated(                           \
+      nsresult aResult, nsIScriptElement* aElement, bool aIsInline) override;
+
+#endif  // MOZILLA_DOM_SCRIPT_NSISCRIPTLOADEROBSERVER_H_
