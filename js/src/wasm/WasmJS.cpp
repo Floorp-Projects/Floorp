@@ -4652,6 +4652,10 @@ static bool WebAssembly_validate(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   FeatureOptions options;
+  if (!options.init(cx, callArgs.get(1))) {
+    return false;
+  }
+
   UniqueChars error;
   bool validated = Validate(cx, *bytecode, options, &error);
 

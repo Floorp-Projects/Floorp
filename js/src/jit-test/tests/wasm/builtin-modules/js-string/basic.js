@@ -1,6 +1,6 @@
 // |jit-test| skip-if: !wasmJSStringBuiltinsEnabled();
 
-let testModule = wasmTextToBinary(`(module
+let testModule = `(module
   (type $arrayMutI16 (array (mut i16)))
 
   (func
@@ -93,7 +93,7 @@ let testModule = wasmTextToBinary(`(module
     (result i32)
   )
   (export "compare" (func 12))
-)`);
+)`;
 
 let {
   createArrayMutI16,
@@ -256,8 +256,8 @@ function assertSameBehavior(funcA, funcB, ...params) {
   return resultA;
 }
 
-let builtinExports = new WebAssembly.Instance(new WebAssembly.Module(testModule, {builtins: ["js-string"]}), {}).exports;
-let polyfillExports = new WebAssembly.Instance(new WebAssembly.Module(testModule), { 'wasm:js-string': polyFillImports }).exports;
+let builtinExports = wasmEvalText(testModule, {}, {builtins: ["js-string"]}).exports;
+let polyfillExports = wasmEvalText(testModule, { 'wasm:js-string': polyFillImports }).exports;
 
 let testStrings = ["", "a", "1", "ab", "hello, world", "\n", "☺", "☺smiley", String.fromCodePoint(0x10000, 0x10001)];
 let testCharCodes = [1, 2, 3, 10, 0x7f, 0xff, 0xfffe, 0xffff];
