@@ -3903,14 +3903,14 @@ class BCMapCellIterator {
  public:
   BCMapCellIterator(nsTableFrame* aTableFrame, const TableArea& aDamageArea);
 
-  void First(BCMapCellInfo& aMapCellInfo);
+  void First(BCMapCellInfo& aMapInfo);
 
-  void Next(BCMapCellInfo& aMapCellInfo);
+  void Next(BCMapCellInfo& aMapInfo);
 
-  void PeekIEnd(const BCMapCellInfo& aRefInfo, uint32_t aRowIndex,
+  void PeekIEnd(const BCMapCellInfo& aRefInfo, int32_t aRowIndex,
                 BCMapCellInfo& aAjaInfo);
 
-  void PeekBEnd(const BCMapCellInfo& aRefInfo, uint32_t aColIndex,
+  void PeekBEnd(const BCMapCellInfo& aRefInfo, int32_t aColIndex,
                 BCMapCellInfo& aAjaInfo);
 
   void PeekIStart(const BCMapCellInfo& aRefInfo, int32_t aRowIndex,
@@ -4190,13 +4190,13 @@ void BCMapCellIterator::Next(BCMapCellInfo& aMapInfo) {
 }
 
 void BCMapCellIterator::PeekIEnd(const BCMapCellInfo& aRefInfo,
-                                 uint32_t aRowIndex, BCMapCellInfo& aAjaInfo) {
-  PeekIAt(aRefInfo, static_cast<int32_t>(aRowIndex),
-          aRefInfo.mColIndex + aRefInfo.mColSpan, aAjaInfo);
+                                 int32_t aRowIndex, BCMapCellInfo& aAjaInfo) {
+  PeekIAt(aRefInfo, aRowIndex, aRefInfo.mColIndex + aRefInfo.mColSpan,
+          aAjaInfo);
 }
 
 void BCMapCellIterator::PeekBEnd(const BCMapCellInfo& aRefInfo,
-                                 uint32_t aColIndex, BCMapCellInfo& aAjaInfo) {
+                                 int32_t aColIndex, BCMapCellInfo& aAjaInfo) {
   aAjaInfo.ResetCellInfo();
   int32_t rowIndex = aRefInfo.mRowIndex + aRefInfo.mRowSpan;
   int32_t rgRowIndex = rowIndex - mRowGroupStart;
@@ -4236,7 +4236,7 @@ void BCMapCellIterator::PeekBEnd(const BCMapCellInfo& aRefInfo,
     if (!cellData) ABORT0();
   }
   if (cellData->IsColSpan()) {
-    aColIndex -= cellData->GetColSpanOffset();
+    aColIndex -= static_cast<int32_t>(cellData->GetColSpanOffset());
     cellData =
         static_cast<BCCellData*>(cellMap->GetDataAt(rgRowIndex, aColIndex));
   }
