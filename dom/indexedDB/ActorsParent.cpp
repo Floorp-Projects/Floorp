@@ -12247,8 +12247,9 @@ nsresult QuotaClient::GetUsageForOriginInternal(
             // If this fails, it probably means we are in a serious situation.
             // e.g. Filesystem corruption. Will handle this in bug 1521541.
             QM_TRY(MOZ_TO_RESULT(RemoveDatabaseFilesAndDirectory(
-                       *directory, subdirNameBase, nullptr, aPersistenceType,
-                       aOriginMetadata, u""_ns)),
+                       *directory, subdirNameBase, /* aQuotaManager */ nullptr,
+                       aPersistenceType, aOriginMetadata,
+                       /* aDatabaseName */ u""_ns)),
                    Err(NS_ERROR_UNEXPECTED));
 
             databaseFilenames.Remove(subdirNameBase);
