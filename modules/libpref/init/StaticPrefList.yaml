@@ -8240,6 +8240,13 @@
   mirror: always
   rust: true
 
+# Whether to respect align-content on blocks.
+- name: layout.css.align-content.blocks.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Whether Container Queries are enabled
 - name: layout.css.container-queries.enabled
   type: RelaxedAtomicBool

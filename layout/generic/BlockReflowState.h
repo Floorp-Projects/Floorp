@@ -102,6 +102,13 @@ class BlockReflowState {
                    const nscoord aInset = 0);
 
   /**
+   * Unshifts coords, restores availableBSize to reality.
+   * (Constructor applies any cached shift before reflow
+   *  so that frames are reflowed with cached shift)
+   */
+  void UndoAlignContentShift();
+
+  /**
    * Get the available reflow space (the area not occupied by floats)
    * for the current y coordinate. The available space is relative to
    * our coordinate system, which is the content box, with (0, 0) in the
@@ -406,6 +413,11 @@ class BlockReflowState {
   // The amount of computed content block-size "consumed" by our previous
   // continuations.
   const nscoord mConsumedBSize;
+
+  // The amount of block-axis alignment shift to assume during reflow.
+  // Cached between reflows in the AlignContentShift property.
+  // (This system optimizes reflow for not changing the shift.)
+  nscoord mAlignContentShift;
 
   // Cache the current line's BSize if nsBlockFrame::PlaceLine() fails to
   // place the line. When redoing the line, it will be used to query the
