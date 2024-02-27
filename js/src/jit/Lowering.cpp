@@ -4552,29 +4552,32 @@ void LIRGenerator::visitClampToUint8(MClampToUint8* ins) {
 
 void LIRGenerator::visitLoadTypedArrayElementHole(
     MLoadTypedArrayElementHole* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
+  MOZ_ASSERT(ins->length()->type() == MIRType::IntPtr);
 
   MOZ_ASSERT(ins->type() == MIRType::Value);
 
-  const LUse object = useRegister(ins->object());
+  const LUse elements = useRegister(ins->elements());
   const LAllocation index = useRegister(ins->index());
+  const LAllocation length = useRegister(ins->length());
 
   if (!Scalar::isBigIntType(ins->arrayType())) {
-    auto* lir = new (alloc()) LLoadTypedArrayElementHole(object, index, temp());
+    auto* lir =
+        new (alloc()) LLoadTypedArrayElementHole(elements, index, length);
     if (ins->fallible()) {
       assignSnapshot(lir, ins->bailoutKind());
     }
     defineBox(lir, ins);
   } else {
 #ifdef JS_CODEGEN_X86
-    LDefinition tmp = LDefinition::BogusTemp();
+    LInt64Definition temp64 = LInt64Definition::BogusTemp();
 #else
-    LDefinition tmp = temp();
+    LInt64Definition temp64 = tempInt64();
 #endif
 
-    auto* lir = new (alloc())
-        LLoadTypedArrayElementHoleBigInt(object, index, tmp, tempInt64());
+    auto* lir = new (alloc()) LLoadTypedArrayElementHoleBigInt(
+        elements, index, length, temp(), temp64);
     defineBox(lir, ins);
     assignSafepoint(lir, ins);
   }

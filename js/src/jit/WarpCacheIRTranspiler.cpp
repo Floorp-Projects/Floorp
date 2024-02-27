@@ -2193,22 +2193,25 @@ bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
+  auto* length = MArrayBufferViewLength::New(alloc(), obj);
+  add(length);
+
+  if (!handleOOB) {
+    // MLoadTypedArrayElementHole does the bounds checking.
+    index = addBoundsCheck(index, length);
+  }
+
+  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
+  add(elements);
+
   if (handleOOB) {
     auto* load = MLoadTypedArrayElementHole::New(
-        alloc(), obj, index, elementType, forceDoubleForUint32);
+        alloc(), elements, index, length, elementType, forceDoubleForUint32);
     add(load);
 
     pushResult(load);
     return true;
   }
-
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
-
-  index = addBoundsCheck(index, length);
-
-  auto* elements = MArrayBufferViewElements::New(alloc(), obj);
-  add(elements);
 
   auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType);
   load->setResultType(
