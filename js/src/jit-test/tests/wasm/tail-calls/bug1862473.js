@@ -1,4 +1,4 @@
-// |jit-test| --wasm-gc; skip-if: !wasmGcEnabled()
+// |jit-test| --setpref=wasm_gc=true; skip-if: !wasmGcEnabled()
 
 var ins = wasmEvalText(`(module
   (func $func1)

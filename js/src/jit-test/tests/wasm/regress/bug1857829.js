@@ -1,4 +1,4 @@
-// |jit-test| --wasm-gc; skip-if: !wasmGcEnabled()
+// |jit-test| --setpref=wasm_gc=true; skip-if: !wasmGcEnabled()
 
 // Tests if i31ref global value is normalized.
 var ins = wasmEvalText(`(module

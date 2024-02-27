@@ -1,1 +1,1 @@
-|jit-test| --wasm-gc; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; include:wasm.js
+|jit-test| test-also=--setpref=wasm_gc=true; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; include:wasm.js

@@ -1,1 +1,1 @@
-|jit-test| test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--wasm-test-serialization; test-also=--test-wasm-await-tier2; include:wasm.js; skip-if: !wasmMemory64Enabled()
+|jit-test| test-also=--setpref=wasm_memory64=true; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--setpref=wasm_test_serialization=true; test-also=--test-wasm-await-tier2; include:wasm.js; skip-if: !wasmMemory64Enabled()

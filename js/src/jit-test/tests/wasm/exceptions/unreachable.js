@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-function-references --wasm-gc --wasm-compiler=optimizing; test-also=--wasm-function-references --wasm-gc --wasm-compiler=baseline;
+// |jit-test| test-also=--setpref=wasm_gc=true --wasm-compiler=optimizing; test-also=--setpref=wasm_gc=true --wasm-compiler=baseline;
 
 wasmFailValidateText(`(module
 	(tag)

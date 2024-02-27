@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-extended-const; test-also=--no-wasm-extended-const
+// |jit-test| test-also=--setpref=wasm_extended_const=true; test-also=--setpref=wasm_extended_const=false
 
 const { Instance, Module, LinkError } = WebAssembly;
 

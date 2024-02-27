@@ -1,4 +1,4 @@
-// |jit-test| --wasm-gc; skip-if: !wasmGcEnabled()
+// |jit-test| --setpref=wasm_gc=true; skip-if: !wasmGcEnabled()
 
 // Validates if imported globals are accounted for in init expressions.
 

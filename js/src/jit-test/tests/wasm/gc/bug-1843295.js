@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled(); --wasm-test-serialization
+// |jit-test| skip-if: !wasmGcEnabled(); --setpref=wasm_test_serialization=true
 
 wasmEvalText(`(module
   (type (sub (array (mut i32))))

@@ -1,4 +1,4 @@
-// |jit-test| skip-variant-if: --wasm-test-serialization, true; skip-if: !wasmGcEnabled()
+// |jit-test| skip-variant-if: --setpref=wasm_test_serialization=true, true; skip-if: !wasmGcEnabled()
 
 gczeal(18)
 function a(str, imports) {
