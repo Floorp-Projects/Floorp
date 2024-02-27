@@ -207,6 +207,11 @@ function resetTelemetry() {
  * values we use to validate the recorded Glean impression events.
  */
 function assertSERPTelemetry(expectedEvents) {
+  // Do a deep copy of impressions in case the input is using constants, as
+  // we insert impression id into the expected events to make it easier to
+  // run Assert.deepEqual() on the expected and actual result.
+  expectedEvents = JSON.parse(JSON.stringify(expectedEvents));
+
   // A single test might run assertImpressionEvents more than once
   // so the Set needs to be cleared or else the impression event
   // check will throw.

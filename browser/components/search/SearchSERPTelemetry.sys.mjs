@@ -404,6 +404,10 @@ class TelemetryHandler {
         );
       }
 
+      newProvider.ignoreLinkRegexps = provider.ignoreLinkRegexps?.length
+        ? provider.ignoreLinkRegexps.map(r => new RegExp(r))
+        : [];
+
       newProvider.nonAdsLinkRegexps = provider.nonAdsLinkRegexps?.length
         ? provider.nonAdsLinkRegexps.map(r => new RegExp(r))
         : [];
@@ -1331,6 +1335,11 @@ class ContentHandler {
 
     let originURL = wrappedChannel.originURI?.spec;
     let url = wrappedChannel.finalURL;
+
+    if (info.ignoreLinkRegexps.some(r => r.test(url))) {
+      return;
+    }
+
     // Some channels re-direct by loading pages that return 200. The result
     // is the channel will have an originURL that changes from the SERP to
     // either a nonAdsRegexp or an extraAdServersRegexps. This is typical
