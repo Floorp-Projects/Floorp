@@ -116,7 +116,9 @@ class SharedArrayRawBuffer {
   // this method merely sets the number of user accessible bytes of this buffer.
   bool grow(size_t newByteLength);
 
-  static int32_t liveBuffers();
+  static size_t offsetOfByteLength() {
+    return offsetof(SharedArrayRawBuffer, length_);
+  }
 };
 
 class WasmSharedArrayRawBuffer : public SharedArrayRawBuffer {
@@ -362,6 +364,10 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   SharedMem<uint8_t*> dataPointerShared() const {
     return rawBufferObject()->dataPointerShared();
+  }
+
+  static constexpr int rawBufferOffset() {
+    return NativeObject::getFixedSlotOffset(RAWBUF_SLOT);
   }
 
   // WebAssembly support:
