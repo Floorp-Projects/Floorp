@@ -7002,7 +7002,7 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
                bool madeProgress = previousFreelistCount != aFreelistCount;
                previousFreelistCount = aFreelistCount;
                MOZ_ASSERT(madeProgress);
-               QM_WARNONLY_TRY(MOZ_TO_RESULT(!madeProgress));
+               QM_WARNONLY_TRY(MOZ_TO_RESULT(madeProgress));
                return madeProgress && (aFreelistCount != 0);
              },
              [&aFreelistStatement, &aFreelistCount, &incrementalVacuumStmt,
