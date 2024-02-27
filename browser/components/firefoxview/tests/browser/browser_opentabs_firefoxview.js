@@ -371,9 +371,7 @@ add_task(async function test_send_device_submenu() {
 
     // navigate down to the "Send tabs" submenu option, and
     // open it with the right arrow key
-    EventUtils.synthesizeKey("KEY_ArrowDown", {});
-    EventUtils.synthesizeKey("KEY_ArrowDown", {});
-    EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 5 });
 
     shown = BrowserTestUtils.waitForEvent(sendTabSubmenuList, "shown");
     EventUtils.synthesizeKey("KEY_ArrowRight", {});
