@@ -1492,6 +1492,17 @@
   alias_set: custom
   clone: true
 
+# Implements the TypedArrayByteOffset intrinsic for resizable typed arrays,
+# which calls TypedArrayObject::byteOffsetMaybeOutOfBounds().
+- name: ResizableTypedArrayByteOffsetMaybeOutOfBounds
+  operands:
+    object: Object
+  result_type: IntPtr
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  compute_range: custom
+
 # Read the length of a resizable typed array.
 - name: ResizableTypedArrayLength
   operands:
@@ -1991,6 +2002,15 @@
   alias_set: none
 
 - name: GuardIsFixedLengthTypedArray
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+
+- name: GuardIsResizableTypedArray
   operands:
     object: Object
   result_type: Object
