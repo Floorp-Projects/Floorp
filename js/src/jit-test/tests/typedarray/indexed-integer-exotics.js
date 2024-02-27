@@ -88,10 +88,10 @@ assertEq(undefined, f());
 
 // These checks currently fail due to bug 1129202 not being implemented yet.
 // We should uncomment them once that bug landed.
-//assertThrows('Object.defineProperty(new Int32Array(100), -1, {value: 1})');
+assertThrows('Object.defineProperty(new Int32Array(100), -1, {value: 1})');
 // -0 gets converted to the string "0", so use "-0" instead.
-//assertThrows('Object.defineProperty(new Int32Array(100), "-0", {value: 1})');
-//assertThrows('Object.defineProperty(new Int32Array(100), -10, {value: 1})');
-//assertThrows('Object.defineProperty(new Int32Array(), 4294967295, {value: 1})');
+assertThrows('Object.defineProperty(new Int32Array(100), "-0", {value: 1})');
+assertThrows('Object.defineProperty(new Int32Array(100), -10, {value: 1})');
+assertThrows('Object.defineProperty(new Int32Array(), 4294967295, {value: 1})');
 
 check();
