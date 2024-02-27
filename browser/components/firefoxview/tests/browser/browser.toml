@@ -58,9 +58,6 @@ fail-if = ["a11y_checks"] # Bugs 1858041, 1854625, and 1872174 clicked Show all 
 ["browser_opentabs_firefoxview.js"]
 fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
-["browser_opentabs_pinned_tabs.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
-
 ["browser_opentabs_recency.js"]
 skip-if = [
   "os == 'win'",
