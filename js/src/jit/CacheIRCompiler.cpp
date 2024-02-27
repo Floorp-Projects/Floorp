@@ -18,7 +18,6 @@
 #include "jsmath.h"
 
 #include "builtin/DataViewObject.h"
-#include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "gc/GCEnum.h"
 #include "gc/SweepingAPI.h"  // js::gc::AutoLockStoreBuffer
@@ -2172,37 +2171,19 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   const JSClass* clasp = nullptr;
   switch (kind) {
     case GuardClassKind::Array:
-      clasp = &ArrayObject::class_;
-      break;
     case GuardClassKind::PlainObject:
-      clasp = &PlainObject::class_;
-      break;
     case GuardClassKind::FixedLengthArrayBuffer:
-      clasp = &FixedLengthArrayBufferObject::class_;
-      break;
     case GuardClassKind::FixedLengthSharedArrayBuffer:
-      clasp = &FixedLengthSharedArrayBufferObject::class_;
-      break;
     case GuardClassKind::FixedLengthDataView:
-      clasp = &FixedLengthDataViewObject::class_;
-      break;
     case GuardClassKind::MappedArguments:
-      clasp = &MappedArgumentsObject::class_;
-      break;
     case GuardClassKind::UnmappedArguments:
-      clasp = &UnmappedArgumentsObject::class_;
+    case GuardClassKind::Set:
+    case GuardClassKind::Map:
+    case GuardClassKind::BoundFunction:
+      clasp = ClassFor(kind);
       break;
     case GuardClassKind::WindowProxy:
       clasp = cx_->runtime()->maybeWindowProxyClass();
-      break;
-    case GuardClassKind::Set:
-      clasp = &SetObject::class_;
-      break;
-    case GuardClassKind::Map:
-      clasp = &MapObject::class_;
-      break;
-    case GuardClassKind::BoundFunction:
-      clasp = &BoundFunctionObject::class_;
       break;
     case GuardClassKind::JSFunction:
       MOZ_CRASH("JSFunction handled before switch");

@@ -1975,6 +1975,40 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
   MOZ_CRASH("Unexpected ProxyStubType");
 }
 
+const JSClass* js::jit::ClassFor(GuardClassKind kind) {
+  switch (kind) {
+    case GuardClassKind::Array:
+      return &ArrayObject::class_;
+    case GuardClassKind::PlainObject:
+      return &PlainObject::class_;
+    case GuardClassKind::FixedLengthArrayBuffer:
+      return &FixedLengthArrayBufferObject::class_;
+    case GuardClassKind::FixedLengthSharedArrayBuffer:
+      return &FixedLengthSharedArrayBufferObject::class_;
+    case GuardClassKind::FixedLengthDataView:
+      return &FixedLengthDataViewObject::class_;
+    case GuardClassKind::MappedArguments:
+      return &MappedArgumentsObject::class_;
+    case GuardClassKind::UnmappedArguments:
+      return &UnmappedArgumentsObject::class_;
+    case GuardClassKind::WindowProxy:
+      // Caller needs to handle this case, see
+      // JSRuntime::maybeWindowProxyClass().
+      break;
+    case GuardClassKind::JSFunction:
+      // Caller needs to handle this case. Can be either |js::FunctionClass| or
+      // |js::ExtendedFunctionClass|.
+      break;
+    case GuardClassKind::BoundFunction:
+      return &BoundFunctionObject::class_;
+    case GuardClassKind::Set:
+      return &SetObject::class_;
+    case GuardClassKind::Map:
+      return &MapObject::class_;
+  }
+  MOZ_CRASH("unexpected kind");
+}
+
 // Guards the class of an object. Because shape implies class, and a shape guard
 // is faster than a class guard, if this is our first time attaching a stub, we
 // instead generate a shape guard.
@@ -1983,25 +2017,13 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
 #ifdef DEBUG
   switch (kind) {
     case GuardClassKind::Array:
-      MOZ_ASSERT(obj->is<ArrayObject>());
-      break;
     case GuardClassKind::PlainObject:
-      MOZ_ASSERT(obj->is<PlainObject>());
-      break;
     case GuardClassKind::FixedLengthArrayBuffer:
-      MOZ_ASSERT(obj->is<FixedLengthArrayBufferObject>());
-      break;
     case GuardClassKind::FixedLengthSharedArrayBuffer:
-      MOZ_ASSERT(obj->is<FixedLengthSharedArrayBufferObject>());
-      break;
     case GuardClassKind::FixedLengthDataView:
-      MOZ_ASSERT(obj->is<FixedLengthDataViewObject>());
-      break;
     case GuardClassKind::Set:
-      MOZ_ASSERT(obj->is<SetObject>());
-      break;
     case GuardClassKind::Map:
-      MOZ_ASSERT(obj->is<MapObject>());
+      MOZ_ASSERT(obj->hasClass(ClassFor(kind)));
       break;
 
     case GuardClassKind::MappedArguments:
