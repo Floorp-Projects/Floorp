@@ -5,6 +5,7 @@
 package org.mozilla.fenix.translations
 
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -224,6 +225,54 @@ class TranslationsDialogReducerTest {
                 englishLanguage.localizedDisplayName,
             ),
             updatedState.translatedPageTitle,
+        )
+    }
+
+    @Test
+    fun `WHEN the reducer is called for UpdateDownloadTranslationDownloadSize THEN a new state with translationDownloadSize is returned`() {
+        val spanishLanguage = Language("es", "Spanish")
+        val englishLanguage = Language("en", "English")
+        val translationsDialogState =
+            TranslationsDialogState(initialTo = englishLanguage, initialFrom = spanishLanguage)
+        val translationDownloadSize = TranslationDownloadSize(
+            fromLanguage = spanishLanguage,
+            toLanguage = englishLanguage,
+            size = 1000L,
+        )
+        val updatedState = TranslationsDialogReducer.reduce(
+            translationsDialogState,
+            TranslationsDialogAction.UpdateDownloadTranslationDownloadSize(
+                translationDownloadSize,
+            ),
+        )
+
+        assertEquals(
+            translationDownloadSize,
+            updatedState.translationDownloadSize,
+        )
+    }
+
+    @Test
+    fun `WHEN the reducer is called for UpdateDownloadTranslationDownloadSize with a invalid object THEN a new state with translationDownloadSize null is returned`() {
+        val spanishLanguage = Language("es", "Spanish")
+        val englishLanguage = Language("en", "English")
+        val translationsDialogState =
+            TranslationsDialogState(initialTo = englishLanguage, initialFrom = spanishLanguage)
+        val translationDownloadSize = TranslationDownloadSize(
+            fromLanguage = englishLanguage,
+            toLanguage = spanishLanguage,
+            size = 0L,
+        )
+        val updatedState = TranslationsDialogReducer.reduce(
+            translationsDialogState,
+            TranslationsDialogAction.UpdateDownloadTranslationDownloadSize(
+                translationDownloadSize,
+            ),
+        )
+
+        assertEquals(
+            null,
+            updatedState.translationDownloadSize,
         )
     }
 }

@@ -11,6 +11,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
@@ -301,6 +302,51 @@ class TranslationsDialogBindingTest {
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslationError(fetchError),
+            )
+        }
+
+    @Test
+    fun `WHEN set translation download size action sent to the browserStore THEN update translation dialog store based on operation`() =
+        runTestOnMain {
+            translationsDialogStore =
+                spy(TranslationsDialogStore(TranslationsDialogState()))
+            browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tabId,
+                ),
+            )
+
+            val binding = TranslationsDialogBinding(
+                browserStore = browserStore,
+                translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
+                getTranslatedPageTitle = { localizedFrom, localizedTo ->
+                    testContext.getString(
+                        R.string.translations_bottom_sheet_title_translation_completed,
+                        localizedFrom,
+                        localizedTo,
+                    )
+                },
+            )
+            binding.start()
+
+            val toLanguage = Language("de", "German")
+            val fromLanguage = Language("es", "Spanish")
+            val translationDownloadSize = TranslationDownloadSize(
+                fromLanguage = fromLanguage,
+                toLanguage = toLanguage,
+                size = 1000L,
+            )
+            browserStore.dispatch(
+                TranslationsAction.SetTranslationDownloadSizeAction(
+                    tabId = tab.id,
+                    translationSize = translationDownloadSize,
+                ),
+            ).joinBlocking()
+
+            verify(translationsDialogStore).dispatch(
+                TranslationsDialogAction.UpdateDownloadTranslationDownloadSize(translationDownloadSize),
             )
         }
 }

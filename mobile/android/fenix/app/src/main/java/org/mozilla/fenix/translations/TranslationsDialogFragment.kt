@@ -35,10 +35,14 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguageFileDialog
+import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguageFileDialogType
+import org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesFeature
 
 /**
  * The enum is to know what bottom sheet to open.
@@ -56,8 +60,11 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
     private val args by navArgs<TranslationsDialogFragmentArgs>()
     private val browserStore: BrowserStore by lazy { requireComponents.core.store }
     private val translationDialogBinding = ViewBoundFeatureWrapper<TranslationsDialogBinding>()
+    private val downloadLanguagesFeature =
+        ViewBoundFeatureWrapper<DownloadLanguagesFeature>()
     private lateinit var translationsDialogStore: TranslationsDialogStore
     private var isTranslationInProgress: Boolean? = null
+    private var isDataSaverEnabledAndWifiDisabled = false
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         super.onCreateDialog(savedInstanceState).apply {
@@ -192,9 +199,22 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
             view = view,
         )
         translationsDialogStore.dispatch(TranslationsDialogAction.InitTranslationsDialog)
+
+        downloadLanguagesFeature.set(
+            feature = DownloadLanguagesFeature(
+                context = requireContext(),
+                wifiConnectionMonitor = requireContext().components.wifiConnectionMonitor,
+                onDataSaverAndWifiChanged = {
+                    isDataSaverEnabledAndWifiDisabled = it
+                },
+            ),
+            owner = this,
+            view = view,
+        )
     }
 
     @Composable
+    @Suppress("LongMethod")
     private fun TranslationsDialogContent(learnMoreUrl: String, onSettingClicked: () -> Unit) {
         val translationsDialogState =
             translationsDialogStore.observeAsComposableState { it }.value
@@ -204,6 +224,10 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
 
             if (state.dismissDialogState is DismissDialogState.Dismiss) {
                 dismissDialog()
+            }
+
+            var showDownloadLanguageFileDialog by remember {
+                mutableStateOf(false)
             }
 
             TranslationsDialog(
@@ -216,7 +240,15 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                     if (state.error is TranslationError.CouldNotLoadLanguagesError) {
                         translationsDialogStore.dispatch(TranslationsDialogAction.FetchSupportedLanguages)
                     } else {
-                        translationsDialogStore.dispatch(TranslationsDialogAction.TranslateAction)
+                        if (
+                            isDataSaverEnabledAndWifiDisabled &&
+                            !requireContext().settings().ignoreTranslationsDataSaverWarning &&
+                            state.translationDownloadSize != null
+                        ) {
+                            showDownloadLanguageFileDialog = true
+                        } else {
+                            translationsDialogStore.dispatch(TranslationsDialogAction.TranslateAction)
+                        }
                     }
                 },
                 onNegativeButtonClicked = {
@@ -225,21 +257,58 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                     }
                     dismiss()
                 },
-                onFromSelected = {
+                onFromSelected = { fromLanguage ->
+                    state.initialTo?.let {
+                        translationsDialogStore.dispatch(
+                            TranslationsDialogAction.FetchDownloadFileSizeAction(
+                                toLanguage = it,
+                                fromLanguage = fromLanguage,
+                            ),
+                        )
+                    }
+
                     translationsDialogStore.dispatch(
                         TranslationsDialogAction.UpdateFromSelectedLanguage(
-                            it,
+                            fromLanguage,
                         ),
                     )
                 },
-                onToSelected = {
+                onToSelected = { toLanguage ->
+                    state.initialFrom?.let {
+                        translationsDialogStore.dispatch(
+                            TranslationsDialogAction.FetchDownloadFileSizeAction(
+                                toLanguage = toLanguage,
+                                fromLanguage = it,
+                            ),
+                        )
+                    }
+
                     translationsDialogStore.dispatch(
                         TranslationsDialogAction.UpdateToSelectedLanguage(
-                            it,
+                            toLanguage,
                         ),
                     )
                 },
             )
+
+            var checkBoxEnabled by remember { mutableStateOf(false) }
+            if (showDownloadLanguageFileDialog) {
+                state.translationDownloadSize?.size?.let { fileSize ->
+                    DownloadLanguageFileDialog(
+                        downloadLanguageDialogType = DownloadLanguageFileDialogType.TranslationRequest,
+                        fileSize = fileSize,
+                        isCheckBoxEnabled = checkBoxEnabled,
+                        onSavingModeStateChange = { checkBoxEnabled = it },
+                        onConfirmDownload = {
+                            requireContext().settings().ignoreTranslationsDataSaverWarning =
+                                checkBoxEnabled
+                            showDownloadLanguageFileDialog = false
+                            translationsDialogStore.dispatch(TranslationsDialogAction.TranslateAction)
+                        },
+                        onCancel = { showDownloadLanguageFileDialog = false },
+                    )
+                }
+            }
         }
     }
 

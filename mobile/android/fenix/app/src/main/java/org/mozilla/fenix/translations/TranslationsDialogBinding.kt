@@ -77,12 +77,14 @@ class TranslationsDialogBinding(
 
                 // Session Translations State Behavior (Tab)
                 val sessionTranslationsState = state.sessionState.translationsState
+
                 val fromSelected =
                     sessionTranslationsState.translationEngineState?.initialFromLanguage(
                         translateFromLanguages,
                     )
 
-                fromSelected?.let {
+                // Dispatch initialFrom Language only the first time when it is null.
+                if (fromSelected != null && translationsDialogStore.state.initialFrom == null) {
                     translationsDialogStore.dispatch(
                         TranslationsDialogAction.UpdateFromSelectedLanguage(
                             fromSelected,
@@ -94,7 +96,9 @@ class TranslationsDialogBinding(
                     sessionTranslationsState.translationEngineState?.initialToLanguage(
                         translateToLanguages,
                     )
-                toSelected?.let {
+
+                // Dispatch initialTo Language only the first time when it is null.
+                if (toSelected != null && translationsDialogStore.state.initialTo == null) {
                     translationsDialogStore.dispatch(
                         TranslationsDialogAction.UpdateToSelectedLanguage(
                             toSelected,
@@ -130,6 +134,12 @@ class TranslationsDialogBinding(
                         TranslationsDialogAction.UpdateTranslationError(sessionTranslationsState.translationError),
                     )
                 }
+
+                sessionTranslationsState.translationDownloadSize?.let {
+                    translationsDialogStore.dispatch(
+                        TranslationsDialogAction.UpdateDownloadTranslationDownloadSize(it),
+                    )
+                }
             }
     }
 
@@ -153,11 +163,13 @@ class TranslationsDialogBinding(
             ),
         )
 
-        translationsDialogStore.dispatch(
-            TranslationsDialogAction.UpdateTranslated(
-                true,
-            ),
-        )
+        if (!translationsDialogStore.state.isTranslated) {
+            translationsDialogStore.dispatch(
+                TranslationsDialogAction.UpdateTranslated(
+                    true,
+                ),
+            )
+        }
 
         if (translationsDialogStore.state.dismissDialogState == DismissDialogState.WaitingToBeDismissed) {
             translationsDialogStore.dispatch(

@@ -74,10 +74,15 @@ class LanguageDialogPreferenceFragment : DialogFragment() {
                 FirefoxTheme {
                     var checkBoxEnabled by remember { mutableStateOf(false) }
                     DownloadLanguageFileDialog(
+                        downloadLanguageDialogType = if (args.downloadLanguageItemStatePreference.type ==
+                            DownloadLanguageItemTypePreference.AllLanguages
+                        ) {
+                            DownloadLanguageFileDialogType.AllLanguages
+                        } else {
+                            DownloadLanguageFileDialogType.Default
+                        },
                         fileSize = args.itemFileSizePreference,
                         isCheckBoxEnabled = checkBoxEnabled,
-                        isAllLanguagesItemType = args.downloadLanguageItemStatePreference.type ==
-                            DownloadLanguageItemTypePreference.AllLanguages,
                         onSavingModeStateChange = { checkBoxEnabled = it },
                         onConfirmDownload = {
                             requireContext().settings().ignoreTranslationsDataSaverWarning =

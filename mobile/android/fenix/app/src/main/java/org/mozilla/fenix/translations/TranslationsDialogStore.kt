@@ -6,6 +6,7 @@ package org.mozilla.fenix.translations
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.Language
+import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
@@ -33,6 +34,8 @@ class TranslationsDialogStore(
  * @property isTranslated The page is currently translated.
  * @property isTranslationInProgress The page is currently attempting a translation.
  * @property positiveButtonType Can be enabled,disabled or in progress.
+ * @property translationDownloadSize A data class to contain information
+ * related to the download size required for a given translation to/from pair.
  * @property error An error that can occur during the translation process.
  * @property dismissDialogState Whether the dialog bottom sheet should be dismissed.
  * @property initialFrom Initial "from" language, based on the translation state and page state.
@@ -45,6 +48,7 @@ data class TranslationsDialogState(
     var isTranslated: Boolean = false,
     val isTranslationInProgress: Boolean = false,
     val positiveButtonType: PositiveButtonType? = null,
+    val translationDownloadSize: TranslationDownloadSize? = null,
     val error: TranslationError? = null,
     val dismissDialogState: DismissDialogState? = null,
     val initialFrom: Language? = null,
@@ -139,6 +143,18 @@ sealed class TranslationsDialogAction : Action {
      * Updates the dialog title if the page was translated.
      */
     data class UpdateTranslatedPageTitle(val title: String) : TranslationsDialogAction()
+
+    /**
+     * Updates the translation download file size.
+     */
+    data class UpdateDownloadTranslationDownloadSize(val translationDownloadSize: TranslationDownloadSize? = null) :
+        TranslationsDialogAction()
+
+    /**
+     * Fetch the translation download file size.
+     */
+    data class FetchDownloadFileSizeAction(val toLanguage: Language, val fromLanguage: Language) :
+        TranslationsDialogAction()
 }
 
 /**
@@ -248,9 +264,7 @@ internal object TranslationsDialogReducer {
             is TranslationsDialogAction.UpdateTranslationError -> {
                 state.copy(
                     error = action.translationError,
-                    positiveButtonType = if (
-                        action.translationError is TranslationError.LanguageNotSupportedError
-                    ) {
+                    positiveButtonType = if (action.translationError is TranslationError.LanguageNotSupportedError) {
                         PositiveButtonType.Disabled
                     } else {
                         PositiveButtonType.Enabled
@@ -269,13 +283,32 @@ internal object TranslationsDialogReducer {
                 state.copy(translatedPageTitle = action.title)
             }
 
+            is TranslationsDialogAction.UpdateDownloadTranslationDownloadSize -> {
+                state.copy(
+                    translationDownloadSize = if (
+                        action.translationDownloadSize?.fromLanguage == state.initialFrom &&
+                        action.translationDownloadSize?.toLanguage == state.initialTo &&
+                        isTranslationDownloadSizeValid(action.translationDownloadSize)
+                    ) {
+                        action.translationDownloadSize
+                    } else {
+                        null
+                    },
+                )
+            }
+
             is TranslationsDialogAction.TranslateAction,
             TranslationsDialogAction.FetchSupportedLanguages,
             TranslationsDialogAction.RestoreTranslation,
+            is TranslationsDialogAction.FetchDownloadFileSizeAction,
             -> {
                 // handled by [TranslationsDialogMiddleware]
                 state
             }
         }
     }
+
+    private fun isTranslationDownloadSizeValid(translationDownloadSize: TranslationDownloadSize?) =
+        translationDownloadSize?.size != 0L &&
+            translationDownloadSize?.error == null
 }

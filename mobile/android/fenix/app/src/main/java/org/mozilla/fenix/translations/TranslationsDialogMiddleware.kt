@@ -24,6 +24,16 @@ class TranslationsDialogMiddleware(
         action: TranslationsDialogAction,
     ) {
         when (action) {
+            is TranslationsDialogAction.FetchDownloadFileSizeAction -> {
+                browserStore.dispatch(
+                    TranslationsAction.FetchTranslationDownloadSizeAction(
+                        tabId = sessionId,
+                        fromLanguage = action.fromLanguage,
+                        toLanguage = action.toLanguage,
+                    ),
+                )
+            }
+
             is TranslationsDialogAction.FetchSupportedLanguages -> {
                 browserStore.dispatch(
                     TranslationsAction.OperationRequestedAction(

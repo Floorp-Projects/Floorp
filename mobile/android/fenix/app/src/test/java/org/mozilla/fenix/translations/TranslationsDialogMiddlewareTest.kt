@@ -98,4 +98,35 @@ class TranslationsDialogMiddlewareTest {
                 )
             }
         }
+
+    @Test
+    fun `GIVEN translationState WHEN FetchDownloadFileSizeAction from TranslationDialogStore is called THEN call FetchTranslationDownloadSizeAction from BrowserStore`() =
+        runTest {
+            val browserStore = mockk<BrowserStore>(relaxed = true)
+            val translationsDialogMiddleware =
+                TranslationsDialogMiddleware(browserStore = browserStore, sessionId = "tab1")
+
+            val translationStore = TranslationsDialogStore(
+                initialState = TranslationsDialogState(),
+                middlewares = listOf(translationsDialogMiddleware),
+            )
+            translationStore.dispatch(
+                TranslationsDialogAction.FetchDownloadFileSizeAction(
+                    toLanguage = Language("en", "English"),
+                    fromLanguage = Language("fr", "France"),
+                ),
+            ).joinBlocking()
+
+            translationStore.waitUntilIdle()
+
+            verify {
+                browserStore.dispatch(
+                    TranslationsAction.FetchTranslationDownloadSizeAction(
+                        tabId = "tab1",
+                        fromLanguage = Language("fr", "France"),
+                        toLanguage = Language("en", "English"),
+                    ),
+                )
+            }
+        }
 }

@@ -36,19 +36,19 @@ import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Download Languages File Dialog.
- *
+ * @param downloadLanguageDialogType Whether the download language file item is
+ * of type all languages,single file translation request or default.
  * @param fileSize Language file size in bytes that should be displayed in the dialogue title.
  * @param isCheckBoxEnabled Whether saving mode checkbox is checked or unchecked.
- * @param isAllLanguagesItemType Whether the download language file item is of type all languages.
  * @param onSavingModeStateChange Invoked when the user clicks on the checkbox of the saving mode state.
  * @param onConfirmDownload Invoked when the user click on the "Download" dialog button.
  * @param onCancel Invoked when the user clicks on the "Cancel" dialog button.
  */
 @Composable
 fun DownloadLanguageFileDialog(
+    downloadLanguageDialogType: DownloadLanguageFileDialogType,
     fileSize: Long,
     isCheckBoxEnabled: Boolean,
-    isAllLanguagesItemType: Boolean,
     onSavingModeStateChange: (Boolean) -> Unit,
     onConfirmDownload: () -> Unit,
     onCancel: () -> Unit,
@@ -62,18 +62,29 @@ fun DownloadLanguageFileDialog(
                 )
                 .padding(16.dp),
         ) {
+            val title =
+                if (downloadLanguageDialogType is DownloadLanguageFileDialogType.TranslationRequest) {
+                    stringResource(
+                        R.string.translations_download_language_file_dialog_title,
+                        fileSize.toMegabyteOrKilobyteString(),
+                    )
+                } else {
+                    stringResource(
+                        R.string.download_language_file_dialog_title,
+                        fileSize.toMegabyteOrKilobyteString(),
+                    )
+                }
             Text(
-                text = stringResource(
-                    R.string.download_language_file_dialog_title,
-                    fileSize.toMegabyteOrKilobyteString(),
-                ),
+                text = title,
                 modifier = Modifier
                     .semantics { heading() },
                 color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.headline7,
             )
 
-            if (isAllLanguagesItemType) {
+            if (downloadLanguageDialogType is DownloadLanguageFileDialogType.AllLanguages ||
+                downloadLanguageDialogType is DownloadLanguageFileDialogType.TranslationRequest
+            ) {
                 Text(
                     text = stringResource(
                         R.string.download_language_file_dialog_message_all_languages,
@@ -89,11 +100,14 @@ fun DownloadLanguageFileDialog(
                 onSavingModeStateChange = onSavingModeStateChange,
             )
 
-            val primaryButtonText: String = if (isAllLanguagesItemType) {
-                stringResource(id = R.string.download_language_file_dialog_positive_button_text_all_languages)
-            } else {
-                stringResource(id = R.string.download_language_file_dialog_positive_button_text)
-            }
+            val primaryButtonText: String =
+                if (downloadLanguageDialogType is DownloadLanguageFileDialogType.AllLanguages ||
+                    downloadLanguageDialogType is DownloadLanguageFileDialogType.TranslationRequest
+                ) {
+                    stringResource(id = R.string.download_language_file_dialog_positive_button_text_all_languages)
+                } else {
+                    stringResource(id = R.string.download_language_file_dialog_positive_button_text)
+                }
 
             PrimaryButton(
                 text = primaryButtonText,
@@ -163,9 +177,9 @@ private fun DownloadLanguageFileDialogCheckbox(
 private fun PrefDownloadLanguageFileDialogPreviewAllLanguages() {
     FirefoxTheme {
         DownloadLanguageFileDialog(
+            downloadLanguageDialogType = DownloadLanguageFileDialogType.AllLanguages,
             fileSize = 4000L,
             isCheckBoxEnabled = true,
-            isAllLanguagesItemType = true,
             onSavingModeStateChange = {},
             onConfirmDownload = {},
             onCancel = {},
@@ -173,14 +187,37 @@ private fun PrefDownloadLanguageFileDialogPreviewAllLanguages() {
     }
 }
 
+/**
+ *  Download Languages File Dialog Type.
+ */
+sealed class DownloadLanguageFileDialogType {
+
+    /**
+     * All language files need to be downloaded.
+     */
+    data object AllLanguages : DownloadLanguageFileDialogType()
+
+    /**
+     * Only one language package needs to be downloaded.
+     */
+    data object Default : DownloadLanguageFileDialogType()
+
+    /**
+     * When the user presses the translate button, the site needs to be translated.
+     * To perform this translation, the device will need to download a language model to perform
+     * this specific translation, if not already downloaded.
+     */
+    data object TranslationRequest : DownloadLanguageFileDialogType()
+}
+
 @Composable
 @LightDarkPreview
 private fun PrefDownloadLanguageFileDialogPreview() {
     FirefoxTheme {
         DownloadLanguageFileDialog(
+            downloadLanguageDialogType = DownloadLanguageFileDialogType.Default,
             fileSize = 4000L,
             isCheckBoxEnabled = false,
-            isAllLanguagesItemType = false,
             onSavingModeStateChange = {},
             onConfirmDownload = {},
             onCancel = {},
