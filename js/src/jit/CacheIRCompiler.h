@@ -865,16 +865,17 @@ class MOZ_RAII CacheIRCompiler {
 
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult(
       ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
-      Scalar::Type elementType, AtomicsReadWriteModifyFn fn);
+      Scalar::Type elementType, ArrayBufferViewKind viewKind,
+      AtomicsReadWriteModifyFn fn);
 
   using AtomicsReadWriteModify64Fn = JS::BigInt* (*)(JSContext*,
                                                      TypedArrayObject*, size_t,
                                                      const JS::BigInt*);
 
   template <AtomicsReadWriteModify64Fn fn>
-  [[nodiscard]] bool emitAtomicsReadModifyWriteResult64(ObjOperandId objId,
-                                                        IntPtrOperandId indexId,
-                                                        uint32_t valueId);
+  [[nodiscard]] bool emitAtomicsReadModifyWriteResult64(
+      ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+      ArrayBufferViewKind viewKind);
 
   void emitActivateIterator(Register objBeingIterated, Register iterObject,
                             Register nativeIter, Register scratch,

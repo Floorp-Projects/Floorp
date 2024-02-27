@@ -262,11 +262,10 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                        Scalar::Type type, MDefinition** offset,
                        MInstruction** elements);
 
-  [[nodiscard]] bool emitAtomicsBinaryOp(ObjOperandId objId,
-                                         IntPtrOperandId indexId,
-                                         uint32_t valueId,
-                                         Scalar::Type elementType,
-                                         bool forEffect, AtomicOp op);
+  [[nodiscard]] bool emitAtomicsBinaryOp(
+      ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+      Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind,
+      AtomicOp op);
 
   [[nodiscard]] bool emitLoadArgumentSlot(ValOperandId resultId,
                                           uint32_t slotIndex);
@@ -4621,14 +4620,14 @@ bool WarpCacheIRTranspiler::emitNewTypedArrayFromArrayResult(
 
 bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t expectedId,
-    uint32_t replacementId, Scalar::Type elementType) {
+    uint32_t replacementId, Scalar::Type elementType,
+    ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
   MDefinition* expected = getOperand(ValOperandId(expectedId));
   MDefinition* replacement = getOperand(ValOperandId(replacementId));
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   index = addBoundsCheck(index, length);
 
@@ -4650,13 +4649,12 @@ bool WarpCacheIRTranspiler::emitAtomicsCompareExchangeResult(
 
 bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
-    Scalar::Type elementType) {
+    Scalar::Type elementType, ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(ValOperandId(valueId));
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   index = addBoundsCheck(index, length);
 
@@ -4676,17 +4674,15 @@ bool WarpCacheIRTranspiler::emitAtomicsExchangeResult(
   return resumeAfter(exchange);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
-                                                IntPtrOperandId indexId,
-                                                uint32_t valueId,
-                                                Scalar::Type elementType,
-                                                bool forEffect, AtomicOp op) {
+bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind,
+    AtomicOp op) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(ValOperandId(valueId));
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   index = addBoundsCheck(index, length);
 
@@ -4712,59 +4708,48 @@ bool WarpCacheIRTranspiler::emitAtomicsBinaryOp(ObjOperandId objId,
   return resumeAfter(binop);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsAddResult(ObjOperandId objId,
-                                                 IntPtrOperandId indexId,
-                                                 uint32_t valueId,
-                                                 Scalar::Type elementType,
-                                                 bool forEffect) {
+bool WarpCacheIRTranspiler::emitAtomicsAddResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             AtomicFetchAddOp);
+                             viewKind, AtomicFetchAddOp);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsSubResult(ObjOperandId objId,
-                                                 IntPtrOperandId indexId,
-                                                 uint32_t valueId,
-                                                 Scalar::Type elementType,
-                                                 bool forEffect) {
+bool WarpCacheIRTranspiler::emitAtomicsSubResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             AtomicFetchSubOp);
+                             viewKind, AtomicFetchSubOp);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsAndResult(ObjOperandId objId,
-                                                 IntPtrOperandId indexId,
-                                                 uint32_t valueId,
-                                                 Scalar::Type elementType,
-                                                 bool forEffect) {
+bool WarpCacheIRTranspiler::emitAtomicsAndResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             AtomicFetchAndOp);
+                             viewKind, AtomicFetchAndOp);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsOrResult(ObjOperandId objId,
-                                                IntPtrOperandId indexId,
-                                                uint32_t valueId,
-                                                Scalar::Type elementType,
-                                                bool forEffect) {
+bool WarpCacheIRTranspiler::emitAtomicsOrResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             AtomicFetchOrOp);
+                             viewKind, AtomicFetchOrOp);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsXorResult(ObjOperandId objId,
-                                                 IntPtrOperandId indexId,
-                                                 uint32_t valueId,
-                                                 Scalar::Type elementType,
-                                                 bool forEffect) {
+bool WarpCacheIRTranspiler::emitAtomicsXorResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             AtomicFetchXorOp);
+                             viewKind, AtomicFetchXorOp);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
-                                                  IntPtrOperandId indexId,
-                                                  Scalar::Type elementType) {
+bool WarpCacheIRTranspiler::emitAtomicsLoadResult(
+    ObjOperandId objId, IntPtrOperandId indexId, Scalar::Type elementType,
+    ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   index = addBoundsCheck(index, length);
 
@@ -4784,16 +4769,14 @@ bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
   return resumeAfter(load);
 }
 
-bool WarpCacheIRTranspiler::emitAtomicsStoreResult(ObjOperandId objId,
-                                                   IntPtrOperandId indexId,
-                                                   uint32_t valueId,
-                                                   Scalar::Type elementType) {
+bool WarpCacheIRTranspiler::emitAtomicsStoreResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
   MDefinition* value = getOperand(ValOperandId(valueId));
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   index = addBoundsCheck(index, length);
 

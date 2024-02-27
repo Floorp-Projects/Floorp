@@ -9318,7 +9318,8 @@ bool CacheIRCompiler::emitGetFirstDollarIndexResult(StringOperandId strId) {
 
 bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t expectedId,
-    uint32_t replacementId, Scalar::Type elementType) {
+    uint32_t replacementId, Scalar::Type elementType,
+    ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   Maybe<AutoOutputRegister> output;
@@ -9351,8 +9352,17 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
                             : callvm->outputValueReg().scratchReg();
   MOZ_ASSERT(scratch != obj, "scratchReg must not be typeReg");
 
+  Maybe<AutoScratchRegister> scratch2;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+#ifdef JS_CODEGEN_X86
+    // Not enough spare registers on x86.
+#else
+    scratch2.emplace(allocator, masm);
+#endif
+  }
+
   // Not enough registers on X86.
-  Register spectreTemp = Register::Invalid();
+  constexpr auto spectreTemp = mozilla::Nothing{};
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -9365,8 +9375,8 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
   MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
-  masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch, scratch2,
+                            spectreTemp, failure->label());
 
   // Atomic operations are highly platform-dependent, for example x86/x64 has
   // specific requirements on which registers are used; MIPS needs multiple
@@ -9419,15 +9429,20 @@ bool CacheIRCompiler::emitAtomicsCompareExchangeResult(
 
 bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
-    Scalar::Type elementType, AtomicsReadWriteModifyFn fn) {
+    Scalar::Type elementType, ArrayBufferViewKind viewKind,
+    AtomicsReadWriteModifyFn fn) {
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
   Register value = allocator.useRegister(masm, Int32OperandId(valueId));
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Maybe<AutoScratchRegisterMaybeOutputType> scratch2;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+    scratch2.emplace(allocator, masm, output);
+  }
 
   // Not enough registers on X86.
-  Register spectreTemp = Register::Invalid();
+  constexpr auto spectreTemp = mozilla::Nothing{};
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -9435,8 +9450,8 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
   }
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
-  masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch, scratch2,
+                            spectreTemp, failure->label());
 
   // See comment in emitAtomicsCompareExchange for why we use an ABI call.
   {
@@ -9469,15 +9484,20 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult(
 
 template <CacheIRCompiler::AtomicsReadWriteModify64Fn fn>
 bool CacheIRCompiler::emitAtomicsReadModifyWriteResult64(
-    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId) {
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    ArrayBufferViewKind viewKind) {
   AutoCallVM callvm(masm, this, allocator);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
   Register value = allocator.useRegister(masm, BigIntOperandId(valueId));
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, callvm.output());
+  Maybe<AutoScratchRegisterMaybeOutputType> scratch2;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+    scratch2.emplace(allocator, masm, callvm.output());
+  }
 
   // Not enough registers on X86.
-  Register spectreTemp = Register::Invalid();
+  constexpr auto spectreTemp = mozilla::Nothing{};
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -9490,8 +9510,8 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult64(
   MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
-  masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch, scratch2,
+                            spectreTemp, failure->label());
 
   // See comment in emitAtomicsCompareExchange for why we use a VM call.
 
@@ -9508,95 +9528,88 @@ bool CacheIRCompiler::emitAtomicsReadModifyWriteResult64(
 bool CacheIRCompiler::emitAtomicsExchangeResult(ObjOperandId objId,
                                                 IntPtrOperandId indexId,
                                                 uint32_t valueId,
-                                                Scalar::Type elementType) {
+                                                Scalar::Type elementType,
+                                                ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
     return emitAtomicsReadModifyWriteResult64<jit::AtomicsExchange64>(
-        objId, indexId, valueId);
+        objId, indexId, valueId, viewKind);
   }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
+                                          viewKind,
                                           AtomicsExchange(elementType));
 }
 
-bool CacheIRCompiler::emitAtomicsAddResult(ObjOperandId objId,
-                                           IntPtrOperandId indexId,
-                                           uint32_t valueId,
-                                           Scalar::Type elementType,
-                                           bool forEffect) {
+bool CacheIRCompiler::emitAtomicsAddResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
-    return emitAtomicsReadModifyWriteResult64<jit::AtomicsAdd64>(objId, indexId,
-                                                                 valueId);
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsAdd64>(
+        objId, indexId, valueId, viewKind);
   }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
-                                          AtomicsAdd(elementType));
+                                          viewKind, AtomicsAdd(elementType));
 }
 
-bool CacheIRCompiler::emitAtomicsSubResult(ObjOperandId objId,
-                                           IntPtrOperandId indexId,
-                                           uint32_t valueId,
-                                           Scalar::Type elementType,
-                                           bool forEffect) {
+bool CacheIRCompiler::emitAtomicsSubResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
-    return emitAtomicsReadModifyWriteResult64<jit::AtomicsSub64>(objId, indexId,
-                                                                 valueId);
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsSub64>(
+        objId, indexId, valueId, viewKind);
   }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
-                                          AtomicsSub(elementType));
+                                          viewKind, AtomicsSub(elementType));
 }
 
-bool CacheIRCompiler::emitAtomicsAndResult(ObjOperandId objId,
-                                           IntPtrOperandId indexId,
-                                           uint32_t valueId,
-                                           Scalar::Type elementType,
-                                           bool forEffect) {
+bool CacheIRCompiler::emitAtomicsAndResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
-    return emitAtomicsReadModifyWriteResult64<jit::AtomicsAnd64>(objId, indexId,
-                                                                 valueId);
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsAnd64>(
+        objId, indexId, valueId, viewKind);
   }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
-                                          AtomicsAnd(elementType));
+                                          viewKind, AtomicsAnd(elementType));
 }
 
-bool CacheIRCompiler::emitAtomicsOrResult(ObjOperandId objId,
-                                          IntPtrOperandId indexId,
-                                          uint32_t valueId,
-                                          Scalar::Type elementType,
-                                          bool forEffect) {
+bool CacheIRCompiler::emitAtomicsOrResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
-    return emitAtomicsReadModifyWriteResult64<jit::AtomicsOr64>(objId, indexId,
-                                                                valueId);
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsOr64>(
+        objId, indexId, valueId, viewKind);
   }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
-                                          AtomicsOr(elementType));
+                                          viewKind, AtomicsOr(elementType));
 }
 
-bool CacheIRCompiler::emitAtomicsXorResult(ObjOperandId objId,
-                                           IntPtrOperandId indexId,
-                                           uint32_t valueId,
-                                           Scalar::Type elementType,
-                                           bool forEffect) {
+bool CacheIRCompiler::emitAtomicsXorResult(
+    ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
+    Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   if (Scalar::isBigIntType(elementType)) {
-    return emitAtomicsReadModifyWriteResult64<jit::AtomicsXor64>(objId, indexId,
-                                                                 valueId);
+    return emitAtomicsReadModifyWriteResult64<jit::AtomicsXor64>(
+        objId, indexId, valueId, viewKind);
   }
   return emitAtomicsReadModifyWriteResult(objId, indexId, valueId, elementType,
-                                          AtomicsXor(elementType));
+                                          viewKind, AtomicsXor(elementType));
 }
 
 bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
                                             IntPtrOperandId indexId,
-                                            Scalar::Type elementType) {
+                                            Scalar::Type elementType,
+                                            ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   Maybe<AutoOutputRegister> output;
@@ -9610,7 +9623,13 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm,
                                          output ? *output : callvm->output());
-  AutoSpectreBoundsScratchRegister spectreTemp(allocator, masm);
+  Maybe<AutoSpectreBoundsScratchRegister> spectreTemp;
+  Maybe<AutoScratchRegister> scratch2;
+  if (viewKind == ArrayBufferViewKind::FixedLength) {
+    spectreTemp.emplace(allocator, masm);
+  } else {
+    scratch2.emplace(allocator, masm);
+  }
   AutoAvailableFloatRegister floatReg(*this, FloatReg0);
 
   FailurePath* failure;
@@ -9624,8 +9643,8 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   MOZ_ASSERT(isBaseline(), "Can't use FailurePath with AutoCallVM in Ion ICs");
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
-  masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch, scratch2,
+                            spectreTemp, failure->label());
 
   // Atomic operations are highly platform-dependent, for example x86/arm32 has
   // specific requirements on which registers are used. Therefore we're using a
@@ -9665,7 +9684,8 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
 bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
                                              IntPtrOperandId indexId,
                                              uint32_t valueId,
-                                             Scalar::Type elementType) {
+                                             Scalar::Type elementType,
+                                             ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -9679,9 +9699,13 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
     valueBigInt.emplace(allocator.useRegister(masm, BigIntOperandId(valueId)));
   }
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Maybe<AutoScratchRegisterMaybeOutputType> scratch2;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+    scratch2.emplace(allocator, masm, output);
+  }
 
   // Not enough registers on X86.
-  Register spectreTemp = Register::Invalid();
+  constexpr auto spectreTemp = mozilla::Nothing{};
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -9689,8 +9713,8 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
   }
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
-  masm.spectreBoundsCheckPtr(index, scratch, spectreTemp, failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch, scratch2,
+                            spectreTemp, failure->label());
 
   if (!Scalar::isBigIntType(elementType)) {
     // Load the elements vector.
