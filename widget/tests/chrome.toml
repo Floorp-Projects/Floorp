@@ -82,6 +82,9 @@ support-files = "file_test_clipboard_asyncSetData.js"
 ["test_composition_text_querycontent.xhtml"]
 support-files = ["window_composition_text_querycontent.xhtml"]
 
+["test_ime_focus_with_multiple_contenteditable.html"]
+support-files = ["file_ime_state_test_helper.js"]
+
 ["test_ime_state_in_contenteditable_on_readonly_change_in_parent.html"]
 support-files = [
   "file_ime_state_test_helper.js",
