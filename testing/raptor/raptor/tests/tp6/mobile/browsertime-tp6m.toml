@@ -94,6 +94,7 @@ test_url = "https://support.microsoft.com/en-us"
 test_url = "https://www.reddit.com"
 
 ["sina"]
+playback_pageset_manifest = "mitm8-android-fenix-{subtest}.manifest"
 test_url = "https://www.sina.com.cn/"
 
 ["stackoverflow"]
