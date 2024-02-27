@@ -147,6 +147,9 @@ const customLazy = {
  * @param {Boolean} options.traceFunctionReturn
  *        Optional setting to enable when the tracing should notify about frame exit.
  *        i.e. when a function call returns or throws.
+ * @param {String} options.filterFrameSourceUrl
+ *        Optional setting to restrict all traces to only a given source URL.
+ *        This is a loose check, so any source whose URL includes the passed string will be traced.
  * @param {Number} options.maxDepth
  *        Optional setting to ignore frames when depth is greater than the passed number.
  * @param {Number} options.maxRecords
@@ -212,6 +215,12 @@ class JavaScriptTracer {
         throw new Error("'pauseOnStep' attribute should be a number");
       }
       this.pauseOnStep = options.pauseOnStep;
+    }
+    if ("filterFrameSourceUrl" in options) {
+      if (typeof options.filterFrameSourceUrl != "string") {
+        throw new Error("'filterFrameSourceUrl' attribute should be a string");
+      }
+      this.filterFrameSourceUrl = options.filterFrameSourceUrl;
     }
 
     // An increment used to identify function calls and their returned/exit frames
@@ -565,6 +574,14 @@ class JavaScriptTracer {
       return;
     }
     try {
+      // If an optional filter is passed, ignore frames which aren't matching the filter string
+      if (
+        this.filterFrameSourceUrl &&
+        !frame.script.source.url?.includes(this.filterFrameSourceUrl)
+      ) {
+        return;
+      }
+
       // Because of async frame which are popped and entered again on completion of the awaited async task,
       // we have to compute the depth from the frame. (and can't use a simple increment on enter/decrement on pop).
       const depth = getFrameDepth(frame);
