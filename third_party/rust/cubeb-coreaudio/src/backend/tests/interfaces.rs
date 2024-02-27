@@ -90,6 +90,7 @@ fn test_ops_context_supported_input_processing_params() {
                 params,
                 ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
                     | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL
             );
         },
     );
@@ -1018,6 +1019,54 @@ fn test_ops_duplex_voice_stream_set_input_mute() {
 }
 
 #[test]
+fn test_ops_duplex_voice_stream_set_input_mute_before_start() {
+    test_default_duplex_voice_stream_operation(
+        "duplex voice stream: mute before start",
+        |stream| {
+            assert_eq!(
+                unsafe { OPS.stream_set_input_mute.unwrap()(stream, 1) },
+                ffi::CUBEB_OK
+            );
+            assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+        },
+    );
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_mute_before_start_with_reinit() {
+    test_default_duplex_voice_stream_operation(
+        "duplex voice stream: mute before start with reinit",
+        |stream| {
+            assert_eq!(
+                unsafe { OPS.stream_set_input_mute.unwrap()(stream, 1) },
+                ffi::CUBEB_OK
+            );
+            assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+
+            // Hacky cast, but testing this here was simplest for now.
+            let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
+            stm.reinit_async();
+            let queue = stm.queue.clone();
+            let mut mute_after_reinit = false;
+            queue.run_sync(|| {
+                let mut mute: u32 = 0;
+                let r = audio_unit_get_property(
+                    stm.core_stream_data.input_unit,
+                    kAUVoiceIOProperty_MuteOutput,
+                    kAudioUnitScope_Global,
+                    AU_IN_BUS,
+                    &mut mute,
+                    &mut mem::size_of::<u32>(),
+                );
+                assert_eq!(r, NO_ERR);
+                mute_after_reinit = mute == 1;
+            });
+            assert_eq!(mute_after_reinit, true);
+        },
+    );
+}
+
+#[test]
 fn test_ops_duplex_voice_stream_set_input_mute_after_start() {
     test_default_duplex_voice_stream_operation("duplex voice stream: mute after start", |stream| {
         assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
@@ -1033,7 +1082,8 @@ fn test_ops_duplex_voice_stream_set_input_processing_params() {
     test_default_duplex_voice_stream_operation("duplex voice stream: processing", |stream| {
         let params: ffi::cubeb_input_processing_params =
             ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
-                | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+                | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION
+                | ffi::CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL;
         assert_eq!(
             unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
             ffi::CUBEB_OK
@@ -1048,12 +1098,72 @@ fn test_ops_duplex_voice_stream_set_input_processing_params_before_start() {
         |stream| {
             let params: ffi::cubeb_input_processing_params =
                 ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
-                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL;
             assert_eq!(
                 unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
                 ffi::CUBEB_OK
             );
             assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+        },
+    );
+}
+
+#[test]
+fn test_ops_duplex_voice_stream_set_input_processing_params_before_start_with_reinit() {
+    test_default_duplex_voice_stream_operation(
+        "duplex voice stream: processing before start with reinit",
+        |stream| {
+            let params: ffi::cubeb_input_processing_params =
+                ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL;
+            assert_eq!(
+                unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
+                ffi::CUBEB_OK
+            );
+            assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+
+            // Hacky cast, but testing this here was simplest for now.
+            let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
+            stm.reinit_async();
+            let queue = stm.queue.clone();
+            let mut params_after_reinit: ffi::cubeb_input_processing_params =
+                ffi::CUBEB_INPUT_PROCESSING_PARAM_NONE;
+            queue.run_sync(|| {
+                let mut params: ffi::cubeb_input_processing_params =
+                    ffi::CUBEB_INPUT_PROCESSING_PARAM_NONE;
+                let mut agc: u32 = 0;
+                let r = audio_unit_get_property(
+                    stm.core_stream_data.input_unit,
+                    kAUVoiceIOProperty_VoiceProcessingEnableAGC,
+                    kAudioUnitScope_Global,
+                    AU_IN_BUS,
+                    &mut agc,
+                    &mut mem::size_of::<u32>(),
+                );
+                assert_eq!(r, NO_ERR);
+                if agc == 1 {
+                    params = params | ffi::CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL;
+                }
+                let mut bypass: u32 = 0;
+                let r = audio_unit_get_property(
+                    stm.core_stream_data.input_unit,
+                    kAUVoiceIOProperty_BypassVoiceProcessing,
+                    kAudioUnitScope_Global,
+                    AU_IN_BUS,
+                    &mut bypass,
+                    &mut mem::size_of::<u32>(),
+                );
+                assert_eq!(r, NO_ERR);
+                if bypass == 0 {
+                    params = params
+                        | ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
+                        | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+                }
+                params_after_reinit = params;
+            });
+            assert_eq!(params, params_after_reinit);
         },
     );
 }
@@ -1066,7 +1176,8 @@ fn test_ops_duplex_voice_stream_set_input_processing_params_after_start() {
             assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
             let params: ffi::cubeb_input_processing_params =
                 ffi::CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION
-                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION;
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION
+                    | ffi::CUBEB_INPUT_PROCESSING_PARAM_AUTOMATIC_GAIN_CONTROL;
             assert_eq!(
                 unsafe { OPS.stream_set_input_processing_params.unwrap()(stream, params) },
                 ffi::CUBEB_OK
