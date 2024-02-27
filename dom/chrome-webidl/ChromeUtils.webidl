@@ -544,6 +544,9 @@ partial namespace ChromeUtils {
    * the same file will not cause the module to be re-evaluated, but
    * the symbols in EXPORTED_SYMBOLS will be exported into the
    * specified target object and the global object returned as above.
+   *
+   * TODO: Remove this once m-c, c-c, and out-of-tree code migrations finish
+   *       (bug 1881888).
    */
   [Throws]
   object import(UTF8String aResourceURI, optional object aTargetObj);

@@ -324,6 +324,9 @@ interface nsIXPCComponents_Utils : nsISupports
      * pointing to the same file will not cause the module to be re-evaluated,
      * but the symbols in EXPORTED_SYMBOLS will be exported into the
      * specified target object and the global object returned as above.
+     *
+     * TODO: Remove this once m-c, c-c, and out-of-tree code migrations finish
+     *       (bug 1776175, bug 1881888).
      */
     [implicit_jscontext,optional_argc]
     jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
@@ -344,6 +347,9 @@ interface nsIXPCComponents_Utils : nsISupports
     /**
      * Returns true if the JSM is loaded into the system global previously via
      * the import method above. Returns false otherwise.
+     *
+     * TODO: Remove this once m-c, c-c, and out-of-tree code migrations finish
+     *       (bug 1776175, bug 1881888).
      */
     boolean isJSModuleLoaded(in AUTF8String aResourceURI);
 
@@ -360,6 +366,9 @@ interface nsIXPCComponents_Utils : nsISupports
      * imported then this method will do nothing.
      *
      * @param resourceURI A resource:// URI string to unload the module from.
+     *
+     * TODO: Remove this once m-c, c-c, and out-of-tree code migrations finish
+     *       (bug 1776175, bug 1881888).
      */
     void unload(in AUTF8String registryLocation);
 
