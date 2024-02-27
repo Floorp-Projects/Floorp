@@ -15,6 +15,7 @@ define(function (require, exports, module) {
 
   // Reps
   const {
+    appendRTLClassNameIfNeeded,
     cropString,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -71,13 +72,17 @@ define(function (require, exports, module) {
       shouldRenderTooltip,
     } = opts;
 
+    const text = getTextContent(object);
     const config = {
       "data-link-actor-id": object.actor,
       "data-link-content-dom-reference": JSON.stringify(
         object.contentDomReference
       ),
-      className: "objectBox objectBox-textNode",
-      title: shouldRenderTooltip ? `#text "${getTextContent(object)}"` : null,
+      className: appendRTLClassNameIfNeeded(
+        "objectBox objectBox-textNode",
+        text
+      ),
+      title: shouldRenderTooltip ? `#text "${text}"` : null,
     };
 
     if (isInTree) {
