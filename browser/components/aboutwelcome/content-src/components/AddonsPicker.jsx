@@ -20,7 +20,9 @@ export const InstallButton = props => {
   const [installing, setInstalling] = useState(false);
   const [installComplete, setInstallComplete] = useState(false);
 
-  let buttonLabel = installComplete ? "Installed" : "Add to Firefox";
+  let buttonLabel = installComplete
+    ? { string_id: "amo-picker-install-complete-label" }
+    : { string_id: "amo-picker-install-button-label" };
 
   function onClick(event) {
     props.handleAction(event);

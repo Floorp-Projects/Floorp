@@ -2150,7 +2150,11 @@ const Loader = () => {
 const InstallButton = props => {
   const [installing, setInstalling] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [installComplete, setInstallComplete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  let buttonLabel = installComplete ? "Installed" : "Add to Firefox";
+  let buttonLabel = installComplete ? {
+    string_id: "amo-picker-install-complete-label"
+  } : {
+    string_id: "amo-picker-install-button-label"
+  };
   function onClick(event) {
     props.handleAction(event);
     // Replace the label with the spinner
