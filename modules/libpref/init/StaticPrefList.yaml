@@ -7701,16 +7701,6 @@
     mirror: always
     set_spidermonkey_pref: startup
 
--   name: javascript.options.wasm_extended_const
-    type: bool
-#if defined(ENABLE_WASM_EXTENDED_CONST)
-    value: true
-#else
-    value: false
-#endif
-    mirror: always
-    set_spidermonkey_pref: startup
-
 -   name: javascript.options.wasm_exnref
     type: bool
     value: @IS_EARLY_BETA_OR_EARLIER@

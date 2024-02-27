@@ -95,7 +95,7 @@ name = "extended-const"
 url = "https://github.com/WebAssembly/extended-const"
 branch = "main"
 parent = "spec"
-directive = "; --setpref=wasm_extended_const=true; --setpref=wasm_gc=false; skip-if: !wasmExtendedConstEnabled()"
+directive = "; --setpref=wasm_gc=false"
 excluded_tests = []
 
 [[repos]]
