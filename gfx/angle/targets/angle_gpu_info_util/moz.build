@@ -170,10 +170,6 @@ USE_LIBS += [
     "angle_common",
 ]
 
-DIRS += [
-    "../angle_common",
-]
-
 OS_LIBS += [
     "dxgi",
     "setupapi",

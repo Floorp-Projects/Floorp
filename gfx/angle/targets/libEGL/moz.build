@@ -157,11 +157,6 @@ USE_LIBS += [
     "libGLESv2",
 ]
 
-DIRS += [
-    "../angle_common",
-    "../libGLESv2",
-]
-
 OS_LIBS += [
     "advapi32",
     "comdlg32",

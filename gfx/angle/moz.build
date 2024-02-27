@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["targets/translator"]
+DIRS += [
+    "targets/angle_common",
+    "targets/translator",
+]
 
 # Only build libEGL/libGLESv2 on Windows
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
