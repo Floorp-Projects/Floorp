@@ -48,7 +48,7 @@ class DataViewObject : public ArrayBufferViewObject {
                                          const CallArgs& args,
                                          size_t* byteOffsetPtr,
                                          size_t* byteLengthPtr,
-                                         bool* autoLengthPtr);
+                                         AutoLength* autoLengthPtr);
   static bool constructSameCompartment(JSContext* cx, HandleObject bufobj,
                                        const CallArgs& args);
   static bool constructWrapped(JSContext* cx, HandleObject bufobj,
@@ -58,16 +58,16 @@ class DataViewObject : public ArrayBufferViewObject {
       JSContext* cx, size_t byteOffset, size_t byteLength,
       Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
 
- protected:
-  size_t rawByteLength() const {
-    return size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
-  }
-
  public:
   static const JSClass protoClass_;
 
-  mozilla::Maybe<size_t> byteLength();
-  mozilla::Maybe<size_t> byteOffset();
+  /**
+   * Return the current byteLength, or |Nothing| if the DataView is detached or
+   * out-of-bounds.
+   */
+  mozilla::Maybe<size_t> byteLength() {
+    return ArrayBufferViewObject::length();
+  }
 
   template <typename NativeType>
   static bool offsetIsInBounds(uint64_t offset, size_t byteLength) {
@@ -173,9 +173,11 @@ class FixedLengthDataViewObject : public DataViewObject {
  public:
   static const JSClass class_;
 
-  size_t byteOffset() const { return ArrayBufferViewObject::byteOffset(); }
+  size_t byteOffset() const {
+    return ArrayBufferViewObject::byteOffsetSlotValue();
+  }
 
-  size_t byteLength() const { return rawByteLength(); }
+  size_t byteLength() const { return ArrayBufferViewObject::lengthSlotValue(); }
 
   bool offsetIsInBounds(uint32_t byteSize, uint64_t offset) const {
     return DataViewObject::offsetIsInBounds(byteSize, offset, byteLength());
@@ -195,19 +197,14 @@ class ResizableDataViewObject : public DataViewObject {
   friend class DataViewObject;
 
   static ResizableDataViewObject* create(
-      JSContext* cx, size_t byteOffset, size_t byteLength, bool autoLength,
-      Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, HandleObject proto);
+      JSContext* cx, size_t byteOffset, size_t byteLength,
+      AutoLength autoLength, Handle<ArrayBufferObjectMaybeShared*> arrayBuffer,
+      HandleObject proto);
 
  public:
-  static const uint8_t AUTO_LENGTH_SLOT = DataViewObject::RESERVED_SLOTS;
-
-  static const uint8_t RESERVED_SLOTS = DataViewObject::RESERVED_SLOTS + 1;
+  static const uint8_t RESERVED_SLOTS = RESIZABLE_RESERVED_SLOTS;
 
   static const JSClass class_;
-
-  bool isAutoLength() const {
-    return getFixedSlot(AUTO_LENGTH_SLOT).toBoolean();
-  }
 };
 
 // For structured cloning.

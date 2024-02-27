@@ -7,6 +7,8 @@
 #ifndef vm_ArrayBufferViewObject_h
 #define vm_ArrayBufferViewObject_h
 
+#include "mozilla/Maybe.h"
+
 #include "builtin/TypedArrayConstants.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/NativeObject.h"
@@ -47,6 +49,14 @@ class ArrayBufferViewObject : public NativeObject {
 
   static constexpr size_t RESERVED_SLOTS = 4;
 
+  // Additional slots for views on resizable/growable (Shared)ArrayBufferObject.
+
+  static const uint8_t AUTO_LENGTH_SLOT = 4;
+  static const uint8_t INITIAL_LENGTH_SLOT = 5;
+  static const uint8_t INITIAL_BYTE_OFFSET_SLOT = 6;
+
+  static constexpr size_t RESIZABLE_RESERVED_SLOTS = 7;
+
 #ifdef DEBUG
   static const uint8_t ZeroLengthArrayData = 0x4A;
 #endif
@@ -76,10 +86,19 @@ class ArrayBufferViewObject : public NativeObject {
                           size_t byteOffset, size_t length,
                           uint32_t bytesPerElement);
 
+  enum class AutoLength : bool { No, Yes };
+
+  [[nodiscard]] bool initResizable(JSContext* cx,
+                                   ArrayBufferObjectMaybeShared* buffer,
+                                   size_t byteOffset, size_t length,
+                                   uint32_t bytesPerElement,
+                                   AutoLength autoLength);
+
   static ArrayBufferObjectMaybeShared* ensureBufferObject(
       JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
   void notifyBufferDetached();
+  void notifyBufferResized();
   void notifyBufferMoved(uint8_t* srcBufStart, uint8_t* dstBufStart);
 
   void initDataPointer(SharedMem<uint8_t*> viewData) {
@@ -156,6 +175,24 @@ class ArrayBufferViewObject : public NativeObject {
 
   bool hasResizableBuffer() const;
 
+ private:
+  bool hasDetachedBufferOrIsOutOfBounds() const {
+    // Shared buffers can't be detached or get out-of-bounds.
+    if (isSharedMemory()) {
+      return false;
+    }
+
+    // A view with a null buffer has never had its buffer exposed to become
+    // detached or get out-of-bounds.
+    auto* buffer = bufferUnshared();
+    if (!buffer) {
+      return false;
+    }
+
+    return buffer->isDetached() || (buffer->isResizable() && isOutOfBounds());
+  }
+
+ public:
   bool isLengthPinned() const {
     Value buffer = bufferValue();
     if (buffer.isBoolean()) {
@@ -193,9 +230,73 @@ class ArrayBufferViewObject : public NativeObject {
   static bool ensureNonInline(JSContext* cx,
                               JS::Handle<ArrayBufferViewObject*> view);
 
+ private:
+  void computeResizableLengthAndByteOffset(size_t bytesPerElement);
+
+  size_t bytesPerElement() const;
+
  protected:
-  size_t byteOffset() const {
+  size_t lengthSlotValue() const {
+    return size_t(getFixedSlot(LENGTH_SLOT).toPrivate());
+  }
+
+  size_t byteOffsetSlotValue() const {
     return size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate());
+  }
+
+  /**
+   * Offset into the buffer's data-pointer. Different from |byteOffset| for
+   * views on non-detached resizable buffers which are currently out-of-bounds.
+   */
+  size_t dataPointerOffset() const;
+
+  /**
+   * Return the current length, or |Nothing| if the view is detached or
+   * out-of-bounds.
+   */
+  mozilla::Maybe<size_t> length() const;
+
+ public:
+  /**
+   * Return the current byteOffset, or |Nothing| if the view is detached or
+   * out-of-bounds.
+   */
+  mozilla::Maybe<size_t> byteOffset() const;
+
+ private:
+  size_t initialByteOffsetValue() const {
+    // No assertion for resizable buffers here, because this method is called
+    // from dataPointerOffset(), which can be called during tracing.
+    return size_t(getFixedSlot(INITIAL_BYTE_OFFSET_SLOT).toPrivate());
+  }
+
+ public:
+  // The following methods can only be called on views for resizable buffers.
+
+  bool isAutoLength() const {
+    MOZ_ASSERT(hasResizableBuffer());
+    return getFixedSlot(AUTO_LENGTH_SLOT).toBoolean();
+  }
+
+  size_t initialLength() const {
+    MOZ_ASSERT(hasResizableBuffer());
+    return size_t(getFixedSlot(INITIAL_LENGTH_SLOT).toPrivate());
+  }
+
+  size_t initialByteOffset() const {
+    MOZ_ASSERT(hasResizableBuffer());
+    return initialByteOffsetValue();
+  }
+
+  bool isOutOfBounds() const {
+    MOZ_ASSERT(hasResizableBuffer());
+
+    // The view is out-of-bounds if the length and byteOffset slots are both set
+    // to zero and the initial length or initial byteOffset are non-zero. If the
+    // initial length and initial byteOffset are both zero, the view can never
+    // get out-of-bounds.
+    return lengthSlotValue() == 0 && byteOffsetSlotValue() == 0 &&
+           (initialLength() > 0 || initialByteOffset() > 0);
   }
 
  public:

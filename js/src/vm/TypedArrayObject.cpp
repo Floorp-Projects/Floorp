@@ -382,6 +382,7 @@ class TypedArrayObjectTemplate {
 
   using FixedLengthTypedArray = FixedLengthTypedArrayObjectTemplate<NativeType>;
   using ResizableTypedArray = ResizableTypedArrayObjectTemplate<NativeType>;
+  using AutoLength = ArrayBufferViewObject::AutoLength;
 
   static constexpr auto ByteLengthLimit = TypedArrayObject::ByteLengthLimit;
   static constexpr auto INLINE_BUFFER_LIMIT =
@@ -574,7 +575,7 @@ class TypedArrayObjectTemplate {
   static bool computeAndCheckLength(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> bufferMaybeUnwrapped,
       uint64_t byteOffset, uint64_t lengthIndex, size_t* length,
-      bool* autoLength) {
+      AutoLength* autoLength) {
     MOZ_ASSERT(byteOffset % BYTES_PER_ELEMENT == 0);
     MOZ_ASSERT(byteOffset < uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
     MOZ_ASSERT_IF(lengthIndex != UINT64_MAX,
@@ -605,7 +606,7 @@ class TypedArrayObjectTemplate {
       // Resizable buffers without an explicit length are auto-length.
       if (bufferMaybeUnwrapped->isResizable()) {
         *length = 0;
-        *autoLength = true;
+        *autoLength = AutoLength::Yes;
         return true;
       }
 
@@ -642,7 +643,7 @@ class TypedArrayObjectTemplate {
 
     MOZ_ASSERT(len <= ByteLengthLimit / BYTES_PER_ELEMENT);
     *length = len;
-    *autoLength = false;
+    *autoLength = AutoLength::No;
     return true;
   }
 
@@ -654,7 +655,7 @@ class TypedArrayObjectTemplate {
       uint64_t byteOffset, uint64_t lengthIndex, HandleObject proto) {
     // Steps 5-8.
     size_t length = 0;
-    bool autoLength = false;
+    auto autoLength = AutoLength::No;
     if (!computeAndCheckLength(cx, buffer, byteOffset, lengthIndex, &length,
                                &autoLength)) {
       return nullptr;
@@ -703,7 +704,7 @@ class TypedArrayObjectTemplate {
     unwrappedBuffer = &unwrapped->as<ArrayBufferObjectMaybeShared>();
 
     size_t length = 0;
-    bool autoLength = false;
+    auto autoLength = AutoLength::No;
     if (!computeAndCheckLength(cx, unwrappedBuffer, byteOffset, lengthIndex,
                                &length, &autoLength)) {
       return nullptr;
@@ -1044,11 +1045,12 @@ class ResizableTypedArrayObjectTemplate
 
   static ResizableTypedArrayObject* makeInstance(
       JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
-      size_t byteOffset, size_t len, bool autoLength, HandleObject proto) {
+      size_t byteOffset, size_t len, AutoLength autoLength,
+      HandleObject proto) {
     MOZ_ASSERT(buffer);
     MOZ_ASSERT(buffer->isResizable());
     MOZ_ASSERT(!buffer->isDetached());
-    MOZ_ASSERT(!autoLength || len == 0,
+    MOZ_ASSERT(autoLength == AutoLength::No || len == 0,
                "length is zero for 'auto' length views");
     MOZ_ASSERT(len <= ByteLengthLimit / BYTES_PER_ELEMENT);
 
@@ -1061,11 +1063,10 @@ class ResizableTypedArrayObjectTemplate
     } else {
       obj = newBuiltinClassInstance(cx, allocKind, gc::Heap::Default);
     }
-    if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
+    if (!obj || !obj->initResizable(cx, buffer, byteOffset, len,
+                                    BYTES_PER_ELEMENT, autoLength)) {
       return nullptr;
     }
-
-    obj->setFixedSlot(AUTO_LENGTH_SLOT, BooleanValue(autoLength));
 
     return obj;
   }
@@ -1086,6 +1087,10 @@ class ResizableTypedArrayObjectTemplate
     tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT,
                           PrivateValue(size_t(0)));
     tarray->initFixedSlot(AUTO_LENGTH_SLOT, BooleanValue(false));
+    tarray->initFixedSlot(ResizableTypedArrayObject::INITIAL_LENGTH_SLOT,
+                          PrivateValue(size_t(0)));
+    tarray->initFixedSlot(ResizableTypedArrayObject::INITIAL_BYTE_OFFSET_SLOT,
+                          PrivateValue(size_t(0)));
 
     // Template objects don't need memory for their elements, since there
     // won't be any elements to store.
@@ -2233,131 +2238,6 @@ bool TypedArrayObjectTemplate<uint64_t>::getElement(JSContext* cx,
   return true;
 }
 } /* anonymous namespace */
-
-/**
- * IsIntegerIndexedObjectOutOfBounds ( iieoRecord )
- *
- * IsIntegerIndexedObjectOutOfBounds can be rewritten into the following spec
- * steps when inlining the call to
- * MakeIntegerIndexedObjectWithBufferWitnessRecord.
- *
- * 1. Let buffer be O.[[ViewedArrayBuffer]].
- * 2. If IsDetachedBuffer(buffer) is true, then
- *   a. Return true.
- * 3. If IsFixedLengthArrayBuffer(buffer) is true, then
- *   a. Return false.
- * 4. Let bufferByteLength be ArrayBufferByteLength(buffer, order).
- * 5. Let byteOffsetStart be O.[[ByteOffset]].
- * 6. If byteOffsetStart > bufferByteLength, then
- *   a. Return true.
- * 7. If O.[[ArrayLength]] is auto, then
- *     a. Return false.
- * 8. Let elementSize be TypedArrayElementSize(O).
- * 9. Let byteOffsetEnd be byteOffsetStart + O.[[ArrayLength]] × elementSize.
- * 10. If byteOffsetEnd > bufferByteLength, then
- *   a. Return true.
- * 11. Return false.
- *
- * The additional call to IsFixedLengthArrayBuffer is an optimization to skip
- * unnecessary validation which don't apply for fixed length typed arrays.
- *
- * https://tc39.es/ecma262/#sec-isintegerindexedobjectoutofbounds
- * https://tc39.es/ecma262/#sec-makeintegerindexedobjectwithbufferwitnessrecord
- */
-mozilla::Maybe<size_t> TypedArrayObject::byteOffset() const {
-  if (MOZ_UNLIKELY(hasDetachedBuffer())) {
-    return mozilla::Nothing{};
-  }
-
-  size_t byteOffsetStart = ArrayBufferViewObject::byteOffset();
-
-  if (MOZ_LIKELY(is<FixedLengthTypedArrayObject>())) {
-    return mozilla::Some(byteOffsetStart);
-  }
-
-  auto* buffer = bufferEither();
-  MOZ_ASSERT(buffer->isResizable());
-
-  size_t bufferByteLength = buffer->byteLength();
-  if (byteOffsetStart > bufferByteLength) {
-    return mozilla::Nothing{};
-  }
-
-  if (as<ResizableTypedArrayObject>().isAutoLength()) {
-    return mozilla::Some(byteOffsetStart);
-  }
-
-  size_t viewByteLength = rawByteLength();
-  size_t byteOffsetEnd = byteOffsetStart + viewByteLength;
-  if (byteOffsetEnd > bufferByteLength) {
-    return mozilla::Nothing{};
-  }
-  return mozilla::Some(byteOffsetStart);
-}
-
-/**
- * IntegerIndexedObjectLength ( iieoRecord )
- *
- * IntegerIndexedObjectLength can be rewritten into the following spec
- * steps when inlining the calls to IsIntegerIndexedObjectOutOfBounds and
- * MakeIntegerIndexedObjectWithBufferWitnessRecord.
- *
- * 1. Let buffer be O.[[ViewedArrayBuffer]].
- * 2. If IsDetachedBuffer(buffer) is true, then
- *   a. Return out-of-bounds.
- * 3. If IsFixedLengthArrayBuffer(buffer) is true, then
- *   a. Return O.[[ArrayLength]].
- * 4. Let bufferByteLength be ArrayBufferByteLength(buffer, order).
- * 5. Let byteOffsetStart be O.[[ByteOffset]].
- * 6. If byteOffsetStart > bufferByteLength, then
- *   a. Return out-of-bounds.
- * 7. If O.[[ArrayLength]] is auto, then
- *   a. Let elementSize be TypedArrayElementSize(O).
- *   b. Return floor((bufferByteLength - byteOffsetStart) / elementSize).
- * 8. Let elementSize be TypedArrayElementSize(O).
- * 9. Let byteOffsetEnd be byteOffsetStart + O.[[ArrayLength]] × elementSize.
- * 10. If byteOffsetEnd > bufferByteLength, then
- *   a. Return out-of-bounds.
- * 11. Return O.[[ArrayLength]].
- *
- * The additional call to IsFixedLengthArrayBuffer is an optimization to skip
- * unnecessary validation which don't apply for fixed length typed arrays.
- *
- * https://tc39.es/ecma262/#sec-integerindexedobjectlength
- * https://tc39.es/ecma262/#sec-isintegerindexedobjectoutofbounds
- * https://tc39.es/ecma262/#sec-makeintegerindexedobjectwithbufferwitnessrecord
- */
-mozilla::Maybe<size_t> TypedArrayObject::length() const {
-  if (MOZ_UNLIKELY(hasDetachedBuffer())) {
-    return mozilla::Nothing{};
-  }
-
-  if (MOZ_LIKELY(is<FixedLengthTypedArrayObject>())) {
-    size_t arrayLength = rawLength();
-    return mozilla::Some(arrayLength);
-  }
-
-  auto* buffer = bufferEither();
-  MOZ_ASSERT(buffer->isResizable());
-
-  size_t bufferByteLength = buffer->byteLength();
-  size_t byteOffsetStart = ArrayBufferViewObject::byteOffset();
-  if (byteOffsetStart > bufferByteLength) {
-    return mozilla::Nothing{};
-  }
-
-  if (as<ResizableTypedArrayObject>().isAutoLength()) {
-    size_t bytes = bufferByteLength - byteOffsetStart;
-    return mozilla::Some(bytes / bytesPerElement());
-  }
-
-  size_t arrayLength = rawLength();
-  size_t byteOffsetEnd = byteOffsetStart + arrayLength * bytesPerElement();
-  if (byteOffsetEnd > bufferByteLength) {
-    return mozilla::Nothing{};
-  }
-  return mozilla::Some(arrayLength);
-}
 
 namespace js {
 
