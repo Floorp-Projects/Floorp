@@ -11,19 +11,23 @@ div {
 <body>
   <div>
   <input id="instant" type="button" value="instant no features"
-         onclick="window.open('about:blank', '_blank');">
+         onclick="window.open('about:blank', '_blank');"
+         onmousedown="if (event.button == 1) { window.open('about:blank', '_blank'); event.preventDefault(); }">
   </div>
   <div>
   <input id="instant-popup" type="button" value="instant popup"
-         onclick="window.open('about:blank', '_blank', 'popup=true');">
+         onclick="window.open('about:blank', '_blank', 'popup=true');"
+         onmousedown="if (event.button == 1) { window.open('about:blank', '_blank', 'popup=true'); }">
   </div>
   <div>
   <input id="delayed" type="button" value="delayed no features"
-         onclick="setTimeout(() => window.open('about:blank', '_blank'), 100);">
+         onclick="setTimeout(() => window.open('about:blank', '_blank'), 100);"
+         onmousedown="if (event.button == 1) { setTimeout(() => window.open('about:blank', '_blank'), 100); }">
   </div>
   <div>
   <input id="delayed-popup" type="button" value="delayed popup"
-         onclick="setTimeout(() => window.open('about:blank', '_blank', 'popup=true'), 100);">
+         onclick="setTimeout(() => window.open('about:blank', '_blank', 'popup=true'), 100);"
+         onmousedown="if (event.button == 1) { setTimeout(() => window.open('about:blank', '_blank', 'popup=true'), 100); }">
   <div>
   <div>
   <a id="link-instant" href=""
