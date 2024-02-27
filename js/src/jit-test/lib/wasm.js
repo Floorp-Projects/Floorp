@@ -42,13 +42,13 @@ if (largeArrayBufferSupported()) {
 }
 var MaxPagesIn32BitMemory = Math.floor(MaxBytesIn32BitMemory / PageSizeInBytes);
 
-function wasmEvalText(str, imports) {
+function wasmEvalText(str, imports, compileOptions) {
     let binary = wasmTextToBinary(str);
-    let valid = WebAssembly.validate(binary);
+    let valid = WebAssembly.validate(binary, compileOptions);
 
     let m;
     try {
-        m = new WebAssembly.Module(binary);
+        m = new WebAssembly.Module(binary, compileOptions);
         assertEq(valid, true, "failed WebAssembly.validate but still compiled successfully");
     } catch(e) {
         if (!e.toString().match(/out of memory/)) {
