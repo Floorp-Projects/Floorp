@@ -1689,6 +1689,11 @@ class ProxyFunctionRunnable : public CancelableRunnable {
   UniquePtr<FunctionStorage> mFunction;
 };
 
+template <typename T>
+constexpr static bool IsRefPtrMozPromise = false;
+template <typename T, typename U, bool B>
+constexpr static bool IsRefPtrMozPromise<RefPtr<MozPromise<T, U, B>>> = true;
+
 // Note: The following struct and function are not for public consumption (yet?)
 // as we would prefer all calls to pass on-the-spot lambdas (or at least moved
 // function objects). They could be moved outside of detail if really needed.
@@ -1706,8 +1711,7 @@ template <typename Function>
 static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
                         AllowInvokeAsyncFunctionLVRef, Function&& aFunction)
     -> decltype(aFunction()) {
-  static_assert(IsRefcountedSmartPointer<decltype(aFunction())> &&
-                    IsMozPromise<RemoveSmartPointer<decltype(aFunction())>>,
+  static_assert(IsRefPtrMozPromise<decltype(aFunction())>,
                 "Function object must return RefPtr<MozPromise>");
   MOZ_ASSERT(aTarget);
   typedef RemoveSmartPointer<decltype(aFunction())> PromiseType;
