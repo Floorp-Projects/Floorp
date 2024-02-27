@@ -2440,6 +2440,14 @@ class PresShell final : public nsStubDocumentObserver,
                                              nsEventStatus* aEventStatus);
 
     /**
+     * Maybe dispatch mouse events for aTouchEnd.  This should be called after
+     * aTouchEndEvent is dispatched into the DOM.
+     */
+    MOZ_CAN_RUN_SCRIPT void MaybeSynthesizeCompatMouseEventsForTouchEnd(
+        const WidgetTouchEvent* aTouchEndEvent,
+        const nsEventStatus* aStatus) const;
+
+    /**
      * MaybeDiscardOrDelayKeyboardEvent() may discared or put aGUIEvent into
      * the delayed event queue if it's a keyboard event and if we should do so.
      * If aGUIEvent is not a keyboard event, this does nothing.
@@ -2821,8 +2829,10 @@ class PresShell final : public nsStubDocumentObserver,
      * and then, this cleans up the state of mPresShell and aEvent.
      *
      * @param aEvent            The handled event.
+     * @param aStatus           The status of aEvent.  Must not be nullptr.
      */
-    MOZ_CAN_RUN_SCRIPT void FinalizeHandlingEvent(WidgetEvent* aEvent);
+    MOZ_CAN_RUN_SCRIPT void FinalizeHandlingEvent(WidgetEvent* aEvent,
+                                                  const nsEventStatus* aStatus);
 
     /**
      * AutoCurrentEventInfoSetter() pushes and pops current event info of
