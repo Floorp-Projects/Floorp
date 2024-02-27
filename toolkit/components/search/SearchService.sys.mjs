@@ -2268,12 +2268,6 @@ export class SearchService {
           engineSetting._metaData
         );
 
-        // We used to store the alias in metadata.alias, in 1621892 that was
-        // changed to only store the user set alias in metadata.alias, remove
-        // it from metadata if it was previously set to the internal value.
-        if (eng._alias === engineSetting?._metaData?.alias) {
-          delete engineSetting._metaData.alias;
-        }
         eng._metaData = engineSetting._metaData || {};
       }
     }
