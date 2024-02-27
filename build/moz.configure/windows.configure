@@ -483,20 +483,21 @@ add_old_configure_assignment("LINKER", link)
 option(
     "--with-redist",
     env="WIN32_REDIST_DIR",
-    default=depends("MOZ_AUTOMATION")(lambda x: bool(x)),
     nargs="?",
     help="{Package|Don't package} redistributable MSVCRT",
 )
 
 
-@depends("--with-redist", vc_path, target)
+@depends("--with-redist", "MOZ_AUTOMATION", c_compiler, vc_path, target)
 @imports("os")
-def win32_redist_dir(redist, vc_path, target):
+def win32_redist_dir(redist, automation, c_compiler, vc_path, target):
     if len(redist):
         if os.path.isdir(redist[0]):
             return redist[0]
         configure_error(f"Invalid Win32 Redist directory: {redist[0]}")
-    if redist:
+    if redist or (
+        automation and redist.origin == "default" and c_compiler.type == "clang-cl"
+    ):
         if not vc_path:
             configure_error("Cannot ship redistributable MSVCRT without MSVC")
         # It would be too simple if the Redist dir had the same version number as
