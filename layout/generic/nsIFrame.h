@@ -3311,13 +3311,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsHiddenByContentVisibilityOfInFlowParentForLayout() const;
 
   /**
-   * Whether or not this frame's content is a descendant of a top layer element
-   * used to determine if this frame is relevant content for
-   * `content-visibility: auto`.
-   */
-  bool IsDescendantOfTopLayerElement() const;
-
-  /**
    * Returns true if this frame has a SelectionType::eNormal type selection in
    * somewhere in its subtree of frames. This is used to determine content
    * relevancy for `content-visibility: auto`.
