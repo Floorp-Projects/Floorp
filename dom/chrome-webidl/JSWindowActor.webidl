@@ -132,6 +132,9 @@ dictionary WindowActorSidedOptions {
    *
    * If neither this nor `esModuleURI` is passed, the specified side cannot receive
    * messages, but may send them using `sendAsyncMessage` or `sendQuery`.
+   *
+   * TODO: Remove this once m-c, c-c, and out-of-tree code migrations finish
+   *       (bug 1866732).
    */
   ByteString moduleURI;
 
