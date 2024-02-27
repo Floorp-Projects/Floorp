@@ -1983,8 +1983,12 @@ const JSClass* js::jit::ClassFor(GuardClassKind kind) {
       return &PlainObject::class_;
     case GuardClassKind::FixedLengthArrayBuffer:
       return &FixedLengthArrayBufferObject::class_;
+    case GuardClassKind::ResizableArrayBuffer:
+      return &ResizableArrayBufferObject::class_;
     case GuardClassKind::FixedLengthSharedArrayBuffer:
       return &FixedLengthSharedArrayBufferObject::class_;
+    case GuardClassKind::GrowableSharedArrayBuffer:
+      return &GrowableSharedArrayBufferObject::class_;
     case GuardClassKind::FixedLengthDataView:
       return &FixedLengthDataViewObject::class_;
     case GuardClassKind::MappedArguments:
@@ -2019,7 +2023,9 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::Array:
     case GuardClassKind::PlainObject:
     case GuardClassKind::FixedLengthArrayBuffer:
+    case GuardClassKind::ResizableArrayBuffer:
     case GuardClassKind::FixedLengthSharedArrayBuffer:
+    case GuardClassKind::GrowableSharedArrayBuffer:
     case GuardClassKind::FixedLengthDataView:
     case GuardClassKind::Set:
     case GuardClassKind::Map:
@@ -10716,14 +10722,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
   if (args_[0].isObject() && args_[0].toObject().is<ProxyObject>()) {
     return AttachDecision::NoAction;
   }
-  if (args_[0].isObject() &&
-      args_[0].toObject().is<ResizableArrayBufferObject>()) {
-    return AttachDecision::NoAction;
-  }
-  if (args_[0].isObject() &&
-      args_[0].toObject().is<GrowableSharedArrayBufferObject>()) {
-    return AttachDecision::NoAction;
-  }
 
 #ifdef JS_CODEGEN_X86
   // Unfortunately NewTypedArrayFromArrayBufferResult needs more registers than
@@ -10768,9 +10766,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
       // From ArrayBuffer.
       if (obj->is<FixedLengthArrayBufferObject>()) {
         writer.guardClass(objId, GuardClassKind::FixedLengthArrayBuffer);
-      } else {
-        MOZ_ASSERT(obj->is<FixedLengthSharedArrayBufferObject>());
+      } else if (obj->is<FixedLengthSharedArrayBufferObject>()) {
         writer.guardClass(objId, GuardClassKind::FixedLengthSharedArrayBuffer);
+      } else if (obj->is<ResizableArrayBufferObject>()) {
+        writer.guardClass(objId, GuardClassKind::ResizableArrayBuffer);
+      } else {
+        MOZ_ASSERT(obj->is<GrowableSharedArrayBufferObject>());
+        writer.guardClass(objId, GuardClassKind::GrowableSharedArrayBuffer);
       }
       ValOperandId byteOffsetId;
       if (argc_ > 1) {

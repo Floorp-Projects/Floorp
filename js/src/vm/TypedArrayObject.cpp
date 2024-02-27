@@ -1025,13 +1025,13 @@ class ResizableTypedArrayObjectTemplate
   }
 
   static ResizableTypedArrayObject* newBuiltinClassInstance(
-      JSContext* cx, gc::AllocKind allocKind) {
+      JSContext* cx, gc::AllocKind allocKind, gc::Heap heap) {
     RootedObject proto(cx, GlobalObject::getOrCreatePrototype(cx, protoKey()));
     if (!proto) {
       return nullptr;
     }
     return NewTypedArrayObject<ResizableTypedArrayObject>(
-        cx, instanceClass(), proto, allocKind, gc::Heap::Default);
+        cx, instanceClass(), proto, allocKind, heap);
   }
 
   static ResizableTypedArrayObject* makeProtoInstance(JSContext* cx,
@@ -1059,7 +1059,7 @@ class ResizableTypedArrayObjectTemplate
     if (proto) {
       obj = makeProtoInstance(cx, proto, allocKind);
     } else {
-      obj = newBuiltinClassInstance(cx, allocKind);
+      obj = newBuiltinClassInstance(cx, allocKind, gc::Heap::Default);
     }
     if (!obj || !obj->init(cx, buffer, byteOffset, len, BYTES_PER_ELEMENT)) {
       return nullptr;
@@ -1068,6 +1068,30 @@ class ResizableTypedArrayObjectTemplate
     obj->setFixedSlot(AUTO_LENGTH_SLOT, BooleanValue(autoLength));
 
     return obj;
+  }
+
+  static ResizableTypedArrayObject* makeTemplateObject(JSContext* cx) {
+    gc::AllocKind allocKind = gc::GetGCObjectKind(instanceClass());
+
+    AutoSetNewObjectMetadata metadata(cx);
+
+    auto* tarray = newBuiltinClassInstance(cx, allocKind, gc::Heap::Tenured);
+    if (!tarray) {
+      return nullptr;
+    }
+
+    tarray->initFixedSlot(TypedArrayObject::BUFFER_SLOT, JS::FalseValue());
+    tarray->initFixedSlot(TypedArrayObject::LENGTH_SLOT,
+                          PrivateValue(size_t(0)));
+    tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT,
+                          PrivateValue(size_t(0)));
+    tarray->initFixedSlot(AUTO_LENGTH_SLOT, BooleanValue(false));
+
+    // Template objects don't need memory for their elements, since there
+    // won't be any elements to store.
+    MOZ_ASSERT(tarray->getReservedSlot(DATA_SLOT).isUndefined());
+
+    return tarray;
   }
 };
 
@@ -1499,18 +1523,29 @@ static bool GetTemplateObjectForNative(JSContext* cx,
     return !!res;
   }
 
+  if (!arg.isObject()) {
+    return true;
+  }
+  auto* obj = &arg.toObject();
+
   // We don't support wrappers, because of the complicated interaction between
   // wrapped ArrayBuffers and TypedArrays, see |fromBufferWrapped()|.
-  if (arg.isObject() && !IsWrapper(&arg.toObject())) {
-    // We don't use the template's length in the object case, so we can create
-    // the template typed array with an initial length of zero.
-    uint32_t len = 0;
-    res.set(
-        FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len));
-    return !!res;
+  if (IsWrapper(obj)) {
+    return true;
   }
 
-  return true;
+  // We don't use the template's length in the object case, so we can create
+  // the template typed array with an initial length of zero.
+  uint32_t len = 0;
+
+  if (!obj->is<ArrayBufferObjectMaybeShared>() ||
+      !obj->as<ArrayBufferObjectMaybeShared>().isResizable()) {
+    res.set(
+        FixedLengthTypedArrayObjectTemplate<T>::makeTemplateObject(cx, len));
+  } else {
+    res.set(ResizableTypedArrayObjectTemplate<T>::makeTemplateObject(cx));
+  }
+  return !!res;
 }
 
 /* static */ bool TypedArrayObject::GetTemplateObjectForNative(

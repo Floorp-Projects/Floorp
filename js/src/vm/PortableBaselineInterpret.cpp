@@ -762,8 +762,18 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           return ICInterpretOpResult::NextIC;
         }
         break;
+      case GuardClassKind::ResizableArrayBuffer:
+        if (object->getClass() != &ResizableArrayBufferObject::class_) {
+          return ICInterpretOpResult::NextIC;
+        }
+        break;
       case GuardClassKind::FixedLengthSharedArrayBuffer:
         if (object->getClass() != &FixedLengthSharedArrayBufferObject::class_) {
+          return ICInterpretOpResult::NextIC;
+        }
+        break;
+      case GuardClassKind::GrowableSharedArrayBuffer:
+        if (object->getClass() != &GrowableSharedArrayBufferObject::class_) {
           return ICInterpretOpResult::NextIC;
         }
         break;
