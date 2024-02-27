@@ -3871,6 +3871,20 @@ void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
   define(lir, ins);
 }
 
+static auto SynchronizeLoad(MemoryBarrierRequirement requiresBarrier) {
+  if (requiresBarrier == MemoryBarrierRequirement::Required) {
+    return Synchronization::Load();
+  }
+  return Synchronization::None();
+}
+
+static auto SynchronizeStore(MemoryBarrierRequirement requiresBarrier) {
+  if (requiresBarrier == MemoryBarrierRequirement::Required) {
+    return Synchronization::Store();
+  }
+  return Synchronization::None();
+}
+
 void LIRGenerator::visitArrayBufferByteLength(MArrayBufferByteLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::IntPtr);
@@ -4341,8 +4355,9 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   MOZ_ASSERT(ins->index()->type() == MIRType::IntPtr);
   MOZ_ASSERT(IsNumericType(ins->type()) || ins->type() == MIRType::Boolean);
 
-  if (Scalar::isBigIntType(ins->storageType()) &&
-      ins->requiresMemoryBarrier()) {
+  auto sync = SynchronizeLoad(ins->requiresMemoryBarrier());
+
+  if (Scalar::isBigIntType(ins->storageType()) && !sync.isNone()) {
     lowerAtomicLoad64(ins);
     return;
   }
@@ -4353,8 +4368,7 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
 
   // NOTE: the generated code must match the assembly code in gen_load in
   // GenerateAtomicOperations.py
-  Synchronization sync = Synchronization::Load();
-  if (ins->requiresMemoryBarrier()) {
+  if (!sync.isNone()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierBefore);
     add(fence, ins);
   }
@@ -4381,7 +4395,7 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
     assignSafepoint(lir, ins);
   }
 
-  if (ins->requiresMemoryBarrier()) {
+  if (!sync.isNone()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierAfter);
     add(fence, ins);
   }
@@ -4517,7 +4531,9 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
     MOZ_ASSERT(ins->value()->type() == MIRType::Int32);
   }
 
-  if (ins->isBigIntWrite() && ins->requiresMemoryBarrier()) {
+  auto sync = SynchronizeStore(ins->requiresMemoryBarrier());
+
+  if (ins->isBigIntWrite() && !sync.isNone()) {
     lowerAtomicStore64(ins);
     return;
   }
@@ -4543,8 +4559,7 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   //
   // NOTE: the generated code must match the assembly code in gen_store in
   // GenerateAtomicOperations.py
-  Synchronization sync = Synchronization::Store();
-  if (ins->requiresMemoryBarrier()) {
+  if (!sync.isNone()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierBefore);
     add(fence, ins);
   }
@@ -4554,7 +4569,7 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
     add(new (alloc()) LStoreUnboxedBigInt(elements, index, value, tempInt64()),
         ins);
   }
-  if (ins->requiresMemoryBarrier()) {
+  if (!sync.isNone()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierAfter);
     add(fence, ins);
   }
