@@ -154,23 +154,18 @@ class SettingsSubMenuAutofillRobot {
             navigateBackButton(),
             toolbarCheckmarkButton(),
             nameTextInput(),
-        )
-        scrollToElementByText(getStringResource(R.string.addresses_street_address))
-        assertUIObjectExists(
             streetAddressTextInput(),
+            cityTextInput(),
+            subRegionDropDown(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
         assertUIObjectExists(
-            cityTextInput(),
-            subRegionDropDown(),
             zipCodeTextInput(),
-        )
-        scrollToElementByText(getStringResource(R.string.addresses_save_button))
-        assertUIObjectExists(
             countryDropDown(),
             phoneTextInput(),
             emailTextInput(),
         )
+        scrollToElementByText(getStringResource(R.string.addresses_save_button))
         assertUIObjectExists(
             saveButton(),
             cancelButton(),
@@ -214,23 +209,18 @@ class SettingsSubMenuAutofillRobot {
             toolbarDeleteAddressButton(),
             toolbarCheckmarkButton(),
             nameTextInput(),
-        )
-        scrollToElementByText(getStringResource(R.string.addresses_street_address))
-        assertUIObjectExists(
             streetAddressTextInput(),
+            cityTextInput(),
+            subRegionDropDown(),
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
         assertUIObjectExists(
-            cityTextInput(),
-            subRegionDropDown(),
             zipCodeTextInput(),
-        )
-        scrollToElementByText(getStringResource(R.string.addresses_save_button))
-        assertUIObjectExists(
             countryDropDown(),
             phoneTextInput(),
             emailTextInput(),
         )
+        scrollToElementByText(getStringResource(R.string.addresses_save_button))
         assertUIObjectExists(
             saveButton(),
             cancelButton(),

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui
 
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -117,7 +116,6 @@ class AddressAutofillTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1836840
-    @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1882170")
     @Test
     fun verifyAddAddressViewTest() {
         homeScreen {
@@ -132,7 +130,6 @@ class AddressAutofillTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1836841
-    @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1882170")
     @Test
     fun verifyEditAddressViewTest() {
         autofillScreen {
