@@ -82,7 +82,6 @@
     /*** Button ***/
     --button-border-radius: var(--border-radius-small);
     --button-font-weight: var(--font-weight-bold);
-    --button-line-height: var(--line-height-small);
     --button-min-height: var(--size-item-large);
 
     /*** Checkbox ***/
@@ -91,7 +90,6 @@
     --checkbox-size: var(--size-item-small);
 
     /*** Text ***/
-    --input-text-line-height: var(--button-line-height);
     --input-text-min-height: var(--button-min-height);
 
     /** Link **/

@@ -323,7 +323,6 @@ xul|tab[selected]:hover:active {
 
 html|button {
   font: inherit;
-  line-height: var(--button-line-height);
 }
 
 /* xul buttons and menulists */
@@ -339,7 +338,6 @@ xul|menulist {
   border-radius: 4px;
   background-color: var(--in-content-button-background);
   font-weight: 400;
-  line-height: var(--button-line-height);
   padding: .45em 1em;
   text-decoration: none;
   margin: 4px 8px;
@@ -614,7 +612,6 @@ html|textarea {
   box-sizing: border-box;
   font-family: inherit;
   font-size: inherit;
-  line-height: var(--input-text-line-height);
   padding: .45em;
   margin: 2px 4px;
   min-height: var(--input-text-min-height);
