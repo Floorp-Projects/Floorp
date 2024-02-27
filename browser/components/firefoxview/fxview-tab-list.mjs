@@ -45,6 +45,7 @@ if (!window.IS_STORYBOOK) {
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
  * @property {number} maxTabsLength - The max number of tabs for the list
+ * @property {boolean} pinnedTabsGridView - Whether to show pinned tabs in a grid view
  * @property {Array} tabItems - Items to show in the tab list
  * @property {string} searchQuery - The query string to highlight, if provided.
  */
@@ -59,6 +60,9 @@ export default class FxviewTabList extends MozLitElement {
     this.dateTimeFormat = "relative";
     this.maxTabsLength = 25;
     this.tabItems = [];
+    this.pinnedTabs = [];
+    this.pinnedTabsGridView = false;
+    this.unpinnedTabs = [];
     this.compactRows = false;
     this.updatesPaused = true;
     this.#register();
@@ -71,6 +75,7 @@ export default class FxviewTabList extends MozLitElement {
     dateTimeFormat: { type: String },
     hasPopup: { type: String },
     maxTabsLength: { type: Number },
+    pinnedTabsGridView: { type: Boolean },
     tabItems: { type: Array },
     updatesPaused: { type: Boolean },
     searchQuery: { type: String },
@@ -99,8 +104,20 @@ export default class FxviewTabList extends MozLitElement {
       }
     }
 
-    if (this.maxTabsLength > 0) {
+    // Move pinned tabs to the beginning of the list
+    if (this.pinnedTabsGridView) {
       // Can set maxTabsLength to -1 to have no max
+      this.unpinnedTabs = this.tabItems.filter(
+        tab => !tab.indicators?.includes("pinned")
+      );
+      this.pinnedTabs = this.tabItems.filter(tab =>
+        tab.indicators?.includes("pinned")
+      );
+      if (this.maxTabsLength > 0) {
+        this.unpinnedTabs = this.unpinnedTabs.slice(0, this.maxTabsLength);
+      }
+      this.tabItems = [...this.pinnedTabs, ...this.unpinnedTabs];
+    } else if (this.maxTabsLength > 0) {
       this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
     }
   }
@@ -176,53 +193,78 @@ export default class FxviewTabList extends MozLitElement {
     if (e.code == "ArrowUp") {
       // Focus either the link or button of the previous row based on this.currentActiveElementId
       e.preventDefault();
-      this.focusPrevRow();
+      if (
+        (this.pinnedTabsGridView &&
+          this.activeIndex >= this.pinnedTabs.length) ||
+        !this.pinnedTabsGridView
+      ) {
+        this.focusPrevRow();
+      }
     } else if (e.code == "ArrowDown") {
       // Focus either the link or button of the next row based on this.currentActiveElementId
       e.preventDefault();
-      this.focusNextRow();
+      if (
+        this.pinnedTabsGridView &&
+        this.activeIndex < this.pinnedTabs.length
+      ) {
+        this.focusIndex(this.pinnedTabs.length);
+      } else {
+        this.focusNextRow();
+      }
     } else if (e.code == "ArrowRight") {
       // Focus either the link or the button in the current row and
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        if (
-          (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
-          this.currentActiveElementId === "fxview-tab-row-secondary-button"
-        ) {
-          this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-        } else {
-          this.currentActiveElementId = fxviewTabRow.focusLink();
-        }
-      } else if (
-        (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
-        this.currentActiveElementId === "fxview-tab-row-main"
-      ) {
-        this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+        this.moveFocusLeft(fxviewTabRow);
       } else {
-        this.currentActiveElementId = fxviewTabRow.focusButton();
+        this.moveFocusRight(fxviewTabRow);
       }
     } else if (e.code == "ArrowLeft") {
       // Focus either the link or the button in the current row and
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        if (
-          (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
-          this.currentActiveElementId === "fxview-tab-row-main"
-        ) {
-          this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-        } else {
-          this.currentActiveElementId = fxviewTabRow.focusButton();
-        }
-      } else if (
-        (fxviewTabRow.soundPlaying || fxviewTabRow.muted) &&
-        this.currentActiveElementId === "fxview-tab-row-secondary-button"
-      ) {
-        this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+        this.moveFocusRight(fxviewTabRow);
       } else {
-        this.currentActiveElementId = fxviewTabRow.focusLink();
+        this.moveFocusLeft(fxviewTabRow);
       }
+    }
+  }
+
+  moveFocusRight(fxviewTabRow) {
+    if (
+      this.pinnedTabsGridView &&
+      fxviewTabRow.indicators?.includes("pinned")
+    ) {
+      this.focusNextRow();
+    } else if (
+      (fxviewTabRow.indicators?.includes("soundplaying") ||
+        fxviewTabRow.indicators?.includes("muted")) &&
+      this.currentActiveElementId === "fxview-tab-row-main"
+    ) {
+      this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+    } else {
+      this.currentActiveElementId = fxviewTabRow.focusButton();
+    }
+  }
+
+  moveFocusLeft(fxviewTabRow) {
+    if (
+      this.pinnedTabsGridView &&
+      (fxviewTabRow.indicators?.includes("pinned") ||
+        (this.currentActiveElementId === "fxview-tab-row-main" &&
+          this.activeIndex === this.pinnedTabs.length))
+    ) {
+      this.focusPrevRow();
+    } else if (
+      (fxviewTabRow.indicators?.includes("soundplaying") ||
+        fxviewTabRow.indicators?.includes("muted")) &&
+      this.currentActiveElementId === "fxview-tab-row-secondary-button"
+    ) {
+      this.currentActiveElementId = fxviewTabRow.focusMediaButton();
+    } else {
+      this.currentActiveElementId = fxviewTabRow.focusLink();
     }
   }
 
@@ -236,12 +278,18 @@ export default class FxviewTabList extends MozLitElement {
 
   async focusIndex(index) {
     // Focus link or button of item
-    if (lazy.virtualListEnabledPref) {
-      let row = this.rootVirtualListEl.getItem(index);
+    if (
+      ((this.pinnedTabsGridView && index > this.pinnedTabs.length) ||
+        !this.pinnedTabsGridView) &&
+      lazy.virtualListEnabledPref
+    ) {
+      let row = this.rootVirtualListEl.getItem(index - this.pinnedTabs.length);
       if (!row) {
         return;
       }
-      let subList = this.rootVirtualListEl.getSubListForItem(index);
+      let subList = this.rootVirtualListEl.getSubListForItem(
+        index - this.pinnedTabs.length
+      );
       if (!subList) {
         return;
       }
@@ -286,23 +334,26 @@ export default class FxviewTabList extends MozLitElement {
     return html`
       <fxview-tab-row
         exportparts="secondary-button"
+        class=${classMap({
+          pinned:
+            this.pinnedTabsGridView && tabItem.indicators?.includes("pinned"),
+        })}
         ?active=${i == this.activeIndex}
         ?compact=${this.compactRows}
         .hasPopup=${this.hasPopup}
-        .containerObj=${tabItem.containerObj}
+        .containerObj=${ifDefined(tabItem.containerObj)}
         .currentActiveElementId=${this.currentActiveElementId}
         .dateTimeFormat=${this.dateTimeFormat}
         .favicon=${tabItem.icon}
-        .isBookmark=${ifDefined(tabItem.isBookmark)}
-        .muted=${ifDefined(tabItem.muted)}
-        .pinned=${ifDefined(tabItem.pinned)}
+        .indicators=${ifDefined(tabItem.indicators)}
+        .pinnedTabsGridView=${ifDefined(this.pinnedTabsGridView)}
         .primaryL10nId=${tabItem.primaryL10nId}
         .primaryL10nArgs=${ifDefined(tabItem.primaryL10nArgs)}
-        role="listitem"
+        role=${this.pinnedTabsGridView && tabItem.indicators?.includes("pinned")
+          ? "none"
+          : "listitem"}
         .secondaryL10nId=${tabItem.secondaryL10nId}
         .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
-        .attention=${ifDefined(tabItem.attention)}
-        .soundPlaying=${ifDefined(tabItem.soundPlaying)}
         .sourceClosedId=${ifDefined(tabItem.sourceClosedId)}
         .sourceWindowId=${ifDefined(tabItem.sourceWindowId)}
         .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
@@ -311,7 +362,6 @@ export default class FxviewTabList extends MozLitElement {
         .time=${ifDefined(time)}
         .timeMsPref=${ifDefined(this.timeMsPref)}
         .title=${tabItem.title}
-        .titleChanged=${ifDefined(tabItem.titleChanged)}
         .url=${tabItem.url}
       ></fxview-tab-row>
     `;
@@ -326,9 +376,26 @@ export default class FxviewTabList extends MozLitElement {
         rel="stylesheet"
         href="chrome://browser/content/firefoxview/fxview-tab-list.css"
       />
+      ${when(
+        this.pinnedTabsGridView && this.pinnedTabs.length,
+        () => html`
+          <div
+            id="fxview-tab-list"
+            class="fxview-tab-list pinned"
+            data-l10n-id="firefoxview-pinned-tabs"
+            role="tablist"
+            @keydown=${this.handleFocusElementInRow}
+          >
+            ${this.pinnedTabs.map((tabItem, i) =>
+              this.itemTemplate(tabItem, i)
+            )}
+          </div>
+        `
+      )}
       <div
         id="fxview-tab-list"
         class="fxview-tab-list"
+        data-l10n-id="firefoxview-tabs"
         role="list"
         @keydown=${this.handleFocusElementInRow}
       >
@@ -337,7 +404,12 @@ export default class FxviewTabList extends MozLitElement {
           () => html`
             <virtual-list
               .activeIndex=${this.activeIndex}
-              .items=${this.tabItems}
+              .pinnedTabsIndexOffset=${this.pinnedTabsGridView
+                ? this.pinnedTabs.length
+                : 0}
+              .items=${this.pinnedTabsGridView
+                ? this.unpinnedTabs
+                : this.tabItems}
               .template=${this.itemTemplate}
             ></virtual-list>
           `
@@ -374,23 +446,19 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {string} currentActiveElementId - ID of currently focused element within each tab item
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
- * @property {boolean} isBookmark - Whether an open tab is bookmarked
+ * @property {string} indicators - An array of tab indicators if any are present
  * @property {number} closedId - The tab ID for when the tab item was closed.
  * @property {number} sourceClosedId - The closedId of the closed window its from if applicable
  * @property {number} sourceWindowId - The sessionstore id of the window its from if applicable
  * @property {string} favicon - The favicon for the tab item.
- * @property {boolean} muted - Whether an open tab is muted
- * @property {boolean} pinned - Whether an open tab is pinned
+ * @property {boolean} pinnedTabsGridView - Whether the show pinned tabs in a grid view
  * @property {string} primaryL10nId - The l10n id used for the primary action element
  * @property {string} primaryL10nArgs - The l10n args used for the primary action element
  * @property {string} secondaryL10nId - The l10n id used for the secondary action button
  * @property {string} secondaryL10nArgs - The l10n args used for the secondary action element
- * @property {boolean} attention - Whether to show a notification dot
- * @property {boolean} soundPlaying - Whether an open tab has soundPlaying
  * @property {object} tabElement - The MozTabbrowserTab element for the tab item.
  * @property {number} time - The timestamp for when the tab was last accessed.
  * @property {string} title - The title for the tab item.
- * @property {boolean} titleChanged - Whether the title has changed for an open tab
  * @property {string} url - The url for the tab item.
  * @property {number} timeMsPref - The frequency in milliseconds of updates to relative time
  * @property {string} searchQuery - The query string to highlight, if provided.
@@ -410,31 +478,28 @@ export class FxviewTabRow extends MozLitElement {
     dateTimeFormat: { type: String },
     favicon: { type: String },
     hasPopup: { type: String },
-    isBookmark: { type: Boolean },
-    muted: { type: Boolean },
-    pinned: { type: Boolean },
+    indicators: { type: Array },
+    pinnedTabsGridView: { type: Boolean },
     primaryL10nId: { type: String },
     primaryL10nArgs: { type: String },
     secondaryL10nId: { type: String },
     secondaryL10nArgs: { type: String },
-    soundPlaying: { type: Boolean },
     closedId: { type: Number },
     sourceClosedId: { type: Number },
     sourceWindowId: { type: String },
     tabElement: { type: Object },
     time: { type: Number },
     title: { type: String },
-    titleChanged: { type: Boolean },
-    attention: { type: Boolean },
     timeMsPref: { type: Number },
     url: { type: String },
     searchQuery: { type: String },
   };
 
   static queries = {
-    mainEl: ".fxview-tab-row-main",
+    mainEl: "#fxview-tab-row-main",
     buttonEl: "#fxview-tab-row-secondary-button:not([hidden])",
     mediaButtonEl: "#fxview-tab-row-media-button",
+    pinnedTabButtonEl: "button#fxview-tab-row-main",
   };
 
   get currentFocusable() {
@@ -443,6 +508,28 @@ export class FxviewTabRow extends MozLitElement {
       focusItem = this.renderRoot.getElementById("fxview-tab-row-main");
     }
     return focusItem;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener("keydown", this.handleKeydown);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener("keydown", this.handleKeydown);
+  }
+
+  handleKeydown(e) {
+    if (
+      this.active &&
+      this.pinnedTabsGridView &&
+      this.indicators?.includes("pinned") &&
+      e.key === "m" &&
+      e.ctrlKey
+    ) {
+      this.muteOrUnmuteTab();
+    }
   }
 
   focus() {
@@ -562,6 +649,9 @@ export class FxviewTabRow extends MozLitElement {
 
   secondaryActionHandler(event) {
     if (
+      (this.pinnedTabsGridView &&
+        this.indicators?.includes("pinned") &&
+        event.type == "contextmenu") ||
       (event.type == "click" && event.detail && !event.altKey) ||
       // detail=0 is from keyboard
       (event.type == "click" && !event.detail)
@@ -579,10 +669,67 @@ export class FxviewTabRow extends MozLitElement {
 
   muteOrUnmuteTab() {
     this.tabElement.toggleMuteAudio();
-    this.muted = !this.muted;
   }
 
-  render() {
+  #faviconTemplate() {
+    return html`<span
+      class="${classMap({
+        "fxview-tab-row-favicon-wrapper": true,
+        pinned: this.indicators?.includes("pinned"),
+        attention: this.indicators?.includes("attention"),
+      })}"
+    >
+      <span
+        class="fxview-tab-row-favicon icon"
+        id="fxview-tab-row-favicon"
+        style=${styleMap({
+          backgroundImage: `url(${this.getImageUrl(this.favicon, this.url)})`,
+        })}
+      ></span>
+      ${when(
+        this.pinnedTabsGridView &&
+          this.indicators?.includes("pinned") &&
+          (this.indicators?.includes("muted") ||
+            this.indicators?.includes("soundplaying")),
+        () => html`
+          <button
+            class="fxview-tab-row-pinned-media-button"
+            id="fxview-tab-row-media-button"
+            tabindex="-1"
+            data-l10n-id=${this.indicators?.includes("muted")
+              ? "fxviewtabrow-unmute-tab-button-no-context"
+              : "fxviewtabrow-mute-tab-button-no-context"}
+            muted=${this.indicators?.includes("muted")}
+            soundplaying=${this.indicators?.includes("soundplaying") &&
+            !this.indicators?.includes("muted")}
+            @click=${this.muteOrUnmuteTab}
+          ></button>
+        `
+      )}
+    </span>`;
+  }
+
+  #pinnedTabItemTemplate() {
+    return html` <button
+      class="fxview-tab-row-main ghost-button semi-transparent"
+      id="fxview-tab-row-main"
+      aria-haspopup=${ifDefined(this.hasPopup)}
+      data-l10n-id=${ifDefined(this.primaryL10nId)}
+      data-l10n-args=${ifDefined(this.primaryL10nArgs)}
+      tabindex=${this.active &&
+      this.currentActiveElementId === "fxview-tab-row-main"
+        ? "0"
+        : "-1"}
+      role="tab"
+      @click=${this.primaryActionHandler}
+      @keydown=${this.primaryActionHandler}
+      @contextmenu=${this.secondaryActionHandler}
+    >
+      ${this.#faviconTemplate()}
+    </button>`;
+  }
+
+  #unpinnedTabItemTemplate() {
     const title = this.title;
     const relativeString = this.relativeTime(
       this.time,
@@ -598,25 +745,7 @@ export class FxviewTabRow extends MozLitElement {
     const timeString = this.timeFluentId(this.dateTimeFormat);
     const time = this.time;
     const timeArgs = JSON.stringify({ time });
-    return html`
-      ${when(
-        this.containerObj,
-        () => html`
-          <link
-            rel="stylesheet"
-            href="chrome://browser/content/usercontext/usercontext.css"
-          />
-        `
-      )}
-      <link
-        rel="stylesheet"
-        href="chrome://global/skin/in-content/common.css"
-      />
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/firefoxview/fxview-tab-row.css"
-      />
-      <a
+    return html`<a
         href=${ifDefined(this.url)}
         class="fxview-tab-row-main"
         id="fxview-tab-row-main"
@@ -628,29 +757,9 @@ export class FxviewTabRow extends MozLitElement {
         data-l10n-args=${ifDefined(this.primaryL10nArgs)}
         @click=${this.primaryActionHandler}
         @keydown=${this.primaryActionHandler}
+        title=${!this.primaryL10nId ? this.url : null}
       >
-        <span
-          class="${classMap({
-            "fxview-tab-row-favicon-wrapper": true,
-            bookmark: this.isBookmark && !this.attention,
-            notification: this.pinned
-              ? this.attention || this.titleChanged
-              : this.attention,
-            soundplaying: this.soundPlaying && !this.muted && this.pinned,
-            muted: this.muted && this.pinned,
-          })}"
-        >
-          <span
-            class="fxview-tab-row-favicon icon"
-            id="fxview-tab-row-favicon"
-            style=${styleMap({
-              backgroundImage: `url(${this.getImageUrl(
-                this.favicon,
-                this.url
-              )})`,
-            })}
-          ></span>
-        </span>
+        ${this.#faviconTemplate()}
         <span
           class="fxview-tab-row-title text-truncated-ellipsis"
           id="fxview-tab-row-title"
@@ -701,26 +810,29 @@ export class FxviewTabRow extends MozLitElement {
         </span>
       </a>
       ${when(
-        (this.soundPlaying || this.muted) && !this.pinned,
+        this.indicators?.includes("soundplaying") ||
+          this.indicators?.includes("muted"),
         () => html`<button
-          class=fxview-tab-row-button ghost-button icon-button semi-transparent"
-          id="fxview-tab-row-media-button"
-          data-l10n-id=${
-            this.muted
-              ? "fxviewtabrow-unmute-tab-button"
-              : "fxviewtabrow-mute-tab-button"
-          }
-          data-l10n-args=${JSON.stringify({ tabTitle: title })}
-          muted=${ifDefined(this.muted)}
-          soundplaying=${this.soundPlaying && !this.muted}
-          @click=${this.muteOrUnmuteTab}
-          tabindex="${
-            this.active &&
-            this.currentActiveElementId === "fxview-tab-row-media-button"
-              ? "0"
-              : "-1"
-          }"
-        ></button>`,
+        class=fxview-tab-row-button ghost-button icon-button semi-transparent"
+        id="fxview-tab-row-media-button"
+        data-l10n-id=${
+          this.indicators?.includes("muted")
+            ? "fxviewtabrow-unmute-tab-button-no-context"
+            : "fxviewtabrow-mute-tab-button-no-context"
+        }
+        muted=${this.indicators?.includes("muted")}
+        soundplaying=${
+          this.indicators?.includes("soundplaying") &&
+          !this.indicators?.includes("muted")
+        }
+        @click=${this.muteOrUnmuteTab}
+        tabindex="${
+          this.active &&
+          this.currentActiveElementId === "fxview-tab-row-media-button"
+            ? "0"
+            : "-1"
+        }"
+      ></button>`,
         () => html`<span></span>`
       )}
       ${when(
@@ -738,6 +850,32 @@ export class FxviewTabRow extends MozLitElement {
             ? "0"
             : "-1"}"
         ></button>`
+      )}`;
+  }
+
+  render() {
+    return html`
+      ${when(
+        this.containerObj,
+        () => html`
+          <link
+            rel="stylesheet"
+            href="chrome://browser/content/usercontext/usercontext.css"
+          />
+        `
+      )}
+      <link
+        rel="stylesheet"
+        href="chrome://global/skin/in-content/common.css"
+      />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/fxview-tab-row.css"
+      />
+      ${when(
+        this.pinnedTabsGridView && this.indicators?.includes("pinned"),
+        this.#pinnedTabItemTemplate.bind(this),
+        this.#unpinnedTabItemTemplate.bind(this)
       )}
     `;
   }
@@ -780,6 +918,7 @@ export class VirtualList extends MozLitElement {
     isAlwaysVisible: { type: Boolean },
     isVisible: { type: Boolean, state: true },
     isSubList: { type: Boolean },
+    pinnedTabsIndexOffset: { type: Number },
   };
 
   createRenderRoot() {
@@ -790,6 +929,7 @@ export class VirtualList extends MozLitElement {
     super();
     this.activeIndex = 0;
     this.itemOffset = 0;
+    this.pinnedTabsIndexOffset = 0;
     this.items = [];
     this.subListItems = [];
     this.itemHeightEstimate = FXVIEW_ROW_HEIGHT_PX;
@@ -893,14 +1033,16 @@ export class VirtualList extends MozLitElement {
       .template=${this.template}
       .items=${data}
       .itemHeightEstimate=${this.itemHeightEstimate}
-      .itemOffset=${i * this.maxRenderCountEstimate}
+      .itemOffset=${i * this.maxRenderCountEstimate +
+      this.pinnedTabsIndexOffset}
       .isAlwaysVisible=${i ==
       parseInt(this.activeIndex / this.maxRenderCountEstimate, 10)}
       isSubList
     ></virtual-list>`;
   };
 
-  itemTemplate = (data, i) => this.template(data, this.itemOffset + i);
+  itemTemplate = (data, i) =>
+    this.template(data, this.itemOffset + i + this.pinnedTabsIndexOffset);
 
   render() {
     if (this.isAlwaysVisible || this.isVisible) {
