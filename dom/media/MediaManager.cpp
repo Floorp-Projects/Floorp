@@ -2249,14 +2249,6 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
       GetPrefs(branch, nullptr);
     }
   }
-  LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s,"
-      "agc: %s, hpf: %s, noise: %s, agc level: %d, agc version: %s, noise "
-      "level: %d, transient: %s, channels %d",
-      __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
-      mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
-      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAgc,
-      mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
-      mPrefs.mTransientOn ? "on" : "off", mPrefs.mChannels);
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIMemoryReporter,
@@ -3498,6 +3490,14 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
 #endif
+  LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s, "
+      "agc: %s, hpf: %s, noise: %s, agc level: %d, agc version: %s, noise "
+      "level: %d, transient: %s, channels %d",
+      __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
+      mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
+      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAgc,
+      mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
+      mPrefs.mTransientOn ? "on" : "off", mPrefs.mChannels);
 }
 
 void MediaManager::Shutdown() {
@@ -3650,8 +3650,6 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIPrefBranch> branch(do_QueryInterface(aSubject));
     if (branch) {
       GetPrefs(branch, NS_ConvertUTF16toUTF8(aData).get());
-      LOG("%s: %dx%d @%dfps", __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight,
-          mPrefs.mFPS);
       DeviceListChanged();
     }
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
