@@ -18,18 +18,18 @@ let testModule = wasmTextToBinary(`(module
   (export "cast" (func 1))
 
   (func
-    (import "wasm:js-string" "fromWTF16Array")
+    (import "wasm:js-string" "fromCharCodeArray")
     (param (ref null $arrayMutI16) i32 i32)
     (result (ref extern))
   )
-  (export "fromWTF16Array" (func 2))
+  (export "fromCharCodeArray" (func 2))
 
   (func
-    (import "wasm:js-string" "toWTF16Array")
+    (import "wasm:js-string" "intoCharCodeArray")
     (param externref (ref null $arrayMutI16) i32)
     (result i32)
   )
-  (export "toWTF16Array" (func 3))
+  (export "intoCharCodeArray" (func 3))
 
   (func
     (import "wasm:js-string" "fromCharCode")
@@ -67,11 +67,11 @@ let testModule = wasmTextToBinary(`(module
   (export "length" (func 8))
 
   (func
-    (import "wasm:js-string" "concatenate")
+    (import "wasm:js-string" "concat")
     (param externref externref)
     (result externref)
   )
-  (export "concatenate" (func 9))
+  (export "concat" (func 9))
 
   (func
     (import "wasm:js-string" "substring")
@@ -144,7 +144,7 @@ let polyFillImports = {
     }
     return string;
   },
-  fromWTF16Array: (array, arrayStart, arrayCount) => {
+  fromCharCodeArray: (array, arrayStart, arrayCount) => {
     arrayStart |= 0;
     arrayCount |= 0;
     let length = arrayLength(array);
@@ -157,7 +157,7 @@ let polyFillImports = {
     }
     return result;
   },
-  toWTF16Array: (string, arr, arrayStart) => {
+  intoCharCodeArray: (string, arr, arrayStart) => {
     arrayStart |= 0;
     throwIfNotString(string);
     let arrLength = arrayLength(arr);
@@ -196,7 +196,7 @@ let polyFillImports = {
     throwIfNotString(string);
     return string.length;
   },
-  concatenate: (stringA, stringB) => {
+  concat: (stringA, stringB) => {
     throwIfNotString(stringA);
     throwIfNotString(stringB);
     return stringA + stringB;
@@ -320,13 +320,13 @@ for (let a of testStrings) {
 
   let arrayMutI16 = createArrayMutI16(length);
   assertSameBehavior(
-    builtinExports['toWTF16Array'],
-    polyfillExports['toWTF16Array'],
+    builtinExports['intoCharCodeArray'],
+    polyfillExports['intoCharCodeArray'],
     a, arrayMutI16, 0
   );
   assertSameBehavior(
-    builtinExports['fromWTF16Array'],
-    polyfillExports['fromWTF16Array'],
+    builtinExports['fromCharCodeArray'],
+    polyfillExports['fromCharCodeArray'],
     arrayMutI16, 0, length
   );
 
@@ -344,8 +344,8 @@ for (let a of testStrings) {
 for (let a of testStrings) {
   for (let b of testStrings) {
     assertSameBehavior(
-      builtinExports['concatenate'],
-      polyfillExports['concatenate'],
+      builtinExports['concat'],
+      polyfillExports['concat'],
       a, b
     );
     assertSameBehavior(

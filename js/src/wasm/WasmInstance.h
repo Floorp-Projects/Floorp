@@ -573,10 +573,11 @@ class alignas(16) Instance {
 
   static int32_t stringTest(Instance* instance, void* stringArg);
   static void* stringCast(Instance* instance, void* stringArg);
-  static void* stringFromWTF16Array(Instance* instance, void* arrayArg,
-                                    uint32_t arrayStart, uint32_t arrayCount);
-  static int32_t stringToWTF16Array(Instance* instance, void* stringArg,
-                                    void* arrayArg, uint32_t start);
+  static void* stringFromCharCodeArray(Instance* instance, void* arrayArg,
+                                       uint32_t arrayStart,
+                                       uint32_t arrayCount);
+  static int32_t stringIntoCharCodeArray(Instance* instance, void* stringArg,
+                                         void* arrayArg, uint32_t arrayStart);
   static void* stringFromCharCode(Instance* instance, uint32_t charCode);
   static void* stringFromCodePoint(Instance* instance, uint32_t codePoint);
   static int32_t stringCharCodeAt(Instance* instance, void* stringArg,
@@ -584,8 +585,8 @@ class alignas(16) Instance {
   static int32_t stringCodePointAt(Instance* instance, void* stringArg,
                                    uint32_t index);
   static int32_t stringLength(Instance* instance, void* stringArg);
-  static void* stringConcatenate(Instance* instance, void* firstStringArg,
-                                 void* secondStringArg);
+  static void* stringConcat(Instance* instance, void* firstStringArg,
+                            void* secondStringArg);
   static void* stringSubstring(Instance* instance, void* stringArg,
                                int32_t startIndex, int32_t endIndex);
   static int32_t stringEquals(Instance* instance, void* firstStringArg,
