@@ -2754,13 +2754,6 @@
   value: true
   mirror: always
 
-# A pref that is used to slow down connection idle maintenance for testing
-# purposes.
-- name: dom.indexedDB.connectionIdleMaintenance.pauseOnConnectionThreadMs
-  type: RelaxedAtomicUint32
-  value: 0
-  mirror: always
-
 # Whether or not indexedDB test mode is enabled.
 - name: dom.indexedDB.testing
   type: RelaxedAtomicBool

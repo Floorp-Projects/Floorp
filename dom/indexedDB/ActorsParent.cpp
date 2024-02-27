@@ -291,8 +291,7 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
               "Must be 0 (disabled) or a positive multiple of the page size!");
 
 // The maximum number of threads that can be used for database activity at a
-// single time. Please keep in sync with the constants in
-// test_connection_idle_maintenance*.js tests
+// single time.
 const uint32_t kMaxConnectionThreadCount = 20;
 
 static_assert(kMaxConnectionThreadCount, "Must have at least one thread!");
@@ -305,8 +304,7 @@ static_assert(kMaxConnectionThreadCount >= kMaxIdleConnectionThreadCount,
               "Idle thread limit must be less than total thread limit!");
 
 // The length of time that database connections will be held open after all
-// transactions have completed before doing idle maintenance. Please keep in
-// sync with the timeouts in test_connection_idle_maintenance*.js tests
+// transactions have completed before doing idle maintenance.
 const uint32_t kConnectionIdleMaintenanceMS = 2 * 1000;  // 2 seconds
 
 // The length of time that database connections will be held open after all
@@ -6934,12 +6932,6 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
 
   AUTO_PROFILER_LABEL("DatabaseConnection::ReclaimFreePagesWhileIdle", DOM);
 
-  uint32_t pauseOnConnectionThreadMs = StaticPrefs::
-      dom_indexedDB_connectionIdleMaintenance_pauseOnConnectionThreadMs();
-  if (pauseOnConnectionThreadMs > 0) {
-    PR_Sleep(PR_MillisecondsToInterval(pauseOnConnectionThreadMs));
-  }
-
   // Make sure we don't keep working if anything else needs this thread.
   nsIThread* currentThread = NS_GetCurrentThread();
   MOZ_ASSERT(currentThread);
@@ -7009,7 +7001,7 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
                bool madeProgress = previousFreelistCount != aFreelistCount;
                previousFreelistCount = aFreelistCount;
                MOZ_ASSERT(madeProgress);
-               QM_WARNONLY_TRY(MOZ_TO_RESULT(madeProgress));
+               QM_WARNONLY_TRY(MOZ_TO_RESULT(!madeProgress));
                return madeProgress && (aFreelistCount != 0);
              },
              [&aFreelistStatement, &aFreelistCount, &incrementalVacuumStmt,
