@@ -461,4 +461,44 @@ add_task(async function testTracingPauseOnStep() {
   Assert.equal(sandbox.counter, 1);
   info("The thread should have paused at least the pauseOnStep's duration");
   Assert.greater(Cu.now() - startTimestamp, 250);
+
+  info("Stop tracing");
+  stopTracing();
+});
+
+add_task(async function testTracingFilterSourceUrl() {
+  // Test the `filterFrameSourceUrl` flag
+  const sandbox = Cu.Sandbox("https://example.com");
+
+  // Use a unique global (sandbox), but with two distinct scripts (first.js and second.js)
+  const source1 = `function foo() { bar(); }`;
+  Cu.evalInSandbox(source1, sandbox, null, "first.js", 1);
+
+  // Only code running in that second source should be traced.
+  const source2 = `function bar() { }`;
+  Cu.evalInSandbox(source2, sandbox, null, "second.js", 1);
+
+  // Pass an override method to catch all strings tentatively logged to stdout
+  const logs = [];
+  function loggingMethod(str) {
+    logs.push(str);
+  }
+
+  info("Start tracing");
+  startTracing({
+    global: sandbox,
+    filterFrameSourceUrl: "second",
+    loggingMethod,
+  });
+
+  info("Call some code");
+  sandbox.foo();
+
+  Assert.equal(logs.length, 2);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ bar");
+  Assert.stringContains(logs[1], "second.js:1:18");
+
+  info("Stop tracing");
+  stopTracing();
 });
