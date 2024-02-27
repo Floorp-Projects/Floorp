@@ -490,8 +490,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
     if (
       where === Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW ||
       where === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB ||
-      where === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND ||
-      where === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_FOREGROUND
+      where === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND
     ) {
       browser = this.handleNewSession(uri, openWindowInfo, where, flags, name);
     }
