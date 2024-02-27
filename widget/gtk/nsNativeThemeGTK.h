@@ -93,7 +93,6 @@ class nsNativeThemeGTK final : public mozilla::widget::Theme {
                             WidgetNodeType& aGtkWidgetType,
                             GtkWidgetState* aState, gint* aWidgetFlags);
   mozilla::CSSIntMargin GetExtraSizeForWidget(nsIFrame*, StyleAppearance);
-  bool IsWidgetVisible(StyleAppearance aAppearance);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
   WidgetNodeType NativeThemeToGtkTheme(StyleAppearance aAppearance,

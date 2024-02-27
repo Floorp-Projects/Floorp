@@ -191,6 +191,10 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
         aAppearance == StyleAppearance::Toolbarbutton ||
         aAppearance == StyleAppearance::Dualbutton ||
         aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
+        aAppearance == StyleAppearance::MozWindowButtonMinimize ||
+        aAppearance == StyleAppearance::MozWindowButtonRestore ||
+        aAppearance == StyleAppearance::MozWindowButtonMaximize ||
+        aAppearance == StyleAppearance::MozWindowButtonClose ||
         aAppearance == StyleAppearance::Menulist ||
         aAppearance == StyleAppearance::MenulistButton) {
       aState->active &= aState->inHover;
@@ -391,9 +395,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       break;
     case StyleAppearance::MozWindowTitlebarMaximized:
       aGtkWidgetType = MOZ_GTK_HEADER_BAR_MAXIMIZED;
-      break;
-    case StyleAppearance::MozWindowButtonBox:
-      aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_BOX;
       break;
     case StyleAppearance::MozWindowButtonClose:
       aGtkWidgetType = MOZ_GTK_HEADER_BAR_BUTTON_CLOSE;
@@ -676,16 +677,6 @@ CSSIntMargin nsNativeThemeGTK::GetExtraSizeForWidget(
   return extra;
 }
 
-bool nsNativeThemeGTK::IsWidgetVisible(StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowButtonBox:
-      return false;
-    default:
-      break;
-  }
-  return true;
-}
-
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
@@ -702,8 +693,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
 
-  if (!IsWidgetVisible(aAppearance) ||
-      !GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, &state,
+  if (!GetGtkWidgetAndState(aAppearance, aFrame, gtkWidgetType, &state,
                             &flags)) {
     return NS_OK;
   }
@@ -937,7 +927,6 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
   switch (aAppearance) {
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Tooltip:
-    case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
@@ -1072,23 +1061,23 @@ LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
     case StyleAppearance::MozWindowButtonClose: {
       const ToolbarButtonGTKMetrics* metrics =
           GetToolbarButtonMetrics(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
-      result.width = metrics->minSizeWithBorderMargin.width;
-      result.height = metrics->minSizeWithBorderMargin.height;
+      result.width = metrics->minSizeWithBorder.width;
+      result.height = metrics->minSizeWithBorder.height;
       break;
     }
     case StyleAppearance::MozWindowButtonMinimize: {
       const ToolbarButtonGTKMetrics* metrics =
           GetToolbarButtonMetrics(MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE);
-      result.width = metrics->minSizeWithBorderMargin.width;
-      result.height = metrics->minSizeWithBorderMargin.height;
+      result.width = metrics->minSizeWithBorder.width;
+      result.height = metrics->minSizeWithBorder.height;
       break;
     }
     case StyleAppearance::MozWindowButtonMaximize:
     case StyleAppearance::MozWindowButtonRestore: {
       const ToolbarButtonGTKMetrics* metrics =
           GetToolbarButtonMetrics(MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE);
-      result.width = metrics->minSizeWithBorderMargin.width;
-      result.height = metrics->minSizeWithBorderMargin.height;
+      result.width = metrics->minSizeWithBorder.width;
+      result.height = metrics->minSizeWithBorder.height;
       break;
     }
     case StyleAppearance::Button:
@@ -1288,7 +1277,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Range:
     case StyleAppearance::RangeThumb:
     case StyleAppearance::Splitter:
-    case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonClose:
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:

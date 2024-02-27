@@ -289,6 +289,9 @@ class LookAndFeel {
     /** GTK titlebar radius */
     TitlebarRadius,
 
+    /** GTK button-to-button spacing in the inline axis */
+    TitlebarButtonSpacing,
+
     /**
      * Corresponding to dynamic-range.
      * https://drafts.csswg.org/mediaqueries-5/#dynamic-range

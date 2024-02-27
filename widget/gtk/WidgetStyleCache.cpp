@@ -644,10 +644,7 @@ static void CreateHeaderBarButtons() {
   GtkWidget* headerBar = sWidgetStorage[MOZ_GTK_HEADER_BAR];
   MOZ_ASSERT(headerBar, "We're missing header bar widget!");
 
-  gint buttonSpacing = 6;
-  g_object_get(headerBar, "spacing", &buttonSpacing, nullptr);
-
-  GtkWidget* buttonBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, buttonSpacing);
+  GtkWidget* buttonBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_container_add(GTK_CONTAINER(headerBar), buttonBox);
   // We support only LTR headerbar layout for now.
   gtk_style_context_add_class(gtk_widget_get_style_context(buttonBox),
