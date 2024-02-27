@@ -119,6 +119,56 @@ class StorageModule extends Module {
    */
 
   /**
+   * Remove zero or more cookies which match a set of provided parameters.
+   *
+   * @param {object=} options
+   * @param {CookieFilter=} options.filter
+   *     An object which holds field names and values, which
+   *     should be used to filter the output of the command.
+   * @param {PartitionDescriptor=} options.partition
+   *     An object which holds the information which
+   *     should be used to build a partition key.
+   *
+   * @returns {PartitionKey}
+   *     An object with the partition key which was used to
+   *     retrieve cookies which had to be removed.
+   * @throws {InvalidArgumentError}
+   *     If the provided arguments are not valid.
+   * @throws {NoSuchFrameError}
+   *     If the provided browsing context cannot be found.
+   * @throws {UnsupportedOperationError}
+   *     Raised when the command is called with `userContext` as
+   *     in `partition` argument.
+   */
+  async deleteCookies(options = {}) {
+    let { filter = {} } = options;
+    const { partition: partitionSpec = null } = options;
+
+    this.#assertPartition(partitionSpec);
+    filter = this.#assertCookieFilter(filter);
+
+    const partitionKey = this.#expandStoragePartitionSpec(partitionSpec);
+    const store = this.#getTheCookieStore(partitionKey);
+    const cookies = this.#getMatchingCookies(store, filter);
+
+    for (const cookie of cookies) {
+      Services.cookies.remove(
+        cookie.host,
+        cookie.name,
+        cookie.path,
+        cookie.originAttributes
+      );
+    }
+
+    // Bug 1875255. Exchange platform id for Webdriver BiDi id for the user context to return it to the client.
+    // For now we use platform user context id for returning cookies for a specific browsing context in the platform API,
+    // but we can not return it directly to the client, so for now we just remove it from the response.
+    delete partitionKey.userContext;
+
+    return { partitionKey };
+  }
+
+  /**
    * Retrieve zero or more cookies which match a set of provided parameters.
    *
    * @param {object=} options
@@ -145,18 +195,23 @@ class StorageModule extends Module {
     const { partition: partitionSpec = null } = options;
 
     this.#assertPartition(partitionSpec);
-    filter = this.#assertGetCookieFilter(filter);
+    filter = this.#assertCookieFilter(filter);
 
     const partitionKey = this.#expandStoragePartitionSpec(partitionSpec);
     const store = this.#getTheCookieStore(partitionKey);
     const cookies = this.#getMatchingCookies(store, filter);
+    const serializedCookies = [];
+
+    for (const cookie of cookies) {
+      serializedCookies.push(this.#serializeCookie(cookie));
+    }
 
     // Bug 1875255. Exchange platform id for Webdriver BiDi id for the user context to return it to the client.
     // For now we use platform user context id for returning cookies for a specific browsing context in the platform API,
     // but we can not return it directly to the client, so for now we just remove it from the response.
     delete partitionKey.userContext;
 
-    return { cookies, partitionKey };
+    return { cookies: serializedCookies, partitionKey };
   }
 
   /**
@@ -318,7 +373,7 @@ class StorageModule extends Module {
     }
   }
 
-  #assertGetCookieFilter(filter) {
+  #assertCookieFilter(filter) {
     lazy.assert.object(
       filter,
       `Expected "filter" to be an object, got ${filter}`
@@ -505,6 +560,40 @@ class StorageModule extends Module {
   }
 
   /**
+   * Deserialize filter.
+   *
+   * @see https://w3c.github.io/webdriver-bidi/#deserialize-filter
+   */
+  #deserializeFilter(filter) {
+    const deserializedFilter = {};
+    for (const [fieldName, value] of Object.entries(filter)) {
+      if (value === null) {
+        continue;
+      }
+
+      const deserializedName = CookieFieldsMapping[fieldName];
+      let deserializedValue;
+
+      switch (deserializedName) {
+        case "sameSite":
+          deserializedValue = this.#getSameSitePlatformProperty(value);
+          break;
+
+        case "value":
+          deserializedValue = this.#deserializeProtocolBytes(value);
+          break;
+
+        default:
+          deserializedValue = value;
+      }
+
+      deserializedFilter[deserializedName] = deserializedValue;
+    }
+
+    return deserializedFilter;
+  }
+
+  /**
    * Deserialize the value to string, since platform API
    * returns cookie's value as a string.
    */
@@ -595,11 +684,11 @@ class StorageModule extends Module {
    */
   #getMatchingCookies(cookieStore, filter) {
     const cookies = [];
+    const deserializedFilter = this.#deserializeFilter(filter);
 
     for (const storedCookie of cookieStore) {
-      const serializedCookie = this.#serializeCookie(storedCookie);
-      if (this.#matchCookie(serializedCookie, filter)) {
-        cookies.push(serializedCookie);
+      if (this.#matchCookie(storedCookie, deserializedFilter)) {
+        cookies.push(storedCookie);
       }
     }
     return cookies;
@@ -702,19 +791,23 @@ class StorageModule extends Module {
    * @see https://w3c.github.io/webdriver-bidi/#match-cookie
    */
   #matchCookie(storedCookie, filter) {
-    for (const [fieldName] of Object.entries(CookieFieldsMapping)) {
-      let value = filter[fieldName];
-      if (value !== null) {
-        let storedCookieValue = storedCookie[fieldName];
+    for (const [fieldName, value] of Object.entries(filter)) {
+      // Since we set `null` to not specified values, we have to check for `null` here
+      // and not match on these values.
+      if (value === null) {
+        continue;
+      }
 
-        if (fieldName === "value") {
-          value = this.#deserializeProtocolBytes(value);
-          storedCookieValue = this.#deserializeProtocolBytes(storedCookieValue);
-        }
+      let storedCookieValue = storedCookie[fieldName];
 
-        if (storedCookieValue !== value) {
-          return false;
-        }
+      // The platform represantation of cookie doesn't contain a size field,
+      // so we have to calculate it to match.
+      if (fieldName === "size") {
+        storedCookieValue = this.#getCookieSize(storedCookie);
+      }
+
+      if (storedCookieValue !== value) {
+        return false;
       }
     }
 
