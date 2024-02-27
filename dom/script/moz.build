@@ -7,14 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-XPIDL_SOURCES += [
-    "nsIScriptLoaderObserver.idl",
-]
-
-XPIDL_MODULE = "dom"
-
 EXPORTS += [
     "nsIScriptElement.h",
+    "nsIScriptLoaderObserver.h",
 ]
 
 EXPORTS.mozilla.dom += [
