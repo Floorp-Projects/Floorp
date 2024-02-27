@@ -6882,6 +6882,16 @@ MDefinition* MGuardToClass::foldsTo(TempAllocator& alloc) {
   return object();
 }
 
+MDefinition* MGuardToEitherClass::foldsTo(TempAllocator& alloc) {
+  const JSClass* clasp = GetObjectKnownJSClass(object());
+  if (!clasp || (getClass1() != clasp && getClass2() != clasp)) {
+    return this;
+  }
+
+  AssertKnownClass(alloc, this, object());
+  return object();
+}
+
 MDefinition* MGuardToFunction::foldsTo(TempAllocator& alloc) {
   if (GetObjectKnownClass(object()) != KnownClass::Function) {
     return this;

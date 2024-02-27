@@ -8997,6 +8997,55 @@ class MGuardToClass : public MUnaryInstruction,
   }
 };
 
+class MGuardToEitherClass : public MUnaryInstruction,
+                            public SingleObjectPolicy::Data {
+  const JSClass* class1_;
+  const JSClass* class2_;
+
+  MGuardToEitherClass(MDefinition* object, const JSClass* clasp1,
+                      const JSClass* clasp2)
+      : MUnaryInstruction(classOpcode, object),
+        class1_(clasp1),
+        class2_(clasp2) {
+    MOZ_ASSERT(object->type() == MIRType::Object);
+    MOZ_ASSERT(clasp1 != clasp2, "Use MGuardToClass instead");
+    MOZ_ASSERT(!clasp1->isJSFunction(), "Use MGuardToFunction instead");
+    MOZ_ASSERT(!clasp2->isJSFunction(), "Use MGuardToFunction instead");
+    setResultType(MIRType::Object);
+    setMovable();
+
+    // We will bail out if the class type is incorrect, so we need to ensure we
+    // don't eliminate this instruction
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardToEitherClass)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object))
+
+  const JSClass* getClass1() const { return class1_; }
+  const JSClass* getClass2() const { return class2_; }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardToEitherClass()) {
+      return false;
+    }
+    const auto* other = ins->toGuardToEitherClass();
+    if (getClass1() != other->getClass1() &&
+        getClass1() != other->getClass2()) {
+      return false;
+    }
+    if (getClass2() != other->getClass1() &&
+        getClass2() != other->getClass2()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+};
+
 class MGuardToFunction : public MUnaryInstruction,
                          public SingleObjectPolicy::Data {
   explicit MGuardToFunction(MDefinition* object)
