@@ -1284,6 +1284,7 @@ using MVariadicInstruction = MVariadicT<MInstruction>;
 // - MCompareExchangeTypedArrayElement
 // - MExchangeTypedArrayElement
 // - MAtomicTypedArrayElementBinop
+// - MGrowableSharedArrayBufferByteLength
 //
 // And operations which are optionally barriered:
 // - MLoadUnboxedScalar

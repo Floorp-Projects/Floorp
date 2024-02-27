@@ -1893,6 +1893,12 @@
     synchronization: js::jit::Synchronization
   num_temps: 1
 
+# Read the byte length of a growable shared array buffer.
+- name: GrowableSharedArrayBufferByteLength
+  result_type: WordSized
+  operands:
+    object: WordSized
+
 # Guard a resizable array buffer view is in-bounds.
 - name: GuardResizableArrayBufferViewInBounds
   operands:

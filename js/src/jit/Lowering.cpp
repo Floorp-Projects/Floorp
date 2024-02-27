@@ -3949,6 +3949,16 @@ void LIRGenerator::visitResizableDataViewByteLength(
   define(lir, ins);
 }
 
+void LIRGenerator::visitGrowableSharedArrayBufferByteLength(
+    MGrowableSharedArrayBufferByteLength* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::IntPtr);
+
+  auto* lir = new (alloc())
+      LGrowableSharedArrayBufferByteLength(useRegisterAtStart(ins->object()));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitGuardResizableArrayBufferViewInBounds(
     MGuardResizableArrayBufferViewInBounds* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
