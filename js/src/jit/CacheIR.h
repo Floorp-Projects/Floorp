@@ -530,6 +530,11 @@ enum class GuardClassKind : uint8_t {
 
 const JSClass* ClassFor(GuardClassKind kind);
 
+enum class ArrayBufferViewKind : uint8_t {
+  FixedLength,
+  Resizable,
+};
+
 }  // namespace jit
 }  // namespace js
 
