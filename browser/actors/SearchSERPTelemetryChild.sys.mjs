@@ -391,12 +391,24 @@ class SearchAdImpression {
     // - For others, map its component type and check visibility.
     for (let [element, data] of this.#elementToAdDataMap.entries()) {
       if (data.type == "incontent_searchbox") {
+        // Bug 1880413: Deprecate hard coding the incontent search box.
         // If searchbox has child elements, observe those, otherwise
         // fallback to its parent element.
-        this.#addEventListenerToElements(
-          data.childElements.length ? data.childElements : [element],
-          data.type,
-          false
+        let searchElements = data.childElements.length
+          ? data.childElements
+          : [element];
+        ListenerHelper.addListeners(
+          searchElements,
+          [
+            { eventType: "click", target: data.type },
+            {
+              eventType: "keydown",
+              target: data.type,
+              action: "submitted",
+              condition: "keydownEnter",
+            },
+          ],
+          data.type
         );
         continue;
       }
@@ -538,7 +550,19 @@ class SearchAdImpression {
           });
         }
         if (result.relatedElements?.length) {
-          this.#addEventListenerToElements(result.relatedElements, result.type);
+          // Bug 1880413: Deprecate related elements.
+          // Bottom-up approach with related elements are only used for
+          // non-link elements related to ads, like carousel arrows.
+          ListenerHelper.addListeners(
+            result.relatedElements,
+            [
+              {
+                action: "expanded",
+                eventType: "click",
+              },
+            ],
+            result.type
+          );
         }
       }
     }
@@ -572,11 +596,33 @@ class SearchAdImpression {
           ListenerHelper.addListeners(parents, eventListeners, component.type);
         }
         for (let parent of parents) {
+          // Bug 1880413: Deprecate related elements.
+          // Top-down related elements are either used for auto-suggested
+          // elements of a searchbox, or elements on a page which we can't
+          // find through a bottom up approach but we want an add a listener,
+          // like carousels with arrows.
           if (component.included.related?.selector) {
-            this.#addEventListenerToElements(
-              parent.querySelectorAll(component.included.related.selector),
-              component.type
+            let relatedElements = parent.querySelectorAll(
+              component.included.related.selector
             );
+            if (relatedElements.length) {
+              // For the search box, related elements with event listeners are
+              // auto-suggested terms. For everything else (e.g. carousels)
+              // they are expanded.
+              ListenerHelper.addListeners(
+                relatedElements,
+                [
+                  {
+                    action:
+                      component.type == "incontent_searchbox"
+                        ? "submitted"
+                        : "expanded",
+                    eventType: "click",
+                  },
+                ],
+                component.type
+              );
+            }
           }
           if (component.included.children) {
             for (let child of component.included.children) {
@@ -939,85 +985,6 @@ class SearchAdImpression {
         childElements,
       });
     }
-  }
-
-  /**
-   * Adds a click listener to a specific element.
-   *
-   * @param {Array<Element>} elements
-   *  DOM elements to add event listeners to.
-   * @param {string} type
-   *  The component type of the element.
-   * @param {boolean} isRelated
-   *  Whether the elements input are related to components or are actual
-   *  components.
-   */
-  #addEventListenerToElements(elements, type, isRelated = true) {
-    if (!elements?.length) {
-      return;
-    }
-    let clickAction = "clicked";
-    let keydownEnterAction = "clicked";
-
-    switch (type) {
-      case "incontent_searchbox":
-        keydownEnterAction = "submitted";
-        if (isRelated) {
-          // The related element to incontent_search are autosuggested elements
-          // which when clicked should cause different action than if the
-          // searchbox is clicked.
-          clickAction = "submitted";
-        }
-        break;
-      case "ad_carousel":
-      case "refined_search_buttons":
-        if (isRelated) {
-          clickAction = "expanded";
-        }
-        break;
-    }
-
-    let document = elements[0].ownerGlobal.document;
-    let url = document.documentURI;
-    let callback = documentToEventCallbackMap.get(document);
-
-    let removeListenerCallbacks = [];
-
-    for (let element of elements) {
-      let clickCallback = () => {
-        callback({
-          target: type,
-          url,
-          action: clickAction,
-        });
-      };
-      element.addEventListener("click", clickCallback);
-
-      let keydownCallback = event => {
-        if (event.key == "Enter") {
-          callback({
-            target: type,
-            url,
-            action: keydownEnterAction,
-          });
-        }
-      };
-      element.addEventListener("keydown", keydownCallback);
-
-      removeListenerCallbacks.push(() => {
-        element.removeEventListener("click", clickCallback);
-        element.removeEventListener("keydown", keydownCallback);
-      });
-    }
-
-    // The map might have entries from previous callers, so we must ensure
-    // we don't discard existing event listener callbacks.
-    if (documentToRemoveEventListenersMap.has(document)) {
-      let callbacks = documentToRemoveEventListenersMap.get(document);
-      removeListenerCallbacks = removeListenerCallbacks.concat(callbacks);
-    }
-
-    documentToRemoveEventListenersMap.set(document, removeListenerCallbacks);
   }
 }
 
