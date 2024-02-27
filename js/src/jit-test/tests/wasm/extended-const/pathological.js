@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmExtendedConstEnabled()
-
 // Let's calculate zero in some elaborate ways.
 function testFancyZeroOffset(fancyZero, memType = 'i32') {
     try {

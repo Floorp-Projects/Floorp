@@ -42,11 +42,6 @@
 #else
 #  define WASM_RELAXED_SIMD_ENABLED 0
 #endif
-#ifdef ENABLE_WASM_EXTENDED_CONST
-#  define WASM_EXTENDED_CONST_ENABLED 1
-#else
-#  define WASM_EXTENDED_CONST_ENABLED 0
-#endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 #  define WASM_FUNCTION_REFERENCES_ENABLED 1
 #else
@@ -90,15 +85,6 @@
 
 // clang-format off
 #define JS_FOR_WASM_FEATURES(FEATURE)                                   \
-  FEATURE(                                                              \
-    /* capitalized name   */ ExtendedConst,                             \
-    /* lower case name    */ extendedConst,                             \
-    /* compile predicate  */ WASM_EXTENDED_CONST_ENABLED,               \
-    /* compiler predicate */ true,                                      \
-    /* flag predicate     */ true,                                      \
-    /* flag force enable  */ false,                                     \
-    /* flag fuzz enable   */ true,                                      \
-    /* preference name    */ extended_const)                            \
   FEATURE(                                                              \
     /* capitalized name   */ ExnRef,                                    \
     /* lower case name    */ exnref,                                    \

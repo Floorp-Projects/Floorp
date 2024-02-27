@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmExtendedConstEnabled()
-
 function testPrivateGlobal(valtype, expr, result) {
   // Immutable private globals have a single cell for wasm.
   let { get } = wasmEvalText(`(module

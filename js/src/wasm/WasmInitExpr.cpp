@@ -74,20 +74,16 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return stack.append(Val(RefType::func(), ref));
   }
 
-#if defined(ENABLE_WASM_EXTENDED_CONST) || defined(ENABLE_WASM_GC)
   int32_t popI32() {
     uint32_t result = stack.back().i32();
     stack.popBack();
     return int32_t(result);
   }
-#endif
-#ifdef ENABLE_WASM_EXTENDED_CONST
   int64_t popI64() {
     uint64_t result = stack.back().i64();
     stack.popBack();
     return int64_t(result);
   }
-#endif
 
   bool evalGlobalGet(JSContext* cx, uint32_t index) {
     RootedVal val(cx);
@@ -107,7 +103,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return pushFuncRef(func);
   }
   bool evalRefNull(RefType type) { return pushRef(type, AnyRef::null()); }
-#ifdef ENABLE_WASM_EXTENDED_CONST
   bool evalI32Add() {
     uint32_t b = popI32();
     uint32_t a = popI32();
@@ -138,7 +133,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     uint64_t a = popI64();
     return pushI64(a * b);
   }
-#endif  // ENABLE_WASM_EXTENDED_CONST
 #ifdef ENABLE_WASM_GC
   bool evalStructNew(JSContext* cx, uint32_t typeIndex) {
     const TypeDef& typeDef = instance().metadata().types->type(typeIndex);
@@ -320,7 +314,6 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
         }
         CHECK(evalRefNull(type));
       }
-#ifdef ENABLE_WASM_EXTENDED_CONST
       case uint16_t(Op::I32Add): {
         if (!d.readBinary()) {
           return false;
@@ -357,7 +350,6 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
         }
         CHECK(evalI64Mul());
       }
-#endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         switch (op.b1) {
@@ -449,9 +441,7 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
       return false;
     }
 
-#if defined(ENABLE_WASM_EXTENDED_CONST) || defined(ENABLE_WASM_GC)
     Nothing nothing;
-#endif
     NothingVector nothings{};
     ResultType unusedType;
 
@@ -542,13 +532,9 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
         *literal = Some(LitVal(ValType(type)));
         break;
       }
-#ifdef ENABLE_WASM_EXTENDED_CONST
       case uint16_t(Op::I32Add):
       case uint16_t(Op::I32Sub):
       case uint16_t(Op::I32Mul): {
-        if (!env->extendedConstEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         if (!iter.readBinary(ValType::I32, &nothing, &nothing)) {
           return false;
         }
@@ -558,16 +544,12 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
       case uint16_t(Op::I64Add):
       case uint16_t(Op::I64Sub):
       case uint16_t(Op::I64Mul): {
-        if (!env->extendedConstEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         if (!iter.readBinary(ValType::I64, &nothing, &nothing)) {
           return false;
         }
         *literal = Nothing();
         break;
       }
-#endif
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         if (!env->gcEnabled()) {
