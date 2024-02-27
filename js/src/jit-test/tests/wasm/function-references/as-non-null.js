@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 let {checkNonNull} = wasmEvalText(`(module
   (func (export "checkNonNull") (param externref) (result (ref extern))

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // RefType/ValueType as a simple string
 const t01 = new WebAssembly.Table({element: 'funcref', initial: 3});

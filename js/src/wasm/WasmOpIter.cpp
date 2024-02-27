@@ -25,14 +25,14 @@ using namespace js::jit;
 using namespace js::wasm;
 
 #ifdef ENABLE_WASM_GC
-#  ifndef ENABLE_WASM_FUNCTION_REFERENCES
+#  ifndef ENABLE_WASM_GC
 #    error "GC types require the function-references feature"
 #  endif
 #endif
 
 #ifdef DEBUG
 
-#  ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#  ifdef ENABLE_WASM_GC
 #    define WASM_FUNCTION_REFERENCES_OP(code) return code
 #  else
 #    define WASM_FUNCTION_REFERENCES_OP(code) break

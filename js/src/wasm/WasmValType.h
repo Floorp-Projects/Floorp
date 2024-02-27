@@ -479,7 +479,7 @@ class StorageTypeTraits {
       case TypeCode::NullExternRef:
       case TypeCode::NullAnyRef:
 #endif
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
       case AbstractTypeRefCode:
 #endif
         return true;
@@ -557,7 +557,7 @@ class ValTypeTraits {
       case TypeCode::NullExternRef:
       case TypeCode::NullAnyRef:
 #endif
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
       case AbstractTypeRefCode:
 #endif
         return true;

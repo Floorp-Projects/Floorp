@@ -42,11 +42,6 @@
 #else
 #  define WASM_RELAXED_SIMD_ENABLED 0
 #endif
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-#  define WASM_FUNCTION_REFERENCES_ENABLED 1
-#else
-#  define WASM_FUNCTION_REFERENCES_ENABLED 0
-#endif
 #ifdef ENABLE_WASM_GC
 #  define WASM_GC_ENABLED 1
 #else
@@ -94,15 +89,6 @@
     /* flag force enable  */ false,                                     \
     /* flag fuzz enable   */ true,                                      \
     /* preference name    */ exnref)                                    \
-  FEATURE(                                                              \
-    /* capitalized name   */ FunctionReferences,                        \
-    /* lower case name    */ functionReferences,                        \
-    /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,          \
-    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
-    /* flag predicate     */ true,                                      \
-    /* flag force enable  */ WasmGcFlag(cx),                            \
-    /* flag fuzz enable   */ false,                                     \
-    /* preference name    */ function_references)                       \
   FEATURE(                                                              \
     /* capitalized name   */ Gc,                                        \
     /* lower case name    */ gc,                                        \

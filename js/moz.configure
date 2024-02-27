@@ -705,29 +705,6 @@ option(
     help="Force disable all wasm experimental features for testing.",
 )
 
-# Support for WebAssembly function-references.
-# ===========================
-
-
-option(
-    "--disable-wasm-function-references",
-    default=True,
-    help="{Enable|Disable} WebAssembly function-references",
-)
-
-
-@depends("--disable-wasm-function-references", "--wasm-no-experimental")
-def wasm_function_references(value, no_experimental):
-    if no_experimental:
-        return
-
-    if value:
-        return True
-
-
-set_config("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
-set_define("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
-
 # Support for WebAssembly tail-calls.
 # ===========================
 
@@ -765,28 +742,14 @@ set_define("ENABLE_WASM_TAIL_CALLS", wasm_tail_calls)
 # ===========================
 
 
-@depends("--disable-wasm-function-references")
-def default_wasm_gc(function_references):
-    if function_references:
-        return True
+option("--disable-wasm-gc", default=True, help="{Enable|Disable} WebAssembly GC")
 
 
-option(
-    "--disable-wasm-gc", default=default_wasm_gc, help="{Enable|Disable} WebAssembly GC"
-)
-
-
-@depends(
-    "--disable-wasm-gc", "--disable-wasm-function-references", "--wasm-no-experimental"
-)
-def wasm_gc(value, function_references, no_experimental):
+@depends("--disable-wasm-gc", "--wasm-no-experimental")
+def wasm_gc(value, no_experimental):
     if no_experimental or not value:
         return
-
-    if function_references:
-        return True
-
-    die("--disable-wasm-gc only possible with --disable-wasm-function-references")
+    return True
 
 
 set_config("ENABLE_WASM_GC", wasm_gc)

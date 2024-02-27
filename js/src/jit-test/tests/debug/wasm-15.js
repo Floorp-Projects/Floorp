@@ -63,7 +63,7 @@ wasmRunWithDebugger(
 );
 
 // Checking if enter/leave frame at return_call_ref.
-wasmFunctionReferencesEnabled() && wasmRunWithDebugger(
+wasmGcEnabled() && wasmRunWithDebugger(
     '(module (type $t (func)) (elem declare func 0) (func) (func (return_call_ref $t (ref.func 0))) (func (call 1)) (export "test" (func 2)))',
     undefined,
     function ({dbg}) {
