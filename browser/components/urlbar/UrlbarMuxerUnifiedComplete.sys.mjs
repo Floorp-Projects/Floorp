@@ -166,9 +166,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     }
 
     // Show Top Sites above trending results.
-    let showSearchSuggestionsFirst = !(
-      lazy.UrlbarPrefs.get("suggest.trending") && !context.searchString
-    );
+    let showSearchSuggestionsFirst =
+      context.searchString ||
+      (!lazy.UrlbarPrefs.get("suggest.trending") &&
+        !lazy.UrlbarPrefs.get("suggest.recentsearches"));
+
     // Determine the result groups to use for this sort.  In search mode with
     // an engine, show search suggestions first.
     let rootGroup =
