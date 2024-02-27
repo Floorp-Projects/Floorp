@@ -1,16 +1,18 @@
 // |jit-test| skip-if: !wasmJSStringBuiltinsEnabled();
 
 let testModule = wasmTextToBinary(`(module
+  (type $arrayI16 (array i16))
+  (type $arrayMutI16 (array (mut i16)))
   (func
     (import "wasm:js-string" "fromWTF16Array")
-    (param anyref i32 i32)
-    (result externref)
+    (param (ref null $arrayMutI16) i32 i32)
+    (result (ref extern))
   )
   (export "fromWTF16Array" (func 0))
 
   (func
     (import "wasm:js-string" "toWTF16Array")
-    (param externref anyref i32)
+    (param externref (ref null $arrayMutI16) i32)
     (result i32)
   )
   (export "toWTF16Array" (func 1))
@@ -80,31 +82,31 @@ let testModule = wasmTextToBinary(`(module
 )`);
 
 let {
-  createArray,
+  createArrayMutI16,
   arrayLength,
   arraySet,
   arrayGet
 } = wasmEvalText(`(module
-  (type $i16Array (array (mut i16)))
-  (func (export "createArray") (param i32) (result anyref)
+  (type $arrayMutI16 (array (mut i16)))
+  (func (export "createArrayMutI16") (param i32) (result anyref)
     i32.const 0
     local.get 0
-    array.new $i16Array
+    array.new $arrayMutI16
   )
   (func (export "arrayLength") (param arrayref) (result i32)
     local.get 0
     array.len
   )
-  (func (export "arraySet") (param (ref $i16Array) i32 i32)
+  (func (export "arraySet") (param (ref $arrayMutI16) i32 i32)
     local.get 0
     local.get 1
     local.get 2
-    array.set $i16Array
+    array.set $arrayMutI16
   )
-  (func (export "arrayGet") (param (ref $i16Array) i32) (result i32)
+  (func (export "arrayGet") (param (ref $arrayMutI16) i32) (result i32)
     local.get 0
     local.get 1
-    array.get_u $i16Array
+    array.get_u $arrayMutI16
   )
 )`).exports;
 
@@ -272,16 +274,16 @@ for (let a of testStrings) {
     );
   }
 
-  let array = createArray(length);
+  let arrayMutI16 = createArrayMutI16(length);
   assertSameBehavior(
     builtinExports['toWTF16Array'],
     polyfillExports['toWTF16Array'],
-    a, array, 0
+    a, arrayMutI16, 0
   );
   assertSameBehavior(
     builtinExports['fromWTF16Array'],
     polyfillExports['fromWTF16Array'],
-    array, 0, length
+    arrayMutI16, 0, length
   );
 
   for (let i = 0; i < length; i++) {

@@ -27,28 +27,29 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmOpIter.h"
+#include "wasm/WasmStaticTypeDefs.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;
 using namespace js::wasm;
 
-#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, uses_memory, \
-                           idx)                                              \
-  static const ValType BuiltinModuleFunc##op##_Params[] =                    \
-      DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_##op;                       \
-                                                                             \
-  const BuiltinModuleFunc BuiltinModuleFunc##op = {                          \
-      export,                                                                \
-      mozilla::Span<const ValType>(BuiltinModuleFunc##op##_Params),          \
-      DECLARE_BUILTIN_MODULE_FUNC_RESULT_VALTYPE_##op,                       \
-      SASig##sa_name,                                                        \
-      uses_memory,                                                           \
-  };
+BuiltinModuleFuncs* BuiltinModuleFuncs::singleton_ = nullptr;
 
-FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
-#undef VISIT_BUILTIN_FUNC
+[[nodiscard]] bool BuiltinModuleFunc::init(const RefPtr<TypeContext>& types,
+                                           mozilla::Span<const ValType> params,
+                                           Maybe<ValType> result,
+                                           bool usesMemory,
+                                           const SymbolicAddressSignature* sig,
+                                           const char* exportName) {
+  // This builtin must not have been initialized yet.
+  MOZ_ASSERT(!recGroup_);
 
-bool BuiltinModuleFunc::funcType(FuncType* type) const {
+  // Initialize the basic fields
+  exportName_ = exportName;
+  sig_ = sig;
+  usesMemory_ = usesMemory;
+
+  // Create a function type for the given params and result
   ValTypeVector paramVec;
   if (!paramVec.append(params.data(), params.data() + params.size())) {
     return false;
@@ -57,21 +58,48 @@ bool BuiltinModuleFunc::funcType(FuncType* type) const {
   if (result.isSome() && !resultVec.append(*result)) {
     return false;
   }
-  *type = FuncType(std::move(paramVec), std::move(resultVec));
+  const TypeDef* typeDef =
+      types->addType(FuncType(std::move(paramVec), std::move(resultVec)));
+  if (!typeDef) {
+    return false;
+  }
+  recGroup_ = &typeDef->recGroup();
   return true;
 }
 
-/* static */
-const BuiltinModuleFunc& BuiltinModuleFunc::getFromId(BuiltinModuleFuncId id) {
-  switch (id) {
-#define VISIT_BUILTIN_FUNC(op, ...) \
-  case BuiltinModuleFuncId::op:     \
-    return BuiltinModuleFunc##op;
-    FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
-#undef VISIT_BUILTIN_FUNC
-    default:
-      MOZ_CRASH("unexpected builtinModuleFunc");
+bool BuiltinModuleFuncs::init() {
+  singleton_ = js_new<BuiltinModuleFuncs>();
+  if (!singleton_) {
+    return false;
   }
+
+  RefPtr<TypeContext> types = js_new<TypeContext>();
+  if (!types) {
+    return false;
+  }
+
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, uses_memory,   \
+                           ...)                                                \
+  const ValType op##Params[] =                                                 \
+      DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_##op;                         \
+  Maybe<ValType> op##Result = DECLARE_BUILTIN_MODULE_FUNC_RESULT_VALTYPE_##op; \
+  if (!singleton_->funcs_[BuiltinModuleFuncId::op].init(                       \
+          types, mozilla::Span<const ValType>(op##Params), op##Result,         \
+          uses_memory, &SASig##sa_name, export)) {                             \
+    return false;                                                              \
+  }
+  FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
+
+  return true;
+}
+
+void BuiltinModuleFuncs::destroy() {
+  if (!singleton_) {
+    return;
+  }
+  js_delete(singleton_);
+  singleton_ = nullptr;
 }
 
 bool EncodeFuncBody(const BuiltinModuleFunc& builtinModuleFunc,
@@ -80,7 +108,8 @@ bool EncodeFuncBody(const BuiltinModuleFunc& builtinModuleFunc,
   if (!EncodeLocalEntries(encoder, ValTypeVector())) {
     return false;
   }
-  for (uint32_t i = 0; i < builtinModuleFunc.params.size(); i++) {
+  const FuncType* funcType = builtinModuleFunc.funcType();
+  for (uint32_t i = 0; i < funcType->args().length(); i++) {
     if (!encoder.writeOp(Op::LocalGet) || !encoder.writeVarU32(i)) {
       return false;
     }
@@ -145,11 +174,11 @@ bool CompileBuiltinModule(JSContext* cx,
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
     const BuiltinModuleFuncId& id = ids[funcIndex];
     const BuiltinModuleFunc& builtinModuleFunc =
-        BuiltinModuleFunc::getFromId(id);
+        BuiltinModuleFuncs::getFromId(id);
 
-    FuncType type;
-    if (!builtinModuleFunc.funcType(&type) ||
-        !moduleEnv.types->addType(std::move(type))) {
+    SharedRecGroup recGroup = builtinModuleFunc.recGroup();
+    MOZ_ASSERT(recGroup->numTypes() == 1);
+    if (!moduleEnv.types->addRecGroup(recGroup)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -170,10 +199,10 @@ bool CompileBuiltinModule(JSContext* cx,
   // Add (export "$name" (func $i)) declarations.
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
     const BuiltinModuleFunc& builtinModuleFunc =
-        BuiltinModuleFunc::getFromId(ids[funcIndex]);
+        BuiltinModuleFuncs::getFromId(ids[funcIndex]);
 
     CacheableName exportName;
-    if (!CacheableName::fromUTF8Chars(builtinModuleFunc.exportName,
+    if (!CacheableName::fromUTF8Chars(builtinModuleFunc.exportName(),
                                       &exportName) ||
         !moduleEnv.exports.append(Export(std::move(exportName), funcIndex,
                                          DefinitionKind::Function))) {
@@ -200,7 +229,7 @@ bool CompileBuiltinModule(JSContext* cx,
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
     BuiltinModuleFuncId id = ids[funcIndex];
     const BuiltinModuleFunc& builtinModuleFunc =
-        BuiltinModuleFunc::getFromId(ids[funcIndex]);
+        BuiltinModuleFuncs::getFromId(ids[funcIndex]);
 
     // Compilation may be done using other threads, ModuleGenerator requires
     // that function bodies live until after finishFuncDefs().
@@ -300,8 +329,8 @@ Maybe<const BuiltinModuleFunc*> wasm::ImportMatchesBuiltinModuleFunc(
   // Not supported for implicit instantiation yet
   MOZ_RELEASE_ASSERT(module == BuiltinModuleId::JSString);
   for (BuiltinModuleFuncId funcId : JSStringFuncs) {
-    const BuiltinModuleFunc& func = BuiltinModuleFunc::getFromId(funcId);
-    if (importName == mozilla::MakeStringSpan(func.exportName)) {
+    const BuiltinModuleFunc& func = BuiltinModuleFuncs::getFromId(funcId);
+    if (importName == mozilla::MakeStringSpan(func.exportName())) {
       return Some(&func);
     }
   }

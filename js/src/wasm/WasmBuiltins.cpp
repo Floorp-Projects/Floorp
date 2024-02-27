@@ -397,9 +397,9 @@ const SymbolicAddressSignature SASigArrayCopy = {
 #define VISIT_BUILTIN_FUNC(op, export, sa_name, ...)   \
   const SymbolicAddressSignature SASig##sa_name = {    \
       SymbolicAddress::sa_name,                        \
-      DECLARE_BUILTIN_MODULE_FUNC_RESULT_SASTYPE_##op, \
+      DECLARE_BUILTIN_MODULE_FUNC_RESULT_MIRTYPE_##op, \
       DECLARE_BUILTIN_MODULE_FUNC_FAILMODE_##op,       \
-      DECLARE_BUILTIN_MODULE_FUNC_PARAM_SASTYPES_##op};
+      DECLARE_BUILTIN_MODULE_FUNC_PARAM_MIRTYPES_##op};
 
 FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef VISIT_BUILTIN_FUNC

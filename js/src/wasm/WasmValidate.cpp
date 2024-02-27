@@ -2229,13 +2229,6 @@ static bool CheckImportsAgainstBuiltinModules(Decoder& d,
     return true;
   }
 
-  // Allocate a type context for builtin types so we can canonicalize them
-  // and use them in type comparisons
-  RefPtr<TypeContext> builtinTypes = js_new<TypeContext>();
-  if (!builtinTypes) {
-    return false;
-  }
-
   uint32_t importFuncIndex = 0;
   for (auto& import : env->imports) {
     Maybe<BuiltinModuleId> builtinModule =
@@ -2260,21 +2253,9 @@ static bool CheckImportsAgainstBuiltinModules(Decoder& d,
           return d.fail("unrecognized builtin module field");
         }
 
-        // Get a canonicalized type definition for this builtin so we can
-        // accurately compare it against the import type.
-        FuncType builtinFuncType;
-        if (!(*builtinFunc)->funcType(&builtinFuncType)) {
-          return false;
-        }
-        if (!builtinTypes->addType(builtinFuncType)) {
-          return false;
-        }
-        const TypeDef& builtinTypeDef =
-            builtinTypes->type(builtinTypes->length() - 1);
-
         const TypeDef& importTypeDef = (*env->types)[func.typeIndex];
-        if (!TypeDef::isSubTypeOf(&builtinTypeDef, &importTypeDef)) {
-          return d.failf("type mismatch in %s", (*builtinFunc)->exportName);
+        if (!TypeDef::isSubTypeOf((*builtinFunc)->typeDef(), &importTypeDef)) {
+          return d.failf("type mismatch in %s", (*builtinFunc)->exportName());
         }
         break;
       }
