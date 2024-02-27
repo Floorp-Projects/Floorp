@@ -47,10 +47,10 @@ class MessagingMiddleware(
                     context.state.messaging.messages,
                 )
                 if (message != null) {
-                    context.dispatch(UpdateMessageToShow(message))
+                    context.store.dispatch(UpdateMessageToShow(message))
                     onMessagedDisplayed(message, context)
                 } else {
-                    context.dispatch(ConsumeMessageToShow(action.surface))
+                    context.store.dispatch(ConsumeMessageToShow(action.surface))
                 }
             }
 
@@ -86,7 +86,7 @@ class MessagingMiddleware(
         message: Message,
     ) {
         val newMessages = removeMessage(context, message)
-        context.dispatch(UpdateMessages(newMessages))
+        context.store.dispatch(UpdateMessages(newMessages))
         consumeMessageToShowIfNeeded(context, message)
         coroutineScope.launch {
             controller.onMessageDismissed(message)
@@ -103,7 +103,7 @@ class MessagingMiddleware(
         }
         // Update app state.
         val newMessages = removeMessage(context, message)
-        context.dispatch(UpdateMessages(newMessages))
+        context.store.dispatch(UpdateMessages(newMessages))
         consumeMessageToShowIfNeeded(context, message)
     }
 
@@ -113,7 +113,7 @@ class MessagingMiddleware(
     ) {
         val current = context.state.messaging.messageToShow[message.surface]
         if (current?.id == message.id) {
-            context.dispatch(ConsumeMessageToShow(message.surface))
+            context.store.dispatch(ConsumeMessageToShow(message.surface))
         }
     }
 
