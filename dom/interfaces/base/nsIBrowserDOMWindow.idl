@@ -65,6 +65,8 @@ interface nsIBrowserDOMWindow : nsISupports
   /**
    * Open in a new content tab in the toplevel browser window corresponding to
    * this nsIBrowserDOMWindow.
+   * Use browser.tabs.loadDivertedInBackground pref to choose whether to open
+   * in background tab or foreground tab.
    */
   const short OPEN_NEWTAB        = 3;
   /**
@@ -76,6 +78,11 @@ interface nsIBrowserDOMWindow : nsISupports
    * corresponding to this nsIBrowserDOMWindow.
    */
   const short OPEN_NEWTAB_BACKGROUND = 5;
+  /**
+   * Open in a new foreground content tab in the toplevel browser window
+   * corresponding to this nsIBrowserDOMWindow.
+   */
+  const short OPEN_NEWTAB_FOREGROUND = 6;
 
   /**
    * Values for createContentWindow's and openURI's aFlags parameter.
