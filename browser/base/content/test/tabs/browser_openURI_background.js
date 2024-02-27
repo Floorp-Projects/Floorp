@@ -11,6 +11,7 @@ add_task(async function () {
   const tests = [
     ["OPEN_NEWTAB", false],
     ["OPEN_NEWTAB_BACKGROUND", true],
+    ["OPEN_NEWTAB_FOREGROUND", false],
   ];
 
   for (const [flag, isBackground] of tests) {
