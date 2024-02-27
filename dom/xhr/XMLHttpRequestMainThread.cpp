@@ -185,7 +185,7 @@ static void AddLoadFlags(nsIRequest* request, nsLoadFlags newFlags) {
 // invoked for increased scrutability.  Save the previous value on the stack.
 namespace {
 struct DebugWorkerRefs {
-  RefPtr<ThreadSafeWorkerRef>& mTSWorkerRef;
+  RefPtr<ThreadSafeWorkerRef> mTSWorkerRef;
   nsCString mPrev;
 
   DebugWorkerRefs(RefPtr<ThreadSafeWorkerRef>& aTSWorkerRef,
