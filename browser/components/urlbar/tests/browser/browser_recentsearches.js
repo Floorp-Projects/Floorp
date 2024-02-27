@@ -10,6 +10,12 @@ const CONFIG_DEFAULT = [
   },
 ];
 
+const TOP_SITES = [
+  "https://example-1.com/",
+  "https://example-2.com/",
+  "https://example-3.com/",
+];
+
 SearchTestUtils.init(this);
 
 add_setup(async () => {
@@ -58,7 +64,6 @@ add_task(async () => {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "Bob Vylan",
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -70,7 +75,6 @@ add_task(async () => {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "",
-    waitForFocus: SimpleTest.waitForFocus,
   });
 
   Assert.equal(
@@ -98,5 +102,37 @@ add_task(async () => {
     0,
     1
   );
+  await BrowserTestUtils.removeTab(tab);
+});
+
+// Ensure that top sites are shown above recent searches, even if trending
+// suggestions are disabled.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.trending", false],
+      ["browser.urlbar.suggest.topsites", true],
+      ["browser.newtabpage.activity-stream.default.sites", TOP_SITES.join(",")],
+    ],
+  });
+  await updateTopSites(sites => sites && sites.length);
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "data:text/html,"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+
+  let count = UrlbarTestUtils.getResultCount(window);
+  let { result } = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    count - 1
+  );
+  Assert.equal(result.providerName, "RecentSearches");
+
   await BrowserTestUtils.removeTab(tab);
 });
