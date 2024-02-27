@@ -350,7 +350,20 @@
           count: affectedTabsLength,
         });
       }
-      this._mouseenter();
+
+      if (this.hidden || this.closing) {
+        return;
+      }
+
+      let tabToWarm = this.mOverCloseButton
+        ? gBrowser._findTabToBlurTo(this)
+        : this;
+      gBrowser.warmupTab(tabToWarm);
+
+      // If the previous target wasn't part of this tab then this is a mouseenter event.
+      if (!this.contains(event.relatedTarget)) {
+        this._mouseenter();
+      }
     }
 
     on_mouseout(event) {
@@ -360,7 +373,11 @@
       if (event.target == this.overlayIcon) {
         this.setSecondaryTabTooltipLabel(null);
       }
-      this._mouseleave();
+
+      // If the new target is not part of this tab then this is a mouseleave event.
+      if (!this.contains(event.relatedTarget)) {
+        this._mouseleave();
+      }
     }
 
     on_dragstart(event) {
@@ -530,9 +547,6 @@
     }
 
     _mouseenter() {
-      if (this.hidden || this.closing) {
-        return;
-      }
       this._hover = true;
 
       if (this.selected) {
@@ -544,12 +558,6 @@
 
       // Prepare connection to host beforehand.
       SessionStore.speculativeConnectOnTabHover(this);
-
-      let tabToWarm = this;
-      if (this.mOverCloseButton) {
-        tabToWarm = gBrowser._findTabToBlurTo(this);
-      }
-      gBrowser.warmupTab(tabToWarm);
 
       this.dispatchEvent(new CustomEvent("TabHoverStart", { bubbles: true }));
     }
