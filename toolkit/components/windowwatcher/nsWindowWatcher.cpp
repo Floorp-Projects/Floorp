@@ -2442,7 +2442,9 @@ bool nsWindowWatcher::IsWindowOpenLocationModified(
     const mozilla::dom::UserActivation::Modifiers& aModifiers,
     int32_t* aLocation) {
   // Perform the subset of BrowserUtils.whereToOpenLink in
-  // toolkit/modules/BrowserUtils.sys.mjs
+  // toolkit/modules/BrowserUtils.sys.mjs for modifier key handling, and
+  // URILoadingHelper.openLinkIn in browser/modules/URILoadingHelper.sys.mjs
+  // for loadInBackground pref handling.
 #ifdef XP_MACOSX
   bool metaKey = aModifiers.IsMeta();
 #else
@@ -2450,11 +2452,15 @@ bool nsWindowWatcher::IsWindowOpenLocationModified(
 #endif
   bool shiftKey = aModifiers.IsShift();
   if (metaKey) {
+    bool loadInBackground = StaticPrefs::browser_tabs_loadInBackground();
     if (shiftKey) {
-      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB;
-      return true;
+      loadInBackground = !loadInBackground;
     }
-    *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND;
+    if (loadInBackground) {
+      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND;
+    } else {
+      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_FOREGROUND;
+    }
     return true;
   }
   if (shiftKey) {
