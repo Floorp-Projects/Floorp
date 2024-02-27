@@ -6933,6 +6933,12 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
 
   AUTO_PROFILER_LABEL("DatabaseConnection::ReclaimFreePagesWhileIdle", DOM);
 
+  uint32_t pauseOnConnectionThreadMs = StaticPrefs::
+      dom_indexedDB_connectionIdleMaintenance_pauseOnConnectionThreadMs();
+  if (pauseOnConnectionThreadMs > 0) {
+    PR_Sleep(PR_MillisecondsToInterval(pauseOnConnectionThreadMs));
+  }
+
   // Make sure we don't keep working if anything else needs this thread.
   nsIThread* currentThread = NS_GetCurrentThread();
   MOZ_ASSERT(currentThread);
