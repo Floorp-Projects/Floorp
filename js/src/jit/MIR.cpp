@@ -6411,6 +6411,15 @@ bool MResizableDataViewByteLength::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(ins);
 }
 
+AliasSet MGrowableSharedArrayBufferByteLength::getAliasSet() const {
+  // Requires a barrier, so make the instruction effectful by giving it a
+  // "store" effect. Also prevent reordering LoadUnboxedScalar before this
+  // instruction by including |UnboxedElement| in the alias set.
+  return AliasSet::Store(AliasSet::FixedSlot |
+                         AliasSet::SharedArrayRawBufferLength |
+                         AliasSet::UnboxedElement);
+}
+
 AliasSet MGuardResizableArrayBufferViewInBounds::getAliasSet() const {
   // Additionally reads the |initialLength| and |initialByteOffset| slots, but
   // since these can't change after construction, we don't need to track them.

@@ -345,12 +345,13 @@ bool WarpCacheIRTranspiler::transpile(
   // Effectful instructions should have a resume point. MIonToWasmCall is an
   // exception: we can attach the resume point to the MInt64ToBigInt instruction
   // instead. Other exceptions are MResizableTypedArrayLength and
-  // MResizableDataViewByteLength, which add the resume point to
-  // MPostIntPtrConversion.
-  MOZ_ASSERT_IF(effectful_, effectful_->resumePoint() ||
-                                effectful_->isIonToWasmCall() ||
-                                effectful_->isResizableTypedArrayLength() ||
-                                effectful_->isResizableDataViewByteLength());
+  // MResizableDataViewByteLength, and MGrowableSharedArrayBufferByteLength,
+  // which add the resume point to MPostIntPtrConversion.
+  MOZ_ASSERT_IF(effectful_,
+                effectful_->resumePoint() || effectful_->isIonToWasmCall() ||
+                    effectful_->isResizableTypedArrayLength() ||
+                    effectful_->isResizableDataViewByteLength() ||
+                    effectful_->isGrowableSharedArrayBufferByteLength());
   return true;
 }
 
@@ -4261,6 +4262,40 @@ bool WarpCacheIRTranspiler::emitResizableDataViewByteLengthDoubleResult(
   auto barrier = MemoryBarrierRequirement::Required;
 
   auto* length = MResizableDataViewByteLength::New(alloc(), obj, barrier);
+  addEffectful(length);
+
+  auto* lengthDouble = MIntPtrToDouble::New(alloc(), length);
+  add(lengthDouble);
+
+  auto* postConversion = MPostIntPtrConversion::New(alloc(), lengthDouble);
+  add(postConversion);
+
+  pushResult(postConversion);
+  return resumeAfterUnchecked(postConversion);
+}
+
+bool WarpCacheIRTranspiler::emitGrowableSharedArrayBufferByteLengthInt32Result(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MGrowableSharedArrayBufferByteLength::New(alloc(), obj);
+  addEffectful(length);
+
+  auto* lengthInt32 = MNonNegativeIntPtrToInt32::New(alloc(), length);
+  add(lengthInt32);
+
+  auto* postConversion = MPostIntPtrConversion::New(alloc(), lengthInt32);
+  add(postConversion);
+
+  pushResult(postConversion);
+  return resumeAfterUnchecked(postConversion);
+}
+
+bool WarpCacheIRTranspiler::emitGrowableSharedArrayBufferByteLengthDoubleResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MGrowableSharedArrayBufferByteLength::New(alloc(), obj);
   addEffectful(length);
 
   auto* lengthDouble = MIntPtrToDouble::New(alloc(), length);

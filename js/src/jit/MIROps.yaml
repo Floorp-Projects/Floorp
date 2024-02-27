@@ -1520,6 +1520,15 @@
   alias_set: custom
   compute_range: custom
 
+# Read the byte length of a growable shared array buffer as IntPtr.
+- name: GrowableSharedArrayBufferByteLength
+  operands:
+    object: Object
+  result_type: IntPtr
+  guard: true
+  movable: false
+  alias_set: custom
+
 # Return the element size of a typed array.
 - name: TypedArrayElementSize
   operands:
