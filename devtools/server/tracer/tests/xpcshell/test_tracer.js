@@ -329,3 +329,136 @@ foo();`;
   info("Stop tracing");
   stopTracing();
 });
+
+add_task(async function testTracingPauseOnStep() {
+  // Test the `pauseOnStep` flag
+  const sandbox = Cu.Sandbox("https://example.com");
+  sandbox.dump = dump;
+  const source = `var counter = 0; function incrementCounter() { let x = 0; dump("++\\n"); counter++; };`;
+  Cu.evalInSandbox(source, sandbox);
+
+  // Pass an override method to catch all strings tentatively logged to stdout
+  const logs = [];
+  let loggingMethodResolve;
+  function loggingMethod(str) {
+    logs.push(str);
+    if (loggingMethodResolve) {
+      loggingMethodResolve();
+    }
+  }
+
+  info("Start tracing without pause");
+  startTracing({
+    global: sandbox,
+    loggingMethod,
+  });
+
+  info("Call some code");
+  sandbox.incrementCounter();
+
+  Assert.equal(logs.length, 2);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ incrementCounter");
+
+  info(
+    "When pauseOnStep isn't used, the traced code runs synchronously to completion"
+  );
+  Assert.equal(sandbox.counter, 1);
+
+  info("Stop tracing");
+  stopTracing();
+
+  logs.length = 0;
+  sandbox.counter = 0;
+
+  info("Start tracing with 0ms pause");
+  startTracing({
+    global: sandbox,
+    pauseOnStep: 0,
+    loggingMethod,
+  });
+
+  let onTraces = Promise.withResolvers();
+  let onResumed = Promise.withResolvers();
+  // This is used when receiving new traces in `loggingMethod()`
+  loggingMethodResolve = onTraces.resolve;
+
+  info(
+    "Run the to-be-traced code in a distinct event loop as it would be paused synchronously and would prevent further test script execution"
+  );
+  Services.tm.dispatchToMainThread(() => {
+    sandbox.incrementCounter();
+    onResumed.resolve();
+  });
+
+  info("Wait for tracer to call the listener");
+  await onTraces.promise;
+
+  Assert.equal(logs.length, 2);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ incrementCounter");
+
+  info(
+    "When pauseInStep is used, the tracer listener is called, but the traced function is paused and doesn't run synchronously to completion"
+  );
+  Assert.equal(
+    sandbox.counter,
+    0,
+    "The increment method was called but its execution flow was blocked and couldn't increment"
+  );
+
+  info("Wait for traced code to be resumed");
+  await onResumed.promise;
+  info(
+    "If we release the event loop, we can see the traced function completion"
+  );
+  Assert.equal(sandbox.counter, 1);
+
+  info("Stop tracing");
+  stopTracing();
+
+  logs.length = 0;
+  sandbox.counter = 0;
+
+  info("Start tracing with 250ms pause");
+  startTracing({
+    global: sandbox,
+    pauseOnStep: 250,
+    loggingMethod,
+  });
+
+  onTraces = Promise.withResolvers();
+  onResumed = Promise.withResolvers();
+  // This is used when receiving new traces in `loggingMethod()`
+  loggingMethodResolve = onTraces.resolve;
+
+  info(
+    "Run the to-be-traced code in a distinct event loop as it would be paused synchronously and would prevent further test script execution"
+  );
+  const startTimestamp = Cu.now();
+  Services.tm.dispatchToMainThread(() => {
+    sandbox.incrementCounter();
+    onResumed.resolve();
+  });
+
+  info("Wait for tracer to call the listener");
+  await onTraces.promise;
+
+  Assert.equal(logs.length, 2);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ incrementCounter");
+
+  info(
+    "When pauseInStep is used, the tracer lsitener is called, but the traced function is paused and doesn't run synchronously to completion"
+  );
+  Assert.equal(sandbox.counter, 0);
+
+  info("Wait for traced code to be resumed");
+  await onResumed.promise;
+  info(
+    "If we release the event loop, we can see the traced function completion"
+  );
+  Assert.equal(sandbox.counter, 1);
+  info("The thread should have paused at least the pauseOnStep's duration");
+  Assert.greater(Cu.now() - startTimestamp, 250);
+});
