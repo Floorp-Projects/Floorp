@@ -130,8 +130,6 @@ if CONFIG["TARGET_CPU"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     LOCAL_INCLUDES += ["/third_party/xsimd/include"]
     SOURCES += ["AudioNodeEngineNEON.cpp"]
     SOURCES["AudioNodeEngineNEON.cpp"].flags += CONFIG["NEON_FLAGS"]
-    if CONFIG["BUILD_ARM_NEON"]:
-        LOCAL_INCLUDES += ["/media/openmax_dl/dl/api/"]
 
 # Are we targeting x86 or x64?  If so, build SSEX files.
 if CONFIG["INTEL_ARCHITECTURE"]:
