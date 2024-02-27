@@ -1558,8 +1558,8 @@ void MacroAssembler::wasmAtomicEffectOp64(const wasm::MemoryAccessDesc& access,
   AtomicEffectOp64(*this, &access, op, value.reg, mem);
 }
 
-void MacroAssembler::compareExchange64(const Synchronization&,
-                                       const Address& mem, Register64 expected,
+void MacroAssembler::compareExchange64(Synchronization, const Address& mem,
+                                       Register64 expected,
                                        Register64 replacement,
                                        Register64 output) {
   // NOTE: the generated code must match the assembly code in gen_cmpxchg in
@@ -1571,8 +1571,7 @@ void MacroAssembler::compareExchange64(const Synchronization&,
   lock_cmpxchgq(replacement.reg, Operand(mem));
 }
 
-void MacroAssembler::compareExchange64(const Synchronization&,
-                                       const BaseIndex& mem,
+void MacroAssembler::compareExchange64(Synchronization, const BaseIndex& mem,
                                        Register64 expected,
                                        Register64 replacement,
                                        Register64 output) {
@@ -1583,9 +1582,8 @@ void MacroAssembler::compareExchange64(const Synchronization&,
   lock_cmpxchgq(replacement.reg, Operand(mem));
 }
 
-void MacroAssembler::atomicExchange64(const Synchronization&,
-                                      const Address& mem, Register64 value,
-                                      Register64 output) {
+void MacroAssembler::atomicExchange64(Synchronization, const Address& mem,
+                                      Register64 value, Register64 output) {
   // NOTE: the generated code must match the assembly code in gen_exchange in
   // GenerateAtomicOperations.py
   if (value != output) {
@@ -1594,33 +1592,32 @@ void MacroAssembler::atomicExchange64(const Synchronization&,
   xchgq(output.reg, Operand(mem));
 }
 
-void MacroAssembler::atomicExchange64(const Synchronization&,
-                                      const BaseIndex& mem, Register64 value,
-                                      Register64 output) {
+void MacroAssembler::atomicExchange64(Synchronization, const BaseIndex& mem,
+                                      Register64 value, Register64 output) {
   if (value != output) {
     movq(value.reg, output.reg);
   }
   xchgq(output.reg, Operand(mem));
 }
 
-void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicFetchOp64(Synchronization sync, AtomicOp op,
                                      Register64 value, const Address& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, op, value.reg, mem, temp.reg, output.reg);
 }
 
-void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicFetchOp64(Synchronization sync, AtomicOp op,
                                      Register64 value, const BaseIndex& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, op, value.reg, mem, temp.reg, output.reg);
 }
 
-void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicEffectOp64(Synchronization sync, AtomicOp op,
                                       Register64 value, const Address& mem) {
   AtomicEffectOp64(*this, nullptr, op, value.reg, mem);
 }
 
-void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicEffectOp64(Synchronization sync, AtomicOp op,
                                       Register64 value, const BaseIndex& mem) {
   AtomicEffectOp64(*this, nullptr, op, value.reg, mem);
 }

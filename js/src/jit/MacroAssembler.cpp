@@ -7422,11 +7422,11 @@ void MacroAssembler::debugAssertCanonicalInt32(Register r) {
 }
 #endif
 
-void MacroAssembler::memoryBarrierBefore(const Synchronization& sync) {
+void MacroAssembler::memoryBarrierBefore(Synchronization sync) {
   memoryBarrier(sync.barrierBefore);
 }
 
-void MacroAssembler::memoryBarrierAfter(const Synchronization& sync) {
+void MacroAssembler::memoryBarrierAfter(Synchronization sync) {
   memoryBarrier(sync.barrierAfter);
 }
 
