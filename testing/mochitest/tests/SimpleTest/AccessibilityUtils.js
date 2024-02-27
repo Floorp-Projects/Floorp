@@ -586,6 +586,25 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * Determine if a node is a XUL:button on a prompt popup. We know this button
+   * is accessible, but it disappears as soon as it is clicked during tests and
+   * the a11y-checks do not have time to test the label, because the Fluent
+   * localization is not yet completed by then. Thus, we need to special case
+   * the label check for these controls.
+   */
+  function isUnlabeledXulButton(node) {
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const hasLabel = node.querySelector("label, xul\\:label");
+    const isButton =
+      node.getAttribute("role") == "button" ||
+      node.tagName == "button" ||
+      node.tagName == "xul:button";
+    return isButton && hasLabel && node.hasAttribute("data-l10n-id");
+  }
+
+  /**
    * Determine if a node is a XUL element for which tabIndex should be ignored.
    * Some XUL elements report -1 for the .tabIndex property, even though they
    * are in fact keyboard focusable.
@@ -843,7 +862,8 @@ this.AccessibilityUtils = (function () {
               // The Accessible died because the DOM node was removed or hidden.
               if (
                 isUnlabeledUrlBarOption(DOMNode) ||
-                isUnlabeledImageButton(DOMNode)
+                isUnlabeledImageButton(DOMNode) ||
+                isUnlabeledXulButton(DOMNode)
               ) {
                 return;
               }
