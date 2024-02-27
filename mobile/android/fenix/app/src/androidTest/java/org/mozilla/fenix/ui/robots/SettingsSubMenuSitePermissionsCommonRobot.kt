@@ -98,7 +98,7 @@ class SettingsSubMenuSitePermissionsCommonRobot {
         verifyAskToAllowButton()
         verifyBlockedButton()
         // Third option is "Allowed"
-        thirdRadioButton.check(matches(withText("Allowed")))
+        thirdRadioButton().check(matches(withText("Allowed")))
     }
 
     fun clickGoToSettingsButton() {
@@ -158,25 +158,25 @@ class SettingsSubMenuSitePermissionsCommonRobot {
 
     fun selectAutoplayOption(text: String) {
         when (text) {
-            "Allow audio and video" -> askToAllowRadioButton.click()
-            "Block audio and video on cellular data only" -> blockRadioButton.click()
-            "Block audio only" -> thirdRadioButton.click()
-            "Block audio and video" -> fourthRadioButton.click()
+            "Allow audio and video" -> askToAllowRadioButton().click()
+            "Block audio and video on cellular data only" -> blockRadioButton().click()
+            "Block audio only" -> thirdRadioButton().click()
+            "Block audio and video" -> fourthRadioButton().click()
         }
     }
 
     fun selectPermissionSettingOption(text: String) {
         when (text) {
-            "Ask to allow" -> askToAllowRadioButton.click()
-            "Blocked" -> blockRadioButton.click()
+            "Ask to allow" -> askToAllowRadioButton().click()
+            "Blocked" -> blockRadioButton().click()
         }
     }
 
     fun selectDRMControlledContentPermissionSettingOption(text: String) {
         when (text) {
-            "Ask to allow" -> askToAllowRadioButton.click()
-            "Blocked" -> blockRadioButton.click()
-            "Allowed" -> thirdRadioButton.click()
+            "Ask to allow" -> askToAllowRadioButton().click()
+            "Blocked" -> blockRadioButton().click()
+            "Allowed" -> thirdRadioButton().click()
         }
     }
 
@@ -191,43 +191,43 @@ class SettingsSubMenuSitePermissionsCommonRobot {
 }
 
 // common Blocked radio button for all settings
-private val blockRadioButton = onView(withId(R.id.block_radio))
+private fun blockRadioButton() = onView(withId(R.id.block_radio))
 
 // common Ask to Allow radio button for all settings
-private val askToAllowRadioButton = onView(withId(R.id.ask_to_allow_radio))
+private fun askToAllowRadioButton() = onView(withId(R.id.ask_to_allow_radio))
 
 // common extra 3rd radio button for all settings
-private val thirdRadioButton = onView(withId(R.id.third_radio))
+private fun thirdRadioButton() = onView(withId(R.id.third_radio))
 
 // common extra 4th radio button for all settings
-private val fourthRadioButton = onView(withId(R.id.fourth_radio))
+private fun fourthRadioButton() = onView(withId(R.id.fourth_radio))
 
 private fun assertNavigationToolBarHeader(header: String) = onView(allOf(withContentDescription(header)))
 
 private fun assertBlockAudioAndVideoOnMobileDataOnlyAudioAndVideoWillPlayOnWiFi() =
-    blockRadioButton.check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
+    blockRadioButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
 private fun assertBlockAudioOnly() =
-    thirdRadioButton.check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
+    thirdRadioButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
 private fun assertVideoAndAudioBlockedRecommended() = onView(withId(R.id.fourth_radio))
     .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
 private fun assertCheckAutoPayRadioButtonDefault() {
     // Allow audio and video
-    askToAllowRadioButton
+    askToAllowRadioButton()
         .assertIsChecked(isChecked = false)
 
     // Block audio and video on cellular data only
-    blockRadioButton
+    blockRadioButton()
         .assertIsChecked(isChecked = false)
 
     // Block audio only (default)
-    thirdRadioButton
+    thirdRadioButton()
         .assertIsChecked(isChecked = true)
 
     // Block audio and video
-    fourthRadioButton
+    fourthRadioButton()
         .assertIsChecked(isChecked = false)
 }
 
