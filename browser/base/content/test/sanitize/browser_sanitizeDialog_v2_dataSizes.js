@@ -5,6 +5,18 @@
 /**
  * This tests the new clear history dialog's data size display functionality
  */
+
+add_setup(async function () {
+  await blankSlate();
+  registerCleanupFunction(async function () {
+    await blankSlate();
+    await PlacesTestUtils.promiseAsyncUpdates();
+  });
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.sanitize.useOldClearHistoryDialog", false]],
+  });
+});
+
 /**
  * Helper function to validate the data sizes shown for each time selection
  *
