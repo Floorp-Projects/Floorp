@@ -61,8 +61,8 @@ data class Addon(
     val downloadUrl: String = "",
     val version: String = "",
     val permissions: List<String> = emptyList(),
-    val optionalPermissions: List<String> = emptyList(),
-    val optionalOrigins: List<String> = emptyList(),
+    val optionalPermissions: List<Permission> = emptyList(),
+    val optionalOrigins: List<Permission> = emptyList(),
     val translatableName: Map<String, String> = emptyMap(),
     val translatableDescription: Map<String, String> = emptyMap(),
     val translatableSummary: Map<String, String> = emptyMap(),
@@ -110,6 +110,19 @@ data class Addon(
     data class Rating(
         val average: Float,
         val reviews: Int,
+    ) : Parcelable
+
+    /**
+     * Required or optional permission.
+     *
+     * @property name The name of this permission.
+     * @property granted Indicate if this permission is granted or not.
+     */
+    @SuppressLint("ParcelCreator")
+    @Parcelize
+    data class Permission(
+        val name: String,
+        val granted: Boolean,
     ) : Parcelable
 
     /**
@@ -350,13 +363,29 @@ data class Addon(
                 else -> Incognito.SPANNING
             }
 
+            val grantedOptionalPermissions = metadata?.grantedOptionalPermissions ?: emptyList()
+            val grantedOptionalOrigins = metadata?.grantedOptionalOrigins ?: emptyList()
+            val optionalPermissions = metadata?.optionalPermissions?.map { permission ->
+                Permission(
+                    name = permission,
+                    granted = grantedOptionalPermissions.contains(permission),
+                )
+            } ?: emptyList()
+
+            val optionalOrigins = metadata?.optionalOrigins?.map { origin ->
+                Permission(
+                    name = origin,
+                    granted = grantedOptionalOrigins.contains(origin),
+                )
+            } ?: emptyList()
+
             return Addon(
                 id = extension.id,
                 author = author,
                 version = metadata?.version.orEmpty(),
                 permissions = permissions,
-                optionalPermissions = metadata?.optionalPermissions.orEmpty(),
-                optionalOrigins = metadata?.optionalOrigins.orEmpty(),
+                optionalPermissions = optionalPermissions,
+                optionalOrigins = optionalOrigins,
                 downloadUrl = metadata?.downloadUrl.orEmpty(),
                 rating = Rating(averageRating, reviewCount),
                 homepageUrl = homepageUrl,

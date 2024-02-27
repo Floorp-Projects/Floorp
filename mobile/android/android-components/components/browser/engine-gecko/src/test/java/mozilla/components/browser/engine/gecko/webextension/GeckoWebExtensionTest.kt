@@ -416,7 +416,9 @@ class GeckoWebExtensionTest {
                 temporary = true,
                 permissions = arrayOf("p1", "p2"),
                 optionalPermissions = arrayOf("clipboardRead"),
+                grantedOptionalPermissions = arrayOf("clipboardRead"),
                 optionalOrigins = arrayOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"),
+                grantedOptionalOrigins = arrayOf("*://*.example.com/*"),
                 fullDescription = "fullDescription",
                 downloadUrl = "downloadUrl",
                 reviewUrl = "reviewUrl",
@@ -432,7 +434,9 @@ class GeckoWebExtensionTest {
 
         assertEquals("1.0", metadata.version)
         assertEquals(listOf("clipboardRead"), metadata.optionalPermissions)
+        assertEquals(listOf("clipboardRead"), metadata.grantedOptionalPermissions)
         assertEquals(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"), metadata.optionalOrigins)
+        assertEquals(listOf("*://*.example.com/*"), metadata.grantedOptionalOrigins)
         assertEquals(listOf("p1", "p2"), metadata.permissions)
         assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
         assertEquals("desc", metadata.description)

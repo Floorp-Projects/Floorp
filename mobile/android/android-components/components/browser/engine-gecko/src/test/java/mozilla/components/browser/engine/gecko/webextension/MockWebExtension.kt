@@ -33,6 +33,8 @@ fun mockNativeWebExtensionMetaData(
     icon: Image = mock(),
     permissions: Array<String> = emptyArray(),
     optionalPermissions: Array<String> = emptyArray(),
+    grantedOptionalPermissions: Array<String> = emptyArray(),
+    grantedOptionalOrigins: Array<String> = emptyArray(),
     optionalOrigins: Array<String> = emptyArray(),
     origins: Array<String> = emptyArray(),
     name: String? = null,
@@ -63,7 +65,9 @@ fun mockNativeWebExtensionMetaData(
     ReflectionUtils.setField(metadata, "icon", icon)
     ReflectionUtils.setField(metadata, "permissions", permissions)
     ReflectionUtils.setField(metadata, "optionalPermissions", optionalPermissions)
+    ReflectionUtils.setField(metadata, "grantedOptionalPermissions", grantedOptionalPermissions)
     ReflectionUtils.setField(metadata, "optionalOrigins", optionalOrigins)
+    ReflectionUtils.setField(metadata, "grantedOptionalOrigins", grantedOptionalOrigins)
     ReflectionUtils.setField(metadata, "origins", origins)
     ReflectionUtils.setField(metadata, "name", name)
     ReflectionUtils.setField(metadata, "description", description)

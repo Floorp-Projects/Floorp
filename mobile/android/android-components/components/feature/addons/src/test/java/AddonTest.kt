@@ -365,7 +365,9 @@ class AddonTest {
         whenever(metadata.version).thenReturn(version)
         whenever(metadata.permissions).thenReturn(permissions)
         whenever(metadata.optionalPermissions).thenReturn(listOf("clipboardRead"))
+        whenever(metadata.grantedOptionalPermissions).thenReturn(listOf("clipboardRead"))
         whenever(metadata.optionalOrigins).thenReturn(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"))
+        whenever(metadata.grantedOptionalOrigins).thenReturn(listOf("*://*.example.com/*"))
         whenever(metadata.hostPermissions).thenReturn(hostPermissions)
         whenever(metadata.name).thenReturn(name)
         whenever(metadata.description).thenReturn(description)
@@ -388,8 +390,14 @@ class AddonTest {
         assertEquals("some-url", addon.homepageUrl)
         assertEquals("some-download-url", addon.downloadUrl)
         assertEquals(permissions + hostPermissions, addon.permissions)
-        assertEquals(listOf("clipboardRead"), addon.optionalPermissions)
-        assertEquals(listOf("*://*.example.com/*", "*://opt-host-perm.example.com/*"), addon.optionalOrigins)
+        assertEquals(
+            listOf(Addon.Permission(name = "clipboardRead", granted = true)),
+            addon.optionalPermissions,
+        )
+        assertEquals(
+            listOf(Addon.Permission(name = "*://*.example.com/*", granted = true), Addon.Permission(name = "*://opt-host-perm.example.com/*", granted = false)),
+            addon.optionalOrigins,
+        )
         assertEquals("", addon.updatedAt)
         assertEquals("some name", addon.translatableName[Addon.DEFAULT_LOCALE])
         assertEquals("fullDescription", addon.translatableDescription[Addon.DEFAULT_LOCALE])

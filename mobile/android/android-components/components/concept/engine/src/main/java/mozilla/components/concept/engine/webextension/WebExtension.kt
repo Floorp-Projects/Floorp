@@ -365,11 +365,22 @@ data class Metadata(
     val optionalPermissions: List<String>,
 
     /**
+     * Optional permissions granted to this extension:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions
+     */
+    val grantedOptionalPermissions: List<String>,
+
+    /**
      * Optional origin permissions requested or granted to this extension:
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions
      */
     val optionalOrigins: List<String>,
 
+    /**
+     * Optional origin permissions granted to this extension:
+     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions
+     */
+    val grantedOptionalOrigins: List<String>,
     /**
      * Required host permissions:
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#Host_permissions

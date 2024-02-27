@@ -367,6 +367,8 @@ class GeckoWebExtension(
                 version = it.version,
                 permissions = it.permissions.toList(),
                 optionalPermissions = it.optionalPermissions.toList(),
+                grantedOptionalPermissions = it.grantedOptionalPermissions.toList(),
+                grantedOptionalOrigins = it.grantedOptionalOrigins.toList(),
                 optionalOrigins = it.optionalOrigins.toList(),
                 // Origins is marked as @NonNull but may be null: https://bugzilla.mozilla.org/show_bug.cgi?id=1629957
                 hostPermissions = it.origins.orEmpty().toList(),
