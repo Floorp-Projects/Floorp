@@ -1694,36 +1694,6 @@ constexpr static bool IsRefPtrMozPromise = false;
 template <typename T, typename U, bool B>
 constexpr static bool IsRefPtrMozPromise<RefPtr<MozPromise<T, U, B>>> = true;
 
-// Note: The following struct and function are not for public consumption (yet?)
-// as we would prefer all calls to pass on-the-spot lambdas (or at least moved
-// function objects). They could be moved outside of detail if really needed.
-
-// We prefer getting function objects by non-lvalue-ref (to avoid copying them
-// and their captures). This struct is a tag that allows the use of objects
-// through lvalue-refs where necessary.
-struct AllowInvokeAsyncFunctionLVRef {};
-
-// Invoke a function object (e.g., lambda or std/mozilla::function)
-// asynchronously; note that the object will be copied if provided by
-// lvalue-ref. Return a promise that the function should eventually resolve or
-// reject.
-template <typename Function>
-static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
-                        AllowInvokeAsyncFunctionLVRef, Function&& aFunction)
-    -> decltype(aFunction()) {
-  static_assert(IsRefPtrMozPromise<decltype(aFunction())>,
-                "Function object must return RefPtr<MozPromise>");
-  MOZ_ASSERT(aTarget);
-  typedef RemoveSmartPointer<decltype(aFunction())> PromiseType;
-  typedef detail::ProxyFunctionRunnable<Function, PromiseType>
-      ProxyRunnableType;
-
-  auto p = MakeRefPtr<typename PromiseType::Private>(aCallerName);
-  auto r = MakeRefPtr<ProxyRunnableType>(p, std::forward<Function>(aFunction));
-  aTarget->Dispatch(r.forget());
-  return p;
-}
-
 }  // namespace detail
 
 // Invoke a function object (e.g., lambda) asynchronously.
@@ -1734,9 +1704,18 @@ static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
   static_assert(!std::is_lvalue_reference_v<Function>,
                 "Function object must not be passed by lvalue-ref (to avoid "
                 "unplanned copies); Consider move()ing the object.");
-  return detail::InvokeAsync(aTarget, aCallerName,
-                             detail::AllowInvokeAsyncFunctionLVRef(),
-                             std::forward<Function>(aFunction));
+
+  static_assert(detail::IsRefPtrMozPromise<decltype(aFunction())>,
+                "Function object must return RefPtr<MozPromise>");
+  MOZ_ASSERT(aTarget);
+  typedef RemoveSmartPointer<decltype(aFunction())> PromiseType;
+  typedef detail::ProxyFunctionRunnable<Function, PromiseType>
+      ProxyRunnableType;
+
+  auto p = MakeRefPtr<typename PromiseType::Private>(aCallerName);
+  auto r = MakeRefPtr<ProxyRunnableType>(p, std::forward<Function>(aFunction));
+  aTarget->Dispatch(r.forget());
+  return p;
 }
 
 #  undef PROMISE_LOG
