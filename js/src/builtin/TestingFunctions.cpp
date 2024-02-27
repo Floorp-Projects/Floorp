@@ -5269,15 +5269,17 @@ class CustomSerializableObject : public NativeObject {
     static ActivityLog* getThreadLog() {
       if (!self.initialized() || !self.get()) {
         self.infallibleInit();
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         self.set(js_new<ActivityLog>());
-        MOZ_RELEASE_ASSERT(self.get());
+        if (!self.get()) {
+          oomUnsafe.crash("allocating activity log");
+        }
         if (!TlsContext.get()->runtime()->atExit(
                 [](void* vpData) {
                   auto* log = static_cast<ActivityLog*>(vpData);
                   js_delete(log);
                 },
                 self.get())) {
-          AutoEnterOOMUnsafeRegion oomUnsafe;
           oomUnsafe.crash("atExit");
         }
       }
