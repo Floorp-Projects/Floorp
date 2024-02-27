@@ -648,6 +648,10 @@ pref("browser.urlbar.suggest.mdn", true);
 // Feature gate pref for Yelp suggestions in the urlbar.
 pref("browser.urlbar.yelp.featureGate", false);
 
+// The minimum prefix length of yelp query the user must type to trigger
+// the suggestion.
+pref("browser.urlbar.yelp.minKeywordLength", 5);
+
 // If `browser.urlbar.yelp.featureGate` is true, this controls whether
 // Yelp suggestions are turned on.
 pref("browser.urlbar.suggest.yelp", true);

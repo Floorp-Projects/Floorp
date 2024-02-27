@@ -255,7 +255,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
     if (details.result?.providerName == this.name) {
       let feature = this.#getFeatureByResult(details.result);
       if (feature?.handleCommand) {
-        feature.handleCommand(controller.view, details.result, details.selType);
+        feature.handleCommand(
+          controller.view,
+          details.result,
+          details.selType,
+          this._trimmedSearchString
+        );
       } else if (details.selType == "dismiss") {
         // Handle dismissals.
         this.#dismissResult(controller, details.result);

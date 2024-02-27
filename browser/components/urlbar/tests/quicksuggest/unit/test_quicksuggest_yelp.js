@@ -58,17 +58,6 @@ add_task(async function basic() {
       },
     },
     {
-      description: "No specific location",
-      query: "ramen",
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=ramen",
-        displayUrl:
-          "yelp.com/search?find_desc=ramen&find_loc=Yokohama,+Kanagawa",
-        title: "ramen in Yokohama, Kanagawa",
-      },
-    },
-    {
       description: "Query too short, no subject exact match: ra",
       query: "ra",
       expected: null,
@@ -143,7 +132,13 @@ add_task(async function basic() {
         "Subject exact match with length == minKeywordLength, showLessFrequentlyCount non-zero",
       query: "ramen",
       showLessFrequentlyCount: 1,
-      expected: null,
+      expected: {
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=ramen",
+        displayUrl:
+          "yelp.com/search?find_desc=ramen&find_loc=Yokohama,+Kanagawa",
+        title: "ramen in Yokohama, Kanagawa",
+      },
     },
     {
       description: "Query too short: alon",
@@ -166,7 +161,13 @@ add_task(async function basic() {
         "Query length == minKeywordLength, subject not exact match, showLessFrequentlyCount non-zero",
       query: "along",
       showLessFrequentlyCount: 1,
-      expected: null,
+      expected: {
+        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
+        displayUrl:
+          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
+        title: "alongerkeyword in Yokohama, Kanagawa",
+      },
     },
     {
       description:
@@ -186,7 +187,13 @@ add_task(async function basic() {
         "Query length < minKeywordLength + showLessFrequentlyCount, subject not exact match",
       query: "alonge",
       showLessFrequentlyCount: 2,
-      expected: null,
+      expected: {
+        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
+        displayUrl:
+          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
+        title: "alongerkeyword in Yokohama, Kanagawa",
+      },
     },
     {
       description:
@@ -556,27 +563,135 @@ add_task(async function notInterested() {
 
 // Tests the "show less frequently" behavior.
 add_task(async function showLessFrequently() {
+  UrlbarPrefs.set("yelp.showLessFrequentlyCount", 0);
+  UrlbarPrefs.set("yelp.minKeywordLength", 0);
+  let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+    yelpMinKeywordLength: 0,
+    yelpShowLessFrequentlyCap: 3,
+  });
+
   let location = `${GEOLOCATION.city}, ${GEOLOCATION.region}`;
 
   let originalUrl = new URL("https://www.yelp.com/search");
-  originalUrl.searchParams.set("find_desc", "alongerkeyword");
+  originalUrl.searchParams.set("find_desc", "best ramen");
 
   let url = new URL(originalUrl);
   url.searchParams.set("find_loc", location);
 
-  await doShowLessFrequentlyTests({
-    feature: QuickSuggest.getFeature("YelpSuggestions"),
-    showLessFrequentlyCountPref: "yelp.showLessFrequentlyCount",
-    nimbusCapVariable: "yelpShowLessFrequentlyCap",
-    expectedResult: () =>
-      makeExpectedResult({
-        url: url.toString(),
-        originalUrl: originalUrl.toString(),
-        title: `alongerkeyword in ${location}`,
-      }),
-    keyword: "alongerkeyword",
-    keywordBaseIndex: 5,
+  let result = makeExpectedResult({
+    url: url.toString(),
+    originalUrl: originalUrl.toString(),
+    title: `best ramen in ${location}`,
   });
+
+  const testData = [
+    {
+      input: "best ra",
+      before: {
+        canShowLessFrequently: true,
+        showLessFrequentlyCount: 0,
+        minKeywordLength: 0,
+      },
+      after: {
+        canShowLessFrequently: true,
+        showLessFrequentlyCount: 1,
+        minKeywordLength: 8,
+      },
+    },
+    {
+      input: "best ram",
+      before: {
+        canShowLessFrequently: true,
+        showLessFrequentlyCount: 1,
+        minKeywordLength: 8,
+      },
+      after: {
+        canShowLessFrequently: true,
+        showLessFrequentlyCount: 2,
+        minKeywordLength: 9,
+      },
+    },
+    {
+      input: "best rame",
+      before: {
+        canShowLessFrequently: true,
+        showLessFrequentlyCount: 2,
+        minKeywordLength: 9,
+      },
+      after: {
+        canShowLessFrequently: false,
+        showLessFrequentlyCount: 3,
+        minKeywordLength: 10,
+      },
+    },
+    {
+      input: "best ramen",
+      before: {
+        canShowLessFrequently: false,
+        showLessFrequentlyCount: 3,
+        minKeywordLength: 10,
+      },
+      after: {
+        canShowLessFrequently: false,
+        showLessFrequentlyCount: 3,
+        minKeywordLength: 11,
+      },
+    },
+  ];
+
+  for (let { input, before, after } of testData) {
+    let feature = QuickSuggest.getFeature("YelpSuggestions");
+
+    await check_results({
+      context: createContext(input, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [result],
+    });
+
+    Assert.equal(
+      UrlbarPrefs.get("yelp.minKeywordLength"),
+      before.minKeywordLength
+    );
+    Assert.equal(feature.canShowLessFrequently, before.canShowLessFrequently);
+    Assert.equal(
+      feature.showLessFrequentlyCount,
+      before.showLessFrequentlyCount
+    );
+
+    feature.handleCommand(
+      {
+        acknowledgeFeedback: () => {},
+        invalidateResultMenuCommands: () => {},
+      },
+      result,
+      "show_less_frequently",
+      input
+    );
+
+    Assert.equal(
+      UrlbarPrefs.get("yelp.minKeywordLength"),
+      after.minKeywordLength
+    );
+    Assert.equal(feature.canShowLessFrequently, after.canShowLessFrequently);
+    Assert.equal(
+      feature.showLessFrequentlyCount,
+      after.showLessFrequentlyCount
+    );
+
+    await check_results({
+      context: createContext(input, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
+  }
+
+  await cleanUpNimbus();
+  UrlbarPrefs.clear("yelp.showLessFrequentlyCount");
+  UrlbarPrefs.clear("yelp.minKeywordLength");
 });
 
 // The `Yelp` Rust provider should be passed to the Rust component when
