@@ -59,8 +59,12 @@ class UserActivation final : public nsISupports, public nsWrapperCache {
     static constexpr uint8_t Meta = 0x20;
     static constexpr uint8_t Control = 0x40;
     static constexpr uint8_t Alt = 0x80;
+    static constexpr uint8_t MiddleMouse = 0x08;
 
-    static constexpr uint8_t Mask = 0xF0;
+    static constexpr uint8_t Mask = 0xF8;
+
+    static_assert((uint8_t(State::EndGuard_) & ~Mask) ==
+                  uint8_t(State::EndGuard_));
 
     constexpr Modifiers() = default;
     explicit constexpr Modifiers(uint8_t aModifiers) : mModifiers(aModifiers) {}
@@ -71,11 +75,13 @@ class UserActivation final : public nsISupports, public nsWrapperCache {
     void SetMeta() { mModifiers |= Meta; }
     void SetControl() { mModifiers |= Control; }
     void SetAlt() { mModifiers |= Alt; }
+    void SetMiddleMouse() { mModifiers |= MiddleMouse; }
 
     bool IsShift() const { return mModifiers & Shift; }
     bool IsMeta() const { return mModifiers & Meta; }
     bool IsControl() const { return mModifiers & Control; }
     bool IsAlt() const { return mModifiers & Alt; }
+    bool IsMiddleMouse() const { return mModifiers & MiddleMouse; }
 
    private:
     uint8_t mModifiers = 0;
