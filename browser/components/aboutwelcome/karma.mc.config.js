@@ -150,7 +150,7 @@ module.exports = function (config) {
               statements: 78.06,
               lines: 79.89,
               functions: 73.17,
-              branches: 61.9,
+              branches: 61.74,
             },
           },
         },
