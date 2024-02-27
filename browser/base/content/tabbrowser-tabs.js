@@ -187,6 +187,26 @@
       this.updateTabIndicatorAttr(event.target);
     }
 
+    on_TabHoverStart(event) {
+      if (this._showCardPreviews) {
+        const previewContainer = document.getElementById(
+          "tabbrowser-tab-preview"
+        );
+        previewContainer.tab = event.target;
+      }
+    }
+
+    on_TabHoverEnd(event) {
+      if (this._showCardPreviews) {
+        const previewContainer = document.getElementById(
+          "tabbrowser-tab-preview"
+        );
+        if (previewContainer.tab === event.target) {
+          previewContainer.tab = null;
+        }
+      }
+    }
+
     on_transitionend(event) {
       if (event.propertyName != "max-width") {
         return;
@@ -1818,22 +1838,6 @@
 
     handleEvent(aEvent) {
       switch (aEvent.type) {
-        case "TabHoverStart":
-          if (this._showCardPreviews) {
-            const previewContainer = document.getElementById(
-              "tabbrowser-tab-preview"
-            );
-            previewContainer.tab = aEvent.target;
-          }
-          break;
-        case "TabHoverEnd":
-          if (this._showCardPreviews) {
-            const previewContainer = document.getElementById(
-              "tabbrowser-tab-preview"
-            );
-            previewContainer.tab = null;
-          }
-          break;
         case "mouseout":
           // If the "related target" (the node to which the pointer went) is not
           // a child of the current document, the mouse just left the window.
