@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1872863
+-->
+<head>
+<title>Test IME state and focus with multiple contenteditable elements</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="file_ime_state_test_helper.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+
+<style>
+#div0 {
+  width: 200px;
+  height: 50px;
+}
+
+#div3 {
+  background-color: blue;
+  width: 200px;
+  height: 100px;
+}
+
+#div4 {
+  width: 200px;
+  height: 50px;
+}
+</style>
+<script>
+add_task(async function test_modify_contenteditable_on_focused_element() {
+  await SimpleTest.promiseFocus();
+
+  const tipWrapper = new TIPWrapper(window);
+  ok(tipWrapper.isAvailable(), "TextInputProcessor should've been initialized");
+
+  const div1 = document.getElementById("div1");
+  const div2 = document.getElementById("div2");
+  const div3 = document.getElementById("div3");
+
+  div1.addEventListener("mousedown", e => {
+    div2.contentEditable = true;
+  });
+  div3.addEventListener("mousedown", e => {
+    div2.contentEditable = false;
+    e.preventDefault();
+  });
+
+  // Set focus by mouse then contenteditable becomes true by script.
+
+  const promiseFocus = new Promise(resolve => {
+    div2.addEventListener("focus", resolve, { once: true });
+  });
+  synthesizeMouseAtCenter(div1, {});
+  await promiseFocus;
+
+  is(
+    SpecialPowers.DOMWindowUtils.IMEStatus,
+    SpecialPowers.DOMWindowUtils.IME_STATUS_ENABLED,
+    "IMEStatus is enabled on contenteditable=true"
+  );
+  ok(tipWrapper.IMEHasFocus, "IME has focus");
+
+  // Move focus by mouse then contenteditable becomes false by script.
+
+  const promiseMouseUp = new Promise(resolve => {
+    div3.addEventListener("mouseup", resolve, { once: true });
+  });
+  synthesizeMouseAtCenter(div3, {});
+  await promiseMouseUp;
+
+  is(
+    SpecialPowers.DOMWindowUtils.IMEStatus,
+    SpecialPowers.DOMWindowUtils.IME_STATUS_DISABLED,
+    "IMEStatus is disabled on contenteditable=false"
+  );
+  ok(!tipWrapper.IMEHasFocus, "IME losts focus after contenteditable=false");
+
+  // contenteditable changes to true on focused element.
+
+  const promiseMouseUp2 = new Promise(resolve => {
+    div1.addEventListener("mouseup", resolve, { once: true });
+  });
+  synthesizeMouseAtCenter(div1, {});
+  await promiseMouseUp2;
+
+  is(
+    SpecialPowers.DOMWindowUtils.IMEStatus,
+    SpecialPowers.DOMWindowUtils.IME_STATUS_ENABLED,
+    "IMEStatus is enabled on contenteditable=true"
+  );
+
+  ok(tipWrapper.IMEHasFocus, "IME has focus after contenteditable=true again");
+});
+</script>
+</head>
+<body>
+<div id="div0"><div id="div1">
+<div id="div2" contenteditable="false"><div>foo</div></div>
+</div></div>
+<div id="div3"></div>
+<div id="div4" contenteditable></div>
+</body>
+</html>
