@@ -473,9 +473,6 @@ const SHOPPING_MICROSURVEY = {
         title: {
           string_id: "shopping-survey-headline",
         },
-        subtitle: {
-          string_id: "shopping-survey-question-one",
-        },
         primary_button: {
           label: {
             string_id: "shopping-survey-next-button-label",
@@ -519,6 +516,9 @@ const SHOPPING_MICROSURVEY = {
           style: {
             flexDirection: "column",
             alignItems: "flex-start",
+          },
+          label: {
+            string_id: "shopping-survey-question-one",
           },
           data: [
             {
@@ -572,9 +572,6 @@ const SHOPPING_MICROSURVEY = {
         title: {
           string_id: "shopping-survey-headline",
         },
-        subtitle: {
-          string_id: "shopping-survey-question-two",
-        },
         primary_button: {
           label: {
             string_id: "shopping-survey-submit-button-label",
@@ -618,6 +615,9 @@ const SHOPPING_MICROSURVEY = {
           style: {
             flexDirection: "column",
             alignItems: "flex-start",
+          },
+          label: {
+            string_id: "shopping-survey-question-two",
           },
           data: [
             {

@@ -328,11 +328,16 @@ div#feature-callout.hidden {
   align-items: end;
 }
 #feature-callout .screen[pos=callout] .multi-select-container {
-  margin-block: 0;
+  margin: 0;
   font-size: 0.813em;
   row-gap: 12px;
   color: inherit;
   overflow: visible;
+}
+#feature-callout .screen[pos=callout] .multi-select-container #multi-stage-multi-select-label {
+  font-size: inherit;
+  margin: -4px 0 0;
+  color: inherit;
 }
 #feature-callout .screen[pos=callout] .cta-link {
   background: none;
@@ -844,6 +849,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
 }
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner {
   min-height: auto;
+  align-items: initial;
 }
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner .welcome-text {
   align-items: initial;
@@ -879,6 +885,12 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   font-size: 1em;
   gap: 12px;
   width: 100%;
+}
+.onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner .multi-select-container #multi-stage-multi-select-label {
+  color: inherit;
+  line-height: 20px;
+  margin-block: -2px 0;
+  font-size: 1em;
 }
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner .multi-select-container .multi-select-item input {
   margin-block: 0;
@@ -2018,6 +2030,7 @@ html {
   align-items: flex-start;
   gap: 16px;
   margin-block: -1em 2em;
+  margin-inline: 1em;
   color: #5B5B66;
   font-weight: 400;
   font-size: 14px;
@@ -2025,6 +2038,32 @@ html {
   transition: var(--transition);
   z-index: 1;
 }
+.onboardingContainer .multi-select-container #multi-stage-multi-select-label {
+  color: var(--in-content-page-color);
+  line-height: 1.5;
+  font-size: 16px;
+  font-weight: normal;
+  letter-spacing: -0.01em;
+  margin: calc(0.5em + 10px) 6px 0;
+  max-width: 750px;
+}
+.onboardingContainer .screen[pos=split] .multi-select-container #multi-stage-multi-select-label {
+  margin: calc(-35px + 1em + 10px) 0 0;
+  min-height: 1em;
+  font-size: 15px;
+  line-height: 1.5;
+}
+@media (prefers-contrast: no-preference) {
+  .onboardingContainer .screen[pos=split] .multi-select-container #multi-stage-multi-select-label {
+    color: #5B5B66;
+  }
+}
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  .onboardingContainer .screen[pos=split] .multi-select-container #multi-stage-multi-select-label {
+    color: #CFCFD8;
+  }
+}
+
 .onboardingContainer .multi-select-container .checkbox-container {
   display: flex;
 }
