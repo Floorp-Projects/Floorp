@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled(); --wasm-test-serialization
+// |jit-test| skip-if: !wasmGcEnabled(); --setpref=wasm_test_serialization=true
 
 // Test that serialization doesn't create a forward reference to the third
 // struct when serializing the reference to the first struct, which is

@@ -1,4 +1,4 @@
-// |jit-test| --more-compartments; skip-variant-if: --wasm-test-serialization, true; skip-variant-if: --wasm-compiler=ion, true; skip-if: !wasmGcEnabled()
+// |jit-test| --more-compartments; skip-variant-if: --setpref=wasm_test_serialization=true, true; skip-variant-if: --wasm-compiler=ion, true; skip-if: !wasmGcEnabled()
 
 var dbg = newGlobal()
 dbg.parent = this

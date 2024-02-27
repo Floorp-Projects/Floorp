@@ -2076,16 +2076,11 @@ static bool WasmReturnFlag(JSContext* cx, unsigned argc, Value* vp, Flag flag) {
   return true;
 }
 
-#if defined(DEBUG)
 static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (!args.get(0).isObject()) {
     JS_ReportErrorASCII(cx, "argument is not an object");
-    return false;
-  }
-
-  if (!cx->options().wasmTestMetadata()) {
     return false;
   }
 
@@ -2130,7 +2125,6 @@ static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
 
   return false;
 }
-#endif
 
 static bool WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc,
                                              Value* vp) {
@@ -9959,11 +9953,9 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "  element's edge is the node of the i+1'th array element; the destination of\n"
 "  the last array element is implicitly |target|.\n"),
 
-#if defined(DEBUG)
     JS_FN_HELP("wasmMetadataAnalysis", wasmMetadataAnalysis, 1, 0,
 "wasmMetadataAnalysis(wasmObject)",
 "  Prints an analysis of the size of metadata on this wasm object.\n"),
-#endif
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,

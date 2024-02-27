@@ -1,4 +1,4 @@
-// |jit-test| --wasm-gc; skip-if: !wasmCachingEnabled() || !wasmGcEnabled()
+// |jit-test| --setpref=wasm_gc=true; skip-if: !wasmCachingEnabled() || !wasmGcEnabled()
 
 const code = wasmTextToBinary(`(module
   (type $t (struct (field i32) (field anyref)))

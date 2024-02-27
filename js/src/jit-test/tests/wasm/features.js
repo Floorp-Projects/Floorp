@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-extended-const; test-also=--wasm-exceptions;
+// |jit-test| test-also=--setpref=wasm_extended_const=true; test-also=--setpref=wasm_exceptions=true;
 
 // Test that if a feature is 'experimental' then we must be in a nightly build,
 // and if a feature is 'released' then it must be enabled on release and beta.

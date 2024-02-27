@@ -1,4 +1,4 @@
-// |jit-test| --more-compartments; skip-variant-if: --wasm-test-serialization, true; skip-variant-if: --wasm-compiler=ion, true
+// |jit-test| --more-compartments; skip-variant-if: --setpref=wasm_test_serialization=true, true; skip-variant-if: --wasm-compiler=ion, true
 dbg = newGlobal();
 dbg.b = this;
 dbg.eval("(" + function() {

@@ -7681,57 +7681,73 @@
   value: true
   mirror: always
 
-#if defined(ENABLE_WASM_RELAXED_SIMD)
 -   name: javascript.options.wasm_relaxed_simd
     type: bool
+#if defined(ENABLE_WASM_RELAXED_SIMD)
     value: @IS_NIGHTLY_BUILD@
+#else
+    value: false
+#endif
     mirror: always
-#endif  // defined(ENABLE_WASM_RELAXED_SIMD)
+    set_spidermonkey_pref: startup
 
-#if defined(ENABLE_WASM_MOZ_INTGEMM)
 -   name: javascript.options.wasm_moz_intgemm
     type: bool
+#if defined(ENABLE_WASM_MOZ_INTGEMM)
     value: @IS_NIGHTLY_BUILD@
+#else
+    value: false
+#endif
     mirror: always
-#endif  // defined(ENABLE_WASM_MOZ_INTGEMM)
+    set_spidermonkey_pref: startup
 
-#if defined(ENABLE_WASM_EXTENDED_CONST)
 -   name: javascript.options.wasm_extended_const
     type: bool
+#if defined(ENABLE_WASM_EXTENDED_CONST)
     value: true
+#else
+    value: false
+#endif
     mirror: always
-#endif  // defined(ENABLE_WASM_EXTENDED_CONST)
+    set_spidermonkey_pref: startup
 
 -   name: javascript.options.wasm_exceptions
     type: bool
     value: true
     mirror: always
+    set_spidermonkey_pref: startup
 
 -   name: javascript.options.wasm_exnref
     type: bool
     value: @IS_EARLY_BETA_OR_EARLIER@
     mirror: always
+    set_spidermonkey_pref: startup
 
-#if defined(ENABLE_WASM_FUNCTION_REFERENCES)
 -   name: javascript.options.wasm_function_references
     type: bool
+#if defined(ENABLE_WASM_FUNCTION_REFERENCES)
     value: true
+#else
+    value: false
+#endif
     mirror: always
-#endif // defined(ENABLE_WASM_FUNCTION_REFERENCES)
+    set_spidermonkey_pref: startup
 
-#if defined(ENABLE_WASM_GC)
 -   name: javascript.options.wasm_gc
     type: bool
+#if defined(ENABLE_WASM_GC)
     value: true
+#else
+    value: false
+#endif
     mirror: always
-#endif // defined(ENABLE_WASM_GC)
+    set_spidermonkey_pref: startup
 
-#if defined(ENABLE_WASM_MEMORY_CONTROL)
 -   name: javascript.options.wasm_memory_control
     type: bool
     value: false
     mirror: always
-#endif // defined(ENABLE_WASM_MEMORY_CONTROL)
+    set_spidermonkey_pref: startup
 
 #if defined(ENABLE_WASM_SIMD)
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
@@ -7744,19 +7760,43 @@
 #endif
 #endif
 
-#if defined(ENABLE_WASM_MEMORY64)
 -   name: javascript.options.wasm_memory64
     type: bool
+#if defined(ENABLE_WASM_MEMORY64)
     value: @IS_NIGHTLY_BUILD@
+#else
+    value: false
+#endif
     mirror: always
-#endif  // defined(ENABLE_WASM_MEMORY64)
+    set_spidermonkey_pref: startup
 
-#if defined(ENABLE_WASM_TAIL_CALLS)
+-   name: javascript.options.wasm_multi_memory
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+
+-   name: javascript.options.wasm_js_string_builtins
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+
 -   name: javascript.options.wasm_tail_calls
     type: bool
+#if defined(ENABLE_WASM_TAIL_CALLS)
     value: true
+#else
+    value: false
+#endif
     mirror: always
-#endif  // defined(ENABLE_WASM_TAIL_CALLS)
+    set_spidermonkey_pref: startup
+
+-   name: javascript.options.wasm_test_serialization
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
 
 # Support for pretenuring allocations based on their allocation site.
 - name: javascript.options.site_based_pretenuring

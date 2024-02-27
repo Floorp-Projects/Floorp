@@ -1,4 +1,4 @@
-// |jit-test| --wasm-tail-calls; skip-if: !wasmTailCallsEnabled()
+// |jit-test| --setpref=wasm_tail_calls=true; skip-if: !wasmTailCallsEnabled()
 /* Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

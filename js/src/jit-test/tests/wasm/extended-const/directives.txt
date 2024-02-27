@@ -1,1 +1,1 @@
-|jit-test| --wasm-extended-const; test-also=--wasm-compiler=optimizing; test-also=--wasm-test-serialization; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; include:wasm.js
+|jit-test| --setpref=wasm_extended_const=true; test-also=--wasm-compiler=optimizing; test-also=--setpref=wasm_test_serialization=true; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; include:wasm.js

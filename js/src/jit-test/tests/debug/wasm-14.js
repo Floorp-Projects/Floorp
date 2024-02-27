@@ -1,4 +1,4 @@
-// |jit-test| test-also=--wasm-compiler=optimizing; test-also=--wasm-function-references --wasm-gc; skip-if: !wasmDebuggingEnabled() || !wasmGcEnabled(); skip-if: true
+// |jit-test| test-also=--wasm-compiler=optimizing; test-also=--setpref=wasm_gc=true; skip-if: !wasmDebuggingEnabled() || !wasmGcEnabled(); skip-if: true
 // An extension of wasm-10.js, testing that wasm GC objects are inspectable in locals.
 
 // As of bug 1825098, this test is disabled. (skip-if: true)

@@ -21,6 +21,7 @@
 #include "jit/AtomicOperations.h"
 #include "jit/JitContext.h"
 #include "jit/JitOptions.h"
+#include "js/Prefs.h"
 #include "util/StringBuffer.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -56,13 +57,13 @@ static inline bool WasmThreadsFlag(JSContext* cx) {
 JS_FOR_WASM_FEATURES(WASM_FEATURE);
 #undef WASM_FEATURE
 
-#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
-                     FLAG_PRED, FLAG_FORCE_ON, ...)                        \
-  static inline bool Wasm##NAME##Flag(JSContext* cx) {                     \
-    if (!(COMPILE_PRED)) {                                                 \
-      return false;                                                        \
-    }                                                                      \
-    return ((FLAG_PRED) && cx->options().wasm##NAME()) || (FLAG_FORCE_ON); \
+#define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
+                     FLAG_FORCE_ON, FLAG_FUZZ_ON, PREF)                        \
+  static inline bool Wasm##NAME##Flag(JSContext* cx) {                         \
+    if (!(COMPILE_PRED)) {                                                     \
+      return false;                                                            \
+    }                                                                          \
+    return ((FLAG_PRED) && JS::Prefs::wasm_##PREF()) || (FLAG_FORCE_ON);       \
   }
 JS_FOR_WASM_FEATURES(WASM_FEATURE);
 #undef WASM_FEATURE
@@ -219,10 +220,9 @@ bool wasm::AnyCompilerAvailable(JSContext* cx) {
 // compiler that can support the feature.  Subsequent compiler selection must
 // ensure that only compilers that actually support the feature are used.
 
-#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
-                     ...)                                                  \
-  bool wasm::NAME##Available(JSContext* cx) {                              \
-    return Wasm##NAME##Flag(cx) && (COMPILER_PRED);                        \
+#define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, ...) \
+  bool wasm::NAME##Available(JSContext* cx) {                            \
+    return Wasm##NAME##Flag(cx) && (COMPILER_PRED);                      \
   }
 JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
