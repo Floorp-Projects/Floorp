@@ -3464,12 +3464,6 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
   }
 }
 
-nscoord StyleCalcLengthPercentage::Resolve(nscoord aBasis,
-                                           CoordRounder aRounder) const {
-  CSSCoord result = ResolveToCSSPixels(CSSPixel::FromAppUnits(aBasis));
-  return aRounder(result * AppUnitsPerCSSPixel());
-}
-
 bool nsStyleDisplay::PrecludesSizeContainmentOrContentVisibilityWithFrame(
     const nsIFrame& aFrame) const {
   // The spec says that in the case of SVG, the contain property only applies
