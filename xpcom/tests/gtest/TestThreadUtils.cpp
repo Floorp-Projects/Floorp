@@ -885,29 +885,6 @@ TEST(ThreadUtils, IdleTaskRunner)
 
 TEST(ThreadUtils, TypeTraits)
 {
-  static_assert(!mozilla::IsRefcountedSmartPointer<int>,
-                "IsRefcountedSmartPointer<int> should be false");
-  static_assert(mozilla::IsRefcountedSmartPointer<RefPtr<int>>,
-                "IsRefcountedSmartPointer<RefPtr<...>> should be true");
-  static_assert(mozilla::IsRefcountedSmartPointer<const RefPtr<int>>,
-                "IsRefcountedSmartPointer<const RefPtr<...>> should be true");
-  static_assert(
-      mozilla::IsRefcountedSmartPointer<volatile RefPtr<int>>,
-      "IsRefcountedSmartPointer<volatile RefPtr<...>> should be true");
-  static_assert(
-      mozilla::IsRefcountedSmartPointer<const volatile RefPtr<int>>,
-      "IsRefcountedSmartPointer<const volatile RefPtr<...>> should be true");
-  static_assert(mozilla::IsRefcountedSmartPointer<nsCOMPtr<int>>,
-                "IsRefcountedSmartPointer<nsCOMPtr<...>> should be true");
-  static_assert(mozilla::IsRefcountedSmartPointer<const nsCOMPtr<int>>,
-                "IsRefcountedSmartPointer<const nsCOMPtr<...>> should be true");
-  static_assert(
-      mozilla::IsRefcountedSmartPointer<volatile nsCOMPtr<int>>,
-      "IsRefcountedSmartPointer<volatile nsCOMPtr<...>> should be true");
-  static_assert(
-      mozilla::IsRefcountedSmartPointer<const volatile nsCOMPtr<int>>,
-      "IsRefcountedSmartPointer<const volatile nsCOMPtr<...>> should be true");
-
   static_assert(std::is_same_v<int, mozilla::RemoveSmartPointer<int>>,
                 "RemoveSmartPointer<int> should be int");
   static_assert(std::is_same_v<int*, mozilla::RemoveSmartPointer<int*>>,
