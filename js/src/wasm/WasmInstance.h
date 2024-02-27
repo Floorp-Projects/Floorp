@@ -571,6 +571,8 @@ class alignas(16) Instance {
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,
                               uint32_t src2, uint32_t len, uint8_t* memBase);
 
+  static int32_t stringTest(Instance* instance, void* stringArg);
+  static void* stringCast(Instance* instance, void* stringArg);
   static void* stringFromWTF16Array(Instance* instance, void* arrayArg,
                                     uint32_t arrayStart, uint32_t arrayCount);
   static int32_t stringToWTF16Array(Instance* instance, void* stringArg,

@@ -219,6 +219,32 @@
 
 #if defined(ENABLE_WASM_JS_STRING_BUILTINS)
 
+- op: StringTest
+  symbolic_address:
+    name: StringTest
+    type: Args_Int32_GeneralGeneral
+  entry: Instance::stringTest
+  export: test
+  params:
+    - 'externref'
+  result: 'i32'
+  fail_mode: Infallible
+  uses_memory: false
+
+- op: StringCast
+  symbolic_address:
+    name: StringCast
+    type: Args_General2
+  entry: Instance::stringCast
+  export: cast
+  params:
+    - 'externref'
+  result:
+    code: 'extern'
+    nullable: false
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
 - op: StringFromWTF16Array
   symbolic_address:
     name: StringFromWTF16Array
