@@ -437,7 +437,9 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const ResourceTimingStructArgs& timing);
   void Redirect3Complete();
   void DeleteSelf();
-  void DoNotifyListener();
+  // aUseEventQueue should only be false when called from
+  // HttpChannelChild::Release to make sure OnStopRequest is called syncly.
+  void DoNotifyListener(bool aUseEventQueue = true);
   void ContinueDoNotifyListener();
   void OnAfterLastPart(const nsresult& aStatus);
   void MaybeConnectToSocketProcess();
