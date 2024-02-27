@@ -3907,11 +3907,14 @@ class BCMapCellIterator {
 
   void Next(BCMapCellInfo& aMapCellInfo);
 
-  void PeekIEnd(BCMapCellInfo& aRefInfo, uint32_t aRowIndex,
+  void PeekIEnd(const BCMapCellInfo& aRefInfo, uint32_t aRowIndex,
                 BCMapCellInfo& aAjaInfo);
 
-  void PeekBEnd(BCMapCellInfo& aRefInfo, uint32_t aColIndex,
+  void PeekBEnd(const BCMapCellInfo& aRefInfo, uint32_t aColIndex,
                 BCMapCellInfo& aAjaInfo);
+
+  void PeekIStart(const BCMapCellInfo& aRefInfo, int32_t aRowIndex,
+                  BCMapCellInfo& aAjaInfo);
 
   bool IsNewRow() { return mIsNewRow; }
 
@@ -3927,6 +3930,8 @@ class BCMapCellIterator {
  private:
   bool SetNewRow(nsTableRowFrame* row = nullptr);
   bool SetNewRowGroup(bool aFindFirstDamagedRow);
+  void PeekIAt(const BCMapCellInfo& aRefInfo, int32_t aRowIndex,
+               int32_t aColIndex, BCMapCellInfo& aAjaInfo);
 
   nsTableFrame* mTableFrame;
   nsTableCellMap* mTableCellMap;
@@ -4184,35 +4189,14 @@ void BCMapCellIterator::Next(BCMapCellInfo& aMapInfo) {
   mAtEnd = true;
 }
 
-void BCMapCellIterator::PeekIEnd(BCMapCellInfo& aRefInfo, uint32_t aRowIndex,
-                                 BCMapCellInfo& aAjaInfo) {
-  aAjaInfo.ResetCellInfo();
-  int32_t colIndex = aRefInfo.mColIndex + aRefInfo.mColSpan;
-  uint32_t rgRowIndex = aRowIndex - mRowGroupStart;
-
-  BCCellData* cellData =
-      static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, colIndex));
-  if (!cellData) {  // add a dead cell data
-    NS_ASSERTION(colIndex < mTableCellMap->GetColCount(), "program error");
-    TableArea damageArea;
-    cellData = static_cast<BCCellData*>(mCellMap->AppendCell(
-        *mTableCellMap, nullptr, rgRowIndex, false, 0, damageArea));
-    if (!cellData) ABORT0();
-  }
-  nsTableRowFrame* row = nullptr;
-  if (cellData->IsRowSpan()) {
-    rgRowIndex -= cellData->GetRowSpanOffset();
-    cellData =
-        static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, colIndex));
-    if (!cellData) ABORT0();
-  } else {
-    row = mRow;
-  }
-  aAjaInfo.SetInfo(row, colIndex, cellData, this);
+void BCMapCellIterator::PeekIEnd(const BCMapCellInfo& aRefInfo,
+                                 uint32_t aRowIndex, BCMapCellInfo& aAjaInfo) {
+  PeekIAt(aRefInfo, static_cast<int32_t>(aRowIndex),
+          aRefInfo.mColIndex + aRefInfo.mColSpan, aAjaInfo);
 }
 
-void BCMapCellIterator::PeekBEnd(BCMapCellInfo& aRefInfo, uint32_t aColIndex,
-                                 BCMapCellInfo& aAjaInfo) {
+void BCMapCellIterator::PeekBEnd(const BCMapCellInfo& aRefInfo,
+                                 uint32_t aColIndex, BCMapCellInfo& aAjaInfo) {
   aAjaInfo.ResetCellInfo();
   int32_t rowIndex = aRefInfo.mRowIndex + aRefInfo.mRowSpan;
   int32_t rgRowIndex = rowIndex - mRowGroupStart;
@@ -4227,6 +4211,7 @@ void BCMapCellIterator::PeekBEnd(BCMapCellInfo& aRefInfo, uint32_t aColIndex,
       if (rg) {
         cellMap = mTableCellMap->GetMapFor(rg, cellMap);
         if (!cellMap) ABORT0();
+        // First row of the next row group
         rgRowIndex = 0;
         nextRow = rg->GetFirstRow();
       }
@@ -4256,6 +4241,39 @@ void BCMapCellIterator::PeekBEnd(BCMapCellInfo& aRefInfo, uint32_t aColIndex,
         static_cast<BCCellData*>(cellMap->GetDataAt(rgRowIndex, aColIndex));
   }
   aAjaInfo.SetInfo(nextRow, aColIndex, cellData, this, cellMap);
+}
+
+void BCMapCellIterator::PeekIStart(const BCMapCellInfo& aRefInfo,
+                                   int32_t aRowIndex, BCMapCellInfo& aAjaInfo) {
+  NS_ASSERTION(aRefInfo.mColIndex != 0, "program error");
+  PeekIAt(aRefInfo, aRowIndex, aRefInfo.mColIndex - 1, aAjaInfo);
+}
+
+void BCMapCellIterator::PeekIAt(const BCMapCellInfo& aRefInfo,
+                                int32_t aRowIndex, int32_t aColIndex,
+                                BCMapCellInfo& aAjaInfo) {
+  aAjaInfo.ResetCellInfo();
+  int32_t rgRowIndex = aRowIndex - mRowGroupStart;
+
+  auto* cellData =
+      static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, aColIndex));
+  if (!cellData) {  // add a dead cell data
+    NS_ASSERTION(aColIndex < mTableCellMap->GetColCount(), "program error");
+    TableArea damageArea;
+    cellData = static_cast<BCCellData*>(mCellMap->AppendCell(
+        *mTableCellMap, nullptr, rgRowIndex, false, 0, damageArea));
+    if (!cellData) ABORT0();
+  }
+  nsTableRowFrame* row = nullptr;
+  if (cellData->IsRowSpan()) {
+    rgRowIndex -= static_cast<int32_t>(cellData->GetRowSpanOffset());
+    cellData =
+        static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, aColIndex));
+    if (!cellData) ABORT0();
+  } else {
+    row = mRow;
+  }
+  aAjaInfo.SetInfo(row, aColIndex, cellData, this);
 }
 
 #define CELL_CORNER true
@@ -5043,6 +5061,24 @@ void nsTableFrame::CalcBCBorders() {
   BCCellBorders lastBlockDirBorders(damageArea.ColCount() + 1,
                                     damageArea.StartCol());
   if (!lastBlockDirBorders.borders) ABORT0();
+  if (damageArea.StartRow() != 0) {
+    // Ok, we've filled with information about the previous row's borders with
+    // the default state, which is "no borders." This is incorrect, and leaving
+    // it will result in an erroneous behaviour if the previous row did have
+    // borders, and the dirty rows don't, as we will not mark the beginning of
+    // the no border segment.
+    TableArea prevRowArea(damageArea.StartCol(), damageArea.StartRow() - 1,
+                          damageArea.ColCount(), 1);
+    BCMapCellIterator iter(this, prevRowArea);
+    BCMapCellInfo info(this);
+    for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
+      if (info.mColIndex == prevRowArea.StartCol()) {
+        lastBlockDirBorders.borders[0] = info.GetIStartEdgeBorder();
+      }
+      lastBlockDirBorders.borders[info.mColIndex - prevRowArea.StartCol() + 1] =
+          info.GetIEndEdgeBorder();
+    }
+  }
   // Inline direction border at block start of the table, computed by the
   // previous cell. Unused afterwards.
   Maybe<BCCellBorder> firstRowBStartEdgeBorder;
@@ -5072,12 +5108,27 @@ void nsTableFrame::CalcBCBorders() {
     if (iter.IsNewRow()) {
       if (info.mRowIndex == 0) {
         BCCellBorder border;
-        border.Reset(info.mRowIndex, info.mRowSpan);
+        if (info.mColIndex == 0) {
+          border.Reset(info.mRowIndex, info.mRowSpan);
+        } else {
+          // Similar to lastBlockDirBorders, the previous block-start border
+          // is filled by actually quering the adjacent cell.
+          BCMapCellInfo ajaInfo(this);
+          iter.PeekIStart(info, info.mRowIndex, ajaInfo);
+          border = ajaInfo.GetBStartEdgeBorder();
+        }
         firstRowBStartEdgeBorder = Some(border);
       } else {
         firstRowBStartEdgeBorder = Nothing{};
       }
-      lastBEndBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
+      if (info.mColIndex == 0) {
+        lastBEndBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
+      } else {
+        // Same as above, but for block-end border.
+        BCMapCellInfo ajaInfo(this);
+        iter.PeekIStart(info, info.mRowIndex, ajaInfo);
+        lastBEndBorder = ajaInfo.GetBEndEdgeBorder();
+      }
     } else if (info.mColIndex > damageArea.StartCol()) {
       lastBEndBorder = lastBEndBorders[info.mColIndex - 1];
       if (lastBEndBorder.rowIndex > (info.GetCellEndRowIndex() + 1)) {
