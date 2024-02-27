@@ -559,6 +559,33 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * Determine if the node is a "Show All" or one of image buttons on the
+   * about:config page, or a "X" close button on moz-message-bar. We know these
+   * buttons are accessible, but they disappear/are replaced as soon as they
+   * are clicked during tests and the a11y-checks do not have time to test the
+   * label, because the Fluent localization is not yet completed by then.
+   * Thus, we need to special case the label check for these controls.
+   */
+  function isUnlabeledImageButton(node) {
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const isShowAllButton = node.id == "show-all";
+    const isReplacedImageButton =
+      node.classList.contains("button-add") ||
+      node.classList.contains("button-delete") ||
+      node.classList.contains("button-reset");
+    const isCloseMozMessageBarButton =
+      node.classList.contains("close") &&
+      node.getAttribute("data-l10n-id") == "moz-message-bar-close-button";
+    return (
+      node.tagName.toLowerCase() == "button" &&
+      node.hasAttribute("data-l10n-id") &&
+      (isShowAllButton || isReplacedImageButton || isCloseMozMessageBarButton)
+    );
+  }
+
+  /**
    * Determine if a node is a XUL element for which tabIndex should be ignored.
    * Some XUL elements report -1 for the .tabIndex property, even though they
    * are in fact keyboard focusable.
@@ -787,7 +814,8 @@ this.AccessibilityUtils = (function () {
           // can pick it up.
           if (
             isUnlabeledUrlBarOption(DOMNode) ||
-            isUnlabeledMenuitem(DOMNode)
+            isUnlabeledMenuitem(DOMNode) ||
+            isUnlabeledImageButton(DOMNode)
           ) {
             return;
           }
@@ -813,7 +841,10 @@ this.AccessibilityUtils = (function () {
               accessible.name;
             } catch (e) {
               // The Accessible died because the DOM node was removed or hidden.
-              if (isUnlabeledUrlBarOption(DOMNode)) {
+              if (
+                isUnlabeledUrlBarOption(DOMNode) ||
+                isUnlabeledImageButton(DOMNode)
+              ) {
                 return;
               }
               a11yWarn("Unlabeled element removed before l10n finished", {
