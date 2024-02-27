@@ -1801,9 +1801,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     ////////////////////////////////////
     // FEATURE_HW_DECODED_VIDEO_ZERO_COPY - ALLOWLIST
-
-    // XXX ZeroCopyNV12Texture is disabled with non-intel GPUs for now.
-    // See Bug 1798242
+#ifdef EARLY_BETA_OR_EARLIER
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows, DeviceFamily::NvidiaAll,
+        nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_COMPARISON_IGNORED,
+        V(0, 0, 0, 0), "FEATURE_ROLLOUT_ALL");
+#endif
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_HW_DECODED_VIDEO_ZERO_COPY,
