@@ -1380,8 +1380,6 @@ class nsIFrame : public nsQueryFrame {
     return nullptr;
   }
 
-  bool HasUnreflowedContainerQueryAncestor() const;
-
  private:
   // The value that the CSS page-name "auto" keyword resolves to for children
   // of this frame.
