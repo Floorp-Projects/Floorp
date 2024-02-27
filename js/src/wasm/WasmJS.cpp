@@ -5351,15 +5351,13 @@ static bool WebAssemblyClassFinish(JSContext* cx, HandleObject object,
     }
   }
 
-  if (ExceptionsAvailable(cx)) {
-    constexpr NameAndProtoKey exceptionEntries[] = {
-        {"Tag", JSProto_WasmTag},
-        {"Exception", JSProto_WasmException},
-    };
-    for (const auto& entry : exceptionEntries) {
-      if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
-        return false;
-      }
+  constexpr NameAndProtoKey exceptionEntries[] = {
+      {"Tag", JSProto_WasmTag},
+      {"Exception", JSProto_WasmException},
+  };
+  for (const auto& entry : exceptionEntries) {
+    if (!WebAssemblyDefineConstructor(cx, wasm, entry, &ctorValue, &id)) {
+      return false;
     }
   }
 

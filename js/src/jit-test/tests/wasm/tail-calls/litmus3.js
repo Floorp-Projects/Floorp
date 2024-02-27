@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmTailCallsEnabled() || !wasmExceptionsEnabled()
+// |jit-test| skip-if: !wasmTailCallsEnabled()
 
 // Mutually recursive functions implement a multi-entry loop using tail calls,
 // with exception handling.

@@ -100,15 +100,6 @@
     /* flag fuzz enable   */ true,                                      \
     /* preference name    */ extended_const)                            \
   FEATURE(                                                              \
-    /* capitalized name   */ Exceptions,                                \
-    /* lower case name    */ exceptions,                                \
-    /* compile predicate  */ true,                                      \
-    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
-    /* flag predicate     */ true,                                      \
-    /* flag force enable  */ WasmExnRefFlag(cx),                        \
-    /* flag fuzz enable   */ true,                                      \
-    /* preference name    */ exceptions)                                \
-  FEATURE(                                                              \
     /* capitalized name   */ ExnRef,                                    \
     /* lower case name    */ exnref,                                    \
     /* compile predicate  */ true,                                      \

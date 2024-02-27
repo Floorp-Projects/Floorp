@@ -9989,36 +9989,18 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::Else):
         CHECK_NEXT(emitElse());
       case uint16_t(Op::Try):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitTry());
       case uint16_t(Op::Catch):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitCatch());
       case uint16_t(Op::CatchAll):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitCatchAll());
       case uint16_t(Op::Delegate):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK(emitDelegate());
         iter_.popDelegate();
         NEXT();
       case uint16_t(Op::Throw):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitThrow());
       case uint16_t(Op::Rethrow):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitRethrow());
       case uint16_t(Op::ThrowRef):
         if (!moduleEnv_.exnrefEnabled()) {

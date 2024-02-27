@@ -43,7 +43,7 @@ url = "https://github.com/WebAssembly/exception-handling"
 branch = "main"
 parent = "spec"
 # Skip in jit-test when it's not enabled
-directive = "; --setpref=wasm_exceptions=true; --setpref=wasm_exnref=true; skip-if: !wasmExceptionsEnabled()"
+directive = "; --setpref=wasm_exnref=true; skip-if: !wasmExnRefEnabled()"
 excluded_tests = [
   # harness doesn't support exnref, because JS-API globals can't use it
   "ref_null.wast.js"
