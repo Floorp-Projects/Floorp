@@ -6638,9 +6638,61 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
   masm.bind(&done);
 }
 
+void CacheIRCompiler::emitTypedArrayBoundsCheck(ArrayBufferViewKind viewKind,
+                                                Register obj, Register index,
+                                                Register scratch,
+                                                Register maybeScratch,
+                                                Register spectreScratch,
+                                                Label* fail) {
+  // |index| must not alias any scratch register.
+  MOZ_ASSERT(index != scratch);
+  MOZ_ASSERT(index != maybeScratch);
+  MOZ_ASSERT(index != spectreScratch);
+
+  if (viewKind == ArrayBufferViewKind::FixedLength) {
+    masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
+    masm.spectreBoundsCheckPtr(index, scratch, spectreScratch, fail);
+  } else {
+    if (maybeScratch == InvalidReg) {
+      // Spill |index| to use it as an additional scratch register.
+      masm.push(index);
+
+      maybeScratch = index;
+    } else {
+      // Use |maybeScratch| when no explicit |spectreScratch| is present.
+      if (spectreScratch == InvalidReg) {
+        spectreScratch = maybeScratch;
+      }
+    }
+
+    // Bounds check doesn't require synchronization. See IsValidIntegerIndex
+    // abstract operation which reads the underlying buffer byte length using
+    // "unordered" memory order.
+    auto sync = Synchronization::None();
+
+    masm.loadResizableTypedArrayLengthIntPtr(sync, obj, scratch, maybeScratch);
+
+    if (maybeScratch == index) {
+      // Restore |index|.
+      masm.pop(index);
+    }
+
+    masm.spectreBoundsCheckPtr(index, scratch, spectreScratch, fail);
+  }
+}
+
+void CacheIRCompiler::emitTypedArrayBoundsCheck(
+    ArrayBufferViewKind viewKind, Register obj, Register index,
+    Register scratch, mozilla::Maybe<Register> maybeScratch,
+    mozilla::Maybe<Register> spectreScratch, Label* fail) {
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch,
+                            maybeScratch.valueOr(InvalidReg),
+                            spectreScratch.valueOr(InvalidReg), fail);
+}
+
 bool CacheIRCompiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, IntPtrOperandId indexId, Scalar::Type elementType,
-    bool handleOOB, bool forceDoubleForUint32) {
+    bool handleOOB, bool forceDoubleForUint32, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
@@ -6662,9 +6714,8 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
 
   // Bounds check.
   Label outOfBounds;
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch1);
-  masm.spectreBoundsCheckPtr(index, scratch1, scratch2,
-                             handleOOB ? &outOfBounds : failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch1, scratch2, scratch2,
+                            handleOOB ? &outOfBounds : failure->label());
 
   // Allocate BigInt if needed. The code after this should be infallible.
   Maybe<Register> bigInt;
