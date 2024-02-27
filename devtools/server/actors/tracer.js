@@ -129,6 +129,7 @@ class TracerActor extends Actor {
 
     this.tracingListener = {
       onTracingFrame: this.onTracingFrame.bind(this),
+      onTracingFrameStep: this.onTracingFrameStep.bind(this),
       onTracingFrameExit: this.onTracingFrameExit.bind(this),
       onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
       onTracingToggled: this.onTracingToggled.bind(this),
@@ -321,6 +322,62 @@ class TracerActor extends Actor {
     return false;
   }
 
+  /**
+   * Called by JavaScriptTracer class on each step of a function call.
+   *
+   * @param {Debugger.Frame} frame
+   *        A descriptor object for the JavaScript frame.
+   * @param {Number} depth
+   *        Represents the depth of the frame in the call stack.
+   * @param {String} prefix
+   *        A string to be displayed as a prefix of any logged frame.
+   * @return {Boolean}
+   *         Return true, if the JavaScriptTracer should log the step to stdout.
+   */
+  onTracingFrameStep({ frame, depth, prefix }) {
+    const { script } = frame;
+    const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
+    const url = script.source.url;
+
+    // NOTE: Debugger.Script.prototype.getOffsetMetadata returns
+    //       columnNumber in 1-based.
+    //       Convert to 0-based, while keeping the wasm's column (1) as is.
+    //       (bug 1863878)
+    const columnBase = script.format === "wasm" ? 0 : 1;
+
+    // Ignore blackboxed sources
+    if (
+      this.sourcesManager.isBlackBoxed(
+        url,
+        lineNumber,
+        columnNumber - columnBase
+      )
+    ) {
+      return false;
+    }
+
+    if (this.logMethod == LOG_METHODS.STDOUT) {
+      // By returning true, we let JavaScriptTracer class log the message to stdout.
+      return true;
+    }
+
+    if (this.logMethod == LOG_METHODS.CONSOLE) {
+      this.throttledTraces.push({
+        resourceType: JSTRACER_TRACE,
+        prefix,
+        timeStamp: ChromeUtils.dateNow(),
+
+        depth,
+        filename: url,
+        lineNumber,
+        columnNumber: columnNumber - columnBase,
+        sourceId: script.source.id,
+      });
+      this.throttleEmitTraces();
+    }
+
+    return false;
+  }
   /**
    * Called by JavaScriptTracer class when a new JavaScript frame is executed.
    *

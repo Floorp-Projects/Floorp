@@ -99,15 +99,17 @@ function JSTracerTrace(props) {
         // Add an extra space at the end to have nice copy-paste messages
         "— DOM Mutation | " + mutationType + " "
       ),
+      formatRep(messageBodyConfig, mutationElement),
     ];
-    messageBody.push(formatRep(messageBodyConfig, mutationElement));
-  } else {
+  } else if (displayName) {
     messageBody = [
       dom.span({ className: "jstracer-io" }, "⟶ "),
       dom.span({ className: "jstracer-implementation" }, implementation),
       // Add a space in order to improve copy paste rendering
       dom.span({ className: "jstracer-display-name" }, " " + displayName),
     ];
+  } else {
+    messageBody = [dom.span({ className: "jstracer-io" }, "—")];
   }
 
   // Arguments will only be passed on-demand
