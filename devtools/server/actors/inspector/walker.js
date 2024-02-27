@@ -339,7 +339,11 @@ class WalkerActor extends Actor {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {},
+      traits: {
+        // @backward-compat { version 125 } Indicate to the client that it can use getIdrefNode.
+        // This trait can be removed once 125 hits release.
+        hasGetIdrefNode: true,
+      },
     };
   }
 
@@ -1065,6 +1069,32 @@ class WalkerActor extends Actor {
     }
 
     return new NodeListActor(this, nodeList);
+  }
+
+  /**
+   * Return the node in the baseNode rootNode matching the passed id referenced in a
+   * idref/idreflist attribute, as those are scoped within a shadow root.
+   *
+   * @param NodeActor baseNode
+   * @param string id
+   */
+  getIdrefNode(baseNode, id) {
+    if (isNodeDead(baseNode)) {
+      return {};
+    }
+
+    // Get the document or the shadow root for baseNode
+    const rootNode = baseNode.rawNode.getRootNode({ composed: false });
+    if (!rootNode) {
+      return {};
+    }
+
+    const node = rootNode.getElementById(id);
+    if (!node) {
+      return {};
+    }
+
+    return this.attachElement(node);
   }
 
   /**

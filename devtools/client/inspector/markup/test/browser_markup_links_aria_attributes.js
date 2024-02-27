@@ -16,42 +16,74 @@ const TEST_DATA = [
   {
     selector: "#aria-activedescendant",
     attributeName: "aria-activedescendant",
-    links: ["activedescendant01"],
+    links: [{ id: "activedescendant01" }],
   },
   {
     selector: "#aria-controls",
     attributeName: "aria-controls",
-    links: ["controls01", "controls02"],
+    links: [{ id: "controls01" }, { id: "controls02" }],
   },
   {
     selector: "#aria-describedby",
     attributeName: "aria-describedby",
-    links: ["describedby01", "describedby02"],
+    links: [{ id: "describedby01" }, { id: "describedby02" }],
   },
   {
     selector: "#aria-details",
     attributeName: "aria-details",
-    links: ["details01", "details02"],
+    links: [{ id: "details01" }, { id: "details02" }],
   },
   {
     selector: "#aria-errormessage",
     attributeName: "aria-errormessage",
-    links: ["errormessage01"],
+    links: [{ id: "errormessage01" }],
   },
   {
     selector: "#aria-flowto",
     attributeName: "aria-flowto",
-    links: ["flowto01", "flowto02"],
+    links: [{ id: "flowto01" }, { id: "flowto02" }],
   },
   {
     selector: "#aria-labelledby",
     attributeName: "aria-labelledby",
-    links: ["labelledby01", "labelledby02"],
+    links: [{ id: "labelledby01" }, { id: "labelledby02" }],
   },
   {
     selector: "#aria-owns",
     attributeName: "aria-owns",
-    links: ["owns01", "owns02"],
+    links: [{ id: "owns01" }, { id: "owns02" }],
+  },
+  {
+    getContainer: async inspector => {
+      info("Find and expand the test-component shadow DOM host.");
+      const hostFront = await getNodeFront("test-component", inspector);
+      const hostContainer = inspector.markup.getContainer(hostFront);
+      await expandContainer(inspector, hostContainer);
+
+      info("Expand the shadow root");
+      const shadowRootContainer = hostContainer.getChildContainers()[0];
+      await expandContainer(inspector, shadowRootContainer);
+
+      info("Expand the slot");
+      const slotContainer = shadowRootContainer.getChildContainers()[0];
+
+      is(
+        slotContainer.elt
+          .querySelector(`[data-attr="id"]`)
+          .getAttribute("data-value"),
+        "aria-describedby-shadow-dom",
+        `This is the container for button#aria-describedby-shadow-dom`
+      );
+
+      // The test expect the node to be selected
+      const updated = inspector.once("inspector-updated");
+      inspector.selection.setNodeFront(slotContainer.node, { reason: "test" });
+      await updated;
+
+      return slotContainer;
+    },
+    attributeName: "aria-describedby",
+    links: [{ id: "describedby01", valid: false }, { id: "describedbyshadow" }],
   },
 ];
 
@@ -59,11 +91,16 @@ add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const test of TEST_DATA) {
-    info("Selecting test node " + test.selector);
-    await selectNode(test.selector, inspector);
+    let editor;
+    if (typeof test.getContainer === "function") {
+      ({ editor } = await test.getContainer(inspector));
+    } else {
+      info("Selecting test node " + test.selector);
+      await selectNode(test.selector, inspector);
+      info("Finding the popupNode to anchor the context-menu to");
+      ({ editor } = await getContainerForSelector(test.selector, inspector));
+    }
 
-    info("Finding the popupNode to anchor the context-menu to");
-    const { editor } = await getContainerForSelector(test.selector, inspector);
     const attributeEl = editor.attrElements.get(test.attributeName);
     const linksEl = attributeEl.querySelectorAll(".link");
 
@@ -79,8 +116,6 @@ add_task(async function () {
       const linkEl = linksEl[i];
       ok(linkEl, "Found the link");
 
-      const expectedReferencedNodeId = test.links[i];
-
       info("Simulating a context click on the link");
       const allMenuItems = openContextMenuAndGetAllItems(inspector, {
         target: linkEl,
@@ -95,6 +130,7 @@ add_task(async function () {
 
       is(linkFollow.visible, true, "The follow-link item is visible");
       is(linkCopy.visible, false, "The copy-link item is not visible");
+      const { id: expectedReferencedNodeId } = test.links[i];
       const linkFollowItemLabel = INSPECTOR_L10N.getFormatStr(
         "inspector.menu.selectElement.label",
         expectedReferencedNodeId
@@ -114,16 +150,32 @@ add_task(async function () {
         "Button has expected title"
       );
 
-      info("Check that clicking on button selects the associated node");
-      const onSelection = inspector.selection.once("new-node-front");
-      buttonEl.click();
-      await onSelection;
+      if (test.links[i].valid !== false) {
+        info("Check that clicking on button selects the associated node");
+        const onSelection = inspector.selection.once("new-node-front");
+        buttonEl.click();
+        await onSelection;
 
-      is(
-        inspector.selection.nodeFront.id,
-        expectedReferencedNodeId,
-        "The expected new node was selected"
-      );
+        is(
+          inspector.selection.nodeFront.id,
+          expectedReferencedNodeId,
+          "The expected new node was selected"
+        );
+      } else {
+        info(
+          "Check that clicking on button triggers idref-attribute-link-failed event"
+        );
+        const onIdrefAttributeLinkFailed = inspector.markup.once(
+          "idref-attribute-link-failed"
+        );
+        const onSelection = inspector.selection.once("new-node-front");
+        const onTimeout = wait(500).then(() => "TIMEOUT");
+        buttonEl.click();
+        await onIdrefAttributeLinkFailed;
+        ok(true, "Got expected idref-attribute-link-failed event");
+        const res = await Promise.race([onSelection, onTimeout]);
+        is(res, "TIMEOUT", "Clicking the button did not select a new node");
+      }
     }
   }
 });

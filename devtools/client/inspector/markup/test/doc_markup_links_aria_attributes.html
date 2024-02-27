@@ -3,6 +3,24 @@
   <head>
     <meta charset="utf-8">
     <title>Markup-view Linkify ARIA attributes</title>
+    <script>
+      "use strict";
+      class TestComponent extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({mode: 'open'});
+
+          this.shadowRoot.innerHTML = `
+            <button
+              id="aria-describedby-shadow-dom"
+              aria-describedby="describedby01 describedbyshadow"
+            ></button>
+            <div id="describedbyshadow">#describedbyshadow</div>
+          `;
+        }
+      }
+      customElements.define('test-component', TestComponent);
+    </script>
   </head>
   <body>
     <div id="aria-activedescendant"
@@ -40,5 +58,7 @@
     <div id="aria-owns" aria-owns="owns01 owns02">aria-owns test</div>
     <div id="owns01">#owns01</div>
     <div id="owns02">#owns02</div>
+
+    <test-component></test-component>
   </body>
 </html>
