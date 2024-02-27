@@ -37,6 +37,14 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    bundle {
+        language {
+            // Because we have runtime language selection we will keep all strings and languages
+            // in the base APKs.
+            enableSplit = false
+        }
+    }
+
     lint {
         lintConfig file("lint.xml")
     }
