@@ -2,7 +2,7 @@
 
 const { CompileError, validate } = WebAssembly;
 
-const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|(Structure|reference|gc) types not enabled|invalid heap type|invalid inline block type|bad type|\(ref T\) types not enabled|Invalid type|invalid function type/;
+const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|gc not enabled|invalid heap type|invalid inline block type|bad type|Invalid type|invalid function type/;
 
 let simpleTests = [
     "(module (func (drop (ref.null eq))))",

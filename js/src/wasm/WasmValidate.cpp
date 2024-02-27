@@ -1606,7 +1606,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
 static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
                              StructType* structType) {
   if (!env->gcEnabled()) {
-    return d.fail("Structure types not enabled");
+    return d.fail("gc not enabled");
   }
 
   uint32_t numFields;
@@ -1650,7 +1650,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
 static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
                             ArrayType* arrayType) {
   if (!env->gcEnabled()) {
-    return d.fail("gc types not enabled");
+    return d.fail("gc not enabled");
   }
 
   StorageType elementType;
