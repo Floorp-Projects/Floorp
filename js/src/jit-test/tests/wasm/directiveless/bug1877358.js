@@ -1,4 +1,4 @@
-// |jit-test| --no-wasm-exceptions; include:wasm.js
+// |jit-test| -P wasm_exceptions=false; include:wasm.js
 
 let {test} = wasmEvalText(`(module
 	(func $m (import "" "m"))
