@@ -437,13 +437,12 @@ uint32_t SpeechRecognition::ProcessAudioSegment(AudioSegment* aSegment,
   // we need to call the nsISpeechRecognitionService::ProcessAudioSegment
   // in a separate thread so that any eventual encoding or pre-processing
   // of the audio does not block the main thread
-  nsresult rv = mEncodeTaskQueue->Dispatch(NS_NewRunnableFunction(
-      "nsISpeechRecognitionService::ProcessAudioSegment",
-      [=, service = mRecognitionService,
-       segment = std::move(*aSegment)]() mutable {
-        service->ProcessAudioSegment(&segment, aTrackRate);
-      }));
-
+  nsresult rv = mEncodeTaskQueue->Dispatch(
+      NewRunnableMethod<StoreCopyPassByPtr<AudioSegment>, TrackRate>(
+          "nsISpeechRecognitionService::ProcessAudioSegment",
+          mRecognitionService,
+          &nsISpeechRecognitionService::ProcessAudioSegment,
+          std::move(*aSegment), aTrackRate));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
   return samples;
