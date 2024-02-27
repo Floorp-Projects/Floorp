@@ -93,6 +93,19 @@ export class YelpSuggestions extends BaseFeature {
     url.searchParams.set("utm_medium", "partner");
     url.searchParams.set("utm_source", "mozilla");
 
+    let resultProperties = {
+      isRichSuggestion: true,
+      richSuggestionIconSize: 38,
+      showFeedbackMenu: true,
+    };
+    if (!suggestion.is_top_pick) {
+      resultProperties.richSuggestionIconSize = 16;
+      resultProperties.isSuggestedIndexRelativeToGroup = true;
+      resultProperties.suggestedIndex = lazy.UrlbarPrefs.get(
+        "yelpSuggestNonPriorityIndex"
+      );
+    }
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
@@ -105,11 +118,7 @@ export class YelpSuggestions extends BaseFeature {
           bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
         })
       ),
-      {
-        isRichSuggestion: true,
-        richSuggestionIconSize: suggestion.is_top_pick ? 38 : 16,
-        showFeedbackMenu: true,
-      }
+      resultProperties
     );
   }
 

@@ -1068,6 +1068,13 @@ async function check_results({
         `result.suggestedIndex at result index ${i}`
       );
     }
+    if (expected.hasOwnProperty("isSuggestedIndexRelativeToGroup")) {
+      Assert.equal(
+        !!actual.isSuggestedIndexRelativeToGroup,
+        expected.isSuggestedIndexRelativeToGroup,
+        `result.isSuggestedIndexRelativeToGroup at result index ${i}`
+      );
+    }
 
     if (expected.payload) {
       Assert.deepEqual(
