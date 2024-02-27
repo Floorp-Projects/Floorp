@@ -831,7 +831,7 @@ class BuildReader(object):
         self.config = config
 
         self._log = logging.getLogger(__name__)
-        self._read_files = set()
+        self._read_files = {}
         self._execution_stack = []
         self.finder = finder
 
@@ -1113,24 +1113,26 @@ class BuildReader(object):
             "Reading file: {path}".format(path=path),
         )
 
-        if path in self._read_files:
-            log(
-                self._log,
-                logging.WARNING,
-                "read_already",
-                {"path": path},
-                "File already read. Skipping: {path}".format(path=path),
-            )
-            return
-
-        self._read_files.add(path)
-
         time_start = time.monotonic()
 
         topobjdir = config.topobjdir
 
         relpath = mozpath.relpath(path, config.topsrcdir)
         reldir = mozpath.dirname(relpath)
+
+        # NOTE: descend case is handled in the loop below.
+        if not descend:
+            if relpath in self._read_files:
+                log(
+                    self._log,
+                    logging.WARNING,
+                    "read_already",
+                    {"path": path},
+                    "File already read. Skipping: {path}".format(path=path),
+                )
+                return
+
+            self._read_files[relpath] = (relpath, "")
 
         if mozpath.dirname(relpath) == "js/src" and not config.substs.get(
             "JS_STANDALONE"
@@ -1233,6 +1235,15 @@ class BuildReader(object):
 
             if not descend:
                 continue
+
+            child_relpath = mozpath.relpath(child_path, self.config.topsrcdir)
+
+            if child_relpath in self._read_files:
+                (prev_parent, prev_path) = self._read_files[child_relpath]
+                raise Exception(
+                    f"File already read. A directory should not be added to DIRS twice: {child_relpath} is referred from {prev_parent} as '{prev_path}', and {relpath} as '{path}'"
+                )
+            self._read_files[child_relpath] = (relpath, path)
 
             for res in self.read_mozbuild(
                 child_path, context.config, metadata=child_metadata

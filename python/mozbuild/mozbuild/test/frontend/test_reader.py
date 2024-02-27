@@ -83,12 +83,20 @@ class TestBuildReader(unittest.TestCase):
         contexts = list(reader.read_topsrcdir())
         self.assertEqual(len(contexts), 3)
 
-    def test_repeated_dirs_ignored(self):
-        # Ensure repeated directories are ignored.
+    def test_repeated_dirs_error(self):
         reader = self.reader("traversal-repeated-dirs")
 
-        contexts = list(reader.read_topsrcdir())
-        self.assertEqual(len(contexts), 3)
+        with self.assertRaises(BuildReaderError) as bre:
+            list(reader.read_topsrcdir())
+
+        e = bre.exception
+        self.assertEqual(
+            e.actual_file, self.file_path("traversal-repeated-dirs", "bar", "moz.build")
+        )
+        self.assertIn(
+            "File already read. A directory should not be added to DIRS twice: foo/moz.build is referred from moz.build as 'foo', and bar/moz.build as '../foo'",
+            str(e),
+        )
 
     def test_outside_topsrcdir(self):
         # References to directories outside the topsrcdir should fail.
