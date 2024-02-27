@@ -99,6 +99,8 @@ interface nsIComponentManager : nsISupports
     /**
      * Returns a list of JSM URLs which are used to create components. This
      * should only be used in automation.
+     *
+     * TODO: Remove this once m-c and c-c migrations finish (bug 1881887).
      */
     nsIUTF8StringEnumerator getComponentJSMs();
 

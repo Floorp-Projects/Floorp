@@ -86,6 +86,7 @@ const nsXPTInterface gInterfaces[] = {
 //# @define_has_component_jsms@
 
 #ifdef HAS_COMPONENT_JSMS
+// TODO: Remove this once m-c and c-c migrations finish (bug 1881887).
 const StringOffset gComponentJSMs[] = {
 //# @component_jsms@
 };
