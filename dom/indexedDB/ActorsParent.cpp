@@ -304,7 +304,8 @@ static_assert(kMaxConnectionThreadCount >= kMaxIdleConnectionThreadCount,
               "Idle thread limit must be less than total thread limit!");
 
 // The length of time that database connections will be held open after all
-// transactions have completed before doing idle maintenance.
+// transactions have completed before doing idle maintenance. Please keep in
+// sync with the timeouts in test_connection_idle_maintenance*.js tests
 const uint32_t kConnectionIdleMaintenanceMS = 2 * 1000;  // 2 seconds
 
 // The length of time that database connections will be held open after all
