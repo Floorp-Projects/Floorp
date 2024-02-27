@@ -14,6 +14,7 @@ define(function (require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
   const {
+    appendRTLClassNameIfNeeded,
     containsURL,
     escapeString,
     getGripType,
@@ -135,6 +136,8 @@ define(function (require, exports, module) {
         text
       );
     }
+
+    config.className = appendRTLClassNameIfNeeded(config.className, text);
 
     return span(config, text);
   }
