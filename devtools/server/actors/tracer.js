@@ -325,11 +325,12 @@ class TracerActor extends Actor {
   /**
    * Called by JavaScriptTracer class on each step of a function call.
    *
-   * @param {Debugger.Frame} frame
+   * @param {Object} options
+   * @param {Debugger.Frame} options.frame
    *        A descriptor object for the JavaScript frame.
-   * @param {Number} depth
+   * @param {Number} options.depth
    *        Represents the depth of the frame in the call stack.
-   * @param {String} prefix
+   * @param {String} options.prefix
    *        A string to be displayed as a prefix of any logged frame.
    * @return {Boolean}
    *         Return true, if the JavaScriptTracer should log the step to stdout.

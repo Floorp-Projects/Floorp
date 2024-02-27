@@ -152,6 +152,8 @@ const customLazy = {
  * @param {Number} options.maxRecords
  *        Optional setting to stop the tracer after having recorded at least
  *        the passed number of top level frames.
+ * @param {Number} options.pauseOnStep
+ *        Optional setting to delay each frame execution for a given amount of time in ms.
  */
 class JavaScriptTracer {
   constructor(options) {
@@ -205,6 +207,12 @@ class JavaScriptTracer {
     this.maxDepth = options.maxDepth;
     this.maxRecords = options.maxRecords;
     this.records = 0;
+    if ("pauseOnStep" in options) {
+      if (typeof options.pauseOnStep != "number") {
+        throw new Error("'pauseOnStep' attribute should be a number");
+      }
+      this.pauseOnStep = options.pauseOnStep;
+    }
 
     // An increment used to identify function calls and their returned/exit frames
     this.frameId = 0;
@@ -647,6 +655,10 @@ class JavaScriptTracer {
           if (shouldLogToStdout) {
             this.logFrameStepToStdout(frame, depth);
           }
+          // Optionaly pause the frame execution by letting the other event loop to run in between.
+          if (typeof this.pauseOnStep == "number") {
+            syncPause(this.pauseOnStep);
+          }
         };
       }
 
@@ -703,6 +715,11 @@ class JavaScriptTracer {
           this.logFrameExitedToStdout(frame, depth, why, rv);
         }
       };
+
+      // Optionaly pause the frame execution by letting the other event loop to run in between.
+      if (typeof this.pauseOnStep == "number") {
+        syncPause(this.pauseOnStep);
+      }
     } catch (e) {
       console.error("Exception while tracing javascript", e);
     }
@@ -982,6 +999,27 @@ function getTerminalHyperLink(frame) {
   // Use special characters in order to print working hyperlinks right from the terminal
   // See https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
   return `\x1B]8;;${href}\x1B\\${href}\x1B]8;;\x1B\\`;
+}
+
+/**
+ * Helper function to synchronously pause the current frame execution
+ * for a given duration in ms.
+ *
+ * @param {Number} duration
+ */
+function syncPause(duration) {
+  let freeze = true;
+  const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(
+    () => {
+      freeze = false;
+    },
+    duration,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
+  Services.tm.spinEventLoopUntil("debugger-slow-motion", function () {
+    return !freeze;
+  });
 }
 
 // This JSM may be execute as CommonJS when loaded in the worker thread
