@@ -270,3 +270,5 @@ skip-if = [
 ["test_WaitingOnMissingData_mp4.html"]
 
 ["test_WaitingToEndedTransition_mp4.html"]
+
+["test_BufferedSeekCanPlayThrough.html"]
