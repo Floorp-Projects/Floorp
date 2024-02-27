@@ -196,6 +196,12 @@ class ProfilingFrameIterator {
   ProfilingFrameIterator(const jit::JitActivation& activation,
                          const RegisterState& state);
 
+  enum Category {
+    Baseline,
+    Ion,
+    Other,
+  };
+
   void operator++();
 
   bool done() const {
@@ -212,6 +218,8 @@ class ProfilingFrameIterator {
     return unwoundJitCallerFP_;
   }
   const char* label() const;
+
+  Category category() const;
 
   void* endStackAddress() const { return endStackAddress_; }
 };

@@ -205,7 +205,8 @@ void ThreadStackHelper::CollectJitReturnAddr(void* aAddr) {
   TryAppendFrame(HangEntryJit());
 }
 
-void ThreadStackHelper::CollectWasmFrame(const char* aLabel) {
+void ThreadStackHelper::CollectWasmFrame(JS::ProfilingCategoryPair aCategory,
+                                         const char* aLabel) {
   MOZ_RELEASE_ASSERT(mStackToFill);
   // We don't want to collect WASM frames, as they are probably for content, so
   // we just add a "(content wasm)" frame.

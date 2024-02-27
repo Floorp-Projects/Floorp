@@ -247,7 +247,8 @@ class ProfileBufferCollector final : public ProfilerStackCollector {
 
   virtual void CollectNativeLeafAddr(void* aAddr) override;
   virtual void CollectJitReturnAddr(void* aAddr) override;
-  virtual void CollectWasmFrame(const char* aLabel) override;
+  virtual void CollectWasmFrame(JS::ProfilingCategoryPair aCategory,
+                                const char* aLabel) override;
   virtual void CollectProfilingStackFrame(
       const js::ProfilingStackFrame& aFrame) override;
 

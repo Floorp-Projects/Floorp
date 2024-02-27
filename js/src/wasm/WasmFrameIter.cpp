@@ -1882,3 +1882,16 @@ const char* ProfilingFrameIterator::label() const {
 
   MOZ_CRASH("bad code range kind");
 }
+
+ProfilingFrameIterator::Category ProfilingFrameIterator::category() const {
+  if (!exitReason_.isFixed() || !exitReason_.isNone() ||
+      !codeRange_->isFunction()) {
+    return Category::Other;
+  }
+
+  Tier tier;
+  if (!code_->lookupFunctionTier(codeRange_, &tier)) {
+    return Category::Other;
+  }
+  return tier == Tier::Optimized ? Category::Ion : Category::Baseline;
+}

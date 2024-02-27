@@ -139,8 +139,12 @@
       label: JIT (ion)
     - name: JS_Builtin
       label: Builtin API
-    - name: JS_Wasm
-      label: Wasm
+    - name: JS_WasmIon
+      label: Wasm (ion)
+    - name: JS_WasmBaseline
+      label: Wasm (baseline)
+    - name: JS_WasmOther
+      label: Wasm (other)
 
 - name: GCCC
   label: GC / CC
