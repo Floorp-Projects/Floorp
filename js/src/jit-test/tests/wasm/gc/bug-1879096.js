@@ -1,4 +1,4 @@
-// |jit-test| test-also=-P wasm_test_serialization; skip-if: !wasmGcEnabled()
+// |jit-test| test-also=--setpref=wasm_test_serialization; skip-if: !wasmGcEnabled()
 
 // Conditional branch instructions need to rewrite their stack types according
 // to the destination label types. This loses information but is mandated by

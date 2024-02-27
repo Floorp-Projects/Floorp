@@ -11444,21 +11444,34 @@ static bool ParsePrefValue(const char* name, const char* val, T* result) {
   }
 }
 
-static bool SetJSPref(const char* pref) {
-  const char* assign = strchr(pref, '=');
-  if (!assign) {
-    fprintf(stderr, "Missing '=' for --setpref\n");
-    return false;
+static bool SetJSPrefToTrueForBool(const char* name) {
+  // Search for a matching pref and try to set it to a default value for the
+  // type.
+#define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF)      \
+  if (strcmp(name, NAME) == 0) {                                       \
+    if constexpr (std::is_same_v<TYPE, bool>) {                        \
+      JS::Prefs::SETTER(true);                                         \
+      return true;                                                     \
+    } else {                                                           \
+      fprintf(stderr, "Pref %s must have a value specified.\n", name); \
+      return false;                                                    \
+    }                                                                  \
   }
+  FOR_EACH_JS_PREF(CHECK_PREF)
+#undef CHECK_PREF
 
-  size_t nameLen = assign - pref;
-  const char* valStart = assign + 1;  // Skip '='.
+  // Nothing matched, return false
+  fprintf(stderr, "Invalid pref name: %s\n", name);
+  return false;
+}
 
-  // Search for a matching pref and try to set it.
+static bool SetJSPrefToValue(const char* name, size_t nameLen,
+                             const char* value) {
+  // Search for a matching pref and try to set it to the provided value.
 #define CHECK_PREF(NAME, CPP_NAME, TYPE, SETTER, IS_STARTUP_PREF)         \
-  if (nameLen == strlen(NAME) && memcmp(pref, NAME, strlen(NAME)) == 0) { \
+  if (nameLen == strlen(NAME) && memcmp(name, NAME, strlen(NAME)) == 0) { \
     TYPE v;                                                               \
-    if (!ParsePrefValue<TYPE>(NAME, valStart, &v)) {                      \
+    if (!ParsePrefValue<TYPE>(NAME, value, &v)) {                         \
       return false;                                                       \
     }                                                                     \
     JS::Prefs::SETTER(v);                                                 \
@@ -11467,8 +11480,27 @@ static bool SetJSPref(const char* pref) {
   FOR_EACH_JS_PREF(CHECK_PREF)
 #undef CHECK_PREF
 
-  fprintf(stderr, "Invalid pref name: %s\n", pref);
+  // Nothing matched, return false
+  fprintf(stderr, "Invalid pref name: %s\n", name);
   return false;
+}
+
+static bool SetJSPref(const char* pref) {
+  const char* assign = strchr(pref, '=');
+  if (!assign) {
+    if (!SetJSPrefToTrueForBool(pref)) {
+      return false;
+    }
+    return true;
+  }
+
+  size_t nameLen = assign - pref;
+  const char* valStart = assign + 1;  // Skip '='.
+
+  if (!SetJSPrefToValue(pref, nameLen, valStart)) {
+    return false;
+  }
+  return true;
 }
 
 static void ListJSPrefs() {
@@ -12185,8 +12217,10 @@ bool InitOptionParser(OptionParser& op) {
 #endif
       !op.addStringOption('\0', "telemetry-dir", "[directory]",
                           "Output telemetry results in a directory") ||
-      !op.addMultiStringOption('\0', "setpref", "name=val",
-                               "Set the value of a JS pref. Use --list-prefs "
+      !op.addMultiStringOption('P', "setpref", "name[=val]",
+                               "Set the value of a JS pref. The value may "
+                               "be omitted for boolean prefs, in which case "
+                               "they default to true. Use --list-prefs "
                                "to print all pref names.") ||
       !op.addBoolOption(
           '\0', "list-prefs",
