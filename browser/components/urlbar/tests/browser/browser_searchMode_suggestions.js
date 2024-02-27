@@ -68,6 +68,7 @@ add_setup(async function () {
       ["browser.search.separatePrivateDefault.ui.enabled", false],
       ["browser.urlbar.suggest.quickactions", false],
       ["browser.urlbar.suggest.trending", false],
+      ["browser.urlbar.suggest.recentsearches", false],
     ],
   });
 });
