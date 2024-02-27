@@ -36,9 +36,7 @@ namespace mozilla {
 
 typedef std::complex<double> Complex;
 
-#ifdef MOZ_LIBAV_FFT
 FFmpegRDFTFuncs FFTBlock::sRDFTFuncs;
-#endif
 
 static double fdlibm_cabs(const Complex& z) {
   return fdlibm_hypot(real(z), imag(z));

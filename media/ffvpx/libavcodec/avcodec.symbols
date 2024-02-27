@@ -30,11 +30,9 @@ av_packet_free
 av_parser_close
 av_parser_init
 av_parser_parse2
-#ifdef MOZ_LIBAV_FFT
 av_rdft_calc
 av_rdft_end
 av_rdft_init
-#endif
 av_shrink_packet
 av_vorbis_parse_frame
 av_vorbis_parse_frame_flags
