@@ -11562,6 +11562,26 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
   return clip ? PhysicalAxes::Both : PhysicalAxes::None;
 }
 
+bool nsIFrame::HasUnreflowedContainerQueryAncestor() const {
+  // If this frame has done the first reflow, its ancestors are guaranteed to
+  // have as well.
+  if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW) ||
+      !PresContext()->HasContainerQueryFrames()) {
+    return false;
+  }
+  for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
+    if (!cur->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
+      // Done first reflow from this ancestor up, including query containers.
+      return false;
+    }
+    if (cur->StyleDisplay()->IsQueryContainer()) {
+      return true;
+    }
+  }
+  // No query container from this frame up to root.
+  return false;
+}
+
 #ifdef DEBUG
 static void GetTagName(nsIFrame* aFrame, nsIContent* aContent, int aResultSize,
                        char* aResult) {

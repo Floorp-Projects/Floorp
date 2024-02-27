@@ -990,6 +990,19 @@ bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
   }
 }
 
+bool nsComputedDOMStyle::NeedsToFlushLayoutForContainerQuery() const {
+  const auto* outerFrame = GetOuterFrame();
+  if (!outerFrame) {
+    return false;
+  }
+  const auto* innerFrame = nsLayoutUtils::GetStyleFrame(outerFrame);
+  MOZ_ASSERT(innerFrame, "No valid inner frame?");
+  // It's possible that potential containers are styled but not yet reflowed,
+  // i.e. They don't have a correct size, which makes any container query
+  // evaluation against them invalid.
+  return innerFrame->HasUnreflowedContainerQueryAncestor();
+}
+
 void nsComputedDOMStyle::Flush(Document& aDocument, FlushType aFlushType) {
   MOZ_ASSERT(mElement->IsInComposedDoc());
   MOZ_ASSERT(mDocumentWeak == &aDocument);
@@ -1051,8 +1064,9 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
     Flush(*document, FlushType::Frames);
   }
 
-  if (NeedsToFlushLayout(aPropID)) {
-    MOZ_ASSERT(MayNeedToFlushLayout(aPropID));
+  const bool needsToFlushLayoutForProp = NeedsToFlushLayout(aPropID);
+  if (needsToFlushLayoutForProp || NeedsToFlushLayoutForContainerQuery()) {
+    MOZ_ASSERT_IF(needsToFlushLayoutForProp, MayNeedToFlushLayout(aPropID));
     didFlush = true;
     Flush(*document, FlushType::Layout);
 #ifdef DEBUG
