@@ -3,7 +3,6 @@
 
 const {
   getFirefoxViewURL,
-  switchToWindow,
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
@@ -586,7 +585,6 @@ async function navigateToViewAndWait(document, view) {
  *   The tab switched to.
  */
 async function switchToFxViewTab(win = window) {
-  await switchToWindow(win);
   return BrowserTestUtils.switchTab(win.gBrowser, win.FirefoxViewHandler.tab);
 }
 
@@ -647,30 +645,8 @@ function setSortOption(component, value) {
   EventUtils.synthesizeMouseAtCenter(el, {}, el.ownerGlobal);
 }
 
-/**
- * Select the Open Tabs view-page in the Firefox View tab.
- */
-async function navigateToOpenTabs(browser) {
-  const document = browser.contentDocument;
-  if (document.querySelector("named-deck").selectedViewName != "opentabs") {
-    await navigateToViewAndWait(browser.contentDocument, "opentabs");
-  }
-}
-
 function getOpenTabsCards(openTabs) {
   return openTabs.shadowRoot.querySelectorAll("view-opentabs-card");
-}
-
-function getOpenTabsComponent(browser) {
-  return browser.contentDocument.querySelector("named-deck > view-opentabs");
-}
-
-async function getTabRowsForCard(card) {
-  await TestUtils.waitForCondition(
-    () => card.tabList.rowEls.length,
-    "Wait for the card's tab list to have rows"
-  );
-  return card.tabList.rowEls;
 }
 
 async function click_recently_closed_tab_item(itemElem, itemProperty = "") {

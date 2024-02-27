@@ -470,14 +470,6 @@ class OpenTabsInViewCard extends ViewPageContent {
   }
 
   onTabListRowClick(event) {
-    // Don't open pinned tab if mute/unmute indicator button selected
-    if (
-      Array.from(event.explicitOriginalTarget.classList).includes(
-        "fxview-tab-row-pinned-media-button"
-      )
-    ) {
-      return;
-    }
     const tab = event.originalTarget.tabElement;
     const browserWindow = tab.ownerGlobal;
     browserWindow.focus();
@@ -545,10 +537,9 @@ class OpenTabsInViewCard extends ViewPageContent {
             @fxview-tab-list-primary-action=${this.onTabListRowClick}
             @fxview-tab-list-secondary-action=${this.openContextMenu}
             .maxTabsLength=${this.getMaxTabsLength()}
-            .tabItems=${this.searchResults ||
-            getTabListItems(this.tabs, this.recentBrowsing)}
+            .tabItems=${this.searchResults || getTabListItems(this.tabs)}
             .searchQuery=${this.searchQuery}
-            .pinnedTabsGridView=${!this.recentBrowsing}
+            .showTabIndicators=${true}
             ><view-opentabs-contextmenu slot="menu"></view-opentabs-contextmenu>
           </fxview-tab-list>
         </div>
@@ -664,29 +655,6 @@ class OpenTabsContextMenu extends MozLitElement {
     this.ownerViewPage.recordContextMenuTelemetry("close-tab", e);
   }
 
-  pinTab(e) {
-    const tab = this.triggerNode.tabElement;
-    tab?.ownerGlobal.gBrowser.pinTab(tab);
-    this.ownerViewPage.recordContextMenuTelemetry("pin-tab", e);
-  }
-
-  unpinTab(e) {
-    const tab = this.triggerNode.tabElement;
-    tab?.ownerGlobal.gBrowser.unpinTab(tab);
-    this.ownerViewPage.recordContextMenuTelemetry("unpin-tab", e);
-  }
-
-  toggleAudio(e) {
-    const tab = this.triggerNode.tabElement;
-    tab.toggleMuteAudio();
-    this.ownerViewPage.recordContextMenuTelemetry(
-      `${
-        this.triggerNode.indicators.includes("muted") ? "unmute" : "mute"
-      }-tab`,
-      e
-    );
-  }
-
   moveTabsToStart(e) {
     const tab = this.triggerNode.tabElement;
     tab?.ownerGlobal.gBrowser.moveTabsToStart(tab);
@@ -791,20 +759,6 @@ class OpenTabsContextMenu extends MozLitElement {
           submenu="move-tab-menu"
           >${this.moveMenuTemplate()}</panel-item
         >
-        <panel-item
-          data-l10n-id=${tab.pinned
-            ? "fxviewtabrow-unpin-tab"
-            : "fxviewtabrow-pin-tab"}
-          data-l10n-attrs="accesskey"
-          @click=${tab.pinned ? this.unpinTab : this.pinTab}
-        ></panel-item>
-        <panel-item
-          data-l10n-id=${tab.hasAttribute("muted")
-            ? "fxviewtabrow-unmute-tab"
-            : "fxviewtabrow-mute-tab"}
-          data-l10n-attrs="accesskey"
-          @click=${this.toggleAudio}
-        ></panel-item>
         <hr />
         <panel-item
           data-l10n-id="fxviewtabrow-copy-link"
@@ -844,112 +798,36 @@ function getContainerObj(tab) {
 }
 
 /**
- * Gets an array of tab indicators (if any) when normalizing for fxview-tab-list
- *
- * @param {MozTabbrowserTab[]} tab
- *   Tab to fetch container info on.
- * @returns {Array[]}
- *  Array of named tab indicators
- */
-function getIndicatorsForTab(tab) {
-  let tabIndicators = [];
-  let hasAttention =
-    (tab.pinned &&
-      (tab.hasAttribute("attention") || tab.hasAttribute("titlechanged"))) ||
-    (!tab.pinned && tab.hasAttribute("attention"));
-  if (tab.pinned) {
-    tabIndicators.push("pinned");
-  }
-  if (getContainerObj(tab)) {
-    tabIndicators.push("container");
-  }
-  if (hasAttention) {
-    tabIndicators.push("attention");
-  }
-  if (tab.hasAttribute("soundplaying") && !tab.hasAttribute("muted")) {
-    tabIndicators.push("soundplaying");
-  }
-  if (tab.hasAttribute("muted")) {
-    tabIndicators.push("muted");
-  }
-  return tabIndicators;
-}
-
-/**
- * Gets the primary l10n id for a tab when normalizing for fxview-tab-list
- *
- * @param {boolean} isRecentBrowsing
- *   Whether the tabs are going to be displayed on the Recent Browsing page or not
- * @param {Array[]} tabIndicators
- *   Array of tab indicators for the given tab
- * @returns {string}
- *  L10n ID string
- */
-function getPrimaryL10nId(isRecentBrowsing, tabIndicators) {
-  let indicatorL10nId = null;
-  if (tabIndicators?.includes("pinned") && !isRecentBrowsing) {
-    indicatorL10nId = "firefoxview-opentabs-pinned-tab";
-  }
-  return indicatorL10nId;
-}
-
-/**
- * Gets the primary l10n args for a tab when normalizing for fxview-tab-list
- *
- * @param {MozTabbrowserTab[]} tab
- *   Tab to fetch container info on.
- * @param {boolean} isRecentBrowsing
- *   Whether the tabs are going to be displayed on the Recent Browsing page or not
- * @param {string} url
- *   URL for the given tab
- * @returns {string}
- *  L10n ID args
- */
-function getPrimaryL10nArgs(tab, isRecentBrowsing, url) {
-  let indicatorArgs = null;
-  if (tab.pinned && !isRecentBrowsing) {
-    indicatorArgs = JSON.stringify({ tabTitle: tab.label });
-  } else {
-    indicatorArgs = JSON.stringify({ url });
-  }
-  return indicatorArgs;
-}
-
-/**
  * Convert a list of tabs into the format expected by the fxview-tab-list
  * component.
  *
  * @param {MozTabbrowserTab[]} tabs
  *   Tabs to format.
- * @param {boolean} isRecentBrowsing
- *   Whether the tabs are going to be displayed on the Recent Browsing page or not
  * @returns {object[]}
  *   Formatted objects.
  */
-function getTabListItems(tabs, isRecentBrowsing) {
-  let filtered = tabs?.filter(tab => !tab.closing && !tab.hidden);
+function getTabListItems(tabs) {
+  let filtered = tabs?.filter(
+    tab => !tab.closing && !tab.hidden && !tab.pinned
+  );
 
   return filtered.map(tab => {
-    let tabIndicators = getIndicatorsForTab(tab);
-    let containerObj = getContainerObj(tab);
     const url = tab.linkedBrowser?.currentURI?.spec || "";
     return {
-      containerObj,
-      indicators: tabIndicators,
+      attention: tab.hasAttribute("attention"),
+      containerObj: getContainerObj(tab),
       icon: tab.getAttribute("image"),
-      primaryL10nId: getPrimaryL10nId(isRecentBrowsing, tabIndicators),
-      primaryL10nArgs: getPrimaryL10nArgs(tab, isRecentBrowsing, url),
-      secondaryL10nId:
-        isRecentBrowsing || (!isRecentBrowsing && !tab.pinned)
-          ? "fxviewtabrow-options-menu-button"
-          : null,
-      secondaryL10nArgs:
-        isRecentBrowsing || (!isRecentBrowsing && !tab.pinned)
-          ? JSON.stringify({ tabTitle: tab.label })
-          : null,
+      muted: tab.hasAttribute("muted"),
+      pinned: tab.pinned,
+      primaryL10nId: "firefoxview-opentabs-tab-row",
+      primaryL10nArgs: JSON.stringify({ url }),
+      secondaryL10nId: "fxviewtabrow-options-menu-button",
+      secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
+      soundPlaying: tab.hasAttribute("soundplaying"),
       tabElement: tab,
       time: tab.lastAccessed,
       title: tab.label,
+      titleChanged: tab.hasAttribute("titlechanged"),
       url,
     };
   });

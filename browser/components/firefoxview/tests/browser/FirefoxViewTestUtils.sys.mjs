@@ -21,20 +21,6 @@ function getFirefoxViewURL() {
   return "about:firefoxview";
 }
 
-/**
- * Make the given window focused and active
- */
-async function switchToWindow(win) {
-  await testScope.SimpleTest.promiseFocus(win);
-  if (Services.focus.activeWindow !== win) {
-    testScope.info("switchToWindow, waiting for activate event on the window");
-    await BrowserTestUtils.waitForEvent(win, "activate");
-  } else {
-    testScope.info("switchToWindow, win is already the activeWindow");
-  }
-  testScope.info("switchToWindow, done");
-}
-
 function assertFirefoxViewTab(win) {
   Assert.ok(win.FirefoxViewHandler.tab, "Firefox View tab exists");
   Assert.ok(win.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
@@ -62,7 +48,7 @@ async function openFirefoxViewTab(win) {
       "Must initialize FirefoxViewTestUtils with a test scope which has a SimpleTest property"
     );
   }
-  await switchToWindow(win);
+  await testScope.SimpleTest.promiseFocus(win);
   let fxviewTab = win.FirefoxViewHandler.tab;
   let alreadyLoaded =
     fxviewTab?.linkedBrowser.currentURI.spec.includes(getFirefoxViewURL()) &&
@@ -181,7 +167,6 @@ function isFirefoxViewTabSelectedInWindow(win) {
 
 export {
   init,
-  switchToWindow,
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
