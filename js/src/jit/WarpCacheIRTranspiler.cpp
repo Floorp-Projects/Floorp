@@ -4482,7 +4482,7 @@ bool WarpCacheIRTranspiler::emitAtomicsLoadResult(ObjOperandId objId,
       MIRTypeForArrayBufferViewRead(elementType, forceDoubleForUint32);
 
   auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType,
-                                       DoesRequireMemoryBarrier);
+                                       MemoryBarrierRequirement::Required);
   load->setResultType(knownType);
   addEffectful(load);
 
@@ -4506,8 +4506,9 @@ bool WarpCacheIRTranspiler::emitAtomicsStoreResult(ObjOperandId objId,
   auto* elements = MArrayBufferViewElements::New(alloc(), obj);
   add(elements);
 
-  auto* store = MStoreUnboxedScalar::New(alloc(), elements, index, value,
-                                         elementType, DoesRequireMemoryBarrier);
+  auto* store =
+      MStoreUnboxedScalar::New(alloc(), elements, index, value, elementType,
+                               MemoryBarrierRequirement::Required);
   addEffectful(store);
 
   pushResult(value);
