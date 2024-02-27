@@ -132,6 +132,7 @@
 
     .main-content-inner {
       min-height: auto;
+      align-items: initial;
 
       .welcome-text {
         align-items: initial;
@@ -174,6 +175,13 @@
         font-size: 1em;
         gap: 12px;
         width: 100%;
+
+        #multi-stage-multi-select-label {
+          color: inherit;
+          line-height: 20px;
+          margin-block: -2px 0;
+          font-size: 1em;
+        }
 
         .multi-select-item input {
           margin-block: 0;

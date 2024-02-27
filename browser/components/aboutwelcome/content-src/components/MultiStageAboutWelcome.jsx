@@ -171,6 +171,8 @@ export const MultiStageAboutWelcome = props => {
     return false;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [multiSelects, setMultiSelects] = useState({});
+
   // Save the active multi select state for each screen as an object keyed by
   // screen id. Each screen id has an array containing checkbox ids used in
   // handleAction to update MULTI_ACTION data. This allows us to remember the
@@ -223,6 +225,14 @@ export const MultiStageAboutWelcome = props => {
                   ? valueOrFn(prevState[screen.id])
                   : valueOrFn,
             }));
+          const setScreenMultiSelects = valueOrFn =>
+            setMultiSelects(prevState => ({
+              ...prevState,
+              [screen.id]:
+                typeof valueOrFn === "function"
+                  ? valueOrFn(prevState[screen.id])
+                  : valueOrFn,
+            }));
 
           return index === order ? (
             <WelcomeScreen
@@ -243,6 +253,8 @@ export const MultiStageAboutWelcome = props => {
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
               setInitialTheme={setInitialTheme}
+              screenMultiSelects={multiSelects[screen.id]}
+              setScreenMultiSelects={setScreenMultiSelects}
               activeMultiSelect={activeMultiSelects[screen.id]}
               setActiveMultiSelect={setActiveMultiSelect}
               autoAdvance={screen.auto_advance}
@@ -532,6 +544,8 @@ export class WelcomeScreen extends React.PureComponent {
         order={this.props.order}
         previousOrder={this.props.previousOrder}
         activeTheme={this.props.activeTheme}
+        screenMultiSelects={this.props.screenMultiSelects}
+        setScreenMultiSelects={this.props.setScreenMultiSelects}
         activeMultiSelect={this.props.activeMultiSelect}
         setActiveMultiSelect={this.props.setActiveMultiSelect}
         totalNumberOfScreens={this.props.totalNumberOfScreens}
