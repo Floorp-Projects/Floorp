@@ -33,6 +33,7 @@ categories:
         - uriloader
         - widget/cocoa
         - widget/windows
+        - toolkit/components/ml
         - accessible
         - code-quality
         - writing-rust-code
