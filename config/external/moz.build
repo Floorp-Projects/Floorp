@@ -49,6 +49,9 @@ if not CONFIG["MOZ_SYSTEM_PNG"]:
 if not CONFIG["MOZ_SYSTEM_WEBP"]:
     external_dirs += ["media/libwebp"]
 
+if CONFIG["TARGET_CPU"] == "arm":
+    external_dirs += ["media/openmax_dl/dl"]
+
 if CONFIG["MOZ_FFVPX"]:
     external_dirs += ["media/ffvpx"]
 
@@ -56,6 +59,7 @@ if CONFIG["MOZ_JXL"]:
     external_dirs += ["media/libjxl", "media/highway"]
 
 external_dirs += [
+    "media/kiss_fft",
     "media/libcubeb",
     "media/libmkv",
     "media/libnestegg",

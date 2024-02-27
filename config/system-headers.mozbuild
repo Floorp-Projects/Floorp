@@ -1267,6 +1267,11 @@ if CONFIG["MOZ_SYSTEM_JPEG"]:
         "jpeglib.h",
     ]
 
+if CONFIG["MOZ_LIBAV_FFT"]:
+    system_headers += [
+        "libavcodec/avfft.h",
+    ]
+
 if CONFIG["MOZ_SYSTEM_PNG"]:
     system_headers += [
         "png.h",
