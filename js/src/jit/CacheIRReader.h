@@ -96,6 +96,9 @@ class MOZ_RAII CacheIRReader {
 
   uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
   GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
+  ArrayBufferViewKind arrayBufferViewKind() {
+    return ArrayBufferViewKind(buffer_.readByte());
+  }
   ValueType valueType() { return ValueType(buffer_.readByte()); }
   wasm::ValType::Kind wasmValType() {
     return wasm::ValType::Kind(buffer_.readByte());
