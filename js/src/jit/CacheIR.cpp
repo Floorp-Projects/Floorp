@@ -7009,19 +7009,52 @@ AttachDecision InlinableNativeIRGenerator::tryAttachGuardToClass(
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachGuardToEitherClass(
+    GuardClassKind kind1, GuardClassKind kind2) {
+  MOZ_ASSERT(kind1 != kind2,
+             "prefer tryAttachGuardToClass for the same class case");
+
+  // Self-hosted code calls this with an object argument.
+  MOZ_ASSERT(argc_ == 1);
+  MOZ_ASSERT(args_[0].isObject());
+
+  // Class must match.
+  const JSClass* clasp1 = ClassFor(kind1);
+  const JSClass* clasp2 = ClassFor(kind2);
+  const JSClass* objClass = args_[0].toObject().getClass();
+  if (objClass != clasp1 && objClass != clasp2) {
+    return AttachDecision::NoAction;
+  }
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  // Guard that the argument is an object.
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId objId = writer.guardToObject(argId);
+
+  // Guard that the object has the correct class.
+  writer.guardEitherClass(objId, kind1, kind2);
+
+  // Return the object.
+  writer.loadObjectResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("GuardToEitherClass");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachGuardToArrayBuffer() {
-  // TODO: Support resizable ArrayBuffers (bug 1842999), for now simply
-  // pass through to tryAttachGuardToClass which guards on
-  // FixedLengthArrayBufferObject.
-  return tryAttachGuardToClass(InlinableNative::IntrinsicGuardToArrayBuffer);
+  return tryAttachGuardToEitherClass(GuardClassKind::FixedLengthArrayBuffer,
+                                     GuardClassKind::ResizableArrayBuffer);
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachGuardToSharedArrayBuffer() {
-  // TODO: Support resizable SharedArrayBuffers (bug 1842999), for now simply
-  // pass through to tryAttachGuardToClass which guards on
-  // FixedLengthSharedArrayBufferObject.
-  return tryAttachGuardToClass(
-      InlinableNative::IntrinsicGuardToSharedArrayBuffer);
+  return tryAttachGuardToEitherClass(
+      GuardClassKind::FixedLengthSharedArrayBuffer,
+      GuardClassKind::GrowableSharedArrayBuffer);
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
