@@ -220,6 +220,10 @@ bool HTMLImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (aAttribute == nsGkAtoms::loading) {
       return ParseLoadingAttribute(aValue, aResult);
     }
+    if (aAttribute == nsGkAtoms::fetchpriority) {
+      ParseFetchPriority(aValue, aResult);
+      return true;
+    }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return true;
     }
@@ -1372,6 +1376,10 @@ void HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad) {
   // queued event, and so earlier tasks are implicitly canceled.
   mPendingImageLoadTask = task;
   CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
+}
+
+FetchPriority HTMLImageElement::GetFetchPriorityForImage() const {
+  return nsGenericHTMLElement::GetFetchPriority();
 }
 
 }  // namespace mozilla::dom

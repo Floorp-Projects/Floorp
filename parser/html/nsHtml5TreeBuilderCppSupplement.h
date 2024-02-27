@@ -215,13 +215,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 nsHtml5AttributeName::ATTR_REFERRERPOLICY);
             nsHtml5String sizes =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
-
-            // TODO: support the fetchpriority attribute in bug 1839313.
-            //       Meanwhile the empty string is used since it's mapped to the
-            //       auto state
-            //       (https://html.spec.whatwg.org/#fetch-priority-attribute).
-            auto fetchPriority = nsHtml5String::EmptyString();
-
+            nsHtml5String fetchPriority =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_FETCHPRIORITY);
             mSpeculativeLoadQueue.AppendElement()->InitImage(
                 url, crossOrigin, /* aMedia = */ nullptr, referrerPolicy,
                 srcset, sizes, false, fetchPriority);

@@ -40,6 +40,7 @@ namespace dom {
 struct BindContext;
 class Document;
 class Element;
+enum class FetchPriority : uint8_t;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -235,6 +236,8 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   // Get ourselves as an nsIContent*.  Not const because some of the callers
   // want a non-const nsIContent.
   virtual nsIContent* AsContent() = 0;
+
+  virtual mozilla::dom::FetchPriority GetFetchPriorityForImage() const;
 
   /**
    * Get width and height of the current request, using given image request if
