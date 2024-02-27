@@ -361,6 +361,17 @@ class Raptor(
                 },
             ],
             [
+                ["--post-startup-delay"],
+                {
+                    "dest": "post_startup_delay",
+                    "type": "int",
+                    "help": (
+                        "How long to wait (ms) after browser start-up before "
+                        "starting the tests."
+                    ),
+                },
+            ],
+            [
                 ["--project"],
                 {
                     "action": "store",
@@ -1054,6 +1065,10 @@ class Raptor(
             )
         if self.config.get("page_timeout"):
             options.extend([f"--page-timeout={self.page_timeout}"])
+        if self.config.get("post_startup_delay"):
+            options.extend(
+                [f"--post-startup-delay={self.config['post_startup_delay']}"]
+            )
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line

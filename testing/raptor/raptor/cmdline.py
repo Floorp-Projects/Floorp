@@ -604,6 +604,10 @@ def verify_options(parser, args):
                 "When a benchmark repository is provided, a revision is also required."
             )
 
+    if args.post_startup_delay:
+        if args.post_startup_delay < 0:
+            parser.error("--post-startup-delay must be a positive integer (in ms).")
+
 
 def parse_args(argv=None):
     parser = create_parser()
