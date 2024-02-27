@@ -1131,13 +1131,6 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
       if (inputEvent->IsAlt()) {
         modifiers.SetAlt();
       }
-
-      WidgetMouseEvent* mouseEvent = inputEvent->AsMouseEvent();
-      if (mouseEvent) {
-        if (mouseEvent->mButton == MouseButton::eMiddle) {
-          modifiers.SetMiddleMouse();
-        }
-      }
     }
   }
   doc->NotifyUserGestureActivation(modifiers);

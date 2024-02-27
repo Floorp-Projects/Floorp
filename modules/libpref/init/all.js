@@ -2655,6 +2655,7 @@ pref("font.size.monospace.x-math", 13);
 
   // Middle-mouse handling
   pref("middlemouse.paste", true);
+  pref("middlemouse.openNewWindow", true);
   pref("middlemouse.scrollbarPosition", true);
 
   // Tab focus model bit field:
@@ -2685,6 +2686,7 @@ pref("font.size.monospace.x-math", 13);
 
   // Middle-mouse handling
   pref("middlemouse.paste", true);
+  pref("middlemouse.openNewWindow", true);
   pref("middlemouse.scrollbarPosition", true);
 
   // Tab focus model bit field:
