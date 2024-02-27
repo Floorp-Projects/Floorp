@@ -9720,6 +9720,18 @@ void CodeGenerator::visitGuardResizableArrayBufferViewInBounds(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardResizableArrayBufferViewInBoundsOrDetached(
+    LGuardResizableArrayBufferViewInBoundsOrDetached* lir) {
+  Register obj = ToRegister(lir->object());
+  Register temp = ToRegister(lir->temp0());
+
+  Label done, bail;
+  masm.branchIfResizableArrayBufferViewInBounds(obj, temp, &done);
+  masm.branchIfHasAttachedArrayBuffer(obj, temp, &bail);
+  masm.bind(&done);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardHasAttachedArrayBuffer(
     LGuardHasAttachedArrayBuffer* lir) {
   Register obj = ToRegister(lir->object());
