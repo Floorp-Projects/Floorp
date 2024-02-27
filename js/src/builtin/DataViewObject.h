@@ -178,16 +178,6 @@ class FixedLengthDataViewObject : public DataViewObject {
   }
 
   size_t byteLength() const { return ArrayBufferViewObject::lengthSlotValue(); }
-
-  bool offsetIsInBounds(uint32_t byteSize, uint64_t offset) const {
-    return DataViewObject::offsetIsInBounds(byteSize, offset, byteLength());
-  }
-
-  template <typename NativeType>
-  NativeType read(uint64_t offset, bool isLittleEndian) {
-    return DataViewObject::read<NativeType>(offset, byteLength(),
-                                            isLittleEndian);
-  }
 };
 
 /**

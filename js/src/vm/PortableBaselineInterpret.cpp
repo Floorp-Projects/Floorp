@@ -782,6 +782,11 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
           return ICInterpretOpResult::NextIC;
         }
         break;
+      case GuardClassKind::ResizableDataView:
+        if (object->getClass() != &ResizableDataViewObject::class_) {
+          return ICInterpretOpResult::NextIC;
+        }
+        break;
       case GuardClassKind::MappedArguments:
         if (object->getClass() != &MappedArgumentsObject::class_) {
           return ICInterpretOpResult::NextIC;

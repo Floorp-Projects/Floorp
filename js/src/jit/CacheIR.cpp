@@ -1991,6 +1991,8 @@ const JSClass* js::jit::ClassFor(GuardClassKind kind) {
       return &GrowableSharedArrayBufferObject::class_;
     case GuardClassKind::FixedLengthDataView:
       return &FixedLengthDataViewObject::class_;
+    case GuardClassKind::ResizableDataView:
+      return &ResizableDataViewObject::class_;
     case GuardClassKind::MappedArguments:
       return &MappedArgumentsObject::class_;
     case GuardClassKind::UnmappedArguments:
@@ -2027,6 +2029,7 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::FixedLengthSharedArrayBuffer:
     case GuardClassKind::GrowableSharedArrayBuffer:
     case GuardClassKind::FixedLengthDataView:
+    case GuardClassKind::ResizableDataView:
     case GuardClassKind::Set:
     case GuardClassKind::Map:
       MOZ_ASSERT(obj->hasClass(ClassFor(kind)));
@@ -3135,6 +3138,15 @@ static ArrayBufferViewKind ToArrayBufferViewKind(const TypedArrayObject* obj) {
   }
 
   MOZ_ASSERT(obj->is<ResizableTypedArrayObject>());
+  return ArrayBufferViewKind::Resizable;
+}
+
+static ArrayBufferViewKind ToArrayBufferViewKind(const DataViewObject* obj) {
+  if (obj->is<FixedLengthDataViewObject>()) {
+    return ArrayBufferViewKind::FixedLength;
+  }
+
+  MOZ_ASSERT(obj->is<ResizableDataViewObject>());
   return ArrayBufferViewKind::Resizable;
 }
 
@@ -6561,9 +6573,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayIsArray() {
 AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
     Scalar::Type type) {
   // Ensure |this| is a DataViewObject.
-  // TODO: Support resizable dataviews. (bug 1842999)
-  if (!thisval_.isObject() ||
-      !thisval_.toObject().is<FixedLengthDataViewObject>()) {
+  if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -6579,11 +6589,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
     return AttachDecision::NoAction;
   }
 
-  auto* dv = &thisval_.toObject().as<FixedLengthDataViewObject>();
+  auto* dv = &thisval_.toObject().as<DataViewObject>();
 
   // Bounds check the offset.
-  if (offsetInt64 < 0 ||
-      !dv->offsetIsInBounds(Scalar::byteSize(type), offsetInt64)) {
+  size_t byteLength = dv->byteLength().valueOr(0);
+  if (offsetInt64 < 0 || !DataViewObject::offsetIsInBounds(
+                             Scalar::byteSize(type), offsetInt64, byteLength)) {
     return AttachDecision::NoAction;
   }
 
@@ -6592,7 +6603,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
   bool forceDoubleForUint32 = false;
   if (type == Scalar::Uint32) {
     bool isLittleEndian = argc_ > 1 && args_[1].toBoolean();
-    uint32_t res = dv->read<uint32_t>(offsetInt64, isLittleEndian);
+    uint32_t res = dv->read<uint32_t>(offsetInt64, byteLength, isLittleEndian);
     forceDoubleForUint32 = res >= INT32_MAX;
   }
 
@@ -6606,8 +6617,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  emitOptimisticClassGuard(objId, &thisval_.toObject(),
-                           GuardClassKind::FixedLengthDataView);
+
+  if (dv->is<FixedLengthDataViewObject>()) {
+    emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                             GuardClassKind::FixedLengthDataView);
+  } else {
+    emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                             GuardClassKind::ResizableDataView);
+  }
 
   // Convert offset to intPtr.
   ValOperandId offsetId =
@@ -6624,8 +6641,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
     boolLittleEndianId = writer.loadBooleanConstant(false);
   }
 
+  auto viewKind = ToArrayBufferViewKind(dv);
   writer.loadDataViewValueResult(objId, intPtrOffsetId, boolLittleEndianId,
-                                 type, forceDoubleForUint32);
+                                 type, forceDoubleForUint32, viewKind);
+
   writer.returnFromIC();
 
   trackAttached("DataViewGet");
@@ -6635,9 +6654,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
 AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
     Scalar::Type type) {
   // Ensure |this| is a DataViewObject.
-  // TODO: Support resizable dataviews. (bug 1842999)
-  if (!thisval_.isObject() ||
-      !thisval_.toObject().is<FixedLengthDataViewObject>()) {
+  if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -6656,11 +6673,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
     return AttachDecision::NoAction;
   }
 
-  auto* dv = &thisval_.toObject().as<FixedLengthDataViewObject>();
+  auto* dv = &thisval_.toObject().as<DataViewObject>();
 
   // Bounds check the offset.
-  if (offsetInt64 < 0 ||
-      !dv->offsetIsInBounds(Scalar::byteSize(type), offsetInt64)) {
+  size_t byteLength = dv->byteLength().valueOr(0);
+  if (offsetInt64 < 0 || !DataViewObject::offsetIsInBounds(
+                             Scalar::byteSize(type), offsetInt64, byteLength)) {
     return AttachDecision::NoAction;
   }
 
@@ -6674,8 +6692,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
   ValOperandId thisValId =
       writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId objId = writer.guardToObject(thisValId);
-  emitOptimisticClassGuard(objId, &thisval_.toObject(),
-                           GuardClassKind::FixedLengthDataView);
+
+  if (dv->is<FixedLengthDataViewObject>()) {
+    emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                             GuardClassKind::FixedLengthDataView);
+  } else {
+    emitOptimisticClassGuard(objId, &thisval_.toObject(),
+                             GuardClassKind::ResizableDataView);
+  }
 
   // Convert offset to intPtr.
   ValOperandId offsetId =
@@ -6697,8 +6721,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
     boolLittleEndianId = writer.loadBooleanConstant(false);
   }
 
+  auto viewKind = ToArrayBufferViewKind(dv);
   writer.storeDataViewValueResult(objId, intPtrOffsetId, numericValueId,
-                                  boolLittleEndianId, type);
+                                  boolLittleEndianId, type, viewKind);
+
   writer.returnFromIC();
 
   trackAttached("DataViewSet");

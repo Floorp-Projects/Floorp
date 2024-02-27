@@ -2156,6 +2156,7 @@ static const JSClass* ClassFor(JSContext* cx, GuardClassKind kind) {
     case GuardClassKind::FixedLengthSharedArrayBuffer:
     case GuardClassKind::GrowableSharedArrayBuffer:
     case GuardClassKind::FixedLengthDataView:
+    case GuardClassKind::ResizableDataView:
     case GuardClassKind::MappedArguments:
     case GuardClassKind::UnmappedArguments:
     case GuardClassKind::Set:
@@ -6791,11 +6792,40 @@ bool CacheIRCompiler::emitLoadTypedArrayElementResult(
   return true;
 }
 
-static void EmitDataViewBoundsCheck(MacroAssembler& masm, size_t byteSize,
-                                    Register obj, Register offset,
-                                    Register scratch, Label* fail) {
+void CacheIRCompiler::emitDataViewBoundsCheck(ArrayBufferViewKind viewKind,
+                                              size_t byteSize, Register obj,
+                                              Register offset, Register scratch,
+                                              Register maybeScratch,
+                                              Label* fail) {
+  // |offset| must not alias any scratch register.
+  MOZ_ASSERT(offset != scratch);
+  MOZ_ASSERT(offset != maybeScratch);
+
+  if (viewKind == ArrayBufferViewKind::FixedLength) {
+    masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
+  } else {
+    if (maybeScratch == InvalidReg) {
+      // Spill |offset| to use it as an additional scratch register.
+      masm.push(offset);
+
+      maybeScratch = offset;
+    }
+
+    // Bounds check doesn't require synchronization. See GetViewValue and
+    // SetViewValue abstract operations which read the underlying buffer byte
+    // length using "unordered" memory order.
+    auto sync = Synchronization::None();
+
+    masm.loadResizableDataViewByteLengthIntPtr(sync, obj, scratch,
+                                               maybeScratch);
+
+    if (maybeScratch == offset) {
+      // Restore |offset|.
+      masm.pop(offset);
+    }
+  }
+
   // Ensure both offset < length and offset + (byteSize - 1) < length.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
   if (byteSize == 1) {
     masm.spectreBoundsCheckPtr(offset, scratch, InvalidReg, fail);
   } else {
@@ -6810,7 +6840,7 @@ static void EmitDataViewBoundsCheck(MacroAssembler& masm, size_t byteSize,
 bool CacheIRCompiler::emitLoadDataViewValueResult(
     ObjOperandId objId, IntPtrOperandId offsetId,
     BooleanOperandId littleEndianId, Scalar::Type elementType,
-    bool forceDoubleForUint32) {
+    bool forceDoubleForUint32, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -6823,6 +6853,18 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
   Register64 outputReg64 = output.valueReg().toRegister64();
   Register outputScratch = outputReg64.scratchReg();
 
+  Register boundsCheckScratch;
+#ifndef JS_CODEGEN_X86
+  Maybe<AutoScratchRegister> maybeBoundsCheckScratch;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+    maybeBoundsCheckScratch.emplace(allocator, masm);
+    boundsCheckScratch = *maybeBoundsCheckScratch;
+  }
+#else
+  // Not enough registers on x86, so use the other part of outputReg64.
+  boundsCheckScratch = outputReg64.secondScratchReg();
+#endif
+
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
@@ -6830,8 +6872,8 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
 
   const size_t byteSize = Scalar::byteSize(elementType);
 
-  EmitDataViewBoundsCheck(masm, byteSize, obj, offset, outputScratch,
-                          failure->label());
+  emitDataViewBoundsCheck(viewKind, byteSize, obj, offset, outputScratch,
+                          boundsCheckScratch, failure->label());
 
   masm.loadPtr(Address(obj, DataViewObject::dataOffset()), outputScratch);
 
@@ -6966,7 +7008,8 @@ bool CacheIRCompiler::emitLoadDataViewValueResult(
 
 bool CacheIRCompiler::emitStoreDataViewValueResult(
     ObjOperandId objId, IntPtrOperandId offsetId, uint32_t valueId,
-    BooleanOperandId littleEndianId, Scalar::Type elementType) {
+    BooleanOperandId littleEndianId, Scalar::Type elementType,
+    ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoOutputRegister output(*this);
@@ -7040,6 +7083,24 @@ bool CacheIRCompiler::emitStoreDataViewValueResult(
   }
 #endif
 
+  Register boundsCheckScratch;
+#ifndef JS_CODEGEN_X86
+  Maybe<AutoScratchRegister> maybeBoundsCheckScratch;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+    if (scratch2.constructed<AutoScratchRegister>()) {
+      boundsCheckScratch = scratch2.ref<AutoScratchRegister>().get();
+    } else if (scratch2.constructed<AutoScratchRegister64>()) {
+      boundsCheckScratch =
+          scratch2.ref<AutoScratchRegister64>().get().scratchReg();
+    } else {
+      maybeBoundsCheckScratch.emplace(allocator, masm);
+      boundsCheckScratch = *maybeBoundsCheckScratch;
+    }
+  }
+#else
+  // Not enough registers on x86.
+#endif
+
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
@@ -7047,8 +7108,8 @@ bool CacheIRCompiler::emitStoreDataViewValueResult(
 
   const size_t byteSize = Scalar::byteSize(elementType);
 
-  EmitDataViewBoundsCheck(masm, byteSize, obj, offset, scratch1,
-                          failure->label());
+  emitDataViewBoundsCheck(viewKind, byteSize, obj, offset, scratch1,
+                          boundsCheckScratch, failure->label());
 
   masm.loadPtr(Address(obj, DataViewObject::dataOffset()), scratch1);
   BaseIndex dest(scratch1, offset, TimesOne);
