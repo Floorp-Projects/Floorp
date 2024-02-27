@@ -4233,18 +4233,18 @@ inline bool OpIter<Policy>::readCallBuiltinModuleFunc(
     return fail("index out of range");
   }
 
-  *builtinModuleFunc = &BuiltinModuleFunc::getFromId(BuiltinModuleFuncId(id));
+  *builtinModuleFunc = &BuiltinModuleFuncs::getFromId(BuiltinModuleFuncId(id));
 
-  if ((*builtinModuleFunc)->usesMemory && env_.numMemories() == 0) {
+  if ((*builtinModuleFunc)->usesMemory() && env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
-  if (!popWithTypes((*builtinModuleFunc)->params, params)) {
+
+  const FuncType& funcType = *(*builtinModuleFunc)->funcType();
+  if (!popCallArgs(funcType.args(), params)) {
     return false;
   }
-  if ((*builtinModuleFunc)->result.isNothing()) {
-    return true;
-  }
-  return push(*(*builtinModuleFunc)->result);
+
+  return push(ResultType::Vector(funcType.results()));
 }
 
 }  // namespace wasm

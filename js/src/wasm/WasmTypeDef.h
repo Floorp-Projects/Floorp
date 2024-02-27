@@ -1228,13 +1228,16 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
   }
 
   template <typename T>
-  [[nodiscard]] bool addType(T&& type) {
+  [[nodiscard]] const TypeDef* addType(T&& type) {
     MutableRecGroup recGroup = startRecGroup(1);
     if (!recGroup) {
-      return false;
+      return nullptr;
     }
     recGroup->type(0) = std::move(type);
-    return endRecGroup();
+    if (!endRecGroup()) {
+      return nullptr;
+    }
+    return &this->type(length() - 1);
   }
 
   const TypeDef& type(uint32_t index) const { return *types_[index]; }

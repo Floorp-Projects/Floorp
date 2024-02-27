@@ -12,10 +12,10 @@
   entry: Instance::intrI8VecMul
   export: i8vecmul
   params:
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -40,12 +40,12 @@
   entry: intgemm::IntrI8PrepareB
   export: int8_prepare_b
   params:
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'f32'
+    - 'f32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -65,12 +65,12 @@
   entry: intgemm::IntrI8PrepareBFromTransposed
   export: int8_prepare_b_from_transposed
   params:
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'f32'
+    - 'f32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -90,10 +90,10 @@
   entry: intgemm::IntrI8PrepareBFromQuantizedTransposed
   export: int8_prepare_b_from_quantized_transposed
   params:
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -116,12 +116,12 @@
   entry: intgemm::IntrI8PrepareA
   export: int8_prepare_a
   params:
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'f32'
+    - 'f32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -142,15 +142,15 @@
   entry: intgemm::IntrI8PrepareBias
   export: int8_prepare_bias
   params:
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'f32'
+    - 'f32'
+    - 'f32'
+    - 'f32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -177,18 +177,18 @@
   entry: intgemm::IntrI8MultiplyAndAddBias
   export: int8_multiply_and_add_bias
   params:
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::f32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'f32'
+    - 'f32'
+    - 'i32'
+    - 'f32'
+    - 'f32'
+    - 'i32'
+    - 'f32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -206,12 +206,12 @@
   entry: intgemm::IntrI8SelectColumnsOfB
   export: int8_select_columns_of_b
   params:
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
+    - 'i32'
   fail_mode: FailOnNegI32
   uses_memory: true
 
@@ -226,10 +226,13 @@
   entry: Instance::stringFromWTF16Array
   export: fromWTF16Array
   params:
-    - 'ValType(RefType::any())'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-  result: 'ValType(RefType::extern_())'
+    - type: "StaticTypeDefs::arrayMutI16"
+      nullable: true
+    - 'i32'
+    - 'i32'
+  result:
+    code: 'extern'
+    nullable: false
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -240,10 +243,11 @@
   entry: Instance::stringToWTF16Array
   export: toWTF16Array
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType(RefType::any())'
-    - 'ValType::i32()'
-  result: 'ValType::i32()'
+    - 'externref'
+    - type: "StaticTypeDefs::arrayMutI16"
+      nullable: true
+    - 'i32'
+  result: 'i32'
   fail_mode: FailOnNegI32
   uses_memory: false
 
@@ -254,8 +258,8 @@
   entry: Instance::stringFromCharCode
   export: fromCharCode
   params:
-    - 'ValType::i32()'
-  result: 'ValType(RefType::extern_())'
+    - 'i32'
+  result: 'externref'
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -266,8 +270,8 @@
   entry: Instance::stringFromCodePoint
   export: fromCodePoint
   params:
-    - 'ValType::i32()'
-  result: 'ValType(RefType::extern_())'
+    - 'i32'
+  result: 'externref'
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -278,9 +282,9 @@
   entry: Instance::stringCharCodeAt
   export: charCodeAt
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType::i32()'
-  result: 'ValType::i32()'
+    - 'externref'
+    - 'i32'
+  result: 'i32'
   fail_mode: FailOnNegI32
   uses_memory: false
 
@@ -291,9 +295,9 @@
   entry: Instance::stringCodePointAt
   export: codePointAt
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType::i32()'
-  result: 'ValType::i32()'
+    - 'externref'
+    - 'i32'
+  result: 'i32'
   fail_mode: FailOnNegI32
   uses_memory: false
 
@@ -304,8 +308,8 @@
   entry: Instance::stringLength
   export: length
   params:
-    - 'ValType(RefType::extern_())'
-  result: 'ValType::i32()'
+    - 'externref'
+  result: 'i32'
   fail_mode: FailOnNegI32
   uses_memory: false
 
@@ -316,9 +320,9 @@
   entry: Instance::stringConcatenate
   export: concatenate
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType(RefType::extern_())'
-  result: 'ValType(RefType::extern_())'
+    - 'externref'
+    - 'externref'
+  result: 'externref'
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -329,10 +333,10 @@
   entry: Instance::stringSubstring
   export: substring
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType::i32()'
-    - 'ValType::i32()'
-  result: 'ValType(RefType::extern_())'
+    - 'externref'
+    - 'i32'
+    - 'i32'
+  result: 'externref'
   fail_mode: FailOnNullPtr
   uses_memory: false
 
@@ -343,9 +347,9 @@
   entry: Instance::stringEquals
   export: equals
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType(RefType::extern_())'
-  result: 'ValType::i32()'
+    - 'externref'
+    - 'externref'
+  result: 'i32'
   fail_mode: FailOnNegI32
   uses_memory: false
 
@@ -356,9 +360,9 @@
   entry: Instance::stringCompare
   export: compare
   params:
-    - 'ValType(RefType::extern_())'
-    - 'ValType(RefType::extern_())'
-  result: 'ValType::i32()'
+    - 'externref'
+    - 'externref'
+  result: 'i32'
   fail_mode: FailOnMaxI32
   uses_memory: false
 

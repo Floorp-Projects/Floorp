@@ -2006,10 +2006,10 @@ class FunctionCompiler {
     MOZ_CRASH("Unknown ABIArg kind.");
   }
 
-  template <typename SpanT>
-  [[nodiscard]] bool passArgs(const DefVector& argDefs, SpanT types,
+  template <typename VecT>
+  [[nodiscard]] bool passArgs(const DefVector& argDefs, const VecT& types,
                               CallCompileState* call) {
-    MOZ_ASSERT(argDefs.length() == types.size());
+    MOZ_ASSERT(argDefs.length() == types.length());
     for (uint32_t i = 0; i < argDefs.length(); i++) {
       MDefinition* def = argDefs[i];
       ValType type = types[i];
@@ -7933,18 +7933,18 @@ static bool EmitCallBuiltinModuleFunc(FunctionCompiler& f) {
   }
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
-  const SymbolicAddressSignature& callee = builtinModuleFunc->signature;
+  const SymbolicAddressSignature& callee = *builtinModuleFunc->sig();
 
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
   }
 
-  if (!f.passArgs(params, builtinModuleFunc->params, &args)) {
+  if (!f.passArgs(params, builtinModuleFunc->funcType()->args(), &args)) {
     return false;
   }
 
-  if (builtinModuleFunc->usesMemory) {
+  if (builtinModuleFunc->usesMemory()) {
     MDefinition* memoryBase = f.memoryBase(0);
     if (!f.passArg(memoryBase, MIRType::Pointer, &args)) {
       return false;
@@ -7955,7 +7955,7 @@ static bool EmitCallBuiltinModuleFunc(FunctionCompiler& f) {
     return false;
   }
 
-  bool hasResult = builtinModuleFunc->result.isSome();
+  bool hasResult = !builtinModuleFunc->funcType()->results().empty();
   MDefinition* result = nullptr;
   MDefinition** resultOutParam = hasResult ? &result : nullptr;
   if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args,

@@ -26,10 +26,12 @@
 #include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"
 #include "vm/Runtime.h"
+#include "wasm/WasmBuiltinModule.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmStaticTypeDefs.h"
 
 using namespace js;
 using namespace wasm;
@@ -438,6 +440,15 @@ bool wasm::Init() {
     oomUnsafe.crash("js::wasm::Init");
   }
 
+  if (!StaticTypeDefs::init()) {
+    oomUnsafe.crash("js::wasm::Init");
+  }
+
+  // This uses StaticTypeDefs
+  if (!BuiltinModuleFuncs::init()) {
+    oomUnsafe.crash("js::wasm::Init");
+  }
+
   sProcessCodeSegmentMap = map;
 
   if (!InitTagForJSValue()) {
@@ -455,6 +466,8 @@ void wasm::ShutDown() {
     return;
   }
 
+  BuiltinModuleFuncs::destroy();
+  StaticTypeDefs::destroy();
   PurgeCanonicalTypes();
 
   if (sWrappedJSValueTagType) {

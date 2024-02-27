@@ -47,6 +47,58 @@ def cppBool(v):
     return "false"
 
 
+def specTypeToMIRType(specType):
+    if specType == "i32" or specType == "i64" or specType == "f32" or specType == "f64":
+        return f"ValType::{specType}().toMIRType()"
+    if (
+        specType == "externref"
+        or specType == "anyref"
+        or specType == "funcref"
+        or isinstance(specType, dict)
+    ):
+        return "MIRType::WasmAnyRef"
+    raise ValueError()
+
+
+def specHeapTypeToTypeCode(specHeapType):
+    if specHeapType == "func":
+        return "Func"
+    if specHeapType == "any":
+        return "Any"
+    if specHeapType == "extern":
+        return "Extern"
+    if specHeapType == "array":
+        return "Array"
+    if specHeapType == "struct":
+        return "Struct"
+    raise ValueError()
+
+
+def specTypeToValType(specType):
+    if specType == "i32" or specType == "i64" or specType == "f32" or specType == "f64":
+        return f"ValType::{specType}()"
+
+    if specType == "externref":
+        return "ValType(RefType::extern_())"
+
+    if specType == "anyref":
+        return "ValType(RefType::any())"
+
+    if specType == "funcref":
+        return "ValType(RefType::func())"
+
+    if isinstance(specType, dict):
+        nullable = cppBool(specType["nullable"])
+        if "type" in specType:
+            ref = specType["type"]
+            return f"ValType(RefType::fromTypeDef({ref}, {nullable}))"
+        else:
+            code = specType["code"]
+            return f"ValType(RefType::fromTypeCode(TypeCode(RefType::{specHeapTypeToTypeCode(code)}), {nullable}))"
+
+    raise ValueError()
+
+
 def main(c_out, yaml_path):
     data = load_yaml(yaml_path)
 
@@ -64,34 +116,45 @@ def main(c_out, yaml_path):
     for op in data:
         # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_<op> as:
         # `{ValType::I32, ValType::I32, ...}`.
+        valTypes = ", ".join(specTypeToValType(p) for p in op["params"])
         contents += (
             f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_{op['op']} "
-            f"{{{', '.join(op['params'])}}}\n"
+            f"{{{valTypes}}}\n"
         )
 
-        # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_SASTYPES_<op> as:
-        # `<num_types>, {_PTR, _I32, ..., _PTR, _END}`.
+        # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_MIRTYPES_<op> as:
+        # `<num_types>, {MIRType::Pointer, _I32, ..., MIRType::Pointer, _END}`.
         num_types = len(op["params"]) + 1
-        sas_types = (
-            f"{{_PTR{''.join(', ' + (p + '.toMIRType()') for p in op['params'])}"
-        )
+        mir_types = "{MIRType::Pointer"
+        mir_types += "".join(", " + specTypeToMIRType(p) for p in op["params"])
         if op["uses_memory"]:
-            sas_types += ", _PTR"
+            mir_types += ", MIRType::Pointer"
             num_types += 1
-        sas_types += ", _END}"
+        # Add the end marker
+        mir_types += ", MIRType::None}"
 
-        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_SASTYPES_{op['op']} {num_types}, {sas_types}\n"
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_MIRTYPES_{op['op']} {num_types}, {mir_types}\n"
 
+        # Define DECLARE_BUILTIN_MODULE_FUNC_RESULT_VALTYPE_<op> as:
+        # `Some(X)` if present, or else `Nothing()`.
         result_valtype = ""
-        result_sastype = ""
         if "result" in op:
-            result_valtype = f"Some({op['result']})\n"
-            result_sastype = f"{op['result']}.toMIRType()\n"
+            result_valtype = f"Some({specTypeToValType(op['result'])})\n"
         else:
             result_valtype = "Nothing()"
-            result_sastype = "_VOID"
         contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_RESULT_VALTYPE_{op['op']} {result_valtype}\n"
-        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_RESULT_SASTYPE_{op['op']} {result_sastype}\n"
-        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_FAILMODE_{op['op']} _{op['fail_mode']}\n"
+
+        # Define DECLARE_BUILTIN_MODULE_FUNC_RESULT_MIRTYPE_<op> as:
+        # `X` if present, or else `MIRType::None`.
+        result_mirtype = ""
+        if "result" in op:
+            result_mirtype = specTypeToMIRType(op["result"]) + "\n"
+        else:
+            result_mirtype = "MIRType::None"
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_RESULT_MIRTYPE_{op['op']} {result_mirtype}\n"
+
+        # Define DECLARE_BUILTIN_MODULE_FUNC_FAILMODE_<op> as:
+        # `FailureMode::X`.
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_FAILMODE_{op['op']} FailureMode::{op['fail_mode']}\n"
 
     generate_header(c_out, "wasm_WasmBuiltinModuleGenerated_h", contents)
