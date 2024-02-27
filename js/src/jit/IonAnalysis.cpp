@@ -4453,6 +4453,10 @@ static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
   if (use->type() == MIRType::BigInt) {
     return true;
   }
+  if (use->isLoadTypedArrayElementHole() &&
+      Scalar::isBigIntType(use->toLoadTypedArrayElementHole()->arrayType())) {
+    return true;
+  }
 
   MBasicBlock* block = use->block();
   MInstructionIterator iter(block->begin(slotsOrElements));

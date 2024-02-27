@@ -7208,26 +7208,29 @@ class MLoadDataViewElement : public MTernaryInstruction,
 };
 
 // Load a value from a typed array. Out-of-bounds accesses are handled in-line.
-class MLoadTypedArrayElementHole : public MBinaryInstruction,
-                                   public SingleObjectPolicy::Data {
+class MLoadTypedArrayElementHole : public MTernaryInstruction,
+                                   public NoTypePolicy::Data {
   Scalar::Type arrayType_;
   bool forceDouble_;
 
-  MLoadTypedArrayElementHole(MDefinition* object, MDefinition* index,
-                             Scalar::Type arrayType, bool forceDouble)
-      : MBinaryInstruction(classOpcode, object, index),
+  MLoadTypedArrayElementHole(MDefinition* elements, MDefinition* index,
+                             MDefinition* length, Scalar::Type arrayType,
+                             bool forceDouble)
+      : MTernaryInstruction(classOpcode, elements, index, length),
         arrayType_(arrayType),
         forceDouble_(forceDouble) {
     setResultType(MIRType::Value);
     setMovable();
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::IntPtr);
+    MOZ_ASSERT(length->type() == MIRType::IntPtr);
     MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::MaxTypedArrayViewType);
   }
 
  public:
   INSTRUCTION_HEADER(LoadTypedArrayElementHole)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, index))
+  NAMED_OPERANDS((0, elements), (1, index), (2, length))
 
   Scalar::Type arrayType() const { return arrayType_; }
   bool forceDouble() const { return forceDouble_; }
@@ -7249,8 +7252,7 @@ class MLoadTypedArrayElementHole : public MBinaryInstruction,
     return congruentIfOperandsEqual(other);
   }
   AliasSet getAliasSet() const override {
-    return AliasSet::Load(AliasSet::UnboxedElement | AliasSet::ObjectFields |
-                          AliasSet::ArrayBufferViewLengthOrOffset);
+    return AliasSet::Load(AliasSet::UnboxedElement);
   }
   bool canProduceFloat32() const override {
     return arrayType_ == Scalar::Float32;

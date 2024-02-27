@@ -2095,9 +2095,9 @@
 - name: LoadTypedArrayElementHole
   result_type: BoxedValue
   operands:
-    object: WordSized
+    elements: WordSized
     index: WordSized
-  num_temps: 1
+    length: WordSized
   mir_op: true
 
 - name: LoadTypedArrayElementHoleBigInt
