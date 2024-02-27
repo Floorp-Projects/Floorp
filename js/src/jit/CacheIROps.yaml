@@ -2171,6 +2171,7 @@
     elementType: ScalarTypeImm
     handleOOB: BoolImm
     forceDoubleForUint32: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: LoadDataViewValueResult
   shared: true

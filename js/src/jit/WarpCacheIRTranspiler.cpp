@@ -252,6 +252,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                  ObjOperandId objId, uint32_t offsetOffset,
                                  ValOperandId rhsId, uint32_t newShapeOffset);
 
+  MInstruction* emitTypedArrayLength(ArrayBufferViewKind viewKind,
+                                     MDefinition* obj);
+
   void addDataViewData(MDefinition* obj, Scalar::Type type,
                        MDefinition** offset, MInstruction** elements);
 
@@ -2145,6 +2148,29 @@ bool WarpCacheIRTranspiler::emitCallObjectHasSparseElementResult(
   return true;
 }
 
+MInstruction* WarpCacheIRTranspiler::emitTypedArrayLength(
+    ArrayBufferViewKind viewKind, MDefinition* obj) {
+  if (viewKind == ArrayBufferViewKind::FixedLength) {
+    auto* length = MArrayBufferViewLength::New(alloc(), obj);
+    add(length);
+
+    return length;
+  }
+
+  // Bounds check doesn't require a memory barrier. See IsValidIntegerIndex
+  // abstract operation which reads the underlying buffer byte length using
+  // "unordered" memory order.
+  auto barrier = MemoryBarrierRequirement::NotRequired;
+
+  // Movable and removable because no memory barrier is needed.
+  auto* length = MResizableTypedArrayLength::New(alloc(), obj, barrier);
+  length->setMovable();
+  length->setNotGuard();
+  add(length);
+
+  return length;
+}
+
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementExistsResult(
     ObjOperandId objId, IntPtrOperandId indexId) {
   MDefinition* obj = getOperand(objId);
@@ -2189,12 +2215,11 @@ static MIRType MIRTypeForArrayBufferViewRead(Scalar::Type arrayType,
 
 bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
     ObjOperandId objId, IntPtrOperandId indexId, Scalar::Type elementType,
-    bool handleOOB, bool forceDoubleForUint32) {
+    bool handleOOB, bool forceDoubleForUint32, ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   if (!handleOOB) {
     // MLoadTypedArrayElementHole does the bounds checking.

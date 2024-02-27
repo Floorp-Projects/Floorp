@@ -846,6 +846,17 @@ class MOZ_RAII CacheIRCompiler {
 
   bool emitDoubleIncDecResult(bool isInc, NumberOperandId inputId);
 
+  void emitTypedArrayBoundsCheck(ArrayBufferViewKind viewKind, Register obj,
+                                 Register index, Register scratch,
+                                 Register maybeScratch, Register spectreScratch,
+                                 Label* fail);
+
+  void emitTypedArrayBoundsCheck(ArrayBufferViewKind viewKind, Register obj,
+                                 Register index, Register scratch,
+                                 mozilla::Maybe<Register> maybeScratch,
+                                 mozilla::Maybe<Register> spectreScratch,
+                                 Label* fail);
+
   using AtomicsReadWriteModifyFn = int32_t (*)(FixedLengthTypedArrayObject*,
                                                size_t, int32_t);
 

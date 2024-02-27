@@ -3115,9 +3115,8 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
 
 // For Uint32Array we let the stub return an Int32 if we have not seen a
 // double, to allow better codegen in Warp while avoiding bailout loops.
-static bool ForceDoubleForUint32Array(FixedLengthTypedArrayObject* tarr,
-                                      uint64_t index) {
-  MOZ_ASSERT(index < tarr->length());
+static bool ForceDoubleForUint32Array(TypedArrayObject* tarr, uint64_t index) {
+  MOZ_ASSERT(index < tarr->length().valueOr(0));
 
   if (tarr->type() != Scalar::Type::Uint32) {
     // Return value is only relevant for Uint32Array.
@@ -3130,10 +3129,18 @@ static bool ForceDoubleForUint32Array(FixedLengthTypedArrayObject* tarr,
   return res.isDouble();
 }
 
+static ArrayBufferViewKind ToArrayBufferViewKind(const TypedArrayObject* obj) {
+  if (obj->is<FixedLengthTypedArrayObject>()) {
+    return ArrayBufferViewKind::FixedLength;
+  }
+
+  MOZ_ASSERT(obj->is<ResizableTypedArrayObject>());
+  return ArrayBufferViewKind::Resizable;
+}
+
 AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
     HandleObject obj, ObjOperandId objId) {
-  // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!obj->is<FixedLengthTypedArrayObject>()) {
+  if (!obj->is<TypedArrayObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -3141,12 +3148,12 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
     return AttachDecision::NoAction;
   }
 
-  auto* tarr = &obj->as<FixedLengthTypedArrayObject>();
+  auto* tarr = &obj->as<TypedArrayObject>();
 
   bool handleOOB = false;
   int64_t indexInt64;
   if (!ValueIsInt64Index(idVal_, &indexInt64) || indexInt64 < 0 ||
-      uint64_t(indexInt64) >= tarr->length()) {
+      uint64_t(indexInt64) >= tarr->length().valueOr(0)) {
     handleOOB = true;
   }
 
@@ -3163,8 +3170,9 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
   ValOperandId keyId = getElemKeyValueId();
   IntPtrOperandId intPtrIndexId = guardToIntPtrIndex(idVal_, keyId, handleOOB);
 
+  auto viewKind = ToArrayBufferViewKind(tarr);
   writer.loadTypedArrayElementResult(objId, intPtrIndexId, tarr->type(),
-                                     handleOOB, forceDoubleForUint32);
+                                     handleOOB, forceDoubleForUint32, viewKind);
   writer.returnFromIC();
 
   trackAttached("GetProp.TypedElement");
