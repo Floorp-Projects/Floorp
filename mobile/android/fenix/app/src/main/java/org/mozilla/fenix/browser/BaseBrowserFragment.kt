@@ -161,6 +161,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.tabClosedUndoMessage
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -399,23 +400,7 @@ abstract class BaseBrowserFragment :
             },
             onCloseTab = { closedSession ->
                 val closedTab = store.state.findTab(closedSession.id) ?: return@DefaultBrowserToolbarController
-
-                val snackbarMessage = if (closedTab.content.private) {
-                    requireContext().getString(R.string.snackbar_private_tab_closed)
-                } else {
-                    requireContext().getString(R.string.snackbar_tab_closed)
-                }
-
-                viewLifecycleOwner.lifecycleScope.allowUndo(
-                    binding.dynamicSnackbarContainer,
-                    snackbarMessage,
-                    requireContext().getString(R.string.snackbar_deleted_undo),
-                    {
-                        requireComponents.useCases.tabsUseCases.undo.invoke()
-                    },
-                    paddedForBottomToolbar = true,
-                    operation = { },
-                )
+                showUndoSnackbar(requireContext().tabClosedUndoMessage(closedTab.content.private))
             },
         )
         val browserToolbarMenuController = DefaultBrowserToolbarMenuController(
@@ -1015,6 +1000,19 @@ abstract class BaseBrowserFragment :
             view = view,
         )
         initializeEngineView(toolbarHeight)
+    }
+
+    protected fun showUndoSnackbar(message: String) {
+        viewLifecycleOwner.lifecycleScope.allowUndo(
+            binding.dynamicSnackbarContainer,
+            message,
+            requireContext().getString(R.string.snackbar_deleted_undo),
+            {
+                requireComponents.useCases.tabsUseCases.undo.invoke()
+            },
+            paddedForBottomToolbar = true,
+            operation = { },
+        )
     }
 
     /**

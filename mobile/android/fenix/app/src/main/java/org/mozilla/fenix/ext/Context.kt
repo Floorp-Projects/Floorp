@@ -17,6 +17,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.annotation.StringRes
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.settings.advanced.getSelectedLocale
@@ -133,3 +134,14 @@ inline fun Context.startExternalActivitySafe(intent: Intent, onActivityNotPresen
  */
 fun Context.isSystemInDarkTheme(): Boolean =
     resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+
+/**
+ * Returns the message to be shown when a tab is closed based on whether the tab was private or not.
+ * @param private true if the tab was private, false otherwise.
+ */
+fun Context.tabClosedUndoMessage(private: Boolean): String =
+    if (private) {
+        getString(R.string.snackbar_private_tab_closed)
+    } else {
+        getString(R.string.snackbar_tab_closed)
+    }

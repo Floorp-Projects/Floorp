@@ -239,6 +239,10 @@ internal object AppStoreReducer {
         )
 
         is AppAction.ShoppingAction -> ShoppingStateReducer.reduce(state, action)
+
+        is AppAction.TabStripAction.UpdateLastTabClosed -> state.copy(
+            wasLastTabClosedPrivate = action.private,
+        )
     }
 }
 

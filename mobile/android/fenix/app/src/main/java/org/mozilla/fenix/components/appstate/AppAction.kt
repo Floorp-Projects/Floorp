@@ -267,4 +267,16 @@ sealed class AppAction : Action {
             val key: ShoppingState.ProductRecommendationImpressionKey,
         ) : ShoppingAction()
     }
+
+    /**
+     * [AppAction]s related to the tab strip.
+     */
+    sealed class TabStripAction : AppAction() {
+
+        /**
+         * [TabStripAction] used to update whether the last remaining tab that was closed was private.
+         * Null means the state should reset and no snackbar should be shown.
+         */
+        data class UpdateLastTabClosed(val private: Boolean?) : TabStripAction()
+    }
 }

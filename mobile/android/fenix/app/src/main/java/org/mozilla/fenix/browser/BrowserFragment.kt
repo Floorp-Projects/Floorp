@@ -53,6 +53,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.tabClosedUndoMessage
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
@@ -268,12 +269,18 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                                 ),
                             )
                         },
-                        onLastTabClose = {
+                        onLastTabClose = { isPrivate ->
+                            requireComponents.appStore.dispatch(
+                                AppAction.TabStripAction.UpdateLastTabClosed(isPrivate),
+                            )
                             findNavController().navigate(
                                 BrowserFragmentDirections.actionGlobalHome(),
                             )
                         },
                         onSelectedTabClick = {},
+                        onCloseTabClick = { isPrivate ->
+                            showUndoSnackbar(requireContext().tabClosedUndoMessage(isPrivate))
+                        },
                     )
                 }
             }

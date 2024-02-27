@@ -75,6 +75,7 @@ private val addTabIconSize = 20.dp
  * @param appStore The [AppStore] instance used to observe browsing mode.
  * @param tabsUseCases The [TabsUseCases] instance to perform tab actions.
  * @param onAddTabClick Invoked when the add tab button is clicked.
+ * @param onCloseTabClick Invoked when a tab is closed.
  * @param onLastTabClose Invoked when the last remaining open tab is closed.
  * @param onSelectedTabClick Invoked when a tab is selected.
  */
@@ -85,7 +86,8 @@ fun TabStrip(
     appStore: AppStore = components.appStore,
     tabsUseCases: TabsUseCases = components.useCases.tabsUseCases,
     onAddTabClick: () -> Unit,
-    onLastTabClose: () -> Unit,
+    onCloseTabClick: (isPrivate: Boolean) -> Unit,
+    onLastTabClose: (isPrivate: Boolean) -> Unit,
     onSelectedTabClick: () -> Unit,
 ) {
     val isPrivateMode by appStore.observeAsState(false) { it.mode.isPrivate }
@@ -96,11 +98,12 @@ fun TabStrip(
     TabStripContent(
         state = state,
         onAddTabClick = onAddTabClick,
-        onCloseTabClick = {
+        onCloseTabClick = { id, isPrivate ->
             if (state.tabs.size == 1) {
-                onLastTabClose()
+                onLastTabClose(isPrivate)
             }
-            tabsUseCases.removeTab(it)
+            tabsUseCases.removeTab(id)
+            onCloseTabClick(isPrivate)
         },
         onSelectedTabClick = {
             tabsUseCases.selectTab(it)
@@ -118,7 +121,7 @@ fun TabStrip(
 private fun TabStripContent(
     state: TabStripState,
     onAddTabClick: () -> Unit,
-    onCloseTabClick: (id: String) -> Unit,
+    onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
     onSelectedTabClick: (id: String) -> Unit,
     onMove: (tabId: String, targetId: String, placeAfter: Boolean) -> Unit,
 ) {
@@ -153,7 +156,7 @@ private fun TabStripContent(
 private fun TabsList(
     state: TabStripState,
     modifier: Modifier = Modifier,
-    onCloseTabClick: (id: String) -> Unit,
+    onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
     onSelectedTabClick: (id: String) -> Unit,
     onMove: (tabId: String, targetId: String, placeAfter: Boolean) -> Unit,
 ) {
@@ -246,7 +249,7 @@ private fun LazyListState.isItemPartiallyVisible(itemInfo: LazyListItemInfo?) =
 private fun TabItem(
     state: TabStripItem,
     modifier: Modifier = Modifier,
-    onCloseTabClick: (id: String) -> Unit,
+    onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
     onSelectedTabClick: (id: String) -> Unit,
 ) {
     TabStripCard(
@@ -297,7 +300,7 @@ private fun TabItem(
                 )
             }
 
-            IconButton(onClick = { onCloseTabClick(state.id) }) {
+            IconButton(onClick = { onCloseTabClick(state.id, state.isPrivate) }) {
                 Icon(
                     painter = painterResource(R.drawable.mozac_ic_cross_20),
                     tint = FirefoxTheme.colors.iconPrimary,
@@ -411,7 +414,7 @@ private fun TabStripContentPreview(tabs: List<TabStripItem>) {
                 tabs = tabs,
             ),
             onAddTabClick = {},
-            onCloseTabClick = {},
+            onCloseTabClick = { _, _ -> },
             onSelectedTabClick = {},
             onMove = { _, _, _ -> },
         )
@@ -441,6 +444,7 @@ private fun TabStripPreview() {
                     browserStore.dispatch(TabListAction.AddTabAction(tab))
                 },
                 onLastTabClose = {},
+                onCloseTabClick = {},
                 onSelectedTabClick = {},
             )
         }
