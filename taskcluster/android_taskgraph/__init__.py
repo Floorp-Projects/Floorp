@@ -24,7 +24,6 @@ def register(graph_config):
         [
             "job",
             "parameters",
-            "routes",
             "target_tasks",
             "util.group_by",
             "worker_types",

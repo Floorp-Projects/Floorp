@@ -139,7 +139,6 @@ task_description_schema = Schema(
                 "android-shippable",
                 "android-shippable-with-multi-l10n",
                 "shippable-with-multi-l10n",
-                "signing",
             ),
             # The rank that the task will receive in the TaskCluster
             # index.  A newly completed task supercedes the currently
