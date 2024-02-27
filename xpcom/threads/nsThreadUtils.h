@@ -1021,67 +1021,6 @@ template <class T>
 constexpr static bool HasRefCountMethods =
     decltype(HasRefCountMethodsTest<T>(0))::value;
 
-template <typename TWithoutPointer>
-struct NonnsISupportsPointerStorageClass
-    : std::conditional<
-          std::is_const_v<TWithoutPointer>,
-          StoreConstPtrPassByConstPtr<std::remove_const_t<TWithoutPointer>>,
-          StorePtrPassByPtr<TWithoutPointer>> {
-  using Type = typename NonnsISupportsPointerStorageClass::conditional::type;
-};
-
-template <typename TWithoutPointer>
-struct PointerStorageClass
-    : std::conditional<
-          HasRefCountMethods<TWithoutPointer>,
-          StoreRefPtrPassByPtr<TWithoutPointer>,
-          typename NonnsISupportsPointerStorageClass<TWithoutPointer>::Type> {
-  using Type = typename PointerStorageClass::conditional::type;
-};
-
-template <typename TWithoutRef>
-struct LValueReferenceStorageClass
-    : std::conditional<
-          std::is_const_v<TWithoutRef>,
-          StoreConstRefPassByConstLRef<std::remove_const_t<TWithoutRef>>,
-          StoreRefPassByLRef<TWithoutRef>> {
-  using Type = typename LValueReferenceStorageClass::conditional::type;
-};
-
-template <typename T>
-struct SmartPointerStorageClass
-    : std::conditional<mozilla::IsRefcountedSmartPointer<T>,
-                       StoreRefPtrPassByPtr<mozilla::RemoveSmartPointer<T>>,
-                       StoreCopyPassByConstLRef<T>> {
-  using Type = typename SmartPointerStorageClass::conditional::type;
-};
-
-template <typename T>
-struct NonLValueReferenceStorageClass
-    : std::conditional<std::is_rvalue_reference_v<T>,
-                       StoreCopyPassByRRef<std::remove_reference_t<T>>,
-                       typename SmartPointerStorageClass<T>::Type> {
-  using Type = typename NonLValueReferenceStorageClass::conditional::type;
-};
-
-template <typename T>
-struct NonPointerStorageClass
-    : std::conditional<std::is_lvalue_reference_v<T>,
-                       typename LValueReferenceStorageClass<
-                           std::remove_reference_t<T>>::Type,
-                       typename NonLValueReferenceStorageClass<T>::Type> {
-  using Type = typename NonPointerStorageClass::conditional::type;
-};
-
-template <typename T>
-struct NonParameterStorageClass
-    : std::conditional<
-          std::is_pointer_v<T>,
-          typename PointerStorageClass<std::remove_pointer_t<T>>::Type,
-          typename NonPointerStorageClass<T>::Type> {
-  using Type = typename NonParameterStorageClass::conditional::type;
-};
-
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
 // - RC*       -> StoreRefPtrPassByPtr<RC>       :Store RefPtr<RC>, pass RC*
@@ -1101,11 +1040,77 @@ struct NonParameterStorageClass
 // -              StoreCopyPassByPtr<T>          :Store T, pass T* (of copy!)
 // Or create your own class with PassAsParameter() method, optional
 // clean-up in destructor, and with associated IsParameterStorageClass<>.
+
 template <typename T>
-struct ParameterStorage
-    : std::conditional<IsParameterStorageClass<T>::value, T,
-                       typename NonParameterStorageClass<T>::Type> {
-  using Type = typename ParameterStorage::conditional::type;
+struct OtherParameterStorage;
+
+// The `IsParameterStorageClass` and `RC*` cases must be handled separately (see
+// `ParameterStorageHelper`, below) until we can use C++20 concepts.
+
+template <typename T>
+struct OtherParameterStorage<const T*> {
+  using Type = StoreConstPtrPassByConstPtr<T>;
+};
+
+template <typename T>
+struct OtherParameterStorage<T*> {
+  using Type = StorePtrPassByPtr<T>;
+};
+
+template <typename T>
+struct OtherParameterStorage<const T&> {
+  using Type = StoreConstRefPassByConstLRef<T>;
+};
+
+template <typename T>
+struct OtherParameterStorage<T&> {
+  using Type = StoreRefPassByLRef<T>;
+};
+
+template <typename T>
+struct OtherParameterStorage<RefPtr<T>> {
+  using Type = StoreRefPtrPassByPtr<T>;
+};
+
+template <typename T>
+struct OtherParameterStorage<nsCOMPtr<T>> {
+  using Type = StoreRefPtrPassByPtr<T>;
+};
+
+template <typename T>
+struct OtherParameterStorage<T&&> {
+  using Type = StoreCopyPassByRRef<T>;
+};
+
+// default impl.
+template <typename T>
+struct OtherParameterStorage {
+  using Type = StoreCopyPassByConstLRef<T>;
+};
+
+template <typename T, bool A = IsParameterStorageClass<T>::value,
+          bool B = std::is_pointer_v<T> &&
+                   HasRefCountMethods<std::remove_pointer_t<T>>>
+struct ParameterStorageHelper;
+
+template <typename T, bool B>
+struct ParameterStorageHelper<T, true, B> {
+  using Type = T;
+};
+
+template <typename T>
+struct ParameterStorageHelper<T, false, true> {
+  using Type = StoreRefPtrPassByPtr<std::remove_pointer_t<T>>;
+};
+
+template <typename T>
+struct ParameterStorageHelper<T, false, false> {
+  using Type = typename OtherParameterStorage<std::remove_cv_t<T>>::Type;
+};
+
+template <typename T>
+struct ParameterStorage {
+  using Type = typename ParameterStorageHelper<T>::Type;
 };
 
 template <class T>
