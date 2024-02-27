@@ -1248,9 +1248,30 @@
   args:
     obj: ObjId
 
+- name: ResizableDataViewByteLengthInt32Result
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
+- name: ResizableDataViewByteLengthDoubleResult
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: GuardHasAttachedArrayBuffer
   shared: true
   transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
+- name: GuardResizableArrayBufferViewInBounds
+  shared: true
+  transpile: false
   cost_estimate: 2
   args:
     obj: ObjId

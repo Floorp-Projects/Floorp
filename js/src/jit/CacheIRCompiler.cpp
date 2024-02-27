@@ -5205,6 +5205,50 @@ bool CacheIRCompiler::emitTypedArrayElementSizeResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitResizableDataViewByteLengthInt32Result(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Explicit |byteLength| accesses are seq-consistent atomic loads.
+  auto sync = Synchronization::Load();
+
+  masm.loadResizableDataViewByteLengthIntPtr(sync, obj, scratch1, scratch2);
+  masm.guardNonNegativeIntPtrToInt32(scratch1, failure->label());
+
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitResizableDataViewByteLengthDoubleResult(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  // Explicit |byteLength| accesses are seq-consistent atomic loads.
+  auto sync = Synchronization::Load();
+
+  masm.loadResizableDataViewByteLengthIntPtr(sync, obj, scratch1, scratch2);
+
+  ScratchDoubleScope fpscratch(masm);
+  masm.convertIntPtrToDouble(scratch1, fpscratch);
+  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardHasAttachedArrayBuffer(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -5217,6 +5261,23 @@ bool CacheIRCompiler::emitGuardHasAttachedArrayBuffer(ObjOperandId objId) {
   }
 
   masm.branchIfHasDetachedArrayBuffer(obj, scratch, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardResizableArrayBufferViewInBounds(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoScratchRegister scratch(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchIfResizableArrayBufferViewOutOfBounds(obj, scratch,
+                                                   failure->label());
   return true;
 }
 

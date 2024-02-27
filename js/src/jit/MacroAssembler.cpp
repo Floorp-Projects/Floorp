@@ -8014,6 +8014,29 @@ void MacroAssembler::branchIfHasDetachedArrayBuffer(Register obj, Register temp,
   bind(&done);
 }
 
+void MacroAssembler::branchIfResizableArrayBufferViewOutOfBounds(Register obj,
+                                                                 Register temp,
+                                                                 Label* label) {
+  // Implementation of ArrayBufferViewObject::isOutOfBounds().
+
+  Label done;
+
+  loadArrayBufferViewLengthIntPtr(obj, temp);
+  branchPtr(Assembler::NotEqual, temp, ImmWord(0), &done);
+
+  loadArrayBufferViewByteOffsetIntPtr(obj, temp);
+  branchPtr(Assembler::NotEqual, temp, ImmWord(0), &done);
+
+  loadPrivate(Address(obj, ArrayBufferViewObject::initialLengthOffset()), temp);
+  branchPtr(Assembler::NotEqual, temp, ImmWord(0), label);
+
+  loadPrivate(Address(obj, ArrayBufferViewObject::initialByteOffsetOffset()),
+              temp);
+  branchPtr(Assembler::NotEqual, temp, ImmWord(0), label);
+
+  bind(&done);
+}
+
 void MacroAssembler::branchIfNativeIteratorNotReusable(Register ni,
                                                        Label* notReusable) {
   // See NativeIterator::isReusable.
