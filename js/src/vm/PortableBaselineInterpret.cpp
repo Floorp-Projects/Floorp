@@ -2552,6 +2552,7 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(GrowableSharedArrayBufferByteLengthDoubleResult)
   CACHEOP_CASE_UNIMPL(GuardHasAttachedArrayBuffer)
   CACHEOP_CASE_UNIMPL(GuardResizableArrayBufferViewInBounds)
+  CACHEOP_CASE_UNIMPL(GuardResizableArrayBufferViewInBoundsOrDetached)
   CACHEOP_CASE_UNIMPL(NewArrayIteratorResult)
   CACHEOP_CASE_UNIMPL(NewStringIteratorResult)
   CACHEOP_CASE_UNIMPL(NewRegExpStringIteratorResult)
