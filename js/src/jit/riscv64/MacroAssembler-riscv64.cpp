@@ -2243,7 +2243,7 @@ uint32_t MacroAssembler::pushFakeReturnAddress(Register scratch) {
 template <typename T>
 static void AtomicExchange(MacroAssembler& masm,
                            const wasm::MemoryAccessDesc* access,
-                           Scalar::Type type, const Synchronization& sync,
+                           Scalar::Type type, Synchronization sync,
                            const T& mem, Register value, Register valueTemp,
                            Register offsetTemp, Register maskTemp,
                            Register output) {
@@ -2352,7 +2352,7 @@ static void AtomicExchange(MacroAssembler& masm,
 template <typename T>
 static void AtomicExchange64(MacroAssembler& masm,
                              const wasm::MemoryAccessDesc* access,
-                             const Synchronization& sync, const T& mem,
+                             Synchronization sync, const T& mem,
                              Register64 value, Register64 output) {
   MOZ_ASSERT(value != output);
   UseScratchRegisterScope temps(&masm);
@@ -2382,9 +2382,8 @@ static void AtomicExchange64(MacroAssembler& masm,
 template <typename T>
 static void AtomicFetchOp64(MacroAssembler& masm,
                             const wasm::MemoryAccessDesc* access,
-                            const Synchronization& sync, AtomicOp op,
-                            Register64 value, const T& mem, Register64 temp,
-                            Register64 output) {
+                            Synchronization sync, AtomicOp op, Register64 value,
+                            const T& mem, Register64 temp, Register64 output) {
   MOZ_ASSERT(value != output);
   MOZ_ASSERT(value != temp);
   UseScratchRegisterScope temps(&masm);
@@ -2433,10 +2432,9 @@ static void AtomicFetchOp64(MacroAssembler& masm,
 template <typename T>
 static void AtomicEffectOp(MacroAssembler& masm,
                            const wasm::MemoryAccessDesc* access,
-                           Scalar::Type type, const Synchronization& sync,
-                           AtomicOp op, const T& mem, Register value,
-                           Register valueTemp, Register offsetTemp,
-                           Register maskTemp) {
+                           Scalar::Type type, Synchronization sync, AtomicOp op,
+                           const T& mem, Register value, Register valueTemp,
+                           Register offsetTemp, Register maskTemp) {
   ScratchRegisterScope scratch(masm);
   UseScratchRegisterScope temps(&masm);
   Register scratch2 = temps.Acquire();
@@ -2563,10 +2561,10 @@ static void AtomicEffectOp(MacroAssembler& masm,
 template <typename T>
 static void AtomicFetchOp(MacroAssembler& masm,
                           const wasm::MemoryAccessDesc* access,
-                          Scalar::Type type, const Synchronization& sync,
-                          AtomicOp op, const T& mem, Register value,
-                          Register valueTemp, Register offsetTemp,
-                          Register maskTemp, Register output) {
+                          Scalar::Type type, Synchronization sync, AtomicOp op,
+                          const T& mem, Register value, Register valueTemp,
+                          Register offsetTemp, Register maskTemp,
+                          Register output) {
   ScratchRegisterScope scratch(masm);
   UseScratchRegisterScope temps(&masm);
   Register scratch2 = temps.Acquire();
@@ -2715,7 +2713,7 @@ static void AtomicFetchOp(MacroAssembler& masm,
 
 template <typename T>
 static void CompareExchangeJS(MacroAssembler& masm, Scalar::Type arrayType,
-                              const Synchronization& sync, const T& mem,
+                              Synchronization sync, const T& mem,
                               Register oldval, Register newval,
                               Register valueTemp, Register offsetTemp,
                               Register maskTemp, Register temp,
@@ -2732,10 +2730,10 @@ static void CompareExchangeJS(MacroAssembler& masm, Scalar::Type arrayType,
 
 template <typename T>
 static void AtomicExchangeJS(MacroAssembler& masm, Scalar::Type arrayType,
-                             const Synchronization& sync, const T& mem,
-                             Register value, Register valueTemp,
-                             Register offsetTemp, Register maskTemp,
-                             Register temp, AnyRegister output) {
+                             Synchronization sync, const T& mem, Register value,
+                             Register valueTemp, Register offsetTemp,
+                             Register maskTemp, Register temp,
+                             AnyRegister output) {
   if (arrayType == Scalar::Uint32) {
     masm.atomicExchange(arrayType, sync, mem, value, valueTemp, offsetTemp,
                         maskTemp, temp);
@@ -2748,8 +2746,8 @@ static void AtomicExchangeJS(MacroAssembler& masm, Scalar::Type arrayType,
 
 template <typename T>
 static void AtomicFetchOpJS(MacroAssembler& masm, Scalar::Type arrayType,
-                            const Synchronization& sync, AtomicOp op,
-                            Register value, const T& mem, Register valueTemp,
+                            Synchronization sync, AtomicOp op, Register value,
+                            const T& mem, Register valueTemp,
                             Register offsetTemp, Register maskTemp,
                             Register temp, AnyRegister output) {
   if (arrayType == Scalar::Uint32) {
@@ -2763,7 +2761,7 @@ static void AtomicFetchOpJS(MacroAssembler& masm, Scalar::Type arrayType,
 }
 
 void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
-                                      const Synchronization& sync, AtomicOp op,
+                                      Synchronization sync, AtomicOp op,
                                       Register value, const BaseIndex& mem,
                                       Register valueTemp, Register offsetTemp,
                                       Register maskTemp) {
@@ -2772,37 +2770,35 @@ void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
 }
 
 void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
-                                      const Synchronization& sync, AtomicOp op,
+                                      Synchronization sync, AtomicOp op,
                                       Register value, const Address& mem,
                                       Register valueTemp, Register offsetTemp,
                                       Register maskTemp) {
   AtomicEffectOp(*this, nullptr, arrayType, sync, op, mem, value, valueTemp,
                  offsetTemp, maskTemp);
 }
-void MacroAssembler::atomicExchange64(const Synchronization& sync,
-                                      const Address& mem, Register64 value,
-                                      Register64 output) {
+void MacroAssembler::atomicExchange64(Synchronization sync, const Address& mem,
+                                      Register64 value, Register64 output) {
   AtomicExchange64(*this, nullptr, sync, mem, value, output);
 }
 
-void MacroAssembler::atomicExchange64(const Synchronization& sync,
+void MacroAssembler::atomicExchange64(Synchronization sync,
                                       const BaseIndex& mem, Register64 value,
                                       Register64 output) {
   AtomicExchange64(*this, nullptr, sync, mem, value, output);
 }
 
 void MacroAssembler::atomicExchangeJS(Scalar::Type arrayType,
-                                      const Synchronization& sync,
-                                      const Address& mem, Register value,
-                                      Register valueTemp, Register offsetTemp,
-                                      Register maskTemp, Register temp,
-                                      AnyRegister output) {
+                                      Synchronization sync, const Address& mem,
+                                      Register value, Register valueTemp,
+                                      Register offsetTemp, Register maskTemp,
+                                      Register temp, AnyRegister output) {
   AtomicExchangeJS(*this, arrayType, sync, mem, value, valueTemp, offsetTemp,
                    maskTemp, temp, output);
 }
 
 void MacroAssembler::atomicExchangeJS(Scalar::Type arrayType,
-                                      const Synchronization& sync,
+                                      Synchronization sync,
                                       const BaseIndex& mem, Register value,
                                       Register valueTemp, Register offsetTemp,
                                       Register maskTemp, Register temp,
@@ -2811,8 +2807,7 @@ void MacroAssembler::atomicExchangeJS(Scalar::Type arrayType,
                    maskTemp, temp, output);
 }
 
-void MacroAssembler::atomicExchange(Scalar::Type type,
-                                    const Synchronization& sync,
+void MacroAssembler::atomicExchange(Scalar::Type type, Synchronization sync,
                                     const Address& mem, Register value,
                                     Register valueTemp, Register offsetTemp,
                                     Register maskTemp, Register output) {
@@ -2820,8 +2815,7 @@ void MacroAssembler::atomicExchange(Scalar::Type type,
                  maskTemp, output);
 }
 
-void MacroAssembler::atomicExchange(Scalar::Type type,
-                                    const Synchronization& sync,
+void MacroAssembler::atomicExchange(Scalar::Type type, Synchronization sync,
                                     const BaseIndex& mem, Register value,
                                     Register valueTemp, Register offsetTemp,
                                     Register maskTemp, Register output) {
@@ -2830,7 +2824,7 @@ void MacroAssembler::atomicExchange(Scalar::Type type,
 }
 
 void MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType,
-                                     const Synchronization& sync, AtomicOp op,
+                                     Synchronization sync, AtomicOp op,
                                      Register value, const Address& mem,
                                      Register valueTemp, Register offsetTemp,
                                      Register maskTemp, Register temp,
@@ -2840,7 +2834,7 @@ void MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType,
 }
 
 void MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType,
-                                     const Synchronization& sync, AtomicOp op,
+                                     Synchronization sync, AtomicOp op,
                                      Register value, const BaseIndex& mem,
                                      Register valueTemp, Register offsetTemp,
                                      Register maskTemp, Register temp,
@@ -2849,20 +2843,20 @@ void MacroAssembler::atomicFetchOpJS(Scalar::Type arrayType,
                   maskTemp, temp, output);
 }
 
-void MacroAssembler::atomicFetchOp(Scalar::Type type,
-                                   const Synchronization& sync, AtomicOp op,
-                                   Register value, const Address& mem,
-                                   Register valueTemp, Register offsetTemp,
-                                   Register maskTemp, Register output) {
+void MacroAssembler::atomicFetchOp(Scalar::Type type, Synchronization sync,
+                                   AtomicOp op, Register value,
+                                   const Address& mem, Register valueTemp,
+                                   Register offsetTemp, Register maskTemp,
+                                   Register output) {
   AtomicFetchOp(*this, nullptr, type, sync, op, mem, value, valueTemp,
                 offsetTemp, maskTemp, output);
 }
 
-void MacroAssembler::atomicFetchOp(Scalar::Type type,
-                                   const Synchronization& sync, AtomicOp op,
-                                   Register value, const BaseIndex& mem,
-                                   Register valueTemp, Register offsetTemp,
-                                   Register maskTemp, Register output) {
+void MacroAssembler::atomicFetchOp(Scalar::Type type, Synchronization sync,
+                                   AtomicOp op, Register value,
+                                   const BaseIndex& mem, Register valueTemp,
+                                   Register offsetTemp, Register maskTemp,
+                                   Register output) {
   AtomicFetchOp(*this, nullptr, type, sync, op, mem, value, valueTemp,
                 offsetTemp, maskTemp, output);
 }
@@ -3058,7 +3052,7 @@ void MacroAssembler::comment(const char* msg) { Assembler::comment(msg); }
 template <typename T>
 static void CompareExchange64(MacroAssembler& masm,
                               const wasm::MemoryAccessDesc* access,
-                              const Synchronization& sync, const T& mem,
+                              Synchronization sync, const T& mem,
                               Register64 expect, Register64 replace,
                               Register64 output) {
   MOZ_ASSERT(expect != output && replace != output);
@@ -3092,30 +3086,30 @@ static void CompareExchange64(MacroAssembler& masm,
   masm.bind(&exit);
 }
 
-void MacroAssembler::compareExchange64(const Synchronization& sync,
-                                       const Address& mem, Register64 expect,
-                                       Register64 replace, Register64 output) {
+void MacroAssembler::compareExchange64(Synchronization sync, const Address& mem,
+                                       Register64 expect, Register64 replace,
+                                       Register64 output) {
   CompareExchange64(*this, nullptr, sync, mem, expect, replace, output);
 }
 
-void MacroAssembler::compareExchange64(const Synchronization& sync,
+void MacroAssembler::compareExchange64(Synchronization sync,
                                        const BaseIndex& mem, Register64 expect,
                                        Register64 replace, Register64 output) {
   CompareExchange64(*this, nullptr, sync, mem, expect, replace, output);
 }
 
 void MacroAssembler::compareExchangeJS(Scalar::Type arrayType,
-                                       const Synchronization& sync,
-                                       const Address& mem, Register oldval,
-                                       Register newval, Register valueTemp,
-                                       Register offsetTemp, Register maskTemp,
-                                       Register temp, AnyRegister output) {
+                                       Synchronization sync, const Address& mem,
+                                       Register oldval, Register newval,
+                                       Register valueTemp, Register offsetTemp,
+                                       Register maskTemp, Register temp,
+                                       AnyRegister output) {
   CompareExchangeJS(*this, arrayType, sync, mem, oldval, newval, valueTemp,
                     offsetTemp, maskTemp, temp, output);
 }
 
 void MacroAssembler::compareExchangeJS(Scalar::Type arrayType,
-                                       const Synchronization& sync,
+                                       Synchronization sync,
                                        const BaseIndex& mem, Register oldval,
                                        Register newval, Register valueTemp,
                                        Register offsetTemp, Register maskTemp,
@@ -3947,25 +3941,25 @@ void MacroAssembler::wasmAtomicFetchOp64(const wasm::MemoryAccessDesc& access,
   AtomicFetchOp64(*this, &access, access.sync(), op, value, mem, temp, output);
 }
 
-void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicFetchOp64(Synchronization sync, AtomicOp op,
                                      Register64 value, const Address& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, output);
 }
 
-void MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicFetchOp64(Synchronization sync, AtomicOp op,
                                      Register64 value, const BaseIndex& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, output);
 }
 
-void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicEffectOp64(Synchronization sync, AtomicOp op,
                                       Register64 value, const Address& mem,
                                       Register64 temp) {
   AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, temp);
 }
 
-void MacroAssembler::atomicEffectOp64(const Synchronization& sync, AtomicOp op,
+void MacroAssembler::atomicEffectOp64(Synchronization sync, AtomicOp op,
                                       Register64 value, const BaseIndex& mem,
                                       Register64 temp) {
   AtomicFetchOp64(*this, nullptr, sync, op, value, mem, temp, temp);
@@ -4034,7 +4028,7 @@ void MacroAssembler::wasmCompareExchange64(const wasm::MemoryAccessDesc& access,
 template <typename T>
 static void CompareExchange(MacroAssembler& masm,
                             const wasm::MemoryAccessDesc* access,
-                            Scalar::Type type, const Synchronization& sync,
+                            Scalar::Type type, Synchronization sync,
                             const T& mem, Register oldval, Register newval,
                             Register valueTemp, Register offsetTemp,
                             Register maskTemp, Register output) {
@@ -4140,8 +4134,7 @@ static void CompareExchange(MacroAssembler& masm,
   masm.bind(&end);
 }
 
-void MacroAssembler::compareExchange(Scalar::Type type,
-                                     const Synchronization& sync,
+void MacroAssembler::compareExchange(Scalar::Type type, Synchronization sync,
                                      const Address& mem, Register oldval,
                                      Register newval, Register valueTemp,
                                      Register offsetTemp, Register maskTemp,
@@ -4150,8 +4143,7 @@ void MacroAssembler::compareExchange(Scalar::Type type,
                   offsetTemp, maskTemp, output);
 }
 
-void MacroAssembler::compareExchange(Scalar::Type type,
-                                     const Synchronization& sync,
+void MacroAssembler::compareExchange(Scalar::Type type, Synchronization sync,
                                      const BaseIndex& mem, Register oldval,
                                      Register newval, Register valueTemp,
                                      Register offsetTemp, Register maskTemp,

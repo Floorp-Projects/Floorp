@@ -1626,60 +1626,57 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
 // ========================================================================
 // Primitive atomic operations.
 
-void MacroAssembler::atomicLoad64(const Synchronization&, const Address& mem,
+void MacroAssembler::atomicLoad64(Synchronization, const Address& mem,
                                   Register64 temp, Register64 output) {
   AtomicLoad64(*this, nullptr, mem, temp, output);
 }
 
-void MacroAssembler::atomicLoad64(const Synchronization&, const BaseIndex& mem,
+void MacroAssembler::atomicLoad64(Synchronization, const BaseIndex& mem,
                                   Register64 temp, Register64 output) {
   AtomicLoad64(*this, nullptr, mem, temp, output);
 }
 
-void MacroAssembler::atomicStore64(const Synchronization&, const Address& mem,
+void MacroAssembler::atomicStore64(Synchronization, const Address& mem,
                                    Register64 value, Register64 temp) {
   AtomicExchange64(*this, nullptr, mem, value, temp);
 }
 
-void MacroAssembler::atomicStore64(const Synchronization&, const BaseIndex& mem,
+void MacroAssembler::atomicStore64(Synchronization, const BaseIndex& mem,
                                    Register64 value, Register64 temp) {
   AtomicExchange64(*this, nullptr, mem, value, temp);
 }
 
-void MacroAssembler::compareExchange64(const Synchronization&,
-                                       const Address& mem, Register64 expected,
-                                       Register64 replacement,
-                                       Register64 output) {
-  CompareExchange64(*this, nullptr, mem, expected, replacement, output);
-}
-
-void MacroAssembler::compareExchange64(const Synchronization&,
-                                       const BaseIndex& mem,
+void MacroAssembler::compareExchange64(Synchronization, const Address& mem,
                                        Register64 expected,
                                        Register64 replacement,
                                        Register64 output) {
   CompareExchange64(*this, nullptr, mem, expected, replacement, output);
 }
 
-void MacroAssembler::atomicExchange64(const Synchronization&,
-                                      const Address& mem, Register64 value,
-                                      Register64 output) {
+void MacroAssembler::compareExchange64(Synchronization, const BaseIndex& mem,
+                                       Register64 expected,
+                                       Register64 replacement,
+                                       Register64 output) {
+  CompareExchange64(*this, nullptr, mem, expected, replacement, output);
+}
+
+void MacroAssembler::atomicExchange64(Synchronization, const Address& mem,
+                                      Register64 value, Register64 output) {
   AtomicExchange64(*this, nullptr, mem, value, output);
 }
 
-void MacroAssembler::atomicExchange64(const Synchronization&,
-                                      const BaseIndex& mem, Register64 value,
-                                      Register64 output) {
+void MacroAssembler::atomicExchange64(Synchronization, const BaseIndex& mem,
+                                      Register64 value, Register64 output) {
   AtomicExchange64(*this, nullptr, mem, value, output);
 }
 
-void MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op,
+void MacroAssembler::atomicFetchOp64(Synchronization, AtomicOp op,
                                      const Address& value, const Address& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, op, value, mem, temp, output);
 }
 
-void MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op,
+void MacroAssembler::atomicFetchOp64(Synchronization, AtomicOp op,
                                      const Address& value, const BaseIndex& mem,
                                      Register64 temp, Register64 output) {
   AtomicFetchOp64(*this, nullptr, op, value, mem, temp, output);

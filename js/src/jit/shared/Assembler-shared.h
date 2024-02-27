@@ -552,7 +552,7 @@ class MemoryAccessDesc {
   explicit MemoryAccessDesc(
       uint32_t memoryIndex, Scalar::Type type, uint32_t align, uint64_t offset,
       BytecodeOffset trapOffset, mozilla::DebugOnly<bool> hugeMemory,
-      const jit::Synchronization& sync = jit::Synchronization::None())
+      jit::Synchronization sync = jit::Synchronization::None())
       : memoryIndex_(memoryIndex),
         offset64_(offset),
         align_(align),
@@ -592,7 +592,7 @@ class MemoryAccessDesc {
   uint32_t align() const { return align_; }
   Scalar::Type type() const { return type_; }
   unsigned byteSize() const { return Scalar::byteSize(type()); }
-  const jit::Synchronization& sync() const { return sync_; }
+  jit::Synchronization sync() const { return sync_; }
   BytecodeOffset trapOffset() const { return trapOffset_; }
   wasm::SimdOp widenSimdOp() const {
     MOZ_ASSERT(isWidenSimd128Load());
