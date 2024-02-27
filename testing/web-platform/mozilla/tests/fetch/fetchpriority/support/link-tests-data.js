@@ -113,16 +113,16 @@ const kExpectedRequestsOfLinkPreloadFontDisabled = [
 
 const kExpectedRequestsOfLinkPreloadImage = [
     {   fileNameAndSuffix: "dummy.image?1",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
     },
     {   fileNameAndSuffix: "dummy.image?2",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH + 1
     },
     {   fileNameAndSuffix: "dummy.image?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
     },
     {   fileNameAndSuffix: "dummy.image?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW + 1
     },
 ];
 

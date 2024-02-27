@@ -39,6 +39,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCOMPtr.h"
@@ -1026,7 +1027,9 @@ class nsContentUtils {
       nsContentPolicyType aContentPolicyType =
           nsIContentPolicy::TYPE_INTERNAL_IMAGE,
       bool aUseUrgentStartForChannel = false, bool aLinkPreload = false,
-      uint64_t aEarlyHintPreloaderId = 0);
+      uint64_t aEarlyHintPreloaderId = 0,
+      mozilla::dom::FetchPriority aFetchPriority =
+          mozilla::dom::FetchPriority::Auto);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy

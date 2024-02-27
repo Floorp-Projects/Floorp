@@ -9,6 +9,7 @@
 #include "imgLoader.h"
 #include "imgRequestProxy.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIContentPolicy.h"
@@ -63,7 +64,7 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
         nullptr, nsIRequest::LOAD_NORMAL, nullptr,
         nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
         /* aUseUrgentStartForChannel */ false, /* aLinkPreload */ false, 0,
-        getter_AddRefs(mIconRequest));
+        dom::FetchPriority::Auto, getter_AddRefs(mIconRequest));
   } else {
     // TODO: nsIContentPolicy::TYPE_INTERNAL_IMAGE may not be the correct
     // policy. See bug 1691868 for more details.
@@ -72,7 +73,8 @@ nsresult IconLoader::LoadIcon(nsIURI* aIconURI, nsINode* aNode,
         aNode, document, nsIRequest::LOAD_NORMAL, nullptr,
         nsIContentPolicy::TYPE_INTERNAL_IMAGE, u""_ns,
         /* aUseUrgentStartForChannel */ false,
-        /* aLinkPreload */ false, 0, getter_AddRefs(mIconRequest));
+        /* aLinkPreload */ false, 0, dom::FetchPriority::Auto,
+        getter_AddRefs(mIconRequest));
   }
   if (NS_FAILED(rv)) {
     return rv;
