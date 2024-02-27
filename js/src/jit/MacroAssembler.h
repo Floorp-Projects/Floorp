@@ -5280,6 +5280,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                       Label* label);
 
   void typedArrayElementSize(Register obj, Register output);
+
+ private:
+  // Shift |output| by the element shift of the ResizableTypedArray in |obj|.
+  void resizableTypedArrayElementShiftBy(Register obj, Register output,
+                                         Register scratch);
+
+ public:
   void branchIfClassIsNotTypedArray(Register clasp, Label* notTypedArray);
   void branchIfClassIsNotFixedLengthTypedArray(Register clasp,
                                                Label* notTypedArray);
@@ -5622,6 +5629,32 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadArrayBufferByteLengthIntPtr(Register obj, Register output);
   void loadArrayBufferViewByteOffsetIntPtr(Register obj, Register output);
   void loadArrayBufferViewLengthIntPtr(Register obj, Register output);
+
+  void loadGrowableSharedArrayBufferByteLengthIntPtr(Synchronization sync,
+                                                     Register obj,
+                                                     Register output);
+
+ private:
+  enum class ResizableArrayBufferView { TypedArray, DataView };
+
+  void loadResizableArrayBufferViewLengthIntPtr(ResizableArrayBufferView view,
+                                                Synchronization sync,
+                                                Register obj, Register output,
+                                                Register scratch);
+
+ public:
+  void loadResizableTypedArrayLengthIntPtr(Synchronization sync, Register obj,
+                                           Register output, Register scratch) {
+    loadResizableArrayBufferViewLengthIntPtr(
+        ResizableArrayBufferView::TypedArray, sync, obj, output, scratch);
+  }
+
+  void loadResizableDataViewByteLengthIntPtr(Synchronization sync, Register obj,
+                                             Register output,
+                                             Register scratch) {
+    loadResizableArrayBufferViewLengthIntPtr(ResizableArrayBufferView::DataView,
+                                             sync, obj, output, scratch);
+  }
 
  private:
   void isCallableOrConstructor(bool isCallable, Register obj, Register output,

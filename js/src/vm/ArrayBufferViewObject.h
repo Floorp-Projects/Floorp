@@ -73,6 +73,15 @@ class ArrayBufferViewObject : public NativeObject {
   static constexpr int dataOffset() {
     return NativeObject::getFixedSlotOffset(DATA_SLOT);
   }
+  static constexpr int autoLengthOffset() {
+    return NativeObject::getFixedSlotOffset(AUTO_LENGTH_SLOT);
+  }
+  static constexpr int initialLengthOffset() {
+    return NativeObject::getFixedSlotOffset(INITIAL_LENGTH_SLOT);
+  }
+  static constexpr int initialByteOffsetOffset() {
+    return NativeObject::getFixedSlotOffset(INITIAL_BYTE_OFFSET_SLOT);
+  }
 
  private:
   void* dataPointerEither_() const {
