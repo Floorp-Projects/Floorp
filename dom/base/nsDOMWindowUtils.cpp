@@ -897,6 +897,7 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
     return NS_ERROR_UNEXPECTED;
   }
   WidgetTouchEvent event(true, msg, widget);
+  event.mFlags.mIsSynthesizedForTests = true;
   event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
 
   nsPresContext* presContext = GetPresContext();

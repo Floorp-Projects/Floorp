@@ -9,11 +9,13 @@
 #include "mozilla/PresShell.h"
 
 #include "Units.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/LargestContentfulPaint.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/ArrayUtils.h"
@@ -45,6 +47,7 @@
 #include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_test.h"
 #include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/Try.h"
 #include "mozilla/TextEvents.h"
@@ -7267,7 +7270,17 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   nsresult rv = eventHandler.HandleEventWithCurrentEventInfo(
       aGUIEvent, aEventStatus, true,
       MOZ_KnownLive(eventTargetData.mOverrideClickTarget));
-  return rv;
+  if (NS_FAILED(rv) ||
+      MOZ_UNLIKELY(eventTargetData.mPresShell->IsDestroying())) {
+    return rv;
+  }
+
+  if (aGUIEvent->mMessage == eTouchEnd) {
+    MaybeSynthesizeCompatMouseEventsForTouchEnd(aGUIEvent->AsTouchEvent(),
+                                                aEventStatus);
+  }
+
+  return NS_OK;
 }
 
 bool PresShell::EventHandler::MaybeFlushPendingNotifications(
@@ -7584,6 +7597,60 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
   aGUIEvent->mFlags.mMultipleActionsPrevented = true;
   autoEventTargetPointResetter.SetHandledByAccessibleCaret();
   return true;
+}
+
+void PresShell::EventHandler::MaybeSynthesizeCompatMouseEventsForTouchEnd(
+    const WidgetTouchEvent* aTouchEndEvent,
+    const nsEventStatus* aStatus) const {
+  MOZ_ASSERT(aTouchEndEvent->mMessage == eTouchEnd);
+
+  // If the eTouchEnd event is dispatched via APZ, APZCCallbackHelper dispatches
+  // a set of mouse events with better handling.  Therefore, we don't need to
+  // handle that here.
+  if (!aTouchEndEvent->mFlags.mIsSynthesizedForTests ||
+      StaticPrefs::test_events_async_enabled()) {
+    return;
+  }
+
+  // If the tap was consumed or 2 or more touches occurred, we don't need the
+  // compatibility mouse events.
+  if (*aStatus == nsEventStatus_eConsumeNoDefault ||
+      !TouchManager::IsSingleTapEndToDoDefault(aTouchEndEvent)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!aTouchEndEvent->mWidget)) {
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> widget = aTouchEndEvent->mWidget;
+
+  // NOTE: I think that we don't need to implement a double click here becase
+  // WebDriver does not support a way to synthesize a double click and Chrome
+  // does not fire "dblclick" even if doing `pointerDown().pointerUp()` twice.
+  // FIXME: Currently we don't support long tap.
+  RefPtr<PresShell> presShell = mPresShell;
+  for (const EventMessage message : {eMouseMove, eMouseDown, eMouseUp}) {
+    if (MOZ_UNLIKELY(presShell->IsDestroying())) {
+      break;
+    }
+    nsIFrame* frameForPresShell = GetNearestFrameContainingPresShell(presShell);
+    if (!frameForPresShell) {
+      break;
+    }
+    WidgetMouseEvent event(true, message, widget, WidgetMouseEvent::eReal,
+                           WidgetMouseEvent::eNormal);
+    event.mRefPoint = aTouchEndEvent->mTouches[0]->mRefPoint;
+    event.mButton = MouseButton::ePrimary;
+    event.mButtons = message == eMouseDown ? MouseButtonsFlag::ePrimaryFlag
+                                           : MouseButtonsFlag::eNoButtons;
+    event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+    event.mClickCount = message == eMouseMove ? 0 : 1;
+    event.mModifiers = aTouchEndEvent->mModifiers;
+    event.convertToPointer = false;
+    nsEventStatus mouseEventStatus = nsEventStatus_eIgnore;
+    presShell->HandleEvent(frameForPresShell, &event, false, &mouseEventStatus);
+  }
 }
 
 bool PresShell::EventHandler::MaybeDiscardEvent(WidgetGUIEvent* aGUIEvent) {
@@ -8360,7 +8427,7 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
     manager->TryToFlushPendingNotificationsToIME();
   }
 
-  FinalizeHandlingEvent(aEvent);
+  FinalizeHandlingEvent(aEvent, aEventStatus);
 
   RecordEventHandlingResponsePerformance(aEvent);
 
@@ -8512,7 +8579,8 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(
   }
 }
 
-void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
+void PresShell::EventHandler::FinalizeHandlingEvent(
+    WidgetEvent* aEvent, const nsEventStatus* aStatus) {
   switch (aEvent->mMessage) {
     case eKeyPress:
     case eKeyDown:
@@ -8561,6 +8629,16 @@ void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
         dataTransfer->Disconnect();
       }
       return;
+    }
+    case eTouchStart:
+    case eTouchMove:
+    case eTouchEnd:
+    case eTouchCancel:
+    case eTouchPointerCancel:
+    case eMouseLongTap:
+    case eContextMenu: {
+      mPresShell->mTouchManager.PostHandleEvent(aEvent, aStatus);
+      break;
     }
     default:
       return;
