@@ -4794,17 +4794,30 @@ bool CacheIRCompiler::emitLoadDenseElementHoleResult(ObjOperandId objId,
 }
 
 bool CacheIRCompiler::emitLoadTypedArrayElementExistsResult(
-    ObjOperandId objId, IntPtrOperandId indexId) {
+    ObjOperandId objId, IntPtrOperandId indexId, ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  Maybe<AutoScratchRegister> scratch2;
+  if (viewKind == ArrayBufferViewKind::Resizable) {
+    scratch2.emplace(allocator, masm);
+  }
 
   Label outOfBounds, done;
 
   // Bounds check.
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
+  if (viewKind == ArrayBufferViewKind::FixedLength) {
+    masm.loadArrayBufferViewLengthIntPtr(obj, scratch);
+  } else {
+    // Bounds check doesn't require synchronization. See IsValidIntegerIndex
+    // abstract operation which reads the underlying buffer byte length using
+    // "unordered" memory order.
+    auto sync = Synchronization::None();
+
+    masm.loadResizableTypedArrayLengthIntPtr(sync, obj, scratch, *scratch2);
+  }
   masm.branchPtr(Assembler::BelowOrEqual, scratch, index, &outOfBounds);
   EmitStoreBoolean(masm, true, output);
   masm.jump(&done);

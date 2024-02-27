@@ -4048,8 +4048,7 @@ static void EmitGuardTypedArray(CacheIRWriter& writer, TypedArrayObject* obj,
 AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
                                                        ObjOperandId objId,
                                                        ValOperandId keyId) {
-  // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!obj->is<FixedLengthTypedArrayObject>()) {
+  if (!obj->is<TypedArrayObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -4058,10 +4057,14 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  writer.guardIsFixedLengthTypedArray(objId);
+  auto* tarr = &obj->as<TypedArrayObject>();
+  EmitGuardTypedArray(writer, tarr, objId);
+
   IntPtrOperandId intPtrIndexId =
       guardToIntPtrIndex(idVal_, keyId, /* supportOOB = */ true);
-  writer.loadTypedArrayElementExistsResult(objId, intPtrIndexId);
+
+  auto viewKind = ToArrayBufferViewKind(tarr);
+  writer.loadTypedArrayElementExistsResult(objId, intPtrIndexId, viewKind);
   writer.returnFromIC();
 
   trackAttached("HasProp.TypedArrayObject");
