@@ -514,7 +514,7 @@ android.libraryVariants.all configureVariantDebugLevel
 // be somewhere where the Android plugin is available so that we can fish the
 // path to "android.jar".
 task("generateSDKBindings", type: JavaExec) {
-    classpath project(':annotations').jar.archivePath
+    classpath project(':annotations').jar.archiveFile
     classpath project(':annotations').compileJava.classpath
     classpath project(':annotations').sourceSets.main.runtimeClasspath
 
