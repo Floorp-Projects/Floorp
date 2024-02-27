@@ -1595,16 +1595,19 @@ static bool WasmLosslessInvoke(JSContext* cx, unsigned argc, Value* vp) {
     JS_ReportErrorASCII(cx, "not enough arguments");
     return false;
   }
-  if (!args.get(0).isObject()) {
+  if (!args.get(0).isObject() || !args.get(0).toObject().is<JSFunction>()) {
     JS_ReportErrorASCII(cx, "argument is not an object");
     return false;
   }
 
-  RootedFunction func(cx, args[0].toObject().maybeUnwrapIf<JSFunction>());
+  RootedFunction func(cx, &args[0].toObject().as<JSFunction>());
   if (!func || !wasm::IsWasmExportedFunction(func)) {
     JS_ReportErrorASCII(cx, "argument is not an exported wasm function");
     return false;
   }
+
+  // Switch to the function's realm
+  AutoRealm ar(cx, func);
 
   // Get the instance and funcIndex for calling the function
   wasm::Instance& instance = wasm::ExportedFunctionToInstance(func);
