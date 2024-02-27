@@ -900,7 +900,7 @@ class FunctionCompiler {
     return true;
   }
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
   [[nodiscard]] bool brOnNull(uint32_t relativeDepth, const DefVector& values,
                               const ResultType& type, MDefinition* condition) {
     if (inDeadCode()) {
@@ -963,7 +963,7 @@ class FunctionCompiler {
     return true;
   }
 
-#endif  // ENABLE_WASM_FUNCTION_REFERENCES
+#endif  // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_GC
   MDefinition* refI31(MDefinition* input) {
@@ -2447,7 +2447,7 @@ class FunctionCompiler {
     return collectUnaryCallResult(builtin.retType, def);
   }
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
   [[nodiscard]] bool callRef(const FuncType& funcType, MDefinition* ref,
                              uint32_t lineOrBytecode,
                              const CallCompileState& call, DefVector* results) {
@@ -2489,7 +2489,7 @@ class FunctionCompiler {
 
 #  endif  // ENABLE_WASM_TAIL_CALLS
 
-#endif  // ENABLE_WASM_FUNCTION_REFERENCES
+#endif  // ENABLE_WASM_GC
 
   /*********************************************** Control flow generation */
 
@@ -5440,7 +5440,7 @@ static bool EmitReturnCallIndirect(FunctionCompiler& f) {
 }
 #endif
 
-#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_FUNCTION_REFERENCES)
+#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_GC)
 static bool EmitReturnCallRef(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
@@ -7157,7 +7157,7 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
 
 #endif  // ENABLE_WASM_SIMD
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
 static bool EmitRefAsNonNull(FunctionCompiler& f) {
   MDefinition* ref;
   if (!f.iter().readRefAsNonNull(&ref)) {
@@ -7220,7 +7220,7 @@ static bool EmitCallRef(FunctionCompiler& f) {
   return true;
 }
 
-#endif  // ENABLE_WASM_FUNCTION_REFERENCES
+#endif  // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_GC
 
@@ -8472,36 +8472,35 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       }
 #endif
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
       case uint16_t(Op::RefAsNonNull):
-        if (!f.moduleEnv().functionReferencesEnabled()) {
+        if (!f.moduleEnv().gcEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitRefAsNonNull(f));
       case uint16_t(Op::BrOnNull): {
-        if (!f.moduleEnv().functionReferencesEnabled()) {
+        if (!f.moduleEnv().gcEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitBrOnNull(f));
       }
       case uint16_t(Op::BrOnNonNull): {
-        if (!f.moduleEnv().functionReferencesEnabled()) {
+        if (!f.moduleEnv().gcEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitBrOnNonNull(f));
       }
       case uint16_t(Op::CallRef): {
-        if (!f.moduleEnv().functionReferencesEnabled()) {
+        if (!f.moduleEnv().gcEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitCallRef(f));
       }
 #endif
 
-#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_FUNCTION_REFERENCES)
+#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_GC)
       case uint16_t(Op::ReturnCallRef): {
-        if (!f.moduleEnv().functionReferencesEnabled() ||
-            !f.moduleEnv().tailCallsEnabled()) {
+        if (!f.moduleEnv().gcEnabled() || !f.moduleEnv().tailCallsEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitReturnCallRef(f));

@@ -7707,16 +7707,6 @@
     mirror: always
     set_spidermonkey_pref: startup
 
--   name: javascript.options.wasm_function_references
-    type: bool
-#if defined(ENABLE_WASM_FUNCTION_REFERENCES)
-    value: true
-#else
-    value: false
-#endif
-    mirror: always
-    set_spidermonkey_pref: startup
-
 -   name: javascript.options.wasm_gc
     type: bool
 #if defined(ENABLE_WASM_GC)

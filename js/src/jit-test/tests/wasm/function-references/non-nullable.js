@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // non-null values are subtype of null values
 wasmValidateText(`(module

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // Generates combinations of different block types and operations for
 // non-defaultable locals (local.set / .tee / .get).

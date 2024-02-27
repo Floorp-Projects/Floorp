@@ -70,6 +70,7 @@ let releasedFeatures = [
     wasmTailCallsEnabled(),
     `(module (func) (func (return_call 0)))`
   ],
+  ['gc', wasmGcEnabled(), `(module (type (struct)))`],
 ];
 
 for (let [name, enabled, test] of releasedFeatures) {

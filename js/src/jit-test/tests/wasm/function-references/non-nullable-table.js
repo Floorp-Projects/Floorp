@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // non-null table initialization
 var { get1, get2, get3, get4 } = wasmEvalText(`(module

@@ -173,7 +173,7 @@ assertErrorMessage(() => wasmEvalText(`
 `),
 WebAssembly.CompileError, /expression has type \(ref null.*\) but expected \(ref null.*\)/);
 
-if (!wasmFunctionReferencesEnabled()) {
+if (!wasmGcEnabled()) {
   // Ref type can't reference a function type
 
   assertErrorMessage(() => wasmEvalText(`

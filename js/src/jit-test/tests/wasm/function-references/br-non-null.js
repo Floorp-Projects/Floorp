@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
+// |jit-test| skip-if: !wasmGcEnabled()
 
 // br_on_non_null from constant
 wasmValidateText(`(module

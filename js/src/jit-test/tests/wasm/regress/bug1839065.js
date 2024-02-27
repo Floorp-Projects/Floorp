@@ -1,4 +1,4 @@
-// |jit-test| --setpref=wasm_gc=true; --setpref=wasm_function_references=true; skip-if: !wasmGcEnabled() || !wasmFunctionReferencesEnabled()
+// |jit-test| --setpref=wasm_gc=true; skip-if: !wasmGcEnabled() || !wasmGcEnabled()
 function wasmEvalText(str, imports) {
     let binary = wasmTextToBinary(str);
     m = new WebAssembly.Module(binary);

@@ -165,7 +165,7 @@ enum class OpKind {
   ReturnCall,
   CallIndirect,
   ReturnCallIndirect,
-#  ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#  ifdef ENABLE_WASM_GC
   CallRef,
   ReturnCallRef,
 #  endif
@@ -534,7 +534,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   inline bool checkIsSubtypeOf(ResultType params, ResultType results);
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
   inline bool checkIsSubtypeOf(uint32_t actualTypeIndex,
                                uint32_t expectedTypeIndex);
 #endif
@@ -704,7 +704,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                             uint32_t* tableIndex, Value* callee,
                                             ValueVector* argValues);
 #endif
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
   [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
                                  ValueVector* argValues);
 
@@ -933,7 +933,7 @@ inline bool OpIter<Policy>::checkIsSubtypeOf(ResultType params,
   return true;
 }
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
 template <typename Policy>
 inline bool OpIter<Policy>::checkIsSubtypeOf(uint32_t actualTypeIndex,
                                              uint32_t expectedTypeIndex) {
@@ -2396,10 +2396,10 @@ inline bool OpIter<Policy>::readRefFunc(uint32_t* funcIndex) {
         "function index is not declared in a section before the code section");
   }
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
   // When function references enabled, push type index on the stack, e.g. for
   // validation of the call_ref instruction.
-  if (env_.functionReferencesEnabled()) {
+  if (env_.gcEnabled()) {
     const uint32_t typeIndex = env_.funcs[*funcIndex].typeIndex;
     const TypeDef& typeDef = env_.types->type(typeIndex);
     return push(RefType::fromTypeDef(&typeDef, false));
@@ -2698,7 +2698,7 @@ inline bool OpIter<Policy>::readReturnCallIndirect(uint32_t* funcTypeIndex,
 }
 #endif
 
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+#ifdef ENABLE_WASM_GC
 template <typename Policy>
 inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
                                         Value* callee, ValueVector* argValues) {
@@ -2724,7 +2724,7 @@ inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
 }
 #endif
 
-#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_FUNCTION_REFERENCES)
+#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_GC)
 template <typename Policy>
 inline bool OpIter<Policy>::readReturnCallRef(const FuncType** funcType,
                                               Value* callee,
