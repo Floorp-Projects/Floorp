@@ -382,3 +382,99 @@ add_task(async function test_multiple_listeners() {
 
   await cleanup();
 });
+
+add_task(async function test_condition() {
+  await replaceIncludedProperty({
+    parent: {
+      selector: ".refined-search-buttons",
+      skipCount: true,
+    },
+    children: [
+      {
+        selector: ".arrow",
+        skipCount: true,
+        eventListeners: [
+          {
+            eventType: "keydown",
+            action: "keydowned",
+            condition: "keydownEnter",
+          },
+        ],
+      },
+    ],
+  });
+
+  let { tab, cleanup } = await openSerpInNewTab(SERP_URL);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [SELECTOR], async function (s) {
+    let el = content.document.querySelector(s);
+    el.focus();
+  });
+
+  await EventUtils.synthesizeKey("A");
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 10));
+
+  let pageActionPromise = waitForPageWithAction();
+  await EventUtils.synthesizeKey("KEY_Enter");
+  await pageActionPromise;
+
+  assertSERPTelemetry([
+    {
+      impression: IMPRESSION,
+      engagements: [
+        {
+          action: "keydowned",
+          target: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+        },
+      ],
+    },
+  ]);
+
+  await cleanup();
+});
+
+add_task(async function test_condition_invalid() {
+  await replaceIncludedProperty({
+    parent: {
+      selector: ".refined-search-buttons",
+      skipCount: true,
+    },
+    children: [
+      {
+        selector: ".arrow",
+        skipCount: true,
+        eventListeners: [
+          {
+            eventType: "keydown",
+            action: "keydowned",
+            condition: "noConditionExistsWithThisName",
+          },
+        ],
+      },
+    ],
+  });
+
+  let { tab, cleanup } = await openSerpInNewTab(SERP_URL);
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [SELECTOR], async function (s) {
+    let el = content.document.querySelector(s);
+    el.focus();
+  });
+
+  await EventUtils.synthesizeKey("A");
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 10));
+
+  await EventUtils.synthesizeKey("KEY_Enter");
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 10));
+
+  assertSERPTelemetry([
+    {
+      impression: IMPRESSION,
+    },
+  ]);
+
+  await cleanup();
+});

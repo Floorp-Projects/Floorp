@@ -41,6 +41,15 @@ const EVENT_TYPE_TO_ACTION = {
 };
 
 /**
+ * A map of object conditions mapped to the condition that should be run when
+ * an event is triggered. The condition name is referenced in Remote Settings
+ * under the optional `condition` string for an event listener.
+ */
+const CONDITIONS = {
+  keydownEnter: event => event.key == "Enter",
+};
+
+/**
  * SearchProviders looks after keeping track of the search provider information
  * received from the main process.
  *
@@ -194,9 +203,36 @@ class ListenerHelper {
       }
     }
 
-    let eventCallback = () => {
-      callback({ action, target });
-    };
+    // Some events might have specific conditions we want to check before
+    // registering an engagement event.
+    let eventCallback;
+    if (eventListenerParam.condition) {
+      if (CONDITIONS[eventListenerParam.condition]) {
+        let condition = CONDITIONS[eventListenerParam.condition];
+        eventCallback = async event => {
+          let start = Cu.now();
+          if (condition(event)) {
+            callback({ action, target });
+          }
+          ChromeUtils.addProfilerMarker(
+            "SearchSERPTelemetryChild._eventCallback",
+            start,
+            "Call cached function before callback."
+          );
+        };
+      } else {
+        // If a component included a condition, but it wasn't found it is
+        // due to the fact that it was added in a more recent Firefox version
+        // than what is provided via search-telemetry-v2. Since the version of
+        // Firefox the user is using doesn't include this condition,
+        // we shouldn't add the event.
+        return [];
+      }
+    } else {
+      eventCallback = () => {
+        callback({ action, target });
+      };
+    }
 
     let removeListenerCallbacks = [];
     for (let element of elements) {
