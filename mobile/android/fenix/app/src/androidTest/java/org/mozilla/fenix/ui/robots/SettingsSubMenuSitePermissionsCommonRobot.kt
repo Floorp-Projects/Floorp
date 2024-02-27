@@ -32,15 +32,31 @@ import org.mozilla.fenix.helpers.click
  */
 class SettingsSubMenuSitePermissionsCommonRobot {
 
-    fun verifyNavigationToolBarHeader(header: String) = assertNavigationToolBarHeader(header)
+    fun verifyBlockAudioAndVideoOnMobileDataOnlyAudioAndVideoWillPlayOnWiFi() =
+        blockRadioButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
-    fun verifyBlockAudioAndVideoOnMobileDataOnlyAudioAndVideoWillPlayOnWiFi() = assertBlockAudioAndVideoOnMobileDataOnlyAudioAndVideoWillPlayOnWiFi()
+    fun verifyBlockAudioOnly() = thirdRadioButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
-    fun verifyBlockAudioOnly() = assertBlockAudioOnly()
+    fun verifyVideoAndAudioBlockedRecommended() =
+        onView(withId(R.id.fourth_radio)).check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 
-    fun verifyVideoAndAudioBlockedRecommended() = assertVideoAndAudioBlockedRecommended()
+    fun verifyCheckAutoPlayRadioButtonDefault() {
+        // Allow audio and video
+        askToAllowRadioButton()
+            .assertIsChecked(isChecked = false)
 
-    fun verifyCheckAutoPlayRadioButtonDefault() = assertCheckAutoPayRadioButtonDefault()
+        // Block audio and video on cellular data only
+        blockRadioButton()
+            .assertIsChecked(isChecked = false)
+
+        // Block audio only (default)
+        thirdRadioButton()
+            .assertIsChecked(isChecked = true)
+
+        // Block audio and video
+        fourthRadioButton()
+            .assertIsChecked(isChecked = false)
+    }
 
     fun verifyAskToAllowButton(isChecked: Boolean = true) =
         onView(withId(R.id.ask_to_allow_radio))
@@ -50,19 +66,26 @@ class SettingsSubMenuSitePermissionsCommonRobot {
         onView(withId(R.id.block_radio))
             .check((matches(isDisplayed()))).assertIsChecked(isChecked)
 
-    fun verifyBlockedByAndroid() = assertBlockedByAndroid()
+    fun verifyBlockedByAndroid() {
+        blockedByAndroidContainer().waitForExists(waitingTime)
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.phone_feature_blocked_by_android)))
+    }
 
-    fun verifyUnblockedByAndroid() = assertUnblockedByAndroid()
+    fun verifyUnblockedByAndroid() {
+        blockedByAndroidContainer().waitUntilGone(waitingTime)
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.phone_feature_blocked_by_android)), exists = false)
+    }
 
-    fun verifyToAllowIt() = assertToAllowIt()
+    fun verifyToAllowIt() =
+        onView(withText(R.string.phone_feature_blocked_intro)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyGotoAndroidSettings() = assertGotoAndroidSettings()
+    fun verifyGotoAndroidSettings() =
+        onView(withText(R.string.phone_feature_blocked_step_settings)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyTapPermissions() = assertTapPermissions()
+    fun verifyTapPermissions() =
+        onView(withText("2. Tap Permissions")).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyToggleNameToON(name: String) = assertToggleNameToON(name)
-
-    fun verifyGoToSettingsButton() = assertGoToSettingsButton()
+    fun verifyGoToSettingsButton() = goToSettingsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     fun verifySitePermissionsAutoPlaySubMenuItems() {
         verifyBlockAudioAndVideoOnMobileDataOnlyAudioAndVideoWillPlayOnWiFi()
@@ -202,63 +225,9 @@ private fun thirdRadioButton() = onView(withId(R.id.third_radio))
 // common extra 4th radio button for all settings
 private fun fourthRadioButton() = onView(withId(R.id.fourth_radio))
 
-private fun assertNavigationToolBarHeader(header: String) = onView(allOf(withContentDescription(header)))
-
-private fun assertBlockAudioAndVideoOnMobileDataOnlyAudioAndVideoWillPlayOnWiFi() =
-    blockRadioButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-
-private fun assertBlockAudioOnly() =
-    thirdRadioButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-
-private fun assertVideoAndAudioBlockedRecommended() = onView(withId(R.id.fourth_radio))
-    .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-
-private fun assertCheckAutoPayRadioButtonDefault() {
-    // Allow audio and video
-    askToAllowRadioButton()
-        .assertIsChecked(isChecked = false)
-
-    // Block audio and video on cellular data only
-    blockRadioButton()
-        .assertIsChecked(isChecked = false)
-
-    // Block audio only (default)
-    thirdRadioButton()
-        .assertIsChecked(isChecked = true)
-
-    // Block audio and video
-    fourthRadioButton()
-        .assertIsChecked(isChecked = false)
-}
-
-private fun assertBlockedByAndroid() {
-    blockedByAndroidContainer().waitForExists(waitingTime)
-    assertUIObjectExists(itemContainingText(getStringResource(R.string.phone_feature_blocked_by_android)))
-}
-
-private fun assertUnblockedByAndroid() {
-    blockedByAndroidContainer().waitUntilGone(waitingTime)
-    assertUIObjectExists(itemContainingText(getStringResource(R.string.phone_feature_blocked_by_android)), exists = false)
-}
-
 private fun blockedByAndroidContainer() = mDevice.findObject(UiSelector().resourceId("$packageName:id/permissions_blocked_container"))
 
 private fun permissionSettingMenu() = mDevice.findObject(UiSelector().resourceId("$packageName:id/container"))
-
-private fun assertToAllowIt() = onView(withText(R.string.phone_feature_blocked_intro))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertGotoAndroidSettings() = onView(withText(R.string.phone_feature_blocked_step_settings))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertTapPermissions() = onView(withText("2. Tap Permissions"))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertToggleNameToON(name: String) = onView(withText(name))
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertGoToSettingsButton() =
-    goToSettingsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun goBackButton() =
     onView(allOf(withContentDescription("Navigate up")))
