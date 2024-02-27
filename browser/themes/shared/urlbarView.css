@@ -435,6 +435,8 @@
 
   > .urlbarView-row-inner {
     min-height: 32px;
+    align-items: center;
+
     /* Add space between the tip title (and the rest of row-inner) and its
        button. */
     margin-inline-end: 1.8em;
