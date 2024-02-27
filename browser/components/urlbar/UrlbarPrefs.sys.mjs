@@ -492,9 +492,18 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // suggestion (excluding full keywords that are shorter than this).
   ["yelp.minKeywordLength", 5],
 
+  // Whether Yelp suggestions should be shown as top picks. This is a fallback
+  // pref for the `yelpSuggestPriority` Nimbus variable.
+  ["yelp.priority", false],
+
   // The number of times the user has clicked the "Show less frequently" command
   // for Yelp suggestions.
   ["yelp.showLessFrequentlyCount", 0],
+
+  // The group-relative suggestedIndex of Yelp suggestions within the Firefox
+  // Suggest section. Ignored when Yelp suggestions are shown as top picks. This
+  // is a fallback pref for the `yelpSuggestNonPriorityIndex` Nimbus variable.
+  ["yelp.suggestedIndex", 0],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([

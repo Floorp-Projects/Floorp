@@ -652,6 +652,13 @@ pref("browser.urlbar.yelp.featureGate", false);
 // the suggestion.
 pref("browser.urlbar.yelp.minKeywordLength", 5);
 
+// Whether Yelp suggestions should be shown as top picks.
+pref("browser.urlbar.yelp.priority", false);
+
+// The group-relative suggestedIndex of Yelp suggestions within the Firefox
+// Suggest section. Ignored when Yelp suggestions are shown as top picks.
+pref("browser.urlbar.yelp.suggestedIndex", 0);
+
 // If `browser.urlbar.yelp.featureGate` is true, this controls whether
 // Yelp suggestions are turned on.
 pref("browser.urlbar.suggest.yelp", true);
