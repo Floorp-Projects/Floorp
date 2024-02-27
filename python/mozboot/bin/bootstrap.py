@@ -204,6 +204,8 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path, head_repo, head_rev
         subprocess.check_call(
             [
                 str(git),
+                "-c",
+                "fetch.prune=true",
                 "clone",
                 "--no-checkout",
                 "hg::https://hg.mozilla.org/mozilla-unified",
