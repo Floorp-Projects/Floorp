@@ -2545,6 +2545,8 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(TypedArrayElementSizeResult)
   CACHEOP_CASE_UNIMPL(ResizableDataViewByteLengthInt32Result)
   CACHEOP_CASE_UNIMPL(ResizableDataViewByteLengthDoubleResult)
+  CACHEOP_CASE_UNIMPL(GrowableSharedArrayBufferByteLengthInt32Result)
+  CACHEOP_CASE_UNIMPL(GrowableSharedArrayBufferByteLengthDoubleResult)
   CACHEOP_CASE_UNIMPL(GuardHasAttachedArrayBuffer)
   CACHEOP_CASE_UNIMPL(GuardResizableArrayBufferViewInBounds)
   CACHEOP_CASE_UNIMPL(NewArrayIteratorResult)
