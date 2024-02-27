@@ -105,9 +105,9 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
   prefs.mChannels = c.mChannelCount.Get(std::min(prefs.mChannels, maxChannels));
   prefs.mChannels = std::max(1, std::min(prefs.mChannels, maxChannels));
 
-  LOG("Audio config: agc: %d, noise: %d, channels: %d",
-      prefs.mAgcOn ? prefs.mAgc : -1, prefs.mNoiseOn ? prefs.mNoise : -1,
-      prefs.mChannels);
+  LOG("Mic source %p Audio config: aec: %s, agc: %s, noise: %s, channels: %d",
+      this, prefs.mAecOn ? "on" : "off", prefs.mAgcOn ? "on" : "off",
+      prefs.mNoiseOn ? "on" : "off", prefs.mChannels);
 
   *aOutPrefs = prefs;
 
