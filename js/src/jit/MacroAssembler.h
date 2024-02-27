@@ -5294,6 +5294,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchIfHasDetachedArrayBuffer(Register obj, Register temp,
                                       Label* label);
 
+  void branchIfResizableArrayBufferViewOutOfBounds(Register obj, Register temp,
+                                                   Label* label);
+
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
   void branchNativeIteratorIndices(Condition cond, Register ni, Register temp,
                                    NativeIteratorIndices kind, Label* label);

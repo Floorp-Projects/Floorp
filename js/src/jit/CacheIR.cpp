@@ -2204,11 +2204,10 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
 AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
                                                      ObjOperandId objId,
                                                      HandleId id) {
-  // TODO: Support resizable dataviews. (bug 1842999)
-  if (!obj->is<FixedLengthDataViewObject>()) {
+  if (!obj->is<DataViewObject>()) {
     return AttachDecision::NoAction;
   }
-  auto* dv = &obj->as<FixedLengthDataViewObject>();
+  auto* dv = &obj->as<DataViewObject>();
 
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
@@ -2226,6 +2225,12 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
 
   // byteOffset and byteLength both throw when the ArrayBuffer is detached.
   if (dv->hasDetachedBuffer()) {
+    return AttachDecision::NoAction;
+  }
+
+  // byteOffset and byteLength both throw when the ArrayBuffer is out-of-bounds.
+  if (dv->is<ResizableDataViewObject>() &&
+      dv->as<ResizableDataViewObject>().isOutOfBounds()) {
     return AttachDecision::NoAction;
   }
 
@@ -2253,18 +2258,33 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, dv, holder, id, *prop, objId, mode_);
   writer.guardHasAttachedArrayBuffer(objId);
+  if (dv->is<ResizableDataViewObject>()) {
+    writer.guardResizableArrayBufferViewInBounds(objId);
+  }
   if (isByteOffset) {
-    if (dv->byteOffset() <= INT32_MAX) {
+    // byteOffset doesn't need to use different code paths for fixed-length and
+    // resizable DataViews.
+    size_t byteOffset = dv->byteOffset().valueOr(0);
+    if (byteOffset <= INT32_MAX) {
       writer.arrayBufferViewByteOffsetInt32Result(objId);
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
     trackAttached("GetProp.DataViewByteOffset");
   } else {
-    if (dv->byteLength() <= INT32_MAX) {
-      writer.loadArrayBufferViewLengthInt32Result(objId);
+    size_t byteLength = dv->byteLength().valueOr(0);
+    if (dv->is<FixedLengthDataViewObject>()) {
+      if (byteLength <= INT32_MAX) {
+        writer.loadArrayBufferViewLengthInt32Result(objId);
+      } else {
+        writer.loadArrayBufferViewLengthDoubleResult(objId);
+      }
     } else {
-      writer.loadArrayBufferViewLengthDoubleResult(objId);
+      if (byteLength <= INT32_MAX) {
+        writer.resizableDataViewByteLengthInt32Result(objId);
+      } else {
+        writer.resizableDataViewByteLengthDoubleResult(objId);
+      }
     }
     trackAttached("GetProp.DataViewByteLength");
   }
