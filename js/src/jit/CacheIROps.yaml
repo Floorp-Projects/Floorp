@@ -272,6 +272,16 @@
     obj: ObjId
     kind: GuardClassKindImm
 
+# Guard per GuardClassKind.
+- name: GuardEitherClass
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    kind1: GuardClassKindImm
+    kind2: GuardClassKindImm
+
 # Guard on a realm fuse.
 - name: GuardFuse
   shared: true

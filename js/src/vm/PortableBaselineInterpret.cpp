@@ -2506,6 +2506,7 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(GuardTagNotEqual)
   CACHEOP_CASE_UNIMPL(GuardXrayExpandoShapeAndDefaultProto)
   CACHEOP_CASE_UNIMPL(GuardXrayNoExpando)
+  CACHEOP_CASE_UNIMPL(GuardEitherClass)
   CACHEOP_CASE_UNIMPL(LoadScriptedProxyHandler)
   CACHEOP_CASE_UNIMPL(IdToStringOrSymbol)
   CACHEOP_CASE_UNIMPL(DoubleToUint8Clamped)

@@ -2147,6 +2147,29 @@ bool CacheIRCompiler::emitGuardNonDoubleType(ValOperandId inputId,
   return true;
 }
 
+static const JSClass* ClassFor(JSContext* cx, GuardClassKind kind) {
+  switch (kind) {
+    case GuardClassKind::Array:
+    case GuardClassKind::PlainObject:
+    case GuardClassKind::FixedLengthArrayBuffer:
+    case GuardClassKind::ResizableArrayBuffer:
+    case GuardClassKind::FixedLengthSharedArrayBuffer:
+    case GuardClassKind::GrowableSharedArrayBuffer:
+    case GuardClassKind::FixedLengthDataView:
+    case GuardClassKind::MappedArguments:
+    case GuardClassKind::UnmappedArguments:
+    case GuardClassKind::Set:
+    case GuardClassKind::Map:
+    case GuardClassKind::BoundFunction:
+      return ClassFor(kind);
+    case GuardClassKind::WindowProxy:
+      return cx->runtime()->maybeWindowProxyClass();
+    case GuardClassKind::JSFunction:
+      MOZ_CRASH("must be handled by caller");
+  }
+  MOZ_CRASH("unexpected kind");
+}
+
 bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
@@ -2168,28 +2191,7 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     return true;
   }
 
-  const JSClass* clasp = nullptr;
-  switch (kind) {
-    case GuardClassKind::Array:
-    case GuardClassKind::PlainObject:
-    case GuardClassKind::FixedLengthArrayBuffer:
-    case GuardClassKind::ResizableArrayBuffer:
-    case GuardClassKind::FixedLengthSharedArrayBuffer:
-    case GuardClassKind::GrowableSharedArrayBuffer:
-    case GuardClassKind::FixedLengthDataView:
-    case GuardClassKind::MappedArguments:
-    case GuardClassKind::UnmappedArguments:
-    case GuardClassKind::Set:
-    case GuardClassKind::Map:
-    case GuardClassKind::BoundFunction:
-      clasp = ClassFor(kind);
-      break;
-    case GuardClassKind::WindowProxy:
-      clasp = cx_->runtime()->maybeWindowProxyClass();
-      break;
-    case GuardClassKind::JSFunction:
-      MOZ_CRASH("JSFunction handled before switch");
-  }
+  const JSClass* clasp = ClassFor(cx_, kind);
   MOZ_ASSERT(clasp);
 
   if (objectGuardNeedsSpectreMitigations(objId)) {
@@ -2198,6 +2200,39 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
   } else {
     masm.branchTestObjClassNoSpectreMitigations(Assembler::NotEqual, obj, clasp,
                                                 scratch, failure->label());
+  }
+
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardEitherClass(ObjOperandId objId,
+                                           GuardClassKind kind1,
+                                           GuardClassKind kind2) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // We don't yet need this case, so it's unsupported for now.
+  MOZ_ASSERT(kind1 != GuardClassKind::JSFunction &&
+             kind2 != GuardClassKind::JSFunction);
+
+  const JSClass* clasp1 = ClassFor(cx_, kind1);
+  MOZ_ASSERT(clasp1);
+
+  const JSClass* clasp2 = ClassFor(cx_, kind2);
+  MOZ_ASSERT(clasp2);
+
+  if (objectGuardNeedsSpectreMitigations(objId)) {
+    masm.branchTestObjClass(Assembler::NotEqual, obj, {clasp1, clasp2}, scratch,
+                            obj, failure->label());
+  } else {
+    masm.branchTestObjClassNoSpectreMitigations(
+        Assembler::NotEqual, obj, {clasp1, clasp2}, scratch, failure->label());
   }
 
   return true;

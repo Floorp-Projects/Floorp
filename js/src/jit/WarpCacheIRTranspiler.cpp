@@ -382,6 +382,25 @@ bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardEitherClass(ObjOperandId objId,
+                                                 GuardClassKind kind1,
+                                                 GuardClassKind kind2) {
+  MDefinition* def = getOperand(objId);
+
+  // We don't yet need this case, so it's unsupported for now.
+  MOZ_ASSERT(kind1 != GuardClassKind::JSFunction &&
+             kind2 != GuardClassKind::JSFunction);
+
+  const JSClass* classp1 = classForGuardClassKind(kind1);
+  const JSClass* classp2 = classForGuardClassKind(kind2);
+  auto* ins = MGuardToEitherClass::New(alloc(), def, classp1, classp2);
+
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
     GuardClassKind kind) {
   switch (kind) {
