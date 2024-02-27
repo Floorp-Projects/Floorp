@@ -150,10 +150,6 @@ USE_LIBS += [
     "angle_common",
 ]
 
-DIRS += [
-    "../angle_common",
-]
-
 # LDFLAGS += [
 #     "--color-diagnostics",
 #     "/call-graph-profile-sort:no",

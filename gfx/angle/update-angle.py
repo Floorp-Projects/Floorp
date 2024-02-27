@@ -502,8 +502,18 @@ def export_target(target_full_name) -> Set[str]:
     dep_dirs = set(dep_libs)
     dep_dirs.discard("zlib")
 
+    # Those directories are added by gfx/angle/moz.build.
+    already_added_dirs = [
+        "angle_common",
+        "translator",
+        "libEGL",
+        "libGLESv2",
+    ]
+
     append_arr(lines, "USE_LIBS", dep_libs)
-    append_arr(lines, "DIRS", ["../" + x for x in dep_dirs])
+    append_arr(
+        lines, "DIRS", ["../" + x for x in dep_dirs if x not in already_added_dirs]
+    )
     append_arr(lines, "OS_LIBS", os_libs)
     append_arr_commented(lines, "LDFLAGS", ldflags)
 
