@@ -85,6 +85,16 @@ const TEST_DATA = [
     attributeName: "aria-describedby",
     links: [{ id: "describedby01", valid: false }, { id: "describedbyshadow" }],
   },
+  {
+    selector: "#empty-attributes",
+    attributeName: "aria-activedescendant",
+    links: [],
+  },
+  {
+    selector: "#empty-attributes",
+    attributeName: "aria-details",
+    links: [],
+  },
 ];
 
 add_task(async function () {

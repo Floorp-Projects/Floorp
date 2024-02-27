@@ -878,7 +878,7 @@ ElementEditor.prototype = {
 
     // Create links in the attribute value, and truncate long attribute values if needed.
     for (const token of parsedLinksData) {
-      if (token.type === "string") {
+      if (token.type === "string" || token.value?.trim() === "") {
         attributeValueEl.appendChild(
           this.doc.createTextNode(this._truncateAttributeValue(token.value))
         );
