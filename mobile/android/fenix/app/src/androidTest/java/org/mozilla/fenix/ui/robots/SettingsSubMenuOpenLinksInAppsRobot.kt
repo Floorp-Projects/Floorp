@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
@@ -11,6 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -44,26 +46,35 @@ class SettingsSubMenuOpenLinksInAppsRobot {
         verifySelectedOpenLinksInAppOption(selectedOpenLinkInAppsOption)
     }
 
-    fun verifySelectedOpenLinksInAppOption(openLinkInAppsOption: String) =
+    fun verifySelectedOpenLinksInAppOption(openLinkInAppsOption: String) {
+        Log.i(TAG, "verifySelectedOpenLinksInAppOption: Trying to verify that the $openLinkInAppsOption option is checked")
         onView(
             allOf(
                 withId(R.id.radio_button),
                 hasSibling(withText(openLinkInAppsOption)),
             ),
         ).check(matches(isChecked(true)))
+        Log.i(TAG, "verifySelectedOpenLinksInAppOption: Verified that the $openLinkInAppsOption option is checked")
+    }
 
     fun clickOpenLinkInAppOption(openLinkInAppsOption: String) {
+        Log.i(TAG, "clickOpenLinkInAppOption: Trying to click the $openLinkInAppsOption option")
         when (openLinkInAppsOption) {
             "Always" -> alwaysOption().click()
             "Ask before opening" -> askBeforeOpeningOption().click()
             "Never" -> neverOption().click()
         }
+        Log.i(TAG, "clickOpenLinkInAppOption: Clicked the $openLinkInAppsOption option")
     }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            Log.i(TAG, "goBack: Waiting for device to be idle")
             mDevice.waitForIdle()
+            Log.i(TAG, "goBack: Waited for device to be idle")
+            Log.i(TAG, "goBack: Trying to click the navigate up button")
             goBackButton().click()
+            Log.i(TAG, "goBack: Clicked the navigate up button")
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
