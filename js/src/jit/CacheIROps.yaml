@@ -482,6 +482,13 @@
   args:
     obj: ObjId
 
+- name: GuardIsResizableTypedArray
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: GuardHasProxyHandler
   shared: false
   transpile: true
@@ -1196,6 +1203,20 @@
   shared: true
   transpile: true
   cost_estimate: 1
+  args:
+    obj: ObjId
+
+- name: ResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
+- name: ResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult
+  shared: true
+  transpile: false
+  cost_estimate: 2
   args:
     obj: ObjId
 
