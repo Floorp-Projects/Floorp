@@ -95,6 +95,7 @@ cfg_aliases = "0.1"
 
 [features]
 default = ["link"]
+device_lost_panic = []
 dx12 = [
     "naga/hlsl-out",
     "d3d12",
@@ -117,11 +118,13 @@ gles = [
     "khronos-egl",
     "libloading",
 ]
+internal_error_panic = []
 link = ["metal/link"]
 metal = [
     "naga/msl-out",
     "block",
 ]
+oom_panic = []
 renderdoc = [
     "libloading",
     "renderdoc-sys",
