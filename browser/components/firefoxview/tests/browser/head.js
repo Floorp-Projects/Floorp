@@ -3,6 +3,7 @@
 
 const {
   getFirefoxViewURL,
+  switchToWindow,
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
@@ -585,6 +586,7 @@ async function navigateToViewAndWait(document, view) {
  *   The tab switched to.
  */
 async function switchToFxViewTab(win = window) {
+  await switchToWindow(win);
   return BrowserTestUtils.switchTab(win.gBrowser, win.FirefoxViewHandler.tab);
 }
 
@@ -664,7 +666,10 @@ function getOpenTabsComponent(browser) {
 }
 
 async function getTabRowsForCard(card) {
-  await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
+  await TestUtils.waitForCondition(
+    () => card.tabList.rowEls.length,
+    "Wait for the card's tab list to have rows"
+  );
   return card.tabList.rowEls;
 }
 

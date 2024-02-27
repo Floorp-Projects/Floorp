@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = "about:robots";
+const { NonPrivateTabs } = ChromeUtils.importESModule(
+  "resource:///modules/OpenTabs.sys.mjs"
+);
 let gInitialTab;
 let gInitialTabURL;
 
@@ -25,8 +28,10 @@ async function cleanup() {
 add_task(async function search_open_tabs() {
   // Open a new window and navigate to TEST_URL. Then, when we search for
   // TEST_URL, it should show a search result in the new window's card.
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  await switchToWindow(win2);
+  await NonPrivateTabs.readyWindowsPromise;
+  await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, TEST_URL);
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.firefox-view.search.enabled", true]],
@@ -35,7 +40,6 @@ add_task(async function search_open_tabs() {
     const browser = viewTab.linkedBrowser;
     await navigateToOpenTabs(browser);
     const openTabs = getOpenTabsComponent(browser);
-    await openTabs.openTabsTarget.readyWindowsPromise;
     await openTabs.updateComplete;
 
     const cards = getOpenTabsCards(openTabs);
@@ -111,9 +115,12 @@ add_task(async function search_open_tabs() {
 
 add_task(async function search_open_tabs_recent_browsing() {
   const NUMBER_OF_TABS = 6;
-  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  await switchToWindow(win2);
+  await NonPrivateTabs.readyWindowsPromise;
+
   for (let i = 0; i < NUMBER_OF_TABS; i++) {
-    await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
+    await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, TEST_URL);
   }
   await SpecialPowers.pushPrefEnv({
     set: [["browser.firefox-view.search.enabled", true]],

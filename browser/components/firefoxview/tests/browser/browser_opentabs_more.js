@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { NonPrivateTabs } = ChromeUtils.importESModule(
+  "resource:///modules/OpenTabs.sys.mjs"
+);
 let gInitialTab;
 let gInitialTabURL;
 
@@ -50,6 +53,8 @@ add_task(async function toggle_show_more_link() {
   }
   // use Session restore to batch-open windows and tabs
   await SessionStoreTestUtils.promiseBrowserState(browserState);
+  await NonPrivateTabs.readyWindowsPromise;
+
   // restoring this state requires an update to the initial tab globals
   // so cleanup expects the right thing
   gInitialTab = gBrowser.selectedTab;
@@ -70,24 +75,20 @@ add_task(async function toggle_show_more_link() {
 
   let lastCard;
 
-  SimpleTest.promiseFocus(window);
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
     await navigateToOpenTabs(browser);
     const openTabs = getOpenTabsComponent(browser);
-    await openTabs.openTabsTarget.readyWindowsPromise;
     await openTabs.updateComplete;
 
-    const cards = getOpenTabsCards(openTabs);
+    let cards;
+    await BrowserTestUtils.waitForCondition(() => {
+      cards = getOpenTabsCards(openTabs);
+      return cards.length == NUMBER_OF_WINDOWS;
+    });
     is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
     lastCard = cards[NUMBER_OF_WINDOWS - 1];
-  });
 
-  await openFirefoxViewTab(window).then(async viewTab => {
-    const browser = viewTab.linkedBrowser;
-    const openTabs = getOpenTabsComponent(browser);
-    await openTabs.openTabsTarget.readyWindowsPromise;
-    await openTabs.updateComplete;
     Assert.less(
       (await getTabRowsForCard(lastCard)).length,
       NUMBER_OF_TABS,
