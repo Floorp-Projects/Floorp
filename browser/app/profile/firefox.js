@@ -900,7 +900,6 @@ pref("browser.tabs.warnOnClose", false);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);
-pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
