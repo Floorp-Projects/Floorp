@@ -60,4 +60,6 @@ interface mozIMozIntlHelper : nsISupports
    *    dayPeriod: a string from the set {"am", "pm"}.
    */
   [implicit_jscontext] void addDisplayNamesConstructor(in jsval intlObject);
+
+  [implicit_jscontext] boolean stringHasRTLChars(in jsval str);
 };
