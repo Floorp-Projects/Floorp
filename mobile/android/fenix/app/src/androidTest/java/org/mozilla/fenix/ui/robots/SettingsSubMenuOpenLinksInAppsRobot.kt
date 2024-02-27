@@ -25,7 +25,7 @@ class SettingsSubMenuOpenLinksInAppsRobot {
 
     fun verifyOpenLinksInAppsView(selectedOpenLinkInAppsOption: String) {
         assertUIObjectExists(
-            goBackButton,
+            goBackButton(),
             itemContainingText(getStringResource(R.string.preferences_open_links_in_apps)),
             itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_always)),
             itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_ask)),
@@ -36,7 +36,7 @@ class SettingsSubMenuOpenLinksInAppsRobot {
 
     fun verifyPrivateOpenLinksInAppsView(selectedOpenLinkInAppsOption: String) {
         assertUIObjectExists(
-            goBackButton,
+            goBackButton(),
             itemContainingText(getStringResource(R.string.preferences_open_links_in_apps)),
             itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_ask)),
             itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_never)),
@@ -54,26 +54,26 @@ class SettingsSubMenuOpenLinksInAppsRobot {
 
     fun clickOpenLinkInAppOption(openLinkInAppsOption: String) {
         when (openLinkInAppsOption) {
-            "Always" -> alwaysOption.click()
-            "Ask before opening" -> askBeforeOpeningOption.click()
-            "Never" -> neverOption.click()
+            "Always" -> alwaysOption().click()
+            "Ask before opening" -> askBeforeOpeningOption().click()
+            "Never" -> neverOption().click()
         }
     }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.waitForIdle()
-            goBackButton.click()
+            goBackButton().click()
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
         }
     }
 }
-private val goBackButton = itemWithDescription("Navigate up")
-private val alwaysOption =
+private fun goBackButton() = itemWithDescription("Navigate up")
+private fun alwaysOption() =
     itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_always))
-private val askBeforeOpeningOption =
+private fun askBeforeOpeningOption() =
     itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_ask))
-private val neverOption =
+private fun neverOption() =
     itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_never))
