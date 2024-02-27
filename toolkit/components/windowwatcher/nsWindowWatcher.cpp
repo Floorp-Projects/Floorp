@@ -64,6 +64,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_middlemouse.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
@@ -2451,7 +2452,12 @@ bool nsWindowWatcher::IsWindowOpenLocationModified(
   bool metaKey = aModifiers.IsControl();
 #endif
   bool shiftKey = aModifiers.IsShift();
-  if (metaKey) {
+
+  bool middleMouse = aModifiers.IsMiddleMouse();
+  bool middleUsesTabs = StaticPrefs::browser_tabs_opentabfor_middleclick();
+  bool middleUsesNewWindow = StaticPrefs::middlemouse_openNewWindow();
+
+  if (metaKey || (middleMouse && middleUsesTabs)) {
     bool loadInBackground = StaticPrefs::browser_tabs_loadInBackground();
     if (shiftKey) {
       loadInBackground = !loadInBackground;
@@ -2463,10 +2469,17 @@ bool nsWindowWatcher::IsWindowOpenLocationModified(
     }
     return true;
   }
-  if (shiftKey) {
+
+  if (shiftKey || (middleMouse && !middleUsesTabs && middleUsesNewWindow)) {
     *aLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
     return true;
   }
+
+  // If both middleUsesTabs and middleUsesNewWindow are false, it means the
+  // middle-click is used for different purpose, such as paste or scroll.
+  // Webpage still can trigger `window.open` for the user activation, and in
+  // that case use the `window.open`'s `features` parameter and other prefs to
+  // decide where to open.
 
   return false;
 }
