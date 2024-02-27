@@ -441,6 +441,12 @@ urlbar:
         will be able to click the "Show less frequently" command for Yelp
         suggestions. If undefined or zero, the user will be able to click the
         command without any limit.
+    yelpSuggestNonPriorityIndex:
+      type: int
+      fallbackPref: browser.urlbar.yelp.suggestedIndex
+      description: >-
+        The group-relative suggestedIndex of Yelp suggestions within the Firefox
+        Suggest section. Ignored when `yelpSuggestPriority` is true.
     yelpSuggestPriority:
       type: boolean
       fallbackPref: browser.urlbar.yelp.priority

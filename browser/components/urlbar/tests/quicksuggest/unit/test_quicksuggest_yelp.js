@@ -459,6 +459,49 @@ add_task(async function yelpSuggestPriority() {
   });
 });
 
+// Tests the `yelpSuggestNonPriorityIndex` Nimbus variable, which controls the
+// group-relative suggestedIndex. The default Yelp suggestedIndex is 0, unlike
+// most other Suggest suggestion types, which use -1.
+add_task(async function nimbusSuggestedIndex() {
+  const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
+    yelpSuggestNonPriorityIndex: -1,
+  });
+  await QuickSuggestTestUtils.forceSync();
+
+  await check_results({
+    context: createContext("ramen in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
+        isTopPick: false,
+        suggestedIndex: -1,
+      }),
+    ],
+  });
+
+  await cleanUpNimbusEnable();
+  await QuickSuggestTestUtils.forceSync();
+
+  await check_results({
+    context: createContext("ramen in tokyo", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=tokyo",
+        title: "ramen in tokyo",
+        isTopPick: false,
+        suggestedIndex: 0,
+      }),
+    ],
+  });
+});
+
 // Tests the "Not relevant" command: a dismissed suggestion shouldn't be added.
 add_task(async function notRelevant() {
   let result = makeExpectedResult({
@@ -721,22 +764,41 @@ add_task(async function rustProviders() {
   await QuickSuggestTestUtils.forceSync();
 });
 
-function makeExpectedResult(expected) {
+function makeExpectedResult({
+  url,
+  title,
+  isTopPick = false,
+  // The default Yelp suggestedIndex is 0, unlike most other Suggest suggestion
+  // types, which use -1.
+  suggestedIndex = 0,
+  isSuggestedIndexRelativeToGroup = true,
+  originalUrl = undefined,
+  displayUrl = undefined,
+}) {
   const utmParameters = "&utm_medium=partner&utm_source=mozilla";
 
-  let url = expected.url + utmParameters;
-  let originalUrl = expected.originalUrl ?? expected.url;
-  let displayUrl =
-    (expected.displayUrl ??
-      expected.url
+  originalUrl ??= url;
+
+  displayUrl =
+    (displayUrl ??
+      url
         .replace(/^https:\/\/www[.]/, "")
         .replace("%20", " ")
         .replace("%2C", ",")) + utmParameters;
 
+  url += utmParameters;
+
+  if (isTopPick) {
+    suggestedIndex = 1;
+    isSuggestedIndexRelativeToGroup = false;
+  }
+
   return {
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-    isBestMatch: expected.isTopPick ?? false,
+    isBestMatch: !!isTopPick,
+    suggestedIndex,
+    isSuggestedIndexRelativeToGroup,
     heuristic: false,
     payload: {
       source: "rust",
@@ -746,7 +808,7 @@ function makeExpectedResult(expected) {
       bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
       url,
       originalUrl,
-      title: expected.title,
+      title,
       displayUrl,
       icon: null,
     },
