@@ -1728,6 +1728,7 @@
     expected: RawId
     replacement: RawId
     elementType: ScalarTypeImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsExchangeResult
   shared: true
@@ -1738,6 +1739,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsAddResult
   shared: true
@@ -1749,6 +1751,7 @@
     value: RawId
     elementType: ScalarTypeImm
     forEffect: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsSubResult
   shared: true
@@ -1760,6 +1763,7 @@
     value: RawId
     elementType: ScalarTypeImm
     forEffect: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsAndResult
   shared: true
@@ -1771,6 +1775,7 @@
     value: RawId
     elementType: ScalarTypeImm
     forEffect: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsOrResult
   shared: true
@@ -1782,6 +1787,7 @@
     value: RawId
     elementType: ScalarTypeImm
     forEffect: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsXorResult
   shared: true
@@ -1793,6 +1799,7 @@
     value: RawId
     elementType: ScalarTypeImm
     forEffect: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsLoadResult
   shared: true
@@ -1802,6 +1809,7 @@
     obj: ObjId
     index: IntPtrId
     elementType: ScalarTypeImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsStoreResult
   shared: true
@@ -1812,6 +1820,7 @@
     index: IntPtrId
     value: RawId
     elementType: ScalarTypeImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsIsLockFreeResult
   shared: true

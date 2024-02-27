@@ -1,3 +1,5 @@
+// |jit-test| --enable-arraybuffer-resizable
+
 // Basic functional tests for the Atomics primitives.
 //
 // These do not test atomicity, just that calling and coercions and
@@ -562,3 +564,21 @@ function runTests(SharedOrUnsharedArrayBuffer) {
 
 runTests(SharedArrayBuffer);
 runTests(ArrayBuffer);
+
+if (ArrayBuffer.prototype.resize) {
+    class ResizableArrayBuffer {
+        constructor(byteLength = 0) {
+            return new ArrayBuffer(byteLength, {maxByteLength: byteLength});
+        }
+    }
+    runTests(ResizableArrayBuffer);
+}
+
+if (SharedArrayBuffer.prototype.grow) {
+    class GrowableSharedArrayBuffer {
+        constructor(byteLength = 0) {
+            return new SharedArrayBuffer(byteLength, {maxByteLength: byteLength});
+        }
+    }
+    runTests(GrowableSharedArrayBuffer);
+}
