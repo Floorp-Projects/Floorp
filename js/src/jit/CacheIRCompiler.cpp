@@ -5379,6 +5379,25 @@ bool CacheIRCompiler::emitGuardResizableArrayBufferViewInBounds(
   return true;
 }
 
+bool CacheIRCompiler::emitGuardResizableArrayBufferViewInBoundsOrDetached(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoScratchRegister scratch(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label done;
+  masm.branchIfResizableArrayBufferViewInBounds(obj, scratch, &done);
+  masm.branchIfHasAttachedArrayBuffer(obj, scratch, failure->label());
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitIsTypedArrayConstructorResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

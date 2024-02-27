@@ -10382,7 +10382,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayElementSize() {
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
-    bool isPossiblyWrapped) {
+    bool isPossiblyWrapped, bool allowOutOfBounds) {
   // Self-hosted code calls this with a single, possibly wrapped,
   // TypedArrayObject argument.
   MOZ_ASSERT(argc_ == 1);
@@ -10395,12 +10395,19 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
 
   MOZ_ASSERT(args_[0].toObject().is<TypedArrayObject>());
 
-  // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!args_[0].toObject().is<FixedLengthTypedArrayObject>()) {
-    return AttachDecision::NoAction;
-  }
+  auto* tarr = &args_[0].toObject().as<TypedArrayObject>();
 
-  auto* tarr = &args_[0].toObject().as<FixedLengthTypedArrayObject>();
+  // Don't optimize when a resizable TypedArray is out-of-bounds and
+  // out-of-bounds isn't allowed.
+  auto length = tarr->length();
+  if (length.isNothing() && !tarr->hasDetachedBuffer()) {
+    MOZ_ASSERT(tarr->is<ResizableTypedArrayObject>());
+    MOZ_ASSERT(tarr->isOutOfBounds());
+
+    if (!allowOutOfBounds) {
+      return AttachDecision::NoAction;
+    }
+  }
 
   // Initialize the input operand.
   initializeInputOperand();
@@ -10414,23 +10421,29 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
     writer.guardIsNotProxy(objArgId);
   }
 
-  writer.guardIsFixedLengthTypedArray(objArgId);
-  if (tarr->length() <= INT32_MAX) {
-    writer.loadArrayBufferViewLengthInt32Result(objArgId);
+  EmitGuardTypedArray(writer, tarr, objArgId);
+
+  if (tarr->is<FixedLengthTypedArrayObject>()) {
+    if (length.valueOr(0) <= INT32_MAX) {
+      writer.loadArrayBufferViewLengthInt32Result(objArgId);
+    } else {
+      writer.loadArrayBufferViewLengthDoubleResult(objArgId);
+    }
   } else {
-    writer.loadArrayBufferViewLengthDoubleResult(objArgId);
+    if (!allowOutOfBounds) {
+      writer.guardResizableArrayBufferViewInBoundsOrDetached(objArgId);
+    }
+
+    if (length.valueOr(0) <= INT32_MAX) {
+      writer.resizableTypedArrayLengthInt32Result(objArgId);
+    } else {
+      writer.resizableTypedArrayLengthDoubleResult(objArgId);
+    }
   }
   writer.returnFromIC();
 
   trackAttached("IntrinsicTypedArrayLength");
   return AttachDecision::Attach;
-}
-
-AttachDecision
-InlinableNativeIRGenerator::tryAttachTypedArrayLengthZeroOnOutOfBounds() {
-  // We don't yet inline resizable buffers, so this operation is equivalent to
-  // the inline code path for tryAttachTypedArrayLength().
-  return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false);
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayBufferByteLength(
@@ -11786,11 +11799,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::IntrinsicTypedArrayElementSize:
       return tryAttachTypedArrayElementSize();
     case InlinableNative::IntrinsicTypedArrayLength:
-      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false);
+      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false,
+                                       /* allowOutOfBounds = */ false);
     case InlinableNative::IntrinsicTypedArrayLengthZeroOnOutOfBounds:
-      return tryAttachTypedArrayLengthZeroOnOutOfBounds();
+      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false,
+                                       /* allowOutOfBounds = */ true);
     case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
-      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ true);
+      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ true,
+                                       /* allowOutOfBounds = */ false);
 
     // Reflect natives.
     case InlinableNative::ReflectGetPrototypeOf:

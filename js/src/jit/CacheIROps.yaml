@@ -1311,6 +1311,13 @@
   args:
     obj: ObjId
 
+- name: GuardResizableArrayBufferViewInBoundsOrDetached
+  shared: true
+  transpile: false
+  cost_estimate: 2
+  args:
+    obj: ObjId
+
 - name: NewArrayIteratorResult
   shared: true
   transpile: true
