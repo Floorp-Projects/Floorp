@@ -145,8 +145,8 @@ let polyFillImports = {
     return string;
   },
   fromCharCodeArray: (array, arrayStart, arrayCount) => {
-    arrayStart |= 0;
-    arrayCount |= 0;
+    arrayStart >>>= 0;
+    arrayCount >>>= 0;
     let length = arrayLength(array);
     if (BigInt(arrayStart) + BigInt(arrayCount) > BigInt(length)) {
       throw new WebAssembly.RuntimeError();
@@ -158,7 +158,7 @@ let polyFillImports = {
     return result;
   },
   intoCharCodeArray: (string, arr, arrayStart) => {
-    arrayStart |= 0;
+    arrayStart >>>= 0;
     throwIfNotString(string);
     let arrLength = arrayLength(arr);
     let stringLength = string.length;
@@ -171,22 +171,22 @@ let polyFillImports = {
     return stringLength;
   },
   fromCharCode: (charCode) => {
-    charCode |= 0;
+    charCode >>>= 0;
     return String.fromCharCode(charCode);
   },
   fromCodePoint: (codePoint) => {
-    codePoint |= 0;
+    codePoint >>>= 0;
     return String.fromCodePoint(codePoint);
   },
   charCodeAt: (string, stringIndex) => {
-    stringIndex |= 0;
+    stringIndex >>>= 0;
     throwIfNotString(string);
     if (stringIndex >= string.length)
       throw new WebAssembly.RuntimeError();
     return string.charCodeAt(stringIndex);
   },
   codePointAt: (string, stringIndex) => {
-    stringIndex |= 0;
+    stringIndex >>>= 0;
     throwIfNotString(string);
     if (stringIndex >= string.length)
       throw new WebAssembly.RuntimeError();
@@ -202,8 +202,8 @@ let polyFillImports = {
     return stringA + stringB;
   },
   substring: (string, startIndex, endIndex) => {
-    startIndex |= 0;
-    endIndex |= 0;
+    startIndex >>>= 0;
+    endIndex >>>= 0;
     throwIfNotString(string);
     if (startIndex > string.length,
         endIndex > string.length,
@@ -359,4 +359,14 @@ for (let a of testStrings) {
       a, b
     );
   }
+}
+
+// fromCharCodeArray length is an unsigned integer
+{
+  let arrayMutI16 = createArrayMutI16(1);
+  assertErrorMessage(() => assertSameBehavior(
+    builtinExports['fromCharCodeArray'],
+    polyfillExports['fromCharCodeArray'],
+    arrayMutI16, 1, -1
+  ), WebAssembly.RuntimeError, /./);
 }
