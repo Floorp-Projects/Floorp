@@ -492,6 +492,14 @@ class nsBlockFrame : public nsContainerFrame {
                            BlockReflowState& aState, ReflowOutput& aMetrics);
 
   /**
+   * Calculates the necessary shift to honor 'align-content' and applies it.
+   */
+  void AlignContent(BlockReflowState& aState, ReflowOutput& aMetrics,
+                    nscoord aBEndEdgeOfChildren);
+  // Stash the effective align-content shift value between reflows
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(AlignContentShift, nscoord)
+
+  /**
    * Helper method for Reflow(). Computes the overflow areas created by our
    * children, and includes them into aOverflowAreas.
    */
@@ -539,6 +547,16 @@ class nsBlockFrame : public nsContainerFrame {
    * @return whether the frame is a BIDI form control
    */
   bool IsVisualFormControl(nsPresContext* aPresContext);
+
+  /** Whether this block has an effective align-content property */
+  bool IsAligned() const {
+    return StylePosition()->mAlignContent.primary !=
+           mozilla::StyleAlignFlags::NORMAL;
+  }
+
+  nscoord GetAlignContentShift() const {
+    return IsAligned() ? GetProperty(AlignContentShift()) : 0;
+  }
 
   /**
    * For text-wrap:balance, we iteratively try reflowing with adjusted inline

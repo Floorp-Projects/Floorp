@@ -2023,6 +2023,9 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
       ComputeFinalSize(aReflowInput, state, aMetrics);
   aTrialState.mContainerWidth = state.ContainerSize().width;
 
+  // Align content
+  AlignContent(state, aMetrics, aTrialState.mBlockEndEdgeOfChildren);
+
   return state.mReflowStatus;
 }
 
@@ -2190,6 +2193,11 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     std::tie(blockEndEdgeOfChildren, std::ignore) =
         aState.ClearFloats(blockEndEdgeOfChildren, StyleClear::Both);
   }
+
+  // undo cached alignment shift for sizing purposes
+  // (we used shifted positions because the float manager uses them)
+  blockEndEdgeOfChildren -= aState.mAlignContentShift;
+  aState.UndoAlignContentShift();
 
   if (NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedBSize()) {
     // Note: We don't use blockEndEdgeOfChildren because it includes the
@@ -2379,6 +2387,77 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
 #endif
 
   return blockEndEdgeOfChildren;
+}
+
+void nsBlockFrame::AlignContent(BlockReflowState& aState,
+                                ReflowOutput& aMetrics,
+                                nscoord aBEndEdgeOfChildren) {
+  if (!StaticPrefs::layout_css_align_content_blocks_enabled()) {
+    return;
+  }
+
+  StyleAlignFlags alignment = StylePosition()->mAlignContent.primary;
+  alignment &= ~StyleAlignFlags::FLAG_BITS;
+
+  // Short circuit
+  const bool isCentered = alignment == StyleAlignFlags::CENTER ||
+                          alignment == StyleAlignFlags::SPACE_AROUND ||
+                          alignment == StyleAlignFlags::SPACE_EVENLY;
+  const bool isEndAlign = alignment == StyleAlignFlags::END ||
+                          alignment == StyleAlignFlags::FLEX_END ||
+                          alignment == StyleAlignFlags::LAST_BASELINE;
+  if (!isEndAlign && !isCentered && !aState.mAlignContentShift) {
+    // desired shift = 0, no cached shift to undo
+    return;
+  }
+
+  // NOTE: ComputeFinalSize already called aState.UndoAlignContentShift(),
+  //       so metrics no longer include cached shift.
+  // NOTE: Content is currently positioned at cached shift
+  // NOTE: Content has been fragmented against 0-shift assumption.
+
+  // Calculate shift
+  nscoord shift = 0;
+  WritingMode wm = aState.mReflowInput.GetWritingMode();
+  if ((isCentered || isEndAlign) && !mLines.empty() &&
+      aState.mReflowStatus.IsFullyComplete() && !GetPrevInFlow()) {
+    nscoord availB = aState.mReflowInput.AvailableBSize();
+    nscoord endB = aMetrics.BSize(wm) - aState.BorderPadding().BEnd(wm);
+    shift = std::min(availB, endB) - aBEndEdgeOfChildren;
+
+    // note: these measures all include start BP, so it subtracts out
+    if (!(StylePosition()->mAlignContent.primary & StyleAlignFlags::UNSAFE)) {
+      shift = std::max(0, shift);
+    }
+    if (isCentered) {
+      shift = shift / 2;
+    }
+  }
+  // else: zero shift if start-aligned or if fragmented
+
+  nscoord delta = shift - aState.mAlignContentShift;
+  if (delta) {
+    // Shift children
+    LogicalPoint translation(wm, 0, delta);
+    for (nsLineBox& line : Lines()) {
+      SlideLine(aState, &line, delta);
+    }
+    for (nsIFrame* kid : GetChildList(FrameChildListID::Float)) {
+      kid->MovePositionBy(wm, translation);
+      nsContainerFrame::PlaceFrameView(kid);
+    }
+    if (HasOutsideMarker() && !mLines.empty()) {
+      nsIFrame* marker = GetOutsideMarker();
+      marker->MovePositionBy(wm, translation);
+    }
+  }
+
+  if (shift) {
+    // Cache shift
+    SetProperty(AlignContentShift(), shift);
+  } else {
+    RemoveProperty(AlignContentShift());
+  }
 }
 
 void nsBlockFrame::ConsiderBlockEndEdgeOfChildren(
@@ -6307,7 +6386,7 @@ nsContainerFrame* nsBlockFrame::GetRubyContentPseudoFrame() {
   auto* firstChild = PrincipalChildList().FirstChild();
   if (firstChild && firstChild->IsRubyFrame() &&
       firstChild->Style()->GetPseudoType() ==
-          mozilla::PseudoStyleType::blockRubyContent) {
+          PseudoStyleType::blockRubyContent) {
     return static_cast<nsContainerFrame*>(firstChild);
   }
   return nullptr;
@@ -6447,9 +6526,12 @@ static bool StyleEstablishesBFC(const ComputedStyle* aStyle) {
   // independent formatting context.
   // https://drafts.csswg.org/css-contain/#containment-paint
   // https://drafts.csswg.org/css-contain/#containment-layout
+  // https://drafts.csswg.org/css-align/#distribution-block
   // https://drafts.csswg.org/css-multicol/#columns
   return aStyle->StyleDisplay()->IsContainPaint() ||
          aStyle->StyleDisplay()->IsContainLayout() ||
+         aStyle->StylePosition()->mAlignContent.primary !=
+             StyleAlignFlags::NORMAL ||
          aStyle->GetPseudoType() == PseudoStyleType::columnContent;
 }
 
@@ -7844,7 +7926,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   //
   // Other more specific frame types also always establish a BFC.
   //
-  if (StyleDisplay()->mDisplay == mozilla::StyleDisplay::FlowRoot ||
+  if (StyleDisplay()->mDisplay == StyleDisplay::FlowRoot ||
       (GetParent() &&
        (GetWritingMode().GetBlockDir() !=
             GetParent()->GetWritingMode().GetBlockDir() ||

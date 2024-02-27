@@ -47,7 +47,8 @@ BlockReflowState::BlockReflowState(
       mMinLineHeight(aReflowInput.GetLineHeight()),
       mLineNumber(0),
       mTrailingClearFromPIF(StyleClear::None),
-      mConsumedBSize(aConsumedBSize) {
+      mConsumedBSize(aConsumedBSize),
+      mAlignContentShift(mBlock->GetAlignContentShift()) {
   NS_ASSERTION(mConsumedBSize != NS_UNCONSTRAINEDSIZE,
                "The consumed block-size should be constrained!");
 
@@ -87,8 +88,8 @@ BlockReflowState::BlockReflowState(
   // the "overflow" property. When we don't have a specified style block-size,
   // then we may end up limiting our block-size if the available block-size is
   // constrained (this situation occurs when we are paginated).
-  if (const nscoord availableBSize = aReflowInput.AvailableBSize();
-      availableBSize != NS_UNCONSTRAINEDSIZE) {
+  const nscoord availableBSize = aReflowInput.AvailableBSize();
+  if (availableBSize != NS_UNCONSTRAINEDSIZE) {
     // We are in a paginated situation. The block-end edge of the available
     // space to reflow the children is within our block-end border and padding.
     // If we're cloning our border and padding, and we're going to request
@@ -112,8 +113,32 @@ BlockReflowState::BlockReflowState(
   mContentArea.IStart(wm) = mBorderPadding.IStart(wm);
   mBCoord = mContentArea.BStart(wm) = mBorderPadding.BStart(wm);
 
+  // Account for existing cached shift, we'll re-position in AlignContent() if
+  // needed.
+  if (mAlignContentShift) {
+    mBCoord += mAlignContentShift;
+    mContentArea.BStart(wm) += mAlignContentShift;
+
+    if (availableBSize != NS_UNCONSTRAINEDSIZE) {
+      mContentArea.BSize(wm) += mAlignContentShift;
+    }
+  }
+
   mPrevChild = nullptr;
   mCurrentLine = aFrame->LinesEnd();
+}
+
+void BlockReflowState::UndoAlignContentShift() {
+  if (!mAlignContentShift) {
+    return;
+  }
+
+  mBCoord -= mAlignContentShift;
+  mContentArea.BStart(mReflowInput.GetWritingMode()) -= mAlignContentShift;
+
+  if (mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
+    mContentArea.BSize(mReflowInput.GetWritingMode()) -= mAlignContentShift;
+  }
 }
 
 void BlockReflowState::ComputeFloatAvoidingOffsets(
