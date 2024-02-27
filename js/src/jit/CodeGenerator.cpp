@@ -99,6 +99,7 @@ using namespace js::jit;
 
 using JS::GenericNaN;
 using mozilla::AssertedCast;
+using mozilla::CheckedUint32;
 using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using mozilla::Maybe;
@@ -19177,9 +19178,10 @@ void CodeGenerator::visitWasmNewArrayObject(LWasmNewArrayObject* lir) {
   if (lir->numElements()->isConstant()) {
     // numElements is constant, so we can do optimized code generation.
     uint32_t numElements = lir->numElements()->toConstant()->toInt32();
-    uint32_t storageBytes =
-        WasmArrayObject::calcStorageBytes(mir->elemSize(), numElements);
-    if (storageBytes > WasmArrayObject_MaxInlineBytes) {
+    CheckedUint32 storageBytes =
+        WasmArrayObject::calcStorageBytesChecked(mir->elemSize(), numElements);
+    if (!storageBytes.isValid() ||
+        storageBytes.value() > WasmArrayObject_MaxInlineBytes) {
       // Too much array data to store inline. Immediately perform an instance
       // call to handle the out-of-line storage.
       masm.move32(Imm32(numElements), temp1);
@@ -19198,8 +19200,8 @@ void CodeGenerator::visitWasmNewArrayObject(LWasmNewArrayObject* lir) {
       addOutOfLineCode(ool, lir->mir());
 
       masm.wasmNewArrayObjectFixed(instance, output, typeDefData, temp1, temp2,
-                                   ool->entry(), numElements, storageBytes,
-                                   mir->zeroFields());
+                                   ool->entry(), numElements,
+                                   storageBytes.value(), mir->zeroFields());
 
       masm.bind(ool->rejoin());
     }
