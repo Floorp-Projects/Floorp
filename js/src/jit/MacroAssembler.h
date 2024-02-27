@@ -13,6 +13,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
 
+#include <utility>
+
 #if defined(JS_CODEGEN_X86)
 #  include "jit/x86/MacroAssembler-x86.h"
 #elif defined(JS_CODEGEN_X64)
@@ -1777,6 +1779,21 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchTestObjClass(Condition cond, Register obj, Register clasp,
                                  Register scratch, Register spectreRegToZero,
                                  Label* label);
+
+ private:
+  inline void branchTestClass(Condition cond, Register clasp,
+                              std::pair<const JSClass*, const JSClass*> classes,
+                              Label* label);
+
+ public:
+  inline void branchTestObjClass(
+      Condition cond, Register obj,
+      std::pair<const JSClass*, const JSClass*> classes, Register scratch,
+      Register spectreRegToZero, Label* label);
+  inline void branchTestObjClassNoSpectreMitigations(
+      Condition cond, Register obj,
+      std::pair<const JSClass*, const JSClass*> classes, Register scratch,
+      Label* label);
 
   inline void branchTestObjShape(Condition cond, Register obj,
                                  const Shape* shape, Register scratch,
