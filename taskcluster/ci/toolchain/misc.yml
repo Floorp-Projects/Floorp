@@ -524,9 +524,6 @@ win64-vs2019:
         resources:
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
-        toolchain-alias:
-            - vs
-            - vs-toolchain
 
 win64-vs2022:
     description: "VS 2022"
@@ -544,6 +541,9 @@ win64-vs2022:
         resources:
             - build/vs/vs2022.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
+        toolchain-alias:
+            - vs
+            - vs-toolchain
 
 linux64-afl-instrumentation-4.0:
     description: "AFL++ instrumentation toolchain build"
