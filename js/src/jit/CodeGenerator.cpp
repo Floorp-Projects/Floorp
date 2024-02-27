@@ -4631,6 +4631,17 @@ void CodeGenerator::visitGuardIsFixedLengthTypedArray(
   bailoutFrom(&bail, guard->snapshot());
 }
 
+void CodeGenerator::visitGuardIsResizableTypedArray(
+    LGuardIsResizableTypedArray* guard) {
+  Register obj = ToRegister(guard->input());
+  Register temp = ToRegister(guard->temp0());
+
+  Label bail;
+  masm.loadObjClassUnsafe(obj, temp);
+  masm.branchIfClassIsNotResizableTypedArray(temp, &bail);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
 void CodeGenerator::visitGuardHasProxyHandler(LGuardHasProxyHandler* guard) {
   Register obj = ToRegister(guard->input());
 
@@ -9657,6 +9668,15 @@ void CodeGenerator::visitTypedArrayElementSize(LTypedArrayElementSize* lir) {
   Register out = ToRegister(lir->output());
 
   masm.typedArrayElementSize(obj, out);
+}
+
+void CodeGenerator::visitResizableTypedArrayByteOffsetMaybeOutOfBounds(
+    LResizableTypedArrayByteOffsetMaybeOutOfBounds* lir) {
+  Register obj = ToRegister(lir->object());
+  Register out = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  masm.loadResizableTypedArrayByteOffsetMaybeOutOfBoundsIntPtr(obj, out, temp);
 }
 
 void CodeGenerator::visitResizableTypedArrayLength(

@@ -844,6 +844,16 @@ bool WarpCacheIRTranspiler::emitGuardIsFixedLengthTypedArray(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsResizableTypedArray(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* ins = MGuardIsResizableTypedArray::New(alloc(), obj);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardHasProxyHandler(ObjOperandId objId,
                                                      uint32_t handlerOffset) {
   MDefinition* obj = getOperand(objId);
@@ -4072,6 +4082,38 @@ bool WarpCacheIRTranspiler::emitArrayBufferViewByteOffsetDoubleResult(
   MDefinition* obj = getOperand(objId);
 
   auto* byteOffset = MArrayBufferViewByteOffset::New(alloc(), obj);
+  add(byteOffset);
+
+  auto* byteOffsetDouble = MIntPtrToDouble::New(alloc(), byteOffset);
+  add(byteOffsetDouble);
+
+  pushResult(byteOffsetDouble);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::
+    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result(
+        ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* byteOffset =
+      MResizableTypedArrayByteOffsetMaybeOutOfBounds::New(alloc(), obj);
+  add(byteOffset);
+
+  auto* byteOffsetInt32 = MNonNegativeIntPtrToInt32::New(alloc(), byteOffset);
+  add(byteOffsetInt32);
+
+  pushResult(byteOffsetInt32);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::
+    emitResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult(
+        ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* byteOffset =
+      MResizableTypedArrayByteOffsetMaybeOutOfBounds::New(alloc(), obj);
   add(byteOffset);
 
   auto* byteOffsetDouble = MIntPtrToDouble::New(alloc(), byteOffset);

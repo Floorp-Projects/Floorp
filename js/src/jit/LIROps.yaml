@@ -1884,6 +1884,13 @@
     synchronization: js::jit::Synchronization
   num_temps: 1
 
+# Read the possibly out-of-bounds byteOffset of a resizable typed array.
+- name: ResizableTypedArrayByteOffsetMaybeOutOfBounds
+  result_type: WordSized
+  operands:
+    object: WordSized
+  num_temps: 1
+
 # Read the byte length of a resizable data view.
 - name: ResizableDataViewByteLength
   result_type: WordSized
@@ -2967,6 +2974,11 @@
   num_temps: 1
 
 - name: GuardIsFixedLengthTypedArray
+  operands:
+    object: WordSized
+  num_temps: 1
+
+- name: GuardIsResizableTypedArray
   operands:
     object: WordSized
   num_temps: 1

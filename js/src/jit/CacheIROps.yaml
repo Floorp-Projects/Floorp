@@ -484,7 +484,7 @@
 
 - name: GuardIsResizableTypedArray
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
@@ -1208,14 +1208,14 @@
 
 - name: ResizableTypedArrayByteOffsetMaybeOutOfBoundsInt32Result
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
 
 - name: ResizableTypedArrayByteOffsetMaybeOutOfBoundsDoubleResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
