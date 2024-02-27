@@ -19,6 +19,7 @@ function cleanup() {
 }
 
 add_task(async function test_notification_dot_indicator() {
+  clearHistory();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
@@ -47,9 +48,10 @@ add_task(async function test_notification_dot_indicator() {
     await tabChangeRaised;
     await openTabs.updateComplete;
 
-    await TestUtils.waitForCondition(
-      () => openTabs.viewCards[0].tabList.rowEls[1].attention,
-      "The opened tab doesn't have the attention property, so no notification dot is shown."
+    await TestUtils.waitForCondition(() =>
+      Array.from(openTabs.viewCards[0].tabList.rowEls).some(rowEl => {
+        return rowEl.indicators.includes("attention");
+      })
     );
 
     info("The newly opened tab has a notification dot.");
@@ -63,6 +65,7 @@ add_task(async function test_notification_dot_indicator() {
 });
 
 add_task(async function test_container_indicator() {
+  clearHistory();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
@@ -95,10 +98,14 @@ add_task(async function test_container_indicator() {
     );
     info("openTabs component has finished updating.");
 
-    let containerTabElem = openTabs.viewCards[0].tabList.rowEls[1];
+    let containerTabElem;
 
     await TestUtils.waitForCondition(
-      () => containerTabElem.containerObj,
+      () =>
+        Array.from(openTabs.viewCards[0].tabList.rowEls).some(rowEl => {
+          containerTabElem = rowEl;
+          return rowEl.containerObj;
+        }),
       "The container tab element isn't marked in Fx View."
     );
 
@@ -116,6 +123,7 @@ add_task(async function test_container_indicator() {
 });
 
 add_task(async function test_sound_playing_muted_indicator() {
+  clearHistory();
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     await navigateToViewAndWait(document, "opentabs");
@@ -146,9 +154,13 @@ add_task(async function test_sound_playing_muted_indicator() {
       "The tab list hasn't rendered."
     );
 
-    let soundPlayingTabElem = openTabs.viewCards[0].tabList.rowEls[1];
-
-    await TestUtils.waitForCondition(() => soundPlayingTabElem.soundPlaying);
+    let soundPlayingTabElem;
+    await TestUtils.waitForCondition(() =>
+      Array.from(openTabs.viewCards[0].tabList.rowEls).some(rowEl => {
+        soundPlayingTabElem = rowEl;
+        return rowEl.indicators.includes("soundplaying");
+      })
+    );
 
     ok(
       soundPlayingTabElem.mediaButtonEl,
@@ -174,7 +186,9 @@ add_task(async function test_sound_playing_muted_indicator() {
     await tabChangeRaised;
     await openTabs.updateComplete;
 
-    await TestUtils.waitForCondition(() => soundPlayingTabElem.muted);
+    await TestUtils.waitForCondition(() =>
+      soundPlayingTabElem.indicators.includes("muted")
+    );
 
     ok(
       soundPlayingTabElem.mediaButtonEl,
@@ -185,7 +199,9 @@ add_task(async function test_sound_playing_muted_indicator() {
     soundTab.toggleMuteAudio();
     await tabChangeRaised;
     await openTabs.updateComplete;
-    await TestUtils.waitForCondition(() => soundPlayingTabElem.soundPlaying);
+    await TestUtils.waitForCondition(() =>
+      soundPlayingTabElem.indicators.includes("soundplaying")
+    );
 
     ok(
       soundPlayingTabElem.mediaButtonEl,
@@ -195,7 +211,9 @@ add_task(async function test_sound_playing_muted_indicator() {
     soundTab.toggleMuteAudio();
     await tabChangeRaised;
     await openTabs.updateComplete;
-    await TestUtils.waitForCondition(() => soundPlayingTabElem.muted);
+    await TestUtils.waitForCondition(() =>
+      soundPlayingTabElem.indicators.includes("muted")
+    );
 
     ok(
       soundPlayingTabElem.mediaButtonEl,

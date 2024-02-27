@@ -295,3 +295,16 @@ firefoxview-recentlyclosed-empty-description-two = To find tabs from longer ago,
 firefoxview-syncedtabs-device-notabs = No tabs open on this device
 
 firefoxview-syncedtabs-connect-another-device = Connect another device
+
+firefoxview-pinned-tabs =
+  .title = Pinned Tabs
+
+firefoxview-tabs =
+  .title = Tabs
+
+## These tooltips will be displayed when hovering over a pinned tab on the Open Tabs page
+## Variables:
+##  $tabTitle (string) - Title of pinned tab that will be opened when selected
+
+firefoxview-opentabs-pinned-tab =
+  .title = Switch to { $tabTitle }

@@ -2,14 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- .fxview-tab-list {
+:host {
   display: grid;
-  grid-template-columns: min-content 3fr min-content 2fr 1fr 1fr min-content min-content;
-  gap: 6px;
+  row-gap: var(--space-xsmall);
 }
 
-:host([compactRows]) .fxview-tab-list {
-  grid-template-columns: min-content 1fr min-content min-content min-content;
+.fxview-tab-list {
+  display: grid;
+  grid-template-columns: min-content 3fr min-content 2fr 1fr 1fr min-content min-content;
+  gap: var(--space-xsmall);
+
+  &.pinned {
+    display: flex;
+
+    > virtual-list {
+      display: block;
+    }
+
+    > fxview-tab-row {
+      display: block;
+      margin-block-end: var(--space-xsmall);
+    }
+  }
+
+  :host([compactRows]) & {
+    grid-template-columns: min-content 1fr min-content min-content min-content;
+  }
 }
 
 virtual-list {
