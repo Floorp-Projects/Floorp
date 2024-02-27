@@ -1978,8 +1978,9 @@ void* Instance::stringCast(Instance* instance, void* stringArg) {
 }
 
 /* static */
-void* Instance::stringFromWTF16Array(Instance* instance, void* arrayArg,
-                                     uint32_t arrayStart, uint32_t arrayCount) {
+void* Instance::stringFromCharCodeArray(Instance* instance, void* arrayArg,
+                                        uint32_t arrayStart,
+                                        uint32_t arrayCount) {
   JSContext* cx = instance->cx();
   RootedAnyRef arrayRef(cx, AnyRef::fromCompiledCode(arrayArg));
   Rooted<WasmArrayObject*> array(cx, UncheckedCastToArrayI16<true>(arrayRef));
@@ -2003,8 +2004,8 @@ void* Instance::stringFromWTF16Array(Instance* instance, void* arrayArg,
 }
 
 /* static */
-int32_t Instance::stringToWTF16Array(Instance* instance, void* stringArg,
-                                     void* arrayArg, uint32_t arrayStart) {
+int32_t Instance::stringIntoCharCodeArray(Instance* instance, void* stringArg,
+                                          void* arrayArg, uint32_t arrayStart) {
   JSContext* cx = instance->cx();
   AnyRef stringRef = AnyRef::fromCompiledCode(stringArg);
   if (!stringRef.isJSString()) {
@@ -2122,8 +2123,8 @@ int32_t Instance::stringLength(Instance* instance, void* stringArg) {
   return (int32_t)stringRef.toJSString()->length();
 }
 
-void* Instance::stringConcatenate(Instance* instance, void* firstStringArg,
-                                  void* secondStringArg) {
+void* Instance::stringConcat(Instance* instance, void* firstStringArg,
+                             void* secondStringArg) {
   JSContext* cx = instance->cx();
 
   AnyRef firstStringRef = AnyRef::fromCompiledCode(firstStringArg);

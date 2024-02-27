@@ -245,12 +245,12 @@
   fail_mode: FailOnNullPtr
   uses_memory: false
 
-- op: StringFromWTF16Array
+- op: StringFromCharCodeArray
   symbolic_address:
-    name: StringFromWTF16Array
+    name: StringFromCharCodeArray
     type: Args_General_GeneralGeneralInt32Int32
-  entry: Instance::stringFromWTF16Array
-  export: fromWTF16Array
+  entry: Instance::stringFromCharCodeArray
+  export: fromCharCodeArray
   params:
     - type: "StaticTypeDefs::arrayMutI16"
       nullable: true
@@ -262,12 +262,12 @@
   fail_mode: FailOnNullPtr
   uses_memory: false
 
-- op: StringToWTF16Array
+- op: StringIntoCharCodeArray
   symbolic_address:
-    name: StringToWTF16Array
+    name: StringIntoCharCodeArray
     type: Args_Int32_GeneralGeneralGeneralInt32
-  entry: Instance::stringToWTF16Array
-  export: toWTF16Array
+  entry: Instance::stringIntoCharCodeArray
+  export: intoCharCodeArray
   params:
     - 'externref'
     - type: "StaticTypeDefs::arrayMutI16"
@@ -339,12 +339,12 @@
   fail_mode: FailOnNegI32
   uses_memory: false
 
-- op: StringConcatenate
+- op: StringConcat
   symbolic_address:
-    name: StringConcatenate
+    name: StringConcat
     type: Args_General3
-  entry: Instance::stringConcatenate
-  export: concatenate
+  entry: Instance::stringConcat
+  export: concat
   params:
     - 'externref'
     - 'externref'

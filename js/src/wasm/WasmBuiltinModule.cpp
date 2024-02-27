@@ -298,14 +298,14 @@ static BuiltinModuleFuncId IntGemmFuncs[] = {
 static BuiltinModuleFuncId JSStringFuncs[] = {
     BuiltinModuleFuncId::StringTest,
     BuiltinModuleFuncId::StringCast,
-    BuiltinModuleFuncId::StringFromWTF16Array,
-    BuiltinModuleFuncId::StringToWTF16Array,
+    BuiltinModuleFuncId::StringFromCharCodeArray,
+    BuiltinModuleFuncId::StringIntoCharCodeArray,
     BuiltinModuleFuncId::StringFromCharCode,
     BuiltinModuleFuncId::StringFromCodePoint,
     BuiltinModuleFuncId::StringCharCodeAt,
     BuiltinModuleFuncId::StringCodePointAt,
     BuiltinModuleFuncId::StringLength,
-    BuiltinModuleFuncId::StringConcatenate,
+    BuiltinModuleFuncId::StringConcat,
     BuiltinModuleFuncId::StringSubstring,
     BuiltinModuleFuncId::StringEquals,
     BuiltinModuleFuncId::StringCompare};
