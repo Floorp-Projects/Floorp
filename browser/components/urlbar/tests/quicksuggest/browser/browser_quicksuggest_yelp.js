@@ -81,63 +81,87 @@ add_task(async function basic() {
 
 // Tests the "Show less frequently" result menu command.
 add_task(async function resultMenu_show_less_frequently() {
+  info("Test for no yelpMinKeywordLength and no yelpShowLessFrequentlyCap");
   await doShowLessFrequently({
     minKeywordLength: 0,
     frequentlyCap: 0,
-    initialFrequentlyCount: 2,
     testData: [
       {
-        input: "ramen",
+        input: "best ra",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best ra",
+        expected: {
+          hasSuggestion: false,
+        },
+      },
+      {
+        input: "best ram",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best ram",
+        expected: {
+          hasSuggestion: false,
+        },
+      },
+      {
+        input: "best rame",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best rame",
         expected: {
-          hasSuggestion: true,
-          hasShowLessItem: true,
+          hasSuggestion: false,
         },
       },
     ],
   });
 
+  info("Test whether yelpShowLessFrequentlyCap can work");
   await doShowLessFrequently({
     minKeywordLength: 0,
-    frequentlyCap: 4,
-    initialFrequentlyCount: 2,
+    frequentlyCap: 2,
     testData: [
       {
-        input: "ramen",
+        input: "best ra",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best ram",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best ram",
+        expected: {
+          hasSuggestion: false,
+        },
+      },
+      {
+        input: "best rame",
+        expected: {
+          hasSuggestion: true,
+          hasShowLessItem: false,
+        },
+      },
+      {
+        input: "best ramen",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: false,
@@ -146,30 +170,37 @@ add_task(async function resultMenu_show_less_frequently() {
     ],
   });
 
+  info(
+    "Test whether local yelp.minKeywordLength pref can override nimbus variable yelpMinKeywordLength"
+  );
   await doShowLessFrequently({
-    minKeywordLength: 1,
-    frequentlyCap: 4,
-    initialFrequentlyCount: 2,
+    minKeywordLength: 8,
+    frequentlyCap: 0,
     testData: [
       {
-        input: "ramen",
+        input: "best ra",
+        expected: {
+          hasSuggestion: false,
+        },
+      },
+      {
+        input: "best ram",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best rame",
         expected: {
           hasSuggestion: true,
           hasShowLessItem: true,
         },
       },
       {
-        input: "ramen",
+        input: "best rame",
         expected: {
-          hasSuggestion: true,
-          hasShowLessItem: false,
+          hasSuggestion: false,
         },
       },
     ],
@@ -179,14 +210,15 @@ add_task(async function resultMenu_show_less_frequently() {
 async function doShowLessFrequently({
   minKeywordLength,
   frequentlyCap,
-  initialFrequentlyCount,
   testData,
 }) {
+  UrlbarPrefs.clear("yelp.showLessFrequentlyCount");
+  UrlbarPrefs.clear("yelp.minKeywordLength");
+
   let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
     yelpMinKeywordLength: minKeywordLength,
     yelpShowLessFrequentlyCap: frequentlyCap,
   });
-  UrlbarPrefs.set("yelp.showLessFrequentlyCount", initialFrequentlyCount);
 
   for (let { input, expected } of testData) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -217,6 +249,10 @@ async function doShowLessFrequently({
           UrlbarPrefs.get("yelp.showLessFrequentlyCount"),
           previousShowLessFrequentlyCount + 1
         );
+        Assert.equal(
+          UrlbarPrefs.get("yelp.minKeywordLength"),
+          input.length + 1
+        );
       } else {
         let menuitem = await UrlbarTestUtils.openResultMenuAndGetItem({
           window,
@@ -238,7 +274,8 @@ async function doShowLessFrequently({
   }
 
   await cleanUpNimbus();
-  UrlbarPrefs.set("yelp.showLessFrequentlyCount", 0);
+  UrlbarPrefs.clear("yelp.showLessFrequentlyCount");
+  UrlbarPrefs.clear("yelp.minKeywordLength");
 }
 
 // Tests the "Not relevant" result menu dismissal command.
