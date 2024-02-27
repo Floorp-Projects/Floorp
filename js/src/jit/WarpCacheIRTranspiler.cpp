@@ -2768,17 +2768,14 @@ bool WarpCacheIRTranspiler::emitStoreDenseElementHole(ObjOperandId objId,
   return resumeAfter(store);
 }
 
-bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(ObjOperandId objId,
-                                                       Scalar::Type elementType,
-                                                       IntPtrOperandId indexId,
-                                                       uint32_t rhsId,
-                                                       bool handleOOB) {
+bool WarpCacheIRTranspiler::emitStoreTypedArrayElement(
+    ObjOperandId objId, Scalar::Type elementType, IntPtrOperandId indexId,
+    uint32_t rhsId, bool handleOOB, ArrayBufferViewKind viewKind) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
   MDefinition* rhs = getOperand(ValOperandId(rhsId));
 
-  auto* length = MArrayBufferViewLength::New(alloc(), obj);
-  add(length);
+  auto* length = emitTypedArrayLength(viewKind, obj);
 
   if (!handleOOB) {
     // MStoreTypedArrayElementHole does the bounds checking.

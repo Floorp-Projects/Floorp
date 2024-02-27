@@ -5031,15 +5031,14 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
 
 AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
     HandleObject obj, ObjOperandId objId, ValOperandId rhsId) {
-  // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!obj->is<FixedLengthTypedArrayObject>()) {
+  if (!obj->is<TypedArrayObject>()) {
     return AttachDecision::NoAction;
   }
   if (!idVal_.isNumber()) {
     return AttachDecision::NoAction;
   }
 
-  auto* tarr = &obj->as<FixedLengthTypedArrayObject>();
+  auto* tarr = &obj->as<TypedArrayObject>();
   Scalar::Type elementType = tarr->type();
 
   // Don't attach if the input type doesn't match the guard added below.
@@ -5050,7 +5049,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
   bool handleOOB = false;
   int64_t indexInt64;
   if (!ValueIsInt64Index(idVal_, &indexInt64) || indexInt64 < 0 ||
-      uint64_t(indexInt64) >= tarr->length()) {
+      uint64_t(indexInt64) >= tarr->length().valueOr(0)) {
     handleOOB = true;
   }
 
@@ -5071,8 +5070,9 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
   ValOperandId keyId = setElemKeyValueId();
   IntPtrOperandId indexId = guardToIntPtrIndex(idVal_, keyId, handleOOB);
 
+  auto viewKind = ToArrayBufferViewKind(tarr);
   writer.storeTypedArrayElement(objId, elementType, indexId, rhsValId,
-                                handleOOB);
+                                handleOOB, viewKind);
   writer.returnFromIC();
 
   trackAttached(handleOOB ? "SetTypedElementOOB" : "SetTypedElement");
