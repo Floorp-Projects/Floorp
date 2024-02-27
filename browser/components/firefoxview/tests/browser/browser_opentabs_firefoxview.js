@@ -24,6 +24,11 @@ const { NonPrivateTabs } = ChromeUtils.importESModule(
   "resource:///modules/OpenTabs.sys.mjs"
 );
 
+async function getRowsForCard(card) {
+  await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
+  return card.tabList.rowEls;
+}
+
 async function add_new_tab(URL) {
   let tabChangeRaised = BrowserTestUtils.waitForEvent(
     NonPrivateTabs,
@@ -73,7 +78,7 @@ async function waitUntilRowsMatch(openTabs, cardIndex, expectedURLs) {
     card.shadowRoot,
     { characterData: true, childList: true, subtree: true },
     async () => {
-      let rows = await getTabRowsForCard(card);
+      let rows = await getRowsForCard(card);
       return (
         rows.length == expectedURLs.length &&
         JSON.stringify(getTabRowURLs(rows)) == expectedURLsAsString
@@ -129,7 +134,7 @@ async function moreMenuSetup() {
   let cards = getOpenTabsCards(openTabs);
   is(cards.length, 1, "There is one open window.");
 
-  let rows = await getTabRowsForCard(cards[0]);
+  let rows = await getRowsForCard(cards[0]);
 
   let firstTab = rows[0];
 
@@ -371,7 +376,9 @@ add_task(async function test_send_device_submenu() {
 
     // navigate down to the "Send tabs" submenu option, and
     // open it with the right arrow key
-    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 5 });
+    EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    EventUtils.synthesizeKey("KEY_ArrowDown", {});
 
     shown = BrowserTestUtils.waitForEvent(sendTabSubmenuList, "shown");
     EventUtils.synthesizeKey("KEY_ArrowRight", {});
