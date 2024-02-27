@@ -421,10 +421,13 @@ class AliasSet {
     // The generation counter associated with the global object
     GlobalGenerationCounter = 1 << 26,
 
-    Last = GlobalGenerationCounter,
+    // The SharedArrayRawBuffer::length field.
+    SharedArrayRawBufferLength = 1 << 27,
+
+    Last = SharedArrayRawBufferLength,
 
     Any = Last | (Last - 1),
-    NumCategories = 27,
+    NumCategories = 28,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -1285,6 +1288,7 @@ using MVariadicInstruction = MVariadicT<MInstruction>;
 // And operations which are optionally barriered:
 // - MLoadUnboxedScalar
 // - MStoreUnboxedScalar
+// - MResizableTypedArrayLength
 //
 // Must have the following attributes:
 //
@@ -9388,6 +9392,23 @@ class MObjectToIterator : public MUnaryInstruction,
 
   bool wantsIndices() const { return wantsIndices_; }
   void setWantsIndices(bool value) { wantsIndices_ = value; }
+};
+
+class MPostIntPtrConversion : public MUnaryInstruction,
+                              public NoTypePolicy::Data {
+  explicit MPostIntPtrConversion(MDefinition* input)
+      : MUnaryInstruction(classOpcode, input) {
+    // Passes through the input.
+    setResultType(input->type());
+
+    // Note: Must be non-movable so we can attach a resume point.
+  }
+
+ public:
+  INSTRUCTION_HEADER(PostIntPtrConversion)
+  TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 // Flips the input's sign bit, independently of the rest of the number's

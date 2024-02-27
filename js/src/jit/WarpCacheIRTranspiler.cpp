@@ -344,9 +344,11 @@ bool WarpCacheIRTranspiler::transpile(
 
   // Effectful instructions should have a resume point. MIonToWasmCall is an
   // exception: we can attach the resume point to the MInt64ToBigInt instruction
-  // instead.
-  MOZ_ASSERT_IF(effectful_,
-                effectful_->resumePoint() || effectful_->isIonToWasmCall());
+  // instead. Other exceptions are MResizableTypedArrayLength, which add the
+  // resume point to MPostIntPtrConversion.
+  MOZ_ASSERT_IF(effectful_, effectful_->resumePoint() ||
+                                effectful_->isIonToWasmCall() ||
+                                effectful_->isResizableTypedArrayLength());
   return true;
 }
 
@@ -4076,6 +4078,46 @@ bool WarpCacheIRTranspiler::emitArrayBufferViewByteOffsetDoubleResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitResizableTypedArrayLengthInt32Result(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  // Explicit |length| accesses are seq-consistent atomic loads.
+  auto barrier = MemoryBarrierRequirement::Required;
+
+  auto* length = MResizableTypedArrayLength::New(alloc(), obj, barrier);
+  addEffectful(length);
+
+  auto* lengthInt32 = MNonNegativeIntPtrToInt32::New(alloc(), length);
+  add(lengthInt32);
+
+  auto* postConversion = MPostIntPtrConversion::New(alloc(), lengthInt32);
+  add(postConversion);
+
+  pushResult(postConversion);
+  return resumeAfterUnchecked(postConversion);
+}
+
+bool WarpCacheIRTranspiler::emitResizableTypedArrayLengthDoubleResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  // Explicit |length| accesses are seq-consistent atomic loads.
+  auto barrier = MemoryBarrierRequirement::Required;
+
+  auto* length = MResizableTypedArrayLength::New(alloc(), obj, barrier);
+  addEffectful(length);
+
+  auto* lengthDouble = MIntPtrToDouble::New(alloc(), length);
+  add(lengthDouble);
+
+  auto* postConversion = MPostIntPtrConversion::New(alloc(), lengthDouble);
+  add(postConversion);
+
+  pushResult(postConversion);
+  return resumeAfterUnchecked(postConversion);
+}
+
 bool WarpCacheIRTranspiler::emitTypedArrayByteLengthInt32Result(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
@@ -4119,6 +4161,63 @@ bool WarpCacheIRTranspiler::emitTypedArrayByteLengthDoubleResult(
 
   pushResult(mul);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitResizableTypedArrayByteLengthInt32Result(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  // Explicit |byteLength| accesses are seq-consistent atomic loads.
+  auto barrier = MemoryBarrierRequirement::Required;
+
+  auto* length = MResizableTypedArrayLength::New(alloc(), obj, barrier);
+  addEffectful(length);
+
+  auto* lengthInt32 = MNonNegativeIntPtrToInt32::New(alloc(), length);
+  add(lengthInt32);
+
+  auto* size = MTypedArrayElementSize::New(alloc(), obj);
+  add(size);
+
+  auto* mul = MMul::New(alloc(), lengthInt32, size, MIRType::Int32);
+  mul->setCanBeNegativeZero(false);
+  add(mul);
+
+  auto* postConversion = MPostIntPtrConversion::New(alloc(), mul);
+  add(postConversion);
+
+  pushResult(postConversion);
+  return resumeAfterUnchecked(postConversion);
+}
+
+bool WarpCacheIRTranspiler::emitResizableTypedArrayByteLengthDoubleResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  // Explicit |byteLength| accesses are seq-consistent atomic loads.
+  auto barrier = MemoryBarrierRequirement::Required;
+
+  auto* length = MResizableTypedArrayLength::New(alloc(), obj, barrier);
+  addEffectful(length);
+
+  auto* lengthDouble = MIntPtrToDouble::New(alloc(), length);
+  add(lengthDouble);
+
+  auto* size = MTypedArrayElementSize::New(alloc(), obj);
+  add(size);
+
+  auto* sizeDouble = MToDouble::New(alloc(), size);
+  add(sizeDouble);
+
+  auto* mul = MMul::New(alloc(), lengthDouble, sizeDouble, MIRType::Double);
+  mul->setCanBeNegativeZero(false);
+  add(mul);
+
+  auto* postConversion = MPostIntPtrConversion::New(alloc(), mul);
+  add(postConversion);
+
+  pushResult(postConversion);
+  return resumeAfterUnchecked(postConversion);
 }
 
 bool WarpCacheIRTranspiler::emitTypedArrayElementSizeResult(

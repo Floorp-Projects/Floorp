@@ -1802,6 +1802,12 @@ void MArrayBufferViewByteOffset::computeRange(TempAllocator& alloc) {
   }
 }
 
+void MResizableTypedArrayLength::computeRange(TempAllocator& alloc) {
+  if constexpr (ArrayBufferObject::ByteLengthLimit <= INT32_MAX) {
+    setRange(Range::NewUInt32Range(alloc, 0, INT32_MAX));
+  }
+}
+
 void MObjectKeysLength::computeRange(TempAllocator& alloc) {
   // Object.keys(..) returns an array, but this array is bounded by the number
   // of slots / elements that can be encoded in a single object.

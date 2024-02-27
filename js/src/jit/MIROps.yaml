@@ -1492,6 +1492,20 @@
   alias_set: custom
   clone: true
 
+# Read the length of a resizable typed array.
+- name: ResizableTypedArrayLength
+  operands:
+    object: Object
+  arguments:
+    requiresMemoryBarrier: MemoryBarrierRequirement
+  result_type: IntPtr
+  # Not removable or movable when a barrier is needed.
+  guard: true
+  movable: false
+  congruent_to: custom
+  alias_set: custom
+  compute_range: custom
+
 # Return the element size of a typed array.
 - name: TypedArrayElementSize
   operands:
@@ -3109,6 +3123,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+
+- name: PostIntPtrConversion
+  gen_boilerplate: false
 
 - name: WasmNeg
   gen_boilerplate: false

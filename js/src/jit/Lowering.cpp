@@ -3927,6 +3927,17 @@ void LIRGenerator::visitTypedArrayElementSize(MTypedArrayElementSize* ins) {
          ins);
 }
 
+void LIRGenerator::visitResizableTypedArrayLength(
+    MResizableTypedArrayLength* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::IntPtr);
+
+  auto sync = SynchronizeLoad(ins->requiresMemoryBarrier());
+  auto* lir = new (alloc())
+      LResizableTypedArrayLength(useRegister(ins->object()), temp(), sync);
+  define(lir, ins);
+}
+
 void LIRGenerator::visitGuardHasAttachedArrayBuffer(
     MGuardHasAttachedArrayBuffer* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
@@ -7083,6 +7094,11 @@ void LIRGenerator::visitMapObjectGetValueVMCall(MMapObjectGetValueVMCall* ins) {
 void LIRGenerator::visitMapObjectSize(MMapObjectSize* ins) {
   auto* lir = new (alloc()) LMapObjectSize(useRegisterAtStart(ins->map()));
   define(lir, ins);
+}
+
+void LIRGenerator::visitPostIntPtrConversion(MPostIntPtrConversion* ins) {
+  // This operation is a no-op.
+  redefine(ins, ins->input());
 }
 
 void LIRGenerator::visitConstant(MConstant* ins) {
