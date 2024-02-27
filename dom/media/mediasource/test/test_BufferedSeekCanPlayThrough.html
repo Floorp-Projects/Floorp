@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: Don't get stuck buffering for too long when we have frames to show</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(async (ms, v) => {
+  logEvents(v);
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  ms.addEventListener("sourceopen", () => ok(false, "No more sourceopen"));
+  const sb = ms.addSourceBuffer("video/mp4");
+  ok(sb, "Create a SourceBuffer");
+  sb.addEventListener("error", e => {
+    ok(false, "Got Error: " + e);
+    SimpleTest.finish();
+  });
+
+  // Load just the beginning of the media, and the end. Verify
+  // that canplaythrough isn't fired, and waiting is fired.
+  await fetchAndLoad(sb, "bipbop/bipbop_video", ["init"], ".mp4");
+  await fetchAndLoad(sb, "bipbop/bipbop_video", ["1"], ".m4s");
+  await fetchAndLoad(sb, "bipbop/bipbop_video", ["9"], ".m4s");
+  // Slighly before the end of the first segment.
+  v.currentTime = v.buffered.end(0) - 0.1;
+  v.onseeked = function() {
+    is(v.readyState, HTMLMediaElement.HAVE_FUTURE_DATA,
+    "readyState is HAVE_FUTURE_DATA after seeking close to a large gap");
+    SimpleTest.finish();
+  }
+  v.oncanplaythrough = function() {
+    ok(false, "Should not have received canplaythrough");
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
