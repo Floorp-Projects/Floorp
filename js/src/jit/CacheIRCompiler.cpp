@@ -6523,8 +6523,8 @@ bool CacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
 bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
                                                  Scalar::Type elementType,
                                                  IntPtrOperandId indexId,
-                                                 uint32_t rhsId,
-                                                 bool handleOOB) {
+                                                 uint32_t rhsId, bool handleOOB,
+                                                 ArrayBufferViewKind viewKind) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   Register index = allocator.useRegister(masm, indexId);
@@ -6564,7 +6564,8 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
   AutoScratchRegister scratch1(allocator, masm);
   Maybe<AutoScratchRegister> scratch2;
   Maybe<AutoSpectreBoundsScratchRegister> spectreScratch;
-  if (Scalar::isBigIntType(elementType)) {
+  if (Scalar::isBigIntType(elementType) ||
+      viewKind == ArrayBufferViewKind::Resizable) {
     scratch2.emplace(allocator, masm);
   } else {
     spectreScratch.emplace(allocator, masm);
@@ -6579,10 +6580,9 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
 
   // Bounds check.
   Label done;
-  Register spectreTemp = scratch2 ? scratch2->get() : spectreScratch->get();
-  masm.loadArrayBufferViewLengthIntPtr(obj, scratch1);
-  masm.spectreBoundsCheckPtr(index, scratch1, spectreTemp,
-                             handleOOB ? &done : failure->label());
+  emitTypedArrayBoundsCheck(viewKind, obj, index, scratch1, scratch2,
+                            spectreScratch,
+                            handleOOB ? &done : failure->label());
 
   // Load the elements vector.
   masm.loadPtr(Address(obj, ArrayBufferViewObject::dataOffset()), scratch1);

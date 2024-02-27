@@ -1716,6 +1716,7 @@
     index: IntPtrId
     rhs: RawId
     handleOOB: BoolImm
+    viewKind: ArrayBufferViewKindImm
 
 - name: AtomicsCompareExchangeResult
   shared: true
