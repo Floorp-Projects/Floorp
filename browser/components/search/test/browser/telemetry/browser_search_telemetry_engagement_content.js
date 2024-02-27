@@ -138,8 +138,8 @@ add_task(async function test_click_tab() {
     {
       impression: {
         provider: "example",
-        tagged: "false",
-        partner_code: "",
+        tagged: "true",
+        partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
         is_private: "false",
@@ -217,8 +217,8 @@ add_task(async function test_click_shopping() {
     {
       impression: {
         provider: "example",
-        tagged: "false",
-        partner_code: "",
+        tagged: "true",
+        partner_code: "ff",
         source: "unknown",
         is_shopping_page: "true",
         is_private: "false",

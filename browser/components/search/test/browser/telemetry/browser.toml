@@ -97,6 +97,9 @@ support-files = ["searchTelemetryAd_searchbox_with_content.html", "serp.css"]
 ["browser_search_telemetry_engagement_eventListeners_parent.js"]
 support-files = ["searchTelemetryAd_searchbox_with_content.html", "serp.css"]
 
+["browser_search_telemetry_engagement_ignoreLinkRegexps.js"]
+support-files = ["searchTelemetryAd_searchbox_with_content.html", "serp.css"]
+
 ["browser_search_telemetry_engagement_multiple_tabs.js"]
 support-files = [
   "searchTelemetryAd_searchbox_with_content.html",
