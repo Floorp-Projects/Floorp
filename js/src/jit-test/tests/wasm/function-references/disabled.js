@@ -2,7 +2,7 @@
 
 const { CompileError, validate } = WebAssembly;
 
-const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|bad type|\(ref T\) types not enabled/;
+const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|bad type|gc not enabled/;
 
 let simpleTests = [
     `(module (func (param (ref 0)) (unreachable)))`,

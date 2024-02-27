@@ -720,7 +720,7 @@ inline bool Decoder::readPackedType(const TypeContext& types,
     case uint8_t(TypeCode::NullableRef): {
 #ifdef ENABLE_WASM_GC
       if (!features.gc) {
-        return fail("(ref T) types not enabled");
+        return fail("gc not enabled");
       }
       bool nullable = code == uint8_t(TypeCode::NullableRef);
       RefType refType;
@@ -743,7 +743,7 @@ inline bool Decoder::readPackedType(const TypeContext& types,
     case uint8_t(TypeCode::NullAnyRef): {
 #ifdef ENABLE_WASM_GC
       if (!features.gc) {
-        return fail("gc types not enabled");
+        return fail("gc not enabled");
       }
       *type = RefType::fromTypeCode(TypeCode(code), true);
       return true;
@@ -809,7 +809,7 @@ inline bool Decoder::readHeapType(const TypeContext& types,
       case uint8_t(TypeCode::NullExternRef):
       case uint8_t(TypeCode::NullAnyRef):
         if (!features.gc) {
-          return fail("gc types not enabled");
+          return fail("gc not enabled");
         }
         *type = RefType::fromTypeCode(TypeCode(code), nullable);
         return true;
