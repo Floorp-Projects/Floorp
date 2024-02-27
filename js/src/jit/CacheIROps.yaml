@@ -1250,14 +1250,14 @@
 
 - name: ResizableDataViewByteLengthInt32Result
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
 
 - name: ResizableDataViewByteLengthDoubleResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
@@ -1271,7 +1271,7 @@
 
 - name: GuardResizableArrayBufferViewInBounds
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId

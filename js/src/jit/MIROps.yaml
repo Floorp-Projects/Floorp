@@ -1506,6 +1506,20 @@
   alias_set: custom
   compute_range: custom
 
+# Read the byteLength of a resizable dataview.
+- name: ResizableDataViewByteLength
+  operands:
+    object: Object
+  arguments:
+    requiresMemoryBarrier: MemoryBarrierRequirement
+  result_type: IntPtr
+  # Not removable or movable when a barrier is needed.
+  guard: true
+  movable: false
+  congruent_to: custom
+  alias_set: custom
+  compute_range: custom
+
 # Return the element size of a typed array.
 - name: TypedArrayElementSize
   operands:
@@ -1519,6 +1533,16 @@
 
 # Guard an ArrayBufferView has an attached ArrayBuffer.
 - name: GuardHasAttachedArrayBuffer
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
+# Guard a resizable typed array is in-bounds.
+- name: GuardResizableArrayBufferViewInBounds
   operands:
     object: Object
   result_type: Object
