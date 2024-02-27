@@ -135,7 +135,7 @@ def test_raptor_venv(ConcretePerftest, options):
     "expected_debug_mode",
     [
         [True, True, 1234, 1234, True],
-        [True, True, 12345, 3000, True],
+        [True, True, None, 3000, True],
         [False, False, 1234, 1234, False],
         [False, False, 12345, 12345, False],
         [True, False, 1234, 1234, False],
