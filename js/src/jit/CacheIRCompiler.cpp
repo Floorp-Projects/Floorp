@@ -5099,6 +5099,100 @@ bool CacheIRCompiler::emitTypedArrayByteLengthDoubleResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitResizableTypedArrayByteLengthInt32Result(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Explicit |byteLength| accesses are seq-consistent atomic loads.
+  auto sync = Synchronization::Load();
+
+  masm.loadResizableTypedArrayLengthIntPtr(sync, obj, scratch1, scratch2);
+  masm.guardNonNegativeIntPtrToInt32(scratch1, failure->label());
+  masm.typedArrayElementSize(obj, scratch2);
+
+  masm.branchMul32(Assembler::Overflow, scratch2.get(), scratch1,
+                   failure->label());
+
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitResizableTypedArrayByteLengthDoubleResult(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  // Explicit |byteLength| accesses are seq-consistent atomic loads.
+  auto sync = Synchronization::Load();
+
+  masm.loadResizableTypedArrayLengthIntPtr(sync, obj, scratch1, scratch2);
+  masm.typedArrayElementSize(obj, scratch2);
+  masm.mulPtr(scratch2, scratch1);
+
+  ScratchDoubleScope fpscratch(masm);
+  masm.convertIntPtrToDouble(scratch1, fpscratch);
+  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+  return true;
+}
+
+bool CacheIRCompiler::emitResizableTypedArrayLengthInt32Result(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Explicit |length| accesses are seq-consistent atomic loads.
+  auto sync = Synchronization::Load();
+
+  masm.loadResizableTypedArrayLengthIntPtr(sync, obj, scratch1, scratch2);
+  masm.guardNonNegativeIntPtrToInt32(scratch1, failure->label());
+
+  masm.tagValue(JSVAL_TYPE_INT32, scratch1, output.valueReg());
+  return true;
+}
+
+bool CacheIRCompiler::emitResizableTypedArrayLengthDoubleResult(
+    ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+
+  // Explicit |length| accesses are seq-consistent atomic loads.
+  auto sync = Synchronization::Load();
+
+  masm.loadResizableTypedArrayLengthIntPtr(sync, obj, scratch1, scratch2);
+
+  ScratchDoubleScope fpscratch(masm);
+  masm.convertIntPtrToDouble(scratch1, fpscratch);
+  masm.boxDouble(fpscratch, output.valueReg(), fpscratch);
+  return true;
+}
+
 bool CacheIRCompiler::emitTypedArrayElementSizeResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

@@ -2105,8 +2105,7 @@ AttachDecision GetPropIRGenerator::tryAttachObjectLength(HandleObject obj,
 AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
                                                        ObjOperandId objId,
                                                        HandleId id) {
-  // TODO: Support resizable typed arrays. (bug 1842999)
-  if (!obj->is<FixedLengthTypedArrayObject>()) {
+  if (!obj->is<TypedArrayObject>()) {
     return AttachDecision::NoAction;
   }
 
@@ -2148,31 +2147,52 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     }
   }
 
-  auto* tarr = &obj->as<FixedLengthTypedArrayObject>();
+  auto* tarr = &obj->as<TypedArrayObject>();
 
   maybeEmitIdGuard(id);
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
   EmitCallGetterResultGuards(writer, tarr, holder, id, *prop, objId, mode_);
   if (isLength) {
-    if (tarr->length() <= INT32_MAX) {
-      writer.loadArrayBufferViewLengthInt32Result(objId);
+    size_t length = tarr->length().valueOr(0);
+    if (tarr->is<FixedLengthTypedArrayObject>()) {
+      if (length <= INT32_MAX) {
+        writer.loadArrayBufferViewLengthInt32Result(objId);
+      } else {
+        writer.loadArrayBufferViewLengthDoubleResult(objId);
+      }
     } else {
-      writer.loadArrayBufferViewLengthDoubleResult(objId);
+      if (length <= INT32_MAX) {
+        writer.resizableTypedArrayLengthInt32Result(objId);
+      } else {
+        writer.resizableTypedArrayLengthDoubleResult(objId);
+      }
     }
     trackAttached("GetProp.TypedArrayLength");
   } else if (isByteOffset) {
-    if (tarr->byteOffset() <= INT32_MAX) {
+    // byteOffset doesn't need to use different code paths for fixed-length and
+    // resizable TypedArrays.
+    size_t byteOffset = tarr->byteOffset().valueOr(0);
+    if (byteOffset <= INT32_MAX) {
       writer.arrayBufferViewByteOffsetInt32Result(objId);
     } else {
       writer.arrayBufferViewByteOffsetDoubleResult(objId);
     }
     trackAttached("GetProp.TypedArrayByteOffset");
   } else {
-    if (tarr->byteLength() <= INT32_MAX) {
-      writer.typedArrayByteLengthInt32Result(objId);
+    size_t byteLength = tarr->byteLength().valueOr(0);
+    if (tarr->is<FixedLengthTypedArrayObject>()) {
+      if (byteLength <= INT32_MAX) {
+        writer.typedArrayByteLengthInt32Result(objId);
+      } else {
+        writer.typedArrayByteLengthDoubleResult(objId);
+      }
     } else {
-      writer.typedArrayByteLengthDoubleResult(objId);
+      if (byteLength <= INT32_MAX) {
+        writer.resizableTypedArrayByteLengthInt32Result(objId);
+      } else {
+        writer.resizableTypedArrayByteLengthDoubleResult(objId);
+      }
     }
     trackAttached("GetProp.TypedArrayByteLength");
   }
