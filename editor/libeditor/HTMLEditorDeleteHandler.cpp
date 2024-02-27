@@ -6666,23 +6666,31 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
     return Err(NS_ERROR_FAILURE);
   }
 
-  // Look for the common ancestor's block element.  It's fine that we get
-  // non-editable block element which is ancestor of inline editing host
-  // because the following code checks editing host too.
-  const Element* const maybeNonEditableBlockElement =
-      HTMLEditUtils::GetInclusiveAncestorElement(
-          *commonAncestor, HTMLEditUtils::ClosestBlockElement,
-          BlockInlineCheck::UseComputedDisplayOutsideStyle);
-  if (NS_WARN_IF(!maybeNonEditableBlockElement)) {
+  // Editing host may be nested and outer one could have focus.  Let's use
+  // the closest editing host instead.
+  const RefPtr<Element> closestEditingHost =
+      aHTMLEditor.ComputeEditingHost(*commonAncestor, LimitInBodyElement::No);
+  if (NS_WARN_IF(!closestEditingHost)) {
     return Err(NS_ERROR_FAILURE);
   }
+
+  // Look for the common ancestor's block element in the editing host.  It's
+  // fine that we get non-editable block element which is ancestor of inline
+  // editing host because the following code checks editing host too.
+  const RefPtr<Element> closestBlockAncestorOrInlineEditingHost = [&]() {
+    // Note that if non-closest editing host has focus, found block may be
+    // non-editable.
+    if (Element* const maybeEditableBlockElement =
+            HTMLEditUtils::GetInclusiveAncestorElement(
+                *commonAncestor, HTMLEditUtils::ClosestBlockElement,
+                BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                closestEditingHost)) {
+      return maybeEditableBlockElement;
+    }
+    return closestEditingHost.get();
+  }();
 
   // Set up for loops and cache our root element
-  RefPtr<Element> editingHost = aHTMLEditor.ComputeEditingHost();
-  if (NS_WARN_IF(!editingHost)) {
-    return Err(NS_ERROR_FAILURE);
-  }
-
   // If only one list element is selected, and if the list element is empty,
   // we should delete only the list element.  Or if the list element is not
   // empty, we should make the list has only one empty list item element.
@@ -6712,18 +6720,18 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
 
   // Find previous visible things before start of selection
   EditorRawDOMRange rangeToDelete(aRangeToDelete);
-  if (rangeToDelete.StartRef().GetContainer() != maybeNonEditableBlockElement &&
-      rangeToDelete.StartRef().GetContainer() != editingHost) {
+  if (rangeToDelete.StartRef().GetContainer() !=
+      closestBlockAncestorOrInlineEditingHost) {
     for (;;) {
       WSScanResult backwardScanFromStartResult =
           WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-              editingHost, rangeToDelete.StartRef(),
+              closestEditingHost, rangeToDelete.StartRef(),
               BlockInlineCheck::UseComputedDisplayOutsideStyle);
       if (!backwardScanFromStartResult.ReachedCurrentBlockBoundary()) {
         break;
       }
       MOZ_ASSERT(backwardScanFromStartResult.GetContent() ==
-                 WSRunScanner(editingHost, rangeToDelete.StartRef(),
+                 WSRunScanner(closestEditingHost, rangeToDelete.StartRef(),
                               BlockInlineCheck::UseComputedDisplayOutsideStyle)
                      .GetStartReasonContent());
       // We want to keep looking up.  But stop if we are crossing table
@@ -6731,8 +6739,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
       if (HTMLEditUtils::IsAnyTableElement(
               backwardScanFromStartResult.GetContent()) ||
           backwardScanFromStartResult.GetContent() ==
-              maybeNonEditableBlockElement ||
-          backwardScanFromStartResult.GetContent() == editingHost) {
+              closestBlockAncestorOrInlineEditingHost ||
+          backwardScanFromStartResult.GetContent() == closestEditingHost) {
         break;
       }
       // Don't cross list element boundary because we don't want to delete list
@@ -6767,11 +6775,11 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
 
   // Find next visible things after end of selection
   EditorDOMPoint atFirstInvisibleBRElement;
-  if (rangeToDelete.EndRef().GetContainer() != maybeNonEditableBlockElement &&
-      rangeToDelete.EndRef().GetContainer() != editingHost) {
+  if (rangeToDelete.EndRef().GetContainer() !=
+      closestBlockAncestorOrInlineEditingHost) {
     for (;;) {
       WSRunScanner wsScannerAtEnd(
-          editingHost, rangeToDelete.EndRef(),
+          closestEditingHost, rangeToDelete.EndRef(),
           BlockInlineCheck::UseComputedDisplayOutsideStyle);
       WSScanResult forwardScanFromEndResult =
           wsScannerAtEnd.ScanNextVisibleNodeOrBlockBoundaryFrom(
@@ -6806,8 +6814,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
         if (HTMLEditUtils::IsAnyTableElement(
                 forwardScanFromEndResult.GetContent()) ||
             forwardScanFromEndResult.GetContent() ==
-                maybeNonEditableBlockElement ||
-            forwardScanFromEndResult.GetContent() == editingHost) {
+                closestBlockAncestorOrInlineEditingHost) {
           break;
         }
         // Don't cross flex-item/grid-item boundary to make new content inserted
