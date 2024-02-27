@@ -1,4 +1,4 @@
-// |jit-test| test-also=--setpref=wasm_extended_const=true; test-also=--setpref=wasm_exceptions=true;
+// |jit-test| test-also=--setpref=wasm_extended_const=true;
 
 // Test that if a feature is 'experimental' then we must be in a nightly build,
 // and if a feature is 'released' then it must be enabled on release and beta.
@@ -67,11 +67,6 @@ for (let [name, enabled, test] of releasedFeaturesMaybeDisabledAnyway) {
 
 let releasedFeatures = [
   ['threads', wasmThreadsEnabled(), `(module (memory 1 1 shared))`],
-  [
-    'exceptions',
-    wasmExceptionsEnabled(),
-    `(module (type (func)) (tag (type 0)))`
-  ],
   [
     'extended-const',
     wasmExtendedConstEnabled(),

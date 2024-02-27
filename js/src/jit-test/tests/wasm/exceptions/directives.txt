@@ -1,1 +1,1 @@
-|jit-test| test-also=--setpref=wasm_exnref=true; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--setpref=wasm_test_serialization=true; test-also=--test-wasm-await-tier2; include:wasm.js; skip-if: !wasmExceptionsEnabled()
+|jit-test| test-also=--setpref=wasm_exnref=true; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--setpref=wasm_test_serialization=true; test-also=--test-wasm-await-tier2; include:wasm.js

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmTailCallsEnabled() || !wasmExceptionsEnabled()
+// |jit-test| skip-if: !wasmTailCallsEnabled()
 
 // Tail-call litmus test with multiple results
 //

@@ -1285,31 +1285,19 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readRefIsNull(&nothing));
       }
       case uint16_t(Op::Try):
-        if (!env.exceptionsEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         CHECK(iter.readTry(&unusedType));
       case uint16_t(Op::Catch): {
-        if (!env.exceptionsEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         LabelKind unusedKind;
         uint32_t unusedIndex;
         CHECK(iter.readCatch(&unusedKind, &unusedIndex, &unusedType,
                              &unusedType, &nothings));
       }
       case uint16_t(Op::CatchAll): {
-        if (!env.exceptionsEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         LabelKind unusedKind;
         CHECK(iter.readCatchAll(&unusedKind, &unusedType, &unusedType,
                                 &nothings));
       }
       case uint16_t(Op::Delegate): {
-        if (!env.exceptionsEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         uint32_t unusedDepth;
         if (!iter.readDelegate(&unusedDepth, &unusedType, &nothings)) {
           return false;
@@ -1318,16 +1306,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         break;
       }
       case uint16_t(Op::Throw): {
-        if (!env.exceptionsEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         uint32_t unusedIndex;
         CHECK(iter.readThrow(&unusedIndex, &nothings));
       }
       case uint16_t(Op::Rethrow): {
-        if (!env.exceptionsEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         uint32_t unusedDepth;
         CHECK(iter.readRethrow(&unusedDepth));
       }
@@ -2477,10 +2459,6 @@ static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
   }
   if (!range) {
     return true;
-  }
-
-  if (!env->exceptionsEnabled()) {
-    return d.fail("exceptions not enabled");
   }
 
   uint32_t numDefs;

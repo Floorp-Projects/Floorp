@@ -1,5 +1,3 @@
-// |jit-test| --setpref=wasm_exceptions=true; skip-if: !wasmExceptionsEnabled()
-
 // Simple test with return_call.
 var ins = wasmEvalText(`(module
     (tag $exn)
