@@ -46,7 +46,7 @@ add_setup(async function () {
  * 2. Tab preview card shows the correct preview for the tab being hovered
  * 3. Tab preview card is dismissed when the mouse leaves the tab bar
  */
-add_task(async () => {
+add_task(async function hoverTests() {
   const tabUrl1 =
     "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
@@ -85,6 +85,11 @@ add_task(async () => {
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
 });
 
 /**
@@ -92,7 +97,7 @@ add_task(async () => {
  * when browser.tabs.cardPreview.showThumbnails is set to true,
  * while the currently selected tab never displays a thumbnail in its preview.
  */
-add_task(async () => {
+add_task(async function thumbnailTests() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.cardPreview.showThumbnails", true]],
   });
@@ -120,15 +125,28 @@ add_task(async () => {
     "Tab2 (selected) does not contain thumbnail"
   );
 
+  const previewHidden = BrowserTestUtils.waitForEvent(
+    document.getElementById("tabbrowser-tab-preview"),
+    "previewhidden"
+  );
+
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   await SpecialPowers.popPrefEnv();
+
+  // Removing the tab should close the preview.
+  await previewHidden;
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
 });
 
 /**
  * Wheel events at the document-level of the window should hide the preview.
  */
-add_task(async () => {
+add_task(async function wheelTests() {
   const tabUrl1 = "about:blank";
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
   const tabUrl2 = "about:blank";
@@ -141,14 +159,49 @@ add_task(async () => {
     document.getElementById("tabbrowser-tab-preview"),
     "previewhidden"
   );
-  EventUtils.synthesizeMouse(tabs, 0, tabs.outerHeight + 1, {
-    wheel: true,
-    deltaY: -1,
-    deltaMode: WheelEvent.DOM_DELTA_LINE,
-  });
+
+  // Copied from apz_test_native_event_utils.js
+  let message = 0;
+  switch (AppConstants.platform) {
+    case "win":
+      message = 0x020a;
+      break;
+    case "linux":
+      message = 4;
+      break;
+    case "macosx":
+      message = 1;
+      break;
+  }
+
+  let rect = tabs.getBoundingClientRect();
+  let screenRect = window.windowUtils.toScreenRect(
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height
+  );
+  window.windowUtils.sendNativeMouseScrollEvent(
+    screenRect.left,
+    screenRect.bottom,
+    message,
+    0,
+    3,
+    0,
+    0,
+    Ci.nsIDOMWindowUtils.MOUSESCROLL_SCROLL_LINES,
+    tabs,
+    null
+  );
+
   await previewHidden;
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   await SpecialPowers.popPrefEnv();
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
 });
