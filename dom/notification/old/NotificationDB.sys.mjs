@@ -7,6 +7,12 @@ function debug(s) {
   dump("-*- NotificationDB component: " + s + "\n");
 }
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+});
+
 const NOTIFICATION_STORE_DIR = PathUtils.profileDir;
 const NOTIFICATION_STORE_PATH = PathUtils.join(
   NOTIFICATION_STORE_DIR,
@@ -23,6 +29,11 @@ var NotificationDB = {
   // Ensure we won't call init() while xpcom-shutdown is performed
   _shutdownInProgress: false,
 
+  // A promise that resolves once the ongoing task queue has been drained.
+  // The value will be reset when the queue starts again.
+  _queueDrainedPromise: null,
+  _queueDrainedPromiseResolve: null,
+
   init() {
     if (this._shutdownInProgress) {
       return;
@@ -37,6 +48,13 @@ var NotificationDB = {
 
     Services.obs.addObserver(this, "xpcom-shutdown");
     this.registerListeners();
+
+    // This assumes that nothing will queue a new task at profile-change-teardown phase,
+    // potentially replacing the _queueDrainedPromise if there was no existing task run.
+    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
+      "NotificationDB: Need to make sure that all notification messages are processed",
+      () => this._queueDrainedPromise
+    );
   },
 
   registerListeners() {
@@ -251,6 +269,9 @@ var NotificationDB = {
         debug("Task queue was not running, starting now...");
       }
       this.runNextTask();
+      this._queueDrainedPromise = new Promise(resolve => {
+        this._queueDrainedPromiseResolve = resolve;
+      });
     }
 
     return promise;
@@ -262,6 +283,13 @@ var NotificationDB = {
         debug("No more tasks to run, queue depleted");
       }
       this.runningTask = null;
+      if (this._queueDrainedPromiseResolve) {
+        this._queueDrainedPromiseResolve();
+      } else if (DEBUG) {
+        debug(
+          "_queueDrainedPromiseResolve was null somehow, no promise to resolve"
+        );
+      }
       return;
     }
     this.runningTask = this.tasks.shift();
