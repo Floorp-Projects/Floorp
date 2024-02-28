@@ -16,7 +16,11 @@ async function onBrowseBtnPress() {
   let [loadPK11ModuleFilePickerTitle] = await document.l10n.formatValues([
     { id: "load-pk11-module-file-picker-title" },
   ]);
-  fp.init(window, loadPK11ModuleFilePickerTitle, Ci.nsIFilePicker.modeOpen);
+  fp.init(
+    window.browsingContext,
+    loadPK11ModuleFilePickerTitle,
+    Ci.nsIFilePicker.modeOpen
+  );
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.open(rv => {
     if (rv == Ci.nsIFilePicker.returnOK) {
