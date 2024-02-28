@@ -21,7 +21,6 @@ class FileSystemWritableFileStreamChild
   NS_INLINE_DECL_REFCOUNTING(FileSystemWritableFileStreamChild, override)
 
   FileSystemWritableFileStream* MutableWritableFileStreamPtr() const {
-    MOZ_ASSERT(mStream);
     return mStream;
   }
 
