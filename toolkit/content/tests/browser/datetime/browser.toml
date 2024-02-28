@@ -9,6 +9,7 @@ skip-if = [
 ]
 
 ["browser_datetime_change_event.js"]
+fail-if = ["a11y_checks"] # Bug 1882207
 
 ["browser_datetime_datepicker.js"]
 fail-if = ["a11y_checks"] # Bug 1854538 clicked td.outside may not be accessible
