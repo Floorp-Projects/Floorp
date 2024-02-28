@@ -389,8 +389,8 @@ class DCSurfaceVideo : public DCSurface {
  protected:
   virtual ~DCSurfaceVideo();
 
-  DXGI_FORMAT GetSwapChainFormat();
-  bool CreateVideoSwapChain();
+  DXGI_FORMAT GetSwapChainFormat(bool aUseVpAutoHDR);
+  bool CreateVideoSwapChain(DXGI_FORMAT aFormat);
   bool CallVideoProcessorBlt();
   void ReleaseDecodeSwapChainResources();
 
@@ -409,6 +409,8 @@ class DCSurfaceVideo : public DCSurface {
   int mSlowPresentCount = 0;
   bool mFirstPresent = true;
   const UINT mSwapChainBufferCount;
+  bool mUseVpAutoHDR = false;
+  bool mVpAutoHDRFailed = false;
 };
 
 /**
