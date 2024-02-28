@@ -46,13 +46,14 @@ class TranslationsMiddleware(
         // Pre process actions
         when (action) {
             is InitAction ->
-                scope.launch {
-                    requestEngineSupportAndInit(context)
-                }
+                context.store.dispatch(TranslationsAction.InitTranslationsBrowserState)
 
             is TranslationsAction.InitTranslationsBrowserState -> {
                 scope.launch {
-                    requestSupportedLanguages(context)
+                    val engineIsSupported = requestEngineSupport(context)
+                    if (engineIsSupported == true) {
+                        initializeBrowserStore(context)
+                    }
                 }
             }
 
@@ -146,40 +147,54 @@ class TranslationsMiddleware(
     }
 
     /**
-     * Checks if the translations engine supports the device architecture and updates the state.
-     * When the device does support the translations engine, then the engine will request
-     * initialization of translations data for the [BrowserState.translationEngine] via
-     * [TranslationsAction.InitTranslationsBrowserState].
+     * Use this to initialize translations data for [BrowserState.translationEngine]. If an
+     * issue occurs, the relevant error will be set on [BrowserState.translationEngine].
+     *
+     * This will populate:
+     * Language Support - [requestSupportedLanguages]
      *
      * @param context Context to use to dispatch to the store.
      */
-    private fun requestEngineSupportAndInit(
+    private fun initializeBrowserStore(
         context: MiddlewareContext<BrowserState, BrowserAction>,
     ) {
-        engine.isTranslationsEngineSupported(
-            onSuccess = { isEngineSupported ->
-                if (isEngineSupported) {
-                    context.store.dispatch(
-                        TranslationsAction.InitTranslationsBrowserState,
-                    )
-                }
-                context.store.dispatch(
-                    TranslationsAction.SetEngineSupportedAction(
-                        isEngineSupported = isEngineSupported,
-                    ),
-                )
-                logger.info("Success requesting engine support.")
-            },
+        requestSupportedLanguages(context)
+    }
 
-            onError = { error ->
-                context.store.dispatch(
-                    TranslationsAction.EngineExceptionAction(
-                        error = TranslationError.UnknownEngineSupportError(error),
-                    ),
-                )
-                logger.error("Error requesting engine support: ", error)
-            },
-        )
+    /**
+     * Checks if the translations engine supports the device architecture and updates the state on
+     * [BrowserState.translationEngine].
+     *
+     * @param context Context to use to dispatch to the store.
+     * @return Whether the engine is supported or not, or null when the support cannot be
+     * determined.
+     */
+    private suspend fun requestEngineSupport(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+    ): Boolean? {
+        return suspendCoroutine { continuation ->
+            engine.isTranslationsEngineSupported(
+                onSuccess = { isEngineSupported ->
+                    context.store.dispatch(
+                        TranslationsAction.SetEngineSupportedAction(
+                            isEngineSupported = isEngineSupported,
+                        ),
+                    )
+                    logger.info("Success requesting engine support.")
+                    continuation.resume(isEngineSupported)
+                },
+
+                onError = { error ->
+                    context.store.dispatch(
+                        TranslationsAction.EngineExceptionAction(
+                            error = TranslationError.UnknownEngineSupportError(error),
+                        ),
+                    )
+                    logger.error("Error requesting engine support: ", error)
+                    continuation.resume(null)
+                },
+            )
+        }
     }
 
     /**

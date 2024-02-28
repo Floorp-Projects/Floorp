@@ -39,6 +39,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.atLeastOnce
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -163,30 +164,31 @@ class TranslationsMiddlewareTest {
     }
 
     @Test
-    fun `WHEN InitAction is dispatched AND the translations engine is supported THEN InitTranslationsBrowserState is also dispatched`() = runTest {
-        // Will invoke a double InitAction
+    fun `WHEN InitAction is dispatched THEN InitTranslationsBrowserState is also dispatched`() = runTest {
+        // Send Action
+        // Note: Will cause a double InitAction
         translationsMiddleware.invoke(context = context, next = {}, action = InitAction)
+        waitForIdle()
+
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.InitTranslationsBrowserState,
+        )
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetSupportedLanguagesAction is also dispatched`() = runTest {
+        // Send Action
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
 
         // Set the engine to support
         val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
+        // At least once, since InitAction also will trigger this
         verify(engine, atLeastOnce()).isTranslationsEngineSupported(
             onSuccess = engineSupportedCallback.capture(),
             onError = any(),
         )
         engineSupportedCallback.value.invoke(true)
-
-        // Verifying at least once due to double InitAction
-        verify(store, atLeastOnce()).dispatch(
-            TranslationsAction.InitTranslationsBrowserState,
-        )
-
-        waitForIdle()
-    }
-
-    @Test
-    fun `WHEN InitTranslationsBrowserState is dispatched THEN SetSupportedLanguagesAction is also dispatched`() = runTest {
-        // Will invoke a double InitAction
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
 
         // Verify results for language query
         val languageCallback = argumentCaptor<((TranslationSupport) -> Unit)>()
@@ -205,6 +207,49 @@ class TranslationsMiddlewareTest {
                 supportedLanguages = supportedLanguages,
             ),
         )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN InitTranslationsBrowserState is dispatched AND has an issue with the engine THEN EngineExceptionAction is dispatched`() = runTest() {
+        // Send Action
+        // Note: Implicitly called once due to connection with InitAction
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        waitForIdle()
+
+        // Check expectations
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = any(),
+            onError = errorCallback.capture(),
+        )
+        errorCallback.value.invoke(IllegalStateException())
+        waitForIdle()
+
+        verify(store, atLeastOnce()).dispatch(
+            TranslationsAction.EngineExceptionAction(
+                error = TranslationError.UnknownEngineSupportError(any()),
+            ),
+        )
+    }
+
+    @Test
+    fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is not supported THEN SetSupportedLanguagesAction is NOT dispatched`() = runTest {
+        // Send Action
+        // Will invoke a double InitAction
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+
+        // Set the engine to not support
+        val engineNotSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
+        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
+            onSuccess = engineNotSupportedCallback.capture(),
+            onError = any(),
+        )
+        engineNotSupportedCallback.value.invoke(false)
+
+        // Verify language query was never called
+        verify(engine, never()).getSupportedTranslationLanguages(onSuccess = any(), onError = any())
 
         waitForIdle()
     }
@@ -572,53 +617,6 @@ class TranslationsMiddlewareTest {
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_PAGE_SETTINGS,
-            ),
-        )
-    }
-
-    @Test
-    fun `WHEN InitAction is dispatched THEN SetEngineSupportAction is dispatched`() = runTest {
-        // Send Action
-        // Note: Will cause a double InitAction
-        translationsMiddleware.invoke(context, {}, InitAction)
-        waitForIdle()
-
-        // Check expectations
-        val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
-        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
-            onSuccess = engineSupportedCallback.capture(),
-            onError = any(),
-        )
-        engineSupportedCallback.value.invoke(true)
-        waitForIdle()
-
-        verify(store, atLeastOnce()).dispatch(
-            TranslationsAction.SetEngineSupportedAction(
-                isEngineSupported = true,
-            ),
-        )
-        waitForIdle()
-    }
-
-    @Test
-    fun `WHEN InitAction is dispatched AND has an issue THEN TranslateExceptionAction is dispatched`() = runTest() {
-        // Send Action
-        // Note: Will cause a double InitAction
-        translationsMiddleware.invoke(context, {}, InitAction)
-        waitForIdle()
-
-        // Check expectations
-        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
-        verify(engine, atLeastOnce()).isTranslationsEngineSupported(
-            onSuccess = any(),
-            onError = errorCallback.capture(),
-        )
-        errorCallback.value.invoke(IllegalStateException())
-        waitForIdle()
-
-        verify(store, atLeastOnce()).dispatch(
-            TranslationsAction.EngineExceptionAction(
-                error = TranslationError.UnknownEngineSupportError(any()),
             ),
         )
     }
