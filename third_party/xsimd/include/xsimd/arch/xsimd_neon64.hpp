@@ -92,7 +92,7 @@ namespace xsimd
         template <class A, class T>
         inline batch<T, A> broadcast(T val, requires_arch<neon64>) noexcept
         {
-            return broadcast<neon64>(val, neon {});
+            return broadcast<A>(val, neon {});
         }
 
         template <class A>

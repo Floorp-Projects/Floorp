@@ -23,33 +23,39 @@
 // Wrap intrinsics so we can pass them as function pointers
 // - OP: intrinsics name prefix, e.g., vorrq
 // - RT: type traits to deduce intrinsics return types
-#define WRAP_BINARY_INT_EXCLUDING_64(OP, RT)                                \
+#define WRAP_BINARY_UINT_EXCLUDING_64(OP, RT)                               \
     namespace wrap                                                          \
     {                                                                       \
         inline RT<uint8x16_t> OP##_u8(uint8x16_t a, uint8x16_t b) noexcept  \
         {                                                                   \
             return ::OP##_u8(a, b);                                         \
         }                                                                   \
-        inline RT<int8x16_t> OP##_s8(int8x16_t a, int8x16_t b) noexcept     \
-        {                                                                   \
-            return ::OP##_s8(a, b);                                         \
-        }                                                                   \
         inline RT<uint16x8_t> OP##_u16(uint16x8_t a, uint16x8_t b) noexcept \
         {                                                                   \
             return ::OP##_u16(a, b);                                        \
-        }                                                                   \
-        inline RT<int16x8_t> OP##_s16(int16x8_t a, int16x8_t b) noexcept    \
-        {                                                                   \
-            return ::OP##_s16(a, b);                                        \
         }                                                                   \
         inline RT<uint32x4_t> OP##_u32(uint32x4_t a, uint32x4_t b) noexcept \
         {                                                                   \
             return ::OP##_u32(a, b);                                        \
         }                                                                   \
-        inline RT<int32x4_t> OP##_s32(int32x4_t a, int32x4_t b) noexcept    \
-        {                                                                   \
-            return ::OP##_s32(a, b);                                        \
-        }                                                                   \
+    }
+
+#define WRAP_BINARY_INT_EXCLUDING_64(OP, RT)                             \
+    WRAP_BINARY_UINT_EXCLUDING_64(OP, RT)                                \
+    namespace wrap                                                       \
+    {                                                                    \
+        inline RT<int8x16_t> OP##_s8(int8x16_t a, int8x16_t b) noexcept  \
+        {                                                                \
+            return ::OP##_s8(a, b);                                      \
+        }                                                                \
+        inline RT<int16x8_t> OP##_s16(int16x8_t a, int16x8_t b) noexcept \
+        {                                                                \
+            return ::OP##_s16(a, b);                                     \
+        }                                                                \
+        inline RT<int32x4_t> OP##_s32(int32x4_t a, int32x4_t b) noexcept \
+        {                                                                \
+            return ::OP##_s32(a, b);                                     \
+        }                                                                \
     }
 
 #define WRAP_BINARY_INT(OP, RT)                                             \
@@ -203,6 +209,10 @@ namespace xsimd
                                                                     uint16x8_t, int16x8_t,
                                                                     uint32x4_t, int32x4_t,
                                                                     float32x4_t>;
+
+            using excluding_int64f32_dispatcher = neon_dispatcher_impl<uint8x16_t, int8x16_t,
+                                                                       uint16x8_t, int16x8_t,
+                                                                       uint32x4_t, int32x4_t>;
 
             /**************************
              * comparison dispatchers *
@@ -740,6 +750,38 @@ namespace xsimd
                 std::make_tuple(wrap::vaddq_u8, wrap::vaddq_s8, wrap::vaddq_u16, wrap::vaddq_s16,
                                 wrap::vaddq_u32, wrap::vaddq_s32, wrap::vaddq_u64, wrap::vaddq_s64,
                                 wrap::vaddq_f32)
+            };
+            return dispatcher.apply(register_type(lhs), register_type(rhs));
+        }
+
+        /*******
+         * avg *
+         *******/
+
+        WRAP_BINARY_UINT_EXCLUDING_64(vhaddq, detail::identity_return_type)
+
+        template <class A, class T, class = typename std::enable_if<(std::is_unsigned<T>::value && sizeof(T) != 8), void>::type>
+        inline batch<T, A> avg(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon>) noexcept
+        {
+            using register_type = typename batch<T, A>::register_type;
+            const detail::neon_dispatcher_impl<uint8x16_t, uint16x8_t, uint32x4_t>::binary dispatcher = {
+                std::make_tuple(wrap::vhaddq_u8, wrap::vhaddq_u16, wrap::vhaddq_u32)
+            };
+            return dispatcher.apply(register_type(lhs), register_type(rhs));
+        }
+
+        /********
+         * avgr *
+         ********/
+
+        WRAP_BINARY_UINT_EXCLUDING_64(vrhaddq, detail::identity_return_type)
+
+        template <class A, class T, class = typename std::enable_if<(std::is_unsigned<T>::value && sizeof(T) != 8), void>::type>
+        inline batch<T, A> avgr(batch<T, A> const& lhs, batch<T, A> const& rhs, requires_arch<neon>) noexcept
+        {
+            using register_type = typename batch<T, A>::register_type;
+            const detail::neon_dispatcher_impl<uint8x16_t, uint16x8_t, uint32x4_t>::binary dispatcher = {
+                std::make_tuple(wrap::vrhaddq_u8, wrap::vrhaddq_u16, wrap::vrhaddq_u32)
             };
             return dispatcher.apply(register_type(lhs), register_type(rhs));
         }

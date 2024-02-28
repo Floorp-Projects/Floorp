@@ -36,6 +36,8 @@
 #include "xsimd_avx512dq_register.hpp"
 #include "xsimd_avx512f_register.hpp"
 
+#include "xsimd_i8mm_neon64_register.hpp"
+
 #include "xsimd_neon64_register.hpp"
 #include "xsimd_neon_register.hpp"
 
