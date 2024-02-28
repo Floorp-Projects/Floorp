@@ -500,7 +500,7 @@ var PlacesOrganizer = {
     };
 
     fp.init(
-      window,
+      window.browsingContext,
       PlacesUIUtils.promptLocalization.formatValueSync(
         "places-bookmarks-import"
       ),
@@ -525,7 +525,7 @@ var PlacesOrganizer = {
     };
 
     fp.init(
-      window,
+      window.browsingContext,
       PlacesUIUtils.promptLocalization.formatValueSync(
         "places-bookmarks-export"
       ),
@@ -638,7 +638,7 @@ var PlacesOrganizer = {
         "places-bookmarks-restore-title",
         "places-bookmarks-restore-filter-name",
       ]);
-    fp.init(window, title, Ci.nsIFilePicker.modeOpen);
+    fp.init(window.browsingContext, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.appendFilters(Ci.nsIFilePicker.filterAll);
     fp.displayDirectory = backupsDir;
@@ -711,7 +711,7 @@ var PlacesOrganizer = {
         "places-bookmarks-backup-title",
         "places-bookmarks-restore-filter-name",
       ]);
-    fp.init(window, title, Ci.nsIFilePicker.modeSave);
+    fp.init(window.browsingContext, title, Ci.nsIFilePicker.modeSave);
     fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.defaultString = PlacesBackups.getFilenameForDate();
     fp.defaultExtension = "json";

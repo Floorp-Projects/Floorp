@@ -238,7 +238,7 @@ function promiseTargetFile(aFpP, win) {
     let fp = makeFilePicker();
     let titleKey = aFpP.fpTitleKey;
     fp.init(
-      win,
+      win.browsingContext,
       ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
       Ci.nsIFilePicker.modeSave
     );

@@ -1364,7 +1364,11 @@ this.tabs = class extends ExtensionAPIPersistent {
           }
           filename = DownloadPaths.sanitize(filename);
 
-          picker.init(activeTab.ownerGlobal, title, Ci.nsIFilePicker.modeSave);
+          picker.init(
+            activeTab.ownerGlobal.browsingContext,
+            title,
+            Ci.nsIFilePicker.modeSave
+          );
           picker.appendFilter("PDF", "*.pdf");
           picker.defaultExtension = "pdf";
           picker.defaultString = filename;
