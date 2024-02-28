@@ -7759,7 +7759,11 @@
 
 -   name: javascript.options.wasm_multi_memory
     type: bool
+#if defined(ENABLE_WASM_MULTI_MEMORY)
+    value: true
+#else
     value: false
+#endif
     mirror: always
     set_spidermonkey_pref: startup
 

@@ -71,6 +71,11 @@ let releasedFeatures = [
     `(module (func) (func (return_call 0)))`
   ],
   ['gc', wasmGcEnabled(), `(module (type (struct)))`],
+  [
+    'multi-memory',
+    wasmMultiMemoryEnabled(),
+    `(module (memory 0) (memory 0))`,
+  ],
 ];
 
 for (let [name, enabled, test] of releasedFeatures) {

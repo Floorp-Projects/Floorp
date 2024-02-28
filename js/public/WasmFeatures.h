@@ -141,7 +141,7 @@
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
-    /* flag fuzz enable  */  false,                                     \
+    /* flag fuzz enable   */ true,                                      \
     /* preference name    */ multi_memory)                              \
   FEATURE(                                                              \
     /* capitalized name   */ TailCalls,                                 \

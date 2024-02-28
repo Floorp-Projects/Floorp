@@ -119,7 +119,7 @@ wasmEval(moduleWithSections([tableSection0()]));
 
 wasmEval(moduleWithSections([memorySection(0)]));
 
-function invalidMemorySection2() {
+function memorySection2() {
     var body = [];
     body.push(...varU32(2));           // number of memories
     body.push(...varU32(0x0));
@@ -130,7 +130,11 @@ function invalidMemorySection2() {
 }
 
 wasmEval(moduleWithSections([memorySection0()]));
-assertErrorMessage(() => wasmEval(moduleWithSections([invalidMemorySection2()])), CompileError, /number of memories must be at most one/);
+if (wasmMultiMemoryEnabled()) {
+    wasmEval(moduleWithSections([memorySection2()]));
+} else {
+    assertErrorMessage(() => wasmEval(moduleWithSections([memorySection2()])), CompileError, /number of memories must be at most one/);
+}
 
 // Test early 'end'
 const bodyMismatch = /(function body length mismatch)|(operators remaining after end of function)/;

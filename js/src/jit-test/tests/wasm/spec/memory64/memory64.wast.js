@@ -27,17 +27,19 @@ let $2 = instantiate(`(module (memory i64 1 256))`);
 // ./test/core/memory64.wast:6
 let $3 = instantiate(`(module (memory i64 0 65536))`);
 
-// ./test/core/memory64.wast:8
-assert_invalid(
-  () => instantiate(`(module (memory i64 0) (memory i64 0))`),
-  `multiple memories`,
-);
+if (!wasmMultiMemoryEnabled()) {
+  // ./test/core/memory64.wast:8
+  assert_invalid(
+    () => instantiate(`(module (memory i64 0) (memory i64 0))`),
+    `multiple memories`,
+  );
 
-// ./test/core/memory64.wast:9
-assert_invalid(
-  () => instantiate(`(module (memory (import "spectest" "memory") i64 0) (memory i64 0))`),
-  `multiple memories`,
-);
+  // ./test/core/memory64.wast:9
+  assert_invalid(
+    () => instantiate(`(module (memory (import "spectest" "memory") i64 0) (memory i64 0))`),
+    `multiple memories`,
+  );
+}
 
 // ./test/core/memory64.wast:11
 let $4 = instantiate(`(module (memory i64 (data)) (func (export "memsize") (result i64) (memory.size)))`);
