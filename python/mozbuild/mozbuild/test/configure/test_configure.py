@@ -1921,6 +1921,72 @@ class TestConfigure(unittest.TestCase):
         ):
             self.get_config(["--enable-when"])
 
+    def test_depends_unary_ops_func(self):
+        with self.moz_configure(
+            """
+            option('--foo', nargs=1, help='foo')
+            @depends('--foo')
+            def foo(value):
+                return value
+            set_config('Foo', foo)
+            set_config('notFoo', depends(foo)(lambda x: not x))
+            set_config('invFoo', ~foo)
+        """
+        ):
+            foo_opt, foo_value = "--foo=foo", PositiveOptionValue(("foo",))
+
+            config = self.get_config([foo_opt])
+            self.assertEqual(
+                config,
+                {
+                    "Foo": foo_value,
+                    "notFoo": not foo_value,
+                    "invFoo": not foo_value,
+                },
+            )
+
+            foo_value = False
+            config = self.get_config([])
+            self.assertEqual(
+                config,
+                {
+                    "Foo": foo_value,
+                    "notFoo": not foo_value,
+                    "invFoo": not foo_value,
+                },
+            )
+
+    def test_depends_unary_ops_val(self):
+        with self.moz_configure(
+            """
+            option("--cond", help="condition")
+            cond = depends("--cond")(lambda c: c)
+            foo = depends(when=cond)("foo")
+            set_config('Foo', foo)
+            set_config('notFoo', depends(foo)(lambda x: not x))
+            set_config('invFoo', ~foo)
+
+            bar = depends(when=~cond)("bar")
+            bar2 = depends(when=depends(cond)(lambda c: not c))("bar2")
+            set_config('Bar', bar)
+            set_config('Bar2', bar2)
+        """
+        ):
+            config = self.get_config(["--cond"])
+            self.assertEqual(
+                config,
+                {
+                    "Foo": "foo",
+                    "notFoo": not "foo",
+                    "invFoo": not "foo",
+                },
+            )
+            config = self.get_config([])
+            self.assertEqual(
+                config,
+                {"notFoo": True, "invFoo": True, "Bar": "bar", "Bar2": "bar2"},
+            )
+
     def test_depends_binary_ops(self):
         with self.moz_configure(
             """
