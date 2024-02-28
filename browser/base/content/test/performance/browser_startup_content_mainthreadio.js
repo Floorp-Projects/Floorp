@@ -152,13 +152,6 @@ const processes = {
       condition: WIN,
       stat: 1,
     },
-    {
-      // We should remove this in bug 1882427
-      path: "*screenshots@mozilla.org.xpi",
-      condition: true,
-      ignoreIfUnused: true,
-      close: 1,
-    },
   ],
 };
 
