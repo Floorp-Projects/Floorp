@@ -878,8 +878,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private fun setupTheme() {
         themeManager = createThemeManager()
-        // ExternalAppBrowserActivity handles it's own theming as it can be customized.
-        if (this !is ExternalAppBrowserActivity) {
+        // ExternalAppBrowserActivity exclusively handles it's own theming unless in private mode.
+        if (this !is ExternalAppBrowserActivity || browsingModeManager.mode.isPrivate) {
             themeManager.setActivityTheme(this)
             themeManager.applyStatusBarTheme(this)
         }

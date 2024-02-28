@@ -274,8 +274,8 @@ abstract class BaseBrowserFragment :
         _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
         val activity = activity as HomeActivity
-        // ExternalAppBrowserActivity handles it's own theming as it can be customized.
-        if (activity !is ExternalAppBrowserActivity) {
+        // ExternalAppBrowserActivity exclusively handles it's own theming unless in private mode.
+        if (activity !is ExternalAppBrowserActivity || activity.browsingModeManager.mode.isPrivate) {
             activity.themeManager.applyStatusBarTheme(activity)
         }
 
@@ -1615,8 +1615,8 @@ abstract class BaseBrowserFragment :
             activity?.exitImmersiveMode()
             (view as? SwipeGestureLayout)?.isSwipeEnabled = true
             (activity as? HomeActivity)?.let { activity ->
-                // ExternalAppBrowserActivity handles it's own theming as it can be customized.
-                if (activity !is ExternalAppBrowserActivity) {
+                // ExternalAppBrowserActivity exclusively handles it's own theming unless in private mode.
+                if (activity !is ExternalAppBrowserActivity || activity.browsingModeManager.mode.isPrivate) {
                     activity.themeManager.applyStatusBarTheme(activity)
                 }
             }

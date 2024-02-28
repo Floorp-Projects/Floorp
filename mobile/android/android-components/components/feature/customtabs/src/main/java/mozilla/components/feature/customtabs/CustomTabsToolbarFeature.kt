@@ -11,6 +11,7 @@ import android.view.Window
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.core.content.ContextCompat.getColor
 import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -32,6 +33,7 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.android.view.setNavigationBarTheme
@@ -114,15 +116,24 @@ class CustomTabsToolbarFeature(
     internal fun init(config: CustomTabConfig) {
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
-        val readableColor =
-            config.toolbarColor?.let { getReadableTextColor(it) } ?: toolbar.display.colors.menu
 
-        // Change the toolbar colour
-        updateToolbarColor(
-            config.toolbarColor,
-            config.navigationBarColor ?: config.toolbarColor,
-            readableColor,
-        )
+        val readableColor = if (updateToolbarBackground) {
+            config.toolbarColor?.let { getReadableTextColor(it) } ?: toolbar.display.colors.menu
+        } else {
+            // It's private mode, the readable color needs match the app.
+            // Note: The main app is configuring the private theme, Custom Tabs is adding the
+            // additional theming for the dynamic UI elements e.g. action & share buttons.
+            val colorResId = context.theme.resolveAttribute(android.R.attr.textColorPrimary)
+            getColor(context, colorResId)
+        }
+
+        if (updateToolbarBackground) {
+            updateToolbarColor(
+                config.toolbarColor,
+                config.navigationBarColor ?: config.toolbarColor,
+                readableColor,
+            )
+        }
 
         // Add navigation close action
         if (config.showCloseButton) {
@@ -149,8 +160,8 @@ class CustomTabsToolbarFeature(
         @ColorInt navigationBarColor: Int?,
         @ColorInt readableColor: Int,
     ) {
-        if (updateToolbarBackground && toolbarColor != null) {
-            toolbar.setBackgroundColor(toolbarColor)
+        toolbarColor?.let {
+            toolbar.setBackgroundColor(it)
 
             toolbar.display.colors = toolbar.display.colors.copy(
                 text = readableColor,
@@ -161,7 +172,7 @@ class CustomTabsToolbarFeature(
                 menu = readableColor,
             )
 
-            window?.setStatusBarTheme(toolbarColor)
+            window?.setStatusBarTheme(it)
         }
         navigationBarColor?.let { color ->
             window?.setNavigationBarTheme(color)
