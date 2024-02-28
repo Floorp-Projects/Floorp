@@ -60,7 +60,11 @@ function openFileDialog() {
   const file = new Promise((resolve, reject) => {
     info("Opening Windows file dialog");
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, "Test: browser_utility_filepicker_crashed.js", fp.modeOpen);
+    fp.init(
+      window.browsingContext,
+      "Test: browser_utility_filepicker_crashed.js",
+      fp.modeOpen
+    );
     fp.open(result => {
       Assert.equal(
         result,

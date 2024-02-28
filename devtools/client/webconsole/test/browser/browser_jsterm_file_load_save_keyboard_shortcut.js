@@ -20,7 +20,7 @@ add_task(async function () {
   // create file to import first
   info("Create the file to import");
   const { MockFilePicker } = SpecialPowers;
-  MockFilePicker.init(window);
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 
   const file = await createLocalFile();

@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
 <script type="text/javascript">
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 async function test() {

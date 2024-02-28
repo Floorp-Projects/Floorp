@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let { MockFilePicker } = SpecialPowers;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 registerCleanupFunction(() => MockFilePicker.cleanup());
 
 /**

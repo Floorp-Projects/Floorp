@@ -68,7 +68,7 @@ add_setup(async () => {
   // We use MockFilePicker to simulate a native file picker, and prepare it
   // to return a dummy file pointed at TEST_FILE_PATH. The file at
   // TEST_FILE_PATH is not required (nor expected) to exist.
-  MockFilePicker.init(window);
+  MockFilePicker.init(window.browsingContext);
   registerCleanupFunction(() => {
     MockFilePicker.cleanup();
   });
