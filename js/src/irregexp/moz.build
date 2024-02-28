@@ -14,9 +14,13 @@ include("../js-cxxflags.mozbuild")
 
 CXXFLAGS += ["-Wno-error=type-limits", "-Wno-error=return-type"]
 
-# Suppress spurious warnings in third-party code. See bug 1810584.
+# Suppress spurious warnings in third-party code.
+# See bug 1810584 and bug 1879225.
 if CONFIG["CC_TYPE"] == "gcc":
-    CXXFLAGS += ["-Wno-error=nonnull"]
+    CXXFLAGS += ["-Wno-error=nonnull", "-Wno-narrowing"]
+if CONFIG["CC_TYPE"] == "clang":
+    CXXFLAGS += ["-Wno-c++11-narrowing"]
+
 
 UNIFIED_SOURCES += [
     "imported/regexp-bytecode-generator.cc",
