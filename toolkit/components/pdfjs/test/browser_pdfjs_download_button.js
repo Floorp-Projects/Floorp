@@ -7,7 +7,7 @@ const RELATIVE_DIR = "toolkit/components/pdfjs/test/";
 const TESTROOT = "https://example.com/browser/" + RELATIVE_DIR;
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 var tempDir;

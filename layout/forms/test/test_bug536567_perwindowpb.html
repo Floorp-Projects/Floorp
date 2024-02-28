@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536567
 const Cm = Components.manager;
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
 
 var tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
 var homeDir = Services.dirsvc.get("Desk", Ci.nsIFile);

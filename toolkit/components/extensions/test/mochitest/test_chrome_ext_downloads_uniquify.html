@@ -42,7 +42,7 @@ add_task(async function test_downloads_uniquify() {
   unique.append("file_download(1).txt");
 
   const {MockFilePicker} = SpecialPowers;
-  MockFilePicker.init(window);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 
   MockFilePicker.showCallback = fp => {

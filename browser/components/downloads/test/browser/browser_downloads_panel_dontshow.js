@@ -2,7 +2,7 @@
 // download occurs but not when a user manually saves a page.
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 
 async function promiseDownloadFinished(list) {
   return new Promise(resolve => {
