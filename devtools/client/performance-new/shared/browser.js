@@ -154,7 +154,6 @@ function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
     Ci.nsIFilePicker
   );
   FilePicker.init(
-    // @ts-ignore
     window.browsingContext,
     "Pick build directory",
     FilePicker.modeGetFolder
