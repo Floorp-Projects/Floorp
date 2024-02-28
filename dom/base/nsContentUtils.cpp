@@ -11427,6 +11427,7 @@ int32_t nsContentUtils::CompareTreePosition(const nsINode* aNode1,
 
 nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
                                                         ShadowRootMode aMode,
+                                                        bool aIsClonable,
                                                         bool aDelegatesFocus) {
   RefPtr<Element> host = mozilla::dom::Element::FromNodeOrNull(aHost);
   if (!host) {
@@ -11437,7 +11438,7 @@ nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
   init.mMode = aMode;
   init.mDelegatesFocus = aDelegatesFocus;
   init.mSlotAssignment = SlotAssignmentMode::Named;
-  init.mClonable = true;
+  init.mClonable = aIsClonable;
 
   RefPtr shadowRoot = host->AttachShadow(init, IgnoreErrors(),
                                          Element::ShadowRootDeclarative::Yes);

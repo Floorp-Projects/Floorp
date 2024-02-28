@@ -281,17 +281,20 @@ struct opGetShadowRootFromHost {
   nsIContent** mFragHandle;
   nsIContent** mTemplateNode;
   mozilla::dom::ShadowRootMode mShadowRootMode;
+  bool mShadowRootIsClonable;
   bool mShadowRootDelegatesFocus;
 
   explicit opGetShadowRootFromHost(nsIContentHandle* aHost,
                                    nsIContentHandle* aFragHandle,
                                    nsIContentHandle* aTemplateNode,
                                    mozilla::dom::ShadowRootMode aShadowRootMode,
+                                   bool aShadowRootIsClonable,
                                    bool aShadowRootDelegatesFocus) {
     mHost = static_cast<nsIContent**>(aHost);
     mFragHandle = static_cast<nsIContent**>(aFragHandle);
     mTemplateNode = static_cast<nsIContent**>(aTemplateNode);
     mShadowRootMode = aShadowRootMode;
+    mShadowRootIsClonable = aShadowRootIsClonable;
     mShadowRootDelegatesFocus = aShadowRootDelegatesFocus;
   }
 };

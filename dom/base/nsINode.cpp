@@ -3672,15 +3672,13 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
       }
       newShadowRoot->SetIsDeclarative(originalShadowRoot->IsDeclarative());
 
-      if (aDeep) {
-        for (nsIContent* origChild = originalShadowRoot->GetFirstChild();
-             origChild; origChild = origChild->GetNextSibling()) {
-          nsCOMPtr<nsINode> child =
-              CloneAndAdopt(origChild, aClone, aDeep, nodeInfoManager,
-                            aReparentScope, newShadowRoot, aError);
-          if (NS_WARN_IF(aError.Failed())) {
-            return nullptr;
-          }
+      for (nsIContent* origChild = originalShadowRoot->GetFirstChild();
+           origChild; origChild = origChild->GetNextSibling()) {
+        nsCOMPtr<nsINode> child =
+            CloneAndAdopt(origChild, aClone, true, nodeInfoManager,
+                          aReparentScope, newShadowRoot, aError);
+        if (NS_WARN_IF(aError.Failed())) {
+          return nullptr;
         }
       }
     }
