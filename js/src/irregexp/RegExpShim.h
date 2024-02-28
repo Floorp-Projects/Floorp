@@ -1030,6 +1030,7 @@ class JSRegExp : public HeapObject {
 };
 
 using RegExpFlags = JS::RegExpFlags;
+using RegExpFlag = JS::RegExpFlags::Flag;
 
 inline bool IsUnicode(RegExpFlags flags) { return flags.unicode(); }
 inline bool IsGlobal(RegExpFlags flags) { return flags.global(); }
@@ -1040,6 +1041,22 @@ inline bool IsSticky(RegExpFlags flags) { return flags.sticky(); }
 inline bool IsUnicodeSets(RegExpFlags flags) { return flags.unicodeSets(); }
 inline bool IsEitherUnicode(RegExpFlags flags) {
   return flags.unicode() || flags.unicodeSets();
+}
+
+inline base::Optional<RegExpFlag> TryRegExpFlagFromChar(char c) {
+  RegExpFlag flag;
+
+  // The parser only calls this after verifying that it's a supported flag.
+  MOZ_ALWAYS_TRUE(JS::MaybeParseRegExpFlag(c, &flag));
+
+  return base::Optional(flag);
+}
+
+inline bool operator==(const RegExpFlags& lhs, const int& rhs) {
+  return lhs.value() == rhs;
+}
+inline bool operator!=(const RegExpFlags& lhs, const int& rhs) {
+  return !(lhs == rhs);
 }
 
 class Histogram {
