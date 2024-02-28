@@ -177,6 +177,8 @@ check_and_add_linker_flag("-Wl,-z,relro", when=is_gnu_cc)
 check_and_add_linker_flag("-Wl,-z,now", when=is_gnu_cc)
 check_and_add_linker_flag("-Wl,-z,nocopyreloc", when=is_gnu_cc)
 
+check_and_add_linker_optimize_flag("-Wl,-dead_strip", when=target_is_darwin & ~dtrace)
+
 
 @depends("--enable-address-sanitizer", is_gnu_cc)
 def check_Bsymbolic(enable_asan, is_gnu_cc):
@@ -195,4 +197,7 @@ check_and_add_linker_flag("-Wl,-Bsymbolic", when=check_Bsymbolic)
 add_old_configure_assignment("_COMPILATION_ASFLAGS", asm_flags.asflags)
 add_old_configure_assignment("_COMPILATION_HOST_ASFLAGS", asm_flags.host_asflags)
 add_old_configure_assignment("_COMPILATION_LDFLAGS", linker_flags.ldflags)
+add_old_configure_assignment(
+    "_COMPILATION_OPTIMIZE_LDFLAGS", linker_optimize_flags.ldflags
+)
 add_old_configure_assignment("_COMPILATION_HOST_LDFLAGS", linker_flags.host_ldflags)

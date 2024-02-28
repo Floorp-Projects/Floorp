@@ -786,19 +786,6 @@ check_prog(
     paths=clang_search_path,
 )
 
-option("--enable-dtrace", help="Build with dtrace support")
-
-dtrace = check_header(
-    "sys/sdt.h",
-    when="--enable-dtrace",
-    onerror=lambda: die("dtrace enabled but sys/sdt.h not found"),
-)
-
-set_config("HAVE_DTRACE", True, when=dtrace)
-set_define("INCLUDE_MOZILLA_DTRACE", True, when=dtrace)
-add_old_configure_assignment("enable_dtrace", "yes", when=dtrace)
-
-
 option("--disable-icf", help="Disable Identical Code Folding")
 
 add_old_configure_assignment(

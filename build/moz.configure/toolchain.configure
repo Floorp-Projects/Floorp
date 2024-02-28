@@ -3279,3 +3279,16 @@ set_config(
         flags=["-mavx512vnni", "-mavx512bw", "-mavx512f", "-mavx512dq", "-mavx512cd"],
     ),
 )
+
+# dtrace support
+##
+option("--enable-dtrace", help="Build with dtrace support")
+
+dtrace = check_header(
+    "sys/sdt.h",
+    when="--enable-dtrace",
+    onerror=lambda: die("dtrace enabled but sys/sdt.h not found"),
+)
+
+set_config("HAVE_DTRACE", True, when=dtrace)
+set_define("INCLUDE_MOZILLA_DTRACE", True, when=dtrace)
