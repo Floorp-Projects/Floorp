@@ -632,7 +632,7 @@ enum class AssembleResult {
     // RegExpShared.
     ByteArray bytecode =
         v8::internal::ByteArray::cast(*result.code).takeOwnership(cx->isolate);
-    uint32_t length = bytecode->length;
+    uint32_t length = bytecode->length();
     re->setByteCode(bytecode.release(), isLatin1);
     js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
   }

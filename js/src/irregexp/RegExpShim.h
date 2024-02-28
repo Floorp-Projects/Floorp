@@ -586,15 +586,6 @@ class Object {
   // IsCharacterInRangeArray in regexp-macro-assembler.cc.
   Object(uintptr_t raw) : asBits_(raw) { MOZ_CRASH("unused"); }
 
-  // Used in regexp-interpreter.cc to check the return value of
-  // isolate->stack_guard()->HandleInterrupts(). We want to handle
-  // interrupts in the caller, so we always return false from
-  // HandleInterrupts and true here.
-  inline bool IsException(Isolate*) const {
-    MOZ_ASSERT(!value().toBoolean());
-    return true;
-  }
-
   JS::Value value() const { return JS::Value::fromRawBits(asBits_); }
 
   inline static Object cast(Object object) { return object; }
@@ -603,6 +594,14 @@ class Object {
   void setValue(const JS::Value& val) { asBits_ = val.asRawBits(); }
   uint64_t asBits_;
 } JS_HAZ_GC_POINTER;
+
+// Used in regexp-interpreter.cc to check the return value of
+// isolate->stack_guard()->HandleInterrupts(). We want to handle
+// interrupts in the caller, so we return a magic value from
+// HandleInterrupts and check for it here.
+inline bool IsException(Object obj, Isolate*) {
+  return obj.value().isMagic(JS_INTERRUPT_REGEXP);
+}
 
 class Smi : public Object {
  public:
@@ -689,13 +688,13 @@ T* ByteArrayData::typedData() {
 
 template <typename T>
 T ByteArrayData::getTyped(uint32_t index) {
-  MOZ_ASSERT(index < length / sizeof(T));
+  MOZ_ASSERT(index < length() / sizeof(T));
   return typedData<T>()[index];
 }
 
 template <typename T>
 void ByteArrayData::setTyped(uint32_t index, T value) {
-  MOZ_ASSERT(index < length / sizeof(T));
+  MOZ_ASSERT(index < length() / sizeof(T));
   typedData<T>()[index] = value;
 }
 
@@ -705,6 +704,7 @@ class ByteArray : public HeapObject {
   ByteArrayData* inner() const {
     return static_cast<ByteArrayData*>(value().toPrivate());
   }
+  friend bool IsByteArray(Object obj);
 
  public:
   PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
@@ -713,7 +713,7 @@ class ByteArray : public HeapObject {
   uint8_t get(uint32_t index) { return inner()->get(index); }
   void set(uint32_t index, uint8_t val) { inner()->set(index, val); }
 
-  uint32_t length() const { return inner()->length; }
+  uint32_t length() const { return inner()->length(); }
   uint8_t* GetDataStartAddress() { return inner()->data(); }
 
   static ByteArray cast(Object object) {
@@ -722,10 +722,16 @@ class ByteArray : public HeapObject {
     return b;
   }
 
-  bool IsByteArray() const { return true; }
-
   friend class SMRegExpMacroAssembler;
 };
+
+// This is only used in assertions. In debug builds, we put a magic value
+// in the header of each ByteArrayData, and assert here that it matches.
+inline bool IsByteArray(Object obj) {
+  MOZ_ASSERT(ByteArray::cast(obj).inner()->magic() ==
+             ByteArrayData::ExpectedMagic);
+  return true;
+}
 
 // This is a convenience class used in V8 for treating a ByteArray as an array
 // of fixed-size integers. This version supports integral types up to 32 bits.
@@ -1164,9 +1170,11 @@ class Isolate {
 
   // This is called from inside no-GC code. V8 runs the interrupt
   // inside the no-GC code and then "manually relocates unhandlified
-  // references" afterwards. We just return false and let the caller
-  // handle interrupts.
-  Object HandleInterrupts() { return Object(JS::BooleanValue(false)); }
+  // references" afterwards. We just return a magic value and let the
+  // caller handle interrupts.
+  Object HandleInterrupts() {
+    return Object(JS::MagicValue(JS_INTERRUPT_REGEXP));
+  }
 
   JSContext* cx() const { return cx_; }
 
