@@ -45,11 +45,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   // UIA IAccessibleEx
   if (aGuidService == IID_IAccessibleEx &&
       StaticPrefs::accessibility_uia_enable() && localAcc) {
-    uiaRawElmProvider* accEx = new uiaRawElmProvider(localAcc);
-    HRESULT hr = accEx->QueryInterface(aIID, aInstancePtr);
-    if (FAILED(hr)) delete accEx;
-
-    return hr;
+    return mMsaa->QueryInterface(aIID, aInstancePtr);
   }
 
   // Provide a special service ID for getting the accessible for the browser tab

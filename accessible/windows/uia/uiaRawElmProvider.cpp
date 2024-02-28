@@ -10,6 +10,7 @@
 #include "AccessibleWrap.h"
 #include "ARIAMap.h"
 #include "LocalAccessible-inl.h"
+#include "MsaaAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -17,6 +18,23 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
+
+AccessibleWrap* uiaRawElmProvider::LocalAcc() {
+  return static_cast<MsaaAccessible*>(this)->LocalAcc();
+}
+
+// IUnknown
+
+// Because uiaRawElmProvider inherits multiple COM interfaces (and thus multiple
+// IUnknowns), we need to explicitly implement AddRef and Release to make
+// our QueryInterface implementation (IMPL_IUNKNOWN2) happy.
+ULONG STDMETHODCALLTYPE uiaRawElmProvider::AddRef() {
+  return static_cast<MsaaAccessible*>(this)->AddRef();
+}
+
+ULONG STDMETHODCALLTYPE uiaRawElmProvider::Release() {
+  return static_cast<MsaaAccessible*>(this)->Release();
+}
 
 IMPL_IUNKNOWN2(uiaRawElmProvider, IAccessibleEx, IRawElementProviderSimple)
 
@@ -30,7 +48,7 @@ uiaRawElmProvider::GetObjectForChild(
 
   *aAccEx = nullptr;
 
-  return mAcc->IsDefunct() ? CO_E_OBJNOTCONNECTED : S_OK;
+  return LocalAcc() ? S_OK : CO_E_OBJNOTCONNECTED;
 }
 
 STDMETHODIMP
@@ -41,11 +59,12 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
   *aAcc = nullptr;
   *aIdChild = 0;
 
-  if (mAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!LocalAcc()) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
   *aIdChild = CHILDID_SELF;
-  RefPtr<IAccessible> copy;
-  mAcc->GetNativeInterface(getter_AddRefs(copy));
+  RefPtr<IAccessible> copy = static_cast<MsaaAccessible*>(this);
   copy.forget(aAcc);
 
   return S_OK;
@@ -54,9 +73,13 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
 STDMETHODIMP
 uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds) {
   if (!aRuntimeIds) return E_INVALIDARG;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
   int ids[] = {UiaAppendRuntimeId,
-               static_cast<int>(reinterpret_cast<intptr_t>(mAcc->UniqueID()))};
+               static_cast<int>(reinterpret_cast<intptr_t>(acc->UniqueID()))};
   *aRuntimeIds = SafeArrayCreateVector(VT_I4, 0, 2);
   if (!*aRuntimeIds) return E_OUTOFMEMORY;
 
@@ -108,7 +131,10 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
                                     __RPC__out VARIANT* aPropertyValue) {
   if (!aPropertyValue) return E_INVALIDARG;
 
-  if (mAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
 
   aPropertyValue->vt = VT_EMPTY;
 
@@ -117,7 +143,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AcceleratorKeyPropertyId: {
       nsAutoString keyString;
 
-      mAcc->KeyboardShortcut().ToString(keyString);
+      acc->KeyboardShortcut().ToString(keyString);
 
       if (!keyString.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
@@ -132,7 +158,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AccessKeyPropertyId: {
       nsAutoString keyString;
 
-      mAcc->AccessKey().ToString(keyString);
+      acc->AccessKey().ToString(keyString);
 
       if (!keyString.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
@@ -147,7 +173,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AriaRolePropertyId: {
       nsAutoString xmlRoles;
 
-      RefPtr<AccAttributes> attributes = mAcc->Attributes();
+      RefPtr<AccAttributes> attributes = acc->Attributes();
       attributes->GetAttribute(nsGkAtoms::xmlroles, xmlRoles);
 
       if (!xmlRoles.IsEmpty()) {
@@ -163,7 +189,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AriaPropertiesPropertyId: {
       nsAutoString ariaProperties;
 
-      aria::AttrIterator attribIter(mAcc->GetContent());
+      aria::AttrIterator attribIter(acc->GetContent());
       while (attribIter.Next()) {
         nsAutoString attribName, attribValue;
         nsAutoString value;
