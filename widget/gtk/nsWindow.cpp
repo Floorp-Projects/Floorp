@@ -9895,31 +9895,38 @@ void nsWindow::DisableRendering() {
     mGdkWindow = nullptr;
   }
 
+  // Until Bug 1654938 is fixed we delete layer manager for hidden popups,
+  // otherwise it can easily hold 1GB+ memory for long time.
+  if (mWindowType == WindowType::Popup) {
+    DestroyLayerManager();
+    mSurfaceProvider.CleanupResources();
+  } else {
 #ifdef MOZ_WAYLAND
-  // Widget is backed by OpenGL EGLSurface created over wl_surface
-  // owned by mContainer.
-  // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
-  // wl_surface owned by mContainer and creates a new fallback EGLSurface.
-  // Then we can delete wl_surface in moz_container_wayland_unmap().
-  // We don't want to pause compositor as it may lead to whole
-  // browser freeze (Bug 1777664).
-  ///
-  // We don't need to do such operation for SW backend as
-  // WindowSurfaceWaylandMB::Commit() gets wl_surface from
-  // MozContainer every commit.
-  if (moz_container_wayland_has_egl_window(mContainer) &&
-      mCompositorWidgetDelegate) {
-    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-      // Call DisableRendering() to make GtkCompositorWidget hidden.
-      // Then SendResume() will create fallback EGLSurface, see
-      // GLContextEGL::CreateEGLSurfaceForCompositorWidget().
-      mCompositorWidgetDelegate->DisableRendering();
-      remoteRenderer->SendResume();
-      mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
-                                                 GetShapedState());
+    // Widget is backed by OpenGL EGLSurface created over wl_surface
+    // owned by mContainer.
+    // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
+    // wl_surface owned by mContainer and creates a new fallback EGLSurface.
+    // Then we can delete wl_surface in moz_container_wayland_unmap().
+    // We don't want to pause compositor as it may lead to whole
+    // browser freeze (Bug 1777664).
+    ///
+    // We don't need to do such operation for SW backend as
+    // WindowSurfaceWaylandMB::Commit() gets wl_surface from
+    // MozContainer every commit.
+    if (moz_container_wayland_has_egl_window(mContainer) &&
+        mCompositorWidgetDelegate) {
+      if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+        // Call DisableRendering() to make GtkCompositorWidget hidden.
+        // Then SendResume() will create fallback EGLSurface, see
+        // GLContextEGL::CreateEGLSurfaceForCompositorWidget().
+        mCompositorWidgetDelegate->DisableRendering();
+        remoteRenderer->SendResume();
+        mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
+                                                   GetShapedState());
+      }
     }
-  }
 #endif
+  }
 }
 
 // Apply workaround for Mutter compositor bug (mzbz#1777269).
