@@ -398,6 +398,7 @@ class RecentlyClosedTabsInView extends ViewPage {
                   .tabItems=${this.searchResults || this.recentlyClosedTabs}
                   @fxview-tab-list-secondary-action=${this.onDismissTab}
                   @fxview-tab-list-primary-action=${this.onReopenTab}
+                  secondaryActionClass="dismiss-button"
                 ></fxview-tab-list>
               `
           )}

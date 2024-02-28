@@ -200,6 +200,14 @@
   &[soundplaying="true"] {
     background-image: url("chrome://global/skin/media/audio.svg");
   }
+
+  &.dismiss-button {
+    background-image: url("chrome://global/skin/icons/close.svg");
+  }
+
+  &.options-button {
+    background-image: url("chrome://global/skin/icons/more.svg");
+  }
 }
 
 @media (prefers-contrast) {
