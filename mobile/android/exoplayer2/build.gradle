@@ -34,6 +34,10 @@ android {
         }
     }
 
+    publishing {
+        singleVariant("debug")
+    }
+
     namespace 'org.mozilla.geckoview.thirdparty'
 }
 

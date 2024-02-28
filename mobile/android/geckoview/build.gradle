@@ -155,6 +155,10 @@ android {
         aidl = true
     }
 
+    publishing {
+        singleVariant('withGeckoBinariesDebug')
+    }
+
     namespace 'org.mozilla.geckoview'
 }
 
