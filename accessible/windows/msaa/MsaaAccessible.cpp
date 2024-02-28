@@ -522,10 +522,6 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     if (SUCCEEDED(hr)) {
       return hr;
     }
-    hr = uiaRawElmProvider::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) {
-      return hr;
-    }
   }
   if (*ppv) {
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();

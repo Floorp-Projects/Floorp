@@ -10,8 +10,6 @@
 #include "AccessibleWrap.h"
 #include "ARIAMap.h"
 #include "LocalAccessible-inl.h"
-#include "mozilla/a11y/RemoteAccessible.h"
-#include "MsaaAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -19,23 +17,6 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
-
-Accessible* uiaRawElmProvider::Acc() {
-  return static_cast<MsaaAccessible*>(this)->Acc();
-}
-
-// IUnknown
-
-// Because uiaRawElmProvider inherits multiple COM interfaces (and thus multiple
-// IUnknowns), we need to explicitly implement AddRef and Release to make
-// our QueryInterface implementation (IMPL_IUNKNOWN2) happy.
-ULONG STDMETHODCALLTYPE uiaRawElmProvider::AddRef() {
-  return static_cast<MsaaAccessible*>(this)->AddRef();
-}
-
-ULONG STDMETHODCALLTYPE uiaRawElmProvider::Release() {
-  return static_cast<MsaaAccessible*>(this)->Release();
-}
 
 IMPL_IUNKNOWN2(uiaRawElmProvider, IAccessibleEx, IRawElementProviderSimple)
 
@@ -49,7 +30,7 @@ uiaRawElmProvider::GetObjectForChild(
 
   *aAccEx = nullptr;
 
-  return Acc() ? S_OK : CO_E_OBJNOTCONNECTED;
+  return mAcc->IsDefunct() ? CO_E_OBJNOTCONNECTED : S_OK;
 }
 
 STDMETHODIMP
@@ -60,12 +41,11 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
   *aAcc = nullptr;
   *aIdChild = 0;
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
+  if (mAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   *aIdChild = CHILDID_SELF;
-  RefPtr<IAccessible> copy = static_cast<MsaaAccessible*>(this);
+  RefPtr<IAccessible> copy;
+  mAcc->GetNativeInterface(getter_AddRefs(copy));
   copy.forget(aAcc);
 
   return S_OK;
@@ -74,12 +54,9 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
 STDMETHODIMP
 uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds) {
   if (!aRuntimeIds) return E_INVALIDARG;
-  Accessible* acc = Acc();
-  if (!acc) {
-    return CO_E_OBJNOTCONNECTED;
-  }
 
-  int ids[] = {UiaAppendRuntimeId, MsaaAccessible::GetChildIDFor(acc)};
+  int ids[] = {UiaAppendRuntimeId,
+               static_cast<int>(reinterpret_cast<intptr_t>(mAcc->UniqueID()))};
   *aRuntimeIds = SafeArrayCreateVector(VT_I4, 0, 2);
   if (!*aRuntimeIds) return E_OUTOFMEMORY;
 
@@ -131,24 +108,16 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
                                     __RPC__out VARIANT* aPropertyValue) {
   if (!aPropertyValue) return E_INVALIDARG;
 
-  Accessible* acc = Acc();
-  if (!acc) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  LocalAccessible* localAcc = acc->AsLocal();
+  if (mAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   aPropertyValue->vt = VT_EMPTY;
 
   switch (aPropertyId) {
     // Accelerator Key / shortcut.
     case UIA_AcceleratorKeyPropertyId: {
-      if (!localAcc) {
-        // KeyboardShortcut is only currently relevant for LocalAccessible.
-        break;
-      }
       nsAutoString keyString;
 
-      localAcc->KeyboardShortcut().ToString(keyString);
+      mAcc->KeyboardShortcut().ToString(keyString);
 
       if (!keyString.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
@@ -163,7 +132,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AccessKeyPropertyId: {
       nsAutoString keyString;
 
-      acc->AccessKey().ToString(keyString);
+      mAcc->AccessKey().ToString(keyString);
 
       if (!keyString.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
@@ -178,7 +147,7 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_AriaRolePropertyId: {
       nsAutoString xmlRoles;
 
-      RefPtr<AccAttributes> attributes = acc->Attributes();
+      RefPtr<AccAttributes> attributes = mAcc->Attributes();
       attributes->GetAttribute(nsGkAtoms::xmlroles, xmlRoles);
 
       if (!xmlRoles.IsEmpty()) {
@@ -192,16 +161,9 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 
     // ARIA Properties
     case UIA_AriaPropertiesPropertyId: {
-      if (!localAcc) {
-        // XXX Implement a unified version of this. We don't cache explicit
-        // values for many ARIA attributes in RemoteAccessible; e.g. we use the
-        // checked state rather than caching aria-checked:true. Thus, a unified
-        // implementation will need to work with State(), etc.
-        break;
-      }
       nsAutoString ariaProperties;
 
-      aria::AttrIterator attribIter(localAcc->GetContent());
+      aria::AttrIterator attribIter(mAcc->GetContent());
       while (attribIter.Next()) {
         nsAutoString attribName, attribValue;
         nsAutoString value;

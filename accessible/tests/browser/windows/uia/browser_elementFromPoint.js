@@ -4,7 +4,7 @@
 
 "use strict";
 
-addUiaTask(
+addAccessibleTask(
   `
 <button id="button">button</p>
 <a id="a" href="#">a</a>

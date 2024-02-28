@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "LocalAccessible.h"
+#include "MsaaAccessible.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/Utils.h"
@@ -19,7 +20,6 @@
 namespace mozilla {
 namespace a11y {
 class DocRemoteAccessibleWrap;
-class MsaaAccessible;
 
 /**
  * Windows specific functionality for an accessibility tree node that originated
@@ -50,6 +50,10 @@ class AccessibleWrap : public LocalAccessible {
   static void UpdateSystemCaretFor(RemoteAccessible* aProxy,
                                    const LayoutDeviceIntRect& aCaretRect);
 
+ private:
+  static void UpdateSystemCaretFor(HWND aCaretWnd,
+                                   const LayoutDeviceIntRect& aCaretRect);
+
  public:
   /**
    * Determine whether this is the root accessible for its HWND.
@@ -60,7 +64,7 @@ class AccessibleWrap : public LocalAccessible {
   virtual void GetNativeInterface(void** aOutAccessible) override;
 
  protected:
-  virtual ~AccessibleWrap();
+  virtual ~AccessibleWrap() = default;
 
   RefPtr<MsaaAccessible> mMsaa;
 };
