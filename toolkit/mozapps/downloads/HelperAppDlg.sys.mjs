@@ -309,7 +309,7 @@ nsUnknownContentTypeDialog.prototype = {
       var picker =
         Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
       var windowTitle = bundle.GetStringFromName("saveDialogTitle");
-      picker.init(parent, windowTitle, nsIFilePicker.modeSave);
+      picker.init(parent.browsingContext, windowTitle, nsIFilePicker.modeSave);
       if (aDefaultFileName) {
         picker.defaultString = this.getFinalLeafName(aDefaultFileName);
       }
@@ -1270,7 +1270,7 @@ nsUnknownContentTypeDialog.prototype = {
       var nsIFilePicker = Ci.nsIFilePicker;
       var fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
       fp.init(
-        this.mDialog,
+        this.mDialog.browsingContext,
         this.dialogElement("strings").getString("chooseAppFilePickerTitle"),
         nsIFilePicker.modeOpen
       );
