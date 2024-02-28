@@ -14,6 +14,7 @@
 #include "IUnknownImpl.h"
 #include "MsaaIdGenerator.h"
 #include "nsXULAppAPI.h"
+#include "uiaRawElmProvider.h"
 
 namespace mozilla {
 namespace a11y {
@@ -25,7 +26,8 @@ class sdnAccessible;
 class MsaaAccessible : public ia2Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
-                       public ia2AccessibleValue {
+                       public ia2AccessibleValue,
+                       public uiaRawElmProvider {
  public:
   static MsaaAccessible* Create(Accessible* aAcc);
 
