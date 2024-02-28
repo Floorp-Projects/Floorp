@@ -50,17 +50,15 @@ static double fdlibm_carg(const Complex& z) {
 FFTBlock* FFTBlock::CreateInterpolatedBlock(const FFTBlock& block0,
                                             const FFTBlock& block1,
                                             double interp) {
-  FFTBlock* newBlock = new FFTBlock(block0.FFTSize());
+  uint32_t fftSize = block0.FFTSize();
+  FFTBlock* newBlock = new FFTBlock(fftSize, 1.0f / AssertedCast<float>(fftSize));
 
   newBlock->InterpolateFrequencyComponents(block0, block1, interp);
 
   // In the time-domain, the 2nd half of the response must be zero, to avoid
   // circular convolution aliasing...
-  int fftSize = newBlock->FFTSize();
   AlignedTArray<float> buffer(fftSize);
-  newBlock->GetInverseWithoutScaling(buffer.Elements());
-  AudioBufferInPlaceScale(buffer.Elements(),
-                          1.0f / AssertedCast<float>(fftSize), fftSize / 2);
+  newBlock->GetInverse(buffer.Elements());
   PodZero(buffer.Elements() + fftSize / 2, fftSize / 2);
 
   // Put back into frequency domain.
