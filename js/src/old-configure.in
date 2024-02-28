@@ -601,9 +601,8 @@ then
 fi
 
 
-dnl Checks for math functions.
+dnl Checks for nl_langinfo functions.
 dnl ========================================================
-AC_CHECK_LIB(m, sin)
 
 AM_LANGINFO_CODESET
 
