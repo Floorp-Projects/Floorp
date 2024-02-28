@@ -127,7 +127,7 @@ async function exportToFile(parent, cert) {
   );
 
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(parent, saveCertAs, Ci.nsIFilePicker.modeSave);
+  fp.init(parent.browsingContext, saveCertAs, Ci.nsIFilePicker.modeSave);
   fp.defaultString = certToFilename(cert);
   fp.defaultExtension = DEFAULT_CERT_EXTENSION;
   for (let format of Object.values(formats)) {
