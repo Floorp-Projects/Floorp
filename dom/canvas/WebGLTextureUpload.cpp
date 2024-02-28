@@ -60,6 +60,10 @@ Maybe<TexUnpackBlobDesc> FromImageBitmap(const GLenum target, Maybe<uvec3> size,
   }
 
   const RefPtr<gfx::DataSourceSurface> surf = cloneData->mSurface;
+  if (NS_WARN_IF(!surf)) {
+    return {};
+  }
+
   const auto imageSize = *uvec2::FromSize(surf->GetSize());
   if (!size) {
     size.emplace(imageSize.x, imageSize.y, 1);
