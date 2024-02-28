@@ -194,7 +194,7 @@ namespace xsimd
 
     using all_sve_architectures = arch_list<detail::sve<512>, detail::sve<256>, detail::sve<128>>;
     using all_rvv_architectures = arch_list<detail::rvv<512>, detail::rvv<256>, detail::rvv<128>>;
-    using all_arm_architectures = typename detail::join<all_sve_architectures, arch_list<neon64, neon>>::type;
+    using all_arm_architectures = typename detail::join<all_sve_architectures, arch_list<i8mm<neon64>, neon64, neon>>::type;
     using all_riscv_architectures = all_rvv_architectures;
     using all_wasm_architectures = arch_list<wasm>;
     using all_architectures = typename detail::join<all_riscv_architectures, all_wasm_architectures, all_arm_architectures, all_x86_architectures>::type;

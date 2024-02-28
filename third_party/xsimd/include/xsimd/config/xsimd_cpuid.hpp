@@ -18,6 +18,11 @@
 #if defined(__linux__) && (defined(__ARM_NEON) || defined(_M_ARM) || defined(__riscv_vector))
 #include <asm/hwcap.h>
 #include <sys/auxv.h>
+
+#ifndef HWCAP2_I8MM
+#define HWCAP2_I8MM (1 << 13)
+#endif
+
 #endif
 
 #if defined(_MSC_VER)
@@ -66,6 +71,7 @@ namespace xsimd
             ARCH_FIELD_EX(avx512vnni<::xsimd::avx512vbmi>, avx512vnni_vbmi)
             ARCH_FIELD(neon)
             ARCH_FIELD(neon64)
+            ARCH_FIELD_EX(i8mm<::xsimd::neon64>, i8mm_neon64)
             ARCH_FIELD(sve)
             ARCH_FIELD(rvv)
             ARCH_FIELD(wasm)
@@ -83,6 +89,9 @@ namespace xsimd
 #if defined(__aarch64__) || defined(_M_ARM64)
                 neon = 1;
                 neon64 = 1;
+#if defined(__linux__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)
+                i8mm_neon64 = bool(getauxval(AT_HWCAP2) & HWCAP2_I8MM);
+#endif
 #elif defined(__ARM_NEON) || defined(_M_ARM)
 
 #if defined(__linux__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 18)

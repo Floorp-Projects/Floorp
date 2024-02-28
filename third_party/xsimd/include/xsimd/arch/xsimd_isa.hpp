@@ -104,6 +104,10 @@
 #include "./xsimd_neon64.hpp"
 #endif
 
+#if XSIMD_WITH_I8MM_NEON64
+#include "./xsimd_i8mm_neon64.hpp"
+#endif
+
 #if XSIMD_WITH_SVE
 #include "./xsimd_sve.hpp"
 #endif

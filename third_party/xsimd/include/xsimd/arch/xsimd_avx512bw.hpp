@@ -112,6 +112,44 @@ namespace xsimd
             }
         }
 
+        // avgr
+        template <class A, class T, class = typename std::enable_if<std::is_unsigned<T>::value, void>::type>
+        inline batch<T, A> avgr(batch<T, A> const& self, batch<T, A> const& other, requires_arch<avx512bw>) noexcept
+        {
+            XSIMD_IF_CONSTEXPR(sizeof(T) == 1)
+            {
+                return _mm512_avg_epu8(self, other);
+            }
+            else XSIMD_IF_CONSTEXPR(sizeof(T) == 2)
+            {
+                return _mm512_avg_epu16(self, other);
+            }
+            else
+            {
+                return avgr(self, other, generic {});
+            }
+        }
+
+        // avg
+        template <class A, class T, class = typename std::enable_if<std::is_unsigned<T>::value, void>::type>
+        inline batch<T, A> avg(batch<T, A> const& self, batch<T, A> const& other, requires_arch<avx512bw>) noexcept
+        {
+            XSIMD_IF_CONSTEXPR(sizeof(T) == 1)
+            {
+                auto adj = ((self ^ other) << 7) >> 7;
+                return avgr(self, other, A {}) - adj;
+            }
+            else XSIMD_IF_CONSTEXPR(sizeof(T) == 2)
+            {
+                auto adj = ((self ^ other) << 15) >> 15;
+                return avgr(self, other, A {}) - adj;
+            }
+            else
+            {
+                return avg(self, other, generic {});
+            }
+        }
+
         // bitwise_lshift
         template <class A, class T, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
         inline batch<T, A> bitwise_lshift(batch<T, A> const& self, int32_t other, requires_arch<avx512bw>) noexcept

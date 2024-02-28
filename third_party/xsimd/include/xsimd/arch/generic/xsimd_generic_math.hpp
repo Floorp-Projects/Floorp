@@ -26,7 +26,7 @@ namespace xsimd
 
         using namespace types;
         // abs
-        template <class A, class T, class /*=typename std::enable_if<std::is_integral<T>::value, void>::type*/>
+        template <class A, class T, class>
         inline batch<T, A> abs(batch<T, A> const& self, requires_arch<generic>) noexcept
         {
             if (std::is_unsigned<T>::value)
@@ -43,6 +43,63 @@ namespace xsimd
         inline batch<T, A> abs(batch<std::complex<T>, A> const& z, requires_arch<generic>) noexcept
         {
             return hypot(z.real(), z.imag());
+        }
+
+        // avg
+        namespace detail
+        {
+            template <class A, class T>
+            inline batch<T, A> avg(batch<T, A> const& x, batch<T, A> const& y, std::true_type, std::false_type) noexcept
+            {
+                return (x & y) + ((x ^ y) >> 1);
+            }
+
+            template <class A, class T>
+            inline batch<T, A> avg(batch<T, A> const& x, batch<T, A> const& y, std::true_type, std::true_type) noexcept
+            {
+                // Inspired by
+                // https://stackoverflow.com/questions/5697500/take-the-average-of-two-signed-numbers-in-c
+                auto t = (x & y) + ((x ^ y) >> 1);
+                auto t_u = bitwise_cast<typename std::make_unsigned<T>::type>(t);
+                auto avg = t + (bitwise_cast<T>(t_u >> (8 * sizeof(T) - 1)) & (x ^ y));
+                return avg;
+            }
+
+            template <class A, class T>
+            inline batch<T, A> avg(batch<T, A> const& x, batch<T, A> const& y, std::false_type, std::true_type) noexcept
+            {
+                return (x + y) / 2;
+            }
+        }
+
+        template <class A, class T>
+        inline batch<T, A> avg(batch<T, A> const& x, batch<T, A> const& y, requires_arch<generic>) noexcept
+        {
+            return detail::avg(x, y, typename std::is_integral<T>::type {}, typename std::is_signed<T>::type {});
+        }
+
+        // avgr
+        namespace detail
+        {
+            template <class A, class T>
+            inline batch<T, A> avgr(batch<T, A> const& x, batch<T, A> const& y, std::true_type) noexcept
+            {
+                constexpr unsigned shift = 8 * sizeof(T) - 1;
+                auto adj = std::is_signed<T>::value ? ((x ^ y) & 0x1) : (((x ^ y) << shift) >> shift);
+                return ::xsimd::kernel::avg(x, y, A {}) + adj;
+            }
+
+            template <class A, class T>
+            inline batch<T, A> avgr(batch<T, A> const& x, batch<T, A> const& y, std::false_type) noexcept
+            {
+                return ::xsimd::kernel::avg(x, y, A {});
+            }
+        }
+
+        template <class A, class T>
+        inline batch<T, A> avgr(batch<T, A> const& x, batch<T, A> const& y, requires_arch<generic>) noexcept
+        {
+            return detail::avgr(x, y, typename std::is_integral<T>::type {});
         }
 
         // batch_cast

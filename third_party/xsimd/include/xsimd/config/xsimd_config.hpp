@@ -352,6 +352,17 @@
 /**
  * @ingroup xsimd_config_macro
  *
+ * Set to 1 if i8mm neon64 extension is available at compile-time, to 0 otherwise.
+ */
+#if defined(__ARM_FEATURE_MATMUL_INT8)
+#define XSIMD_WITH_I8MM_NEON64 1
+#else
+#define XSIMD_WITH_I8MM_NEON64 0
+#endif
+
+/**
+ * @ingroup xsimd_config_macro
+ *
  * Set to 1 if SVE is available and bit width is pre-set at compile-time, to 0 otherwise.
  */
 #if defined(__ARM_FEATURE_SVE) && defined(__ARM_FEATURE_SVE_BITS) && __ARM_FEATURE_SVE_BITS > 0
