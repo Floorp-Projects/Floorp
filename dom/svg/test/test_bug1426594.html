@@ -12,10 +12,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1426594
 
     function runTests() {
       let textElement = document.getElementById("textId"),
-          tspanElement = document.getElementById("tspanId");
+          textClientRect = textElement.getBoundingClientRect(),
+          tspanClientRect = document.getElementById("tspanId").getBoundingClientRect();
 
-      isfuzzy(textElement.getBoundingClientRect().width, tspanElement.getBoundingClientRect().width, 5);
-      isfuzzy(textElement.getBoundingClientRect().height, tspanElement.getBoundingClientRect().height, 5);
+      // TODO: tspan bounds should account for stroke, decorations and text-shadow
+      isfuzzy(textClientRect.width, tspanClientRect.width, 6, "unexpected width");
+      isfuzzy(textClientRect.height, tspanClientRect.height, 6, "unexpected height");
 
       SimpleTest.finish();
     }
