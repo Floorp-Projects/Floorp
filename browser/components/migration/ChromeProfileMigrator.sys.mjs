@@ -140,7 +140,7 @@ export class ChromeProfileMigrator extends MigratorBase {
     // to Chrome's local state directory.
     while (!(await this.hasPermissions())) {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(win, "", Ci.nsIFilePicker.modeGetFolder);
+      fp.init(win?.browsingContext, "", Ci.nsIFilePicker.modeGetFolder);
       fp.filterIndex = 1;
       // Now wait for the filepicker to open and close. If the user picks
       // the local state folder, the OS should grant us read access to everything
