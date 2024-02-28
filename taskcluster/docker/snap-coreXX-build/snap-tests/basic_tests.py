@@ -291,7 +291,7 @@ class SnapTests(SnapTestsBase):
         return True
 
     def test_youtube(self, exp):
-        self.open_tab("https://www.youtube.com")
+        self.open_tab("https://www.youtube.com/channel/UCYfdidRxbB8Qhf0Nx7ioOYw")
 
         # Wait for the consent dialog and accept it
         self._logger.info("Wait for consent form")
@@ -304,20 +304,11 @@ class SnapTests(SnapTestsBase):
         except TimeoutException:
             self._logger.info("Wait for consent form: timed out, maybe it is not here")
 
-        try:
-            # Find first video and click it
-            self._logger.info("Wait for one video")
-            self._wait.until(
-                EC.visibility_of_element_located((By.ID, "video-title-link"))
-            ).click()
-        except TimeoutException:
-            # We might have got the "try searching to get started"
-            # link to News channel
-            self._driver.get("https://www.youtube.com/channel/UCYfdidRxbB8Qhf0Nx7ioOYw")
-            self._logger.info("Wait again for one video")
-            self._wait.until(
-                EC.visibility_of_element_located((By.ID, "video-title-link"))
-            ).click()
+        # Find first video and click it
+        self._logger.info("Wait for one video")
+        self._wait.until(
+            EC.visibility_of_element_located((By.ID, "video-title-link"))
+        ).click()
 
         # Wait for duration to be set to something
         self._logger.info("Wait for video to start")
