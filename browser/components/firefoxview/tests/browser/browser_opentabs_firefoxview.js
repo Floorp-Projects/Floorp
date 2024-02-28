@@ -106,7 +106,7 @@ async function getContextMenuPanelListForCard(card) {
 async function openContextMenuForItem(tabItem, card) {
   // click on the item's button element (more menu)
   // and wait for the panel list to be shown
-  tabItem.buttonEl.click();
+  tabItem.secondaryButtonEl.click();
   // NOTE: menu must populate with devices data before it can be rendered
   // so the creation of the panel-list can be async
   let panelList = await getContextMenuPanelListForCard(card);
@@ -148,6 +148,44 @@ async function moreMenuSetup() {
   return [cards, rows];
 }
 
+add_task(async function test_close_open_tab() {
+  await withFirefoxView({}, async browser => {
+    const [cards, rows] = await moreMenuSetup();
+    const firstTab = rows[0];
+    const tertiaryButtonEl = firstTab.tertiaryButtonEl;
+
+    ok(tertiaryButtonEl, "Dismiss button exists");
+
+    await clearAllParentTelemetryEvents();
+    let closeTabEvent = [
+      ["firefoxview_next", "close_open_tab", "tabs", undefined],
+    ];
+
+    let tabsUpdated = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabChange"
+    );
+    EventUtils.synthesizeMouseAtCenter(tertiaryButtonEl, {}, content);
+    await tabsUpdated;
+    Assert.deepEqual(
+      getVisibleTabURLs(),
+      [TEST_URL2, TEST_URL3],
+      "First tab successfully removed"
+    );
+
+    await telemetryEvent(closeTabEvent);
+
+    const openTabs = cards[0].ownerDocument.querySelector(
+      "view-opentabs[name=opentabs]"
+    );
+    await waitUntilRowsMatch(openTabs, 0, [TEST_URL2, TEST_URL3]);
+
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs[0]);
+    }
+  });
+});
+
 add_task(async function test_more_menus() {
   await withFirefoxView({}, async browser => {
     let win = browser.ownerGlobal;
@@ -156,11 +194,11 @@ add_task(async function test_more_menus() {
     gBrowser.selectedTab = gBrowser.visibleTabs[0];
     Assert.equal(
       gBrowser.selectedTab.linkedBrowser.currentURI.spec,
-      "about:blank",
-      "Selected tab is about:blank"
+      "about:mozilla",
+      "Selected tab is about:mozilla"
     );
 
-    info(`Loading ${TEST_URL1} into the selected about:blank tab`);
+    info(`Loading ${TEST_URL1} into the selected about:mozilla tab`);
     let tabLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     win.gURLBar.focus();
@@ -176,64 +214,18 @@ add_task(async function test_more_menus() {
       "Prepared 3 open tabs"
     );
 
+    // Move Tab submenu item
     let firstTab = rows[0];
     // Open the panel list (more menu) from the first list item
     let panelList = await openContextMenuForItem(firstTab, cards[0]);
 
-    // Close Tab menu item
-    info("Panel list shown. Clicking on panel-item");
-    let panelItem = panelList.querySelector(
-      "panel-item[data-l10n-id=fxviewtabrow-close-tab]"
-    );
-    let panelItemButton = panelItem.shadowRoot.querySelector(
-      "button[role=menuitem]"
-    );
-    ok(panelItem, "Close Tab panel item exists");
-    ok(
-      panelItemButton,
-      "Close Tab panel item button with role=menuitem exists"
-    );
-
-    await clearAllParentTelemetryEvents();
-    let contextMenuEvent = [
-      [
-        "firefoxview_next",
-        "context_menu",
-        "tabs",
-        undefined,
-        { menu_action: "close-tab", data_type: "opentabs" },
-      ],
-    ];
-
-    // close a tab via the menu
-    let tabChangeRaised = BrowserTestUtils.waitForEvent(
-      NonPrivateTabs,
-      "TabChange"
-    );
-    menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
-    panelItemButton.click();
-    info("Waiting for result of closing a tab via the menu");
-    await tabChangeRaised;
-    await cards[0].getUpdateComplete();
-    await menuHidden;
-    await telemetryEvent(contextMenuEvent);
-
-    Assert.deepEqual(
-      getVisibleTabURLs(),
-      [TEST_URL2, TEST_URL3],
-      "Got the expected 2 open tabs"
-    );
-
     let openTabs = cards[0].ownerDocument.querySelector(
       "view-opentabs[name=opentabs]"
     );
-    await waitUntilRowsMatch(openTabs, 0, [TEST_URL2, TEST_URL3]);
+    await waitUntilRowsMatch(openTabs, 0, [TEST_URL1, TEST_URL2, TEST_URL3]);
 
-    // Move Tab submenu item
-    firstTab = rows[0];
-    is(firstTab.url, TEST_URL2, `First tab list item is ${TEST_URL2}`);
+    is(firstTab.url, TEST_URL1, `First tab list item is ${TEST_URL1}`);
 
-    panelList = await openContextMenuForItem(firstTab, cards[0]);
     let moveTabsPanelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-move-tab]"
     );
@@ -243,15 +235,14 @@ add_task(async function test_more_menus() {
     );
     ok(moveTabsSubmenuList, "Move tabs submenu panel list exists");
 
-    // navigate down to the "Move tabs" submenu option, and
+    // navigate to the "Move tabs" submenu option, and
     // open it with the right arrow key
-    EventUtils.synthesizeKey("KEY_ArrowDown", {});
     shown = BrowserTestUtils.waitForEvent(moveTabsSubmenuList, "shown");
     EventUtils.synthesizeKey("KEY_ArrowRight", {});
     await shown;
 
     await clearAllParentTelemetryEvents();
-    contextMenuEvent = [
+    let contextMenuEvent = [
       [
         "firefoxview_next",
         "context_menu",
@@ -264,7 +255,7 @@ add_task(async function test_more_menus() {
     // click on the first option, which should be "Move to the end" since
     // this is the first tab
     menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
-    tabChangeRaised = BrowserTestUtils.waitForEvent(
+    let tabChangeRaised = BrowserTestUtils.waitForEvent(
       NonPrivateTabs,
       "TabChange"
     );
@@ -276,7 +267,7 @@ add_task(async function test_more_menus() {
 
     Assert.deepEqual(
       getVisibleTabURLs(),
-      [TEST_URL3, TEST_URL2],
+      [TEST_URL2, TEST_URL3, TEST_URL1],
       "The last tab became the first tab"
     );
 
@@ -284,15 +275,15 @@ add_task(async function test_more_menus() {
     // closing a tab since it very clearly reveals the issues
     // outlined in bug 1852622 when there are 3 or more tabs open
     // and one is moved via the more menus.
-    await waitUntilRowsMatch(openTabs, 0, [TEST_URL3, TEST_URL2]);
+    await waitUntilRowsMatch(openTabs, 0, [TEST_URL2, TEST_URL3, TEST_URL1]);
 
     // Copy Link menu item (copyLink function that's called is a member of Viewpage.mjs)
     panelList = await openContextMenuForItem(firstTab, cards[0]);
     firstTab = rows[0];
-    panelItem = panelList.querySelector(
+    let panelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-copy-link]"
     );
-    panelItemButton = panelItem.shadowRoot.querySelector(
+    let panelItemButton = panelItem.shadowRoot.querySelector(
       "button[role=menuitem]"
     );
     ok(panelItem, "Copy link panel item exists");
@@ -323,7 +314,7 @@ add_task(async function test_more_menus() {
       "text/plain",
       Ci.nsIClipboard.kGlobalClipboard
     );
-    is(copiedText, TEST_URL3, "The correct url has been copied and pasted");
+    is(copiedText, TEST_URL2, "The correct url has been copied and pasted");
 
     while (gBrowser.tabs.length > 1) {
       BrowserTestUtils.removeTab(gBrowser.tabs[0]);
@@ -349,11 +340,11 @@ add_task(async function test_send_device_submenu() {
     .callsFake(() => fxaDevicesWithCommands);
 
   await withFirefoxView({}, async browser => {
-    // TEST_URL2 is our only tab, left over from previous test
+    // TEST_URL1 is our only tab, left over from previous test
     Assert.deepEqual(
       getVisibleTabURLs(),
-      [TEST_URL2],
-      `We initially have a single ${TEST_URL2} tab`
+      [TEST_URL1],
+      `We initially have a single ${TEST_URL1} tab`
     );
     let shown;
 
@@ -376,7 +367,7 @@ add_task(async function test_send_device_submenu() {
 
     // navigate down to the "Send tabs" submenu option, and
     // open it with the right arrow key
-    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 5 });
+    EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 4 });
 
     shown = BrowserTestUtils.waitForEvent(sendTabSubmenuList, "shown");
     EventUtils.synthesizeKey("KEY_ArrowRight", {});
@@ -387,9 +378,9 @@ add_task(async function test_send_device_submenu() {
       .expects("sendTabToDevice")
       .once()
       .withExactArgs(
-        TEST_URL2,
+        TEST_URL1,
         [fxaDevicesWithCommands[0]],
-        "mochitest index /"
+        "Gort! Klaatu barada nikto!"
       )
       .returns(true);
 
