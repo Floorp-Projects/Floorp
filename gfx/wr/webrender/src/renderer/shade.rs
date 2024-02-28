@@ -254,7 +254,6 @@ impl LazilyCompiledShader {
                 VertexArrayKind::RadialGradient => &desc::RADIAL_GRADIENT,
                 VertexArrayKind::ConicGradient => &desc::CONIC_GRADIENT,
                 VertexArrayKind::Blur => &desc::BLUR,
-                VertexArrayKind::ClipImage => &desc::CLIP_IMAGE,
                 VertexArrayKind::ClipRect => &desc::CLIP_RECT,
                 VertexArrayKind::ClipBoxShadow => &desc::CLIP_BOX_SHADOW,
                 VertexArrayKind::VectorStencil => &desc::VECTOR_STENCIL,
@@ -619,7 +618,6 @@ pub struct Shaders {
     pub cs_clip_rectangle_slow: LazilyCompiledShader,
     pub cs_clip_rectangle_fast: LazilyCompiledShader,
     pub cs_clip_box_shadow: LazilyCompiledShader,
-    pub cs_clip_image: LazilyCompiledShader,
 
     // The are "primitive shaders". These shaders draw and blend
     // final results on screen. They are aware of tile boundaries.
@@ -812,16 +810,6 @@ impl Shaders {
         let cs_clip_box_shadow = LazilyCompiledShader::new(
             ShaderKind::ClipCache(VertexArrayKind::ClipBoxShadow),
             "cs_clip_box_shadow",
-            &["TEXTURE_2D"],
-            device,
-            options.precache_flags,
-            &shader_list,
-            profile,
-        )?;
-
-        let cs_clip_image = LazilyCompiledShader::new(
-            ShaderKind::ClipCache(VertexArrayKind::ClipImage),
-            "cs_clip_image",
             &["TEXTURE_2D"],
             device,
             options.precache_flags,
@@ -1130,7 +1118,6 @@ impl Shaders {
             cs_clip_rectangle_slow,
             cs_clip_rectangle_fast,
             cs_clip_box_shadow,
-            cs_clip_image,
             ps_text_run,
             ps_text_run_dual_source,
             ps_quad_textured,
@@ -1276,7 +1263,6 @@ impl Shaders {
         self.cs_clip_rectangle_slow.deinit(device);
         self.cs_clip_rectangle_fast.deinit(device);
         self.cs_clip_box_shadow.deinit(device);
-        self.cs_clip_image.deinit(device);
         self.ps_text_run.deinit(device);
         if let Some(shader) = self.ps_text_run_dual_source {
             shader.deinit(device);

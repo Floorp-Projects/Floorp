@@ -176,17 +176,6 @@ pub struct ClipMaskInstanceCommon {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
-pub struct ClipMaskInstanceImage {
-    pub common: ClipMaskInstanceCommon,
-    pub tile_rect: LayoutRect,
-    pub resource_address: GpuCacheAddress,
-    pub local_rect: LayoutRect,
-}
-
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
 pub struct ClipMaskInstanceRect {
     pub common: ClipMaskInstanceCommon,
     pub local_pos: LayoutPoint,
