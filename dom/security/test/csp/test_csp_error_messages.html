@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test some specialized CSP errors</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<iframe id="cspframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function cleanup() {
+  SpecialPowers.postConsoleSentinel();
+  SimpleTest.finish();
+};
+
+let errors = [];
+function add(name) {
+  ok(!errors.includes(name), `duplicate error for ${name}`);
+  errors.push(name);
+}
+
+SpecialPowers.registerConsoleListener(msg => {
+  if (!msg.errorMessage) {
+    return;
+  }
+
+  let {errorMessage} = msg;
+  function contains(str) {
+    ok(errorMessage.includes(str), `error message contains "${str}"`);
+  }
+
+  if (errorMessage.includes("(script-src-attr)")) {
+    contains("blocked an event handler");
+    contains("from being executed");
+    contains("Source: alert('onload');");
+    add("event handler");
+  } else if (errorMessage.includes("(img-src)")) {
+    contains("blocked the loading of a resource");
+    contains("/image.png");
+    add("image");
+  } else if (errorMessage.includes("an inline script")) {
+    contains("(script-src-elem)");
+    contains("from being executed");
+    add("inline script");
+  } else if (errorMessage.includes("a script")) {
+    contains("(script-src-elem)");
+    contains("from being executed");
+    contains("/script.js");
+    add("script");
+  } else if (errorMessage.includes("(worker-src)")) {
+    contains("(worker-src)");
+    contains("from being executed");
+    contains("/worker.js");
+    add("worker");
+  } else if (errorMessage.includes("a JavaScript eval")) {
+    contains("(script-src)");
+    contains("from being executed");
+    contains("Missing 'unsafe-eval'")
+    add("eval");
+  }
+
+  if (errors.length == 6) {
+    SimpleTest.executeSoon(cleanup);
+  }
+});
+
+document.getElementById('cspframe').src = 'file_csp_error_messages.html';
+</script>
+</body>
+</html>

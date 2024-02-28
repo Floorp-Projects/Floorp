@@ -433,6 +433,9 @@ skip-if = [
 
 ["test_connect-src.html"]
 
+["test_csp_error_messages.html"]
+support-files = ["file_csp_error_messages.html"]
+
 ["test_csp_frame_ancestors_about_blank.html"]
 support-files = [
   "file_csp_frame_ancestors_about_blank.html",

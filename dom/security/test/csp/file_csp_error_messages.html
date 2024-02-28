@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'nonce-abc';">
+  <title></title>
+</head>
+
+<!-- event handler -->
+<body onload="alert('onload');">
+
+  <!-- img-src -->
+  <img src="image.png">
+
+  <!-- external script -->
+  <script src=script.js></script>
+
+  <!-- inline script -->
+  <script>
+    alert("failure");
+  </script>
+
+  <script nonce="abc">
+    /* worker-src */
+    new Worker("/worker.js")
+  </script>
+
+  <script nonce="abc">
+    // eslint-disable-next-line no-eval
+    eval("hello world");
+  </script>
+</body>
+</html>
