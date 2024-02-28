@@ -237,7 +237,11 @@ async function installAddonsFromFilePicker() {
   ]);
   const nsIFilePicker = Ci.nsIFilePicker;
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  fp.init(window, dialogTitle.value, nsIFilePicker.modeOpenMultiple);
+  fp.init(
+    window.browsingContext,
+    dialogTitle.value,
+    nsIFilePicker.modeOpenMultiple
+  );
   try {
     fp.appendFilter(filterName.value, "*.xpi;*.jar;*.zip");
     fp.appendFilters(nsIFilePicker.filterAll);

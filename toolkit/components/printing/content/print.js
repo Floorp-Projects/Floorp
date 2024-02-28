@@ -2811,7 +2811,7 @@ async function pickFileName(contentTitle, currentURI) {
   filename = DownloadPaths.sanitize(filename);
 
   picker.init(
-    window.docShell.chromeEventHandler.ownerGlobal,
+    window.docShell.chromeEventHandler.ownerGlobal.browsingContext,
     title,
     Ci.nsIFilePicker.modeSave
   );
