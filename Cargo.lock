@@ -3454,6 +3454,7 @@ version = "0.1.0"
 dependencies = [
  "libc",
  "mozilla-central-workspace-hack",
+ "process_reader",
  "rust-ini",
  "serde",
  "serde_json",

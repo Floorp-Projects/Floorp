@@ -258,7 +258,6 @@ class GeckoChildProcessHost : public ChildProcessHost,
 #ifdef XP_WIN
   void InitWindowsGroupID();
   nsString mGroupId;
-  CrashReporter::WindowsErrorReportingData mWerData;
 #  ifdef MOZ_SANDBOX
   RefPtr<AbstractSandboxBroker> mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;

@@ -7,17 +7,18 @@ extern crate winapi;
 
 use ini::Ini;
 use libc::time;
+use process_reader::ProcessReader;
 use serde::Serialize;
 use serde_json::ser::to_writer;
 use std::convert::TryInto;
 use std::ffi::OsString;
 use std::fs::{read_to_string, DirBuilder, File};
 use std::io::{BufRead, BufReader, Write};
-use std::mem::{size_of, zeroed};
+use std::mem::{size_of, transmute, zeroed};
 use std::os::windows::ffi::{OsStrExt, OsStringExt};
-use std::os::windows::io::AsRawHandle;
+use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle};
 use std::path::{Path, PathBuf};
-use std::ptr::{addr_of_mut, null, null_mut};
+use std::ptr::{addr_of, null, null_mut};
 use std::slice::from_raw_parts;
 use uuid::Uuid;
 use winapi::shared::basetsd::{SIZE_T, ULONG_PTR};
@@ -31,7 +32,7 @@ use winapi::um::combaseapi::CoTaskMemFree;
 use winapi::um::errhandlingapi::{GetLastError, SetLastError};
 use winapi::um::handleapi::CloseHandle;
 use winapi::um::knownfolders::FOLDERID_RoamingAppData;
-use winapi::um::memoryapi::{ReadProcessMemory, WriteProcessMemory};
+use winapi::um::memoryapi::{VirtualAllocEx, VirtualFreeEx, WriteProcessMemory};
 use winapi::um::minwinbase::LPTHREAD_START_ROUTINE;
 use winapi::um::processthreadsapi::{
     CreateProcessW, CreateRemoteThread, GetProcessId, GetProcessTimes, GetThreadId, OpenProcess,
@@ -49,33 +50,21 @@ use winapi::um::winbase::{
 };
 use winapi::um::winnt::{
     TokenIntegrityLevel, VerSetConditionMask, CONTEXT, DWORDLONG, EXCEPTION_POINTERS,
-    EXCEPTION_RECORD, HANDLE, HRESULT, LIST_ENTRY, LPOSVERSIONINFOEXW, OSVERSIONINFOEXW, PCWSTR,
-    PEXCEPTION_POINTERS, PROCESS_ALL_ACCESS, PVOID, PWSTR, SECURITY_MANDATORY_MEDIUM_RID,
-    TOKEN_MANDATORY_LABEL, TOKEN_QUERY, VER_GREATER_EQUAL, VER_MAJORVERSION, VER_MINORVERSION,
-    VER_SERVICEPACKMAJOR, VER_SERVICEPACKMINOR,
+    EXCEPTION_RECORD, HANDLE, HRESULT, LIST_ENTRY, LPOSVERSIONINFOEXW, MEM_COMMIT, MEM_RELEASE,
+    MEM_RESERVE, OSVERSIONINFOEXW, PAGE_READWRITE, PCWSTR, PEXCEPTION_POINTERS, PROCESS_ALL_ACCESS,
+    PVOID, PWSTR, SECURITY_MANDATORY_MEDIUM_RID, TOKEN_MANDATORY_LABEL, TOKEN_QUERY,
+    VER_GREATER_EQUAL, VER_MAJORVERSION, VER_MINORVERSION, VER_SERVICEPACKMAJOR,
+    VER_SERVICEPACKMINOR,
 };
 use winapi::STRUCT;
 
 /* The following struct must be kept in sync with the identically named one in
- * nsExceptionHandler.h. There is one copy of this structure for every child
- * process and they are all stored within the main process'. WER will use it to
- * communicate with the main process when a child process is encountered. */
+ * nsExceptionHandler.h. WER will use it to communicate with the main process
+ * when a child process is encountered. */
 #[repr(C)]
 struct WindowsErrorReportingData {
-    wer_notify_proc: LPTHREAD_START_ROUTINE,
     child_pid: DWORD,
     minidump_name: [u8; 40],
-    oom_allocation_size: usize,
-}
-
-/* The following struct must be kept in sync with the identically named one in
- * nsExceptionHandler.h. A copy of this is stored in every process and a pointer
- * to it is passed to the runtime exception module. We will read it to gather
- * information about the crashed process. */
-#[repr(C)]
-struct InProcessWindowsErrorReportingData {
-    process_type: u32,
-    oom_allocation_size_ptr: *mut usize,
 }
 
 // This value comes from GeckoProcessTypes.h
@@ -146,16 +135,11 @@ fn out_of_process_exception_event_callback(
 
     let process = unsafe { (*exception_information).hProcess };
     let application_info = ApplicationInformation::from_process(process)?;
-    let wer_data = read_from_process::<InProcessWindowsErrorReportingData>(
-        process,
-        context as *mut InProcessWindowsErrorReportingData,
-    )?;
-    let process = unsafe { (*exception_information).hProcess };
+    let process_type: u32 = (context as usize).try_into().map_err(|_| ())?;
     let startup_time = get_startup_time(process)?;
-    let oom_allocation_size = get_oom_allocation_size(process, &wer_data);
-    let crash_report = CrashReport::new(&application_info, startup_time, oom_allocation_size);
+    let crash_report = CrashReport::new(&application_info, startup_time);
     crash_report.write_minidump(exception_information)?;
-    if wer_data.process_type == MAIN_PROCESS_TYPE {
+    if process_type == MAIN_PROCESS_TYPE {
         match is_sandboxed_process(process) {
             Ok(false) => handle_main_process_crash(crash_report, &application_info),
             _ => {
@@ -188,73 +172,58 @@ fn handle_main_process_crash(
 }
 
 fn handle_child_process_crash(crash_report: CrashReport, child_process: HANDLE) -> Result<(), ()> {
-    let command_line = read_command_line(child_process)?;
-    let data_ptr = parse_child_data(&command_line)?;
     let parent_process = get_parent_process(child_process)?;
+    let process_reader = ProcessReader::new(parent_process).map_err(|_e| ())?;
+    let wer_notify_proc = process_reader
+        .find_section("xul.dll", "mozwerpt")
+        .map_err(|_e| ())?;
+    let wer_notify_proc = unsafe { transmute::<_, LPTHREAD_START_ROUTINE>(wer_notify_proc) };
 
-    let mut wer_data: WindowsErrorReportingData = read_from_process(parent_process, data_ptr)?;
-    wer_data.child_pid = get_process_id(child_process)?;
-    wer_data.minidump_name = crash_report.get_minidump_name();
-    wer_data.oom_allocation_size = crash_report.oom_allocation_size;
-    let wer_notify_proc = wer_data.wer_notify_proc;
-    write_to_process(parent_process, wer_data, data_ptr)?;
-    notify_main_process(parent_process, wer_notify_proc, data_ptr)
+    let wer_data = WindowsErrorReportingData {
+        child_pid: get_process_id(child_process)?,
+        minidump_name: crash_report.get_minidump_name(),
+    };
+    let address = copy_object_into_process(parent_process, wer_data)?;
+    notify_main_process(parent_process, wer_notify_proc, address)
 }
 
-fn read_from_process<T>(process: HANDLE, data_ptr: *mut T) -> Result<T, ()> {
-    let mut data: T = unsafe { zeroed() };
-    let res = unsafe {
-        ReadProcessMemory(
+fn copy_object_into_process<T>(process: HANDLE, data: T) -> Result<*mut T, ()> {
+    let address = unsafe {
+        VirtualAllocEx(
             process,
-            data_ptr as *mut _,
-            addr_of_mut!(data) as *mut _,
-            size_of::<T>() as SIZE_T,
             null_mut(),
+            size_of::<T>(),
+            MEM_RESERVE | MEM_COMMIT,
+            PAGE_READWRITE,
         )
     };
 
-    bool_ok_or_err(res, data)
-}
+    if address.is_null() {
+        return Err(());
+    }
 
-fn read_array_from_process<T: Clone + Default>(
-    process: HANDLE,
-    data_ptr: LPVOID,
-    count: usize,
-) -> Result<Vec<T>, ()> {
-    let mut array = vec![Default::default(); count];
-    let size = size_of::<T>() as SIZE_T;
-    let size = size.checked_mul(count).ok_or(())?;
-    let res = unsafe {
-        ReadProcessMemory(
-            process,
-            data_ptr,
-            array.as_mut_ptr() as *mut _,
-            size,
-            null_mut(),
-        )
-    };
-
-    bool_ok_or_err(res, array)
-}
-
-fn write_to_process<T>(process: HANDLE, mut data: T, data_ptr: *mut T) -> Result<(), ()> {
     let res = unsafe {
         WriteProcessMemory(
             process,
-            data_ptr as LPVOID,
-            addr_of_mut!(data) as *mut _,
-            size_of::<T>() as SIZE_T,
+            address,
+            addr_of!(data) as *const _,
+            size_of::<T>(),
             null_mut(),
         )
     };
 
-    bool_ok_or_err(res, ())
+    if res == 0 {
+        unsafe { VirtualFreeEx(process, address as *mut _, 0, MEM_RELEASE) };
+        Err(())
+    } else {
+        Ok(address as *mut T)
+    }
 }
 
 fn notify_main_process(
     process: HANDLE,
     wer_notify_proc: LPTHREAD_START_ROUTINE,
-    data_ptr: *mut WindowsErrorReportingData,
+    address: *mut WindowsErrorReportingData,
 ) -> Result<(), ()> {
     let thread = unsafe {
         CreateRemoteThread(
@@ -262,24 +231,29 @@ fn notify_main_process(
             null_mut(),
             0,
             wer_notify_proc,
-            data_ptr as LPVOID,
+            address as LPVOID,
             0,
             null_mut(),
         )
     };
 
     if thread == null_mut() {
+        unsafe { VirtualFreeEx(process, address as *mut _, 0, MEM_RELEASE) };
         return Err(());
     }
 
+    // From this point on the memory pointed to by address is owned by the
+    // thread we've created in the main process, so we don't free it.
+
+    let thread = unsafe { OwnedHandle::from_raw_handle(thread as RawHandle) };
+
     // Don't wait forever as we want the process to get killed eventually
-    let res = unsafe { WaitForSingleObject(thread, 5000) };
+    let res = unsafe { WaitForSingleObject(thread.as_raw_handle() as HANDLE, 5000) };
     if res != WAIT_OBJECT_0 {
         return Err(());
     }
 
-    let res = unsafe { CloseHandle(thread) };
-    bool_ok_or_err(res, ())
+    Ok(())
 }
 
 fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
@@ -304,21 +278,6 @@ fn get_startup_time(process: HANDLE) -> Result<u64, ()> {
     let windows_tick: u64 = 10000000;
     let sec_to_unix_epoch = 11644473600;
     Ok((start_time_in_ticks / windows_tick) - sec_to_unix_epoch)
-}
-
-fn get_oom_allocation_size(
-    process: HANDLE,
-    wer_data: &InProcessWindowsErrorReportingData,
-) -> usize {
-    read_from_process(process, wer_data.oom_allocation_size_ptr).unwrap_or(0)
-}
-
-fn parse_child_data(command_line: &str) -> Result<*mut WindowsErrorReportingData, ()> {
-    let mut itr = command_line.rsplit(' ');
-    let address = itr.nth(1).ok_or(())?;
-    let address = usize::from_str_radix(address, 16).map_err(|_err| (()))?;
-
-    Ok(address as *mut WindowsErrorReportingData)
 }
 
 fn get_process_id(process: HANDLE) -> Result<DWORD, ()> {
@@ -427,8 +386,6 @@ struct Annotations {
     BuildID: String,
     CrashTime: String,
     InstallTime: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    OOMAllocationSize: Option<String>,
     ProductID: String,
     ProductName: String,
     ReleaseChannel: String,
@@ -448,18 +405,11 @@ impl Annotations {
         install_time: String,
         crash_time: u64,
         startup_time: u64,
-        oom_allocation_size: usize,
     ) -> Annotations {
-        let oom_allocation_size = if oom_allocation_size != 0 {
-            Some(oom_allocation_size.to_string())
-        } else {
-            None
-        };
         Annotations {
             BuildID: application_data.build_id.clone(),
             CrashTime: crash_time.to_string(),
             InstallTime: install_time,
-            OOMAllocationSize: oom_allocation_size,
             ProductID: application_data.product_id.clone(),
             ProductName: application_data.name.clone(),
             ReleaseChannel: release_channel,
@@ -577,15 +527,10 @@ struct CrashReport {
     release_channel: String,
     annotations: Annotations,
     crash_time: u64,
-    oom_allocation_size: usize,
 }
 
 impl CrashReport {
-    fn new(
-        application_information: &ApplicationInformation,
-        startup_time: u64,
-        oom_allocation_size: usize,
-    ) -> CrashReport {
+    fn new(application_information: &ApplicationInformation, startup_time: u64) -> CrashReport {
         let uuid = Uuid::new_v4()
             .as_hyphenated()
             .encode_lower(&mut Uuid::encode_buffer())
@@ -598,7 +543,6 @@ impl CrashReport {
             application_information.install_time.clone(),
             crash_time,
             startup_time,
-            oom_allocation_size,
         );
         CrashReport {
             uuid,
@@ -606,7 +550,6 @@ impl CrashReport {
             release_channel: application_information.release_channel.clone(),
             annotations,
             crash_time,
-            oom_allocation_size,
         }
     }
 
@@ -748,27 +691,6 @@ fn bool_ok_or_err<T>(res: BOOL, data: T) -> Result<T, ()> {
         FALSE => Err(()),
         _ => Ok(data),
     }
-}
-
-fn read_command_line(process: HANDLE) -> Result<String, ()> {
-    let upp = read_user_process_parameters(process)?;
-
-    // Read the command-line
-    let buffer = upp.CommandLine.Buffer;
-    let length = upp.CommandLine.Length;
-    let count = (length as usize) / 2;
-    let command_line = read_array_from_process::<u16>(process, buffer as *mut _, count)?;
-    String::from_utf16(&command_line).map_err(|_err| ())
-}
-
-fn read_user_process_parameters(process: HANDLE) -> Result<RTL_USER_PROCESS_PARAMETERS, ()> {
-    let pbi = get_process_basic_information(process)?;
-
-    // Read the process environment block
-    let peb: PEB = read_from_process(process, pbi.PebBaseAddress)?;
-
-    // Read the user process parameters
-    read_from_process::<RTL_USER_PROCESS_PARAMETERS>(process, peb.ProcessParameters as *mut _)
 }
 
 fn get_process_basic_information(process: HANDLE) -> Result<PROCESS_BASIC_INFORMATION, ()> {

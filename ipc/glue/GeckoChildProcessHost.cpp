@@ -263,8 +263,7 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
   WindowsProcessLauncher(GeckoChildProcessHost* aHost,
                          std::vector<std::string>&& aExtraOpts)
       : BaseProcessLauncher(aHost, std::move(aExtraOpts)),
-        mCachedNtdllThunk(GetCachedNtDllThunk()),
-        mWerDataPointer(&(aHost->mWerData)) {}
+        mCachedNtdllThunk(GetCachedNtDllThunk()) {}
 
  protected:
   bool SetChannel(IPC::Channel*) override { return true; }
@@ -276,7 +275,6 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
   bool mUseSandbox = false;
 
   const Buffer<IMAGE_THUNK_DATA>* mCachedNtdllThunk;
-  CrashReporter::WindowsErrorReportingData const* mWerDataPointer;
 };
 typedef WindowsProcessLauncher ProcessLauncher;
 #endif  // XP_WIN
@@ -399,9 +397,6 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
       mProcessState(CREATING_CHANNEL),
 #ifdef XP_WIN
       mGroupId(u"-"),
-      mWerData{.mWerNotifyProc = CrashReporter::WerNotifyProc,
-               .mChildPid = 0,
-               .mMinidumpFile = {}},
 #endif
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
       mEnableSandboxLogging(false),
@@ -1587,10 +1582,6 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
     mLaunchOptions->handles_to_inherit.push_back(reinterpret_cast<HANDLE>(h));
     std::string hStr = std::to_string(h);
     mCmdLine->AppendLooseValue(UTF8ToWide(hStr));
-
-    char werDataAddress[17] = {};
-    SprintfLiteral(werDataAddress, "%p", mWerDataPointer);
-    mCmdLine->AppendLooseValue(UTF8ToWide(werDataAddress));
   }
 
   // Process type
