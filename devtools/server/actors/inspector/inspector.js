@@ -264,7 +264,7 @@ class InspectorActor extends Actor {
       return url;
     }
 
-    const baseURI = Services.io.newURI(document.location.href);
+    const baseURI = Services.io.newURI(document.baseURI);
     return Services.io.newURI(url, null, baseURI).spec;
   }
 

@@ -7,6 +7,7 @@
 // do follows the link.
 
 const TEST_URL = URL_ROOT_SSL + "doc_markup_links.html";
+const TEST_URL_BASE = URL_ROOT_SSL + "resources/doc_markup_links_base.html";
 
 add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
@@ -68,6 +69,31 @@ add_task(async function () {
 
   info("Try to follow link wiith meta/ctrl-click, check no new node selected");
   await followLinkNoNewNode(linkEl, true, inspector);
+});
+
+add_task(async function testDocumentWithBaseAttribute() {
+  const { inspector } = await openInspectorForURL(TEST_URL_BASE);
+
+  info("Select a node with a URI attribute");
+  await selectNode("img", inspector);
+
+  info("Find the link element from the markup-view");
+  const { editor } = await getContainerForSelector("img", inspector);
+  const linkEl = editor.attrElements.get("src").querySelector(".link");
+
+  info("Follow the link with middle-click and wait for the new tab to open");
+  await followLinkWaitForTab(
+    linkEl,
+    false,
+    URL_ROOT_SSL + "doc_markup_tooltip.png"
+  );
+
+  info("Follow the link with meta/ctrl-click and wait for the new tab to open");
+  await followLinkWaitForTab(
+    linkEl,
+    true,
+    URL_ROOT_SSL + "doc_markup_tooltip.png"
+  );
 });
 
 function performMouseDown(linkEl, metactrl) {
