@@ -3911,20 +3911,6 @@ firefoxview_next:
       - 1842616
     expiry_version: "never"
     release_channel_collection: opt-out
-  close_open_tab:
-    objects: ["tabs"]
-    description: >
-      Recorded when a tab is closed via the close button on an open tab row.
-    notification_emails:
-      - firefoxview@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1857298
-    expiry_version: "never"
-    release_channel_collection: opt-out
   browser_context_menu:
     objects: ["tabs"]
     description: >
