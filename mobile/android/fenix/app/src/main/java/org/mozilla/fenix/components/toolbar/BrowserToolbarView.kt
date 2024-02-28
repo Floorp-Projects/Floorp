@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
@@ -80,13 +81,23 @@ class BrowserToolbarView(
 
         with(context) {
             val isPinningSupported = components.useCases.webAppUseCases.isPinningSupported()
+            val searchUrlBackground = if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
+                R.drawable.search_url_background
+            } else {
+                R.drawable.search_old_url_background
+            }
 
             view.apply {
                 setToolbarBehavior()
 
                 elevation = resources.getDimension(R.dimen.browser_fragment_toolbar_elevation)
                 if (!isCustomTabSession) {
-                    display.setUrlBackground(getDrawable(R.drawable.search_url_background))
+                    display.setUrlBackground(
+                        AppCompatResources.getDrawable(
+                            context,
+                            searchUrlBackground,
+                        ),
+                    )
                 }
 
                 display.onUrlClicked = {
@@ -111,6 +122,10 @@ class BrowserToolbarView(
                     context,
                     ThemeManager.resolveAttribute(R.attr.borderPrimary, context),
                 )
+                val pageActionSeparatorColor = ContextCompat.getColor(
+                    context,
+                    ThemeManager.resolveAttribute(R.attr.borderToolbarDivider, context),
+                )
 
                 display.urlFormatter = { url -> URLStringUtils.toDisplayUrl(url) }
 
@@ -126,6 +141,7 @@ class BrowserToolbarView(
                         context,
                         R.color.fx_mobile_icon_color_information,
                     ),
+                    pageActionSeparator = pageActionSeparatorColor,
                 )
 
                 display.hint = context.getString(R.string.search_hint)

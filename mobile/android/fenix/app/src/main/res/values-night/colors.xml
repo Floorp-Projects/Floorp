@@ -31,6 +31,8 @@
     <color name="fx_mobile_layer_color_error" tools:ignore="UnusedResources">@color/photonPink80</color>
     <!-- Info background -->
     <color name="fx_mobile_layer_color_info" tools:ignore="UnusedResources">@color/photonBlue50A80</color>
+    <!-- Search -->
+    <color name="fx_mobile_layer_color_search">@color/photonDarkGrey80</color>
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
@@ -143,6 +145,8 @@
     <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Form parts -->
     <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
+    <!-- Toolbar divider -->
+    <color name="fx_mobile_border_color_toolbar_divider">@color/photonDarkGrey60</color>
 
     <!-- Normal theme colors for dark mode -->
     <color name="accent_normal_theme">@color/photonViolet50</color>

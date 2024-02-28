@@ -350,6 +350,22 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Hides the page action separator in display/edit mode.
+     */
+    override fun hidePageActionSeparator() {
+        display.hidePageActionSeparator()
+        edit.hidePageActionSeparator()
+    }
+
+    /**
+     * Shows the page action separator in display/edit mode.
+     */
+    override fun showPageActionSeparator() {
+        display.showPageActionSeparator()
+        edit.showPageActionSeparator()
+    }
+
+    /**
      * Switches to URL editing mode.
      *
      * @param cursorPlacement Where the cursor should be placed after focusing on the URL input field.

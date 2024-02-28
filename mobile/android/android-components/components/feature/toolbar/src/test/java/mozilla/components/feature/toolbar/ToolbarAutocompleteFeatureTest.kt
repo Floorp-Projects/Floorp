@@ -123,6 +123,14 @@ class ToolbarAutocompleteFeatureTest {
             fail()
         }
 
+        override fun hidePageActionSeparator() {
+            fail()
+        }
+
+        override fun showPageActionSeparator() {
+            fail()
+        }
+
         override fun invalidateActions() {
             fail()
         }

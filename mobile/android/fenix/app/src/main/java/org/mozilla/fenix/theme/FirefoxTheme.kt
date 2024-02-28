@@ -105,6 +105,7 @@ private val darkColorPalette = FirefoxColors(
     layerConfirmation = PhotonColors.Green80,
     layerError = PhotonColors.Pink80,
     layerInfo = PhotonColors.Blue50,
+    layerSearch = PhotonColors.DarkGrey80,
     actionPrimary = PhotonColors.Violet60,
     actionSecondary = PhotonColors.LightGrey30,
     actionTertiary = PhotonColors.DarkGrey10,
@@ -161,6 +162,7 @@ private val darkColorPalette = FirefoxColors(
     borderAccent = PhotonColors.Violet40,
     borderDisabled = PhotonColors.LightGrey05A40,
     borderWarning = PhotonColors.Red40,
+    borderToolbarDivider = PhotonColors.DarkGrey60,
 )
 
 private val lightColorPalette = FirefoxColors(
@@ -180,6 +182,7 @@ private val lightColorPalette = FirefoxColors(
     layerConfirmation = PhotonColors.Green20,
     layerError = PhotonColors.Red10,
     layerInfo = PhotonColors.Blue50A44,
+    layerSearch = PhotonColors.LightGrey30,
     actionPrimary = PhotonColors.Ink20,
     actionSecondary = PhotonColors.LightGrey30,
     actionTertiary = PhotonColors.LightGrey40,
@@ -236,12 +239,15 @@ private val lightColorPalette = FirefoxColors(
     borderAccent = PhotonColors.Ink20,
     borderDisabled = PhotonColors.DarkGrey90A40,
     borderWarning = PhotonColors.Red70,
+    borderToolbarDivider = PhotonColors.LightGrey10,
 )
 
 private val privateColorPalette = darkColorPalette.copy(
     layer1 = PhotonColors.Ink50,
     layer2 = PhotonColors.Ink50,
     layer3 = PhotonColors.Ink90,
+    layerSearch = PhotonColors.Ink90,
+    borderToolbarDivider = PhotonColors.Violet80,
 )
 
 /**
@@ -266,6 +272,7 @@ class FirefoxColors(
     layerConfirmation: Color,
     layerError: Color,
     layerInfo: Color,
+    layerSearch: Color,
     actionPrimary: Color,
     actionSecondary: Color,
     actionTertiary: Color,
@@ -322,6 +329,7 @@ class FirefoxColors(
     borderAccent: Color,
     borderDisabled: Color,
     borderWarning: Color,
+    borderToolbarDivider: Color,
 ) {
     // Layers
 
@@ -386,6 +394,10 @@ class FirefoxColors(
 
     // Info background
     var layerInfo by mutableStateOf(layerInfo)
+        private set
+
+    // Search
+    var layerSearch by mutableStateOf(layerSearch)
         private set
 
     // Actions
@@ -608,6 +620,14 @@ class FirefoxColors(
     var borderWarning by mutableStateOf(borderWarning)
         private set
 
+    // Toolbar divider
+    var borderToolbarDivider by mutableStateOf(borderToolbarDivider)
+        private set
+
+    /**
+     * Updates the existing colors with the provided [FirefoxColors].
+     */
+    @Suppress("LongMethod")
     fun update(other: FirefoxColors) {
         layer1 = other.layer1
         layer2 = other.layer2
@@ -625,6 +645,7 @@ class FirefoxColors(
         layerConfirmation = other.layerConfirmation
         layerError = other.layerError
         layerInfo = other.layerInfo
+        layerSearch = other.layerSearch
         actionPrimary = other.actionPrimary
         actionSecondary = other.actionSecondary
         actionTertiary = other.actionTertiary
@@ -681,11 +702,13 @@ class FirefoxColors(
         borderAccent = other.borderAccent
         borderDisabled = other.borderDisabled
         borderWarning = other.borderWarning
+        borderToolbarDivider = other.borderToolbarDivider
     }
 
     /**
      * Return a copy of this [FirefoxColors] and optionally overriding any of the provided values.
      */
+    @Suppress("LongMethod")
     fun copy(
         layer1: Color = this.layer1,
         layer2: Color = this.layer2,
@@ -703,6 +726,7 @@ class FirefoxColors(
         layerConfirmation: Color = this.layerConfirmation,
         layerError: Color = this.layerError,
         layerInfo: Color = this.layerInfo,
+        layerSearch: Color = this.layerSearch,
         actionPrimary: Color = this.actionPrimary,
         actionSecondary: Color = this.actionSecondary,
         actionTertiary: Color = this.actionTertiary,
@@ -759,6 +783,7 @@ class FirefoxColors(
         borderAccent: Color = this.borderAccent,
         borderDisabled: Color = this.borderDisabled,
         borderWarning: Color = this.borderWarning,
+        borderToolbarDivider: Color = this.borderToolbarDivider,
     ): FirefoxColors = FirefoxColors(
         layer1 = layer1,
         layer2 = layer2,
@@ -776,6 +801,7 @@ class FirefoxColors(
         layerConfirmation = layerConfirmation,
         layerError = layerError,
         layerInfo = layerInfo,
+        layerSearch = layerSearch,
         actionPrimary = actionPrimary,
         actionSecondary = actionSecondary,
         actionTertiary = actionTertiary,
@@ -832,6 +858,7 @@ class FirefoxColors(
         borderAccent = borderAccent,
         borderDisabled = borderDisabled,
         borderWarning = borderWarning,
+        borderToolbarDivider = borderToolbarDivider,
     )
 }
 

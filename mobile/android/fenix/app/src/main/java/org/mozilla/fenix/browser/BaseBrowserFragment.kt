@@ -444,14 +444,16 @@ abstract class BaseBrowserFragment :
             lifecycleOwner = viewLifecycleOwner,
         )
 
+        val browserToolbar = browserToolbarView.view
+
         if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
+            browserToolbar.showPageActionSeparator()
             val isToolbarAtBottom = context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
 
             // The toolbar view has already been added directly to the container.
             // We should remove it and add the view to the navigation bar container.
             // Should refactor this so there is no added view to remove to begin with:
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
-            val browserToolbar = browserToolbarView.view
             if (isToolbarAtBottom) {
                 binding.browserLayout.removeView(browserToolbar)
             }
@@ -486,6 +488,8 @@ abstract class BaseBrowserFragment :
                 owner = this,
                 view = view,
             )
+        } else {
+            browserToolbar.hidePageActionSeparator()
         }
 
         toolbarIntegration.set(

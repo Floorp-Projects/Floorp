@@ -95,6 +95,7 @@ class DisplayToolbar internal constructor(
      * @property text Text color of the URL.
      * @property trackingProtection Color tint for the tracking protection icons.
      * @property separator Color tint for the separator shown between indicators.
+     * @property pageActionSeparator Color tint of separator dividing url and page actions.
      * @property highlight Color tint for the highlight icon.
      *
      * Set/Get the site security icon colours. It uses a pair of color integers which represent the
@@ -110,6 +111,7 @@ class DisplayToolbar internal constructor(
         @ColorInt val text: Int,
         @ColorInt val trackingProtection: Int?,
         @ColorInt val separator: Int,
+        @ColorInt val pageActionSeparator: Int,
         @ColorInt val highlight: Int?,
     )
 
@@ -148,6 +150,7 @@ class DisplayToolbar internal constructor(
         navigationActions = rootView.findViewById(R.id.mozac_browser_toolbar_navigation_actions),
         background = rootView.findViewById(R.id.mozac_browser_toolbar_background),
         separator = rootView.findViewById(R.id.mozac_browser_toolbar_separator),
+        pageActionSeparator = rootView.findViewById(R.id.mozac_browser_toolbar_action_separator),
         emptyIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_empty_indicator),
         menu = MenuButton(rootView.findViewById(R.id.mozac_browser_toolbar_menu)),
         securityIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_security_indicator),
@@ -174,6 +177,7 @@ class DisplayToolbar internal constructor(
         text = views.origin.textColor,
         trackingProtection = null,
         separator = ContextCompat.getColor(context, photonColors.photonGrey80),
+        pageActionSeparator = ContextCompat.getColor(context, photonColors.photonGrey80),
         highlight = null,
     )
         set(value) {
@@ -186,6 +190,7 @@ class DisplayToolbar internal constructor(
             views.origin.titleColor = value.title
             views.origin.textColor = value.text
             views.separator.setColorFilter(value.separator)
+            views.pageActionSeparator.setBackgroundColor(value.pageActionSeparator)
 
             if (value.trackingProtection != null) {
                 views.trackingProtectionIndicator.setTint(value.trackingProtection)
@@ -662,6 +667,20 @@ class DisplayToolbar internal constructor(
     internal fun showMenuButton() {
         views.menu.setShouldBeHidden(false)
     }
+
+    /**
+     * Hides the page action separator in display mode.
+     */
+    fun hidePageActionSeparator() {
+        views.pageActionSeparator.isVisible = false
+    }
+
+    /**
+     * Shows the page action separator in display mode.
+     */
+    internal fun showPageActionSeparator() {
+        views.pageActionSeparator.isVisible = true
+    }
 }
 
 /**
@@ -674,6 +693,7 @@ internal class DisplayToolbarViews(
     val navigationActions: ActionContainer,
     val background: ImageView,
     val separator: ImageView,
+    val pageActionSeparator: View,
     val emptyIndicator: ImageView,
     val menu: MenuButton,
     val securityIndicator: SiteSecurityIconView,

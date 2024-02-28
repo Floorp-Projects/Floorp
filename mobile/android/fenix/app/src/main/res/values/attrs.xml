@@ -12,6 +12,7 @@
     <attr name="layer2" format="reference" />
     <!-- Search -->
     <attr name="layer3" format="reference" />
+    <attr name="layerSearch" format="reference" />
     <!-- Selected tab -->
     <attr name="layerNonOpaque" format="reference" />
     <attr name="scrim" format="reference" />
@@ -47,6 +48,8 @@
     <!-- Border -->
     <!-- Default, Divider, Dotted -->
     <attr name="borderPrimary" format="reference" />
+    <!-- Toolbar divider -->
+    <attr name="borderToolbarDivider" format="reference"/>
 
     <!-- Color palette attributes -->
     <attr name="accent" format="reference" />

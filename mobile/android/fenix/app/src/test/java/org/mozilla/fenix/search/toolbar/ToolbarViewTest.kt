@@ -147,6 +147,7 @@ class ToolbarViewTest {
         every { context.settings().shouldShowHistorySuggestions } returns true
         every { context.settings().shouldShowBookmarkSuggestions } returns true
         every { context.settings().isTabletAndTabStripEnabled } returns false
+        every { context.settings().enableIncompleteToolbarRedesign } returns false
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 
@@ -163,6 +164,7 @@ class ToolbarViewTest {
         every { context.settings().shouldShowHistorySuggestions } returns true
         every { context.settings().shouldShowBookmarkSuggestions } returns true
         every { context.settings().isTabletAndTabStripEnabled } returns false
+        every { context.settings().enableIncompleteToolbarRedesign } returns false
         val view = buildToolbarView(false)
         mockkObject(FeatureFlags)
 

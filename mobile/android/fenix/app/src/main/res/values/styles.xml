@@ -50,6 +50,7 @@
         <item name="layer2">@color/fx_mobile_layer_color_2</item>
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_layer_color_3</item>
+        <item name="layerSearch">@color/fx_mobile_layer_color_search</item>
         <!-- Selected tab -->
         <item name="layerNonOpaque">@color/fx_mobile_layer_color_accent_nonopaque</item>
         <item name="scrim">@color/fx_mobile_layer_color_scrim</item>
@@ -85,7 +86,8 @@
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
         <item name="borderPrimary">@color/fx_mobile_border_color_primary</item>
-
+        <!-- Toolbar divider -->
+        <item name="borderToolbarDivider">@color/fx_mobile_border_color_toolbar_divider</item>
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
         <!-- Inactive thumb color -->
@@ -243,6 +245,7 @@
         <item name="layer2">@color/fx_mobile_private_layer_color_2</item>
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_private_layer_color_3</item>
+        <item name="layerSearch">@color/fx_mobile_private_layer_color_search</item>
         <!-- Selected tab -->
         <item name="layerNonOpaque">@color/fx_mobile_private_layer_color_accent_nonopaque</item>
         <item name="scrim">@color/fx_mobile_private_layer_color_scrim</item>
@@ -278,6 +281,8 @@
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
         <item name="borderPrimary">@color/fx_mobile_private_border_color_primary</item>
+        <!-- Toolbar divider -->
+        <item name="borderToolbarDivider">@color/fx_mobile_private_border_color_toolbar_divider</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
