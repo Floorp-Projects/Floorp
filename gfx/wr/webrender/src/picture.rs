@@ -5014,7 +5014,7 @@ impl PicturePrimitive {
 
                                     let content_device_rect = content_device_rect
                                         .intersection(&max_content_rect)
-                                        .expect("bug: no intersection with tile dirty rect: {content_device_rect:?} / {max_content_rect:?}");
+                                        .expect("bug: no intersection with tile dirty rect");
 
                                     let content_task_size = content_device_rect.size();
                                     let normalized_content_rect = content_task_size.into();
