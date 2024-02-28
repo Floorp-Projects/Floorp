@@ -383,6 +383,9 @@ enum JSWhyMagic {
   /** arguments object can't be created because environment is dead. */
   JS_MISSING_ARGUMENTS,
 
+  /** exception value thrown when interrupting irregexp */
+  JS_INTERRUPT_REGEXP,
+
   /** for local use */
   JS_GENERIC_MAGIC,
 
