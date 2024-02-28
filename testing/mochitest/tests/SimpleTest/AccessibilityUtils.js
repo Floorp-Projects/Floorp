@@ -461,6 +461,72 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * The gridcells are not expected to be interactive and focusable
+   * individually, but it is allowed to manually manage focus within the grid
+   * per ARIA Grid pattern (https://www.w3.org/WAI/ARIA/apg/patterns/grid/).
+   * Example of such grid would be a datepicker where one gridcell can be
+   * selected and the focus is moved with arrow keys once the user tabbed into
+   * the grid. In grids like a calendar, only one element would be included in
+   * the focus order and the rest of grid cells may not have an interactive
+   * accessible created. We need to special case the check for these gridcells.
+   */
+  function isAccessibleGridcell(node) {
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const accessible = getAccessible(node);
+
+    if (!accessible || accessible.role != Ci.nsIAccessibleRole.ROLE_GRID_CELL) {
+      return false; // Not a grid cell.
+    }
+    // ToDo: We may eventually need to support intervening generics between
+    // a grid cell and its grid container here.
+    const gridRow = accessible.parent;
+    if (!gridRow || gridRow.role != Ci.nsIAccessibleRole.ROLE_ROW) {
+      return false; // The grid cell isn't inside a row.
+    }
+    let grid = gridRow.parent;
+    if (!grid) {
+      return false; // The grid cell isn't inside a grid.
+    }
+    if (grid.role == Ci.nsIAccessibleRole.ROLE_GROUPING) {
+      // Grid built on the HTML table may include <tbody> wrapper:
+      grid = grid.parent;
+      if (!grid || grid.role != Ci.nsIAccessibleRole.ROLE_GRID) {
+        return false; // The grid cell isn't inside a grid.
+      }
+    }
+    // Check that there is only one keyboard reachable grid cell.
+    let foundFocusable = false;
+    for (const gridCell of grid.DOMNode.querySelectorAll(
+      "td, [role=gridcell]"
+    )) {
+      // Grid cells are not expected to have a "tabindex" attribute and to be
+      // included in the focus order, with the exception of the only one cell
+      // that is included in the page tab sequence to provide access to the grid.
+      if (gridCell.tabIndex == 0) {
+        if (foundFocusable) {
+          // Only one grid cell within a grid should be focusable.
+          // ToDo: Fine-tune the a11y-check error message generated in this case.
+          // Strictly speaking, it's not ideal that we're performing an action
+          // from an is function, which normally only queries something without
+          // any externally observable behaviour. That said, fixing that would
+          // involve different return values for different cases (not a grid
+          // cell, too many focusable grid cells, etc) so we could move the
+          // a11yFail call to the caller.
+          a11yFail(
+            "Only one grid cell should be focusable in a grid",
+            accessible
+          );
+          return false;
+        }
+        foundFocusable = true;
+      }
+    }
+    return foundFocusable;
+  }
+
+  /**
    * XUL treecol elements currently aren't focusable, making them inaccessible.
    * For now, we don't flag these as a failure to avoid breaking multiple tests.
    * ToDo: We should remove this exception after this is fixed in bug 1848397.
@@ -1033,7 +1099,7 @@ this.AccessibilityUtils = (function () {
       // node might be the image.
       const acc = findInteractiveAccessible(node);
       if (!acc) {
-        if (isInaccessibleXulTreecol(node)) {
+        if (isAccessibleGridcell(node) || isInaccessibleXulTreecol(node)) {
           return;
         }
         if (gEnv.mustHaveAccessibleRule) {

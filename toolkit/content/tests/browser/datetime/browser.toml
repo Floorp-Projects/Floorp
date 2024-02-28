@@ -9,10 +9,8 @@ skip-if = [
 ]
 
 ["browser_datetime_change_event.js"]
-fail-if = ["a11y_checks"] # Bug 1882207
 
 ["browser_datetime_datepicker.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked td.outside may not be accessible
 # This file was skipped before new tests were written based on it in Bug 1676068
 skip-if = [
   "tsan", # Frequently times out on TSan
@@ -49,7 +47,6 @@ skip-if = [
 ]
 
 ["browser_datetime_datepicker_min_max.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked TD may not be accessible
 skip-if = [
   "tsan", # Frequently times out on TSan
   "os == 'win' && asan", # fails on asan
@@ -64,7 +61,6 @@ skip-if = [
 ]
 
 ["browser_datetime_datepicker_mousenav.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked td.weekend.outside may not be accessible
 skip-if = [
   "tsan", # Frequently times out on TSan
   "os == 'win' && asan", # fails on asan
