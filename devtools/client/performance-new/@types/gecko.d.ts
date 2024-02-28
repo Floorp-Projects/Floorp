@@ -59,6 +59,8 @@ declare namespace MockedExports {
     addMessageListener: (event: string, listener: (event: any) => void) => void;
   }
 
+  // This is the thing in window.gBrowser, defined in
+  // https://searchfox.org/mozilla-central/source/browser/base/content/tabbrowser.js
   interface Browser {
     addWebTab: (url: string, options: any) => BrowserTab;
     contentPrincipal: any;
@@ -68,28 +70,19 @@ declare namespace MockedExports {
     ownerDocument?: ChromeDocument;
   }
 
+  // This is a tab in a browser, defined in
+  // https://searchfox.org/mozilla-central/rev/6b8a3f804789fb865f42af54e9d2fef9dd3ec74d/browser/base/content/tabbrowser.js#2580
   interface BrowserTab {
-    linkedBrowser: Browser;
+    linkedBrowser: ChromeBrowser;
   }
 
-  interface ChromeWindow {
+  interface BrowserWindow extends Window {
     gBrowser: Browser;
     focus(): void;
-    openWebLinkIn(
-      url: string,
-      where: "current" | "tab" | "window",
-      options: Partial<{
-        // Not all possible options are present, please add more if/when needed.
-        userContextId: number;
-        forceNonPrivate: boolean;
-        relatedToCurrent: boolean;
-        resolveOnContentBrowserCreated: (
-          contentBrowser: ChromeBrowser
-        ) => unknown;
-      }>
-    ): void;
   }
 
+  // The thing created in https://searchfox.org/mozilla-central/rev/6b8a3f804789fb865f42af54e9d2fef9dd3ec74d/browser/base/content/tabbrowser.js#2088
+  // This is linked to BrowserTab.
   interface ChromeBrowser {
     browsingContext?: BrowsingContext;
   }
@@ -196,11 +189,11 @@ declare namespace MockedExports {
       removeObserver: (observer: object, type: string) => void;
     };
     wm: {
-      getMostRecentWindow: (name: string) => ChromeWindow;
-      getMostRecentNonPBWindow: (name: string) => ChromeWindow;
+      getMostRecentWindow: (name: string) => BrowserWindow;
+      getMostRecentNonPBWindow: (name: string) => BrowserWindow;
     };
     focus: {
-      activeWindow: ChromeWindow;
+      activeWindow: BrowserWindow;
     };
     io: {
       newURI(url: string): nsIURI;
@@ -249,7 +242,7 @@ declare namespace MockedExports {
   class nsIFilePicker {}
 
   interface FilePicker {
-    init: (window: Window, title: string, mode: number) => void;
+    init: (browsingContext: BrowsingContext, title: string, mode: number) => void;
     open: (callback: (rv: number) => unknown) => void;
     // The following are enum values.
     modeGetFolder: number;
@@ -404,22 +397,48 @@ declare interface XULElement extends HTMLElement {
 }
 
 declare interface XULIframeElement extends XULElement {
-  contentWindow: ChromeWindow;
+  contentWindow: Window;
   src: string;
 }
 
-declare interface ChromeWindow extends Window {
+// `declare interface Window` is TypeScript way to let us implicitely extend and
+// augment the already existing Window interface defined in the TypeScript library.
+// This makes it possible to define properties that exist in the window object
+// while in a privileged context. We assume that all of the environments we run
+// in this project will be pribileged, that's why we take this shortcut of
+// globally extending the Window type.
+// See the ChromeOnly attributes in https://searchfox.org/mozilla-central/rev/896042a1a71066254ceb5291f016ca3dbca21cb7/dom/webidl/Window.webidl#391
+//
+// openWebLinkIn and openTrustedLinkIn aren't in all privileged windows, but
+// they're also defined in the privileged environments we're dealing with in
+// this project, so they're defined here for convenience.
+declare interface Window {
+  browsingContext: MockedExports.BrowsingContext;
   openWebLinkIn: (
     url: string,
     where: "current" | "tab" | "tabshifted" | "window" | "save",
-    // TS-TODO
-    params?: unknown
+    options?: Partial<{
+      // Not all possible options are present, please add more if/when needed.
+      userContextId: number;
+      forceNonPrivate: boolean;
+      relatedToCurrent: boolean;
+      resolveOnContentBrowserCreated: (
+        contentBrowser: MockedExports.ChromeBrowser
+      ) => unknown;
+    }>
   ) => void;
   openTrustedLinkIn: (
     url: string,
     where: "current" | "tab" | "tabshifted" | "window" | "save",
-    // TS-TODO
-    params?: unknown
+    options?: Partial<{
+      // Not all possible options are present, please add more if/when needed.
+      userContextId: number;
+      forceNonPrivate: boolean;
+      relatedToCurrent: boolean;
+      resolveOnContentBrowserCreated: (
+        contentBrowser: MockedExports.ChromeBrowser
+      ) => unknown;
+    }>
   ) => void;
 }
 
