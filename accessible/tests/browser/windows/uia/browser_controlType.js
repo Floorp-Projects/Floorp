@@ -9,7 +9,7 @@ const UIA_ButtonControlTypeId = 50000;
 const UIA_DocumentControlTypeId = 50030;
 /* eslint-enable camelcase */
 
-addAccessibleTask(
+addUiaTask(
   `
 <button id="button">button</button>
   `,

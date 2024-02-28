@@ -8,7 +8,6 @@
 #define mozilla_a11y_uiaRawElmProvider_h__
 
 #include "objbase.h"
-#include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
 #include "uiautomation.h"
 
@@ -20,13 +19,13 @@ class AccessibleWrap;
 /**
  * IRawElementProviderSimple implementation (maintains IAccessibleEx approach).
  */
-class uiaRawElmProvider final : public IAccessibleEx,
-                                public IRawElementProviderSimple {
+class uiaRawElmProvider : public IAccessibleEx,
+                          public IRawElementProviderSimple {
  public:
-  explicit uiaRawElmProvider(AccessibleWrap* aAcc) : mAcc(aAcc) {}
-
   // IUnknown
-  DECL_IUNKNOWN
+  DECL_IUNKNOWN_INHERITED
+  ULONG STDMETHODCALLTYPE AddRef() override;
+  ULONG STDMETHODCALLTYPE Release() override;
 
   // IAccessibleEx
   virtual HRESULT STDMETHODCALLTYPE GetObjectForChild(
@@ -61,12 +60,7 @@ class uiaRawElmProvider final : public IAccessibleEx,
           aRawElmProvider);
 
  private:
-  uiaRawElmProvider() = delete;
-  uiaRawElmProvider& operator=(const uiaRawElmProvider&) = delete;
-  uiaRawElmProvider(const uiaRawElmProvider&) = delete;
-
- protected:
-  RefPtr<AccessibleWrap> mAcc;
+  AccessibleWrap* LocalAcc();
 };
 
 }  // namespace a11y

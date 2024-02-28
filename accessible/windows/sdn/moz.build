@@ -15,6 +15,7 @@ LOCAL_INCLUDES += [
     "/accessible/generic",
     "/accessible/html",
     "/accessible/windows/msaa",
+    "/accessible/windows/uia",
     "/accessible/xpcom",
     "/accessible/xul",
 ]
