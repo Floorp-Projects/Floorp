@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 const ALWAYS_DOWNLOAD_DIR_PREF = "browser.download.useDownloadDir";

@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
 );
 
 const MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 const file = new FileUtils.File(getTestFilePath("moz.png"));
 MockFilePicker.setFiles([file]);

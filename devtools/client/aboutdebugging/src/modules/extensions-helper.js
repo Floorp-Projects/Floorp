@@ -51,7 +51,7 @@ exports.getExtensionUuid = function (extension) {
 exports.openTemporaryExtension = function (win, message) {
   return new Promise(resolve => {
     const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(win.browsingContext, message, Ci.nsIFilePicker.modeOpen);
+    fp.init(win, message, Ci.nsIFilePicker.modeOpen);
 
     // Try to set the last directory used as "displayDirectory".
     try {

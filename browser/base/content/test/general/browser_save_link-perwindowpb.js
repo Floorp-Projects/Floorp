@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 // Trigger a save of a link in public mode, then trigger an identical save
 // in private mode and ensure that the second request is differentiated from

@@ -154,7 +154,7 @@ add_task(async function test_cancel_event() {
 add_task(async function test_nsIFilePicker_open() {
   let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
-  picker.init(window.browsingContext, "", Ci.nsIFilePicker.modeSave);
+  picker.init(window, "", Ci.nsIFilePicker.modeSave);
 
   let result = await new Promise(resolve => picker.open(res => resolve(res)));
 

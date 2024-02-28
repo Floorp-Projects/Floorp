@@ -45,7 +45,7 @@ add_task(async function testPreferenceRetrievedWhenInstallingExtension() {
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   const onFilePickerShown = new Promise(resolve => {
     MockFilePicker.showCallback = fp => {
       resolve(fp);

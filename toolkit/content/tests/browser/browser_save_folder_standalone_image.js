@@ -43,7 +43,7 @@ async function clearHistoryAndWait() {
  */
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 add_task(async function () {
   const IMAGE_URL =

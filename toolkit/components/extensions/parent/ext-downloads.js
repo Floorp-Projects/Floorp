@@ -941,11 +941,7 @@ this.downloads = class extends ExtensionAPIPersistent {
             const picker = Cc["@mozilla.org/filepicker;1"].createInstance(
               Ci.nsIFilePicker
             );
-            picker.init(
-              window.browsingContext,
-              null,
-              Ci.nsIFilePicker.modeSave
-            );
+            picker.init(window, null, Ci.nsIFilePicker.modeSave);
             if (lastFilePickerDirectory) {
               picker.displayDirectory = lastFilePickerDirectory;
             } else {

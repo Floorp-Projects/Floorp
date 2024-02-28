@@ -48,11 +48,11 @@ export var MockFilePicker = {
   window: null,
   pendingPromises: [],
 
-  init(browsingContext) {
-    this.window = browsingContext.window;
+  init(window) {
+    this.window = window;
 
     this.reset();
-    this.factory = newFactory(this.window);
+    this.factory = newFactory(window);
     if (!registrar.isCIDRegistered(newClassID)) {
       oldClassID = registrar.contractIDToCID(CONTRACT_ID);
       registrar.registerFactory(newClassID, "", CONTRACT_ID, this.factory);

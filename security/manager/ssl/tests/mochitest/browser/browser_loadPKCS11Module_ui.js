@@ -102,7 +102,7 @@ var gMockPromptServiceCID = MockRegistrar.register(
 );
 
 var gMockFilePicker = SpecialPowers.MockFilePicker;
-gMockFilePicker.init(window.browsingContext);
+gMockFilePicker.init(window);
 
 var gTempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
 gTempFile.append("browser_loadPKCS11Module_ui-fakeModule");

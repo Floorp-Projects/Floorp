@@ -8,7 +8,7 @@ let url =
   "data:text/html,<a id='link' href='http://localhost:8000/thefile.js'>Link</a>";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 let httpServer = null;
 

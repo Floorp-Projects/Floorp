@@ -127,7 +127,7 @@ function chooseProfileFolder() {
     I.nsIFilePicker
   );
   dirChooser.init(
-    window.browsingContext,
+    window,
     gProfileManagerBundle.getString("chooseFolder"),
     I.nsIFilePicker.modeGetFolder
   );

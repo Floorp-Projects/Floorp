@@ -219,17 +219,25 @@ void FilePickerParent::Done(nsIFilePicker::ResultCode aResult) {
 }
 
 bool FilePickerParent::CreateFilePicker() {
-  if (!mBrowsingContext) {
-    return false;
-  }
-
   mFilePicker = do_CreateInstance("@mozilla.org/filepicker;1");
-
   if (!mFilePicker) {
     return false;
   }
 
-  return NS_SUCCEEDED(mFilePicker->Init(mBrowsingContext, mTitle, mMode));
+  auto* browserParent = BrowserParent::GetFrom(Manager());
+  auto* browsingContext = browserParent->GetBrowsingContext();
+  Element* element = browserParent->GetOwnerElement();
+  if (!element) {
+    return false;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> window = element->OwnerDoc()->GetWindow();
+  if (!window) {
+    return false;
+  }
+
+  return NS_SUCCEEDED(
+      mFilePicker->Init(window, mTitle, mMode, browsingContext));
 }
 
 mozilla::ipc::IPCResult FilePickerParent::RecvOpen(

@@ -18,7 +18,7 @@ const TEST_FILE_PATH = getTestFilePath("dummy_file.csv");
 const { MockFilePicker } = SpecialPowers;
 
 add_setup(async function () {
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   registerCleanupFunction(() => {
     MockFilePicker.cleanup();
   });

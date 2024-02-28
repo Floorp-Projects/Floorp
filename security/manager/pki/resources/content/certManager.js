@@ -541,7 +541,7 @@ async function backupCerts() {
     { id: "choose-p12-backup-file-dialog" },
     { id: "file-browse-pkcs12-spec" },
   ]);
-  fp.init(window.browsingContext, backupFileDialog, Ci.nsIFilePicker.modeSave);
+  fp.init(window, backupFileDialog, Ci.nsIFilePicker.modeSave);
   fp.appendFilter(filePkcs12Spec, "*.p12");
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.defaultExtension = "p12";
@@ -590,7 +590,7 @@ async function restoreCerts() {
       { id: "file-browse-pkcs12-spec" },
       { id: "file-browse-certificate-spec" },
     ]);
-  fp.init(window.browsingContext, restoreFileDialog, Ci.nsIFilePicker.modeOpen);
+  fp.init(window, restoreFileDialog, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(filePkcs12Spec, "*.p12; *.pfx");
   fp.appendFilter(fileCertSpec, gCertFileTypes);
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
@@ -736,7 +736,7 @@ async function addCACerts() {
     { id: "import-ca-certs-prompt" },
     { id: "file-browse-certificate-spec" },
   ]);
-  fp.init(window.browsingContext, importCa, Ci.nsIFilePicker.modeOpen);
+  fp.init(window, importCa, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(fileCertSpec, gCertFileTypes);
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.open(rv => {
@@ -755,7 +755,7 @@ async function addEmailCert() {
     { id: "import-email-cert-prompt" },
     { id: "file-browse-certificate-spec" },
   ]);
-  fp.init(window.browsingContext, importEmail, Ci.nsIFilePicker.modeOpen);
+  fp.init(window, importEmail, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(fileCertSpec, gCertFileTypes);
   fp.appendFilters(Ci.nsIFilePicker.filterAll);
   fp.open(rv => {

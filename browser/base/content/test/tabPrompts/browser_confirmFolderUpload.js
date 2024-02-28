@@ -88,7 +88,7 @@ async function testUploadPrompt(confirmUpload) {
     await ContentTask.spawn(browser, { path }, args => {
       let MockFilePicker = content.SpecialPowers.MockFilePicker;
       MockFilePicker.init(
-        content.browsingContext,
+        content,
         "A Mock File Picker",
         content.SpecialPowers.Ci.nsIFilePicker.modeGetFolder
       );

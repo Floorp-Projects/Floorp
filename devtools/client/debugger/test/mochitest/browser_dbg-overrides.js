@@ -70,7 +70,7 @@ add_task(async function () {
 
   info("Select test.js tree node, and add override");
   const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   const nsiFile = new FileUtils.File(
     PathUtils.join(PathUtils.tempDir, "test.js")
   );

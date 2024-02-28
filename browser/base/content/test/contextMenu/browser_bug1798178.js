@@ -15,7 +15,7 @@ const TEST_URL =
   ) + "file_bug1798178.html";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 function createTemporarySaveDirectory() {
   let saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
