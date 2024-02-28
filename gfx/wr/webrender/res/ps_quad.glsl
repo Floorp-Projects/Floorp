@@ -2,12 +2,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/// The common infrastructure for ps_quad_* shaders.
+///
+/// # Memory layout
+///
+/// The diagram below shows the the various pieces of data fectched in the vertex shader:
+///
+///```ascii
+///                                       (int gpu buffer)
+///                                       +---------------+    (sGpuCache)
+///  (instance-step vertex attr)          |  Int header   |   +-----------+
+/// +-----------------------------+       |               |   | Transform |
+/// |    Quad instance (uvec4)    |  +--> | transform id +--> +-----------+
+/// |                             |  |    | z id          |
+/// | x: int prim address        +---+    +---------------+   (float gpu buffer)
+/// | y: float prim address      +--------------------------> +-----------+--------------+-+-+
+/// | z: quad flags               |      (sGpuCache)          | Quad Prim | Quad Segment | | |
+/// |    edge flags               |   +--------------------+  |           |              | | |
+/// |    part index               |   |     Picture task   |  | bounds    | rect         | | |
+/// |    segment index            |   |                    |  | clip      | uv rect      | | |
+/// | w: picture task address    +--> | task rect          |  | color     |              | | |
+/// +-----------------------------+   | device pixel scale |  +-----------+--------------+-+-+
+///                                   | content origin     |
+///                                   +--------------------+
+///```
+
 #define WR_FEATURE_TEXTURE_2D
 
 #include shared,rect,transform,render_task,gpu_buffer
 
 flat varying mediump vec4 v_color;
 flat varying mediump vec4 v_uv_sample_bounds;
+// x: (in ps_quad_textured) has edge flags
+// y: has uv rect
+// z: (in ps_quad_textured) sample as mask
 flat varying lowp ivec4 v_flags;
 varying highp vec2 v_uv;
 

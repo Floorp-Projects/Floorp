@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/// This shader applies a (rounded) rectangle mask to the content of the framebuffer.
+
 #include ps_quad,ellipse
 
 varying highp vec4 vClipLocalPos;
