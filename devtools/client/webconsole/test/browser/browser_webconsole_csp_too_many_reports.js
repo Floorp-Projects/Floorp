@@ -13,11 +13,18 @@ const TEST_URI =
 const TEST_VIOLATIONS =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-csp-many-errors.html";
-const CSP_VIOLATION_MSG =
-  "Content-Security-Policy: The page\u2019s settings blocked the loading of a resource " +
-  "at inline (\u201cstyle-src\u201d).";
-const CSP_TOO_MANY_REPORTS_MSG =
-  "Content-Security-Policy: Prevented too many CSP reports from being sent within a short period of time.";
+
+const bundle = Services.strings.createBundle(
+  "chrome://global/locale/security/csp.properties"
+);
+const CSP_VIOLATION_MSG = bundle.formatStringFromName(
+  "CSPInlineStyleViolation",
+  ["style-src 'none'", "style-src-attr"]
+);
+const CSP_TOO_MANY_REPORTS_MSG = bundle.formatStringFromName(
+  "tooManyReports",
+  []
+);
 
 add_task(async function () {
   // Reduce the limit to reduce the log spam.
