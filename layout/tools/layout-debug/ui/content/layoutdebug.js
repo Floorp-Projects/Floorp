@@ -443,7 +443,7 @@ function toggle(menuitem) {
 
 function openFile() {
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, "Select a File", Ci.nsIFilePicker.modeOpen);
+  fp.init(window.browsingContext, "Select a File", Ci.nsIFilePicker.modeOpen);
   fp.appendFilters(Ci.nsIFilePicker.filterHTML | Ci.nsIFilePicker.filterAll);
   fp.open(rv => {
     if (
