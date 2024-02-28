@@ -282,6 +282,11 @@ add_task(async function test_edit_field_selected() {
       Assert.equal(row.value, startValue);
       row.editColumnButton.click();
       Assert.equal(row.valueInput.value, startValue);
+      Assert.equal(
+        row.valueInput.getAttribute("aria-label"),
+        prefName,
+        "The input field is labeled from the pref name"
+      );
 
       EventUtils.sendString(endValue, this.window);
 
