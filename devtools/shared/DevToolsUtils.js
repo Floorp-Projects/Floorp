@@ -901,7 +901,7 @@ exports.showSaveFileDialog = function (
     fp.defaultString = suggestedFilename;
   }
 
-  fp.init(parentWindow, null, fp.modeSave);
+  fp.init(parentWindow.browsingContext, null, fp.modeSave);
   if (Array.isArray(filters) && filters.length) {
     for (const { pattern, label } of filters) {
       fp.appendFilter(label, pattern);
