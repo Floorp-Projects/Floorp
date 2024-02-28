@@ -434,7 +434,7 @@ exports.openFilePicker = function ({ title, filters, defaultName, mode }) {
   }
 
   const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, title, fpMode);
+  fp.init(window.browsingContext, title, fpMode);
 
   for (const filter of filters || []) {
     fp.appendFilter(filter[0], filter[1]);
