@@ -36,7 +36,12 @@ const lazy = createLazyLoaders({
  */
 function selectElementsInPanelview(panelview) {
   const document = panelview.ownerDocument;
-  const window = document.defaultView;
+
+  // Forcefully cast the window to the type Window
+  /** @type {any} */
+  const windowAny = document.defaultView;
+  /** @type {Window} */
+  const window = windowAny;
 
   /**
    * Get an element or throw an error if it's not found. This is more friendly
