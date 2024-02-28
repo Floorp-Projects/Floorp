@@ -307,7 +307,7 @@ void* RegExpUnparser::VisitCapture(RegExpCapture* that, void* data) {
 }
 
 void* RegExpUnparser::VisitGroup(RegExpGroup* that, void* data) {
-  os_ << "(?" << that->flags() << ": ";
+  os_ << "(?: ";
   that->body()->Accept(this, data);
   os_ << ")";
   return nullptr;
@@ -406,17 +406,10 @@ RegExpClassSetExpression::RegExpClassSetExpression(
       may_contain_strings_(may_contain_strings),
       operands_(operands) {
   DCHECK_NOT_NULL(operands);
-  if (is_negated) {
-    DCHECK(!may_contain_strings_);
-    // We don't know anything about max matches for negated classes.
-    // As there are no strings involved, assume that we can match a unicode
-    // character (2 code points).
-    max_match_ = 2;
-  } else {
-    max_match_ = 0;
-    for (auto op : *operands) {
-      max_match_ = std::max(max_match_, op->max_match());
-    }
+  DCHECK_IMPLIES(is_negated_, !may_contain_strings_);
+  max_match_ = 0;
+  for (auto op : *operands) {
+    max_match_ = std::max(max_match_, op->max_match());
   }
 }
 
