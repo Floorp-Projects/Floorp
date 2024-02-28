@@ -6,11 +6,11 @@
 
 #include "MsaaIdGenerator.h"
 
-#include "mozilla/a11y/MsaaAccessible.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Unused.h"
+#include "MsaaAccessible.h"
 #include "nsAccessibilityService.h"
 #include "sdnAccessible.h"
 
