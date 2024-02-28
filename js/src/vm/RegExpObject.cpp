@@ -298,7 +298,6 @@ void RegExpObject::initAndZeroLastIndex(JSAtom* source, RegExpFlags flags,
   zeroLastIndex(cx);
 }
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
 template <typename KnownF, typename UnknownF>
 void ForEachRegExpFlag(JS::RegExpFlags flags, KnownF known, UnknownF unknown) {
   uint8_t raw = flags.value();
@@ -336,6 +335,14 @@ void ForEachRegExpFlag(JS::RegExpFlags flags, KnownF known, UnknownF unknown) {
   }
 }
 
+std::ostream& JS::operator<<(std::ostream& os, RegExpFlags flags) {
+  ForEachRegExpFlag(
+      flags, [&](const char* name, const char* c) { os << c; },
+      [&](uint8_t value) { os << '?'; });
+  return os;
+}
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
 void RegExpObject::dumpOwnFields(js::JSONPrinter& json) const {
   {
     js::GenericPrinter& out = json.beginStringProperty("source");
@@ -1120,36 +1127,7 @@ static bool ParseRegExpFlags(const CharT* chars, size_t length,
 
   for (size_t i = 0; i < length; i++) {
     uint8_t flag;
-    switch (chars[i]) {
-      case 'd':
-        flag = RegExpFlag::HasIndices;
-        break;
-      case 'g':
-        flag = RegExpFlag::Global;
-        break;
-      case 'i':
-        flag = RegExpFlag::IgnoreCase;
-        break;
-      case 'm':
-        flag = RegExpFlag::Multiline;
-        break;
-      case 's':
-        flag = RegExpFlag::DotAll;
-        break;
-      case 'u':
-        flag = RegExpFlag::Unicode;
-        break;
-      case 'v':
-        flag = RegExpFlag::UnicodeSets;
-        break;
-      case 'y':
-        flag = RegExpFlag::Sticky;
-        break;
-      default:
-        *invalidFlag = chars[i];
-        return false;
-    }
-    if (*flagsOut & flag) {
+    if (!JS::MaybeParseRegExpFlag(chars[i], &flag) || *flagsOut & flag) {
       *invalidFlag = chars[i];
       return false;
     }
