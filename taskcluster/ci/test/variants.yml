@@ -83,7 +83,7 @@ aab:
 geckoview-no-fission:
     description: "{description} without fission enabled"
     component: "GeckoView::Sandboxing"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     when:
         <<: *gv_e10s_filter
     suffix: "nofis"
@@ -96,7 +96,7 @@ geckoview-no-fission:
 geckoview-fission:
     description: "{description} with fission enabled and default isolation strategy"
     component: "GeckoView::Sandboxing"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     when:
         <<: *gv_e10s_filter
     suffix: "fis"
@@ -105,7 +105,7 @@ geckoview-fission:
 geckoview-fission-isolate-high-value:
     description: "{description} with fission enabled and isolation strategy isolateHighValue"
     component: "GeckoView::Sandboxing"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     when:
         <<: *gv_e10s_filter
     suffix: "fis-hv"
