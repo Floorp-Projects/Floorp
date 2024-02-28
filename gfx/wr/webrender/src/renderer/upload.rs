@@ -660,7 +660,7 @@ impl UploadTexturePool {
             ImageFormat::RGBA8 => 0,
             ImageFormat::BGRA8 => 1,
             ImageFormat::R8 => 2,
-            _ => { panic!("unexpected format {:?}", format); }
+            _ => { panic!("unexpected format"); }
         }
     }
 
