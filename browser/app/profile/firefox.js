@@ -3029,3 +3029,5 @@ pref("browser.mailto.dualPrompt.os", false);
 // When visiting a site which uses registerProtocolHandler: Ask the user to set Firefox as
 // default mailto handler.
 pref("browser.mailto.prompt.os", true);
+
+pref("browser.backup.enabled", false);

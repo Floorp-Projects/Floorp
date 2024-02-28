@@ -32,6 +32,7 @@ DIRS += [
     "aboutwelcome",
     "asrouter",
     "attribution",
+    "backup",
     "contentanalysis",
     "contextualidentity",
     "customizableui",
