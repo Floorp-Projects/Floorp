@@ -41,7 +41,11 @@ impl ProcessReader {
                 let name = self.get_module_name(module);
                 // Crude way of mimicking Windows lower-case comparisons but
                 // sufficient for our use-cases.
-                name.is_some_and(|name| name.eq_ignore_ascii_case(module_name))
+                if let Some(name) = name {
+                    name.eq_ignore_ascii_case(module_name)
+                } else {
+                    false
+                }
             })
             .find_map(|&module| {
                 self.get_module_info(module).and_then(|info| {
