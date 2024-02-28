@@ -1178,6 +1178,87 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
   mRenderTextureHost = texture;
 }
 
+static UINT GetVendorId(ID3D11VideoDevice* const aVideoDevice) {
+  RefPtr<IDXGIDevice> dxgiDevice;
+  RefPtr<IDXGIAdapter> adapter;
+  aVideoDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+  dxgiDevice->GetAdapter(getter_AddRefs(adapter));
+
+  DXGI_ADAPTER_DESC adapterDesc;
+  adapter->GetDesc(&adapterDesc);
+
+  return adapterDesc.VendorId;
+}
+
+static bool GetNvidiaRTXVideoTrueHDRSupported(
+    ID3D11VideoContext* aVideoContext, ID3D11VideoProcessor* aVideoProcessor) {
+  const GUID kNvidiaTrueHDRInterfaceGUID = {
+      0xfdd62bb4,
+      0x620b,
+      0x4fd7,
+      {0x9a, 0xb3, 0x1e, 0x59, 0xd0, 0xd5, 0x44, 0xb3}};
+  UINT available = 0;
+  HRESULT hr = aVideoContext->VideoProcessorGetStreamExtension(
+      aVideoProcessor, 0, &kNvidiaTrueHDRInterfaceGUID, sizeof(available),
+      &available);
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  bool driverSupportsTrueHdr = (available == 1);
+  return driverSupportsTrueHdr;
+}
+
+static HRESULT SetNvidiaRTXVideoTrueHDR(ID3D11VideoContext* aVideoContext,
+                                        ID3D11VideoProcessor* aVideoProcessor,
+                                        bool aEnable) {
+  constexpr GUID kNvidiaTrueHDRInterfaceGUID = {
+      0xfdd62bb4,
+      0x620b,
+      0x4fd7,
+      {0x9a, 0xb3, 0x1e, 0x59, 0xd0, 0xd5, 0x44, 0xb3}};
+  constexpr UINT kStreamExtensionMethodTrueHDR = 0x3;
+  const UINT TrueHDRVersion4 = 4;
+  struct {
+    UINT version;
+    UINT method;
+    UINT enable : 1;
+    UINT reserved : 31;
+  } streamExtensionInfo = {TrueHDRVersion4, kStreamExtensionMethodTrueHDR,
+                           aEnable ? 1u : 0u, 0u};
+  HRESULT hr = aVideoContext->VideoProcessorSetStreamExtension(
+      aVideoProcessor, 0, &kNvidiaTrueHDRInterfaceGUID,
+      sizeof(streamExtensionInfo), &streamExtensionInfo);
+  return hr;
+}
+
+static bool GetVpAutoHDRSupported(UINT aGpuVendorId,
+                                  ID3D11VideoContext* aVideoContext,
+                                  ID3D11VideoProcessor* aVideoProcessor) {
+  MOZ_ASSERT(aVideoContext);
+  MOZ_ASSERT(aVideoProcessor);
+
+  if (aGpuVendorId == 0x10DE) {
+    return GetNvidiaRTXVideoTrueHDRSupported(aVideoContext, aVideoProcessor);
+  }
+  MOZ_ASSERT_UNREACHABLE("Unexpected to be called");
+  return false;
+}
+
+static HRESULT SetVpAutoHDR(UINT aGpuVendorId,
+                            ID3D11VideoContext* aVideoContext,
+                            ID3D11VideoProcessor* aVideoProcessor,
+                            bool aEnable) {
+  MOZ_ASSERT(aVideoContext);
+  MOZ_ASSERT(aVideoProcessor);
+
+  if (aGpuVendorId == 0x10DE) {
+    return SetNvidiaRTXVideoTrueHDR(aVideoContext, aVideoProcessor, aEnable);
+  }
+  MOZ_ASSERT_UNREACHABLE("Unexpected to be called");
+  return E_NOTIMPL;
+}
+
 bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
   if (!mRenderTextureHost) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
@@ -1225,18 +1306,44 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
     transform = gfx::Matrix::Translation(aTransform.GetTranslation());
   }
 
-  if (!mVideoSwapChain || mSwapChainSize != swapChainSize || mIsDRM != isDRM) {
+  if (!mDCLayerTree->EnsureVideoProcessor(mVideoSize, swapChainSize)) {
+    gfxCriticalNote << "EnsureVideoProcessor Failed";
+    return false;
+  }
+
+  MOZ_ASSERT(mDCLayerTree->GetVideoContext());
+  MOZ_ASSERT(mDCLayerTree->GetVideoProcessor());
+
+  const UINT vendorId = GetVendorId(mDCLayerTree->GetVideoDevice());
+  const bool driverSupportsTrueHDR =
+      GetVpAutoHDRSupported(vendorId, mDCLayerTree->GetVideoContext(),
+                            mDCLayerTree->GetVideoProcessor());
+  const bool contentIsHDR = false;  // XXX for now, only non-HDR is supported.
+  const bool monitorIsHDR = gfx::DeviceManagerDx::Get()->SystemHDREnabled();
+
+  // XXX relax limitation to nightly only
+  bool useVpAutoHDR =
+#ifdef NIGHTLY_BUILD
+      StaticPrefs::gfx_webrender_video_true_hdr_nvidia_AtStartup() &&
+      !contentIsHDR && monitorIsHDR && driverSupportsTrueHDR &&
+      !mVpAutoHDRFailed;
+#else
+      false;
+#endif
+
+  if (!mVideoSwapChain || mSwapChainSize != swapChainSize || mIsDRM != isDRM ||
+      mUseVpAutoHDR != useVpAutoHDR) {
     needsToPresent = true;
     ReleaseDecodeSwapChainResources();
     // Update mSwapChainSize before creating SwapChain
     mSwapChainSize = swapChainSize;
     mIsDRM = isDRM;
 
-    auto swapChainFormat = GetSwapChainFormat();
+    auto swapChainFormat = GetSwapChainFormat(useVpAutoHDR);
     bool useYUVSwapChain = IsYUVSwapChainFormat(swapChainFormat);
     if (useYUVSwapChain) {
       // Tries to create YUV SwapChain
-      CreateVideoSwapChain();
+      CreateVideoSwapChain(swapChainFormat);
       if (!mVideoSwapChain) {
         mFailedYuvSwapChain = true;
         ReleaseDecodeSwapChainResources();
@@ -1246,11 +1353,21 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
     }
     // Tries to create RGB SwapChain
     if (!mVideoSwapChain) {
-      CreateVideoSwapChain();
+      CreateVideoSwapChain(swapChainFormat);
+    }
+    if (!mVideoSwapChain && useVpAutoHDR) {
+      mVpAutoHDRFailed = true;
+      gfxCriticalNoteOnce << "Failed to create video SwapChain for VpAutoHDR";
+
+      // Disable VpAutoHDR
+      useVpAutoHDR = false;
+      swapChainFormat = GetSwapChainFormat(useVpAutoHDR);
+      CreateVideoSwapChain(swapChainFormat);
     }
   }
 
   aTransform = transform;
+  mUseVpAutoHDR = useVpAutoHDR;
 
   return needsToPresent;
 }
@@ -1270,8 +1387,7 @@ void DCSurfaceVideo::PresentVideo() {
   mVisual->SetContent(mVideoSwapChain);
 
   if (!CallVideoProcessorBlt()) {
-    auto swapChainFormat = GetSwapChainFormat();
-    bool useYUVSwapChain = IsYUVSwapChainFormat(swapChainFormat);
+    bool useYUVSwapChain = IsYUVSwapChainFormat(mSwapChainFormat);
     if (useYUVSwapChain) {
       mFailedYuvSwapChain = true;
       ReleaseDecodeSwapChainResources();
@@ -1392,14 +1508,17 @@ void DCSurfaceVideo::PresentVideo() {
   }
 }
 
-DXGI_FORMAT DCSurfaceVideo::GetSwapChainFormat() {
+DXGI_FORMAT DCSurfaceVideo::GetSwapChainFormat(bool aUseVpAutoHDR) {
+  if (aUseVpAutoHDR) {
+    return DXGI_FORMAT_R16G16B16A16_FLOAT;
+  }
   if (mFailedYuvSwapChain || !mDCLayerTree->SupportsHardwareOverlays()) {
     return DXGI_FORMAT_B8G8R8A8_UNORM;
   }
   return mDCLayerTree->GetOverlayFormatForSDR();
 }
 
-bool DCSurfaceVideo::CreateVideoSwapChain() {
+bool DCSurfaceVideo::CreateVideoSwapChain(DXGI_FORMAT aSwapChainFormat) {
   MOZ_ASSERT(mRenderTextureHost);
 
   mFirstPresent = true;
@@ -1423,12 +1542,10 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
     return false;
   }
 
-  auto swapChainFormat = GetSwapChainFormat();
-
   DXGI_SWAP_CHAIN_DESC1 desc = {};
   desc.Width = mSwapChainSize.width;
   desc.Height = mSwapChainSize.height;
-  desc.Format = swapChainFormat;
+  desc.Format = aSwapChainFormat;
   desc.Stereo = FALSE;
   desc.SampleDesc.Count = 1;
   desc.BufferCount = mSwapChainBufferCount;
@@ -1436,7 +1553,7 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
   desc.Flags = DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;
-  if (IsYUVSwapChainFormat(swapChainFormat)) {
+  if (IsYUVSwapChainFormat(aSwapChainFormat)) {
     desc.Flags |= DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO;
   }
   if (mIsDRM) {
@@ -1455,7 +1572,7 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
     return false;
   }
 
-  mSwapChainFormat = swapChainFormat;
+  mSwapChainFormat = aSwapChainFormat;
   return true;
 }
 
@@ -1526,18 +1643,6 @@ static void SetNvidiaVideoSuperRes(ID3D11VideoContext* videoContext,
   }
 }
 
-static UINT GetVendorId(ID3D11VideoDevice* const videoDevice) {
-  RefPtr<IDXGIDevice> dxgiDevice;
-  RefPtr<IDXGIAdapter> adapter;
-  videoDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
-  dxgiDevice->GetAdapter(getter_AddRefs(adapter));
-
-  DXGI_ADAPTER_DESC adapterDesc;
-  adapter->GetDesc(&adapterDesc);
-
-  return adapterDesc.VendorId;
-}
-
 bool DCSurfaceVideo::CallVideoProcessorBlt() {
   MOZ_ASSERT(mRenderTextureHost);
 
@@ -1576,11 +1681,6 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
     }
   }
 
-  if (!mDCLayerTree->EnsureVideoProcessor(mVideoSize, mSwapChainSize)) {
-    gfxCriticalNote << "EnsureVideoProcessor Failed";
-    return false;
-  }
-
   RefPtr<IDXGISwapChain3> swapChain3;
   mVideoSwapChain->QueryInterface(
       (IDXGISwapChain3**)getter_AddRefs(swapChain3));
@@ -1609,6 +1709,13 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
       IsYUVSwapChainFormat(mSwapChainFormat)
           ? inputColorSpace
           : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+
+  if (mUseVpAutoHDR) {
+    outputColorSpace = mSwapChainFormat == DXGI_FORMAT_R16G16B16A16_FLOAT
+                           ? DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709
+                           : DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+  }
+
   hr = swapChain3->SetColorSpace1(outputColorSpace);
   if (FAILED(hr)) {
     gfxCriticalNoteOnce << "SetColorSpace1 failed: " << gfx::hexa(hr);
@@ -1684,6 +1791,14 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
     SetNvidiaVideoSuperRes(videoContext, videoProcessor, true);
   }
 
+  if (mUseVpAutoHDR) {
+    hr = SetVpAutoHDR(vendorId, videoContext, videoProcessor, true);
+    if (FAILED(hr)) {
+      gfxCriticalNoteOnce << "SetVpAutoHDR failed: " << gfx::hexa(hr);
+      mVpAutoHDRFailed = true;
+    }
+  }
+
   hr = videoContext->VideoProcessorBlt(videoProcessor, mOutputView, 0, 1,
                                        &stream);
   if (FAILED(hr)) {
@@ -1703,6 +1818,7 @@ void DCSurfaceVideo::ReleaseDecodeSwapChainResources() {
     ::CloseHandle(mSwapChainSurfaceHandle);
     mSwapChainSurfaceHandle = 0;
   }
+  mUseVpAutoHDR = false;
 }
 
 DCSurfaceHandle::DCSurfaceHandle(bool aIsOpaque, DCLayerTree* aDCLayerTree)
