@@ -78,7 +78,7 @@ function testSelection() {
   deselect();
 
   // Drag from left of the text to the right of the text to select it.
-  drag(90, 50, 110 + text[0].getComputedTextLength(), 50);
+  drag(101, 50, 99 + text[0].getComputedTextLength(), 50);
   selection_is("hello there", "selecting entire simple text by dragging around it");
   deselect();
 
