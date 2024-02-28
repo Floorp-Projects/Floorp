@@ -14,7 +14,7 @@ function test() {
   );
   let MockFilePicker = SpecialPowers.MockFilePicker;
 
-  MockFilePicker.init(window);
+  MockFilePicker.init(window.browsingContext);
   MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
 
   let validateFileNameToRestore = validateFileName;

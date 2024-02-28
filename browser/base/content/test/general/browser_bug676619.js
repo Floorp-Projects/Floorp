@@ -1,5 +1,5 @@
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 
 function waitForNewWindow() {
   return new Promise(resolve => {

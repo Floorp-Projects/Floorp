@@ -149,7 +149,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   }
 
   var MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
 
   function testUserInput() {
     // Simulating an OK click and with a file name return.

@@ -48,7 +48,7 @@ function populateInputFile(aInputFile) {
   var script = SpecialPowers.loadChromeScript(url);
 
   var MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
 
   async function onOpened(message) {
     MockFilePicker.useDirectory(message.dir);
@@ -134,7 +134,7 @@ async function test_individualSymlink(aInputFile) {
 
   // -- Have the picker pick it
   var MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
 
   MockFilePicker.displayDirectory = dir;
   let pickerShown = new Promise(resolve => {
@@ -186,7 +186,7 @@ function test_changeDataWhileWorking() {
   var script = SpecialPowers.loadChromeScript(url);
 
   var MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
   let promptHandled;
 
   // Let's start retrieving the root nsIFile object
@@ -203,7 +203,7 @@ function test_changeDataWhileWorking() {
   // input.click() pointing to the root dir
   .then(async function(aDir) {
     MockFilePicker.cleanup();
-    MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+    MockFilePicker.init(SpecialPowers.wrap(window).browsingContext, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
     MockFilePicker.useDirectory(aDir);
     var input = document.getElementById("inputFileDirectoryChange");
 
@@ -228,7 +228,7 @@ function test_changeDataWhileWorking() {
   // Now let's click again and wait for onchange.
   .then(async function(aDir) {
       MockFilePicker.cleanup();
-      MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
+      MockFilePicker.init(SpecialPowers.wrap(window).browsingContext, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeGetFolder);
       MockFilePicker.useDirectory(aDir);
 
       let input = document.getElementById("inputFileDirectoryChange");

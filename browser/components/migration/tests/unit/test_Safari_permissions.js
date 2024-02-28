@@ -30,7 +30,7 @@ add_setup(async () => {
 
   registerFakePath("ULibDir", tempDir);
 
-  MockFilePicker.init(globalThis);
+  MockFilePicker.init(/* mock BrowsingContext */ { window: globalThis });
   registerCleanupFunction(() => {
     MockFilePicker.cleanup();
   });

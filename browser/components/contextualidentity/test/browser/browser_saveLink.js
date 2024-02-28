@@ -6,7 +6,7 @@ const URI =
   "/browser/browser/components/contextualidentity/test/browser/saveLink.sjs";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 
 add_setup(async function () {
   info("Setting the prefs.");

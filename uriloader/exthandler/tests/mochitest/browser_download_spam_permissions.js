@@ -18,7 +18,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 const AUTOMATIC_DOWNLOAD_TOPIC = "blocked-automatic-download";
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 registerCleanupFunction(() => MockFilePicker.cleanup());
 
 let gTempDownloadDir;
