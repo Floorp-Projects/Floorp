@@ -426,7 +426,6 @@ class SyncedTabsInView extends ViewPage {
         maxTabsLength=${this.showAll ? -1 : this.maxTabsLength}
         @fxview-tab-list-primary-action=${this.onOpenLink}
         @fxview-tab-list-secondary-action=${this.onContextMenu}
-        secondaryActionClass="options-button"
       >
         ${this.panelListTemplate()}
       </fxview-tab-list>`;

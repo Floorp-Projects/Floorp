@@ -92,24 +92,12 @@ body {
   margin: 0;
 }
 
-fxview-category-button:focus-visible {
-  outline-offset: var(--in-content-focus-outline-inset);
+fxview-tab-list.with-dismiss-button::part(secondary-button) {
+  background-image: url("chrome://global/skin/icons/close.svg");
 }
 
-fxview-category-button[name="recentbrowsing"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-recentbrowsing.svg");
-}
-fxview-category-button[name="opentabs"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-opentabs.svg");
-}
-fxview-category-button[name="recentlyclosed"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-recentlyclosed.svg");
-}
-fxview-category-button[name="syncedtabs"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-syncedtabs.svg");
-}
-fxview-category-button[name="history"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-history.svg");
+fxview-tab-list.with-context-menu::part(secondary-button) {
+  background-image: url("chrome://global/skin/icons/more.svg");
 }
 
 .sticky-container {
