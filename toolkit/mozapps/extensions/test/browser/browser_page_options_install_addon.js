@@ -5,7 +5,7 @@
 // Tests bug 567127 - Add install button to the add-ons manager
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 async function checkInstallConfirmation(...names) {
   let notificationCount = 0;

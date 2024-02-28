@@ -23,7 +23,7 @@ const HandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 );
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 function waitForAcceptButtonToGetEnabled(doc) {
   let dialog = doc.querySelector("#unknownContentType");

@@ -595,8 +595,7 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
 
   already_AddRefed<PFilePickerParent> AllocPFilePickerParent(
-      const nsString& aTitle, const nsIFilePicker::Mode& aMode,
-      const MaybeDiscarded<BrowsingContext>& aBrowsingContext);
+      const nsString& aTitle, const nsIFilePicker::Mode& aMode);
 
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 

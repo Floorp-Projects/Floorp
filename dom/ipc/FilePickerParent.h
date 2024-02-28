@@ -12,7 +12,6 @@
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/PFilePickerParent.h"
 
 class nsIFile;
@@ -21,12 +20,8 @@ namespace mozilla::dom {
 
 class FilePickerParent : public PFilePickerParent {
  public:
-  FilePickerParent(const nsString& aTitle, const nsIFilePicker::Mode& aMode,
-                   BrowsingContext* aBrowsingContext)
-      : mTitle(aTitle),
-        mMode(aMode),
-        mBrowsingContext(aBrowsingContext),
-        mResult(nsIFilePicker::returnOK) {}
+  FilePickerParent(const nsString& aTitle, const nsIFilePicker::Mode& aMode)
+      : mTitle(aTitle), mMode(aMode), mResult(nsIFilePicker::returnOK) {}
 
  private:
   virtual ~FilePickerParent();
@@ -98,7 +93,6 @@ class FilePickerParent : public PFilePickerParent {
 
   nsString mTitle;
   nsIFilePicker::Mode mMode;
-  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
   nsIFilePicker::ResultCode mResult;
 };
 

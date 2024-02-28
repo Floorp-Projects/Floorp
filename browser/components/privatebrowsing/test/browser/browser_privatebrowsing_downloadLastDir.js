@@ -17,7 +17,7 @@ function test() {
     source: Services.io.newURI("http://test1.com/file"),
   };
 
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
 
   let prefs = Services.prefs.getBranch("browser.download.");

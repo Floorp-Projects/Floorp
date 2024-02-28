@@ -10,7 +10,7 @@ async function installFile(filename) {
   file.leafName = filename;
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   MockFilePicker.setFiles([file]);
   MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
 

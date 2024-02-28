@@ -442,7 +442,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
         },
       ]);
 
-    fp.init(this.browsingContext, title, Ci.nsIFilePicker.modeSave);
+    fp.init(this.#ownerGlobal, title, Ci.nsIFilePicker.modeSave);
     fp.appendFilter(csvFilterTitle, "*.csv");
     fp.appendFilters(Ci.nsIFilePicker.filterAll);
     fp.defaultString = defaultFilename;
@@ -479,7 +479,8 @@ export class AboutLoginsParent extends JSWindowActorParent {
           title: tsvFilterTitle,
           extensionPattern: "*.tsv",
         },
-      ]
+      ],
+      this.#ownerGlobal
     );
 
     if (result != Ci.nsIFilePicker.returnCancel) {
@@ -525,10 +526,10 @@ export class AboutLoginsParent extends JSWindowActorParent {
     this.sendAsyncMessage("AboutLogins:ShowLoginItemError", messageObject);
   }
 
-  async openFilePickerDialog(title, okButtonLabel, appendFilters) {
+  async openFilePickerDialog(title, okButtonLabel, appendFilters, ownerGlobal) {
     return new Promise(resolve => {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(this.browsingContext, title, Ci.nsIFilePicker.modeOpen);
+      fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeOpen);
       for (const appendFilter of appendFilters) {
         fp.appendFilter(appendFilter.title, appendFilter.extensionPattern);
       }

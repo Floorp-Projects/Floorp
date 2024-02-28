@@ -20,7 +20,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
+MockFilePicker.init(window);
 
 SimpleTest.waitForFocus(function() {
   MockFilePicker.useBlobFile();

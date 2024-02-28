@@ -195,11 +195,7 @@ AppPicker.prototype = {
     var nsIFilePicker = Ci.nsIFilePicker;
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
 
-    fp.init(
-      window.browsingContext,
-      this._incomingParams.title,
-      nsIFilePicker.modeOpen
-    );
+    fp.init(window, this._incomingParams.title, nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterApps);
 
     var startLocation;

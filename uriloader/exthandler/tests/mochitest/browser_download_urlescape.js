@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 registerCleanupFunction(() => MockFilePicker.cleanup());
 
 /**

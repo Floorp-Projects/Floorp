@@ -521,7 +521,7 @@ class PrintHelper {
   mockFilePickerCancel() {
     if (!pickerMocked) {
       pickerMocked = true;
-      MockFilePicker.init(window.browsingContext);
+      MockFilePicker.init(window);
       registerCleanupFunction(() => MockFilePicker.cleanup());
     }
     MockFilePicker.returnValue = MockFilePicker.returnCancel;
@@ -530,7 +530,7 @@ class PrintHelper {
   mockFilePicker(filename) {
     if (!pickerMocked) {
       pickerMocked = true;
-      MockFilePicker.init(window.browsingContext);
+      MockFilePicker.init(window);
       registerCleanupFunction(() => MockFilePicker.cleanup());
     }
     MockFilePicker.returnValue = MockFilePicker.returnOK;

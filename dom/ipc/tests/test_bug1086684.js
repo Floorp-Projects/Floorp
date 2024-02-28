@@ -37,7 +37,7 @@ function childFrameScript() {
   );
 
   function parentReady(message) {
-    MockFilePicker.init(content.browsingContext);
+    MockFilePicker.init(content);
     MockFilePicker.setFiles([message.data.file]);
     MockFilePicker.returnValue = MockFilePicker.returnOK;
 

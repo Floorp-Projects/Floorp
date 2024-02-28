@@ -225,7 +225,7 @@ let dialog = {
     let title = await this.getChooseAppWindowTitle();
 
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window.browsingContext, title, Ci.nsIFilePicker.modeOpen);
+    fp.init(window, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
     fp.open(rv => {

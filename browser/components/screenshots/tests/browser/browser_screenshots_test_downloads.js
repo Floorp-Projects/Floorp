@@ -29,7 +29,7 @@ add_setup(async function () {
     ],
   });
 
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   MockFilePicker.useAnyFile();
   MockFilePicker.returnValue = MockFilePicker.returnOK;
 

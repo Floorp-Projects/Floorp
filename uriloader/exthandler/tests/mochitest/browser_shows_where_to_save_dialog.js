@@ -16,7 +16,7 @@ const { handleInternally, useHelperApp, useSystemDefault, saveToDisk } =
   Ci.nsIHandlerInfo;
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({

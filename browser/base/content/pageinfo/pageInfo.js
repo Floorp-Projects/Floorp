@@ -686,7 +686,7 @@ async function selectSaveFolder(aCallback) {
     }
   };
 
-  fp.init(window.browsingContext, titleText, nsIFilePicker.modeGetFolder);
+  fp.init(window, titleText, nsIFilePicker.modeGetFolder);
   fp.appendFilters(nsIFilePicker.filterAll);
   try {
     let initialDir = Services.prefs.getComplexValue(

@@ -3039,7 +3039,7 @@ function BrowserOpenFileWindow() {
     };
 
     fp.init(
-      window.browsingContext,
+      window,
       gNavigatorBundle.getString("openFile"),
       nsIFilePicker.modeOpen
     );

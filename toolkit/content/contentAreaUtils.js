@@ -688,7 +688,7 @@ function promiseTargetFile(
     let fp = makeFilePicker();
     let titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
     fp.init(
-      window.browsingContext,
+      window,
       ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
       Ci.nsIFilePicker.modeSave
     );

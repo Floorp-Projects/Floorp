@@ -66,13 +66,19 @@ interface nsIFilePicker : nsISupports
   * Initialize the file picker widget.  The file picker is not valid until this
   * method is called.
   *
-  * @param      browsingContext   The context in which the file picker is being
-  *                               shown, must be non-null.
-  * @param      title             The title for the file widget
-  * @param      mode              load, save, or get folder
-  *
+  * @param      parent   mozIDOMWindow parent.  This dialog will be dependent
+  *                      on this parent. parent must be non-null.
+  * @param      title    The title for the file widget
+  * @param      mode     load, save, or get folder
+  * @param      browsingContext [optional]
+  *             The context in which the file picker is being shown. This is
+  *             used for content analysis and can be omitted if chrome is
+  *             showing the file picker.
   */
-  void init(in BrowsingContext browsingContext, in AString title, in nsIFilePicker_Mode mode);
+  void init(in mozIDOMWindowProxy parent,
+            in AString title,
+            in nsIFilePicker_Mode mode,
+            [optional] in BrowsingContext browsingContext);
 
   /**
    * Returns a Promise that resolves to true if the passed nsIFilePicker mode

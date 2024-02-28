@@ -78,7 +78,7 @@ async function checkCertExportWorks(
 ) {
   MockFilePicker.displayDirectory = destDir;
   var destFile = destDir.clone();
-  MockFilePicker.init(window.browsingContext);
+  MockFilePicker.init(window);
   MockFilePicker.filterIndex = exportType;
   MockFilePicker.showCallback = function (fp) {
     info("showCallback");

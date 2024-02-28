@@ -4,7 +4,7 @@
 "use strict";
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 
 /**
  * Tests if saving a response to a file works..

@@ -5,7 +5,7 @@ const IMAGE_PAGE =
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
 
-MockFilePicker.init(window.browsingContext);
+MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
 registerCleanupFunction(function () {

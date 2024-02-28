@@ -35,7 +35,7 @@ add_setup(async () => {
   gTempDir = do_get_tempdir();
   await IOUtils.writeJSON(PathUtils.join(gTempDir.path, "Local State"), []);
 
-  MockFilePicker.init(/* mock BrowsingContext */ { window: globalThis });
+  MockFilePicker.init(globalThis);
   registerCleanupFunction(() => {
     MockFilePicker.cleanup();
   });

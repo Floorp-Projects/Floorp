@@ -779,8 +779,8 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<Document> doc = OwnerDoc();
 
-  RefPtr<BrowsingContext> bc = doc->GetBrowsingContext();
-  if (!bc) {
+  nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
+  if (!win) {
     return NS_ERROR_FAILURE;
   }
 
@@ -793,14 +793,15 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   nsAutoString okButtonLabel;
   if (aType == FILE_PICKER_DIRECTORY) {
     nsContentUtils::GetMaybeLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                            "DirectoryUpload", doc, title);
+                                            "DirectoryUpload", OwnerDoc(),
+                                            title);
 
     nsContentUtils::GetMaybeLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                            "DirectoryPickerOkButtonLabel", doc,
-                                            okButtonLabel);
+                                            "DirectoryPickerOkButtonLabel",
+                                            OwnerDoc(), okButtonLabel);
   } else {
     nsContentUtils::GetMaybeLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                            "FileUpload", doc, title);
+                                            "FileUpload", OwnerDoc(), title);
   }
 
   nsCOMPtr<nsIFilePicker> filePicker =
@@ -817,7 +818,8 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
     mode = nsIFilePicker::modeOpen;
   }
 
-  nsresult rv = filePicker->Init(bc, title, mode);
+  nsresult rv =
+      filePicker->Init(win, title, mode, OwnerDoc()->GetBrowsingContext());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!okButtonLabel.IsEmpty()) {
