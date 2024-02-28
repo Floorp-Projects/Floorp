@@ -1364,6 +1364,30 @@ class ConnectionPool final {
     }
   };
 
+  struct PerformingIdleMaintenanceDatabaseInfo {
+    const NotNull<DatabaseInfo*> mDatabaseInfo;
+
+    explicit PerformingIdleMaintenanceDatabaseInfo(DatabaseInfo& aDatabaseInfo);
+
+    PerformingIdleMaintenanceDatabaseInfo(
+        const PerformingIdleMaintenanceDatabaseInfo& aOther) = delete;
+    PerformingIdleMaintenanceDatabaseInfo(
+        PerformingIdleMaintenanceDatabaseInfo&& aOther) noexcept
+        : mDatabaseInfo{aOther.mDatabaseInfo} {
+      MOZ_COUNT_CTOR(ConnectionPool::PerformingIdleMaintenanceDatabaseInfo);
+    }
+    PerformingIdleMaintenanceDatabaseInfo& operator=(
+        const PerformingIdleMaintenanceDatabaseInfo& aOther) = delete;
+    PerformingIdleMaintenanceDatabaseInfo& operator=(
+        PerformingIdleMaintenanceDatabaseInfo&& aOther) = delete;
+
+    ~PerformingIdleMaintenanceDatabaseInfo();
+
+    bool operator==(const DatabaseInfo* aDatabaseInfo) const {
+      return mDatabaseInfo == aDatabaseInfo;
+    }
+  };
+
   class ThreadInfo {
    public:
     ThreadInfo();
@@ -1458,7 +1482,8 @@ class ConnectionPool final {
   nsCOMPtr<nsIThreadPool> mIOTarget;
   nsTArray<IdleThreadInfo> mIdleThreads;
   nsTArray<IdleDatabaseInfo> mIdleDatabases;
-  nsTArray<NotNull<DatabaseInfo*>> mDatabasesPerformingIdleMaintenance;
+  nsTArray<PerformingIdleMaintenanceDatabaseInfo>
+      mDatabasesPerformingIdleMaintenance;
   nsCOMPtr<nsITimer> mIdleTimer;
   TimeStamp mTargetIdleTime;
 
@@ -7990,8 +8015,9 @@ void ConnectionPool::CloseIdleDatabases() {
   }
 
   if (!mDatabasesPerformingIdleMaintenance.IsEmpty()) {
-    for (const auto dbInfo : mDatabasesPerformingIdleMaintenance) {
-      CloseDatabase(*dbInfo);
+    for (PerformingIdleMaintenanceDatabaseInfo& performingIdleMaintenanceInfo :
+         mDatabasesPerformingIdleMaintenance) {
+      CloseDatabase(*performingIdleMaintenanceInfo.mDatabaseInfo);
     }
     mDatabasesPerformingIdleMaintenance.Clear();
   }
@@ -8072,7 +8098,11 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo& aTransactionInfo,
 
         for (uint32_t index = mDatabasesPerformingIdleMaintenance.Length();
              index > 0; index--) {
-          const auto dbInfo = mDatabasesPerformingIdleMaintenance[index - 1];
+          const auto& performingIdleMaintenanceInfo =
+              mDatabasesPerformingIdleMaintenance[index - 1];
+
+          const auto dbInfo = performingIdleMaintenanceInfo.mDatabaseInfo;
+
           dbInfo->mThreadInfo.AssertValid();
 
           MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.ThreadRef().Dispatch(
@@ -8378,7 +8408,7 @@ void ConnectionPool::PerformIdleDatabaseMaintenance(
   aDatabaseInfo.mIdle = false;
 
   mDatabasesPerformingIdleMaintenance.AppendElement(
-      WrapNotNullUnchecked(&aDatabaseInfo));
+      PerformingIdleMaintenanceDatabaseInfo{aDatabaseInfo});
 
   MOZ_ALWAYS_SUCCEEDS(aDatabaseInfo.mThreadInfo.ThreadRef().Dispatch(
       MakeAndAddRef<IdleConnectionRunnable>(aDatabaseInfo, neededCheckpoint),
@@ -8739,6 +8769,21 @@ ConnectionPool::IdleDatabaseInfo::~IdleDatabaseInfo() {
   AssertIsOnBackgroundThread();
 
   MOZ_COUNT_DTOR(ConnectionPool::IdleDatabaseInfo);
+}
+
+ConnectionPool::PerformingIdleMaintenanceDatabaseInfo::
+    PerformingIdleMaintenanceDatabaseInfo(DatabaseInfo& aDatabaseInfo)
+    : mDatabaseInfo(WrapNotNullUnchecked(&aDatabaseInfo)) {
+  AssertIsOnBackgroundThread();
+
+  MOZ_COUNT_CTOR(ConnectionPool::PerformingIdleMaintenanceDatabaseInfo);
+}
+
+ConnectionPool::PerformingIdleMaintenanceDatabaseInfo::
+    ~PerformingIdleMaintenanceDatabaseInfo() {
+  AssertIsOnBackgroundThread();
+
+  MOZ_COUNT_DTOR(ConnectionPool::PerformingIdleMaintenanceDatabaseInfo);
 }
 
 ConnectionPool::IdleThreadInfo::IdleThreadInfo(ThreadInfo aThreadInfo)
