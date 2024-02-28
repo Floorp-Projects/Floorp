@@ -230,7 +230,7 @@ class SavePage extends Control {
     ]);
     let FilePicker = makeFilePickerService();
     const lazyFileUtils = lazy.FileUtils;
-    FilePicker.init(window, dialogTitle, FilePicker.modeSave);
+    FilePicker.init(window.browsingContext, dialogTitle, FilePicker.modeSave);
     FilePicker.defaultString = LOGFILE_NAME_DEFAULT;
     const rv = await new Promise(r => FilePicker.open(r));
     if (rv != FilePicker.returnOK && rv != FilePicker.returnReplace) {
