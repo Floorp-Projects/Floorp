@@ -36,10 +36,12 @@ option(
 
 
 @depends_if("--enable-bootstrap")
-def enable_bootstrap(bootstrap):
+def want_bootstrap(bootstrap):
     include = set()
     exclude = set()
     for item in bootstrap:
+        if item == "no-update":
+            continue
         if item.startswith("-"):
             exclude.add(item.lstrip("-"))
         else:
@@ -53,34 +55,6 @@ def enable_bootstrap(bootstrap):
         return not bool(include)
 
     return match
-
-
-@depends(developer_options, "--enable-bootstrap", moz_fetches_dir)
-def bootstrap_search_path_order(developer_options, bootstrap, moz_fetches_dir):
-    if moz_fetches_dir:
-        log.debug("Prioritizing MOZ_FETCHES_DIR in toolchain path.")
-        return "prepend"
-
-    if bootstrap:
-        log.debug(
-            "Prioritizing mozbuild state dir in toolchain paths because "
-            "bootstrap mode is enabled."
-        )
-        return "maybe-prepend"
-
-    if developer_options:
-        log.debug(
-            "Prioritizing mozbuild state dir in toolchain paths because "
-            "you are not building in release mode."
-        )
-        return "prepend"
-
-    log.debug(
-        "Prioritizing system over mozbuild state dir in "
-        "toolchain paths because you are building in "
-        "release mode."
-    )
-    return "append"
 
 
 toolchains_base_dir = moz_fetches_dir | mozbuild_state_path
@@ -145,7 +119,8 @@ def bootstrap_path(path, **kwargs):
         )
 
     @depends(
-        enable_bootstrap,
+        "--enable-bootstrap",
+        want_bootstrap,
         toolchains_base_dir,
         moz_fetches_dir,
         bootstrap_toolchain_tasks,
@@ -163,7 +138,8 @@ def bootstrap_path(path, **kwargs):
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
     def bootstrap_path(
-        bootstrap,
+        enable_bootstrap,
+        want_bootstrap,
         toolchains_base_dir,
         moz_fetches_dir,
         tasks,
@@ -294,20 +270,26 @@ def bootstrap_path(path, **kwargs):
             return True
 
         path = os.path.join(toolchains_base_dir, path_prefix, *path_parts)
-        if bootstrap and bootstrap(path_parts[0]):
+        if enable_bootstrap and want_bootstrap(path_parts[0]):
+            exists = os.path.exists(path)
             try:
-                if not try_bootstrap(os.path.exists(path)):
+                # With --enable-bootstrap=no-update, we don't `try_bootstrap`, except
+                # when the toolchain can't be found.
+                if (
+                    "no-update" not in enable_bootstrap or not exists
+                ) and not try_bootstrap(exists):
                     # If there aren't toolchain artifacts to use for this build,
                     # don't return a path.
                     return None
             except Exception as e:
                 log.error("%s", e)
                 die("If you can't fix the above, retry with --disable-bootstrap.")
-        # We re-test whether the path exists because it may have been created by
-        # try_bootstrap. Automation will not have gone through the bootstrap
-        # process, but we want to return the path if it exists.
-        if os.path.exists(path):
-            return path
+        if enable_bootstrap or enable_bootstrap.origin == "default":
+            # We re-test whether the path exists because it may have been created by
+            # try_bootstrap. Automation will not have gone through the bootstrap
+            # process, but we want to return the path if it exists.
+            if os.path.exists(path):
+                return path
 
     return bootstrap_path
 
@@ -315,27 +297,15 @@ def bootstrap_path(path, **kwargs):
 @template
 def bootstrap_search_path(path, paths=original_path, **kwargs):
     @depends(
-        enable_bootstrap,
-        dependable(path),
         bootstrap_path(path, **kwargs),
-        bootstrap_search_path_order,
         paths,
         original_path,
     )
-    def bootstrap_search_path(
-        bootstrap, path, bootstrap_path, order, paths, original_path
-    ):
+    def bootstrap_search_path(path, paths, original_path):
         if paths is None:
             paths = original_path
-        if not bootstrap_path:
+        if not path:
             return paths
-        if order == "maybe-prepend":
-            if bootstrap(path.split("/")[0]):
-                order = "prepend"
-            else:
-                order = "append"
-        if order == "prepend":
-            return [bootstrap_path] + paths
-        return paths + [bootstrap_path]
+        return [path] + paths
 
     return bootstrap_search_path
