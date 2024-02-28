@@ -136,7 +136,7 @@ html|textarea {
   font: inherit;
 }
 
-html|input,
+html|input:not([type=radio i], [type=checkbox i], [type=range i]),
 html|textarea {
   appearance: none;
   padding: 0.25em;
@@ -159,7 +159,7 @@ html|textarea {
 }
 
 /* adapted from toolkit/themes/shared/menulist-shared.css */
-html|select {
+html|select:not([size], [multiple]) {
   appearance: none;
   padding: 6px 16px;
   padding-inline-end: 32px; /* 2 * 10px padding + image's 12px width */
