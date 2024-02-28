@@ -2009,6 +2009,8 @@
     <string name="dialog_delete_negative">Avbryt</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Innloggingsalternativ</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2" tools:ignore="UnusedResources">Passordalternativ</string>
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Det redigerbare tekstfeltet for innloggings-nettadressa.</string>
     <!--  The editable text field for a login's username. -->
@@ -2136,7 +2138,7 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Søk med %s</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Vel at lenker frå nettstadar, e-postmeldingar og meldingar skal opnast automatisk i Firefox.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2506,6 +2508,9 @@
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
     <string name="download_language_file_dialog_negative_button_text">Avbryt</string>
 
+    <!-- Debug drawer -->
+    <!-- The user-facing title of the Debug Drawer feature. -->
+    <string name="debug_drawer_title">Feilsøkingsverktøy</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Naviger tilbake</string>
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
@@ -2520,6 +2525,12 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Privat</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Totalt</string>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Verktøy for å lage faner</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Legg til i aktive faner</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Legg til i inaktive faner</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Legg til i private faner</string>
 </resources>

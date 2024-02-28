@@ -140,6 +140,8 @@
     <string name="mozac_feature_prompts_select_address_2">Vel adresse</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description">Utvid føreslåtte adresser</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Utvid lagra adresser</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description">Slå saman føreslåtte adresser</string>
     <!-- Text for the manage addresses button. -->
