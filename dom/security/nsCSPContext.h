@@ -127,6 +127,7 @@ class nsCSPContext : public nsIContentSecurityPolicy {
       nsICSPEventListener* aCSPEventListener, nsIURI* aBlockedURI,
       BlockedContentSource aBlockedContentSource, nsIURI* aOriginalURI,
       const nsAString& aViolatedDirective,
+      const nsAString& aViolatedDirectiveString,
       const CSPDirective aEffectiveDirective, uint32_t aViolatedPolicyIndex,
       const nsAString& aObserverSubject, const nsAString& aSourceFile,
       bool aReportSample, const nsAString& aScriptSample, uint32_t aLineNum,
@@ -169,6 +170,7 @@ class nsCSPContext : public nsIContentSecurityPolicy {
                              const nsAString& aNonce, bool aReportSample,
                              const nsAString& aSample,
                              const nsAString& aViolatedDirective,
+                             const nsAString& aViolatedDirectiveString,
                              CSPDirective aEffectiveDirective,
                              uint32_t aViolatedPolicyIndex,
                              uint32_t aLineNumber, uint32_t aColumnNumber);
