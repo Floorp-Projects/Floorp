@@ -12,6 +12,7 @@
 #include "AccessibleWrap.h"
 #include "States.h"
 #include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 
 #include "nsIFrame.h"
 

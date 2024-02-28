@@ -31,6 +31,8 @@ using namespace mozilla::a11y;
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
     : LocalAccessible(aContent, aDoc) {}
 
+AccessibleWrap::~AccessibleWrap() = default;
+
 NS_IMPL_ISUPPORTS_INHERITED0(AccessibleWrap, LocalAccessible)
 
 void AccessibleWrap::Shutdown() {
@@ -75,6 +77,24 @@ bool AccessibleWrap::IsRootForHWND() {
   return thisHwnd != parentHwnd;
 }
 
+static void UpdateSystemCaretForHwnd(HWND aCaretWnd,
+                                     const LayoutDeviceIntRect& aCaretRect) {
+  if (!aCaretWnd || aCaretRect.IsEmpty()) {
+    return;
+  }
+
+  // Create invisible bitmap for caret, otherwise its appearance interferes
+  // with Gecko caret
+  nsAutoBitmap caretBitMap(CreateBitmap(1, aCaretRect.Height(), 1, 1, nullptr));
+  if (::CreateCaret(aCaretWnd, caretBitMap, 1,
+                    aCaretRect.Height())) {  // Also destroys the last caret
+    ::ShowCaret(aCaretWnd);
+    POINT clientPoint{aCaretRect.X(), aCaretRect.Y()};
+    ::ScreenToClient(aCaretWnd, &clientPoint);
+    ::SetCaretPos(clientPoint.x, clientPoint.y);
+  }
+}
+
 /* static */
 void AccessibleWrap::UpdateSystemCaretFor(
     Accessible* aAccessible, const LayoutDeviceIntRect& aCaretRect) {
@@ -106,7 +126,7 @@ void AccessibleWrap::UpdateSystemCaretFor(LocalAccessible* aAccessible) {
 
   HWND caretWnd =
       reinterpret_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
-  UpdateSystemCaretFor(caretWnd, caretRect);
+  UpdateSystemCaretForHwnd(caretWnd, caretRect);
 }
 
 /* static */
@@ -117,24 +137,5 @@ void AccessibleWrap::UpdateSystemCaretFor(
   // The HWND should be the real widget HWND, not an emulated HWND.
   // We get the HWND from the proxy's outer doc to bypass window emulation.
   LocalAccessible* outerDoc = aProxy->OuterDocOfRemoteBrowser();
-  UpdateSystemCaretFor(MsaaAccessible::GetHWNDFor(outerDoc), aCaretRect);
-}
-
-/* static */
-void AccessibleWrap::UpdateSystemCaretFor(
-    HWND aCaretWnd, const LayoutDeviceIntRect& aCaretRect) {
-  if (!aCaretWnd || aCaretRect.IsEmpty()) {
-    return;
-  }
-
-  // Create invisible bitmap for caret, otherwise its appearance interferes
-  // with Gecko caret
-  nsAutoBitmap caretBitMap(CreateBitmap(1, aCaretRect.Height(), 1, 1, nullptr));
-  if (::CreateCaret(aCaretWnd, caretBitMap, 1,
-                    aCaretRect.Height())) {  // Also destroys the last caret
-    ::ShowCaret(aCaretWnd);
-    POINT clientPoint{aCaretRect.X(), aCaretRect.Y()};
-    ::ScreenToClient(aCaretWnd, &clientPoint);
-    ::SetCaretPos(clientPoint.x, clientPoint.y);
-  }
+  UpdateSystemCaretForHwnd(MsaaAccessible::GetHWNDFor(outerDoc), aCaretRect);
 }

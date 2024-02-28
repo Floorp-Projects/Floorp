@@ -11,6 +11,7 @@
 #include "AccAttributes.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Components.h"
+#include "MsaaAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

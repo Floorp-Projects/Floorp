@@ -12,6 +12,7 @@
 #include "AccessibleWrap.h"
 #include "LocalAccessible-inl.h"
 #include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 
 #include "mozilla/FloatingPoint.h"
 

@@ -5,11 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ia2AccessibleHyperlink.h"
+
 #include "AccessibleHyperlink.h"
 #include "AccessibleHyperlink_i.c"
 
 #include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 #include "nsIURI.h"
 
 using namespace mozilla::a11y;
