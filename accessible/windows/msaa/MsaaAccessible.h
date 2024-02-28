@@ -12,7 +12,7 @@
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
 #include "IUnknownImpl.h"
-#include "mozilla/a11y/MsaaIdGenerator.h"
+#include "MsaaIdGenerator.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {

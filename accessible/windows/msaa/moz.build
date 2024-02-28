@@ -12,8 +12,6 @@ EXPORTS.mozilla.a11y += [
     "AccessibleWrap.h",
     "Compatibility.h",
     "LazyInstantiator.h",
-    "MsaaAccessible.h",
-    "MsaaIdGenerator.h",
     "nsWinUtils.h",
 ]
 
