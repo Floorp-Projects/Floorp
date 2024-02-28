@@ -253,6 +253,19 @@ jobs:
         echo "****************************************************************************************************"
         find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"
         echo "****************************************************************************************************"
+    
+    - name: Create hashes.txt file 📝
+      run: |
+        cd /home/runner/downloads/artifacts
+        touch hashes.txt
+        echo "SHA256 hashes" > hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+        echo "Linux AArch64" >> hashes.txt
+        sha256sum linux-aarch64/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-aarch64.tar.bz2  >> hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+        echo "Linux x86_64" >> hashes.txt
+        sha256sum linux-x64/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2  >> hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
 
     - name: Deploy to GitHub Releases for Stable Version 🚀
       id: create_release
@@ -267,6 +280,7 @@ jobs:
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
           /home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe
           /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
+          /home/runner/downloads/artifacts/hashes.txt
         tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
         name: "v${{ needs.get-display-version.outputs.display-version }}"
         draft: true

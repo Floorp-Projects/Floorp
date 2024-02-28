@@ -275,6 +275,19 @@ jobs:
       run: |
         cd ~/downloads/artifacts/linux-x64
         mv floorp-*.linux-x86_64.tar.bz2 floorp-linux-x86_64.tar.bz2
+      
+    - name: Create hashes.txt file 📝
+      run: |
+        cd /home/runner/downloads/artifacts
+        touch hashes.txt
+        echo "SHA256 hashes" > hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+        echo "Windows x86_64" >> hashes.txt
+        sha256sum windows-x64/floorp-win64.installer.exe >> hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
+        echo "Linux x86_64" >> hashes.txt
+        sha256sum linux-x64/floorp-linux-x86_64.tar.bz2 >> hashes.txt
+        echo "****************************************************************************************************" >> hashes.txt
 
     - name: Deploy to GitHub Releases 🚀
       id: create_release
@@ -290,6 +303,7 @@ jobs:
           /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.xml
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.xml
           /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.xml
+          /home/runner/downloads/artifacts/hashes.txt
 
         tag_name: "beta"
         name: "Floorp beta build: v${{ needs.get-display-version.outputs.display-version }} | ${{ needs.get-buildid.outputs.buildids }}"
