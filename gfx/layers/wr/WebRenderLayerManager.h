@@ -273,6 +273,8 @@ class WebRenderLayerManager final : public WindowRenderer {
   UniquePtr<wr::DisplayListBuilder> mDLBuilder;
 
   ScrollUpdatesMap mPendingScrollUpdates;
+
+  LayoutDeviceIntSize mFlushWidgetSize;
 };
 
 }  // namespace layers
