@@ -94,19 +94,14 @@ nsFilePicker::nsFilePicker() : mSelectedType(1) {}
 NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
 NS_IMETHODIMP nsFilePicker::Init(
-    mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-    nsIFilePicker::Mode aMode,
-    mozilla::dom::BrowsingContext* aBrowsingContext) {
+    mozilla::dom::BrowsingContext* aBrowsingContext, const nsAString& aTitle,
+    nsIFilePicker::Mode aMode) {
   // Don't attempt to open a real file-picker in headless mode.
   if (gfxPlatform::IsHeadless()) {
     return nsresult::NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aParent);
-  nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
-  mLoadContext = do_QueryInterface(docShell);
-
-  return nsBaseFilePicker::Init(aParent, aTitle, aMode, aBrowsingContext);
+  return nsBaseFilePicker::Init(aBrowsingContext, aTitle, aMode);
 }
 
 namespace mozilla::detail {
@@ -1053,7 +1048,7 @@ void nsFilePicker::RememberLastUsedDirectory() {
 }
 
 bool nsFilePicker::IsPrivacyModeEnabled() {
-  return mLoadContext && mLoadContext->UsePrivateBrowsing();
+  return mBrowsingContext && mBrowsingContext->UsePrivateBrowsing();
 }
 
 bool nsFilePicker::IsDefaultPathLink() {
