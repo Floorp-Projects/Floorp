@@ -40,13 +40,6 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (!acc) {
     return CO_E_OBJNOTCONNECTED;
   }
-  AccessibleWrap* localAcc = mMsaa->LocalAcc();
-
-  // UIA IAccessibleEx
-  if (aGuidService == IID_IAccessibleEx &&
-      StaticPrefs::accessibility_uia_enable() && localAcc) {
-    return mMsaa->QueryInterface(aIID, aInstancePtr);
-  }
 
   // Provide a special service ID for getting the accessible for the browser tab
   // document that contains this accessible object. If this accessible object
@@ -92,8 +85,12 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       {0xb6, 0x61, 0x00, 0xaa, 0x00, 0x4c, 0xd6, 0xd8}};
   if (aGuidService == IID_ISimpleDOMNode ||
       aGuidService == IID_SimpleDOMDeprecated ||
-      aGuidService == IID_IAccessible || aGuidService == IID_IAccessible2)
+      aGuidService == IID_IAccessible || aGuidService == IID_IAccessible2 ||
+      // UIA IAccessibleEx
+      (aGuidService == IID_IAccessibleEx &&
+       StaticPrefs::accessibility_uia_enable())) {
     return mMsaa->QueryInterface(aIID, aInstancePtr);
+  }
 
   return E_INVALIDARG;
 }
