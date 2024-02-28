@@ -9,7 +9,7 @@
 
 struct RDFTContext;
 
-typedef float FFTSample;
+using FFTSample = float;
 
 enum RDFTransformType {
   DFT_R2C,
@@ -20,9 +20,9 @@ enum RDFTransformType {
 
 extern "C" {
 
-typedef RDFTContext* (*AvRdftInitFn)(int nbits, enum RDFTransformType trans);
-typedef void (*AvRdftCalcFn)(RDFTContext* s, FFTSample* data);
-typedef void (*AvRdftEndFn)(RDFTContext* s);
+using AvRdftInitFn = RDFTContext* (*)(int, enum RDFTransformType);
+using AvRdftCalcFn = void (*)(RDFTContext*, FFTSample*);
+using AvRdftEndFn = void (*)(RDFTContext*);
 }
 
 struct FFmpegRDFTFuncs {
