@@ -35,7 +35,9 @@ class QATests(SnapTestsBase):
 
         if iframe_selector:
             self._logger.info("find iframe")
-            iframe = self._driver.find_element(By.CSS_SELECTOR, iframe_selector)
+            iframe = self._wait.until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, iframe_selector))
+            )
             self._driver.switch_to.frame(iframe)
 
         self._logger.info("find video")
