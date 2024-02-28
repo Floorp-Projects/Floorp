@@ -74,7 +74,11 @@ add_task(async function test_pin_unpin_open_tab() {
     );
 
     // Pin tab
-    EventUtils.synthesizeMouseAtCenter(openTabEl.secondaryButtonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(
+      openTabEl.secondaryButtonEl,
+      {},
+      content
+    );
     await TestUtils.waitForCondition(() => card.tabContextMenu.panelList);
     let panelList = card.tabContextMenu.panelList;
     await BrowserTestUtils.waitForEvent(panelList, "shown");
