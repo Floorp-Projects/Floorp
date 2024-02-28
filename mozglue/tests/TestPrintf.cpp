@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Newer versions of the Windows SDK define NAN differently than before,
+// which causes our tests to fail. Force the use of the old definition.
+#define _UCRT_NEGATIVE_NAN 1
+
 #include "mozilla/Printf.h"
 
 #include <cfloat>
