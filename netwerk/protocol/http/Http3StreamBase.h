@@ -52,6 +52,9 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
   virtual bool RecvdReset() const { return mResetRecv; }
   virtual void SetRecvdReset() { mResetRecv = true; }
 
+  void SetInTxQueue(bool aValue) { mInTxQueue = aValue; }
+  bool IsInTxQueue() const { return mInTxQueue; }
+
  protected:
   ~Http3StreamBase();
 
@@ -63,6 +66,7 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
   bool mQueued{false};
   bool mFin{false};
   bool mResetRecv{false};
+  bool mInTxQueue{false};
 };
 
 }  // namespace mozilla::net

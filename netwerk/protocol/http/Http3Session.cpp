@@ -1514,7 +1514,7 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
   while (CanSendData() && (stream = mReadyForWrite.PopFront())) {
     LOG(("Http3Session::SendData call ReadSegments from stream=%p [this=%p]",
          stream.get(), this));
-
+    stream->SetInTxQueue(false);
     rv = stream->ReadSegments();
 
     // on stream error we return earlier to let the error be handled.
@@ -1557,7 +1557,15 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
 
 void Http3Session::StreamReadyToWrite(Http3StreamBase* aStream) {
   MOZ_ASSERT(aStream);
+  // Http3Session::StreamReadyToWrite can be called multiple times when we get
+  // duplicate DataWrite events from neqo at the same time. In this case, we
+  // only want to insert the stream in `mReadyForWrite` once.
+  if (aStream->IsInTxQueue()) {
+    return;
+  }
+
   mReadyForWrite.Push(aStream);
+  aStream->SetInTxQueue(true);
   if (CanSendData() && mConnection) {
     Unused << mConnection->ResumeSend();
   }
