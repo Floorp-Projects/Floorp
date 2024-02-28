@@ -9,6 +9,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
@@ -117,6 +118,9 @@ class ListReorderState internal constructor(
     internal var previousItemOffset = Animatable(0f)
         private set
 
+    internal val orientation: Orientation
+        get() = listState.layoutInfo.orientation
+
     internal fun onTouchSlopPassed(offset: Float, shouldLongPress: Boolean) {
         listState.findItem(offset)?.also {
             draggingItemKey = it.key
@@ -220,7 +224,10 @@ fun LazyItemScope.DragItemContainer(
             Modifier
                 .zIndex(1f)
                 .graphicsLayer {
-                    translationY = state.computeItemOffset(position)
+                    when (state.orientation) {
+                        Orientation.Vertical -> translationY = state.computeItemOffset(position)
+                        Orientation.Horizontal -> translationX = state.computeItemOffset(position)
+                    }
                 }
         }
 
@@ -228,7 +235,10 @@ fun LazyItemScope.DragItemContainer(
             Modifier
                 .zIndex(1f)
                 .graphicsLayer {
-                    translationY = state.previousItemOffset.value
+                    when (state.orientation) {
+                        Orientation.Vertical -> translationY = state.previousItemOffset.value
+                        Orientation.Horizontal -> translationX = state.previousItemOffset.value
+                    }
                 }
         }
 
@@ -266,17 +276,27 @@ private fun LazyListState.findItem(offset: Float) =
  * @param reorderState List reordering state used for dragging callbacks.
  * @param shouldLongPressToDrag Whether or not an item should be long pressed to start the dragging gesture.
  */
-fun Modifier.detectVerticalPressAndDrag(
+fun Modifier.detectListPressAndDrag(
     listState: LazyListState,
     reorderState: ListReorderState,
     shouldLongPressToDrag: Boolean,
-): Modifier = pointerInput(listState, shouldLongPressToDrag) {
+): Modifier = this then pointerInput(listState, shouldLongPressToDrag) {
     if (shouldLongPressToDrag) {
         detectDragGesturesAfterLongPress(
-            onDragStart = { offset -> reorderState.onTouchSlopPassed(offset.y, true) },
+            onDragStart = { offset ->
+                val offsetInOrientation = when (listState.layoutInfo.orientation) {
+                    Orientation.Vertical -> offset.y
+                    Orientation.Horizontal -> offset.x
+                }
+                reorderState.onTouchSlopPassed(offsetInOrientation, true)
+            },
             onDrag = { change, dragAmount ->
                 change.consume()
-                reorderState.onDrag(dragAmount.y)
+                val dragOffset = when (listState.layoutInfo.orientation) {
+                    Orientation.Vertical -> dragAmount.y
+                    Orientation.Horizontal -> dragAmount.x
+                }
+                reorderState.onDrag(dragOffset)
             },
             onDragEnd = reorderState::onDragInterrupted,
             onDragCancel = reorderState::onDragInterrupted,
