@@ -42,7 +42,9 @@ async def test_partition_context(
         partition=new_tab_partition,
     )
 
-    assert set_cookie_result == {"partitionKey": {"sourceOrigin": source_origin_1}}
+    assert set_cookie_result == {
+        "partitionKey": {"sourceOrigin": source_origin_1, "userContext": "default"}
+    }
 
     # Check that added cookies are present on the right context.
     cookies = await bidi_session.storage.get_cookies(partition=new_tab_partition)
@@ -72,7 +74,11 @@ async def test_partition_context(
     )
 
     recursive_compare(
-        {"cookies": [], "partitionKey": {"sourceOrigin": source_origin_2}}, cookies
+        {
+            "cookies": [],
+            "partitionKey": {"sourceOrigin": source_origin_2, "userContext": "default"},
+        },
+        cookies,
     )
 
 
@@ -121,7 +127,10 @@ async def test_partition_context_iframe(
     recursive_compare(
         {
             "cookies": expected_cookies,
-            "partitionKey": {"sourceOrigin": source_origin_for_iframe},
+            "partitionKey": {
+                "sourceOrigin": source_origin_for_iframe,
+                "userContext": "default",
+            },
         },
         cookies,
     )
@@ -134,7 +143,10 @@ async def test_partition_context_iframe(
         recursive_compare(
             {
                 "cookies": [],
-                "partitionKey": {"sourceOrigin": source_origin_for_page},
+                "partitionKey": {
+                    "sourceOrigin": source_origin_for_page,
+                    "userContext": "default",
+                },
             },
             cookies,
         )
@@ -144,7 +156,10 @@ async def test_partition_context_iframe(
         recursive_compare(
             {
                 "cookies": expected_cookies,
-                "partitionKey": {"sourceOrigin": source_origin_for_page},
+                "partitionKey": {
+                    "sourceOrigin": source_origin_for_page,
+                    "userContext": "default",
+                },
             },
             cookies,
         )
