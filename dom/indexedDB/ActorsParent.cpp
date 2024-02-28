@@ -1366,14 +1366,18 @@ class ConnectionPool final {
 
   struct PerformingIdleMaintenanceDatabaseInfo {
     const NotNull<DatabaseInfo*> mDatabaseInfo;
+    RefPtr<IdleConnectionRunnable> mIdleConnectionRunnable;
 
-    explicit PerformingIdleMaintenanceDatabaseInfo(DatabaseInfo& aDatabaseInfo);
+    PerformingIdleMaintenanceDatabaseInfo(
+        DatabaseInfo& aDatabaseInfo,
+        RefPtr<IdleConnectionRunnable> aIdleConnectionRunnable);
 
     PerformingIdleMaintenanceDatabaseInfo(
         const PerformingIdleMaintenanceDatabaseInfo& aOther) = delete;
     PerformingIdleMaintenanceDatabaseInfo(
         PerformingIdleMaintenanceDatabaseInfo&& aOther) noexcept
-        : mDatabaseInfo{aOther.mDatabaseInfo} {
+        : mDatabaseInfo{aOther.mDatabaseInfo},
+          mIdleConnectionRunnable{std::move(aOther.mIdleConnectionRunnable)} {
       MOZ_COUNT_CTOR(ConnectionPool::PerformingIdleMaintenanceDatabaseInfo);
     }
     PerformingIdleMaintenanceDatabaseInfo& operator=(
@@ -8407,12 +8411,15 @@ void ConnectionPool::PerformIdleDatabaseMaintenance(
   aDatabaseInfo.mNeedsCheckpoint = false;
   aDatabaseInfo.mIdle = false;
 
+  auto idleConnectionRunnable =
+      MakeRefPtr<IdleConnectionRunnable>(aDatabaseInfo, neededCheckpoint);
+
   mDatabasesPerformingIdleMaintenance.AppendElement(
-      PerformingIdleMaintenanceDatabaseInfo{aDatabaseInfo});
+      PerformingIdleMaintenanceDatabaseInfo{aDatabaseInfo,
+                                            idleConnectionRunnable});
 
   MOZ_ALWAYS_SUCCEEDS(aDatabaseInfo.mThreadInfo.ThreadRef().Dispatch(
-      MakeAndAddRef<IdleConnectionRunnable>(aDatabaseInfo, neededCheckpoint),
-      NS_DISPATCH_NORMAL));
+      idleConnectionRunnable.forget(), NS_DISPATCH_NORMAL));
 }
 
 void ConnectionPool::CloseDatabase(DatabaseInfo& aDatabaseInfo) const {
@@ -8772,9 +8779,13 @@ ConnectionPool::IdleDatabaseInfo::~IdleDatabaseInfo() {
 }
 
 ConnectionPool::PerformingIdleMaintenanceDatabaseInfo::
-    PerformingIdleMaintenanceDatabaseInfo(DatabaseInfo& aDatabaseInfo)
-    : mDatabaseInfo(WrapNotNullUnchecked(&aDatabaseInfo)) {
+    PerformingIdleMaintenanceDatabaseInfo(
+        DatabaseInfo& aDatabaseInfo,
+        RefPtr<IdleConnectionRunnable> aIdleConnectionRunnable)
+    : mDatabaseInfo(WrapNotNullUnchecked(&aDatabaseInfo)),
+      mIdleConnectionRunnable(std::move(aIdleConnectionRunnable)) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mIdleConnectionRunnable);
 
   MOZ_COUNT_CTOR(ConnectionPool::PerformingIdleMaintenanceDatabaseInfo);
 }
