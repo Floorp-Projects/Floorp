@@ -9,6 +9,7 @@
 
 #include "Compatibility.h"
 #include "DocAccessible.h"
+#include "MsaaAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 

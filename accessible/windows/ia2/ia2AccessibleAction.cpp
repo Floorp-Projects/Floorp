@@ -11,6 +11,7 @@
 
 #include "AccessibleWrap.h"
 #include "IUnknownImpl.h"
+#include "MsaaAccessible.h"
 
 using namespace mozilla::a11y;
 
