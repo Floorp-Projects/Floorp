@@ -724,40 +724,6 @@ if test "$GNU_CC"; then
   TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
 fi
 
-# try harder, when checking for __thread support, see bug 521750 comment #33 and below
-# We pass MOZ_OPTIMIZE_LDFLAGS to the linker because if dead_strip is
-# enabled, the linker in xcode 4.1 will crash. Without this it would crash when
-# linking XUL.
-_SAVE_LDFLAGS=$LDFLAGS
-LDFLAGS="$LDFLAGS $DSO_LDOPTS $MOZ_OPTIMIZE_LDFLAGS"
-AC_CACHE_CHECK(for __thread keyword for TLS variables,
-               ac_cv_thread_keyword,
-               [AC_TRY_LINK([__thread bool tlsIsMainThread = false;],
-                            [return tlsIsMainThread;],
-                            ac_cv_thread_keyword=yes,
-                            ac_cv_thread_keyword=no)])
-LDFLAGS=$_SAVE_LDFLAGS
-# The custom dynamic linker doesn't support TLS variables
-if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
-  # mips builds fail with TLS variables because of a binutils bug.
-  # See bug 528687
-  # OpenBSD doesn't have TLS support, and the test succeeds with clang++
-  case "${target}" in
-    mips*-*)
-      :
-      ;;
-    *-android*|*-linuxandroid*)
-      :
-      ;;
-    *-openbsd*)
-      :
-      ;;
-    *)
-      AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
-      ;;
-  esac
-fi
-
 if test -n "$MOZ_LINKER"; then
 dnl gold emits wrong sysv-style elf hash tables when building both sysv and
 dnl style tables. https://sourceware.org/bugzilla/show_bug.cgi?id=13597

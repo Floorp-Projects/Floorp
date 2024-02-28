@@ -213,6 +213,7 @@ include("build/moz.configure/flags.configure", when="--enable-compile-environmen
 include("build/moz.configure/lto-pgo.configure", when="--enable-compile-environment")
 # rust.configure is included by js/moz.configure.
 
+
 option("--enable-valgrind", help="Enable Valgrind integration hooks")
 
 valgrind_h = check_header("valgrind/valgrind.h", when="--enable-valgrind")
