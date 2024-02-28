@@ -3318,6 +3318,24 @@ security.ui.certerror:
       has_sts: If the error page is for a site with HSTS headers or with a pinned key.
       panel_open: If the advanced panel was open at the time of the interaction.
 
+security.ui.tlserror:
+  load:
+    objects: ["abouttlserror"]
+    bug_numbers:
+      - 1881335
+    description: >
+      The about:neterror page is loaded with a TLS error or non-overridable certificate error, keyed by error code.
+    expiry_version: never
+    notification_emails:
+      - dkeeler@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    extra_keys:
+      is_frame: If the error page is loaded in an iframe.
+
 slow_script_warning:
   shown:
     bug_numbers:
