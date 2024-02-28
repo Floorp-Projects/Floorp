@@ -55,6 +55,14 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "google-breakpad/src/processor",
         ]
 
+        UNIFIED_SOURCES += [
+            "linux_utils.cc",
+        ]
+
+        EXPORTS += [
+            "linux_utils.h",
+        ]
+
         if CONFIG["MOZ_OXIDIZED_BREAKPAD"]:
             DIRS += ["rust_minidump_writer_linux"]
 
