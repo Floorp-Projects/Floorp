@@ -303,6 +303,109 @@ add_task(async function test_app_provided_engine_deployment_extended() {
   });
 });
 
+add_task(
+  async function test_app_provided_engine_deployment_extended_restart_only() {
+    await assertCorrectlySwitchedWhenExtended(async () => {
+      info(
+        "Change configuration with restart to include engine in user's environment"
+      );
+
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_EVERYWHERE_V2
+          : CONFIG_SIMPLE_EVERYWHERE
+      );
+      await promiseAfterSettings();
+      Services.search.wrappedJSObject.reset();
+      await Services.search.init();
+    });
+
+    await assertCorrectlySwitchedWhenRemoved(async () => {
+      info(
+        "Change configuration with restart to remove engine from user's environment"
+      );
+
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_LOCALE_DE_V2
+          : CONFIG_SIMPLE_LOCALE_DE
+      );
+      await promiseAfterSettings();
+      Services.search.wrappedJSObject.reset();
+      await Services.search.init();
+      // Ensure settings have been saved before the engines are added, so that
+      // we know we won't have race conditions when `addEnginesFromExtension`
+      // loads the settings itself.
+      await promiseAfterSettings();
+
+      // Simulate the add-on manager starting up and telling the
+      // search service about the add-on again.
+      let extensionData = {
+        ...extension.extension,
+        startupReason: "APP_STARTUP",
+      };
+      await Services.search.addEnginesFromExtension(extensionData);
+    });
+
+    let settingsData = await promiseSettingsData();
+    Assert.ok(
+      settingsData.engines.every(e => !e._metaData.overriddenBy),
+      "Should have cleared the overridden by flag after removal"
+    );
+  }
+);
+
+add_task(
+  async function test_app_provided_engine_deployment_extended_restart_only_startup_extension() {
+    await assertCorrectlySwitchedWhenExtended(async () => {
+      info(
+        "Change configuration with restart to include engine in user's environment"
+      );
+
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_EVERYWHERE_V2
+          : CONFIG_SIMPLE_EVERYWHERE
+      );
+      await promiseAfterSettings();
+      Services.search.wrappedJSObject.reset();
+      await Services.search.init();
+    });
+
+    await assertCorrectlySwitchedWhenRemoved(async () => {
+      info(
+        "Change configuration with restart to remove engine from user's environment"
+      );
+
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_LOCALE_DE_V2
+          : CONFIG_SIMPLE_LOCALE_DE
+      );
+      await promiseAfterSettings();
+      Services.search.wrappedJSObject.reset();
+      // Simulate the add-on manager starting up and telling the
+      // search service about the add-on again.
+      //
+      // In this test, it does this before init() is called, to
+      // simulate this being a startup extension.
+      let extensionData = {
+        ...extension.extension,
+        startupReason: "APP_STARTUP",
+      };
+      await Services.search.addEnginesFromExtension(extensionData);
+
+      await Services.search.init();
+    });
+
+    let settingsData = await promiseSettingsData();
+    Assert.ok(
+      settingsData.engines.every(e => !e._metaData.overriddenBy),
+      "Should have cleared the overridden by flag after removal"
+    );
+  }
+);
+
 /**
  * Tests that overrides are correctly applied when the user's environment changes
  * e.g. they have the WebExtension installed and change to a locale where the
@@ -382,7 +485,7 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
     "Should not have attempted to display a notification box"
   );
 
-  info("Test restarting search service to add application provided engine");
+  info("Test restarting search service ensure settings are kept.");
 
   await promiseAfterSettings();
   Services.search.wrappedJSObject.reset();
