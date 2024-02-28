@@ -263,51 +263,60 @@ internal object TranslationsStateReducer {
             }
 
         is TranslationsAction.UpdatePageSettingAction -> {
-            var pageSettings = state.findTab(action.tabId)?.translationsState?.pageSettings
-            // Initialize page settings, if null.
-            if (pageSettings == null) {
-                pageSettings = TranslationPageSettings()
-            }
+            val currentPageSettings =
+                state.findTab(action.tabId)?.translationsState?.pageSettings ?: TranslationPageSettings()
+
             when (action.operation) {
                 TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP -> {
-                    pageSettings.alwaysOfferPopup = action.setting
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            pageSettings = pageSettings,
+                            pageSettings = currentPageSettings.copy(alwaysOfferPopup = action.setting),
                         )
                     }
                 }
+
                 TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE -> {
-                    pageSettings.alwaysTranslateLanguage = action.setting
-                    if (action.setting) {
+                    val alwaysTranslateLang = action.setting
+                    var neverTranslateLang = currentPageSettings.neverTranslateLanguage
+
+                    if (alwaysTranslateLang) {
                         // Always and never translate sites are always opposites when the other is true.
-                        pageSettings.neverTranslateLanguage = false
+                        neverTranslateLang = false
                     }
 
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            pageSettings = pageSettings,
+                            pageSettings = currentPageSettings.copy(
+                                alwaysTranslateLanguage = alwaysTranslateLang,
+                                neverTranslateLanguage = neverTranslateLang,
+                            ),
                         )
                     }
                 }
+
                 TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE -> {
-                    pageSettings.neverTranslateLanguage = action.setting
-                    if (action.setting) {
+                    var alwaysTranslateLang = currentPageSettings.alwaysTranslateLanguage
+                    val neverTranslateLang = action.setting
+
+                    if (neverTranslateLang) {
                         // Always and never translate sites are always opposites when the other is true.
-                        pageSettings.alwaysTranslateLanguage = false
+                        alwaysTranslateLang = false
                     }
 
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            pageSettings = pageSettings,
+                            pageSettings = currentPageSettings.copy(
+                                alwaysTranslateLanguage = alwaysTranslateLang,
+                                neverTranslateLanguage = neverTranslateLang,
+                            ),
                         )
                     }
                 }
+
                 TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE -> {
-                    pageSettings.neverTranslateSite = action.setting
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
-                            pageSettings = pageSettings,
+                            pageSettings = currentPageSettings.copy(neverTranslateSite = action.setting),
                         )
                     }
                 }

@@ -690,6 +690,7 @@ class TranslationsActionTest {
         assertTrue(tabState().translationsState.pageSettings?.neverTranslateSite!!)
     }
 
+    @Test
     fun `WHEN a SetEngineSupportAction is dispatched THEN the browser store is updated to match`() {
         // Initial state
         assertNull(store.state.translationEngine.isEngineSupported)
