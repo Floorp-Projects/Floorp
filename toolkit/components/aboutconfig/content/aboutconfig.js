@@ -255,6 +255,7 @@ class PrefRow {
       if (this.editing) {
         this.inputField = document.createElement("input");
         this.inputField.value = this.value;
+        this.inputField.ariaLabel = this.name;
         if (this.type == "Number") {
           this.inputField.type = "number";
           this.inputField.required = true;
