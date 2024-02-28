@@ -1322,8 +1322,20 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 #endif
 
 already_AddRefed<PFilePickerParent> BrowserParent::AllocPFilePickerParent(
-    const nsString& aTitle, const nsIFilePicker::Mode& aMode) {
-  return MakeAndAddRef<FilePickerParent>(aTitle, aMode);
+    const nsString& aTitle, const nsIFilePicker::Mode& aMode,
+    const MaybeDiscarded<BrowsingContext>& aBrowsingContext) {
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      [&]() -> CanonicalBrowsingContext* {
+    if (aBrowsingContext.IsNullOrDiscarded()) {
+      return nullptr;
+    }
+    if (!aBrowsingContext.get_canonical()->IsOwnedByProcess(
+            Manager()->ChildID())) {
+      return nullptr;
+    }
+    return aBrowsingContext.get_canonical();
+  }();
+  return MakeAndAddRef<FilePickerParent>(aTitle, aMode, browsingContext);
 }
 
 already_AddRefed<PSessionStoreParent>

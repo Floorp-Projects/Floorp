@@ -66,9 +66,8 @@ class nsFilePicker final : public nsBaseWinFilePicker {
  public:
   nsFilePicker();
 
-  NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  nsIFilePicker::Mode aMode,
-                  mozilla::dom::BrowsingContext* aBrowsingContext) override;
+  NS_IMETHOD Init(mozilla::dom::BrowsingContext* aBrowsingContext,
+                  const nsAString& aTitle, nsIFilePicker::Mode aMode) override;
 
   NS_DECL_ISUPPORTS
 
@@ -117,7 +116,6 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   bool IsDefaultPathLink();
   bool IsDefaultPathHtml();
 
-  nsCOMPtr<nsILoadContext> mLoadContext;
   nsCOMPtr<nsIWidget> mParentWidget;
   nsString mTitle;
   nsCString mFile;
