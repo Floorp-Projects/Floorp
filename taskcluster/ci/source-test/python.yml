@@ -24,6 +24,7 @@ job-defaults:
                     PATH: "/usr/local/bin:/bin:/sbin:/usr/bin:/usr/sbin"
             default:
                 max-run-time: 3600
+    use-system-python: false
     treeherder:
         kind: test
         tier: 1
