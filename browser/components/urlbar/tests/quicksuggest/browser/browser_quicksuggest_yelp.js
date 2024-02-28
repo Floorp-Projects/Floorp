@@ -15,6 +15,7 @@ const REMOTE_SETTINGS_RECORDS = [
       locationSigns: [{ keyword: "in", needLocation: true }],
       yelpModifiers: [],
       icon: "1234",
+      score: 0.5,
     },
   },
 ];
