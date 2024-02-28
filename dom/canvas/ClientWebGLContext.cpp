@@ -5858,7 +5858,7 @@ void ClientWebGLContext::AttachShader(WebGLProgramJS& prog,
 void ClientWebGLContext::BindAttribLocation(WebGLProgramJS& prog,
                                             const GLuint location,
                                             const nsAString& name) const {
-  const FuncScope funcScope(*this, "detachShader");
+  const FuncScope funcScope(*this, "bindAttribLocation");
   if (IsContextLost()) return;
   if (!prog.ValidateUsable(*this, "program")) return;
 
