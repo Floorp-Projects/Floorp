@@ -714,7 +714,7 @@ class ByteArray : public HeapObject {
   void set(uint32_t index, uint8_t val) { inner()->set(index, val); }
 
   uint32_t length() const { return inner()->length(); }
-  uint8_t* GetDataStartAddress() { return inner()->data(); }
+  uint8_t* begin() { return inner()->data(); }
 
   static ByteArray cast(Object object) {
     ByteArray b;
