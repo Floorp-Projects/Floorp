@@ -71,6 +71,7 @@ skip-if = [
 ]
 
 ["browser_acknowledgeFeedbackAndDismissal.js"]
+fail-if = ["a11y_checks"] # Bug 1882430 while the general patch is under review
 
 ["browser_action_searchengine.js"]
 skip-if = [
