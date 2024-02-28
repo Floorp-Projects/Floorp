@@ -1,0 +1,86 @@
+{
+  "triagers": {
+    "Amy Churchwell": {
+      "bzmail": "achurchwell@mozilla.com"
+    },
+    "Cieara Meador": {
+      "bzmail": "cmeador@mozilla.com"
+    },
+    "Dão Gottwald": {
+      "bzmail": "dao+bmo@mozilla.com"
+    },
+    "Jules Simplicio": {
+      "bzmail": "jules@mozilla.com"
+    },
+    "Kelly Cochrane": {
+      "bzmail": "kcochrane@mozilla.com"
+    },
+    "Sam Foster": {
+      "bzmail": "sfoster@mozilla.com"
+    }
+  },
+  "duty-start-dates": {
+    "2024-03-01": "Amy Churchwell",
+    "2024-03-08": "Cieara Meador",
+    "2024-03-15": "Dão Gottwald",
+    "2024-03-22": "Jules Simplicio",
+    "2024-03-29": "Kelly Cochrane",
+    "2024-04-06": "Sam Foster",
+    "2024-04-13": "Amy Churchwell",
+    "2024-04-20": "Cieara Meador",
+    "2024-04-27": "Dão Gottwald",
+    "2024-05-04": "Jules Simplicio",
+    "2024-05-11": "Kelly Cochrane",
+    "2024-05-18": "Sam Foster",
+    "2024-05-25": "Amy Churchwell",
+    "2024-06-02": "Cieara Meador",
+    "2024-06-09": "Dão Gottwald",
+    "2024-06-16": "Jules Simplicio",
+    "2024-06-23": "Kelly Cochrane",
+    "2024-06-30": "Sam Foster",
+    "2024-07-07": "Amy Churchwell",
+    "2024-07-14": "Cieara Meador",
+    "2024-07-21": "Dão Gottwald",
+    "2024-07-28": "Jules Simplicio",
+    "2024-08-05": "Kelly Cochrane",
+    "2024-08-12": "Sam Foster",
+    "2024-08-19": "Amy Churchwell",
+    "2024-08-26": "Cieara Meador",
+    "2024-09-03": "Dão Gottwald",
+    "2024-09-10": "Jules Simplicio",
+    "2024-09-17": "Kelly Cochrane",
+    "2024-09-24": "Sam Foster",
+    "2024-10-01": "Amy Churchwell",
+    "2024-10-08": "Cieara Meador",
+    "2024-10-15": "Dão Gottwald",
+    "2024-10-22": "Jules Simplicio",
+    "2024-10-29": "Kelly Cochrane",
+    "2024-11-06": "Sam Foster",
+    "2024-11-13": "Amy Churchwell",
+    "2024-11-20": "Cieara Meador",
+    "2024-11-27": "Dão Gottwald",
+    "2024-12-04": "Jules Simplicio",
+    "2024-12-11": "Kelly Cochrane",
+    "2024-12-18": "Sam Foster",
+    "2024-12-25": "Amy Churchwell",
+    "2025-01-02": "Cieara Meador",
+    "2025-01-09": "Dão Gottwald",
+    "2025-01-16": "Jules Simplicio",
+    "2025-01-23": "Kelly Cochrane",
+    "2025-01-30": "Sam Foster",
+    "2025-02-07": "Amy Churchwell",
+    "2025-02-14": "Cieara Meador",
+    "2025-02-21": "Dão Gottwald",
+    "2025-02-28": "Jules Simplicio",
+    "2025-03-05": "Kelly Cochrane",
+    "2025-03-12": "Sam Foster",
+    "2025-03-19": "Amy Churchwell",
+    "2025-03-26": "Cieara Meador",
+    "2025-04-03": "Dão Gottwald",
+    "2025-04-10": "Jules Simplicio",
+    "2025-04-17": "Kelly Cochrane",
+    "2025-04-24": "Sam Foster",
+    "2025-05-01": "Amy Churchwell",
+    "2025-05-08": "Cieara Meador"
+  }
+}
