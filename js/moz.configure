@@ -1354,6 +1354,16 @@ with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT"
     set_define("HAVE_PTHREAD_GET_NAME_NP", check_symbol("pthread_get_name_np"))
     set_define("HAVE_STRERROR", check_symbol("strerror"))
 
+    set_config(
+        "HAVE_LANGINFO_CODESET",
+        try_link(
+            includes=["langinfo.h"],
+            body="char* cs = nl_langinfo(CODESET);",
+            check_msg="for nl_langinfo and CODESET",
+            when=building_with_gnu_cc,
+        ),
+    )
+
     @depends(check_symbol("__cxa_demangle", language="C++"), moz_debug, dmd)
     def demangle_symbols(cxa_demangle, moz_debug, dmd):
         # Demangle only for debug or DMD builds
