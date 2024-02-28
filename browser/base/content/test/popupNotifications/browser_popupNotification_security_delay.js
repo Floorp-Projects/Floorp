@@ -5,6 +5,8 @@
 
 const TEST_SECURITY_DELAY = 5000;
 
+SimpleTest.requestCompleteLog();
+
 /**
  * Shows a test PopupNotification.
  */
@@ -394,4 +396,167 @@ add_task(async function test_notificationWindowMove() {
 
   // Reset window position
   window.moveTo(screenX, screenY);
+});
+
+/**
+ * Tests that the security delay gets extended if a notification is shown during
+ * a full screen transition.
+ */
+add_task(async function test_notificationDuringFullScreenTransition() {
+  // Log full screen transition messages.
+  let loggingObserver = {
+    observe(subject, topic) {
+      info("Observed topic: " + topic);
+    },
+  };
+  Services.obs.addObserver(loggingObserver, "fullscreen-transition-start");
+  Services.obs.addObserver(loggingObserver, "fullscreen-transition-end");
+  // Unregister observers when the test ends:
+  registerCleanupFunction(() => {
+    Services.obs.removeObserver(loggingObserver, "fullscreen-transition-start");
+    Services.obs.removeObserver(loggingObserver, "fullscreen-transition-end");
+  });
+
+  if (Services.appinfo.OS == "Linux") {
+    ok(
+      "Skipping test on Linux because of disabled full screen transition in CI."
+    );
+    return;
+  }
+  // Bug 1882527: Intermittent failures on macOS.
+  if (Services.appinfo.OS == "Darwin") {
+    ok("Skipping test on macOS because of intermittent failures.");
+    return;
+  }
+
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        // Set a short security delay so we can observe it being extended.
+        ["security.notification_enable_delay", 1],
+        // Set a longer full screen exit transition so the test works on slow builds.
+        ["full-screen-api.transition-duration.leave", "1000 1000"],
+        // Waive the user activation requirement for full screen requests.
+        // The PoC this test is based on relies on spam clicking which grants
+        // user activation in the popup that requests full screen.
+        // This isn't reliable in automation.
+        ["full-screen-api.allow-trusted-requests-only", false],
+        // macOS native full screen is not affected by the full screen
+        // transition overlap. Test with the old full screen implementation.
+        ["full-screen-api.macos-native-full-screen", false],
+      ],
+    });
+
+    await ensureSecurityDelayReady();
+
+    ok(
+      !PopupNotifications.isPanelOpen,
+      "PopupNotification panel should not be open initially."
+    );
+
+    info("Open a notification.");
+    let popupShownPromise = waitForNotificationPanel();
+    showNotification();
+    await popupShownPromise;
+    ok(
+      PopupNotifications.isPanelOpen,
+      "PopupNotification should be open after show call."
+    );
+
+    let notification = PopupNotifications.getNotification("foo", browser);
+    is(notification?.id, "foo", "There should be a notification with id foo");
+
+    info(
+      "Open a new tab via window.open, enter full screen and remove the tab."
+    );
+
+    // There are two transitions, one for full screen entry and one for full screen exit.
+    let transitionStartCount = 0;
+    let transitionEndCount = 0;
+    let promiseFullScreenTransitionStart = TestUtils.topicObserved(
+      "fullscreen-transition-start",
+      () => {
+        transitionStartCount++;
+        return transitionStartCount == 2;
+      }
+    );
+    let promiseFullScreenTransitionEnd = TestUtils.topicObserved(
+      "fullscreen-transition-end",
+      () => {
+        transitionEndCount++;
+        return transitionEndCount == 2;
+      }
+    );
+    let notificationShownPromise = waitForNotificationPanel();
+
+    await SpecialPowers.spawn(browser, [], () => {
+      // Use eval to execute in the privilege context of the website.
+      content.eval(`
+           let button = document.createElement("button");
+           button.id = "triggerBtn";
+           button.innerText = "Open Popup";
+           button.addEventListener("click", () => {
+             let popup = window.open("about:blank");
+             popup.document.write(
+               "<script>setTimeout(() => document.documentElement.requestFullscreen(), 500)</script>"
+             );
+             popup.document.write(
+               "<script>setTimeout(() => window.close(), 1500)</script>"
+             );
+           });
+           // Insert button at the top so the synthesized click works. Otherwise
+           // the button may be outside of the viewport.
+           document.body.prepend(button);
+         `);
+    });
+
+    let timeClick = performance.now();
+    await BrowserTestUtils.synthesizeMouseAtCenter("#triggerBtn", {}, browser);
+
+    info("Wait for the exit transition to start. It's the second transition.");
+    await promiseFullScreenTransitionStart;
+    info("Full screen transition start");
+    ok(true, "Full screen transition started");
+    ok(
+      window.isInFullScreenTransition,
+      "Full screen transition is still running."
+    );
+
+    info(
+      "Wait for notification to re-show on tab switch, after the popup has been closed"
+    );
+    await notificationShownPromise;
+    ok(
+      window.isInFullScreenTransition,
+      "Full screen transition is still running."
+    );
+    info(
+      "about to trigger notification. time between btn click and notification show: " +
+        (performance.now() - timeClick)
+    );
+
+    info(
+      "Trigger main action via button click during the extended security delay."
+    );
+    triggerMainCommand(PopupNotifications.panel);
+
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    ok(
+      PopupNotifications.isPanelOpen,
+      "PopupNotification should still be open."
+    );
+    notification = PopupNotifications.getNotification(
+      "foo",
+      gBrowser.selectedBrowser
+    );
+    ok(
+      notification,
+      "Notification should still be open because we clicked during the security delay."
+    );
+
+    info("Wait for full screen transition end.");
+    await promiseFullScreenTransitionEnd;
+    info("Full screen transition end");
+  });
 });
