@@ -15,14 +15,14 @@ const { debug, warn } = GeckoViewUtils.initLogging("FilePickerDelegate");
 
 export class FilePickerDelegate {
   /* ----------  nsIFilePicker  ---------- */
-  init(aParent, aTitle, aMode) {
+  init(aBrowsingContext, aTitle, aMode) {
     if (
       aMode === Ci.nsIFilePicker.modeGetFolder ||
       aMode === Ci.nsIFilePicker.modeSave
     ) {
       throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     }
-    this._prompt = new lazy.GeckoViewPrompter(aParent);
+    this._prompt = new lazy.GeckoViewPrompter(aBrowsingContext);
     this._msg = {
       type: "file",
       title: aTitle,
