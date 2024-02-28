@@ -75,6 +75,10 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         ]
         USE_LIBS += ['mozva']
 
+EXPORTS.ffvpx = [
+    "tx.h"
+]
+
 SYMBOLS_FILE =  'avutil.symbols'
 NoVisibilityFlags()
 
