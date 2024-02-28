@@ -167,6 +167,23 @@ After the build has completed, ``./mach run`` with the usual options for
 running in a debugger (``gdb``, ``lldb``, ``rr``, etc.) work fine, as do
 the ``--disable-e10s`` and other options.
 
+While running Firefox, ensure that it's not in safe mode since it might cause
+some tsan failures during startup. You can use a different profile or add
+``--temp-profile`` to use a temporary one.
+
+Firefox might crash on startup if you have an NVIDIA GPU with proprietary
+drivers. To fix this, disable the graphics acceleration by changing the following
+prefs:
+
+- ``gfx.x11-egl.force-disabled=true``
+- ``gfx.webrender.software.opengl=true``
+- ``layers.acceleration.disabled=true``
+
+You can either do this by passing these prefs to your ``./mach run`` command
+like this: ``./mach run --setpref "gfx.x11-egl.force-disabled=true" --setpref "gfx.webrender.software.opengl=true" --setpref "layers.acceleration.disabled=true"``
+or you can add them to your ``machrc`` file. Learn more about mach settings
+:ref:`here<mach_settings>`.
+
 Building only the JavaScript shell
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
