@@ -632,7 +632,7 @@ enum class AssembleResult {
     // RegExpShared.
     ByteArray bytecode =
         v8::internal::ByteArray::cast(*result.code).takeOwnership(cx->isolate);
-    uint32_t length = bytecode->length();
+    uint32_t length = bytecode->length;
     re->setByteCode(bytecode.release(), isLatin1);
     js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
   }
@@ -773,7 +773,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   bool isLatin1 = input->hasLatin1Chars();
 
   SampleCharacters(input, compiler);
-  data.node = compiler.PreprocessRegExp(&data, isLatin1);
+  data.node = compiler.PreprocessRegExp(&data, flags, isLatin1);
   data.error = AnalyzeRegExp(cx->isolate, isLatin1, flags, data.node);
   if (data.error != RegExpError::kNone) {
     MOZ_ASSERT(data.error == RegExpError::kAnalysisStackOverflow);

@@ -103,7 +103,7 @@ class RegExpShared
 
     size_t byteCodeLength() const {
       MOZ_ASSERT(byteCode);
-      return byteCode->length();
+      return byteCode->length;
     }
   };
 

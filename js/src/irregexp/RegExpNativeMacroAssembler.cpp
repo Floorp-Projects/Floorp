@@ -247,8 +247,8 @@ void SMRegExpMacroAssembler::CheckCharacterNotInRange(base::uc16 from,
 bool SMRegExpMacroAssembler::IsCharacterInRangeArray(uint32_t c,
                                                      ByteArrayData* ranges) {
   js::AutoUnsafeCallWithABI unsafe;
-  MOZ_ASSERT(ranges->length() % sizeof(uint16_t) == 0);
-  uint32_t length = ranges->length() / sizeof(uint16_t);
+  MOZ_ASSERT(ranges->length % sizeof(uint16_t) == 0);
+  uint32_t length = ranges->length / sizeof(uint16_t);
   MOZ_ASSERT(length > 0);
 
   // Fast paths.
