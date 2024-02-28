@@ -5126,7 +5126,11 @@ class Document : public nsINode,
   // https://drafts.csswg.org/css-round-display/#viewport-fit-descriptor
   ViewportFitType mViewportFit;
 
-  PLDHashTable* mSubDocuments;
+  // XXXdholbert This should really be modernized to a nsTHashMap or similar,
+  // though note that the modernization will need to take care to also convert
+  // the special hash_table_ops logic (e.g. how SubDocClearEntry clears the
+  // parent document as part of cleaning up an entry in this table).
+  UniquePtr<PLDHashTable> mSubDocuments;
 
   class HeaderData;
   UniquePtr<HeaderData> mHeaderData;
