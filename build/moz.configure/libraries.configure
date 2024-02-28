@@ -42,3 +42,14 @@ set_config(
 )
 
 set_config("REALTIME_LIBS", ["-lrt"], when=have_rt_clock_monotonic_support)
+
+
+have_res_ninit = try_link(
+    includes=["sys/types.h", "netinet/in.h", "arpa/nameser.h", "resolv.h"],
+    body="int foo = res_ninit(&_res);",
+    check_msg="for res_ninit()",
+    flags=depends(when=building_linux)(["-D_BSD_SOURCE=1"]),
+    when=building_with_gnu_cc & ~target_is_netbsd & ~target_is_openbsd,
+)
+
+set_define("HAVE_RES_NINIT", have_res_ninit)
