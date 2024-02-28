@@ -64,6 +64,7 @@ void setDocumentFragmentForTemplate(nsIContentHandle* aTemplate,
 nsIContentHandle* getShadowRootFromHost(nsIContentHandle* aHost,
                                         nsIContentHandle* aTemplateNode,
                                         nsHtml5String aShadowRootMode,
+                                        bool aShadowRootIsClonable,
                                         bool aShadowRootDelegatesFocus);
 
 nsIContentHandle* getFormPointerForContext(nsIContentHandle* aContext);

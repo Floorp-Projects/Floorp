@@ -930,6 +930,7 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     nsresult operator()(const opGetShadowRootFromHost& aOperation) {
       nsIContent* root = nsContentUtils::AttachDeclarativeShadowRoot(
           *aOperation.mHost, aOperation.mShadowRootMode,
+          aOperation.mShadowRootIsClonable,
           aOperation.mShadowRootDelegatesFocus);
       if (root) {
         *aOperation.mFragHandle = root;

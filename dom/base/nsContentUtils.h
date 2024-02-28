@@ -3441,7 +3441,7 @@ class nsContentUtils {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static nsIContent* AttachDeclarativeShadowRoot(
-      nsIContent* aHost, mozilla::dom::ShadowRootMode aMode,
+      nsIContent* aHost, mozilla::dom::ShadowRootMode aMode, bool aIsClonable,
       bool aDelegatesFocus);
 
  private:

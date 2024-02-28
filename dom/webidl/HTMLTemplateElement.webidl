@@ -16,6 +16,8 @@ interface HTMLTemplateElement : HTMLElement {
   readonly attribute DocumentFragment content;
   [CEReactions, Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   attribute DOMString shadowRootMode;
-  [CEReactions, Pref="dom.webcomponents.shadowdom.declarative.enabled"]
+  [CEReactions, SetterThrows, Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   attribute boolean shadowRootDelegatesFocus;
+  [CEReactions, SetterThrows, Pref="dom.webcomponents.shadowdom.declarative.enabled"]
+  attribute boolean shadowRootClonable;
 };

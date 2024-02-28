@@ -51,12 +51,18 @@ class HTMLTemplateElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::shadowrootmode, aValue);
   }
 
-  bool ShadowRootDelegatesFocus() {
+  bool ShadowRootDelegatesFocus() const {
     return GetBoolAttr(nsGkAtoms::shadowrootdelegatesfocus);
   }
-  void SetShadowRootDelegatesFocus(bool aValue) {
-    SetHTMLBoolAttr(nsGkAtoms::shadowrootdelegatesfocus, aValue,
-                    IgnoredErrorResult());
+  void SetShadowRootDelegatesFocus(bool aValue, ErrorResult& aRv) {
+    SetHTMLBoolAttr(nsGkAtoms::shadowrootdelegatesfocus, aValue, aRv);
+  }
+
+  bool ShadowRootClonable() const {
+    return GetBoolAttr(nsGkAtoms::shadowrootclonable);
+  }
+  void SetShadowRootClonable(bool aValue, ErrorResult& aRv) {
+    SetHTMLBoolAttr(nsGkAtoms::shadowrootclonable, aValue, aRv);
   }
 
   MOZ_CAN_RUN_SCRIPT
