@@ -2406,12 +2406,12 @@ var gBrowserInit = {
             // Add SSB Window or Tab Attribute
             // This attribute is used to make do not restore the window or tab when the browser is restarted.
             window.floorpSsbWindow = true;
-            gBrowser.tabs.forEach(tab => {
-              tab.setAttribute("floorpSSB", "true");
-            });
 
             SessionStore.promiseInitialized.then(() => {
               // Load SSB Support Script & CSS
+              gBrowser.tabs.forEach(tab => {
+                tab.setAttribute("floorpSSB", "true");
+              });
               window.gBrowser.floorpSsbWindow = true;
               Services.scriptloader.loadSubScript(
                 "chrome://browser/content/browser-ssb-support.js",
