@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  BackupService: "resource:///modules/backup/BackupService.sys.mjs",
   Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
@@ -3163,6 +3164,14 @@ BrowserGlue.prototype = {
         name: "SearchSERPDomainToCategoriesMap.init",
         task: () => {
           lazy.SearchSERPDomainToCategoriesMap.init().catch(console.error);
+        },
+      },
+
+      {
+        name: "BackupService initialization",
+        condition: Services.prefs.getBoolPref("browser.backup.enabled", false),
+        task: () => {
+          lazy.BackupService.init();
         },
       },
 
