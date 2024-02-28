@@ -130,6 +130,7 @@ skip-if = ["os == 'android'"] # only the current window is supported - bug 17959
 ["test_ext_browserAction_openPopup_without_pref.html"]
 
 ["test_ext_browserSettings_overrideDocumentColors.html"]
+skip-if = ["os == 'android'"] # bug 1876317
 
 ["test_ext_browsingData_indexedDB.html"]
 skip-if = [
