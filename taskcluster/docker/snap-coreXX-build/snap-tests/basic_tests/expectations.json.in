@@ -10,5 +10,9 @@
     "test_youtube": {
         "duration": 1,
         "playback": 2
+    },
+    "test_youtube_film": {
+        "duration": 1,
+        "playback": 2
     }
 }
