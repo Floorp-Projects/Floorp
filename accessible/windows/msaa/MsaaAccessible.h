@@ -12,9 +12,8 @@
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
 #include "IUnknownImpl.h"
-#include "MsaaIdGenerator.h"
+#include "mozilla/a11y/MsaaIdGenerator.h"
 #include "nsXULAppAPI.h"
-#include "uiaRawElmProvider.h"
 
 namespace mozilla {
 namespace a11y {
@@ -26,8 +25,7 @@ class sdnAccessible;
 class MsaaAccessible : public ia2Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
-                       public ia2AccessibleValue,
-                       public uiaRawElmProvider {
+                       public ia2AccessibleValue {
  public:
   static MsaaAccessible* Create(Accessible* aAcc);
 
