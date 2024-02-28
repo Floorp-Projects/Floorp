@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap;
+class Accessible;
 
 /**
  * IRawElementProviderSimple implementation (maintains IAccessibleEx approach).
@@ -60,7 +60,7 @@ class uiaRawElmProvider : public IAccessibleEx,
           aRawElmProvider);
 
  private:
-  AccessibleWrap* LocalAcc();
+  Accessible* Acc();
 };
 
 }  // namespace a11y
