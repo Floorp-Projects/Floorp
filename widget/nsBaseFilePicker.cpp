@@ -18,6 +18,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "WidgetUtils.h"
@@ -156,17 +157,16 @@ nsBaseFilePicker::nsBaseFilePicker()
 
 nsBaseFilePicker::~nsBaseFilePicker() = default;
 
-NS_IMETHODIMP nsBaseFilePicker::Init(
-    mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-    nsIFilePicker::Mode aMode,
-    mozilla::dom::BrowsingContext* aBrowsingContext) {
-  MOZ_ASSERT(aParent,
-             "Null parent passed to filepicker, no file "
+NS_IMETHODIMP nsBaseFilePicker::Init(BrowsingContext* aBrowsingContext,
+                                     const nsAString& aTitle,
+                                     nsIFilePicker::Mode aMode) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aBrowsingContext,
+             "Null bc passed to filepicker, no file "
              "picker for you!");
 
-  mParent = nsPIDOMWindowOuter::From(aParent);
-
-  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(mParent);
+  nsCOMPtr<nsIWidget> widget =
+      aBrowsingContext->Canonical()->GetParentProcessWidgetContaining();
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   mBrowsingContext = aBrowsingContext;
@@ -462,6 +462,8 @@ nsBaseFilePicker::GetOkButtonLabel(nsAString& aLabel) {
 
 NS_IMETHODIMP
 nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  NS_ENSURE_ARG_POINTER(mBrowsingContext);
   nsCOMPtr<nsIFile> localFile;
   nsresult rv = GetFile(getter_AddRefs(localFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -471,7 +473,10 @@ nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue) {
     return NS_OK;
   }
 
-  auto* innerParent = mParent ? mParent->GetCurrentInnerWindow() : nullptr;
+  auto* innerParent =
+      mBrowsingContext->GetDOMWindow()
+          ? mBrowsingContext->GetDOMWindow()->GetCurrentInnerWindow()
+          : nullptr;
 
   if (!innerParent) {
     return NS_ERROR_FAILURE;
@@ -485,11 +490,19 @@ NS_IMETHODIMP
 nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(
     nsISimpleEnumerator** aValue) {
   nsCOMPtr<nsISimpleEnumerator> iter;
+  MOZ_ASSERT(XRE_IsParentProcess());
+  NS_ENSURE_ARG_POINTER(mBrowsingContext);
   nsresult rv = GetFiles(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  auto* parent = mBrowsingContext->GetDOMWindow();
+
+  if (!parent) {
+    return NS_ERROR_FAILURE;
+  }
+
   RefPtr<nsBaseFilePickerEnumerator> retIter =
-      new nsBaseFilePickerEnumerator(mParent, iter, mMode);
+      new nsBaseFilePickerEnumerator(parent, iter, mMode);
 
   retIter.forget(aValue);
   return NS_OK;

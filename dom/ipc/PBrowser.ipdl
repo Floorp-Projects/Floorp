@@ -428,7 +428,7 @@ parent:
      */
     async PColorPicker(nsString title, nsString initialColor, nsString[] defaultColors);
 
-    async PFilePicker(nsString aTitle, Mode aMode);
+    async PFilePicker(nsString aTitle, Mode aMode, MaybeDiscardedBrowsingContext aBrowsingContext);
 
     /**
      * Tells the containing widget whether the given input block results in a
