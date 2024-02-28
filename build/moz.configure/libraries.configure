@@ -1,0 +1,44 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+@template
+def check_clock_monotonic_support(lib=None, when=None):
+    check_msg = "for clock_gettime(CLOCK_MONOTONIC)"
+    flags = []
+
+    if lib is not None:
+        check_msg += f" in {lib}"
+        flags.append(f"-l{lib}")
+
+    check_when = building_with_gnu_cc
+    if when is not None:
+        check_when &= when
+
+    return try_link(
+        includes=["time.h"],
+        body="struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);",
+        check_msg=check_msg,
+        flags=flags,
+        when=check_when,
+    )
+
+
+have_raw_clock_monotonic_support = check_clock_monotonic_support()
+have_rt_clock_monotonic_support = check_clock_monotonic_support(
+    lib="rt", when=~have_raw_clock_monotonic_support
+)
+
+set_define(
+    "HAVE_CLOCK_MONOTONIC",
+    have_raw_clock_monotonic_support | have_rt_clock_monotonic_support,
+)
+set_config(
+    "HAVE_CLOCK_MONOTONIC",
+    have_raw_clock_monotonic_support | have_rt_clock_monotonic_support,
+)
+
+set_config("REALTIME_LIBS", ["-lrt"], when=have_rt_clock_monotonic_support)
