@@ -57,7 +57,7 @@ var HarMenuUtils = {
   openHarFile(actions, openSplitConsole) {
     const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(
-      window,
+      window.browsingContext,
       L10N.getStr("netmonitor.har.importHarDialogTitle"),
       Ci.nsIFilePicker.modeOpen
     );
