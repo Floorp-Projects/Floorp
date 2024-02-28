@@ -74,7 +74,7 @@ add_task(async function test_pin_unpin_open_tab() {
     );
 
     // Pin tab
-    EventUtils.synthesizeMouseAtCenter(openTabEl.buttonEl, {}, content);
+    EventUtils.synthesizeMouseAtCenter(openTabEl.secondaryButtonEl, {}, content);
     await TestUtils.waitForCondition(() => card.tabContextMenu.panelList);
     let panelList = card.tabContextMenu.panelList;
     await BrowserTestUtils.waitForEvent(panelList, "shown");
@@ -273,7 +273,7 @@ add_task(async function test_indicator_pinned_tabs_with_keyboard() {
 
     await arrowRight(card.tabList);
     ok(
-      isActiveElement(firstUnpinnedTab.buttonEl),
+      isActiveElement(firstUnpinnedTab.secondaryButtonEl),
       "Focus should be on the first unpinned tab's secondary/more button element."
     );
 
@@ -285,7 +285,7 @@ add_task(async function test_indicator_pinned_tabs_with_keyboard() {
 
     await arrowRight(card.tabList);
     ok(
-      isActiveElement(firstUnpinnedTab.buttonEl),
+      isActiveElement(firstUnpinnedTab.secondaryButtonEl),
       "Focus should be on the first unpinned tab's secondary/more button element."
     );
 
@@ -303,13 +303,13 @@ add_task(async function test_indicator_pinned_tabs_with_keyboard() {
 
     await arrowDown(card.tabList);
     ok(
-      isActiveElement(firstUnpinnedTab.buttonEl),
+      isActiveElement(firstUnpinnedTab.secondaryButtonEl),
       "Focus should be on the first unpinned tab's secondary/more button element."
     );
 
     await arrowDown(card.tabList);
     ok(
-      isActiveElement(secondUnpinnedTab.buttonEl),
+      isActiveElement(secondUnpinnedTab.secondaryButtonEl),
       "Focus should be on the second unpinned tab's secondary/more button element."
     );
 

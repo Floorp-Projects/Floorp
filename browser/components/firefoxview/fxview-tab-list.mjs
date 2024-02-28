@@ -48,6 +48,8 @@ if (!window.IS_STORYBOOK) {
  * @property {boolean} pinnedTabsGridView - Whether to show pinned tabs in a grid view
  * @property {Array} tabItems - Items to show in the tab list
  * @property {string} searchQuery - The query string to highlight, if provided.
+ * @property {string} secondaryActionClass - The class used to style the secondary action element
+ * @property {string} tertiaryActionClass - The class used to style the tertiary action element
  */
 export default class FxviewTabList extends MozLitElement {
   constructor() {
@@ -79,6 +81,8 @@ export default class FxviewTabList extends MozLitElement {
     tabItems: { type: Array },
     updatesPaused: { type: Boolean },
     searchQuery: { type: String },
+    secondaryActionClass: { type: String },
+    tertiaryActionClass: { type: String },
   };
 
   static queries = {
@@ -244,8 +248,16 @@ export default class FxviewTabList extends MozLitElement {
       this.currentActiveElementId === "fxview-tab-row-main"
     ) {
       this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-    } else {
-      this.currentActiveElementId = fxviewTabRow.focusButton();
+    } else if (
+      this.currentActiveElementId === "fxview-tab-row-media-button" ||
+      this.currentActiveElementId === "fxview-tab-row-main"
+    ) {
+      this.currentActiveElementId = fxviewTabRow.focusSecondaryButton();
+    } else if (
+      fxviewTabRow.tertiaryButtonEl &&
+      this.currentActiveElementId === "fxview-tab-row-secondary-button"
+    ) {
+      this.currentActiveElementId = fxviewTabRow.focusTertiaryButton();
     }
   }
 
@@ -257,6 +269,10 @@ export default class FxviewTabList extends MozLitElement {
           this.activeIndex === this.pinnedTabs.length))
     ) {
       this.focusPrevRow();
+    } else if (
+      this.currentActiveElementId === "fxview-tab-row-tertiary-button"
+    ) {
+      this.currentActiveElementId = fxviewTabRow.focusSecondaryButton();
     } else if (
       (fxviewTabRow.indicators?.includes("soundplaying") ||
         fxviewTabRow.indicators?.includes("muted")) &&
@@ -354,6 +370,10 @@ export default class FxviewTabList extends MozLitElement {
           : "listitem"}
         .secondaryL10nId=${tabItem.secondaryL10nId}
         .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
+        .tertiaryL10nId=${ifDefined(tabItem.tertiaryL10nId)}
+        .tertiaryL10nArgs=${ifDefined(tabItem.tertiaryL10nArgs)}
+        .secondaryActionClass=${this.secondaryActionClass}
+        .tertiaryActionClass=${ifDefined(this.tertiaryActionClass)}
         .sourceClosedId=${ifDefined(tabItem.sourceClosedId)}
         .sourceWindowId=${ifDefined(tabItem.sourceWindowId)}
         .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
@@ -456,6 +476,10 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {string} primaryL10nArgs - The l10n args used for the primary action element
  * @property {string} secondaryL10nId - The l10n id used for the secondary action button
  * @property {string} secondaryL10nArgs - The l10n args used for the secondary action element
+ * @property {string} secondaryActionClass - The class used to style the secondary action element
+ * @property {string} tertiaryL10nId - The l10n id used for the tertiary action button
+ * @property {string} tertiaryL10nArgs - The l10n args used for the tertiary action element
+ * @property {string} tertiaryActionClass - The class used to style the tertiary action element
  * @property {object} tabElement - The MozTabbrowserTab element for the tab item.
  * @property {number} time - The timestamp for when the tab was last accessed.
  * @property {string} title - The title for the tab item.
@@ -484,6 +508,10 @@ export class FxviewTabRow extends MozLitElement {
     primaryL10nArgs: { type: String },
     secondaryL10nId: { type: String },
     secondaryL10nArgs: { type: String },
+    secondaryActionClass: { type: String },
+    tertiaryL10nId: { type: String },
+    tertiaryL10nArgs: { type: String },
+    tertiaryActionClass: { type: String },
     closedId: { type: Number },
     sourceClosedId: { type: Number },
     sourceWindowId: { type: String },
@@ -497,7 +525,8 @@ export class FxviewTabRow extends MozLitElement {
 
   static queries = {
     mainEl: "#fxview-tab-row-main",
-    buttonEl: "#fxview-tab-row-secondary-button:not([hidden])",
+    secondaryButtonEl: "#fxview-tab-row-secondary-button:not([hidden])",
+    tertiaryButtonEl: "#fxview-tab-row-tertiary-button",
     mediaButtonEl: "#fxview-tab-row-media-button",
     pinnedTabButtonEl: "button#fxview-tab-row-main",
   };
@@ -536,9 +565,14 @@ export class FxviewTabRow extends MozLitElement {
     this.currentFocusable.focus();
   }
 
-  focusButton() {
-    this.buttonEl.focus();
-    return this.buttonEl.id;
+  focusSecondaryButton() {
+    this.secondaryButtonEl.focus();
+    return this.secondaryButtonEl.id;
+  }
+
+  focusTertiaryButton() {
+    this.tertiaryButtonEl.focus();
+    return this.tertiaryButtonEl.id;
   }
 
   focusMediaButton() {
@@ -659,6 +693,23 @@ export class FxviewTabRow extends MozLitElement {
       event.preventDefault();
       this.dispatchEvent(
         new CustomEvent("fxview-tab-list-secondary-action", {
+          bubbles: true,
+          composed: true,
+          detail: { originalEvent: event, item: this },
+        })
+      );
+    }
+  }
+
+  tertiaryActionHandler(event) {
+    if (
+      (event.type == "click" && event.detail && !event.altKey) ||
+      // detail=0 is from keyboard
+      (event.type == "click" && !event.detail)
+    ) {
+      event.preventDefault();
+      this.dispatchEvent(
+        new CustomEvent("fxview-tab-list-tertiary-action", {
           bubbles: true,
           composed: true,
           detail: { originalEvent: event, item: this },
@@ -838,9 +889,14 @@ export class FxviewTabRow extends MozLitElement {
       ${when(
         this.secondaryL10nId && this.secondaryActionHandler,
         () => html`<button
-          class="fxview-tab-row-button ghost-button icon-button semi-transparent"
+          class=${classMap({
+            "fxview-tab-row-button": true,
+            "ghost-button": true,
+            "icon-button": true,
+            "semi-transparent": true,
+            [this.secondaryActionClass]: this.secondaryActionClass,
+          })}
           id="fxview-tab-row-secondary-button"
-          part="secondary-button"
           data-l10n-id=${this.secondaryL10nId}
           data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
           aria-haspopup=${ifDefined(this.hasPopup)}
@@ -876,6 +932,27 @@ export class FxviewTabRow extends MozLitElement {
         this.pinnedTabsGridView && this.indicators?.includes("pinned"),
         this.#pinnedTabItemTemplate.bind(this),
         this.#unpinnedTabItemTemplate.bind(this)
+      )}
+      ${when(
+        this.tertiaryL10nId && this.tertiaryActionHandler,
+        () => html`<button
+          class=${classMap({
+            "fxview-tab-row-button": true,
+            "ghost-button": true,
+            "icon-button": true,
+            "semi-transparent": true,
+            [this.tertiaryActionClass]: this.tertiaryActionClass,
+          })}
+          id="fxview-tab-row-tertiary-button"
+          data-l10n-id=${this.tertiaryL10nId}
+          data-l10n-args=${ifDefined(this.tertiaryL10nArgs)}
+          aria-haspopup=${ifDefined(this.hasPopup)}
+          @click=${this.tertiaryActionHandler}
+          tabindex="${this.active &&
+          this.currentActiveElementId === "fxview-tab-row-tertiary-button"
+            ? "0"
+            : "-1"}"
+        ></button>`
       )}
     `;
   }
