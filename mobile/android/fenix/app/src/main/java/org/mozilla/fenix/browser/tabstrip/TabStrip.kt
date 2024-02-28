@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.systemGestureExclusion
@@ -54,6 +54,9 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Favicon
+import org.mozilla.fenix.tabstray.browser.compose.DragItemContainer
+import org.mozilla.fenix.tabstray.browser.compose.createListReorderState
+import org.mozilla.fenix.tabstray.browser.compose.detectListPressAndDrag
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -103,6 +106,11 @@ fun TabStrip(
             tabsUseCases.selectTab(it)
             onSelectedTabClick()
         },
+        onMove = { tabId, targetId, placeAfter ->
+            if (tabId != targetId) {
+                tabsUseCases.moveTabs(listOf(tabId), targetId, placeAfter)
+            }
+        },
     )
 }
 
@@ -112,6 +120,7 @@ private fun TabStripContent(
     onAddTabClick: () -> Unit,
     onCloseTabClick: (id: String) -> Unit,
     onSelectedTabClick: (id: String) -> Unit,
+    onMove: (tabId: String, targetId: String, placeAfter: Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -125,6 +134,7 @@ private fun TabStripContent(
             modifier = Modifier.weight(1f, fill = false),
             onCloseTabClick = onCloseTabClick,
             onSelectedTabClick = onSelectedTabClick,
+            onMove = onMove,
         )
 
         IconButton(onClick = onAddTabClick) {
@@ -145,6 +155,7 @@ private fun TabsList(
     modifier: Modifier = Modifier,
     onCloseTabClick: (id: String) -> Unit,
     onSelectedTabClick: (id: String) -> Unit,
+    onMove: (tabId: String, targetId: String, placeAfter: Boolean) -> Unit,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val listState = rememberLazyListState()
@@ -153,29 +164,51 @@ private fun TabsList(
         val availableWidth = maxWidth - tabStripStartPadding
         val tabWidth = (availableWidth / state.tabs.size) - spaceBetweenTabs
 
+        val reorderState = createListReorderState(
+            listState = listState,
+            onMove = { movedTab, adjacentTab ->
+                onMove(
+                    (movedTab.key as String),
+                    (adjacentTab.key as String),
+                    movedTab.index < adjacentTab.index,
+                )
+            },
+            ignoredItems = emptyList(),
+        )
+
         LazyRow(
-            modifier = Modifier,
+            modifier = Modifier.detectListPressAndDrag(
+                reorderState = reorderState,
+                listState = listState,
+                shouldLongPressToDrag = true,
+            ),
             state = listState,
             contentPadding = PaddingValues(start = tabStripStartPadding),
         ) {
-            items(
+            itemsIndexed(
                 items = state.tabs,
-                key = { it.id },
-            ) { itemState ->
-                TabItem(
-                    state = itemState,
-                    onCloseTabClick = onCloseTabClick,
-                    onSelectedTabClick = onSelectedTabClick,
-                    modifier = Modifier
-                        .padding(end = spaceBetweenTabs)
-                        .animateItemPlacement()
-                        .width(
-                            tabWidth.coerceIn(
-                                minimumValue = minTabStripItemWidth,
-                                maximumValue = maxTabStripItemWidth,
+                key = { _, item -> item.id },
+            ) { index, itemState ->
+                DragItemContainer(
+                    state = reorderState,
+                    key = itemState.id,
+                    position = index,
+                ) {
+                    TabItem(
+                        state = itemState,
+                        onCloseTabClick = onCloseTabClick,
+                        onSelectedTabClick = onSelectedTabClick,
+                        modifier = Modifier
+                            .padding(end = spaceBetweenTabs)
+                            .animateItemPlacement()
+                            .width(
+                                tabWidth.coerceIn(
+                                    minimumValue = minTabStripItemWidth,
+                                    maximumValue = maxTabStripItemWidth,
+                                ),
                             ),
-                        ),
-                )
+                    )
+                }
             }
         }
 
@@ -380,6 +413,7 @@ private fun TabStripContentPreview(tabs: List<TabStripItem>) {
             onAddTabClick = {},
             onCloseTabClick = {},
             onSelectedTabClick = {},
+            onMove = { _, _, _ -> },
         )
     }
 }
