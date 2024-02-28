@@ -14,7 +14,7 @@ buildscript {
         }
     }
 
-    ext.kotlin_version = '1.8.21'
+    ext.kotlin_version = '1.9.22'
 
     dependencies {
         classpath 'org.mozilla.apilint:apilint:0.5.2'
@@ -98,7 +98,7 @@ allprojects {
     if (mozconfig.substs.ENABLE_MOZSEARCH_PLUGIN || mozconfig.substs.DOWNLOAD_ALL_GRADLE_DEPENDENCIES) {
         def targetRoot = new File(topobjdir, "mozsearch_java_index")
         def semanticdbJavacVersion = "com.sourcegraph:semanticdb-javac:0.9.6"
-        def semanticdbKotlincVersion = "com.sourcegraph:semanticdb-kotlinc:0.3.2"
+        def semanticdbKotlincVersion = "com.sourcegraph:semanticdb-kotlinc:0.4.0"
 
         afterEvaluate {
             def addDependencyToConfigurationIfExists = { configurationName, dependency ->
