@@ -131,7 +131,6 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.components.toolbar.BottomToolbarContainerView
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
@@ -142,6 +141,8 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
+import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
+import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
 import org.mozilla.fenix.crashes.CrashContentIntegration
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.databinding.FragmentBrowserBinding
@@ -223,6 +224,7 @@ abstract class BaseBrowserFragment :
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
+    private val navbarIntegration = ViewBoundFeatureWrapper<NavbarIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
@@ -467,11 +469,17 @@ abstract class BaseBrowserFragment :
 
             BottomToolbarContainerView(
                 context = context,
-                container = binding.browserLayout,
+                parent = binding.browserLayout,
                 androidToolbarView = if (isToolbarAtBottom) browserToolbar else null,
                 menuButton = menuButton,
                 browsingModeManager = activity.browsingModeManager,
-            )
+            ).also {
+                navbarIntegration.set(
+                    feature = it.navbarIntegration,
+                    owner = this,
+                    view = view,
+                )
+            }
         }
 
         toolbarIntegration.set(

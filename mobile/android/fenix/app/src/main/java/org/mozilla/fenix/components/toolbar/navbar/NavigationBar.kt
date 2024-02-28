@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.toolbar
+package org.mozilla.fenix.components.toolbar.navbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import mozilla.components.browser.menu.view.MenuButton
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.toolbar.ItemType.STANDARD
-import org.mozilla.fenix.components.toolbar.ItemType.TAB_COUNTER
+import org.mozilla.fenix.components.toolbar.navbar.ItemType.STANDARD
+import org.mozilla.fenix.components.toolbar.navbar.ItemType.TAB_COUNTER
 import org.mozilla.fenix.compose.TabCounter
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -153,7 +153,7 @@ object NavigationItems {
     val tabs = ActionItem(
         iconId = R.drawable.mozac_ui_tabcounter_box,
         descriptionResourceId = R.string.mozac_tab_counter_content_description,
-        type = ItemType.TAB_COUNTER,
+        type = TAB_COUNTER,
     )
 
     val defaultItems = listOf(back, forward, home, tabs, menu)
