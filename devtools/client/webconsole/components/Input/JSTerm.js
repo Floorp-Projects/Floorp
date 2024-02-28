@@ -758,7 +758,7 @@ class JSTerm extends Component {
   async _openFile() {
     const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(
-      this.webConsoleUI.document.defaultView,
+      this.webConsoleUI.document.defaultView.browsingContext,
       l10n.getStr("webconsole.input.openJavaScriptFile"),
       Ci.nsIFilePicker.modeOpen
     );

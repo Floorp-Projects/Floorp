@@ -142,7 +142,7 @@ export function showFilePicker(
     fp.defaultString = suggestedFilename;
   }
 
-  fp.init(parentWindow, getString(key + ".title"), mode);
+  fp.init(parentWindow.browsingContext, getString(key + ".title"), mode);
   fp.appendFilter(getString(key + ".filter"), "*.css");
   fp.appendFilters(fp.filterAll);
   fp.open(fpCallback);
