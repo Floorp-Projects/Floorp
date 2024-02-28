@@ -421,6 +421,11 @@ urlbar:
         If neither Nimbus nor remote settings defines a cap, no cap will be
         used, and the user will be able to increment the minimum length without
         any limit.
+    weatherSimpleUI:
+      type: boolean
+      description: >-
+        If true, show the weather suggestion by simple UI edition as follows.
+        * Remove the forcast text from the summary text.
     yelpMinKeywordLength:
       type: int
       fallbackPref: browser.urlbar.yelp.minKeywordLength

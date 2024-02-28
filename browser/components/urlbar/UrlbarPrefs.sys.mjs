@@ -525,6 +525,7 @@ const NIMBUS_DEFAULTS = {
   weatherKeywords: null,
   weatherKeywordsMinimumLength: 0,
   weatherKeywordsMinimumLengthCap: 0,
+  weatherSimpleUI: false,
 };
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
