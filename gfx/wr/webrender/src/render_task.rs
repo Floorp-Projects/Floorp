@@ -10,7 +10,7 @@ use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::command_buffer::{CommandBufferIndex, QuadFlags};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
-use crate::frame_builder::{FrameBuilderConfig};
+use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, TransformPaletteId};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
@@ -940,6 +940,9 @@ impl RenderTask {
         size: DeviceIntSize,
         kind: RenderTaskKind,
     ) -> Self {
+        if size.is_empty() {
+            log::warn!("Bad {} render task size: {:?}", kind.as_str(), size);
+        }
         RenderTask::new(
             RenderTaskLocation::Unallocated { size },
             kind,
