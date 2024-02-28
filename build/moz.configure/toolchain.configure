@@ -1615,6 +1615,7 @@ host_windows_abi = windows_abi(host, host_c_compiler)
 
 # Generic compiler-based conditions.
 building_with_gcc = depends(c_compiler)(lambda info: info.type == "gcc")
+building_with_gnu_cc = depends(c_compiler)(lambda info: info.type != "clang-cl")
 
 
 @depends(cxx_compiler, ccache_prefix)

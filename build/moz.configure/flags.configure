@@ -145,44 +145,34 @@ def file_prefix_map_flags(path_remapping, path_remappings, compiler):
 set_config("MOZ_FILE_PREFIX_MAP_FLAGS", file_prefix_map_flags)
 
 
-@depends(c_compiler)
-def is_gcc(c_compiler):
-    return c_compiler.type == "gcc"
-
-
-@depends(c_compiler)
-def is_gnu_cc(c_compiler):
-    return c_compiler.type != "clang-cl"
-
-
-@depends(developer_options, when=is_gnu_cc)
+@depends(developer_options, when=building_with_gnu_cc)
 def check_build_id_uuid(developer_options):
     return developer_options
 
 
-@depends(developer_options, when=is_gnu_cc)
+@depends(developer_options, when=building_with_gnu_cc)
 def check_build_id_sha1(developer_options):
     return not developer_options
 
 
-check_and_add_flag("-pipe", when=is_gcc)
+check_and_add_flag("-pipe", when=building_with_gcc)
 
 check_and_add_linker_flag("-Wl,--build-id=uuid", when=check_build_id_uuid)
 check_and_add_linker_flag("-Wl,--build-id=sha1", when=check_build_id_sha1)
 
-check_and_add_asm_flag("-Wa,--noexecstack", when=is_gnu_cc)
-check_and_add_linker_flag("-Wl,-z,noexecstack", when=is_gnu_cc)
-check_and_add_linker_flag("-Wl,-z,text", when=is_gnu_cc)
-check_and_add_linker_flag("-Wl,-z,relro", when=is_gnu_cc)
-check_and_add_linker_flag("-Wl,-z,now", when=is_gnu_cc)
-check_and_add_linker_flag("-Wl,-z,nocopyreloc", when=is_gnu_cc)
+check_and_add_asm_flag("-Wa,--noexecstack", when=building_with_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,noexecstack", when=building_with_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,text", when=building_with_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,relro", when=building_with_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,now", when=building_with_gnu_cc)
+check_and_add_linker_flag("-Wl,-z,nocopyreloc", when=building_with_gnu_cc)
 
 check_and_add_linker_optimize_flag("-Wl,-dead_strip", when=target_is_darwin & ~dtrace)
 
 
-@depends("--enable-address-sanitizer", is_gnu_cc)
-def check_Bsymbolic(enable_asan, is_gnu_cc):
-    return enable_asan and is_gnu_cc
+@depends("--enable-address-sanitizer", building_with_gnu_cc)
+def check_Bsymbolic(enable_asan, building_with_gnu_cc):
+    return enable_asan and building_with_gnu_cc
 
 
 # ASan assumes no symbols are being interposed, and when that happens,
