@@ -66,7 +66,7 @@ class ProviderAboutPages extends UrlbarProvider {
       if (aboutUrl.startsWith(searchString)) {
         let result = new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.URL,
-          UrlbarUtils.RESULT_SOURCE.HISTORY,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
             title: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
             url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
