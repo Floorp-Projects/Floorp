@@ -37,9 +37,6 @@ def _bootstrap_sandbox():
         Path(__file__).parent.parent.parent.parent / "build" / "moz.configure"
     )
     sandbox.include_file(str(moz_configure / "init.configure"))
-    # bootstrap_search_path_order has a dependency on developer_options, which
-    # is not defined in init.configure. Its value doesn't matter for us, though.
-    sandbox["developer_options"] = sandbox["always"]
     sandbox.include_file(str(moz_configure / "bootstrap.configure"))
     return sandbox
 
