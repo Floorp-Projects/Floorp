@@ -89,7 +89,10 @@ export let RemotePageAccessManager = {
         "OpenTRRPreferences",
       ],
       RPMCheckAlternateHostAvailable: ["*"],
-      RPMRecordTelemetryEvent: ["security.doh.neterror"],
+      RPMRecordTelemetryEvent: [
+        "security.doh.neterror",
+        "security.ui.tlserror",
+      ],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
       RPMGetFormatURLPref: [

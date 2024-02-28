@@ -2546,6 +2546,10 @@ BrowserGlue.prototype = {
             "security.ui.certerror",
             enableCertErrorUITelemetry
           );
+          Services.telemetry.setEventRecordingEnabled(
+            "security.ui.tlserror",
+            enableCertErrorUITelemetry
+          );
         },
       },
 
