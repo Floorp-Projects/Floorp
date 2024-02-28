@@ -9,7 +9,7 @@ select = [
 ]
 ignore = [
   # These should be triaged and either fixed or moved to the list below.
-  "E713", "E714", "W605",
+  "E713", "E714",
 
   # These are intentionally ignored.
   "E741",      # ambiguous-variable-name
