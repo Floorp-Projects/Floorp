@@ -1252,14 +1252,20 @@ Suggestion.Yelp = class extends Suggestion{
     constructor(
         url,
         title,
+        icon,
+        score,
+        hasLocationSign,
         subjectExactMatch,
-        icon
+        locationParam
         ) {
             super();
             this.url = url;
             this.title = title;
-            this.subjectExactMatch = subjectExactMatch;
             this.icon = icon;
+            this.score = score;
+            this.hasLocationSign = hasLocationSign;
+            this.subjectExactMatch = subjectExactMatch;
+            this.locationParam = locationParam;
         }
 }
 Suggestion.Mdn = class extends Suggestion{
@@ -1333,8 +1339,11 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
                 return new Suggestion.Yelp(
                     FfiConverterString.read(dataStream),
                     FfiConverterString.read(dataStream),
+                    FfiConverterOptionalSequenceu8.read(dataStream),
+                    FfiConverterF64.read(dataStream),
                     FfiConverterBool.read(dataStream),
-                    FfiConverterOptionalSequenceu8.read(dataStream)
+                    FfiConverterBool.read(dataStream),
+                    FfiConverterString.read(dataStream)
                     );
             case 6:
                 return new Suggestion.Mdn(
@@ -1401,8 +1410,11 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             dataStream.writeInt32(5);
             FfiConverterString.write(dataStream, value.url);
             FfiConverterString.write(dataStream, value.title);
-            FfiConverterBool.write(dataStream, value.subjectExactMatch);
             FfiConverterOptionalSequenceu8.write(dataStream, value.icon);
+            FfiConverterF64.write(dataStream, value.score);
+            FfiConverterBool.write(dataStream, value.hasLocationSign);
+            FfiConverterBool.write(dataStream, value.subjectExactMatch);
+            FfiConverterString.write(dataStream, value.locationParam);
             return;
         }
         if (value instanceof Suggestion.Mdn) {
@@ -1467,8 +1479,11 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
         if (value instanceof Suggestion.Yelp) {
             totalSize += FfiConverterString.computeSize(value.url);
             totalSize += FfiConverterString.computeSize(value.title);
-            totalSize += FfiConverterBool.computeSize(value.subjectExactMatch);
             totalSize += FfiConverterOptionalSequenceu8.computeSize(value.icon);
+            totalSize += FfiConverterF64.computeSize(value.score);
+            totalSize += FfiConverterBool.computeSize(value.hasLocationSign);
+            totalSize += FfiConverterBool.computeSize(value.subjectExactMatch);
+            totalSize += FfiConverterString.computeSize(value.locationParam);
             return totalSize;
         }
         if (value instanceof Suggestion.Mdn) {

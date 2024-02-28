@@ -298,6 +298,7 @@ pub(crate) struct DownloadedYelpSuggestion {
     pub yelp_modifiers: Vec<String>,
     #[serde(rename = "icon")]
     pub icon_id: String,
+    pub score: f64,
 }
 
 /// An MDN suggestion to ingest from an attachment

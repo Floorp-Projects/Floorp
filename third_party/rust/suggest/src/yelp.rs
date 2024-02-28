@@ -118,10 +118,11 @@ impl<'a> SuggestDao<'a> {
 
         self.scope.err_if_interrupted()?;
         self.conn.execute_cached(
-            "INSERT INTO yelp_custom_details(record_id, icon_id) VALUES(:record_id, :icon_id)",
+            "INSERT INTO yelp_custom_details(record_id, icon_id, score) VALUES(:record_id, :icon_id, :score)",
             named_params! {
                 ":record_id": record_id.as_str(),
-                ":icon_id": suggestion.icon_id
+                ":icon_id": suggestion.icon_id,
+                ":score": suggestion.score,
             },
         )?;
 
@@ -143,7 +144,7 @@ impl<'a> SuggestDao<'a> {
             let Some((subject, subject_exact_match)) = self.find_subject(query_string)? else {
                 return Ok(vec![]);
             };
-            let icon = self.fetch_icon()?;
+            let (icon, score) = self.fetch_custom_details()?;
             let builder = SuggestionBuilder {
                 subject: &subject,
                 subject_exact_match,
@@ -153,6 +154,7 @@ impl<'a> SuggestDao<'a> {
                 location: None,
                 need_location: false,
                 icon,
+                score,
             };
             return Ok(vec![builder.into()]);
         }
@@ -183,7 +185,7 @@ impl<'a> SuggestDao<'a> {
             return Ok(vec![]);
         };
 
-        let icon = self.fetch_icon()?;
+        let (icon, score) = self.fetch_custom_details()?;
         let builder = SuggestionBuilder {
             subject: &subject,
             subject_exact_match,
@@ -193,33 +195,42 @@ impl<'a> SuggestDao<'a> {
             location,
             need_location,
             icon,
+            score,
         };
         Ok(vec![builder.into()])
     }
 
-    /// Fetch the icon for Yelp suggestions.
+    /// Fetch the custom details for Yelp suggestions.
+    /// It returns the location tuple as follows:
+    /// (
+    ///   Option<Vec<u8>>: Icon data. If not found, returns None.
+    ///   f64: Reflects score field in the yelp_custom_details table.
+    /// )
     ///
     /// Note that there should be only one record in `yelp_custom_details`
     /// as all the Yelp assets are stored in the attachment of a single record
     /// on Remote Settings. The following query will perform a table scan against
-    /// `yelp_custom_details` followed by an index search against `icons`, which
-    /// should be fine since there is only one record in the first table.
-    fn fetch_icon(&self) -> Result<Option<Vec<u8>>> {
-        Ok(self.conn.try_query_one(
+    /// `yelp_custom_details` followed by an index search against `icons`,
+    /// which should be fine since there is only one record in the first table.
+    fn fetch_custom_details(&self) -> Result<(Option<Vec<u8>>, f64)> {
+        let result = self.conn.query_row_and_then_cachable(
             r#"
             SELECT
-              i.data
+              i.data, y.score
             FROM
               yelp_custom_details y
-            JOIN
+            LEFT JOIN
               icons i
               ON y.icon_id = i.id
             LIMIT
               1
             "#,
             (),
+            |row| -> Result<_> { Ok((row.get::<_, Option<Vec<u8>>>(0)?, row.get::<_, f64>(1)?)) },
             true,
-        )?)
+        )?;
+
+        Ok(result)
     }
 
     /// Find the location information from the given query string.
@@ -428,6 +439,7 @@ struct SuggestionBuilder<'a> {
     location: Option<String>,
     need_location: bool,
     icon: Option<Vec<u8>>,
+    score: f64,
 }
 
 impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
@@ -475,8 +487,11 @@ impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
         Suggestion::Yelp {
             url,
             title,
-            subject_exact_match: builder.subject_exact_match,
             icon: builder.icon,
+            score: builder.score,
+            has_location_sign: location_modifier.is_none() && builder.location_sign.is_some(),
+            subject_exact_match: builder.subject_exact_match,
+            location_param: "find_loc".to_string(),
         }
     }
 }
