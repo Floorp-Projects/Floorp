@@ -6194,6 +6194,9 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
   NS_ASSERTION(frame || !(aFlags & INCLUDE_PERSPECTIVE),
                "Must have a frame to compute perspective!");
 
+  // IncrementScaleRestyleCountIfNeeded in ActiveLayerTracker.cpp is a
+  // simplified copy of this function.
+
   // Get the underlying transform matrix:
 
   /* Get the matrix, then change its basis to factor in the origin. */
