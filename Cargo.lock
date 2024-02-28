@@ -4185,6 +4185,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "process_reader"
+version = "0.1.0"
+dependencies = [
+ "goblin",
+ "memoffset",
+ "mozilla-central-workspace-hack",
+ "thiserror",
+ "winapi",
+]
+
+[[package]]
 name = "processtools"
 version = "0.1.0"
 dependencies = [
