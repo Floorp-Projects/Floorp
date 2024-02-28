@@ -14,7 +14,7 @@ class FocusDependenciesPlugin : Plugin<Settings> {
 
 object FocusVersions {
     object Adjust {
-        const val adjust = "4.38.1"
+        const val adjust = "4.38.2"
         const val install_referrer = "2.2"
     }
 
