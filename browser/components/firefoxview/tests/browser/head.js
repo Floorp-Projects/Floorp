@@ -663,7 +663,7 @@ async function click_recently_closed_tab_item(itemElem, itemProperty = "") {
   let clickTarget;
   switch (itemProperty) {
     case "dismiss":
-      clickTarget = itemElem.buttonEl;
+      clickTarget = itemElem.secondaryButtonEl;
       break;
     default:
       clickTarget = itemElem.mainEl;

@@ -16,6 +16,11 @@ fxviewtabrow-tabs-list-tab =
   .title = Open { $targetURI } in a new tab
 
 # Variables:
+#   $tabTitle (string) - Title of tab being closed
+fxviewtabrow-close-tab-button =
+  .title = Close { $tabTitle }
+
+# Variables:
 #   $tabTitle (string) - Title of tab being dismissed
 fxviewtabrow-dismiss-tab-button =
   .title = Dismiss { $tabTitle }
