@@ -3,6 +3,7 @@ import pytest
 from webdriver.bidi.modules.network import NetworkStringValue
 from webdriver.bidi.modules.storage import (
     BrowsingContextPartitionDescriptor,
+    PartialCookie,
     StorageKeyPartitionDescriptor,
 )
 
@@ -211,4 +212,89 @@ async def test_partition_source_origin(
         name=cookie2_name,
         value={"type": "string", "value": cookie2_value},
         partition=cookie2_partition,
+    )
+
+
+@pytest.mark.parametrize(
+    "with_document_cookie",
+    [True, False],
+    ids=["with document cookie", "with set cookie"],
+)
+async def test_partition_user_context(
+    bidi_session,
+    test_page,
+    create_user_context,
+    test_page_cross_origin,
+    domain_value,
+    add_cookie,
+    set_cookie,
+    with_document_cookie,
+):
+    user_context_1 = await create_user_context()
+    new_context_1 = await bidi_session.browsing_context.create(
+        user_context=user_context_1, type_hint="tab"
+    )
+    await bidi_session.browsing_context.navigate(
+        context=new_context_1["context"], url=test_page, wait="complete"
+    )
+
+    user_context_2 = await create_user_context()
+    new_context_2 = await bidi_session.browsing_context.create(
+        user_context=user_context_2, type_hint="tab"
+    )
+    await bidi_session.browsing_context.navigate(
+        context=new_context_2["context"], url=test_page_cross_origin, wait="complete"
+    )
+
+    cookie1_domain = domain_value()
+    cookie1_name = "foo_1"
+    cookie1_value = "bar_1"
+    cookie1_partition = StorageKeyPartitionDescriptor(user_context=user_context_1)
+
+    cookie2_domain = domain_value(domain="alt")
+    cookie2_name = "foo_2"
+    cookie2_value = "bar_2"
+    cookie2_partition = StorageKeyPartitionDescriptor(user_context=user_context_2)
+
+    if with_document_cookie:
+        await add_cookie(
+            new_context_1["context"], cookie1_name, cookie1_value, path="/"
+        )
+        await add_cookie(
+            new_context_2["context"], cookie2_name, cookie2_value, path="/"
+        )
+    else:
+        await set_cookie(
+            cookie=PartialCookie(
+                domain=cookie1_domain,
+                name=cookie1_name,
+                value=NetworkStringValue(cookie1_value),
+            ),
+            partition=cookie1_partition,
+        )
+        await set_cookie(
+            cookie=PartialCookie(
+                domain=cookie2_domain,
+                name=cookie2_name,
+                value=NetworkStringValue(cookie2_value),
+            ),
+            partition=cookie2_partition,
+        )
+
+    result = await bidi_session.storage.delete_cookies(
+        partition=StorageKeyPartitionDescriptor(user_context=user_context_1)
+    )
+    recursive_compare({"partitionKey": {"userContext": user_context_1}}, result)
+
+    # Make sure that deleted cookies are not present.
+    await assert_cookies_are_not_present(bidi_session, partition=cookie1_partition)
+
+    # Check that the second cookie is still present on another origin.
+    await assert_cookie_is_set(
+        bidi_session=bidi_session,
+        domain=cookie2_domain,
+        name=cookie2_name,
+        value={"type": "string", "value": cookie2_value},
+        partition=cookie2_partition,
+        secure=False
     )

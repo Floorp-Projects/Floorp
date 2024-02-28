@@ -154,3 +154,10 @@ async def test_params_partition_user_context_invalid_type(bidi_session, value):
         await bidi_session.storage.delete_cookies(
             partition=StorageKeyPartitionDescriptor(user_context=value)
         )
+
+
+async def test_params_partition_user_context_invalid_value(bidi_session):
+    with pytest.raises(error.NoSuchUserContextException):
+        await bidi_session.storage.delete_cookies(
+            partition=StorageKeyPartitionDescriptor(user_context="foo")
+        )
