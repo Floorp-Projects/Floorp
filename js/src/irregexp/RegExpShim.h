@@ -626,6 +626,27 @@ class HeapObject : public Object {
   }
 };
 
+// V8's values use low-bit tagging. If the LSB is 0, it's a small
+// integer. If the LSB is 1, it's a pointer to some GC thing. In V8,
+// this wrapper class is used to represent a pointer that has the low
+// bit set, or a small integer that has been shifted left by one
+// bit. We don't use the same tagging system, so all we need is a
+// transparent wrapper that automatically converts to/from the wrapped
+// type.
+template <typename T>
+class Tagged {
+ public:
+  Tagged() {}
+  MOZ_IMPLICIT Tagged(const T& value) : value_(value) {}
+  MOZ_IMPLICIT Tagged(T&& value) : value_(std::move(value)) {}
+
+  T* operator->() { return &value_; }
+  constexpr operator T() const { return value_; }
+
+ private:
+  T value_;
+};
+
 // A fixed-size array with Objects (aka Values) as element types.
 // Implemented using the dense elements of an ArrayObject.
 // Used for named captures.
