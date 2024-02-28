@@ -1569,8 +1569,7 @@ nsCSPPolicy::~nsCSPPolicy() {
 
 bool nsCSPPolicy::permits(CSPDirective aDir, nsILoadInfo* aLoadInfo,
                           nsIURI* aUri, bool aWasRedirected, bool aSpecific,
-                          nsAString& outViolatedDirective,
-                          nsAString& outViolatedDirectiveString) const {
+                          nsAString& outViolatedDirective) const {
   if (CSPUTILSLOGENABLED()) {
     CSPUTILSLOG(("nsCSPPolicy::permits, aUri: %s, aDir: %s, aSpecific: %s",
                  aUri->GetSpecOrDefault().get(), CSP_CSPDirectiveToString(aDir),
@@ -1590,7 +1589,6 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsILoadInfo* aLoadInfo,
       if (!mDirectives[i]->permits(aDir, aLoadInfo, aUri, aWasRedirected,
                                    mReportOnly, mUpgradeInsecDir)) {
         mDirectives[i]->getDirName(outViolatedDirective);
-        mDirectives[i]->toString(outViolatedDirectiveString);
         return false;
       }
       return true;
@@ -1606,7 +1604,6 @@ bool nsCSPPolicy::permits(CSPDirective aDir, nsILoadInfo* aLoadInfo,
     if (!defaultDir->permits(aDir, aLoadInfo, aUri, aWasRedirected, mReportOnly,
                              mUpgradeInsecDir)) {
       defaultDir->getDirName(outViolatedDirective);
-      defaultDir->toString(outViolatedDirectiveString);
       return false;
     }
     return true;
@@ -1695,22 +1692,43 @@ bool nsCSPPolicy::allowsAllInlineBehavior(CSPDirective aDir) const {
  * The parameter outDirective is the equivalent of 'outViolatedDirective'
  * for the ::permits() function family.
  */
-void nsCSPPolicy::getViolatedDirectiveInformation(CSPDirective aDirective,
-                                                  nsAString& outDirective,
-                                                  nsAString& outDirectiveString,
-                                                  bool* aReportSample) const {
+void nsCSPPolicy::getDirectiveStringAndReportSampleForContentType(
+    CSPDirective aDirective, nsAString& outDirective,
+    bool* aReportSample) const {
+  MOZ_ASSERT(aReportSample);
   *aReportSample = false;
-  nsCSPDirective* directive = matchingOrDefaultDirective(aDirective);
-  if (!directive) {
-    MOZ_ASSERT_UNREACHABLE("Can not query violated directive");
-    outDirective.AppendLiteral("couldNotQueryViolatedDirective");
-    outDirective.Truncate();
+
+  nsCSPDirective* defaultDir = nullptr;
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->isDefaultDirective()) {
+      defaultDir = mDirectives[i];
+      continue;
+    }
+    if (mDirectives[i]->equals(aDirective)) {
+      mDirectives[i]->getDirName(outDirective);
+      *aReportSample = mDirectives[i]->hasReportSampleKeyword();
+      return;
+    }
+  }
+  // if we haven't found a matching directive yet,
+  // the contentType must be restricted by the default directive
+  if (defaultDir) {
+    defaultDir->getDirName(outDirective);
+    *aReportSample = defaultDir->hasReportSampleKeyword();
     return;
   }
+  NS_ASSERTION(false, "Can not query directive string for contentType!");
+  outDirective.AppendLiteral("couldNotQueryViolatedDirective");
+}
 
-  directive->getDirName(outDirective);
-  directive->toString(outDirectiveString);
-  *aReportSample = directive->hasReportSampleKeyword();
+void nsCSPPolicy::getDirectiveAsString(CSPDirective aDir,
+                                       nsAString& outDirective) const {
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(aDir)) {
+      mDirectives[i]->toString(outDirective);
+      return;
+    }
+  }
 }
 
 /*

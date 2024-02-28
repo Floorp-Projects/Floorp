@@ -619,8 +619,7 @@ class nsCSPPolicy {
 
   bool permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo, nsIURI* aUri,
                bool aWasRedirected, bool aSpecific,
-               nsAString& outViolatedDirective,
-               nsAString& outViolatedDirectiveString) const;
+               nsAString& outViolatedDirective) const;
   bool allows(CSPDirective aDirective, enum CSPKeyword aKeyword,
               const nsAString& aHashOrNonce) const;
   void toString(nsAString& outStr) const;
@@ -651,10 +650,11 @@ class nsCSPPolicy {
 
   void getReportURIs(nsTArray<nsString>& outReportURIs) const;
 
-  void getViolatedDirectiveInformation(CSPDirective aDirective,
-                                       nsAString& outDirective,
-                                       nsAString& outDirectiveString,
-                                       bool* aReportSample) const;
+  void getDirectiveStringAndReportSampleForContentType(
+      CSPDirective aDirective, nsAString& outDirective,
+      bool* aReportSample) const;
+
+  void getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) const;
 
   uint32_t getSandboxFlags() const;
 
