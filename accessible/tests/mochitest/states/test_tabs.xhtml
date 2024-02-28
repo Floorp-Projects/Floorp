@@ -23,7 +23,7 @@
     function doTest()
     {
       testStates("tab1", 0, EXT_STATE_PINNED);
-      testStates("tab2", 0, 0, 0, EXT_STATE_PINNED);
+      testStates("tab2", 0, EXT_STATE_PINNED);
       testStates("tab3", 0, 0, 0, EXT_STATE_PINNED);
 
       SimpleTest.finish()
@@ -51,8 +51,8 @@
     <vbox flex="1">
       <tabbox>
         <tabs id="tabs">
-          <tab id="tab1" label="tab1" pinned="true"/>
-          <tab id="tab2" label="tab2" pinned="false"/>
+          <tab id="tab1" label="tab1" pinned=""/>
+          <tab id="tab2" label="tab2" pinned="true"/>
           <tab id="tab3" label="tab3"/>
         </tabs>
         <tabpanels id="tabpanels">
