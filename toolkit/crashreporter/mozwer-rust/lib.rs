@@ -157,7 +157,7 @@ fn out_of_process_exception_event_callback(
     crash_report.write_minidump(exception_information)?;
     if wer_data.process_type == MAIN_PROCESS_TYPE {
         match is_sandboxed_process(process) {
-            Ok(false) => handle_main_process_crash(crash_report, process, &application_info),
+            Ok(false) => handle_main_process_crash(crash_report, &application_info),
             _ => {
                 // The parent process should never be sandboxed, bail out so the
                 // process which is impersonating it gets killed right away. Also
@@ -177,18 +177,12 @@ fn get_parent_process(process: HANDLE) -> Result<HANDLE, ()> {
 
 fn handle_main_process_crash(
     crash_report: CrashReport,
-    process: HANDLE,
     application_information: &ApplicationInformation,
 ) -> Result<(), ()> {
     crash_report.write_extra_file()?;
     crash_report.write_event_file()?;
 
-    let mut environment = read_environment_block(process)?;
-    launch_crash_reporter_client(
-        &application_information.install_path,
-        &mut environment,
-        &crash_report,
-    );
+    launch_crash_reporter_client(&application_information.install_path, &crash_report);
 
     Ok(())
 }
@@ -343,11 +337,7 @@ fn get_process_handle(pid: DWORD) -> Result<HANDLE, ()> {
     }
 }
 
-fn launch_crash_reporter_client(
-    install_path: &Path,
-    environment: &mut Vec<u16>,
-    crash_report: &CrashReport,
-) {
+fn launch_crash_reporter_client(install_path: &Path, crash_report: &CrashReport) {
     // Prepare the command line
     let client_path = install_path.join("crashreporter.exe");
 
@@ -372,7 +362,7 @@ fn launch_crash_reporter_client(
             null_mut(),
             FALSE,
             NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT,
-            environment.as_mut_ptr() as *mut _,
+            null_mut(),
             null_mut(),
             &mut si,
             &mut pi,
@@ -758,16 +748,6 @@ fn bool_ok_or_err<T>(res: BOOL, data: T) -> Result<T, ()> {
         FALSE => Err(()),
         _ => Ok(data),
     }
-}
-
-fn read_environment_block(process: HANDLE) -> Result<Vec<u16>, ()> {
-    let upp = read_user_process_parameters(process)?;
-
-    // Read the environment
-    let buffer = upp.Environment;
-    let length = upp.EnvironmentSize;
-    let count = length as usize / 2;
-    read_array_from_process::<u16>(process, buffer, count)
 }
 
 fn read_command_line(process: HANDLE) -> Result<String, ()> {
