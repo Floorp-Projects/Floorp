@@ -3618,7 +3618,6 @@ impl Renderer {
     fn draw_clip_batch_list(
         &mut self,
         list: &ClipBatchList,
-        draw_target: &DrawTarget,
         projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
@@ -3672,42 +3671,6 @@ impl Renderer {
                 &textures,
                 stats,
             );
-        }
-
-        // draw image masks
-        let mut using_scissor = false;
-        for ((mask_texture_id, clip_rect), items) in list.images.iter() {
-            let _gm2 = self.gpu_profiler.start_marker("clip images");
-            // Some image masks may require scissoring to ensure they don't draw
-            // outside their task's target bounds. Axis-aligned primitives will
-            // be clamped inside the shader and should not require scissoring.
-            // TODO: We currently assume scissor state is off by default for
-            // alpha targets here, but in the future we may want to track the
-            // current scissor state so that this can be properly saved and
-            // restored here.
-            if let Some(clip_rect) = clip_rect {
-                if !using_scissor {
-                    self.device.enable_scissor();
-                    using_scissor = true;
-                }
-                let scissor_rect = draw_target.build_scissor_rect(Some(*clip_rect));
-                self.device.set_scissor_rect(scissor_rect);
-            } else if using_scissor {
-                self.device.disable_scissor();
-                using_scissor = false;
-            }
-            let textures = BatchTextures::composite_rgb(*mask_texture_id);
-            self.shaders.borrow_mut().cs_clip_image
-                .bind(&mut self.device, projection, None, &mut self.renderer_errors, &mut self.profile);
-            self.draw_instanced_batch(
-                items,
-                VertexArrayKind::ClipImage,
-                &textures,
-                stats,
-            );
-        }
-        if using_scissor {
-            self.device.disable_scissor();
         }
     }
 
@@ -3863,7 +3826,6 @@ impl Renderer {
             self.set_blend(false, FramebufferKind::Other);
             self.draw_clip_batch_list(
                 &target.clip_batcher.primary_clips,
-                &draw_target,
                 projection,
                 stats,
             );
@@ -3874,7 +3836,6 @@ impl Renderer {
             self.set_blend_mode_multiply(FramebufferKind::Other);
             self.draw_clip_batch_list(
                 &target.clip_batcher.secondary_clips,
-                &draw_target,
                 projection,
                 stats,
             );
