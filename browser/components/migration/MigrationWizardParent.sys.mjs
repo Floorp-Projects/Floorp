@@ -219,7 +219,11 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     let { result, path } = await new Promise(resolve => {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(window, filePickerConfig.title, Ci.nsIFilePicker.modeOpen);
+      fp.init(
+        window.browsingContext,
+        filePickerConfig.title,
+        Ci.nsIFilePicker.modeOpen
+      );
 
       for (let filter of filePickerConfig.filters) {
         fp.appendFilter(filter.title, filter.extensionPattern);
@@ -299,7 +303,11 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     let { result, path } = await new Promise(resolve => {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(window, filePickerConfig.title, Ci.nsIFilePicker.modeOpen);
+      fp.init(
+        window.browsingContext,
+        filePickerConfig.title,
+        Ci.nsIFilePicker.modeOpen
+      );
 
       for (let filter of filePickerConfig.filters) {
         fp.appendFilter(filter.title, filter.extensionPattern);
