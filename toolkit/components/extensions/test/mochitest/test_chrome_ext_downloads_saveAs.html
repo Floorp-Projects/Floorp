@@ -78,7 +78,7 @@ add_task(async function test_downloads_saveAs() {
   defaultFile.append(DOWNLOAD_FILENAME);
 
   const {MockFilePicker} = SpecialPowers;
-  MockFilePicker.init(window);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
 
   function mockFilePickerCallback(expectedStartingDir, pickedFile) {
     return fp => {

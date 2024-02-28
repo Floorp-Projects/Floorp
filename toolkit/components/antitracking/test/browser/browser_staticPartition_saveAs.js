@@ -16,7 +16,7 @@ const TEST_VIDEO_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsVideo.sjs";
 const TEST_PAGEINFO_URL = TEST_DOMAIN + TEST_PATH + "file_saveAsPageInfo.html";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 
 const tempDir = createTemporarySaveDirectory();
 MockFilePicker.displayDirectory = tempDir;

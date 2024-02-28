@@ -13,7 +13,7 @@ const LINK_PAGE_URL = TESTROOT + "file_pdf_download_link.html";
 
 add_task(async function test_filename_nonpdf_extension() {
   var MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window);
+  MockFilePicker.init(window.browsingContext);
   let filepickerNamePromise = new Promise(resolve => {
     MockFilePicker.showCallback = function (fp) {
       resolve(fp.defaultString);

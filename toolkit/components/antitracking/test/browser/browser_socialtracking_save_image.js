@@ -13,7 +13,7 @@ const TEST_IMAGE_URL =
   "http://social-tracking.example.org/browser/toolkit/components/antitracking/test/browser/raptor.jpg";
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 
 const tempDir = createTemporarySaveDirectory();
 MockFilePicker.displayDirectory = tempDir;

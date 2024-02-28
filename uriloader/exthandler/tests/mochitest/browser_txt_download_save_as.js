@@ -25,7 +25,7 @@ const {
 } = Ci.nsIHandlerInfo;
 const testDir = createTemporarySaveDirectory();
 const MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(window.browsingContext);
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",

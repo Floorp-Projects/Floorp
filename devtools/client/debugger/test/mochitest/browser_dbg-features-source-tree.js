@@ -124,7 +124,7 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
   info("Test the download file context menu");
   // Before trigerring the menu, mock the file picker
   const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window);
+  MockFilePicker.init(window.browsingContext);
   const nsiFile = new FileUtils.File(
     PathUtils.join(PathUtils.tempDir, `export_source_content_${Date.now()}.log`)
   );

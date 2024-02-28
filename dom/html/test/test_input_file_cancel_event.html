@@ -14,7 +14,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.init(window);
+MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
 MockFilePicker.useBlobFile();
 MockFilePicker.returnValue = MockFilePicker.returnCancel;
 

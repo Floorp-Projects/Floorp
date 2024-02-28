@@ -143,7 +143,7 @@ add_task(async function modifyAccessKey() {
 add_task(async function file_picker() {
   const file = document.getElementById("file");
   const MockFilePicker = SpecialPowers.MockFilePicker;
-  MockFilePicker.init(window);
+  MockFilePicker.init(SpecialPowers.wrap(window).browsingContext);
   MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
   let clicked = false;
