@@ -396,6 +396,48 @@ async function doSessionOngoingCommandTest(command) {
   await doDismissTest("not_interested");
 }
 
+// Test for simple UI.
+add_tasks_with_rust(async function simpleUI() {
+  const testData = [
+    {
+      weatherSimpleUI: true,
+      expectedSummary:
+        MerinoTestUtils.WEATHER_SUGGESTION.current_conditions.summary,
+    },
+    {
+      weatherSimpleUI: false,
+      expectedSummary: `${MerinoTestUtils.WEATHER_SUGGESTION.current_conditions.summary}; ${MerinoTestUtils.WEATHER_SUGGESTION.forecast.summary}`,
+    },
+  ];
+
+  for (let { weatherSimpleUI, expectedSummary } of testData) {
+    let nimbusCleanup = await UrlbarTestUtils.initNimbusFeature({
+      weatherSimpleUI,
+    });
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: MerinoTestUtils.WEATHER_KEYWORD,
+    });
+
+    let resultIndex = 1;
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      resultIndex
+    );
+    assertIsWeatherResult(details.result, true);
+    let { row } = details.element;
+
+    Assert.equal(
+      row.querySelector(".urlbarView-dynamic-weather-summaryText").textContent,
+      expectedSummary
+    );
+
+    await UrlbarTestUtils.promisePopupClose(window);
+    await nimbusCleanup();
+  }
+});
+
 function assertIsWeatherResult(result, isWeatherResult) {
   let provider = UrlbarPrefs.get("quickSuggestRustEnabled")
     ? UrlbarProviderQuickSuggest

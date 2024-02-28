@@ -410,17 +410,19 @@ export class Weather extends BaseFeature {
       url: {
         textContent: result.payload.url,
       },
-      summaryText: {
-        l10n: {
-          id: "firefox-suggest-weather-summary-text",
-          args: {
-            currentConditions: result.payload.currentConditions,
-            forecast: result.payload.forecast,
+      summaryText: lazy.UrlbarPrefs.get("weatherSimpleUI")
+        ? { textContent: result.payload.currentConditions }
+        : {
+            l10n: {
+              id: "firefox-suggest-weather-summary-text",
+              args: {
+                currentConditions: result.payload.currentConditions,
+                forecast: result.payload.forecast,
+              },
+              cacheable: true,
+              excludeArgsFromCacheKey: true,
+            },
           },
-          cacheable: true,
-          excludeArgsFromCacheKey: true,
-        },
-      },
       highLow: {
         l10n: {
           id: "firefox-suggest-weather-high-low",
