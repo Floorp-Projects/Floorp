@@ -2049,17 +2049,24 @@ static void ReportArrayContents(
   nsTArray<GLContext::NamedResource> copy(aArray.Clone());
   copy.Sort();
 
+  // Accumulate the output in a buffer to avoid interleaved output.
+  nsCString line;
+
   GLContext* lastContext = nullptr;
   for (uint32_t i = 0; i < copy.Length(); ++i) {
     if (lastContext != copy[i].origin) {
-      if (lastContext) printf_stderr("\n");
-      printf_stderr("  [%p - %s] ", copy[i].origin,
-                    copy[i].originDeleted ? "deleted" : "live");
+      if (lastContext) {
+        printf_stderr("%s\n", line.BeginReading());
+        line.Assign("");
+      }
+      line.Append(nsPrintfCString("  [%p - %s] ", copy[i].origin,
+                                  copy[i].originDeleted ? "deleted" : "live"));
       lastContext = copy[i].origin;
     }
-    printf_stderr("%d ", copy[i].name);
+    line.AppendInt(copy[i].name);
+    line.Append(' ');
   }
-  printf_stderr("\n");
+  printf_stderr("%s\n", line.BeginReading());
 }
 
 void GLContext::ReportOutstandingNames() {
