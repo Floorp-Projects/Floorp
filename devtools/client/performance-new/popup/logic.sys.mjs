@@ -36,6 +36,8 @@ const lazy = createLazyLoaders({
  */
 function selectElementsInPanelview(panelview) {
   const document = panelview.ownerDocument;
+  const window = document.defaultView;
+
   /**
    * Get an element or throw an error if it's not found. This is more friendly
    * for TypeScript.
