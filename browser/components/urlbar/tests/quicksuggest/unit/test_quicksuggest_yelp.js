@@ -15,7 +15,10 @@ const REMOTE_SETTINGS_RECORDS = [
       subjects: ["ramen", "ab", "alongerkeyword"],
       preModifiers: ["best"],
       postModifiers: ["delivery"],
-      locationSigns: [{ keyword: "in", needLocation: true }],
+      locationSigns: [
+        { keyword: "in", needLocation: true },
+        { keyword: "nearby", needLocation: false },
+      ],
       yelpModifiers: [],
       icon: "1234",
       score: 0.5,
@@ -56,6 +59,28 @@ add_task(async function basic() {
       expected: {
         url: "https://www.yelp.com/search?find_desc=BeSt+RaMeN+dElIvErY&find_loc=tOkYo",
         title: "BeSt RaMeN dElIvErY iN tOkYo",
+      },
+    },
+    {
+      description: "No specific location with location-sign",
+      query: "ramen in",
+      expected: {
+        url: "https://www.yelp.com/search?find_desc=ramen&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=ramen",
+        displayUrl:
+          "yelp.com/search?find_desc=ramen&find_loc=Yokohama,+Kanagawa",
+        title: "ramen in Yokohama, Kanagawa",
+      },
+    },
+    {
+      description: "No specific location with location-modifier",
+      query: "ramen nearby",
+      expected: {
+        url: "https://www.yelp.com/search?find_desc=ramen+nearby&find_loc=Yokohama%2C+Kanagawa",
+        originalUrl: "https://www.yelp.com/search?find_desc=ramen+nearby",
+        displayUrl:
+          "yelp.com/search?find_desc=ramen+nearby&find_loc=Yokohama,+Kanagawa",
+        title: "ramen nearby in Yokohama, Kanagawa",
       },
     },
     {

@@ -80,13 +80,18 @@ export class YelpSuggestions extends BaseFeature {
 
     let url = new URL(suggestion.url);
     let title = suggestion.title;
-    if (!url.searchParams.has("find_loc")) {
+    if (!url.searchParams.has(suggestion.locationParam)) {
       let city = await this.#fetchCity();
 
       // If we can't get city from Merino, rely on Yelp own.
       if (city) {
-        url.searchParams.set("find_loc", city);
-        title = `${title} in ${city}`;
+        url.searchParams.set(suggestion.locationParam, city);
+
+        if (!suggestion.hasLocationSign) {
+          title += " in";
+        }
+
+        title += ` ${city}`;
       }
     }
 
