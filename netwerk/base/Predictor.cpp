@@ -487,7 +487,9 @@ Predictor::PredictNative(nsIURI* targetURI, nsIURI* sourceURI,
   PREDICTOR_LOG(("Predictor::Predict"));
 
   if (IsNeckoChild()) {
-    MOZ_DIAGNOSTIC_ASSERT(gNeckoChild);
+    if (!gNeckoChild) {
+      return NS_ERROR_FAILURE;
+    }
 
     PREDICTOR_LOG(("    called on child process"));
     // If two different threads are predicting concurently, this will be
@@ -1237,7 +1239,9 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
   PREDICTOR_LOG(("Predictor::Learn"));
 
   if (IsNeckoChild()) {
-    MOZ_DIAGNOSTIC_ASSERT(gNeckoChild);
+    if (!gNeckoChild) {
+      return NS_ERROR_FAILURE;
+    }
 
     PREDICTOR_LOG(("    called on child process"));
 
@@ -1715,7 +1719,9 @@ Predictor::Reset() {
   PREDICTOR_LOG(("Predictor::Reset"));
 
   if (IsNeckoChild()) {
-    MOZ_DIAGNOSTIC_ASSERT(gNeckoChild);
+    if (!gNeckoChild) {
+      return NS_ERROR_FAILURE;
+    }
 
     PREDICTOR_LOG(("    forwarding to parent process"));
     gNeckoChild->SendPredReset();
