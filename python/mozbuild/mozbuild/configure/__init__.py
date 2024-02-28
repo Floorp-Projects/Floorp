@@ -49,6 +49,7 @@ class SandboxDependsFunction(object):
     def __init__(self, unsandboxed):
         self._or = unsandboxed.__or__
         self._and = unsandboxed.__and__
+        self._invert = unsandboxed.__invert__
         self._getattr = unsandboxed.__getattr__
 
     def __call__(self, *arg, **kwargs):
@@ -69,6 +70,9 @@ class SandboxDependsFunction(object):
                 "with another @depends function."
             )
         return self._and(other).sandboxed
+
+    def __invert__(self):
+        return self._invert().sandboxed
 
     def __cmp__(self, other):
         raise ConfigureError("Cannot compare @depends functions.")
@@ -117,8 +121,6 @@ class DependsFunction(object):
         assert not inspect.isgeneratorfunction(func)
         # Allow non-functions when there are no dependencies. This is equivalent
         # to passing a lambda that returns the given value.
-        if not (inspect.isroutine(func) or not dependencies):
-            print(func)
         assert inspect.isroutine(func) or not dependencies
         self._func = func
         self._name = getattr(func, "__name__", None)
@@ -189,6 +191,9 @@ class DependsFunction(object):
         assert isinstance(other, DependsFunction)
         assert self.sandbox is other.sandbox
         return CombinedDependsFunction(self.sandbox, self.and_impl, (self, other))
+
+    def __invert__(self):
+        return TrivialDependsFunction(self.sandbox, lambda x: not x, [self])
 
     @staticmethod
     def and_impl(iterable):
