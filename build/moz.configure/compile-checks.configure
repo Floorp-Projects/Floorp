@@ -436,6 +436,24 @@ def check_and_add_linker_flag(flag, compiler=None, when=None, check=True):
     )
 
 
+# Like the compilation checks above, but for linker optimization flags.
+@dependable
+def linker_optimize_flags():
+    return namespace(ldflags=[])
+
+
+@template
+def check_and_add_linker_optimize_flag(flag, compiler=None, when=None, check=True):
+    return check_and_add_flags(
+        flag,
+        linker_optimize_flags,
+        [flag],
+        when=when,
+        check=check,
+        mode="link",
+    )
+
+
 # Add the given flag to the list of linker flags for the build.
 # - `flag` is the flag (e.g. -fno-sized-deallocation)
 # - `when` (optional) is a @depends function or option name conditioning
