@@ -4142,7 +4142,8 @@ void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
         CheckedInt<size_t>(unpack.metrics.bytesPerRowStride) *
         unpack.metrics.totalRows;
     if (bytesUpperBound.isValid()) {
-      cpuData->Shrink(bytesUpperBound.value());
+      auto& span = *cpuData;
+      span = span.subspan(0, std::min(span.size(), bytesUpperBound.value()));
     }
   }
 }
@@ -4218,7 +4219,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
             return Some(webgl::TexUnpackBlobDesc{imageTarget,
                                                  size.value(),
                                                  gfxAlphaType::NonPremult,
-                                                 Some(RawBuffer<>{*range}),
+                                                 Some(*range),
                                                  {}});
           });
     }
