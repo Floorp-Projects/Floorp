@@ -239,6 +239,10 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += [
         "gfxMacPlatformFontList.mm",
     ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
+    UNIFIED_SOURCES += [
+        "IOSPlatformFontList.mm",
+    ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     UNIFIED_SOURCES += [
         "D3D11Checks.cpp",

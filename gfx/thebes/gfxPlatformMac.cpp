@@ -9,7 +9,6 @@
 #include "mozilla/DataMutex.h"
 #include "mozilla/gfx/2D.h"
 
-#include "gfxMacPlatformFontList.h"
 #include "gfxMacFont.h"
 #include "gfxCoreTextShaper.h"
 #include "gfxTextRun.h"
@@ -48,6 +47,14 @@ using namespace mozilla::unicode;
 
 using mozilla::dom::SystemFontList;
 
+#ifdef MOZ_WIDGET_COCOA
+#  include "gfxMacPlatformFontList.h"
+using PlatformFontListClass = gfxMacPlatformFontList;
+#else
+#  include "IOSPlatformFontList.h"
+using PlatformFontListClass = IOSPlatformFontList;
+#endif
+
 // A bunch of fonts for "additional language support" are shipped in a
 // "Language Support" directory, and don't show up in the standard font
 // list returned by CTFontManagerCopyAvailableFontFamilyNames unless
@@ -62,7 +69,7 @@ void gfxPlatformMac::FontRegistrationCallback(void* aUnused) {
   PR_SetCurrentThreadName("RegisterFonts");
 
   for (const auto& dir : kLangFontsDirs) {
-    gfxMacPlatformFontList::ActivateFontsFromDir(dir);
+    PlatformFontListClass::ActivateFontsFromDir(dir);
   }
 }
 
@@ -111,11 +118,11 @@ BackendPrefsData gfxPlatformMac::GetBackendPrefs() const {
 }
 
 bool gfxPlatformMac::CreatePlatformFontList() {
-  return gfxPlatformFontList::Initialize(new gfxMacPlatformFontList);
+  return gfxPlatformFontList::Initialize(new PlatformFontListClass);
 }
 
 void gfxPlatformMac::ReadSystemFontList(SystemFontList* aFontList) {
-  gfxMacPlatformFontList::PlatformFontList()->ReadSystemFontList(aFontList);
+  PlatformFontListClass::PlatformFontList()->ReadSystemFontList(aFontList);
 }
 
 already_AddRefed<gfxASurface> gfxPlatformMac::CreateOffscreenSurface(
@@ -668,8 +675,8 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
 void gfxPlatformMac::LookupSystemFont(
     mozilla::LookAndFeel::FontID aSystemFontID, nsACString& aSystemFontName,
     gfxFontStyle& aFontStyle) {
-  return gfxMacPlatformFontList::LookupSystemFont(aSystemFontID,
-                                                  aSystemFontName, aFontStyle);
+  return PlatformFontListClass::LookupSystemFont(aSystemFontID, aSystemFontName,
+                                                 aFontStyle);
 }
 
 uint32_t gfxPlatformMac::ReadAntiAliasingThreshold() {
