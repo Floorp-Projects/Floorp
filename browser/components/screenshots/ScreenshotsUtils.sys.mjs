@@ -544,12 +544,7 @@ export var ScreenshotsUtils = {
    * @param browser The current browser.
    */
   closeOverlay(browser, options = {}) {
-    // If the actor has been unregistered (e.g. if the component enabled pref is flipped false)
-    // its possible getActor will throw an exception. That's ok.
-    let actor;
-    try {
-      actor = this.getActor(browser);
-    } catch (ex) {}
+    let actor = this.getActor(browser);
     actor?.sendAsyncMessage("Screenshots:HideOverlay", options);
 
     if (this.browserToScreenshotsState.has(browser)) {
