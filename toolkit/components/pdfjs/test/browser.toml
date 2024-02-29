@@ -33,9 +33,6 @@ support-files = ["file_pdfjs_form.pdf"]
 ["browser_pdfjs_hcm.js"]
 support-files = ["file_pdfjs_hcm.pdf"]
 
-["browser_pdfjs_highlight_telemetry.js"]
-skip-if = ["true"]
-
 ["browser_pdfjs_js.js"]
 support-files = ["file_pdfjs_js.pdf"]
 
