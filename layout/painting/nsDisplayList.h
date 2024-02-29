@@ -457,7 +457,10 @@ class nsDisplayListBuilder {
    * a displayport, and for scroll handoff to work properly the ancestor
    * scrollframes should also get their own scrollable layers.
    */
-  void ForceLayerForScrollParent() { mForceLayerForScrollParent = true; }
+  void ForceLayerForScrollParent();
+  uint32_t GetNumActiveScrollframesEncountered() const {
+    return mNumActiveScrollframesEncountered;
+  }
   /**
    * Set the flag that indicates there is a non-minimal display port in the
    * current subtree. This is used to determine display port expiry.
@@ -1847,6 +1850,8 @@ class nsDisplayListBuilder {
 
   nsDisplayListBuilderMode mMode;
   static uint32_t sPaintSequenceNumber;
+
+  uint32_t mNumActiveScrollframesEncountered = 0;
 
   bool mContainsBlendMode;
   bool mIsBuildingScrollbar;
@@ -6414,6 +6419,12 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
 
   bool CreatesStackingContextHelper() override { return true; }
 
+  void SetContainsASRs(bool aContainsASRs) { mContainsASRs = aContainsASRs; }
+  bool GetContainsASRs() const { return mContainsASRs; }
+  bool ShouldDeferTransform() const {
+    return !mFrame->ChildrenHavePerspective() && !mContainsASRs;
+  }
+
  private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);
   nsRect TransformUntransformedBounds(nsDisplayListBuilder* aBuilder,
@@ -6459,6 +6470,7 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   // True if this item is created together with `nsDisplayPerspective`
   // from the same CSS stacking context.
   bool mHasAssociatedPerspective : 1;
+  bool mContainsASRs : 1;
 };
 
 /* A display item that applies a perspective transformation to a single
