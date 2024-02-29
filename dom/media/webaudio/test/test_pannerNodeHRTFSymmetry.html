@@ -17,15 +17,6 @@ const bufferSize = 4096; // > HRTF panner latency
 
 var ctx = new AudioContext();
 
-function isChannelSilent(channel) {
-  for (var i = 0; i < channel.length; ++i) {
-    if (channel[i] != 0.0) {
-      return false;
-    }
-  }
-  return true;
-}
-
 function startTest() {
   var leftPanner = ctx.createPanner();
   var rightPanner = ctx.createPanner();
@@ -78,29 +69,7 @@ function startTest() {
     }
 }
 
-function prepareTest() {
-  // A PannerNode will produce no output until it has loaded its HRIR
-  // database.  Wait for this to load before starting the test.
-  var processor = ctx.createScriptProcessor(bufferSize, 2, 0);
-  var panner = ctx.createPanner();
-  panner.panningModel = "HRTF";
-  panner.connect(processor);
-  var oscillator = ctx.createOscillator();
-  oscillator.connect(panner);
-  oscillator.start(0);
-
-  processor.onaudioprocess =
-    function(e) {
-      if (isChannelSilent(e.inputBuffer.getChannelData(0)))
-        return;
-
-      oscillator.stop(0);
-      panner.disconnect();
-      e.target.onaudioprocess = null;
-      startTest();
-    };
-}
-prepareTest();
+promiseHRTFReady(ctx.sampleRate).then(startTest);
 </script>
 </pre>
 </body>
