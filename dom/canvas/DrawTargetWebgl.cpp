@@ -619,13 +619,13 @@ bool SharedContextWebgl::SetNoClipMask() {
   }
   mWebgl->ActiveTexture(1);
   mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, mNoClipMask);
-  static const uint8_t solidMask[4] = {0xFF, 0xFF, 0xFF, 0xFF};
-  mWebgl->TexImage(
-      0, LOCAL_GL_RGBA8, {0, 0, 0}, {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE},
-      {LOCAL_GL_TEXTURE_2D,
-       {1, 1, 1},
-       gfxAlphaType::NonPremult,
-       Some(RawBuffer(Range<const uint8_t>(solidMask, sizeof(solidMask))))});
+  static const auto solidMask = std::array<const uint8_t, 4>{0xFF, 0xFF, 0xFF, 0xFF};
+  mWebgl->TexImage(0, LOCAL_GL_RGBA8, {0, 0, 0},
+                   {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE},
+                   {LOCAL_GL_TEXTURE_2D,
+                    {1, 1, 1},
+                    gfxAlphaType::NonPremult,
+                    Some(Span{solidMask})});
   InitTexParameters(mNoClipMask, false);
   mWebgl->ActiveTexture(0);
   mLastClipMask = mNoClipMask;
@@ -1914,11 +1914,11 @@ bool SharedContextWebgl::UploadSurface(DataSourceSurface* aData,
     int32_t bpp = BytesPerPixel(aFormat);
     // Get the data pointer range considering the sampling rect offset and
     // size.
-    Range<const uint8_t> range(
+    Span<const uint8_t> range(
         map.GetData() + aSrcRect.y * size_t(stride) + aSrcRect.x * bpp,
         std::max(aSrcRect.height - 1, 0) * size_t(stride) +
             aSrcRect.width * bpp);
-    texDesc.cpuData = Some(RawBuffer(range));
+    texDesc.cpuData = Some(range);
     // If the stride happens to be 4 byte aligned, assume that is the
     // desired alignment regardless of format (even A8). Otherwise, we
     // default to byte alignment.
