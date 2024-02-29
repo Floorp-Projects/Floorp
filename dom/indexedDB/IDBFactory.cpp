@@ -592,19 +592,20 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
 
   PersistenceType persistenceType;
 
-  bool isInternal = principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo;
-  if (!isInternal &&
+  bool isPersistent =
+      principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo;
+  if (!isPersistent &&
       principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
     nsCString origin =
         principalInfo.get_ContentPrincipalInfo().originNoSuffix();
-    isInternal = QuotaManager::IsOriginInternal(origin);
+    isPersistent = QuotaManager::IsOriginInternal(origin);
   }
 
   const bool isPrivate =
       principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
       principalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId > 0;
 
-  if (isInternal) {
+  if (isPersistent) {
     // Chrome privilege and internal origins always get persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
   } else if (isPrivate) {
