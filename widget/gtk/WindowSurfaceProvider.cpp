@@ -52,6 +52,16 @@ WindowSurfaceProvider::WindowSurfaceProvider()
 {
 }
 
+WindowSurfaceProvider::~WindowSurfaceProvider() {
+#ifdef MOZ_WAYLAND
+  MOZ_DIAGNOSTIC_ASSERT(!mWidget,
+                        "nsWindow reference is still live, we're leaking it!");
+#endif
+#ifdef MOZ_X11
+  MOZ_DIAGNOSTIC_ASSERT(!mXWindow, "mXWindow should be released on quit!");
+#endif
+}
+
 #ifdef MOZ_WAYLAND
 void WindowSurfaceProvider::Initialize(RefPtr<nsWindow> aWidget) {
   mWindowSurfaceValid = false;

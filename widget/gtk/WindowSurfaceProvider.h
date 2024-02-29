@@ -36,7 +36,7 @@ class GtkCompositorWidget;
 class WindowSurfaceProvider final {
  public:
   WindowSurfaceProvider();
-  ~WindowSurfaceProvider() = default;
+  ~WindowSurfaceProvider();
 
   /**
    * Initializes the WindowSurfaceProvider by giving it the window
