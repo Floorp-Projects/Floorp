@@ -195,7 +195,7 @@ radio {
  */
 
 .subcategory:not([hidden]) ~ .subcategory {
-  padding-top: var(--space-xlarge);
+  padding-top: var(--space-xxlarge);
   border-top: 1px solid var(--in-content-border-color);
 }
 
@@ -596,7 +596,7 @@ a[is="moz-support-link"]:not(.sidebar-footer-link) {
 }
 
 html|dialog {
-  padding: 24px;
+  padding: var(--space-xlarge);
 }
 
 html|dialog::backdrop,
@@ -717,7 +717,7 @@ html|dialog,
   border-radius: 50%;
   border: 1px solid transparent;
   list-style-image: url(chrome://browser/skin/fxa/avatar-color.svg);
-  margin-inline-end: 24px;
+  margin-inline-end: var(--space-xlarge);
   -moz-user-focus: normal;
 }
 
@@ -803,7 +803,7 @@ html|dialog,
 }
 
 .sync-group {
-  margin-block: 16px;
+  margin-block: var(--space-large);
   border: 1px solid var(--in-content-border-color);
 }
 
@@ -818,7 +818,7 @@ html|dialog,
 .sync-engines-list > div,
 .sync-engines-list + hbox {
   margin-top: 0;
-  padding-top: 16px;
+  padding-top: var(--space-large);
   max-width: 300px;
   height: auto;
 }
@@ -961,7 +961,7 @@ dialog > .sync-engines-list + hbox {
 }
 
 #policies-container {
-  margin-inline-end: 16px;
+  margin-inline-end: var(--space-large);
   /* Make sure the container is at least the same height as the searchbox.
      This is needed in addition to the min-height above to make the info icon
      the same height as the first line in the policies label.
@@ -1217,11 +1217,11 @@ richlistitem .text-link:hover {
 }
 
 #pane-experimental-featureGates {
-  margin-top: 16px;
+  margin-top: var(--space-large);
 }
 
 .featureGate {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-large);
 }
 
 .featureGateCheckbox {
@@ -1251,7 +1251,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory-header .subtitle {
-  margin-block-end: 24px;
+  margin-block-end: var(--space-xlarge);
 }
 
 #moreFromMozillaCategory:not([hidden]) {
@@ -1358,7 +1358,7 @@ richlistitem .text-link:hover {
 }
 
 .simple .qr-code-box {
-  padding-inline: 24px;
+  padding-inline: var(--space-xlarge);
   padding-block: 20px
 }
 
@@ -1387,13 +1387,13 @@ richlistitem .text-link:hover {
 #web-appearance-chooser {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-large);
 }
 
 #web-appearance-chooser,
 #web-appearance-override-warning,
 #text-zoom-override-warning {
-  margin: 12px 0;
+  margin: var(--space-medium) 0;
 }
 
 #web-appearance-override-warning:not([hidden]) {
@@ -1411,7 +1411,7 @@ richlistitem .text-link:hover {
 
 .web-appearance-choice-image-container {
   background-color: var(--in-content-button-background);
-  padding: 12px 0;
+  padding: var(--space-medium) 0;
 }
 
 .web-appearance-choice:hover > .web-appearance-choice-image-container {
@@ -1477,7 +1477,7 @@ richlistitem .text-link:hover {
 
 #translations-manage-error {
   color: var(--text-color-error);
-  margin: 16px 0;
+  margin: var(--space-large) 0;
 }
 
 .hidden-category {

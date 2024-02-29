@@ -111,7 +111,10 @@
     --space-xxsmall: calc(0.5 * var(--space-xsmall));
     --space-xsmall: 0.267rem;
     --space-small: calc(2 * var(--space-xsmall));
-    --space-xlarge: calc(8 * var(--space-xsmall));
+    --space-medium: calc(3 * var(--space-xsmall));
+    --space-large: calc(4 * var(--space-xsmall));
+    --space-xlarge: calc(6 * var(--space-xsmall));
+    --space-xxlarge: calc(8 * var(--space-xsmall));
   }
 }
 
