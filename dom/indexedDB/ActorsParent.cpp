@@ -2997,14 +2997,9 @@ class FactoryOp
  protected:
   enum class State {
     // Just created on the PBackground thread, dispatched to the current thread.
-    // Next step is either SendingResults if initialization failed, or
-    // FinishOpen if the initialization succeeded.
+    // Next step is either SendingResults if opening initialization failed, or
+    // DirectoryOpenPending if the opening initialization succeeded.
     Initial,
-
-    // Ensuring quota manager is created and opening directory on the
-    // PBackground thread. Next step is either SendingResults if quota manager
-    // is not available or DirectoryOpenPending if quota manager is available.
-    FinishOpen,
 
     // Waiting for directory open allowed on the PBackground thread. The next
     // step is either SendingResults if directory lock failed to acquire, or
@@ -3163,8 +3158,6 @@ class FactoryOp
   virtual void SendBlockedNotification() = 0;
 
  private:
-  nsresult FinishOpen();
-
   // Test whether this FactoryOp needs to wait for the given op.
   bool MustWaitFor(const FactoryOp& aExistingOp);
 };
@@ -14545,10 +14538,6 @@ void FactoryOp::StringifyState(nsACString& aResult) const {
       aResult.AppendLiteral("Initial");
       return;
 
-    case State::FinishOpen:
-      aResult.AppendLiteral("FinishOpen");
-      return;
-
     case State::DirectoryOpenPending:
       aResult.AppendLiteral("DirectoryOpenPending");
       return;
@@ -14642,8 +14631,76 @@ nsresult FactoryOp::Open() {
     MOZ_ASSERT(false);
   }
 
-  mState = State::FinishOpen;
-  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+  MOZ_ASSERT(mOriginMetadata.mOrigin.IsEmpty());
+  MOZ_ASSERT(!mDirectoryLock);
+
+  QM_TRY(QuotaManager::EnsureCreated());
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  const DatabaseMetadata& metadata = mCommonParams.metadata();
+
+  const PersistenceType persistenceType = metadata.persistenceType();
+
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
+
+    MOZ_ASSERT(QuotaManager::IsOriginInternal(mOriginMetadata.mOrigin));
+
+    mEnforcingQuota = false;
+  } else {
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+    QM_TRY_UNWRAP(
+        auto principalMetadata,
+        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
+
+    mOriginMetadata = {std::move(principalMetadata), persistenceType};
+
+    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
+  }
+
+  QuotaManager::GetStorageId(persistenceType, mOriginMetadata.mOrigin,
+                             Client::IDB, mDatabaseId);
+
+  mDatabaseId.Append('*');
+  mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
+
+  // Need to get database file path before opening the directory.
+  // XXX: For what reason?
+  QM_TRY_UNWRAP(
+      mDatabaseFilePath,
+      ([this, metadata, quotaManager]() -> mozilla::Result<nsString, nsresult> {
+        QM_TRY_INSPECT(const auto& dbFile,
+                       quotaManager->GetOriginDirectory(mOriginMetadata));
+
+        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
+            NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
+
+        QM_TRY(MOZ_TO_RESULT(
+            dbFile->Append(GetDatabaseFilenameBase(metadata.name(),
+                                                   mOriginMetadata.mIsPrivate) +
+                           kSQLiteSuffix)));
+
+        QM_TRY_RETURN(
+            MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
+      }()));
+
+  // Open directory
+  mState = State::DirectoryOpenPending;
+
+  quotaManager->OpenClientDirectory({mOriginMetadata, Client::IDB})
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this)](
+              const ClientDirectoryLockPromise::ResolveOrRejectValue& aValue) {
+            if (aValue.IsResolve()) {
+              self->DirectoryLockAcquired(aValue.ResolveValue());
+            } else {
+              self->DirectoryLockFailed();
+            }
+          });
 
   return NS_OK;
 }
@@ -14806,91 +14863,6 @@ nsresult FactoryOp::SendVersionChangeMessages(
   return NS_OK;
 }  // namespace indexedDB
 
-nsresult FactoryOp::FinishOpen() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::FinishOpen);
-  MOZ_ASSERT(mOriginMetadata.mOrigin.IsEmpty());
-  MOZ_ASSERT(!mDirectoryLock);
-
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
-      IsActorDestroyed()) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  QM_TRY(QuotaManager::EnsureCreated());
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
-
-  const DatabaseMetadata& metadata = mCommonParams.metadata();
-
-  const PersistenceType persistenceType = metadata.persistenceType();
-
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
-
-    MOZ_ASSERT(QuotaManager::IsOriginInternal(mOriginMetadata.mOrigin));
-
-    mEnforcingQuota = false;
-  } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
-
-    QM_TRY_UNWRAP(
-        auto principalMetadata,
-        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
-
-    mOriginMetadata = {std::move(principalMetadata), persistenceType};
-
-    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
-  }
-
-  QuotaManager::GetStorageId(persistenceType, mOriginMetadata.mOrigin,
-                             Client::IDB, mDatabaseId);
-
-  mDatabaseId.Append('*');
-  mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
-
-  // Need to get database file path before opening the directory.
-  // XXX: For what reason?
-  QM_TRY_UNWRAP(
-      mDatabaseFilePath,
-      ([this, metadata, quotaManager]() -> mozilla::Result<nsString, nsresult> {
-        QM_TRY_INSPECT(const auto& dbFile,
-                       quotaManager->GetOriginDirectory(mOriginMetadata));
-
-        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
-            NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
-
-        QM_TRY(MOZ_TO_RESULT(
-            dbFile->Append(GetDatabaseFilenameBase(metadata.name(),
-                                                   mOriginMetadata.mIsPrivate) +
-                           kSQLiteSuffix)));
-
-        QM_TRY_RETURN(
-            MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
-      }()));
-
-  // Open directory
-  mState = State::DirectoryOpenPending;
-
-  quotaManager->OpenClientDirectory({mOriginMetadata, Client::IDB})
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr(this)](
-              const ClientDirectoryLockPromise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve()) {
-              self->DirectoryLockAcquired(aValue.ResolveValue());
-            } else {
-              self->DirectoryLockFailed();
-            }
-          });
-
-  return NS_OK;
-}
-
 bool FactoryOp::MustWaitFor(const FactoryOp& aExistingOp) {
   AssertIsOnOwningThread();
 
@@ -14929,10 +14901,6 @@ FactoryOp::Run() {
   switch (mState) {
     case State::Initial:
       QM_WARNONLY_TRY(MOZ_TO_RESULT(Open()), handleError);
-      break;
-
-    case State::FinishOpen:
-      QM_WARNONLY_TRY(MOZ_TO_RESULT(FinishOpen()), handleError);
       break;
 
     case State::DatabaseOpenPending:
