@@ -65,17 +65,16 @@ class WaylandMessage {
  public:
   bool Write(int aSocket);
 
-  bool Loaded() const { return mLoaded && (mFds.size() || mData.size()); }
+  bool Loaded() const { return !mFailed && (mFds.size() || mData.size()); }
   bool Failed() const { return mFailed; }
 
   explicit WaylandMessage(int aSocket) { Read(aSocket); }
   ~WaylandMessage();
 
  private:
-  bool Read(int aSocket);
+  void Read(int aSocket);
 
  private:
-  bool mLoaded = false;
   bool mFailed = false;
 
   std::vector<int> mFds;
@@ -133,9 +132,9 @@ WaylandMessage::~WaylandMessage() {
   }
 }
 
-bool WaylandMessage::Read(int aSocket) {
+void WaylandMessage::Read(int aSocket) {
   // We don't expect WaylandMessage re-read
-  assert(!mLoaded && !mFailed);
+  assert(!Loaded() && !mFailed);
 
   mData.resize(MAX_DATA_SIZE);
 
@@ -152,7 +151,7 @@ bool WaylandMessage::Read(int aSocket) {
   if (msg.msg_flags & (MSG_CTRUNC | MSG_TRUNC)) {
     Error("WaylandMessage::Read() data truncated, small buffer?");
     mFailed = true;
-    return false;
+    return;
   }
 
   if (ret < 1) {
@@ -161,11 +160,11 @@ bool WaylandMessage::Read(int aSocket) {
       case EINTR:
         // Neither loaded nor failed, we'll try again later
         Print("WaylandMessage::Read() failed %s\n", strerror(errno));
-        return false;
+        return;
       default:
         Error("WaylandMessage::Read() failed");
         mFailed = true;
-        return false;
+        return;
     }
   }
 
@@ -199,13 +198,10 @@ bool WaylandMessage::Read(int aSocket) {
     }
     header = next;
   }
-
-  mLoaded = true;
-  return true;
 }
 
 bool WaylandMessage::Write(int aSocket) {
-  if (!mLoaded || mFailed) {
+  if (!Loaded()) {
     return false;
   }
 
