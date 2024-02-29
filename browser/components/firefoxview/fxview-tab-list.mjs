@@ -727,6 +727,7 @@ export class FxviewTabRow extends MozLitElement {
       class="${classMap({
         "fxview-tab-row-favicon-wrapper": true,
         pinned: this.indicators?.includes("pinned"),
+        pinnedOnNewTab: this.indicators?.includes("pinnedOnNewTab"),
         attention: this.indicators?.includes("attention"),
       })}"
     >
@@ -796,6 +797,7 @@ export class FxviewTabRow extends MozLitElement {
     const timeString = this.timeFluentId(this.dateTimeFormat);
     const time = this.time;
     const timeArgs = JSON.stringify({ time });
+
     return html`<a
         href=${ifDefined(this.url)}
         class="fxview-tab-row-main"
