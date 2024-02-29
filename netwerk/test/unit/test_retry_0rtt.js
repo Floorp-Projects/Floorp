@@ -83,7 +83,7 @@ add_task(
     var retryDomains = [
       "0rtt-alert-bad-mac.example.com",
       "0rtt-alert-protocol-version.example.com",
-      //"0rtt-alert-unexpected.example.com", // TODO(bug 1753204): uncomment this
+      "0rtt-alert-unexpected.example.com",
     ];
 
     Services.prefs.setCharPref("network.dns.localDomains", retryDomains);
