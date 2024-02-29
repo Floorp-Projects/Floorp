@@ -170,6 +170,7 @@ nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 nsIFrame* NS_NewFileControlLabelFrame(PresShell*, ComputedStyle*);
+nsIFrame* NS_NewComboboxLabelFrame(PresShell*, ComputedStyle*);
 nsIFrame* NS_NewMiddleCroppingLabelFrame(PresShell*, ComputedStyle*);
 
 #include "mozilla/dom/NodeInfo.h"
@@ -3012,90 +3013,32 @@ static inline void ClearLazyBits(nsIContent* aStartContent,
   }
 }
 
-nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindSelectData(const Element& aElement,
+                                      ComputedStyle& aStyle) {
+  // Construct a frame-based listbox or combobox
+  const auto* sel = dom::HTMLSelectElement::FromNode(aElement);
+  MOZ_ASSERT(sel);
+  if (sel->IsCombobox()) {
+    static constexpr FrameConstructionData sComboboxData{
+        ToCreationFunc(NS_NewComboboxControlFrame), 0,
+        PseudoStyleType::buttonContent};
+    return &sComboboxData;
+  }
+  // FIXME: Can we simplify this to avoid needing ConstructListboxSelectFrame,
+  // and reuse ConstructScrollableBlock or so?
+  static constexpr FrameConstructionData sListBoxData{
+      &nsCSSFrameConstructor::ConstructListBoxSelectFrame};
+  return &sListBoxData;
+}
+
+nsIFrame* nsCSSFrameConstructor::ConstructListBoxSelectFrame(
     nsFrameConstructorState& aState, FrameConstructionItem& aItem,
     nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
     nsFrameList& aFrameList) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
-
-  // Construct a frame-based listbox or combobox
-  dom::HTMLSelectElement* sel = dom::HTMLSelectElement::FromNode(content);
-  MOZ_ASSERT(sel);
-  if (sel->IsCombobox()) {
-    // Construct a frame-based combo box.
-    // The frame-based combo box is built out of three parts. A display area, a
-    // button and a dropdown list. The display area and button are created
-    // through anonymous content. The drop-down list's frame is created
-    // explicitly. The combobox frame shares its content with the drop-down
-    // list.
-    nsComboboxControlFrame* comboboxFrame =
-        NS_NewComboboxControlFrame(mPresShell, computedStyle);
-
-    // Save the history state so we don't restore during construction
-    // since the complete tree is required before we restore.
-    nsILayoutHistoryState* historyState = aState.mFrameState;
-    aState.mFrameState = nullptr;
-    // Initialize the combobox frame
-    InitAndRestoreFrame(aState, content,
-                        aState.GetGeometricParent(*aStyleDisplay, aParentFrame),
-                        comboboxFrame);
-
-    comboboxFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
-
-    aState.AddChild(comboboxFrame, aFrameList, content, aParentFrame);
-
-    // Resolve pseudo element style for the dropdown list
-    RefPtr<ComputedStyle> listStyle =
-        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
-            PseudoStyleType::dropDownList, computedStyle);
-
-    // child frames of combobox frame
-    nsFrameList childList;
-
-    // Create display and button frames from the combobox's anonymous content.
-    // The anonymous content is appended to existing anonymous content for this
-    // element (the scrollbars).
-    //
-    // nsComboboxControlFrame needs special frame creation behavior for its
-    // first piece of anonymous content, which means that we can't take the
-    // normal ProcessChildren path.
-    AutoTArray<nsIAnonymousContentCreator::ContentInfo, 2> newAnonymousItems;
-    DebugOnly<nsresult> rv =
-        GetAnonymousContent(content, comboboxFrame, newAnonymousItems);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!newAnonymousItems.IsEmpty());
-
-    // Manually create a frame for the special NAC.
-    MOZ_ASSERT(newAnonymousItems[0].mContent ==
-               comboboxFrame->GetDisplayNode());
-    newAnonymousItems.RemoveElementAt(0);
-    nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
-    MOZ_ASSERT(customFrame);
-    childList.AppendFrame(nullptr, customFrame);
-
-    nsFrameConstructorSaveState floatSaveState;
-    aState.MaybePushFloatContainingBlock(comboboxFrame, floatSaveState);
-
-    // The other piece of NAC can take the normal path.
-    AutoFrameConstructionItemList fcItems(this);
-    AutoFrameConstructionPageName pageNameTracker(aState, comboboxFrame);
-    AddFCItemsForAnonymousContent(aState, comboboxFrame, newAnonymousItems,
-                                  fcItems, pageNameTracker);
-    ConstructFramesFromItemList(aState, fcItems, comboboxFrame,
-                                /* aParentIsWrapperAnonBox = */ false,
-                                childList);
-
-    comboboxFrame->SetInitialChildList(FrameChildListID::Principal,
-                                       std::move(childList));
-
-    aState.mFrameState = historyState;
-    if (aState.mFrameState) {
-      // Restore frame state for the entire subtree of |comboboxFrame|.
-      RestoreFrameState(comboboxFrame, aState.mFrameState);
-    }
-    return comboboxFrame;
-  }
 
   // Listbox, not combobox
   nsContainerFrame* listFrame =
@@ -3175,7 +3118,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
 
   const nsStyleDisplay* fieldsetContentDisplay =
       fieldsetContentStyle->StyleDisplay();
-  bool isScrollable = fieldsetContentDisplay->IsScrollableOverflow();
+  const bool isScrollable = fieldsetContentDisplay->IsScrollableOverflow();
   nsContainerFrame* scrollFrame = nullptr;
   if (isScrollable) {
     fieldsetContentStyle = BeginBuildingScrollFrame(
@@ -3499,11 +3442,18 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
                "Unexpected parent for fieldset content anon box");
 
   if (aElement.IsInNativeAnonymousSubtree() &&
-      aElement.NodeInfo()->NameAtom() == nsGkAtoms::label &&
-      static_cast<nsFileControlFrame*>(do_QueryFrame(aParentFrame))) {
-    static constexpr FrameConstructionData sFileLabelData(
-        NS_NewFileControlLabelFrame);
-    return &sFileLabelData;
+      aElement.NodeInfo()->NameAtom() == nsGkAtoms::label && aParentFrame) {
+    if (static_cast<nsFileControlFrame*>(do_QueryFrame(aParentFrame))) {
+      static constexpr FrameConstructionData sFileLabelData(
+          NS_NewFileControlLabelFrame);
+      return &sFileLabelData;
+    }
+    if (aParentFrame->GetParent() &&
+        aParentFrame->GetParent()->IsComboboxControlFrame()) {
+      static constexpr FrameConstructionData sComboboxLabelData(
+          NS_NewComboboxLabelFrame);
+      return &sComboboxLabelData;
+    }
   }
 
   static constexpr FrameConstructionDataByTag sHTMLData[] = {
@@ -3515,7 +3465,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
       SIMPLE_TAG_CREATE(wbr, NS_NewWBRFrame),
       SIMPLE_TAG_CHAIN(input, nsCSSFrameConstructor::FindInputData),
       SIMPLE_TAG_CREATE(textarea, NS_NewTextControlFrame),
-      COMPLEX_TAG_CREATE(select, &nsCSSFrameConstructor::ConstructSelectFrame),
+      SIMPLE_TAG_CHAIN(select, nsCSSFrameConstructor::FindSelectData),
       SIMPLE_TAG_CHAIN(object, nsCSSFrameConstructor::FindObjectData),
       SIMPLE_TAG_CHAIN(embed, nsCSSFrameConstructor::FindObjectData),
       COMPLEX_TAG_CREATE(fieldset,
@@ -5165,10 +5115,14 @@ static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
     return false;
   }
 
+  // Allow native anonymous content no matter what.
+  if (aChild.IsRootOfNativeAnonymousSubtree()) {
+    return false;
+  }
+
   // Options with labels have their label text added in ::before by forms.css.
   // Suppress frames for their child text.
-  if (aParent->IsHTMLElement(nsGkAtoms::option) &&
-      !aChild.IsRootOfNativeAnonymousSubtree()) {
+  if (aParent->IsHTMLElement(nsGkAtoms::option)) {
     return aParent->AsElement()->HasNonEmptyAttr(nsGkAtoms::label);
   }
 
@@ -5191,11 +5145,7 @@ static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
     return false;
   }
 
-  // Allow native anonymous content no matter what.
-  if (aChild.IsRootOfNativeAnonymousSubtree()) {
-    return false;
-  }
-
+  // Anything else is not ok.
   return true;
 }
 

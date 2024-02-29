@@ -57,8 +57,8 @@ void nsHTMLButtonControlFrame::SetFocus(bool aOn, bool aRepaint) {}
 nsresult nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
                                                WidgetGUIEvent* aEvent,
                                                nsEventStatus* aEventStatus) {
-  // if disabled do nothing
-  if (mRenderer.isDisabled()) {
+  if (mContent->AsElement()->IsDisabled()) {
+    // If disabled do nothing
     return NS_OK;
   }
 
@@ -237,12 +237,14 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
     // Button has a fixed block-size -- that's its content-box bSize.
     buttonContentBox.BSize(wm) = aButtonReflowInput.ComputedBSize();
   } else {
-    // Button is intrinsically sized -- it should shrinkwrap the
-    // button-contents' bSize. But if it has size containment in block axis,
-    // ignore the contents and use contain-intrinsic-block-size.
-    nscoord bSize = aButtonReflowInput.mFrame->ContainIntrinsicBSize().valueOr(
-        contentsDesiredSize.BSize(wm));
-
+    // Button is intrinsically sized -- it should shrinkwrap the contents'
+    // bSize.
+    // If we have size containment in block axis, ignore the contents and use
+    // contain-intrinsic-block-size. The combobox content size with no content
+    // is one line-height, not zero.
+    const Maybe<nscoord> containBSize = ContainIntrinsicBSize(
+        IsComboboxControlFrame() ? aButtonReflowInput.GetLineHeight() : 0);
+    const nscoord bSize = containBSize.valueOr(contentsDesiredSize.BSize(wm));
     // Make sure we obey min/max-bSize in the case when we're doing intrinsic
     // sizing (we get it for free when we have a non-intrinsic
     // aButtonReflowInput.ComputedBSize()).  Note that we do this before

@@ -70,10 +70,6 @@ label {
     user-select: all !important;
 }
 
-::-moz-display-comboboxcontrol-frame {
-  user-select: text !important;
-}
-
 option {
   user-select: text !important;
 }

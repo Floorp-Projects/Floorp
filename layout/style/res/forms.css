@@ -259,40 +259,27 @@ select:-moz-select-list-box {
 }
 
 select > button {
-  inline-size: 12px;
-  white-space: nowrap;
-  position: static;
+  padding: 0;
+  border: 0;
   appearance: auto;
   -moz-default-appearance: -moz-menulist-arrow-button;
-
-  /* Make sure to size correctly if the combobox has a non-auto height. */
-  block-size: 100%;
-  box-sizing: border-box;
 
   /* Draw the arrow in the select's color */
   color: inherit;
 
-  /*
-    Make sure to align properly with the display frame.  Note that we
-    want the baseline of the combobox to match the baseline of the
-    display frame, so the dropmarker is what gets the vertical-align.
-  */
+  /* We don't want the button to grow the line-height */
+  font: inherit;
+  max-block-size: 100%;
+
+  /* Make sure to align properly with the display frame.  Note that we want the
+   * baseline of the combobox to match the baseline of the label, so the
+   * dropmarker is what gets the vertical-align. */
   vertical-align: top;
 }
 
-*|*::-moz-display-comboboxcontrol-frame {
-  content: inherit;
+select > label {
+  display: inline-block;
   overflow: clip;
-  color: unset;
-  white-space: nowrap;
-  text-align: unset;
-  user-select: none;
-  /* Make sure to size correctly if the combobox has a non-auto block-size. */
-  block-size: 100%;
-  /* Try to always display our own text */
-  min-inline-size: max-content;
-  box-sizing: border-box;
-  line-height: -moz-block-height;
 }
 
 option[label]::before {
@@ -668,16 +655,15 @@ input[type=file] > label {
   *  inherit into the ':-moz-button-content' pseudo-element.
   *
   * <select>:
-  *  inherit into the ':-moz-display-comboboxcontrol-frame' pseudo-element and
-  *  the <optgroup>'s ':before' pseudo-element, which is where the label of
-  *  the <optgroup> gets displayed. The <option>s don't use anonymous boxes,
-  *  so they need no special rules.
+  *  inherit into the label and the <optgroup>'s ':before' pseudo-element,
+  *  which is where the label of the <optgroup> gets displayed. The <option>s
+  *  don't use anonymous boxes, so they need no special rules.
   */
 ::placeholder,
 ::-moz-text-control-editing-root,
 *|*::-moz-button-content,
-*|*::-moz-display-comboboxcontrol-frame,
-optgroup:before {
+select > label,
+optgroup::before {
   unicode-bidi: inherit;
   text-overflow: inherit;
 }
