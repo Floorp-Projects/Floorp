@@ -468,7 +468,7 @@ bool WaylandProxy::SetupWaylandDisplays() {
   char* waylandDisplay = getenv("WAYLAND_DISPLAY_COMPOSITOR");
   if (!waylandDisplay) {
     waylandDisplay = getenv("WAYLAND_DISPLAY");
-    if (!waylandDisplay) {
+    if (!waylandDisplay || waylandDisplay[0] == '\0') {
       ErrorPlain("WaylandProxy::SetupWaylandDisplays(), Missing Wayland display, WAYLAND_DISPLAY is empty.");
       return false;
     }
