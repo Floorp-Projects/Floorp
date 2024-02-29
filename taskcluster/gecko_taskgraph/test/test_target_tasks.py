@@ -210,6 +210,21 @@ class TestTargetTasks(unittest.TestCase):
         }
         self.assertEqual(sorted(method(tg, params, {})), ["ddd-1", "ddd-2"])
 
+    def test_try_task_config_regex_with_paths(self):
+        "try_mode = try_task_config uses the try config with regex instead of chunk numbers"
+        tg = self.make_task_graph()
+        method = target_tasks.get_method("try_tasks")
+        params = {
+            "try_mode": "try_task_config",
+            "try_task_config": {
+                "new-test-config": True,
+                "tasks": ["ddd-*"],
+                "env": {"MOZHARNESS_TEST_PATHS": "foo/bar"},
+            },
+            "project": "try",
+        }
+        self.assertEqual(sorted(method(tg, params, {})), ["ddd-1"])
+
     def test_try_task_config_absolute(self):
         "try_mode = try_task_config uses the try config with full task labels"
         tg = self.make_task_graph()
