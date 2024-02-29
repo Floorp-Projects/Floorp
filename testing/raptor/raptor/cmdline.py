@@ -520,6 +520,13 @@ def create_parser(mach_interface=False):
         type=str,
         help="Repository branch that should be used for a particular benchmark test.",
     )
+    add_arg(
+        "--screenshot-on-failure",
+        action="store_true",
+        dest="screenshot_on_failure",
+        default=False,
+        help="Take a screenshot when the test fails.",
+    )
 
     add_logging_group(parser)
     return parser

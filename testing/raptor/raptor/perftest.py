@@ -110,6 +110,7 @@ class Perftest(object):
         benchmark_revision=None,
         benchmark_branch=None,
         clean=False,
+        screenshot_on_failure=False,
         **kwargs
     ):
         self._remote_test_root = None
@@ -156,6 +157,7 @@ class Perftest(object):
             "benchmark_revision": benchmark_revision,
             "benchmark_branch": benchmark_branch,
             "clean": clean,
+            "screenshot_on_failure": screenshot_on_failure,
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS

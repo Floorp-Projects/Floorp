@@ -68,6 +68,7 @@ class RaptorRunner(MozbuildObject):
         self.browsertime_visualmetrics = kwargs["browsertime_visualmetrics"]
         self.browsertime_node = kwargs["browsertime_node"]
         self.clean = kwargs["clean"]
+        self.screenshot_on_failure = kwargs["screenshot_on_failure"]
 
         if Conditions.is_android(self) or kwargs["app"] in ANDROID_BROWSERS:
             self.binary_path = None
@@ -122,6 +123,7 @@ class RaptorRunner(MozbuildObject):
             "browsertime_node": self.browsertime_node,
             "mozbuild_path": get_state_dir(),
             "clean": self.clean,
+            "screenshot_on_failure": self.screenshot_on_failure,
         }
 
         sys.path.insert(0, os.path.join(self.topsrcdir, "tools", "browsertime"))

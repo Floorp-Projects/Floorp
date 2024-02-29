@@ -19,7 +19,7 @@ from benchmark import Benchmark
 from cmdline import CHROME_ANDROID_APPS
 from logger.logger import RaptorLogger
 from manifestparser.util import evaluate_list_from_string
-from perftest import GECKO_PROFILER_APPS, TRACE_APPS, Perftest
+from perftest import FIREFOX_APPS, GECKO_PROFILER_APPS, TRACE_APPS, Perftest
 from results import BrowsertimeResultsHandler
 from utils import bool_from_str
 
@@ -825,6 +825,21 @@ class Browsertime(Perftest):
             os.killpg(proc.pid, signal.SIGKILL)
         proc.wait()
 
+    def get_failure_screenshot(self):
+        if (
+            self.config.get("screenshot_on_failure")
+            and self.config["app"] in FIREFOX_APPS
+        ):
+            from mozscreenshot import dump_screen
+
+            obj_dir = os.environ.get("MOZ_DEVELOPER_OBJ_DIR", None)
+            if obj_dir is None:
+                build_dir = pathlib.Path(os.environ.get("MOZ_UPLOAD_DIR")).parent
+                utility_path = pathlib.Path(build_dir, "tests", "bin")
+            else:
+                utility_path = os.path.join(obj_dir, "dist", "bin")
+            dump_screen(utility_path, LOG)
+
     def run_extra_profiler_run(
         self, test, timeout, proc_timeout, output_timeout, line_handler, env
     ):
@@ -1016,16 +1031,19 @@ class Browsertime(Perftest):
             )
 
             if self.output_timed_out:
+                self.get_failure_screenshot()
                 raise Exception(
                     f"Browsertime process timed out after waiting {output_timeout} seconds "
                     "for output"
                 )
             if self.timed_out:
+                self.get_failure_screenshot()
                 raise Exception(
                     f"Browsertime process timed out after {proc_timeout} seconds"
                 )
 
             if self.browsertime_failure:
+                self.get_failure_screenshot()
                 raise Exception(self.browsertime_failure)
 
             # We've run the main browsertime process, now we need to run the
