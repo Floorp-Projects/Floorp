@@ -27,7 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NetworkManager: "resource://pdf.js/PdfJsNetwork.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
-  PdfJsTelemetry: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
+  PdfJsTelemetryContent: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
   PdfSandbox: "resource://pdf.js/PdfSandbox.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
@@ -331,27 +331,8 @@ class ChromeActions {
 
   reportTelemetry(data) {
     const probeInfo = JSON.parse(data);
-    const { type } = probeInfo;
-    switch (type) {
-      case "pageInfo":
-        lazy.PdfJsTelemetry.onTimeToView(probeInfo.timestamp);
-        break;
-      case "editing":
-        lazy.PdfJsTelemetry.onEditing(probeInfo);
-        break;
-      case "buttons":
-      case "gv-buttons":
-        const id = probeInfo.data.id.replace(
-          /([A-Z])/g,
-          c => `_${c.toLowerCase()}`
-        );
-        if (type === "buttons") {
-          lazy.PdfJsTelemetry.onButtons(id);
-        } else {
-          lazy.PdfJsTelemetry.onGeckoview(id);
-        }
-        break;
-    }
+    const actor = getActor(this.domWindow);
+    actor?.sendAsyncMessage("PDFJS:Parent:reportTelemetry", probeInfo);
   }
 
   updateFindControlState(data) {
@@ -1010,7 +991,7 @@ PdfStreamConverter.prototype = {
       aRequest.setResponseHeader("Refresh", "", false);
     }
 
-    lazy.PdfJsTelemetry.onViewerIsUsed();
+    lazy.PdfJsTelemetryContent.onViewerIsUsed();
 
     // The document will be loaded via the stream converter as html,
     // but since we may have come here via a download or attachment
