@@ -115,10 +115,8 @@ USE_IS_ENUM_CASE(webgl::ProvokingVertex)
 
 template <typename T>
 struct QueueParamTraits<RawBuffer<T>> {
-  using ParamType = RawBuffer<T>;
-
   template <typename U>
-  static bool Write(ProducerView<U>& view, const ParamType& in) {
+  static bool Write(ProducerView<U>& view, const RawBuffer<T>& in) {
     const auto& elemCount = in.size();
     auto status = view.WriteParam(elemCount);
     if (!status) return status;
@@ -130,7 +128,7 @@ struct QueueParamTraits<RawBuffer<T>> {
   }
 
   template <typename U>
-  static bool Read(ConsumerView<U>& view, ParamType* const out) {
+  static bool Read(ConsumerView<U>& view, RawBuffer<T>* const out) {
     size_t elemCount = 0;
     auto status = view.ReadParam(&elemCount);
     if (!status) return status;
@@ -143,6 +141,40 @@ struct QueueParamTraits<RawBuffer<T>> {
     auto data = view.template ReadRange<T>(elemCount);
     if (!data) return false;
     *out = std::move(RawBuffer<T>{*data});
+    return true;
+  }
+};
+
+// -
+
+template <typename T>
+struct QueueParamTraits<Span<T>> {
+  template <typename U>
+  static bool Write(ProducerView<U>& view, const Span<T>& in) {
+    const auto& elemCount = in.size();
+    auto status = view.WriteParam(elemCount);
+    if (!status) return status;
+
+    if (!elemCount) return status;
+    status = view.WriteFromRange(Range<const T>{in});
+
+    return status;
+  }
+
+  template <typename U>
+  static bool Read(ConsumerView<U>& view, Span<const T>* const out) {
+    size_t elemCount = 0;
+    auto status = view.ReadParam(&elemCount);
+    if (!status) return status;
+
+    if (!elemCount) {
+      *out = {};
+      return true;
+    }
+
+    auto data = view.template ReadRange<const T>(elemCount);
+    if (!data) return false;
+    *out = Span{*data};
     return true;
   }
 };

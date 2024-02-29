@@ -24,6 +24,7 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/Span.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Logging.h"
@@ -1207,6 +1208,13 @@ inline void Memcpy(const RangedPtr<T>* const destBegin,
   Memcpy(destBegin, srcRange->begin(), srcRange->length());
 }
 
+template <typename Dst, typename Src>
+inline void Memcpy(const Span<Dst>* const dest, const Span<Src>& src) {
+  MOZ_RELEASE_ASSERT(src.size_bytes() >= dest->size_bytes());
+  MOZ_ASSERT(src.size_bytes() == dest->size_bytes());
+  memcpy(dest->data(), src.data(), dest->size_bytes());
+}
+
 // -
 
 inline bool StartsWith(const std::string_view str,
@@ -1284,6 +1292,15 @@ inline const char* ToChars(const bool val) {
   if (val) return "true";
   return "false";
 }
+
+template <class To>
+struct ReinterpretToSpan {
+  template <class FromT>
+  static inline constexpr Span<To> From(const Span<FromT>& from) {
+    static_assert(sizeof(FromT) == sizeof(To));
+    return {reinterpret_cast<To*>(from.data()), from.size()};
+  }
+};
 
 }  // namespace mozilla
 
