@@ -437,6 +437,7 @@ win64-clang-17-stage1:
         toolchain:
             - linux64-clang-17-stage1
             - vs-toolchain
+            - win64-libxml2
 
 win64-clang-17-raw:
     description: "Clang-cl 17 toolchain build"
@@ -467,6 +468,7 @@ win64-clang-17-raw:
             - win64-clang-17-stage1
             - win64-compiler-rt-17
             - vs-toolchain
+            - win64-libxml2
 
 win64-clang-17:
     description: "Clang-cl 17 toolchain build"
@@ -801,6 +803,7 @@ win64-clang-18-stage1:
         toolchain:
             - linux64-clang-18-stage1
             - vs-toolchain
+            - win64-libxml2
 
 win64-clang-18-raw:
     description: "Clang-cl 18 toolchain build"
@@ -831,6 +834,7 @@ win64-clang-18-raw:
             - win64-clang-18-stage1
             - win64-compiler-rt-18
             - vs-toolchain
+            - win64-libxml2
 
 win64-clang-18:
     description: "Clang-cl 18 toolchain build"
@@ -1207,6 +1211,7 @@ win64-clang-trunk-stage1:
         toolchain:
             - linux64-clang-trunk-stage1
             - vs-toolchain
+            - win64-libxml2
 
 win64-clang-trunk-raw:
     description: "Clang-cl trunk toolchain build"
@@ -1239,6 +1244,7 @@ win64-clang-trunk-raw:
             - win64-clang-trunk-stage1
             - win64-compiler-rt-trunk
             - vs-toolchain
+            - win64-libxml2
 
 win64-clang-trunk:
     description: "Clang-cl trunk toolchain build"

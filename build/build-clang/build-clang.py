@@ -251,10 +251,7 @@ def build_one_stage(
 
         cmake_args.append("-DLLVM_ENABLE_PROJECTS=%s" % ";".join(projects))
 
-        # There is no libxml2 on Windows except if we build one ourselves.
-        # libxml2 is only necessary for llvm-mt, but Windows can just use the
-        # native MT tool.
-        if not is_windows(target) and is_final_stage:
+        if is_final_stage:
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
         if is_linux(target) and is_final_stage:
             sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
@@ -276,6 +273,13 @@ def build_one_stage(
                     f"-DHOST_ARCH={target[: -len('-pc-windows-msvc')]}",
                     f"-DLLVM_WINSYSROOT={os.environ['VSINSTALLDIR']}",
                     "-DLLVM_DISABLE_ASSEMBLY_FILES=ON",
+                ]
+            if is_final_stage:
+                fetches = os.environ["MOZ_FETCHES_DIR"]
+                cmake_args += [
+                    "-DLIBXML2_DEFINITIONS=-DLIBXML_STATIC",
+                    f"-DLIBXML2_INCLUDE_DIR={fetches}/libxml2/include/libxml2",
+                    f"-DLIBXML2_LIBRARIES={fetches}/libxml2/lib/libxml2s.lib",
                 ]
         else:
             # libllvm as a shared library is not supported on Windows
