@@ -258,7 +258,7 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       case "PDFJS:Parent:updateMatchesCount":
         return this.#updateMatchesCount(aMsg);
       case "PDFJS:Parent:addEventListener":
-        return this.#addEventListener();
+        return this.#addEventListener(aMsg);
       case "PDFJS:Parent:saveURL":
         return this.#save(aMsg);
       case "PDFJS:Parent:getNimbus":
@@ -299,7 +299,16 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
     this.#fileSaver = null;
   }
 
-  #addEventListener() {
+  #addEventListener({ data: { aSupportsFind } }) {
+    this.#fileSaver = new FileSaver(this.browser, this.eventDispatcher);
+    this.eventDispatcher.registerListener(this.#fileSaver, [
+      "GeckoView:PDFSave",
+    ]);
+
+    if (!aSupportsFind) {
+      return;
+    }
+
     if (this.#findHandler) {
       this.#findHandler.cleanup();
       return;
@@ -310,11 +319,6 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       "GeckoView:ClearMatches",
       "GeckoView:DisplayMatches",
       "GeckoView:FindInPage",
-    ]);
-
-    this.#fileSaver = new FileSaver(this.browser, this.eventDispatcher);
-    this.eventDispatcher.registerListener(this.#fileSaver, [
-      "GeckoView:PDFSave",
     ]);
   }
 
