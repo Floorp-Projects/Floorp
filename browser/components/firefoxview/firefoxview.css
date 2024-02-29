@@ -16,6 +16,7 @@
   --fxview-text-color-hover: var(--newtab-text-primary-color);
   --fxview-primary-action-background: var(--newtab-primary-action-background, #0061e0);
   --fxview-border: var(--fc-border-light, #CFCFD8);
+  --fxview-indicator-stroke-color-hover: #DEDDDE;
 
   /* ensure utility button hover states match those of the rest of the page */
   --in-content-button-background-hover: var(--fxview-element-background-hover);
@@ -37,6 +38,7 @@
     --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 80%, white);
     --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 60%, white);
     --fxview-border: #8F8F9D;
+    --fxview-indicator-stroke-color-hover:#5D5C66;
 
     /* copy over newtab colors from activity-stream-[os].css files */
     --newtab-background-color: #2B2A33;

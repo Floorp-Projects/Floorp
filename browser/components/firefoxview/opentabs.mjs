@@ -23,6 +23,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NonPrivateTabs: "resource:///modules/OpenTabs.sys.mjs",
   getTabsTargetForWindow: "resource:///modules/OpenTabs.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -861,11 +862,13 @@ function getContainerObj(tab) {
  *  Array of named tab indicators
  */
 function getIndicatorsForTab(tab) {
+  const url = tab.linkedBrowser?.currentURI?.spec || "";
   let tabIndicators = [];
   let hasAttention =
     (tab.pinned &&
       (tab.hasAttribute("attention") || tab.hasAttribute("titlechanged"))) ||
     (!tab.pinned && tab.hasAttribute("attention"));
+
   if (tab.pinned) {
     tabIndicators.push("pinned");
   }
@@ -881,9 +884,12 @@ function getIndicatorsForTab(tab) {
   if (tab.hasAttribute("muted")) {
     tabIndicators.push("muted");
   }
+  if (checkIfPinnedNewTab(url)) {
+    tabIndicators.push("pinnedOnNewTab");
+  }
+
   return tabIndicators;
 }
-
 /**
  * Gets the primary l10n id for a tab when normalizing for fxview-tab-list
  *
@@ -925,6 +931,18 @@ function getPrimaryL10nArgs(tab, isRecentBrowsing, url) {
 }
 
 /**
+ * Check if a given url is pinned on the new tab page
+ *
+ * @param {string} url
+ *   url to check
+ * @returns {boolean}
+ *   is tabbed pinned on new tab page
+ */
+function checkIfPinnedNewTab(url) {
+  return url && lazy.NewTabUtils.pinnedLinks.isPinned({ url });
+}
+
+/**
  * Convert a list of tabs into the format expected by the fxview-tab-list
  * component.
  *
@@ -941,7 +959,7 @@ function getTabListItems(tabs, isRecentBrowsing) {
   return filtered.map(tab => {
     let tabIndicators = getIndicatorsForTab(tab);
     let containerObj = getContainerObj(tab);
-    const url = tab.linkedBrowser?.currentURI?.spec || "";
+    const url = tab?.linkedBrowser?.currentURI?.spec || "";
     return {
       containerObj,
       indicators: tabIndicators,

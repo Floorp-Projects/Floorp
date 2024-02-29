@@ -50,6 +50,10 @@
 .fxview-tab-row-button.ghost-button.icon-button:enabled:hover {
   background-color: var(--fxviewtabrow-element-background-hover);
   color: var(--fxviewtabrow-text-color-hover);
+
+  & .fxview-tab-row-favicon-wrapper .fxview-tab-row-favicon::after {
+    stroke: var(--fxview-indicator-stroke-color-hover);
+  }
 }
 
 .fxview-tab-row-main:hover:active,
@@ -93,12 +97,20 @@
     stroke: var(--fxview-background-color-secondary);
   }
 
+  &:is(.pinnedOnNewTab, .bookmark) .fxview-tab-row-favicon::after {
+    inset-block-start: 9px;
+    inset-inline-end: -6px;
+  }
+
   &.bookmark .fxview-tab-row-favicon::after,
   &.bookmark .fxview-tab-row-button::after {
     background-image: url("chrome://browser/skin/bookmark-12.svg");
-    inset-block-start: 9px;
-    inset-inline-end: -6px;
     fill: var(--fxview-primary-action-background);
+  }
+
+  &.pinnedOnNewTab .fxview-tab-row-favicon::after,
+  &.pinnedOnNewTab .fxview-tab-row-button::after {
+    background-image: url("chrome://browser/skin/pin-12.svg");
   }
 
   &.attention .fxview-tab-row-favicon::after,
@@ -107,14 +119,6 @@
     height: 4px;
     width: 100%;
     inset-block-start: 20px;
-  }
-
-  &.pinnedNewTab .fxview-tab-row-favicon::after,
-  &.pinnedNewTab .fxview-tab-row-button::after {
-    background-image: url("chrome://browser/skin/pin-12.svg");
-    inset-block-start: 9px;
-    inset-inline-end: -10px;
-    fill: var(--fxview-primary-action-background);
   }
 
   &.pinned .fxview-tab-row-pinned-media-button {
