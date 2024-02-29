@@ -165,6 +165,7 @@ class MigrationUtils {
         "about:welcome",
         "about:welcome?*",
         "about:preferences",
+        "about:settings",
         "chrome://browser/content/migration/migration-dialog-window.html",
         "chrome://browser/content/spotlight.html",
         "about:firefoxview",
