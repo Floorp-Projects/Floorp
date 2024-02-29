@@ -88,7 +88,7 @@ class CookieService final : public nsICookieService,
                         bool aIsSameSiteForeign, bool aHadCrossSiteRedirects,
                         bool aHttpBound,
                         bool aAllowSecureCookiesToInsecureOrigin,
-                        const OriginAttributes& aOriginAttrs,
+                        const nsTArray<OriginAttributes>& aOriginAttrsList,
                         nsTArray<Cookie*>& aCookieList);
 
   /**

@@ -5,6 +5,7 @@
 
 #include "CookieCommons.h"
 #include "CookieLogging.h"
+#include "CookieServiceParent.h"
 #include "mozilla/net/CookieService.h"
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/net/NeckoParent.h"
@@ -124,6 +125,8 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   bool isSameSiteForeign =
       CookieCommons::IsSameSiteForeign(aChannel, uri, &hadCrossSiteRedirects);
 
+  // TODO (Bug 1874174): A channel could load both unpartitioned and partitioned
+  // cookie jars together. We will need to track both originAttributes for them.
   StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
       aChannel, attrs);
 
@@ -134,7 +137,12 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   ThirdPartyAnalysisResult result = thirdPartyUtil->AnalyzeChannel(
       aChannel, false, nullptr, nullptr, &rejectedReason);
 
-  UpdateCookieInContentList(uri, attrs);
+  nsTArray<OriginAttributes> originAttributesList;
+  originAttributesList.AppendElement(attrs);
+
+  for (auto& originAttributes : originAttributesList) {
+    UpdateCookieInContentList(uri, originAttributes);
+  }
 
   // Send matching cookies to Child.
   nsTArray<Cookie*> foundCookieList;
@@ -144,10 +152,11 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
-      hadCrossSiteRedirects, false, true, attrs, foundCookieList);
-  nsTArray<CookieStruct> matchingCookiesList;
-  SerializeCookieList(foundCookieList, matchingCookiesList, uri);
-  Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
+      hadCrossSiteRedirects, false, true, originAttributesList,
+      foundCookieList);
+  nsTArray<CookieStructTable> matchingCookiesListTable;
+  SerializeCookieListTable(foundCookieList, matchingCookiesListTable, uri);
+  Unused << SendTrackCookiesLoad(matchingCookiesListTable);
 }
 
 // we append outgoing cookie info into a list here so the ContentParent can
@@ -170,12 +179,22 @@ void CookieServiceParent::UpdateCookieInContentList(
 }
 
 // static
-void CookieServiceParent::SerializeCookieList(
+void CookieServiceParent::SerializeCookieListTable(
     const nsTArray<Cookie*>& aFoundCookieList,
-    nsTArray<CookieStruct>& aCookiesList, nsIURI* aHostURI) {
-  for (uint32_t i = 0; i < aFoundCookieList.Length(); i++) {
-    Cookie* cookie = aFoundCookieList.ElementAt(i);
-    CookieStruct* cookieStruct = aCookiesList.AppendElement();
+    nsTArray<CookieStructTable>& aCookiesListTable, nsIURI* aHostURI) {
+  nsTHashMap<nsCStringHashKey, CookieStructTable*> cookieListTable;
+
+  for (Cookie* cookie : aFoundCookieList) {
+    nsAutoCString attrsSuffix;
+    cookie->OriginAttributesRef().CreateSuffix(attrsSuffix);
+    CookieStructTable* table =
+        cookieListTable.LookupOrInsertWith(attrsSuffix, [&] {
+          CookieStructTable* newTable = aCookiesListTable.AppendElement();
+          newTable->attrs() = cookie->OriginAttributesRef();
+          return newTable;
+        });
+
+    CookieStruct* cookieStruct = table->cookies().AppendElement();
     *cookieStruct = cookie->ToIPC();
 
     // clear http-only cookie values
@@ -200,7 +219,7 @@ IPCResult CookieServiceParent::RecvGetCookieList(
     const bool& aStorageAccessPermissionGranted,
     const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
     const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
-    const OriginAttributes& aAttrs, GetCookieListResolver&& aResolve) {
+    nsTArray<OriginAttributes>&& aAttrsList, GetCookieListResolver&& aResolve) {
   // Send matching cookies to Child.
   if (!aHost) {
     return IPC_FAIL(this, "aHost must not be null");
@@ -208,7 +227,9 @@ IPCResult CookieServiceParent::RecvGetCookieList(
 
   // we append outgoing cookie info into a list here so the ContentParent can
   // filter cookies that do not need to go to certain ContentProcesses
-  UpdateCookieInContentList(aHost, aAttrs);
+  for (const auto& attrs : aAttrsList) {
+    UpdateCookieInContentList(aHost, attrs);
+  }
 
   nsTArray<Cookie*> foundCookieList;
   // Note: passing nullptr as aChannel to GetCookiesForURI() here is fine since
@@ -218,12 +239,12 @@ IPCResult CookieServiceParent::RecvGetCookieList(
       aHost, nullptr, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aStorageAccessPermissionGranted,
       aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign,
-      aHadCrossSiteRedirects, false, true, aAttrs, foundCookieList);
+      aHadCrossSiteRedirects, false, true, aAttrsList, foundCookieList);
 
-  nsTArray<CookieStruct> matchingCookiesList;
-  SerializeCookieList(foundCookieList, matchingCookiesList, aHost);
+  nsTArray<CookieStructTable> matchingCookiesListTable;
+  SerializeCookieListTable(foundCookieList, matchingCookiesListTable, aHost);
 
-  aResolve(matchingCookiesList);
+  aResolve(matchingCookiesListTable);
 
   return IPC_OK();
 }

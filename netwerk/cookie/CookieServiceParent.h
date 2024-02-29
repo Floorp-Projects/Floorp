@@ -70,11 +70,12 @@ class CookieServiceParent : public PCookieServiceParent {
       const bool& aStorageAccessPermissionGranted,
       const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
       const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
-      const OriginAttributes& aAttrs, GetCookieListResolver&& aResolve);
+      nsTArray<OriginAttributes>&& aAttrsList,
+      GetCookieListResolver&& aResolve);
 
-  static void SerializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
-                                  nsTArray<CookieStruct>& aCookiesList,
-                                  nsIURI* aHostURI);
+  static void SerializeCookieListTable(
+      const nsTArray<Cookie*>& aFoundCookieList,
+      nsTArray<CookieStructTable>& aCookiesListTable, nsIURI* aHostURI);
 
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   RefPtr<CookieService> mCookieService;
