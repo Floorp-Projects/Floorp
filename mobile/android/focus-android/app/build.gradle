@@ -47,6 +47,7 @@ android {
 
     lint {
         lintConfig file("lint.xml")
+        baseline file("lint-baseline.xml")
     }
 
     // We have a three dimensional build configuration:
@@ -355,6 +356,7 @@ dependencies {
     androidTestImplementation ComponentsDependencies.androidx_test_runner
     androidTestUtil FocusDependencies.androidx_orchestrator
 
+    lintChecks project(':tooling-lint')
 }
 // -------------------------------------------------------------------------------------------------
 //  Dynamically set versionCode (See tools/build/versionCode.gradle
