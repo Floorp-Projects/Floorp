@@ -36,7 +36,7 @@ def _execute_taskcluster_steps(diff, task_id):
     artifact_url = f"{tc_root_url}/api/queue/v1/task/{task_id}/artifacts/public%2Fgit%2F{BUILDCONFIG_DIFF_FILE_NAME}"  # noqa E501
     message = f"""{BUILDCONFIG_FILE_NAME} file changed! Please update it by running:
 
-curl --location {artifact_url} | gunzip | git apply
+curl --location --compressed {artifact_url} | git apply
 
 Then commit and push!
 """
