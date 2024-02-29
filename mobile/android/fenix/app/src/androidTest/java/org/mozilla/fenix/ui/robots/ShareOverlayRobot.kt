@@ -28,7 +28,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -37,9 +37,12 @@ class ShareOverlayRobot {
 
     // This function verifies the share layout when more than one tab is shared - a list of tabs is shown
     fun verifyShareTabsOverlay(vararg tabsTitles: String) {
+        Log.i(TAG, "verifyShareTabsOverlay: Trying to verify that the share overlay site list is displayed")
         onView(withId(R.id.shared_site_list))
             .check(matches(isDisplayed()))
+        Log.i(TAG, "verifyShareTabsOverlay: Verified that the share overlay site list is displayed")
         for (tabs in tabsTitles) {
+            Log.i(TAG, "verifyShareTabsOverlay: Trying to verify the shared tab: $tabs favicon and url")
             onView(withText(tabs))
                 .check(
                     matches(
@@ -49,6 +52,7 @@ class ShareOverlayRobot {
                         ),
                     ),
                 )
+            Log.i(TAG, "verifyShareTabsOverlay: Verified the shared tab: $tabs favicon and url")
         }
     }
 
@@ -90,22 +94,29 @@ class ShareOverlayRobot {
 
     fun verifySharingWithSelectedApp(appName: String, content: String, subject: String) {
         val sharingApp = mDevice.findObject(UiSelector().text(appName))
+        Log.i(TAG, "verifySharingWithSelectedApp: Trying to verify that sharing app: $appName exists")
         if (sharingApp.exists()) {
+            Log.i(TAG, "verifySharingWithSelectedApp: Sharing app: $appName exists")
+            Log.i(TAG, "verifySharingWithSelectedApp: Trying to click sharing app: $appName and wait for a new window")
             sharingApp.clickAndWaitForNewWindow()
+            Log.i(TAG, "verifySharingWithSelectedApp: Clicked sharing app: $appName and waited for a new window")
             verifySharedTabsIntent(content, subject)
         }
     }
 
     fun verifySharedTabsIntent(text: String, subject: String) {
+        Log.i(TAG, "verifySharedTabsIntent: Trying to verify the intent of the shared tab with text: $text, and subject: $subject")
         Intents.intended(
             allOf(
                 IntentMatchers.hasExtra(Intent.EXTRA_TEXT, text),
                 IntentMatchers.hasExtra(Intent.EXTRA_SUBJECT, subject),
             ),
         )
+        Log.i(TAG, "verifySharedTabsIntent: Verified the intent of the shared tab with text: $text, and subject: $subject")
     }
 
     fun verifyShareLinkIntent(url: Uri) {
+        Log.i(TAG, "verifyShareLinkIntent: Trying to verify that the share intent for link: $url is launched")
         // verify share intent is launched and matched with associated passed in URL
         Intents.intended(
             allOf(
@@ -127,20 +138,24 @@ class ShareOverlayRobot {
                 ),
             ),
         )
+        Log.i(TAG, "verifyShareLinkIntent: Verified that the share intent for link: $url was launched")
     }
 
     class Transition {
         fun clickSaveAsPDF(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+            Log.i(TAG, "clickSaveAsPDF: Trying to click the \"SAVE AS PDF\" share overlay button")
             itemContainingText("Save as PDF").click()
-            Log.i(TAG, "clickSaveAsPDF: Clicked \"SAVE AS PDF\" share overlay button")
+            Log.i(TAG, "clickSaveAsPDF: Clicked the \"SAVE AS PDF\" share overlay button")
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()
         }
 
         fun clickPrintButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            itemWithText("Print").waitForExists(TestAssetHelper.waitingTime)
+            itemWithText("Print").waitForExists(waitingTime)
+            Log.i(TAG, "clickPrintButton: Trying to click the \"Print\" share overlay button")
             itemWithText("Print").click()
+            Log.i(TAG, "clickPrintButton: Clicked the \"Print\" share overlay button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
