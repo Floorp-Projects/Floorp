@@ -24,9 +24,20 @@
 
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
   --urlbarView-item-block-padding: 6px;
-  --urlbarView-favicon-width: 16px;
+
+  /* The inline margins of a row icon. Rows with different icon sizes will define
+     different values for these variables so that the icons of all rows are
+     center-aligned along one vertical axis. Row icons happen to use the
+     `.urlbarView-favicon` class but not all icons are favicons (e.g., rich
+     search suggestion icons are images from the search engine). */
   --urlbarView-icon-margin-start: 0px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
+
+  /* The size and inline margins of a standard 16px favicon. The margin variables
+     can be used to align any 16px content along the vertical icon axis. */
+  --urlbarView-favicon-width: 16px;
+  --urlbarView-favicon-margin-start: var(--urlbarView-icon-margin-start);
+  --urlbarView-favicon-margin-end: var(--urlbarView-icon-margin-end);
 
   --urlbarView-rich-suggestion-default-icon-size: 28px;
 
@@ -52,6 +63,12 @@
     --urlbarView-result-button-background-opacity: 100%;
     --urlbarView-secondary-text-color: currentColor;
   }
+
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media (-moz-bool-pref: "browser.urlbar.richSuggestions.featureGate") {
+    --urlbarView-favicon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - var(--urlbarView-favicon-width)) / 2);
+    --urlbarView-favicon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline) + ((var(--urlbarView-rich-suggestion-default-icon-size) - var(--urlbarView-favicon-width)) / 2));
+    }
 }
 
 .urlbarView {
@@ -95,8 +112,8 @@
   @media (-moz-bool-pref: "browser.urlbar.richSuggestions.featureGate") {
     &:not([rich-suggestion]),
     &[rich-suggestion][icon-size="16"] {
-      --urlbarView-icon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2);
-      --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline) + ((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2));
+      --urlbarView-icon-margin-start: var(--urlbarView-favicon-margin-start);
+      --urlbarView-icon-margin-end: var(--urlbarView-favicon-margin-end);
     }
     &[rich-suggestion][icon-size="24"] {
       --urlbarView-icon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - 24px) / 2);
@@ -525,8 +542,8 @@
     position: absolute;
     bottom: 0.72em;
     font-size: var(--urlbarView-small-font-size);
-    margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--urlbarView-icon-margin-start));
-    padding-inline-start: calc(var(--urlbarView-favicon-width) + var(--urlbarView-icon-margin-end));
+    margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--urlbarView-favicon-margin-start));
+    padding-inline-start: calc(var(--urlbarView-favicon-width) + var(--urlbarView-favicon-margin-end));
     background-image: url("chrome://branding/content/icon32.png");
     background-repeat: no-repeat;
     background-position: 0 center;
