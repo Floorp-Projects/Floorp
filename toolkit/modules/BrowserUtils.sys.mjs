@@ -112,6 +112,7 @@ export var BrowserUtils = {
   canFindInPage(location) {
     return (
       !location.startsWith("about:preferences") &&
+      !location.startsWith("about:settings") &&
       !location.startsWith("about:logins") &&
       !(location.startsWith("about:firefoxview") && lazy.FXVIEW_SEARCH_ENABLED)
     );

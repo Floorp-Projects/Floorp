@@ -1365,6 +1365,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // preferences and downloads allow legacy inline scripts through hash src.
   MOZ_ASSERT(!foundScriptSrc ||
                  StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:settings"_ns) ||
                  StringBeginsWith(aboutSpec, "about:downloads"_ns) ||
                  StringBeginsWith(aboutSpec, "about:asrouter"_ns) ||
                  StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
@@ -1383,6 +1384,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
   // remote web resources
   MOZ_ASSERT(!foundWebScheme ||
                  StringBeginsWith(aboutSpec, "about:preferences"_ns) ||
+                 StringBeginsWith(aboutSpec, "about:settings"_ns) ||
                  StringBeginsWith(aboutSpec, "about:addons"_ns) ||
                  StringBeginsWith(aboutSpec, "about:newtab"_ns) ||
                  StringBeginsWith(aboutSpec, "about:debugging"_ns) ||
@@ -1411,6 +1413,7 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
       // Bug 1579160: Remove 'unsafe-inline' from style-src within
       // about:preferences
       "about:preferences"_ns,
+      "about:settings"_ns,
       // Bug 1571346: Remove 'unsafe-inline' from style-src within about:addons
       "about:addons"_ns,
       // Bug 1584485: Remove 'unsafe-inline' from style-src within:
@@ -1553,7 +1556,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
       // and this is the most reasonable. See 1727770
       u"about:downloads"_ns,
       // We think this is the same problem as about:downloads
-      u"about:preferences"_ns,
+      u"about:preferences"_ns, u"about:settings"_ns,
       // Browser console will give a filename of 'debugger' See 1763943
       // Sometimes it's 'debugger eager eval code', other times just 'debugger
       // eval code'

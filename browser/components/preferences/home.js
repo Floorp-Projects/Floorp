@@ -344,12 +344,15 @@ var gHomePane = {
   },
 
   /**
-   * _isTabAboutPreferences: Is a given tab set to about:preferences?
+   * _isTabAboutPreferencesOrSettings: Is a given tab set to about:preferences or about:settings?
    * @param {Element} aTab A tab element
-   * @returns {bool} Is the linkedBrowser of aElement set to about:preferences?
+   * @returns {bool} Is the linkedBrowser of aElement set to about:preferences or about:settings?
    */
-  _isTabAboutPreferences(aTab) {
-    return aTab.linkedBrowser.currentURI.spec.startsWith("about:preferences");
+  _isTabAboutPreferencesOrSettings(aTab) {
+    return (
+      aTab.linkedBrowser.currentURI.spec.startsWith("about:preferences") ||
+      aTab.linkedBrowser.currentURI.spec.startsWith("about:settings")
+    );
   },
 
   /**
@@ -367,7 +370,7 @@ var gHomePane = {
         "navigator:browser"
     ) {
       tabs = win.gBrowser.visibleTabs.slice(win.gBrowser._numPinnedTabs);
-      tabs = tabs.filter(tab => !this._isTabAboutPreferences(tab));
+      tabs = tabs.filter(tab => !this._isTabAboutPreferencesOrSettings(tab));
       // XXX: Bug 1441637 - Fix tabbrowser to report tab.closing before it blurs it
       tabs = tabs.filter(tab => !tab.closing);
     }
