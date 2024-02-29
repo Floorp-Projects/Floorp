@@ -4,10 +4,8 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -23,13 +21,26 @@ import org.mozilla.fenix.helpers.click
  * Implementation of Robot Pattern for the settings turn on sync option.
  */
 class SettingsTurnOnSyncRobot {
-    fun verifyUseEmailOption() = assertUseEmailField()
+    fun verifyUseEmailOption() {
+        onView(withText("Use email instead"))
+            .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
 
-    fun verifyReadyToScanOption() = assertReadyToScan()
+    fun verifyReadyToScanOption() {
+        onView(withText("Ready to scan"))
+            .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
 
     fun tapOnUseEmailToSignIn() = useEmailButton().click()
 
-    fun verifyTurnOnSyncToolbarTitle() = assertTurnOnSyncToolbarTitle()
+    fun verifyTurnOnSyncToolbarTitle() {
+        onView(
+            allOf(
+                withParent(withId(R.id.navigationToolbar)),
+                withText(R.string.preferences_sync_2),
+            ),
+        ).check(matches(isDisplayed()))
+    }
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsRobot.Transition {
@@ -42,20 +53,6 @@ class SettingsTurnOnSyncRobot {
 }
 
 private fun goBackButton() =
-    Espresso.onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
-private fun assertUseEmailField() = Espresso.onView(ViewMatchers.withText("Use email instead"))
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertReadyToScan() = Espresso.onView(ViewMatchers.withText("Ready to scan"))
-    .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun useEmailButton() = Espresso.onView(ViewMatchers.withText("Use email instead"))
-
-private fun assertTurnOnSyncToolbarTitle() =
-    onView(
-        allOf(
-            withParent(withId(R.id.navigationToolbar)),
-            withText(R.string.preferences_sync_2),
-        ),
-    ).check(matches(isDisplayed()))
+private fun useEmailButton() = onView(withText("Use email instead"))
