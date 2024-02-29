@@ -101,8 +101,7 @@ VideoEncoderConfigInternal::VideoEncoderConfigInternal(
       mBitrateMode(aConfig.mBitrateMode),
       mLatencyMode(aConfig.mLatencyMode),
       mContentHint(aConfig.mContentHint),
-      mAvc(aConfig.mAvc) {
-}
+      mAvc(aConfig.mAvc) {}
 
 VideoEncoderConfigInternal::VideoEncoderConfigInternal(
     const VideoEncoderConfig& aConfig)
@@ -119,8 +118,7 @@ VideoEncoderConfigInternal::VideoEncoderConfigInternal(
       mBitrateMode(aConfig.mBitrateMode),
       mLatencyMode(aConfig.mLatencyMode),
       mContentHint(OptionalToMaybe(aConfig.mContentHint)),
-      mAvc(OptionalToMaybe(aConfig.mAvc)) {
-}
+      mAvc(OptionalToMaybe(aConfig.mAvc)) {}
 
 nsString VideoEncoderConfigInternal::ToString() const {
   nsString rv;
@@ -238,8 +236,8 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
     if (ExtractH264CodecDetails(mCodec, profile, constraints, level)) {
       if (profile == H264_PROFILE_BASE || profile == H264_PROFILE_MAIN ||
           profile == H264_PROFILE_EXTENDED || profile == H264_PROFILE_HIGH) {
-        specific.emplace(
-            H264Specific(static_cast<H264_PROFILE>(profile), static_cast<H264_LEVEL>(level), format));
+        specific.emplace(H264Specific(static_cast<H264_PROFILE>(profile),
+                                      static_cast<H264_LEVEL>(level), format));
       }
     }
   }
@@ -268,13 +266,14 @@ EncoderConfig VideoEncoderConfigInternal::ToEncoderConfig() const {
   } else {
     scalabilityMode = MediaDataEncoder::ScalabilityMode::None;
   }
-  return EncoderConfig(
-      codecType, {mWidth, mHeight}, usage, ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
-      AssertedCast<uint8_t>(mFramerate.refOr(0.f)), 0, mBitrate.refOr(0),
-      mBitrateMode == VideoEncoderBitrateMode::Constant
-          ? MediaDataEncoder::BitrateMode::Constant
-          : MediaDataEncoder::BitrateMode::Variable,
-      hwPref, scalabilityMode, specific);
+  return EncoderConfig(codecType, {mWidth, mHeight}, usage,
+                       ImageBitmapFormat::RGBA32, ImageBitmapFormat::RGBA32,
+                       AssertedCast<uint8_t>(mFramerate.refOr(0.f)), 0,
+                       mBitrate.refOr(0),
+                       mBitrateMode == VideoEncoderBitrateMode::Constant
+                           ? MediaDataEncoder::BitrateMode::Constant
+                           : MediaDataEncoder::BitrateMode::Variable,
+                       hwPref, scalabilityMode, specific);
 }
 already_AddRefed<WebCodecsConfigurationChangeList>
 VideoEncoderConfigInternal::Diff(
