@@ -2996,7 +2996,7 @@ class FactoryOp
 
  protected:
   enum class State {
-    // Just created on the PBackground thread, dispatched to the main thread.
+    // Just created on the PBackground thread, dispatched to the current thread.
     // Next step is either SendingResults if initialization failed, or
     // FinishOpen if the initialization succeeded.
     Initial,
@@ -9155,7 +9155,7 @@ mozilla::ipc::IPCResult Factory::RecvPBackgroundIDBFactoryRequestConstructor(
 
   auto* op = static_cast<FactoryOp*>(aActor);
 
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(op));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(op));
   return IPC_OK();
 }
 
@@ -14607,11 +14607,11 @@ void FactoryOp::Stringify(nsACString& aResult) const {
 }
 
 nsresult FactoryOp::Open() {
-  AssertIsOnMainThread();
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Initial);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      !OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
+      IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
