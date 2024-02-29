@@ -2264,7 +2264,8 @@ void nsRefreshDriver::DetermineProximityToViewportAndNotifyResizeObservers() {
       return false;
     }
     return ps->HasContentVisibilityAutoFrames() ||
-           aDocument->HasResizeObservers();
+           aDocument->HasResizeObservers() ||
+           aDocument->HasElementsWithLastRememberedSize();
   };
 
   AutoTArray<RefPtr<Document>, 32> documents;

@@ -3723,12 +3723,12 @@ class Document : public nsINode,
   DOMIntersectionObserver* GetLazyLoadObserver() { return mLazyLoadObserver; }
   DOMIntersectionObserver& EnsureLazyLoadObserver();
 
-  ResizeObserver* GetLastRememberedSizeObserver() {
-    return mLastRememberedSizeObserver;
+  bool HasElementsWithLastRememberedSize() const {
+    return !mElementsObservedForLastRememberedSize.IsEmpty();
   }
-  ResizeObserver& EnsureLastRememberedSizeObserver();
   void ObserveForLastRememberedSize(Element&);
   void UnobserveForLastRememberedSize(Element&);
+  void UpdateLastRememberedSizes();
 
   // Dispatch a runnable related to the document.
   nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const;
@@ -5167,9 +5167,9 @@ class Document : public nsINode,
 
   RefPtr<DOMIntersectionObserver> mLazyLoadObserver;
 
-  // ResizeObserver for storing and removing the last remembered size.
+  // Elements observed for a last remembered size.
   // @see {@link https://drafts.csswg.org/css-sizing-4/#last-remembered}
-  RefPtr<ResizeObserver> mLastRememberedSizeObserver;
+  nsTHashSet<RefPtr<Element>> mElementsObservedForLastRememberedSize;
 
   // Stack of top layer elements.
   nsTArray<nsWeakPtr> mTopLayer;

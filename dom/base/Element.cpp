@@ -2144,11 +2144,10 @@ void Element::UnbindFromTree(UnbindContext& aContext) {
     }
 
     if (HasLastRememberedBSize() || HasLastRememberedISize()) {
-      // Need to remove the last remembered size at the next ResizeObserver
-      // opportunity, so observe the element. But if already observed, we still
-      // want the callback to be invoked even if the size was already 0x0, so
-      // unobserve it first.
-      document->UnobserveForLastRememberedSize(*this);
+      // Make sure the element is observed so that remembered sizes are kept
+      // until the next time "ResizeObserver events are determined and
+      // delivered". See "Disconnected element" tests from
+      // css/css-sizing/contain-intrinsic-size/auto-006.html
       document->ObserveForLastRememberedSize(*this);
     }
   }
