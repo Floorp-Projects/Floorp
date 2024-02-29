@@ -191,8 +191,21 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
    */
   MOZ_CAN_RUN_SCRIPT uint32_t BroadcastActiveObservations();
 
-  static already_AddRefed<ResizeObserver> CreateLastRememberedSizeObserver(
-      Document&);
+  /**
+   * Returns |aTarget|'s size in the form of gfx::Size (in pixels).
+   * If the target is an SVG that does not participate in CSS layout,
+   * its width and height are determined from bounding box. Otherwise, the
+   * relevant box is determined according to the |aBox| parameter.
+   *
+   * If dom.resize_observer.support_fragments is enabled, or if
+   * |aForceFragmentHandling| is true then the function reports the size of all
+   * fragments, and not just the first one.
+   *
+   * https://www.w3.org/TR/resize-observer-1/#calculate-box-size
+   */
+  static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
+      Element* aTarget, ResizeObserverBoxOptions aBox,
+      bool aForceFragmentHandling = false);
 
  protected:
   ~ResizeObserver() { Disconnect(); }
