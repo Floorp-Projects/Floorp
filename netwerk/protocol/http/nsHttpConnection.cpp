@@ -742,7 +742,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
       gHttpHandler->ClearHostMapping(mConnInfo);
     }
     if (mTlsHandshaker->EarlyDataWasAvailable() &&
-        SecurityErrorThatMayNeedRestart(reason)) {
+        PossibleZeroRTTRetryError(reason)) {
       gHttpHandler->Exclude0RttTcp(mConnInfo);
     }
 
