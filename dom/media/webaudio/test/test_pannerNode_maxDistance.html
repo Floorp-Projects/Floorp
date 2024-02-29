@@ -14,15 +14,7 @@ var types = [
   "HRTF"
 ]
 
-var finished = types.length;
-
-function finish() {
-  if (!--finished) {
-    SimpleTest.finish();
-  }
-}
-
-function test(type) {
+async function test(type) {
   var ac = new OfflineAudioContext(1, 128, 44100);
   var osc = ac.createOscillator();
   var panner = ac.createPanner();
@@ -37,26 +29,24 @@ function test(type) {
 
   osc.start();
 
-  ac.startRendering().then(function(buffer) {
-    var silence = true;
-    var array = buffer.getChannelData(0);
-    for (var i = 0; i < buffer.length; i++) {
-      if (array[i] != 0) {
-        ok(false, "Found noise in the buffer.");
-        silence = false;
-      }
+  const buffer = await ac.startRendering()
+
+  var silence = true;
+  var array = buffer.getChannelData(0);
+  for (var i = 0; i < buffer.length; i++) {
+    if (array[i] != 0) {
+      ok(false, "Found noise in the buffer.");
+      silence = false;
     }
-    ok(silence, "The buffer is silent.");
-    finish();
-  });
+  }
+  ok(silence, "The buffer is silent.");
 }
 
-
-addLoadEvent(function() {
-  types.forEach(test);
+add_task(async function() {
+  for (const panningModel of types) {
+    await test(panningModel);
+  }
 });
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>

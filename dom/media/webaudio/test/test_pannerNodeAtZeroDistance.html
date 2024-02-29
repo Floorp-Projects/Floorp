@@ -17,15 +17,7 @@ var types = [
   "HRTF"
 ]
 
-var finished = 2 * types.length;
-
-function finish() {
-  if (!--finished) {
-    SimpleTest.finish();
-  }
-}
-
-function testMono(type) {
+async function testMono(type) {
   var ac = new OfflineAudioContext(1, BUF_SIZE, 44100);
 
   // A sine to be used to fill the buffers
@@ -76,13 +68,11 @@ function testMono(type) {
     monoBuffer.getChannelData(0)[i] = gain * monoBuffer.getChannelData(0)[i];
   }
 
-  ac.startRendering().then(function(buffer) {
-    compareBuffers(buffer, monoBuffer);
-    finish();
-  });
+  const buffer = await ac.startRendering();
+  compareBuffers(buffer, monoBuffer);
 }
 
-function testStereo(type) {
+async function testStereo(type) {
   var ac = new OfflineAudioContext(2, BUF_SIZE, 44100);
 
   // A sine to be used to fill the buffers
@@ -126,22 +116,20 @@ function testStereo(type) {
 
   panner3.connect(ac.destination);
 
-  ac.startRendering().then(function(buffer) {
-    compareBuffers(buffer, stereoBuffer);
-    finish();
-  });
+  const buffer = await ac.startRendering();
+  compareBuffers(buffer, stereoBuffer);
 }
 
-function test(type) {
-  testMono(type);
-  testStereo(type);
+async function test(type) {
+  await testMono(type)
+  await testStereo(type);
 }
 
-addLoadEvent(function() {
-  types.forEach(test);
+add_task(async function() {
+  for (const panningModel of types) {
+    await test(panningModel);
+  }
 });
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>
