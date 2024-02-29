@@ -522,7 +522,7 @@ class FeatureTest {
     return shadow(this, "isCSSRoundSupported", globalThis.CSS?.supports?.("width: round(1.5px, 1px)"));
   }
 }
-const hexNumbers = [...Array(256).keys()].map(n => n.toString(16).padStart(2, "0"));
+const hexNumbers = Array.from(Array(256).keys(), n => n.toString(16).padStart(2, "0"));
 class Util {
   static makeHexColor(r, g, b) {
     return `#${hexNumbers[r]}${hexNumbers[g]}${hexNumbers[b]}`;
@@ -52790,6 +52790,7 @@ class LinkAnnotation extends Annotation {
       annotationGlobals
     } = params;
     this.data.annotationType = AnnotationType.LINK;
+    this.data.noHTML = false;
     const quadPoints = getQuadPoints(dict, this.rectangle);
     if (quadPoints) {
       this.data.quadPoints = quadPoints;
@@ -56658,7 +56659,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.1.215";
+    const workerVersion = "4.1.235";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -57220,8 +57221,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.1.215";
-const pdfjsBuild = "72b8b2914";
+const pdfjsVersion = "4.1.235";
+const pdfjsBuild = "9fe15d4a0";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };

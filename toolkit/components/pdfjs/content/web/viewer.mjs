@@ -2085,16 +2085,9 @@ class AltTextManager {
     }
   }
   #close() {
-    this.#eventBus.dispatch("reporttelemetry", {
-      source: this,
-      details: {
-        type: "editing",
-        subtype: this.#currentEditor.editorType,
-        data: this.#telemetryData || {
-          action: "alt_text_cancel",
-          alt_text_keyboard: !this.#hasUsedPointer
-        }
-      }
+    this.#currentEditor._reportTelemetry(this.#telemetryData || {
+      action: "alt_text_cancel",
+      alt_text_keyboard: !this.#hasUsedPointer
     });
     this.#telemetryData = null;
     this.#removeOnClickListeners();
@@ -2280,8 +2273,28 @@ class CaretBrowsingMode {
       return;
     }
     const midY = rect.y + rect.height / 2;
-    const caretPosition = CaretBrowsingMode.#caretPositionFromPoint(caretX, midY);
-    if (caretPosition.offsetNode?.parentElement !== element) {
+    let caretPosition = CaretBrowsingMode.#caretPositionFromPoint(caretX, midY);
+    let parentElement = caretPosition.offsetNode?.parentElement;
+    if (parentElement && parentElement !== element) {
+      const elementsAtPoint = document.elementsFromPoint(caretX, midY);
+      const savedVisibilities = [];
+      for (const el of elementsAtPoint) {
+        if (el === element) {
+          break;
+        }
+        const {
+          style
+        } = el;
+        savedVisibilities.push([el, style.visibility]);
+        style.visibility = "hidden";
+      }
+      caretPosition = CaretBrowsingMode.#caretPositionFromPoint(caretX, midY);
+      parentElement = caretPosition.offsetNode?.parentElement;
+      for (const [el, visibility] of savedVisibilities) {
+        el.style.visibility = visibility;
+      }
+    }
+    if (parentElement !== element) {
       if (select) {
         selection.extend(element.firstChild, 0);
       } else {
@@ -5088,7 +5101,7 @@ class PDFPresentationMode {
     this.#addWindowListeners();
     this.#showControls();
     this.contextMenuOpen = false;
-    window.getSelection().removeAllRanges();
+    document.getSelection().empty();
   }
   #exit() {
     const pageNumber = this.pdfViewer.currentPageNumber;
@@ -8446,7 +8459,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.215";
+    const viewerVersion = "4.1.235";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -10197,6 +10210,15 @@ class Toolbar {
         once: true
       });
     }
+    eventBus._on("showannotationeditorui", ({
+      mode
+    }) => {
+      switch (mode) {
+        case AnnotationEditorType.HIGHLIGHT:
+          options.editorHighlightButton.click();
+          break;
+      }
+    });
     this.reset();
   }
   #setAnnotationEditorUIManager(uiManager, parentContainer) {
@@ -10526,6 +10548,9 @@ const PDFViewerApplication = {
   _isCtrlKeyDown: false,
   _nimbusDataPromise: null,
   _caretBrowsing: null,
+  _isScrolling: false,
+  _lastScrollTop: 0,
+  _lastScrollLeft: 0,
   async initialize(appConfig) {
     let l10nPromise;
     l10nPromise = this.externalServices.createL10n();
@@ -10809,6 +10834,39 @@ const PDFViewerApplication = {
       appConfig.toolbar?.viewFind?.classList.add("hidden");
     }
     this.initPassiveLoading(file);
+    const {
+      mainContainer
+    } = appConfig;
+    ({
+      scrollTop: this._lastScrollTop,
+      scrollLeft: this._lastScrollLeft
+    } = mainContainer);
+    const scroll = () => {
+      if (this._lastScrollTop === mainContainer.scrollTop && this._lastScrollLeft === mainContainer.scrollLeft) {
+        return;
+      }
+      mainContainer.removeEventListener("scroll", scroll, {
+        passive: true
+      });
+      this._isScrolling = true;
+      const scrollend = () => {
+        ({
+          scrollTop: this._lastScrollTop,
+          scrollLeft: this._lastScrollLeft
+        } = mainContainer);
+        this._isScrolling = false;
+        mainContainer.addEventListener("scroll", scroll, {
+          passive: true
+        });
+        mainContainer.removeEventListener("scrollend", scrollend);
+        mainContainer.removeEventListener("blur", scrollend);
+      };
+      mainContainer.addEventListener("scrollend", scrollend);
+      mainContainer.addEventListener("blur", scrollend);
+    };
+    mainContainer.addEventListener("scroll", scroll, {
+      passive: true
+    });
   },
   get externalServices() {
     return shadow(this, "externalServices", new ExternalServices());
@@ -11096,7 +11154,8 @@ const PDFViewerApplication = {
       this.externalServices.reportTelemetry({
         type: "editing",
         data: {
-          type: "save"
+          type: "save",
+          stats: this.pdfDocument?.annotationStorage.editorStats
         }
       });
     }
@@ -11486,14 +11545,6 @@ const PDFViewerApplication = {
     annotationStorage.onAnnotationEditor = typeStr => {
       this._hasAnnotationEditors = !!typeStr;
       this.setTitle();
-      if (typeStr) {
-        this.externalServices.reportTelemetry({
-          type: "editing",
-          data: {
-            type: typeStr
-          }
-        });
-      }
     };
   },
   setInitialView(storedHash, {
@@ -11578,7 +11629,8 @@ const PDFViewerApplication = {
       this.externalServices.reportTelemetry({
         type: "editing",
         data: {
-          type: "print"
+          type: "print",
+          stats: this.pdfDocument?.annotationStorage.editorStats
         }
       });
     }
@@ -12096,7 +12148,7 @@ function webViewerWheel(evt) {
   const isPinchToZoom = evt.ctrlKey && !PDFViewerApplication._isCtrlKeyDown && deltaMode === WheelEvent.DOM_DELTA_PIXEL && evt.deltaX === 0 && (Math.abs(scaleFactor - 1) < 0.05 || isBuiltInMac) && evt.deltaZ === 0;
   if (isPinchToZoom || evt.ctrlKey && supportsMouseWheelZoomCtrlKey || evt.metaKey && supportsMouseWheelZoomMetaKey) {
     evt.preventDefault();
-    if (zoomDisabledTimeout || document.visibilityState === "hidden" || PDFViewerApplication.overlayManager.active) {
+    if (PDFViewerApplication._isScrolling || zoomDisabledTimeout || document.visibilityState === "hidden" || PDFViewerApplication.overlayManager.active) {
       return;
     }
     const previousScale = pdfViewer.currentScale;
@@ -12131,8 +12183,6 @@ function webViewerWheel(evt) {
       }
     }
     PDFViewerApplication._centerAtPos(previousScale, evt.clientX, evt.clientY);
-  } else {
-    setZoomDisabledTimeout();
   }
 }
 function webViewerTouchStart(evt) {
@@ -12541,8 +12591,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.215";
-const pdfjsBuild = "72b8b2914";
+const pdfjsVersion = "4.1.235";
+const pdfjsBuild = "9fe15d4a0";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
