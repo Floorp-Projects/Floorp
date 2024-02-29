@@ -454,6 +454,12 @@ struct CookieStruct
   uint8_t   schemeMap;
 };
 
+struct CookieStructTable
+{
+  OriginAttributes attrs;
+  CookieStruct[] cookies;
+};
+
 struct DocumentCreationArgs {
   bool uriModified;
   bool isEmbeddingBlockedError;
