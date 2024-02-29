@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Ndajeni përmes</string>
 
     <string name="notification_erase_title_android_14">Të fshihet historik shfletimesh?</string>
-    <string name="notification_erase_text_android_14">Që të fshihet në mënyrë të siguruar historiku juaj i shfletimit, prekeni, ose spastrojeni këtë njoftim.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Që të fshihet në mënyrë të siguruar historiku juaj i shfletimit, prekeni, ose spastrojeni këtë njoftim.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Që të fshihet në mënyrë të siguruar historiku juaj i shfletimit, prekeni, ose fërkojeni këtë njoftim.</string>
 
     <string name="notification_erase_text">Fshini historik shfletimesh</string>
 
