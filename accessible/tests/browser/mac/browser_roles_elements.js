@@ -47,6 +47,7 @@ addAccessibleTask(
   <div id="complementary" role="complementary"></div>
   <div id="contentinfo" role="contentinfo"></div>
   <div id="form" role="form"></div>
+  <div id="form_label" aria-label="form" role="form"></div>
   <div id="main" role="main"></div>
   <div id="navigation" role="navigation"></div>
   <div id="search" role="search"></div>
@@ -149,7 +150,8 @@ addAccessibleTask(
       "AXLandmarkComplementary"
     );
     testRoleAndSubRole(accDoc, "contentinfo", null, "AXLandmarkContentInfo");
-    testRoleAndSubRole(accDoc, "form", null, "AXLandmarkForm");
+    testRoleAndSubRole(accDoc, "form", null, "AXApplicationGroup");
+    testRoleAndSubRole(accDoc, "form_label", null, "AXLandmarkForm");
     testRoleAndSubRole(accDoc, "main", null, "AXLandmarkMain");
     testRoleAndSubRole(accDoc, "navigation", null, "AXLandmarkNavigation");
     testRoleAndSubRole(accDoc, "search", null, "AXLandmarkSearch");

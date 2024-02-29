@@ -56,8 +56,8 @@
       testRole("aria_directory_mixed", ROLE_LIST);
       testRole("aria_document", ROLE_NON_NATIVE_DOCUMENT);
       testRole("aria_document_mixed", ROLE_NON_NATIVE_DOCUMENT);
-      testRole("aria_form", ROLE_FORM);
-      testRole("aria_form_mixed", ROLE_FORM);
+      testRole("aria_form", ROLE_TEXT);
+      testRole("aria_form_mixed", ROLE_TEXT);
       testRole("aria_form_with_label", ROLE_FORM);
       testRole("aria_form_with_label_mixed", ROLE_FORM);
       testRole("aria_feed", ROLE_GROUPING);
@@ -184,8 +184,10 @@
 
       testRole("articlemain", ROLE_LANDMARK);
       testRole("articlemain_mixed", ROLE_LANDMARK);
-      testRole("articleform", ROLE_FORM);
-      testRole("articleform_mixed", ROLE_FORM);
+      testRole("articleform", ROLE_ARTICLE);
+      testRole("articleform_mixed", ROLE_ARTICLE);
+      testRole("articleform_label", ROLE_FORM);
+      testRole("articleform_label_mixed", ROLE_FORM);
 
       // Test article exposed as article
       testRole("testArticle", ROLE_ARTICLE);
@@ -204,8 +206,10 @@
       // strong landmark
       testRole("application", ROLE_APPLICATION);
       testRole("application_mixed", ROLE_APPLICATION);
-      testRole("form", ROLE_FORM);
-      testRole("form_mixed", ROLE_FORM);
+      testRole("form", ROLE_SECTION);
+      testRole("form_mixed", ROLE_SECTION);
+      testRole("form_label", ROLE_FORM);
+      testRole("form_label_mixed", ROLE_FORM);
       testRole("application_table", ROLE_APPLICATION);
       testRole("application_table_mixed", ROLE_APPLICATION);
 
@@ -535,6 +539,8 @@
   <article id="articlemain_mixed" role="mAIn">a main area</article>
   <article id="articleform" role="form">a form area</article>
   <article id="articleform_mixed" role="fORm">a form area</article>
+  <article id="articleform_label" aria-label="form" role="form">a form area</article>
+  <article id="articleform_label_mixed" aria-label="form" role="fORm">a form area</article>
 
   <div id="testArticle" role="article" title="Test article">
     <p>This is a paragraph inside the article.</p>
@@ -561,6 +567,8 @@
   <div role="aPPLICATIOn" id="application_mixed">application</div>
   <div role="form" id="form">form</div>
   <div role="fORm" id="form_mixed">form</div>
+  <div role="form" id="form_label" aria-label="form">form</div>
+  <div role="fORm" id="form_label_mixed" aria-label="form">form</div>
 
   <!-- weak landmarks -->
   <div role="banner" id="banner">banner</div>
