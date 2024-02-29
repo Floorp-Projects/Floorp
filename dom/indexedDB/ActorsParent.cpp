@@ -2092,6 +2092,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
 
 class Factory final : public PBackgroundIDBFactoryParent,
                       public AtomicSafeRefCounted<Factory> {
+  nsCString mSystemLocale;
   RefPtr<DatabaseLoggingInfo> mLoggingInfo;
 
 #ifdef DEBUG
@@ -2103,7 +2104,7 @@ class Factory final : public PBackgroundIDBFactoryParent,
 
  public:
   [[nodiscard]] static SafeRefPtr<Factory> Create(
-      const LoggingInfo& aLoggingInfo);
+      const LoggingInfo& aLoggingInfo, const nsACString& aSystemLocale);
 
   DatabaseLoggingInfo* GetLoggingInfo() const {
     AssertIsOnBackgroundThread();
@@ -2112,11 +2113,14 @@ class Factory final : public PBackgroundIDBFactoryParent,
     return mLoggingInfo;
   }
 
+  const nsCString& GetSystemLocale() const { return mSystemLocale; }
+
   MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::indexedDB::Factory)
   MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED(Factory, AtomicSafeRefCounted)
 
   // Only constructed in Create().
-  explicit Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo);
+  Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo,
+          const nsACString& aSystemLocale);
 
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -6545,7 +6549,7 @@ already_AddRefed<nsIThreadPool> MakeConnectionIOTarget() {
  ******************************************************************************/
 
 already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
-    const LoggingInfo& aLoggingInfo) {
+    const LoggingInfo& aLoggingInfo, const nsACString& aSystemLocale) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
@@ -6559,15 +6563,15 @@ already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
     return nullptr;
   }
 
-  SafeRefPtr<Factory> actor = Factory::Create(aLoggingInfo);
+  SafeRefPtr<Factory> actor = Factory::Create(aLoggingInfo, aSystemLocale);
   MOZ_ASSERT(actor);
 
   return actor.forget();
 }
 
 bool RecvPBackgroundIDBFactoryConstructor(
-    PBackgroundIDBFactoryParent* aActor,
-    const LoggingInfo& /* aLoggingInfo */) {
+    PBackgroundIDBFactoryParent* aActor, const LoggingInfo& /* aLoggingInfo */,
+    const nsACString& /* aSystemLocale */) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
@@ -8976,8 +8980,10 @@ DatabaseLoggingInfo::~DatabaseLoggingInfo() {
  * Factory
  ******************************************************************************/
 
-Factory::Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo)
-    : mLoggingInfo(std::move(aLoggingInfo))
+Factory::Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo,
+                 const nsACString& aSystemLocale)
+    : mSystemLocale(aSystemLocale),
+      mLoggingInfo(std::move(aLoggingInfo))
 #ifdef DEBUG
       ,
       mActorDestroyed(false)
@@ -8990,7 +8996,8 @@ Factory::Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo)
 Factory::~Factory() { MOZ_ASSERT(mActorDestroyed); }
 
 // static
-SafeRefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
+SafeRefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo,
+                                    const nsACString& aSystemLocale) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
@@ -9027,7 +9034,7 @@ SafeRefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
             return do_AddRef(entry.Data());
           });
 
-  return MakeSafeRefPtr<Factory>(std::move(loggingInfo));
+  return MakeSafeRefPtr<Factory>(std::move(loggingInfo), aSystemLocale);
 }
 
 void Factory::ActorDestroy(ActorDestroyReason aWhy) {
@@ -15348,7 +15355,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
   QM_TRY_INSPECT(
       const auto& lastIndexId,
-      ([&aConnection,
+      ([this, &aConnection,
         &objectStores]() -> mozilla::Result<IndexOrObjectStoreId, nsresult> {
         // Load index information
         QM_TRY_INSPECT(
@@ -15365,7 +15372,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
         QM_TRY(CollectWhileHasResult(
             *stmt,
-            [&lastIndexId, &objectStores, &aConnection,
+            [this, &lastIndexId, &objectStores, &aConnection,
              usedIds = Maybe<nsTHashSet<uint64_t>>{},
              usedNames = Maybe<nsTHashSet<nsString>>{}](
                 auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
@@ -15456,8 +15463,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
                     indexMetadata->mCommonMetadata.locale();
                 const bool& isAutoLocale =
                     indexMetadata->mCommonMetadata.autoLocale();
-                const nsCString& systemLocale =
-                    IndexedDatabaseManager::GetLocale();
+                const nsCString& systemLocale = mFactory->GetSystemLocale();
                 if (!systemLocale.IsEmpty() && isAutoLocale &&
                     !indexedLocale.Equals(systemLocale)) {
                   QM_TRY(MOZ_TO_RESULT(UpdateLocaleAwareIndex(

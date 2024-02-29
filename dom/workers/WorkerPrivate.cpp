@@ -2804,7 +2804,12 @@ nsresult WorkerPrivate::GetLoadInfo(
     AssertIsOnMainThread();
 
     // Make sure that the IndexedDatabaseManager is set up
-    Unused << NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
+    IndexedDatabaseManager* idm = IndexedDatabaseManager::GetOrCreate();
+    if (idm) {
+      Unused << NS_WARN_IF(NS_FAILED(idm->EnsureLocale()));
+    } else {
+      NS_WARNING("Failed to get IndexedDatabaseManager!");
+    }
 
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);

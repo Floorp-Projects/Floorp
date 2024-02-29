@@ -31,11 +31,12 @@ class BackgroundParentImpl : public PBackgroundParent {
   bool DeallocPBackgroundTestParent(PBackgroundTestParent* aActor) override;
 
   already_AddRefed<PBackgroundIDBFactoryParent>
-  AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo) override;
+  AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo,
+                                   const nsACString& aSystemLocale) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBFactoryConstructor(
-      PBackgroundIDBFactoryParent* aActor,
-      const LoggingInfo& aLoggingInfo) override;
+      PBackgroundIDBFactoryParent* aActor, const LoggingInfo& aLoggingInfo,
+      const nsACString& aSystemLocale) override;
 
   PBackgroundIndexedDBUtilsParent* AllocPBackgroundIndexedDBUtilsParent()
       override;

@@ -38,10 +38,11 @@ class PBackgroundIDBFactoryParent;
 class PBackgroundIndexedDBUtilsParent;
 
 already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
-    const LoggingInfo& aLoggingInfo);
+    const LoggingInfo& aLoggingInfo, const nsACString& aSystemLocale);
 
 bool RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,
-                                          const LoggingInfo& aLoggingInfo);
+                                          const LoggingInfo& aLoggingInfo,
+                                          const nsACString& aSystemLocale);
 
 bool DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor);
 

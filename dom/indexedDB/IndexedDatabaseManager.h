@@ -123,6 +123,9 @@ class IndexedDatabaseManager final {
 
   nsresult FlushPendingFileDeletions();
 
+  // XXX This extra explicit initialization should go away with bug 1730706.
+  nsresult EnsureLocale();
+
   static const nsCString& GetLocale();
 
   static bool ResolveSandboxBinding(JSContext* aCx);
