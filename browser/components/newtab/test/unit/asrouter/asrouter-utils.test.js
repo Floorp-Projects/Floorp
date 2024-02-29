@@ -27,6 +27,15 @@ describe("ASRouterUtils", () => {
       overrider.set("ASRouterMessage", undefined);
       assert.throws(() => ASRouterUtils.sendMessage({ foo: "bar" }));
     });
+    it("can accept the legacy NEWTAB_MESSAGE_REQUEST message without throwing", async () => {
+      assert.doesNotThrow(async () => {
+        let result = await ASRouterUtils.sendMessage({
+          type: "NEWTAB_MESSAGE_REQUEST",
+          data: {},
+        });
+        sandbox.assert.deepEqual(result, {});
+      });
+    });
   });
   describe("blockById", () => {
     it("default", () => {

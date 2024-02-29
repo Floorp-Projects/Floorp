@@ -84,6 +84,13 @@ export class ASRouterChild extends JSWindowActorChild {
   }
 
   asRouterMessage({ type, data }) {
+    // Some legacy privileged addons send this message, but it got removed from
+    // VALID_TYPES in bug 1715158. Thankfully, these addons don't appear to
+    // require any actions from this message - just a Promise that resolves.
+    if (type === "NEWTAB_MESSAGE_REQUEST") {
+      return this.wrapPromise(Promise.resolve());
+    }
+
     if (VALID_TYPES.has(type)) {
       switch (type) {
         case msg.DISABLE_PROVIDER:
