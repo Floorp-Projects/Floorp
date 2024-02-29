@@ -8,7 +8,6 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
@@ -26,11 +25,34 @@ import org.mozilla.fenix.helpers.isChecked
  */
 class SettingsSubMenuTabsRobot {
 
-    fun verifyTabViewOptions() = assertTabViewOptions()
+    fun verifyTabViewOptions() {
+        tabViewHeading()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        listToggle()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        gridToggle()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
 
-    fun verifyCloseTabsOptions() = assertCloseTabsOptions()
+    fun verifyCloseTabsOptions() {
+        closeTabsHeading()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        neverOption()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        afterOneDayOption()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        afterOneWeekOption()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        afterOneMonthOption()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
 
-    fun verifyMoveOldTabsToInactiveOptions() = assertMoveOldTabsToInactiveOptions()
+    fun verifyMoveOldTabsToInactiveOptions() {
+        moveOldTabsToInactiveHeading()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        moveOldTabsToInactiveToggle()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
 
     fun verifySelectedCloseTabsOption(closedTabsOption: String) =
         onView(
@@ -58,35 +80,6 @@ class SettingsSubMenuTabsRobot {
             return SettingsRobot.Transition()
         }
     }
-}
-
-private fun assertTabViewOptions() {
-    tabViewHeading()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    listToggle()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    gridToggle()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
-private fun assertCloseTabsOptions() {
-    closeTabsHeading()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    neverOption()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterOneDayOption()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterOneWeekOption()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterOneMonthOption()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
-private fun assertMoveOldTabsToInactiveOptions() {
-    moveOldTabsToInactiveHeading()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    moveOldTabsToInactiveToggle()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun tabViewHeading() = onView(withText("Tab view"))
