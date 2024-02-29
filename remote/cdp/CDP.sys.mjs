@@ -26,8 +26,6 @@ const RECOMMENDED_PREFS = new Map([
     "browser.contentblocking.features.standard",
     "-tp,tpPrivate,cookieBehavior0,-cm,-fp",
   ],
-  // Accept all cookies (see behavior definitions in nsICookieService.idl)
-  ["network.cookie.cookieBehavior", 0],
 ]);
 
 /**
