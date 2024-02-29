@@ -21,6 +21,7 @@ PIP_OVERRIDES_PREF = "extensions.webcompat.enable_picture_in_picture_overrides"
 SHIMS_PREF = "extensions.webcompat.enable_shims"
 STRICT_ETP_PREF = "privacy.trackingprotection.enabled"
 UA_OVERRIDES_PREF = "extensions.webcompat.perform_ua_overrides"
+SYSTEM_ADDON_UPDATES_PREF = "extensions.systemAddon.update.enabled"
 
 
 class WebDriver:
@@ -81,6 +82,9 @@ class FirefoxWebDriver(WebDriver):
 
         if "use_strict_etp" in test_config:
             prefs[STRICT_ETP_PREF] = test_config["use_strict_etp"]
+
+        # keep system addon updates off to prevent bug 1882562
+        prefs[SYSTEM_ADDON_UPDATES_PREF] = False
 
         # remote/cdp/CDP.sys.mjs sets cookieBehavior to 0,
         # which we definitely do not want, so set it back to 5.
