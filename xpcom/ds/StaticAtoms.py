@@ -2529,7 +2529,6 @@ STATIC_ATOMS = [
     InheritingAnonBoxAtom("AnonBox_cellContent", ":-moz-cell-content"),
     InheritingAnonBoxAtom("AnonBox_dropDownList", ":-moz-dropdown-list"),
     InheritingAnonBoxAtom("AnonBox_fieldsetContent", ":-moz-fieldset-content"),
-    InheritingAnonBoxAtom("AnonBox_mozDisplayComboboxControlFrame", ":-moz-display-comboboxcontrol-frame"),
     InheritingAnonBoxAtom("AnonBox_htmlCanvasContent", ":-moz-html-canvas-content"),
     InheritingAnonBoxAtom("AnonBox_inlineTable", ":-moz-inline-table"),
     InheritingAnonBoxAtom("AnonBox_table", ":-moz-table"),

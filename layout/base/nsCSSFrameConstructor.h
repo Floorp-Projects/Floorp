@@ -1388,14 +1388,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                              nsFrameState aTypeBit);
 
  private:
-  // ConstructSelectFrame puts the new frame in aFrameList and
-  // handles the kids of the select.
-  nsIFrame* ConstructSelectFrame(nsFrameConstructorState& aState,
-                                 FrameConstructionItem& aItem,
-                                 nsContainerFrame* aParentFrame,
-                                 const nsStyleDisplay* aStyleDisplay,
-                                 nsFrameList& aFrameList);
-
   // ConstructFieldSetFrame puts the new frame in aFrameList and
   // handles the kids of the fieldset
   nsIFrame* ConstructFieldSetFrame(nsFrameConstructorState& aState,
@@ -1403,6 +1395,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                    nsContainerFrame* aParentFrame,
                                    const nsStyleDisplay* aStyleDisplay,
                                    nsFrameList& aFrameList);
+
+  nsIFrame* ConstructListBoxSelectFrame(nsFrameConstructorState& aState,
+                                        FrameConstructionItem& aItem,
+                                        nsContainerFrame* aParentFrame,
+                                        const nsStyleDisplay* aStyleDisplay,
+                                        nsFrameList& aFrameList);
 
   // Creates a block frame wrapping an anonymous ruby frame.
   nsIFrame* ConstructBlockRubyFrame(nsFrameConstructorState& aState,
@@ -1450,6 +1448,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                                    nsIFrame* aParentFrame,
                                                    ComputedStyle&);
   // HTML data-finding helper functions
+  static const FrameConstructionData* FindSelectData(const Element&,
+                                                     ComputedStyle&);
   static const FrameConstructionData* FindImgData(const Element&,
                                                   ComputedStyle&);
   static const FrameConstructionData* FindGeneratedImageData(const Element&,

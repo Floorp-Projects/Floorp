@@ -2229,97 +2229,83 @@ nscoord nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     // calculated from aspect-ratio. i.e. Don't carry out block margin-end if it
     // is replaced by the block size from aspect-ratio and inline size.
     aMetrics.mCarriedOutBEndMargin.Zero();
-  } else {
-    Maybe<nscoord> containBSize = ContainIntrinsicBSize(
-        IsComboboxControlFrame() ? NS_UNCONSTRAINEDSIZE : 0);
-    if (containBSize && *containBSize != NS_UNCONSTRAINEDSIZE) {
-      // If we're size-containing in block axis and we don't have a specified
-      // block size, then our final size should actually be computed from only
-      // our border, padding and contain-intrinsic-block-size, ignoring the
-      // actual contents. Hence this case is a simplified version of the case
-      // below.
-      //
-      // NOTE: We exempt the nsComboboxControlFrame subclass from taking this
-      // special case when it has 'contain-intrinsic-block-size: none', because
-      // comboboxes implicitly honors the size-containment behavior on its
-      // nsComboboxDisplayFrame child (which it shrinkwraps) rather than on the
-      // nsComboboxControlFrame. (Moreover, the DisplayFrame child doesn't even
-      // need any special content-size-ignoring behavior in its reflow method,
-      // because that method just resolves "auto" BSize values to one
-      // line-height rather than by measuring its contents' BSize.)
-      nscoord contentBSize = *containBSize;
-      nscoord autoBSize =
-          aReflowInput.ApplyMinMaxBSize(contentBSize, aState.mConsumedBSize);
+  } else if (Maybe<nscoord> containBSize = ContainIntrinsicBSize()) {
+    // If we're size-containing in block axis and we don't have a specified
+    // block size, then our final size should actually be computed from only
+    // our border, padding and contain-intrinsic-block-size, ignoring the
+    // actual contents. Hence this case is a simplified version of the case
+    // below.
+    nscoord contentBSize = *containBSize;
+    nscoord autoBSize =
+        aReflowInput.ApplyMinMaxBSize(contentBSize, aState.mConsumedBSize);
+    aMetrics.mCarriedOutBEndMargin.Zero();
+    autoBSize += borderPadding.BStartEnd(wm);
+    finalSize.BSize(wm) = autoBSize;
+  } else if (aState.mReflowStatus.IsInlineBreakBefore()) {
+    // Our parent is expected to push this frame to the next page/column so
+    // what size we set here doesn't really matter.
+    finalSize.BSize(wm) = aReflowInput.AvailableBSize();
+  } else if (aState.mReflowStatus.IsComplete()) {
+    const nscoord lineClampedContentBlockEndEdge =
+        ApplyLineClamp(aReflowInput, this, blockEndEdgeOfChildren);
+
+    const nscoord bpBStart = borderPadding.BStart(wm);
+    const nscoord contentBSize = blockEndEdgeOfChildren - bpBStart;
+    const nscoord lineClampedContentBSize =
+        lineClampedContentBlockEndEdge - bpBStart;
+
+    const nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(
+        lineClampedContentBSize, aState.mConsumedBSize);
+    if (autoBSize != contentBSize) {
+      // Our min-block-size, max-block-size, or -webkit-line-clamp value made
+      // our bsize change.  Don't carry out our kids' block-end margins.
       aMetrics.mCarriedOutBEndMargin.Zero();
-      autoBSize += borderPadding.BStartEnd(wm);
-      finalSize.BSize(wm) = autoBSize;
-    } else if (aState.mReflowStatus.IsInlineBreakBefore()) {
-      // Our parent is expected to push this frame to the next page/column so
-      // what size we set here doesn't really matter.
-      finalSize.BSize(wm) = aReflowInput.AvailableBSize();
-    } else if (aState.mReflowStatus.IsComplete()) {
-      const nscoord lineClampedContentBlockEndEdge =
-          ApplyLineClamp(aReflowInput, this, blockEndEdgeOfChildren);
-
-      const nscoord bpBStart = borderPadding.BStart(wm);
-      const nscoord contentBSize = blockEndEdgeOfChildren - bpBStart;
-      const nscoord lineClampedContentBSize =
-          lineClampedContentBlockEndEdge - bpBStart;
-
-      const nscoord autoBSize = aReflowInput.ApplyMinMaxBSize(
-          lineClampedContentBSize, aState.mConsumedBSize);
-      if (autoBSize != contentBSize) {
-        // Our min-block-size, max-block-size, or -webkit-line-clamp value made
-        // our bsize change.  Don't carry out our kids' block-end margins.
-        aMetrics.mCarriedOutBEndMargin.Zero();
-      }
-      nscoord bSize = autoBSize + borderPadding.BStartEnd(wm);
-      if (MOZ_UNLIKELY(autoBSize > contentBSize &&
-                       bSize > aReflowInput.AvailableBSize() &&
-                       aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
-        // Applying `min-size` made us overflow our available size.
-        // Clamp it and report that we're Incomplete, or BreakBefore if we have
-        // 'break-inside: avoid' that is applicable.
-        bSize = aReflowInput.AvailableBSize();
-        if (ShouldAvoidBreakInside(aReflowInput)) {
-          aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
-        } else {
-          aState.mReflowStatus.SetIncomplete();
-        }
-      }
-      finalSize.BSize(wm) = bSize;
-    } else {
-      NS_ASSERTION(
-          aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
-          "Shouldn't be incomplete if availableBSize is UNCONSTRAINED.");
-      nscoord bSize = std::max(aState.mBCoord, aReflowInput.AvailableBSize());
-      if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
-        // This should never happen, but it does. See bug 414255
-        bSize = aState.mBCoord;
-      }
-      const nscoord maxBSize = aReflowInput.ComputedMaxBSize();
-      if (maxBSize != NS_UNCONSTRAINEDSIZE &&
-          aState.mConsumedBSize + bSize - borderPadding.BStart(wm) > maxBSize) {
-        // Compute this fragment's block-size, with the max-block-size
-        // constraint taken into consideration.
-        const nscoord clampedBSizeWithoutEndBP =
-            std::max(0, maxBSize - aState.mConsumedBSize) +
-            borderPadding.BStart(wm);
-        const nscoord clampedBSize =
-            clampedBSizeWithoutEndBP + borderPadding.BEnd(wm);
-        if (clampedBSize <= aReflowInput.AvailableBSize()) {
-          // We actually fit after applying `max-size` so we should be
-          // Overflow-Incomplete instead.
-          bSize = clampedBSize;
-          aState.mReflowStatus.SetOverflowIncomplete();
-        } else {
-          // We cannot fit after applying `max-size` with our block-end BP, so
-          // we should draw it in our next continuation.
-          bSize = clampedBSizeWithoutEndBP;
-        }
-      }
-      finalSize.BSize(wm) = bSize;
     }
+    nscoord bSize = autoBSize + borderPadding.BStartEnd(wm);
+    if (MOZ_UNLIKELY(autoBSize > contentBSize &&
+                     bSize > aReflowInput.AvailableBSize() &&
+                     aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
+      // Applying `min-size` made us overflow our available size.
+      // Clamp it and report that we're Incomplete, or BreakBefore if we have
+      // 'break-inside: avoid' that is applicable.
+      bSize = aReflowInput.AvailableBSize();
+      if (ShouldAvoidBreakInside(aReflowInput)) {
+        aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
+      } else {
+        aState.mReflowStatus.SetIncomplete();
+      }
+    }
+    finalSize.BSize(wm) = bSize;
+  } else {
+    NS_ASSERTION(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
+                 "Shouldn't be incomplete if availableBSize is UNCONSTRAINED.");
+    nscoord bSize = std::max(aState.mBCoord, aReflowInput.AvailableBSize());
+    if (aReflowInput.AvailableBSize() == NS_UNCONSTRAINEDSIZE) {
+      // This should never happen, but it does. See bug 414255
+      bSize = aState.mBCoord;
+    }
+    const nscoord maxBSize = aReflowInput.ComputedMaxBSize();
+    if (maxBSize != NS_UNCONSTRAINEDSIZE &&
+        aState.mConsumedBSize + bSize - borderPadding.BStart(wm) > maxBSize) {
+      // Compute this fragment's block-size, with the max-block-size
+      // constraint taken into consideration.
+      const nscoord clampedBSizeWithoutEndBP =
+          std::max(0, maxBSize - aState.mConsumedBSize) +
+          borderPadding.BStart(wm);
+      const nscoord clampedBSize =
+          clampedBSizeWithoutEndBP + borderPadding.BEnd(wm);
+      if (clampedBSize <= aReflowInput.AvailableBSize()) {
+        // We actually fit after applying `max-size` so we should be
+        // Overflow-Incomplete instead.
+        bSize = clampedBSize;
+        aState.mReflowStatus.SetOverflowIncomplete();
+      } else {
+        // We cannot fit after applying `max-size` with our block-end BP, so
+        // we should draw it in our next continuation.
+        bSize = clampedBSizeWithoutEndBP;
+      }
+    }
+    finalSize.BSize(wm) = bSize;
   }
 
   if (IsTrueOverflowContainer()) {
@@ -7572,7 +7558,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   //    (B) we are not honoring the document colors
   //    (C) the force color adjust property is set to auto
   if (StaticPrefs::browser_display_permit_backplate() &&
-      PresContext()->ForcingColors() && !IsComboboxControlFrame() &&
+      PresContext()->ForcingColors() &&
       StyleText()->mForcedColorAdjust != StyleForcedColorAdjust::None) {
     backplateColor.emplace(GetBackplateColor(this));
   }
@@ -7970,8 +7956,7 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
          (pseudo == PseudoStyleType::scrolledContent &&
           !GetParent()->IsListControlFrame()) ||
          pseudo == PseudoStyleType::mozSVGText) &&
-        !IsComboboxControlFrame() && !IsMathMLFrame() &&
-        !IsColumnSetWrapperFrame() &&
+        !IsMathMLFrame() && !IsColumnSetWrapperFrame() &&
         RefPtr<ComputedStyle>(GetFirstLetterStyle(PresContext())) != nullptr;
     NS_ASSERTION(haveFirstLetterStyle ==
                      HasAnyStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE),

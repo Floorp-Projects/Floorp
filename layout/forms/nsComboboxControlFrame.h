@@ -7,56 +7,30 @@
 #ifndef nsComboboxControlFrame_h___
 #define nsComboboxControlFrame_h___
 
-#ifdef DEBUG_evaughan
-// #define DEBUG_rods
-#endif
-
-#ifdef DEBUG_rods
-// #define DO_REFLOW_DEBUG
-// #define DO_REFLOW_COUNTER
-// #define DO_UNCONSTRAINED_CHECK
-// #define DO_PIXELS
-// #define DO_NEW_REFLOW
-#endif
-
-// Mark used to indicate when onchange has been fired for current combobox item
-#define NS_SKIP_NOTIFY_INDEX -2
-
 #include "mozilla/Attributes.h"
-#include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRollupListener.h"
 #include "nsThreadUtils.h"
-
-class nsComboboxDisplayFrame;
-class nsTextNode;
+#include "nsHTMLButtonControlFrame.h"
 
 namespace mozilla {
 class PresShell;
 class HTMLSelectEventListener;
+class ComboboxLabelFrame;
 namespace dom {
 class HTMLSelectElement;
 }
-
-namespace gfx {
-class DrawTarget;
-}  // namespace gfx
 }  // namespace mozilla
 
-class nsComboboxControlFrame final : public nsBlockFrame,
-                                     public nsIFormControlFrame,
+class nsComboboxControlFrame final : public nsHTMLButtonControlFrame,
                                      public nsIAnonymousContentCreator,
                                      public nsISelectControlFrame {
-  using DrawTarget = mozilla::gfx::DrawTarget;
   using Element = mozilla::dom::Element;
 
  public:
-  friend nsComboboxControlFrame* NS_NewComboboxControlFrame(
-      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
-  friend class nsComboboxDisplayFrame;
-
+  friend class mozilla::ComboboxLabelFrame;
   explicit nsComboboxControlFrame(ComputedStyle* aStyle,
                                   nsPresContext* aPresContext);
   ~nsComboboxControlFrame();
@@ -69,16 +43,16 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilter) final;
 
-  nsIContent* GetDisplayNode() const;
-  nsIFrame* CreateFrameForDisplayNode();
-
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() final;
 #endif
 
   nscoord GetMinISize(gfxContext* aRenderingContext) final;
-
   nscoord GetPrefISize(gfxContext* aRenderingContext) final;
+
+  // We're a leaf, so we need to report ourselves as the content insertion
+  // frame.
+  nsContainerFrame* GetContentInsertionFrame() override { return this; }
 
   void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput, nsReflowStatus& aStatus) final;
@@ -88,27 +62,15 @@ class nsComboboxControlFrame final : public nsBlockFrame,
                        mozilla::WidgetGUIEvent* aEvent,
                        nsEventStatus* aEventStatus) final;
 
-  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                        const nsDisplayListSet& aLists) final;
-
-  void PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt);
-
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) final;
-
-#ifdef DEBUG_FRAME_DUMP
-  nsresult GetFrameName(nsAString& aResult) const final;
-#endif
   void Destroy(DestroyContext&) final;
 
-  void SetInitialChildList(ChildListID aListID, nsFrameList&& aChildList) final;
-  const nsFrameList& GetChildList(ChildListID aListID) const final;
-  void GetChildLists(nsTArray<ChildList>* aLists) const final;
-
-  nsContainerFrame* GetContentInsertionFrame() final;
-
-  // Return the dropdown and display frame.
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) final;
+#ifdef DEBUG_FRAME_DUMP
+  nsresult GetFrameName(nsAString& aResult) const final {
+    return MakeFrameName(u"ComboboxControl"_ns, aResult);
+  }
+#endif
 
   // nsIFormControlFrame
   nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) final {
@@ -116,32 +78,10 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   }
 
   /**
-   * Inform the control that it got (or lost) focus.
-   * If it lost focus, the dropdown menu will be rolled up if needed,
-   * and FireOnChange() will be called.
-   * @param aOn true if got focus, false if lost focus.
-   * @param aRepaint if true then force repaint (NOTE: we always force repaint
-   *        currently)
    * @note This method might destroy |this|.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void SetFocus(bool aOn, bool aRepaint) final;
-
-  /**
-   * Return the available space before and after this frame for
-   * placing the drop-down list, and the current 2D translation.
-   * Note that either or both can be less than or equal to zero,
-   * if both are then the drop-down should be closed.
-   */
-  void GetAvailableDropdownSpace(mozilla::WritingMode aWM, nscoord* aBefore,
-                                 nscoord* aAfter,
-                                 mozilla::LogicalPoint* aTranslation);
-  int32_t GetIndexOfDisplayArea();
-  /**
-   * @note This method might destroy |this|.
-   */
+  void FireValueChangeEvent();
   nsresult RedisplaySelectedText();
-  int32_t UpdateRecentIndex(int32_t aIndex);
 
   bool IsDroppedDown() const;
 
@@ -192,53 +132,23 @@ class nsComboboxControlFrame final : public nsBlockFrame,
     nsComboboxControlFrame* mControlFrame;
   };
 
-  void CheckFireOnChange();
-  void FireValueChangeEvent();
   nsresult RedisplayText();
   void HandleRedisplayTextEvent();
   void ActuallyDisplayText(bool aNotify);
 
-  // If our total transform to the root frame of the root document is only a 2d
-  // translation then return that translation, otherwise returns (0,0).
-  nsPoint GetCSSTransformTranslation();
-
   mozilla::dom::HTMLSelectElement& Select() const;
   void GetOptionText(uint32_t aIndex, nsAString& aText) const;
 
-  RefPtr<nsTextNode> mDisplayContent;  // Anonymous content used to display the
-                                       // current selection
-  RefPtr<Element> mButtonContent;      // Anonymous content for the button
-  nsContainerFrame* mDisplayFrame;     // frame to display selection
-  nsIFrame* mButtonFrame;              // button frame
-
-  // The inline size of our display area.  Used by that frame's reflow
-  // to size to the full inline size except the drop-marker.
-  nscoord mDisplayISize;
-  // The maximum inline size of our display area, which is the
-  // nsComoboxControlFrame's border-box.
-  //
-  // Going over this would be observable via DOM APIs like client / scrollWidth.
-  nscoord mMaxDisplayISize;
-
+  RefPtr<Element> mDisplayLabel;   // Anonymous content for the label
+  RefPtr<Element> mButtonContent;  // Anonymous content for the button
   nsRevocableEventPtr<RedisplayTextEvent> mRedisplayTextEvent;
 
-  int32_t mRecentSelectedIndex;
-  int32_t mDisplayedIndex;
+  // The inline size of our display area. Used by that frame's reflow to size to
+  // the full inline size except the drop-marker.
+  nscoord mDisplayISize = 0;
+  int32_t mDisplayedIndex = -1;
   nsString mDisplayedOptionTextOrPreview;
-
   RefPtr<mozilla::HTMLSelectEventListener> mEventListener;
-
-  // See comment in HandleRedisplayTextEvent().
-  bool mInRedisplayText;
-  bool mIsOpenInParentProcess;
-
-  // static class data member for Bug 32920
-  // only one control can be focused at a time
-  static nsComboboxControlFrame* sFocused;
-
-#ifdef DO_REFLOW_COUNTER
-  int32_t mReflowId;
-#endif
 };
 
 #endif
