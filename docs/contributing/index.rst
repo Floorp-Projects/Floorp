@@ -42,14 +42,6 @@ development process and source code documentation.
 
 
 .. toctree::
-   :caption: Signing
-   :maxdepth: 1
-   :glob:
-
-   signing/*
-
-
-.. toctree::
    :caption: Additional Information
    :maxdepth: 1
 
