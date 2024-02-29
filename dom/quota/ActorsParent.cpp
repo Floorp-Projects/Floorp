@@ -82,6 +82,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/dom/FileSystemQuotaClientFactory.h"
 #include "mozilla/dom/FlippedOnce.h"
+#include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/cache/QuotaClient.h"
@@ -1377,6 +1378,9 @@ void InitializeQuotaManager() {
     RefPtr<net::ExtensionProtocolHandler> extensionProtocolHandler =
         net::ExtensionProtocolHandler::GetSingleton();
     QM_WARNONLY_TRY(MOZ_TO_RESULT(extensionProtocolHandler));
+
+    IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
+    QM_WARNONLY_TRY(MOZ_TO_RESULT(mgr));
   }
 
   QM_WARNONLY_TRY(QM_TO_RESULT(QuotaManager::Initialize()));
