@@ -278,7 +278,10 @@ var gMainPane = {
         let uri = win.gBrowser.currentURI.spec;
 
         if (
-          (uri == "about:preferences" || uri == "about:preferences#general") &&
+          (uri == "about:preferences" ||
+            uri == "about:preferences#general" ||
+            uri == "about:settings" ||
+            uri == "about:settings#general") &&
           document.visibilityState == "visible"
         ) {
           this.updateSetDefaultBrowser();
