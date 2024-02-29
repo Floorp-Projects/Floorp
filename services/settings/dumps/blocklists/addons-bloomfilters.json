@@ -3,6 +3,60 @@
     {
       "stash": {
         "blocked": [
+          "{7bc8e402-0d0f-4daa-b639-12638167b89b}:1.0.0",
+          "{7ffc9179-b13b-43c7-a629-e912d1bd2d41}:1.0.1",
+          "{0bfd044e-fd33-43c5-963e-79bc37677ef0}:1.0",
+          "{9081d218-23b6-4fb0-b0e2-9584cfd9ec67}:1.0.2",
+          "{8a0f8be7-462c-4ac4-9aaa-e6942ceba2de}:1.0.1",
+          "{947e6a31-2445-4943-a470-759a4503c677}:1.0.1",
+          "adblockdefender@ext:1.0.1",
+          "{0a9351b5-c0a5-4e05-9f95-bb76da94599d}:1.0.1",
+          "{49b5c131-1f79-4917-b6a7-aa210cd686b0}:1.0.1",
+          "cinematic-compass@addon:1.0",
+          "rank-master@addon:1.0.4",
+          "rank-master@addon:1.0.1",
+          "{4a25756a-7fc7-44ac-82b3-5afc323e80d0}:1.0.1",
+          "{7f7ac8a6-57ec-4d91-99dc-8674cf1e367b}:1.0.3",
+          "rank-tracker@addon:1.0.1",
+          "{ff21bd20-17e1-48da-ba2b-9d8f1f7b3bed}:1.0.0",
+          "{947e6a31-2445-4943-a470-759a4503c677}:1.0.0",
+          "{e3894e65-24c3-4a49-ab0f-a3cd87eedd35}:1.0.1",
+          "{a1e65c0a-c949-4a85-9b33-e9c6c0f249be}:1.2.1",
+          "{9081d218-23b6-4fb0-b0e2-9584cfd9ec67}:1.0.0",
+          "{3e55091d-709e-4b91-a4ac-09bbbf169bff}:1.0.1",
+          "adlockernet@extension:1.0.0",
+          "adsoff@addon:1.0.0",
+          "{c8d534aa-5add-4870-8925-34d39f4ffd2c}:1.0.0",
+          "adblckhero@ext:1.0.0",
+          "{40014e6f-37c2-4e84-8b0f-219464496aec}:1.0.0",
+          "adblockdefender@ext:1.0.0",
+          "{0a9351b5-c0a5-4e05-9f95-bb76da94599d}:1.0.0",
+          "{13db8986-7bd0-41b1-a9de-af3541ec5df1}:1.1.1",
+          "{105b0afa-c723-4347-b945-7cf283dc69da}:1.0.0",
+          "{13db8986-7bd0-41b1-a9de-af3541ec5df1}:1.0.1",
+          "cinematic-compass@addon:1.0.3",
+          "streamflicks@addon:1.0",
+          "{ff21bd20-17e1-48da-ba2b-9d8f1f7b3bed}:1.0.1",
+          "{0a9351b5-c0a5-4e05-9f95-bb76da94599d}:1.0.2",
+          "rank-master@addon:1.0.3",
+          "{bc426494-9c10-4462-aeb0-9bfba371ac1c}:1.0",
+          "{2dc2a242-51eb-4c47-a257-2df052e83390}:1.0.1",
+          "rank-master@addon:1.0.2",
+          "{a401a93a-c77a-4677-ad91-70ffd90a116b}:1.0",
+          "musicz@addons:1.0.0",
+          "{d3a98f6b-f202-4735-ac51-21fb6249af4b}:1.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1708713360872,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1709037304339,
+      "id": "e84f82b8-12d4-44de-b392-47c90d07e20c",
+      "last_modified": 1709037359688
+    },
+    {
+      "stash": {
+        "blocked": [
           "{baf760b3-2a5b-4e38-878a-139bf10380c2}:1.0.1",
           "purebrowse@ext:1.0.1",
           "purebrowse@ext:1.0.0",
@@ -131,5 +185,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1708713360745
+  "timestamp": 1709037359688
 }
