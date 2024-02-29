@@ -1017,13 +1017,15 @@ SupportedAlpnRank IsAlpnSupported(const nsACString& aAlpn) {
   return SupportedAlpnRank::NOT_SUPPORTED;
 }
 
-// On some security error when 0RTT is used we want to restart transactions
-// without 0RTT. Some firewalls do not behave well with 0RTT and cause this
-// errors.
-bool SecurityErrorThatMayNeedRestart(nsresult aReason) {
+// NSS Errors which *may* have been triggered by the use of 0-RTT in the
+// presence of badly behaving middleboxes. We may re-attempt the connection
+// without early data.
+bool PossibleZeroRTTRetryError(nsresult aReason) {
   return (aReason ==
           psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT)) ||
-         (aReason == psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_MAC_ALERT));
+         (aReason == psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_MAC_ALERT)) ||
+         (aReason ==
+          psm::GetXPCOMFromNSSError(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT));
 }
 
 nsresult MakeOriginURL(const nsACString& origin, nsCOMPtr<nsIURI>& url) {

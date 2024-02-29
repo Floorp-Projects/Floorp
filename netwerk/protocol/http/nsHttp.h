@@ -499,8 +499,6 @@ static inline bool AllowedErrorForHTTPSRRFallback(nsresult aError) {
          aError == NS_ERROR_UNKNOWN_HOST || aError == NS_ERROR_NET_TIMEOUT;
 }
 
-bool SecurityErrorThatMayNeedRestart(nsresult aReason);
-
 [[nodiscard]] nsresult MakeOriginURL(const nsACString& origin,
                                      nsCOMPtr<nsIURI>& url);
 
@@ -520,6 +518,8 @@ uint8_t GetWebTransportErrorFromNSResult(nsresult aResult);
 uint64_t WebTransportErrorToHttp3Error(uint8_t aErrorCode);
 
 uint8_t Http3ErrorToWebTransportError(uint64_t aErrorCode);
+
+bool PossibleZeroRTTRetryError(nsresult aReason);
 
 }  // namespace net
 }  // namespace mozilla
