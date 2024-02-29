@@ -1,0 +1,10 @@
+#!/bin/sh
+
+case "$*" in
+"--show-sdk-path --sdk iphoneos"|"--show-sdk-path -sdk iphoneos")
+    ;;
+*)
+    echo We only expect this to be executed by third_party/rust/cc/src/lib.rs or rustc when targetting iOS >&2
+    exit 1
+esac
+echo $IPHONEOS_SDK_DIR
