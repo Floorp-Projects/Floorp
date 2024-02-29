@@ -86,6 +86,7 @@ projects:
     - support-test-libstate
     - support-utils
     - support-webextensions
+    - tooling-lint
     - ui-autocomplete
     - ui-colors
     - ui-icons

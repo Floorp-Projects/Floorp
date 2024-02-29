@@ -17,7 +17,6 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
-import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Element
 
 /**
@@ -36,7 +35,6 @@ class ImageViewAndroidTintXmlDetector : ResourceXmlDetector() {
         const val ERROR_MESSAGE =
             "Using android:tint to tint ImageView instead of app:tint with AppCompatImageView"
 
-        @VisibleForTesting
         val ISSUE_XML_SRC_USAGE = Issue.create(
             id = "AndroidSrcXmlDetector",
             briefDescription = "Prohibits using android:tint in ImageViews and ImageButtons",

@@ -726,6 +726,7 @@ dependencies {
     testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
     lintChecks project(":mozilla-lint-rules")
+    lintChecks project(':tooling-lint')
 }
 
 protobuf {
