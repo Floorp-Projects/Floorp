@@ -190,10 +190,13 @@ support-files = [
 
 ["test_allowMedia.html"]
 skip-if = [
-  "verify && (os == 'linux' || os == 'win')",
-  "!debug && os == 'mac' && bits == 64",
-  "debug && os == 'win'",
-  "debug && os == 'linux' && os_version == '18.04'", #Bug 1434744
+  "apple_catalina && !debug",
+  "apple_silicon && !debug",
+  "os == 'linux' && os_version == '18.04' && verify",
+  "os == 'linux' && os_version == '18.04' && debug", #Bug 1434744
+  "win11_2009 && verify",
+  "win10_2009 && debug",
+  "win11_2009 && debug",
 ]
 
 ["test_anchor_href_cache_invalidation.html"]
@@ -324,7 +327,7 @@ skip-if = ["os == 'android'"] #TIMED_OUT
 ["test_bug369370.html"]
 skip-if = [
   "os == 'android'",
-  "os == 'linux'", # disabled on linux bug 1258103
+  "os == 'linux' && os_version == '18.04'", # disabled on linux bug 1258103
 ]
 
 ["test_bug371375.html"]
@@ -597,7 +600,8 @@ fail-if = ["xorigin"]
 ["test_bug615833.html"]
 skip-if = [
   "os == 'android'",
-  "os == 'mac'", #TIMED_OUT # form control not selected/checked with synthesizeMouse, osx(bug 1275664)
+  "apple_catalina", #TIMED_OUT # form control not selected/checked with synthesizeMouse, osx(bug 1275664)
+  "apple_silicon", #TIMED_OUT # form control not selected/checked with synthesizeMouse, osx(bug 1275664)
 ]
 
 ["test_bug618948.html"]
@@ -769,17 +773,22 @@ skip-if = [
 ["test_bug1261673.html"]
 skip-if = [
   "os == 'android'",
-  "os == 'mac'",
+  "apple_catalina",
+  "apple_silicon",
 ]
 
 ["test_bug1261674-1.html"]
 skip-if = [
   "os == 'android'",
-  "os == 'mac'",
+  "apple_catalina",
+  "apple_silicon",
 ]
 
 ["test_bug1261674-2.html"]
-skip-if = ["os == 'mac'"]
+skip-if = [
+  "apple_catalina",
+  "apple_silicon",
+]
 
 ["test_bug1264157.html"]
 
@@ -979,7 +988,8 @@ tags = "openwindow"
 skip-if = [
   "os == 'android' && debug",
   "os == 'linux'",
-  "os == 'win' && debug && bits == 64", # Bug 1533759
+  "win11_2009 && bits == 64 && debug", # Bug 1533759
+  "win10_2009 && bits == 64 && debug", # Bug 1533759
 ]
 
 ["test_window_open_from_closing.html"]
