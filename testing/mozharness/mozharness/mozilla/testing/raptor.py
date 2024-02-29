@@ -619,6 +619,15 @@ class Raptor(
                     ),
                 },
             ],
+            [
+                ["--screenshot-on-failure"],
+                {
+                    "action": "store_true",
+                    "dest": "screenshot_on_failure",
+                    "default": False,
+                    "help": "Take a screenshot when the test fails.",
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -743,6 +752,7 @@ class Raptor(
         self.browser_cycles = self.config.get("browser_cycles")
         self.clean = self.config.get("clean")
         self.page_timeout = self.config.get("page_timeout", None)
+        self.screenshot_on_failure = self.config.get("screenshot_on_failure")
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
@@ -1069,6 +1079,11 @@ class Raptor(
             options.extend(
                 [f"--post-startup-delay={self.config['post_startup_delay']}"]
             )
+        if (
+            self.config.get("screenshot_on_failure", False)
+            or os.environ.get("MOZ_AUTOMATION", None) is not None
+        ):
+            options.extend(["--screenshot-on-failure"])
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line
