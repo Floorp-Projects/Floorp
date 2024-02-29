@@ -4,14 +4,13 @@
 
 //! Computed color values.
 
-use crate::color::parsing::Color as CSSParserColor;
 use crate::color::AbsoluteColor;
 use crate::values::animated::ToAnimatedZero;
 use crate::values::computed::percentage::Percentage;
 use crate::values::generics::color::{
     GenericCaretColor, GenericColor, GenericColorMix, GenericColorOrAuto,
 };
-use std::fmt;
+use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
 pub use crate::values::specified::color::{ColorScheme, ForcedColorAdjust, PrintColorAdjust};
@@ -32,7 +31,7 @@ impl ToCss for Color {
     {
         match *self {
             Self::Absolute(ref c) => c.to_css(dest),
-            Self::CurrentColor => cssparser::ToCss::to_css(&CSSParserColor::CurrentColor, dest),
+            Self::CurrentColor => dest.write_str("currentcolor"),
             Self::ColorMix(ref m) => m.to_css(dest),
         }
     }

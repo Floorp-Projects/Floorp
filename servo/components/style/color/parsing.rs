@@ -18,8 +18,6 @@ use cssparser::color::{
     PredefinedColorSpace, OPAQUE,
 };
 use cssparser::{match_ignore_ascii_case, CowRcStr, ParseError, Parser, ToCss, Token};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::f32::consts::PI;
 use std::fmt;
 use std::str::FromStr;
@@ -494,27 +492,6 @@ impl RgbaLegacy {
     }
 }
 
-#[cfg(feature = "serde")]
-impl Serialize for RgbaLegacy {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        (self.red, self.green, self.blue, self.alpha).serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for RgbaLegacy {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let (r, g, b, a) = Deserialize::deserialize(deserializer)?;
-        Ok(RgbaLegacy::new(r, g, b, a))
-    }
-}
-
 impl ToCss for RgbaLegacy {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
     where
@@ -582,27 +559,6 @@ impl ToCss for Hsl {
     }
 }
 
-#[cfg(feature = "serde")]
-impl Serialize for Hsl {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        (self.hue, self.saturation, self.lightness, self.alpha).serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Hsl {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let (lightness, a, b, alpha) = Deserialize::deserialize(deserializer)?;
-        Ok(Self::new(lightness, a, b, alpha))
-    }
-}
-
 /// Color specified by hue, whiteness and blackness components.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Hwb {
@@ -646,27 +602,6 @@ impl ToCss for Hwb {
         ));
 
         RgbaLegacy::from_floats(red, green, blue, self.alpha.unwrap_or(OPAQUE)).to_css(dest)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl Serialize for Hwb {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        (self.hue, self.whiteness, self.blackness, self.alpha).serialize(serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> Deserialize<'de> for Hwb {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let (lightness, whiteness, blackness, alpha) = Deserialize::deserialize(deserializer)?;
-        Ok(Self::new(lightness, whiteness, blackness, alpha))
     }
 }
 
@@ -715,27 +650,6 @@ macro_rules! impl_lab_like {
                     b,
                     alpha,
                 }
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl Serialize for $cls {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                (self.lightness, self.a, self.b, self.alpha).serialize(serializer)
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl<'de> Deserialize<'de> for $cls {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                let (lightness, a, b, alpha) = Deserialize::deserialize(deserializer)?;
-                Ok(Self::new(lightness, a, b, alpha))
             }
         }
 
@@ -806,27 +720,6 @@ macro_rules! impl_lch_like {
                     hue,
                     alpha,
                 }
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl Serialize for $cls {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
-            {
-                (self.lightness, self.chroma, self.hue, self.alpha).serialize(serializer)
-            }
-        }
-
-        #[cfg(feature = "serde")]
-        impl<'de> Deserialize<'de> for $cls {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                let (lightness, chroma, hue, alpha) = Deserialize::deserialize(deserializer)?;
-                Ok(Self::new(lightness, chroma, hue, alpha))
             }
         }
 
@@ -905,60 +798,6 @@ impl ToCss for ColorFunction {
         serialize_color_alpha(dest, self.alpha, false)?;
 
         dest.write_char(')')
-    }
-}
-
-/// Describes one of the value <color> values according to the CSS
-/// specification.
-///
-/// Most components are `Option<_>`, so when the value is `None`, that component
-/// serializes to the "none" keyword.
-///
-/// <https://drafts.csswg.org/css-color-4/#color-type>
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Color {
-    /// The 'currentcolor' keyword.
-    CurrentColor,
-    /// Specify sRGB colors directly by their red/green/blue/alpha chanels.
-    Rgba(RgbaLegacy),
-    /// Specifies a color in sRGB using hue, saturation and lightness components.
-    Hsl(Hsl),
-    /// Specifies a color in sRGB using hue, whiteness and blackness components.
-    Hwb(Hwb),
-    /// Specifies a CIELAB color by CIE Lightness and its a- and b-axis hue
-    /// coordinates (red/green-ness, and yellow/blue-ness) using the CIE LAB
-    /// rectangular coordinate model.
-    Lab(Lab),
-    /// Specifies a CIELAB color by CIE Lightness, Chroma, and hue using the
-    /// CIE LCH cylindrical coordinate model.
-    Lch(Lch),
-    /// Specifies an Oklab color by Oklab Lightness and its a- and b-axis hue
-    /// coordinates (red/green-ness, and yellow/blue-ness) using the Oklab
-    /// rectangular coordinate model.
-    Oklab(Oklab),
-    /// Specifies an Oklab color by Oklab Lightness, Chroma, and hue using
-    /// the OKLCH cylindrical coordinate model.
-    Oklch(Oklch),
-    /// Specifies a color in a predefined color space.
-    ColorFunction(ColorFunction),
-}
-
-impl ToCss for Color {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-    where
-        W: fmt::Write,
-    {
-        match *self {
-            Color::CurrentColor => dest.write_str("currentcolor"),
-            Color::Rgba(rgba) => rgba.to_css(dest),
-            Color::Hsl(hsl) => hsl.to_css(dest),
-            Color::Hwb(hwb) => hwb.to_css(dest),
-            Color::Lab(lab) => lab.to_css(dest),
-            Color::Lch(lch) => lch.to_css(dest),
-            Color::Oklab(lab) => lab.to_css(dest),
-            Color::Oklch(lch) => lch.to_css(dest),
-            Color::ColorFunction(color_function) => color_function.to_css(dest),
-        }
     }
 }
 
@@ -1085,23 +924,6 @@ pub trait ColorParser<'i> {
     }
 }
 
-/// Default implementation of a [`ColorParser`]
-pub struct DefaultColorParser;
-
-impl<'i> ColorParser<'i> for DefaultColorParser {
-    type Output = Color;
-    type Error = ();
-}
-
-impl Color {
-    /// Parse a <color> value, per CSS Color Module Level 3.
-    ///
-    /// FIXME(#2) Deprecated CSS2 System Colors are not supported yet.
-    pub fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Color, ParseError<'i, ()>> {
-        parse_color_with(&DefaultColorParser, input)
-    }
-}
-
 /// This trait is used by the [`ColorParser`] to construct colors of any type.
 pub trait FromParsedColor {
     /// Construct a new color from the CSS `currentcolor` keyword.
@@ -1162,85 +984,4 @@ pub trait FromParsedColor {
         c3: Option<f32>,
         alpha: Option<f32>,
     ) -> Self;
-}
-
-impl FromParsedColor for Color {
-    #[inline]
-    fn from_current_color() -> Self {
-        Color::CurrentColor
-    }
-
-    #[inline]
-    fn from_rgba(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
-        Color::Rgba(RgbaLegacy::new(red, green, blue, alpha))
-    }
-
-    fn from_hsl(
-        hue: Option<f32>,
-        saturation: Option<f32>,
-        lightness: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::Hsl(Hsl::new(hue, saturation, lightness, alpha))
-    }
-
-    fn from_hwb(
-        hue: Option<f32>,
-        blackness: Option<f32>,
-        whiteness: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::Hwb(Hwb::new(hue, blackness, whiteness, alpha))
-    }
-
-    #[inline]
-    fn from_lab(
-        lightness: Option<f32>,
-        a: Option<f32>,
-        b: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::Lab(Lab::new(lightness, a, b, alpha))
-    }
-
-    #[inline]
-    fn from_lch(
-        lightness: Option<f32>,
-        chroma: Option<f32>,
-        hue: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::Lch(Lch::new(lightness, chroma, hue, alpha))
-    }
-
-    #[inline]
-    fn from_oklab(
-        lightness: Option<f32>,
-        a: Option<f32>,
-        b: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::Oklab(Oklab::new(lightness, a, b, alpha))
-    }
-
-    #[inline]
-    fn from_oklch(
-        lightness: Option<f32>,
-        chroma: Option<f32>,
-        hue: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::Oklch(Oklch::new(lightness, chroma, hue, alpha))
-    }
-
-    #[inline]
-    fn from_color_function(
-        color_space: PredefinedColorSpace,
-        c1: Option<f32>,
-        c2: Option<f32>,
-        c3: Option<f32>,
-        alpha: Option<f32>,
-    ) -> Self {
-        Color::ColorFunction(ColorFunction::new(color_space, c1, c2, c3, alpha))
-    }
 }
