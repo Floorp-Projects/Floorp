@@ -2993,9 +2993,8 @@ class FactoryOp
  protected:
   enum class State {
     // Just created on the PBackground thread, dispatched to the main thread.
-    // Next step is either SendingResults if permission is denied,
-    // PermissionChallenge if the permission is unknown, or FinishOpen
-    // if permission is granted.
+    // Next step is either SendingResults if initialization failed, or
+    // FinishOpen if the initialization succeeded.
     Initial,
 
     // Ensuring quota manager is created and opening directory on the
@@ -3160,8 +3159,6 @@ class FactoryOp
   virtual void SendBlockedNotification() = 0;
 
  private:
-  mozilla::Result<PermissionValue, nsresult> CheckPermission();
-
   nsresult FinishOpen();
 
   // Test whether this FactoryOp needs to wait for the given op.
@@ -14638,15 +14635,6 @@ nsresult FactoryOp::Open() {
     MOZ_ASSERT(false);
   }
 
-  QM_TRY_INSPECT(const auto& permission, CheckPermission());
-
-  MOZ_ASSERT(permission == PermissionValue::kPermissionAllowed ||
-             permission == PermissionValue::kPermissionDenied);
-
-  if (permission == PermissionValue::kPermissionDenied) {
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
-
   {
     // These services have to be started on the main thread currently.
 
@@ -14662,8 +14650,6 @@ nsresult FactoryOp::Open() {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
-
-  MOZ_ASSERT(permission == PermissionValue::kPermissionAllowed);
 
   mState = State::FinishOpen;
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
@@ -14787,37 +14773,6 @@ void FactoryOp::FinishSendResults() {
 
   // Make sure to release the factory on this thread.
   mFactory = nullptr;
-}
-
-Result<PermissionValue, nsresult> FactoryOp::CheckPermission() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State::Initial);
-
-  const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
-  MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo ||
-             principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
-
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    MOZ_ASSERT(mState == State::Initial);
-
-    return PermissionValue::kPermissionAllowed;
-  }
-
-  QM_TRY_INSPECT(
-      const auto& permission,
-      ([persistenceType = mCommonParams.metadata().persistenceType(),
-        origin = QuotaManager::GetOriginFromValidatedPrincipalInfo(
-            principalInfo)]() -> mozilla::Result<PermissionValue, nsresult> {
-        if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-          if (QuotaManager::IsOriginInternal(origin)) {
-            return PermissionValue::kPermissionAllowed;
-          }
-          return Err(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
-        }
-        return PermissionValue::kPermissionAllowed;
-      })());
-
-  return permission;
 }
 
 nsresult FactoryOp::SendVersionChangeMessages(
