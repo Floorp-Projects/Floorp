@@ -5,4 +5,5 @@ package org.mozilla.focus.helpers
 
 object Constants {
     const val RETRY_COUNT = 3
+    const val LONG_CLICK_DURATION: Long = 5000
 }

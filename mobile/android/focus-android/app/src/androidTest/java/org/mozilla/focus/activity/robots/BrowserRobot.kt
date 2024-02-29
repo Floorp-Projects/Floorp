@@ -214,6 +214,11 @@ class BrowserRobot {
     fun verifySiteSecurityIndicatorShown() = assertTrue(site_security_indicator.waitForExists(waitingTime))
 
     fun verifyLinkContextMenu(linkAddress: String) {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/parentPanel"),
+            ).waitForExists(waitingTime),
+        )
         onView(withId(R.id.titleView)).check(matches(withText(linkAddress)))
         openLinkInPrivateTab.check(matches(isDisplayed()))
         copyLink.check(matches(isDisplayed()))
@@ -221,6 +226,11 @@ class BrowserRobot {
     }
 
     fun verifyImageContextMenu(hasLink: Boolean, linkAddress: String) {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/parentPanel"),
+            ).waitForExists(waitingTime),
+        )
         onView(withId(R.id.titleView)).check(matches(withText(linkAddress)))
         if (hasLink) {
             openLinkInPrivateTab.check(matches(isDisplayed()))

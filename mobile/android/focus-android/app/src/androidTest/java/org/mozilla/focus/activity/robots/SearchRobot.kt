@@ -9,6 +9,7 @@ import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
@@ -70,7 +71,7 @@ class SearchRobot {
 
     fun longPressSearchBar() {
         searchBar.waitForExists(waitingTime)
-        searchBar.longClick()
+        mDevice.findObject(By.res("$packageName:id/mozac_browser_toolbar_edit_url_view")).click(LONG_CLICK_DURATION)
     }
 
     fun clearSearchBar() = clearSearchButton.click()
