@@ -222,7 +222,7 @@ bool WaylandMessage::Write(int aSocket) {
 
   int filenum = mFds.size();
   if (filenum) {
-    if (filenum >= MAX_LIBWAY_FDS) {
+    if (filenum > MAX_LIBWAY_FDS) {
       ErrorPlain("WaylandMessage::Write() too many files to send\n");
       return false;
     }
