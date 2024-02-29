@@ -121,9 +121,6 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
  * https://drafts.csswg.org/resize-observer/#api
  */
 class ResizeObserver final : public nsISupports, public nsWrapperCache {
-  using NativeCallback = void (*)(
-      const Sequence<OwningNonNull<ResizeObserverEntry>>&, ResizeObserver&);
-  ResizeObserver(Document& aDocument, NativeCallback aCallback);
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -131,9 +128,7 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
 
   ResizeObserver(nsCOMPtr<nsPIDOMWindowInner>&& aOwner, Document* aDocument,
                  ResizeObserverCallback& aCb)
-      : mOwner(std::move(aOwner)),
-        mDocument(aDocument),
-        mCallback(RefPtr<ResizeObserverCallback>(&aCb)) {
+      : mOwner(std::move(aOwner)), mDocument(aDocument), mCallback(&aCb) {
     MOZ_ASSERT(mOwner, "Need a non-null owner window");
     MOZ_ASSERT(mDocument, "Need a non-null doc");
     MOZ_ASSERT(mDocument == mOwner->GetExtantDoc());
@@ -177,11 +172,6 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   bool HasSkippedObservations() const { return mHasSkippedTargets; }
 
   /**
-   * Returns whether this is an internal ResizeObserver with a native callback.
-   */
-  bool HasNativeCallback() const { return mCallback.is<NativeCallback>(); }
-
-  /**
    * Invoke the callback function in JavaScript for all active observations
    * and pass the sequence of ResizeObserverEntry so JavaScript can access them.
    * The active observations' mLastReportedSize fields will be updated, and
@@ -213,7 +203,7 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
   // The window's document at the time of ResizeObserver creation.
   RefPtr<Document> mDocument;
-  Variant<RefPtr<ResizeObserverCallback>, NativeCallback> mCallback;
+  RefPtr<ResizeObserverCallback> mCallback;
   nsTArray<RefPtr<ResizeObservation>> mActiveTargets;
   // The spec uses a list to store the skipped targets. However, it seems what
   // we want is to check if there are any skipped targets (i.e. existence).

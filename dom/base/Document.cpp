@@ -17171,13 +17171,7 @@ bool Document::IsExtensionPage() const {
 
 void Document::AddResizeObserver(ResizeObserver& aObserver) {
   MOZ_ASSERT(!mResizeObservers.Contains(&aObserver));
-  // Insert internal ResizeObservers before scripted ones, since they may have
-  // observable side-effects and we don't want to expose the insertion time.
-  if (aObserver.HasNativeCallback()) {
-    mResizeObservers.InsertElementAt(0, &aObserver);
-  } else {
-    mResizeObservers.AppendElement(&aObserver);
-  }
+  mResizeObservers.AppendElement(&aObserver);
 }
 
 void Document::RemoveResizeObserver(ResizeObserver& aObserver) {
