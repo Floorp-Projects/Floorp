@@ -577,7 +577,7 @@ class Talos(
         if self.config.get("code_coverage", False):
             options.extend(["--code-coverage"])
         if (
-            self.config.get("--screenshot-on-failure", False)
+            self.config.get("screenshot_on_failure", False)
             or os.environ.get("MOZ_AUTOMATION", None) is not None
         ):
             options.extend(["--screenshot-on-failure"])
