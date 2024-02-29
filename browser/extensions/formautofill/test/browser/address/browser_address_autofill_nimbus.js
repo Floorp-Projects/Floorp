@@ -14,7 +14,10 @@ const { FormAutofill } = ChromeUtils.importESModule(
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.formautofill.addresses.experiments.enabled", false]],
+    set: [
+      ["extensions.formautofill.addresses.experiments.enabled", false],
+      ["extensions.formautofill.addresses.supportedCountries", "FR"],
+    ],
   });
 });
 
