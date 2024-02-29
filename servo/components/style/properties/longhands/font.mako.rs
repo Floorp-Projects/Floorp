@@ -305,10 +305,7 @@ ${helpers.predefined_type(
     "MathDepth",
     "0",
     engines="gecko",
-    gecko_pref="layout.css.math-depth.enabled",
-    has_effect_on_gecko_scrollbars=False,
     animation_value_type="none",
-    enabled_in="ua",
     spec="https://mathml-refresh.github.io/mathml-core/#the-math-script-level-property",
     affects="",
 )}
@@ -318,11 +315,8 @@ ${helpers.single_keyword(
     "normal compact",
     engines="gecko",
     gecko_enum_prefix="StyleMathStyle",
-    gecko_pref="layout.css.math-style.enabled",
     spec="https://mathml-refresh.github.io/mathml-core/#the-math-style-property",
-    has_effect_on_gecko_scrollbars=False,
     animation_value_type="none",
-    enabled_in="ua",
     needs_conversion=True,
     affects="layout",
 )}

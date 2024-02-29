@@ -13604,36 +13604,32 @@ if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.math-depth.enabled")) {
-  gCSSProperties["math-depth"] = {
-    domProp: "mathDepth",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["0"],
-    other_values: [
-      // auto-add cannot be tested here because it has no effect when the
-      // inherited math-style is equal to the default (normal).
-      "123",
-      "-123",
-      "add(123)",
-      "add(-123)",
-      "calc(1 + 2*3)",
-      "add(calc(4 - 2/3))",
-    ],
-    invalid_values: ["auto", "1,23", "1.23", "add(1,23)", "add(1.23)"],
-  };
-}
+gCSSProperties["math-depth"] = {
+  domProp: "mathDepth",
+  inherited: true,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["0"],
+  other_values: [
+    // auto-add cannot be tested here because it has no effect when the
+    // inherited math-style is equal to the default (normal).
+    "123",
+    "-123",
+    "add(123)",
+    "add(-123)",
+    "calc(1 + 2*3)",
+    "add(calc(4 - 2/3))",
+  ],
+  invalid_values: ["auto", "1,23", "1.23", "add(1,23)", "add(1.23)"],
+};
 
-if (IsCSSPropertyPrefEnabled("layout.css.math-style.enabled")) {
-  gCSSProperties["math-style"] = {
-    domProp: "mathStyle",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: ["compact"],
-    invalid_values: [],
-  };
-}
+gCSSProperties["math-style"] = {
+  domProp: "mathStyle",
+  inherited: true,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["normal"],
+  other_values: ["compact"],
+  invalid_values: [],
+};
 
 if (IsCSSPropertyPrefEnabled("layout.css.forced-color-adjust.enabled")) {
   gCSSProperties["forced-color-adjust"] = {
