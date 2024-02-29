@@ -464,6 +464,45 @@ bool ProxiedConnection::Process() {
   return !mFailed;
 }
 
+bool WaylandProxy::CheckWaylandDisplay(const char* aWaylandDisplay) {
+  struct sockaddr_un addr = {};
+  addr.sun_family = AF_UNIX;
+  strcpy(addr.sun_path, aWaylandDisplay);
+
+  int sc = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+  if (sc == -1) {
+    Error("CheckWaylandDisplay(): failed to create socket");
+    return false;
+  }
+
+  bool ret =
+      connect(sc, (const struct sockaddr*)&addr,
+              sizeof(struct sockaddr_un)) != -1;
+  if (!ret) {
+    switch (errno) {
+      case EAGAIN:
+      case EALREADY:
+      case ECONNREFUSED:
+      case EINPROGRESS:
+      case EINTR:
+      case EISCONN:
+      case ETIMEDOUT:
+        // We can recover from these errors and try again
+        ret = true;
+        break;
+      default:
+        ErrorPlain(
+          "CheckWaylandDisplay(): Failed to connect to Wayland display '%s' error: %s\n",
+          mWaylandDisplay, strerror(errno));
+        break;
+    }
+  }
+
+  close(sc);
+  return ret;
+}
+
+
 bool WaylandProxy::SetupWaylandDisplays() {
   char* waylandDisplay = getenv("WAYLAND_DISPLAY_COMPOSITOR");
   if (!waylandDisplay) {
@@ -496,8 +535,9 @@ bool WaylandProxy::SetupWaylandDisplays() {
     }
   }
 
-  // Save original Wayland display variable for potential reuse
-  setenv("WAYLAND_DISPLAY_COMPOSITOR", waylandDisplay, /* overwrite = */ true);
+  if (!CheckWaylandDisplay(mWaylandDisplay)) {
+    return false;
+  }
 
   int ret = snprintf(mWaylandProxy, sMaxDisplayNameLen,
                      "%s/wayland-proxy-%d", XDGRuntimeDir, getpid());
@@ -506,7 +546,11 @@ bool WaylandProxy::SetupWaylandDisplays() {
     return false;
   }
 
-  Info("SetupWaylandDisplays() Wayland '%s' proxy '%s'\n", mWaylandDisplay, mWaylandProxy);
+  // Save original Wayland display variable for potential reuse
+  setenv("WAYLAND_DISPLAY_COMPOSITOR", waylandDisplay, /* overwrite = */ true);
+
+  Info("SetupWaylandDisplays() Wayland '%s' proxy '%s'\n",
+       mWaylandDisplay, mWaylandProxy);
   return true;
 }
 
@@ -733,7 +777,9 @@ bool WaylandProxy::RunChildApplication(char* argv[]) {
   if (mApplicationPID == 0) {
     SetWaylandProxyDisplay();
     if (execv(argv[0], argv) == -1) {
-      ErrorPlain("WaylandProxy::RunChildApplication: failed to run %s error %s\n", argv[0], strerror(errno));
+      ErrorPlain(
+        "WaylandProxy::RunChildApplication: failed to run %s error %s\n",
+        argv[0], strerror(errno));
       exit(1);
     }
   }

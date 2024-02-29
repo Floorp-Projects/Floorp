@@ -39,6 +39,7 @@ class WaylandProxy {
 
   void SetWaylandProxyDisplay();
   static void* RunProxyThread(WaylandProxy* aProxy);
+  bool CheckWaylandDisplay(const char* aWaylandDisplay);
 
   bool SetupWaylandDisplays();
   bool StartProxyServer();
