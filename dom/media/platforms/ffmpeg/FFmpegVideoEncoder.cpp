@@ -504,67 +504,28 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
   mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
 #endif
   mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
-  // TODO (bug 1872871): Move the following extra settings to some helpers
-  // instead.
+
   if (mConfig.mUsage == MediaDataEncoder::Usage::Realtime) {
     mLib->av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0);
     // Explicitly ask encoder do not keep in flight at any one time for
     // lookahead purposes.
     mLib->av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0);
   }
-  // Apply SVC settings.
-  if (Maybe<VPXSVCSetting> svc =
-          GetVPXSVCSetting(mConfig.mScalabilityMode, mConfig.mBitrate)) {
-    // For libvpx.
-    if (mCodecName == "libvpx" || mCodecName == "libvpx-vp9") {
-      // Show a warning if mScalabilityMode mismatches mNumTemporalLayers
-      if (mConfig.mCodecSpecific) {
-        if (mConfig.mCodecSpecific->is<VP8Specific>() ||
-            mConfig.mCodecSpecific->is<VP9Specific>()) {
-          const uint8_t numTemporalLayers =
-              mConfig.mCodecSpecific->is<VP8Specific>()
-                  ? mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers
-                  : mConfig.mCodecSpecific->as<VP9Specific>()
-                        .mNumTemporalLayers;
-          if (numTemporalLayers != svc->mNumberLayers) {
-            FFMPEGV_LOG(
-                "Force using %zu layers defined in scalability mode instead of "
-                "the %u layers defined in VP8/9Specific",
-                svc->mNumberLayers, numTemporalLayers);
-          }
-        }
-      }
 
-      // Set ts_layering_mode.
-      nsPrintfCString parameters("ts_layering_mode=%u", svc->mLayeringMode);
-      // Set ts_target_bitrate.
-      parameters.Append(":ts_target_bitrate=");
-      for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
-        if (i > 0) {
-          parameters.Append(",");
-        }
-        parameters.AppendPrintf("%d", svc->mTargetBitrates[i]);
-      }
-      // TODO: Set ts_number_layers, ts_periodicity, ts_layer_id and
-      // ts_rate_decimator if they are different from the preset values in
-      // ts_layering_mode.
+  if (Maybe<SVCSettings> settings = GetSVCSettings()) {
+    SVCSettings s = settings.extract();
+    mLib->av_opt_set(mCodecContext->priv_data, s.mSettingKeyValue.first.get(),
+                     s.mSettingKeyValue.second.get(), 0);
 
-      // Set parameters into ts-parameters.
-      mLib->av_opt_set(mCodecContext->priv_data, "ts-parameters",
-                       parameters.get(), 0);
+    // FFmpegVideoEncoder is reset after Drain(), so mSVCInfo should be reset()
+    // before emplace().
+    mSVCInfo.reset();
+    mSVCInfo.emplace(std::move(s.mTemporalLayerIds));
 
-      // FFmpegVideoEncoder would be reset after Drain(), so mSVCInfo should be
-      // reset() before emplace().
-      mSVCInfo.reset();
-      mSVCInfo.emplace(std::move(svc->mLayerIds));
-
-      // TODO: layer settings should be changed dynamically when the frame's
-      // color space changed.
-    } else {
-      FFMPEGV_LOG("SVC setting is not implemented for %s codec",
-                  mCodecName.get());
-    }
+    // TODO: layer settings should be changed dynamically when the frame's
+    // color space changed.
   }
+
   // Apply codec specific settings.
   nsAutoCString codecSpecificLog;
   if (mConfig.mCodecSpecific) {
@@ -1150,6 +1111,64 @@ void FFmpegVideoEncoder<LIBAV_VER>::ForceEnablingFFmpegDebugLogs() {
     mLib->av_log_set_level(AV_LOG_DEBUG);
   }
 #endif  // DEBUG
+}
+
+Maybe<FFmpegVideoEncoder<LIBAV_VER>::SVCSettings>
+FFmpegVideoEncoder<LIBAV_VER>::GetSVCSettings() {
+  MOZ_ASSERT(!mCodecName.IsEmpty());
+
+  // TODO: Add support for AV1 and H264.
+  if (mCodecName != "libvpx" && mCodecName != "libvpx-vp9") {
+    FFMPEGV_LOG("SVC setting is not implemented for %s codec",
+                mCodecName.get());
+    return Nothing();
+  }
+
+  Maybe<VPXSVCSetting> svc =
+      GetVPXSVCSetting(mConfig.mScalabilityMode, mConfig.mBitrate);
+  if (!svc) {
+    FFMPEGV_LOG("No SVC settings obtained. Skip");
+    return Nothing();
+  }
+
+  // Check if the number of temporal layers in codec specific settings matches
+  // the number of layers for the given scalability mode.
+
+  auto GetNumTemporalLayers = [&]() -> uint8_t {
+    uint8_t layers = 0;
+    if (mConfig.mCodecSpecific) {
+      if (mConfig.mCodecSpecific->is<VP8Specific>()) {
+        layers = mConfig.mCodecSpecific->as<VP8Specific>().mNumTemporalLayers;
+        MOZ_ASSERT(layers > 0);
+      } else if (mConfig.mCodecSpecific->is<VP9Specific>()) {
+        layers = mConfig.mCodecSpecific->as<VP9Specific>().mNumTemporalLayers;
+        MOZ_ASSERT(layers > 0);
+      }
+    }
+    return layers;
+  };
+
+  DebugOnly<uint8_t> numTemporalLayers = GetNumTemporalLayers();
+  MOZ_ASSERT_IF(numTemporalLayers > 0, numTemporalLayers == svc->mNumberLayers);
+
+  // Form an SVC setting string for libvpx.
+
+  nsPrintfCString parameters("ts_layering_mode=%u", svc->mLayeringMode);
+  parameters.Append(":ts_target_bitrate=");
+  for (size_t i = 0; i < svc->mTargetBitrates.Length(); ++i) {
+    if (i > 0) {
+      parameters.Append(",");
+    }
+    parameters.AppendPrintf("%d", svc->mTargetBitrates[i]);
+  }
+
+  // TODO: Set ts_number_layers, ts_periodicity, ts_layer_id and
+  // ts_rate_decimator if they are different from the preset values in
+  // ts_layering_mode.
+
+  return Some(
+      SVCSettings{std::move(svc->mLayerIds),
+                  std::make_pair("ts-parameters"_ns, std::move(parameters))});
 }
 
 }  // namespace mozilla
