@@ -6,11 +6,11 @@
 #![allow(non_snake_case)]
 
 extern crate byteorder;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 #[macro_use]
 extern crate core_foundation;
 extern crate env_logger;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 #[macro_use]
 extern crate lazy_static;
 #[cfg(target_os = "macos")]
@@ -30,12 +30,12 @@ use std::ffi::CStr;
 use std::sync::Mutex;
 use std::thread;
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod backend_macos;
 #[cfg(target_os = "windows")]
 mod backend_windows;
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 use crate::backend_macos::Backend;
 #[cfg(target_os = "windows")]
 use crate::backend_windows::Backend;
@@ -143,7 +143,7 @@ extern "C" fn C_Initialize(pInitArgs: CK_VOID_PTR) -> CK_RV {
         mechanisms,
     }) {
         Some(_unexpected_previous_module_state) => {
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
             {
                 log_with_thread_id!(info, "C_Initialize: module state previously set (this is expected on macOS - replacing it)");
             }
@@ -1233,5 +1233,5 @@ pub unsafe extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_
     CKR_OK
 }
 
-#[cfg_attr(target_os = "macos", link(name = "Security", kind = "framework"))]
+#[cfg_attr(any(target_os = "macos", target_os = "ios"), link(name = "Security", kind = "framework"))]
 extern "C" {}
