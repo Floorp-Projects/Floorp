@@ -19,6 +19,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PdfJsTelemetry: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SetClipboardSearchString: "resource://gre/modules/Finder.sys.mjs",
 });
@@ -69,6 +70,8 @@ export class PdfjsParent extends JSWindowActorParent {
         return this._saveURL(aMsg);
       case "PDFJS:Parent:recordExposure":
         return this._recordExposure();
+      case "PDFJS:Parent:reportTelemetry":
+        return this._reportTelemetry(aMsg);
     }
     return undefined;
   }
@@ -83,6 +86,10 @@ export class PdfjsParent extends JSWindowActorParent {
 
   _recordExposure() {
     lazy.NimbusFeatures.pdfjs.recordExposureEvent({ once: true });
+  }
+
+  _reportTelemetry(aMsg) {
+    lazy.PdfJsTelemetry.report(aMsg.data);
   }
 
   _saveURL(aMsg) {
