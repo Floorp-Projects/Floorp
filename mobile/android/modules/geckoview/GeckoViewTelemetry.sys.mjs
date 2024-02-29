@@ -33,12 +33,16 @@ export class GleanStopwatch {
   }
 
   finish() {
-    this._metric.stopAndAccumulate(this._timerId);
-    this._timerId = null;
+    if (this.isRunning()) {
+      this._metric.stopAndAccumulate(this._timerId);
+      this._timerId = null;
+    }
   }
 
   cancel() {
-    this._metric.cancel(this._timerId);
-    this._timerId = null;
+    if (this.isRunning()) {
+      this._metric.cancel(this._timerId);
+      this._timerId = null;
+    }
   }
 }
