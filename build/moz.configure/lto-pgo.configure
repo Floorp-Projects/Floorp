@@ -319,7 +319,6 @@ def lto(
 
     if (
         target.kernel == "Darwin"
-        and target.os == "OSX"
         and "cross" in values
         and select_linker.KIND == "ld64"
         and not ld64_known_good
@@ -395,7 +394,7 @@ def lto(
     # (For hot functions, PGO will put a multiplier on this limit.)
     if target.os == "WINNT":
         ldflags.append("-mllvm:-import-instr-limit=10")
-    elif target.os == "OSX":
+    elif target.kernel == "Darwin":
         ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
     elif c_compiler.type == "clang":
         ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
@@ -409,7 +408,7 @@ def lto(
                 ldflags.append("-opt:ltonewpassmanager")
             if c_compiler.version >= "12.0.0":
                 ldflags.append("-mllvm:-import-hot-multiplier=30")
-        elif target.os == "OSX":
+        elif target.kernel == "Darwin":
             ldflags.append("-Wl,-mllvm,-import-hot-multiplier=30")
         else:
             if c_compiler.version < "13.0.0":

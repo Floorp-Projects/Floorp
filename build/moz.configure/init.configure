@@ -525,6 +525,12 @@ def split_triplet(triplet, allow_wasi=False):
     elif os.startswith("darwin"):
         canonical_kernel = "Darwin"
         canonical_os = "OSX"
+    elif os.startswith("ios"):
+        canonical_kernel = "Darwin"
+        canonical_os = "iOS"
+        # old-configure does plenty of tests against $target and $target_os
+        # and expects darwin for iOS, so make it happy.
+        sub_configure_alias = sub_configure_alias[: -len(os)] + "darwin"
     elif os.startswith("dragonfly"):
         canonical_os = canonical_kernel = "DragonFly"
     elif os.startswith("freebsd"):
@@ -603,7 +609,7 @@ def split_triplet(triplet, allow_wasi=False):
     # prefixes. We need to be more specific about the LLVM target on Mac
     # so cross-language LTO will work correctly.
 
-    if os.startswith("darwin"):
+    if os.startswith(("darwin", "ios")):
         toolchain = "%s-apple-%s" % (cpu, os)
     else:
         toolchain = "%s-%s" % (cpu, os)
@@ -900,6 +906,15 @@ def host_is_osx(host):
 
 
 set_define("XP_MACOSX", target_is_osx)
+
+
+@depends(target)
+def target_is_ios(target):
+    if target.kernel == "Darwin" and target.os == "iOS":
+        return True
+
+
+set_define("XP_IOS", target_is_ios)
 
 
 @depends(target)

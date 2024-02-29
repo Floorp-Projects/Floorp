@@ -60,7 +60,7 @@ set_config("MOZ_CONFIGURE_OPTIONS", all_configure_options)
 
 @depends(target)
 def fold_libs(target):
-    return target.os in ("WINNT", "OSX", "Android")
+    return target.os in ("WINNT", "OSX", "iOS", "Android")
 
 
 set_config("MOZ_FOLD_LIBS", fold_libs)
@@ -207,6 +207,8 @@ def audio_backends_default(target):
         return ("sndio",)
     elif target.os == "OSX":
         return ("audiounit",)
+    elif target.os == "iOS":
+        return None
     elif target.os == "NetBSD":
         return ("sunaudio",)
     elif target.os == "SunOS":
@@ -281,7 +283,7 @@ def imply_opensl(values, target):
 @depends("--enable-audio-backends", target)
 def imply_oss(values, target):
     if any("oss" in value for value in values) and (
-        target.os == "Android" or target.os == "OSX" or target.os == "WINNT"
+        target.os in ("Android", "OSX", "iOS", "WINNT")
     ):
         die("Cannot enable OSS on %s", target.os)
     return any("oss" in value for value in values) or None
@@ -290,7 +292,7 @@ def imply_oss(values, target):
 @depends("--enable-audio-backends", target)
 def imply_pulseaudio(values, target):
     if any("pulseaudio" in value for value in values) and (
-        target.os == "Android" or target.os == "OSX" or target.os == "WINNT"
+        target.os in ("Android", "OSX", "iOS", "WINNT")
     ):
         die("Cannot enable PulseAudio on %s", target.os)
     return any("pulseaudio" in value for value in values) or None
@@ -299,7 +301,7 @@ def imply_pulseaudio(values, target):
 @depends("--enable-audio-backends", target)
 def imply_sndio(values, target):
     if any("sndio" in value for value in values) and (
-        target.os == "Android" or target.os == "OSX" or target.os == "WINNT"
+        target.os in ("Android", "OSX", "iOS", "WINNT")
     ):
         die("Cannot enable sndio on %s", target.os)
     return any("sndio" in value for value in values) or None
@@ -435,6 +437,8 @@ def toolkit_choices(target):
         return ("cairo-windows",)
     elif target.os == "OSX":
         return ("cairo-cocoa",)
+    elif target.os == "iOS":
+        return ("cairo-uikit",)
     elif target.os == "Android":
         return ("cairo-android",)
     else:
@@ -1072,9 +1076,19 @@ def app_system_headers(value):
 set_config("MOZ_APP_SYSTEM_HEADERS", app_system_headers)
 set_define("MOZ_APP_SYSTEM_HEADERS", app_system_headers)
 
+
 # Printing
 # ==============================================================
-option("--disable-printing", help="Disable printing support")
+@depends(target)
+def printing_default(target):
+    return target.os != "iOS"
+
+
+option(
+    "--disable-printing",
+    default=printing_default,
+    help="{Enable|Disable} printing support",
+)
 
 
 @depends("--disable-printing")
@@ -2514,11 +2528,11 @@ def check_nasm_version(nasm_version, versioned):
 @depends(target, when=check_nasm_version)
 def nasm_asflags(target):
     asflags = {
-        ("OSX", "x86"): ["-f", "macho32"],
-        ("OSX", "x86_64"): ["-f", "macho64"],
+        ("Darwin", "x86"): ["-f", "macho32"],
+        ("Darwin", "x86_64"): ["-f", "macho64"],
         ("WINNT", "x86"): ["-f", "win32"],
         ("WINNT", "x86_64"): ["-f", "win64"],
-    }.get((target.os, target.cpu), None)
+    }.get((target.kernel, target.cpu), None)
     if asflags is None:
         # We're assuming every x86 platform we support that's
         # not Windows or Mac is ELF.
@@ -3086,7 +3100,7 @@ with only_when(compile_environment):
 # ==============================================================
 @depends(target, developer_options, artifact_builds)
 def crashreporter_default(target, developer_options, artifacts):
-    if target.kernel in ("WINNT", "Darwin"):
+    if target.os in ("WINNT", "OSX"):
         return True
     if target.kernel == "Linux" and target.cpu in ("x86", "x86_64", "arm", "aarch64"):
         # The crash reporter prevents crash stacktraces to be logged in the

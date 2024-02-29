@@ -71,6 +71,24 @@ with only_when(target_is_osx):
         return value[0]
 
 
+@imports("plistlib")
+@imports(_from="__builtin__", _import="open")
+@imports(_from="__builtin__", _import="Exception")
+def get_sdk_version(sdk):
+    with open(os.path.join(sdk, "SDKSettings.plist"), "rb") as plist:
+        obj = plistlib.load(plist)
+    if not obj:
+        raise Exception(
+            "Error parsing SDKSettings.plist in the SDK directory: %s" % sdk
+        )
+    if "Version" not in obj:
+        raise Exception(
+            "Error finding Version information in SDKSettings.plist from the SDK: %s"
+            % sdk
+        )
+    return Version(obj["Version"])
+
+
 with only_when(host_is_osx | target_is_osx):
     # MacOS SDK
     # =========
@@ -81,31 +99,14 @@ with only_when(host_is_osx | target_is_osx):
         help="Location of platform SDK to use",
     )
 
-    @imports("plistlib")
-    @imports(_from="__builtin__", _import="open")
-    @imports(_from="__builtin__", _import="Exception")
-    def get_sdk_version(sdk):
-        with open(os.path.join(sdk, "SDKSettings.plist"), "rb") as plist:
-            obj = plistlib.load(plist)
-        if not obj:
-            raise Exception(
-                "Error parsing SDKSettings.plist in the SDK directory: %s" % sdk
-            )
-        if "Version" not in obj:
-            raise Exception(
-                "Error finding Version information in SDKSettings.plist from the SDK: %s"
-                % sdk
-            )
-        return Version(obj["Version"])
-
-    def sdk_min_version():
+    def mac_sdk_min_version():
         return "14.2"
 
     @depends(
         "--with-macos-sdk",
         host,
         bootstrap_path(
-            "MacOSX{}.sdk".format(sdk_min_version()),
+            "MacOSX{}.sdk".format(mac_sdk_min_version()),
             when=depends("--with-macos-sdk")(lambda x: not x),
             allow_failure=True,
         ),
@@ -155,10 +156,10 @@ with only_when(host_is_osx | target_is_osx):
                 "tools are selected during the Xcode/Developer Tools installation."
                 % sdk
             )
-        if version < Version(sdk_min_version()):
+        if version < Version(mac_sdk_min_version()):
             die(
                 'SDK version "%s" is too old. Please upgrade to at least %s. Try '
-                "updating your system Xcode." % (version, sdk_min_version())
+                "updating your system Xcode." % (version, mac_sdk_min_version())
             )
         return sdk
 
@@ -193,6 +194,90 @@ with only_when(target_is_osx):
         return os.path.join(sdk or "/", "System/Library/PrivateFrameworks")
 
     set_config("MACOS_PRIVATE_FRAMEWORKS_DIR", macos_private_frameworks)
+
+
+with only_when(target_is_ios):
+    # iOS deployment target version
+    # ==============================================================
+    # This needs to happen before any compilation test is done.
+
+    option(
+        "--enable-ios-target",
+        env="IPHONEOS_DEPLOYMENT_TARGET",
+        nargs=1,
+        default="16.4",
+        help="Set the minimum iOS version needed at runtime",
+    )
+
+    @depends_if("--enable-ios-target")
+    def ios_target(value):
+        return value[0]
+
+
+with only_when(target_is_ios):
+    # MacOS SDK
+    # =========
+    option(
+        "--with-ios-sdk",
+        env="IPHONEOS_SDK_DIR",
+        nargs=1,
+        help="Location of platform SDK to use",
+    )
+
+    def ios_sdk_min_version():
+        return "16.4"
+
+    @depends("--with-ios-sdk", host)
+    @imports(_from="__builtin__", _import="Exception")
+    @imports(_from="os.path", _import="isdir")
+    @imports(_from="os", _import="listdir")
+    def ios_sdk(sdk, host):
+        if sdk:
+            sdk = sdk[0]
+            try:
+                version = get_sdk_version(sdk)
+            except Exception as e:
+                die(e)
+        elif host.os == "OSX":
+            sdk = check_cmd_output(
+                "xcrun", "--show-sdk-path", "--sdk", "iphoneos", onerror=lambda: ""
+            ).rstrip()
+            if not sdk:
+                die(
+                    "Could not find the iOS SDK. Please use --with-ios-sdk to give "
+                    "the path to a iOS SDK."
+                )
+            # Scan the parent directory xcrun returns for the most recent SDK.
+            sdk_dir = os.path.dirname(sdk)
+            versions = []
+            for d in listdir(sdk_dir):
+                if d.lower().startswith("iphoneos"):
+                    try:
+                        sdk = os.path.join(sdk_dir, d)
+                        versions.append((get_sdk_version(sdk), sdk))
+                    except Exception:
+                        pass
+            version, sdk = max(versions)
+        else:
+            die(
+                "Need an iOS SDK when targeting iOS. Please use --with-ios-sdk "
+                "to give the path to a iOS SDK."
+            )
+
+        if not isdir(sdk):
+            die(
+                "SDK not found in %s. When using --with-ios-sdk, you must specify a "
+                "valid SDK. SDKs are installed when the optional cross-development "
+                "tools are selected during the Xcode installation." % sdk
+            )
+        if version < Version(ios_sdk_min_version()):
+            die(
+                'SDK version "%s" is too old. Please upgrade to at least %s. Try '
+                "updating your system Xcode." % (version, ios_sdk_min_version())
+            )
+        return sdk
+
+    set_config("IPHONEOS_SDK_DIR", ios_sdk)
 
 
 # GC rooting and hazard analysis.
@@ -1065,18 +1150,21 @@ def sysroot(host_or_target, target_sysroot=None):
         sysroot_input,
         host_or_target,
         macos_sdk,
+        ios_sdk,
         bootstrap_path(
             depends(host_or_target)(lambda t: "sysroot-{}".format(t.toolchain)),
             when=bootstrap_sysroot,
         ),
     )
     @imports("os")
-    def sysroot(sysroot_input, host_or_target, macos_sdk, path):
+    def sysroot(sysroot_input, host_or_target, macos_sdk, ios_sdk, path):
         version = None
         if sysroot_input:
             path = sysroot_input[0]
-        elif host_or_target.kernel == "Darwin" and macos_sdk:
+        elif host_or_target.os == "OSX" and macos_sdk:
             path = macos_sdk
+        elif host_or_target.os == "iOS" and ios_sdk:
+            path = ios_sdk
         if path:
             # Find the version of libstdc++ headears in the sysroot
             include = os.path.join(path, "usr/include/c++")
@@ -1229,6 +1317,7 @@ def compiler(
         host_or_target,
         sysroot,
         macos_target,
+        ios_target,
         android_version,
         vc_compiler_version,
         multiarch_dir,
@@ -1246,6 +1335,7 @@ def compiler(
         host_or_target,
         sysroot,
         macos_target,
+        ios_target,
         android_version,
         vc_compiler_version,
         multiarch_dir,
@@ -1276,6 +1366,8 @@ def compiler(
 
         if host_or_target.os == "OSX" and macos_target:
             flags.append("-mmacosx-version-min=%s" % macos_target)
+        if host_or_target.os == "iOS" and ios_target:
+            flags.append("-mios-version-min=%s" % ios_target)
 
         # When not given an explicit compatibility version, clang-cl tries
         # to get one from MSVC, which might not even be the one used by the

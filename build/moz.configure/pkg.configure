@@ -16,7 +16,7 @@ pkg_config = check_prog(
     bootstrap=depends(when=target_sysroot.bootstrapped)(lambda: "pkgconf"),
     allow_missing=True,
     when=compile_environment
-    & depends(target.os)(lambda os: os not in ("WINNT", "OSX", "Android")),
+    & depends(target.os)(lambda os: os not in ("WINNT", "OSX", "iOS", "Android")),
 )
 
 

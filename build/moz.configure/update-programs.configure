@@ -7,9 +7,9 @@
 
 # Updater
 # ==============================================================
-@depends(build_project)
-def updater_default(build_project):
-    return build_project != "mobile/android"
+@depends(build_project, target)
+def updater_default(build_project, target):
+    return build_project != "mobile/android" and target.os != "iOS"
 
 
 option(

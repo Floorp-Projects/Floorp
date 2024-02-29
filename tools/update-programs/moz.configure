@@ -11,7 +11,7 @@ def js_standalone():
 
 @depends(target)
 def fold_libs(target):
-    return target.os in ("WINNT", "OSX", "Android")
+    return target.os in ("WINNT", "OSX", "iOS", "Android")
 
 
 set_config("MOZ_FOLD_LIBS", fold_libs)
