@@ -657,3 +657,14 @@ windows-rs:
         artifact-name: windows-rs.tar.zst
         strip-components: 1
         add-prefix: windows-rs/
+
+libxml2:
+    description: Source of the libxml2 library
+    fetch:
+        type: static-url
+        url: https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.12/libxml2-v2.9.12.tar.gz
+        sha256: 98bfa7a9a5e2a75638422050740448ee9f02bf4dc2075c9822d7747d5ff9e617
+        size: 5233674
+        artifact-name: libxml2.tar.zst
+        strip-components: 1
+        add-prefix: libxml2/
