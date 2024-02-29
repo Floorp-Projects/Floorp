@@ -9106,6 +9106,14 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
     return nullptr;
   }
 
+  if (NS_AUUF_OR_WARN_IF(
+          principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
+          QuotaManager::IsOriginInternal(
+              principalInfo.get_ContentPrincipalInfo().originNoSuffix()) &&
+          metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
+    return nullptr;
+  }
+
   Maybe<ContentParentId> contentParentId;
 
   uint64_t childID = BackgroundParent::GetChildID(Manager());
@@ -14612,6 +14620,12 @@ nsresult FactoryOp::Open() {
   } else if (principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
     const ContentPrincipalInfo& contentPrincipalInfo =
         principalInfo.get_ContentPrincipalInfo();
+
+    MOZ_ASSERT_IF(
+        QuotaManager::IsOriginInternal(contentPrincipalInfo.originNoSuffix()),
+        mCommonParams.metadata().persistenceType() ==
+            PERSISTENCE_TYPE_PERSISTENT);
+
     if (contentPrincipalInfo.attrs().mPrivateBrowsingId != 0) {
       if (StaticPrefs::dom_indexedDB_privateBrowsing_enabled()) {
         // Explicitly disallow moz-extension urls from using the encrypted
@@ -14645,8 +14659,6 @@ nsresult FactoryOp::Open() {
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
-
-    MOZ_ASSERT(QuotaManager::IsOriginInternal(mOriginMetadata.mOrigin));
 
     mEnforcingQuota = false;
   } else {
