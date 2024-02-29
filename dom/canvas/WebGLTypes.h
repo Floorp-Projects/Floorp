@@ -854,47 +854,6 @@ struct VertAttribPointerCalculated final {
 
 }  // namespace webgl
 
-// TODO: s/RawBuffer/Span/
-template <typename T = uint8_t>
-class RawBuffer final {
-  const T* mBegin = nullptr;
-  size_t mLen = 0;
-
- public:
-  using ElementType = T;
-
-  explicit RawBuffer(const Range<const T>& data)
-      : mBegin(data.begin().get()), mLen(data.length()) {
-    if (mLen) {
-      MOZ_ASSERT(mBegin);
-    }
-  }
-
-  ~RawBuffer() = default;
-
-  Range<const T> Data() const { return {begin(), mLen}; }
-  const auto& begin() const {
-    if (mLen) {
-      MOZ_RELEASE_ASSERT(mBegin);
-    }
-    return mBegin;
-  }
-  const auto& size() const { return mLen; }
-
-  void Shrink(const size_t newLen) {
-    if (mLen <= newLen) return;
-    mLen = newLen;
-  }
-
-  RawBuffer() = default;
-
-  RawBuffer(const RawBuffer&) = delete;
-  RawBuffer& operator=(const RawBuffer&) = delete;
-
-  RawBuffer(RawBuffer&&) = default;
-  RawBuffer& operator=(RawBuffer&&) = default;
-};
-
 template <class T>
 inline Range<T> ShmemRange(const mozilla::ipc::Shmem& shmem) {
   return {shmem.get<T>(), shmem.Size<T>()};
@@ -1135,11 +1094,6 @@ inline Range<const T> MakeRange(const dom::Sequence<T>& seq) {
   return {seq.Elements(), seq.Length()};
 }
 
-template <typename T>
-inline Range<const T> MakeRange(const RawBuffer<T>& from) {
-  return from.Data();
-}
-
 // -
 
 constexpr auto kUniversalAlignment = alignof(std::max_align_t);
@@ -1156,13 +1110,6 @@ inline size_t AlignmentOffset(const size_t alignment, const T posOrPtr) {
 template <typename T>
 inline size_t ByteSize(const Range<T>& range) {
   return range.length() * sizeof(T);
-}
-
-// -
-
-template <typename T>
-RawBuffer<T> RawBufferView(const Range<T>& range) {
-  return RawBuffer<T>{range};
 }
 
 // -
