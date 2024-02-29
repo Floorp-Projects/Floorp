@@ -106,7 +106,7 @@ static bool ValidateFramebufferAttachmentEnum(WebGLContext* webgl,
 }
 
 bool WebGLContext::ValidateInvalidateFramebuffer(
-    GLenum target, const Range<const GLenum>& attachments,
+    GLenum target, const Span<const GLenum>& attachments,
     std::vector<GLenum>* const scopedVector,
     GLsizei* const out_glNumAttachments,
     const GLenum** const out_glAttachments) {
@@ -139,8 +139,8 @@ bool WebGLContext::ValidateInvalidateFramebuffer(
   }
   DoBindFB(fb, target);
 
-  *out_glNumAttachments = attachments.length();
-  *out_glAttachments = attachments.begin().get();
+  *out_glNumAttachments = AutoAssertCast(attachments.size());
+  *out_glAttachments = attachments.data();
 
   if (fb) {
     for (const auto& attachment : attachments) {
@@ -153,7 +153,7 @@ bool WebGLContext::ValidateInvalidateFramebuffer(
 
     if (!isDefaultFB) {
       MOZ_ASSERT(scopedVector->empty());
-      scopedVector->reserve(attachments.length());
+      scopedVector->reserve(attachments.size());
       for (const auto& attachment : attachments) {
         switch (attachment) {
           case LOCAL_GL_COLOR:
@@ -172,7 +172,7 @@ bool WebGLContext::ValidateInvalidateFramebuffer(
             MOZ_CRASH();
         }
       }
-      *out_glNumAttachments = scopedVector->size();
+      *out_glNumAttachments = AutoAssertCast(scopedVector->size());
       *out_glAttachments = scopedVector->data();
     }
   }
@@ -183,7 +183,7 @@ bool WebGLContext::ValidateInvalidateFramebuffer(
 }
 
 void WebGL2Context::InvalidateFramebuffer(
-    GLenum target, const Range<const GLenum>& attachments) {
+    GLenum target, const Span<const GLenum>& attachments) {
   const FuncScope funcScope(*this, "invalidateFramebuffer");
 
   std::vector<GLenum> scopedVector;
@@ -210,7 +210,7 @@ void WebGL2Context::InvalidateFramebuffer(
 }
 
 void WebGL2Context::InvalidateSubFramebuffer(
-    GLenum target, const Range<const GLenum>& attachments, GLint x, GLint y,
+    GLenum target, const Span<const GLenum>& attachments, GLint x, GLint y,
     GLsizei width, GLsizei height) {
   const FuncScope funcScope(*this, "invalidateSubFramebuffer");
 

@@ -929,11 +929,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void EnqueueErrorImpl(GLenum errorOrZero, const nsACString&) const;
 
  public:
-  Maybe<Range<uint8_t>> ValidateArrayBufferView(const Span<uint8_t>& bytes,
-                                                size_t elemSize,
-                                                GLuint elemOffset,
-                                                GLuint elemCountOverride,
-                                                const GLenum errorEnum) const;
+  Maybe<Span<uint8_t>> ValidateArrayBufferView(const Span<uint8_t>& bytes,
+                                               size_t elemSize,
+                                               GLuint elemOffset,
+                                               GLuint elemCountOverride,
+                                               const GLenum errorEnum) const;
 
  protected:
   template <typename T>

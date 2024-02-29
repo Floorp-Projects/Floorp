@@ -47,9 +47,9 @@ class WebGL2Context final : public WebGLContext {
                        GLbitfield mask, GLenum filter);
 
   void InvalidateFramebuffer(GLenum target,
-                             const Range<const GLenum>& attachments);
+                             const Span<const GLenum>& attachments);
   void InvalidateSubFramebuffer(GLenum target,
-                                const Range<const GLenum>& attachments, GLint x,
+                                const Span<const GLenum>& attachments, GLint x,
                                 GLint y, GLsizei width, GLsizei height);
   void ReadBuffer(GLenum mode);
 
