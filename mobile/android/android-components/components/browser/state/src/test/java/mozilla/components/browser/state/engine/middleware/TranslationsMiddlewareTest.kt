@@ -11,6 +11,7 @@ import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.TranslationsBrowserState
 import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -65,7 +66,13 @@ class TranslationsMiddlewareTest {
     private val store = spy(BrowserStore(middleware = listOf(translationsMiddleware), initialState = state))
     private val context = mock<MiddlewareContext<BrowserState, BrowserAction>>()
 
+    // Mock Variables
     private val mockFrom = Language(code = "es", localizedDisplayName = "Spanish")
+    private val mockTo = Language(code = "en", localizedDisplayName = "English")
+    private val mockSupportedLanguages = TranslationSupport(
+        fromLanguages = listOf(mockFrom, mockTo),
+        toLanguages = listOf(mockFrom, mockTo),
+    )
     private val mockIsDownloaded = true
     private val mockSize: Long = 1234
     private val mockLanguage = Language(mockFrom.code, mockFrom.localizedDisplayName)
@@ -86,21 +93,21 @@ class TranslationsMiddlewareTest {
     }
 
     /**
-     * Use with tests that need a mock translations engine state.
+     * Use with tests that need a mock translations engine state and supported languages.
      */
     private fun setupMockState() {
-        val mockFrom = "es"
-        val mockTo = "en"
         val mockDetectedLanguages = DetectedLanguages(
-            documentLangTag = mockFrom,
+            documentLangTag = mockFrom.code,
             supportedDocumentLang = true,
-            userPreferredLangTag = mockTo,
+            userPreferredLangTag = mockTo.code,
         )
-        val mockState = TranslationsState(
+        val mockSessionState = TranslationsState(
             translationEngineState = TranslationEngineState(mockDetectedLanguages),
         )
+        whenever(store.state.findTab(tab.id)?.translationsState).thenReturn(mockSessionState)
 
-        whenever(store.state.findTab(tab.id)?.translationsState).thenReturn(mockState)
+        val mockBrowserState = TranslationsBrowserState(isEngineSupported = true, supportedLanguages = mockSupportedLanguages)
+        whenever(store.state.translationEngine).thenReturn(mockBrowserState)
     }
 
     @Test
@@ -287,6 +294,46 @@ class TranslationsMiddlewareTest {
         // Verify language query was never called
         verify(engine, never()).getSupportedTranslationLanguages(onSuccess = any(), onError = any())
         waitForIdle()
+    }
+
+    @Test
+    fun `WHEN TranslateExpectedAction is dispatched THEN FetchTranslationDownloadSizeAction is also dispatched`() = runTest {
+        // Set up the state of defaults on the engine.
+        setupMockState()
+
+        // Action
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.TranslateExpectedAction(tab.id))
+
+        waitForIdle()
+
+        // Verifying at least once
+        verify(store).dispatch(
+            TranslationsAction.FetchTranslationDownloadSizeAction(
+                tabId = tab.id,
+                fromLanguage = mockFrom,
+                toLanguage = mockTo,
+            ),
+        )
+
+        waitForIdle()
+    }
+
+    @Test
+    fun `WHEN TranslateExpectedAction is dispatched AND the defaults are NOT available THEN FetchTranslationDownloadSizeAction is NOT dispatched`() = runTest {
+        // Note, no state is set on the engine, so no default values are available.
+        // Action
+        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.TranslateExpectedAction(tab.id))
+
+        waitForIdle()
+
+        // Verifying no dispatch
+        verify(store, never()).dispatch(
+            TranslationsAction.FetchTranslationDownloadSizeAction(
+                tabId = tab.id,
+                fromLanguage = mockFrom,
+                toLanguage = mockTo,
+            ),
+        )
 
         // Verify language query was never called
         verify(engine, never()).getTranslationsModelDownloadStates(onSuccess = any(), onError = any())
