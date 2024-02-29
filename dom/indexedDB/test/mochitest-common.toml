@@ -282,7 +282,7 @@ skip-if = ["true"] # disabled for the moment
 ["test_names_sorted.html"]
 skip-if = [
   "xorigin && !debug", # Hangs
-  "os == 'linux' && bits == 64 && !debug", # Bug 1602927
+  "os == 'linux' && os_version == '18.04' && bits == 64 && !debug", # Bug 1602927
 ]
 
 ["test_objectCursors.html"]
@@ -382,7 +382,9 @@ skip-if = [
 
 ["test_upgrade_add_index.html"]
 skip-if = [
-  "!debug && bits == 64 && (os == 'linux' || os == 'mac')",
+  "os == 'linux' && os_version == '18.04' && bits == 64 && !debug",
+  "apple_silicon && !debug",
+  "apple_catalina && !debug",
   "os == 'win'", #Bug 1637715
 ]
 scheme = "https"
