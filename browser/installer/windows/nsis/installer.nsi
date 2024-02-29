@@ -474,22 +474,22 @@ Section "-Application" APP_IDX
   ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                  "${AppRegName} URL" "true"
 
-  ; Create protocol registry keys for dual browser extensions - only if not already set
+  ; Create protocol registry keys for FirefoxBridge extensions - only if not already set
   SetShellVarContext current  ; Set SHCTX to HKCU
-  !define FIREFOX_PROTOCOL "firefox"
+  !define FIREFOX_PROTOCOL "firefox-bridge"
   ClearErrors
   ReadRegStr $0 SHCTX "Software\Classes\${FIREFOX_PROTOCOL}" ""
   ${If} $0 == ""
     ${AddDisabledDDEHandlerValues} "${FIREFOX_PROTOCOL}" "$2" "$8,${IDI_APPICON_ZERO_BASED}" \
-                                   "Firefox Browsing Protocol" "true"
+                                   "Firefox Bridge Protocol" "true"
   ${EndIf}
 
-  !define FIREFOX_PRIVATE_PROTOCOL "firefox-private"
+  !define FIREFOX_PRIVATE_PROTOCOL "firefox-private-bridge"
   ClearErrors
   ReadRegStr $0 SHCTX "Software\Classes\${FIREFOX_PRIVATE_PROTOCOL}" ""
   ${If} $0 == ""
     ${AddDisabledDDEHandlerValues} "${FIREFOX_PRIVATE_PROTOCOL}" "$\"$8$\" -osint -private-window $\"%1$\"" \
-                                   "$8,${IDI_PBICON_PB_EXE_ZERO_BASED}" "Firefox Private Browsing Protocol" "true"
+                                   "$8,${IDI_PBICON_PB_EXE_ZERO_BASED}" "Firefox Private Bridge Protocol" "true"
   ${EndIf}
   SetShellVarContext all  ; Set SHCTX to HKLM
 
@@ -793,6 +793,15 @@ Section "-InstallEndCleanup"
 
   ; Refresh desktop icons
   ${RefreshShellIcons}
+
+  ; Remove old unsupported firefox and firefox-private extension protocol
+  ; handlers which were added in FX122 for the dual browser extension, since
+  ; renamed to FirefoxBridge
+  Push $1
+  ${GetLongPath} "$INSTDIR\${FileMainEXE}" $1
+  ${DeleteProtocolRegistryIfSetToInstallation} "$1" "firefox"
+  ${DeleteProtocolRegistryIfSetToInstallation} "$1" "firefox-private"
+  Pop $1
 
   ${InstallEndCleanupCommon}
 

@@ -90,7 +90,7 @@ function resolveURIInternal(
     if (aArgument.startsWith(protocolWithColon)) {
       if (!validateFirefoxProtocol(aCmdLine, launchedWithArg_osint)) {
         throw new Error(
-          "Invalid use of Firefox and Firefox-private protocols."
+          "Invalid use of Firefox-bridge and Firefox-private-bridge protocols."
         );
       }
       aArgument = aArgument.substring(protocolWithColon.length);
@@ -100,7 +100,7 @@ function resolveURIInternal(
         !aArgument.startsWith("https://")
       ) {
         throw new Error(
-          "Firefox and Firefox-private protocols can only be used in conjunction with http and https urls."
+          "Firefox-bridge and Firefox-private-bridge protocols can only be used in conjunction with http and https urls."
         );
       }
 
@@ -113,8 +113,8 @@ function resolveURIInternal(
     }
   };
 
-  handleFirefoxProtocol("firefox");
-  handleFirefoxProtocol("firefox-private");
+  handleFirefoxProtocol("firefox-bridge");
+  handleFirefoxProtocol("firefox-private-bridge");
 
   var uri = aCmdLine.resolveURI(aArgument);
   var uriFixup = Services.uriFixup;
@@ -599,7 +599,7 @@ nsBrowserContentHandler.prototype = {
       if (urlFlagIdx > -1 && cmdLine.length > 1) {
         url = cmdLine.getArgument(urlFlagIdx + 1);
       }
-      if (privateWindowParam || url?.startsWith("firefox-private:")) {
+      if (privateWindowParam || url?.startsWith("firefox-private-bridge:")) {
         // Check if the osint flag is present on Windows
         let launchedWithArg_osint =
           AppConstants.platform == "win" &&
@@ -614,7 +614,7 @@ nsBrowserContentHandler.prototype = {
             uri: Services.io.newURI("about:privatebrowsing"),
             principal: lazy.gSystemPrincipal,
           };
-        } else if (url?.startsWith("firefox-private:")) {
+        } else if (url?.startsWith("firefox-private-bridge:")) {
           cmdLine.removeArguments(urlFlagIdx, urlFlagIdx + 1);
           resolvedInfo = resolveURIInternal(
             cmdLine,
@@ -1463,7 +1463,7 @@ nsDefaultCommandLineHandler.prototype = {
       }
 
       // Can't open multiple URLs without using system principal.
-      // The firefox and firefox-private protocols should only
+      // The firefox-bridge and firefox-private-bridge protocols should only
       // accept a single URL due to using the -osint option
       // so this isn't very relevant.
       var URLlist = urilist.filter(shouldLoadURI).map(u => u.spec);

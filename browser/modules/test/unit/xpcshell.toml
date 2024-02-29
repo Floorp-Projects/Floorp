@@ -5,6 +5,9 @@ skip-if = ["os == 'android'"] # bug 1730213
 
 ["test_E10SUtils_nested_URIs.js"]
 
+["test_FirefoxBridgeExtensionUtils.js"]
+run-if = ["os == 'win'"] # Test of a Windows-specific feature
+
 ["test_HomePage.js"]
 
 ["test_HomePage_ignore.js"]
