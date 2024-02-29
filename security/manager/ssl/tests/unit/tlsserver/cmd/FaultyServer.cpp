@@ -157,7 +157,7 @@ void SecretCallbackFailZeroRtt(PRFileDesc* fd, PRUint16 epoch,
     } else if (!strcmp(host->mHostName, kHostZeroRttAlertVersion)) {
       SSL3_SendAlert(ss, alert_fatal, protocol_version);
     } else if (!strcmp(host->mHostName, kHostZeroRttAlertUnexpected)) {
-      SSL3_SendAlert(ss, alert_fatal, no_alert);
+      SSL3_SendAlert(ss, alert_fatal, unexpected_message);
     }
   }
 }
