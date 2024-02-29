@@ -450,16 +450,6 @@ impl ToComputedValue for FontStretch {
     }
 }
 
-#[cfg(feature = "gecko")]
-fn math_depth_enabled(_context: &ParserContext) -> bool {
-    static_prefs::pref!("layout.css.math-depth.enabled")
-}
-
-#[cfg(feature = "servo")]
-fn math_depth_enabled(_context: &ParserContext) -> bool {
-    false
-}
-
 /// CSS font keywords
 #[derive(
     Animate,
@@ -496,7 +486,7 @@ pub enum FontSizeKeyword {
     XXXLarge,
     /// Indicate whether to apply font-size: math is specified so that extra
     /// scaling due to math-depth changes is applied during the cascade.
-    #[parse(condition = "math_depth_enabled")]
+    #[cfg(feature="gecko")]
     Math,
     #[css(skip)]
     None,
@@ -1018,7 +1008,7 @@ impl FontSize {
             return Ok(FontSize::Length(lp));
         }
 
-        if let Ok(kw) = input.try_parse(|i| FontSizeKeyword::parse(context, i)) {
+        if let Ok(kw) = input.try_parse(|i| FontSizeKeyword::parse(i)) {
             return Ok(FontSize::Keyword(KeywordInfo::new(kw)));
         }
 

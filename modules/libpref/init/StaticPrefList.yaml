@@ -8644,20 +8644,6 @@
   mirror: always
   rust: true
 
-# Is support for math-style enabled?
-- name: layout.css.math-style.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
-# Is support for math-depth enabled?
-- name: layout.css.math-depth.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Is -moz-osx-font-smoothing enabled? (Only supported in OSX builds)
 - name: layout.css.osx-font-smoothing.enabled
   type: bool
