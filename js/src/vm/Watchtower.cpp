@@ -102,23 +102,24 @@ static void InvalidateMegamorphicCache(JSContext* cx,
 }
 
 void MaybePopReturnFuses(JSContext* cx, Handle<NativeObject*> nobj) {
-  JSObject* objectProto = &cx->global()->getObjectPrototype();
+  GlobalObject* global = &nobj->global();
+  JSObject* objectProto = &global->getObjectPrototype();
   if (nobj == objectProto) {
     nobj->realm()->realmFuses.objectPrototypeHasNoReturnProperty.popFuse(
         cx, nobj->realm()->realmFuses);
     return;
   }
 
-  JSObject* iteratorProto = cx->global()->maybeGetIteratorPrototype();
+  JSObject* iteratorProto = global->maybeGetIteratorPrototype();
   if (nobj == iteratorProto) {
     nobj->realm()->realmFuses.iteratorPrototypeHasNoReturnProperty.popFuse(
         cx, nobj->realm()->realmFuses);
     return;
   }
 
-  JSObject* arrayIterProto = cx->global()->maybeGetArrayIteratorPrototype();
+  JSObject* arrayIterProto = global->maybeGetArrayIteratorPrototype();
   if (nobj == arrayIterProto) {
-    cx->realm()->realmFuses.arrayIteratorPrototypeHasNoReturnProperty.popFuse(
+    nobj->realm()->realmFuses.arrayIteratorPrototypeHasNoReturnProperty.popFuse(
         cx, nobj->realm()->realmFuses);
     return;
   }
@@ -208,12 +209,12 @@ static bool WatchProtoChangeImpl(JSContext* cx, HandleObject obj) {
     InvalidateMegamorphicCache(cx, obj.as<NativeObject>());
 
     NativeObject* nobj = &obj->as<NativeObject>();
-    if (nobj == cx->global()->maybeGetArrayIteratorPrototype()) {
+    if (nobj == nobj->global().maybeGetArrayIteratorPrototype()) {
       nobj->realm()->realmFuses.arrayIteratorPrototypeHasIteratorProto.popFuse(
           cx, nobj->realm()->realmFuses);
     }
 
-    if (nobj == cx->global()->maybeGetIteratorPrototype()) {
+    if (nobj == nobj->global().maybeGetIteratorPrototype()) {
       nobj->realm()->realmFuses.iteratorPrototypeHasObjectProto.popFuse(
           cx, nobj->realm()->realmFuses);
     }
