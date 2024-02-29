@@ -36,6 +36,7 @@ struct BaseMarkerDescription {
   static constexpr MS::PayloadField PayloadFields[] = {
       {"StartTime", MS::InputType::TimeStamp, "Start Time"},
       {"EndTime", MS::InputType::TimeStamp, "End Time"},
+      {"Phase", MS::InputType::Uint8, "Phase"},
       {"InnerWindowId", MS::InputType::Uint64, "Inner Window ID"},
       {"CategoryPair", MS::InputType::Uint32, "Category Pair"}};
 };
@@ -65,6 +66,7 @@ constexpr uint8_t GetTlgInputType(mozilla::MarkerSchema::InputType aInput) {
   using InputType = mozilla::MarkerSchema::InputType;
   switch (aInput) {
     case InputType::Boolean:
+    case InputType::Uint8:
       return TlgInUINT8;
     case InputType::Uint32:
       return TlgInUINT32;
@@ -239,6 +241,7 @@ struct MarkerHasTranslator<
 struct BaseEventStorage {
   uint64_t mStartTime;
   uint64_t mEndTime;
+  uint8_t mPhase;
   uint64_t mWindowID;
   uint32_t mCategoryPair;
 };
@@ -252,6 +255,7 @@ static inline void StoreBaseEventDataDesc(
         aOptions.Timing().StartTime().RawQueryPerformanceCounterValue().value();
     aStorage.mEndTime =
         aOptions.Timing().EndTime().RawQueryPerformanceCounterValue().value();
+    aStorage.mPhase = uint8_t(aOptions.Timing().MarkerPhase());
   }
   if (!aOptions.InnerWindowId().IsUnspecified()) {
     aStorage.mWindowID = aOptions.InnerWindowId().Id();
@@ -259,8 +263,9 @@ static inline void StoreBaseEventDataDesc(
   aStorage.mCategoryPair = uint32_t(aCategory.CategoryPair());
   EventDataDescCreate(&aDescriptors[2], &aStorage.mStartTime, sizeof(uint64_t));
   EventDataDescCreate(&aDescriptors[3], &aStorage.mEndTime, sizeof(uint64_t));
-  EventDataDescCreate(&aDescriptors[4], &aStorage.mWindowID, sizeof(uint64_t));
-  EventDataDescCreate(&aDescriptors[5], &aStorage.mCategoryPair,
+  EventDataDescCreate(&aDescriptors[4], &aStorage.mPhase, sizeof(uint8_t));
+  EventDataDescCreate(&aDescriptors[5], &aStorage.mWindowID, sizeof(uint64_t));
+  EventDataDescCreate(&aDescriptors[6], &aStorage.mCategoryPair,
                       sizeof(uint32_t));
 }
 
@@ -278,7 +283,7 @@ static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
       align(1)) constexpr StaticMetaData<SimpleMarkerType>
       staticData;
 
-  std::array<EVENT_DATA_DESCRIPTOR, 7> descriptors = {};
+  std::array<EVENT_DATA_DESCRIPTOR, 8> descriptors = {};
 
   // This is storage space allocated on the stack for POD values.
   BaseEventStorage dataStorage = {};
@@ -286,7 +291,7 @@ static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
   StoreBaseEventDataDesc(dataStorage, descriptors.data(), aCategory,
                          std::move(aOptions));
 
-  EventDataDescCreate(&descriptors[6], aName.StringView().data(),
+  EventDataDescCreate(&descriptors[7], aName.StringView().data(),
                       aName.StringView().size() + 1);
   _tlgWriteTransfer(kFirefoxTraceLoggingProvider, &staticData.metaData.Channel,
                     NULL, NULL, descriptors.size(), descriptors.data());

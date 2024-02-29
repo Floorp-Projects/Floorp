@@ -352,6 +352,13 @@ class MarkerTiming {
   [[nodiscard]] const TimeStamp& StartTime() const { return mStartTime; }
   [[nodiscard]] const TimeStamp& EndTime() const { return mEndTime; }
 
+  // The phase differentiates Instant markers from Interval markers.
+  // Interval markers can either carry both timestamps on a single marker,
+  // or they can be split into individual Start and End markers, which are
+  // associated with each other via the marker name.
+  //
+  // The numeric representation of this enum value is also exposed in the
+  // ETW trace event's Phase field.
   enum class Phase : uint8_t {
     Instant = 0,
     Interval = 1,
@@ -691,6 +698,7 @@ class MarkerSchema {
   enum class InputType {
     Uint64,
     Uint32,
+    Uint8,
     Boolean,
     CString,
     String,
