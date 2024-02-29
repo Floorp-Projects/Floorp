@@ -237,7 +237,7 @@
 			<string>Firefox Protocol</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>firefox</string>
+				<string>firefox-bridge</string>
 			</array>
 		</dict>
 		<dict>
@@ -245,7 +245,7 @@
 			<string>Firefox Private Browsing Protocol</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>firefox-private</string>
+				<string>firefox-private-bridge</string>
 			</array>
 		</dict>
 	</array>

@@ -1824,3 +1824,49 @@ FunctionEnd
   ${WriteRegStr2} ${RegKey} "Software\Classes\CLSID\$0\InProcServer32" "" "$INSTDIR\notificationserver.dll" 0
 !macroend
 !define WriteToastNotificationRegistration "!insertmacro WriteToastNotificationRegistration"
+
+/**
+ * Deletes the registry keys for a protocol handler but only if those registry
+ * keys were pointed to the installation being uninstalled.
+ * Does this with both the HKLM and the HKCU registry entries.
+ *
+ * @param   _PROTOCOL
+ *          The protocol to delete the registry keys for
+ */
+!macro DeleteProtocolRegistryIfSetToInstallation INSTALL_PATH _PROTOCOL
+  Push $0
+
+  ; Check if there is a protocol handler registered by fetching the DefaultIcon value
+  ; in the registry.
+  ; If there is something registered for the icon, it will be the path to the executable,
+  ; plus a comma and a number for the id of the resource for the icon.
+  ; Use StrCpy with -2 to remove the comma and the resource id so that
+  ; the whole path to the executable can be compared against what's being
+  ; uninstalled.
+
+  ; Do all of that twice, once for the local machine and once for the current user
+  
+  ; Remove protocol handlers
+  ClearErrors
+  ReadRegStr $0 HKLM "Software\Classes\${_PROTOCOL}\DefaultIcon" ""
+  ${If} $0 != ""
+    StrCpy $0 $0 -2
+    ${If} $0 == '"${INSTALL_PATH}"'
+      DeleteRegKey HKLM "Software\Classes\${_PROTOCOL}"
+    ${EndIf}
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\${_PROTOCOL}\DefaultIcon" ""
+  ${If} $0 != ""
+    StrCpy $0 $0 -2
+    ${If} $0 == '"${INSTALL_PATH}"'
+      DeleteRegKey HKCU "Software\Classes\${_PROTOCOL}"
+    ${EndIf}
+  ${EndIf}
+
+  ClearErrors
+
+  Pop $0
+!macroend
+!define DeleteProtocolRegistryIfSetToInstallation '!insertmacro DeleteProtocolRegistryIfSetToInstallation'

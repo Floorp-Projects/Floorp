@@ -92,14 +92,14 @@
           </uap3:Protocol>
         </uap3:Extension>
         <uap3:Extension Category="windows.protocol">
-          <uap3:Protocol Name="firefox" Parameters="-osint -url &quot;%1&quot;">
-            <uap:DisplayName>Firefox Protocol</uap:DisplayName>
+          <uap3:Protocol Name="firefox-bridge" Parameters="-osint -url &quot;%1&quot;">
+            <uap:DisplayName>Firefox Bridge Protocol</uap:DisplayName>
             <uap:Logo>Assets\Document44x44.png</uap:Logo>
           </uap3:Protocol>
         </uap3:Extension>
         <uap3:Extension Category="windows.protocol">
-          <uap3:Protocol Name="firefox-private" Parameters="-osint -private-window &quot;%1&quot;">
-            <uap:DisplayName>Firefox Private Browsing Protocol</uap:DisplayName>
+          <uap3:Protocol Name="firefox-private-bridge" Parameters="-osint -private-window &quot;%1&quot;">
+            <uap:DisplayName>Firefox Private Bridge Protocol</uap:DisplayName>
             <uap:Logo>Assets\Document44x44.png</uap:Logo>
           </uap3:Protocol>
         </uap3:Extension>

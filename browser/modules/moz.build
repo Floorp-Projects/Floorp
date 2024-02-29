@@ -7,6 +7,12 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
+with Files("FirefoxBridgeExtensionUtils.sys.mjs"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")
+
+with Files("test/unit/test_FirefoxBridgeExtensionUtils.sys.mjs"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")
+
 with Files("test/browser/*Telemetry*"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
@@ -128,6 +134,7 @@ EXTRA_JS_MODULES += [
     "EveryWindow.sys.mjs",
     "ExtensionsUI.sys.mjs",
     "FaviconLoader.sys.mjs",
+    "FirefoxBridgeExtensionUtils.sys.mjs",
     "HomePage.sys.mjs",
     "LaterRun.sys.mjs",
     "NewTabPagePreloading.sys.mjs",
