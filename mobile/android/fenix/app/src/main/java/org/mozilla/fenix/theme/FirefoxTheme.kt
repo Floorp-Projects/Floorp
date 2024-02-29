@@ -140,6 +140,7 @@ private val darkColorPalette = FirefoxColors(
     iconActive = PhotonColors.Violet40,
     iconDisabled = PhotonColors.LightGrey05A40,
     iconOnColor = PhotonColors.LightGrey05,
+    iconOnColorDisabled = PhotonColors.LightGrey05A40,
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.LightGrey05,
     iconWarning = PhotonColors.Red20,
@@ -214,6 +215,7 @@ private val lightColorPalette = FirefoxColors(
     iconActive = PhotonColors.Ink20,
     iconDisabled = PhotonColors.DarkGrey90A40,
     iconOnColor = PhotonColors.LightGrey05,
+    iconOnColorDisabled = PhotonColors.LightGrey05A40,
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.Ink20,
     iconWarning = PhotonColors.Red70,
@@ -299,6 +301,7 @@ class FirefoxColors(
     iconActive: Color,
     iconDisabled: Color,
     iconOnColor: Color,
+    iconOnColorDisabled: Color,
     iconNotice: Color,
     iconButton: Color,
     iconWarning: Color,
@@ -531,6 +534,10 @@ class FirefoxColors(
     var iconOnColor by mutableStateOf(iconOnColor)
         private set
 
+    // Disabled icon inverted (on color)
+    var iconOnColorDisabled by mutableStateOf(iconOnColorDisabled)
+        private set
+
     // New
     var iconNotice by mutableStateOf(iconNotice)
         private set
@@ -653,6 +660,7 @@ class FirefoxColors(
         iconActive = other.iconActive
         iconDisabled = other.iconDisabled
         iconOnColor = other.iconOnColor
+        iconOnColorDisabled = other.iconOnColorDisabled
         iconNotice = other.iconNotice
         iconButton = other.iconButton
         iconWarning = other.iconWarning
@@ -730,6 +738,7 @@ class FirefoxColors(
         iconActive: Color = this.iconActive,
         iconDisabled: Color = this.iconDisabled,
         iconOnColor: Color = this.iconOnColor,
+        iconOnColorDisabled: Color = this.iconOnColorDisabled,
         iconNotice: Color = this.iconNotice,
         iconButton: Color = this.iconButton,
         iconWarning: Color = this.iconWarning,
@@ -802,6 +811,7 @@ class FirefoxColors(
         iconActive = iconActive,
         iconDisabled = iconDisabled,
         iconOnColor = iconOnColor,
+        iconOnColorDisabled = iconOnColorDisabled,
         iconNotice = iconNotice,
         iconButton = iconButton,
         iconWarning = iconWarning,
