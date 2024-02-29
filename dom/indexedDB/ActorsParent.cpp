@@ -14606,6 +14606,8 @@ void FactoryOp::Stringify(nsACString& aResult) const {
 nsresult FactoryOp::Open() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::Initial);
+  MOZ_ASSERT(mOriginMetadata.mOrigin.IsEmpty());
+  MOZ_ASSERT(!mDirectoryLock);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       IsActorDestroyed()) {
@@ -14613,10 +14615,27 @@ nsresult FactoryOp::Open() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  QM_TRY(QuotaManager::EnsureCreated());
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  const DatabaseMetadata& metadata = mCommonParams.metadata();
+
+  const PersistenceType persistenceType = metadata.persistenceType();
+
   const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
+
+  QM_TRY_UNWRAP(auto principalMetadata,
+                quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
+
+  mOriginMetadata = {std::move(principalMetadata), persistenceType};
+
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     MOZ_ASSERT(mCommonParams.metadata().persistenceType() ==
                PERSISTENCE_TYPE_PERSISTENT);
+
+    mEnforcingQuota = false;
   } else if (principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
     const ContentPrincipalInfo& contentPrincipalInfo =
         principalInfo.get_ContentPrincipalInfo();
@@ -14626,7 +14645,9 @@ nsresult FactoryOp::Open() {
         mCommonParams.metadata().persistenceType() ==
             PERSISTENCE_TYPE_PERSISTENT);
 
-    if (contentPrincipalInfo.attrs().mPrivateBrowsingId != 0) {
+    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
+
+    if (mOriginMetadata.mIsPrivate) {
       if (StaticPrefs::dom_indexedDB_privateBrowsing_enabled()) {
         // Explicitly disallow moz-extension urls from using the encrypted
         // indexedDB storage mode when the caller is an extension (see Bug
@@ -14643,34 +14664,6 @@ nsresult FactoryOp::Open() {
     }
   } else {
     MOZ_ASSERT(false);
-  }
-
-  MOZ_ASSERT(mOriginMetadata.mOrigin.IsEmpty());
-  MOZ_ASSERT(!mDirectoryLock);
-
-  QM_TRY(QuotaManager::EnsureCreated());
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  const DatabaseMetadata& metadata = mCommonParams.metadata();
-
-  const PersistenceType persistenceType = metadata.persistenceType();
-
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
-
-    mEnforcingQuota = false;
-  } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
-
-    QM_TRY_UNWRAP(
-        auto principalMetadata,
-        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
-
-    mOriginMetadata = {std::move(principalMetadata), persistenceType};
-
-    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
   }
 
   QuotaManager::GetStorageId(persistenceType, mOriginMetadata.mOrigin,
