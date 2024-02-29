@@ -17,12 +17,12 @@ echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
 echo "MOZ_LIBWEBRTC_BRANCH: $MOZ_LIBWEBRTC_BRANCH"
 echo "MOZ_FASTFORWARD_BUG: $MOZ_FASTFORWARD_BUG"
 
-TIP_SHA=`hg id -r tip | awk '{ print $1; }'`
-echo "TIP_SHA: $TIP_SHA"
+CURRENT_SHA=`hg id -r . | awk '{ print $1; }'`
+echo "CURRENT_SHA: $CURRENT_SHA"
 
 # we grab the entire firstline description for convenient logging
-LAST_PATCHSTACK_UPDATE_COMMIT=`hg log --template "{node|short} {desc|firstline}\n" \
-    --include "third_party/libwebrtc/moz-patch-stack/*.patch" | head -1`
+LAST_PATCHSTACK_UPDATE_COMMIT=`hg log -r ::. --template "{node|short} {desc|firstline}\n" \
+    --include "third_party/libwebrtc/moz-patch-stack/*.patch" | tail -1`
 echo "LAST_PATCHSTACK_UPDATE_COMMIT: $LAST_PATCHSTACK_UPDATE_COMMIT"
 
 LAST_PATCHSTACK_UPDATE_COMMIT_SHA=`echo $LAST_PATCHSTACK_UPDATE_COMMIT \
@@ -31,7 +31,7 @@ echo "LAST_PATCHSTACK_UPDATE_COMMIT_SHA: $LAST_PATCHSTACK_UPDATE_COMMIT_SHA"
 
 # grab the oldest, non "Vendor from libwebrtc" line
 OLDEST_CANDIDATE_COMMIT=`hg log --template "{node|short} {desc|firstline}\n" \
-    -r $LAST_PATCHSTACK_UPDATE_COMMIT_SHA::tip \
+    -r $LAST_PATCHSTACK_UPDATE_COMMIT_SHA::. \
     | grep -v "Vendor libwebrtc from" | head -1`
 echo "OLDEST_CANDIDATE_COMMIT: $OLDEST_CANDIDATE_COMMIT"
 
@@ -39,9 +39,9 @@ OLDEST_CANDIDATE_SHA=`echo $OLDEST_CANDIDATE_COMMIT \
     | awk '{ print $1; }'`
 echo "OLDEST_CANDIDATE_SHA: $OLDEST_CANDIDATE_SHA"
 
-EXTRACT_COMMIT_RANGE="{start-commit-sha}::tip"
-if [ "x$TIP_SHA" != "x$OLDEST_CANDIDATE_SHA" ]; then
-  EXTRACT_COMMIT_RANGE="$OLDEST_CANDIDATE_SHA::tip"
+EXTRACT_COMMIT_RANGE="{start-commit-sha}::."
+if [ "x$CURRENT_SHA" != "x$OLDEST_CANDIDATE_SHA" ]; then
+  EXTRACT_COMMIT_RANGE="$OLDEST_CANDIDATE_SHA::."
   echo "EXTRACT_COMMIT_RANGE: $EXTRACT_COMMIT_RANGE"
 fi
 
