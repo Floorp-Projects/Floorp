@@ -503,7 +503,6 @@ impl FromParsedColor for Color {
 struct ColorParser<'a, 'b: 'a>(&'a ParserContext<'b>);
 impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
     type Output = Color;
-    type Error = StyleParseErrorKind<'i>;
 
     fn parse_angle_or_number<'t>(
         &self,

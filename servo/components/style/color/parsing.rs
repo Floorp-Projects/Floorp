@@ -17,10 +17,11 @@ use cssparser::color::{
     clamp_floor_256_f32, clamp_unit_f32, parse_hash_color, serialize_color_alpha,
     PredefinedColorSpace, OPAQUE,
 };
-use cssparser::{match_ignore_ascii_case, CowRcStr, ParseError, Parser, ToCss, Token};
+use cssparser::{match_ignore_ascii_case, CowRcStr, Parser, ToCss, Token};
 use std::f32::consts::PI;
 use std::fmt;
 use std::str::FromStr;
+use style_traits::ParseError;
 
 /// Return the named color with the given name.
 ///
@@ -47,7 +48,7 @@ where
 pub fn parse_color_with<'i, 't, P>(
     color_parser: &P,
     input: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -75,7 +76,7 @@ fn parse_color_function<'i, 't, P>(
     color_parser: &P,
     name: CowRcStr<'i>,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -118,7 +119,7 @@ where
 fn parse_alpha_component<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<f32, ParseError<'i, P::Error>>
+) -> Result<f32, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -132,7 +133,7 @@ where
 fn parse_legacy_alpha<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<f32, ParseError<'i, P::Error>>
+) -> Result<f32, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -147,7 +148,7 @@ where
 fn parse_modern_alpha<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<Option<f32>, ParseError<'i, P::Error>>
+) -> Result<Option<f32>, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -163,7 +164,7 @@ where
 fn parse_rgb<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -229,7 +230,7 @@ where
 fn parse_hsl<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -273,7 +274,7 @@ where
 fn parse_hwb<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -306,7 +307,7 @@ fn parse_lab_like<'i, 't, P>(
     lightness_range: f32,
     a_b_range: f32,
     into_color: IntoColorFn<P::Output>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -332,7 +333,7 @@ fn parse_lch_like<'i, 't, P>(
     lightness_range: f32,
     chroma_range: f32,
     into_color: IntoColorFn<P::Output>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -356,7 +357,7 @@ where
 fn parse_color_with_color_space<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i, P::Error>>
+) -> Result<P::Output, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -389,8 +390,8 @@ where
     ))
 }
 
-type ComponentParseResult<'i, R1, R2, R3, Error> =
-    Result<(Option<R1>, Option<R2>, Option<R3>, Option<f32>), ParseError<'i, Error>>;
+type ComponentParseResult<'i, R1, R2, R3> =
+    Result<(Option<R1>, Option<R2>, Option<R3>, Option<f32>), ParseError<'i>>;
 
 /// Parse the color components and alpha with the modern [color-4] syntax.
 pub fn parse_components<'i, 't, P, F1, F2, F3, R1, R2, R3>(
@@ -399,12 +400,12 @@ pub fn parse_components<'i, 't, P, F1, F2, F3, R1, R2, R3>(
     f1: F1,
     f2: F2,
     f3: F3,
-) -> ComponentParseResult<'i, R1, R2, R3, P::Error>
+) -> ComponentParseResult<'i, R1, R2, R3>
 where
     P: ColorParser<'i>,
-    F1: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R1, ParseError<'i, P::Error>>,
-    F2: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R2, ParseError<'i, P::Error>>,
-    F3: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R3, ParseError<'i, P::Error>>,
+    F1: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R1, ParseError<'i>>,
+    F2: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R2, ParseError<'i>>,
+    F3: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R3, ParseError<'i>>,
 {
     let r1 = parse_none_or(input, |p| f1(color_parser, p))?;
     let r2 = parse_none_or(input, |p| f2(color_parser, p))?;
@@ -860,16 +861,13 @@ pub trait ColorParser<'i> {
     /// The type that the parser will construct on a successful parse.
     type Output: FromParsedColor;
 
-    /// A custom error type that can be returned from the parsing functions.
-    type Error: 'i;
-
     /// Parse an `<angle>` or `<number>`.
     ///
     /// Returns the result in degrees.
     fn parse_angle_or_number<'t>(
         &self,
         input: &mut Parser<'i, 't>,
-    ) -> Result<AngleOrNumber, ParseError<'i, Self::Error>> {
+    ) -> Result<AngleOrNumber, ParseError<'i>> {
         let location = input.current_source_location();
         Ok(match *input.next()? {
             Token::Number { value, .. } => AngleOrNumber::Number { value },
@@ -895,18 +893,12 @@ pub trait ColorParser<'i> {
     /// Parse a `<percentage>` value.
     ///
     /// Returns the result in a number from 0.0 to 1.0.
-    fn parse_percentage<'t>(
-        &self,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<f32, ParseError<'i, Self::Error>> {
+    fn parse_percentage<'t>(&self, input: &mut Parser<'i, 't>) -> Result<f32, ParseError<'i>> {
         input.expect_percentage().map_err(From::from)
     }
 
     /// Parse a `<number>` value.
-    fn parse_number<'t>(
-        &self,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<f32, ParseError<'i, Self::Error>> {
+    fn parse_number<'t>(&self, input: &mut Parser<'i, 't>) -> Result<f32, ParseError<'i>> {
         input.expect_number().map_err(From::from)
     }
 
@@ -914,7 +906,7 @@ pub trait ColorParser<'i> {
     fn parse_number_or_percentage<'t>(
         &self,
         input: &mut Parser<'i, 't>,
-    ) -> Result<NumberOrPercentage, ParseError<'i, Self::Error>> {
+    ) -> Result<NumberOrPercentage, ParseError<'i>> {
         let location = input.current_source_location();
         Ok(match *input.next()? {
             Token::Number { value, .. } => NumberOrPercentage::Number { value },
