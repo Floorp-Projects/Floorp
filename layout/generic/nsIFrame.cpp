@@ -3409,6 +3409,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
     ApplyClipProp(transformedCssClip);
   }
 
+  uint32_t numActiveScrollframesEncounteredBefore =
+      aBuilder->GetNumActiveScrollframesEncountered();
+
   nsDisplayListCollection set(aBuilder);
   Maybe<nsRect> clipForMask;
   {
@@ -3692,17 +3695,22 @@ void nsIFrame::BuildDisplayListForStackingContext(
     if (transformItem) {
       resultList.AppendToTop(transformItem);
       createdContainer = true;
-    }
 
-    if (hasPerspective) {
-      transformItem->MarkWithAssociatedPerspective();
-
-      if (clipCapturedBy == ContainerItemType::Perspective) {
-        clipState.Restore();
+      if (numActiveScrollframesEncounteredBefore !=
+          aBuilder->GetNumActiveScrollframesEncountered()) {
+        transformItem->SetContainsASRs(true);
       }
-      resultList.AppendNewToTop<nsDisplayPerspective>(aBuilder, this,
-                                                      &resultList);
-      createdContainer = true;
+
+      if (hasPerspective) {
+        transformItem->MarkWithAssociatedPerspective();
+
+        if (clipCapturedBy == ContainerItemType::Perspective) {
+          clipState.Restore();
+        }
+        resultList.AppendNewToTop<nsDisplayPerspective>(aBuilder, this,
+                                                        &resultList);
+        createdContainer = true;
+      }
     }
   }
 
