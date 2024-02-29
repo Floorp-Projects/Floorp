@@ -164,9 +164,7 @@ class AndroidXPCShellRunner(MozbuildObject):
         if not kwargs["symbolsPath"]:
             kwargs["symbolsPath"] = os.path.join(self.distdir, "crashreporter-symbols")
 
-        if self.substs.get("MOZ_BUILD_APP") == "b2g":
-            kwargs["localAPK"] = None
-        elif not kwargs["localAPK"]:
+        if not kwargs["localAPK"]:
             for root, _, paths in os.walk(os.path.join(kwargs["objdir"], "gradle")):
                 for file_name in paths:
                     if file_name.endswith(".apk") and file_name.startswith(
@@ -195,10 +193,7 @@ class AndroidXPCShellRunner(MozbuildObject):
 
 def get_parser():
     build_obj = MozbuildObject.from_environment(cwd=here)
-    if (
-        conditions.is_android(build_obj)
-        or build_obj.substs.get("MOZ_BUILD_APP") == "b2g"
-    ):
+    if conditions.is_android(build_obj):
         return parser_remote()
     else:
         return parser_desktop()
@@ -245,10 +240,7 @@ def run_xpcshell_test(command_context, test_objects=None, **params):
         # pylint --py3k W1619
         params["threadCount"] = int((cpu_count() * 3) / 2)
 
-    if (
-        conditions.is_android(command_context)
-        or command_context.substs.get("MOZ_BUILD_APP") == "b2g"
-    ):
+    if conditions.is_android(command_context):
         from mozrunner.devices.android_device import (
             InstallIntent,
             get_adb_path,
