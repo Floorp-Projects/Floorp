@@ -616,6 +616,7 @@ TRR::OnPush(nsIHttpChannel* associated, nsIHttpChannel* pushed) {
   }
 
   RefPtr<TRR> trr = new TRR(mHostResolver, mPB);
+  trr->SetPurpose(mPurpose);
   return trr->ReceivePush(pushed, mRec);
 }
 
@@ -901,6 +902,7 @@ nsresult TRR::FollowCname(nsIChannel* aChannel) {
        mCnameLoop));
   RefPtr<TRR> trr =
       new TRR(mHostResolver, mRec, mCname, mType, mCnameLoop, mPB);
+  trr->SetPurpose(mPurpose);
   if (!TRRService::Get()) {
     return NS_ERROR_FAILURE;
   }
