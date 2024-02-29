@@ -49,7 +49,7 @@ support-files = [
   "../../../../../toolkit/components/reader/test/readerModeNonArticle.html",
   "../../../../../toolkit/components/reader/test/readerModeArticle.html",
 ]
-skip-if = ["os == 'linux' && os_version == '18.04' && asan"] # Bug 1721945 - Software WebRender
+skip-if = ["os == 'linux' && asan"] # Bug 1721945 - Software WebRender
 
 ["browser_AMBrowserExtensionsImport.js"]
 
@@ -75,12 +75,12 @@ disabled = "bug 1438663 # same focus issue as Bug 1438663"
 ["browser_ext_browserAction_context.js"]
 https_first_disabled = true
 skip-if = [
-  "os == 'linux' && os_version == '18.04' && debug", # Bug 1504096
-  "os == 'linux' && os_version == '18.04' && socketprocess_networking",
+  "os == 'linux' && debug", # Bug 1504096
+  "os == 'linux' && socketprocess_networking",
 ]
 
 ["browser_ext_browserAction_contextMenu.js"]
-skip-if = ["os == 'linux' && os_version == '18.04'"] # bug 1369197
+skip-if = ["os == 'linux'"] # bug 1369197
 
 ["browser_ext_browserAction_disabled.js"]
 
@@ -132,9 +132,8 @@ skip-if = ["debug"] # Bug 1522164
 
 ["browser_ext_commands_execute_page_action.js"]
 skip-if = [
-  "os == 'linux' && os_version == '18.04' && verify",
-  "apple_catalina && verify",
-  "apple_silicon && verify",
+  "verify && os == 'linux'",
+  "verify && os == 'mac'",
 ]
 
 ["browser_ext_commands_execute_sidebar_action.js"]
@@ -231,9 +230,8 @@ support-files = ["../../../../../devtools/client/inspector/extensions/test/head_
 ["browser_ext_find.js"]
 https_first_disabled = true
 skip-if = [
-  "os == 'linux' && os_version == '18.04' && verify",
-  "apple_catalina && verify",
-  "apple_silicon && verify",
+  "verify && os == 'linux'",
+  "verify && os == 'mac'",
 ]
 
 ["browser_ext_getViews.js"]
@@ -305,9 +303,8 @@ https_first_disabled = true
 
 ["browser_ext_openPanel.js"]
 skip-if = [
-  "os == 'linux' && os_version == '18.04' && !debug && verify",
-  "apple_catalina && !debug && verify",
-  "apple_silicon && !debug && verify",
+  "verify && !debug && os == 'linux'",
+  "verify && !debug && os == 'mac'",
 ]
 
 ["browser_ext_optionsPage_activity.js"]
@@ -331,17 +328,14 @@ https_first_disabled = true
 
 ["browser_ext_pageAction_context.js"]
 https_first_disabled = true
-skip-if = ["os == 'linux' && os_version == '18.04' && !debug && verify"]
+skip-if = ["verify && !debug && os == 'linux'"]
 
 ["browser_ext_pageAction_contextMenu.js"]
 
 ["browser_ext_pageAction_popup.js"]
 
 ["browser_ext_pageAction_popup_resize.js"]
-skip-if = [
-  "apple_catalina && debug && verify",
-  "apple_silicon && debug && verify",
-]
+skip-if = ["verify && debug && os == 'mac'"]
 
 ["browser_ext_pageAction_show_matches.js"]
 https_first_disabled = true
@@ -493,9 +487,8 @@ https_first_disabled = true
 ["browser_ext_tabs_discard_reversed.js"]
 https_first_disabled = true
 skip-if = [
-  "apple_silicon", # Bug 1722607
-  "apple_catalina", # Bug 1722607
-  "os == 'linux' && os_version == '18.04' && debug", #Bug 1722607
+  "os == 'mac'", # Bug 1722607
+  "os == 'linux' && debug", #Bug 1722607
 ]
 
 ["browser_ext_tabs_discarded.js"]
@@ -648,10 +641,7 @@ https_first_disabled = true
 ["browser_ext_webRequest_error_after_stopped_or_closed.js"]
 
 ["browser_ext_webrtc.js"]
-skip-if = [
-  "apple_catalina", # Bug 1565738
-  "apple_silicon", # Bug 1565738
-]
+skip-if = ["os == 'mac'"] # Bug 1565738
 
 ["browser_ext_windows.js"]
 https_first_disabled = true
@@ -660,10 +650,7 @@ https_first_disabled = true
 https_first_disabled = true
 
 ["browser_ext_windows_create.js"]
-skip-if = [
-  "apple_catalina && verify",
-  "apple_silicon && verify",
-]
+skip-if = ["verify && os == 'mac'"]
 tags = "fullscreen"
 
 ["browser_ext_windows_create_cookieStoreId.js"]
@@ -683,15 +670,13 @@ https_first_disabled = true
 
 ["browser_ext_windows_size.js"]
 skip-if = [
-  "apple_catalina",
-  "apple_silicon",
+  "os == 'mac'",
   "os == 'linux' && os_version == '18.04' && debug", # Fails when windows are randomly opened in fullscreen mode, Bug 1638027
 ]
 
 ["browser_ext_windows_update.js"]
 skip-if = [
-  "apple_catalina && verify",
-  "apple_silicon && verify",
+  "verify && os == 'mac'",
   "os == 'mac' && os_version == '10.15' && debug", # Bug 1780998
   "os == 'linux' && os_version == '18.04'", # Bug 1533982 for linux1804
 ]

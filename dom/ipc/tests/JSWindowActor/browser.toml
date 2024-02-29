@@ -6,10 +6,7 @@ support-files = ["head.js"]
 ["browser_crash_report.js"]
 
 ["browser_destroy_callbacks.js"]
-skip-if = [
-  "apple_catalina && !debug", #Bug 1604538
-  "apple_silicon && !debug", #Bug 1604538
-]
+skip-if = ["!debug && os == 'mac'"] #Bug 1604538
 
 ["browser_event_listener.js"]
 support-files = ["file_dummyChromePage.html"]

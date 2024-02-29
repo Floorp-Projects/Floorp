@@ -34,8 +34,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_computed_getNodeInfo.js"]
 skip-if = [
-  "apple_catalina && !debug", #Bug 1559033
-  "apple_silicon && !debug", #Bug 1559033
+  "!debug && os == 'mac'", #Bug 1559033
   "a11y_checks", # Bugs 1849028 and 1858041 to investigate intermittent a11y_checks results
 ]
 
