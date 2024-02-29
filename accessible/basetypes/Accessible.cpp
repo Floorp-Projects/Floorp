@@ -539,17 +539,13 @@ nsStaticAtom* Accessible::LandmarkRole() const {
   }
 
   if (tagName == nsGkAtoms::section) {
-    nsAutoString name;
-    Name(name);
-    if (!name.IsEmpty()) {
+    if (!NameIsEmpty()) {
       return nsGkAtoms::region;
     }
   }
 
   if (tagName == nsGkAtoms::form) {
-    nsAutoString name;
-    Name(name);
-    if (!name.IsEmpty()) {
+    if (!NameIsEmpty()) {
       return nsGkAtoms::form;
     }
   }
@@ -567,8 +563,10 @@ nsStaticAtom* Accessible::LandmarkRole() const {
 nsStaticAtom* Accessible::ComputedARIARole() const {
   const nsRoleMapEntry* roleMap = ARIARoleMap();
   if (roleMap && roleMap->roleAtom != nsGkAtoms::_empty &&
-      // region has its own Gecko role and it needs to be handled specially.
+      // region and form have their own Gecko roles and need to be handled
+      // specially.
       roleMap->roleAtom != nsGkAtoms::region &&
+      roleMap->roleAtom != nsGkAtoms::form &&
       (roleMap->roleRule == kUseNativeRole || roleMap->IsOfType(eLandmark) ||
        roleMap->roleAtom == nsGkAtoms::alertdialog ||
        roleMap->roleAtom == nsGkAtoms::feed ||
@@ -649,6 +647,12 @@ void Accessible::ApplyImplicitState(uint64_t& aState) const {
   if (Opacity() == 1.0f && !(aState & states::INVISIBLE)) {
     aState |= states::OPAQUE1;
   }
+}
+
+bool Accessible::NameIsEmpty() const {
+  nsAutoString name;
+  Name(name);
+  return name.IsEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

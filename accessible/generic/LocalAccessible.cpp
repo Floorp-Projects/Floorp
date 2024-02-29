@@ -1842,8 +1842,10 @@ bool LocalAccessible::SetCurValue(double aValue) {
 
 role LocalAccessible::ARIATransformRole(role aRole) const {
   // Beginning with ARIA 1.1, user agents are expected to use the native host
-  // language role of the element when the region role is used without a name.
-  // https://rawgit.com/w3c/aria/master/core-aam/core-aam.html#role-map-region
+  // language role of the element when the form or region roles are used without
+  // a name. Says the spec, "the user agent MUST treat such elements as if no
+  // role had been provided."
+  // https://w3c.github.io/aria/#document-handling_author-errors_roles
   //
   // XXX: While the name computation algorithm can be non-trivial in the general
   // case, it should not be especially bad here: If the author hasn't used the
@@ -1851,10 +1853,8 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
   // calculation rule excludes name from content. That said, this use case is
   // another example of why we should consider caching the accessible name. See:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1378235.
-  if (aRole == roles::REGION) {
-    nsAutoString name;
-    Name(name);
-    return name.IsEmpty() ? NativeRole() : aRole;
+  if (aRole == roles::REGION || aRole == roles::FORM) {
+    return NameIsEmpty() ? NativeRole() : aRole;
   }
 
   // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
