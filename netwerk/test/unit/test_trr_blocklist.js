@@ -14,6 +14,21 @@ function setup() {
 }
 setup();
 
+// Waits until a predicate returns true or re-tries the predicate calls
+// |retry| times, we wait for 100ms between each calls.
+async function waitUntil(predicate, retry = 20) {
+  let count = 0;
+  while (count++ < retry) {
+    if (await predicate()) {
+      return true;
+    }
+    // Wait for 100 milliseconds.
+    await new Promise(resolve => do_timeout(100, resolve));
+  }
+  // Timed out after trying too many times.
+  return false;
+}
+
 add_task(async function checkBlocklisting() {
   let trrServer = new TRRServer();
   registerCleanupFunction(async () => {
@@ -75,4 +90,53 @@ add_task(async function checkBlocklisting() {
     2,
     "We should do another TRR request because the bloclist expired"
   );
+});
+
+add_task(async function test_blocklist_cname() {
+  let trrServer = new TRRServer();
+  registerCleanupFunction(async () => {
+    await trrServer.stop();
+  });
+  await trrServer.start();
+  info(`port = ${trrServer.port()}\n`);
+
+  Services.dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port()}/dns-query`
+  );
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+
+  await trrServer.registerDoHAnswers(`top.test.com`, "NS", {
+    answers: [
+      {
+        name: "top.test.com",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "other.foo",
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers(`other.foo`, "NS", {
+    answers: [
+      {
+        name: "other.foo",
+        ttl: 55,
+        type: "NS",
+        flush: false,
+        data: "ns.other.foo",
+      },
+    ],
+  });
+
+  override.addIPOverride("sub.top.test.com", "2.2.2.2");
+  await new TRRDNSListener("sub.top.test.com", {
+    expectedAnswer: "2.2.2.2",
+  });
+
+  await waitUntil(async () => {
+    return (await trrServer.requestCount("top.test.com", "NS")) == 1;
+  });
 });
