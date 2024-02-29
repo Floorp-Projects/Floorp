@@ -191,26 +191,28 @@ bool BackgroundParentImpl::DeallocPBackgroundTestParent(
 }
 
 auto BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
-    const LoggingInfo& aLoggingInfo)
+    const LoggingInfo& aLoggingInfo, const nsACString& aSystemLocale)
     -> already_AddRefed<PBackgroundIDBFactoryParent> {
   using mozilla::dom::indexedDB::AllocPBackgroundIDBFactoryParent;
 
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return AllocPBackgroundIDBFactoryParent(aLoggingInfo);
+  return AllocPBackgroundIDBFactoryParent(aLoggingInfo, aSystemLocale);
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundIDBFactoryConstructor(
-    PBackgroundIDBFactoryParent* aActor, const LoggingInfo& aLoggingInfo) {
+    PBackgroundIDBFactoryParent* aActor, const LoggingInfo& aLoggingInfo,
+    const nsACString& aSystemLocale) {
   using mozilla::dom::indexedDB::RecvPBackgroundIDBFactoryConstructor;
 
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  if (!RecvPBackgroundIDBFactoryConstructor(aActor, aLoggingInfo)) {
+  if (!RecvPBackgroundIDBFactoryConstructor(aActor, aLoggingInfo,
+                                            aSystemLocale)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

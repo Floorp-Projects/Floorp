@@ -129,7 +129,8 @@ parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   async PBackgroundTest(nsCString testArg);
 
-  async PBackgroundIDBFactory(LoggingInfo loggingInfo);
+  async PBackgroundIDBFactory(LoggingInfo loggingInfo,
+                              nsCString systemLocale);
 
   async PBackgroundIndexedDBUtils();
 

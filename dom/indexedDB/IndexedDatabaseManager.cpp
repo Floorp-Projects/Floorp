@@ -296,25 +296,6 @@ nsresult IndexedDatabaseManager::Init() {
   Preferences::RegisterCallbackAndCall(MaxPreloadExtraRecordsPrefChangeCallback,
                                        kPrefMaxPreloadExtraRecords);
 
-  nsAutoCString acceptLang;
-  Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
-
-  // Split values on commas.
-  for (const auto& lang :
-       nsCCharSeparatedTokenizer(acceptLang, ',').ToRange()) {
-    mozilla::intl::LocaleCanonicalizer::Vector asciiString{};
-    auto result = mozilla::intl::LocaleCanonicalizer::CanonicalizeICULevel1(
-        PromiseFlatCString(lang).get(), asciiString);
-    if (result.isOk()) {
-      mLocale.AssignASCII(asciiString);
-      break;
-    }
-  }
-
-  if (mLocale.IsEmpty()) {
-    mLocale.AssignLiteral("en_US");
-  }
-
   return NS_OK;
 }
 
@@ -652,11 +633,37 @@ void IndexedDatabaseManager::LoggingModePrefChangedCallback(
   }
 }
 
+nsresult IndexedDatabaseManager::EnsureLocale() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString acceptLang;
+  Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
+
+  // Split values on commas.
+  for (const auto& lang :
+       nsCCharSeparatedTokenizer(acceptLang, ',').ToRange()) {
+    mozilla::intl::LocaleCanonicalizer::Vector asciiString{};
+    auto result = mozilla::intl::LocaleCanonicalizer::CanonicalizeICULevel1(
+        PromiseFlatCString(lang).get(), asciiString);
+    if (result.isOk()) {
+      mLocale.AssignASCII(asciiString);
+      break;
+    }
+  }
+
+  if (mLocale.IsEmpty()) {
+    mLocale.AssignLiteral("en_US");
+  }
+
+  return NS_OK;
+}
+
 // static
 const nsCString& IndexedDatabaseManager::GetLocale() {
   IndexedDatabaseManager* idbManager = Get();
   MOZ_ASSERT(idbManager, "IDBManager is not ready!");
 
+  MOZ_ASSERT(!idbManager->mLocale.IsEmpty());
   return idbManager->mLocale;
 }
 

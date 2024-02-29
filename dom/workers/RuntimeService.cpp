@@ -1419,8 +1419,14 @@ nsresult RuntimeService::Init() {
       Preferences::GetInt(PREF_WORKERS_MAX_PER_DOMAIN, MAX_WORKERS_PER_DOMAIN);
   gMaxWorkersPerDomain = std::max(0, maxPerDomain);
 
-  if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
+  IndexedDatabaseManager* idm = IndexedDatabaseManager::GetOrCreate();
+  if (NS_WARN_IF(!idm)) {
     return NS_ERROR_UNEXPECTED;
+  }
+
+  rv = idm->EnsureLocale();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   // PerformanceService must be initialized on the main-thread.
