@@ -134,7 +134,6 @@ MACH_COMMANDS = {
     "mach-debug-commands": MachCommandReference(
         "python/mach/mach/commands/commandinfo.py"
     ),
-    "macos-sign": MachCommandReference("tools/signing/macos/mach_commands.py"),
     "manifest": MachCommandReference("testing/mach_commands.py"),
     "marionette-test": MachCommandReference("testing/marionette/mach_commands.py"),
     "mochitest": MachCommandReference("testing/mochitest/mach_commands.py", ["test"]),
