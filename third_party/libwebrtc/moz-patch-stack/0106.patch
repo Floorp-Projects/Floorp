@@ -1,101 +1,127 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 22 Jan 2024 11:40:00 -0600
-Subject: Bug 1871981 - Cherry-pick upstream libwebrtc commit 6a992129fb
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 13 Feb 2024 13:12:00 +0000
+Subject: Bug 1879752 - WebRTC backport: Video capture PipeWire - simplify
+ thread and lock annotations r=pehrsons,webrtc-reviewers
 
-Upstream commit: https://webrtc.googlesource.com/src/+/6a992129fb0dede4a8fbdaf5de43abaf43c20299
-       Tighten som DCHECKs to CHECKs in VP9 packetization.
+This is a simple backport of an WebRTC upstream change.
 
-       Bug: chromium:1518991, chromium:1518994
-       Change-Id: I47f68ba6aaf4874fd952332bf213e3a1e0389268
-       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335241
-       Auto-Submit: Erik Språng <sprang@webrtc.org>
-       Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
-       Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-       Cr-Commit-Position: refs/heads/main@{#41580}
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/83483e973267a892a795eda1f5b5d421bed22031
+Upstream commit: 541f202354e2b4906935c8db6e54386aa8bc8d1f
+
+Differential Revision: https://phabricator.services.mozilla.com/D201328
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dc12e6eecaa8dc91ee0a517cfd27570691c441b9
 ---
- modules/rtp_rtcp/source/rtp_format_vp9.cc | 26 ++++++++++++-----------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ .../linux/video_capture_pipewire.cc           | 25 ++++++++++++-------
+ .../linux/video_capture_pipewire.h            | 14 +++++------
+ 2 files changed, 22 insertions(+), 17 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_format_vp9.cc b/modules/rtp_rtcp/source/rtp_format_vp9.cc
-index 15e059e85c..9ad4aa97c3 100644
---- a/modules/rtp_rtcp/source/rtp_format_vp9.cc
-+++ b/modules/rtp_rtcp/source/rtp_format_vp9.cc
-@@ -94,8 +94,8 @@ size_t RefIndicesLength(const RTPVideoHeaderVP9& hdr) {
-   if (!hdr.inter_pic_predicted || !hdr.flexible_mode)
-     return 0;
+diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
+index fb813e331f..8af483636a 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.cc
++++ b/modules/video_capture/linux/video_capture_pipewire.cc
+@@ -121,7 +121,6 @@ static spa_pod* BuildFormat(spa_pod_builder* builder,
  
--  RTC_DCHECK_GT(hdr.num_ref_pics, 0U);
--  RTC_DCHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
-+  RTC_CHECK_GT(hdr.num_ref_pics, 0U);
-+  RTC_CHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
-   return hdr.num_ref_pics;
+ int32_t VideoCaptureModulePipeWire::StartCapture(
+     const VideoCaptureCapability& capability) {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   RTC_DCHECK_RUN_ON(&api_checker_);
+ 
+   if (initialized_) {
+@@ -134,10 +133,17 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
+ 
+   uint8_t buffer[1024] = {};
+ 
++  // We don't want members above to be guarded by capture_checker_ as
++  // it's meant to be for members that are accessed on the API thread
++  // only when we are not capturing. The code above can be called many
++  // times while sharing instance of VideoCapturePipeWire between
++  // websites and therefore it would not follow the requirements of this
++  // checker.
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
++  PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
++
+   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
+ 
+-  PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
+   pw_properties* reuse_props =
+       pw_properties_new_string("pipewire.client.reuse=1");
+   stream_ = pw_stream_new(session_->pw_core_, "camera-stream", reuse_props);
+@@ -188,11 +194,13 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
  }
  
-@@ -123,9 +123,9 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
-   if (!hdr.ss_data_available)
-     return 0;
+ int32_t VideoCaptureModulePipeWire::StopCapture() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   RTC_DCHECK_RUN_ON(&api_checker_);
  
--  RTC_DCHECK_GT(hdr.num_spatial_layers, 0U);
--  RTC_DCHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
--  RTC_DCHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
-+  RTC_CHECK_GT(hdr.num_spatial_layers, 0U);
-+  RTC_CHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
-+  RTC_CHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
-   size_t length = 1;  // V
-   if (hdr.spatial_layer_resolution_present) {
-     length += 4 * hdr.num_spatial_layers;  // Y
-@@ -136,7 +136,7 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
-   // N_G
-   length += hdr.gof.num_frames_in_gof;  // T, U, R
-   for (size_t i = 0; i < hdr.gof.num_frames_in_gof; ++i) {
--    RTC_DCHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
-+    RTC_CHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
-     length += hdr.gof.num_ref_pics[i];  // R times
-   }
-   return length;
-@@ -248,9 +248,9 @@ bool WriteRefIndices(const RTPVideoHeaderVP9& vp9,
- //      +-+-+-+-+-+-+-+-+              -|           -|
- //
- bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
--  RTC_DCHECK_GT(vp9.num_spatial_layers, 0U);
--  RTC_DCHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
--  RTC_DCHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
-+  RTC_CHECK_GT(vp9.num_spatial_layers, 0U);
-+  RTC_CHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
-+  RTC_CHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
-   bool g_bit = vp9.gof.num_frames_in_gof > 0;
+   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
++  // PipeWireSession is guarded by API checker so just make sure we do
++  // race detection when the PipeWire loop is locked/stopped to not run
++  // any callback at this point.
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   if (stream_) {
+     pw_stream_destroy(stream_);
+     stream_ = nullptr;
+@@ -225,14 +233,14 @@ void VideoCaptureModulePipeWire::OnStreamParamChanged(
+   VideoCaptureModulePipeWire* that =
+       static_cast<VideoCaptureModulePipeWire*>(data);
+   RTC_DCHECK(that);
+-  RTC_CHECK_RUNS_SERIALIZED(&that->pipewire_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
  
-   RETURN_FALSE_ON_ERROR(writer->WriteBits(vp9.num_spatial_layers - 1, 3));
-@@ -288,6 +288,8 @@ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
- // current API to invoke SVC is not flexible enough.
- RTPVideoHeaderVP9 RemoveInactiveSpatialLayers(
-     const RTPVideoHeaderVP9& original_header) {
-+  RTC_CHECK_LE(original_header.num_spatial_layers,
-+               kMaxVp9NumberOfSpatialLayers);
-   RTPVideoHeaderVP9 hdr(original_header);
-   if (original_header.first_active_layer == 0)
-     return hdr;
-@@ -314,7 +316,7 @@ RtpPacketizerVp9::RtpPacketizerVp9(rtc::ArrayView<const uint8_t> payload,
-       header_size_(PayloadDescriptorLengthMinusSsData(hdr_)),
-       first_packet_extra_header_size_(SsDataLength(hdr_)),
-       remaining_payload_(payload) {
--  RTC_DCHECK_EQ(hdr_.first_active_layer, 0);
-+  RTC_CHECK_EQ(hdr_.first_active_layer, 0);
+   if (format && id == SPA_PARAM_Format)
+     that->OnFormatChanged(format);
+ }
  
-   limits.max_payload_len -= header_size_;
-   limits.first_packet_reduction_len += first_packet_extra_header_size_;
-@@ -357,8 +359,8 @@ bool RtpPacketizerVp9::NextPacket(RtpPacketToSend* packet) {
+ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
  
-   // Ensure end_of_picture is always set on top spatial layer when it is not
-   // dropped.
--  RTC_DCHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
--             hdr_.end_of_picture);
-+  RTC_CHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
-+            hdr_.end_of_picture);
+   uint32_t media_type, media_subtype;
  
-   packet->SetMarker(layer_end && hdr_.end_of_picture);
-   return true;
+@@ -331,7 +339,6 @@ void VideoCaptureModulePipeWire::OnStreamStateChanged(
+   VideoCaptureModulePipeWire* that =
+       static_cast<VideoCaptureModulePipeWire*>(data);
+   RTC_DCHECK(that);
+-  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
+ 
+   MutexLock lock(&that->api_lock_);
+   switch (state) {
+@@ -374,7 +381,7 @@ static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
+ }
+ 
+ void VideoCaptureModulePipeWire::ProcessBuffers() {
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
+     struct spa_meta_header* h;
+diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
+index 5d6794ed65..eeb3b9497c 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.h
++++ b/modules/video_capture/linux/video_capture_pipewire.h
+@@ -43,18 +43,16 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+   void OnFormatChanged(const struct spa_pod* format);
+   void ProcessBuffers();
+ 
+-  rtc::RaceChecker pipewire_checker_;
+-
+   const rtc::scoped_refptr<PipeWireSession> session_
+-      RTC_GUARDED_BY(capture_checker_);
++      RTC_GUARDED_BY(api_checker_);
++  bool initialized_ RTC_GUARDED_BY(api_checker_);
++  bool started_ RTC_GUARDED_BY(api_lock_);
+   int node_id_ RTC_GUARDED_BY(capture_checker_);
+   VideoCaptureCapability configured_capability_
+-      RTC_GUARDED_BY(pipewire_checker_);
+-  bool initialized_ RTC_GUARDED_BY(capture_checker_);
+-  bool started_ RTC_GUARDED_BY(api_lock_);
++      RTC_GUARDED_BY(capture_checker_);
+ 
+-  struct pw_stream* stream_ RTC_GUARDED_BY(pipewire_checker_) = nullptr;
+-  struct spa_hook stream_listener_ RTC_GUARDED_BY(pipewire_checker_);
++  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
++  struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
+ };
+ }  // namespace videocapturemodule
+ }  // namespace webrtc
