@@ -652,12 +652,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
 
             self.pushLibs()
         else:
-            localB2G = os.path.join(self.options["objdir"], "dist", "b2g")
-            if os.path.exists(localB2G):
-                self.device.push(localB2G, self.remoteBinDir)
-                self.device.chmod(self.remoteBinDir)
-            else:
-                raise Exception("unable to install gre: no APK and not b2g")
+            raise Exception("unable to install gre: no APK")
 
     def pushLibs(self):
         pushed_libs_count = 0
