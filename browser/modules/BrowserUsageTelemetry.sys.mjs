@@ -759,7 +759,10 @@ export let BrowserUsageTelemetry = {
     if (URL == AppConstants.BROWSER_CHROME_URL) {
       return this._getBrowserWidgetContainer(node);
     }
-    if (URL.startsWith("about:preferences")) {
+    if (
+      URL.startsWith("about:preferences") ||
+      URL.startsWith("about:settings")
+    ) {
       // Find the element's category.
       let container = node.closest("[data-category]");
       if (!container) {
@@ -833,7 +836,8 @@ export let BrowserUsageTelemetry = {
     // Find the actual element we're interested in.
     let node = sourceEvent.target;
     const isAboutPreferences =
-      node.ownerDocument.URL.startsWith("about:preferences");
+      node.ownerDocument.URL.startsWith("about:preferences") ||
+      node.ownerDocument.URL.startsWith("about:settings");
     while (
       !UI_TARGET_ELEMENTS.includes(node.localName) &&
       !node.classList?.contains("wants-telemetry") &&

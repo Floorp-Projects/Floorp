@@ -431,8 +431,7 @@ async function openPreferences(paneID, extraArgs) {
       }
     }
   }
-  let preferencesURL =
-    "about:preferences" +
+  let preferencesURLSuffix =
     (params ? "?" + params : "") +
     (friendlyCategoryName ? "#" + friendlyCategoryName : "");
   let newLoad = true;
@@ -444,7 +443,7 @@ async function openPreferences(paneID, extraArgs) {
     let supportsStringPrefURL = Cc[
       "@mozilla.org/supports-string;1"
     ].createInstance(Ci.nsISupportsString);
-    supportsStringPrefURL.data = preferencesURL;
+    supportsStringPrefURL.data = "about:preferences" + preferencesURLSuffix;
     windowArguments.appendElement(supportsStringPrefURL);
 
     win = Services.ww.openWindow(
@@ -458,11 +457,28 @@ async function openPreferences(paneID, extraArgs) {
     let shouldReplaceFragment = friendlyCategoryName
       ? "whenComparingAndReplace"
       : "whenComparing";
-    newLoad = !win.switchToTabHavingURI(preferencesURL, true, {
-      ignoreFragment: shouldReplaceFragment,
-      replaceQueryString: true,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    newLoad = !win.switchToTabHavingURI(
+      "about:settings" + preferencesURLSuffix,
+      false,
+      {
+        ignoreFragment: shouldReplaceFragment,
+        replaceQueryString: true,
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      }
+    );
+    if (newLoad) {
+      newLoad = !win.switchToTabHavingURI(
+        "about:preferences" + preferencesURLSuffix,
+        true,
+        {
+          ignoreFragment: shouldReplaceFragment,
+          replaceQueryString: true,
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
+        }
+      );
+    }
     browser = win.gBrowser.selectedBrowser;
   }
 

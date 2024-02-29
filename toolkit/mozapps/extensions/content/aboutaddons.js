@@ -1423,10 +1423,23 @@ class SidebarFooter extends HTMLElement {
       labelL10nId: "addons-settings-button",
       onClick: e => {
         e.preventDefault();
-        windowRoot.ownerGlobal.switchToTabHavingURI("about:preferences", true, {
-          ignoreFragment: "whenComparing",
-          triggeringPrincipal: systemPrincipal,
-        });
+        let hasAboutSettings = windowRoot.ownerGlobal.switchToTabHavingURI(
+          "about:settings",
+          false,
+          {
+            ignoreFragment: "whenComparing",
+          }
+        );
+        if (!hasAboutSettings) {
+          windowRoot.ownerGlobal.switchToTabHavingURI(
+            "about:preferences",
+            true,
+            {
+              ignoreFragment: "whenComparing",
+              triggeringPrincipal: systemPrincipal,
+            }
+          );
+        }
       },
     });
 
