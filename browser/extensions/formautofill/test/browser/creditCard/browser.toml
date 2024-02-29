@@ -17,10 +17,7 @@ support-files = [
 ]
 
 ["browser_anti_clickjacking.js"]
-skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1600059
-  "apple_silicon && !debug", # perma-fail see Bug 1600059
-]
+skip-if = ["!debug && os == 'mac'"] # perma-fail see Bug 1600059
 
 ["browser_creditCard_capture_form_removal.js"]
 
@@ -28,62 +25,58 @@ skip-if = [
 
 ["browser_creditCard_doorhanger_action.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_doorhanger_display.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_doorhanger_fields.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_doorhanger_iframe.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_doorhanger_logo.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_doorhanger_not_shown.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_doorhanger_sync.js"]
 skip-if = [
-  "apple_catalina && !debug", # perma-fail see Bug 1655601
-  "apple_silicon && !debug", # perma-fail see Bug 1655601
-  "win11_2009 && ccov",   # Bug 1655600
+  "!debug && os == 'mac'", # perma-fail see Bug 1655601
+  "os == 'win' && ccov",   # Bug 1655600
 ]
 
 ["browser_creditCard_dropdown_layout.js"]
-skip-if = ["true"]
+skip-if = [
+  "os == 'mac'",
+  "os == 'linux'",
+  "os == 'win'",
+]
 
 ["browser_creditCard_fill_cancel_login.js"]
 skip-if = [
-  "apple_catalina && !debug",
-  "os == 'linux' && os_version == '18.04'",
-  "win10_2009",
-  "win11_2009",
+  "!debug && os == 'mac'",
+  "os == 'linux'",
+  "os == 'win'",
 ]
 
 ["browser_creditCard_heuristics.js"]
@@ -107,10 +100,22 @@ skip-if = [
 ]
 
 ["browser_editCreditCardDialog.js"]
-skip-if = ["true"] # perma-fail see Bug 1600059
+skip-if = [
+  "os == 'mac'",   # perma-fail see Bug 1600059
+  "os == 'linux'", # perma-fail see Bug 1600059
+  "os == 'win'",   # perma-fail see Bug 1600059
+]
 
 ["browser_insecure_form.js"]
-skip-if = ["true"] # perma-fail see Bug 1456284
+skip-if = [
+  "os == 'mac'",   # bug 1456284
+  "os == 'linux'", # bug 1456284
+  "os == 'win'",   # bug 1456284
+]
 
 ["browser_manageCreditCardsDialog.js"]
-skip-if = ["true"]
+skip-if = [
+  "os == 'mac'",
+  "os == 'linux'",
+  "os == 'win'",
+]

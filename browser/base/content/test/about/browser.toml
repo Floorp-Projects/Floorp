@@ -34,8 +34,7 @@ support-files = [
 ["browser_aboutHome_search_suggestion.js"]
 skip-if = [
   "os == 'mac'",
-  "os == 'linux' && os_version == '18.04' && !debug",
-  "os == 'linux' && os_version == '18.04' && bits == 64",
+  "os == 'linux' && (!debug || bits == 64)",
   "win10_2009 && bits == 64 && !debug", # Bug 1399648, bug 1402502
 ]
 
@@ -76,7 +75,7 @@ skip-if = ["tsan"] # Bug 1676326, highly frequent on TSan
 ["browser_aboutStopReload.js"]
 
 ["browser_aboutSupport.js"]
-skip-if = ["os == 'linux' && os_version == '18.04' && asan"] # Bug 1713368
+skip-if = ["os == 'linux' && bits == 64 && asan && !debug"] # Bug 1713368
 
 ["browser_aboutSupport_newtab_security_state.js"]
 
@@ -84,9 +83,6 @@ skip-if = ["os == 'linux' && os_version == '18.04' && asan"] # Bug 1713368
 skip-if = ["os == 'android'"]
 
 ["browser_bug435325.js"]
-skip-if = [
-  "apple_catalina && !debug && verify"
-  "apple_silicon && !debug && verify"
-]
+skip-if = ["verify && !debug && os == 'mac'"]
 
 ["browser_bug633691.js"]
