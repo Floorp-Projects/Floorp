@@ -78,3 +78,48 @@ add_task(async function test_openTabs() {
   // Sanity check that this doesn't throw.
   provider.cancelQuery(context);
 });
+
+add_task(async function test_openTabs_mixedtype_input() {
+  // Passing the userContextId as a string, rather than a number, is a fairly
+  // common mistake, check the API handles both properly.
+  const url = "http://someurl.mozilla.org/";
+  Assert.deepEqual(
+    [],
+    UrlbarProviderOpenTabs.getOpenTabs(1),
+    "Found all the expected tabs"
+  );
+  Assert.deepEqual(
+    [],
+    UrlbarProviderOpenTabs.getOpenTabs(2),
+    "Found all the expected tabs"
+  );
+  UrlbarProviderOpenTabs.registerOpenTab(url, 1, false);
+  UrlbarProviderOpenTabs.registerOpenTab(url, "2", false);
+  Assert.deepEqual(
+    [url],
+    UrlbarProviderOpenTabs.getOpenTabs(1),
+    "Found all the expected tabs"
+  );
+  Assert.deepEqual(
+    [url],
+    UrlbarProviderOpenTabs.getOpenTabs(2),
+    "Found all the expected tabs"
+  );
+  Assert.deepEqual(
+    UrlbarProviderOpenTabs.getOpenTabs(1),
+    UrlbarProviderOpenTabs.getOpenTabs("1"),
+    "Also check getOpenTabs adapts to the argument type"
+  );
+  UrlbarProviderOpenTabs.unregisterOpenTab(url, "1", false);
+  UrlbarProviderOpenTabs.unregisterOpenTab(url, 2, false);
+  Assert.deepEqual(
+    [],
+    UrlbarProviderOpenTabs.getOpenTabs(1),
+    "Found all the expected tabs"
+  );
+  Assert.deepEqual(
+    [],
+    UrlbarProviderOpenTabs.getOpenTabs(2),
+    "Found all the expected tabs"
+  );
+});
