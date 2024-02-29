@@ -17232,6 +17232,18 @@ void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
     // sub-documents or ancestors, so flushing layout for the whole browsing
     // context tree makes sure we don't miss anyone.
     FlushLayoutForWholeBrowsingContextTree(*this);
+
+    // Last remembered sizes are recorded "at the time that ResizeObserver
+    // events are determined and delivered".
+    // https://drafts.csswg.org/css-sizing-4/#last-remembered
+    //
+    // We do it right after layout to make sure sizes are up-to-date. If we do
+    // it after determining the proximities to viewport of
+    // 'content-visibility: auto' nodes, and if one of such node ever becomes
+    // relevant to the user, then we would be incorrectly recording the size
+    // of its rendering when it was skipping its content.
+    UpdateLastRememberedSizes();
+
     if (PresShell* presShell = GetPresShell()) {
       auto result = presShell->DetermineProximityToViewport();
       if (result.mHadInitialDetermination) {
@@ -17252,11 +17264,6 @@ void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
         }
       }
     }
-
-    // Last remembered sizes are recorded "at the time that ResizeObserver
-    // events are determined and delivered".
-    // https://drafts.csswg.org/css-sizing-4/#last-remembered
-    UpdateLastRememberedSizes();
 
     // To avoid infinite resize loop, we only gather all active observations
     // that have the depth of observed target element more than current
