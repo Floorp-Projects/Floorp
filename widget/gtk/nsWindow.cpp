@@ -631,8 +631,6 @@ void nsWindow::Destroy() {
 
   DestroyLayerManager();
 
-  mSurfaceProvider.CleanupResources();
-
   g_signal_handlers_disconnect_by_data(gtk_settings_get_default(), this);
 
   if (mIMContext) {
@@ -4137,6 +4135,16 @@ void nsWindow::OnUnmap() {
     if (sGtkDragCancel) {
       sGtkDragCancel(mSourceDragContext);
       mSourceDragContext = nullptr;
+    }
+  }
+
+  // We don't have valid XWindow any more,
+  // so clear stored ones at GtkCompositorWidget() for OMTC rendering
+  // and mSurfaceProvider for legacy rendering.
+  if (GdkIsX11Display()) {
+    mSurfaceProvider.CleanupResources();
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->DisableRendering();
     }
   }
 }
