@@ -48,8 +48,8 @@ class WaylandProxy {
   bool ProcessConnections();
 
   void Info(const char* aFormat, ...);
-  void Warning(const char* aOperation, bool aPrintErrno = true);
-  void Error(const char* aOperation, bool aPrintErrno = true);
+  void Warning(const char* aOperation);
+  void Error(const char* aOperation);
   void ErrorPlain(const char* aFormat, ...);
 
  private:
