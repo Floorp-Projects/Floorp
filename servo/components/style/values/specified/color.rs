@@ -5,9 +5,7 @@
 //! Specified color values.
 
 use super::AllowQuirks;
-use crate::color::parsing::{
-    self, AngleOrNumber, Color as CSSParserColor, FromParsedColor, NumberOrPercentage,
-};
+use crate::color::parsing::{self, AngleOrNumber, FromParsedColor, NumberOrPercentage};
 use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
@@ -700,7 +698,7 @@ impl ToCss for Color {
         W: Write,
     {
         match *self {
-            Color::CurrentColor => cssparser::ToCss::to_css(&CSSParserColor::CurrentColor, dest),
+            Color::CurrentColor => dest.write_str("currentcolor"),
             Color::Absolute(ref absolute) => absolute.to_css(dest),
             Color::ColorMix(ref mix) => mix.to_css(dest),
             Color::LightDark(ref ld) => ld.to_css(dest),
