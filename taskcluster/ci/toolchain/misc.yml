@@ -603,3 +603,17 @@ windows-rs:
             - artifact: windows-rs.tar.zst
               extract: false
               dest: ../artifacts
+
+win64-libxml2:
+    description: "libxml2 toolchain build"
+    treeherder:
+        symbol: TW64(libxml2)
+    run:
+        script: build-libxml2.sh
+        toolchain-artifact: public/build/libxml2.tar.zst
+    fetches:
+        fetch:
+            - libxml2
+        toolchain:
+            - linux64-clang-toolchain
+            - vs-toolchain
