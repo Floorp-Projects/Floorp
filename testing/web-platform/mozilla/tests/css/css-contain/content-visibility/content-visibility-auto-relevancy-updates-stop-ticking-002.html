@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Content Visibility: stop ticking after relevancy updates</title>
+<!--
+    Adapted from testing/web-platform/tests/css/css-contain/content-visibility/content-visibility-intrinsic-size-001.html
+-->
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1880928">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/common/rendering-utils.js"></script>
+
+<style>
+  #container {
+      position: sticky;
+  }
+  #container > div {
+      content-visibility: auto;
+      contain-intrinsic-size: 1px 5000px;
+  }
+</style>
+<div id="container">
+  <div>X</div>
+  <div id="target">XX</div>
+  <div>XXX</div>
+  <div>XXXX</div>
+</div>
+<script>
+  target.scrollIntoView();
+</script>
+
+<script>
+function hasPendingTick() {
+  return SpecialPowers.wrap(window).windowUtils.refreshDriverHasPendingTick;
+}
+
+// See comment in layout/base/tests/test_bug1756118.html about why the timeouts
+// etc.
+async function expectTicksToStop() {
+  for (let i = 0; i < 100; i++) {
+    await new Promise(r => setTimeout(r, 8));
+    if(!hasPendingTick()) {
+      break;
+    }
+  }
+  assert_false(hasPendingTick(), "refresh driver should have eventually stopped ticking");
+}
+
+promise_test(async function(t) {
+  await new Promise(resolve => { window.addEventListener("load", resolve); });
+  await SpecialPowers.pushPrefEnv({'set':
+                                   [['layout.keep_ticking_after_load_ms', 0]]});
+  await waitForAtLeastOneFrame();
+  await expectTicksToStop();
+});
+</script>
