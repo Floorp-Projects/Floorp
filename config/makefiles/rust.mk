@@ -254,6 +254,9 @@ export COREAUDIO_SDK_PATH=$(MACOS_SDK_DIR)
 endif
 ifdef IPHONEOS_SDK_DIR
 export COREAUDIO_SDK_PATH=$(IPHONEOS_SDK_DIR)
+# export for build/macosx/xcrun
+export IPHONEOS_SDK_DIR
+PATH := $(topsrcdir)/build/macosx:$(PATH)
 endif
 endif
 
