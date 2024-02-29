@@ -265,6 +265,8 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
         return this.#getExperimentFeature();
       case "PDFJS:Parent:recordExposure":
         return this.#recordExposure();
+      case "PDFJS:Parent:reportTelemetry":
+        return this.#reportTelemetry(aMsg);
       default:
         break;
     }
@@ -354,6 +356,10 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
     } catch (e) {
       warn`Cannot record experiment exposure: ${e}`;
     }
+  }
+
+  #reportTelemetry(aMsg) {
+    lazy.PdfJsTelemetry.report(aMsg.data);
   }
 }
 

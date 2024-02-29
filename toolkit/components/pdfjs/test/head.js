@@ -119,6 +119,7 @@ async function waitForSelector(browser, selector, message) {
 }
 
 async function click(browser, selector) {
+  await waitForSelector(browser, selector);
   await SpecialPowers.spawn(browser, [selector], async function (sel) {
     const el = content.document.querySelector(sel);
     await new Promise(r => {
@@ -126,6 +127,17 @@ async function click(browser, selector) {
       el.click();
     });
   });
+}
+
+async function waitForTelemetry(browser) {
+  await BrowserTestUtils.waitForContentEvent(
+    browser,
+    "reporttelemetry",
+    false,
+    null,
+    true
+  );
+  await TestUtils.waitForTick();
 }
 
 /**
@@ -160,33 +172,40 @@ async function enableEditor(browser, name) {
  * @param {string} text
  * @returns {Object} the bbox of the span containing the text.
  */
-async function getSpanBox(browser, text) {
-  return SpecialPowers.spawn(browser, [text], async function (text) {
-    const { ContentTaskUtils } = ChromeUtils.importESModule(
-      "resource://testing-common/ContentTaskUtils.sys.mjs"
-    );
-    const { document } = content;
+async function getSpanBox(browser, text, pageNumber = 1) {
+  return SpecialPowers.spawn(
+    browser,
+    [text, pageNumber],
+    async function (text, number) {
+      const { ContentTaskUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/ContentTaskUtils.sys.mjs"
+      );
+      const { document } = content;
 
-    await ContentTaskUtils.waitForCondition(
-      () => !!document.querySelector(".textLayer .endOfContent"),
-      "The text layer must be displayed"
-    );
+      await ContentTaskUtils.waitForCondition(
+        () =>
+          !!document.querySelector(
+            `.page[data-page-number='${number}'] .textLayer .endOfContent`
+          ),
+        "The text layer must be displayed"
+      );
 
-    let targetSpan = null;
-    for (const span of document.querySelectorAll(
-      `.textLayer span[role="presentation"]`
-    )) {
-      if (span.innerText.includes(text)) {
-        targetSpan = span;
-        break;
+      let targetSpan = null;
+      for (const span of document.querySelectorAll(
+        `.page[data-page-number='${number}'] .textLayer span`
+      )) {
+        if (span.innerText.includes(text)) {
+          targetSpan = span;
+          break;
+        }
       }
+
+      Assert.ok(!!targetSpan, `document must have a span containing '${text}'`);
+
+      const { x, y, width, height } = targetSpan.getBoundingClientRect();
+      return { x, y, width, height };
     }
-
-    Assert.ok(targetSpan, `document must have a span containing '${text}'`);
-
-    const { x, y, width, height } = targetSpan.getBoundingClientRect();
-    return { x, y, width, height };
-  });
+  );
 }
 
 /**
@@ -210,14 +229,16 @@ async function countElements(browser, selector) {
  * @param {Object} browser
  * @param {number} x
  * @param {number} y
+ * @param {number} n
  */
-async function clickAt(browser, x, y) {
+async function clickAt(browser, x, y, n = 1) {
   await BrowserTestUtils.synthesizeMouseAtPoint(
     x,
     y,
     {
       type: "mousedown",
       button: 0,
+      clickCount: n,
     },
     browser
   );
@@ -227,6 +248,7 @@ async function clickAt(browser, x, y) {
     {
       type: "mouseup",
       button: 0,
+      clickCount: n,
     },
     browser
   );
@@ -256,20 +278,30 @@ async function clickOn(browser, selector) {
   await clickAt(browser, x, y);
 }
 
-async function focusEditorLayer(browser) {
-  return SpecialPowers.spawn(browser, [], async function () {
-    const layer = content.document.querySelector(".annotationEditorLayer");
-    if (layer === content.document.activeElement) {
+function focusEditorLayer(browser) {
+  return focus(browser, ".annotationEditorLayer");
+}
+
+/**
+ * Focus an element corresponding to the given selector.
+ * @param {Object} browser
+ * @param {string} selector
+ * @returns
+ */
+async function focus(browser, selector) {
+  return SpecialPowers.spawn(browser, [selector], function (sel) {
+    const el = content.document.querySelector(sel);
+    if (el === content.document.activeElement) {
       return Promise.resolve();
     }
     const promise = new Promise(resolve => {
       const listener = () => {
-        layer.removeEventListener("focus", listener);
+        el.removeEventListener("focus", listener);
         resolve();
       };
-      layer.addEventListener("focus", listener);
+      el.addEventListener("focus", listener);
     });
-    layer.focus();
+    el.focus();
     return promise;
   });
 }
@@ -317,12 +349,16 @@ async function addFreeText(browser, text, box) {
   const count = await countElements(browser, ".freeTextEditor");
   await focusEditorLayer(browser);
   await clickAt(browser, x + 0.1 * width, y + 0.5 * height);
-  await BrowserTestUtils.waitForCondition(
-    async () => (await countElements(browser, ".freeTextEditor")) === count + 1
-  );
+  await waitForEditors(browser, ".freeTextEditor", count + 1);
 
   await write(browser, text);
   await escape(browser);
+}
+
+async function waitForEditors(browser, selector, count) {
+  await BrowserTestUtils.waitForCondition(
+    async () => (await countElements(browser, selector)) === count
+  );
 }
 
 function changeMimeHandler(preferredAction, alwaysAskBeforeHandling) {

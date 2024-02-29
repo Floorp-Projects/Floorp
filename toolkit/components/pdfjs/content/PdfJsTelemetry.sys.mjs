@@ -12,44 +12,127 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint max-len: ["error", 100] */
 
-export const PdfJsTelemetry = {
-  onViewerIsUsed() {
+export class PdfJsTelemetryContent {
+  static onViewerIsUsed() {
     Glean.pdfjs.used.add(1);
-  },
-  onTimeToView(ms) {
+  }
+}
+
+export class PdfJsTelemetry {
+  static report(aData) {
+    const { type } = aData;
+    switch (type) {
+      case "pageInfo":
+        this.onTimeToView(aData.timestamp);
+        break;
+      case "editing":
+        this.onEditing(aData);
+        break;
+      case "buttons":
+      case "gv-buttons":
+        {
+          const id = aData.data.id.replace(
+            /([A-Z])/g,
+            c => `_${c.toLowerCase()}`
+          );
+          if (type === "buttons") {
+            this.onButtons(id);
+          } else {
+            this.onGeckoview(id);
+          }
+        }
+        break;
+    }
+  }
+
+  static onTimeToView(ms) {
     Glean.pdfjs.timeToView.accumulateSamples([ms]);
-  },
-  onEditing({ subtype, data }) {
-    if (!data) {
-      return;
-    }
-    if (!subtype && data.type) {
-      Glean.pdfjs.editing[data.type].add(1);
+  }
+
+  static onEditing({ type, data }) {
+    if (type !== "editing" || !data) {
       return;
     }
 
-    if (subtype !== "stamp") {
-      return;
+    switch (data.type) {
+      case "freetext":
+      case "ink":
+        Glean.pdfjs.editing[data.type].add(1);
+        return;
+      case "print":
+      case "save":
+        {
+          Glean.pdfjs.editing[data.type].add(1);
+          if (!data.stats) {
+            return;
+          }
+          const numbers = ["one", "two", "three", "four", "five"];
+          Glean.pdfjsEditingHighlight[data.type].add(1);
+          Glean.pdfjsEditingHighlight.numberOfColors[
+            numbers[data.stats.highlight.numberOfColors - 1]
+          ].add(1);
+        }
+        return;
+      case "stamp":
+        if (data.action === "added") {
+          Glean.pdfjs.editing.stamp.add(1);
+          return;
+        }
+        Glean.pdfjs.stamp[data.action].add(1);
+        for (const key of [
+          "alt_text_keyboard",
+          "alt_text_decorative",
+          "alt_text_description",
+          "alt_text_edit",
+        ]) {
+          if (data[key]) {
+            Glean.pdfjs.stamp[key].add(1);
+          }
+        }
+        return;
+      case "highlight":
+      case "free_highlight":
+        switch (data.action) {
+          case "added":
+            Glean.pdfjsEditingHighlight.kind[data.type].add(1);
+            Glean.pdfjsEditingHighlight.method[data.methodOfCreation].add(1);
+            Glean.pdfjsEditingHighlight.color[data.color].add(1);
+            if (data.type === "free_highlight") {
+              Glean.pdfjsEditingHighlight.thickness.accumulateSamples([
+                data.thickness,
+              ]);
+            }
+            break;
+          case "color_changed":
+            Glean.pdfjsEditingHighlight.color[data.color].add(1);
+            Glean.pdfjsEditingHighlight.colorChanged.add(1);
+            break;
+          case "thickness_changed":
+            Glean.pdfjsEditingHighlight.thickness.accumulateSamples([
+              data.thickness,
+            ]);
+            Glean.pdfjsEditingHighlight.thicknessChanged.add(1);
+            break;
+          case "deleted":
+            Glean.pdfjsEditingHighlight.deleted.add(1);
+            break;
+          case "edited":
+            Glean.pdfjsEditingHighlight.edited.add(1);
+            break;
+          case "toggle_visibility":
+            Glean.pdfjsEditingHighlight.toggleVisibility.add(1);
+            break;
+        }
+        break;
     }
+  }
 
-    Glean.pdfjs.stamp[data.action].add(1);
-    for (const key of [
-      "alt_text_keyboard",
-      "alt_text_decorative",
-      "alt_text_description",
-      "alt_text_edit",
-    ]) {
-      if (data[key]) {
-        Glean.pdfjs.stamp[key].add(1);
-      }
-    }
-  },
-  onButtons(id) {
+  static onButtons(id) {
     Glean.pdfjs.buttons[id].add(1);
-  },
-  onGeckoview(id) {
+  }
+
+  static onGeckoview(id) {
     Glean.pdfjs.geckoview[id].add(1);
-  },
-};
+  }
+}
