@@ -4747,37 +4747,40 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       if (saveDisplayArg) {
         if (GdkIsX11Display(disp)) {
           SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
-        }
-#  ifdef MOZ_WAYLAND
-        else if (GdkIsWaylandDisplay(disp)) {
+        } else if (GdkIsWaylandDisplay(disp)) {
           SaveWordToEnv("WAYLAND_DISPLAY", nsDependentCString(display_name));
         }
-#  endif
       }
-    }
-#  ifdef MOZ_WIDGET_GTK
-    else {
+    } else {
       gdk_display_manager_open_display(gdk_display_manager_get(), nullptr);
     }
-#  endif
-    // Check that Wayland only and X11 only builds
-    // use appropriate displays.
-#  if defined(MOZ_WAYLAND) && !defined(MOZ_X11)
-    if (!GdkIsWaylandDisplay()) {
-      Output(true, "Wayland only build is missig Wayland display!\n");
-    }
-#  endif
-#  if !defined(MOZ_WAYLAND) && defined(MOZ_X11)
-    if (!GdkIsX11Display()) {
-      Output(true, "X11 only build is missig X11 display!\n");
-    }
-#  endif
 #  if defined(MOZ_WAYLAND)
     // We want to use proxy for main connection only so
     // restore original Wayland display for next potential Wayland connections
     // from gfx probe code and so on.
     if (gWaylandProxy) {
       gWaylandProxy->RestoreWaylandDisplay();
+    }
+#  endif
+    if (!gdk_display_get_default()) {
+      Output(true,
+             "Error: we don't have any display, WAYLAND_DISPLAY='%s' "
+             "DISPLAY='%s'\n",
+             PR_GetEnv("WAYLAND_DISPLAY"), PR_GetEnv("DISPLAY"));
+      return 1;
+    }
+    // Check that Wayland only and X11 only builds
+    // use appropriate displays.
+#  if defined(MOZ_WAYLAND) && !defined(MOZ_X11)
+    if (!GdkIsWaylandDisplay()) {
+      Output(true, "Wayland only build is missig Wayland display!\n");
+      return 1;
+    }
+#  endif
+#  if !defined(MOZ_WAYLAND) && defined(MOZ_X11)
+    if (!GdkIsX11Display()) {
+      Output(true, "X11 only build is missig X11 display!\n");
+      return 1;
     }
 #  endif
   }
