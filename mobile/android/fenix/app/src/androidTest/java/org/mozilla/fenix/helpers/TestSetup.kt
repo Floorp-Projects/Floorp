@@ -11,8 +11,8 @@ import org.junit.After
 import org.junit.Before
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.TAG
-import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.ui.robots.notificationShade
+import java.util.Locale
 
 /**
  * Standard Test setup and tear down methods to run before each test.
@@ -26,19 +26,12 @@ open class TestSetup {
     @Before
     open fun setUp() {
         Log.i(TAG, "TestSetup: Starting the @Before setup")
-        // Initializing this as part of class construction, below the rule would throw a NPE.
-        // So we are initializing this here instead of in all related tests.
-        Log.i(TAG, "TestSetup: Trying to initialize the browserStore instance")
-        browserStore = appContext.components.core.store
-        Log.i(TAG, "TestSetup: Initialized the browserStore instance")
-        // Clear pre-existing notifications.
-        notificationShade {
-            cancelAllShownNotifications()
-        }
-
         runBlocking {
             // Reset locale to EN-US if needed.
-            AppAndSystemHelper.resetSystemLocaleToEnUS()
+            // Because of https://bugzilla.mozilla.org/show_bug.cgi?id=1812183, some items might not be updated.
+            if (Locale.getDefault() != Locale.US) {
+                AppAndSystemHelper.setSystemLocale(Locale.US)
+            }
             // Check and clear the downloads folder, in case the tearDown method is not executed.
             // This will only work in case of a RetryTestRule execution.
             AppAndSystemHelper.clearDownloadsFolder()
@@ -50,6 +43,16 @@ open class TestSetup {
             AppAndSystemHelper.deleteHistoryStorage()
             // Clear permissions left after a failed test, before a retry.
             AppAndSystemHelper.deletePermissionsStorage()
+        }
+
+        // Initializing this as part of class construction, below the rule would throw a NPE.
+        // So we are initializing this here instead of in all related tests.
+        Log.i(TAG, "TestSetup: Trying to initialize the browserStore instance")
+        browserStore = TestHelper.appContext.components.core.store
+        Log.i(TAG, "TestSetup: Initialized the browserStore instance")
+        // Clear pre-existing notifications.
+        notificationShade {
+            cancelAllShownNotifications()
         }
 
         mockWebServer = MockWebServer().apply {
@@ -68,7 +71,16 @@ open class TestSetup {
     @After
     open fun tearDown() {
         Log.i(TAG, "TestSetup: Starting the @After tearDown methods.")
-        // Check and clear the downloads folder.
-        AppAndSystemHelper.clearDownloadsFolder()
+        runBlocking {
+            // Check and clear the downloads folder.
+            AppAndSystemHelper.clearDownloadsFolder()
+
+            // Reset locale to EN-US if needed.
+            // This method is only here temporarily, to set the language before a new activity is started.
+            // TODO: When https://bugzilla.mozilla.org/show_bug.cgi?id=1812183 is fixed, it should be removed.
+            if (Locale.getDefault() != Locale.US) {
+                AppAndSystemHelper.setSystemLocale(Locale.US)
+            }
+        }
     }
 }
