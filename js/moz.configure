@@ -567,7 +567,7 @@ set_config("JS_MASM_VERBOSE", depends_if("--enable-masm-verbose")(lambda _: True
 # FJCVTZS instruction as part of ARMv8.3-JSConv.
 @depends(target)
 def is_apple_silicon(target):
-    return target.os == "OSX" and target.kernel == "Darwin" and target.cpu == "aarch64"
+    return target.kernel == "Darwin" and target.cpu == "aarch64"
 
 
 option(

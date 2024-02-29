@@ -36,6 +36,7 @@ class OS(EnumString):
         "DragonFly",
         "FreeBSD",
         "GNU",
+        "iOS",
         "NetBSD",
         "OpenBSD",
         "OSX",

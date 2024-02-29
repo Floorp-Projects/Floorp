@@ -102,6 +102,10 @@ gyp_vars["ssl_enable_zlib"] = 0
 gyp_vars["use_system_sqlite"] = 1
 gyp_vars["sqlite_libs"] = "sqlite"
 gyp_vars["enable_draft_hpke"] = 1
+# This makes a block in security/nss/coreconf/config.gypi happy, but it
+# doesn't actually matter because it's for xcode settings, which the
+# build system ignores.
+gyp_vars["iphone_deployment_target"] = "doesntmatter"
 
 # Clang can build NSS with its integrated assembler since version 9.
 if (
