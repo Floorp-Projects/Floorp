@@ -82,11 +82,15 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
   /**
    * Return unique urls that are open for given user context id.
    *
-   * @param {integer} userContextId Containers user context id
+   * @param {integer|string} userContextId Containers user context id
    * @param {boolean} [isInPrivateWindow] In private browsing window or not
    * @returns {Array} urls
    */
   static getOpenTabs(userContextId, isInPrivateWindow = false) {
+    // It's fairly common to retrieve the value from an HTML attribute, that
+    // means we're getting sometimes a string, sometimes an integer. As we're
+    // using this as key of a Map, we must treat it consistently.
+    userContextId = parseInt(userContextId);
     userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
       userContextId,
       isInPrivateWindow
@@ -168,10 +172,22 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
    * Registers a tab as open.
    *
    * @param {string} url Address of the tab
-   * @param {integer} userContextId Containers user context id
+   * @param {integer|string} userContextId Containers user context id
    * @param {boolean} isInPrivateWindow In private browsing window or not
    */
   static async registerOpenTab(url, userContextId, isInPrivateWindow) {
+    // It's fairly common to retrieve the value from an HTML attribute, that
+    // means we're getting sometimes a string, sometimes an integer. As we're
+    // using this as key of a Map, we must treat it consistently.
+    userContextId = parseInt(userContextId);
+    if (!Number.isInteger(userContextId)) {
+      lazy.logger.error("Invalid userContextId while registering openTab: ", {
+        url,
+        userContextId,
+        isInPrivateWindow,
+      });
+      return;
+    }
     lazy.logger.info("Registering openTab: ", {
       url,
       userContextId,
@@ -195,10 +211,14 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
    * Unregisters a previously registered open tab.
    *
    * @param {string} url Address of the tab
-   * @param {integer} userContextId Containers user context id
+   * @param {integer|string} userContextId Containers user context id
    * @param {boolean} isInPrivateWindow In private browsing window or not
    */
   static async unregisterOpenTab(url, userContextId, isInPrivateWindow) {
+    // It's fairly common to retrieve the value from an HTML attribute, that
+    // means we're getting sometimes a string, sometimes an integer. As we're
+    // using this as key of a Map, we must treat it consistently.
+    userContextId = parseInt(userContextId);
     lazy.logger.info("Unregistering openTab: ", {
       url,
       userContextId,
