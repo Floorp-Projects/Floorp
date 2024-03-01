@@ -103,3 +103,4 @@ pref(ui.use_standins_for_native_colors,false) pref(browser.display.use_system_co
 
 # Forced color adjust
 pref(layout.css.forced-color-adjust.enabled,true) == backplate-force-color-adjust.html backplate-force-color-adjust-ref.html
+== transparent-textarea.html transparent-textarea-ref.html
