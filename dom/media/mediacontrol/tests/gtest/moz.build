@@ -11,7 +11,7 @@ UNIFIED_SOURCES += [
     "TestMediaKeysEvent.cpp",
 ]
 
-if CONFIG["MOZ_APPLEMEDIA"]:
+if CONFIG["MOZ_APPLEMEDIA"] and CONFIG["TARGET_OS"] == "OSX":
     UNIFIED_SOURCES += ["TestMediaKeysEventMac.mm", "TestMediaKeysEventMediaCenter.mm"]
 
 include("/ipc/chromium/chromium-config.mozbuild")

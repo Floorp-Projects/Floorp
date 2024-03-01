@@ -120,8 +120,12 @@ else:
 if CONFIG["OS_TARGET"] == "Darwin":
     UNIFIED_SOURCES += [
         "TestAvailableMemoryWatcherMac.cpp",
-        "TestMacNSURLEscaping.mm",
         "TestThreads_mac.mm",
+    ]
+
+if CONFIG["TARGET_OS"] == "OSX":
+    UNIFIED_SOURCES += [
+        "TestMacNSURLEscaping.mm",
     ]
 
 if CONFIG["OS_TARGET"] == "Linux":
