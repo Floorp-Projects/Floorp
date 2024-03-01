@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include "mozilla/dom/GamepadHandle.h"
+#include "mozilla/Tainting.h"
 
 namespace mozilla {
 namespace dom {
