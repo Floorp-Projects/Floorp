@@ -126,7 +126,7 @@ const GlobalConstants = Object.freeze({
   IDS_GT_AND_LT: "Invalid value: must be greater than or equal to % s " + "and less than or equal to % s.",
   IDS_LESS_THAN: "Invalid value: must be less than or equal to % s.",
   IDS_INVALID_MONTH: "** Invalid **",
-  IDS_INVALID_DATE: "Invalid date / time: please ensure that the date / time exists.Field",
+  IDS_INVALID_DATE: "Invalid date / time: please ensure that the date / time exists. Field",
   IDS_INVALID_DATE2: " should match format ",
   IDS_INVALID_VALUE: "The value entered does not match the format of the field",
   IDS_AM: "am",
@@ -3957,8 +3957,8 @@ function initSandbox(params) {
 
 ;// CONCATENATED MODULE: ./src/pdf.scripting.js
 
-const pdfjsVersion = "4.1.181";
-const pdfjsBuild = "14874e50b";
+const pdfjsVersion = "4.1.247";
+const pdfjsBuild = "29c493d36";
 globalThis.pdfjsScripting = {
   initSandbox: initSandbox
 };

@@ -606,6 +606,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
+  enableML: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+  },
   enablePermissions: {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -1444,6 +1448,7 @@ class BasePreferences {
     defaultZoomValue: "",
     disablePageLabels: false,
     enableHighlightEditor: false,
+    enableML: false,
     enablePermissions: false,
     enablePrintAutoRotate: true,
     enableScripting: true,
@@ -1807,6 +1812,11 @@ class FirefoxScripting {
     FirefoxCom.request("destroySandbox", null);
   }
 }
+class MLManager {
+  guess(data) {
+    return FirefoxCom.requestAsync("mlGuess", data);
+  }
+}
 class ExternalServices extends BaseExternalServices {
   updateFindControlState(data) {
     FirefoxCom.request("updateFindControlState", data);
@@ -2075,16 +2085,9 @@ class AltTextManager {
     }
   }
   #close() {
-    this.#eventBus.dispatch("reporttelemetry", {
-      source: this,
-      details: {
-        type: "editing",
-        subtype: this.#currentEditor.editorType,
-        data: this.#telemetryData || {
-          action: "alt_text_cancel",
-          alt_text_keyboard: !this.#hasUsedPointer
-        }
-      }
+    this.#currentEditor._reportTelemetry(this.#telemetryData || {
+      action: "alt_text_cancel",
+      alt_text_keyboard: !this.#hasUsedPointer
     });
     this.#telemetryData = null;
     this.#removeOnClickListeners();
@@ -2270,8 +2273,28 @@ class CaretBrowsingMode {
       return;
     }
     const midY = rect.y + rect.height / 2;
-    const caretPosition = CaretBrowsingMode.#caretPositionFromPoint(caretX, midY);
-    if (caretPosition.offsetNode?.parentElement !== element) {
+    let caretPosition = CaretBrowsingMode.#caretPositionFromPoint(caretX, midY);
+    let parentElement = caretPosition.offsetNode?.parentElement;
+    if (parentElement && parentElement !== element) {
+      const elementsAtPoint = document.elementsFromPoint(caretX, midY);
+      const savedVisibilities = [];
+      for (const el of elementsAtPoint) {
+        if (el === element) {
+          break;
+        }
+        const {
+          style
+        } = el;
+        savedVisibilities.push([el, style.visibility]);
+        style.visibility = "hidden";
+      }
+      caretPosition = CaretBrowsingMode.#caretPositionFromPoint(caretX, midY);
+      parentElement = caretPosition.offsetNode?.parentElement;
+      for (const [el, visibility] of savedVisibilities) {
+        el.style.visibility = visibility;
+      }
+    }
+    if (parentElement !== element) {
       if (select) {
         selection.extend(element.firstChild, 0);
       } else {
@@ -5078,7 +5101,7 @@ class PDFPresentationMode {
     this.#addWindowListeners();
     this.#showControls();
     this.contextMenuOpen = false;
-    window.getSelection().removeAllRanges();
+    document.getSelection().empty();
   }
   #exit() {
     const pageNumber = this.pdfViewer.currentPageNumber;
@@ -5401,7 +5424,14 @@ function composePage(pdfDocument, pageNumber, size, printContainer, printResolut
   };
 }
 class FirefoxPrintService {
-  constructor(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise = null, printAnnotationStoragePromise = null) {
+  constructor({
+    pdfDocument,
+    pagesOverview,
+    printContainer,
+    printResolution,
+    optionalContentConfigPromise = null,
+    printAnnotationStoragePromise = null
+  }) {
     this.pdfDocument = pdfDocument;
     this.pagesOverview = pagesOverview;
     this.printContainer = printContainer;
@@ -5454,8 +5484,8 @@ class PDFPrintServiceFactory {
     const canvas = document.createElement("canvas");
     return shadow(this, "supportsPrinting", "mozPrintCallback" in canvas);
   }
-  static createPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise) {
-    return new FirefoxPrintService(pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, printAnnotationStoragePromise);
+  static createPrintService(params) {
+    return new FirefoxPrintService(params);
   }
 }
 
@@ -8418,6 +8448,7 @@ class PDFViewer {
   #containerTopLeft = null;
   #copyCallbackBound = null;
   #enablePermissions = false;
+  #mlManager = null;
   #getAllTextInProgress = false;
   #hiddenCopyElement = null;
   #interruptCopyCondition = false;
@@ -8428,7 +8459,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.181";
+    const viewerVersion = "4.1.247";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -8454,6 +8485,7 @@ class PDFViewer {
     this.l10n = options.l10n;
     this.#enablePermissions = options.enablePermissions || false;
     this.pageColors = options.pageColors || null;
+    this.#mlManager = options.mlManager || null;
     this.defaultRenderingQueue = !options.renderingQueue;
     this.renderingQueue = options.renderingQueue;
     this.scroll = watchScroll(this.container, this._scrollUpdate.bind(this));
@@ -8813,7 +8845,7 @@ class PDFViewer {
         if (pdfDocument.isPureXfa) {
           console.warn("Warning: XFA-editing is not implemented.");
         } else if (isValidAnnotationEditorMode(mode)) {
-          this.#annotationEditorUIManager = new AnnotationEditorUIManager(this.container, this.viewer, this.#altTextManager, this.eventBus, pdfDocument, this.pageColors, this.#annotationEditorHighlightColors);
+          this.#annotationEditorUIManager = new AnnotationEditorUIManager(this.container, this.viewer, this.#altTextManager, this.eventBus, pdfDocument, this.pageColors, this.#annotationEditorHighlightColors, this.#mlManager);
           this.eventBus.dispatch("annotationeditoruimanager", {
             source: this,
             uiManager: this.#annotationEditorUIManager
@@ -10178,6 +10210,15 @@ class Toolbar {
         once: true
       });
     }
+    eventBus._on("showannotationeditorui", ({
+      mode
+    }) => {
+      switch (mode) {
+        case AnnotationEditorType.HIGHLIGHT:
+          options.editorHighlightButton.click();
+          break;
+      }
+    });
     this.reset();
   }
   #setAnnotationEditorUIManager(uiManager, parentContainer) {
@@ -10507,6 +10548,9 @@ const PDFViewerApplication = {
   _isCtrlKeyDown: false,
   _nimbusDataPromise: null,
   _caretBrowsing: null,
+  _isScrolling: false,
+  _lastScrollTop: 0,
+  _lastScrollLeft: 0,
   async initialize(appConfig) {
     let l10nPromise;
     l10nPromise = this.externalServices.createL10n();
@@ -10654,7 +10698,8 @@ const PDFViewerApplication = {
       enablePrintAutoRotate: AppOptions.get("enablePrintAutoRotate"),
       maxCanvasPixels: AppOptions.get("maxCanvasPixels"),
       enablePermissions: AppOptions.get("enablePermissions"),
-      pageColors
+      pageColors,
+      mlManager: this.mlManager
     });
     this.pdfViewer = pdfViewer;
     pdfRenderingQueue.setViewer(pdfViewer);
@@ -10789,9 +10834,45 @@ const PDFViewerApplication = {
       appConfig.toolbar?.viewFind?.classList.add("hidden");
     }
     this.initPassiveLoading(file);
+    const {
+      mainContainer
+    } = appConfig;
+    ({
+      scrollTop: this._lastScrollTop,
+      scrollLeft: this._lastScrollLeft
+    } = mainContainer);
+    const scroll = () => {
+      if (this._lastScrollTop === mainContainer.scrollTop && this._lastScrollLeft === mainContainer.scrollLeft) {
+        return;
+      }
+      mainContainer.removeEventListener("scroll", scroll, {
+        passive: true
+      });
+      this._isScrolling = true;
+      const scrollend = () => {
+        ({
+          scrollTop: this._lastScrollTop,
+          scrollLeft: this._lastScrollLeft
+        } = mainContainer);
+        this._isScrolling = false;
+        mainContainer.addEventListener("scroll", scroll, {
+          passive: true
+        });
+        mainContainer.removeEventListener("scrollend", scrollend);
+        mainContainer.removeEventListener("blur", scrollend);
+      };
+      mainContainer.addEventListener("scrollend", scrollend);
+      mainContainer.addEventListener("blur", scrollend);
+    };
+    mainContainer.addEventListener("scroll", scroll, {
+      passive: true
+    });
   },
   get externalServices() {
     return shadow(this, "externalServices", new ExternalServices());
+  },
+  get mlManager() {
+    return shadow(this, "mlManager", AppOptions.get("enableML") === true ? new MLManager() : null);
   },
   get initialized() {
     return this._initializedCapability.settled;
@@ -11073,7 +11154,8 @@ const PDFViewerApplication = {
       this.externalServices.reportTelemetry({
         type: "editing",
         data: {
-          type: "save"
+          type: "save",
+          stats: this.pdfDocument?.annotationStorage.editorStats
         }
       });
     }
@@ -11463,14 +11545,6 @@ const PDFViewerApplication = {
     annotationStorage.onAnnotationEditor = typeStr => {
       this._hasAnnotationEditors = !!typeStr;
       this.setTitle();
-      if (typeStr) {
-        this.externalServices.reportTelemetry({
-          type: "editing",
-          data: {
-            type: typeStr
-          }
-        });
-      }
     };
   },
   setInitialView(storedHash, {
@@ -11540,20 +11614,23 @@ const PDFViewerApplication = {
       });
       return;
     }
-    const pagesOverview = this.pdfViewer.getPagesOverview();
-    const printContainer = this.appConfig.printContainer;
-    const printResolution = AppOptions.get("printResolution");
-    const optionalContentConfigPromise = this.pdfViewer.optionalContentConfigPromise;
-    const printService = PDFPrintServiceFactory.createPrintService(this.pdfDocument, pagesOverview, printContainer, printResolution, optionalContentConfigPromise, this._printAnnotationStoragePromise);
-    this.printService = printService;
+    this.printService = PDFPrintServiceFactory.createPrintService({
+      pdfDocument: this.pdfDocument,
+      pagesOverview: this.pdfViewer.getPagesOverview(),
+      printContainer: this.appConfig.printContainer,
+      printResolution: AppOptions.get("printResolution"),
+      optionalContentConfigPromise: this.pdfViewer.optionalContentConfigPromise,
+      printAnnotationStoragePromise: this._printAnnotationStoragePromise
+    });
     this.forceRendering();
     this.setTitle();
-    printService.layout();
+    this.printService.layout();
     if (this._hasAnnotationEditors) {
       this.externalServices.reportTelemetry({
         type: "editing",
         data: {
-          type: "print"
+          type: "print",
+          stats: this.pdfDocument?.annotationStorage.editorStats
         }
       });
     }
@@ -11752,12 +11829,12 @@ const PDFViewerApplication = {
 initCom(PDFViewerApplication);
 async function loadFakeWorker() {
   GlobalWorkerOptions.workerSrc ||= AppOptions.get("workerSrc");
-  await import(/* webpackIgnore: true */ PDFWorker.workerSrc);
+  await import( /*webpackIgnore: true*/PDFWorker.workerSrc);
 }
 async function loadPDFBug(self) {
   const {
     PDFBug
-  } = await import(/* webpackIgnore: true */ AppOptions.get("debuggerSrc"));
+  } = await import( /*webpackIgnore: true*/AppOptions.get("debuggerSrc"));
   self._PDFBug = PDFBug;
 }
 function reportPageStatsPDFBug({
@@ -11830,7 +11907,7 @@ function webViewerNamedAction(evt) {
       break;
     case "Find":
       if (!PDFViewerApplication.supportsIntegratedFind) {
-        PDFViewerApplication?.findBar.toggle();
+        PDFViewerApplication.findBar?.toggle();
       }
       break;
     case "Print":
@@ -11995,7 +12072,7 @@ function webViewerUpdateFindMatchesCount({
   if (PDFViewerApplication.supportsIntegratedFind) {
     PDFViewerApplication.externalServices.updateFindMatchesCount(matchesCount);
   } else {
-    PDFViewerApplication.findBar.updateResultsCount(matchesCount);
+    PDFViewerApplication.findBar?.updateResultsCount(matchesCount);
   }
 }
 function webViewerUpdateFindControlState({
@@ -12071,7 +12148,7 @@ function webViewerWheel(evt) {
   const isPinchToZoom = evt.ctrlKey && !PDFViewerApplication._isCtrlKeyDown && deltaMode === WheelEvent.DOM_DELTA_PIXEL && evt.deltaX === 0 && (Math.abs(scaleFactor - 1) < 0.05 || isBuiltInMac) && evt.deltaZ === 0;
   if (isPinchToZoom || evt.ctrlKey && supportsMouseWheelZoomCtrlKey || evt.metaKey && supportsMouseWheelZoomMetaKey) {
     evt.preventDefault();
-    if (zoomDisabledTimeout || document.visibilityState === "hidden" || PDFViewerApplication.overlayManager.active) {
+    if (PDFViewerApplication._isScrolling || zoomDisabledTimeout || document.visibilityState === "hidden" || PDFViewerApplication.overlayManager.active) {
       return;
     }
     const previousScale = pdfViewer.currentScale;
@@ -12106,8 +12183,6 @@ function webViewerWheel(evt) {
       }
     }
     PDFViewerApplication._centerAtPos(previousScale, evt.clientX, evt.clientY);
-  } else {
-    setZoomDisabledTimeout();
   }
 }
 function webViewerTouchStart(evt) {
@@ -12516,8 +12591,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.181";
-const pdfjsBuild = "14874e50b";
+const pdfjsVersion = "4.1.247";
+const pdfjsBuild = "29c493d36";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
