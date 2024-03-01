@@ -130,47 +130,37 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame) {
   return false;
 }
 
-/**
- * Determines whether the given frame is visible or has
- * visible children that participate in the same line. Frames
- * that are not line participants do not have their
- * children checked.
- */
-static bool FrameHasVisibleInlineContent(nsIFrame* aFrame) {
+// Determines whether the given frame is visible text or has visible text that
+// participate in the same line. Frames that are not line participants do not
+// have their children checked.
+static bool FrameHasVisibleInlineText(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "Frame argument cannot be null");
-
-  if (aFrame->StyleVisibility()->IsVisible()) {
-    return true;
+  if (!aFrame->IsLineParticipant()) {
+    return false;
   }
-
-  if (aFrame->IsLineParticipant()) {
-    for (nsIFrame* kid : aFrame->PrincipalChildList()) {
-      if (kid->StyleVisibility()->IsVisible() ||
-          FrameHasVisibleInlineContent(kid)) {
-        return true;
-      }
+  if (aFrame->IsTextFrame()) {
+    return aFrame->StyleVisibility()->IsVisible() &&
+           NS_GET_A(aFrame->StyleText()->mWebkitTextFillColor.CalcColor(
+               aFrame)) != 0;
+  }
+  for (nsIFrame* kid : aFrame->PrincipalChildList()) {
+    if (FrameHasVisibleInlineText(kid)) {
+      return true;
     }
   }
   return false;
 }
 
-/**
- * Determines whether any of the frames descended from the
- * given line have inline content with 'visibility: visible'.
- * This function calls FrameHasVisibleInlineContent to process
- * each frame in the line's child list.
- */
-static bool LineHasVisibleInlineContent(nsLineBox* aLine) {
+// Determines whether any of the frames from the given line have visible text.
+static bool LineHasVisibleInlineText(nsLineBox* aLine) {
   nsIFrame* kid = aLine->mFirstChild;
   int32_t n = aLine->GetChildCount();
   while (n-- > 0) {
-    if (FrameHasVisibleInlineContent(kid)) {
+    if (FrameHasVisibleInlineText(kid)) {
       return true;
     }
-
     kid = kid->GetNextSibling();
   }
-
   return false;
 }
 
@@ -7554,11 +7544,11 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // We'll try to draw an accessibility backplate behind text (to ensure it's
   // readable over any possible background-images), if all of the following
   // hold:
-  //    (A) the backplate feature is preffed on
-  //    (B) we are not honoring the document colors
+  //    (A) we are not honoring the document colors
+  //    (B) the backplate feature is preffed on
   //    (C) the force color adjust property is set to auto
-  if (StaticPrefs::browser_display_permit_backplate() &&
-      PresContext()->ForcingColors() &&
+  if (PresContext()->ForcingColors() &&
+      StaticPrefs::browser_display_permit_backplate() &&
       StyleText()->mForcedColorAdjust != StyleForcedColorAdjust::None) {
     backplateColor.emplace(GetBackplateColor(this));
   }
@@ -7650,7 +7640,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         }
         lastY = lineArea.y;
         lastYMost = lineArea.YMost();
-        if (lineInLine && backplateColor && LineHasVisibleInlineContent(line)) {
+        if (lineInLine && backplateColor && LineHasVisibleInlineText(line)) {
           nsRect lineBackplate = GetLineTextArea(line, aBuilder) +
                                  aBuilder->ToReferenceFrame(this);
           if (curBackplateArea.IsEmpty()) {
