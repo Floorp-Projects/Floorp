@@ -385,6 +385,47 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(textEl.at(0).prop("data-l10n-id"), "test-string-id");
       assert.equal(textEl.at(1).prop("data-l10n-id"), "test-string-id-2");
     });
+
+    it("should render above_button_content legal copy with MultiSelect tile", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          tiles: {
+            type: "multiselect",
+            label: "Test Subtitle",
+            data: [
+              {
+                id: "checkbox-1",
+                type: "checkbox",
+                defaultValue: false,
+                label: { raw: "Checkbox 1" },
+              },
+            ],
+          },
+          above_button_content: [
+            {
+              type: "text",
+              text: {
+                string_id: "test-string-id",
+              },
+              font_styles: "legal",
+              link_keys: ["privacy_policy", "terms_of_use"],
+            },
+          ],
+        },
+        setScreenMultiSelects: sandbox.stub(),
+        setActiveMultiSelect: sandbox.stub(),
+      };
+
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      const legalText = wrapper.find(".legal-paragraph");
+      assert.equal(legalText.exists(), true);
+
+      const multiSelectContainer = wrapper.find(".multi-select-container");
+      assert.equal(multiSelectContainer.exists(), true);
+
+      sandbox.restore();
+    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {
