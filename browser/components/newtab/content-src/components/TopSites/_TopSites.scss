@@ -246,7 +246,24 @@ $letter-fallback-color: $white;
 
   &.placeholder {
     .tile {
-      box-shadow: $inner-box-shadow;
+      box-shadow: $shadow-card;
+      cursor: default;
+    }
+
+    &.add-button {
+      .tile {
+        background-color: var(--button-background-color);
+
+        .icon-wrapper {
+          background-image: url('chrome://global/skin/icons/plus-20.svg');
+          background-size: cover;
+          background-repeat: no-repeat;
+          height: 20px;
+          width: 20px;
+          fill: var(--icon-color);
+          -moz-context-properties: fill;
+        }
+      }
     }
   }
 

@@ -6477,7 +6477,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
     // If we have tabbed to a search shortcut top site, and we click 'enter',
     // we should execute the onClick function. This needs to be added because
     // search top sites are anchor tags without an href. See bug 1483135
-    if (this.props.link.searchTopSite && event.key === "Enter") {
+    if (event.key === "Enter" && (this.props.link.searchTopSite || this.props.isAddButton)) {
       this.props.onClick(event);
     }
   }
@@ -6572,7 +6572,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       isDraggable,
       link,
       onClick,
-      title
+      title,
+      isAddButton
     } = this.props;
     const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}${link.isDragged ? " dragged" : ""}${link.searchTopSite ? " search-shortcut" : ""}`;
     const [letterFallback] = title;
@@ -6583,6 +6584,9 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       imageClassName,
       selectedColor
     } = this.calculateStyle();
+    let addButtonl10n = {
+      "data-l10n-id": "newtab-topsites-add-shortcut-label"
+    };
     let draggableProps = {};
     if (isDraggable) {
       draggableProps = {
@@ -6674,14 +6678,16 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       className: "top-site-icon search-topsite"
     })), /*#__PURE__*/external_React_default().createElement("div", {
       className: `title${link.isPinned ? " has-icon pinned" : ""}${link.type === SPOC_TYPE || link.show_sponsored_label ? " sponsored" : ""}`
-    }, /*#__PURE__*/external_React_default().createElement("span", {
+    }, /*#__PURE__*/external_React_default().createElement("span", TopSite_extends({
       dir: "auto"
-    }, link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
+    }, isAddButton && {
+      ...addButtonl10n
+    }), link.isPinned && /*#__PURE__*/external_React_default().createElement("div", {
       className: "icon icon-pin-small"
-    }), title || /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("span", {
+    }), title || /*#__PURE__*/external_React_default().createElement("br", null)), /*#__PURE__*/external_React_default().createElement("span", {
       className: "sponsored-label",
       "data-l10n-id": "newtab-topsite-sponsored"
-    })))), children, impressionStats));
+    }))), children, impressionStats));
   }
 }
 TopSiteLink.defaultProps = {
@@ -6889,14 +6895,18 @@ class TopSitePlaceholder extends (external_React_default()).PureComponent {
     });
   }
   render() {
-    return /*#__PURE__*/external_React_default().createElement(TopSiteLink, TopSite_extends({}, this.props, {
-      className: `placeholder ${this.props.className || ""}`,
+    let addButtonProps = {};
+    if (this.props.isAddButton) {
+      addButtonProps = {
+        title: "newtab-topsites-add-shortcut-label",
+        onClick: this.onEditButtonClick
+      };
+    }
+    return /*#__PURE__*/external_React_default().createElement(TopSiteLink, TopSite_extends({}, this.props, this.props.isAddButton ? {
+      ...addButtonProps
+    } : {}, {
+      className: `placeholder ${this.props.className || ""} ${this.props.isAddButton ? "add-button" : ""}`,
       isDraggable: false
-    }), /*#__PURE__*/external_React_default().createElement("button", {
-      "aria-haspopup": "dialog",
-      className: "context-menu-button edit-button icon",
-      "data-l10n-id": "newtab-menu-topsites-placeholder-tooltip",
-      onClick: this.onEditButtonClick
     }));
   }
 }
@@ -6990,6 +7000,19 @@ class _TopSiteList extends (external_React_default()).PureComponent {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
     topSites.length = this.props.TopSitesRows * TOP_SITES_MAX_SITES_PER_ROW;
+    // if topSites do not fill an entire row add 'Add shortcut' button to array of topSites
+    // (there should only be one of these)
+    let firstPlaceholder = topSites.findIndex(Object.is.bind(null, undefined));
+    // make sure placeholder exists and there already isnt a add button
+    if (firstPlaceholder && !topSites.includes(site => site.isAddButton)) {
+      topSites[firstPlaceholder] = {
+        isAddButton: true
+      };
+    } else if (topSites.includes(site => site.isAddButton)) {
+      topSites.push(topSites.splice(topSites.indexOf({
+        isAddButton: true
+      }), 1)[0]);
+    }
     return topSites;
   }
 
@@ -7076,8 +7099,12 @@ class _TopSiteList extends (external_React_default()).PureComponent {
       let topSiteLink;
       // Use a placeholder if the link is empty or it's rendering a sponsored
       // tile for the about:home startup cache.
-      if (!link || props.App.isForStartupCache && isSponsored(link)) {
-        topSiteLink = /*#__PURE__*/external_React_default().createElement(TopSitePlaceholder, TopSite_extends({}, slotProps, commonProps));
+      if (!link || props.App.isForStartupCache && isSponsored(link) || topSites[i]?.isAddButton) {
+        if (link) {
+          topSiteLink = /*#__PURE__*/external_React_default().createElement(TopSitePlaceholder, TopSite_extends({}, slotProps, commonProps, {
+            isAddButton: topSites[i] && topSites[i].isAddButton
+          }));
+        }
       } else {
         topSiteLink = /*#__PURE__*/external_React_default().createElement(TopSite, TopSite_extends({
           link: link,

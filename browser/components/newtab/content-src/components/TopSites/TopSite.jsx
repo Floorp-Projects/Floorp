@@ -159,7 +159,10 @@ export class TopSiteLink extends React.PureComponent {
     // If we have tabbed to a search shortcut top site, and we click 'enter',
     // we should execute the onClick function. This needs to be added because
     // search top sites are anchor tags without an href. See bug 1483135
-    if (this.props.link.searchTopSite && event.key === "Enter") {
+    if (
+      event.key === "Enter" &&
+      (this.props.link.searchTopSite || this.props.isAddButton)
+    ) {
       this.props.onClick(event);
     }
   }
@@ -250,8 +253,15 @@ export class TopSiteLink extends React.PureComponent {
   }
 
   render() {
-    const { children, className, isDraggable, link, onClick, title } =
-      this.props;
+    const {
+      children,
+      className,
+      isDraggable,
+      link,
+      onClick,
+      title,
+      isAddButton,
+    } = this.props;
     const topSiteOuterClassName = `top-site-outer${
       className ? ` ${className}` : ""
     }${link.isDragged ? " dragged" : ""}${
@@ -265,6 +275,10 @@ export class TopSiteLink extends React.PureComponent {
       imageClassName,
       selectedColor,
     } = this.calculateStyle();
+
+    let addButtonl10n = {
+      "data-l10n-id": "newtab-topsites-add-shortcut-label",
+    };
 
     let draggableProps = {};
     if (isDraggable) {
@@ -380,14 +394,14 @@ export class TopSiteLink extends React.PureComponent {
                   : ""
               }`}
             >
-              <span dir="auto">
+              <span dir="auto" {...(isAddButton && { ...addButtonl10n })}>
                 {link.isPinned && <div className="icon icon-pin-small" />}
                 {title || <br />}
-                <span
-                  className="sponsored-label"
-                  data-l10n-id="newtab-topsite-sponsored"
-                />
               </span>
+              <span
+                className="sponsored-label"
+                data-l10n-id="newtab-topsite-sponsored"
+              />
             </div>
           </a>
           {children}
@@ -619,19 +633,23 @@ export class TopSitePlaceholder extends React.PureComponent {
   }
 
   render() {
+    let addButtonProps = {};
+    if (this.props.isAddButton) {
+      addButtonProps = {
+        title: "newtab-topsites-add-shortcut-label",
+        onClick: this.onEditButtonClick,
+      };
+    }
+
     return (
       <TopSiteLink
         {...this.props}
-        className={`placeholder ${this.props.className || ""}`}
+        {...(this.props.isAddButton ? { ...addButtonProps } : {})}
+        className={`placeholder ${this.props.className || ""} ${
+          this.props.isAddButton ? "add-button" : ""
+        }`}
         isDraggable={false}
-      >
-        <button
-          aria-haspopup="dialog"
-          className="context-menu-button edit-button icon"
-          data-l10n-id="newtab-menu-topsites-placeholder-tooltip"
-          onClick={this.onEditButtonClick}
-        />
-      </TopSiteLink>
+      />
     );
   }
 }
@@ -742,6 +760,17 @@ export class _TopSiteList extends React.PureComponent {
     // Make a copy of the sites to truncate or extend to desired length
     let topSites = this.props.TopSites.rows.slice();
     topSites.length = this.props.TopSitesRows * TOP_SITES_MAX_SITES_PER_ROW;
+    // if topSites do not fill an entire row add 'Add shortcut' button to array of topSites
+    // (there should only be one of these)
+    let firstPlaceholder = topSites.findIndex(Object.is.bind(null, undefined));
+    // make sure placeholder exists and there already isnt a add button
+    if (firstPlaceholder && !topSites.includes(site => site.isAddButton)) {
+      topSites[firstPlaceholder] = { isAddButton: true };
+    } else if (topSites.includes(site => site.isAddButton)) {
+      topSites.push(
+        topSites.splice(topSites.indexOf({ isAddButton: true }), 1)[0]
+      );
+    }
     return topSites;
   }
 
@@ -839,8 +868,20 @@ export class _TopSiteList extends React.PureComponent {
       let topSiteLink;
       // Use a placeholder if the link is empty or it's rendering a sponsored
       // tile for the about:home startup cache.
-      if (!link || (props.App.isForStartupCache && isSponsored(link))) {
-        topSiteLink = <TopSitePlaceholder {...slotProps} {...commonProps} />;
+      if (
+        !link ||
+        (props.App.isForStartupCache && isSponsored(link)) ||
+        topSites[i]?.isAddButton
+      ) {
+        if (link) {
+          topSiteLink = (
+            <TopSitePlaceholder
+              {...slotProps}
+              {...commonProps}
+              isAddButton={topSites[i] && topSites[i].isAddButton}
+            />
+          );
+        }
       } else {
         topSiteLink = (
           <TopSite

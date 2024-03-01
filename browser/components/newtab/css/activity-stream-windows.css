@@ -722,7 +722,20 @@ main section {
   inset-inline-end: -6px;
 }
 .top-site-outer.placeholder .tile {
-  box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: default;
+}
+.top-site-outer.placeholder.add-button .tile {
+  background-color: var(--button-background-color);
+}
+.top-site-outer.placeholder.add-button .tile .icon-wrapper {
+  background-image: url("chrome://global/skin/icons/plus-20.svg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  height: 20px;
+  width: 20px;
+  fill: var(--icon-color);
+  -moz-context-properties: fill;
 }
 .top-site-outer .title {
   color: var(--newtab-text-primary-color);
