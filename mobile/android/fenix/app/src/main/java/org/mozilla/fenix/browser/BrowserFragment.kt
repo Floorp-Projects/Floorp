@@ -300,7 +300,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun initTranslationsAction(context: Context, view: View) {
-        if (!context.settings().enableTranslations) {
+        val isEngineSupported =
+            context.components.core.store.state.translationEngine.isEngineSupported
+        if (
+            !context.settings().enableTranslations &&
+            (
+                isEngineSupported == null ||
+                    isEngineSupported == false
+                )
+        ) {
             return
         }
 

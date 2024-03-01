@@ -198,7 +198,7 @@ open class DefaultToolbarMenu(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     fun shouldShowTranslations(): Boolean = selectedSession?.let {
-        context.settings().enableTranslations
+        context.settings().enableTranslations && store.state.translationEngine.isEngineSupported == true
     } ?: false
     // End of predicates //
 

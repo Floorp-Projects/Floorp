@@ -72,13 +72,16 @@ class TranslationsBinding(
 
                 // Session Translations State Behavior (Tab)
                 val sessionTranslationsState = state.sessionState.translationsState
+
                 if (sessionTranslationsState.isTranslated) {
-                    val fromSelected = sessionTranslationsState.translationEngineState?.initialFromLanguage(
-                        translateFromLanguages,
-                    )
-                    val toSelected = sessionTranslationsState.translationEngineState?.initialToLanguage(
-                        translateToLanguages,
-                    )
+                    val fromSelected =
+                        sessionTranslationsState.translationEngineState?.initialFromLanguage(
+                            translateFromLanguages,
+                        )
+                    val toSelected =
+                        sessionTranslationsState.translationEngineState?.initialToLanguage(
+                            translateToLanguages,
+                        )
 
                     if (fromSelected != null && toSelected != null) {
                         onStateUpdated(
