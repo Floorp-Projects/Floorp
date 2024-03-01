@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozButton Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://global/content/elements/moz-button.mjs"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://global/skin/design-system/tokens-brand.css">
+  <link rel="stylesheet" href="chrome://global/skin/design-system/text-and-typography.css">
+<style>
+.four::part(button),
+.five::part(button),
+.six::part(button) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16' fill='context-fill' fill-opacity='context-fill-opacity'%3E%3Cpath d='M3 7 1.5 7l-.5.5L1 9l.5.5 1.5 0 .5-.5 0-1.5z'/%3E%3Cpath d='m8.75 7-1.5 0-.5.5 0 1.5.5.5 1.5 0 .5-.5 0-1.5z'/%3E%3Cpath d='M14.5 7 13 7l-.5.5 0 1.5.5.5 1.5 0L15 9l0-1.5z'/%3E%3C/svg%3E");
+}
+</style>
+  <script>
+    function normalizeColor(val, computedStyles) {
+      if (val.includes("currentColor")) {
+        val = val.replaceAll("currentColor", computedStyles.color);
+      }
+      if (val.startsWith("light-dark")) {
+        let [, light, dark] = val.match(/light-dark\(([^,]+),\s*([^)]+)\)/);
+        if (light && dark) {
+          val = window.matchMedia("(prefers-color-scheme: dark)").matches ? dark : light;
+        }
+      }
+      try {
+        let { r, g, b, a } = InspectorUtils.colorToRGBA(val);
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      } catch (e) {
+        info(val);
+        throw e;
+      }
+    }
+
+    function assertButtonPropertiesMatch(el, propertyToCssVar) {
+      let elStyles = getComputedStyle(el.buttonEl);
+      for (let [property, cssVar] of Object.entries(propertyToCssVar)) {
+        let propertyVal = elStyles[property];
+        let cssVarVal = cssVar.startsWith("--") ? elStyles.getPropertyValue(cssVar) : cssVar;
+        if (propertyVal.startsWith("rgb") || propertyVal.startsWith("#") || propertyVal.startsWith("color")) {
+          propertyVal = normalizeColor(propertyVal, elStyles);
+          cssVarVal = normalizeColor(cssVarVal, elStyles);
+        }
+        info(`${propertyVal} == ${cssVarVal}`);
+        is(propertyVal, cssVarVal, `${property} should be ${cssVar}`);
+      }
+    }
+
+    add_task(async function testButtonTypes() {
+      let [...buttons] = document.querySelectorAll("moz-button");
+      let [one, two, three, four, five, six] = buttons;
+
+      await Promise.all(buttons.map(btn => btn.updateComplete));
+
+      is(one.textContent, "Test button", "Text is set");
+      is(two.buttonEl.textContent.trim(), "Test button", "Text is set");
+      is(three.textContent, "Test button", "Text is set");
+
+      assertButtonPropertiesMatch(one, {
+        backgroundColor: "--button-background-color",
+        color: "--button-text-color",
+        height: "--button-min-height",
+      });
+      assertButtonPropertiesMatch(two, {
+        backgroundColor: "--button-background-color",
+        color: "--button-text-color",
+        height: "--button-min-height",
+      });
+      assertButtonPropertiesMatch(three, {
+        backgroundColor: "--button-background-color-primary",
+        color: "--button-text-color-primary",
+        height: "--button-min-height",
+      });
+
+      assertButtonPropertiesMatch(four, {
+        width: "--button-size-icon",
+        height: "--button-size-icon",
+        backgroundColor: "--button-background-color",
+        fill: "--button-text-color",
+      });
+      assertButtonPropertiesMatch(five, {
+        width: "--button-size-icon",
+        height: "--button-size-icon",
+        backgroundColor: "transparent",
+        fill: "--button-text-color",
+      });
+      assertButtonPropertiesMatch(six, {
+        width: "--button-size-icon",
+        height: "--button-size-icon",
+        backgroundColor: "transparent",
+        fill: "--button-text-color",
+      });
+
+      buttons.forEach(btn => (btn.size = "small"));
+
+      await Promise.all(buttons.map(btn => btn.updateComplete));
+
+      assertButtonPropertiesMatch(one, {
+        height: "--button-min-height-small",
+      });
+      assertButtonPropertiesMatch(two, {
+        height: "--button-min-height-small",
+      });
+      assertButtonPropertiesMatch(three, {
+        height: "--button-min-height-small",
+      });
+      assertButtonPropertiesMatch(four, {
+        width: "--button-size-icon-small",
+        height: "--button-size-icon-small",
+      });
+      assertButtonPropertiesMatch(five, {
+        width: "--button-size-icon-small",
+        height: "--button-size-icon-small",
+      });
+      assertButtonPropertiesMatch(six, {
+        width: "--button-size-icon-small",
+        height: "--button-size-icon-small",
+      });
+    });
+
+    add_task(async function testA11yAttributes() {
+      let button = document.querySelector("moz-button");
+
+      async function testProperty(propName, jsPropName = propName) {
+        let propValue = `${propName} value`;
+        ok(!button.buttonEl.hasAttribute(propName), `No ${propName} on inner button`);
+        button.setAttribute(propName, propValue);
+
+        await button.updateComplete;
+
+        ok(!button.hasAttribute(propName), `moz-button ${propName} cleared`);
+        is(button.buttonEl.getAttribute(propName), propValue, `${propName} added to inner button`);
+
+        button[jsPropName] = null;
+        await button.updateComplete;
+
+        ok(!button.buttonEl.hasAttribute(propName), `${propName} cleared by setting property`);
+      }
+
+      await testProperty("title");
+      await testProperty("aria-label", "ariaLabel");
+    });
+
+  </script>
+</head>
+<body>
+  <moz-button class="one">Test button</moz-button>
+  <moz-button class="two" label="Test button"></moz-button>
+  <moz-button class="three" type="primary">Test button</moz-button>
+  <moz-button class="four" type="icon"></moz-button>
+  <moz-button class="five" type="icon ghost"></moz-button>
+  <moz-button class="six" type="ghost icon"></moz-button>
+</body>
+</html>

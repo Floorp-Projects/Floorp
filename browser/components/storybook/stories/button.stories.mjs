@@ -14,6 +14,9 @@ export default {
     },
   },
   parameters: {
+    actions: {
+      handles: ["click"],
+    },
     status: "stable",
     fluent: `
 button-regular = Regular
