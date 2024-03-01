@@ -76,6 +76,7 @@ RenderThread::RenderThread(RefPtr<nsIThread> aThread)
       mThreadPool(false),
       mThreadPoolLP(true),
       mSingletonGLIsForHardwareWebRender(true),
+      mBatteryInfo("RenderThread.mBatteryInfo"),
       mWindowInfos("RenderThread.mWindowInfos"),
       mRenderTextureMapLock("RenderThread.mRenderTextureMapLock"),
       mHasShutdown(false),
@@ -289,6 +290,26 @@ RefPtr<MemoryReportPromise> RenderThread::AccumulateMemoryReport(
           &RenderThread::DoAccumulateMemoryReport, aInitial, p));
 
   return p;
+}
+
+void RenderThread::SetBatteryInfo(const hal::BatteryInformation& aBatteryInfo) {
+  MOZ_ASSERT(XRE_IsGPUProcess());
+
+  auto batteryInfo = mBatteryInfo.Lock();
+  batteryInfo.ref() = Some(aBatteryInfo);
+}
+
+bool RenderThread::GetPowerIsCharging() {
+  MOZ_ASSERT(XRE_IsGPUProcess());
+
+  auto batteryInfo = mBatteryInfo.Lock();
+  if (batteryInfo.ref().isSome()) {
+    return batteryInfo.ref().ref().charging();
+  }
+
+  gfxCriticalNoteOnce << "BatteryInfo is not set";
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  return false;
 }
 
 void RenderThread::AddRenderer(wr::WindowId aWindowId,

@@ -14,6 +14,7 @@
 #include "GLTypes.h"  // for GLenum
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/Hal.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/Maybe.h"
@@ -302,6 +303,9 @@ class RenderThread final {
 
   static void MaybeEnableGLDebugMessage(gl::GLContext* aGLContext);
 
+  void SetBatteryInfo(const hal::BatteryInformation& aBatteryInfo);
+  bool GetPowerIsCharging();
+
  private:
   enum class RenderTextureOp {
     PrepareForUse,
@@ -433,6 +437,8 @@ class RenderThread final {
   RefPtr<layers::SurfacePool> mSurfacePool;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
+
+  DataMutex<Maybe<hal::BatteryInformation>> mBatteryInfo;
 
   struct PendingFrameInfo {
     TimeStamp mStartTime;

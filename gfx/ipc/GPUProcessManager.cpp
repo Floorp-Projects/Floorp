@@ -142,6 +142,22 @@ GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+GPUProcessManager::BatteryObserver::BatteryObserver(GPUProcessManager* aManager)
+    : mManager(aManager) {
+  hal::RegisterBatteryObserver(this);
+}
+
+void GPUProcessManager::BatteryObserver::Notify(
+    const hal::BatteryInformation& aBatteryInfo) {
+  mManager->NotifyBatteryInfo(aBatteryInfo);
+}
+
+void GPUProcessManager::BatteryObserver::ShutDown() {
+  hal::UnregisterBatteryObserver(this);
+}
+
+GPUProcessManager::BatteryObserver::~BatteryObserver() {}
+
 void GPUProcessManager::OnXPCOMShutdown() {
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
@@ -181,6 +197,13 @@ void GPUProcessManager::ScreenInformationChanged() {
     mGPUChild->SendScreenInformationChanged();
   }
 #endif
+}
+
+void GPUProcessManager::NotifyBatteryInfo(
+    const hal::BatteryInformation& aBatteryInfo) {
+  if (mGPUChild) {
+    mGPUChild->SendNotifyBatteryInfo(aBatteryInfo);
+  }
 }
 
 void GPUProcessManager::ResetProcessStable() {
@@ -577,6 +600,9 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken,
                                           std::move(vsyncChild));
   mGPUChild->SendInitVsyncBridge(std::move(vsyncParent));
+
+  MOZ_ASSERT(!mBatteryObserver);
+  mBatteryObserver = new BatteryObserver(this);
 
   // Flush any pref updates that happened during launch and weren't
   // included in the blobs set up in LaunchGPUProcess.
@@ -1073,6 +1099,10 @@ void GPUProcessManager::DestroyProcess(bool aUnexpectedShutdown) {
   if (mVsyncBridge) {
     mVsyncBridge->Close();
     mVsyncBridge = nullptr;
+  }
+  if (mBatteryObserver) {
+    mBatteryObserver->ShutDown();
+    mBatteryObserver = nullptr;
   }
 
   CrashReporter::AnnotateCrashReport(

@@ -578,6 +578,12 @@ mozilla::ipc::IPCResult GPUParent::RecvScreenInformationChanged() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUParent::RecvNotifyBatteryInfo(
+    const BatteryInformation& aBatteryInfo) {
+  wr::RenderThread::Get()->SetBatteryInfo(aBatteryInfo);
+  return IPC_OK();
+}
+
 static void CopyFeatureChange(Feature aFeature, Maybe<FeatureFailure>* aOut) {
   FeatureState& feature = gfxConfig::GetFeature(aFeature);
   if (feature.DisabledByDefault() || feature.IsEnabled()) {

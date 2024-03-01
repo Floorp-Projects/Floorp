@@ -41,6 +41,7 @@ using mozilla::layers::OverlayInfo from "mozilla/layers/OverlayInfo.h";
 using mozilla::layers::SwapChainInfo from "mozilla/layers/OverlayInfo.h";
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::layers::VideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
+using mozilla::hal::BatteryInformation from "mozilla/hal_sandbox/PHal.h";
 
 namespace mozilla {
 namespace gfx {
@@ -80,6 +81,7 @@ parent:
 
   async PreferenceUpdate(Pref pref);
   async ScreenInformationChanged();
+  async NotifyBatteryInfo(BatteryInformation aBatteryInfo);
 
   // Create a new content-process compositor bridge.
   async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint, ContentParentId childId, uint32_t aNamespace);
