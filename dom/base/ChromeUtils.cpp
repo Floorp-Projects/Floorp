@@ -2075,8 +2075,8 @@ unsigned ChromeUtils::AliveUtilityProcesses(const GlobalObject&) {
 void ChromeUtils::GetAllPossibleUtilityActorNames(GlobalObject& aGlobal,
                                                   nsTArray<nsCString>& aNames) {
   aNames.Clear();
-  for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
-    auto idlName = static_cast<UtilityActorName>(i);
+  for (UtilityActorName idlName :
+       MakeWebIDLEnumeratedRange<WebIDLUtilityActorName>()) {
     aNames.AppendElement(GetEnumString(idlName));
   }
 }
