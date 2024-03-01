@@ -190,7 +190,7 @@ struct txEXSLTFunctionDescriptor {
 };
 
 static EnumeratedArray<txEXSLTType, txEXSLTFunctionDescriptor,
-                       txEXSLTType::_LIMIT>
+                       size_t(txEXSLTType::_LIMIT)>
     descriptTable;
 
 class txEXSLTFunctionCall : public FunctionCall {

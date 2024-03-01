@@ -138,7 +138,7 @@ struct Statistics {
 
   template <typename IndexType, typename ValueType, IndexType SizeAsEnumValue>
   using EnumeratedArray =
-      mozilla::EnumeratedArray<IndexType, ValueType, SizeAsEnumValue>;
+      mozilla::EnumeratedArray<IndexType, ValueType, size_t(SizeAsEnumValue)>;
 
   using TimeDuration = mozilla::TimeDuration;
   using TimeStamp = mozilla::TimeStamp;

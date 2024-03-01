@@ -27,7 +27,7 @@ namespace mozilla {
 
 template <typename T, size_t Length>
 class Array;
-template <typename IndexType, typename ValueType, IndexType SizeAsEnumValue>
+template <typename IndexType, typename ValueType, size_t Size>
 class EnumeratedArray;
 
 /*
@@ -64,9 +64,9 @@ constexpr size_t ArrayLength(const Array<T, N>& aArr) {
   return N;
 }
 
-template <typename E, typename T, E N>
+template <typename E, typename T, size_t N>
 constexpr size_t ArrayLength(const EnumeratedArray<E, T, N>& aArr) {
-  return size_t(N);
+  return N;
 }
 
 /*

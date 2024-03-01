@@ -38,9 +38,9 @@ enum class LayoutSubsystem : uint8_t {
 };
 
 using LayoutSubsystemDurations =
-    EnumeratedArray<LayoutSubsystem, double, LayoutSubsystem::Count>;
+    EnumeratedArray<LayoutSubsystem, double, size_t(LayoutSubsystem::Count)>;
 using LayoutFlushCount =
-    EnumeratedArray<FlushKind, SaturateUint8, FlushKind::Count>;
+    EnumeratedArray<FlushKind, SaturateUint8, size_t(FlushKind::Count)>;
 
 struct Data {
   Data();
