@@ -69,9 +69,14 @@ export function getDisplayURL(url, extensionName = null) {
     return def;
   }
 
-  const { pathname, search, protocol, host } = parse(url);
+  let { pathname, search, protocol, host } = parse(url);
 
-  const filename = getUnicodeUrlPath(getFilenameFromPath(pathname));
+  // Decode encoded characters early so that all other code rely on decoded strings
+  pathname = getUnicodeUrlPath(pathname);
+  search = getUnicodeUrlPath(search);
+  host = getUnicodeHostname(host);
+
+  const filename = getFilenameFromPath(pathname);
 
   switch (protocol) {
     case "javascript:":
@@ -125,7 +130,7 @@ export function getDisplayURL(url, extensionName = null) {
         search,
         filename,
         fileExtension: getFileExtension("/"),
-        group: url,
+        group: getUnicodeUrlPath(url),
       };
 
     case "data:":
@@ -169,7 +174,7 @@ export function getDisplayURL(url, extensionName = null) {
         search,
         filename,
         fileExtension: getFileExtension(pathname),
-        group: getUnicodeHostname(host),
+        group: host,
       };
   }
 
