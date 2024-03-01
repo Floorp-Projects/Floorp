@@ -103,6 +103,7 @@ win64-clang-tidy:
         toolchain:
             - linux64-clang-17
             - vs-toolchain
+            - win64-libxml2
 
 linux64-clang-tidy-external:
     attributes:
