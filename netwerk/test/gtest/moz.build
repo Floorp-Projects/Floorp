@@ -8,7 +8,6 @@ UNIFIED_SOURCES += [
     "TestBase64Stream.cpp",
     "TestBind.cpp",
     "TestBufferedInputStream.cpp",
-    "TestCacheControlParser.cpp",
     "TestCommon.cpp",
     "TestCookie.cpp",
     "TestDNSPacket.cpp",
@@ -62,7 +61,6 @@ USE_LIBS += [
 LOCAL_INCLUDES += [
     "/netwerk/base",
     "/netwerk/cookie",
-    "/netwerk/protocol/http",
     "/toolkit/components/jsoncpp/include",
     "/xpcom/tests/gtest",
 ]
