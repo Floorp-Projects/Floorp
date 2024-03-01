@@ -54,8 +54,6 @@ const char* kIsPerUserPref = "browser.contentanalysis.is_per_user";
 const char* kPipePathNamePref = "browser.contentanalysis.pipe_path_name";
 const char* kDefaultAllowPref = "browser.contentanalysis.default_allow";
 
-static constexpr uint32_t kAnalysisTimeoutSecs = 30;  // 30 sec
-
 nsresult MakePromise(JSContext* aCx, RefPtr<mozilla::dom::Promise>* aPromise) {
   nsIGlobalObject* go = xpc::CurrentNativeGlobal(aCx);
   if (NS_WARN_IF(!go)) {
@@ -279,7 +277,8 @@ static nsresult ConvertToProtobuf(
 static nsresult ConvertToProtobuf(
     nsIContentAnalysisRequest* aIn,
     content_analysis::sdk::ContentAnalysisRequest* aOut) {
-  aOut->set_expires_at(time(nullptr) + kAnalysisTimeoutSecs);  // TODO:
+  uint32_t timeout = StaticPrefs::browser_contentanalysis_agent_timeout();
+  aOut->set_expires_at(time(nullptr) + timeout);
 
   nsIContentAnalysisRequest::AnalysisType analysisType;
   nsresult rv = aIn->GetAnalysisType(&analysisType);

@@ -1178,6 +1178,12 @@
   value: false
   mirror: always
 
+# Time (secs) after which content analysis operations are considered timed-out
+- name: browser.contentanalysis.agent_timeout
+  type: uint32_t
+  value: 30
+  mirror: always
+
 # Content blocking for Enhanced Tracking Protection
 - name: browser.contentblocking.database.enabled
   type: bool
