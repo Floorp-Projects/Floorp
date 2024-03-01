@@ -57,6 +57,24 @@
 #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
 #endif
 
+// These defines are here to support building on kernel 3.16 which some
+// downstream projects, e.g. Firefox, use.
+// TODO(apehrson): Remove them and their undefs when no longer needed.
+#ifndef V4L2_PIX_FMT_ABGR32
+#define ABGR32_OVERRIDE 1
+#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
+#endif
+
+#ifndef V4L2_PIX_FMT_ARGB32
+#define ARGB32_OVERRIDE 1
+#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
+#endif
+
+#ifndef V4L2_PIX_FMT_RGBA32
+#define RGBA32_OVERRIDE 1
+#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
+#endif
+
 namespace webrtc {
 namespace videocapturemodule {
 #ifdef WEBRTC_LINUX

@@ -69,12 +69,6 @@ rm -f *.patch
 CHERRY_PICK_BASE=`git merge-base branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM master`
 echo "common commit: $CHERRY_PICK_BASE"
 
-# find the last upstream commit used by the previous update, so we don't
-# accidentally grab release branch commits that were added after we started
-# the previous update.
-LAST_UPSTREAM_COMMIT_SHA=`tail -1 $CURRENT_DIR/third_party/libwebrtc/README.moz-ff-commit`
-echo "previous update's last commit: $LAST_UPSTREAM_COMMIT_SHA"
-
 # create a new branch at the common commit and checkout the new branch
 ERROR_HELP=$"
 Unable to create branch '$MOZ_LIBWEBRTC_BRANCH'.  This probably means
@@ -95,7 +89,7 @@ git checkout $MOZ_LIBWEBRTC_BRANCH
 rm -f $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
 
 # grab the patches for all the commits in chrome's release branch for libwebrtc
-git format-patch -o $TMP_DIR -k $CHERRY_PICK_BASE..$LAST_UPSTREAM_COMMIT_SHA
+git format-patch -o $TMP_DIR -k $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM
 # tweak the release branch commit summaries to show they were cherry picked
 sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM) /" $TMP_DIR/*.patch
 git am $TMP_DIR/*.patch # applies to branch mozpatches
