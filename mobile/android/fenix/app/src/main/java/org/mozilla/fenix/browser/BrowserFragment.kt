@@ -346,6 +346,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
                         safeInvalidateBrowserToolbarView()
                     },
+                    onShowTranslationsDialog = {
+                        browserToolbarInteractor.onTranslationsButtonClicked()
+                    },
                 ),
                 owner = this,
                 view = view,

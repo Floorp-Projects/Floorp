@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.initialFromLanguage
 import mozilla.components.concept.engine.translate.initialToLanguage
 import mozilla.components.lib.state.helpers.AbstractBinding
+import org.mozilla.fenix.translations.TranslationDialogBottomSheet
 import org.mozilla.fenix.translations.TranslationsFlowState
 
 /**
@@ -25,6 +26,8 @@ import org.mozilla.fenix.translations.TranslationsFlowState
  * @param browserStore [BrowserStore] observed for any changes related to [TranslationsState].
  * @param sessionId Current open tab session id.
  * @param onStateUpdated Invoked when the translations action button should be updated with the new translations state.
+ * @param onShowTranslationsDialog Invoked when [TranslationDialogBottomSheet]
+ * should be automatically shown to the user.
  */
 class TranslationsBinding(
     private val browserStore: BrowserStore,
@@ -35,6 +38,7 @@ class TranslationsBinding(
         fromSelectedLanguage: Language?,
         toSelectedLanguage: Language?,
     ) -> Unit,
+    private val onShowTranslationsDialog: () -> Unit,
 ) : AbstractBinding<BrowserState>(browserStore) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {
@@ -93,6 +97,10 @@ class TranslationsBinding(
                     )
                 } else {
                     onStateUpdated(false, false, null, null)
+                }
+
+                if (sessionTranslationsState.isOfferTranslate) {
+                    onShowTranslationsDialog()
                 }
             }
     }

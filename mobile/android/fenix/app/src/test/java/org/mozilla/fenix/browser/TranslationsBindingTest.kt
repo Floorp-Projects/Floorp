@@ -40,6 +40,8 @@ class TranslationsBindingTest {
         toSelectedLanguage: Language?,
     ) -> Unit = spy()
 
+    private val onShowTranslationsDialog: () -> Unit = spy()
+
     @Test
     fun `GIVEN translationState WHEN translation status isTranslated THEN invoke onIconChanged callback`() =
         runTestOnMain {
@@ -57,6 +59,7 @@ class TranslationsBindingTest {
                 browserStore = browserStore,
                 sessionId = tabId,
                 onStateUpdated = onIconChanged,
+                onShowTranslationsDialog = {},
             )
             binding.start()
 
@@ -123,6 +126,7 @@ class TranslationsBindingTest {
                 browserStore = browserStore,
                 sessionId = tabId,
                 onStateUpdated = onIconChanged,
+                onShowTranslationsDialog = {},
             )
             binding.start()
 
@@ -154,6 +158,7 @@ class TranslationsBindingTest {
                 browserStore = browserStore,
                 sessionId = tabId,
                 onStateUpdated = onIconChanged,
+                onShowTranslationsDialog = {},
             )
             binding.start()
 
@@ -163,5 +168,32 @@ class TranslationsBindingTest {
                 null,
                 null,
             )
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN translation state isOfferTranslate is true THEN invoke onShowTranslationsDialog callback`() =
+        runTestOnMain {
+            browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tabId,
+                ),
+            )
+
+            val binding = TranslationsBinding(
+                browserStore = browserStore,
+                sessionId = tabId,
+                onStateUpdated = onIconChanged,
+                onShowTranslationsDialog = onShowTranslationsDialog,
+            )
+            binding.start()
+
+            browserStore.dispatch(
+                TranslationsAction.TranslateOfferAction(
+                    tabId = tab.id,
+                ),
+            ).joinBlocking()
+
+            verify(onShowTranslationsDialog).invoke()
         }
 }
