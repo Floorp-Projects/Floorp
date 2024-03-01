@@ -155,7 +155,11 @@ async function setHttpsFirstAndOnlyPrefs(httpsFirst, httpsOnly) {
 add_task(async function testBaseline() {
   // Run with HTTPS-First and HTTPS-Only disabled
   await setHttpsFirstAndOnlyPrefs(false, false);
-  await runTest("#insecure-link", HTTP_LINK, undefined);
+  await runTest(
+    "#insecure-link",
+    HTTP_LINK,
+    "We blocked a download that’s not secure: “http://example.org/”."
+  );
   await runTest("#secure-link", HTTPS_LINK, undefined);
 });
 
@@ -169,7 +173,7 @@ add_task(async function testHttpsFirst() {
   await runTest(
     "#insecure-link",
     HTTP_LINK,
-    "Blocked downloading insecure content “http://example.org/”."
+    "We blocked a download that’s not secure: “http://example.org/”."
   );
   await runTest("#secure-link", HTTPS_LINK, undefined);
 });
@@ -181,7 +185,7 @@ add_task(async function testHttpsOnly() {
   await runTest(
     "#insecure-link",
     HTTP_LINK,
-    "Blocked downloading insecure content “http://example.org/”."
+    "We blocked a download that’s not secure: “http://example.org/”."
   );
   await runTest("#secure-link", HTTPS_LINK, undefined);
 });
