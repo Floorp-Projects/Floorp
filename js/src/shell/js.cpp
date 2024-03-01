@@ -12227,8 +12227,7 @@ bool InitOptionParser(OptionParser& op) {
           "Print list of prefs that can be set with --setpref.") ||
       !op.addBoolOption('\0', "use-fdlibm-for-sin-cos-tan",
                         "Use fdlibm for Math.sin, Math.cos, and Math.tan") ||
-      !op.addBoolOption('\0', "wasm-gc",
-                        "Enable WebAssembly gc proposal.") ||
+      !op.addBoolOption('\0', "wasm-gc", "Enable WebAssembly gc proposal.") ||
       !op.addBoolOption('\0', "wasm-relaxed-simd",
                         "Enable WebAssembly relaxed-simd proposal.") ||
       !op.addBoolOption('\0', "wasm-multi-memory",
@@ -12261,39 +12260,50 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   // Override pref values for prefs that have a custom shell flag.
   // If you're adding a new feature, consider using --setpref instead.
 
-  JS::Prefs::setAtStartup_array_grouping(
-      !op.getBoolOption("disable-array-grouping"));
-  JS::Prefs::setAtStartup_arraybuffer_transfer(
-      !op.getBoolOption("disable-arraybuffer-transfer"));
-  JS::Prefs::set_experimental_shadow_realms(
-      op.getBoolOption("enable-shadow-realms"));
-  JS::Prefs::setAtStartup_well_formed_unicode_strings(
-      !op.getBoolOption("disable-well-formed-unicode-strings"));
+  if (op.getBoolOption("disable-array-grouping")) {
+    JS::Prefs::setAtStartup_array_grouping(false);
+  }
+  if (op.getBoolOption("disable-arraybuffer-transfer")) {
+    JS::Prefs::setAtStartup_arraybuffer_transfer(false);
+  }
+  if (op.getBoolOption("enable-shadow-realms")) {
+    JS::Prefs::set_experimental_shadow_realms(true);
+  }
+  if (op.getBoolOption("disable-well-formed-unicode-strings")) {
+    JS::Prefs::setAtStartup_well_formed_unicode_strings(false);
+  }
 #ifdef NIGHTLY_BUILD
-  JS::Prefs::setAtStartup_experimental_arraybuffer_resizable(
-      op.getBoolOption("enable-arraybuffer-resizable"));
-  JS::Prefs::setAtStartup_experimental_sharedarraybuffer_growable(
-      op.getBoolOption("enable-arraybuffer-resizable"));
-  JS::Prefs::setAtStartup_experimental_iterator_helpers(
-      op.getBoolOption("enable-iterator-helpers"));
-  JS::Prefs::setAtStartup_experimental_new_set_methods(
-      op.getBoolOption("enable-new-set-methods"));
-  JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(
-      op.getBoolOption("enable-symbols-as-weakmap-keys"));
+  if (op.getBoolOption("enable-arraybuffer-resizable")) {
+    JS::Prefs::setAtStartup_experimental_arraybuffer_resizable(true);
+    JS::Prefs::setAtStartup_experimental_sharedarraybuffer_growable(true);
+  }
+  if (op.getBoolOption("enable-iterator-helpers")) {
+    JS::Prefs::setAtStartup_experimental_iterator_helpers(true);
+  }
+  if (op.getBoolOption("enable-new-set-methods")) {
+    JS::Prefs::setAtStartup_experimental_new_set_methods(true);
+  }
+  if (op.getBoolOption("enable-symbols-as-weakmap-keys")) {
+    JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(true);
+  }
 #endif
 
-  JS::Prefs::setAtStartup_weakrefs(!op.getBoolOption("disable-weak-refs"));
+  if (op.getBoolOption("disable-weak-refs")) {
+    JS::Prefs::setAtStartup_weakrefs(false);
+  }
   JS::Prefs::setAtStartup_experimental_weakrefs_expose_cleanupSome(true);
 
-  JS::Prefs::setAtStartup_destructuring_fuse(
-      !op.getBoolOption("disable-destructuring-fuse"));
+  if (op.getBoolOption("disable-destructuring-fuse")) {
+    JS::Prefs::setAtStartup_destructuring_fuse(false);
+  }
+  if (op.getBoolOption("disable-property-error-message-fix")) {
+    JS::Prefs::setAtStartup_property_error_message_fix(false);
+  }
+
   JS::Prefs::set_use_fdlibm_for_sin_cos_tan(
       op.getBoolOption("use-fdlibm-for-sin-cos-tan"));
-  JS::Prefs::setAtStartup_property_error_message_fix(
-      !op.getBoolOption("disable-property-error-message-fix"));
 
-  if (op.getBoolOption("wasm-gc") ||
-      op.getBoolOption("wasm-relaxed-simd") ||
+  if (op.getBoolOption("wasm-gc") || op.getBoolOption("wasm-relaxed-simd") ||
       op.getBoolOption("wasm-multi-memory") ||
       op.getBoolOption("wasm-memory-control") ||
       op.getBoolOption("wasm-memory64") ||
@@ -12625,10 +12635,10 @@ bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
   const char* to_propagate[] = {
       // Compiler selection options
       "--test-wasm-await-tier2",
-      NULL};
-  for (const char** p = &to_propagate[0]; *p; p++) {
-    if (op.getBoolOption(&(*p)[2] /* 2 => skip the leading '--' */)) {
-      if (!sCompilerProcessFlags.append(*p)) {
+  };
+  for (const char* p : to_propagate) {
+    if (op.getBoolOption(p + 2 /* 2 => skip the leading '--' */)) {
+      if (!sCompilerProcessFlags.append(p)) {
         return false;
       }
     }
