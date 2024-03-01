@@ -45,7 +45,7 @@ features = ["serde_derive"]
 optional = true
 
 [dev-dependencies]
-serde_json = "1.0.111"
+serde_json = "1.0.113"
 
 [dev-dependencies.serde]
 version = "1"
