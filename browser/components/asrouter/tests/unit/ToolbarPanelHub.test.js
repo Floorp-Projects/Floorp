@@ -392,14 +392,13 @@ describe("ToolbarPanelHub", () => {
       for (let message of messages) {
         assert.ok(
           fakeRemoteL10n.createElement.args.find(
-            ([doc, el, args]) =>
-              args && args.classList === "whatsNew-message-title"
+            ([, , args]) => args && args.classList === "whatsNew-message-title"
           )
         );
         if (message.content.layout === "tracking-protections") {
           assert.ok(
             fakeRemoteL10n.createElement.args.find(
-              ([doc, el, args]) =>
+              ([, , args]) =>
                 args && args.classList === "whatsNew-message-subtitle"
             )
           );
@@ -407,13 +406,13 @@ describe("ToolbarPanelHub", () => {
         if (message.id === "WHATS_NEW_FINGERPRINTER_COUNTER_72") {
           assert.ok(
             fakeRemoteL10n.createElement.args.find(
-              ([doc, el, args]) => el === "h2" && args.content === 3
+              ([, el, args]) => el === "h2" && args.content === 3
             )
           );
         }
         assert.ok(
           fakeRemoteL10n.createElement.args.find(
-            ([doc, el, args]) =>
+            ([, , args]) =>
               args && args.classList === "whatsNew-message-content"
           )
         );
@@ -456,10 +455,9 @@ describe("ToolbarPanelHub", () => {
       // value as the `order` field of the message
       const titleEls = fakeRemoteL10n.createElement.args
         .filter(
-          ([doc, el, args]) =>
-            args && args.classList === "whatsNew-message-title"
+          ([, , args]) => args && args.classList === "whatsNew-message-title"
         )
-        .map(([doc, el, args]) => args.content);
+        .map(([, , args]) => args.content);
       assert.deepEqual(titleEls, [1, 2, 3]);
     });
     it("should accept string for image attributes", async () => {
@@ -488,7 +486,7 @@ describe("ToolbarPanelHub", () => {
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
       const [, , args] = fakeRemoteL10n.createElement.args.find(
-        ([doc, el, elArgs]) => elArgs && elArgs.attributes
+        ([, , elArgs]) => elArgs && elArgs.attributes
       );
       assert.ok(args);
       // Currently this.state.contentArguments has 8 different entries
@@ -510,7 +508,7 @@ describe("ToolbarPanelHub", () => {
       await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
 
       const dateElements = fakeRemoteL10n.createElement.args.filter(
-        ([doc, el, args]) =>
+        ([, el, args]) =>
           el === "p" && args.classList === "whatsNew-message-date"
       );
       assert.lengthOf(dateElements, uniqueDates.length);

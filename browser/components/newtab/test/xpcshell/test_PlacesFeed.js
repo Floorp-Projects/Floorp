@@ -424,7 +424,7 @@ add_task(async function test_onAction_OPEN_LINK() {
     data: { url: "https://foo.com" },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "current" },
       },
     },
   };
@@ -450,7 +450,7 @@ add_task(async function test_onAction_OPEN_LINK_referrer() {
     data: { url: "https://foo.com", referrer: "https://foo.com/ref" },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "tab" },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "tab" },
       },
     },
   };
@@ -496,7 +496,7 @@ add_task(async function test_onAction_OPEN_LINK_typed_bonus() {
     },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "tab" },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "tab" },
       },
     },
   };
@@ -524,7 +524,7 @@ add_task(async function test_onAction_OPEN_LINK_pocket() {
     },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "current" },
       },
     },
   };
@@ -551,7 +551,7 @@ add_task(async function test_onAction_OPEN_LINK_not_http() {
     data: { url: "file:///foo.com" },
     _target: {
       browser: {
-        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: e => "current" },
+        ownerGlobal: { openTrustedLinkIn, whereToOpenLink: () => "current" },
       },
     },
   };

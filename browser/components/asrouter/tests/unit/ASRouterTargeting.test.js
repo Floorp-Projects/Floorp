@@ -32,11 +32,11 @@ describe("#CachedTargetingGetter", () => {
     globals.set(
       "TargetingContext",
       class {
-        static combineContexts(...args) {
+        static combineContexts() {
           return sinon.stub();
         }
 
-        evalWithDefault(expr) {
+        evalWithDefault() {
           return sinon.stub();
         }
       }

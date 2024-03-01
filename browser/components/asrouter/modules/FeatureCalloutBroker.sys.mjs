@@ -192,7 +192,7 @@ export class _FeatureCalloutBroker {
     return item;
   }
 
-  handleFeatureCalloutCallback(win, event, data) {
+  handleFeatureCalloutCallback(win, event) {
     switch (event) {
       case "end":
         const item = this.#calloutMap.get(win);

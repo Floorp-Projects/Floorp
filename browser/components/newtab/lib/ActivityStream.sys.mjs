@@ -306,7 +306,7 @@ export const PREFS_CONFIG = new Map([
     "discoverystream.config",
     {
       title: "Configuration for the new pocket new tab",
-      getValue: ({ geo, locale }) => {
+      getValue: () => {
         return JSON.stringify({
           api_key_pref: "extensions.pocket.oAuthConsumerKey",
           collapsible: true,
@@ -689,7 +689,7 @@ export class ActivityStream {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "intl:app-locales-changed":
       case lazy.Region.REGION_TOPIC:
