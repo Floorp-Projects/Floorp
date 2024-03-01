@@ -42,7 +42,7 @@ module.exports = {
 
   create(context) {
     return {
-      AssignmentExpression(node, parents) {
+      AssignmentExpression(node) {
         let target = node.left;
         while (target.type === "MemberExpression") {
           target = target.object;

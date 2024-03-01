@@ -29,7 +29,7 @@ module.exports = {
   create(context) {
     return {
       "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']":
-        function (node) {
+        function () {
           // testing/mochitest/BrowserTestUtils/content/content-task.js
           // This script is loaded as a sub script into a frame script.
           for (let [name, value] of Object.entries(frameScriptEnv.globals)) {
@@ -37,7 +37,7 @@ module.exports = {
           }
         },
       "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']":
-        function (node) {
+        function () {
           for (let [name, value] of Object.entries(sandboxEnv.globals)) {
             helpers.addVarToScope(name, context.getScope(), value);
           }
@@ -54,7 +54,7 @@ module.exports = {
           }
         },
       "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawnChrome']":
-        function (node) {
+        function () {
           for (let [name, value] of Object.entries(sandboxEnv.globals)) {
             helpers.addVarToScope(name, context.getScope(), value);
           }

@@ -191,13 +191,13 @@ module.exports = {
     let parents = [];
 
     estraverse.traverse(ast, {
-      enter(node, parent) {
+      enter(node) {
         listener(node.type, node, parents);
 
         parents.push(node);
       },
 
-      leave(node, parent) {
+      leave() {
         if (!parents.length) {
           throw new Error("Left more nodes than entered.");
         }
@@ -285,7 +285,7 @@ module.exports = {
    * @return {Object}
    *         Espree compatible permissive config.
    */
-  getPermissiveConfig({ useBabel = true } = {}) {
+  getPermissiveConfig() {
     return {
       range: true,
       loc: true,

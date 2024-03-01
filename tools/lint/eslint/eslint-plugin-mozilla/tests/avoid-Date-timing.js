@@ -16,7 +16,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, type, message) {
+function invalidCode(code, type) {
   return { code, errors: [{ messageId: "usePerfNow", type }] };
 }
 

@@ -16,7 +16,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, output, messageId, options = []) {
+function invalidCode(code, output, messageId) {
   let rv = {
     code,
     errors: [{ messageId }],
