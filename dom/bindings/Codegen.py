@@ -12401,7 +12401,7 @@ class CGEnum(CGThing):
             # -1 because nEnumStrings() includes a string for EndGuard_
             real_entry_count=self.nEnumStrings() - 1,
             name=self.enum.identifier.name,
-            type=self.underlyingType(),
+            type=CGEnum.underlyingType(enum),
         )
         strings = CGNamespace(
             self.stringsNamespace(),
@@ -12431,15 +12431,14 @@ class CGEnum(CGThing):
     def nEnumStrings(self):
         return len(self.enum.values()) + 1
 
-    def underlyingType(self):
-        count = self.nEnumStrings()
+    @staticmethod
+    def underlyingType(enum):
+        count = len(enum.values())
         if count <= 256:
             return "uint8_t"
         if count <= 65536:
             return "uint16_t"
-        raise ValueError(
-            "Enum " + self.enum.identifier.name + " has more than 65536 values"
-        )
+        raise ValueError("Enum " + enum.identifier.name + " has more than 65536 values")
 
     def declare(self):
         decl = fill(
@@ -12450,7 +12449,7 @@ class CGEnum(CGThing):
             };
             """,
             name=self.enum.identifier.name,
-            ty=self.underlyingType(),
+            ty=CGEnum.underlyingType(self.enum),
             enums=",\n".join(map(getEnumValueName, self.enum.values())) + ",\n",
         )
 
@@ -12458,6 +12457,37 @@ class CGEnum(CGThing):
 
     def define(self):
         return self.cgThings.define()
+
+    def deps(self):
+        return self.enum.getDeps()
+
+
+class CGMaxContiguousEnumValue(CGThing):
+    def __init__(self, enum):
+        CGThing.__init__(self)
+        self.enum = enum
+
+    def declare(self):
+        enumValues = self.enum.values()
+        return fill(
+            """
+            template <>
+            struct MaxContiguousEnumValue<dom::${name}>
+            {
+              static constexpr dom::${name} value = dom::${name}::${maxValue};
+
+              static_assert(static_cast<${ty}>(dom::${name}::${minValue}) == 0,
+                            "We rely on this in ContiguousEnumValues");
+            };
+            """,
+            name=self.enum.identifier.name,
+            ty=CGEnum.underlyingType(self.enum),
+            maxValue=getEnumValueName(enumValues[-1]),
+            minValue=getEnumValueName(enumValues[0]),
+        )
+
+    def define(self):
+        return ""
 
     def deps(self):
         return self.enum.getDeps()
@@ -19073,9 +19103,11 @@ class CGBindingRoot(CGThing):
         # Do codegen for all the enums
         enums = config.getEnums(webIDLFile)
         cgthings.extend(CGEnum(e) for e in enums)
+        maxEnumValues = CGList([CGMaxContiguousEnumValue(e) for e in enums], "\n")
 
         bindingDeclareHeaders["mozilla/Span.h"] = enums
         bindingDeclareHeaders["mozilla/ArrayUtils.h"] = enums
+        bindingDeclareHeaders["mozilla/EnumTypeTraits.h"] = enums
 
         hasCode = descriptors or callbackDescriptors or dictionaries or callbacks
         bindingHeaders["mozilla/dom/BindingUtils.h"] = hasCode
@@ -19175,7 +19207,13 @@ class CGBindingRoot(CGThing):
         curr = CGWrapper(CGList(cgthings, "\n\n"), post="\n\n")
 
         # Wrap all of that in our namespaces.
-        curr = CGNamespace.build(["mozilla", "dom"], CGWrapper(curr, pre="\n"))
+
+        if len(maxEnumValues) > 0:
+            curr = CGNamespace("dom", CGWrapper(curr, pre="\n"))
+            curr = CGWrapper(CGList([curr, maxEnumValues], "\n\n"), post="\n\n")
+            curr = CGNamespace("mozilla", CGWrapper(curr, pre="\n"))
+        else:
+            curr = CGNamespace.build(["mozilla", "dom"], CGWrapper(curr, pre="\n"))
 
         curr = CGList(
             [
