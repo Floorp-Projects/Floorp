@@ -216,6 +216,7 @@ decorate_task(
   withMockNormandyApi(),
   withStub(ClientEnvironment, "getClientClassification"),
   async function testClientClassificationCache({
+    mockNormandyApi,
     getClientClassificationStub,
   }) {
     getClientClassificationStub.returns(Promise.resolve(false));
@@ -293,6 +294,7 @@ decorate_task(
   async function testReadFromRemoteSettings({
     verifyObjectSignatureStub,
     processRecipeStub,
+    finalizeStub,
     reportRecipeStub,
   }) {
     const matchRecipe = {
@@ -332,7 +334,7 @@ decorate_task(
 
     let recipesFromRS = (
       await RecipeRunner._remoteSettingsClientForTesting.get()
-    ).map(({ recipe }) => recipe);
+    ).map(({ recipe, signature }) => recipe);
     // Sort the records by id so that they match the order in the assertion
     recipesFromRS.sort((a, b) => a.id - b.id);
     Assert.deepEqual(
@@ -516,7 +518,11 @@ decorate_task(
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
   withStub(RecipeRunner, "watchPrefs"),
-  async function testInitFirstRun({ runStub, registerTimerStub }) {
+  async function testInitFirstRun({
+    runStub,
+    registerTimerStub,
+    watchPrefsStub,
+  }) {
     await RecipeRunner.init();
     Assert.deepEqual(
       runStub.args,
@@ -812,7 +818,7 @@ decorate_task(
   withStub(Uptake, "reportRunner"),
   withStub(ActionsManager.prototype, "finalize"),
   NormandyTestUtils.withMockRecipeCollection([]),
-  async function testRunEvents() {
+  async function testRunEvents({ reportRunnerStub, finalizeStub }) {
     const observer = sinon.spy();
     Services.obs.addObserver(observer, "recipe-runner:start");
 

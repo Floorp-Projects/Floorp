@@ -183,7 +183,7 @@ export class BaseAction {
    *
    * @param {Recipe} recipe
    */
-  async _run() {
+  async _run(recipe) {
     throw new Error("Not implemented");
   }
 

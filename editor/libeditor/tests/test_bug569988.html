@@ -33,7 +33,7 @@ function runTest() {
     os.addObserver(onPromptLoad, "common-dialog-loaded");
     os.addObserver(onPromptLoad, "tabmodal-dialog-loaded");
 
-    function onPromptLoad(subject) {
+    function onPromptLoad(subject, topic, data) {
       let ui = subject.Dialog ? subject.Dialog.ui : undefined;
       if (!ui) {
         // subject is an tab prompt, find the elements ourselves

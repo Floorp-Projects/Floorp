@@ -67,7 +67,7 @@ export class ActivityStreamMessageChannel {
    * @param  {object} store A redux store
    * @return {function} Redux middleware
    */
-  middleware() {
+  middleware(store) {
     return next => action => {
       const skipMain = action.meta && action.meta.skipMain;
       if (au.isSendToOneContent(action)) {

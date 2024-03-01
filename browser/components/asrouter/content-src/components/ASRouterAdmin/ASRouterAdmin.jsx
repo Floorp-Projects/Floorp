@@ -258,7 +258,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     ASRouterUtils.sendMessage({ type: "RESET_PROVIDER_PREF" });
   }
 
-  resetGroups() {
+  resetGroups(id, value) {
     ASRouterUtils.sendMessage({
       type: "RESET_GROUPS_STATE",
     }).then(this.setStateFromParent);
@@ -387,7 +387,7 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   // Simulate a copy event that sets to clipboard all targeting paramters and values
-  onCopyTargetingParams() {
+  onCopyTargetingParams(event) {
     const stringTargetingParameters = {
       ...this.state.stringTargetingParameters,
     };
@@ -507,7 +507,7 @@ export class ASRouterAdminInner extends React.PureComponent {
             isBlocked ? null : isModified ? (
               <button
                 className="button restore"
-                onClick={() => this.resetJSON(msg)}
+                onClick={e => this.resetJSON(msg)}
               >
                 Reset
               </button>
@@ -523,7 +523,7 @@ export class ASRouterAdminInner extends React.PureComponent {
           {isBlocked ? null : (
             <button
               className="button modify"
-              onClick={() => this.modifyJson(msg)}
+              onClick={e => this.modifyJson(msg)}
             >
               Modify
             </button>
@@ -557,7 +557,7 @@ export class ASRouterAdminInner extends React.PureComponent {
                 name={msg.id}
                 className="general-textarea"
                 disabled={isBlocked}
-                onChange={() => this.handleChange(msg.id)}
+                onChange={e => this.handleChange(msg.id)}
               >
                 {JSON.stringify(msg, null, 2)}
               </textarea>
@@ -647,7 +647,7 @@ export class ASRouterAdminInner extends React.PureComponent {
           </button>
           <button
             className="ASRouterButton slim button"
-            onClick={() => this.resetPBJSON(msg)}
+            onClick={e => this.resetPBJSON(msg)}
           >
             Reset JSON
           </button>
@@ -698,7 +698,7 @@ export class ASRouterAdminInner extends React.PureComponent {
       <div>
         <button
           className="ASRouterButton slim"
-          onClick={() => this.toggleAllMessages(messagesToShow)}
+          onClick={e => this.toggleAllMessages(messagesToShow)}
         >
           Collapse/Expand All
         </button>
@@ -1046,7 +1046,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     });
   }
 
-  setAttribution() {
+  setAttribution(e) {
     ASRouterUtils.sendMessage({
       type: "FORCE_ATTRIBUTION",
       data: this.state.attributionParameters,
@@ -1307,7 +1307,7 @@ export class ASRouterAdminInner extends React.PureComponent {
           <h2>Messages</h2>
           <button
             className="ASRouterButton slim button"
-            onClick={() => this.toggleAllMessages(messagesToShow)}
+            onClick={e => this.toggleAllMessages(messagesToShow)}
           >
             Collapse/Expand All
           </button>
@@ -1359,7 +1359,10 @@ export class ASRouterAdminInner extends React.PureComponent {
               <tbody>
                 {this.state.groups &&
                   this.state.groups.map(
-                    ({ id, enabled, frequency, userPreferences = [] }) => (
+                    (
+                      { id, enabled, frequency, userPreferences = [] },
+                      index
+                    ) => (
                       <Row key={id}>
                         <td>
                           <TogglePrefCheckbox

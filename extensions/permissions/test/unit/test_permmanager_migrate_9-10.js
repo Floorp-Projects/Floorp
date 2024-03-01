@@ -175,7 +175,7 @@ add_task(async function test() {
     ["http://foo.com^inBrowser=1", "A", 2, 0, 0, 0],
   ];
 
-  let found = expected.map(() => 0);
+  let found = expected.map(it => 0);
 
   // Add some places to the places database
   await PlacesTestUtils.addVisits(

@@ -85,6 +85,7 @@ export const DefaultMeta = ({
   sponsor,
   sponsored_by_override,
   saveToPocketCard,
+  isRecentSave,
   ctaButtonVariant,
 }) => (
   <div className="meta">
@@ -182,7 +183,7 @@ export class _DSCard extends React.PureComponent {
     ];
   }
 
-  onLinkClick() {
+  onLinkClick(event) {
     if (this.props.dispatch) {
       this.props.dispatch(
         ac.DiscoveryStreamUserEvent({
@@ -222,7 +223,7 @@ export class _DSCard extends React.PureComponent {
     }
   }
 
-  onSaveClick() {
+  onSaveClick(event) {
     if (this.props.dispatch) {
       this.props.dispatch(
         ac.AlsoToMain({
@@ -525,4 +526,4 @@ export const DSCard = connect(state => ({
   DiscoveryStream: state.DiscoveryStream,
 }))(_DSCard);
 
-export const PlaceholderDSCard = () => <DSCard placeholder={true} />;
+export const PlaceholderDSCard = props => <DSCard placeholder={true} />;

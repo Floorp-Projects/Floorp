@@ -69,7 +69,7 @@ var gSyncPane = {
     xps.ensureLoaded();
   },
 
-  _showLoadPage() {
+  _showLoadPage(xps) {
     let maybeAcct = false;
     let username = Services.prefs.getCharPref("services.sync.username", "");
     if (username) {

@@ -46,29 +46,29 @@ Tree.prototype = {
   get rowCount() {
     return this._data.length;
   },
-  getCellText(aRow) {
+  getCellText(aRow, aColumn) {
     return this._data[aRow];
   },
-  isSeparator() {
+  isSeparator(aIndex) {
     return false;
   },
   isSorted() {
     return false;
   },
-  isContainer() {
+  isContainer(aIndex) {
     return false;
   },
-  setTree() {},
-  getImageSrc() {},
-  getCellValue() {},
-  cycleHeader() {},
-  getRowProperties() {
+  setTree(aTree) {},
+  getImageSrc(aRow, aColumn) {},
+  getCellValue(aRow, aColumn) {},
+  cycleHeader(column) {},
+  getRowProperties(row) {
     return "";
   },
-  getColumnProperties() {
+  getColumnProperties(column) {
     return "";
   },
-  getCellProperties() {
+  getCellProperties(row, column) {
     return "";
   },
   QueryInterface: ChromeUtils.generateQI(["nsITreeView"]),

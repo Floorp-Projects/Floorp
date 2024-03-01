@@ -729,7 +729,7 @@ export class _ExperimentManager {
   /**
    * Unenroll from all active studies if user opts out.
    */
-  observe() {
+  observe(aSubject, aTopic, aPrefName) {
     if (!this.studiesEnabled) {
       for (const { slug } of this.store.getAllActiveExperiments()) {
         this.unenroll(slug, "studies-opt-out");

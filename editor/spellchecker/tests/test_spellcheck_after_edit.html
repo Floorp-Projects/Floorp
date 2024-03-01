@@ -67,11 +67,11 @@ SimpleTest.waitForFocus(async () => {
           normalSel.collapse(editingHost.querySelector("p + p").firstChild, 0);
           return 0;
         },
-        run: () => {
+        run: (editingHost) => {
           document.execCommand("delete");
           return 0;
         },
-        check: (spellCheckSel) => {
+        check: (spellCheckSel, editingHost) => {
           is(
             spellCheckSel.rangeCount,
             0,
@@ -86,11 +86,11 @@ SimpleTest.waitForFocus(async () => {
           normalSel.collapse(editingHost.querySelector("p + p").firstChild, 0);
           return 2;
         },
-        run: () => {
+        run: (editingHost) => {
           document.execCommand("delete");
           return 0;
         },
-        check: (spellCheckSel) => {
+        check: (spellCheckSel, editingHost) => {
           is(
             spellCheckSel.rangeCount,
             0,
@@ -105,11 +105,11 @@ SimpleTest.waitForFocus(async () => {
           normalSel.collapse(editingHost.querySelector("p").firstChild, "It is".length);
           return 1;
         },
-        run: () => {
+        run: (editingHost) => {
           document.execCommand("insertParagraph");
           return 0;
         },
-        check: (spellCheckSel) => {
+        check: (spellCheckSel, editingHost) => {
           is(
             spellCheckSel.rangeCount,
             0,
@@ -124,7 +124,7 @@ SimpleTest.waitForFocus(async () => {
           normalSel.collapse(editingHost.querySelector("p").firstChild, "It's beco".length);
           return 0;
         },
-        run: () => {
+        run: (editingHost) => {
           document.execCommand("insertParagraph");
           return 1;
         },

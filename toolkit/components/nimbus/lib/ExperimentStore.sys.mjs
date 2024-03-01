@@ -237,7 +237,7 @@ export class ExperimentStore extends SharedDataMap {
   async init() {
     await super.init();
 
-    this.getAllActiveExperiments().forEach(({ branch, featureIds }) => {
+    this.getAllActiveExperiments().forEach(({ slug, branch, featureIds }) => {
       (featureIds || getAllBranchFeatureIds(branch)).forEach(featureId =>
         this._emitFeatureUpdate(featureId, "feature-experiment-loaded")
       );

@@ -244,7 +244,7 @@ export var PreferenceExperiments = {
     const defaultBranchPrefs = allExperiments
       .flatMap(exp => Object.entries(exp.preferences))
       .filter(
-        ([, preferenceInfo]) =>
+        ([preferenceName, preferenceInfo]) =>
           preferenceInfo.preferenceBranchType === "default"
       );
     for (const [preferenceName, { preferenceValue }] of defaultBranchPrefs) {

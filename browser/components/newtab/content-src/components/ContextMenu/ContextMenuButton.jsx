@@ -16,7 +16,7 @@ export class ContextMenuButton extends React.PureComponent {
     this.onUpdate = this.onUpdate.bind(this);
   }
 
-  openContextMenu(isKeyBoard) {
+  openContextMenu(isKeyBoard, event) {
     if (this.props.onUpdate) {
       this.props.onUpdate(true);
     }

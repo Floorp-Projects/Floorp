@@ -43,7 +43,7 @@ export class ASRouterChild extends JSWindowActorChild {
     });
   }
 
-  handleEvent() {
+  handleEvent(event) {
     // DOMDocElementCreated is only used to create the actor.
   }
 
