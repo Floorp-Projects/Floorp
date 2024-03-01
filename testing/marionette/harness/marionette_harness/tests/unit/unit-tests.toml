@@ -138,6 +138,8 @@ skip-if = ["os == 'mac'"] # bug 1674411
 
 ["test_session.py"]
 
+["test_set_permission.py"]
+
 ["test_skip_setup.py"]
 
 ["test_switch_frame.py"]
