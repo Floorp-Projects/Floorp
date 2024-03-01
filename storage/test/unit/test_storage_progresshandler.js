@@ -26,7 +26,7 @@ var testProgressHandler = {
   calls: 0,
   abort: false,
 
-  onProgress(comm) {
+  onProgress() {
     ++this.calls;
     return this.abort;
   },

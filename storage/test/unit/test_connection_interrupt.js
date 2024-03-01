@@ -41,10 +41,10 @@ add_task(
 
     let completePromise = new Promise((resolve, reject) => {
       let listener = {
-        handleResult(aResultSet) {
+        handleResult() {
           reject();
         },
-        handleError(aError) {
+        handleError() {
           reject();
         },
         handleCompletion(aReason) {
@@ -92,10 +92,10 @@ add_task(
 
     let completePromise = new Promise((resolve, reject) => {
       let listener = {
-        handleResult(aResultSet) {
+        handleResult() {
           reject();
         },
-        handleError(aError) {
+        handleError() {
           reject();
         },
         handleCompletion(aReason) {
