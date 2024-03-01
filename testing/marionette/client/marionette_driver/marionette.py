@@ -2181,3 +2181,11 @@ class Marionette(object):
         :returns: Window rect.
         """
         return self._send_message("WebDriver:FullscreenWindow")
+
+    def set_permission(self, descriptor, state):
+        """Set the permission for the origin of the current page."""
+        body = {
+            "descriptor": descriptor,
+            "state": state,
+        }
+        return self._send_message("WebDriver:SetPermission", body)
