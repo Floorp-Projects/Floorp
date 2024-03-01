@@ -46,7 +46,11 @@ const functionAllowList = [
   Array.prototype.reduceRight,
   Array.prototype.slice,
   Array.prototype.some,
+  Array.prototype.toReversed,
+  Array.prototype.toSorted,
+  Array.prototype.toSpliced,
   Array.prototype.values,
+  Array.prototype.with,
   ArrayBuffer,
   ArrayBuffer.isView,
   ArrayBuffer.prototype.slice,
@@ -94,7 +98,10 @@ const functionAllowList = [
   TypedArray.prototype.slice,
   TypedArray.prototype.some,
   TypedArray.prototype.subarray,
+  TypedArray.prototype.toReversed,
+  TypedArray.prototype.toSorted,
   TypedArray.prototype.values,
+  TypedArray.prototype.with,
   ...allProperties(JSON),
   Map,
   Map.prototype.forEach,
@@ -229,21 +236,5 @@ const getterAllowList = [
   getter(TypedArray.prototype, Symbol.toStringTag),
   getter(TypedArray, Symbol.species),
 ];
-
-// TODO: Integrate in main list when changes array by copy ships by default
-const changesArrayByCopy = [
-  Array.prototype.toReversed,
-  Array.prototype.toSorted,
-  Array.prototype.toSpliced,
-  Array.prototype.with,
-  TypedArray.prototype.toReversed,
-  TypedArray.prototype.toSorted,
-  TypedArray.prototype.with,
-];
-for (const fn of changesArrayByCopy) {
-  if (typeof fn == "function") {
-    functionAllowList.push(fn);
-  }
-}
 
 module.exports = { functions: functionAllowList, getters: getterAllowList };
