@@ -123,7 +123,7 @@ let gContainersPane = {
     this.openPreferenceDialog(button.getAttribute("value"));
   },
 
-  onAddButtonCommand(button) {
+  onAddButtonCommand() {
     this.openPreferenceDialog(null);
   },
 

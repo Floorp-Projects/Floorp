@@ -13,7 +13,7 @@
     <h1>Service Worker Test</h1>
     <script type="text/javascript">
       navigator.serviceWorker.register("service_worker_test.js")
-               .then(regis => document.body.setAttribute("data-test-service-worker-registered", "true"));
+               .then(() => document.body.setAttribute("data-test-service-worker-registered", "true"));
     </script>
   </body>
 </html>
