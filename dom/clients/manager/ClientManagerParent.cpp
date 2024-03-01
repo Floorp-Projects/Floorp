@@ -88,7 +88,12 @@ ClientManagerParent::AllocPClientSourceParent(
 IPCResult ClientManagerParent::RecvPClientSourceConstructor(
     PClientSourceParent* aActor, const ClientSourceConstructorArgs& aArgs) {
   ClientSourceParent* actor = static_cast<ClientSourceParent*>(aActor);
-  actor->Init();
+
+  IPCResult result = actor->Init();
+  if (!result) {
+    return result;
+  }
+
   return IPC_OK();
 }
 

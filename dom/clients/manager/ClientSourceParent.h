@@ -28,8 +28,6 @@ class ClientSourceParent final : public PClientSourceParent {
   bool mExecutionReady;
   bool mFrozen;
 
-  void KillInvalidChild();
-
   ~ClientSourceParent();
 
   // PClientSourceParent
@@ -62,7 +60,7 @@ class ClientSourceParent final : public PClientSourceParent {
   explicit ClientSourceParent(const ClientSourceConstructorArgs& aArgs,
                               const Maybe<ContentParentId>& aContentParentId);
 
-  void Init();
+  mozilla::ipc::IPCResult Init();
 
   const ClientInfo& Info() const;
 
