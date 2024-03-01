@@ -450,7 +450,7 @@ nsHttpServer.prototype = {
    *   was stopped using nsIHttpServer.stop)
    * @see nsIServerSocketListener.onStopListening
    */
-  onStopListening(socket, status) {
+  onStopListening(socket) {
     dumpn(">>> shutting down server on port " + socket.port);
     for (var n in this._connections) {
       if (!this._connections[n]._requestStarted) {
@@ -4430,7 +4430,7 @@ Response.prototype = {
 
     var response = this;
     var copyObserver = {
-      onStartRequest(request) {
+      onStartRequest() {
         dumpn("*** preamble copying started");
       },
 
@@ -4488,7 +4488,7 @@ Response.prototype = {
 
     var response = this;
     var copyObserver = {
-      onStartRequest(request) {
+      onStartRequest() {
         dumpn("*** onStartRequest");
       },
 

@@ -26,7 +26,7 @@ CustomProtocolHandler.prototype = {
   newChannel(aURI, aLoadInfo) {
     return new CustomChannel(aURI, aLoadInfo);
   },
-  allowPort(port, scheme) {
+  allowPort(port) {
     return port != -1;
   },
 
@@ -56,7 +56,7 @@ CustomChannel.prototype = {
   set uploadStream(val) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  setUploadStream(aStream, aContentType, aContentLength) {
+  setUploadStream(aStream) {
     this._uploadStream = aStream;
   },
 
@@ -172,7 +172,7 @@ document.getElementById('form').submit();
   get status() {
     return Cr.NS_OK;
   },
-  cancel(status) {},
+  cancel() {},
   loadGroup: null,
   loadFlags:
     Ci.nsIRequest.LOAD_NORMAL |

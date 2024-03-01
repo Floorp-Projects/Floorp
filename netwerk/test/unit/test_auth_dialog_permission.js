@@ -63,7 +63,7 @@ AuthPrompt.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
-  prompt(title, text, realm, save, defaultText, result) {
+  prompt() {
     do_throw("unexpected prompt call");
   },
 
@@ -75,7 +75,7 @@ AuthPrompt.prototype = {
     return true;
   },
 
-  promptPassword(title, text, realm, save, pwd) {
+  promptPassword() {
     do_throw("unexpected promptPassword call");
   },
 };
@@ -159,7 +159,7 @@ Test.prototype = {
     throw Components.Exception("", Cr.NS_ERROR_ABORT);
   },
 
-  onDataAvailable(request, stream, offset, count) {
+  onDataAvailable() {
     do_throw("Should not get any data!");
   },
 

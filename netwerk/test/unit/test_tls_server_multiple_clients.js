@@ -34,7 +34,7 @@ function startServer(cert) {
       input = transport.openInputStream(0, 0, 0);
       output = transport.openOutputStream(0, 0, 0);
     },
-    onHandshakeDone(socket, status) {
+    onHandshakeDone() {
       info("TLS handshake done");
 
       input.asyncWait(

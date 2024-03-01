@@ -123,7 +123,7 @@ Http2MultiplexListener.prototype.onDataAvailable = function (
   this.buffer = this.buffer.concat(data);
 };
 
-Http2MultiplexListener.prototype.onStopRequest = function (request, status) {
+Http2MultiplexListener.prototype.onStopRequest = function (request) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -290,7 +290,7 @@ Http2BigListener.prototype.onDataAvailable = function (
   Assert.equal(bigListenerMD5, request.getResponseHeader("X-Expected-MD5"));
 };
 
-Http2BigListener.prototype.onStopRequest = function (request, status) {
+Http2BigListener.prototype.onStopRequest = function (request) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -320,10 +320,7 @@ Http2HugeSuspendedListener.prototype.onDataAvailable = function (
   read_stream(stream, cnt);
 };
 
-Http2HugeSuspendedListener.prototype.onStopRequest = function (
-  request,
-  status
-) {
+Http2HugeSuspendedListener.prototype.onStopRequest = function (request) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -470,7 +467,7 @@ async function test_http2_xhr(serverPort) {
   return new Promise(resolve => {
     var req = new XMLHttpRequest();
     req.open("GET", `https://localhost:${serverPort}/`, true);
-    req.addEventListener("readystatechange", function (evt) {
+    req.addEventListener("readystatechange", function () {
       checkXhr(req, resolve);
     });
     req.send(null);
@@ -485,7 +482,7 @@ Http2ConcurrentListener.prototype.target = 0;
 Http2ConcurrentListener.prototype.reset = 0;
 Http2ConcurrentListener.prototype.recvdHdr = 0;
 
-Http2ConcurrentListener.prototype.onStopRequest = function (request, status) {
+Http2ConcurrentListener.prototype.onStopRequest = function (request) {
   this.count++;
   Assert.ok(this.isHttp2Connection);
   if (this.recvdHdr > 0) {
@@ -814,7 +811,7 @@ altsvcClientListener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request) {
     var isHttp2Connection = checkIsHttp2(
       request.QueryInterface(Ci.nsIHttpChannel)
     );
@@ -875,7 +872,7 @@ altsvcClientListener2.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request) {
     var isHttp2Connection = checkIsHttp2(
       request.QueryInterface(Ci.nsIHttpChannel)
     );
@@ -959,7 +956,7 @@ Http2PushApiListener.prototype = {
   },
 
   // normal Channel listeners
-  onStartRequest: function pushAPIOnStart(request) {},
+  onStartRequest: function pushAPIOnStart() {},
 
   onDataAvailable: function pushAPIOnDataAvailable(
     request,
@@ -997,7 +994,7 @@ Http2PushApiListener.prototype = {
     }
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request) {
     if (
       request.originalURI.spec ==
       `https://localhost:${this.serverPort}/pushapi1/2`
@@ -1100,10 +1097,7 @@ function H11RequiredSessionListener() {}
 
 H11RequiredSessionListener.prototype = new Http2CheckListener();
 
-H11RequiredSessionListener.prototype.onStopRequest = function (
-  request,
-  status
-) {
+H11RequiredSessionListener.prototype.onStopRequest = function (request) {
   var streamReused = request.getResponseHeader("X-H11Required-Stream-Ok");
   Assert.equal(streamReused, "yes");
 
@@ -1157,8 +1151,7 @@ Http2IllegalHpackValidationListener.prototype = new Http2CheckListener();
 Http2IllegalHpackValidationListener.prototype.shouldGoAway = false;
 
 Http2IllegalHpackValidationListener.prototype.onStopRequest = function (
-  request,
-  status
+  request
 ) {
   var wentAway = request.getResponseHeader("X-Did-Goaway") === "yes";
   Assert.equal(wentAway, this.shouldGoAway);
@@ -1176,7 +1169,7 @@ function Http2IllegalHpackListener() {}
 Http2IllegalHpackListener.prototype = new Http2CheckListener();
 Http2IllegalHpackListener.prototype.shouldGoAway = false;
 
-Http2IllegalHpackListener.prototype.onStopRequest = function (request, status) {
+Http2IllegalHpackListener.prototype.onStopRequest = function () {
   var chan = makeHTTPChannel(
     `https://localhost:${this.serverPort}/illegalhpack_validate`
   );

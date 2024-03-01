@@ -182,7 +182,7 @@ function startClient(port, useGREASE, beConservative) {
     nonflavors.push("_ECH_GREASE");
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     req.onload = () => {
       equal(req.responseText, "OK", "response text should be 'OK'");
 

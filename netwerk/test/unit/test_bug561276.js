@@ -22,7 +22,7 @@ function setupChannel(suffix) {
   return httpChan;
 }
 
-function checkValueAndTrigger(request, data, ctx) {
+function checkValueAndTrigger(request, data) {
   Assert.equal("Ok", data);
   httpserver.stop(do_test_finished);
 }

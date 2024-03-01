@@ -17,16 +17,16 @@ WebSocketListener.prototype = {
   _received: null,
   QueryInterface: ChromeUtils.generateQI(["nsIWebSocketListener"]),
 
-  onAcknowledge(aContext, aSize) {},
+  onAcknowledge() {},
   onBinaryMessageAvailable(aContext, aMsg) {
     info("WsListener::onBinaryMessageAvailable");
     this._received = aMsg;
     this._ws.close(0, null);
   },
-  onMessageAvailable(aContext, aMsg) {},
-  onServerClose(aContext, aCode, aReason) {},
-  onWebSocketListenerStart(aContext) {},
-  onStart(aContext) {
+  onMessageAvailable() {},
+  onServerClose() {},
+  onWebSocketListenerStart() {},
+  onStart() {
     this._ws.sendMsg(this._sentMsg);
   },
   onStop(aContext, aStatusCode) {

@@ -131,7 +131,7 @@ function test_echo() {
       );
     },
 
-    onStopListening(aServ, aStatus) {
+    onStopListening(aServ) {
       info("called test_echo's onStopListening");
       log += "s";
 
@@ -456,7 +456,7 @@ function test_connect_permission() {
     let serverOutput = aTransport.openOutputStream(0, 0, 0);
 
     serverInput.asyncWait(
-      function (aStream) {
+      function () {
         info(
           "called test_connect_permission's socketAccepted's onInputStreamReady"
         );
@@ -485,7 +485,7 @@ function test_connect_permission() {
     server.close();
   }
 
-  function stopListening(aServ, aStatus) {
+  function stopListening() {
     info("called test_connect_permission's server's stopListening");
     log += "s";
 
@@ -650,7 +650,7 @@ function test_abstract_address_socket() {
       let serverOutput = aTransport.openOutputStream(0, 0, 0);
 
       serverInput.asyncWait(
-        aStream => {
+        () => {
           info(
             "called test_abstract_address_socket's onSocketAccepted's onInputStreamReady"
           );
@@ -665,7 +665,7 @@ function test_abstract_address_socket() {
         threadManager.currentThread
       );
     },
-    onStopListening: (aServ, aTransport) => {},
+    onStopListening: () => {},
   });
 
   let client =
@@ -680,7 +680,7 @@ function test_abstract_address_socket() {
   clientOutput.write("ping ping", 9);
 
   clientInput.asyncWait(
-    aStream => {
+    () => {
       let clientScriptInput = new ScriptableInputStream(clientInput);
       let available = clientScriptInput.available();
       if (available) {

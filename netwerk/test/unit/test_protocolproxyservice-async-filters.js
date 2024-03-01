@@ -25,10 +25,10 @@ TestProtocolHandler.prototype = {
     Ci.nsIProtocolHandler.URI_NORELATIVE |
     Ci.nsIProtocolHandler.ALLOWS_PROXY |
     Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
-  newChannel(uri, aLoadInfo) {
+  newChannel() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  allowPort(port, scheme) {
+  allowPort() {
     return true;
   },
 };
@@ -128,7 +128,7 @@ resolveCallback.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIProtocolProxyCallback"]),
 
-  onProxyAvailable(req, channel, pi, status) {
+  onProxyAvailable(req, channel, pi) {
     this.nextFunction(pi);
   },
 };

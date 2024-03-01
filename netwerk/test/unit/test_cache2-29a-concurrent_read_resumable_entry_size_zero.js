@@ -27,7 +27,7 @@ ChromeUtils.defineLazyGetter(this, "URL", function () {
 
 var httpServer = null;
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 

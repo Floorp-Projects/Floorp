@@ -19,7 +19,7 @@ async function doTest()
 {
   await SpecialPowers.setBoolPref("network.http.debug-observations", true);
 
-  observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+  observer = SpecialPowers.wrapCallback(function() {
     remainder--;
     ok(true, "observed remainder = " + remainder);
     if (!remainder) {

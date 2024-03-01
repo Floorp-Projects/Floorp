@@ -107,5 +107,5 @@ WindowListener.prototype = {
       { once: true }
     );
   },
-  onCloseWindow(aXULWindow) {},
+  onCloseWindow() {},
 };

@@ -37,7 +37,7 @@ function sendPing(socket, addr) {
         socket.close();
         resolve(message.data);
       },
-      onStopListening(sock, status) {},
+      onStopListening() {},
     });
 
     info("Multicast send to port " + socket.port);

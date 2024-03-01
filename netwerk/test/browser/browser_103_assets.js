@@ -41,7 +41,7 @@ async function test_hint_asset(testName, asset, variant) {
 
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       if (aTopic == "earlyhints-connectback") {
         numConnectBackRemaining -= 1;
       }

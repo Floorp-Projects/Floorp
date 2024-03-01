@@ -29,7 +29,7 @@ ChromeUtils.defineLazyGetter(this, "URL", function () {
 
 var httpServer = null;
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
@@ -90,6 +90,6 @@ function firstTimeThrough(request, buffer) {
   Assert.equal(buffer, responseBody);
 }
 
-function secondTimeThrough(request, buffer) {
+function secondTimeThrough() {
   httpServer.stop(do_test_finished);
 }

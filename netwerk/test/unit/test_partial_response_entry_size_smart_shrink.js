@@ -19,7 +19,7 @@ ChromeUtils.defineLazyGetter(this, "URL", function () {
 
 var httpServer = null;
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
@@ -84,7 +84,7 @@ function run_test() {
   do_test_pending();
 }
 
-function firstTimeThrough(request, buffer) {
+function firstTimeThrough() {
   // Change single cache entry limit to 1 kb.  This emulates smart size change.
   Services.prefs.setIntPref("browser.cache.disk.max_entry_size", 1);
 

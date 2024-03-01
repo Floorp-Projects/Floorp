@@ -59,7 +59,7 @@ function _observer(generator, topic) {
 }
 
 _observer.prototype = {
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     Assert.equal(this.topic, topic);
 
     Services.obs.removeObserver(this, this.topic);
@@ -93,7 +93,7 @@ function _promise_observer(topic) {
 }
 
 _promise_observer.prototype = {
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     Assert.equal(this.topic, topic);
 
     Services.obs.removeObserver(this, this.topic);

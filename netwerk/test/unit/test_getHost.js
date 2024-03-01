@@ -32,7 +32,7 @@ CheckGetHostListener.prototype = {
     }
   },
 
-  onStopRequest(request, statusCode) {
+  onStopRequest() {
     dump("*** listener onStopRequest\n");
 
     Assert.equal(gotOnStartRequest, true);

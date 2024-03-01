@@ -17,7 +17,7 @@ ChromeUtils.defineLazyGetter(this, "BadRedirectURI", function () {
   );
 });
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
@@ -27,7 +27,7 @@ function BadRedirectHandler(metadata, response) {
   response.setHeader("Location", "http://localhost:4444>BadRedirect", false);
 }
 
-function checkFailed(request, buffer) {
+function checkFailed(request) {
   Assert.equal(request.status, Cr.NS_ERROR_CORRUPTED_CONTENT);
 
   httpServer.stop(do_test_finished);

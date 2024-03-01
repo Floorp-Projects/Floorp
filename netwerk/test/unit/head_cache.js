@@ -84,7 +84,7 @@ function syncWithCacheIOThread(callback, force) {
       "disk",
       Ci.nsICacheStorage.OPEN_READONLY,
       null,
-      function (status, entry) {
+      function (status) {
         Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
         callback();
       }

@@ -41,7 +41,7 @@ class SecurityObserver {
     this.output = output;
   }
 
-  onHandshakeDone(socket, status) {
+  onHandshakeDone() {
     info("TLS handshake done");
 
     let output = this.output;

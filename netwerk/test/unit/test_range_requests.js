@@ -38,7 +38,7 @@ const encodedBody = [
 const partial_data_length = 4;
 var port = null; // set in run_test
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true,
@@ -54,7 +54,7 @@ Canceler.prototype = {
     "nsIStreamListener",
     "nsIRequestObserver",
   ]),
-  onStartRequest(request) {},
+  onStartRequest() {},
 
   onDataAvailable(request, stream, offset, count) {
     // Read stream so we don't assert for not reading from the stream
@@ -78,14 +78,14 @@ MyListener.prototype = {
     "nsIStreamListener",
     "nsIRequestObserver",
   ]),
-  onStartRequest(request) {
+  onStartRequest() {
     this._buffer = "";
   },
 
   onDataAvailable(request, stream, offset, count) {
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
-  onStopRequest(request, status) {
+  onStopRequest(request) {
     this.continueFn(request, this._buffer);
   },
 };
@@ -99,7 +99,7 @@ FailedChannelListener.prototype = {
     "nsIStreamListener",
     "nsIRequestObserver",
   ]),
-  onStartRequest(request) {},
+  onStartRequest() {},
 
   onDataAvailable(request, stream, offset, count) {
     read_stream(stream, count);
@@ -192,7 +192,7 @@ function handler_4(metadata, response) {
   }
   case_4_request_no++;
 }
-function received_partial_4(request, data) {
+function received_partial_4() {
   // checking length does not work with encoded data
   //  do_check_eq(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_4");

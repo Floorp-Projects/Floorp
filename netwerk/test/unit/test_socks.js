@@ -461,7 +461,7 @@ SocksTestServer.prototype = {
     this.client_connections.push(client);
   },
 
-  onStopListening(socket) {},
+  onStopListening() {},
 
   close() {
     if (this.client_subprocess) {

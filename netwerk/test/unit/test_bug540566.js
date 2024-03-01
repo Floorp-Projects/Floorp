@@ -4,7 +4,7 @@
 
 "use strict";
 
-function continue_test(status, entry) {
+function continue_test(status) {
   Assert.equal(status, Cr.NS_OK);
   // TODO - mayhemer: remove this tests completely
   // entry.deviceID;

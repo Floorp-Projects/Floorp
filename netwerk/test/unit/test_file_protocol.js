@@ -163,7 +163,7 @@ function do_test_read_dir(set_type, expected_type) {
   var file = do_get_tempdir();
   var chan = new_file_channel(file);
 
-  function on_read_complete(data) {
+  function on_read_complete() {
     dump(
       "*** test_read_dir.on_read_complete(" +
         set_type +

@@ -72,7 +72,7 @@ add_test(function test_sockets() {
     null
   );
   let listener = {
-    onTransportStatus(aTransport, aStatus, aProgress, aProgressMax) {
+    onTransportStatus(aTransport, aStatus) {
       if (aStatus == Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
         gDashboard.requestSockets(function (data) {
           gServerSocket.close();

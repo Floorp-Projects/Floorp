@@ -29,7 +29,7 @@ add_setup(async function () {
 
 function waitForNotificationPromise(notification, expected) {
   return new Promise(resolve => {
-    function observer(subject, topic, data) {
+    function observer() {
       is(content.document.cookie, expected);
       Services.obs.removeObserver(observer, notification);
       resolve();
@@ -70,7 +70,7 @@ add_task(async function test_purge_sync_batch_and_deleted() {
       () => content.document.cookie == "",
       "cookie did not expire in time",
       200
-    ).catch(msg => {
+    ).catch(() => {
       is(false, "Cookie did not expire in time");
     });
   });

@@ -79,7 +79,7 @@ function triggerNextTest() {
   channel.asyncOpen(new ChannelListener(checkValueAndTrigger, null));
 }
 
-function checkValueAndTrigger(request, data, ctx) {
+function checkValueAndTrigger(request, data) {
   logit(index, data);
   Assert.equal(tests[index].expected, data);
 

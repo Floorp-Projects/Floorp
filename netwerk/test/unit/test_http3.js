@@ -283,7 +283,7 @@ MultipleListener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     let routed = "";
     try {
       routed = request.getRequestHeader("Alt-Used");

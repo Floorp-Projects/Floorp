@@ -8,9 +8,9 @@ var httpserv;
 
 function TestListener() {}
 
-TestListener.prototype.onStartRequest = function (request) {};
+TestListener.prototype.onStartRequest = function () {};
 
-TestListener.prototype.onStopRequest = function (request, status) {
+TestListener.prototype.onStopRequest = function () {
   httpserv.stop(do_test_finished);
 };
 
@@ -34,7 +34,7 @@ function run_test() {
   do_test_pending();
 }
 
-function bug412945(metadata, response) {
+function bug412945(metadata) {
   if (
     !metadata.hasHeader("Content-Length") ||
     metadata.getHeader("Content-Length") != "0"

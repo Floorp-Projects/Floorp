@@ -167,8 +167,8 @@ async function run_one_testcase(testcase) {
       false
     );
   }
-  let response = await new Promise((resolve, reject) => {
-    NetUtil.asyncFetch(obliviousHttpChannel, function (inputStream, result) {
+  let response = await new Promise(resolve => {
+    NetUtil.asyncFetch(obliviousHttpChannel, function (inputStream) {
       let scriptableInputStream = Cc[
         "@mozilla.org/scriptableinputstream;1"
       ].createInstance(Ci.nsIScriptableInputStream);
@@ -200,7 +200,7 @@ async function run_one_testcase(testcase) {
     ).relayChannel;
     equal(relayChannel.responseStatus, 404);
   }
-  await new Promise((resolve, reject) => {
+  await new Promise(resolve => {
     httpServer.stop(resolve);
   });
 }

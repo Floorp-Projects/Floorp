@@ -156,7 +156,7 @@ add_task(async function test_trr_proxy() {
       QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),
       mainThreadOnly: true,
       PACURI: null,
-      getProxyForURI: (aSpec, aScheme, aHost, aPort) => {
+      getProxyForURI: () => {
         return `HTTPS foo.example.com:${proxyPort}`;
       },
     };

@@ -72,7 +72,7 @@ var proxiedChannel;
 var listener = {
   expectedCode: -1, // uninitialized
 
-  onStartRequest: function test_onStartR(request) {},
+  onStartRequest: function test_onStartR() {},
 
   onDataAvailable: function test_ODA() {
     do_throw("Should not get any data!");

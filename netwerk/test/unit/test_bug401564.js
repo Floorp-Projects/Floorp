@@ -14,12 +14,12 @@ function redirectHandler(metadata, response) {
   response.setHeader("Location", noRedirectURI, false);
 }
 
-function contentHandler(metadata, response) {
+function contentHandler(metadata) {
   Assert.equal(metadata.getHeader("Accept"), acceptType);
   httpserver.stop(do_test_finished);
 }
 
-function dummyHandler(request, buffer) {}
+function dummyHandler() {}
 
 function run_test() {
   httpserver = new HttpServer();

@@ -16,7 +16,7 @@ add_task(async function test_103_cancel_parent_connect() {
   let observed_cancel_reason = "";
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       aSubject = aSubject.QueryInterface(Ci.nsIRequest);
       if (
         aTopic == "http-on-stop-request" &&

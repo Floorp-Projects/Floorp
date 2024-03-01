@@ -67,7 +67,7 @@ function check_async_open_throws(error) {
 }
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {
+  onStartRequest: function test_onStartR() {
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
 
@@ -76,7 +76,7 @@ var listener = {
     check_async_open_throws(NS_ERROR_IN_PROGRESS);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR() {
     // Once onStopRequest is reached, the channel is marked as having been
     // opened
     check_async_open_throws(NS_ERROR_ALREADY_OPENED);

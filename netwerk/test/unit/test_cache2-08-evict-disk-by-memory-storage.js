@@ -8,7 +8,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "a1m", "a1d", function (entry) {
+    new OpenCallback(NEW, "a1m", "a1d", function () {
       var storage = getCacheStorage("memory");
       // Have to fail
       storage.asyncDoomURI(

@@ -55,7 +55,7 @@ RequestObserver.prototype = {
     "nsISupportsWeakReference",
   ]),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == notification) {
       if (!(subject instanceof Ci.nsIHttpChannel)) {
         do_throw(notification + " observed a non-HTTP channel.");
@@ -76,13 +76,13 @@ RequestObserver.prototype = {
 };
 
 var listener = {
-  onStartRequest: function test_onStartR(request) {},
+  onStartRequest: function test_onStartR() {},
 
   onDataAvailable: function test_ODA() {
     do_throw("Should not get any data!");
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR() {
     if (current_test < tests.length - 1) {
       current_test++;
       tests[current_test]();

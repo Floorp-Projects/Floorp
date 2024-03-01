@@ -26,7 +26,7 @@ var test_sink_closed;
 var test_nr;
 
 var copyObserver = {
-  onStartRequest(request) {},
+  onStartRequest() {},
 
   onStopRequest(request, statusCode) {
     // check status code

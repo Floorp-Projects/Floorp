@@ -94,7 +94,7 @@ FailListener.prototype = {
   onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     Assert.ok(!Components.isSuccessCode(request.status));
     nextTest();
     do_test_finished();
@@ -293,7 +293,7 @@ Http2PushApiListener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR(request) {
     dump("push api onstop " + request.originalURI.spec + "\n");
     Assert.ok(this.fooOK);
     Assert.ok(this.alt1OK);

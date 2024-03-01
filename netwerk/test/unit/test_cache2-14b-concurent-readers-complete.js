@@ -8,7 +8,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "x1m", "x1d", function (entry) {
+    new OpenCallback(NEW, "x1m", "x1d", function () {
       // nothing to do here, we expect concurent callbacks to get
       // all notified, then the test finishes
     })

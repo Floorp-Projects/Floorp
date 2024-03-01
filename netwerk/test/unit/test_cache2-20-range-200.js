@@ -37,9 +37,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function (
-          entry
-        ) {
+        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function () {
           mc.fired();
         })
       );
@@ -48,9 +46,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function (
-          entry
-        ) {
+        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function () {
           mc.fired();
         })
       );
@@ -59,9 +55,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function (
-          entry
-        ) {
+        new OpenCallback(NORMAL, "200m2", "200part1b--part2b", function () {
           mc.fired();
         })
       );

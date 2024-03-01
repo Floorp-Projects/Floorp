@@ -45,7 +45,7 @@ Listener.prototype = {
     }
   },
 
-  onStopRequest(request, status) {
+  onStopRequest() {
     if (pass == 0) {
       Assert.equal(this._buffer.length, responseLen);
       pass++;

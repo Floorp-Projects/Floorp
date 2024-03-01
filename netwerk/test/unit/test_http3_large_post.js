@@ -38,7 +38,7 @@ Http3Listener.prototype = {
     this.onProgressNotificationCount += 1;
   },
 
-  onStatus(request, status, statusArg) {},
+  onStatus() {},
 
   onStartRequest: function testOnStartRequest(request) {
     Assert.equal(request.status, this.expectedStatus);
@@ -55,7 +55,7 @@ Http3Listener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     let httpVersion = "";
     try {
       httpVersion = request.protocolVersion;

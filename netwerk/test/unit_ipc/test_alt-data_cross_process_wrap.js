@@ -41,7 +41,7 @@ function load_channel(channelUrl) {
   chan.asyncOpen(new ChannelListener(readTextData, null));
 }
 
-function make_channel(channelUrl, callback, ctx) {
+function make_channel(channelUrl) {
   return NetUtil.newChannel({
     uri: channelUrl,
     loadUsingSystemPrincipal: true,

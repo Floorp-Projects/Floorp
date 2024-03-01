@@ -75,7 +75,7 @@ Listener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     if (expectConditional) {
       Assert.equal(request.getResponseHeader("x-conditional"), "true");
     } else {

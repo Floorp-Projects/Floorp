@@ -25,7 +25,7 @@ ProtocolHandler.prototype = {
     this.loadInfo = aLoadInfo;
     return this;
   },
-  allowPort(port, scheme) {
+  allowPort(port) {
     return port != -1;
   },
 
@@ -67,7 +67,7 @@ ProtocolHandler.prototype = {
       loadUsingSystemPrincipal: true,
     }).open();
   },
-  asyncOpen(aListener, aContext) {
+  asyncOpen() {
     throw Components.Exception("Not implemented", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   contentDisposition: Ci.nsIChannel.DISPOSITION_INLINE,
@@ -86,7 +86,7 @@ ProtocolHandler.prototype = {
   get status() {
     return Cr.NS_OK;
   },
-  cancel(status) {},
+  cancel() {},
   loadGroup: null,
   loadFlags:
     Ci.nsIRequest.LOAD_NORMAL |

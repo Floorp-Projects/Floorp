@@ -151,7 +151,7 @@ function startClient(port, beConservative, expectSuccess) {
   req.open("GET", `https://${hostname}:${port}`);
   let internalChannel = req.channel.QueryInterface(Ci.nsIHttpChannelInternal);
   internalChannel.beConservative = beConservative;
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     req.onload = () => {
       ok(
         expectSuccess,

@@ -31,7 +31,7 @@ function successResponseHandler(metadata, response) {
 function onModifyListener(callback) {
   obs.addObserver(
     {
-      observe(subject, topic, data) {
+      observe(subject) {
         obs.removeObserver(this, "http-on-modify-request");
         callback(subject.QueryInterface(Ci.nsIHttpChannel));
       },
@@ -47,7 +47,7 @@ function startChannelRequest(uri, flags, expectedResponse = null) {
   });
   chan.asyncOpen(
     new ChannelListener(
-      (request, data, context) => {
+      (request, data) => {
         if (expectedResponse) {
           Assert.equal(data, expectedResponse);
         } else {

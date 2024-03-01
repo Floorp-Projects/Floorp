@@ -33,7 +33,7 @@ function startIter() {
   );
 }
 
-function completeIter(request, data, ctx) {
+function completeIter(request, data) {
   Assert.ok(data.length == tests[index].datalen);
   if (++index < tests.length) {
     startIter();

@@ -117,7 +117,7 @@ function chanPromise(uri, statusArg, version) {
   });
 }
 
-function checkRequest(request, data, context) {
+function checkRequest() {
   Assert.equal(last, RESPONSE_LENGTH);
   Assert.equal(max, RESPONSE_LENGTH);
 }

@@ -126,7 +126,7 @@ add_task(async function test() {
                   onCacheEntryCheck() {
                     return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
                   },
-                  onCacheEntryAvailable(entry, isnew, status) {
+                  onCacheEntryAvailable() {
                     info("opened");
                     r2();
                   },
@@ -154,17 +154,7 @@ add_task(async function test() {
     let entryCount = 0;
     let visitor = {
       onCacheStorageInfo() {},
-      async onCacheEntryInfo(
-        aURI,
-        aIdEnhance,
-        aDataSize,
-        aAltDataSize,
-        aFetchCount,
-        aLastModifiedTime,
-        aExpirationTime,
-        aPinned,
-        aInfo
-      ) {
+      async onCacheEntryInfo() {
         entryCount++;
       },
       onCacheEntryVisitCompleted() {

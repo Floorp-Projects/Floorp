@@ -10,11 +10,11 @@ var chan;
 var offlineStatus;
 
 var listener = {
-  onAcknowledge(aContext, aSize) {},
-  onBinaryMessageAvailable(aContext, aMsg) {},
-  onMessageAvailable(aContext, aMsg) {},
-  onServerClose(aContext, aCode, aReason) {},
-  onStart(aContext) {
+  onAcknowledge() {},
+  onBinaryMessageAvailable() {},
+  onMessageAvailable() {},
+  onServerClose() {},
+  onStart() {
     // onStart is not called when a connection fails
     Assert.ok(false);
   },

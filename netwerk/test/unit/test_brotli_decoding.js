@@ -26,7 +26,7 @@ let channelListener = function (closure) {
 };
 
 channelListener.prototype = {
-  onStartRequest: function testOnStartRequest(request) {},
+  onStartRequest: function testOnStartRequest() {},
 
   onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     let data = read_stream(stream, cnt);
@@ -39,7 +39,7 @@ channelListener.prototype = {
     }
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest() {
     this._closure();
   },
 };

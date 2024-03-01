@@ -64,7 +64,7 @@ var listener = {
     this._done_onData = true;
   },
 
-  onStopRequest(request, status) {
+  onStopRequest() {
     Assert.ok(this._done_onData);
     this._reset();
     if (this._test <= MAX_TESTS) {

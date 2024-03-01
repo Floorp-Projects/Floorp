@@ -24,7 +24,7 @@ iframe.addEventListener("load", finishTest);
 document.body.appendChild(iframe);
 iframe.src = "http://mochi.test:8888/tests/netwerk/test/mochitests/redirect_idn.html";
 
-function finishTest(e) {
+function finishTest() {
   ok(true);
   SimpleTest.finish();
 }

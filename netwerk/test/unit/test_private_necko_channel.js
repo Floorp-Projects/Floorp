@@ -45,7 +45,7 @@ function serverHandler(metadata, response) {
   response.bodyOutputStream.write(httpbody, httpbody.length);
 }
 
-function checkRequest(request, data, context) {
+function checkRequest() {
   get_device_entry_count("disk", null, function (count) {
     Assert.equal(count, 0);
     get_device_entry_count(

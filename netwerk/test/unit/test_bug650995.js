@@ -158,7 +158,7 @@ function TestCacheEntrySize(
       channel.asyncOpen(new ChannelListener(ctx.testAndTriggerNext, ctx));
     });
   };
-  this.testAndTriggerNext = function (request, data, ctx) {
+  this.testAndTriggerNext = function (request, data) {
     Assert.equal(secondExpectedReply, data);
     executeSoon(nextTest);
   };

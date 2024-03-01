@@ -858,22 +858,22 @@ class WebSocketConnection {
     ]);
   }
 
-  onAcknowledge(aContext, aSize) {}
+  onAcknowledge() {}
   onBinaryMessageAvailable(aContext, aMsg) {
     this._messages.push(aMsg);
     this._msgCallback();
   }
-  onMessageAvailable(aContext, aMsg) {}
-  onServerClose(aContext, aCode, aReason) {}
-  onWebSocketListenerStart(aContext) {}
-  onStart(aContext) {
+  onMessageAvailable() {}
+  onServerClose() {}
+  onWebSocketListenerStart() {}
+  onStart() {
     this._openCallback();
   }
   onStop(aContext, aStatusCode) {
     this._stopCallback({ status: aStatusCode });
     this._ws = null;
   }
-  onProxyAvailable(req, chan, proxyInfo, status) {
+  onProxyAvailable(req, chan, proxyInfo) {
     if (proxyInfo) {
       this._proxyAvailCallback({ type: proxyInfo.type });
     } else {

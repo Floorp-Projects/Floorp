@@ -38,11 +38,11 @@ ValidityChecker.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
-  onCacheEntryCheck(entry) {
+  onCacheEntryCheck() {
     return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
   },
 
-  onCacheEntryAvailable(entry, isnew, status) {
+  onCacheEntryAvailable(entry) {
     // Check if forced valid
     Assert.equal(entry.isForcedValid, this.httpStatus === 200);
     this.verifier.maybe_run_next_test();
@@ -155,7 +155,7 @@ var prepListener = {
     this.continueCallback = cb;
   },
 
-  onCacheEntryCheck(entry) {
+  onCacheEntryCheck() {
     return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
   },
 
@@ -555,7 +555,7 @@ var prefetchListener = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest(request, status) {
+  onStopRequest() {
     run_next_test();
   },
 };
@@ -736,17 +736,7 @@ function test_visitor_doom() {
       let entryCount = 0;
       let visitor = {
         onCacheStorageInfo() {},
-        async onCacheEntryInfo(
-          aURI,
-          aIdEnhance,
-          aDataSize,
-          aAltDataSize,
-          aFetchCount,
-          aLastModifiedTime,
-          aExpirationTime,
-          aPinned,
-          aInfo
-        ) {
+        async onCacheEntryInfo() {
           entryCount++;
         },
         onCacheEntryVisitCompleted() {
@@ -797,7 +787,7 @@ var observer = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic != "predictor-reset-complete") {
       return;
     }

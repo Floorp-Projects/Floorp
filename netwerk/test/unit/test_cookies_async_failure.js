@@ -158,7 +158,7 @@ async function run_test_1() {
   Assert.equal(Services.cookies.countCookiesFromHost(cookie.host), 1);
 
   let isRebuildingDone = false;
-  let rebuildingObserve = function (subject, topic, data) {
+  let rebuildingObserve = function () {
     isRebuildingDone = true;
     Services.obs.removeObserver(rebuildingObserve, "cookie-db-rebuilding");
   };

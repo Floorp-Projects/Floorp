@@ -71,8 +71,8 @@ function pumpReadStream(inputStream, goon) {
     pump.init(inputStream, 0, 0, true);
     let data = "";
     pump.asyncRead({
-      onStartRequest(aRequest) {},
-      onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
+      onStartRequest() {},
+      onDataAvailable(aRequest, aInputStream) {
         var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
           Ci.nsIScriptableInputStream
         );
@@ -422,7 +422,7 @@ function wait_for_cache_index(continue_func) {
 }
 
 function finish_cache2_test() {
-  callbacks.forEach(function (callback, index) {
+  callbacks.forEach(function (callback) {
     callback.selfCheck();
   });
   do_test_finished();

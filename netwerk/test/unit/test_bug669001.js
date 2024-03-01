@@ -28,13 +28,13 @@ var fetched;
 var tests = [
   {
     prepare() {},
-    test(response) {
+    test() {
       Assert.ok(fetched);
     },
   },
   {
     prepare() {},
-    test(response) {
+    test() {
       Assert.ok(!fetched);
     },
   },
@@ -42,13 +42,13 @@ var tests = [
     prepare() {
       setUA("A different User Agent");
     },
-    test(response) {
+    test() {
       Assert.ok(fetched);
     },
   },
   {
     prepare() {},
-    test(response) {
+    test() {
       Assert.ok(!fetched);
     },
   },
@@ -56,13 +56,13 @@ var tests = [
     prepare() {
       setUA("And another User Agent");
     },
-    test(response) {
+    test() {
       Assert.ok(fetched);
     },
   },
   {
     prepare() {},
-    test(response) {
+    test() {
       Assert.ok(!fetched);
     },
   },

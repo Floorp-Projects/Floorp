@@ -4,7 +4,7 @@ const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
@@ -51,7 +51,7 @@ add_task(async function check_protocols() {
       let p = new Promise(resolve1 =>
         channel.asyncOpen(new ChannelListener(resolve1))
       );
-      p.then((request, buffer) => {
+      p.then(() => {
         TelemetryTestUtils.assertKeyedHistogramSum(redirect_hist, protocol, 1);
         resolve();
       });

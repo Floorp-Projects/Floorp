@@ -39,7 +39,7 @@ AuthPrompt1.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
-  prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
+  prompt: function ap1_prompt() {
     do_throw("unexpected prompt call");
   },
 
@@ -95,7 +95,7 @@ AuthPrompt1.prototype = {
     return true;
   },
 
-  promptPassword: function ap1_promptPW(title, text, realm, save, pwd) {
+  promptPassword: function ap1_promptPW() {
     do_throw("unexpected promptPassword call");
   },
 };
@@ -118,7 +118,7 @@ AuthPrompt2.prototype = {
     return true;
   },
 
-  asyncPromptAuth: function ap2_async(chan, cb, ctx, lvl, info) {
+  asyncPromptAuth: function ap2_async() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
@@ -176,7 +176,7 @@ RealmTestRequestor.prototype = {
     return false;
   },
 
-  asyncPromptAuth: function realmtest_async(chan, cb, ctx, lvl, info) {
+  asyncPromptAuth: function realmtest_async() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };

@@ -66,7 +66,7 @@ export var NetUtil = {
     var observer;
     if (aCallback) {
       observer = {
-        onStartRequest(aRequest) {},
+        onStartRequest() {},
         onStopRequest(aRequest, aStatusCode) {
           aCallback(aStatusCode);
         },
@@ -118,7 +118,7 @@ export var NetUtil = {
       "@mozilla.org/network/simple-stream-listener;1"
     ].createInstance(Ci.nsISimpleStreamListener);
     listener.init(pipe.outputStream, {
-      onStartRequest(aRequest) {},
+      onStartRequest() {},
       onStopRequest(aRequest, aStatusCode) {
         pipe.outputStream.close();
         aCallback(pipe.inputStream, aStatusCode, aRequest);

@@ -53,7 +53,7 @@ add_task(async function test_localhost_origin() {
   });
   await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((request, buffer) => {
+      new ChannelListener(request => {
         let channel = request.QueryInterface(Ci.nsITimedChannel);
         let headers = channel.serverTiming.QueryInterface(Ci.nsIArray);
         ok(headers.length);
@@ -86,7 +86,7 @@ add_task(async function test_http_non_localhost() {
   });
   await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((request, buffer) => {
+      new ChannelListener(request => {
         let channel = request.QueryInterface(Ci.nsITimedChannel);
         let headers = channel.serverTiming.QueryInterface(Ci.nsIArray);
         Assert.equal(headers.length, 0);

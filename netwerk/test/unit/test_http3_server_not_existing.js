@@ -77,7 +77,7 @@ add_task(async function test_fatal_stream_error() {
 let CheckOnlyHttp2Listener = function () {};
 
 CheckOnlyHttp2Listener.prototype = {
-  onStartRequest: function testOnStartRequest(request) {},
+  onStartRequest: function testOnStartRequest() {},
 
   onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);

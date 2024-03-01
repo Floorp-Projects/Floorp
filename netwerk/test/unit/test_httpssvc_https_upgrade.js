@@ -192,7 +192,7 @@ add_task(async function testInvalidDNSResult1() {
   let topic = "http-on-modify-request";
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       if (aTopic == topic) {
         Services.obs.removeObserver(observer, topic);
         let channel = aSubject.QueryInterface(Ci.nsIChannel);
@@ -266,7 +266,7 @@ add_task(async function testHttpRequestBlocked() {
         this.obs.removeObserver(this, "dns-resolution-request");
       }
     },
-    observe(subject, topic, data) {
+    observe(subject, topic) {
       if (topic == "dns-resolution-request") {
         Assert.ok(false, "unreachable");
       }
@@ -278,7 +278,7 @@ add_task(async function testHttpRequestBlocked() {
   Services.prefs.setBoolPref("network.dns.disablePrefetch", true);
 
   let httpserv = new HttpServer();
-  httpserv.registerPathHandler("/", function handler(metadata, response) {
+  httpserv.registerPathHandler("/", function handler() {
     Assert.ok(false, "unreachable");
   });
   httpserv.start(-1);
@@ -295,7 +295,7 @@ add_task(async function testHttpRequestBlocked() {
   let topic = "http-on-modify-request";
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       if (aTopic == topic) {
         Services.obs.removeObserver(observer, topic);
         let channel = aSubject.QueryInterface(Ci.nsIChannel);

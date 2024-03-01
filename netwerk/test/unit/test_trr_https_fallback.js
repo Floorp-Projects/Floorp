@@ -963,14 +963,14 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
 });
 
 WebSocketListener.prototype = {
-  onAcknowledge(aContext, aSize) {},
-  onBinaryMessageAvailable(aContext, aMsg) {},
-  onMessageAvailable(aContext, aMsg) {},
-  onServerClose(aContext, aCode, aReason) {},
-  onStart(aContext) {
+  onAcknowledge() {},
+  onBinaryMessageAvailable() {},
+  onMessageAvailable() {},
+  onServerClose() {},
+  onStart() {
     this.finish();
   },
-  onStop(aContext, aStatusCode) {},
+  onStop() {},
 };
 
 add_task(async function testUpgradeNotUsingHTTPSRR() {

@@ -56,7 +56,7 @@ var listenerCallback = {
     }
   },
 
-  onStatus(request, status, statusArg) {},
+  onStatus() {},
 };
 
 function run_test() {
@@ -114,7 +114,7 @@ function setupChannel(path) {
   }).QueryInterface(Ci.nsIHttpChannel);
 }
 
-function serverHandler(metadata, response) {
+function serverHandler(metadata) {
   Assert.equal(metadata.method, "POST");
 
   var data = read_stream(
@@ -135,7 +135,7 @@ function serverHandler(metadata, response) {
   );
 }
 
-function checkRequest(request, data, context) {
+function checkRequest() {
   Assert.ok(correctOnProgress);
   httpserver.stop(do_test_finished);
 }

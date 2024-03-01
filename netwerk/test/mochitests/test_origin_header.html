@@ -193,7 +193,7 @@ function frameLoaded(test, check)
 
 function submitForm(test, check)
 {
-     return new Promise((resolve, reject) => {
+     return new Promise((resolve) => {
          document.getElementById(check.frameID).onload = () => {
              frameLoaded(test, check);
              resolve();
@@ -204,7 +204,7 @@ function submitForm(test, check)
 
 function loadIframe(test, check)
 {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let frame = SpecialPowers.wrap(window.document.getElementById(check.frameID));
         frame.onload = function () {
             // Ignore the first load and wait for the submitted form instead.
@@ -220,7 +220,7 @@ function loadIframe(test, check)
 
 function loadSrcDocFrame(test, check)
 {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let frame = SpecialPowers.wrap(window.document.getElementById(check.frameID));
         frame.onload = function () {
             // Ignore the first load and wait for the submitted form instead.
@@ -240,7 +240,7 @@ function loadSrcDocFrame(test, check)
 
 function loadDataURIFrame(test, check)
 {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let frame = SpecialPowers.wrap(window.document.getElementById(check.frameID));
         frame.onload = function () {
             // Ignore the first load and wait for the submitted form instead.
@@ -262,7 +262,7 @@ async function resetFrames()
 {
     let checkPromises = [];
     for (let check of checksToRun) {
-        checkPromises.push(new Promise((resolve, reject) => {
+        checkPromises.push(new Promise((resolve) => {
             let frame = document.getElementById(check.frameID);
             frame.onload = () => resolve();
             if (check.srcdoc) {

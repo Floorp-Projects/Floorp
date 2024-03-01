@@ -27,7 +27,7 @@ var sniffer = {
     return this.QueryInterface(iid);
   },
 
-  getMIMETypeFromContent(request, data, length) {
+  getMIMETypeFromContent() {
     return sniffedType;
   },
 };
@@ -72,7 +72,7 @@ var listener = {
     throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
   },
 
-  onStopRequest: function test_onStopR(request, status) {
+  onStopRequest: function test_onStopR() {
     run_test_iteration(this._iteration);
     do_test_finished();
   },

@@ -95,7 +95,7 @@ function firstTimeThrough(request, buffer) {
   Assert.ok(gMockPromptService.firstTimeCalled, "Prompt service invoked");
 }
 
-function secondTimeThrough(request, buffer) {
+function secondTimeThrough(request) {
   Assert.equal(request.status, Cr.NS_ERROR_SUPERFLUOS_AUTH);
   httpServer.stop(do_test_finished);
 }

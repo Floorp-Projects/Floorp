@@ -13,12 +13,12 @@ var observer = {
   },
 };
 
-addMessageListener("createObserver", function (e) {
+addMessageListener("createObserver", function () {
   Services.obs.addObserver(observer, "cookie-changed");
   sendAsyncMessage("createObserver:return");
 });
 
-addMessageListener("removeObserver", function (e) {
+addMessageListener("removeObserver", function () {
   Services.obs.removeObserver(observer, "cookie-changed");
   sendAsyncMessage("removeObserver:return");
 });

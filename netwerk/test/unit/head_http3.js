@@ -44,13 +44,13 @@ CheckHttp3Listener.prototype = {
   expectedRoute: "",
   http3version: "",
 
-  onStartRequest: function testOnStartRequest(request) {},
+  onStartRequest: function testOnStartRequest() {},
 
   onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     let routed = "NA";
     try {
       routed = request.getRequestHeader("Alt-Used");
