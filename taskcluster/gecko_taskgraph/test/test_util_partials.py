@@ -30,18 +30,34 @@ release_blob = {
 
 
 def nightly_blob(release):
-    return {
-        "platforms": {
-            "WINNT_x86_64-msvc": {
-                "locales": {
-                    "en-US": {
-                        "buildID": release[-14:],
-                        "completes": [{"fileUrl": release}],
+    # Added for bug 1883046, where we identified a case where a Balrog release
+    # that does not contain completes will throw an unnecessary exception.
+    if release == "Firefox-mozilla-central-nightly-20211001214601":
+        return {
+            "platforms": {
+                "WINNT_x86_64-msvc": {
+                    "locales": {
+                        "en-US": {
+                            "buildID": release[-14:],
+                            "partials": [{"fileUrl": release}],
+                        }
                     }
                 }
             }
         }
-    }
+    else:
+        return {
+            "platforms": {
+                "WINNT_x86_64-msvc": {
+                    "locales": {
+                        "en-US": {
+                            "buildID": release[-14:],
+                            "completes": [{"fileUrl": release}],
+                        }
+                    }
+                }
+            }
+        }
 
 
 class TestReleaseHistory(unittest.TestCase):
