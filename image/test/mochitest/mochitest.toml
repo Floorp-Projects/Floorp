@@ -100,6 +100,7 @@ support-files = [
   "6M-pixels.png",
   "12M-pixels-1.png",
   "12M-pixels-2.png",
+  "1835509.gif",
 ]
 
 ["test_animSVGImage.html"]

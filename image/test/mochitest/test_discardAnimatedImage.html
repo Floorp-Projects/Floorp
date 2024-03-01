@@ -16,14 +16,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
 <div id="content">
   <div id="container">
     <canvas id="canvas" width="100" height="100"></canvas>
+
+    <!-- NOTE if adding a new image here you need to adjust four other places:
+      * add it to the gImgs array below
+      * add it to the 4 arrays below that
+      * add it to the condition in checkIfFinished if it's infinite
+      * potentially update the starting index of finite imgs in
+        addCallbacks observer.discard.
+    -->
     <img id="infinitepng" src="infinite-apng.png">
     <img id="infinitegif" src="animated1.gif">
     <img id="infinitewebp" src="infinite.webp">
     <img id="infiniteavif" src="infinite.avif">
+
+    <img id="corruptinfinitegif" src="1835509.gif">
+
     <img id="finitepng" src="restore-previous.png">
     <img id="finitegif" src="animated-gif.gif">
     <img id="finitewebp" src="keep.webp">
     <img id="finiteavif" src="animated-avif.avif">
+    <!-- NOTE see above the steps you need to do if adding an img here -->
+
   </div>
 </div>
 <pre id="test">
@@ -45,6 +58,7 @@ window.onload = function() {
 }
 
 var gImgs = ['infinitepng', 'infinitegif', 'infinitewebp', 'infiniteavif',
+             'corruptinfinitegif',
              'finitepng',   'finitegif',   'finitewebp', 'finiteavif'];
 // If we are currently counting frame updates.
 var gCountingFrameUpdates = false;
@@ -52,18 +66,25 @@ var gCountingFrameUpdates = false;
 // after discarding. (The last two images are finite looping so we don't expect
 // them to get incremented but it's possible if they don't finish their
 // animation before we discard them.)
-var gNumFrameUpdates = [0, 0, 0, 0, 0, 0];
+var gNumFrameUpdates = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 // The last snapshot of the image. Used to check that the image actually changes.
-var gLastSnapShot = [null, null, null, null, null, null];
+var gLastSnapShot = [null, null, null, null, null, null, null, null, null];
 // Number of observed changes in the snapshot.
-var gNumSnapShotChanges = [0, 0, 0, 0, 0, 0];
+var gNumSnapShotChanges = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 // If we've removed the observer.
-var gRemovedObserver = [false, false, false, false, false, false];
+var gRemovedObserver = [false, false, false, false, false, false, false, false, false];
 
 // 2 would probably be a good enough test, we arbitrarily choose 4.
-var kNumFrameUpdatesToExpect = 4;
+var kNumFrameUpdatesToExpect = 5;
 
 function runTest() {
+  let numImgsInDoc = document.getElementsByTagName("img").length;
+  ok(gImgs.length == numImgsInDoc, "gImgs missing img");
+  ok(gNumFrameUpdates.length == numImgsInDoc, "gNumFrameUpdates missing img");
+  ok(gLastSnapShot.length == numImgsInDoc, "gLastSnapShot missing img");
+  ok(gNumSnapShotChanges.length == numImgsInDoc, "gNumSnapShotChanges missing img");
+  ok(gRemovedObserver.length == numImgsInDoc, "gRemovedObserver missing img");
+
   var animatedDiscardable =
     SpecialPowers.getBoolPref('image.mem.animated.discardable');
   if (!animatedDiscardable) {
@@ -117,9 +138,13 @@ function checkIfFinished() {
   if ((gNumFrameUpdates[0] >= kNumFrameUpdatesToExpect) &&
       (gNumFrameUpdates[1] >= kNumFrameUpdatesToExpect) &&
       (gNumFrameUpdates[2] >= kNumFrameUpdatesToExpect) &&
+      (gNumFrameUpdates[3] >= kNumFrameUpdatesToExpect) &&
+      (gNumFrameUpdates[4] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[0] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect) &&
-      (gNumSnapShotChanges[2] >= kNumFrameUpdatesToExpect)) {
+      (gNumSnapShotChanges[2] >= kNumFrameUpdatesToExpect) &&
+      (gNumSnapShotChanges[3] >= kNumFrameUpdatesToExpect) &&
+      (gNumSnapShotChanges[4] >= kNumFrameUpdatesToExpect)) {
     ok(true, "got expected frame updates");
     gFinished = true;
     SimpleTest.finish();
@@ -133,8 +158,8 @@ function addCallbacks(anImage, arrayIndex) {
   observer.discard = function () {
     gNumDiscards++;
     ok(true, "got image discard");
-    if (arrayIndex >= 3) {
-      // The last two images are finite, so we don't expect any frame updates,
+    if (arrayIndex >= 5) {
+      // The last four images are finite, so we don't expect any frame updates,
       // this image is done the test, so remove the observer.
       if (!gRemovedObserver[arrayIndex]) {
         gRemovedObserver[arrayIndex] = true;
