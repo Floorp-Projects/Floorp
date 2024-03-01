@@ -106,6 +106,11 @@ nsresult BounceTrackingStateGlobal::ClearByTimeRange(
   NS_ENSURE_ARG_MIN(aFrom, 0);
   NS_ENSURE_TRUE(!aTo || aTo.value() > aFrom, NS_ERROR_INVALID_ARG);
 
+  MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+          ("%s: Clearing user activations by time range from %" PRIu64
+           " to %" PRIu64 " %s",
+           __FUNCTION__, aFrom, aTo.valueOr(0), Describe().get()));
+
   // Clear in memory user activation data.
   if (aEntryType.isNothing() ||
       aEntryType.value() ==
@@ -113,10 +118,10 @@ nsresult BounceTrackingStateGlobal::ClearByTimeRange(
     for (auto iter = mUserActivation.Iter(); !iter.Done(); iter.Next()) {
       if (iter.Data() >= aFrom &&
           (aTo.isNothing() || iter.Data() <= aTo.value())) {
-        iter.Remove();
         MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
                 ("%s: Remove user activation for %s", __FUNCTION__,
                  PromiseFlatCString(iter.Key()).get()));
+        iter.Remove();
       }
     }
   }
@@ -128,10 +133,10 @@ nsresult BounceTrackingStateGlobal::ClearByTimeRange(
     for (auto iter = mBounceTrackers.Iter(); !iter.Done(); iter.Next()) {
       if (iter.Data() >= aFrom &&
           (aTo.isNothing() || iter.Data() <= aTo.value())) {
-        iter.Remove();
         MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
                 ("%s: Remove bouncer tracker for %s", __FUNCTION__,
                  PromiseFlatCString(iter.Key()).get()));
+        iter.Remove();
       }
     }
   }
@@ -185,6 +190,29 @@ nsresult BounceTrackingStateGlobal::RemoveBounceTrackers(
   }
 
   return NS_OK;
+}
+
+// static
+nsCString BounceTrackingStateGlobal::DescribeMap(
+    const nsTHashMap<nsCStringHashKey, PRTime>& aMap) {
+  nsAutoCString mapStr;
+
+  for (auto iter = aMap.ConstIter(); !iter.Done(); iter.Next()) {
+    mapStr.Append(nsPrintfCString("{ %s: %" PRIu64 " }, ",
+                                  PromiseFlatCString(iter.Key()).get(),
+                                  iter.Data()));
+  }
+
+  return std::move(mapStr);
+}
+
+nsCString BounceTrackingStateGlobal::Describe() {
+  nsAutoCString originAttributeSuffix;
+  mOriginAttributes.CreateSuffix(originAttributeSuffix);
+  return nsPrintfCString(
+      "{ mOriginAttributes: %s, mUserActivation: %s, mBounceTrackers: %s }",
+      originAttributeSuffix.get(), DescribeMap(mUserActivation).get(),
+      DescribeMap(mBounceTrackers).get());
 }
 
 }  // namespace mozilla

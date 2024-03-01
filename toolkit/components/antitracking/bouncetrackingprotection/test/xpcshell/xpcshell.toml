@@ -5,4 +5,6 @@ prefs = [
   "privacy.bounceTrackingProtection.bounceTrackingPurgeTimerPeriodSec=0",
 ]
 
+["test_bouncetracking_clearExpiredUserActivation.js"]
+
 ["test_bouncetracking_purge.js"]

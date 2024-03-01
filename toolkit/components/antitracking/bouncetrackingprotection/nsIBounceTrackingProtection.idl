@@ -28,6 +28,10 @@ interface nsIBounceTrackingProtection : nsISupports {
     [implicit_jscontext]
     Promise testRunPurgeBounceTrackers();
 
+    // Clear expired user activation flags. Expiry is set via pref
+    // "privacy.bounceTrackingProtection.bounceTrackingActivationLifetimeSec".
+    void testClearExpiredUserActivations();
+
     // Getters and setters for user activation and bounce tracker state.
     // These are used for testing purposes only.
     // State is keyed by OriginAttributes.

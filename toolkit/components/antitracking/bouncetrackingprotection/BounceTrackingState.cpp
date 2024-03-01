@@ -540,8 +540,12 @@ nsresult BounceTrackingState::OnResponseReceived(
             ("%s: Calling RecordStatefulBounces after timeout.", __FUNCTION__));
 
         BounceTrackingState* bounceTrackingState = thisWeak;
-        bounceTrackingState->mBounceTrackingProtection->RecordStatefulBounces(
-            bounceTrackingState);
+        DebugOnly<nsresult> rv =
+            bounceTrackingState->mBounceTrackingProtection
+                ->RecordStatefulBounces(bounceTrackingState);
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "Running RecordStatefulBounces after a timeout failed.");
 
         bounceTrackingState->mClientBounceDetectionTimeout = nullptr;
       },

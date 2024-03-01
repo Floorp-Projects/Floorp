@@ -83,6 +83,9 @@ class BounceTrackingStateGlobal final {
     return mBounceTrackers;
   }
 
+  // Create a string that describes this object. Used for logging.
+  nsCString Describe();
+
  private:
   ~BounceTrackingStateGlobal() = default;
 
@@ -107,6 +110,10 @@ class BounceTrackingStateGlobal final {
   // on the given site host performed an action that could indicate stateful
   // bounce tracking took place.
   nsTHashMap<nsCStringHashKey, PRTime> mBounceTrackers{};
+
+  // Helper to create a string representation of a siteHost -> timestamp map.
+  static nsCString DescribeMap(
+      const nsTHashMap<nsCStringHashKey, PRTime>& aMap);
 };
 
 }  // namespace mozilla
