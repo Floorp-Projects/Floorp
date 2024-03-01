@@ -252,7 +252,7 @@ add_task(async function test() {
     ["https://192.0.2.235", "A", 1, 0, 0],
   ];
 
-  let found = expected.map(it => 0);
+  let found = expected.map(() => 0);
 
   // Add some places to the places database
   await PlacesTestUtils.addVisits(

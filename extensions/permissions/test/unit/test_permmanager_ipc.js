@@ -12,7 +12,7 @@ add_task(async function test_permissions_sent_over_ipc_on_bloburl() {
   // setup a profile.
   do_get_profile();
 
-  async function assertExpectedContentPage(contentPage) {
+  async function assertExpectedContentPage() {
     const [processType, remoteType, principalSpec] = await page.spawn(
       [],
       async () => {
