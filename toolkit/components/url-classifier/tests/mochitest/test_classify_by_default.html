@@ -77,7 +77,7 @@ async function setupAndRun(hasCookie, topLevelSite = TEST_TOP_SITE) {
   });
 }
 
-async function cleanup(topLevelSite = TEST_TOP_SITE) {
+async function cleanup() {
   function clearServiceWorker() {
     return new Promise(resolve => {
       let w;

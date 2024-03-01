@@ -36,7 +36,7 @@ var gCurGethashCounter = 0;
 var expectLoad = false;
 
 function loadTestFrame() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var iframe = document.createElement("iframe");
     iframe.setAttribute("src", "gethashFrame.html");
     document.body.appendChild(iframe);
@@ -49,7 +49,7 @@ function loadTestFrame() {
 }
 
 function getGethashCounter() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var xhr = new XMLHttpRequest;
     xhr.open("PUT", GETHASH_URL + "?gethashcount");
     xhr.setRequestHeader("Content-Type", "text/plain");

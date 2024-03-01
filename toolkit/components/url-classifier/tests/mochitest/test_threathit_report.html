@@ -76,7 +76,7 @@ var testDatas = [
 ];
 
 function addDataV4ToServer(list, type, data) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var xhr = new XMLHttpRequest;
     let params = new URLSearchParams();
     params.append("action", "store");
@@ -185,7 +185,7 @@ function testOnWindow(aTestData) {
       let expected;
       let browser = win.gBrowser.selectedBrowser;
       let progressListener = {
-        onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
+        onContentBlockingEvent() {
           expected = aTestData.reportUrl;
         },
         QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),

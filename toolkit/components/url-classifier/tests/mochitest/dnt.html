@@ -13,7 +13,7 @@ function makeXHR(url, callback) {
   xhr.send();
 }
 
-function loaded(type) {
+function loaded() {
   window.parent.postMessage("navigator.doNotTrack=" + navigator.doNotTrack, "*");
 
   makeXHR("dnt.sjs", (res) => {

@@ -28,7 +28,7 @@ const {TestUtils} = ChromeUtils.importESModule(
 );
 
 function testOnWindow() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let win = mainWindow.OpenBrowserWindow();
     win.addEventListener("load", function() {
       TestUtils.topicObserved("browser-delayed-startup-finished",

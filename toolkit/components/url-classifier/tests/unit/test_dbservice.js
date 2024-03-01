@@ -112,7 +112,7 @@ function tablesCallbackWithoutSub(tables) {
   checkNoHost();
 }
 
-function expireSubSuccess(result) {
+function expireSubSuccess() {
   dbservice.getTables(tablesCallbackWithoutSub);
 }
 

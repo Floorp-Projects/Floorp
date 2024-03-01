@@ -28,7 +28,7 @@
   function testValidTrack() {
     SpecialPowers.setBoolPref(PREF, true);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var track = document.createElement("track");
       track.track.mode = "hidden";
       track.src = validtrack_url;
@@ -58,7 +58,7 @@
   function testBlocklistTrackSafebrowsingOff() {
     SpecialPowers.setBoolPref(PREF, false);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var track = document.createElement("track");
       track.track.mode = "hidden";
       track.src = malware_url;
@@ -88,7 +88,7 @@
   function testBlocklistTrackSafebrowsingOn() {
     SpecialPowers.setBoolPref(PREF, true);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var track = document.createElement("track");
       track.track.mode = "hidden";
       // Add a query string parameter here to avoid url classifier bypass classify

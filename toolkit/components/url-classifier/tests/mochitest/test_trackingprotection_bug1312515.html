@@ -86,7 +86,7 @@ function checkPriority(aSubject, aCallback, aPriority, aMessage) {
 }
 
 function testXHR1() {
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function(aResolve) {
     testUrl = "http://tracking.example.com/";
     info("Not blocklisted: " + testUrl);
     resolve = aResolve;
@@ -96,7 +96,7 @@ function testXHR1() {
 }
 
 function testXHR2() {
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function(aResolve) {
     testUrl = "http://trackertest.org/";
     info("Blocklisted and not entitylisted: " + testUrl);
     resolve = aResolve;
@@ -106,7 +106,7 @@ function testXHR2() {
 }
 
 function testFetch1() {
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function(aResolve) {
     testUrl = "http://itisatracker.org/"; // only entitylisted in TP, not for annotations
     info("Blocklisted and not entitylisted: " + testUrl);
     resolve = aResolve;
@@ -116,7 +116,7 @@ function testFetch1() {
 }
 
 function testFetch2() {
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function(aResolve) {
     testUrl = "http://tracking.example.org/"; // only entitylisted for annotations, not in TP
     info("Blocklisted but also entitylisted: " + testUrl);
     resolve = aResolve;

@@ -225,12 +225,12 @@ export var UrlClassifierTestUtils = {
 
           throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
         },
-        updateUrlRequested: url => {},
-        streamFinished: status => {},
-        updateError: errorCode => {
+        updateUrlRequested: () => {},
+        streamFinished: () => {},
+        updateError: () => {
           reject("Got updateError when updating " + table.name);
         },
-        updateSuccess: requestedTimeout => {
+        updateSuccess: () => {
           resolve();
         },
       };

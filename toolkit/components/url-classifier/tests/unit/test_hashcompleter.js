@@ -383,7 +383,7 @@ function callback(completion) {
 }
 
 callback.prototype = {
-  completionV2: function completionV2(hash, table, chunkId, trusted) {
+  completionV2: function completionV2(hash, table, chunkId) {
     Assert.ok(this._completion.expectCompletion);
     if (this._completion.multipleCompletions) {
       for (let completion of this._completion.completions) {
@@ -411,7 +411,7 @@ callback.prototype = {
     }
   },
 
-  completionFinished: function completionFinished(status) {
+  completionFinished: function completionFinished() {
     finishedCompletions++;
     Assert.equal(!!this._completion.expectCompletion, !!this._completed);
     this._completion._finished = true;

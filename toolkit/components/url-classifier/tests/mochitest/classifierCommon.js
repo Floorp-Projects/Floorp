@@ -23,12 +23,12 @@ function setTimeout(callback, delay) {
 function doUpdate(update) {
   let listener = {
     QueryInterface: ChromeUtils.generateQI(["nsIUrlClassifierUpdateObserver"]),
-    updateUrlRequested(url) {},
-    streamFinished(status) {},
+    updateUrlRequested() {},
+    streamFinished() {},
     updateError(errorCode) {
       sendAsyncMessage("updateError", errorCode);
     },
-    updateSuccess(requestedTimeout) {
+    updateSuccess() {
       sendAsyncMessage("updateSuccess");
     },
   };

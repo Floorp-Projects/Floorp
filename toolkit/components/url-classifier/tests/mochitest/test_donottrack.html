@@ -78,7 +78,7 @@ function executeTest(test) {
 
   var win = mainWindow.OpenBrowserWindow({private: test.setting.pbMode});
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     win.addEventListener("load", function() {
       TestUtils.topicObserved("browser-delayed-startup-finished",
                               subject => subject == win).then(() => {
