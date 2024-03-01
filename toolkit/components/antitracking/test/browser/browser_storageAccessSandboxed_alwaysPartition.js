@@ -22,7 +22,7 @@ AntiTracking.runTest(
         Services.io.newURI(TEST_3RD_PARTY_DOMAIN).host,
         true,
         Ci.nsIClearDataService.CLEAR_PERMISSIONS,
-        value => resolve()
+        () => resolve()
       );
     });
   },
@@ -205,7 +205,7 @@ AntiTracking.runTest(
   // cleanup function
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -238,7 +238,7 @@ AntiTracking.runTest(
         Services.io.newURI(TEST_3RD_PARTY_DOMAIN).host,
         true,
         Ci.nsIClearDataService.CLEAR_PERMISSIONS,
-        value => resolve()
+        () => resolve()
       );
     });
   },

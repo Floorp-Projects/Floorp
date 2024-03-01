@@ -73,7 +73,7 @@ add_task(async function runTest() {
   info("Clean up");
   BrowserTestUtils.removeTab(tab);
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

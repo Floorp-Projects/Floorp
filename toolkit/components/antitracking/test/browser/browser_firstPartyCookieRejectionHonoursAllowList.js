@@ -27,7 +27,7 @@ add_task(async function () {
   // The previous function reloads the browser, so wait for it to load again!
   await BrowserTestUtils.browserLoaded(browser);
 
-  await SpecialPowers.spawn(browser, [], async function (obj) {
+  await SpecialPowers.spawn(browser, [], async function () {
     await new content.Promise(async resolve => {
       let document = content.document;
       let window = document.defaultView;
@@ -70,7 +70,7 @@ add_task(async function () {
 add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

@@ -21,7 +21,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   },
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -58,7 +58,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
@@ -87,14 +87,14 @@ AntiTracking.runTestInNormalAndPrivateMode(
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
   },
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -159,7 +159,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
   },
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -206,7 +206,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
@@ -250,7 +250,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
@@ -282,7 +282,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
@@ -304,14 +304,14 @@ AntiTracking.runTestInNormalAndPrivateMode(
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
   },
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });

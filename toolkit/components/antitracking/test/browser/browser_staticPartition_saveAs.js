@@ -370,7 +370,7 @@ add_task(async function testSavePageInOfflineMode() {
       // Clean up the cache count on the server side.
       await fetch(`${TEST_IMAGE_URL}?result`);
       await new Promise(resolve => {
-        Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
           resolve()
         );
       });

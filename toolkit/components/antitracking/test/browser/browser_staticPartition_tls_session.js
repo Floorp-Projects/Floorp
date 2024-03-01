@@ -29,7 +29,7 @@ async function waitForLoad(url) {
   return new Promise(resolve => {
     const TOPIC = "http-on-examine-response";
 
-    function observer(subject, topic, data) {
+    function observer(subject, topic) {
       if (topic != TOPIC) {
         return;
       }

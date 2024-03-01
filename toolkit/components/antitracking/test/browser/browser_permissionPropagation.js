@@ -229,7 +229,7 @@ add_task(async function testPermissionGrantedOn3rdParty() {
   let browser4 = gBrowser.getBrowserForTab(tab4);
 
   info("Grant storage permission to the first iframe in the first tab");
-  await SpecialPowers.spawn(browser1, [page, msg], async function (page, msg) {
+  await SpecialPowers.spawn(browser1, [page, msg], async function () {
     await new content.Promise(resolve => {
       content.addEventListener("message", function msg(event) {
         if (event.data.type == "finish") {
@@ -289,7 +289,7 @@ add_task(async function testPermissionGrantedOn3rdParty() {
 add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
@@ -419,7 +419,7 @@ add_task(async function testPermissionGrantedOnFirstParty() {
 add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

@@ -20,7 +20,7 @@ function is(a, b, msg) {
 }
 
 function workerCode() {
-  onmessage = e => {
+  onmessage = () => {
     try {
       indexedDB.open("test", "1");
       postMessage(true);

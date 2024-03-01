@@ -40,7 +40,7 @@ URLDecorationAnnotationsService.prototype = {
     branch.lockPref(PREF_NAME);
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic == "profile-after-change") {
       this.ensureUpdated();
     }

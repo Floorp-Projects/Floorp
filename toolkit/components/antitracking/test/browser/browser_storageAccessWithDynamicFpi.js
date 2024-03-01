@@ -32,7 +32,7 @@ const EXCEPTION_LIST_PREF_NAME = "privacy.restrict3rdpartystorage.skip_list";
 async function cleanup() {
   Services.prefs.clearUserPref(EXCEPTION_LIST_PREF_NAME);
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

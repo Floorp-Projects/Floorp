@@ -62,7 +62,7 @@ function runScriptInSubFrame(browser, id, script) {
 }
 
 function waitStoragePermission(trackingOrigin) {
-  return TestUtils.topicObserved("perm-changed", (aSubject, aData) => {
+  return TestUtils.topicObserved("perm-changed", aSubject => {
     let permission = aSubject.QueryInterface(Ci.nsIPermission);
     let uri = Services.io.newURI(TEST_DOMAIN);
     return (

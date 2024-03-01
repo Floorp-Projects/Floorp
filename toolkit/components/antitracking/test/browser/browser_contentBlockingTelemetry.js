@@ -336,8 +336,7 @@ add_task(async function testTelemetryForUserInteractionHeuristic() {
         let windowClosed = new content.Promise(resolve => {
           Services.ww.registerNotification(function notification(
             aSubject,
-            aTopic,
-            aData
+            aTopic
           ) {
             // We need to check the document URI here as well for the same
             // reason above.

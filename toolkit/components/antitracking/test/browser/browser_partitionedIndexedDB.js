@@ -1,6 +1,6 @@
 PartitionedStorageHelper.runTest(
   "IndexedDB",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     await new Promise(resolve => {
       let a = win1stParty.indexedDB.open("test", 1);
       ok(!!a, "IDB should not be blocked in 1st party contexts");
@@ -34,7 +34,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -87,7 +87,7 @@ PartitionedStorageHelper.runPartitioningTest(
   // cleanup
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });

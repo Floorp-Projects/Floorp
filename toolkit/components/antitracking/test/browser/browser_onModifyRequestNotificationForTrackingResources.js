@@ -10,8 +10,8 @@
 
 let gExpectedResourcesSeen = 0;
 async function onModifyRequest() {
-  return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observer(subject, topic, data) {
+  return new Promise(resolve => {
+    Services.obs.addObserver(function observer(subject) {
       let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
       let spec = httpChannel.URI.spec;
       info("Observed channel for " + spec);

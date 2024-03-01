@@ -148,7 +148,7 @@ add_task(async function cSAR_crossSiteIframe() {
 add_task(async () => {
   Services.perms.removeAll();
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

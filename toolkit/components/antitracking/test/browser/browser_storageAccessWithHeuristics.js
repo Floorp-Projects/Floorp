@@ -131,7 +131,7 @@ async function runTestWindowOpenHeuristic(disableHeuristics) {
 
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
@@ -216,7 +216,7 @@ add_task(async function testDoublyNestedWindowOpenHeuristic() {
 add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
@@ -296,8 +296,7 @@ async function runTestUserInteractionHeuristic(disableHeuristics) {
         let windowClosed = new content.Promise(resolve => {
           Services.ww.registerNotification(function notification(
             aSubject,
-            aTopic,
-            aData
+            aTopic
           ) {
             // We need to check the document URI for Fission. It's because the
             // 'domwindowclosed' would be triggered twice, one for the
@@ -418,8 +417,7 @@ async function runTestUserInteractionHeuristic(disableHeuristics) {
         let windowClosed = new content.Promise(resolve => {
           Services.ww.registerNotification(function notification(
             aSubject,
-            aTopic,
-            aData
+            aTopic
           ) {
             // We need to check the document URI here as well for the same
             // reason above.
@@ -479,7 +477,7 @@ async function runTestUserInteractionHeuristic(disableHeuristics) {
 
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
@@ -564,8 +562,7 @@ add_task(async function testDoublyNestedUserInteractionHeuristic() {
       let windowClosed = new content.Promise(resolve => {
         Services.ww.registerNotification(function notification(
           aSubject,
-          aTopic,
-          aData
+          aTopic
         ) {
           if (aTopic == "domwindowclosed") {
             Services.ww.unregisterNotification(notification);
@@ -674,8 +671,7 @@ add_task(async function testDoublyNestedUserInteractionHeuristic() {
       let windowClosed = new content.Promise(resolve => {
         Services.ww.registerNotification(function notification(
           aSubject,
-          aTopic,
-          aData
+          aTopic
         ) {
           if (aTopic == "domwindowclosed") {
             Services.ww.unregisterNotification(notification);
@@ -732,7 +728,7 @@ add_task(async function () {
 
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
@@ -893,7 +889,7 @@ async function runTestFirstPartyWindowOpenHeuristic(disableHeuristics) {
 
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
