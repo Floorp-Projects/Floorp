@@ -38,7 +38,6 @@ add_setup(async function () {
     set: [
       ["privacy.firstparty.isolate", true],
       ["dom.security.https_first", false],
-      ["dom.block_download_insecure", false],
     ],
   });
 

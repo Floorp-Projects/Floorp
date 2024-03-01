@@ -7,7 +7,6 @@ skip-if = [
 prefs = [
   "security.mixed_content.upgrade_display_content=false",
   "dom.security.https_first=false",
-  "dom.block_download_insecure=false",
 ]
 support-files = [
   "alloworigin.sjs",
