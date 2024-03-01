@@ -1538,7 +1538,11 @@ class ThreadActor extends Actor {
     // overhead of an RDP packet for every source right now. Let the default
     // timeout flush the buffered packets.
 
-    return this.sourcesManager.iter().map(s => s.form());
+    const forms = [];
+    for (const source of this.sourcesManager.iter()) {
+      forms.push(source.form());
+    }
+    return forms;
   }
 
   /**
