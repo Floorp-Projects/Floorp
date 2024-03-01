@@ -329,27 +329,37 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  RequestMode fallbackMode = RequestMode::EndGuard_;
-  RequestCredentials fallbackCredentials = RequestCredentials::EndGuard_;
-  RequestCache fallbackCache = RequestCache::EndGuard_;
+  Maybe<RequestMode> mode;
+  if (aInit.mMode.WasPassed()) {
+    if (aInit.mMode.Value() == RequestMode::Navigate) {
+      aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>("navigate");
+      return nullptr;
+    }
+
+    mode.emplace(aInit.mMode.Value());
+  }
+  Maybe<RequestCredentials> credentials;
+  if (aInit.mCredentials.WasPassed()) {
+    credentials.emplace(aInit.mCredentials.Value());
+  }
+  Maybe<RequestCache> cache;
+  if (aInit.mCache.WasPassed()) {
+    cache.emplace(aInit.mCache.Value());
+  }
   if (aInput.IsUSVString()) {
-    fallbackMode = RequestMode::Cors;
-    fallbackCredentials = RequestCredentials::Same_origin;
-    fallbackCache = RequestCache::Default;
+    if (mode.isNothing()) {
+      mode.emplace(RequestMode::Cors);
+    }
+    if (credentials.isNothing()) {
+      credentials.emplace(RequestCredentials::Same_origin);
+    }
+    if (cache.isNothing()) {
+      cache.emplace(RequestCache::Default);
+    }
   }
 
-  RequestMode mode =
-      aInit.mMode.WasPassed() ? aInit.mMode.Value() : fallbackMode;
-  RequestCredentials credentials = aInit.mCredentials.WasPassed()
-                                       ? aInit.mCredentials.Value()
-                                       : fallbackCredentials;
-
-  if (mode == RequestMode::Navigate) {
-    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>("navigate");
-    return nullptr;
-  }
   if (aInit.IsAnyMemberPresent() && request->Mode() == RequestMode::Navigate) {
-    mode = RequestMode::Same_origin;
+    mode = Some(RequestMode::Same_origin);
   }
 
   if (aInit.IsAnyMemberPresent()) {
@@ -480,24 +490,22 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
   request->SetPrincipalInfo(std::move(principalInfo));
   request->SetEmbedderPolicy(coep);
 
-  if (mode != RequestMode::EndGuard_) {
-    request->SetMode(mode);
+  if (mode.isSome()) {
+    request->SetMode(mode.value());
   }
 
-  if (credentials != RequestCredentials::EndGuard_) {
-    request->SetCredentialsMode(credentials);
+  if (credentials.isSome()) {
+    request->SetCredentialsMode(credentials.value());
   }
 
-  RequestCache cache =
-      aInit.mCache.WasPassed() ? aInit.mCache.Value() : fallbackCache;
-  if (cache != RequestCache::EndGuard_) {
-    if (cache == RequestCache::Only_if_cached &&
+  if (cache.isSome()) {
+    if (cache.value() == RequestCache::Only_if_cached &&
         request->Mode() != RequestMode::Same_origin) {
       aRv.ThrowTypeError<MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN>(
           GetEnumString(request->Mode()));
       return nullptr;
     }
-    request->SetCacheMode(cache);
+    request->SetCacheMode(cache.value());
   }
 
   if (aInit.mRedirect.WasPassed()) {
