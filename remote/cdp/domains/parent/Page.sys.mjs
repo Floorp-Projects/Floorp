@@ -672,10 +672,6 @@ export class Page extends Domain {
    * When file chooser interception is enabled,
    * the native file chooser dialog is not shown.
    * Instead, a protocol event Page.fileChooserOpened is emitted.
-   *
-   * @param {object} options
-   * @param {boolean=} options.enabled
-   *     Enabled state of file chooser interception.
    */
   setInterceptFileChooserDialog() {}
 
