@@ -74,16 +74,15 @@ enum class BailoutReturnKind {
 // is stored in JitRuntime and generated when creating the JitRuntime.
 class BaselineICFallbackCode {
   JitCode* code_ = nullptr;
-  using OffsetArray =
-      mozilla::EnumeratedArray<BaselineICFallbackKind,
-                               BaselineICFallbackKind::Count, uint32_t>;
+  using OffsetArray = mozilla::EnumeratedArray<BaselineICFallbackKind, uint32_t,
+                                               BaselineICFallbackKind::Count>;
   OffsetArray offsets_ = {};
 
   // Keep track of offset into various baseline stubs' code at return
   // point from called script.
   using BailoutReturnArray =
-      mozilla::EnumeratedArray<BailoutReturnKind, BailoutReturnKind::Count,
-                               uint32_t>;
+      mozilla::EnumeratedArray<BailoutReturnKind, uint32_t,
+                               BailoutReturnKind::Count>;
   BailoutReturnArray bailoutReturnOffsets_ = {};
 
  public:
@@ -175,13 +174,13 @@ class JitRuntime {
   WriteOnceData<uint32_t> doubleToInt32ValueStubOffset_{0};
 
   // Thunk to do a generic call from Ion.
-  mozilla::EnumeratedArray<IonGenericCallKind, IonGenericCallKind::Count,
-                           WriteOnceData<uint32_t>>
+  mozilla::EnumeratedArray<IonGenericCallKind, WriteOnceData<uint32_t>,
+                           IonGenericCallKind::Count>
       ionGenericCallStubOffset_;
 
   // Thunk used by the debugger for breakpoint and step mode.
-  mozilla::EnumeratedArray<DebugTrapHandlerKind, DebugTrapHandlerKind::Count,
-                           WriteOnceData<JitCode*>>
+  mozilla::EnumeratedArray<DebugTrapHandlerKind, WriteOnceData<JitCode*>,
+                           DebugTrapHandlerKind::Count>
       debugTrapHandlers_;
 
   // BaselineInterpreter state.

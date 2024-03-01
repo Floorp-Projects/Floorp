@@ -1010,13 +1010,13 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // When system-wide font lookup fails for a character, cache it to skip future
   // searches. This is an array of bitsets, one for each FontVisibility level.
-  mozilla::EnumeratedArray<FontVisibility, FontVisibility::Count,
-                           gfxSparseBitSet>
+  mozilla::EnumeratedArray<FontVisibility, gfxSparseBitSet,
+                           FontVisibility::Count>
       mCodepointsWithNoFonts MOZ_GUARDED_BY(mLock);
 
   // the family to use for U+FFFD fallback, to avoid expensive search every time
   // on pages with lots of problems
-  mozilla::EnumeratedArray<FontVisibility, FontVisibility::Count, FontFamily>
+  mozilla::EnumeratedArray<FontVisibility, FontFamily, FontVisibility::Count>
       mReplacementCharFallbackFamily MOZ_GUARDED_BY(mLock);
 
   // Sorted array of lowercased family names; use ContainsSorted to test

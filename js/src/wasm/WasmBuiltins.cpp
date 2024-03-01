@@ -1839,7 +1839,7 @@ using TypedNativeToCodeRangeMap =
     HashMap<TypedNative, uint32_t, TypedNative, SystemAllocPolicy>;
 
 using SymbolicAddressToCodeRangeArray =
-    EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, uint32_t>;
+    EnumeratedArray<SymbolicAddress, uint32_t, SymbolicAddress::Limit>;
 
 struct BuiltinThunks {
   uint8_t* codeBase;

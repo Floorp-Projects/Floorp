@@ -1397,7 +1397,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 #ifdef DEBUG
  private:
   friend struct nsAutoLayoutPhase;
-  mozilla::EnumeratedArray<nsLayoutPhase, nsLayoutPhase::COUNT, uint32_t>
+  mozilla::EnumeratedArray<nsLayoutPhase, uint32_t, nsLayoutPhase::COUNT>
       mLayoutPhaseCount;
 
  public:
