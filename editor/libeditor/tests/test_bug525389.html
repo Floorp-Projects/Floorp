@@ -17,7 +17,7 @@ function getLoadContext() {
 
 async function runTest() {
   var pasteCount = 0;
-  var pasteFunc = function(event) { pasteCount++; };
+  var pasteFunc = function() { pasteCount++; };
 
   function verifyContent(s) {
     var e = document.getElementById("i1");
