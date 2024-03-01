@@ -57,8 +57,9 @@ enum SyntaxParseHandlerNode {
   // casing.
   NodeName,
 
-  // Nodes representing the names "arguments" and "eval".
+  // Nodes representing the names "arguments", "length" and "eval".
   NodeArgumentsName,
+  NodeLengthName,
   NodeEvalName,
 
   // Node representing the "async" name, which may actually be a
@@ -76,6 +77,10 @@ enum SyntaxParseHandlerNode {
   // detectable in syntax parse
   NodePrivateMemberAccess,
   NodeOptionalPrivateMemberAccess,
+
+  // Node representing the compound Arguments.length expression;
+  // Used only for property access, not assignment.
+  NodeArgumentsLength,
 
   // Destructuring target patterns can't be parenthesized: |([a]) = [3];|
   // must be a syntax error.  (We can't use NodeGeneric instead of these
@@ -164,7 +169,7 @@ class SyntaxParseHandler {
 
   bool isPropertyOrPrivateMemberAccess(Node node) {
     return node == NodeDottedProperty || node == NodeElement ||
-           node == NodePrivateMemberAccess;
+           node == NodePrivateMemberAccess || node == NodeArgumentsLength;
   }
 
   bool isOptionalPropertyOrPrivateMemberAccess(Node node) {
@@ -209,6 +214,9 @@ class SyntaxParseHandler {
     lastAtom = name;
     if (name == TaggedParserAtomIndex::WellKnown::arguments()) {
       return NodeArgumentsName;
+    }
+    if (name == TaggedParserAtomIndex::WellKnown::length()) {
+      return NodeLengthName;
     }
     if (pos.begin + strlen("async") == pos.end &&
         name == TaggedParserAtomIndex::WellKnown::async()) {
@@ -579,6 +587,10 @@ class SyntaxParseHandler {
     return NodeDottedProperty;
   }
 
+  PropertyAccessResult newArgumentsLength(Node expr, NameNodeType key) {
+    return NodeArgumentsLength;
+  }
+
   PropertyAccessResult newOptionalPropertyAccess(Node expr, NameNodeType key) {
     return NodeOptionalDottedProperty;
   }
@@ -777,10 +789,12 @@ class SyntaxParseHandler {
 
   bool isName(Node node) {
     return node == NodeName || node == NodeArgumentsName ||
-           node == NodeEvalName || node == NodePotentialAsyncKeyword;
+           node == NodeLengthName || node == NodeEvalName ||
+           node == NodePotentialAsyncKeyword;
   }
 
   bool isArgumentsName(Node node) { return node == NodeArgumentsName; }
+  bool isLengthName(Node node) { return node == NodeLengthName; }
   bool isEvalName(Node node) { return node == NodeEvalName; }
   bool isAsyncKeyword(Node node) { return node == NodePotentialAsyncKeyword; }
 
@@ -795,7 +809,8 @@ class SyntaxParseHandler {
     // |this|.  It's not really eligible for the funapply/funcall
     // optimizations as they're currently implemented (assuming a single
     // value is used for both retrieval and |this|).
-    if (node != NodeDottedProperty && node != NodeOptionalDottedProperty) {
+    if (node != NodeDottedProperty && node != NodeOptionalDottedProperty &&
+        node != NodeArgumentsLength) {
       return TaggedParserAtomIndex::null();
     }
     return lastAtom;
