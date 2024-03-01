@@ -795,12 +795,10 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_compute_pass(
     });
     let timestamp_writes = timestamp_writes.as_ref();
 
-    let pass = crate::command::RecordedComputePass::new(
-        &wgc::command::ComputePassDescriptor {
-            label,
-            timestamp_writes,
-        },
-    );
+    let pass = crate::command::RecordedComputePass::new(&wgc::command::ComputePassDescriptor {
+        label,
+        timestamp_writes,
+    });
     Box::into_raw(Box::new(pass))
 }
 
@@ -871,15 +869,13 @@ pub unsafe extern "C" fn wgpu_command_encoder_begin_render_pass(
         .iter()
         .map(|format| Some(format.clone()))
         .collect();
-    let pass = crate::command::RecordedRenderPass::new(
-        &wgc::command::RenderPassDescriptor {
-            label,
-            color_attachments: Cow::Owned(color_attachments),
-            depth_stencil_attachment: depth_stencil_attachment.as_ref(),
-            timestamp_writes,
-            occlusion_query_set,
-        },
-    );
+    let pass = crate::command::RecordedRenderPass::new(&wgc::command::RenderPassDescriptor {
+        label,
+        color_attachments: Cow::Owned(color_attachments),
+        depth_stencil_attachment: depth_stencil_attachment.as_ref(),
+        timestamp_writes,
+        occlusion_query_set,
+    });
     Box::into_raw(Box::new(pass))
 }
 
