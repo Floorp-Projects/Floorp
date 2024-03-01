@@ -1468,32 +1468,7 @@ class CSPReportSenderRunnable final : public Runnable {
     mCSPContext->SendReports(init, mViolatedPolicyIndex);
 
     // 3) log to console (one per policy violation)
-
-    if (mBlockedURI) {
-      mBlockedURI->GetSpec(blockedContentSource);
-      if (blockedContentSource.Length() >
-          nsCSPContext::ScriptSampleMaxLength()) {
-        bool isData = mBlockedURI->SchemeIs("data");
-        if (NS_SUCCEEDED(rv) && isData &&
-            blockedContentSource.Length() >
-                nsCSPContext::ScriptSampleMaxLength()) {
-          blockedContentSource.Truncate(nsCSPContext::ScriptSampleMaxLength());
-          blockedContentSource.Append(
-              NS_ConvertUTF16toUTF8(nsContentUtils::GetLocalizedEllipsis()));
-        }
-      }
-    }
-
-    if (blockedContentSource.Length() > 0) {
-      nsString blockedContentSource16 =
-          NS_ConvertUTF8toUTF16(blockedContentSource);
-      AutoTArray<nsString, 2> params = {mViolatedDirective,
-                                        blockedContentSource16};
-      mCSPContext->logToConsole(
-          mReportOnlyFlag ? "CSPROViolationWithURI" : "CSPViolationWithURI",
-          params, mSourceFile, mScriptSample, mLineNum, mColumnNum,
-          nsIScriptError::errorFlag);
-    }
+    ReportToConsole();
 
     // 4) fire violation event
     // A frame-ancestors violation has occurred, but we should not dispatch
@@ -1507,6 +1482,104 @@ class CSPReportSenderRunnable final : public Runnable {
   }
 
  private:
+  void ReportToConsole() const {
+    NS_ConvertUTF8toUTF16 effectiveDirective(
+        CSP_CSPDirectiveToString(mEffectiveDirective));
+
+    switch (mBlockedContentSource) {
+      case nsCSPContext::BlockedContentSource::eInline: {
+        const char* errorName = nullptr;
+        if (mEffectiveDirective == CSPDirective::STYLE_SRC_ATTR_DIRECTIVE ||
+            mEffectiveDirective == CSPDirective::STYLE_SRC_ELEM_DIRECTIVE) {
+          errorName = mReportOnlyFlag ? "CSPROInlineStyleViolation"
+                                      : "CSPInlineStyleViolation";
+        } else if (mEffectiveDirective ==
+                   CSPDirective::SCRIPT_SRC_ATTR_DIRECTIVE) {
+          errorName = mReportOnlyFlag ? "CSPROEventHandlerScriptViolation"
+                                      : "CSPEventHandlerScriptViolation";
+        } else {
+          MOZ_ASSERT(mEffectiveDirective ==
+                     CSPDirective::SCRIPT_SRC_ELEM_DIRECTIVE);
+          errorName = mReportOnlyFlag ? "CSPROInlineScriptViolation"
+                                      : "CSPInlineScriptViolation";
+        }
+
+        AutoTArray<nsString, 2> params = {mViolatedDirectiveString,
+                                          effectiveDirective};
+        mCSPContext->logToConsole(errorName, params, mSourceFile, mScriptSample,
+                                  mLineNum, mColumnNum,
+                                  nsIScriptError::errorFlag);
+        break;
+      }
+
+      case nsCSPContext::BlockedContentSource::eEval: {
+        AutoTArray<nsString, 2> params = {mViolatedDirectiveString,
+                                          effectiveDirective};
+        mCSPContext->logToConsole(mReportOnlyFlag ? "CSPROEvalScriptViolation"
+                                                  : "CSPEvalScriptViolation",
+                                  params, mSourceFile, mScriptSample, mLineNum,
+                                  mColumnNum, nsIScriptError::errorFlag);
+        break;
+      }
+
+      case nsCSPContext::BlockedContentSource::eWasmEval: {
+        AutoTArray<nsString, 2> params = {mViolatedDirectiveString,
+                                          effectiveDirective};
+        mCSPContext->logToConsole(mReportOnlyFlag
+                                      ? "CSPROWasmEvalScriptViolation"
+                                      : "CSPWasmEvalScriptViolation",
+                                  params, mSourceFile, mScriptSample, mLineNum,
+                                  mColumnNum, nsIScriptError::errorFlag);
+        break;
+      }
+
+      case nsCSPContext::BlockedContentSource::eSelf:
+      case nsCSPContext::BlockedContentSource::eUnknown: {
+        nsAutoString source(u"<unknown>"_ns);
+        if (mBlockedURI) {
+          nsAutoCString uri;
+          mBlockedURI->GetSpec(uri);
+
+          if (mBlockedURI->SchemeIs("data") &&
+              uri.Length() > nsCSPContext::ScriptSampleMaxLength()) {
+            uri.Truncate(nsCSPContext::ScriptSampleMaxLength());
+            uri.Append(
+                NS_ConvertUTF16toUTF8(nsContentUtils::GetLocalizedEllipsis()));
+          }
+
+          if (!uri.IsEmpty()) {
+            CopyUTF8toUTF16(uri, source);
+          }
+        }
+
+        const char* errorName = nullptr;
+        switch (mEffectiveDirective) {
+          case CSPDirective::STYLE_SRC_ELEM_DIRECTIVE:
+            errorName =
+                mReportOnlyFlag ? "CSPROStyleViolation" : "CSPStyleViolation";
+            break;
+          case CSPDirective::SCRIPT_SRC_ELEM_DIRECTIVE:
+            errorName =
+                mReportOnlyFlag ? "CSPROScriptViolation" : "CSPScriptViolation";
+            break;
+          case CSPDirective::WORKER_SRC_DIRECTIVE:
+            errorName =
+                mReportOnlyFlag ? "CSPROWorkerViolation" : "CSPWorkerViolation";
+            break;
+          default:
+            errorName = mReportOnlyFlag ? "CSPROGenericViolation"
+                                        : "CSPGenericViolation";
+        }
+
+        AutoTArray<nsString, 3> params = {mViolatedDirectiveString, source,
+                                          effectiveDirective};
+        mCSPContext->logToConsole(errorName, params, mSourceFile, mScriptSample,
+                                  mLineNum, mColumnNum,
+                                  nsIScriptError::errorFlag);
+      }
+    }
+  }
+
   RefPtr<Element> mTriggeringElement;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   nsCOMPtr<nsIURI> mBlockedURI;
