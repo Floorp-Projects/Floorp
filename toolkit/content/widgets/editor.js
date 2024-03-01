@@ -16,13 +16,13 @@
           "nsIURIContentListener",
           "nsISupportsWeakReference",
         ]),
-        doContent(contentType, isContentPreferred, request, contentHandler) {
+        doContent() {
           return false;
         },
-        isPreferred(contentType, desiredContentType) {
+        isPreferred() {
           return false;
         },
-        canHandleContent(contentType, isContentPreferred, desiredContentType) {
+        canHandleContent() {
           return false;
         },
         loadCookie: null,

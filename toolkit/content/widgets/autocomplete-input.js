@@ -40,7 +40,7 @@
 
       this.addEventListener(
         "compositionstart",
-        event => {
+        () => {
           if (
             this.mController.input.wrappedJSObject == this.nsIAutocompleteInput
           ) {
@@ -52,7 +52,7 @@
 
       this.addEventListener(
         "compositionend",
-        event => {
+        () => {
           if (
             this.mController.input.wrappedJSObject == this.nsIAutocompleteInput
           ) {
@@ -64,7 +64,7 @@
 
       this.addEventListener(
         "focus",
-        event => {
+        () => {
           this.attachController();
           if (
             window.gBrowser &&
@@ -82,7 +82,7 @@
 
       this.addEventListener(
         "blur",
-        event => {
+        () => {
           if (!this._dontBlur) {
             if (this.forceComplete && this.mController.matchCount >= 1) {
               // If forceComplete is requested, we need to call the enter processing
@@ -625,7 +625,7 @@
       return value;
     }
 
-    onInput(aEvent) {
+    onInput() {
       if (
         !this.mIgnoreInput &&
         this.mController.input.wrappedJSObject == this.nsIAutocompleteInput

@@ -21,7 +21,7 @@
        * This overrides listitem's mousedown handler because we want to set the
        * selected item even when the shift or accel keys are pressed.
        */
-      this.addEventListener("mousedown", event => {
+      this.addEventListener("mousedown", () => {
         // Call this.control only once since it's not a simple getter.
         let control = this.control;
         if (!control || control.disabled) {
@@ -587,7 +587,7 @@
     /**
      * Override _getSearchTokens to have the Learn More text emphasized
      */
-    _getSearchTokens(aSearch) {
+    _getSearchTokens() {
       return [this._learnMoreString.toLowerCase()];
     }
   }

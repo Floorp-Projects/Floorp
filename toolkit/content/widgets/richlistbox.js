@@ -126,7 +126,7 @@
         }
       });
 
-      this.addEventListener("focus", event => {
+      this.addEventListener("focus", () => {
         if (this.getRowCount() > 0) {
           if (this.currentIndex == -1) {
             this.currentIndex = this.getIndexOfFirstVisibleRow();

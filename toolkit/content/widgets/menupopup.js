@@ -74,13 +74,13 @@
 
     initShadowDOM() {
       // Retarget events from shadow DOM arrowscrollbox to the host.
-      this.scrollBox.addEventListener("scroll", ev =>
+      this.scrollBox.addEventListener("scroll", () =>
         this.dispatchEvent(new Event("scroll"))
       );
-      this.scrollBox.addEventListener("overflow", ev =>
+      this.scrollBox.addEventListener("overflow", () =>
         this.dispatchEvent(new Event("overflow"))
       );
-      this.scrollBox.addEventListener("underflow", ev =>
+      this.scrollBox.addEventListener("underflow", () =>
         this.dispatchEvent(new Event("underflow"))
       );
     }

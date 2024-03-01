@@ -92,7 +92,7 @@
       });
 
       if (this.spellcheck) {
-        this.menupopup.addEventListener("popuphiding", event => {
+        this.menupopup.addEventListener("popuphiding", () => {
           if (this.spellCheckerUI) {
             this.spellCheckerUI.clearSuggestionsFromMenu();
             this.spellCheckerUI.clearDictionaryListFromMenu();

@@ -1188,7 +1188,7 @@ this.VideoControlsImplWidget = class {
         }
       },
 
-      onScrubberInput(e) {
+      onScrubberInput() {
         const duration = Math.round(this.video.duration * 1000); // in ms
         let time = this.scrubber.value;
 
@@ -1200,7 +1200,7 @@ this.VideoControlsImplWidget = class {
         this.pauseVideoDuringDragging();
       },
 
-      onScrubberChange(e) {
+      onScrubberChange() {
         this.scrubber.isDragging = false;
 
         if (this.isPausedByDragging) {
@@ -3085,7 +3085,7 @@ this.NoControlsMobileImplWidget = class {
     );
   }
 
-  elementStateMatches(element) {
+  elementStateMatches() {
     return true;
   }
 
@@ -3135,7 +3135,7 @@ this.NoControlsPictureInPictureImplWidget = class {
     this.shadowRoot.firstElementChild.setAttribute("localedir", direction);
   }
 
-  elementStateMatches(element) {
+  elementStateMatches() {
     return true;
   }
 
@@ -3312,7 +3312,7 @@ this.NoControlsDesktopImplWidget = class {
     this.Utils.init(this.shadowRoot, this.prefs);
   }
 
-  elementStateMatches(element) {
+  elementStateMatches() {
     return true;
   }
 

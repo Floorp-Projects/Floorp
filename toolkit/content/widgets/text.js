@@ -67,7 +67,7 @@
       this.formatAccessKey();
     }
 
-    _onClick(event) {
+    _onClick() {
       let controlElement = this.labeledControlElement;
       if (!controlElement || this.disabled) {
         return;

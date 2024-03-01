@@ -749,7 +749,7 @@
       }
     }
 
-    on_touchend(event) {
+    on_touchend() {
       this._touchStart = -1;
     }
 
@@ -804,12 +804,12 @@
       this._updateScrollButtonsDisabledState();
     }
 
-    on_scroll(event) {
+    on_scroll() {
       this._isScrolling = true;
       this._updateScrollButtonsDisabledState();
     }
 
-    on_scrollend(event) {
+    on_scrollend() {
       this._isScrolling = false;
       this._destination = 0;
       this._direction = 0;

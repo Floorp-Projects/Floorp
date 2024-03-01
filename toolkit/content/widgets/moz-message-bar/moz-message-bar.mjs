@@ -69,7 +69,7 @@ export default class MozMessageBar extends MozLitElement {
     this.dismissable = false;
   }
 
-  onSlotchange(e) {
+  onSlotchange() {
     let actions = this.actionsSlotEl.assignedNodes();
     this.actionsEl.classList.toggle("active", actions.length);
   }
