@@ -2472,11 +2472,6 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     }
   }
 
-  if (pc_->numberOfArgumentsNames > 0 || kind == FunctionSyntaxKind::Arrow) {
-    MOZ_ASSERT(pc_->isFunctionBox());
-    pc_->sc()->setIneligibleForArgumentsLength();
-  }
-
   // Declare the 'arguments', 'this', and 'new.target' bindings if necessary
   // before finishing up the scope so these special bindings get marked as
   // closed over if necessary. Arrow functions don't have these bindings.
@@ -6575,8 +6570,6 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
         return false;
       }
     }
-  } else if (handler_.isArgumentsLength(*forInitialPart)) {
-    pc_->sc()->setIneligibleForArgumentsLength();
   } else if (handler_.isPropertyOrPrivateMemberAccess(*forInitialPart)) {
     // Permitted: no additional testing/fixup needed.
   } else if (handler_.isFunctionCall(*forInitialPart)) {
@@ -10227,8 +10220,6 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::assignExpr(
         return errorResult();
       }
     }
-  } else if (handler_.isArgumentsLength(lhs)) {
-    pc_->sc()->setIneligibleForArgumentsLength();
   } else if (handler_.isPropertyOrPrivateMemberAccess(lhs)) {
     // Permitted: no additional testing/fixup needed.
   } else if (handler_.isFunctionCall(lhs)) {
@@ -10289,8 +10280,6 @@ bool GeneralParser<ParseHandler, Unit>::checkIncDecOperand(
         return false;
       }
     }
-  } else if (handler_.isArgumentsLength(operand)) {
-    pc_->sc()->setIneligibleForArgumentsLength();
   } else if (handler_.isPropertyOrPrivateMemberAccess(operand)) {
     // Permitted: no additional testing/fixup needed.
   } else if (handler_.isFunctionCall(operand)) {
@@ -10909,9 +10898,6 @@ template <class ParseHandler>
 inline typename ParseHandler::NameNodeResult
 PerHandlerParser<ParseHandler>::newName(TaggedParserAtomIndex name,
                                         TokenPos pos) {
-  if (name == TaggedParserAtomIndex::WellKnown::arguments()) {
-    this->pc_->numberOfArgumentsNames++;
-  }
   return handler_.newName(name, pos);
 }
 
@@ -10940,13 +10926,6 @@ GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
     MOZ_ASSERT(!handler_.isSuperBase(lhs));
     return handler_.newOptionalPropertyAccess(lhs, name);
   }
-
-  if (handler_.isArgumentsName(lhs) && handler_.isLengthName(name)) {
-    MOZ_ASSERT(pc_->numberOfArgumentsNames > 0);
-    pc_->numberOfArgumentsNames--;
-    return handler_.newArgumentsLength(lhs, name);
-  }
-
   return handler_.newPropertyAccess(lhs, name);
 }
 
@@ -11503,10 +11482,6 @@ void GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentName(
   // Return early if a pending destructuring error is already present.
   if (possibleError->hasPendingDestructuringError()) {
     return;
-  }
-
-  if (handler_.isArgumentsLength(name)) {
-    pc_->sc()->setIneligibleForArgumentsLength();
   }
 
   if (pc_->sc()->strict()) {
@@ -12166,10 +12141,6 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
                                  chars)) {
             return errorResult();
           }
-        }
-
-        if (handler_.isArgumentsLength(lhs)) {
-          pc_->sc()->setIneligibleForArgumentsLength();
         }
 
         Node rhs;
