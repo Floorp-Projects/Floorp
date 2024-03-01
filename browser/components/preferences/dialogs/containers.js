@@ -88,7 +88,7 @@ let gContainersManager = {
     this._dialog.setAttribute("buttondisabledaccept", !name.value.trim());
   },
 
-  createIconButtons(defaultIcon) {
+  createIconButtons() {
     let radiogroup = document.createXULElement("radiogroup");
     radiogroup.setAttribute("id", "icon");
     radiogroup.className = "icon-buttons radio-buttons";
@@ -116,7 +116,7 @@ let gContainersManager = {
     return radiogroup;
   },
 
-  createColorSwatches(defaultColor) {
+  createColorSwatches() {
     let radiogroup = document.createXULElement("radiogroup");
     radiogroup.setAttribute("id", "color");
     radiogroup.className = "radio-buttons";
