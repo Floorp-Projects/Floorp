@@ -8,8 +8,6 @@ import {
   getDisplayPath,
   getSourceLineCount,
   isJavaScript,
-  isDescendantOfRoot,
-  removeThreadActorId,
   isUrlExtension,
   getLineText,
 } from "../source.js";
@@ -19,7 +17,6 @@ import {
   makeMockSourceWithContent,
   makeMockSourceAndContent,
   makeMockWasmSourceWithContent,
-  makeMockThread,
   makeFullfilledMockSourceContent,
 } from "../test-mockup";
 import { isFulfilled } from "../async-value.js";
@@ -224,42 +221,6 @@ describe("sources", () => {
         throw new Error("Unexpected content value");
       }
       expect(getSourceLineCount(content.value)).toEqual(2);
-    });
-  });
-
-  describe("isDescendantOfRoot", () => {
-    const threads = [
-      makeMockThread({ actor: "server0.conn1.child1/thread19" }),
-    ];
-
-    it("should detect normal source urls", () => {
-      const source = makeMockSource(
-        "resource://activity-stream/vendor/react.js"
-      );
-      const rootWithoutThreadActor = removeThreadActorId(
-        "resource://activity-stream",
-        threads
-      );
-      expect(isDescendantOfRoot(source, rootWithoutThreadActor)).toBe(true);
-    });
-
-    it("should detect source urls under chrome:// as root", () => {
-      const source = makeMockSource(
-        "chrome://browser/content/contentSearchUI.js"
-      );
-      const rootWithoutThreadActor = removeThreadActorId("chrome://", threads);
-      expect(isDescendantOfRoot(source, rootWithoutThreadActor)).toBe(true);
-    });
-
-    it("should detect source urls if root is a thread actor Id", () => {
-      const source = makeMockSource(
-        "resource://activity-stream/vendor/react-dom.js"
-      );
-      const rootWithoutThreadActor = removeThreadActorId(
-        "server0.conn1.child1/thread19",
-        threads
-      );
-      expect(isDescendantOfRoot(source, rootWithoutThreadActor)).toBe(true);
     });
   });
 

@@ -17,7 +17,6 @@ const {
 import { getRelativePath } from "../utils/sources-tree/utils";
 import { endTruncateStr } from "./utils";
 import { truncateMiddleText } from "../utils/text";
-import { parse as parseURL } from "../utils/url";
 import { memoizeLast } from "../utils/memoizeLast";
 import { renderWasmText } from "./wasm";
 import { toEditorLine } from "./editor/index";
@@ -289,16 +288,6 @@ export function getFileURL(source, truncate = true) {
   return resolveFileURL(url, getUnicodeUrl, truncate);
 }
 
-export function getSourcePath(url) {
-  if (!url) {
-    return "";
-  }
-
-  const { path, href } = parseURL(url);
-  // for URLs like "about:home" the path is null so we pass the full href
-  return path || href;
-}
-
 /**
  * Returns amount of lines in the source. If source is a WebAssembly binary,
  * the function returns amount of bytes.
@@ -318,10 +307,6 @@ export function getSourceLineCount(content) {
   }
 
   return count + 1;
-}
-
-export function isInlineScript(source) {
-  return source.introductionType === "scriptElement";
 }
 
 function getNthLine(str, lineNum) {
@@ -427,43 +412,6 @@ export function getRelativeUrl(source, root) {
   // + 1 removes the leading "/"
   const url = group + path;
   return url.slice(url.indexOf(root) + root.length + 1);
-}
-
-/**
- * source.url doesn't include thread actor ID, so before calling underRoot(), the thread actor ID
- * must be removed from the root, which this function handles.
- * @param {string} root The root url to be cleaned
- * @param {Set<Thread>} threads The list of threads
- * @returns {string} The root url with thread actor IDs removed
- */
-export function removeThreadActorId(root, threads) {
-  threads.forEach(thread => {
-    if (root.includes(thread.actor)) {
-      root = root.slice(thread.actor.length + 1);
-    }
-  });
-  return root;
-}
-
-/**
- * Checks if the source is descendant of the root identified by the
- * root url specified. The root might likely be projectDirectoryRoot which
- * is a defined by a pref that allows users restrict the source tree to
- * a subset of sources.
- *
- * @param {Object} source
- *                  The source object
- * @param {String} rootUrlWithoutThreadActor
- *                 The url for the root node, without the thread actor ID. This can be obtained
- *                 by calling removeThreadActorId()
- */
-export function isDescendantOfRoot(source, rootUrlWithoutThreadActor) {
-  if (source.url && source.url.includes("chrome://")) {
-    const { group, path } = source.displayURL;
-    return (group + path).includes(rootUrlWithoutThreadActor);
-  }
-
-  return !!source.url && source.url.includes(rootUrlWithoutThreadActor);
 }
 
 export function isUrlExtension(url) {
