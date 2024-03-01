@@ -578,28 +578,31 @@ Shared tokens ([tokens-shared.css](https://searchfox.org/mozilla-central/source/
   </div>
 </div>
 
-#### Brand
-Tokens specific to the brand, such as colors, and typographical styles. Used within domains that rely on brand values.
+#### `tokens-brand.css`
+This file is for token values specific to the brand, such as colors and
+typographical styles. This stylesheet should be loaded in domains that rely on
+brand values.
 
-For example, we use the brand's accent color under brand contexts (in-content/about: pages):
+For example, we re-map the accent color token in `tokens-brand.css` to the
+value we want to use in brand contexts (in-content/about: pages):
 ```css
 /* tokens-brand.css */
---color-accent-primary: var(--brand-color-accent);
---brand-color-accent: light-dark(var(--color-blue-50), var(--color-cyan-50));
+--color-accent-primary: light-dark(var(--color-blue-50), var(--color-cyan-50));
 ```
 
-#### Platform
-Tokens used within the browser chrome that come from the user’s operating system, such as colors and fonts.
+#### `tokens-platform.css`
+This file is for token values used the browser chrome that come from the user’s
+operating system, such as colors and fonts.
 
-For example, we use the system's accent color under platform contexts (chrome):
+For example, we re-map the accent color token in `tokens-platform.css` to the
+value we want to use in platform contexts (chrome):
 ```css
 /* tokens-platform.css */
---color-accent-primary: var(--platform-color-accent);
---platform-color-accent: AccentColor;
+--color-accent-primary: var(--button-primary-bgcolor, AccentColor);
 ```
 
-#### Shared
-Tokens used and shared between brand and platform contexts.
+#### `tokens-shared.css`
+This file is for tokens that are shared between brand and platform contexts.
 
 For example, both the chrome and in-content pages make use of the same border-radius patterns:
 ```css
@@ -623,7 +626,7 @@ Application design tokens represent the collection of semantic design tokens tha
 
 ```css
 /* tokens-brand.css */
---brand-color-accent: var(--color-blue-50);
+--color-accent-primary: light-dark(var(--color-blue-50), var(--color-cyan-50));
 ```
 
 #### Component
@@ -633,7 +636,7 @@ Component-level tokens should live at the component-level file (e.g. [moz-toggle
 
 ```css
 /* moz-toggle.css */
---toggle-background-color-pressed: var(--brand-color-accent);
+--toggle-background-color-pressed: var(--color-accent-primary);
 ```
 
 ### File structure

@@ -16,12 +16,9 @@
     --button-background-color-active: var(--button-active-bgcolor);
 
     /** Color **/
-    --color-accent-primary: var(--platform-color-accent);
-    --color-accent-primary-hover: var(--platform-color-accent-hover);
-    --color-accent-primary-active: var(--platform-color-accent-active);
-    --platform-color-accent: var(--button-primary-bgcolor, AccentColor);
-    --platform-color-accent-hover: var(--button-primary-hover-bgcolor);
-    --platform-color-accent-active: var(--button-primary-active-bgcolor);
+    --color-accent-primary: var(--button-primary-bgcolor, AccentColor);
+    --color-accent-primary-hover: var(--button-primary-hover-bgcolor);
+    --color-accent-primary-active: var(--button-primary-active-bgcolor);
     --color-canvas: Canvas;
 
     /** Font size **/
