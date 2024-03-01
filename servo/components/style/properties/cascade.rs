@@ -448,6 +448,8 @@ fn tweak_when_ignoring_colors(
 
     // A few special-cases ahead.
     match **declaration {
+        // Honor CSS-wide keywords like unset / revert / initial...
+        PropertyDeclaration::CSSWideKeyword(..) => return,
         PropertyDeclaration::BackgroundColor(ref color) => {
             // We honor system colors and transparent colors unconditionally.
             //
