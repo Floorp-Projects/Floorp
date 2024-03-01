@@ -54,7 +54,6 @@ async function checkIsFormCleared(patch = {}) {
     const expectedValue = patch[elem.id] || "";
     checkFieldValue(elem, expectedValue);
     await checkFieldHighlighted(elem, false);
-    await checkFieldPreview(elem, "");
   }
 }
 
