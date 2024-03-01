@@ -4,8 +4,8 @@
 "use strict";
 
 const URL_PATH = "browser/toolkit/components/extensions/test/browser/data";
-const TEST_URL = `http://example.com/${URL_PATH}/test_downloads_referrer.html`;
-const DOWNLOAD_URL = `http://example.com/${URL_PATH}/test-download.txt`;
+const TEST_URL = `https://example.com/${URL_PATH}/test_downloads_referrer.html`;
+const DOWNLOAD_URL = `https://example.com/${URL_PATH}/test-download.txt`;
 
 async function triggerSaveAs({ selector }) {
   const contextMenu = window.document.getElementById("contentAreaContextMenu");

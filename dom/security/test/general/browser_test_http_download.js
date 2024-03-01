@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
 ChromeUtils.defineESModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
@@ -9,16 +12,13 @@ const HandlerService = Cc[
 
 const MIMEService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
+// Using insecure HTTP URL for a test cases around HTTP downloads
 let INSECURE_BASE_URL =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content/",
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com/"
-  ) + "download_page.html";
-let SECURE_BASE_URL =
-  getRootDirectory(gTestPath).replace(
-    "chrome://mochitests/content/",
-    "https://example.com/"
-  ) + "download_page.html";
+  ) + "http_download_page.html";
 
 function promiseFocus() {
   return new Promise(resolve => {
@@ -26,17 +26,13 @@ function promiseFocus() {
   });
 }
 
-function promisePanelOpened() {
-  if (DownloadsPanel.panel && DownloadsPanel.panel.state == "open") {
-    return Promise.resolve();
-  }
-  return BrowserTestUtils.waitForEvent(DownloadsPanel.panel, "popupshown");
-}
-
 async function task_openPanel() {
   await promiseFocus();
 
-  let promise = promisePanelOpened();
+  let promise = BrowserTestUtils.waitForPopupEvent(
+    DownloadsPanel.panel,
+    "shown"
+  );
   DownloadsPanel.showPanel();
   await promise;
 }
@@ -210,32 +206,14 @@ add_task(async function test_blocking() {
     });
     await runTest(
       INSECURE_BASE_URL,
-      "insecure",
-      shouldTriggerDownload,
-      "Insecure -> Insecure should download"
-    );
-    await runTest(
-      INSECURE_BASE_URL,
-      "secure",
-      shouldTriggerDownload,
-      "Insecure -> Secure should download"
-    );
-    await runTest(
-      SECURE_BASE_URL,
-      "insecure",
+      "http-link",
       () =>
         Promise.all([
           shouldTriggerDownload(),
           shouldNotifyDownloadUI(),
           shouldConsoleError(),
         ]),
-      "Secure -> Insecure should Error"
-    );
-    await runTest(
-      SECURE_BASE_URL,
-      "secure",
-      shouldTriggerDownload,
-      "Secure -> Secure should Download"
+      "Insecure (HTTP) toplevel -> Insecure (HTTP) download should Error"
     );
     await SpecialPowers.popPrefEnv();
   }
@@ -248,8 +226,8 @@ add_task(async function test_manual_unblocking() {
       set: [["browser.download.always_ask_before_handling_new_types", prefVal]],
     });
     await runTest(
-      SECURE_BASE_URL,
-      "insecure",
+      INSECURE_BASE_URL,
+      "http-link",
       async () => {
         let [, download] = await Promise.all([
           shouldTriggerDownload(),
@@ -262,7 +240,7 @@ add_task(async function test_manual_unblocking() {
           "There should be no error after unblocking"
         );
       },
-      "A Blocked Download Should succeeded to Download after a Manual unblock"
+      "A blocked download should succeed to download after a manual unblock"
     );
     await SpecialPowers.popPrefEnv();
   }
@@ -274,14 +252,15 @@ add_task(async function test_unblock_download_visible() {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.download.always_ask_before_handling_new_types", prefVal]],
     });
-    // Focus, open and close the panel once
-    // to make sure the panel is loaded and ready
     await promiseFocus();
     await runTest(
-      SECURE_BASE_URL,
-      "insecure",
+      INSECURE_BASE_URL,
+      "http-link",
       async () => {
-        let panelHasOpened = promisePanelOpened();
+        let panelHasOpened = BrowserTestUtils.waitForPopupEvent(
+          DownloadsPanel.panel,
+          "shown"
+        );
         info("awaiting that the download is triggered and added to the list");
         await Promise.all([shouldTriggerDownload(), shouldNotifyDownloadUI()]);
         info("awaiting that the Download list shows itself");
@@ -289,53 +268,8 @@ add_task(async function test_unblock_download_visible() {
         DownloadsPanel.hidePanel();
         ok(true, "The Download Panel should have opened on blocked download");
       },
-      "A Blocked Download Should open the Download Panel"
+      "A blocked download should open the download panel"
     );
     await SpecialPowers.popPrefEnv();
   }
-});
-
-// Test Download an insecure svg and choose "Open with Firefox"
-add_task(async function download_open_insecure_SVG() {
-  const mimeInfo = MIMEService.getFromTypeAndExtension("image/svg+xml", "svg");
-  mimeInfo.alwaysAskBeforeHandling = false;
-  mimeInfo.preferredAction = mimeInfo.handleInternally;
-  HandlerService.store(mimeInfo);
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.always_ask_before_handling_new_types", false]],
-  });
-  await promiseFocus();
-  await runTest(
-    SECURE_BASE_URL,
-    "insecureSVG",
-    async () => {
-      info("awaiting that the download is triggered and added to the list");
-      let [_, download] = await Promise.all([
-        shouldTriggerDownload("handleInternally"),
-        shouldNotifyDownloadUI(),
-      ]);
-
-      let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-      await download.unblock();
-      Assert.equal(
-        download.error,
-        null,
-        "There should be no error after unblocking"
-      );
-
-      let tab = await newTabPromise;
-
-      ok(
-        tab.linkedBrowser._documentURI.filePath.includes(".svg"),
-        "The download target was opened"
-      );
-      BrowserTestUtils.removeTab(tab);
-      ok(true, "The Content was opened in a new tab");
-      await SpecialPowers.popPrefEnv();
-    },
-    "A Blocked SVG can be opened internally"
-  );
-
-  HandlerService.remove(mimeInfo);
 });

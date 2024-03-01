@@ -5,7 +5,7 @@
 
 const TESTROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",
-  "http://mochi.test:8888/"
+  "https://example.com/"
 );
 
 // Get a ref to the pdf we want to open.
