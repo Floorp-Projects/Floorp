@@ -228,7 +228,7 @@
 //!
 //!   [`anyhow`]: https://github.com/dtolnay/anyhow
 
-#![doc(html_root_url = "https://docs.rs/thiserror/1.0.56")]
+#![doc(html_root_url = "https://docs.rs/thiserror/1.0.57")]
 #![allow(
     clippy::module_name_repetitions,
     clippy::needless_lifetimes,

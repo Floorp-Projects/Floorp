@@ -32,7 +32,10 @@ impl Display<'_> {
             }
         }
 
+        self.requires_fmt_machinery = self.requires_fmt_machinery || fmt.contains('}');
+
         while let Some(brace) = read.find('{') {
+            self.requires_fmt_machinery = true;
             out += &read[..brace + 1];
             read = &read[brace + 1..];
             if read.starts_with('{') {
