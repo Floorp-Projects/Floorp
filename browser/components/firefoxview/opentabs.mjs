@@ -21,6 +21,7 @@ import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BookmarkList: "resource://gre/modules/BookmarkList.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
@@ -107,6 +108,10 @@ class OpenTabsInView extends ViewPage {
         this
       );
     }
+
+    this.bookmarkList = new lazy.BookmarkList(this.#getAllTabUrls(), () =>
+      this.viewCards.forEach(card => card.requestUpdate())
+    );
   }
 
   shouldUpdate(changedProperties) {
@@ -142,6 +147,8 @@ class OpenTabsInView extends ViewPage {
         this
       );
     }
+
+    this.bookmarkList.removeListeners();
   }
 
   viewVisibleCallback() {
@@ -160,6 +167,13 @@ class OpenTabsInView extends ViewPage {
       this.openTabsTarget.removeEventListener("TabRecencyChange", this);
       this.openTabsTarget.addEventListener("TabChange", this);
     }
+  }
+
+  #getAllTabUrls() {
+    return this.openTabsTarget
+      .getAllTabs()
+      .map(({ linkedBrowser }) => linkedBrowser?.currentURI?.spec)
+      .filter(Boolean);
   }
 
   render() {
@@ -269,6 +283,7 @@ class OpenTabsInView extends ViewPage {
                   winID: currentWindowIndex,
                 })}"
                 .searchQuery=${this.searchQuery}
+                .bookmarkList=${this.bookmarkList}
               ></view-opentabs-card>
             `
         )}
@@ -283,6 +298,7 @@ class OpenTabsInView extends ViewPage {
               data-l10n-id="firefoxview-opentabs-window-header"
               data-l10n-args="${JSON.stringify({ winID })}"
               .searchQuery=${this.searchQuery}
+              .bookmarkList=${this.bookmarkList}
             ></view-opentabs-card>
           `
         )}
@@ -319,6 +335,7 @@ class OpenTabsInView extends ViewPage {
       .recentBrowsing=${true}
       .paused=${this.paused}
       .searchQuery=${this.searchQuery}
+      .bookmarkList=${this.bookmarkList}
     ></view-opentabs-card>`;
   }
 
@@ -338,6 +355,7 @@ class OpenTabsInView extends ViewPage {
         }
         windowIds = detail.windowIds;
         this._updateWindowList();
+        this.bookmarkList.setTrackedUrls(this.#getAllTabUrls());
         break;
     }
     if (this.recentBrowsing) {
@@ -391,6 +409,7 @@ class OpenTabsInViewCard extends ViewPageContent {
     searchResults: { type: Array },
     showAll: { type: Boolean },
     cumulativeSearches: { type: Number },
+    bookmarkList: { type: Object },
   };
   static MAX_TABS_FOR_COMPACT_HEIGHT = 7;
 
@@ -613,6 +632,28 @@ class OpenTabsInViewCard extends ViewPageContent {
     this.searchResults = this.searchQuery
       ? searchTabList(this.searchQuery, getTabListItems(this.tabs))
       : null;
+  }
+
+  updated() {
+    this.updateBookmarkStars();
+  }
+
+  async updateBookmarkStars() {
+    const tabItems = [...this.tabList.tabItems];
+    for (const row of tabItems) {
+      const isBookmark = await this.bookmarkList.isBookmark(row.url);
+      if (isBookmark && !row.indicators.includes("bookmark")) {
+        row.indicators.push("bookmark");
+      }
+      if (!isBookmark && row.indicators.includes("bookmark")) {
+        row.indicators = row.indicators.filter(i => i !== "bookmark");
+      }
+      row.primaryL10nId = getPrimaryL10nId(
+        this.isRecentBrowsing,
+        row.indicators
+      );
+    }
+    this.tabList.tabItems = tabItems;
   }
 }
 customElements.define("view-opentabs-card", OpenTabsInViewCard);
@@ -902,8 +943,17 @@ function getIndicatorsForTab(tab) {
  */
 function getPrimaryL10nId(isRecentBrowsing, tabIndicators) {
   let indicatorL10nId = null;
-  if (tabIndicators?.includes("pinned") && !isRecentBrowsing) {
-    indicatorL10nId = "firefoxview-opentabs-pinned-tab";
+  if (!isRecentBrowsing) {
+    if (
+      tabIndicators?.includes("pinned") &&
+      tabIndicators?.includes("bookmark")
+    ) {
+      indicatorL10nId = "firefoxview-opentabs-bookmarked-pinned-tab";
+    } else if (tabIndicators?.includes("pinned")) {
+      indicatorL10nId = "firefoxview-opentabs-pinned-tab";
+    } else if (tabIndicators?.includes("bookmark")) {
+      indicatorL10nId = "firefoxview-opentabs-bookmarked-tab";
+    }
   }
   return indicatorL10nId;
 }
@@ -921,13 +971,7 @@ function getPrimaryL10nId(isRecentBrowsing, tabIndicators) {
  *  L10n ID args
  */
 function getPrimaryL10nArgs(tab, isRecentBrowsing, url) {
-  let indicatorArgs = null;
-  if (tab.pinned && !isRecentBrowsing) {
-    indicatorArgs = JSON.stringify({ tabTitle: tab.label });
-  } else {
-    indicatorArgs = JSON.stringify({ url });
-  }
-  return indicatorArgs;
+  return JSON.stringify({ tabTitle: tab.label, url });
 }
 
 /**
