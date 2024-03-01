@@ -23,16 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
-// Sqlite result row index constants.
-const QUERYINDEX = {
-  URL: 0,
-  TITLE: 1,
-  BOOKMARKED: 2,
-  BOOKMARKTITLE: 3,
-  TAGS: 4,
-  SWITCHTAB: 8,
-};
-
 // Constants to support an alternative frecency algorithm.
 const PAGES_USE_ALT_FRECENCY = Services.prefs.getBoolPref(
   "places.frecency.pages.alternative.featureGate",
@@ -42,23 +32,20 @@ const PAGES_FRECENCY_FIELD = PAGES_USE_ALT_FRECENCY
   ? "alt_frecency"
   : "frecency";
 
-// This SQL query fragment provides the following:
-//   - whether the entry is bookmarked (QUERYINDEX_BOOKMARKED)
-//   - the bookmark title, if it is a bookmark (QUERYINDEX_BOOKMARKTITLE)
-//   - the tags associated with a bookmarked entry (QUERYINDEX_TAGS)
-const SQL_BOOKMARK_TAGS_FRAGMENT = `EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk = h.id) AS bookmarked,
-   ( SELECT title FROM moz_bookmarks WHERE fk = h.id AND title NOTNULL
-     ORDER BY lastModified DESC LIMIT 1
-   ) AS btitle,
-   ( SELECT GROUP_CONCAT(t.title ORDER BY t.title)
-     FROM moz_bookmarks b
-     JOIN moz_bookmarks t ON t.id = +b.parent AND t.parent = :parent
-     WHERE b.fk = h.id
-   ) AS tags`;
-
 const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
-   SELECT h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT}, h.visit_count,
-          h.typed, h.id, t.open_count, ${PAGES_FRECENCY_FIELD}
+   SELECT h.url,
+          h.title,
+          EXISTS(SELECT 1 FROM moz_bookmarks WHERE fk = h.id) AS bookmarked,
+          ( SELECT title FROM moz_bookmarks WHERE fk = h.id AND title NOTNULL
+            ORDER BY lastModified DESC LIMIT 1
+          ) AS bookmark_title,
+          ( SELECT GROUP_CONCAT(t.title ORDER BY t.title)
+            FROM moz_bookmarks b
+            JOIN moz_bookmarks t ON t.id = +b.parent AND t.parent = :parent
+            WHERE b.fk = h.id
+          ) AS tags,
+          t.open_count,
+          t.userContextId
    FROM (
      SELECT ROUND(MAX(use_count) * (1 + (input = :search_string)), 1) AS rank,
             place_id
@@ -71,7 +58,7 @@ const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
           ON t.url = h.url
           AND (t.userContextId = :userContextId OR (t.userContextId <> -1 AND :userContextId IS NULL))
    WHERE AUTOCOMPLETE_MATCH(NULL, h.url,
-                            IFNULL(btitle, h.title), tags,
+                            IFNULL(bookmark_title, h.title), tags,
                             h.visit_count, h.typed, bookmarked,
                             t.open_count,
                             :matchBehavior, :searchBehavior,
@@ -142,14 +129,14 @@ class ProviderInputHistory extends UrlbarProvider {
     }
 
     for (let row of rows) {
-      const url = row.getResultByIndex(QUERYINDEX.URL);
-      const openPageCount = row.getResultByIndex(QUERYINDEX.SWITCHTAB) || 0;
-      const historyTitle = row.getResultByIndex(QUERYINDEX.TITLE) || "";
-      const bookmarked = row.getResultByIndex(QUERYINDEX.BOOKMARKED);
+      const url = row.getResultByName("url");
+      const openPageCount = row.getResultByName("open_count") || 0;
+      const historyTitle = row.getResultByName("title") || "";
+      const bookmarked = row.getResultByName("bookmarked");
       const bookmarkTitle = bookmarked
-        ? row.getResultByIndex(QUERYINDEX.BOOKMARKTITLE)
+        ? row.getResultByName("bookmark_title")
         : null;
-      const tags = row.getResultByIndex(QUERYINDEX.TAGS) || "";
+      const tags = row.getResultByName("tags") || "";
 
       let resultTitle = historyTitle;
       if (openPageCount > 0 && lazy.UrlbarPrefs.get("suggest.openpage")) {
@@ -164,7 +151,7 @@ class ProviderInputHistory extends UrlbarProvider {
             url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(url),
-            userContextId: queryContext.userContextId || 0,
+            userContextId: row.getResultByName("userContextId") || 0,
           })
         );
         addCallback(this, result);

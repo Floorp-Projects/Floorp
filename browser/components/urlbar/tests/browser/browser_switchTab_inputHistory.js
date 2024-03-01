@@ -89,3 +89,54 @@ add_task(async function test_adaptive_with_search_term_and_switch_tab() {
     BrowserTestUtils.removeTab(tab);
   }
 });
+
+add_task(
+  async function test_adaptive_nonadaptive_container_dedupe_switch_tab() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["privacy.userContext.enabled", true]],
+    });
+    // Add a url both to history and input history, ensure that the Muxer will
+    // properly dedupe the 2 entries, also with containers involved.
+    await PlacesUtils.history.clear();
+    const url = "https://example.com/";
+
+    let promiseVisited = PlacesTestUtils.waitForNotification(
+      "page-visited",
+      events => events.some(e => e.url === url)
+    );
+    let tab = BrowserTestUtils.addTab(gBrowser, url, { userContextId: 1 });
+    await promiseVisited;
+
+    async function queryAndCheckOneSwitchTabResult() {
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: "xampl",
+      });
+      Assert.equal(
+        2,
+        UrlbarTestUtils.getResultCount(window),
+        "Check number of results"
+      );
+      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+      Assert.equal(url, result.url, `Url is the first non-heuristic result`);
+      Assert.equal(
+        UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+        result.type,
+        "Should be a switch tab result"
+      );
+      Assert.equal(
+        1,
+        result.result.payload.userContextId,
+        "Should use the expected container"
+      );
+    }
+    info("Check the tab is returned as history by a search.");
+    await queryAndCheckOneSwitchTabResult();
+    info("Add the same url to input history.");
+    await UrlbarUtils.addToInputHistory(url, "xampl");
+    info("Repeat the query.");
+    await queryAndCheckOneSwitchTabResult();
+    BrowserTestUtils.removeTab(tab);
+    await SpecialPowers.popPrefEnv();
+  }
+);
