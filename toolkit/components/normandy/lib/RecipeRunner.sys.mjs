@@ -63,13 +63,13 @@ ChromeUtils.defineLazyGetter(lazy, "gRemoteSettingsClient", () => {
 function cacheProxy(target) {
   const cache = new Map();
   return new Proxy(target, {
-    get(target, prop, receiver) {
+    get(target, prop) {
       if (!cache.has(prop)) {
         cache.set(prop, target[prop]);
       }
       return cache.get(prop);
     },
-    set(target, prop, value, receiver) {
+    set(target, prop, value) {
       cache.set(prop, value);
       return true;
     },

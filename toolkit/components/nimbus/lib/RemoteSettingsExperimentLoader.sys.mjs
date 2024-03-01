@@ -350,7 +350,7 @@ export class _RemoteSettingsExperimentLoader {
     }
   }
 
-  observe(aSubect, aTopic, aData) {
+  observe(aSubect, aTopic) {
     if (aTopic === STUDIES_ENABLED_CHANGED) {
       this.onEnabledPrefChange();
     }
