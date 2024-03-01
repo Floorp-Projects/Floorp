@@ -80,8 +80,9 @@ add_task(async function test_open_tab_row_with_sound_navigation() {
 
     await navigateToViewAndWait(document, "opentabs");
     const openTabs = document.querySelector("view-opentabs[name=opentabs]");
-    await TestUtils.waitForCondition(() =>
-      tabWithSound.hasAttribute("soundplaying")
+    await TestUtils.waitForCondition(
+      () => tabWithSound.hasAttribute("soundplaying"),
+      "Tab is playing sound"
     );
     await tabsUpdated;
     await openTabs.updateComplete;
@@ -91,8 +92,10 @@ add_task(async function test_open_tab_row_with_sound_navigation() {
       "The tab list hasn't rendered"
     );
 
-    // Focus tab row
-    let tabRow = openTabs.viewCards[0].tabList.rowEls[1];
+    // Focus tab row with sound playing
+    let tabRow = openTabs.viewCards[0].tabList.rowEls.find(rowEl =>
+      rowEl.indicators.includes("soundplaying")
+    );
     let tabRowFocused = BrowserTestUtils.waitForEvent(tabRow, "focus", win);
     tabRow.focus();
     await tabRowFocused;
