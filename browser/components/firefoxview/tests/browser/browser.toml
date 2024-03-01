@@ -85,6 +85,5 @@ fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is no
 ["browser_tab_close_last_tab.js"]
 
 ["browser_tab_list_keyboard_navigation.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_tab_on_close_warning.js"]
