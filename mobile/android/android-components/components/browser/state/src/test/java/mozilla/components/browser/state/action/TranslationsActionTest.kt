@@ -155,6 +155,45 @@ class TranslationsActionTest {
     }
 
     @Test
+    fun `WHEN a TranslateStateChangeAction is dispatched THEN the isOfferTranslate status updates accordingly`() {
+        // Initial State
+        assertNull(tabState().translationsState.translationEngineState)
+
+        // Sending an initial request to set state; however, the engine hasn't decided if it is an
+        // offered state
+        var translatedEngineState = TranslationEngineState(
+            detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = true, userPreferredLangTag = "en"),
+            error = null,
+            isEngineReady = true,
+            requestedTranslationPair = TranslationPair(fromLanguage = "es", toLanguage = "en"),
+        )
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = translatedEngineState))
+            .joinBlocking()
+        assertFalse(tabState().translationsState.isOfferTranslate)
+
+        // Engine is sending a translation offer action
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id))
+            .joinBlocking()
+
+        // Initial expected translation state
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = translatedEngineState))
+            .joinBlocking()
+        assertTrue(tabState().translationsState.isOfferTranslate)
+
+        // Not in an offer translation state, because it is no longer supported
+        translatedEngineState = TranslationEngineState(
+            detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = false, userPreferredLangTag = "en"),
+            error = null,
+            isEngineReady = true,
+            requestedTranslationPair = TranslationPair(fromLanguage = "es", toLanguage = "en"),
+        )
+
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = translatedEngineState))
+            .joinBlocking()
+        assertFalse(tabState().translationsState.isOfferTranslate)
+    }
+
+    @Test
     fun `WHEN a TranslateAction is dispatched AND successful THEN update translation processing status`() {
         // Initial
         assertEquals(false, tabState().translationsState.isTranslateProcessing)
