@@ -65,9 +65,10 @@ mozilla::UniquePtr<wchar_t[]> GetAssociationKeyPath(const wchar_t* aExt);
  * Appends the registry path for the given association, file extension or
  * protocol to the parameter string.
  *
- * @return The path, or nullptr on failure.
+ * @param aExt      File extension or protocol association to return path to.
+ * @param aOutput   String to append registry path to.
  */
-nsresult AppendAssociationKeyPath(const wchar_t* aExt, nsString& output);
+void AppendAssociationKeyPath(const wchar_t* aExt, nsAString& aOutput);
 
 /*
  * Get the current user's SID

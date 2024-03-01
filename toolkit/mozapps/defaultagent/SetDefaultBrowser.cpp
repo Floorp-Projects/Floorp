@@ -512,7 +512,7 @@ static UINT GetSystemSleepIntervalInMilliseconds(UINT defaultValue) {
 }
 
 /*
- * MSIX implementation o SetDefaultExtensionHandlersUserChoice.
+ * MSIX implementation for SetDefaultExtensionHandlersUserChoice.
  *
  * Due to the fact that MSIX builds run in a virtual, walled off environment,
  * calling into the Win32 registry APIs doesn't work to set registry keys.
@@ -530,7 +530,7 @@ static UINT GetSystemSleepIntervalInMilliseconds(UINT defaultValue) {
  * Powershell, to make it as quick as possible.
  *
  */
-nsresult SetDefaultExtensionHandlersUserChoiceImplMsix(
+static nsresult SetDefaultExtensionHandlersUserChoiceImplMsix(
     const wchar_t* aAumi, const wchar_t* const aSid,
     const nsTArray<nsString>& aFileExtensions) {
   mozilla::UniquePtr<wchar_t[]> exePath;
@@ -544,24 +544,20 @@ nsresult SetDefaultExtensionHandlersUserChoiceImplMsix(
   // extension, done below.
   nsString startScript(
       uR"(
+# Force exceptions to stop execution
+$ErrorActionPreference = 'Stop'
+
 function Set-DefaultHandlerRegistry($Path, $ProgID, $Hash) {
   $Path = "$Path\UserChoice"
   $CurrentUser = [Microsoft.Win32.Registry]::CurrentUser
-  $ReadWriteSubTreePerm = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-  try {
-    $CurrentUser.DeleteSubKeyTree($Path, $false)
-    $key = $CurrentUser.CreateSubKey($Path, $ReadWriteSubTreePerm)
-  } catch {
-    $key = $CurrentUser.OpenSubKey($Path, $ReadWriteSubTreePerm, [System.Security.AccessControl.RegistryRights]::ChangePermissions)
-    $acl = $key.GetAccessControl()
-    $CurrentName = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $rule = New-Object System.Security.AccessControl.RegistryAccessRule($CurrentName, 'SetValue', 'Deny')
-    $acl.RemoveAccessRule($rule)
-    $key.SetAccessControl($acl)
-    $key.Close()
 
-    $key = $CurrentUser.OpenSubKey($Path, $ReadWriteSubTreePerm)
-  }
+  # DeleteSubKey throws if we don't have sufficient permissions to delete key,
+  # signaling failure to launching process.
+  #
+  # Note: DeleteSubKeyTree fails when DENY permissions are set on key, whereas
+  # DeleteSubKey succeeds.
+  $CurrentUser.DeleteSubKey($Path, $false)
+  $key = $CurrentUser.CreateSubKey($Path)
 
   $StringType = [Microsoft.Win32.RegistryValueKind]::String
   $key.SetValue('ProgID', $ProgID, $StringType)
@@ -620,28 +616,20 @@ function Set-DefaultHandlerRegistry($Path, $ProgID, $Hash) {
     for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
       const wchar_t* fileExtension = aFileExtensions[i].get();
 
-      // Append a line to the script buffer in the form:
-      // Set-DefaultHandlerRegistry $RegistryKeyPath $ProgID $UserChoiceHash
+      nsAutoString keyPath;
+      AppendAssociationKeyPath(fileExtension, keyPath);
 
-      // Use Append to minimize string allocation and processing
-
-      scriptBuffer.AppendLiteral(u"Set-DefaultHandlerRegistry ");
-      rv = AppendAssociationKeyPath(fileExtension, scriptBuffer);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      scriptBuffer.AppendLiteral(u" ");
-
-      scriptBuffer.Append(progIDs[i / 2].get());
-      scriptBuffer.AppendLiteral(u" ");
-
-      auto hash = GenerateUserChoiceHash(fileExtension, aSid,
-                                         progIDs[i / 2].get(), hashTimestamp);
-      if (!hash) {
+      auto hashWchar = GenerateUserChoiceHash(
+          fileExtension, aSid, progIDs[i / 2].get(), hashTimestamp);
+      if (!hashWchar) {
         return NS_ERROR_FAILURE;
       }
+      auto hash = nsDependentString(hashWchar.get());
 
-      scriptBuffer.Append(hash.get());
-      scriptBuffer.AppendLiteral(u"\n");
+      // Append a line to the script buffer in the form:
+      // Set-DefaultHandlerRegistry $RegistryKeyPath $ProgID $UserChoiceHash
+      scriptBuffer += u"Set-DefaultHandlerRegistry "_ns + keyPath + u" "_ns +
+                      progIDs[i / 2] + u" "_ns + hash + u"\n"_ns;
     }
 
     // The hash changes at the end of each minute, so check that the hash should
