@@ -57,7 +57,7 @@ function openFileDialog() {
     return pid;
   })();
 
-  const file = new Promise((resolve, reject) => {
+  const file = new Promise(resolve => {
     info("Opening Windows file dialog");
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(
