@@ -3821,10 +3821,6 @@ XPCOMUtils.defineLazyServiceGetter(
  * Handles getting and checking extensions against the allow list.
  */
 class SearchDefaultOverrideAllowlistHandler {
-  /**
-   * @param {Function} listener
-   *   A listener for configuration update changes.
-   */
   constructor() {
     this._remoteConfig = lazy.RemoteSettings(
       lazy.SearchUtils.SETTINGS_ALLOWLIST_KEY

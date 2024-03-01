@@ -63,8 +63,6 @@ export class AppProvidedSearchEngine extends SearchEngine {
    * @param {object} options
    *   The options object.
    *
-   * @param {object} options.locale
-   *   The locale that is being used for the engine.
    * @param {object} options.configuration
    *   The search engine configuration for application provided engines.
    */
