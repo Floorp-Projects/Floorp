@@ -169,7 +169,7 @@ Adapter::Adapter(Instance* const aParent, WebGPUChild* const aBridge,
     auto ret = std::unordered_map<ffi::WGPUFeatures, dom::GPUFeatureName>{};
 
     for (const auto feature :
-         MakeEnumeratedRange(dom::GPUFeatureName::EndGuard_)) {
+         dom::MakeWebIDLEnumeratedRange<dom::GPUFeatureName>()) {
       const auto bitForFeature = ToWGPUFeatures(feature);
       if (!bitForFeature) {
         // There are some features that don't have bits.
