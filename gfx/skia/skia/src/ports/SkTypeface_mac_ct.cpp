@@ -64,7 +64,7 @@
 #include <string.h>
 #include <memory>
 
-#ifdef MOZ_SKIA
+#if defined(MOZ_SKIA) && defined(XP_MACOSX)
 #include "nsCocoaFeatures.h"
 #endif
 
@@ -290,7 +290,7 @@ SkUniqueCFRef<CTFontRef> SkCTFontCreateExactCopy(CTFontRef baseFont, CGFloat tex
         auto ctFont = SkUniqueCFRef<CTFontRef>(
             CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, nullptr, desc.get()));
         if (variations) {
-#ifdef MOZ_SKIA
+#if defined(MOZ_SKIA) && defined(XP_MACOSX)
             if (nsCocoaFeatures::OnVenturaOrLater()) {
                 // On recent macOS versions, CTFontCreateWithGraphicsFont fails to apply
                 // the variations from the descriptor, so to get the correct values we use
