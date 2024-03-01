@@ -206,7 +206,7 @@ export class _TopSites extends React.PureComponent {
   }
 }
 
-export const TopSites = connect(state => ({
+export const TopSites = connect((state, props) => ({
   TopSites: state.TopSites,
   Prefs: state.Prefs,
   TopSitesRows: state.Prefs.values.topSitesRows,

@@ -176,7 +176,7 @@ export class FakensIPrefBranch {
   prefHasUserValue(prefName) {
     return this.prefs.has(prefName);
   }
-  prefIsLocked(_prefName) {
+  prefIsLocked(prefName) {
     return false;
   }
 }
@@ -187,7 +187,7 @@ export class FakensIPrefBranch {
  */
 export class FakensIPrefService extends FakensIPrefBranch {
   getBranch() {}
-  getDefaultBranch(_prefix) {
+  getDefaultBranch(prefix) {
     return {
       setBoolPref() {},
       setIntPref() {},
@@ -208,8 +208,8 @@ export class FakePrefs extends FakensIPrefBranch {
   ignore(prefName, callback) {
     super.removeObserver(prefName, callback);
   }
-  observeBranch(_listener) {}
-  ignoreBranch(_listener) {}
+  observeBranch(listener) {}
+  ignoreBranch(listener) {}
   set(prefName, value) {
     this.prefs.set(prefName, value);
 
@@ -312,7 +312,7 @@ FakePerformance.prototype = {
     return 10000.234;
   },
   // XXX assumes type == "mark"
-  getEntriesByName(name, _type) {
+  getEntriesByName(name, type) {
     if (this.marks.has(name)) {
       return this.marks.get(name);
     }

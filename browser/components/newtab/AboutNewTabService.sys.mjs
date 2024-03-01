@@ -339,7 +339,7 @@ export const AboutHomeStartupCacheChild = {
     });
   },
 
-  observe(subject, topic) {
+  observe(subject, topic, data) {
     if (topic === "memory-pressure" && this._cacheWorker) {
       this._cacheWorker.terminate();
       this._cacheWorker = null;
@@ -447,7 +447,7 @@ class BaseAboutNewTabService {
     return this.defaultURL;
   }
 
-  aboutHomeChannel() {
+  aboutHomeChannel(uri, loadInfo) {
     throw Components.Exception(
       "AboutHomeChannel not implemented for this process.",
       Cr.NS_ERROR_NOT_IMPLEMENTED

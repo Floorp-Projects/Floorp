@@ -79,7 +79,7 @@ export class PrefsFeed {
   /**
    * Handler for when experiment data updates.
    */
-  onExperimentUpdated() {
+  onExperimentUpdated(event, reason) {
     const value = lazy.NimbusFeatures.newtab.getAllVariables() || {};
     this.store.dispatch(
       ac.BroadcastToContent({
@@ -238,7 +238,7 @@ export class PrefsFeed {
     }
   }
 
-  observe(subject, topic) {
+  observe(subject, topic, data) {
     switch (topic) {
       case lazy.Region.REGION_TOPIC:
         this.store.dispatch(

@@ -110,7 +110,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
     });
   }
 
-  renderComponent(component) {
+  renderComponent(component, embedWidth) {
     switch (component.type) {
       case "Highlights":
         return <Highlights />;

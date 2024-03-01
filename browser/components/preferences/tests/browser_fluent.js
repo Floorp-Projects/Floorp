@@ -1,7 +1,7 @@
 function whenMainPaneLoadedFinished() {
-  return new Promise(function (resolve) {
+  return new Promise(function (resolve, reject) {
     const topic = "main-pane-loaded";
-    Services.obs.addObserver(function observer() {
+    Services.obs.addObserver(function observer(aSubject) {
       Services.obs.removeObserver(observer, topic);
       resolve();
     }, topic);

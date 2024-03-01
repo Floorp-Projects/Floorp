@@ -331,7 +331,7 @@ export class DiscoveryStreamFeed {
               },
             });
           },
-          error() {},
+          error(error) {},
         });
       }
     }

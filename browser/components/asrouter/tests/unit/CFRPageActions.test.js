@@ -554,7 +554,7 @@ describe("CFRPageActions", () => {
         );
         const htmlFooterEl = fakeRemoteL10n.createElement.args.find(
           /* eslint-disable-next-line max-nested-callbacks */
-          ([, , args]) =>
+          ([doc, el, args]) =>
             args && args.content === fakeRecommendation.content.text
         );
         assert.ok(htmlFooterEl);
@@ -849,7 +849,7 @@ describe("CFRPageActions", () => {
         );
         const [, , headerElementArgs] = fakeRemoteL10n.createElement.args.find(
           /* eslint-disable-next-line max-nested-callbacks */
-          ([, , args]) => args && args.content && args.attributes
+          ([doc, el, args]) => args && args.content && args.attributes
         );
         assert.equal(
           headerElementArgs.content.string_id,
@@ -872,7 +872,7 @@ describe("CFRPageActions", () => {
         );
         const [, , headerElementArgs] = fakeRemoteL10n.createElement.args.find(
           /* eslint-disable-next-line max-nested-callbacks */
-          ([, , args]) => args && args.content && args.attributes
+          ([doc, el, args]) => args && args.content && args.attributes
         );
         assert.equal(
           headerElementArgs.content.string_id,

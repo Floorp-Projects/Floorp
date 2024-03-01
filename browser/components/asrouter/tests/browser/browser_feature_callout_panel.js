@@ -186,7 +186,7 @@ add_task(async function panel_feature_callout_anchor_open_attr() {
 
       win.document.querySelector(calloutDismissSelector).click();
     },
-    () => {
+    (win, calloutContainer) => {
       ok(
         !anchor.hasAttribute("open"),
         "Callout container's anchor node should not have its [open] attribute set"

@@ -6,7 +6,7 @@ class MockTagger {
     this.mode = mode;
     this.tagScoreMap = tagScoreMap;
   }
-  tagTokens() {
+  tagTokens(tokens) {
     if (this.mode === "nb") {
       // eslint-disable-next-line prefer-destructuring
       let tag = Object.keys(this.tagScoreMap)[0];

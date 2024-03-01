@@ -242,7 +242,7 @@ export class RecommendationProvider {
     );
   }
 
-  async observe(subject, topic) {
+  async observe(subject, topic, data) {
     switch (topic) {
       case "idle-daily":
         await this.updatePersonalizationScores();
