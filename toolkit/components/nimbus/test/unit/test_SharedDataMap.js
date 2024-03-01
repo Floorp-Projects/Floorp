@@ -115,7 +115,6 @@ with_sharedDataMap(async function test_childInit({ instance, sandbox }) {
 
 with_sharedDataMap(async function test_parentChildSync_synchronously({
   instance: parentInstance,
-  sandbox,
 }) {
   await parentInstance.init();
   parentInstance.set("foo", { bar: 1 });
@@ -142,7 +141,6 @@ with_sharedDataMap(async function test_parentChildSync_synchronously({
 
 with_sharedDataMap(async function test_parentChildSync_async({
   instance: parentInstance,
-  sandbox,
 }) {
   const childInstance = new SharedDataMap("xpcshell", {
     path: PATH,
@@ -169,7 +167,6 @@ with_sharedDataMap(async function test_parentChildSync_async({
 
 with_sharedDataMap(async function test_earlyChildSync({
   instance: parentInstance,
-  sandbox,
 }) {
   const childInstance = new SharedDataMap("xpcshell", {
     path: PATH,
@@ -193,7 +190,7 @@ with_sharedDataMap(async function test_earlyChildSync({
   );
 });
 
-with_sharedDataMap(async function test_updateStoreData({ instance, sandbox }) {
+with_sharedDataMap(async function test_updateStoreData({ instance }) {
   await instance.init();
 
   Assert.ok(!instance.get("foo"), "No value initially");

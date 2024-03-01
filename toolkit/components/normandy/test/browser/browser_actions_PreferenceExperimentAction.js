@@ -831,7 +831,6 @@ decorate_task(
   withSpy(PreferenceExperiments, "stop"),
   withStub(PreferenceExperimentAction.prototype, "_considerTemporaryError"),
   async function testNoRecipes({
-    stopSpy,
     _considerTemporaryErrorStub,
     prefExperiments: [experiment],
   }) {

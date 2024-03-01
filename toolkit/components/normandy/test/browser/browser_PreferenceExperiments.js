@@ -312,7 +312,7 @@ decorate_task(
 // clearAllExperimentStorage
 decorate_task(
   withMockExperiments([preferenceStudyFactory({ slug: "test" })]),
-  async function ({ prefExperiments }) {
+  async function () {
     ok(await PreferenceExperiments.has("test"), "Mock experiment is detected.");
     await PreferenceExperiments.clearAllExperimentStorage();
     ok(
@@ -434,12 +434,7 @@ decorate_task(
   withMockPreferences(),
   withStub(PreferenceExperiments, "startObserver"),
   withSendEventSpy(),
-  async function testStart({
-    prefExperiments,
-    mockPreferences,
-    startObserverStub,
-    sendEventSpy,
-  }) {
+  async function testStart({ mockPreferences, startObserverStub }) {
     mockPreferences.set("fake.preference", "oldvalue", "default");
     mockPreferences.set("fake.preference", "uservalue", "user");
     mockPreferences.set("fake.preferenceinteger", 1, "default");
@@ -1193,7 +1188,7 @@ decorate_task(withMockExperiments(), async function () {
 // get
 decorate_task(
   withMockExperiments([preferenceStudyFactory({ slug: "test" })]),
-  async function ({ prefExperiments }) {
+  async function () {
     const experiment = await PreferenceExperiments.get("test");
     is(experiment.slug, "test", "get fetches the correct experiment");
 
@@ -1253,9 +1248,7 @@ decorate_task(
     }),
   ]),
   withMockPreferences(),
-  async function testGetAllActive({
-    prefExperiments: [activeExperiment, inactiveExperiment],
-  }) {
+  async function testGetAllActive({ prefExperiments: [activeExperiment] }) {
     let allActiveExperiments = await PreferenceExperiments.getAllActive();
     Assert.deepEqual(
       allActiveExperiments,
@@ -1306,11 +1299,7 @@ decorate_task(
   withMockPreferences(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
   withStub(PreferenceExperiments, "startObserver"),
-  async function testInit({
-    prefExperiments,
-    mockPreferences,
-    setExperimentActiveStub,
-  }) {
+  async function testInit({ mockPreferences, setExperimentActiveStub }) {
     mockPreferences.set("fake.pref", "experiment value");
     await PreferenceExperiments.init();
     ok(

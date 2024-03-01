@@ -19,7 +19,7 @@ class NoopAction extends BaseAction {
     this._testPreExecutionFlag = true;
   }
 
-  _run(recipe) {
+  _run() {
     this._testRunFlag = true;
   }
 
@@ -37,7 +37,7 @@ class FailPreExecutionAction extends NoopAction {
 }
 
 class FailRunAction extends NoopAction {
-  _run(recipe) {
+  _run() {
     throw NoopAction._errorToThrow;
   }
 }
