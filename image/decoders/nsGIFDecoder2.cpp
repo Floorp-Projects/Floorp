@@ -1032,6 +1032,9 @@ LexerTransition<nsGIFDecoder2::State> nsGIFDecoder2::ReadLZWData(
         break;
 
       case WriteState::FAILURE:
+        if (mGIFStruct.images_decoded > 0) {
+          return Transition::TerminateSuccess();
+        }
         return Transition::TerminateFailure();
     }
   }
