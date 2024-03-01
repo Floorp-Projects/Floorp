@@ -11,6 +11,7 @@
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
+#include "jit/AtomicOperations.h"
 #include "jit/Bailouts.h"
 #include "jit/CompileInfo.h"
 #include "jit/Ion.h"
@@ -2013,15 +2014,11 @@ bool MAtomicIsLockFree::writeRecoverData(CompactBufferWriter& writer) const {
 RAtomicIsLockFree::RAtomicIsLockFree(CompactBufferReader& reader) {}
 
 bool RAtomicIsLockFree::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
+  Value operand = iter.read();
   MOZ_ASSERT(operand.isInt32());
 
-  int32_t result;
-  if (!js::AtomicIsLockFree(cx, operand, &result)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(Int32Value(result));
+  bool result = AtomicOperations::isLockfreeJS(operand.toInt32());
+  iter.storeInstructionResult(BooleanValue(result));
   return true;
 }
 

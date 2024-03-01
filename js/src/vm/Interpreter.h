@@ -589,8 +589,6 @@ bool GreaterThan(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs,
 bool GreaterThanOrEqual(JSContext* cx, MutableHandleValue lhs,
                         MutableHandleValue rhs, bool* res);
 
-bool AtomicIsLockFree(JSContext* cx, HandleValue in, int* out);
-
 template <bool strict>
 bool DelPropOperation(JSContext* cx, HandleValue val,
                       Handle<PropertyName*> name, bool* res);
