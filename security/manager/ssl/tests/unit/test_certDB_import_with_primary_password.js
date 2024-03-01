@@ -28,11 +28,11 @@ const gCertificateDialogs = {
     trust.value = Ci.nsIX509CertDB.TRUSTED_EMAIL;
     return true;
   },
-  setPKCS12FilePassword: (ctx, password) => {
+  setPKCS12FilePassword: () => {
     // This is only relevant to exporting.
     ok(false, "setPKCS12FilePassword() should not have been called");
   },
-  getPKCS12FilePassword: (ctx, password) => {
+  getPKCS12FilePassword: () => {
     // We don't test anything that calls this method yet.
     ok(false, "getPKCS12FilePassword() should not have been called");
   },
@@ -47,7 +47,7 @@ var gMockPrompter = {
   // This intentionally does not use arrow function syntax to avoid an issue
   // where in the context of the arrow function, |this != gMockPrompter| due to
   // how objects get wrapped when going across xpcom boundaries.
-  promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
+  promptPassword(dialogTitle, text, password, checkMsg) {
     this.numPrompts++;
     if (this.numPrompts > 1) {
       // don't keep retrying a bad password

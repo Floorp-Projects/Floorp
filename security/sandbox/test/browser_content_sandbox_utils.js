@@ -234,7 +234,7 @@ function isContentFileIOSandboxed(level) {
 
 // Returns the lowest sandbox level where blanket reading of the profile
 // directory from the content process should be blocked by the sandbox.
-function minProfileReadSandboxLevel(level) {
+function minProfileReadSandboxLevel() {
   switch (Services.appinfo.OS) {
     case "WINNT":
       return 3;
@@ -250,7 +250,7 @@ function minProfileReadSandboxLevel(level) {
 
 // Returns the lowest sandbox level where blanket reading of the home
 // directory from the content process should be blocked by the sandbox.
-function minHomeReadSandboxLevel(level) {
+function minHomeReadSandboxLevel() {
   switch (Services.appinfo.OS) {
     case "WINNT":
       return 3;

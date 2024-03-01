@@ -74,16 +74,7 @@ function add_ocsp_necko_cache_test(loadContext) {
     let foundEntry = false;
     let visitor = {
       onCacheStorageInfo() {},
-      onCacheEntryInfo(
-        aURI,
-        aIdEnhance,
-        aDataSize,
-        aFetchCount,
-        aLastModifiedTime,
-        aExpirationTime,
-        aPinned,
-        aInfo
-      ) {
+      onCacheEntryInfo(aURI) {
         Assert.equal(
           aURI.spec,
           "http://localhost:8888/",

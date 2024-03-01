@@ -300,7 +300,7 @@ function checkCertErrorGenericAtTime(
   /* optional */ hostname,
   /* optional */ flags = NO_FLAGS
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let result = new CertVerificationExpectedErrorResult(
       cert.commonName,
       expectedError,
@@ -570,7 +570,7 @@ async function asyncConnectTo(
 
   Connection.prototype = {
     // nsITransportEventSink
-    onTransportStatus(aTransport, aStatus, aProgress, aProgressMax) {
+    onTransportStatus(aTransport, aStatus) {
       if (
         !this.connected &&
         aStatus == Ci.nsISocketTransport.STATUS_CONNECTED_TO
@@ -596,7 +596,7 @@ async function asyncConnectTo(
     },
 
     // nsIOutputStreamCallback
-    onOutputStreamReady(aStream) {
+    onOutputStreamReady() {
       if (aAfterStreamOpen) {
         aAfterStreamOpen(this.transport);
       }
@@ -774,7 +774,7 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation) {
 // serverIdentities.
 function getFailingHttpServer(serverPort, serverIdentities) {
   let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/", function (request, response) {
+  httpServer.registerPrefixHandler("/", function () {
     Assert.ok(false, "HTTP responder should not have been queried");
   });
   httpServer.identity.setPrimary("http", serverIdentities.shift(), serverPort);
@@ -902,7 +902,7 @@ function startOCSPResponder(
 // Given an OCSP responder (see startOCSPResponder), returns a promise that
 // resolves when the responder has successfully stopped.
 function stopOCSPResponder(responder) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     responder.stop(resolve);
   });
 }
@@ -977,7 +977,7 @@ class CertVerificationResult {
     this.resolve = resolve;
   }
 
-  verifyCertFinished(aPRErrorCode, aVerifiedChain, aHasEVPolicy) {
+  verifyCertFinished(aPRErrorCode) {
     if (this.successExpected) {
       equal(
         aPRErrorCode,
@@ -1017,7 +1017,7 @@ function asyncTestCertificateUsages(certdb, cert, expectedUsages) {
   let now = new Date().getTime() / 1000;
   let promises = [];
   Object.keys(allCertificateUsages).forEach(usageString => {
-    let promise = new Promise((resolve, reject) => {
+    let promise = new Promise(resolve => {
       let usage = allCertificateUsages[usageString];
       let successExpected = expectedUsages.includes(usage);
       let result = new CertVerificationResult(

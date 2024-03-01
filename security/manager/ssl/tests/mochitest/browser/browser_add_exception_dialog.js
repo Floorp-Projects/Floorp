@@ -20,7 +20,7 @@ function test() {
 
   function testAddCertificate() {
     win.removeEventListener("load", testAddCertificate);
-    Services.obs.addObserver(async function onCertUI(aSubject, aTopic, aData) {
+    Services.obs.addObserver(async function onCertUI() {
       Services.obs.removeObserver(onCertUI, "cert-exception-ui-ready");
       ok(win.gCert, "The certificate information should be available now");
 
