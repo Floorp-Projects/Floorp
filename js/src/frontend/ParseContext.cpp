@@ -593,12 +593,27 @@ bool ParseContext::hasUsedName(const UsedNameTracker& usedNames,
   return false;
 }
 
+bool ParseContext::hasClosedOverName(const UsedNameTracker& usedNames,
+                                     TaggedParserAtomIndex name) {
+  if (auto p = usedNames.lookup(name)) {
+    return p->value().isClosedOver(scriptId());
+  }
+  return false;
+}
+
 bool ParseContext::hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
                                               TaggedParserAtomIndex name) {
   MOZ_ASSERT(name == TaggedParserAtomIndex::WellKnown::arguments() ||
              name == TaggedParserAtomIndex::WellKnown::dot_this_() ||
              name == TaggedParserAtomIndex::WellKnown::dot_newTarget_());
   return hasUsedName(usedNames, name) ||
+         functionBox()->bindingsAccessedDynamically();
+}
+
+bool ParseContext::hasClosedOverFunctionSpecialName(
+    const UsedNameTracker& usedNames, TaggedParserAtomIndex name) {
+  MOZ_ASSERT(name == TaggedParserAtomIndex::WellKnown::arguments());
+  return hasClosedOverName(usedNames, name) ||
          functionBox()->bindingsAccessedDynamically();
 }
 
