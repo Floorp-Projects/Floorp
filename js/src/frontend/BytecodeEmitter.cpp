@@ -925,7 +925,6 @@ restart:
     // Watch out for getters!
     case ParseNodeKind::OptionalDotExpr:
     case ParseNodeKind::DotExpr:
-    case ParseNodeKind::ArgumentsLength:
       MOZ_ASSERT(pn->is<BinaryNode>());
       *answer = true;
       return true;
@@ -4368,7 +4367,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
                              : NameOpEmitter::Kind::SimpleAssignment);
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
       bool isSuper = prop->isSuper();
@@ -4468,7 +4466,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   if (isCompound) {
     MOZ_ASSERT(rhs);
     switch (lhs->getKind()) {
-      case ParseNodeKind::ArgumentsLength:
       case ParseNodeKind::DotExpr: {
         PropertyAccess* prop = &lhs->as<PropertyAccess>();
         if (!poe->emitGet(prop->key().atom())) {
@@ -4515,7 +4512,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       }
       offset += noe->emittedBindOp();
       break;
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr:
       if (!poe->prepareForRhs()) {
         //          [stack] # if Simple Assignment with Super
@@ -4583,7 +4579,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       }
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
       if (!poe->emitAssignment(prop->key().atom())) {
@@ -4671,7 +4666,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
       numPushed = noe->emittedBindOp();
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
+
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
       bool isSuper = prop->isSuper();
@@ -4807,7 +4802,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
       }
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
+
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
 
@@ -7331,7 +7326,6 @@ bool BytecodeEmitter::emitDeleteOptionalChain(UnaryNode* deleteNode) {
 
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr:
     case ParseNodeKind::OptionalDotExpr: {
       auto* propExpr = &kid->as<PropertyAccessBase>();
@@ -7984,7 +7978,6 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
       }
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
       PropertyAccess* prop = &callee->as<PropertyAccess>();
@@ -8083,7 +8076,6 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* maybeCall,
       }
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
       PropertyAccess* prop = &callee->as<PropertyAccess>();
@@ -8205,7 +8197,6 @@ ParseNode* BytecodeEmitter::getCoordNode(ParseNode* callNode,
     coordNode = argsList;
 
     switch (calleeNode->getKind()) {
-      case ParseNodeKind::ArgumentsLength:
       case ParseNodeKind::DotExpr:
         // Use the position of a property access identifier.
         //
@@ -8667,7 +8658,6 @@ bool BytecodeEmitter::emitOptionalTree(
       }
       break;
     }
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &pn->as<PropertyAccess>();
       bool isSuper = prop->isSuper();
@@ -9025,7 +9015,6 @@ bool BytecodeEmitter::emitSequenceExpr(ListNode* node, ValueUsage valueUsage) {
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitIncOrDec(UnaryNode* incDec,
                                                     ValueUsage valueUsage) {
   switch (incDec->kid()->getKind()) {
-    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr:
       return emitPropIncDec(incDec, valueUsage);
     case ParseNodeKind::ElemExpr:
@@ -12509,32 +12498,6 @@ bool BytecodeEmitter::emitTree(
       if (!poe.emitGet(prop->key().atom())) {
         //          [stack] PROP
         return false;
-      }
-      break;
-    }
-
-    case ParseNodeKind::ArgumentsLength: {
-      if (sc->isFunctionBox() &&
-          sc->asFunctionBox()->isEligibleForArgumentsLength() &&
-          !sc->asFunctionBox()->needsArgsObj()) {
-        if (!emit1(JSOp::ArgumentsLength)) {
-          return false;
-        }
-      } else {
-        PropOpEmitter poe(this, PropOpEmitter::Kind::Get,
-                          PropOpEmitter::ObjKind::Other);
-        if (!poe.prepareForObj()) {
-          return false;
-        }
-
-        NameOpEmitter noe(this, TaggedParserAtomIndex::WellKnown::arguments(),
-                          NameOpEmitter::Kind::Get);
-        if (!noe.emitGet()) {
-          return false;
-        }
-        if (!poe.emitGet(TaggedParserAtomIndex::WellKnown::length())) {
-          return false;
-        }
       }
       break;
     }
