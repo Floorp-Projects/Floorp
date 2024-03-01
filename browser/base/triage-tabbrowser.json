@@ -1,0 +1,34 @@
+{
+  "triagers": {
+    "Dão Gottwald": {
+      "bzmail": "dao+bmo@mozilla.com"
+    },
+    "Marco Bonardo": {
+      "bzmail": "mak@mozilla.com"
+    },
+    "Mike Conley": {
+      "bzmail": "mconley@mozilla.com"
+    }
+  },
+  "duty-start-dates": {
+    "2024-03-16": "Marco Bonardo",
+    "2024-04-01": "Dão Gottwald",
+    "2024-04-16": "Mike Conley",
+    "2024-05-01": "Dão Gottwald",
+    "2024-05-16": "Marco Bonardo",
+    "2024-06-01": "Dão Gottwald",
+    "2024-06-16": "Mike Conley",
+    "2024-07-01": "Dão Gottwald",
+    "2024-07-16": "Marco Bonardo",
+    "2024-08-01": "Dão Gottwald",
+    "2024-08-16": "Mike Conley",
+    "2024-09-01": "Dão Gottwald",
+    "2024-09-16": "Marco Bonardo",
+    "2024-10-01": "Dão Gottwald",
+    "2024-10-16": "Mike Conley",
+    "2024-11-01": "Dão Gottwald",
+    "2024-11-16": "Marco Bonardo",
+    "2024-12-01": "Dão Gottwald",
+    "2024-12-16": "Mike Conley"
+  }
+}
