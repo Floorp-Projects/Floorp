@@ -8,7 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "gfxFont.h"
-#include <ApplicationServices/ApplicationServices.h>
+#include <CoreText/CoreText.h>
 
 #include "mozilla/gfx/UnscaledFontMac.h"
 

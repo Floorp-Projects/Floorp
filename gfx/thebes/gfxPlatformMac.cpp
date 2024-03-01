@@ -19,7 +19,9 @@
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/VsyncDispatcher.h"
-#include "nsCocoaFeatures.h"
+#ifdef MOZ_WIDGET_COCOA
+#  include "nsCocoaFeatures.h"
+#endif
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsUnicodeProperties.h"
@@ -707,6 +709,7 @@ uint32_t gfxPlatformMac::ReadAntiAliasingThreshold() {
 
 bool gfxPlatformMac::AccelerateLayersByDefault() { return true; }
 
+#ifdef MOZ_WIDGET_COCOA
 // This is the renderer output callback function, called on the vsync thread
 static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
                               const CVTimeStamp* aNow,
@@ -941,9 +944,11 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
   vsyncSource->NotifyVsync(previousVsync, outputTime);
   return kCVReturnSuccess;
 }
+#endif
 
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatformMac::CreateGlobalHardwareVsyncSource() {
+#ifdef MOZ_WIDGET_COCOA
   RefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
   osxVsyncSource->EnableVsync();
   if (!osxVsyncSource->IsVsyncEnabled()) {
@@ -954,6 +959,10 @@ gfxPlatformMac::CreateGlobalHardwareVsyncSource() {
 
   osxVsyncSource->DisableVsync();
   return osxVsyncSource.forget();
+#else
+  // TODO: CADisplayLink
+  return GetSoftwareVsyncSource();
+#endif
 }
 
 bool gfxPlatformMac::SupportsHDR() {
@@ -965,8 +974,10 @@ bool gfxPlatformMac::SupportsHDR() {
     return false;
   }
 
+#ifdef MOZ_WIDGET_UIKIT
+  return false;
+#elif defined(EARLY_BETA_OR_EARLIER)
   // Screen is capable. Is the OS capable?
-#ifdef EARLY_BETA_OR_EARLIER
   // More-or-less supported in Catalina.
   return true;
 #else
@@ -981,7 +992,10 @@ nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
     return prefProfileData;
   }
 
-  CGColorSpaceRef cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
+  CGColorSpaceRef cspace = nil;
+#ifdef MOZ_WIDGET_COCOA
+  cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
+#endif
   if (!cspace) {
     cspace = ::CGColorSpaceCreateDeviceRGB();
   }

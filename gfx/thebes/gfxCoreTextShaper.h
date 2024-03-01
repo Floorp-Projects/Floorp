@@ -8,7 +8,7 @@
 
 #include "gfxFont.h"
 
-#include <ApplicationServices/ApplicationServices.h>
+#include <CoreText/CoreText.h>
 
 class gfxMacFont;
 
