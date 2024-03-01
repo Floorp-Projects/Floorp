@@ -119,6 +119,9 @@ definitions:
 
             - `text`: Record long text data.
 
+            - `object`: Record structured data based on a pre-defined schema
+              Additional properties: `structure`.
+
         type: string
         enum:
           - event
@@ -140,6 +143,7 @@ definitions:
           - labeled_counter
           - rate
           - text
+          - object
 
       description:
         title: Description
@@ -566,6 +570,15 @@ definitions:
           The named denominator must be defined in this component
           so glean_parser can find it.
         type: string
+
+      structure:
+        title: A subset of a JSON schema definition
+        description: |
+          The expected structure of data, defined in a strict subset of
+          YAML-dialect JSON Schema (Draft 7) supporting keys "type"
+          (only values "object", "array", "number", "string", and "boolean"),
+          "properties", and "items".
+        type: object
 
     required:
       - type

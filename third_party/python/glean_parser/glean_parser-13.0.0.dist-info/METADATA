@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 11.0.1
+Version: 13.0.0
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -78,6 +78,23 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 13.0.0
+
+- BREAKING CHANGE: Support metadata field `include_info_sections` ([bug 1866559](https://bugzilla.mozilla.org/show_bug.cgi?id=1866559))
+
+## 12.0.1
+
+- Fix Rust codegen for object metric type ([#662](https://github.com/mozilla/glean_parser/pull/662))
+
+## 12.0.0
+
+- Add new metric type object (only Rust codegen support right now) ([#587](https://github.com/mozilla/glean_parser/pull/587))
+
+## 11.1.0
+
+- Add Go log outputter (`go_server`) ([#645](https://github.com/mozilla/glean_parser/pull/645))
+- Add Python log outputter (`python_server`) ([MPP-3642](https://mozilla-hub.atlassian.net/browse/MPP-3642))
 
 ## 11.0.1
 

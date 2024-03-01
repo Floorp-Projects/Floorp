@@ -84,6 +84,18 @@ additionalProperties:
             When `false` Glean uses minute-precise timestamps for
             the ping's start/end time.
           type: boolean
+        include_info_sections:
+          title: Include Info Sections
+          description: |
+            When `true`, assemble and include the `client_info` and `ping_info`
+            sections in the ping on submission.
+            When `false`, omit the `client_info` and `ping_info` sections when
+            assembling the ping on submission.
+            Defaults to `true`.
+
+            Interaction with `include_client_id`: `include_client_id` only takes
+            effect when `metadata.include_info_sections` is `true`.
+          type: boolean
 
       default: {}
 
@@ -93,6 +105,9 @@ additionalProperties:
         **Required.**
 
         When `true`, include the `client_id` value in the ping.
+
+        Interaction with `metadata.include_info_sections`: `include_client_id`
+        only takes effect when `metadata.include_info_sections` is `true`.
       type: boolean
 
     send_if_empty:
