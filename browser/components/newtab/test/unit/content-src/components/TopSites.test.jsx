@@ -1477,20 +1477,21 @@ describe("<TopSiteList>", () => {
       TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW
     );
   });
-  it("should fill with placeholders if TopSites rows is less than TopSitesRows", () => {
+  it("should add a single placeholder is there is availible space in the row", () => {
     const rows = [{ url: "https://foo.com" }, { url: "https://bar.com" }];
+    const availibleRows = 1;
     const wrapper = shallow(
       <TopSiteList
         {...DEFAULT_PROPS}
         TopSites={{ rows }}
-        TopSitesRows={1}
+        TopSitesRows={availibleRows}
         App={{ APP }}
       />
     );
     assert.lengthOf(wrapper.find(TopSite), 2, "topSites");
     assert.lengthOf(
       wrapper.find(TopSitePlaceholder),
-      TOP_SITES_MAX_SITES_PER_ROW - 2,
+      availibleRows >= wrapper.find(TopSite).length ? 0 : 1,
       "placeholders"
     );
   });
@@ -1511,11 +1512,7 @@ describe("<TopSiteList>", () => {
       />
     );
     assert.lengthOf(wrapper.find(TopSite), 2, "topSites");
-    assert.lengthOf(
-      wrapper.find(TopSitePlaceholder),
-      TOP_SITES_MAX_SITES_PER_ROW - 2,
-      "placeholders"
-    );
+    assert.lengthOf(wrapper.find(TopSitePlaceholder), 4, "placeholders");
   });
   it("should fill any holes in TopSites with placeholders", () => {
     const rows = [{ url: "https://foo.com" }];
@@ -1529,11 +1526,7 @@ describe("<TopSiteList>", () => {
       />
     );
     assert.lengthOf(wrapper.find(TopSite), 2, "topSites");
-    assert.lengthOf(
-      wrapper.find(TopSitePlaceholder),
-      TOP_SITES_MAX_SITES_PER_ROW - 2,
-      "placeholders"
-    );
+    assert.lengthOf(wrapper.find(TopSitePlaceholder), 1, "placeholders");
   });
   it("should update state onDragStart and clear it onDragEnd", () => {
     const wrapper = shallow(<TopSiteList {...DEFAULT_PROPS} App={{ APP }} />);
@@ -1627,6 +1620,7 @@ describe("<TopSiteList>", () => {
         App={{ APP }}
       />
     );
+    const addButton = { isAddButton: true };
     let instance = wrapper.instance();
     instance.setState({
       draggedIndex: 0,
@@ -1641,7 +1635,7 @@ describe("<TopSiteList>", () => {
       site2,
       draggedSite,
       site3,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1651,7 +1645,7 @@ describe("<TopSiteList>", () => {
       site2,
       site3,
       draggedSite,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1660,7 +1654,7 @@ describe("<TopSiteList>", () => {
     assert.deepEqual(instance._makeTopSitesPreview(3), [
       site2,
       site3,
-      null,
+      addButton,
       draggedSite,
       null,
       null,
@@ -1672,7 +1666,7 @@ describe("<TopSiteList>", () => {
       site2,
       draggedSite,
       site3,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1682,7 +1676,7 @@ describe("<TopSiteList>", () => {
       site3,
       site2,
       draggedSite,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1693,7 +1687,7 @@ describe("<TopSiteList>", () => {
       site2,
       draggedSite,
       site3,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1703,7 +1697,7 @@ describe("<TopSiteList>", () => {
       site2,
       site3,
       draggedSite,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1714,7 +1708,7 @@ describe("<TopSiteList>", () => {
       site2,
       draggedSite,
       site3,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1724,7 +1718,7 @@ describe("<TopSiteList>", () => {
       site2,
       site3,
       draggedSite,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1741,7 +1735,7 @@ describe("<TopSiteList>", () => {
       draggedSite,
       site1,
       site3,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1751,7 +1745,7 @@ describe("<TopSiteList>", () => {
       site1,
       site3,
       draggedSite,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1768,7 +1762,7 @@ describe("<TopSiteList>", () => {
       draggedSite,
       site2,
       site1,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1786,7 +1780,7 @@ describe("<TopSiteList>", () => {
       draggedSite,
       site2,
       site1,
-      null,
+      addButton,
       null,
       null,
       null,
@@ -1811,13 +1805,13 @@ describe("<TopSiteList>", () => {
 });
 
 describe("TopSitePlaceholder", () => {
-  it("should dispatch a TOP_SITES_EDIT action when edit-button is clicked", () => {
+  it("should dispatch a TOP_SITES_EDIT action when the addbutton is clicked", () => {
     const dispatch = sinon.spy();
     const wrapper = shallow(
-      <TopSitePlaceholder dispatch={dispatch} index={7} />
+      <TopSitePlaceholder dispatch={dispatch} index={7} isAddButton={true} />
     );
 
-    wrapper.find(".edit-button").first().simulate("click");
+    wrapper.find(".add-button").first().simulate("click");
 
     assert.calledOnce(dispatch);
     assert.calledWithExactly(dispatch, {
