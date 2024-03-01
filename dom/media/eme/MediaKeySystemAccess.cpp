@@ -352,13 +352,15 @@ static bool SupportsEncryptionScheme(
 
 static bool ToSessionType(const nsAString& aSessionType,
                           MediaKeySessionType& aOutType) {
-  Maybe<MediaKeySessionType> type =
-      StringToEnum<MediaKeySessionType>(aSessionType);
-  if (type.isNothing()) {
-    return false;
+  if (aSessionType.Equals(ToString(MediaKeySessionType::Temporary))) {
+    aOutType = MediaKeySessionType::Temporary;
+    return true;
   }
-  aOutType = type.value();
-  return true;
+  if (aSessionType.Equals(ToString(MediaKeySessionType::Persistent_license))) {
+    aOutType = MediaKeySessionType::Persistent_license;
+    return true;
+  }
+  return false;
 }
 
 // 5.1.1 Is persistent session type?
@@ -1080,7 +1082,7 @@ static nsCString ToCString(const nsString& aString) {
 
 static nsCString ToCString(const MediaKeysRequirement aValue) {
   nsCString str("'");
-  str.AppendASCII(GetEnumString(aValue));
+  str.AppendASCII(MediaKeysRequirementValues::GetString(aValue));
   str.AppendLiteral("'");
   return str;
 }

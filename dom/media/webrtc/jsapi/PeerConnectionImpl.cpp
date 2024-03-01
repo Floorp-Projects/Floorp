@@ -1671,6 +1671,7 @@ JsepSdpType ToJsepSdpType(dom::RTCSdpType aType) {
       return kJsepSdpAnswer;
     case dom::RTCSdpType::Rollback:
       return kJsepSdpRollback;
+    case dom::RTCSdpType::EndGuard_:;
   }
 
   MOZ_CRASH("Nonexistent dom::RTCSdpType");
@@ -3647,6 +3648,8 @@ RTCIceGatheringState PeerConnectionImpl::GetNewIceGatheringState() const {
         return RTCIceGatheringState::Gathering;
       case RTCIceGathererState::Complete:
         foundComplete = true;
+        break;
+      case RTCIceGathererState::EndGuard_:
         break;
     }
   }

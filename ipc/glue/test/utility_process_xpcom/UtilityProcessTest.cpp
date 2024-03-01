@@ -7,7 +7,6 @@
 #if defined(ENABLE_TESTS)
 #  include "mozilla/ipc/UtilityProcessManager.h"
 #  include "mozilla/ipc/UtilityProcessTest.h"
-#  include "mozilla/dom/ChromeUtilsBinding.h"
 #  include "mozilla/dom/Promise.h"
 #  include "mozilla/ProcInfo.h"
 #  include "mozilla/IntentionalCrash.h"
@@ -27,17 +26,23 @@ namespace mozilla::ipc {
 static UtilityActorName UtilityActorNameFromString(
     const nsACString& aStringName) {
   using namespace mozilla::dom;
-  auto idlName = StringToEnum<UtilityActorName>(aStringName);
-  if (idlName.isSome()) {
-    return idlName.value();
+
+  // We use WebIDLUtilityActorNames because UtilityActorNames is not designed
+  // for iteration.
+  for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
+    auto idlName = static_cast<UtilityActorName>(i);
+    const nsDependentCSubstring idlNameString(
+        WebIDLUtilityActorNameValues::GetString(idlName));
+    if (idlNameString.Equals(aStringName)) {
+      return idlName;
+    }
   }
   MOZ_CRASH("Unknown utility actor name");
 }
 
 // Find the utility process with the given actor or any utility process if
-// aActorName is Nothing().
-static SandboxingKind FindUtilityProcessWithActor(
-    const Maybe<UtilityActorName>& aActorName) {
+// the actor is UtilityActorName::EndGuard_.
+static SandboxingKind FindUtilityProcessWithActor(UtilityActorName aActorName) {
   RefPtr<UtilityProcessManager> utilityProc =
       UtilityProcessManager::GetSingleton();
   MOZ_ASSERT(utilityProc, "No UtilityprocessManager?");
@@ -47,11 +52,11 @@ static SandboxingKind FindUtilityProcessWithActor(
     if (!utilityProc->Process(sbKind)) {
       continue;
     }
-    if (aActorName.isNothing()) {
+    if (aActorName == UtilityActorName::EndGuard_) {
       return sbKind;
     }
     for (auto actor : utilityProc->GetActors(sbKind)) {
-      if (actor == aActorName.ref()) {
+      if (actor == aActorName) {
         return sbKind;
       }
     }
@@ -231,9 +236,9 @@ UtilityProcessTest::StopProcess(const char* aActorName) {
   if (aActorName) {
     const nsDependentCString actorStringName(aActorName);
     UtilityActorName actorName = UtilityActorNameFromString(actorStringName);
-    sbKind = FindUtilityProcessWithActor(Some(actorName));
+    sbKind = FindUtilityProcessWithActor(actorName);
   } else {
-    sbKind = FindUtilityProcessWithActor(Nothing());
+    sbKind = FindUtilityProcessWithActor(UtilityActorName::EndGuard_);
   }
 
   if (sbKind == SandboxingKind::COUNT) {

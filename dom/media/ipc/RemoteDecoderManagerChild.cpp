@@ -50,8 +50,8 @@ using namespace gfx;
 // Used so that we only ever attempt to check if the RDD/GPU/Utility processes
 // should be launched serially. Protects sLaunchPromise
 StaticMutex sLaunchMutex;
-static EnumeratedArray<RemoteDecodeIn, StaticRefPtr<GenericNonExclusivePromise>,
-                       size_t(RemoteDecodeIn::SENTINEL)>
+static EnumeratedArray<RemoteDecodeIn, RemoteDecodeIn::SENTINEL,
+                       StaticRefPtr<GenericNonExclusivePromise>>
     sLaunchPromises MOZ_GUARDED_BY(sLaunchMutex);
 
 // Only modified on the main-thread, read on any thread. While it could be read
@@ -61,8 +61,8 @@ static StaticDataMutex<StaticRefPtr<nsIThread>>
     sRemoteDecoderManagerChildThread("sRemoteDecoderManagerChildThread");
 
 // Only accessed from sRemoteDecoderManagerChildThread
-static EnumeratedArray<RemoteDecodeIn, StaticRefPtr<RemoteDecoderManagerChild>,
-                       size_t(RemoteDecodeIn::SENTINEL)>
+static EnumeratedArray<RemoteDecodeIn, RemoteDecodeIn::SENTINEL,
+                       StaticRefPtr<RemoteDecoderManagerChild>>
     sRemoteDecoderManagerChildForProcesses;
 
 static StaticAutoPtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
@@ -70,8 +70,8 @@ static StaticAutoPtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
 // Used for protecting codec support information collected from different remote
 // processes.
 StaticMutex sProcessSupportedMutex;
-static EnumeratedArray<RemoteDecodeIn, Maybe<media::MediaCodecsSupported>,
-                       size_t(RemoteDecodeIn::SENTINEL)>
+static EnumeratedArray<RemoteDecodeIn, RemoteDecodeIn::SENTINEL,
+                       Maybe<media::MediaCodecsSupported>>
     sProcessSupported MOZ_GUARDED_BY(sProcessSupportedMutex);
 
 class ShutdownObserver final : public nsIObserver {

@@ -291,8 +291,9 @@ WebTask* WebTaskScheduler::GetNextTask() const {
     return nullptr;
   }
 
-  for (TaskPriority priority : MakeWebIDLEnumeratedRange<TaskPriority>()) {
-    if (auto queues = allQueues.Lookup(UnderlyingValue(priority))) {
+  for (uint32_t priority = static_cast<uint32_t>(TaskPriority::User_blocking);
+       priority < static_cast<uint32_t>(TaskPriority::EndGuard_); ++priority) {
+    if (auto queues = allQueues.Lookup(priority)) {
       WebTaskQueue* oldestQueue = nullptr;
       MOZ_ASSERT(!queues.Data().IsEmpty());
       for (auto& webTaskQueue : queues.Data()) {

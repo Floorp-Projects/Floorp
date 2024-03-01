@@ -258,6 +258,13 @@ class ReferrerInfo : public nsIReferrerInfo {
   static ReferrerPolicyEnum ReferrerPolicyFromHeaderString(
       const nsAString& aContent);
 
+  /*
+   * Helper function to convert ReferrerPolicy enum to string
+   *
+   * @param aPolicy referrer policy to convert.
+   */
+  static const char* ReferrerPolicyToString(ReferrerPolicyEnum aPolicy);
+
   /**
    * Hash function for this object
    */

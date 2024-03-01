@@ -968,8 +968,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   // -------------------------------------------------------------------------
   // WebGL extensions (implemented in WebGLContextExtensions.cpp)
 
-  EnumeratedArray<WebGLExtensionID, std::unique_ptr<WebGLExtensionBase>,
-                  size_t(WebGLExtensionID::Max)>
+  EnumeratedArray<WebGLExtensionID, WebGLExtensionID::Max,
+                  std::unique_ptr<WebGLExtensionBase>>
       mExtensions;
 
  public:

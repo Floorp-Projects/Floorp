@@ -406,9 +406,10 @@ nsresult ExtensionPolicyService::InjectContentScripts(
     DocInfo docInfo(win);
 
     using RunAt = dom::ContentScriptRunAt;
+    namespace RunAtValues = dom::ContentScriptRunAtValues;
     using Scripts = AutoTArray<RefPtr<WebExtensionContentScript>, 8>;
 
-    Scripts scripts[ContiguousEnumSize<RunAt>::value];
+    Scripts scripts[RunAtValues::Count];
 
     auto GetScripts = [&](RunAt aRunAt) -> Scripts&& {
       static_assert(sizeof(aRunAt) == 1, "Our cast is wrong");

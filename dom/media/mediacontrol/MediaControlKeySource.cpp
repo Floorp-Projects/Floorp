@@ -36,11 +36,7 @@ void MediaControlKeyHandler::OnActionPerformed(
     return;
   }
 
-  if (aAction.mKey.isNothing()) {
-    MOZ_ASSERT_UNREACHABLE("Error : undefined media key!");
-    return;
-  }
-  switch (aAction.mKey.value()) {
+  switch (aAction.mKey) {
     case MediaControlKey::Focus:
       controller->Focus();
       return;

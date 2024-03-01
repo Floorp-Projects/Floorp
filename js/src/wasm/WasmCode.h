@@ -117,8 +117,8 @@ struct LinkData : LinkDataCacheablePod {
   };
   using InternalLinkVector = Vector<InternalLink, 0, SystemAllocPolicy>;
 
-  struct SymbolicLinkArray : EnumeratedArray<SymbolicAddress, Uint32Vector,
-                                             size_t(SymbolicAddress::Limit)> {
+  struct SymbolicLinkArray
+      : EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, Uint32Vector> {
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   };
 

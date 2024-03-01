@@ -906,6 +906,7 @@ Maybe<ColorScheme> nsPresContext::GetOverriddenOrEmbedderColorScheme() const {
     case dom::PrefersColorSchemeOverride::Light:
       return Some(ColorScheme::Light);
     case dom::PrefersColorSchemeOverride::None:
+    case dom::PrefersColorSchemeOverride::EndGuard_:
       break;
   }
 

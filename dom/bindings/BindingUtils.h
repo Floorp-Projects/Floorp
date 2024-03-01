@@ -24,8 +24,6 @@
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DeferredFinalize.h"
-#include "mozilla/EnumTypeTraits.h"
-#include "mozilla/EnumeratedRange.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -1345,27 +1343,26 @@ inline bool EnumValueNotFound<true>(BindingCallContext& cx,
                                                       deflated.get(), type);
 }
 
-namespace binding_detail {
-
 template <typename CharT>
 inline int FindEnumStringIndexImpl(const CharT* chars, size_t length,
-                                   const Span<const nsLiteralCString>& values) {
-  for (size_t i = 0; i < values.Length(); ++i) {
-    const nsLiteralCString& value = values[i];
-    if (length != value.Length()) {
+                                   const EnumEntry* values) {
+  int i = 0;
+  for (const EnumEntry* value = values; value->value; ++value, ++i) {
+    if (length != value->length) {
       continue;
     }
 
     bool equal = true;
+    const char* val = value->value;
     for (size_t j = 0; j != length; ++j) {
-      if (unsigned(value.CharAt(j)) != unsigned(chars[j])) {
+      if (unsigned(val[j]) != unsigned(chars[j])) {
         equal = false;
         break;
       }
     }
 
     if (equal) {
-      return (int)i;
+      return i;
     }
   }
 
@@ -1374,9 +1371,8 @@ inline int FindEnumStringIndexImpl(const CharT* chars, size_t length,
 
 template <bool InvalidValueFatal>
 inline bool FindEnumStringIndex(BindingCallContext& cx, JS::Handle<JS::Value> v,
-                                const Span<const nsLiteralCString>& values,
-                                const char* type, const char* sourceDescription,
-                                int* index) {
+                                const EnumEntry* values, const char* type,
+                                const char* sourceDescription, int* index) {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
   JS::Rooted<JSString*> str(cx, JS::ToString(cx, v));
   if (!str) {
@@ -1407,31 +1403,6 @@ inline bool FindEnumStringIndex(BindingCallContext& cx, JS::Handle<JS::Value> v,
   }
 
   return EnumValueNotFound<InvalidValueFatal>(cx, str, type, sourceDescription);
-}
-
-}  // namespace binding_detail
-
-template <typename Enum, class StringT>
-inline Maybe<Enum> StringToEnum(const StringT& aString) {
-  int index = binding_detail::FindEnumStringIndexImpl(
-      aString.BeginReading(), aString.Length(),
-      binding_detail::EnumStrings<Enum>::Values);
-  return index >= 0 ? Some(static_cast<Enum>(index)) : Nothing();
-}
-
-template <typename Enum>
-inline const nsCString& GetEnumString(Enum stringId) {
-  MOZ_RELEASE_ASSERT(
-      static_cast<size_t>(stringId) <
-      mozilla::ArrayLength(binding_detail::EnumStrings<Enum>::Values));
-  return binding_detail::EnumStrings<Enum>::Values[static_cast<size_t>(
-      stringId)];
-}
-
-template <typename Enum>
-constexpr mozilla::detail::EnumeratedRange<Enum> MakeWebIDLEnumeratedRange() {
-  return MakeInclusiveEnumeratedRange(ContiguousEnumValues<Enum>::min,
-                                      ContiguousEnumValues<Enum>::max);
 }
 
 inline nsWrapperCache* GetWrapperCache(const ParentObject& aParentObject) {
@@ -3284,7 +3255,6 @@ already_AddRefed<Promise> CreateRejectedPromiseFromThrownException(
 }  // namespace binding_detail
 
 }  // namespace dom
-
 }  // namespace mozilla
 
 #endif /* mozilla_dom_BindingUtils_h__ */

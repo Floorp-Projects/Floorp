@@ -13,9 +13,6 @@
 
 namespace mozilla {
 
-template <typename T>
-class Maybe;
-
 namespace layers {
 class Image;
 }
@@ -54,7 +51,7 @@ class ImageUtils {
   explicit ImageUtils(layers::Image* aImage);
   ~ImageUtils();
 
-  Maybe<ImageBitmapFormat> GetFormat() const;
+  ImageBitmapFormat GetFormat() const;
 
   uint32_t GetBufferLength() const;
 

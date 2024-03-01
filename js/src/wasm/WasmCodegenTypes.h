@@ -273,7 +273,7 @@ WASM_DECLARE_CACHEABLE_POD(TrapSite);
 WASM_DECLARE_POD_VECTOR(TrapSite, TrapSiteVector)
 
 struct TrapSiteVectorArray
-    : EnumeratedArray<Trap, TrapSiteVector, size_t(Trap::Limit)> {
+    : EnumeratedArray<Trap, Trap::Limit, TrapSiteVector> {
   bool empty() const;
   void clear();
   void swap(TrapSiteVectorArray& rhs);

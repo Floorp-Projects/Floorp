@@ -894,7 +894,10 @@ which becomes the value `_empty`.
 
 For a Web IDL enum named `MyEnum`, the C++ enum is named `MyEnum` and
 placed in the `mozilla::dom` namespace, while the values are placed in
-the `mozilla::dom::MyEnum` namespace.
+the `mozilla::dom::MyEnum` namespace. There is also a
+`mozilla::dom::MyEnumValues::strings` which is an array of
+`mozilla::dom::EnumEntry` structs that gives access to the string
+representations of the values.
 
 The type of the enum class is automatically selected to be the smallest
 unsigned integer type that can hold all the values.  In practice, this
@@ -921,34 +924,11 @@ enum class MyEnum : uint8_t {
   _empty,
   Another
 };
+
+namespace MyEnumValues {
+extern const EnumEntry strings[10];
+} // namespace MyEnumValues
 ```
-
-`mozilla::dom::GetEnumString` is a templated helper function declared in
-[`BindingUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h)
-and exported to `mozilla/dom/BindingUtils.h` that can be used to convert an enum
-value to its corresponding string value. It returns a `const nsCString&`
-containing the string value.
-
-`mozilla::dom::StringToEnum` is a templated helper function in
-[`BindingUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h)
-and exported to `mozilla/dom/BindingUtils.h` that can be used to convert a
-string to the corresponding enum value. It needs to be supplied with the enum
-class as a template argument, and returns a `mozilla::Maybe<Enum>`. If the string
-value passed to it as an argument is not one of the string values for the enum
-then it returns `mozilla::Nothing()`, else it returns the right enum value in
-the `mozilla::Maybe`.
-
-`mozilla::dom::WebIDLEnumSerializer` is a templated alias in
-[`BindingIPCUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingIPCUtils.h)
-exported to `mozilla/dom/BindingIPCUtils.h` to implement an IPC serializer with
-the right validation for WebIDL enums. It uses a
-`mozilla::MaxContinuousEnumValue` that is generated for every WebIDL enum to
-implement the validation.
-
-`mozilla::dom::MakeWebIDLEnumeratedRange` is a templated helper function in
-[`BindingUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h)
-and exported to `mozilla/dom/BindingUtils.h` that can be used to create a
-`mozilla::EnumeratedRange` for a WebIDL enum.
 
 #### Callback function types
 

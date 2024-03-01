@@ -189,8 +189,8 @@ struct txEXSLTFunctionDescriptor {
   int32_t mNamespaceID;
 };
 
-static EnumeratedArray<txEXSLTType, txEXSLTFunctionDescriptor,
-                       size_t(txEXSLTType::_LIMIT)>
+static EnumeratedArray<txEXSLTType, txEXSLTType::_LIMIT,
+                       txEXSLTFunctionDescriptor>
     descriptTable;
 
 class txEXSLTFunctionCall : public FunctionCall {

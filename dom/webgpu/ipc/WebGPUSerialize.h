@@ -9,7 +9,6 @@
 #include "WebGPUTypes.h"
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
@@ -21,9 +20,7 @@ namespace IPC {
       : public ContiguousEnumSerializer<something, something(0), guard> {}
 
 #define DEFINE_IPC_SERIALIZER_DOM_ENUM(something) \
-  template <>                                     \
-  struct ParamTraits<something>                   \
-      : public mozilla::dom::WebIDLEnumSerializer<something> {}
+  DEFINE_IPC_SERIALIZER_ENUM_GUARD(something, something::EndGuard_)
 #define DEFINE_IPC_SERIALIZER_FFI_ENUM(something) \
   DEFINE_IPC_SERIALIZER_ENUM_GUARD(something, something##_Sentinel)
 

@@ -120,7 +120,8 @@ class MediaSession final : public nsIDocumentActivity, public nsWrapperCache {
 
   RefPtr<MediaMetadata> mMediaMetadata;
 
-  EnumeratedArray<MediaSessionAction, RefPtr<MediaSessionActionHandler>>
+  EnumeratedArray<MediaSessionAction, MediaSessionAction::EndGuard_,
+                  RefPtr<MediaSessionActionHandler>>
       mActionHandlers;
 
   // This is used as is a hint for the user agent to determine whether the

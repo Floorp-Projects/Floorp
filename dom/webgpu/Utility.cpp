@@ -228,6 +228,8 @@ ffi::WGPUTextureFormat ConvertTextureFormat(
     case dom::GPUTextureFormat::Depth32float_stencil8:
       result.tag = ffi::WGPUTextureFormat_Depth32FloatStencil8;
       break;
+    case dom::GPUTextureFormat::EndGuard_:
+      MOZ_ASSERT_UNREACHABLE();
   }
 
   // Clang will check for us that the switch above is exhaustive,

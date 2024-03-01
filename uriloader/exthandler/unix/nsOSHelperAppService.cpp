@@ -176,7 +176,7 @@ struct FileLocationCache {
     void Clear() { *this = {}; }
   };
 
-  EnumeratedArray<FileKind, Entry, size_t(FileKind::Count)> mEntries;
+  EnumeratedArray<FileKind, FileKind::Count, Entry> mEntries;
 
   static const char* PrefFor(FileKind aKind) {
     switch (aKind) {

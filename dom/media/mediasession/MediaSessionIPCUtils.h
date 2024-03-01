@@ -6,7 +6,6 @@
 #define DOM_MEDIA_MEDIASESSION_MEDIASESSIONIPCUTILS_H_
 
 #include "ipc/EnumSerializer.h"
-#include "mozilla/dom/BindingIPCUtils.h"
 #include "MediaMetadata.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/MediaSessionBinding.h"
@@ -88,13 +87,17 @@ struct ParamTraits<mozilla::dom::PositionState> {
 
 template <>
 struct ParamTraits<mozilla::dom::MediaSessionPlaybackState>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::MediaSessionPlaybackState> {};
+    : public ContiguousEnumSerializer<
+          mozilla::dom::MediaSessionPlaybackState,
+          mozilla::dom::MediaSessionPlaybackState::None,
+          mozilla::dom::MediaSessionPlaybackState::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::MediaSessionAction>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::MediaSessionAction> {};
+    : public ContiguousEnumSerializer<
+          mozilla::dom::MediaSessionAction,
+          mozilla::dom::MediaSessionAction::Play,
+          mozilla::dom::MediaSessionAction::EndGuard_> {};
 
 }  // namespace IPC
 

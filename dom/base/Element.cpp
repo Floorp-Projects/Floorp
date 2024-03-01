@@ -781,9 +781,12 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
         return WhereToScroll::Center;
       case ScrollLogicalPosition::End:
         return WhereToScroll::End;
+      case ScrollLogicalPosition::EndGuard_:
+        MOZ_FALLTHROUGH_ASSERT("Unexpected block direction value");
       case ScrollLogicalPosition::Nearest:
-        return WhereToScroll::Nearest;
+        break;
     }
+    return WhereToScroll::Nearest;
   };
 
   const auto block = ToWhereToScroll(aOptions.mBlock);

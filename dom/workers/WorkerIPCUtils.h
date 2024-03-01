@@ -6,7 +6,7 @@
 #ifndef _mozilla_dom_WorkerIPCUtils_h
 #define _mozilla_dom_WorkerIPCUtils_h
 
-#include "mozilla/dom/BindingIPCUtils.h"
+#include "ipc/EnumSerializer.h"
 
 // Undo X11/X.h's definition of None
 #undef None
@@ -17,7 +17,9 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::WorkerType>
-    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::WorkerType> {};
+    : public ContiguousEnumSerializer<mozilla::dom::WorkerType,
+                                      mozilla::dom::WorkerType::Classic,
+                                      mozilla::dom::WorkerType::EndGuard_> {};
 
 }  // namespace IPC
 
