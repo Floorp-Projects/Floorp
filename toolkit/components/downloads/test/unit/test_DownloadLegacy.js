@@ -11,8 +11,6 @@
 
 // Execution of common tests
 
-Services.prefs.setBoolPref("dom.block_download_insecure", false);
-
 // This is used in common_test_Download.js
 // eslint-disable-next-line no-unused-vars
 var gUseLegacySaver = true;

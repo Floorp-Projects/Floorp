@@ -24,10 +24,7 @@ server.registerFile(`/${encodeURIComponent(TEST_FILE)}`, file);
  */
 add_task(async function test_idn_blocklisted_char_not_escaped() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.always_ask_before_handling_new_types", false],
-      ["dom.block_download_insecure", false],
-    ],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
 
   info("Testing with " + TEST_URL);
