@@ -887,8 +887,8 @@ class nsWindow final : public nsBaseWidget {
   mozilla::UniquePtr<mozilla::widget::DirectManipulationOwner> mDmOwner;
 
   // Client rect for minimize, maximize and close buttons.
-  mozilla::EnumeratedArray<WindowButtonType, WindowButtonType::Count,
-                           LayoutDeviceIntRect>
+  mozilla::EnumeratedArray<WindowButtonType, LayoutDeviceIntRect,
+                           WindowButtonType::Count>
       mWindowBtnRect;
 
   mozilla::DataMutex<Desktop> mDesktopId;

@@ -440,7 +440,7 @@ static bool InRange(uint32_t caller, uint32_t callee) {
 using OffsetMap =
     HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>;
 using TrapMaybeOffsetArray =
-    EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>>;
+    EnumeratedArray<Trap, Maybe<uint32_t>, Trap::Limit>;
 
 bool ModuleGenerator::linkCallSites() {
   AutoCreatedBy acb(masm_, "linkCallSites");
