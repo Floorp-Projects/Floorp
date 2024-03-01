@@ -77,18 +77,14 @@ describe("sources", () => {
         getTruncatedFileName(
           makeMockSource(
             "really-really-really-really-really-really-long-name.html"
-          ),
-          "",
-          30
+          )
         )
       ).toBe("really-really…long-name.html");
     });
     it("should first decode the filename and then truncate it", () => {
       expect(
         getTruncatedFileName(
-          makeMockSource(`${encodedUnicode.repeat(30)}.html`),
-          "",
-          30
+          makeMockSource(`${encodedUnicode.repeat(30)}.html`)
         )
       ).toBe("測測測測測測測測測測測測測…測測測測測測測測測.html");
     });

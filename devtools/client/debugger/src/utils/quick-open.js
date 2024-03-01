@@ -3,12 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { endTruncateStr } from "./utils";
-import {
-  getFilename,
-  getSourceClassnames,
-  getSourceQueryString,
-  getRelativeUrl,
-} from "./source";
+import { getFilename, getSourceClassnames, getRelativeUrl } from "./source";
 
 export const MODIFIERS = {
   "@": "functions",
@@ -66,7 +61,7 @@ export function formatSourceForList(
   const relativeUrlWithQuery = `${getRelativeUrl(
     source,
     projectDirectoryRoot
-  )}${getSourceQueryString(source) || ""}`;
+  )}${source.displayURL.search || ""}`;
   const subtitle = endTruncateStr(relativeUrlWithQuery, 100);
   const value = relativeUrlWithQuery;
   return {

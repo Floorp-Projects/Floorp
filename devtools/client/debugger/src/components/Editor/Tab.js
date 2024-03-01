@@ -15,7 +15,6 @@ import actions from "../../actions/index";
 import {
   getDisplayPath,
   getFileURL,
-  getSourceQueryString,
   getTruncatedFileName,
   isPretty,
 } from "../../utils/source";
@@ -87,7 +86,6 @@ class Tab extends PureComponent {
     });
 
     const path = getDisplayPath(source, tabSources);
-    const query = getSourceQueryString(source);
     return div(
       {
         draggable: true,
@@ -115,7 +113,7 @@ class Tab extends PureComponent {
         {
           className: "filename",
         },
-        getTruncatedFileName(source, query),
+        getTruncatedFileName(source),
         path && span(null, `../${path}/..`)
       ),
       React.createElement(CloseButton, {

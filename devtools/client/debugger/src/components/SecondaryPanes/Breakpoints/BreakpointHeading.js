@@ -12,7 +12,6 @@ import actions from "../../../actions/index";
 import {
   getTruncatedFileName,
   getDisplayPath,
-  getSourceQueryString,
   getFileURL,
 } from "../../../utils/source";
 import { createLocation } from "../../../utils/location";
@@ -40,7 +39,6 @@ class BreakpointHeading extends PureComponent {
     const { sources, source, selectSource } = this.props;
 
     const path = getDisplayPath(source, sources);
-    const query = getSourceQueryString(source);
     return div(
       {
         className: "breakpoint-heading",
@@ -67,7 +65,7 @@ class BreakpointHeading extends PureComponent {
         {
           className: "filename",
         },
-        getTruncatedFileName(source, query),
+        getTruncatedFileName(source),
         path && span(null, `../${path}/..`)
       )
     );
