@@ -102,15 +102,15 @@
     inset-inline-end: -6px;
   }
 
-  &.pinnedOnNewTab .fxview-tab-row-favicon::after,
-  &.pinnedOnNewTab .fxview-tab-row-button::after {
-    background-image: url("chrome://browser/skin/pin-12.svg");
-  }
-
   &.bookmark .fxview-tab-row-favicon::after,
   &.bookmark .fxview-tab-row-button::after {
     background-image: url("chrome://browser/skin/bookmark-12.svg");
     fill: var(--fxview-primary-action-background);
+  }
+
+  &.pinnedOnNewTab .fxview-tab-row-favicon::after,
+  &.pinnedOnNewTab .fxview-tab-row-button::after {
+    background-image: url("chrome://browser/skin/pin-12.svg");
   }
 
   &.attention .fxview-tab-row-favicon::after,
