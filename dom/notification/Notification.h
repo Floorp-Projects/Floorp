@@ -245,8 +245,7 @@ class Notification : public DOMEventTargetHelper,
       nsIGlobalObject* aGlobal, const nsAString& aID, const nsAString& aTitle,
       const NotificationOptions& aOptions, ErrorResult& aRv);
 
-  // Triggers CloseInternal for non-persistent notifications if window goes away
-  nsresult MaybeObserveWindowFrozenOrDestroyed();
+  nsresult Init();
   bool IsInPrivateBrowsing();
   void ShowInternal();
   void CloseInternal(bool aContextClosed = false);
