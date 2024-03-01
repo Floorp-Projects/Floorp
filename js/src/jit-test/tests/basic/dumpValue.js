@@ -1,6 +1,4 @@
-// |jit-test| skip-if: typeof dumpValue !== 'function' || getBuildConfiguration("windows")
-
-// FIXME: Fix backslash handling on windows (bug 1880003).
+// |jit-test| skip-if: typeof dumpValue !== 'function'
 
 // Try the dumpValue and dumpValueToString shell functions on various types of
 // values, and make sure theyit don't crash, and the result is valid JSON.
