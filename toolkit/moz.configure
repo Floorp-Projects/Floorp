@@ -988,6 +988,8 @@ project_flag(
 def check_places_and_android_history(places, android_history):
     if places and android_history:
         die("Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.")
+    if not places and not android_history:
+        die("One of MOZ_ANDROID_HISTORY or MOZ_PLACES must be set.")
 
 
 option(
