@@ -209,6 +209,7 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool createSource();
   bool makeDebuggeeValueMethod();
   bool isSameNativeMethod();
+  bool isSameNativeWithJitInfoMethod();
   bool isNativeGetterWithJitInfo();
   bool unsafeDereferenceMethod();
   bool unwrapMethod();
@@ -1338,7 +1339,18 @@ bool DebuggerObject::CallData::isSameNativeMethod() {
     return false;
   }
 
-  return DebuggerObject::isSameNative(cx, object, args[0], args.rval());
+  return DebuggerObject::isSameNative(cx, object, args[0], CheckJitInfo::No,
+                                      args.rval());
+}
+
+bool DebuggerObject::CallData::isSameNativeWithJitInfoMethod() {
+  if (!args.requireAtLeast(
+          cx, "Debugger.Object.prototype.isSameNativeWithJitInfo", 1)) {
+    return false;
+  }
+
+  return DebuggerObject::isSameNative(cx, object, args[0], CheckJitInfo::Yes,
+                                      args.rval());
 }
 
 bool DebuggerObject::CallData::isNativeGetterWithJitInfo() {
@@ -1535,6 +1547,7 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_DEBUG_FN("createSource", createSource, 1),
     JS_DEBUG_FN("makeDebuggeeValue", makeDebuggeeValueMethod, 1),
     JS_DEBUG_FN("isSameNative", isSameNativeMethod, 1),
+    JS_DEBUG_FN("isSameNativeWithJitInfo", isSameNativeWithJitInfoMethod, 1),
     JS_DEBUG_FN("isNativeGetterWithJitInfo", isNativeGetterWithJitInfo, 1),
     JS_DEBUG_FN("unsafeDereference", unsafeDereferenceMethod, 0),
     JS_DEBUG_FN("unwrap", unwrapMethod, 0),
@@ -2576,9 +2589,36 @@ static JSAtom* MaybeGetSelfHostedFunctionName(const Value& v) {
   return GetClonedSelfHostedFunctionName(fun);
 }
 
+static bool IsSameNative(JSFunction* a, JSFunction* b,
+                         DebuggerObject::CheckJitInfo checkJitInfo) {
+  if (a->native() != b->native()) {
+    return false;
+  }
+
+  if (checkJitInfo == DebuggerObject::CheckJitInfo::No) {
+    return true;
+  }
+
+  // Both function should agree with the existence of JitInfo.
+
+  if (a->hasJitInfo() != b->hasJitInfo()) {
+    return false;
+  }
+
+  if (!a->hasJitInfo()) {
+    return true;
+  }
+
+  if (a->jitInfo() == b->jitInfo()) {
+    return true;
+  }
+
+  return false;
+}
+
 /* static */
 bool DebuggerObject::isSameNative(JSContext* cx, Handle<DebuggerObject*> object,
-                                  HandleValue value,
+                                  HandleValue value, CheckJitInfo checkJitInfo,
                                   MutableHandleValue result) {
   RootedValue referentValue(cx, ObjectValue(*object->referent()));
 
@@ -2602,7 +2642,8 @@ bool DebuggerObject::isSameNative(JSContext* cx, Handle<DebuggerObject*> object,
 
   RootedFunction referentFun(cx, EnsureNativeFunction(referentValue));
 
-  result.setBoolean(referentFun && referentFun->native() == fun->native());
+  result.setBoolean(referentFun &&
+                    IsSameNative(referentFun, fun, checkJitInfo));
   return true;
 }
 
