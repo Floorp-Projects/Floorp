@@ -43,7 +43,7 @@ static_assert(nsIServiceWorkerInfo::STATE_REDUNDANT ==
               "ServiceWorkerState enumeration value should match state values "
               "from nsIServiceWorkerInfo.");
 static_assert(nsIServiceWorkerInfo::STATE_UNKNOWN ==
-                  ContiguousEnumSize<ServiceWorkerState>::value,
+                  ServiceWorkerStateValues::Count,
               "ServiceWorkerState enumeration value should match state values "
               "from nsIServiceWorkerInfo.");
 
@@ -165,6 +165,8 @@ void ServiceWorkerInfo::UpdateState(ServiceWorkerState aState) {
   // Any state can directly transition to redundant, but everything else is
   // ordered.
   if (aState != ServiceWorkerState::Redundant) {
+    MOZ_ASSERT_IF(State() == ServiceWorkerState::EndGuard_,
+                  aState == ServiceWorkerState::Installing);
     MOZ_ASSERT_IF(State() == ServiceWorkerState::Installing,
                   aState == ServiceWorkerState::Installed);
     MOZ_ASSERT_IF(State() == ServiceWorkerState::Installed,

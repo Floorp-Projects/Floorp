@@ -4,25 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/EnumTypeTraits.h"
 
 using mozilla::EnumeratedArray;
 
-enum class AnimalSpecies { Cow, Sheep, Pig };
+enum class AnimalSpecies { Cow, Sheep, Pig, Count };
 
-template <>
-struct mozilla::MaxContiguousEnumValue<AnimalSpecies> {
-  static constexpr AnimalSpecies value = AnimalSpecies::Pig;
-};
-
-using TestArray = EnumeratedArray<AnimalSpecies, int>;
+using TestArray = EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int>;
 
 void TestInitialValueByConstructor() {
   // Style 1
   TestArray headCount(1, 2, 3);
-  MOZ_RELEASE_ASSERT(mozilla::ArrayLength(headCount) == 3);
   MOZ_RELEASE_ASSERT(headCount[AnimalSpecies::Cow] == 1);
   MOZ_RELEASE_ASSERT(headCount[AnimalSpecies::Sheep] == 2);
   MOZ_RELEASE_ASSERT(headCount[AnimalSpecies::Pig] == 3);

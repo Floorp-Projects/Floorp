@@ -128,6 +128,9 @@ static Maybe<ffi::WGPUFeatures> ToWGPUFeatures(
 
     case dom::GPUFeatureName::Float32_filterable:
       return Some(WGPUFeatures_FLOAT32_FILTERABLE);
+
+    case dom::GPUFeatureName::EndGuard_:
+      break;
   }
   MOZ_CRASH("Bad GPUFeatureName.");
 }
@@ -138,11 +141,11 @@ static Maybe<ffi::WGPUFeatures> MakeFeatureBits(
   for (const auto& feature : aFeatures) {
     const auto bit = ToWGPUFeatures(feature);
     if (!bit) {
-      const auto featureStr = dom::GetEnumString(feature);
+      const auto featureStr = dom::GPUFeatureNameValues::GetString(feature);
       (void)featureStr;
       NS_WARNING(
           nsPrintfCString("Requested feature bit for '%s' is not implemented.",
-                          featureStr.get())
+                          featureStr.data())
               .get());
       return Nothing();
     }
@@ -166,7 +169,7 @@ Adapter::Adapter(Instance* const aParent, WebGPUChild* const aBridge,
     auto ret = std::unordered_map<ffi::WGPUFeatures, dom::GPUFeatureName>{};
 
     for (const auto feature :
-         dom::MakeWebIDLEnumeratedRange<dom::GPUFeatureName>()) {
+         MakeEnumeratedRange(dom::GPUFeatureName::EndGuard_)) {
       const auto bitForFeature = ToWGPUFeatures(feature);
       if (!bitForFeature) {
         // There are some features that don't have bits.
@@ -360,12 +363,12 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
     for (const auto requested : aDesc.mRequiredFeatures) {
       const bool supported = mFeatures->Features().count(requested);
       if (!supported) {
-        const auto fstr = dom::GetEnumString(requested);
+        const auto fstr = dom::GPUFeatureNameValues::GetString(requested);
         const auto astr = this->LabelOrId();
         nsPrintfCString msg(
             "requestDevice: Feature '%s' requested must be supported by "
             "adapter %s",
-            fstr.get(), astr.get());
+            fstr.data(), astr.get());
         promise->MaybeRejectWithTypeError(msg);
         return;
       }

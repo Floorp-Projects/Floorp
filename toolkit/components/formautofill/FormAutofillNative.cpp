@@ -200,16 +200,14 @@ enum class CCExpYearParams : uint8_t {
 };
 
 struct AutofillParams {
-  EnumeratedArray<CCNumberParams, double, size_t(CCNumberParams::Count)>
+  EnumeratedArray<CCNumberParams, CCNumberParams::Count, double>
       mCCNumberParams;
-  EnumeratedArray<CCNameParams, double, size_t(CCNameParams::Count)>
-      mCCNameParams;
-  EnumeratedArray<CCTypeParams, double, size_t(CCTypeParams::Count)>
-      mCCTypeParams;
-  EnumeratedArray<CCExpParams, double, size_t(CCExpParams::Count)> mCCExpParams;
-  EnumeratedArray<CCExpMonthParams, double, size_t(CCExpMonthParams::Count)>
+  EnumeratedArray<CCNameParams, CCNameParams::Count, double> mCCNameParams;
+  EnumeratedArray<CCTypeParams, CCTypeParams::Count, double> mCCTypeParams;
+  EnumeratedArray<CCExpParams, CCExpParams::Count, double> mCCExpParams;
+  EnumeratedArray<CCExpMonthParams, CCExpMonthParams::Count, double>
       mCCExpMonthParams;
-  EnumeratedArray<CCExpYearParams, double, size_t(CCExpYearParams::Count)>
+  EnumeratedArray<CCExpYearParams, CCExpYearParams::Count, double>
       mCCExpYearParams;
 };
 
@@ -669,11 +667,13 @@ class FormAutofillImpl {
   // Array contains regular expressions to match the corresponding
   // field. Ex, CC number, CC type, etc.
   using RegexStringArray =
-      EnumeratedArray<RegexKey, nsCString, size_t(RegexKey::Count)>;
+      EnumeratedArray<RegexKey, RegexKey::Count, nsCString>;
   RegexStringArray mRuleMap;
 
   // Array that holds RegexWrapper that created by regex::ffi::regex_new
-  using RegexWrapperArray = EnumeratedArray<RegexKey, RustRegex, size_t(RegexKey::Count)>;
+  using RegexWrapperArray =
+      EnumeratedArray<RegexKey, RegexKey::Count,
+                      RustRegex>;
   RegexWrapperArray mRegexes;
 };
 

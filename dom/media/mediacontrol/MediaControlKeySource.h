@@ -28,10 +28,10 @@ struct SeekDetails {
 
 struct MediaControlAction {
   MediaControlAction() = default;
-  explicit MediaControlAction(MediaControlKey aKey) : mKey(Some(aKey)) {}
+  explicit MediaControlAction(MediaControlKey aKey) : mKey(aKey) {}
   MediaControlAction(MediaControlKey aKey, const SeekDetails& aDetails)
-      : mKey(Some(aKey)), mDetails(Some(aDetails)) {}
-  Maybe<MediaControlKey> mKey;
+      : mKey(aKey), mDetails(Some(aDetails)) {}
+  MediaControlKey mKey = MediaControlKey::EndGuard_;
   Maybe<SeekDetails> mDetails;
 };
 

@@ -727,8 +727,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
 
-  EnumeratedArray<Client::Type, nsCString, size_t(Client::TYPE_MAX)>
-      mShutdownSteps;
+  EnumeratedArray<Client::Type, Client::TYPE_MAX, nsCString> mShutdownSteps;
   LazyInitializedOnce<const TimeStamp> mShutdownStartedAt;
 
   // Accesses to mQuotaManagerShutdownSteps must be protected by mQuotaMutex.

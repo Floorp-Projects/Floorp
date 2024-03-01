@@ -20,7 +20,6 @@
 #endif
 #include "mozilla/AppShutdown.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -97,17 +96,23 @@ namespace IPC {
 // Allow serialization and deserialization of OrientationType over IPC
 template <>
 struct ParamTraits<mozilla::dom::OrientationType>
-    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::OrientationType> {
-};
+    : public ContiguousEnumSerializer<
+          mozilla::dom::OrientationType,
+          mozilla::dom::OrientationType::Portrait_primary,
+          mozilla::dom::OrientationType::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::DisplayMode>
-    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::DisplayMode> {};
+    : public ContiguousEnumSerializer<mozilla::dom::DisplayMode,
+                                      mozilla::dom::DisplayMode::Browser,
+                                      mozilla::dom::DisplayMode::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::PrefersColorSchemeOverride>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::PrefersColorSchemeOverride> {};
+    : public ContiguousEnumSerializer<
+          mozilla::dom::PrefersColorSchemeOverride,
+          mozilla::dom::PrefersColorSchemeOverride::None,
+          mozilla::dom::PrefersColorSchemeOverride::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::ExplicitActiveStatus>
@@ -119,8 +124,10 @@ struct ParamTraits<mozilla::dom::ExplicitActiveStatus>
 // Allow serialization and deserialization of TouchEventsOverride over IPC
 template <>
 struct ParamTraits<mozilla::dom::TouchEventsOverride>
-    : public mozilla::dom::WebIDLEnumSerializer<
-          mozilla::dom::TouchEventsOverride> {};
+    : public ContiguousEnumSerializer<
+          mozilla::dom::TouchEventsOverride,
+          mozilla::dom::TouchEventsOverride::Disabled,
+          mozilla::dom::TouchEventsOverride::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::EmbedderColorSchemes> {

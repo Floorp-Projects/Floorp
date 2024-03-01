@@ -412,7 +412,8 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
       "MediaKeySystemAccess::GetKeySystemStatus(%s) "
       "result=%s msg='%s'",
       NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get(),
-      GetEnumString(status).get(), message.get());
+      nsCString(MediaKeySystemStatusValues::GetString(status)).get(),
+      message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
   EME_LOG("%s", msg.get());
 

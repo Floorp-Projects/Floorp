@@ -106,8 +106,9 @@ ConsoleLogLevel PrefToValue(const nsACString& aPref,
     return aLevel;
   }
 
-  Maybe<ConsoleLogLevel> level = StringToEnum<ConsoleLogLevel>(value);
-  if (NS_WARN_IF(level.isNothing())) {
+  int index = FindEnumStringIndexImpl(value.get(), value.Length(),
+                                      ConsoleLogLevelValues::strings);
+  if (NS_WARN_IF(index < 0)) {
     nsString message;
     message.AssignLiteral("Invalid Console.maxLogLevelPref value: ");
     message.Append(NS_ConvertUTF8toUTF16(value));
@@ -117,7 +118,8 @@ ConsoleLogLevel PrefToValue(const nsACString& aPref,
     return aLevel;
   }
 
-  return level.value();
+  MOZ_ASSERT(index < (int)ConsoleLogLevelValues::Count);
+  return static_cast<ConsoleLogLevel>(index);
 }
 
 void ConsoleInstance::SetLogLevel() {

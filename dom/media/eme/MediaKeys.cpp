@@ -792,7 +792,8 @@ void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
       sessionsInfo.AppendLiteral("(kid=");
       sessionsInfo.Append(keyID);
       sessionsInfo.AppendLiteral(" status=");
-      sessionsInfo.AppendASCII(GetEnumString(keyStatusMap->GetValueAtIndex(i)));
+      sessionsInfo.AppendASCII(
+          MediaKeyStatusValues::GetString(keyStatusMap->GetValueAtIndex(i)));
       sessionsInfo.AppendLiteral(")");
     }
     sessionsInfo.AppendLiteral(")");
@@ -823,7 +824,7 @@ already_AddRefed<Promise> MediaKeys::GetStatusForPolicy(
   }
 
   EME_LOG("GetStatusForPolicy minHdcpVersion = %s.",
-          GetEnumString(aPolicy.mMinHdcpVersion.Value()).get());
+          HDCPVersionValues::GetString(aPolicy.mMinHdcpVersion.Value()).data());
   mProxy->GetStatusForPolicy(StorePromise(promise),
                              aPolicy.mMinHdcpVersion.Value());
   return promise.forget();

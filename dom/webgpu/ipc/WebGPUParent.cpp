@@ -1452,6 +1452,8 @@ ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
         case dom::GPUErrorFilter::Internal:
           ret.resultType = PopErrorScopeResultType::InternalError;
           break;
+        case dom::GPUErrorFilter::EndGuard_:
+          MOZ_CRASH("Bad GPUErrorFilter");
       }
     }
     return ret;

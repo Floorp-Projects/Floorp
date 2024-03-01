@@ -228,8 +228,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
     ~ProcessFields() = default;
   };
 
-  EnumeratedArray<SandboxingKind, RefPtr<ProcessFields>,
-                  size_t(SandboxingKind::COUNT)>
+  EnumeratedArray<SandboxingKind, SandboxingKind::COUNT, RefPtr<ProcessFields>>
       mProcesses;
 
   RefPtr<ProcessFields> GetProcess(SandboxingKind);

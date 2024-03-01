@@ -408,6 +408,8 @@ inline ColorSpace2 ToColorSpace2(const dom::PredefinedColorSpace cs) {
       return ColorSpace2::SRGB;
     case dom::PredefinedColorSpace::Display_p3:
       return ColorSpace2::DISPLAY_P3;
+    case dom::PredefinedColorSpace::EndGuard_:
+      break;
   }
   MOZ_CRASH("Exhaustive switch");
 }

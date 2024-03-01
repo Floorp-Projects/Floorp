@@ -686,8 +686,8 @@ class ServoStyleSet {
 
   // Stores pointers to our cached ComputedStyles for non-inheriting anonymous
   // boxes.
-  EnumeratedArray<nsCSSAnonBoxes::NonInheriting, RefPtr<ComputedStyle>,
-                  size_t(nsCSSAnonBoxes::NonInheriting::_Count)>
+  EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
+                  nsCSSAnonBoxes::NonInheriting::_Count, RefPtr<ComputedStyle>>
       mNonInheritingComputedStyles;
 
  public:

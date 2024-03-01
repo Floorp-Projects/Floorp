@@ -364,9 +364,7 @@ class VideoFrameConverter {
         aFrame.mImage->AsPlanarYCbCrImage();
     if (image) {
       dom::ImageUtils utils(image);
-      Maybe<dom::ImageBitmapFormat> format = utils.GetFormat();
-      if (format.isSome() &&
-          format.value() == dom::ImageBitmapFormat::YUV420P &&
+      if (utils.GetFormat() == dom::ImageBitmapFormat::YUV420P &&
           image->GetData()) {
         const layers::PlanarYCbCrData* data = image->GetData();
         rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =

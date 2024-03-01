@@ -244,8 +244,8 @@ class EffectCompositor {
   // animations that can be throttled, we will add an entry to the hashtable to
   // indicate that the style rule on the element is out of date but without
   // posting a restyle to update it.
-  EnumeratedArray<CascadeLevel, nsTHashMap<PseudoElementHashEntry, bool>,
-                  kCascadeLevelCount>
+  EnumeratedArray<CascadeLevel, CascadeLevel(kCascadeLevelCount),
+                  nsTHashMap<PseudoElementHashEntry, bool>>
       mElementsToRestyle;
 
   bool mIsInPreTraverse = false;

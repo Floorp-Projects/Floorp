@@ -381,7 +381,8 @@ void WMFCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
   RETURN_IF_SHUTDOWN();
   EME_LOG("WMFCDMProxy::GetStatusForPolicy(this=%p, pid=%" PRIu32
           ", minHDCP=%s)",
-          this, aPromiseId, dom::GetEnumString(aMinHdcpVersion).get());
+          this, aPromiseId,
+          dom::HDCPVersionValues::GetString(aMinHdcpVersion).data());
   mCDM->GetStatusForPolicy(aPromiseId, aMinHdcpVersion)
       ->Then(
           mMainThread, __func__,

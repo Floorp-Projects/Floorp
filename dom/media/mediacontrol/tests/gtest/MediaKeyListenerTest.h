@@ -18,7 +18,7 @@ class MediaKeyListenerTest : public MediaControlKeyListener {
   void Clear() { mReceivedKey = mozilla::Nothing(); }
 
   void OnActionPerformed(const MediaControlAction& aAction) override {
-    mReceivedKey = aAction.mKey;
+    mReceivedKey = mozilla::Some(aAction.mKey);
   }
   bool IsResultEqualTo(MediaControlKey aResult) const {
     if (mReceivedKey) {

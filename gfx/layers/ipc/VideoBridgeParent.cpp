@@ -17,8 +17,9 @@ namespace mozilla::layers {
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
-using VideoBridgeTable = EnumeratedArray<VideoBridgeSource, VideoBridgeParent*,
-                                         size_t(VideoBridgeSource::_Count)>;
+using VideoBridgeTable =
+    EnumeratedArray<VideoBridgeSource, VideoBridgeSource::_Count,
+                    VideoBridgeParent*>;
 
 static StaticDataMutex<VideoBridgeTable> sVideoBridgeFromProcess(
     "VideoBridges");

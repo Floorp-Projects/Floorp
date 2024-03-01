@@ -170,7 +170,9 @@ nsString VideoDecoderConfigInternal::ToString() const {
   if (mDescription.isSome()) {
     rv.AppendPrintf("extradata: %zu bytes", mDescription.value()->Length());
   }
-  rv.AppendPrintf("hw accel: %s", GetEnumString(mHardwareAcceleration).get());
+  rv.AppendPrintf(
+      "hw accel: %s",
+      HardwareAccelerationValues::GetString(mHardwareAcceleration).data());
   if (mOptimizeForLatency.isSome()) {
     rv.AppendPrintf("optimize for latency: %s",
                     mOptimizeForLatency.value() ? "true" : "false");
@@ -326,10 +328,8 @@ static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
     // DMABUFSurfaceImage?
     if (aImage->AsPlanarYCbCrImage() || aImage->AsNVImage()) {
       const ImageUtils imageUtils(aImage);
-      Maybe<dom::ImageBitmapFormat> format = imageUtils.GetFormat();
       Maybe<VideoPixelFormat> f =
-          format.isSome() ? ImageBitmapFormatToVideoPixelFormat(format.value())
-                          : Nothing();
+          ImageBitmapFormatToVideoPixelFormat(imageUtils.GetFormat());
 
       // ImageBitmapFormat cannot distinguish YUV420 or YUV420A.
       bool hasAlpha = aImage->AsPlanarYCbCrImage() &&
@@ -385,6 +385,8 @@ static VideoColorSpaceInternal GuessColorSpace(
     // Make an educated guess based on the coefficients.
     colorSpace.mPrimaries = colorSpace.mMatrix.map([](const auto& aMatrix) {
       switch (aMatrix) {
+        case VideoMatrixCoefficients::EndGuard_:
+          MOZ_CRASH("This should not happen");
         case VideoMatrixCoefficients::Bt2020_ncl:
           return VideoColorPrimaries::Bt2020;
         case VideoMatrixCoefficients::Rgb:
@@ -520,6 +522,9 @@ static VideoColorSpaceInternal GuessColorSpace(layers::Image* aImage) {
               break;
             case VideoMatrixCoefficients::Bt2020_ncl:
               colorSpace.mPrimaries = Some(VideoColorPrimaries::Bt2020);
+              break;
+            case VideoMatrixCoefficients::EndGuard_:
+              MOZ_ASSERT_UNREACHABLE("bad enum value");
               break;
           };
         }

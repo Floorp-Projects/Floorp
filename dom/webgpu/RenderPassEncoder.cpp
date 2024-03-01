@@ -30,6 +30,8 @@ static ffi::WGPULoadOp ConvertLoadOp(const dom::GPULoadOp& aOp) {
       return ffi::WGPULoadOp_Load;
     case dom::GPULoadOp::Clear:
       return ffi::WGPULoadOp_Clear;
+    case dom::GPULoadOp::EndGuard_:
+      break;
   }
   MOZ_CRASH("bad GPULoadOp");
 }
@@ -40,6 +42,8 @@ static ffi::WGPUStoreOp ConvertStoreOp(const dom::GPUStoreOp& aOp) {
       return ffi::WGPUStoreOp_Store;
     case dom::GPUStoreOp::Discard:
       return ffi::WGPUStoreOp_Discard;
+    case dom::GPUStoreOp::EndGuard_:
+      break;
   }
   MOZ_CRASH("bad GPUStoreOp");
 }

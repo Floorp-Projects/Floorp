@@ -144,9 +144,8 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
     StyleTextDecorationStyle mUnderlineStyle;
     float mUnderlineRelativeSize;
   };
-  mozilla::EnumeratedArray<SelectionStyleIndex,
-                           mozilla::Maybe<nsSelectionStyle>,
-                           size_t(SelectionStyleIndex::Count)>
+  mozilla::EnumeratedArray<SelectionStyleIndex, SelectionStyleIndex::Count,
+                           mozilla::Maybe<nsSelectionStyle>>
       mSelectionStyle;
 
   // Color initializations

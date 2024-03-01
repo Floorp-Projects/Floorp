@@ -42,8 +42,8 @@ NS_IMETHODIMP UtilityAudioDecoderChildShutdownObserver::Observe(
 
 NS_IMPL_ISUPPORTS(UtilityAudioDecoderChildShutdownObserver, nsIObserver);
 
-static EnumeratedArray<SandboxingKind, StaticRefPtr<UtilityAudioDecoderChild>,
-                       size_t(SandboxingKind::COUNT)>
+static EnumeratedArray<SandboxingKind, SandboxingKind::COUNT,
+                       StaticRefPtr<UtilityAudioDecoderChild>>
     sAudioDecoderChilds;
 
 UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)

@@ -220,7 +220,8 @@ void ConvertDetailsUpdate(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
 
 void ConvertOptions(const PaymentOptions& aOptions,
                     IPCPaymentOptions& aIPCOption) {
-  NS_ConvertASCIItoUTF16 shippingType(GetEnumString(aOptions.mShippingType));
+  NS_ConvertASCIItoUTF16 shippingType(
+      PaymentShippingTypeValues::GetString(aOptions.mShippingType));
   aIPCOption =
       IPCPaymentOptions(aOptions.mRequestPayerName, aOptions.mRequestPayerEmail,
                         aOptions.mRequestPayerPhone, aOptions.mRequestShipping,
@@ -547,7 +548,8 @@ void PaymentRequestManager::CompletePayment(PaymentRequest* aRequest,
   if (aTimedOut) {
     completeStatusString.AssignLiteral("timeout");
   } else {
-    completeStatusString.AssignASCII(GetEnumString(aComplete));
+    completeStatusString.AssignASCII(
+        PaymentCompleteValues::GetString(aComplete));
   }
 
   nsAutoString requestId;

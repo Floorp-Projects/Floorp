@@ -135,20 +135,26 @@ nsString VideoEncoderConfigInternal::ToString() const {
   if (mFramerate.isSome()) {
     rv.AppendPrintf(", %lfHz", mFramerate.value());
   }
-  rv.AppendPrintf(" hw: %s", GetEnumString(mHardwareAcceleration).get());
-  rv.AppendPrintf(", alpha: %s", GetEnumString(mAlpha).get());
+  rv.AppendPrintf(
+      " hw: %s",
+      HardwareAccelerationValues::GetString(mHardwareAcceleration).data());
+  rv.AppendPrintf(", alpha: %s", AlphaOptionValues::GetString(mAlpha).data());
   if (mScalabilityMode.isSome()) {
     rv.AppendPrintf(", scalability mode: %s",
                     NS_ConvertUTF16toUTF8(mScalabilityMode.value()).get());
   }
-  rv.AppendPrintf(", bitrate mode: %s", GetEnumString(mBitrateMode).get());
-  rv.AppendPrintf(", latency mode: %s", GetEnumString(mLatencyMode).get());
+  rv.AppendPrintf(
+      ", bitrate mode: %s",
+      VideoEncoderBitrateModeValues::GetString(mBitrateMode).data());
+  rv.AppendPrintf(", latency mode: %s",
+                  LatencyModeValues::GetString(mLatencyMode).data());
   if (mContentHint.isSome()) {
     rv.AppendPrintf(", content hint: %s",
                     NS_ConvertUTF16toUTF8(mContentHint.value()).get());
   }
   if (mAvc.isSome()) {
-    rv.AppendPrintf(", avc-specific: %s", GetEnumString(mAvc->mFormat).get());
+    rv.AppendPrintf(", avc-specific: %s",
+                    AvcBitstreamFormatValues::GetString(mAvc->mFormat).data());
   }
 
   return rv;
