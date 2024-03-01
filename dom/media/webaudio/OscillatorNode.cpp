@@ -329,10 +329,8 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
         case OscillatorType::Custom:
           ComputeCustom(output, start, end, frequency, detune);
           break;
-        case OscillatorType::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE("end guard");
-          // Avoid `default:` so that `-Wswitch` catches missing enumerators
-          // at compile time.
+          // Avoid `default:` so that `-Wswitch` catches missing enumerators at
+          // compile time.
       };
     }
 

@@ -151,8 +151,6 @@ gfx::YUVColorSpace ToColorSpace(VideoMatrixCoefficients aMatrix) {
       return gfx::YUVColorSpace::BT601;
     case VideoMatrixCoefficients::Bt2020_ncl:
       return gfx::YUVColorSpace::BT2020;
-    case VideoMatrixCoefficients::EndGuard_:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported VideoMatrixCoefficients");
   return gfx::YUVColorSpace::Default;
@@ -171,8 +169,7 @@ gfx::TransferFunction ToTransferFunction(
     case VideoTransferCharacteristics::Hlg:
       return gfx::TransferFunction::HLG;
     case VideoTransferCharacteristics::Linear:
-    case VideoTransferCharacteristics::EndGuard_:
-      break;
+      return gfx::TransferFunction::Default;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
   return gfx::TransferFunction::Default;
@@ -190,8 +187,6 @@ gfx::ColorSpace2 ToPrimaries(VideoColorPrimaries aPrimaries) {
       return gfx::ColorSpace2::BT2020;
     case VideoColorPrimaries::Smpte432:
       return gfx::ColorSpace2::DISPLAY_P3;
-    case VideoColorPrimaries::EndGuard_:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
   return gfx::ColorSpace2::UNKNOWN;
