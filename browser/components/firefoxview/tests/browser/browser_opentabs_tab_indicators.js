@@ -223,3 +223,90 @@ add_task(async function test_sound_playing_muted_indicator() {
     cleanup();
   });
 });
+
+add_task(async function test_bookmark_indicator() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URLs[0]);
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    await navigateToViewAndWait(document, "opentabs");
+    const openTabs = document.querySelector("view-opentabs[name=opentabs]");
+    setSortOption(openTabs, "recency");
+    let rowEl = await TestUtils.waitForCondition(
+      () => openTabs.viewCards[0]?.tabList.rowEls[0]
+    );
+
+    info("Bookmark a tab while Firefox View is active.");
+    let bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: URLs[0],
+    });
+    await TestUtils.waitForCondition(
+      () => rowEl.shadowRoot.querySelector(".bookmark"),
+      "Tab shows the bookmark star."
+    );
+    await PlacesUtils.bookmarks.update({
+      guid: bookmark.guid,
+      url: URLs[1],
+    });
+    await TestUtils.waitForCondition(
+      () => !rowEl.shadowRoot.querySelector(".bookmark"),
+      "The bookmark star is removed."
+    );
+    bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: URLs[0],
+    });
+    await TestUtils.waitForCondition(
+      () => rowEl.shadowRoot.querySelector(".bookmark"),
+      "The bookmark star is restored."
+    );
+    await PlacesUtils.bookmarks.remove(bookmark.guid);
+    await TestUtils.waitForCondition(
+      () => !rowEl.shadowRoot.querySelector(".bookmark"),
+      "The bookmark star is removed again."
+    );
+
+    info("Bookmark a tab while Firefox View is inactive.");
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+    bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: URLs[0],
+    });
+    await switchToFxViewTab();
+    await TestUtils.waitForCondition(
+      () => rowEl.shadowRoot.querySelector(".bookmark"),
+      "Tab shows the bookmark star."
+    );
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+    await PlacesUtils.bookmarks.remove(bookmark.guid);
+    await switchToFxViewTab();
+    await TestUtils.waitForCondition(
+      () => !rowEl.shadowRoot.querySelector(".bookmark"),
+      "The bookmark star is removed."
+    );
+
+    info("Bookmark a tab in a new window.");
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    const tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabChange"
+    );
+    await BrowserTestUtils.openNewForegroundTab(win.gBrowser, URLs[2]);
+    await tabChangeRaised;
+    await openTabs.updateComplete;
+    rowEl = await TestUtils.waitForCondition(
+      () => openTabs.viewCards[1]?.tabList.rowEls[0]
+    );
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: URLs[2],
+    });
+    await TestUtils.waitForCondition(
+      () => rowEl.shadowRoot.querySelector(".bookmark"),
+      "Tab in the new window shows the bookmark star."
+    );
+    await BrowserTestUtils.closeWindow(win);
+  });
+  await cleanup();
+  await PlacesUtils.bookmarks.eraseEverything();
+});
