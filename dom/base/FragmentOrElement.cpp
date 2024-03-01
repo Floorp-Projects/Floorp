@@ -76,7 +76,7 @@
 #include "nsIScrollableFrame.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/NodeListBinding.h"
-
+#include "mozilla/dom/MutationObservers.h"
 #include "nsCCUncollectableMarker.h"
 
 #include "mozAutoDocUpdate.h"
@@ -2002,6 +2002,7 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
   }
 
   if (doc->IsHTMLDocument()) {
+    doc->SuspendDOMNotifications();
     nsAtom* contextLocalName = parseContext->NodeInfo()->NameAtom();
     int32_t contextNameSpaceID = parseContext->GetNameSpaceID();
 
@@ -2009,6 +2010,10 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
     aError = nsContentUtils::ParseFragmentHTML(
         aInnerHTML, target, contextLocalName, contextNameSpaceID,
         doc->GetCompatibilityMode() == eCompatibility_NavQuirks, true);
+    doc->ResumeDOMNotifications();
+    if (target->GetFirstChild()) {
+      MutationObservers::NotifyContentAppended(target, target->GetFirstChild());
+    }
     mb.NodesAdded();
     // HTML5 parser has notified, but not fired mutation events.
     nsContentUtils::FireMutationEventsForDirectParsing(doc, target,

@@ -1400,6 +1400,7 @@ Document::Document(const char* aContentType)
       mShouldResistFingerprinting(false),
       mCloningForSVGUse(false),
       mAllowDeclarativeShadowRoots(false),
+      mSuspendDOMNotifications(false),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
       mWriteLevel(0),

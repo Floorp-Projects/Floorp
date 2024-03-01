@@ -3876,6 +3876,12 @@ class Document : public nsINode,
   void SetAllowDeclarativeShadowRoots(bool aAllowDeclarativeShadowRoots);
   bool AllowsDeclarativeShadowRoots() const;
 
+  void SuspendDOMNotifications() { mSuspendDOMNotifications = true; }
+
+  void ResumeDOMNotifications() { mSuspendDOMNotifications = false; }
+
+  bool DOMNotificationsSuspended() const { return mSuspendDOMNotifications; }
+
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
 
@@ -4866,6 +4872,8 @@ class Document : public nsINode,
   bool mCloningForSVGUse : 1;
 
   bool mAllowDeclarativeShadowRoots : 1;
+
+  bool mSuspendDOMNotifications : 1;
 
   // The fingerprinting protections overrides for this document. The value will
   // override the default enabled fingerprinting protections for this document.

@@ -81,6 +81,9 @@ template <NotifyPresShell aNotifyPresShell = NotifyPresShell::After,
 static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify,
                           uint32_t aCallback) {
   Document* doc = aNode->OwnerDoc();
+  if (doc->DOMNotificationsSuspended()) {
+    return;
+  }
   nsDOMMutationEnterLeave enterLeave(doc);
 
 #ifdef DEBUG
