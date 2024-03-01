@@ -6,17 +6,16 @@
 #include <windows.h>
 #include <appmodel.h>
 #include <shlobj.h>  // for SHChangeNotify and IApplicationAssociationRegistration
-#include <functional>
 #include <timeapi.h>
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "WindowsUserChoice.h"
-#include "nsThreadUtils.h"
 
 #include "EventLog.h"
 #include "SetDefaultBrowser.h"
@@ -220,9 +219,13 @@ static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
   return true;
 }
 
-static bool LaunchExecutable(
-    const wchar_t* exePath, int aArgsLength, const wchar_t* const* aArgs,
-    std::function<bool(DWORD, const wchar_t*)> handleExitCode) {
+struct LaunchExeErr {};
+using LaunchExeResult =
+    mozilla::Result<std::tuple<DWORD, mozilla::UniquePtr<wchar_t[]>>,
+                    LaunchExeErr>;
+
+static LaunchExeResult LaunchExecutable(const wchar_t* exePath, int aArgsLength,
+                                        const wchar_t* const* aArgs) {
   const wchar_t* args[] = {exePath};
   mozilla::UniquePtr<wchar_t[]> cmdLine(mozilla::MakeCommandLine(
       mozilla::ArrayLength(args), const_cast<wchar_t**>(args), aArgsLength,
@@ -237,7 +240,7 @@ static bool LaunchExecutable(
                         nullptr, nullptr, &si, &pi)) {
     HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
     LOG_ERROR(hr);
-    return false;
+    return Err(LaunchExeErr());
   }
 
   nsAutoHandle process(pi.hProcess);
@@ -246,10 +249,10 @@ static bool LaunchExecutable(
   DWORD exitCode;
   if (::WaitForSingleObject(process.get(), INFINITE) == WAIT_OBJECT_0 &&
       ::GetExitCodeProcess(process.get(), &exitCode)) {
-    return handleExitCode(exitCode, cmdLine.get());
+    return std::make_tuple(exitCode, std::move(cmdLine));
   }
 
-  return false;
+  return Err(LaunchExeErr());
 }
 
 static bool LaunchPowershell(const wchar_t* command,
@@ -260,16 +263,17 @@ static bool LaunchPowershell(const wchar_t* command,
       command,
   };
 
-  return LaunchExecutable(powershellPath, mozilla::ArrayLength(args), args,
-                          [](DWORD exitCode, const wchar_t* regCmdLine) {
-                            bool success = (exitCode == 0);
-                            if (!success) {
-                              LOG_ERROR_MESSAGE(
-                                  L"%s returned failure exitCode %d",
-                                  regCmdLine, exitCode);
-                            }
-                            return success;
-                          });
+  return LaunchExecutable(powershellPath, mozilla::ArrayLength(args), args)
+      .map([](auto result) {
+        auto& [exitCode, regCmdLine] = result;
+        bool success = (exitCode == 0);
+        if (!success) {
+          LOG_ERROR_MESSAGE(L"%s returned failure exitCode %d",
+                            regCmdLine.get(), exitCode);
+        }
+        return success;
+      })
+      .unwrapOr(false);
 }
 
 static bool FindPowershell(mozilla::UniquePtr<wchar_t[]>& powershellPath) {
