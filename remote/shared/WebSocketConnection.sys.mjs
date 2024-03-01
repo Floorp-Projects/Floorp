@@ -85,9 +85,6 @@ export class WebSocketConnection {
    * Register a new Session to forward the messages to.
    *
    * Needs to be implemented in the sub class.
-   *
-   * @param {Session} session
-   *     The session to register.
    */
   registerSession() {
     throw new Error("Not implemented");

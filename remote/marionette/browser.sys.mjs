@@ -324,9 +324,6 @@ browser.Context = class {
    * Registers a new frame, and sets its current frame id to this frame
    * if it is not already assigned, and if a) we already have a session
    * or b) we're starting a new session and it is the right start frame.
-   *
-   * @param {XULBrowser} target
-   *     The <xul:browser> that was the target of the originating message.
    */
   register() {
     if (!this.tabBrowser) {

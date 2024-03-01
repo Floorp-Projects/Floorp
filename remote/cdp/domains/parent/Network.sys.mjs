@@ -146,8 +146,6 @@ export class Network extends Domain {
    *
    * Depending on the backend support, will return detailed cookie information in the cookies field.
    *
-   * @param {object} options
-   *
    * @returns {Array<Cookie>}
    *     Array of cookie objects.
    */

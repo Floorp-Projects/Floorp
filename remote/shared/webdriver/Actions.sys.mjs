@@ -508,9 +508,6 @@ class Origin {
    * Viewport coordinates of the origin of this coordinate system.
    *
    * This is overridden in subclasses to provide a class-specific origin.
-   *
-   * @param {InputSource} inputSource - State of current input device.
-   * @param {WindowProxy} win - Current window global
    */
   getOriginCoordinates() {
     throw new Error(
@@ -624,10 +621,6 @@ class Action {
    * This is overridden by subclasses to implement the type-specific
    * dispatch of the action.
    *
-   * @param {State} state - Actions state.
-   * @param {InputSource} inputSource - State of the current input device.
-   * @param {number} tickDuration - Length of the current tick, in ms.
-   * @param {WindowProxy} win - Current window global.
    * @returns {Promise} - Promise that is resolved once the action is complete.
    */
   dispatch() {
@@ -708,7 +701,6 @@ class PauseAction extends NullAction {
    * @param {State} state - Actions state.
    * @param {InputSource} inputSource - State of the current input device.
    * @param {number} tickDuration - Length of the current tick, in ms.
-   * @param {WindowProxy} win - Current window global.
    * @returns {Promise} - Promise that is resolved once the action is complete.
    */
   dispatch(state, inputSource, tickDuration) {
@@ -1416,12 +1408,6 @@ class TouchActionGroup {
    * This is overridden by subclasses to implement the type-specific
    * dispatch of the action.
    *
-   * @param {State} state - Actions state.
-   * @param {null} inputSource
-   *     This is always null; the argument only exists for compatibility
-   *     with {@link Action.dispatch}.
-   * @param {number} tickDuration - Length of the current tick, in ms.
-   * @param {WindowProxy} win - Current window global.
    * @returns {Promise} - Promise that is resolved once the action is complete.
    */
   dispatch() {
@@ -1778,11 +1764,6 @@ class Pointer {
 
   /**
    * Implementation of depressing the pointer.
-   *
-   * @param {State} state - Actions state.
-   * @param {InputSource} inputSource - State of the current input device.
-   * @param {Action} action - The Action object invoking the pointer
-   * @param {WindowProxy} win - Current window global.
    */
   pointerDown() {
     throw new Error(`Unimplemented pointerDown for pointerType ${this.type}`);
@@ -1790,11 +1771,6 @@ class Pointer {
 
   /**
    * Implementation of releasing the pointer.
-   *
-   * @param {State} state - Actions state.
-   * @param {InputSource} inputSource - State of the current input device.
-   * @param {Action} action - The Action object invoking the pointer
-   * @param {WindowProxy} win - Current window global.
    */
   pointerUp() {
     throw new Error(`Unimplemented pointerUp for pointerType ${this.type}`);
@@ -1802,12 +1778,6 @@ class Pointer {
 
   /**
    * Implementation of moving the pointer.
-   *
-   * @param {State} state - Actions state.
-   * @param {InputSource} inputSource - State of the current input device.
-   * @param {number} targetX - Target X coordinate of the pointer move
-   * @param {number} targetY - Target Y coordinate of the pointer move
-   * @param {WindowProxy} win - Current window global.
    */
   pointerMove() {
     throw new Error(`Unimplemented pointerMove for pointerType ${this.type}`);
@@ -2138,9 +2108,6 @@ class InputEventData {
 
   /**
    * Update the input data based on global and input state
-   *
-   * @param {State} state - Actions state.
-   * @param {InputSource} inputSource - State of the current input device.
    */
   update() {}
 
