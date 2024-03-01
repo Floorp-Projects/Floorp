@@ -4421,8 +4421,12 @@ already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
         ctx->GetSharedWebrtcState());
     mRtcpReceiveListener = mSignalHandler->RtcpReceiveEvent().Connect(
         mCall->mCallThread, [call = mCall](MediaPacket aPacket) {
-          call->Call()->Receiver()->DeliverRtcpPacket(
-              rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+          // This might not be initted yet, because the task to do that is tail
+          // dispatched, and STS might beat it to the punch.
+          if (call->Call()) {
+            call->Call()->Receiver()->DeliverRtcpPacket(
+                rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+          }
         });
   }
 
