@@ -233,6 +233,7 @@ bool AppleDecoderModule::CanCreateHWDecoder(MediaCodec aCodec) {
 
 /* static */
 bool AppleDecoderModule::RegisterSupplementalVP9Decoder() {
+#ifdef XP_MACOSX
   static bool sRegisterIfAvailable = []() {
     if (__builtin_available(macos 11.0, *)) {
       VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
@@ -241,6 +242,9 @@ bool AppleDecoderModule::RegisterSupplementalVP9Decoder() {
     return false;
   }();
   return sRegisterIfAvailable;
+#else  // iOS
+  return false;
+#endif
 }
 
 /* static */
