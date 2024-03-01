@@ -138,7 +138,7 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 - [Official Floorp Twitter](https://twitter.com/Floorp_Browser) or [Official Ablaze Twitter](https://twitter.com/Ablaze_MIRAI)
 
-- [Official Ablaze Community Discord Server]((https://discord.com/invite/f8NFWjx6Rt)
+- [Official Ablaze Community Discord Server](https://discord.com/invite/f8NFWjx6Rt)
 
 ### 📜 Privacy Policy
 
