@@ -2144,26 +2144,31 @@ BrowserGlue.prototype = {
     const COMPONENT_PREF = "screenshots.browser.component.enabled";
     const ID = "screenshots@mozilla.org";
     const _checkScreenshotsPref = async () => {
-      let addon = await lazy.AddonManager.getAddonByID(ID);
-      if (!addon) {
-        return;
-      }
       let screenshotsDisabled = Services.prefs.getBoolPref(
         SCREENSHOTS_PREF,
         false
       );
-      let componentEnabled = Services.prefs.getBoolPref(COMPONENT_PREF, false);
+      let componentEnabled = Services.prefs.getBoolPref(COMPONENT_PREF, true);
+
+      let screenshotsAddon = await lazy.AddonManager.getAddonByID(ID);
+
       if (screenshotsDisabled) {
         if (componentEnabled) {
           lazy.ScreenshotsUtils.uninitialize();
-        } else {
-          await addon.disable({ allowSystemAddons: true });
+        } else if (screenshotsAddon?.isActive) {
+          await screenshotsAddon.disable({ allowSystemAddons: true });
         }
       } else if (componentEnabled) {
         lazy.ScreenshotsUtils.initialize();
-        await addon.disable({ allowSystemAddons: true });
+        if (screenshotsAddon?.isActive) {
+          await screenshotsAddon.disable({ allowSystemAddons: true });
+        }
       } else {
-        await addon.enable({ allowSystemAddons: true });
+        try {
+          await screenshotsAddon.enable({ allowSystemAddons: true });
+        } catch (ex) {
+          console.error(`Error trying to enable screenshots extension: ${ex}`);
+        }
         lazy.ScreenshotsUtils.uninitialize();
       }
     };
@@ -2434,7 +2439,6 @@ BrowserGlue.prototype = {
       LATE_TASKS_IDLE_TIME_SEC
     );
 
-    this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
     this._monitorHTTPSOnlyPref();
     this._monitorIonPref();
@@ -2787,13 +2791,9 @@ BrowserGlue.prototype = {
       },
 
       {
-        name: "ScreenshotsUtils.initialize",
+        name: "BrowserGlue._monitorScreenshotsPref",
         task: () => {
-          if (
-            Services.prefs.getBoolPref("screenshots.browser.component.enabled")
-          ) {
-            lazy.ScreenshotsUtils.initialize();
-          }
+          this._monitorScreenshotsPref();
         },
       },
 
