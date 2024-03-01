@@ -792,7 +792,7 @@ export class PageAction {
    * Respond to a user click on the recommendation by showing a doorhanger/
    * popup notification or running the action defined in the message
    */
-  async _cfrUrlbarButtonClick() {
+  async _cfrUrlbarButtonClick(event) {
     const browser = this.window.gBrowser.selectedBrowser;
     if (!RecommendationMap.has(browser)) {
       // There's no recommendation for this browser, so the user shouldn't have

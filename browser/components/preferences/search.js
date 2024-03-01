@@ -496,7 +496,7 @@ var gSearchPane = {
    * @param {boolean} isPrivate
    *   True if we are dealing with the default engine for private mode.
    */
-  async _buildEngineDropDown(list, currentEngine) {
+  async _buildEngineDropDown(list, currentEngine, isPrivate) {
     // If the current engine isn't in the list any more, select the first item.
     let engines = gEngineView._engineStore._engines;
     if (!engines.length) {
@@ -1231,7 +1231,7 @@ EngineView.prototype = {
   },
 
   selection: null,
-  getRowProperties() {
+  getRowProperties(index) {
     return "";
   },
   getCellProperties(index, column) {
@@ -1245,31 +1245,31 @@ EngineView.prototype = {
     }
     return "";
   },
-  getColumnProperties() {
+  getColumnProperties(column) {
     return "";
   },
-  isContainer() {
+  isContainer(index) {
     return false;
   },
-  isContainerOpen() {
+  isContainerOpen(index) {
     return false;
   },
-  isContainerEmpty() {
+  isContainerEmpty(index) {
     return false;
   },
-  isSeparator() {
+  isSeparator(index) {
     return false;
   },
-  isSorted() {
+  isSorted(index) {
     return false;
   },
-  getParentIndex() {
+  getParentIndex(index) {
     return -1;
   },
-  hasNextSibling() {
+  hasNextSibling(parentIndex, index) {
     return false;
   },
-  getLevel() {
+  getLevel(index) {
     return 0;
   },
   getCellValue(index, column) {
@@ -1282,10 +1282,10 @@ EngineView.prototype = {
     }
     return undefined;
   },
-  toggleOpenState() {},
-  cycleHeader() {},
+  toggleOpenState(index) {},
+  cycleHeader(column) {},
   selectionChanged() {},
-  cycleCell() {},
+  cycleCell(row, column) {},
   isEditable(index, column) {
     return (
       column.id != "engineName" &&

@@ -81,7 +81,7 @@ export class _ToolbarBadgeHub {
     win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
   }
 
-  executeAction({ id }) {
+  executeAction({ id, data, message_id }) {
     switch (id) {
       case "show-whatsnew-button":
         lazy.ToolbarPanelHub.enableToolbarButton();

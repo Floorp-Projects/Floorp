@@ -45,7 +45,7 @@ function openAndLoadSubDialog(
 }
 
 function promiseLoadSubDialog(aURL) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     content.gSubDialog._dialogStack.addEventListener(
       "dialogopen",
       function dialogopen(aEvent) {

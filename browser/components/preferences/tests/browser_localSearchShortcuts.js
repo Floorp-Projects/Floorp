@@ -36,7 +36,7 @@ add_setup(async function () {
 // The rows should be visible and checked by default.
 add_task(async function visible() {
   await checkRowVisibility(true);
-  await forEachLocalShortcutRow(async row => {
+  await forEachLocalShortcutRow(async (row, shortcut) => {
     Assert.equal(
       gTree.view.getCellValue(row, gTree.columns.getNamedColumn("engineShown")),
       "true",
@@ -136,7 +136,7 @@ add_task(async function syncToPrefs_click() {
 
 // The keyword column should not be editable according to isEditable().
 add_task(async function keywordNotEditable_isEditable() {
-  await forEachLocalShortcutRow(async row => {
+  await forEachLocalShortcutRow(async (row, shortcut) => {
     Assert.ok(
       !gTree.view.isEditable(
         row,

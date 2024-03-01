@@ -26,7 +26,7 @@ function test() {
   so it has to be opened as a sub dialog of the main pref tab.
   Open the main tab here.
   */
-  open_preferences(async function tabOpened() {
+  open_preferences(async function tabOpened(aContentWindow) {
     is(
       gBrowser.currentURI.spec,
       "about:preferences",

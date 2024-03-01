@@ -58,7 +58,7 @@ var gClearSiteDataDialog = {
     );
   },
 
-  onCheckboxCommand() {
+  onCheckboxCommand(event) {
     this._dialog.setAttribute(
       "buttondisabledaccept",
       !(this._clearSiteDataCheckbox.checked || this._clearCacheCheckbox.checked)

@@ -435,7 +435,7 @@ var gPrivacyPane = {
     );
 
     let trackingProtectionObserver = {
-      observe() {
+      observe(subject, topic, data) {
         gPrivacyPane._updateTrackingProtectionUI();
       },
     };
@@ -3317,7 +3317,7 @@ var gPrivacyPane = {
    * Initialize the opt-out-study preference checkbox into about:preferences and
    * handles events coming from the UI for it.
    */
-  initOptOutStudyCheckbox() {
+  initOptOutStudyCheckbox(doc) {
     // The checkbox should be disabled if any of the below are true. This
     // prevents the user from changing the value in the box.
     //
@@ -3361,7 +3361,7 @@ var gPrivacyPane = {
     });
   },
 
-  observe(aSubject, aTopic) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "sitedatamanager:updating-sites":
         // While updating, we want to disable this section and display loading message until updated
