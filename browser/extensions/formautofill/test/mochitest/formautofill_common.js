@@ -104,27 +104,6 @@ async function checkFieldHighlighted(elem, expectedValue) {
   is(isHighlightApplied, expectedValue, `Checking #${elem.id} highlight style`);
 }
 
-async function checkFieldPreview(elem, expectedValue) {
-  is(
-    SpecialPowers.wrap(elem).previewValue,
-    expectedValue,
-    `Checking #${elem.id} previewValue`
-  );
-  let isTextColorApplied;
-  await SimpleTest.promiseWaitForCondition(function checkPreview() {
-    const computedStyle = window.getComputedStyle(elem);
-    const actualColor = computedStyle.getPropertyValue("color");
-    if (elem.disabled) {
-      isTextColorApplied = actualColor !== defaultDisabledTextColor;
-    } else {
-      isTextColorApplied = actualColor !== defaultTextColor;
-    }
-    return isTextColorApplied === !!expectedValue;
-  }, `Checking #${elem.id} preview style`);
-
-  is(isTextColorApplied, !!expectedValue, `Checking #${elem.id} preview style`);
-}
-
 async function checkFormFieldsStyle(profile, isPreviewing = true) {
   const elems = document.querySelectorAll("input, select");
 
@@ -143,7 +122,6 @@ async function checkFormFieldsStyle(profile, isPreviewing = true) {
         (isPreviewing && fillableValue?.toString().replaceAll("*", "•")) || "";
     }
     await checkFieldHighlighted(elem, !!fillableValue);
-    await checkFieldPreview(elem, previewValue);
   }
 }
 

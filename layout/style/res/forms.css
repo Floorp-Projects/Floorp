@@ -919,7 +919,3 @@ input:autofill, select:autofill {
   background-image: none !important;
   color: FieldText !important;
 }
-
-input:-moz-autofill-preview, select:-moz-autofill-preview {
-  color: GrayText;
-}

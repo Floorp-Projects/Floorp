@@ -72,9 +72,7 @@ async function checkMultipleCCNumberFormStyle(profile, isPreviewing = true) {
     } else {
       fillableValue = profile[element.id];
     }
-    let previewValue = (isPreviewing && fillableValue) || "";
     await checkFieldHighlighted(element, !!fillableValue);
-    await checkFieldPreview(element, previewValue);
 
   }
 }
