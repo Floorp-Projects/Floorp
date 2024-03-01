@@ -12514,19 +12514,27 @@ bool BytecodeEmitter::emitTree(
     }
 
     case ParseNodeKind::ArgumentsLength: {
-      PropOpEmitter poe(this, PropOpEmitter::Kind::Get,
-                        PropOpEmitter::ObjKind::Other);
-      if (!poe.prepareForObj()) {
-        return false;
-      }
+      if (sc->isFunctionBox() &&
+          sc->asFunctionBox()->isEligibleForArgumentsLength() &&
+          !sc->asFunctionBox()->needsArgsObj()) {
+        if (!emit1(JSOp::ArgumentsLength)) {
+          return false;
+        }
+      } else {
+        PropOpEmitter poe(this, PropOpEmitter::Kind::Get,
+                          PropOpEmitter::ObjKind::Other);
+        if (!poe.prepareForObj()) {
+          return false;
+        }
 
-      NameOpEmitter noe(this, TaggedParserAtomIndex::WellKnown::arguments(),
-                        NameOpEmitter::Kind::Get);
-      if (!noe.emitGet()) {
-        return false;
-      }
-      if (!poe.emitGet(TaggedParserAtomIndex::WellKnown::length())) {
-        return false;
+        NameOpEmitter noe(this, TaggedParserAtomIndex::WellKnown::arguments(),
+                          NameOpEmitter::Kind::Get);
+        if (!noe.emitGet()) {
+          return false;
+        }
+        if (!poe.emitGet(TaggedParserAtomIndex::WellKnown::length())) {
+          return false;
+        }
       }
       break;
     }
