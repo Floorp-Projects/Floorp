@@ -62,7 +62,7 @@ TestServer.prototype = {
     this.reset();
   },
 
-  onStopListening(socket) {},
+  onStopListening() {},
 
   /**
    * Called to close a connection and clean up properties.

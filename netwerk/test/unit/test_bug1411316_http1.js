@@ -72,9 +72,9 @@ function HttpResponseListener(id, onStopRequestStatus) {
 }
 
 HttpResponseListener.prototype = {
-  onStartRequest(request) {},
+  onStartRequest() {},
 
-  onDataAvailable(request, stream, off, cnt) {},
+  onDataAvailable() {},
 
   onStopRequest(request, status) {
     log("STOP id=" + this.id + " status=" + status);

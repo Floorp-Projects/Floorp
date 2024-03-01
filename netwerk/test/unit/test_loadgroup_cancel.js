@@ -43,7 +43,7 @@ add_task(async function test_cancelledInOnStop() {
   );
 
   let loadListener = {
-    onStartRequest: aRequest => {
+    onStartRequest: () => {
       info("onStartRequest");
     },
     onStopRequest: (aRequest, aStatusCode) => {

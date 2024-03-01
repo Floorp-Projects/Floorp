@@ -82,7 +82,7 @@ FileStreamListener.prototype = {
     "nsIRequestObserver",
   ]),
 
-  onStartRequest(request) {
+  onStartRequest() {
     if (this._got_onstartrequest) {
       do_throw("Got second onStartRequest event!");
     }

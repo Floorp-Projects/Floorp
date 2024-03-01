@@ -11,7 +11,7 @@ var httpServer = null;
 
 let handlerCallbacks = {};
 
-function listenHandler(metadata, response) {
+function listenHandler(metadata) {
   info(metadata.path);
   handlerCallbacks[metadata.path] = (handlerCallbacks[metadata.path] || 0) + 1;
 }

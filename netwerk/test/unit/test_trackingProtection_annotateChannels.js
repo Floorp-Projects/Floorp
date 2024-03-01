@@ -63,8 +63,8 @@ listener.prototype = {
     request.cancel(Cr.NS_ERROR_ABORT);
     this._nextTest();
   },
-  onDataAvailable: (request, stream, offset, count) => {},
-  onStopRequest: (request, status) => {},
+  onDataAvailable: () => {},
+  onStopRequest: () => {},
 };
 
 var httpServer;

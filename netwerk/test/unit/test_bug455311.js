@@ -25,7 +25,7 @@ NotificationCallbacks.prototype = {
   getInterface(iid) {
     return this.QueryInterface(iid);
   },
-  asyncOnChannelRedirect(oldChan, newChan, flags, callback) {
+  asyncOnChannelRedirect(oldChan, newChan) {
     Assert.equal(oldChan.URI.spec, this._origURI.spec);
     Assert.equal(oldChan.URI, this._origURI);
     Assert.equal(oldChan.originalURI.spec, this._origURI.spec);
@@ -54,7 +54,7 @@ RequestObserver.prototype = {
     Assert.equal(chan.originalURI.spec, this._origURI.spec);
     Assert.equal(chan.originalURI, this._origURI);
   },
-  onDataAvailable(req, stream, offset, count) {
+  onDataAvailable() {
     do_throw("Unexpected call to onDataAvailable");
   },
   onStopRequest(req, status) {

@@ -166,7 +166,7 @@ function startClient(port, tlsFlags, expectSuccess) {
   req.open("GET", `https://${hostname}:${port}`);
   let internalChannel = req.channel.QueryInterface(Ci.nsIHttpChannelInternal);
   internalChannel.tlsFlags = tlsFlags;
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     req.onload = () => {
       ok(
         expectSuccess,

@@ -7,7 +7,7 @@ const { HttpServer } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 

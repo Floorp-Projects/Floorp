@@ -52,7 +52,7 @@ function serverHandler(metadata, response) {
   response.bodyOutputStream.write(httpbody, httpbody.length);
 }
 
-function checkRequestResponse(request, data, context) {
+function checkRequestResponse(request, data) {
   Assert.equal(channel.responseStatus, 200);
   Assert.equal(channel.responseStatusText, "OK");
   Assert.ok(channel.requestSucceeded);

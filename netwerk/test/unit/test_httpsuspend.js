@@ -52,7 +52,7 @@ var listener = {
     this._gotData = true;
   },
 
-  onStopRequest(request, status) {
+  onStopRequest() {
     Assert.ok(this._gotData);
     httpserv.stop(do_test_finished);
   },

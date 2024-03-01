@@ -48,7 +48,7 @@ TracingListener.prototype = {
     do_throw("replaced channel's listener during onStartRequest.");
   },
 
-  onStopRequest(request, statusCode) {
+  onStopRequest() {
     dump("*** tracing listener onStopRequest\n");
 
     Assert.equal(gotOnStartRequest, true);
@@ -88,7 +88,7 @@ HttpResponseExaminer.prototype = {
   },
 
   // Replace channel's listener.
-  observe(subject, topic, data) {
+  observe(subject) {
     dump("In HttpResponseExaminer.observe\n");
     try {
       subject.QueryInterface(Ci.nsITraceableChannel);
@@ -129,7 +129,7 @@ function make_channel(url) {
 }
 
 // Check if received body is correctly modified.
-function channel_finished(request, input, ctx) {
+function channel_finished() {
   httpserver.stop(do_test_finished);
 }
 

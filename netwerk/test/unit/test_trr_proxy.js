@@ -38,7 +38,7 @@ ChromeUtils.defineLazyGetter(this, "systemSettings", function () {
     PACURI: `data:application/x-ns-proxy-autoconfig;charset=utf-8,${encodeURIComponent(
       FindProxyForURL.toString()
     )}`,
-    getProxyForURI(aURI) {
+    getProxyForURI() {
       throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     },
   };

@@ -13,7 +13,7 @@ function run_test() {
     observer = {
       QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-      observe(subject, topic, data) {
+      observe(subject) {
         subject = subject.QueryInterface(Ci.nsIRequest);
         subject.cancel(Cr.NS_BINDING_ABORTED);
 

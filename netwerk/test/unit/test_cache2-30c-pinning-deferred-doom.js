@@ -74,7 +74,7 @@ function run_test() {
       "pin",
       Ci.nsICacheStorage.OPEN_TRUNCATE,
       lci,
-      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "p" + i, function (entry) {
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "p" + i, function () {
         mc.fired();
       })
     );
@@ -85,7 +85,7 @@ function run_test() {
       "disk",
       Ci.nsICacheStorage.OPEN_TRUNCATE,
       lci,
-      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "d" + i, function (entry) {
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "d" + i, function () {
         mc.fired();
       })
     );
@@ -95,7 +95,7 @@ function run_test() {
 
   Services.obs.addObserver(
     {
-      observe(subject, topic, data) {
+      observe() {
         // (3)
 
         log_("after purge, second set of opens");
@@ -112,7 +112,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NORMAL, "m" + i, "p" + i, function (entry) {
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function () {
               mc.fired();
             })
           );
@@ -131,9 +131,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(MAYBE_NEW | DOOMED, "m" + i, "d" + i, function (
-              entry
-            ) {
+            new OpenCallback(MAYBE_NEW | DOOMED, "m" + i, "d" + i, function () {
               mc.fired();
             })
           );
@@ -158,7 +156,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NORMAL, "m" + i, "p" + i, function (entry) {
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function () {
               mc.fired();
             })
           );
@@ -169,7 +167,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NEW, "m2" + i, "d2" + i, function (entry) {
+            new OpenCallback(NEW, "m2" + i, "d2" + i, function () {
               mc.fired();
             })
           );

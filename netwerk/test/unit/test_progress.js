@@ -139,7 +139,7 @@ function serverHandler(metadata, response) {
   }
 }
 
-function checkRequest(request, data, context) {
+function checkRequest() {
   Assert.equal(last, httpbody.length * LOOPS);
   Assert.equal(max, httpbody.length * LOOPS);
 }

@@ -9,7 +9,7 @@ function run_test() {
     "localtest:,recent:"
   );
 
-  do_await_remote_message("gio-allow-test-protocols").then(port => {
+  do_await_remote_message("gio-allow-test-protocols").then(() => {
     do_send_remote_message("gio-allow-test-protocols-done");
   });
 

@@ -127,7 +127,7 @@ add_setup(async function setup() {
     Services.prefs.clearUserPref("network.trr.ohttp.relay_uri");
     Services.prefs.clearUserPref("network.trr.ohttp.uri");
     Services.prefs.clearUserPref("network.dns.get-ttl");
-    await new Promise((resolve, reject) => {
+    await new Promise(resolve => {
       httpServer.stop(resolve);
     });
   });

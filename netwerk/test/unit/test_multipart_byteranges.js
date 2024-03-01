@@ -100,7 +100,7 @@ var multipartListener = {
     "nsIRequestObserver",
   ]),
 
-  onStartRequest(request) {
+  onStartRequest() {
     this._buffer = "";
   },
 
@@ -113,7 +113,7 @@ var multipartListener = {
     }
   },
 
-  onStopRequest(request, status) {
+  onStopRequest(request) {
     try {
       responseHandler(request, this._buffer);
     } catch (ex) {

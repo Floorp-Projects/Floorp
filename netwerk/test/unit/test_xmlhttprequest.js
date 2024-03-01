@@ -42,7 +42,7 @@ function run_test() {
 
   // Test async XHR sending
   let async = createXHR(true);
-  async.addEventListener("readystatechange", function (event) {
+  async.addEventListener("readystatechange", function () {
     if (checkResults(async)) {
       httpserver.stop(do_test_finished);
     }

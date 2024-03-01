@@ -22,7 +22,7 @@ function run_test() {
 
 const REQUEST_DATA = "12345678901234567";
 
-function contentLength(request, response) {
+function contentLength(request) {
   Assert.equal(request.method, "POST");
   Assert.equal(request.getHeader("Content-Length"), "017");
 

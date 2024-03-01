@@ -88,7 +88,7 @@ function setCookie() {
   channel.asyncOpen(new ChannelListener(setNextCookie, null));
 }
 
-function setNextCookie(request, data, context) {
+function setNextCookie() {
   if (++i == tests.length) {
     // all cookies set: switch to checking them
     i = 0;
@@ -106,7 +106,7 @@ function checkCookie() {
   channel.asyncOpen(new ChannelListener(completeCheckCookie, null));
 }
 
-function completeCheckCookie(request, data, context) {
+function completeCheckCookie(request) {
   // Look for all cookies in what the server saw: fail if we see any besides the
   // one expected cookie for each namespace;
   var expectedCookie = tests[i].cookieName;

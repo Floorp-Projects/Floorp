@@ -16,7 +16,7 @@ const NS_ERROR_NOT_RESUMABLE = 0x804b0019;
 
 const rangeBody = "Body of the range request handler.\r\n";
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
@@ -34,7 +34,7 @@ AuthPrompt2.prototype = {
     return true;
   },
 
-  asyncPromptAuth: function ap2_async(chan, cb, ctx, lvl, info) {
+  asyncPromptAuth: function ap2_async() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
@@ -69,7 +69,7 @@ function run_test() {
 
   var entityID;
 
-  function get_entity_id(request, data, ctx) {
+  function get_entity_id(request) {
     dump("*** get_entity_id()\n");
     Assert.ok(
       request instanceof Ci.nsIResumableChannel,
@@ -84,7 +84,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(try_resume, null, CL_EXPECT_FAILURE));
   }
 
-  function try_resume(request, data, ctx) {
+  function try_resume(request) {
     dump("*** try_resume()\n");
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
@@ -94,7 +94,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(try_resume_zero, null));
   }
 
-  function try_resume_zero(request, data, ctx) {
+  function try_resume_zero(request, data) {
     dump("*** try_resume_zero()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody.substring(1));
@@ -106,7 +106,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(try_no_range, null, CL_EXPECT_FAILURE));
   }
 
-  function try_no_range(request, data, ctx) {
+  function try_no_range(request) {
     dump("*** try_no_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
@@ -118,7 +118,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(try_bytes_range, null));
   }
 
-  function try_bytes_range(request, data, ctx) {
+  function try_bytes_range(request, data) {
     dump("*** try_bytes_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody);
@@ -132,7 +132,7 @@ function run_test() {
     );
   }
 
-  function try_foo_bar_range(request, data, ctx) {
+  function try_foo_bar_range(request) {
     dump("*** try_foo_bar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
@@ -146,7 +146,7 @@ function run_test() {
     );
   }
 
-  function try_foobar_range(request, data, ctx) {
+  function try_foobar_range(request) {
     dump("*** try_foobar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
@@ -162,7 +162,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(try_bytes_foobar_range, null));
   }
 
-  function try_bytes_foobar_range(request, data, ctx) {
+  function try_bytes_foobar_range(request, data) {
     dump("*** try_bytes_foobar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody);
@@ -180,7 +180,7 @@ function run_test() {
     );
   }
 
-  function try_bytesfoo_bar_range(request, data, ctx) {
+  function try_bytesfoo_bar_range(request) {
     dump("*** try_bytesfoo_bar_range()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
@@ -191,7 +191,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(try_no_accept_ranges, null));
   }
 
-  function try_no_accept_ranges(request, data, ctx) {
+  function try_no_accept_ranges(request, data) {
     dump("*** try_no_accept_ranges()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody);
@@ -208,7 +208,7 @@ function run_test() {
     );
   }
 
-  function try_suspend_resume(request, data, ctx) {
+  function try_suspend_resume(request, data) {
     dump("*** try_suspend_resume()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody);
@@ -219,7 +219,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(success, null));
   }
 
-  function success(request, data, ctx) {
+  function success(request, data) {
     dump("*** success()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody);
@@ -234,7 +234,7 @@ function run_test() {
     );
   }
 
-  function test_auth_nopw(request, data, ctx) {
+  function test_auth_nopw(request) {
     dump("*** test_auth_nopw()\n");
     Assert.ok(!request.nsIHttpChannel.requestSucceeded);
     Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
@@ -249,7 +249,7 @@ function run_test() {
     chan.notificationCallbacks = new Requestor();
     chan.asyncOpen(new ChannelListener(test_auth, null, CL_EXPECT_FAILURE));
   }
-  function test_auth(request, data, ctx) {
+  function test_auth(request) {
     dump("*** test_auth()\n");
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
     Assert.ok(request.nsIHttpChannel.responseStatus < 300);
@@ -266,7 +266,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(test_auth_resume, null));
   }
 
-  function test_auth_resume(request, data, ctx) {
+  function test_auth_resume(request, data) {
     dump("*** test_auth_resume()\n");
     Assert.equal(data, rangeBody.substring(1));
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
@@ -278,7 +278,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(test_404, null, CL_EXPECT_FAILURE));
   }
 
-  function test_404(request, data, ctx) {
+  function test_404(request) {
     dump("*** test_404()\n");
     Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
     Assert.equal(request.nsIHttpChannel.responseStatus, 404);
@@ -289,7 +289,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(test_416, null, CL_EXPECT_FAILURE));
   }
 
-  function test_416(request, data, ctx) {
+  function test_416(request) {
     dump("*** test_416()\n");
     Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
     Assert.equal(request.nsIHttpChannel.responseStatus, 416);
@@ -301,7 +301,7 @@ function run_test() {
     chan.asyncOpen(new ChannelListener(test_redir_resume, null));
   }
 
-  function test_redir_resume(request, data, ctx) {
+  function test_redir_resume(request, data) {
     dump("*** test_redir_resume()\n");
     Assert.ok(request.nsIHttpChannel.requestSucceeded);
     Assert.equal(data, rangeBody.substring(1));
@@ -316,7 +316,7 @@ function run_test() {
     );
   }
 
-  function test_redir_noresume(request, data, ctx) {
+  function test_redir_noresume(request) {
     dump("*** test_redir_noresume()\n");
     Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 

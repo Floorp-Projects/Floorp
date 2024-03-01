@@ -88,7 +88,7 @@ add_task(async _ => {
     let test = tests[i];
 
     let promise = new Promise(resolve => {
-      function observer(subject, topic, data) {
+      function observer() {
         Services.obs.removeObserver(observer, "cookie-saved-on-disk");
         resolve();
       }

@@ -12,7 +12,7 @@ var unsafeAboutModule = {
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
   },
-  getURIFlags(aURI) {
+  getURIFlags() {
     return Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT;
   },
 };

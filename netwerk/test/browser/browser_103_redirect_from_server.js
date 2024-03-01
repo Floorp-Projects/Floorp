@@ -111,7 +111,7 @@ async function test_hint_redirect(
   if (numRequestRemaining > 0) {
     let observer = {
       QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         aSubject.QueryInterface(Ci.nsIIdentChannel);
         let id = aSubject.channelId;
         if (observedChannelIds.includes(id)) {

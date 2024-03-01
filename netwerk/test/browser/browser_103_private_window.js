@@ -35,7 +35,7 @@ async function test_early_hints_load_url(usePrivateWin) {
   let observed = {};
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       if (aTopic == "http-on-opening-request") {
         let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
         if (channel.URI.spec === expectedUrl) {

@@ -11,7 +11,7 @@ function run_test() {
       "nsIRequestObserver",
     ]),
 
-    onStartRequest(aRequest) {},
+    onStartRequest() {},
 
     onStopRequest(aRequest, aStatusCode) {
       // Make sure we can catch the error NS_ERROR_FILE_NOT_FOUND here.
@@ -19,7 +19,7 @@ function run_test() {
       do_test_finished();
     },
 
-    onDataAvailable(aRequest, aStream, aOffset, aCount) {
+    onDataAvailable() {
       do_throw("The channel must not call onDataAvailable().");
     },
   };

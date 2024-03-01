@@ -17,9 +17,9 @@ for (let i = 0; i < 10000; i++) {
 }
 
 var listener = {
-  onStartRequest(request) {},
+  onStartRequest() {},
 
-  onDataAvailable(request, stream) {},
+  onDataAvailable() {},
 
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_OK);

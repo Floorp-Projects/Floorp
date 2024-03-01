@@ -48,12 +48,12 @@ function WSListener(closure) {
   this._closure = closure;
 }
 WSListener.prototype = {
-  onAcknowledge(aContext, aSize) {},
-  onBinaryMessageAvailable(aContext, aMsg) {},
-  onMessageAvailable(aContext, aMsg) {},
-  onServerClose(aContext, aCode, aReason) {},
-  onStart(aContext) {},
-  onStop(aContext, aStatusCode) {
+  onAcknowledge() {},
+  onBinaryMessageAvailable() {},
+  onMessageAvailable() {},
+  onServerClose() {},
+  onStart() {},
+  onStop() {
     dnsRequestObserver.unregister();
     this._closure();
   },

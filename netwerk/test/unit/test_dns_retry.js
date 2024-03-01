@@ -142,8 +142,8 @@ StatusCounter.prototype = {
     return this.QueryInterface(iid);
   },
 
-  onProgress(request, progress, progressMax) {},
-  onStatus(request, status, statusArg) {
+  onProgress() {},
+  onStatus(request, status) {
     this._statusCount[status] = 1 + (this._statusCount[status] || 0);
   },
 };
@@ -154,7 +154,7 @@ let HttpListener = function (finish, succeeded) {
 };
 
 HttpListener.prototype = {
-  onStartRequest: function testOnStartRequest(request) {},
+  onStartRequest: function testOnStartRequest() {},
 
   onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
@@ -167,7 +167,7 @@ HttpListener.prototype = {
 };
 
 function promiseObserverNotification(aTopic, matchFunc) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     Services.obs.addObserver(function observe(subject, topic, data) {
       let matches = typeof matchFunc != "function" || matchFunc(subject, data);
       if (!matches) {

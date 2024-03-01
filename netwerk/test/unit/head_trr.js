@@ -263,7 +263,7 @@ function answerHandler(req, resp) {
       answers: response.answers || [],
       additionals: response.additionals || [],
     });
-    let writeResponse = (resp2, buf2, context) => {
+    let writeResponse = (resp2, buf2) => {
       try {
         let data = buf2.toString("hex");
         resp2.setHeader("Content-Length", data.length);

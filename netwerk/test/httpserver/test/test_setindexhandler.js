@@ -44,7 +44,7 @@ function stopCustomIndexHandler(ch, status, data) {
 function startDefaultIndexHandler(ch) {
   Assert.equal(ch.responseStatus, 200);
 }
-function stopDefaultIndexHandler(ch, status, data) {
+function stopDefaultIndexHandler(ch, status) {
   Assert.ok(Components.isSuccessCode(status));
 }
 

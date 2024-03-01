@@ -86,7 +86,7 @@ var testHeaderName = "X-Redirected-By-Script";
 var testHeaderVal = "Success";
 var testHeaderVal2 = "Success on server 2";
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 
@@ -130,7 +130,7 @@ Redirector.prototype = {
     "nsISupportsWeakReference",
   ]),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == redirectHook) {
       if (!(subject instanceof Ci.nsIHttpChannel)) {
         do_throw(redirectHook + " observed a non-HTTP channel");

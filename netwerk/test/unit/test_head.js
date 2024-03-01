@@ -141,7 +141,7 @@ function serverHandler(metadata, response) {
   }
 }
 
-function checkRequestResponse(request, data, context) {
+function checkRequestResponse(request, data) {
   if (dbg) {
     print("============== checkRequestResponse: in");
   }

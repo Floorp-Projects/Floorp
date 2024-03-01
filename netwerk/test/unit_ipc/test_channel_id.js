@@ -47,7 +47,7 @@ let parentChannelsDone = new Promise(resolve => {
   };
 });
 
-function observer(subject, topic, data) {
+function observer(subject) {
   let channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
   let uri = channel.URI.spec;

@@ -45,10 +45,10 @@ function make_channel(url, body, cb) {
     getInterface(iid) {
       return this.QueryInterface(iid);
     },
-    onProgress(request, progress, progressMax) {
+    onProgress() {
       gotOnProgress = true;
     },
-    onStatus(request, status, statusArg) {
+    onStatus() {
       gotOnStatus = true;
     },
     shouldPrepareForIntercept() {
@@ -277,7 +277,7 @@ add_test(function () {
 // In this case we should automatically ResetInterception() and complete the
 // network request.
 add_test(function () {
-  var chan = make_channel(URL + "/body", null, function (channel) {
+  var chan = make_channel(URL + "/body", null, function () {
     throw new Error("boom");
   });
   chan.asyncOpen(new ChannelListener(handle_remote_response, null));

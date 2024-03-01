@@ -39,10 +39,10 @@ TestProtocolHandler.prototype = {
     Ci.nsIProtocolHandler.URI_NORELATIVE |
     Ci.nsIProtocolHandler.ALLOWS_PROXY |
     Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
-  newChannel(uri, aLoadInfo) {
+  newChannel() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
-  allowPort(port, scheme) {
+  allowPort() {
     return true;
   },
 };
@@ -160,7 +160,7 @@ resolveCallback.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIProtocolProxyCallback"]),
 
-  onProxyAvailable(req, channel, pi, status) {
+  onProxyAvailable(req, channel, pi) {
     this.nextFunction(pi);
   },
 };
@@ -943,10 +943,10 @@ function failed_script_callback(pi) {
 var directFilterListener = {
   onModifyRequestCalled: false,
 
-  onStartRequest: function test_onStart(request) {},
+  onStartRequest: function test_onStart() {},
   onDataAvailable: function test_OnData() {},
 
-  onStopRequest: function test_onStop(request, status) {
+  onStopRequest: function test_onStop(request) {
     // check on the PI from the channel itself
     request.QueryInterface(Ci.nsIProxiedChannel);
     check_proxy(request.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
@@ -961,7 +961,7 @@ var directFilterListener = {
     run_isresolvable_test();
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (
       topic === "http-on-modify-request" &&
       subject instanceof Ci.nsIHttpChannel &&

@@ -37,7 +37,7 @@ add_task(async function test_connection_based_auth() {
   let proxy = new NodeHTTPSProxyServer();
   await proxy.start();
 
-  await proxy.registerConnectHandler((req, clientSocket, head) => {
+  await proxy.registerConnectHandler((req, clientSocket) => {
     if (!req.headers["proxy-authorization"]) {
       clientSocket.write(
         "HTTP/1.1 407 Unauthorized\r\n" +

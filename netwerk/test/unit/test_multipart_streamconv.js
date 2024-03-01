@@ -51,7 +51,7 @@ var multipartListener = {
     "nsIRequestObserver",
   ]),
 
-  onStartRequest(request) {
+  onStartRequest() {
     this._buffer = "";
   },
 
@@ -64,7 +64,7 @@ var multipartListener = {
     }
   },
 
-  onStopRequest(request, status) {
+  onStopRequest(request) {
     this._index++;
     // Second part should be last part
     Assert.equal(

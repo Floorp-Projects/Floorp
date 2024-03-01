@@ -113,7 +113,7 @@ function startIter() {
   );
 }
 
-function completeIter(request, data, ctx) {
+function completeIter(request, data) {
   if (!(tests[index].flags & CL_EXPECT_FAILURE)) {
     Assert.equal(data.length, tests[index].datalen, "test " + index);
   }

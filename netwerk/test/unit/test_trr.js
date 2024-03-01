@@ -57,7 +57,7 @@ function setModeAndURI(mode, path) {
   );
 }
 
-function makeChan(url, mode, bypassCache) {
+function makeChan(url, mode) {
   let chan = NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true,

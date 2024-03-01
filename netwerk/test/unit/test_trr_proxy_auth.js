@@ -34,7 +34,7 @@ AuthPrompt.prototype = {
     return true;
   },
 
-  asyncPromptAuth: function ap_async(chan, cb, ctx, lvl, info) {
+  asyncPromptAuth: function ap_async() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
@@ -99,7 +99,7 @@ add_task(async function test_trr_proxy_auth() {
   let authTriggered = false;
   let observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       if (aTopic == "http-on-examine-response") {
         Services.obs.removeObserver(observer, "http-on-examine-response");
         let channel = aSubject.QueryInterface(Ci.nsIChannel);

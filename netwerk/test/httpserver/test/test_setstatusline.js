@@ -69,11 +69,11 @@ ChromeUtils.defineLazyGetter(this, "tests", function () {
 });
 
 // /no/setstatusline
-function noSetstatusline(metadata, response) {}
+function noSetstatusline() {}
 function startNoSetStatusLine(ch) {
   checkStatusLine(ch, 1, 1, 200, "OK");
 }
-function stop(ch, status, data) {
+function stop(ch, status) {
   Assert.ok(Components.isSuccessCode(status));
 }
 

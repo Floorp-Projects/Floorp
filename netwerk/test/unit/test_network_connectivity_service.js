@@ -15,7 +15,7 @@ const { HttpServer } = ChromeUtils.importESModule(
  * @returns {Promise} A promise that fulfills when the notification is fired.
  */
 function promiseObserverNotification(topicName, matchFunc) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     Services.obs.addObserver(function observe(subject, topic, data) {
       let matches = typeof matchFunc != "function" || matchFunc(subject, data);
       if (!matches) {

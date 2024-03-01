@@ -94,7 +94,7 @@ function handler1(metadata, response) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function completeTest1(request, data, ctx) {
+function completeTest1(request) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
     Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
@@ -118,7 +118,7 @@ function handler2(metadata, response) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function completeTest2(request, data, ctx) {
+function completeTest2(request) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
     Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
@@ -143,7 +143,7 @@ function handler3(metadata, response) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function completeTest3(request, data, ctx) {
+function completeTest3(request) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
     Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
@@ -169,7 +169,7 @@ function handler4(metadata, response) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function completeTest4(request, data, ctx) {
+function completeTest4(request) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
     Assert.equal(chan.contentDisposition, chan.DISPOSITION_INLINE);

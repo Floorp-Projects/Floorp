@@ -42,7 +42,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });
@@ -76,7 +76,7 @@ CookiePolicyHelper.runTest("IndexedDB in workers", {
         }
       };
 
-      worker.onerror = function (e) {
+      worker.onerror = function () {
         reject();
       };
     });

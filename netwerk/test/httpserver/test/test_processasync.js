@@ -181,7 +181,7 @@ handlers["/handleAsync2"] = handleAsync2;
 
 var startTime_handleAsync2;
 
-function init_handleAsync2(ch) {
+function init_handleAsync2() {
   var now = (startTime_handleAsync2 = Date.now());
   dumpn("*** init_HandleAsync2: start time " + now);
 }

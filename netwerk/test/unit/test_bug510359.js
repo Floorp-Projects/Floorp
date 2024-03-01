@@ -28,7 +28,7 @@ function triggerNextTest() {
   channel.asyncOpen(new ChannelListener(checkValueAndTrigger, null));
 }
 
-function checkValueAndTrigger(request, data, ctx) {
+function checkValueAndTrigger(request, data) {
   Assert.equal(tests[index].expected, data);
 
   if (index < tests.length - 1) {

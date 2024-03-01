@@ -131,8 +131,8 @@ add_task(async function test_cancel_after_connect_http2proxy() {
           return this.QueryInterface(iid);
         },
 
-        onProgress(request, progress, progressMax) {},
-        onStatus(request, status, statusArg) {
+        onProgress() {},
+        onStatus(request, status) {
           info(`status = ${status}`);
           // XXX(valentin): Is this the best status to be cancelling?
           if (status == NS_NET_STATUS_WAITING_FOR) {
@@ -355,7 +355,7 @@ add_task(async function test_cancel_during_response() {
             // Check that we never get more than 1000 bytes.
             Assert.equal(progress, 1000);
           },
-          onStatus(request, status, statusArg) {
+          onStatus(request, status) {
             if (status == NS_NET_STATUS_RECEIVING_FROM) {
               info("cancelling when receiving request");
               chan.cancel(Cr.NS_ERROR_ABORT);

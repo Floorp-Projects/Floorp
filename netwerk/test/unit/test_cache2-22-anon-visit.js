@@ -24,7 +24,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     Services.loadContextInfo.default,
-    new OpenCallback(NEW | WAITFORWRITE, "an2", "an2", function (entry) {
+    new OpenCallback(NEW | WAITFORWRITE, "an2", "an2", function () {
       mc.fired();
     })
   );
@@ -34,7 +34,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     Services.loadContextInfo.anonymous,
-    new OpenCallback(NEW | WAITFORWRITE, "an2", "an2", function (entry) {
+    new OpenCallback(NEW | WAITFORWRITE, "an2", "an2", function () {
       mc.fired();
     })
   );

@@ -26,7 +26,7 @@
 
 /* Check that the iframe has initial content only after the first load.
  */
-function expectInitialContent(e) {
+function expectInitialContent() {
   info("expectInitialContent",
        "First response received: should have partial content");
   var frameElement = document.getElementById('contentFrame');
@@ -57,7 +57,7 @@ function expectInitialContent(e) {
 
 /* Check that the iframe has all the content after the second load.
  */
-function expectFullContent(e)
+function expectFullContent()
 {
   info("expectFullContent",
        "Second response received: should complete content from first load");

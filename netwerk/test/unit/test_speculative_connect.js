@@ -81,7 +81,7 @@ function TestServer() {
 
 TestServer.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIServerSocket"]),
-  onSocketAccepted(socket, trans) {
+  onSocketAccepted() {
     try {
       this.listener.close();
     } catch (e) {}
@@ -89,7 +89,7 @@ TestServer.prototype = {
     next_test();
   },
 
-  onStopListening(socket) {},
+  onStopListening() {},
 };
 
 /** TestFailedStreamCallback

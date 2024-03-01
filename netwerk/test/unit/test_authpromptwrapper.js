@@ -51,7 +51,7 @@ function run_test() {
 
     QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
-    prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
+    prompt: function ap1_prompt(title, text, realm) {
       this.called |= CALLED_PROMPT;
       this.doChecks(text, realm);
       return this.rv;

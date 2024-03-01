@@ -25,7 +25,7 @@ ChromeUtils.defineLazyGetter(this, "randomURI2", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + randomPath2;
 });
 
-function make_channel(url, callback, ctx) {
+function make_channel(url) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }
 

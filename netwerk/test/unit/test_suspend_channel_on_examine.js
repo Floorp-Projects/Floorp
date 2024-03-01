@@ -19,7 +19,7 @@ function responseHandler(metadata, response) {
 function onExamineListener(callback) {
   obs.addObserver(
     {
-      observe(subject, topic, data) {
+      observe(subject) {
         obs.removeObserver(this, "http-on-examine-response");
         callback(subject.QueryInterface(Ci.nsIHttpChannel));
       },
@@ -48,7 +48,7 @@ add_test(function testAsyncCancel() {
       chan.resume();
     });
   });
-  startChannelRequest(baseUrl, CL_EXPECT_FAILURE, (request, data, context) => {
+  startChannelRequest(baseUrl, CL_EXPECT_FAILURE, (request, data) => {
     Assert.ok(!data, "no response");
 
     Assert.equal(

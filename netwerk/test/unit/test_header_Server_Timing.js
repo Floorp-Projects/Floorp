@@ -56,7 +56,7 @@ function checkServerTimingContent(headers) {
   }
 }
 
-function readServerContent(request, buffer) {
+function readServerContent(request) {
   let channel = request.QueryInterface(Ci.nsITimedChannel);
   let headers = channel.serverTiming.QueryInterface(Ci.nsIArray);
   checkServerTimingContent(headers);

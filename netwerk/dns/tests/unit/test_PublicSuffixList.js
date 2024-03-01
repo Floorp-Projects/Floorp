@@ -71,7 +71,7 @@ const downloadToDiskBackup = CLIENT.attachments.downloadToDisk;
 // returns a fake fileURI and sends a signal with filePath and no nsifile
 function mockDownloadToDisk() {
   downloadToDiskCalled = false;
-  CLIENT.attachments.downloadToDisk = async rec => {
+  CLIENT.attachments.downloadToDisk = async () => {
     downloadToDiskCalled = true;
     return `file://${mockedFilePath}`; // Create a fake file URI
   };

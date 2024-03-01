@@ -58,7 +58,7 @@ function serverHandler(metadata, response) {
   }
 }
 
-function checkRequest(request, data, context) {
+function checkRequest(request, data) {
   if (dbg) {
     print("============== checkRequest: in");
   }

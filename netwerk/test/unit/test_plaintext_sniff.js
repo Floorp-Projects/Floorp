@@ -137,7 +137,7 @@ function makeListener(headerIdx, bodyIdx) {
       do_throw("Should not get any data!");
     },
 
-    onStopRequest: function test_onStopR(request, status) {
+    onStopRequest: function test_onStopR() {
       // Advance to next test
       ++headerIdx;
       if (headerIdx == contentTypeHeaderList.length) {

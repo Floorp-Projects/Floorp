@@ -1043,8 +1043,8 @@ async function test_no_retry_without_doh() {
       getInterface(iid) {
         return this.QueryInterface(iid);
       },
-      onProgress(request, progress, progressMax) {},
-      onStatus(request, status, statusArg) {
+      onProgress() {},
+      onStatus(request, status) {
         this.statusCount[status] = 1 + (this.statusCount[status] || 0);
       },
     };

@@ -84,7 +84,7 @@ WaitForHttp3Listener.prototype = {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     let routed = "NA";
     try {
       routed = request.getRequestHeader("Alt-Used");

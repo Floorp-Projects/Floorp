@@ -736,7 +736,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
     do_check_property(aTest, testURI, "pathQueryRef", function (aStr) {
       return aStr + aSuffix;
     });
-    do_check_property(aTest, testURI, "ref", function (aStr) {
+    do_check_property(aTest, testURI, "ref", function () {
       return aSuffix.substr(1);
     });
   }

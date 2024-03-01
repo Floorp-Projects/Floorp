@@ -27,9 +27,9 @@ function TimeoutListener(expectResponse) {
 }
 
 TimeoutListener.prototype = {
-  onStartRequest(request) {},
+  onStartRequest() {},
 
-  onDataAvailable(request, stream) {},
+  onDataAvailable() {},
 
   onStopRequest(request, status) {
     if (this.expectResponse) {

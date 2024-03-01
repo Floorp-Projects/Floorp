@@ -66,7 +66,7 @@ function channelOpenPromise(chan) {
     let topic = "http-on-transaction-suspended-authentication";
     let observer = {
       QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (aTopic == topic) {
           Services.obs.removeObserver(observer, topic);
           let channel = aSubject.QueryInterface(Ci.nsIChannel);

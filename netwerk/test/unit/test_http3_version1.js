@@ -45,13 +45,13 @@ let Http3Listener = function () {};
 Http3Listener.prototype = {
   version1enabled: "",
 
-  onStartRequest: function testOnStartRequest(request) {},
+  onStartRequest: function testOnStartRequest() {},
 
   onDataAvailable: function testOnDataAvailable(request, stream, off, cnt) {
     read_stream(stream, cnt);
   },
 
-  onStopRequest: function testOnStopRequest(request, status) {
+  onStopRequest: function testOnStopRequest(request) {
     let httpVersion = "";
     try {
       httpVersion = request.protocolVersion;

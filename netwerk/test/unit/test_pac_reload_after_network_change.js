@@ -36,7 +36,7 @@ registerCleanupFunction(async () => {
 });
 
 async function getProxyInfo() {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let uri = Services.io.newURI("http://www.mozilla.org/");
     gProxyService.asyncResolve(uri, 0, {
       onProxyAvailable(_req, _uri, pi, _status) {

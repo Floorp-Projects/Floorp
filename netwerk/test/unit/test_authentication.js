@@ -43,7 +43,7 @@ AuthPrompt1.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt"]),
 
-  prompt: function ap1_prompt(title, text, realm, save, defaultText, result) {
+  prompt: function ap1_prompt() {
     do_throw("unexpected prompt call");
   },
 
@@ -99,7 +99,7 @@ AuthPrompt1.prototype = {
     return true;
   },
 
-  promptPassword: function ap1_promptPW(title, text, realm, save, pwd) {
+  promptPassword: function ap1_promptPW() {
     do_throw("unexpected promptPassword call");
   },
 };
@@ -252,7 +252,7 @@ RealmTestRequestor.prototype = {
     return false;
   },
 
-  asyncPromptAuth: function realmtest_async(chan, cb, ctx, lvl, info) {
+  asyncPromptAuth: function realmtest_async() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
@@ -377,7 +377,7 @@ function makeChan(
 
 var ChannelCreationObserver = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic == "http-on-opening-request") {
       initialChannelId = aSubject.QueryInterface(Ci.nsIIdentChannel).channelId;
     }
@@ -666,7 +666,7 @@ async function test_nonascii_xhr() {
   await new Promise(resolve => {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", URL + "/auth/non_ascii", true, "é", "é");
-    xhr.onreadystatechange = function (event) {
+    xhr.onreadystatechange = function () {
       if (xhr.readyState == 4) {
         Assert.equal(xhr.status, 200);
         resolve();

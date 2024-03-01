@@ -14,16 +14,16 @@ const CONTENT_LENGTH = "1152921504606846975";
 var httpServer = null;
 
 var listener = {
-  onStartRequest(req) {},
+  onStartRequest() {},
 
-  onDataAvailable(req, stream, off, count) {
+  onDataAvailable(req) {
     Assert.equal(req.getResponseHeader("Content-Length"), CONTENT_LENGTH);
 
     // We're done here, cancel the channel
     req.cancel(Cr.NS_BINDING_ABORTED);
   },
 
-  onStopRequest(req, stat) {
+  onStopRequest() {
     httpServer.stop(do_test_finished);
   },
 };
