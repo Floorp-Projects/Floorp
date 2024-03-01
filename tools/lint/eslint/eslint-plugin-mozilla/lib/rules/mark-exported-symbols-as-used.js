@@ -49,7 +49,7 @@ module.exports = {
 
   create(context) {
     return {
-      AssignmentExpression(node, parents) {
+      AssignmentExpression(node) {
         if (
           node.operator === "=" &&
           node.left.type === "MemberExpression" &&
@@ -61,7 +61,7 @@ module.exports = {
         }
       },
 
-      VariableDeclaration(node, parents) {
+      VariableDeclaration(node) {
         if (!isGlobalScope(context)) {
           return;
         }

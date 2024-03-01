@@ -634,7 +634,7 @@ module.exports = {
     let globalScope;
 
     let parser = {
-      Program(node) {
+      Program() {
         globalScope = context.getScope();
       },
     };

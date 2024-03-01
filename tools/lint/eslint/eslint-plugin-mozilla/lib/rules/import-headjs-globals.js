@@ -13,7 +13,7 @@ var fs = require("fs");
 var helpers = require("../helpers");
 var globals = require("../globals");
 
-function importHead(context, path, node) {
+function importHead(context, path) {
   try {
     let stats = fs.statSync(path);
     if (!stats.isFile()) {

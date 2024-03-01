@@ -18,7 +18,7 @@ const ruleTester = new RuleTester({
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, messageId) {
+function invalidCode(code) {
   return { code, errors: [{ messageId: "rejectTopLevelAwait" }] };
 }
 
