@@ -78,8 +78,6 @@ skip-if = ["os == 'linux'"] # Bug 821781
 
 ["test_bookmark-tags-changed_frequency.js"]
 
-["test_bookmark_list.js"]
-
 ["test_bookmarks_html.js"]
 
 ["test_bookmarks_html_corrupt.js"]

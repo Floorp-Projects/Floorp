@@ -729,7 +729,6 @@ export class FxviewTabRow extends MozLitElement {
         pinned: this.indicators?.includes("pinned"),
         pinnedOnNewTab: this.indicators?.includes("pinnedOnNewTab"),
         attention: this.indicators?.includes("attention"),
-        bookmark: this.indicators?.includes("bookmark"),
       })}"
     >
       <span
