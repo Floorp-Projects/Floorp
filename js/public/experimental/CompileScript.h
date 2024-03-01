@@ -110,7 +110,7 @@ JS_PUBLIC_API const JSErrorReport* GetFrontendWarningAt(
 //
 // Off-thread consumers can allocate this instance off main thread, and pass it
 // back to the main thread, in order to reduce the main thread allocation.
-struct CompilationStorage {
+struct JS_PUBLIC_API CompilationStorage {
  private:
   // Owned CompilationInput.
   //

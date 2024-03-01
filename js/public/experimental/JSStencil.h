@@ -47,7 +47,7 @@ struct PreallocatedCompilationGCOutput;
 
 namespace JS {
 
-struct CompilationStorage;
+struct JS_PUBLIC_API CompilationStorage;
 
 using Stencil = js::frontend::CompilationStencil;
 using FrontendContext = js::FrontendContext;
