@@ -52,8 +52,8 @@ class SiteSecurityRobot {
     fun clickQuickActionSheetClearSiteData() = quickActionSheetClearSiteData().click()
     fun verifyClearSiteDataPrompt(url: String) {
         assertUIObjectExists(clearSiteDataPrompt(url))
-        cancelClearSiteDataButton.check(matches(isDisplayed()))
-        deleteSiteDataButton.check(matches(isDisplayed()))
+        cancelClearSiteDataButton().check(matches(isDisplayed()))
+        deleteSiteDataButton().check(matches(isDisplayed()))
     }
 
     class Transition
@@ -150,5 +150,5 @@ private fun clearSiteDataPrompt(url: String) =
             .textContains(url),
     )
 
-private val cancelClearSiteDataButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
-private val deleteSiteDataButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
+private fun cancelClearSiteDataButton() = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
+private fun deleteSiteDataButton() = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
