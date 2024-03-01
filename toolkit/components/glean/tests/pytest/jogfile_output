@@ -303,6 +303,7 @@
       true,
       false,
       true,
+      true,
       [
         "background",
         "dirty_startup",
@@ -314,12 +315,14 @@
       true,
       true,
       true,
+      true,
       []
     ],
     [
       "not-events",
       true,
       false,
+      true,
       true,
       [
         "background",
@@ -331,6 +334,7 @@
       "not-metrics",
       true,
       false,
+      true,
       true,
       [
         "overdue",

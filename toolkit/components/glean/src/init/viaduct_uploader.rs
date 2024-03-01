@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use glean::net::{PingUploader, UploadResult};
+use glean::net::{PingUploadRequest, PingUploader, UploadResult};
 use url::Url;
 use viaduct::{Error::*, Request};
 
@@ -19,11 +19,11 @@ impl PingUploader for ViaductUploader {
     ///
     /// # Arguments
     ///
-    /// * `url` - the URL path to upload the data to.
-    /// * `body` - the serialized text data to send.
-    /// * `headers` - a vector of tuples containing the headers to send with
-    ///   the request, i.e. (Name, Value).
-    fn upload(&self, url: String, body: Vec<u8>, headers: Vec<(String, String)>) -> UploadResult {
+    /// * `upload_request` - the ping and its metadata to upload.
+    fn upload(&self, upload_request: PingUploadRequest) -> UploadResult {
+        let PingUploadRequest {
+            url, body, headers, ..
+        } = upload_request;
         log::trace!("FOG Ping Uploader uploading to {}", url);
         let url_clone = url.clone();
         let result: std::result::Result<UploadResult, viaduct::Error> = (move || {
