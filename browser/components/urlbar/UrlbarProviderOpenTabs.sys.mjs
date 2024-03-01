@@ -238,6 +238,8 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       }
       if (oldCount == 1) {
         entries.delete(url);
+        // Note: `entries` might be an empty Map now, though we don't remove it
+        // from `_openTabs` as it's likely to be reused later.
       } else {
         entries.set(url, oldCount - 1);
       }

@@ -3834,8 +3834,9 @@ export class UrlbarInput {
       isPrivate: this.isPrivate,
       maxResults: lazy.UrlbarPrefs.get("maxRichResults"),
       searchString,
-      userContextId:
-        this.window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
+      userContextId: parseInt(
+        this.window.gBrowser.selectedBrowser.getAttribute("usercontextid") || 0
+      ),
       currentPage: this.window.gBrowser.currentURI.spec,
       formHistoryName: this.formHistoryName,
       prohibitRemoteResults:

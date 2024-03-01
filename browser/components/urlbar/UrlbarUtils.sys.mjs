@@ -1029,8 +1029,9 @@ export var UrlbarUtils = {
       isPrivate: lazy.PrivateBrowsingUtils.isWindowPrivate(window),
       maxResults: 1,
       searchString,
-      userContextId:
-        window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
+      userContextId: parseInt(
+        window.gBrowser.selectedBrowser.getAttribute("usercontextid") || 0
+      ),
       prohibitRemoteResults: true,
       providers: ["AliasEngines", "BookmarkKeywords", "HeuristicFallback"],
     };
