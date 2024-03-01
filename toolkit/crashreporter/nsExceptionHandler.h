@@ -143,7 +143,8 @@ void GetAnnotation(uint32_t childPid, Annotation annotation,
                    nsACString& outStr);
 
 // Functions for working with minidumps and .extras
-typedef mozilla::EnumeratedArray<Annotation, nsCString, Annotation::Count>
+typedef mozilla::EnumeratedArray<Annotation, nsCString,
+                                 size_t(Annotation::Count)>
     AnnotationTable;
 void DeleteMinidumpFilesForID(
     const nsAString& aId,

@@ -888,7 +888,7 @@ class nsWindow final : public nsBaseWidget {
 
   // Client rect for minimize, maximize and close buttons.
   mozilla::EnumeratedArray<WindowButtonType, LayoutDeviceIntRect,
-                           WindowButtonType::Count>
+                           size_t(WindowButtonType::Count)>
       mWindowBtnRect;
 
   mozilla::DataMutex<Desktop> mDesktopId;
