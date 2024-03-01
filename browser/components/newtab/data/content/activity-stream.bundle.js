@@ -682,7 +682,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
       }
     }));
   }
-  restorePrefDefaults(event) {
+  restorePrefDefaults() {
     this.props.dispatch(actionCreators.OnlyToMain({
       type: actionTypes.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS
     }));
@@ -1423,7 +1423,7 @@ const LinkMenuOptions = {
   EmptyItem: () => ({
     type: "empty"
   }),
-  ShowPrivacyInfo: site => ({
+  ShowPrivacyInfo: () => ({
     id: "newtab-menu-show-privacy-info",
     icon: "info",
     action: {
@@ -1820,7 +1820,7 @@ class ContextMenuButton extends (external_React_default()).PureComponent {
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onUpdate = this.onUpdate.bind(this);
   }
-  openContextMenu(isKeyBoard, event) {
+  openContextMenu(isKeyBoard) {
     if (this.props.onUpdate) {
       this.props.onUpdate(true);
     }
@@ -2517,7 +2517,6 @@ const DefaultMeta = ({
   sponsor,
   sponsored_by_override,
   saveToPocketCard,
-  isRecentSave,
   ctaButtonVariant
 }) => /*#__PURE__*/external_React_default().createElement("div", {
   className: "meta"
@@ -2592,7 +2591,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       height: 101
     }];
   }
-  onLinkClick(event) {
+  onLinkClick() {
     if (this.props.dispatch) {
       this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
         event: "CLICK",
@@ -2624,7 +2623,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       }));
     }
   }
-  onSaveClick(event) {
+  onSaveClick() {
     if (this.props.dispatch) {
       this.props.dispatch(actionCreators.AlsoToMain({
         type: actionTypes.SAVE_TO_POCKET,
@@ -2874,7 +2873,7 @@ const DSCard = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   App: state.App,
   DiscoveryStream: state.DiscoveryStream
 }))(_DSCard);
-const PlaceholderDSCard = props => /*#__PURE__*/external_React_default().createElement(DSCard, {
+const PlaceholderDSCard = () => /*#__PURE__*/external_React_default().createElement(DSCard, {
   placeholder: true
 });
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx
@@ -3163,7 +3162,6 @@ function DSSubHeader({
   }, children));
 }
 function OnboardingExperience({
-  children,
   dispatch,
   windowObj = __webpack_require__.g
 }) {
@@ -3776,7 +3774,7 @@ class ErrorBoundary extends (external_React_default()).PureComponent {
       hasError: false
     };
   }
-  componentDidCatch(error, info) {
+  componentDidCatch() {
     this.setState({
       hasError: true
     });
@@ -4013,13 +4011,13 @@ class DSPrivacyModal extends (external_React_default()).PureComponent {
     this.onLearnLinkClick = this.onLearnLinkClick.bind(this);
     this.onManageLinkClick = this.onManageLinkClick.bind(this);
   }
-  onLearnLinkClick(event) {
+  onLearnLinkClick() {
     this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
       event: "CLICK_PRIVACY_INFO",
       source: "DS_PRIVACY_MODAL"
     }));
   }
-  onManageLinkClick(event) {
+  onManageLinkClick() {
     this.props.dispatch(actionCreators.OnlyToMain({
       type: actionTypes.SETTINGS_OPEN
     }));
@@ -7537,7 +7535,7 @@ class _TopSites extends (external_React_default()).PureComponent {
     }))))));
   }
 }
-const TopSites_TopSites = (0,external_ReactRedux_namespaceObject.connect)((state, props) => ({
+const TopSites_TopSites = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   TopSites: state.TopSites,
   Prefs: state.Prefs,
   TopSitesRows: state.Prefs.values.topSitesRows
@@ -8039,8 +8037,7 @@ class SectionTitle extends (external_React_default()).PureComponent {
 
 const selectLayoutRender = ({
   state = {},
-  prefs = {},
-  locale = ""
+  prefs = {}
 }) => {
   const {
     layout,
@@ -8323,7 +8320,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
       });
     });
   }
-  renderComponent(component, embedWidth) {
+  renderComponent(component) {
     switch (component.type) {
       case "Highlights":
         return /*#__PURE__*/external_React_default().createElement(Highlights, null);
@@ -9406,7 +9403,7 @@ function mergeStateReducer(mainReducer) {
 /**
  * messageMiddleware - Middleware that looks for SentToMain type actions, and sends them if necessary
  */
-const messageMiddleware = store => next => action => {
+const messageMiddleware = () => next => action => {
   const skipLocal = action.meta && action.meta.skipLocal;
   if (actionUtils.isSendToMain(action)) {
     RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);

@@ -52,7 +52,7 @@ export class ErrorBoundary extends React.PureComponent {
     this.state = { hasError: false };
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch() {
     this.setState({ hasError: true });
   }
 
