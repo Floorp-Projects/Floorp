@@ -482,6 +482,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.serde]]
+version = "1.0.197"
+when = "2024-02-20"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.serde_bytes]]
 version = "0.11.9"
 when = "2023-02-05"
@@ -492,6 +499,13 @@ user-name = "David Tolnay"
 [[publisher.serde_derive]]
 version = "1.0.195"
 when = "2024-01-06"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
+[[publisher.serde_derive]]
+version = "1.0.197"
+when = "2024-02-20"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
