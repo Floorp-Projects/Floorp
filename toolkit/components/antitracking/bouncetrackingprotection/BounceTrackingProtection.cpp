@@ -415,6 +415,18 @@ BounceTrackingProtection::TestAddUserActivation(
 
 RefPtr<BounceTrackingProtection::PurgeBounceTrackersMozPromise>
 BounceTrackingProtection::PurgeBounceTrackers() {
+  // Prevent multiple purge operations from running at the same time.
+  if (mPurgeInProgress) {
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+            ("%s: Skip: Purge already in progress.", __FUNCTION__));
+    return PurgeBounceTrackersMozPromise::CreateAndReject(
+        nsresult::NS_ERROR_NOT_AVAILABLE, __func__);
+  }
+  mPurgeInProgress = true;
+
+  // Collect promises for all clearing operations to later await on.
+  nsTArray<RefPtr<ClearDataMozPromise>> clearPromises;
+
   // Run the purging algorithm for all global state objects.
   for (const auto& entry : mStorage->StateGlobalMapRef()) {
     const OriginAttributes& originAttributes = entry.GetKey();
@@ -429,13 +441,16 @@ BounceTrackingProtection::PurgeBounceTrackers() {
                oaSuffix.get()));
     }
 
-    PurgeBounceTrackersForStateGlobal(stateGlobal, originAttributes);
+    nsresult rv = PurgeBounceTrackersForStateGlobal(stateGlobal, clearPromises);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return PurgeBounceTrackersMozPromise::CreateAndReject(rv, __func__);
+    }
   }
 
   // Wait for all data clearing operations to complete. mClearPromises contains
   // one promise per host / clear task.
   return ClearDataMozPromise::AllSettled(GetCurrentSerialEventTarget(),
-                                         mClearPromises)
+                                         clearPromises)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [&](ClearDataMozPromise::AllSettledPromiseType::ResolveOrRejectValue&&
@@ -450,7 +465,7 @@ BounceTrackingProtection::PurgeBounceTrackers() {
             // If any clear call failed reject.
             for (auto& result : aResults.ResolveValue()) {
               if (result.IsReject()) {
-                mClearPromises.Clear();
+                mPurgeInProgress = false;
                 return PurgeBounceTrackersMozPromise::CreateAndReject(
                     NS_ERROR_FAILURE, __func__);
               }
@@ -458,7 +473,8 @@ BounceTrackingProtection::PurgeBounceTrackers() {
             }
 
             // No clearing errors, resolve.
-            mClearPromises.Clear();
+
+            mPurgeInProgress = false;
             return PurgeBounceTrackersMozPromise::CreateAndResolve(
                 std::move(purgedSiteHosts), __func__);
           });
@@ -466,19 +482,12 @@ BounceTrackingProtection::PurgeBounceTrackers() {
 
 nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
     BounceTrackingStateGlobal* aStateGlobal,
-    const OriginAttributes& aOriginAttributes) {
+    nsTArray<RefPtr<ClearDataMozPromise>>& aClearPromises) {
   MOZ_ASSERT(aStateGlobal);
   MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
           ("%s: #mUserActivation: %d, #mBounceTrackers: %d", __FUNCTION__,
            aStateGlobal->UserActivationMapRef().Count(),
            aStateGlobal->BounceTrackersMapRef().Count()));
-
-  // Purge already in progress.
-  if (!mClearPromises.IsEmpty()) {
-    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
-            ("%s: Skip: Purge already in progress.", __FUNCTION__));
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   const PRTime now = PR_Now();
   // Convert the user activation lifetime into microseconds for calculation with
@@ -502,7 +511,6 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
       do_GetService("@mozilla.org/clear-data-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mClearPromises.Clear();
   nsTArray<nsCString> purgedSiteHosts;
 
   // Collect hosts to remove from the bounce trackers map. We can not remove
@@ -562,7 +570,7 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
       clearPromise->Reject(0, __func__);
     }
 
-    mClearPromises.AppendElement(clearPromise);
+    aClearPromises.AppendElement(clearPromise);
 
     // Remove it from the bounce trackers map, it's about to be purged. If the
     // clear call fails still remove it. We want to avoid an ever growing list

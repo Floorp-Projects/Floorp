@@ -53,13 +53,18 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
       MozPromise<nsTArray<nsCString>, nsresult, true>;
   RefPtr<PurgeBounceTrackersMozPromise> PurgeBounceTrackers();
 
-  nsresult PurgeBounceTrackersForStateGlobal(
-      BounceTrackingStateGlobal* aStateGlobal,
-      const OriginAttributes& aOriginAttributes);
-
   // Pending clear operations are stored as ClearDataMozPromise, one per host.
   using ClearDataMozPromise = MozPromise<nsCString, uint32_t, true>;
-  nsTArray<RefPtr<ClearDataMozPromise>> mClearPromises;
+
+  // Clear state for classified bounce trackers for a specific state global.
+  // aClearPromises is populated with promises for each host that is cleared.
+  [[nodiscard]] nsresult PurgeBounceTrackersForStateGlobal(
+      BounceTrackingStateGlobal* aStateGlobal,
+      nsTArray<RefPtr<ClearDataMozPromise>>& aClearPromises);
+
+  // Whether a purge operation is currently in progress. This avoids running
+  // multiple purge operations at the same time.
+  bool mPurgeInProgress = false;
 
   // Wraps nsIClearDataCallback in MozPromise.
   class ClearDataCallback final : public nsIClearDataCallback {
