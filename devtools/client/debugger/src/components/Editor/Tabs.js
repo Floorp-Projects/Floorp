@@ -23,7 +23,7 @@ import {
 import { isVisible } from "../../utils/ui";
 
 import { getHiddenTabs } from "../../utils/tabs";
-import { getFilename, isPretty, getFileURL } from "../../utils/source";
+import { isPretty, getFileURL } from "../../utils/source";
 import actions from "../../actions/index";
 
 import Tab from "./Tab";
@@ -144,7 +144,6 @@ class Tabs extends PureComponent {
 
   renderDropdownSource = source => {
     const { selectSource } = this.props;
-    const filename = getFilename(source);
 
     const onClick = () => selectSource(source);
     return li(
@@ -160,7 +159,7 @@ class Tabs extends PureComponent {
         {
           className: "dropdown-label",
         },
-        filename
+        source.shortName
       )
     );
   };

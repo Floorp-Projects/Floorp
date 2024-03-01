@@ -16,7 +16,6 @@ import { getEditor } from "../../utils/editor/index";
 import { searchKeys } from "../../constants";
 
 import { getRelativePath } from "../../utils/sources-tree/utils";
-import { getFormattedSourceId } from "../../utils/source";
 import {
   getProjectSearchQuery,
   getNavigateCounter,
@@ -265,7 +264,7 @@ export class ProjectSearch extends Component {
         },
         file.location.source.url
           ? getRelativePath(file.location.source.url)
-          : getFormattedSourceId(file.location.source.id)
+          : file.location.source.shortName
       ),
       span(
         {

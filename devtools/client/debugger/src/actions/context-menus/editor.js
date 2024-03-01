@@ -8,7 +8,6 @@ import { copyToTheClipboard } from "../../utils/clipboard";
 import {
   isPretty,
   getRawSourceURL,
-  getFilename,
   shouldBlackbox,
   findBlackBoxRange,
 } from "../../utils/source";
@@ -321,7 +320,7 @@ const downloadFileItem = (selectedSource, selectedContent) => ({
   id: "node-menu-download-file",
   label: L10N.getStr("downloadFile.label"),
   accesskey: L10N.getStr("downloadFile.accesskey"),
-  click: () => downloadFile(selectedContent, getFilename(selectedSource)),
+  click: () => downloadFile(selectedContent, selectedSource.shortName),
 });
 
 const inlinePreviewItem = dispatch => ({

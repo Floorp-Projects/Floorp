@@ -27,6 +27,9 @@ const {
 const {
   getDisplayURL,
 } = require("resource://devtools/client/debugger/src/utils/sources-tree/getURL.js");
+const {
+  getFormattedSourceId,
+} = require("resource://devtools/client/debugger/src/utils/source.js");
 
 class SmartTrace extends Component {
   static get propTypes() {
@@ -253,8 +256,10 @@ class SmartTrace extends Component {
             // 'id' isn't used by Frames, but by selectFrame callback below
             id: sourceId,
             url: sourceUrl,
-            // 'displayURL' might be used by FrameComponent via getFilename
-            displayURL: getDisplayURL(sourceUrl),
+            // Used by FrameComponent
+            shortName: sourceUrl
+              ? getDisplayURL(sourceUrl).filename
+              : getFormattedSourceId(sourceId),
           },
         };
         let location = generatedLocation;
@@ -265,8 +270,8 @@ class SmartTrace extends Component {
             column: originalLocation.column,
             source: {
               url: originalLocation.url,
-              // 'displayURL' might be used by FrameComponent via getFilename
-              displayURL: getDisplayURL(originalLocation.url),
+              // Used by FrameComponent
+              shortName: getDisplayURL(originalLocation.url).filename,
             },
           };
         }
