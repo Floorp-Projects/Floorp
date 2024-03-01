@@ -540,42 +540,38 @@ void gfxWindowsPlatform::UpdateSupportsHDR() {
     return;
   }
 
-  // Set mSupportsHDR to true if any of the DeviceManager outputs have both:
-  // 1) greater than 8-bit color
-  // 2) a colorspace that uses BT2020
+  // Set mSupportsHDR to true if any of the DeviceManager outputs have a BT2020
+  // colorspace with EOTF2084 gamma curve, this indicates the system is sending
+  // an HDR format to at least one monitor.  The colorspace returned by DXGI is
+  // very vague - we only see DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 for HDR
+  // and DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 for SDR modes, even if the
+  // monitor is using something like YCbCr444 according to Settings
+  // (System -> Display Settings -> Advanced Display).  To get more specific
+  // info we would need to query the DISPLAYCONFIG values in WinGDI.
+  //
+  // Note that the bit depth used to be checked here, but as of Windows 11 22H2,
+  // HDR is supported with 8bpc for lower bandwidth, where DWM converts to
+  // dithered RGB8 rather than RGB10, which doesn't really matter here.
+  //
+  // This only returns true if there is an HDR display connected at app start,
+  // if the user switches to HDR to watch a video, we won't know that here, and
+  // if no displays are connected we return false (e.g. if Windows Update
+  // restarted a laptop with its lid closed and no external displays, we will
+  // see zero outputs here when the app is restarted automatically).
+  //
+  // It would be better to track if HDR is ever used and report that telemetry
+  // so we know if HDR matters, not just when it is detected at app start.
+  //
+  // Further reading:
+  // https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range
+  // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_sdr_white_level
   DeviceManagerDx* dx = DeviceManagerDx::Get();
   nsTArray<DXGI_OUTPUT_DESC1> outputs = dx->EnumerateOutputs();
 
   for (auto& output : outputs) {
-    if (output.BitsPerColor <= 8) {
-      continue;
-    }
-
-    switch (output.ColorSpace) {
-      case DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020:
-      case DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020:
-      case DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020:
-      case DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020:
-#ifndef __MINGW32__
-      // Windows MinGW has an older dxgicommon.h that doesn't define
-      // these enums. We'd like to define them ourselves in that case,
-      // but there's no compilable way to add new enums to an existing
-      // enum type. So instead we just don't check for these values.
-      case DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020:
-      case DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020:
-#endif
-        mSupportsHDR = true;
-        return;
-      default:
-        break;
+    if (output.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) {
+      mSupportsHDR = true;
+      return;
     }
   }
 
