@@ -28,7 +28,7 @@
 #include "plbase64.h"
 #include "mozilla/Logging.h"
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 #  include <CoreFoundation/CoreFoundation.h>
 #endif
 
@@ -1441,7 +1441,7 @@ bool gfxFontUtils::DecodeFontName(const char* aNameData, int32_t aByteLen,
   }
 
   if (encoding == X_USER_DEFINED_ENCODING) {
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
     // Special case for macOS only: support legacy Mac encodings
     // that aren't part of the Encoding Standard.
     if (aPlatformCode == PLATFORM_ID_MAC) {
