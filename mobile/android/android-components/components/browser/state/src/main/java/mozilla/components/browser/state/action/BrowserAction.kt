@@ -47,6 +47,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
+import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -1043,6 +1044,16 @@ sealed class TranslationsAction : BrowserAction() {
         val operation: TranslationPageSettingOperation,
         val setting: Boolean,
     ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Sets the map of BCP 47 language codes (key) and the [LanguageSetting] option (value).
+     *
+     * @property languageSettings A map containing a key of BCP 47 language code and its
+     * [LanguageSetting].
+     */
+    data class SetLanguageSettingsAction(
+        val languageSettings: Map<String, LanguageSetting>,
+    ) : TranslationsAction()
 
     /**
      * Sets the list of sites that the user has opted to never translate.

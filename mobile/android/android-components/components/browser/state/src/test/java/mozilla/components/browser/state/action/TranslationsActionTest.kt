@@ -12,6 +12,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.DetectedLanguages
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
+import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationError
@@ -689,6 +690,62 @@ class TranslationsActionTest {
         assertFalse(tabState().translationsState.pageSettings?.alwaysTranslateLanguage!!)
         assertTrue(tabState().translationsState.pageSettings?.neverTranslateLanguage!!)
         assertTrue(tabState().translationsState.pageSettings?.neverTranslateSite!!)
+    }
+
+    @Test
+    fun `WHEN a SetLanguageSettingsAction is dispatched THEN the browser store is updated to match`() {
+        // Initial state
+        assertNull(store.state.translationEngine.languageSettings)
+
+        // Dispatch
+        val languageSetting = mapOf("es" to LanguageSetting.OFFER)
+        store.dispatch(
+            TranslationsAction.SetLanguageSettingsAction(
+                languageSettings = languageSetting,
+            ),
+        ).joinBlocking()
+
+        // Final state
+        assertEquals(store.state.translationEngine.languageSettings!!, languageSetting)
+    }
+
+    @Test
+    fun `WHEN a OperationRequestedAction is dispatched for FETCH_AUTOMATIC_LANGUAGE_SETTINGS THEN clear languageSettings`() {
+        // Setting first to have a more robust initial state
+        val languageSetting = mapOf("es" to LanguageSetting.OFFER)
+        store.dispatch(
+            TranslationsAction.SetLanguageSettingsAction(
+                languageSettings = languageSetting,
+            ),
+        ).joinBlocking()
+        assertEquals(store.state.translationEngine.languageSettings, languageSetting)
+
+        // Action started
+        store.dispatch(
+            TranslationsAction.OperationRequestedAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertNull(store.state.translationEngine.languageSettings)
+    }
+
+    @Test
+    fun `WHEN a TranslateExceptionAction is dispatched for FETCH_AUTOMATIC_LANGUAGE_SETTINGS THEN set the error`() {
+        // Action started
+        val error = TranslationError.UnknownError(IllegalStateException())
+        store.dispatch(
+            TranslationsAction.TranslateExceptionAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
+                translationError = error,
+            ),
+        ).joinBlocking()
+
+        // Action success
+        assertEquals(error, tabState().translationsState.translationError)
     }
 
     @Test

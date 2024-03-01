@@ -79,6 +79,11 @@ class TranslationsMiddleware(
                             requestPageSettings(context, action.tabId)
                         }
                     }
+                    TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS -> {
+                        scope.launch {
+                            requestLanguageSettings(context, action.tabId)
+                        }
+                    }
                     TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
                         scope.launch {
                             getNeverTranslateSites(context, action.tabId)
@@ -162,6 +167,7 @@ class TranslationsMiddleware(
      * This will populate:
      * Language Support - [requestSupportedLanguages]
      * Language Models - [requestLanguageModels]
+     * Language Settings - [requestLanguageSettings]
      *
      * @param context Context to use to dispatch to the store.
      */
@@ -170,6 +176,7 @@ class TranslationsMiddleware(
     ) {
         requestSupportedLanguages(context)
         requestLanguageModels(context)
+        requestLanguageSettings(context)
     }
 
     /**
@@ -396,7 +403,7 @@ class TranslationsMiddleware(
     }
 
     /**
-     * Retrieves the page settings using [scope] and dispatches the result to the
+     * Retrieves the page settings and dispatches the result to the
      * store via [TranslationsAction.SetPageSettingsAction] or else dispatches the failure
      * [TranslationsAction.TranslateExceptionAction].
      *
@@ -471,6 +478,61 @@ class TranslationsMiddleware(
                 },
             )
         }
+    }
+
+    /**
+     * Retrieves the list of languages and their settings and dispatches the result to the
+     * [BrowserState.translationEngine] via [TranslationsAction.SetLanguageSettingsAction] or
+     * else dispatches the failure.
+     *
+     * For failure dispatching:
+     * If a tab ID is not provided, then only [TranslationsAction.EngineExceptionAction] will be
+     * dispatched to set the error on the [BrowserState.translationEngine].
+     *
+     * If a tab ID is provided, then [TranslationsAction.EngineExceptionAction]
+     * AND [TranslationsAction.TranslateExceptionAction] will be dispatched
+     * to set the error both on the [BrowserState.translationEngine] and
+     * [SessionState.translationsState].
+     *
+     * @param context Context to use to dispatch to the store.
+     * @param tabId If a Tab ID is associated with the request for error handling.
+     * If null, this will only dispatch errors on the global translations browser state.
+     */
+    private fun requestLanguageSettings(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tabId: String? = null,
+    ) {
+        engine.getLanguageSettings(
+
+            onSuccess = { settings ->
+                context.store.dispatch(
+                    TranslationsAction.SetLanguageSettingsAction(
+                        languageSettings = settings,
+                    ),
+                )
+                logger.info("Success requesting language settings.")
+            },
+
+            onError = {
+                context.store.dispatch(
+                    TranslationsAction.EngineExceptionAction(
+                        error = TranslationError.CouldNotLoadLanguageSettingsError(it),
+                    ),
+                )
+
+                if (tabId != null) {
+                    context.store.dispatch(
+                        TranslationsAction.TranslateExceptionAction(
+                            tabId = tabId,
+                            operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
+                            translationError = TranslationError.CouldNotLoadLanguageSettingsError(it),
+                        ),
+                    )
+                }
+
+                logger.error("Error requesting language settings: ", it)
+            },
+        )
     }
 
     /**
@@ -648,6 +710,13 @@ class TranslationsMiddleware(
             languageSetting = setting,
 
             onSuccess = {
+                // Ensure the session's page settings remain in sync with this update.
+                context.store.dispatch(
+                    TranslationsAction.OperationRequestedAction(
+                        tabId = tabId,
+                        operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
+                    ),
+                )
                 logger.info("Successfully updated the language preference.")
             },
 

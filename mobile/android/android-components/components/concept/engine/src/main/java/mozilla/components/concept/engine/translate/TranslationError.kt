@@ -102,6 +102,14 @@ sealed class TranslationError(
         TranslationError(errorName = "could-not-load-settings", displayError = false, cause = cause)
 
     /**
+     * Could not load language settings error.
+     *
+     * @param cause The original [Throwable] before it was converted into this error state.
+     */
+    class CouldNotLoadLanguageSettingsError(override val cause: Throwable?) :
+        TranslationError(errorName = "could-not-load-language-settings", displayError = false, cause = cause)
+
+    /**
      * Could not load never translate sites error.
      *
      * @param cause The original throwable before it was converted into this error state.

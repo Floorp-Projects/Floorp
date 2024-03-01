@@ -146,6 +146,14 @@ internal object TranslationsStateReducer {
                     }
                 }
 
+                TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS -> {
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
+                            engineError = null,
+                        ),
+                    )
+                }
+
                 TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
                     // Reset the error state, and then generally expect
                     // [TranslationsAction.SetNeverTranslateSitesAction] to update
@@ -200,6 +208,14 @@ internal object TranslationsStateReducer {
                         it.copy(
                             pageSettings = null,
                             settingsError = action.translationError,
+                        )
+                    }
+                }
+
+                TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS -> {
+                    state.copyWithTranslationsState(action.tabId) {
+                        it.copy(
+                            translationError = action.translationError,
                         )
                     }
                 }
@@ -276,6 +292,15 @@ internal object TranslationsStateReducer {
                         ),
                     )
                 }
+
+                TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS -> {
+                    state.copy(
+                        translationEngine = state.translationEngine.copy(
+                            languageSettings = null,
+                        ),
+                    )
+                }
+
                 TranslationOperation.FETCH_PAGE_SETTINGS -> {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
@@ -283,6 +308,7 @@ internal object TranslationsStateReducer {
                         )
                     }
                 }
+
                 TranslationOperation.FETCH_NEVER_TRANSLATE_SITES -> {
                     state.copyWithTranslationsState(action.tabId) {
                         it.copy(
@@ -380,6 +406,15 @@ internal object TranslationsStateReducer {
                     translationDownloadSize = action.translationSize,
                 )
             }
+        }
+
+        is TranslationsAction.SetLanguageSettingsAction -> {
+            state.copy(
+                translationEngine = state.translationEngine.copy(
+                    languageSettings = action.languageSettings,
+                    engineError = null,
+                ),
+            )
         }
     }
 
