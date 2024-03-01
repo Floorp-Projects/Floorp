@@ -1,4 +1,4 @@
-self.addEventListener("install", event => {
+self.addEventListener("install", () => {
   performance.mark("__serviceworker_event");
   console.log("[SW]:", "Install event");
 });

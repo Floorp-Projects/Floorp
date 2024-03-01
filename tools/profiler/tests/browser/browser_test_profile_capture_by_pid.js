@@ -107,7 +107,7 @@ add_task(async function browser_test_profile_capture_along_with_content_pid() {
 add_task(async function browser_test_profile_capture_along_with_other_pid() {
   const parentPid = Services.appinfo.processID;
   const { contentPid, pidsWithSamplerThread, profile } = await test_with_filter(
-    contentPid => ["GeckoMain", "pid:" + parentPid]
+    () => ["GeckoMain", "pid:" + parentPid]
   );
 
   Assert.greater(
@@ -174,9 +174,9 @@ add_task(async function browser_test_profile_capture_by_only_content_pid() {
 
 add_task(async function browser_test_profile_capture_by_only_parent_pid() {
   const parentPid = Services.appinfo.processID;
-  const { pidsWithSamplerThread, profile } = await test_with_filter(
-    contentPid => ["pid:" + parentPid]
-  );
+  const { pidsWithSamplerThread, profile } = await test_with_filter(() => [
+    "pid:" + parentPid,
+  ]);
 
   Assert.deepEqual(
     pidsWithSamplerThread,
