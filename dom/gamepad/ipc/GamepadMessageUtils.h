@@ -8,6 +8,7 @@
 #define mozilla_dom_gamepad_GamepadMessageUtils_h
 
 #include "ipc/EnumSerializer.h"
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadHandle.h"
 #include "mozilla/dom/GamepadLightIndicatorBinding.h"
@@ -18,24 +19,17 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::GamepadLightIndicatorType>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::GamepadLightIndicatorType,
-          mozilla::dom::GamepadLightIndicatorType(0),
-          mozilla::dom::GamepadLightIndicatorType(
-              mozilla::dom::GamepadLightIndicatorType::EndGuard_)> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::GamepadLightIndicatorType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::GamepadMappingType>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::GamepadMappingType, mozilla::dom::GamepadMappingType(0),
-          mozilla::dom::GamepadMappingType(
-              mozilla::dom::GamepadMappingType::EndGuard_)> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::GamepadMappingType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::GamepadHand>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::GamepadHand, mozilla::dom::GamepadHand(0),
-          mozilla::dom::GamepadHand(mozilla::dom::GamepadHand::EndGuard_)> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::GamepadHand> {};
 
 template <>
 struct ParamTraits<mozilla::dom::GamepadCapabilityFlags>

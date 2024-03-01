@@ -8,6 +8,7 @@
 #include "WebrtcIPCTraits.h"
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -62,30 +63,22 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::RTCStatsType>
-    : public ContiguousEnumSerializer<mozilla::dom::RTCStatsType,
-                                      mozilla::dom::RTCStatsType::Codec,
-                                      mozilla::dom::RTCStatsType::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCStatsType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCStatsIceCandidatePairState>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::RTCStatsIceCandidatePairState,
-          mozilla::dom::RTCStatsIceCandidatePairState::Frozen,
-          mozilla::dom::RTCStatsIceCandidatePairState::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::RTCStatsIceCandidatePairState> {};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCIceCandidateType>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::RTCIceCandidateType,
-          mozilla::dom::RTCIceCandidateType::Host,
-          mozilla::dom::RTCIceCandidateType::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::RTCIceCandidateType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCBundlePolicy>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::RTCBundlePolicy,
-          mozilla::dom::RTCBundlePolicy::Balanced,
-          mozilla::dom::RTCBundlePolicy::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCBundlePolicy> {
+};
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServerInternal, mUrls,
                                   mCredentialProvided, mUserNameProvided);
@@ -218,10 +211,8 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCDataChannelStats, mId,
 
 template <>
 struct ParamTraits<mozilla::dom::RTCDataChannelState>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::RTCDataChannelState,
-          mozilla::dom::RTCDataChannelState::Connecting,
-          mozilla::dom::RTCDataChannelState::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::RTCDataChannelState> {};
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCCodecStats, mTimestamp,
                                   mType, mId, mPayloadType, mCodecType,
@@ -230,9 +221,7 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCCodecStats, mTimestamp,
 
 template <>
 struct ParamTraits<mozilla::dom::RTCCodecType>
-    : public ContiguousEnumSerializer<mozilla::dom::RTCCodecType,
-                                      mozilla::dom::RTCCodecType::Encode,
-                                      mozilla::dom::RTCCodecType::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::RTCCodecType> {};
 }  // namespace IPC
 
 #endif  // _WEBRTC_GLOBAL_H_
