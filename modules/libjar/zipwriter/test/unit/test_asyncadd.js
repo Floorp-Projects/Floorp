@@ -24,7 +24,7 @@ var TESTS = [
 var size = 0;
 
 var observer = {
-  onStartRequest(request) {},
+  onStartRequest() {},
 
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_OK);
