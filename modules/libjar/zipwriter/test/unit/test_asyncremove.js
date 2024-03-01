@@ -6,7 +6,7 @@
 var TESTS = ["test.txt", "test.png"];
 
 var observer = {
-  onStartRequest(request) {},
+  onStartRequest() {},
 
   onStopRequest(request, status) {
     Assert.equal(status, Cr.NS_OK);

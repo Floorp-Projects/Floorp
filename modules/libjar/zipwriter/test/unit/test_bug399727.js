@@ -23,7 +23,7 @@ BinaryComparer.prototype = {
   length: null,
   callback: null,
 
-  onStartRequest(aRequest) {},
+  onStartRequest() {},
 
   onStopRequest(aRequest, aStatusCode) {
     this.fileStream.close();
