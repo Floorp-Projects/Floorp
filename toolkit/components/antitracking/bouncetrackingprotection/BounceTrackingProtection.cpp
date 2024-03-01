@@ -369,6 +369,11 @@ BounceTrackingProtection::TestRunPurgeBounceTrackers(
 }
 
 NS_IMETHODIMP
+BounceTrackingProtection::TestClearExpiredUserActivations() {
+  return ClearExpiredUserInteractions();
+}
+
+NS_IMETHODIMP
 BounceTrackingProtection::TestAddBounceTrackerCandidate(
     JS::Handle<JS::Value> aOriginAttributes, const nsACString& aHost,
     const PRTime aBounceTime, JSContext* aCx) {
@@ -485,24 +490,13 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
     nsTArray<RefPtr<ClearDataMozPromise>>& aClearPromises) {
   MOZ_ASSERT(aStateGlobal);
   MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
-          ("%s: #mUserActivation: %d, #mBounceTrackers: %d", __FUNCTION__,
-           aStateGlobal->UserActivationMapRef().Count(),
-           aStateGlobal->BounceTrackersMapRef().Count()));
+          ("%s: %s", __FUNCTION__, aStateGlobal->Describe().get()));
 
   const PRTime now = PR_Now();
-  // Convert the user activation lifetime into microseconds for calculation with
-  // PRTime values. The pref is a 32-bit value. Cast into 64-bit before
-  // multiplying so we get the correct result.
-  int64_t activationLifetimeUsec =
-      static_cast<int64_t>(
-          StaticPrefs::
-              privacy_bounceTrackingProtection_bounceTrackingActivationLifetimeSec()) *
-      PR_USEC_PER_SEC;
 
   // 1. Remove hosts from the user activation map whose user activation flag has
   // expired.
-  nsresult rv =
-      aStateGlobal->ClearUserActivationBefore(now - activationLifetimeUsec);
+  nsresult rv = ClearExpiredUserInteractions(aStateGlobal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // 2. Go over bounce tracker candidate map and purge state.
@@ -581,6 +575,43 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
   // Remove hosts from the bounce trackers map which we executed purge calls
   // for.
   return aStateGlobal->RemoveBounceTrackers(bounceTrackerCandidatesToRemove);
+}
+
+nsresult BounceTrackingProtection::ClearExpiredUserInteractions(
+    BounceTrackingStateGlobal* aStateGlobal) {
+  if (!aStateGlobal && mStorage->StateGlobalMapRef().IsEmpty()) {
+    // Nothing to clear.
+    return NS_OK;
+  }
+
+  const PRTime now = PR_Now();
+
+  // Convert the user activation lifetime into microseconds for calculation with
+  // PRTime values. The pref is a 32-bit value. Cast into 64-bit before
+  // multiplying so we get the correct result.
+  int64_t activationLifetimeUsec =
+      static_cast<int64_t>(
+          StaticPrefs::
+              privacy_bounceTrackingProtection_bounceTrackingActivationLifetimeSec()) *
+      PR_USEC_PER_SEC;
+
+  // Clear user activation for the given state global.
+  if (aStateGlobal) {
+    return aStateGlobal->ClearUserActivationBefore(now -
+                                                   activationLifetimeUsec);
+  }
+
+  // aStateGlobal not passed, clear user activation for all state globals.
+  for (const auto& entry : mStorage->StateGlobalMapRef()) {
+    const RefPtr<BounceTrackingStateGlobal>& stateGlobal = entry.GetData();
+    MOZ_ASSERT(stateGlobal);
+
+    nsresult rv =
+        stateGlobal->ClearUserActivationBefore(now - activationLifetimeUsec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 // ClearDataCallback
