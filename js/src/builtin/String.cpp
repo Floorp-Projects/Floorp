@@ -2652,10 +2652,14 @@ bool js::StringLastIndexOf(JSContext* cx, HandleString string,
     return true;
   }
 
+  MOZ_ASSERT(len >= searchLen);
+  size_t start = len - searchLen;
+
   if (searchLen == 0) {
-    *result = 0;
+    *result = start;
     return true;
   }
+  MOZ_ASSERT(start < len);
 
   JSLinearString* text = string->ensureLinear(cx);
   if (!text) {
@@ -2666,9 +2670,6 @@ bool js::StringLastIndexOf(JSContext* cx, HandleString string,
   if (!searchStr) {
     return false;
   }
-
-  MOZ_ASSERT(len >= searchLen);
-  size_t start = len - searchLen;
 
   *result = LastIndexOf(text, searchStr, start);
   return true;
