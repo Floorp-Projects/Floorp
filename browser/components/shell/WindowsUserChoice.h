@@ -62,6 +62,14 @@ CheckUserChoiceHashResult CheckUserChoiceHash(const wchar_t* aExt,
 mozilla::UniquePtr<wchar_t[]> GetAssociationKeyPath(const wchar_t* aExt);
 
 /*
+ * Appends the registry path for the given association, file extension or
+ * protocol to the parameter string.
+ *
+ * @return The path, or nullptr on failure.
+ */
+nsresult AppendAssociationKeyPath(const wchar_t* aExt, nsString& output);
+
+/*
  * Get the current user's SID
  *
  * @return String SID for the user of the current process, nullptr on failure.
