@@ -17,6 +17,7 @@ namespace mozilla {
 class BounceTrackingState;
 class BounceTrackingStateGlobal;
 class BounceTrackingProtectionStorage;
+class ContentBlockingAllowListCache;
 class OriginAttributes;
 
 extern LazyLogModule gBounceTrackingProtectionLog;
@@ -67,6 +68,7 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
   // aClearPromises is populated with promises for each host that is cleared.
   [[nodiscard]] nsresult PurgeBounceTrackersForStateGlobal(
       BounceTrackingStateGlobal* aStateGlobal,
+      ContentBlockingAllowListCache& aContentBlockingAllowList,
       nsTArray<RefPtr<ClearDataMozPromise>>& aClearPromises);
 
   // Whether a purge operation is currently in progress. This avoids running
