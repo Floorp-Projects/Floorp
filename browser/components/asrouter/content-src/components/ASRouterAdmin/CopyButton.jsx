@@ -26,7 +26,7 @@ export const CopyButton = ({
     timeout.current = setTimeout(() => setCopied(false), 1500);
   }, [inputSelector, transformer]);
   return (
-    <button className={className} onClick={e => onClick()} {...props}>
+    <button className={className} onClick={() => onClick()} {...props}>
       {(copied && copiedLabel) || label}
     </button>
   );

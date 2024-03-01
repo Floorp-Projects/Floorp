@@ -123,7 +123,7 @@ export const ToastNotification = {
     }
 
     let shownPromise = Promise.withResolvers();
-    let obs = (subject, topic, data) => {
+    let obs = (subject, topic) => {
       if (topic === "alertshow") {
         shownPromise.resolve();
       }

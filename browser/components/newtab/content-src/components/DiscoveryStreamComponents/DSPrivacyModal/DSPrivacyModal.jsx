@@ -17,7 +17,7 @@ export class DSPrivacyModal extends React.PureComponent {
     this.onManageLinkClick = this.onManageLinkClick.bind(this);
   }
 
-  onLearnLinkClick(event) {
+  onLearnLinkClick() {
     this.props.dispatch(
       ac.DiscoveryStreamUserEvent({
         event: "CLICK_PRIVACY_INFO",
@@ -26,7 +26,7 @@ export class DSPrivacyModal extends React.PureComponent {
     );
   }
 
-  onManageLinkClick(event) {
+  onManageLinkClick() {
     this.props.dispatch(ac.OnlyToMain({ type: at.SETTINGS_OPEN }));
   }
 
