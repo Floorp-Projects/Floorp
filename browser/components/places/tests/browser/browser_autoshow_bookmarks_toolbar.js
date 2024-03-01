@@ -77,7 +77,7 @@ async function checkResponse({ showToolbar, expectedFolder, reason }) {
 add_task(async function test_new_on_toolbar() {
   await BrowserTestUtils.withNewTab(
     { gBrowser: win.gBrowser, url: "https://example.com/1" },
-    async browser => {
+    async () => {
       let toolbar = win.document.getElementById("PersonalToolbar");
       Assert.equal(
         toolbar.collapsed,
@@ -111,7 +111,7 @@ add_task(async function test_new_on_toolbar_never_show_toolbar() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser: win.gBrowser, url: "https://example.com/1" },
-    async browser => {
+    async () => {
       let toolbar = win.document.getElementById("PersonalToolbar");
       Assert.equal(
         toolbar.collapsed,
@@ -144,7 +144,7 @@ add_task(async function test_existing_on_toolbar() {
   });
   await BrowserTestUtils.withNewTab(
     { gBrowser: win.gBrowser, url: "https://example.com/editing-test" },
-    async browser => {
+    async () => {
       await TestUtils.waitForCondition(
         () => win.BookmarkingUI.status == BookmarkingUI.STATUS_STARRED,
         "Page should be starred."

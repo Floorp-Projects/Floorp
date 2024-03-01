@@ -54,7 +54,7 @@ add_task(async function test_sidebarpanels_click() {
     async selectNode(tree) {
       tree.selectItems([this._bookmark.guid]);
     },
-    cleanup(aCallback) {
+    cleanup() {
       return PlacesUtils.bookmarks.remove(this._bookmark);
     },
     sidebarName: BOOKMARKS_SIDEBAR_ID,
@@ -84,7 +84,7 @@ add_task(async function test_sidebarpanels_click() {
       );
       is(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
     },
-    cleanup(aCallback) {
+    cleanup() {
       return PlacesUtils.history.clear();
     },
     sidebarName: HISTORY_SIDEBAR_ID,

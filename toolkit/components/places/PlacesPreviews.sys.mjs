@@ -381,7 +381,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
     let files = await IOUtils.getChildren(this.getPath());
     let hashes = files
       .map(f => PathUtils.filename(f))
-      .filter(n => /^[a-f0-9]{32}\.webp$/)
+      .filter(() => /^[a-f0-9]{32}\.webp$/)
       .map(n => n.substring(0, n.lastIndexOf(".")));
 
     await lazy.PlacesUtils.withConnectionWrapper(

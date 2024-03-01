@@ -50,7 +50,7 @@ let InternalFaviconLoader = {
    * @param {string} reason
    *   The reason for cancelling the request.
    */
-  _cancelRequest({ uri, innerWindowID, timerID, callback }, reason) {
+  _cancelRequest({ uri, timerID, callback }, reason) {
     // Break cycle
     let request = callback.request;
     delete callback.request;

@@ -53,13 +53,10 @@ function checkFaviconDataForPage(
  *        This function is called after the check finished.
  */
 function checkFaviconMissingForPage(aPageURI, aCallback) {
-  PlacesUtils.favicons.getFaviconURLForPage(
-    aPageURI,
-    function (aURI, aDataLen, aData, aMimeType) {
-      Assert.ok(aURI === null);
-      aCallback();
-    }
-  );
+  PlacesUtils.favicons.getFaviconURLForPage(aPageURI, function (aURI) {
+    Assert.ok(aURI === null);
+    aCallback();
+  });
 }
 
 function promiseFaviconMissingForPage(aPageURI) {

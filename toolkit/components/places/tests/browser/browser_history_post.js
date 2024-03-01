@@ -12,7 +12,7 @@ add_task(async function () {
         let doc = content.document;
         let submit = doc.getElementById("submit");
         let iframe = doc.getElementById("post_iframe");
-        let p = new Promise((resolve, reject) => {
+        let p = new Promise(resolve => {
           iframe.addEventListener(
             "load",
             function () {

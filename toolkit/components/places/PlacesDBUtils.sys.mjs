@@ -874,7 +874,7 @@ export var PlacesDBUtils = {
     );
 
     let returnPromise = new Promise(res => {
-      let observer = (subject, topic, data) => {
+      let observer = (subject, topic) => {
         Services.obs.removeObserver(observer, topic);
         logs.push("Database cleaned up");
         res(logs);
@@ -1377,7 +1377,7 @@ async function integrity(dbName) {
 export function PlacesDBUtilsIdleMaintenance() {}
 
 PlacesDBUtilsIdleMaintenance.prototype = {
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.

@@ -14,7 +14,7 @@
 
 var gObserver = {
   notifications: 0,
-  observe(aSubject, aTopic, aData) {
+  observe() {
     this.notifications++;
   },
 };

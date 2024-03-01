@@ -116,7 +116,7 @@ function makeRecord(cleartext) {
   return new Proxy(
     { cleartext },
     {
-      get(target, property, receiver) {
+      get(target, property) {
         if (property == "cleartext") {
           return target.cleartext;
         }
@@ -125,7 +125,7 @@ function makeRecord(cleartext) {
         }
         return target.cleartext[property];
       },
-      set(target, property, value, receiver) {
+      set(target, property, value) {
         if (property == "cleartext") {
           target.cleartext = value;
         } else if (property != "cleartextToString") {
@@ -135,7 +135,7 @@ function makeRecord(cleartext) {
       has(target, property) {
         return property == "cleartext" || property in target.cleartext;
       },
-      deleteProperty(target, property) {},
+      deleteProperty() {},
       ownKeys(target) {
         return ["cleartext", ...Reflect.ownKeys(target)];
       },

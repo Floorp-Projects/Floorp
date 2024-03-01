@@ -348,7 +348,7 @@ export class PlacesFrecencyRecalculator {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     lazy.logger.trace(`Got ${topic} topic`);
     switch (topic) {
       case "idle-daily":
@@ -529,7 +529,7 @@ class AlternativeFrecencyHelper {
     return affected;
   }
 
-  async #recalculateSomePagesAlternativeFrecencies({ chunkSize, variables }) {
+  async #recalculateSomePagesAlternativeFrecencies({ chunkSize }) {
     lazy.logger.trace(
       `Recalculate ${chunkSize} alternative pages frecency values`
     );

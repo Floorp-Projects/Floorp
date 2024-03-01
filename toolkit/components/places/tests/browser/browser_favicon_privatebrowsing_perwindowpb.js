@@ -36,7 +36,7 @@ function test() {
     waitForTabLoad(win, function () {
       PlacesUtils.favicons.getFaviconURLForPage(
         NetUtil.newURI(pageURI),
-        function (uri, dataLen, data, mimeType) {
+        function (uri) {
           is(uri, null, "No result should be found");
           finish();
         }

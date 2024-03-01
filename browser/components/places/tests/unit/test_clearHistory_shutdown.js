@@ -124,7 +124,7 @@ function storeCache(aURL, aContent) {
 
   return new Promise(resolve => {
     let storeCacheListener = {
-      onCacheEntryCheck(entry) {
+      onCacheEntryCheck() {
         return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
       },
 

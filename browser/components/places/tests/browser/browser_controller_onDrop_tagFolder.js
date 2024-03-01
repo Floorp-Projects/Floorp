@@ -81,10 +81,10 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
       mozCursor: "auto",
       mozItemCount: 1,
       types: [PlacesUtils.TYPE_X_MOZ_PLACE],
-      mozTypesAt(i) {
+      mozTypesAt() {
         return this.types;
       },
-      mozGetDataAt(i) {
+      mozGetDataAt() {
         return bookmarkWithId;
       },
     };

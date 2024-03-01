@@ -277,7 +277,7 @@ class PlacesViewBase {
     return this.controller.buildContextMenu(aPopup);
   }
 
-  destroyContextMenu(aPopup) {
+  destroyContextMenu() {
     this._contextMenuShown = null;
   }
 
@@ -458,7 +458,7 @@ class PlacesViewBase {
     }
   }
 
-  nodeURIChanged(aPlacesNode, aURIString) {
+  nodeURIChanged(aPlacesNode) {
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
 
     // There's no DOM node, thus there's nothing to be done when the URI changes.
@@ -519,7 +519,7 @@ class PlacesViewBase {
     }
   }
 
-  nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
+  nodeRemoved(aParentPlacesNode, aPlacesNode) {
     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
@@ -1689,7 +1689,7 @@ class PlacesToolbar extends PlacesViewBase {
     }
   }
 
-  _onMouseOut(aEvent) {
+  _onMouseOut() {
     window.XULBrowserWindow.setOverLink("");
   }
 
@@ -1852,7 +1852,7 @@ class PlacesToolbar extends PlacesViewBase {
     aEvent.stopPropagation();
   }
 
-  _onDragLeave(aEvent) {
+  _onDragLeave() {
     PlacesControllerDragHelper.currentDropTarget = null;
 
     this._dropIndicator.collapsed = true;
@@ -1863,7 +1863,7 @@ class PlacesToolbar extends PlacesViewBase {
     }
   }
 
-  _onDragEnd(aEvent) {
+  _onDragEnd() {
     this._cleanupDragDetails();
   }
 

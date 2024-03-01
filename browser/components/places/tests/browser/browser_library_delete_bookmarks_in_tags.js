@@ -20,7 +20,7 @@ add_task(async function test_tags() {
     Services.io.newURI("http://example.com/3"),
   ];
 
-  let children = uris.map((uri, index, arr) => {
+  let children = uris.map((uri, index) => {
     return {
       title: `bm${index}`,
       url: uri,

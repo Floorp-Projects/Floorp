@@ -53,10 +53,10 @@ async function run_drag_test(startBookmarkIndex, insertionIndex) {
     mozCursor: "auto",
     mozItemCount: 1,
     types: [PlacesUtils.TYPE_X_MOZ_PLACE],
-    mozTypesAt(i) {
+    mozTypesAt() {
       return [this._data[0].type];
     },
-    mozGetDataAt(i) {
+    mozGetDataAt() {
       return this._data[0].data;
     },
     mozSetDataAt(type, data, index) {

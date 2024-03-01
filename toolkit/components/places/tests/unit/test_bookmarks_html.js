@@ -246,7 +246,7 @@ add_task(async function test_import_chromefavicon() {
   let data = await new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(
       PAGE_URI,
-      (uri, dataLen, faviconData, mimeType) => resolve(faviconData)
+      (uri, dataLen, faviconData) => resolve(faviconData)
     );
   });
 

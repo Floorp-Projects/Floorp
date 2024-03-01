@@ -419,7 +419,7 @@ async function toggleToolbar(show, expectedMinChildCount = 0) {
     if (getPlacesChildren().length < expectedMinChildCount) {
       await new Promise(resolve => {
         info("Waiting for bookmark elements to appear");
-        let mut = new MutationObserver(mutations => {
+        let mut = new MutationObserver(() => {
           let children = getPlacesChildren();
           info(`${children.length} bookmark elements appeared`);
           if (children.length >= expectedMinChildCount) {

@@ -117,7 +117,7 @@ add_task(async function test_removeVisitsByFilter() {
       }
       endIndex = Math.min(
         endIndex,
-        removedItems.findIndex((v, index) => v.uri.spec != rawURL) - 1
+        removedItems.findIndex(v => v.uri.spec != rawURL) - 1
       );
     }
     removedItems.splice(endIndex + 1);

@@ -85,7 +85,7 @@ var tests = [
       node.containerOpen = false;
     },
 
-    opened(node, newState, oldState) {
+    opened() {
       do_throw("opened should not be called");
     },
 

@@ -33,7 +33,7 @@ AutoCompleteInput.prototype = {
   popupOpen: false,
 
   popup: {
-    setSelectedIndex(aIndex) {},
+    setSelectedIndex() {},
     invalidate() {},
 
     // nsISupports implementation

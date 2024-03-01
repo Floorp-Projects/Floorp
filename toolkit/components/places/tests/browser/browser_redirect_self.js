@@ -37,7 +37,7 @@ add_task(async function () {
       gBrowser,
       url,
     },
-    async browser => {
+    async () => {
       await TestUtils.waitForCondition(() => visitCount == 2);
       // Check that the visit is not hidden in the database.
       Assert.ok(

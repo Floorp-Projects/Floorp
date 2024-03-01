@@ -94,7 +94,7 @@ async function validateImportedBookmarks(fromPlaces) {
   }
 }
 
-async function promiseImportExport(aWindow) {
+async function promiseImportExport() {
   saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   saveDir.append("temp-bookmarks-export");
   if (!saveDir.exists()) {

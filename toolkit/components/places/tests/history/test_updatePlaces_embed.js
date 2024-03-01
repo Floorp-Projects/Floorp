@@ -28,10 +28,10 @@ add_task(async function test_embed_visit() {
     asyncHistory.updatePlaces(place, {
       ignoreErrors: true,
       ignoreResults: true,
-      handleError(aResultCode, aPlace) {
+      handleError() {
         errors++;
       },
-      handleResult(aPlace) {
+      handleResult() {
         results++;
       },
       handleCompletion(resultCount) {
@@ -64,10 +64,10 @@ add_task(async function test_misc_visits() {
     asyncHistory.updatePlaces(place, {
       ignoreErrors: true,
       ignoreResults: true,
-      handleError(aResultCode, aPlace) {
+      handleError() {
         errors++;
       },
-      handleResult(aPlace) {
+      handleResult() {
         results++;
       },
       handleCompletion(resultCount) {

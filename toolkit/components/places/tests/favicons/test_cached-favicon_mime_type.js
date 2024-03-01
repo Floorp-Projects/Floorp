@@ -19,7 +19,7 @@ function streamListener(aExpectedContentType) {
 }
 streamListener.prototype = {
   onStartRequest() {},
-  onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest(aRequest) {
     let channel = aRequest.QueryInterface(Ci.nsIChannel);
     Assert.equal(
       channel.contentType,
@@ -28,7 +28,7 @@ streamListener.prototype = {
     );
     this.done.resolve();
   },
-  onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
+  onDataAvailable(aRequest) {
     aRequest.cancel(Cr.NS_ERROR_ABORT);
     throw Components.Exception("", Cr.NS_ERROR_ABORT);
   },

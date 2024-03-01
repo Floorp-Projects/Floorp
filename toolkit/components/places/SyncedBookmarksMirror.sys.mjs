@@ -666,7 +666,7 @@ export class SyncedBookmarksMirror {
           "mozISyncedBookmarksMirrorCallback",
         ]),
         // `mozISyncedBookmarksMirrorProgressListener` methods.
-        onFetchLocalTree: (took, itemCount, deleteCount, problemsBag) => {
+        onFetchLocalTree: (took, itemCount, deleteCount) => {
           let counts = [
             {
               name: "items",

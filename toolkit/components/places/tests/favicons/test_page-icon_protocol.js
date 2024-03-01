@@ -185,11 +185,11 @@ add_task(async function page_content_process() {
       let img = content.document.createElement("img");
       img.src = url;
       let imgPromise = new Promise((resolve, reject) => {
-        img.addEventListener("error", e => {
+        img.addEventListener("error", () => {
           Assert.ok(true, "Got expected load error.");
           resolve();
         });
-        img.addEventListener("load", e => {
+        img.addEventListener("load", () => {
           Assert.ok(false, "Did not expect a successful load.");
           reject();
         });
@@ -225,11 +225,11 @@ add_task(async function page_privileged_about_content_process() {
       let img = content.document.createElement("img");
       img.src = url;
       let imgPromise = new Promise((resolve, reject) => {
-        img.addEventListener("error", e => {
+        img.addEventListener("error", () => {
           Assert.ok(false, "Did not expect an error. ");
           reject();
         });
-        img.addEventListener("load", e => {
+        img.addEventListener("load", () => {
           Assert.ok(true, "Got expected load event.");
           resolve();
         });

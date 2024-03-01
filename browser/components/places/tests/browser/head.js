@@ -456,7 +456,7 @@ function promisePopupShown(popup) {
     if (popup.state == "open") {
       resolve();
     } else {
-      let onPopupShown = event => {
+      let onPopupShown = () => {
         popup.removeEventListener("popupshown", onPopupShown);
         resolve();
       };
@@ -468,7 +468,7 @@ function promisePopupShown(popup) {
 // Function copied from browser/base/content/test/general/head.js.
 function promisePopupHidden(popup) {
   return new Promise(resolve => {
-    let onPopupHidden = event => {
+    let onPopupHidden = () => {
       popup.removeEventListener("popuphidden", onPopupHidden);
       resolve();
     };

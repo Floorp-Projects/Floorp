@@ -39,7 +39,7 @@ add_task(async function test_panelview_bookmarks_delete() {
   await promise;
 
   promise = new Promise(resolve => {
-    let observer = new MutationObserver(mutations => {
+    let observer = new MutationObserver(() => {
       if (listItem.parentNode == null) {
         Assert.ok(true, "The bookmarks list item was removed.");
         observer.disconnect();

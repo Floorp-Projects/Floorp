@@ -1485,7 +1485,7 @@ add_task(async function test_edit_specific_keyword() {
     url: "http://test.edit.keyword/",
   };
   bm_info.guid = await PT.NewBookmark(bm_info).transact();
-  function ensureKeywordChange(aCurrentKeyword = "", aPreviousKeyword = "") {
+  function ensureKeywordChange(aCurrentKeyword = "") {
     ensureItemsKeywordChanged({
       guid: bm_info.guid,
       keyword: aCurrentKeyword,

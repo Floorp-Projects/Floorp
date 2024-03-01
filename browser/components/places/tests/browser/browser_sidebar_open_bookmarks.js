@@ -79,7 +79,7 @@ add_task(async function test_open_bookmark_in_tab_from_sidebar() {
     set: [[PREF_LOAD_BOOKMARKS_IN_TABS, true]],
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser }, async initialTab => {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
     await withSidebarTree("bookmarks", async tree => {
       tree.selectItems([gBms[0].guid]);
       let loadedPromise = BrowserTestUtils.browserLoaded(

@@ -583,7 +583,7 @@ function closingPopupEndsDrag(popup) {
       event.stopPropagation();
     }
 
-    on_dragend(event) {
+    on_dragend() {
       this._cleanupDragDetails();
     }
   }
