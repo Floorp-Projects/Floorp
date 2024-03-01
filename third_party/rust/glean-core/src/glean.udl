@@ -201,6 +201,10 @@ dictionary PingRequest {
     sequence<u8> body;
     // A map with all the headers to be sent with the request.
     record<DOMString, string> headers;
+    // Whether the body has {client|ping}_info sections.
+    boolean body_has_info_sections;
+    // The ping's name. Likely also somewhere in `path`.
+    string ping_name;
 };
 
 // An enum representing the possible upload tasks to be performed by an uploader.
@@ -287,7 +291,7 @@ enum ErrorType {
 };
 
 interface PingType {
-    constructor(string name, boolean include_client_id, boolean send_if_empty, boolean precise_timestamps, sequence<string> reason_codes);
+    constructor(string name, boolean include_client_id, boolean send_if_empty, boolean precise_timestamps, boolean include_info_sections, sequence<string> reason_codes);
     void submit(optional string? reason = null);
 };
 

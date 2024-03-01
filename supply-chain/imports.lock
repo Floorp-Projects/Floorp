@@ -212,32 +212,18 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "56.1.0"
-when = "2024-01-17"
-user-id = 48
-user-login = "badboy"
-user-name = "Jan-Erik Rediger"
-
-[[publisher.glean]]
-version = "57.0.0"
-when = "2024-02-12"
-user-id = 66068
-user-login = "travis79"
-user-name = "Travis Long"
-
-[[publisher.glean-core]]
-version = "56.1.0"
-when = "2024-01-17"
+version = "58.0.0"
+when = "2024-02-29"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "57.0.0"
-when = "2024-02-12"
-user-id = 66068
-user-login = "travis79"
-user-name = "Travis Long"
+version = "58.0.0"
+when = "2024-02-29"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
 
 [[publisher.glslopt]]
 version = "0.1.9"

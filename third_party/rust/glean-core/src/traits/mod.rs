@@ -7,6 +7,10 @@
 //! Individual metric types implement this trait to expose the specific metrics API.
 //! It can be used by wrapping implementations to guarantee API conformance.
 
+/// Re-export for use in generated code.
+#[doc(hidden)]
+pub extern crate serde as __serde;
+
 mod boolean;
 mod counter;
 mod custom_distribution;
@@ -15,6 +19,7 @@ mod event;
 mod labeled;
 mod memory_distribution;
 mod numerator;
+mod object;
 mod ping;
 mod quantity;
 mod rate;
@@ -37,6 +42,7 @@ pub use self::event::NoExtraKeys;
 pub use self::labeled::Labeled;
 pub use self::memory_distribution::MemoryDistribution;
 pub use self::numerator::Numerator;
+pub use self::object::{ObjectError, ObjectSerialize};
 pub use self::ping::Ping;
 pub use self::quantity::Quantity;
 pub use self::rate::Rate;

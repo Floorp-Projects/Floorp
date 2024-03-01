@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.66"
 name = "glean"
-version = "57.0.0"
+version = "58.0.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -34,15 +34,8 @@ keywords = [
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
 
-[dependencies.chrono]
-version = "0.4.10"
-features = ["serde"]
-
-[dependencies.crossbeam-channel]
-version = "0.5"
-
 [dependencies.glean-core]
-version = "57.0.0"
+version = "58.0.0"
 
 [dependencies.inherent]
 version = "1"
@@ -53,25 +46,11 @@ version = "0.4.8"
 [dependencies.once_cell]
 version = "1.18.0"
 
-[dependencies.serde]
-version = "1.0.104"
-features = ["derive"]
-
-[dependencies.serde_json]
-version = "1.0.44"
-
-[dependencies.thiserror]
-version = "1.0.4"
-
-[dependencies.time]
-version = "0.1.40"
-
-[dependencies.uuid]
-version = "1.0"
-features = ["v4"]
-
 [dependencies.whatsys]
 version = "0.3.0"
+
+[dev-dependencies.crossbeam-channel]
+version = "0.5"
 
 [dev-dependencies.env_logger]
 version = "0.10.0"
@@ -86,6 +65,9 @@ version = "0.5.0"
 
 [dev-dependencies.libc]
 version = "0.2"
+
+[dev-dependencies.serde_json]
+version = "1.0.44"
 
 [dev-dependencies.tempfile]
 version = "3.1.0"

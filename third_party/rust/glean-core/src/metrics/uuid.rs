@@ -128,6 +128,15 @@ impl UuidMetric {
     /// Gets the currently stored value as a string.
     ///
     /// This doesn't clear the stored value.
+    ///
+    /// # Arguments
+    ///
+    /// * `ping_name` - the optional name of the ping to retrieve the metric
+    ///                 for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The stored value or `None` if nothing stored.
     pub fn test_get_value(&self, ping_name: Option<String>) -> Option<String> {
         crate::block_on_dispatcher();
         crate::core::with_glean(|glean| {
@@ -143,8 +152,6 @@ impl UuidMetric {
     /// # Arguments
     ///
     /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. Defaults to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

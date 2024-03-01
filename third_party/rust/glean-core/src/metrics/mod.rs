@@ -9,7 +9,8 @@ use std::sync::atomic::Ordering;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value as JsonValue};
+use serde_json::json;
+pub use serde_json::Value as JsonValue;
 
 mod boolean;
 mod counter;
@@ -23,6 +24,7 @@ mod memory_distribution;
 mod memory_unit;
 mod metrics_enabled_config;
 mod numerator;
+mod object;
 mod ping;
 mod quantity;
 mod rate;
@@ -54,6 +56,7 @@ pub use self::labeled::{LabeledBoolean, LabeledCounter, LabeledMetric, LabeledSt
 pub use self::memory_distribution::MemoryDistributionMetric;
 pub use self::memory_unit::MemoryUnit;
 pub use self::numerator::NumeratorMetric;
+pub use self::object::ObjectMetric;
 pub use self::ping::PingType;
 pub use self::quantity::QuantityMetric;
 pub use self::rate::{Rate, RateMetric};
@@ -141,6 +144,8 @@ pub enum Metric {
     Url(String),
     /// A Text metric. See [`TextMetric`] for more information.
     Text(String),
+    /// An Object metric. See [`ObjectMetric`] for more information.
+    Object(String),
 }
 
 /// A [`MetricType`] describes common behavior across all metrics.
@@ -251,6 +256,7 @@ impl Metric {
             Metric::MemoryDistribution(_) => "memory_distribution",
             Metric::Jwe(_) => "jwe",
             Metric::Text(_) => "text",
+            Metric::Object(_) => "object",
         }
     }
 
@@ -280,6 +286,9 @@ impl Metric {
             Metric::MemoryDistribution(hist) => json!(memory_distribution::snapshot(hist)),
             Metric::Jwe(s) => json!(s),
             Metric::Text(s) => json!(s),
+            Metric::Object(s) => {
+                serde_json::from_str(s).expect("object storage should have been json")
+            }
         }
     }
 }

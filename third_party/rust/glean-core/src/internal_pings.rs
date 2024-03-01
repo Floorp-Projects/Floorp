@@ -26,6 +26,7 @@ impl InternalPings {
                 true,
                 true,
                 true,
+                true,
                 vec![
                     "active".to_string(),
                     "dirty_startup".to_string(),
@@ -36,6 +37,7 @@ impl InternalPings {
                 "metrics",
                 true,
                 false,
+                true,
                 true,
                 vec![
                     "overdue".to_string(),
@@ -50,6 +52,7 @@ impl InternalPings {
                 true,
                 false,
                 true,
+                true,
                 vec![
                     "startup".to_string(),
                     "inactive".to_string(),
@@ -58,6 +61,7 @@ impl InternalPings {
             ),
             deletion_request: PingType::new(
                 "deletion-request",
+                true,
                 true,
                 true,
                 true,
