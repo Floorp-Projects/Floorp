@@ -929,6 +929,15 @@ and exported to `mozilla/dom/BindingUtils.h` that can be used to convert an enum
 value to its corresponding string value. It returns a `const nsCString&`
 containing the string value.
 
+`mozilla::dom::StringToEnum` is a templated helper function in
+[`BindingUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h)
+and exported to `mozilla/dom/BindingUtils.h` that can be used to convert a
+string to the corresponding enum value. It needs to be supplied with the enum
+class as a template argument, and returns a `mozilla::Maybe<Enum>`. If the string
+value passed to it as an argument is not one of the string values for the enum
+then it returns `mozilla::Nothing()`, else it returns the right enum value in
+the `mozilla::Maybe`.
+
 #### Callback function types
 
 Callback functions are represented as an object, inheriting from

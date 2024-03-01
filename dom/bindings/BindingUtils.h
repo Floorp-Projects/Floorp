@@ -1343,6 +1343,8 @@ inline bool EnumValueNotFound<true>(BindingCallContext& cx,
                                                       deflated.get(), type);
 }
 
+namespace binding_detail {
+
 template <typename CharT>
 inline int FindEnumStringIndexImpl(const CharT* chars, size_t length,
                                    const Span<const nsLiteralCString>& values) {
@@ -1403,6 +1405,16 @@ inline bool FindEnumStringIndex(BindingCallContext& cx, JS::Handle<JS::Value> v,
   }
 
   return EnumValueNotFound<InvalidValueFatal>(cx, str, type, sourceDescription);
+}
+
+}  // namespace binding_detail
+
+template <typename Enum, class StringT>
+inline Maybe<Enum> StringToEnum(const StringT& aString) {
+  int index = binding_detail::FindEnumStringIndexImpl(
+      aString.BeginReading(), aString.Length(),
+      binding_detail::EnumStrings<Enum>::Values);
+  return index >= 0 ? Some(static_cast<Enum>(index)) : Nothing();
 }
 
 template <typename Enum>

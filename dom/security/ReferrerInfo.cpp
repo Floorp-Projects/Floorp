@@ -131,19 +131,9 @@ ReferrerPolicy ReferrerPolicyFromToken(const nsAString& aContent,
     }
   }
 
-  // Supported tokes - ReferrerPolicyValues, are generated from
-  // ReferrerPolicy.webidl
-  for (size_t i = 0;
-       i < ArrayLength(binding_detail::EnumStrings<ReferrerPolicy>::Values);
-       i++) {
-    if (lowerContent.EqualsASCII(
-            binding_detail::EnumStrings<ReferrerPolicy>::Values[i].get())) {
-      return static_cast<enum ReferrerPolicy>(i);
-    }
-  }
-
-  // Return no referrer policy (empty string) if none of the previous match
-  return ReferrerPolicy::_empty;
+  // Return no referrer policy (empty string) if it's not a valid enum value.
+  return StringToEnum<ReferrerPolicy>(lowerContent)
+      .valueOr(ReferrerPolicy::_empty);
 }
 
 // static
