@@ -160,6 +160,10 @@ class UsedNameTracker {
       return !uses_.empty() && uses_.back().scriptId >= scriptId;
     }
 
+    bool isClosedOver(uint32_t scriptId) const {
+      return !uses_.empty() && uses_.back().scriptId > scriptId;
+    }
+
     // To allow disambiguating public and private symbols
     bool isPublic() { return visibility_ == NameVisibility::Public; }
 
