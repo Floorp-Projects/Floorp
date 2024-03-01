@@ -17,8 +17,10 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from . import lint
 from . import parser
+from . import go_server
 from . import javascript
 from . import javascript_server
+from . import python_server
 from . import kotlin
 from . import markdown
 from . import metrics
@@ -54,10 +56,12 @@ class Outputter:
 
 
 OUTPUTTERS = {
+    "go_server": Outputter(go_server.output_go, []),
     "javascript": Outputter(javascript.output_javascript, []),
     "typescript": Outputter(javascript.output_typescript, []),
     "javascript_server": Outputter(javascript_server.output_javascript, []),
     "typescript_server": Outputter(javascript_server.output_typescript, []),
+    "python_server": Outputter(python_server.output_python, []),
     "ruby_server": Outputter(ruby_server.output_ruby, []),
     "kotlin": Outputter(kotlin.output_kotlin, ["*.kt"]),
     "markdown": Outputter(markdown.output_markdown, []),

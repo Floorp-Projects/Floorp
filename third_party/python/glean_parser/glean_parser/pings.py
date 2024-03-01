@@ -45,6 +45,7 @@ class Ping:
             metadata = {}
         self.metadata = metadata
         self.precise_timestamps = self.metadata.get("precise_timestamps", True)
+        self.include_info_sections = self.metadata.get("include_info_sections", True)
         if data_reviews is None:
             data_reviews = []
         self.data_reviews = data_reviews
@@ -90,6 +91,9 @@ class Ping:
         d = self.serialize()
         modified_dict = util.remove_output_params(d, "defined_in")
         modified_dict = util.remove_output_params(modified_dict, "precise_timestamps")
+        modified_dict = util.remove_output_params(
+            modified_dict, "include_info_sections"
+        )
         return modified_dict
 
     def identifier(self) -> str:
