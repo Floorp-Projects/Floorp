@@ -326,8 +326,10 @@ static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
     // DMABUFSurfaceImage?
     if (aImage->AsPlanarYCbCrImage() || aImage->AsNVImage()) {
       const ImageUtils imageUtils(aImage);
+      Maybe<dom::ImageBitmapFormat> format = imageUtils.GetFormat();
       Maybe<VideoPixelFormat> f =
-          ImageBitmapFormatToVideoPixelFormat(imageUtils.GetFormat());
+          format.isSome() ? ImageBitmapFormatToVideoPixelFormat(format.value())
+                          : Nothing();
 
       // ImageBitmapFormat cannot distinguish YUV420 or YUV420A.
       bool hasAlpha = aImage->AsPlanarYCbCrImage() &&

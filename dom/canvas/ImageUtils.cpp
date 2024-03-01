@@ -15,27 +15,27 @@ using namespace mozilla::gfx;
 
 namespace mozilla::dom {
 
-static ImageBitmapFormat GetImageBitmapFormatFromSurfaceFromat(
+static Maybe<ImageBitmapFormat> GetImageBitmapFormatFromSurfaceFromat(
     SurfaceFormat aSurfaceFormat) {
   switch (aSurfaceFormat) {
     case SurfaceFormat::B8G8R8A8:
     case SurfaceFormat::B8G8R8X8:
-      return ImageBitmapFormat::BGRA32;
+      return Some(ImageBitmapFormat::BGRA32);
     case SurfaceFormat::R8G8B8A8:
     case SurfaceFormat::R8G8B8X8:
-      return ImageBitmapFormat::RGBA32;
+      return Some(ImageBitmapFormat::RGBA32);
     case SurfaceFormat::R8G8B8:
-      return ImageBitmapFormat::RGB24;
+      return Some(ImageBitmapFormat::RGB24);
     case SurfaceFormat::B8G8R8:
-      return ImageBitmapFormat::BGR24;
+      return Some(ImageBitmapFormat::BGR24);
     case SurfaceFormat::HSV:
-      return ImageBitmapFormat::HSV;
+      return Some(ImageBitmapFormat::HSV);
     case SurfaceFormat::Lab:
-      return ImageBitmapFormat::Lab;
+      return Some(ImageBitmapFormat::Lab);
     case SurfaceFormat::Depth:
-      return ImageBitmapFormat::DEPTH;
+      return Some(ImageBitmapFormat::DEPTH);
     case SurfaceFormat::A8:
-      return ImageBitmapFormat::GRAY8;
+      return Some(ImageBitmapFormat::GRAY8);
     case SurfaceFormat::R5G6B5_UINT16:
     case SurfaceFormat::YUV:
     case SurfaceFormat::NV12:
@@ -43,11 +43,11 @@ static ImageBitmapFormat GetImageBitmapFormatFromSurfaceFromat(
     case SurfaceFormat::P016:
     case SurfaceFormat::UNKNOWN:
     default:
-      return ImageBitmapFormat::EndGuard_;
+      return Nothing();
   }
 }
 
-static ImageBitmapFormat GetImageBitmapFormatFromPlanarYCbCrData(
+static Maybe<ImageBitmapFormat> GetImageBitmapFormatFromPlanarYCbCrData(
     layers::PlanarYCbCrData const* aData) {
   MOZ_ASSERT(aData);
 
@@ -68,11 +68,11 @@ static ImageBitmapFormat GetImageBitmapFormatFromPlanarYCbCrData(
         !CbInterval.Intersects(CrInterval)) {  // Three planes.
       switch (aData->mChromaSubsampling) {
         case ChromaSubsampling::FULL:
-          return ImageBitmapFormat::YUV444P;
+          return Some(ImageBitmapFormat::YUV444P);
         case ChromaSubsampling::HALF_WIDTH:
-          return ImageBitmapFormat::YUV422P;
+          return Some(ImageBitmapFormat::YUV422P);
         case ChromaSubsampling::HALF_WIDTH_AND_HEIGHT:
-          return ImageBitmapFormat::YUV420P;
+          return Some(ImageBitmapFormat::YUV420P);
         default:
           break;
       }
@@ -83,14 +83,14 @@ static ImageBitmapFormat GetImageBitmapFormatFromPlanarYCbCrData(
                                                               // planes.
     if (!YInterval.Intersects(CbInterval) &&
         aData->mCbChannel == aData->mCrChannel - 1) {  // Two planes.
-      return ImageBitmapFormat::YUV420SP_NV12;         // Y-Cb-Cr
+      return Some(ImageBitmapFormat::YUV420SP_NV12);   // Y-Cb-Cr
     } else if (!YInterval.Intersects(CrInterval) &&
                aData->mCrChannel == aData->mCbChannel - 1) {  // Two planes.
-      return ImageBitmapFormat::YUV420SP_NV21;                // Y-Cr-Cb
+      return Some(ImageBitmapFormat::YUV420SP_NV21);          // Y-Cr-Cb
     }
   }
 
-  return ImageBitmapFormat::EndGuard_;
+  return Nothing();
 }
 
 // ImageUtils::Impl implements the _generic_ algorithm which always readback
@@ -104,7 +104,7 @@ class ImageUtils::Impl {
 
   virtual ~Impl() = default;
 
-  virtual ImageBitmapFormat GetFormat() const {
+  virtual Maybe<ImageBitmapFormat> GetFormat() const {
     return GetImageBitmapFormatFromSurfaceFromat(Surface()->GetFormat());
   }
 
@@ -144,7 +144,7 @@ class YUVImpl final : public ImageUtils::Impl {
                aImage->GetFormat() == ImageFormat::NV_IMAGE);
   }
 
-  ImageBitmapFormat GetFormat() const override {
+  Maybe<ImageBitmapFormat> GetFormat() const override {
     return GetImageBitmapFormatFromPlanarYCbCrData(GetPlanarYCbCrData());
   }
 
@@ -189,7 +189,7 @@ ImageUtils::~ImageUtils() {
   }
 }
 
-ImageBitmapFormat ImageUtils::GetFormat() const {
+Maybe<ImageBitmapFormat> ImageUtils::GetFormat() const {
   MOZ_ASSERT(mImpl);
   return mImpl->GetFormat();
 }

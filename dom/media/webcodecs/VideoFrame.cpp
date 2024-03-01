@@ -1390,8 +1390,9 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   const ImageUtils imageUtils(image);
+  Maybe<dom::ImageBitmapFormat> f = imageUtils.GetFormat();
   Maybe<VideoPixelFormat> format =
-      ImageBitmapFormatToVideoPixelFormat(imageUtils.GetFormat());
+      f.isSome() ? ImageBitmapFormatToVideoPixelFormat(f.value()) : Nothing();
 
   // TODO: Retrive/infer the duration, and colorspace.
   auto r = InitializeFrameFromOtherFrame(
