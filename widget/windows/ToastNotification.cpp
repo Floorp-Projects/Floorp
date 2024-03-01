@@ -776,6 +776,8 @@ ToastNotification::CloseAlert(const nsAString& aAlertName,
                               bool aContextClosed) {
   RefPtr<ToastNotificationHandler> handler;
   if (NS_WARN_IF(!mActiveHandlers.Get(aAlertName, getter_AddRefs(handler)))) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Closing a notification that is not being handled by nsIAlertsService");
     return NS_OK;
   }
 
