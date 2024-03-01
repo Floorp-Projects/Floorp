@@ -115,7 +115,7 @@ export class BranchedAddonStudyAction extends BaseStudyAction {
     this.seenRecipeIds = new Set();
   }
 
-  async _run() {
+  async _run(recipe) {
     throw new Error("_run should not be called anymore");
   }
 

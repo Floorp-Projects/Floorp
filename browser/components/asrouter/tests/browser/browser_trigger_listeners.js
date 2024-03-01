@@ -16,10 +16,10 @@ const mockIdleService = {
   },
   QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
   idleTime: 1200000,
-  addIdleObserver(observer) {
+  addIdleObserver(observer, time) {
     this._observers.add(observer);
   },
-  removeIdleObserver(observer) {
+  removeIdleObserver(observer, time) {
     this._observers.delete(observer);
   },
 };

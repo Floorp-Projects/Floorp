@@ -92,7 +92,7 @@ SimpleTest.waitForFocus(function() {
   // start running all tests.
   var myXHR = new XMLHttpRequest();
   myXHR.open("GET", "file_bug611182.sjs?queryTotalTests");
-  myXHR.onload = function() {
+  myXHR.onload = function(e) {
     totalTests = myXHR.responseText;
     runAllTests();
   };

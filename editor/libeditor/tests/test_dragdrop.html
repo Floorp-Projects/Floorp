@@ -3101,7 +3101,7 @@ async function doTest() {
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
-    const onDragStart = () => {
+    const onDragStart = aEvent => {
       input.style.display = "none";
       document.documentElement.scrollTop;
       input.style.display = "";
@@ -3147,7 +3147,7 @@ async function doTest() {
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
-    const onDragStart = () => {
+    const onDragStart = aEvent => {
       textarea.style.display = "none";
       document.documentElement.scrollTop;
       textarea.style.display = "";
@@ -3193,13 +3193,13 @@ async function doTest() {
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
-    const onMouseMove = () => {
+    const onMouseMove = aEvent => {
       input.style.display = "none";
       document.documentElement.scrollTop;
       input.style.display = "";
       document.documentElement.scrollTop;
     };
-    const onMouseDown = () => {
+    const onMouseDown = aEvent => {
       document.addEventListener("mousemove", onMouseMove, {once: true});
     }
     const onDrop = aEvent => {
@@ -3243,13 +3243,13 @@ async function doTest() {
     beforeinputEvents = [];
     inputEvents = [];
     dragEvents = [];
-    const onMouseMove = () => {
+    const onMouseMove = aEvent => {
       textarea.style.display = "none";
       document.documentElement.scrollTop;
       textarea.style.display = "";
       document.documentElement.scrollTop;
     };
-    const onMouseDown = () => {
+    const onMouseDown = aEvent => {
       document.addEventListener("mousemove", onMouseMove, {once: true});
     }
     const onDrop = aEvent => {

@@ -576,7 +576,7 @@ const TargetingGetters = {
       lazy.fxAccounts
         .getSignedInUser()
         .then(data => resolve(!!data))
-        .catch(() => resolve(false));
+        .catch(e => resolve(false));
     });
   },
   get sync() {

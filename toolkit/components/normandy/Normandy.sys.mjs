@@ -78,7 +78,7 @@ export var Normandy = {
     await this.finishInit();
   },
 
-  async observe(subject, topic) {
+  async observe(subject, topic, data) {
     if (topic === UI_AVAILABLE_NOTIFICATION) {
       Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
       this.uiAvailableNotificationObserved.resolve();

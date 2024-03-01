@@ -44,7 +44,7 @@ function mergeStateReducer(mainReducer) {
 /**
  * messageMiddleware - Middleware that looks for SentToMain type actions, and sends them if necessary
  */
-const messageMiddleware = () => next => action => {
+const messageMiddleware = store => next => action => {
   const skipLocal = action.meta && action.meta.skipLocal;
   if (au.isSendToMain(action)) {
     RPMSendAsyncMessage(OUTGOING_MESSAGE_NAME, action);

@@ -29,7 +29,7 @@ add_setup(async function () {
   };
 
   const origStart = FxAccountsPairingFlow.start;
-  FxAccountsPairingFlow.start = () => {
+  FxAccountsPairingFlow.start = ({ emitter: e }) => {
     return `https://foo.bar/${flowCounter++}`;
   };
 

@@ -143,7 +143,7 @@ export const UTSessionPing = Joi.array().items(
   eventsTelemetryExtraKeys
 );
 
-export function chaiAssertions(_chai) {
+export function chaiAssertions(_chai, utils) {
   const { Assertion } = _chai;
 
   Assertion.addMethod("validate", function (schema, schemaName) {
