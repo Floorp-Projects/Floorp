@@ -32,7 +32,7 @@ var shouldLoad = false;
 // When access the test page gecko should trigger gethash request to server and
 // get the completion response.
 function loadTestFrame(id) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var iframe = document.getElementById(id);
     iframe.setAttribute("src", "gethashFrame.html");
 

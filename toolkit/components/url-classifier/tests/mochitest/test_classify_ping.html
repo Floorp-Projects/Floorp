@@ -31,7 +31,7 @@
     var id = "1111";
     ping(id, host_nottrack);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       // Retry at most 30 seconds.
       isPingedWithRetry(id, expectPing, msg, resolve, 30 * 1000 / RETRY_TIMEOUT_MS);
     });
@@ -45,7 +45,7 @@
     var id = "2222";
     ping(id, host_track);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       // Retry at most 30 seconds.
       isPingedWithRetry(id, expectPing, msg, resolve, 30 * 1000 / RETRY_TIMEOUT_MS);
     });
@@ -59,7 +59,7 @@
     var id = "3333";
     ping(id, host_track);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       setTimeout(function() {
         isPinged(id, expectPing, msg, resolve);
       }, timeout);

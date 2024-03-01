@@ -29,7 +29,7 @@ const PREF_DISABLE_TEST_BACKOFF =
  *
  * @returns {function} A partially-applied form of the speficied function.
  */
-export function BindToObject(fn, self, opt_args) {
+export function BindToObject(fn, self) {
   var boundargs = fn.boundArgs_ || [];
   boundargs = boundargs.concat(
     Array.prototype.slice.call(arguments, 2, arguments.length)

@@ -1,6 +1,6 @@
 // calculate the fullhash and send it to gethash server
 function addCompletionToServer(list, url, mochitestUrl) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     var listParam = "list=" + list;
     var fullhashParam = "fullhash=" + hash(url);
 

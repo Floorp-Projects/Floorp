@@ -27,7 +27,7 @@ classifierHelper._initsCB = [];
 // This function return a Promise, promise is resolved when SafeBrowsing.jsm
 // is initialized.
 classifierHelper.waitForInit = function () {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     classifierHelper._initsCB.push(resolve);
     gScript.sendAsyncMessage("waitForInit");
   });
@@ -115,7 +115,7 @@ classifierHelper.resetDatabase = function () {
 };
 
 classifierHelper.reloadDatabase = function () {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     gScript.addMessageListener("reloadSuccess", function handler() {
       gScript.removeMessageListener("reloadSuccess", handler);
       resolve();

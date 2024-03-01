@@ -16,7 +16,7 @@ function startCleanWorker() {
     window.parent.postMessage("finish", "*");
   };
 
-  worker.onerror = function(event) {
+  worker.onerror = function() {
     window.parent.postmessage("failure:failed to load cleanWorker.js", "*");
     window.parent.postMessage("finish", "*");
   };
@@ -27,12 +27,12 @@ function startCleanWorker() {
 function startEvilWorker() {
   var worker = new Worker("evilWorker.js");
 
-  worker.onmessage = function(event) {
+  worker.onmessage = function() {
     window.parent.postMessage("failure:failed to block evilWorker.js", "*");
     startUnwantedWorker();
   };
 
-  worker.onerror = function(event) {
+  worker.onerror = function() {
     window.parent.postMessage("success:blocked evilWorker.js", "*");
     startUnwantedWorker();
   };
@@ -43,12 +43,12 @@ function startEvilWorker() {
 function startUnwantedWorker() {
   var worker = new Worker("unwantedWorker.js");
 
-  worker.onmessage = function(event) {
+  worker.onmessage = function() {
     window.parent.postMessage("failure:failed to block unwantedWorker.js", "*");
     startCleanWorker();
   };
 
-  worker.onerror = function(event) {
+  worker.onerror = function() {
     window.parent.postMessage("success:blocked unwantedWorker.js", "*");
     startCleanWorker();
   };

@@ -417,7 +417,7 @@ function setupCachedResults(addUrls, part2) {
 }
 
 function testCachedResults() {
-  setupCachedResults(["foo.com/a"], function (add) {
+  setupCachedResults(["foo.com/a"], function () {
     // This is called after setupCachedResults().  Verify that
     // checking the url again does not cause a completer request.
 
