@@ -19,7 +19,7 @@ add_task(async function testAllow() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -52,7 +52,7 @@ add_task(async function testBlock() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -85,7 +85,7 @@ add_task(async function testAllowAgain() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -152,7 +152,7 @@ add_task(async function testAdd() {
 
       PermissionTestUtils.remove(uri, "popup");
     },
-    params => {
+    () => {
       return [
         {
           type: "popup",
@@ -178,7 +178,7 @@ add_task(async function testAllowHTTPSWithPort() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -204,7 +204,7 @@ add_task(async function testBlockHTTPSWithPort() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -230,7 +230,7 @@ add_task(async function testAllowAgainHTTPSWithPort() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -288,7 +288,7 @@ add_task(async function testAllowPort() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -321,7 +321,7 @@ add_task(async function testBlockPort() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -354,7 +354,7 @@ add_task(async function testAllowAgainPort() {
       apply();
       await observeAllPromise;
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -450,7 +450,7 @@ add_task(async function testSort() {
         PermissionTestUtils.remove(uri, "cookie");
       }
     },
-    params => {
+    () => {
       return [
         {
           type: "cookie",
@@ -477,7 +477,7 @@ add_task(async function testSort() {
 
 add_task(async function testPrivateBrowsingSessionPermissionsAreHidden() {
   await runTest(
-    async (params, observeAllPromise, apply) => {
+    async params => {
       assertListContents(params, []);
 
       let uri = Services.io.newURI("http://test.com");
@@ -498,7 +498,7 @@ add_task(async function testPrivateBrowsingSessionPermissionsAreHidden() {
 
       PermissionTestUtils.remove(uri, "cookie");
     },
-    params => {
+    () => {
       return [];
     }
   );

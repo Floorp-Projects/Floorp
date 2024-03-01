@@ -167,7 +167,7 @@ add_task(async function testDialogLaunchFromURI() {
   );
   await BrowserTestUtils.withNewTab(
     "about:preferences?action=choose-what-to-sync#sync",
-    async browser => {
+    async () => {
       let dialogEvent = await dialogEventPromise;
       Assert.equal(
         dialogEvent.detail.dialog._frame.contentWindow.location,

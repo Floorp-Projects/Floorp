@@ -109,7 +109,7 @@ add_task(async function () {
   win.FontBuilder._enumerator = {
     _list: ["MockedFont1", "MockedFont2", "MockedFont3"],
     _defaultFont: null,
-    EnumerateFontsAsync(lang, type) {
+    EnumerateFontsAsync() {
       return Promise.resolve(this._list);
     },
     EnumerateAllFontsAsync() {

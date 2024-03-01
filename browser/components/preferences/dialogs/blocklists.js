@@ -26,28 +26,28 @@ var gBlocklistManager = {
       return "";
     },
 
-    isSeparator(index) {
+    isSeparator() {
       return false;
     },
     isSorted() {
       return false;
     },
-    isContainer(index) {
+    isContainer() {
       return false;
     },
-    setTree(tree) {},
-    getImageSrc(row, column) {},
+    setTree() {},
+    getImageSrc() {},
     getCellValue(row, column) {
       if (column.id == "selectionCol") {
         return gBlocklistManager._blockLists[row].selected;
       }
       return undefined;
     },
-    cycleHeader(column) {},
-    getRowProperties(row) {
+    cycleHeader() {},
+    getRowProperties() {
       return "";
     },
-    getColumnProperties(column) {
+    getColumnProperties() {
       return "";
     },
     getCellProperties(row, column) {
