@@ -227,11 +227,11 @@ with only_when(target_is_ios):
     def ios_sdk_min_version():
         return "16.4"
 
-    @depends("--with-ios-sdk", host)
+    @depends("--with-ios-sdk", host, target)
     @imports(_from="__builtin__", _import="Exception")
     @imports(_from="os.path", _import="isdir")
     @imports(_from="os", _import="listdir")
-    def ios_sdk(sdk, host):
+    def ios_sdk(sdk, host, target):
         if sdk:
             sdk = sdk[0]
             try:
@@ -239,8 +239,9 @@ with only_when(target_is_ios):
             except Exception as e:
                 die(e)
         elif host.os == "OSX":
+            sdk_name = "iphonesimulator" if target.raw_os == "ios-sim" else "iphoneos"
             sdk = check_cmd_output(
-                "xcrun", "--show-sdk-path", "--sdk", "iphoneos", onerror=lambda: ""
+                "xcrun", "--show-sdk-path", "--sdk", sdk_name, onerror=lambda: ""
             ).rstrip()
             if not sdk:
                 die(
@@ -251,7 +252,7 @@ with only_when(target_is_ios):
             sdk_dir = os.path.dirname(sdk)
             versions = []
             for d in listdir(sdk_dir):
-                if d.lower().startswith("iphoneos"):
+                if d.lower().startswith(sdk_name):
                     try:
                         sdk = os.path.join(sdk_dir, d)
                         versions.append((get_sdk_version(sdk), sdk))
@@ -552,7 +553,11 @@ def check_compiler(configure_cache, compiler, language, target, android_version)
             if "--target=arm64-apple-darwin" not in compiler:
                 flags.append("--target=arm64-apple-darwin")
             has_target = True
-
+        elif target.os == "iOS":
+            target_flag = "--target=%s" % toolchain
+            if target_flag not in compiler:
+                flags.append(target_flag)
+            has_target = True
         elif (
             not info.kernel
             or info.kernel != target.kernel

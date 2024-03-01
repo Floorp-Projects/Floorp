@@ -531,6 +531,10 @@ def split_triplet(triplet, allow_wasi=False):
         # old-configure does plenty of tests against $target and $target_os
         # and expects darwin for iOS, so make it happy.
         sub_configure_alias = sub_configure_alias[: -len(os)] + "darwin"
+        # rust knows ios-sim, clang knows ios-simulator. We only take the
+        # former as --target, but we need to make clang happy.
+        if os == "ios-sim":
+            os = "ios-simulator"
     elif os.startswith("dragonfly"):
         canonical_os = canonical_kernel = "DragonFly"
     elif os.startswith("freebsd"):
@@ -653,12 +657,13 @@ def help_host_target(help, host, target):
 
 def config_sub(shell, triplet):
     config_sub = os.path.join(os.path.dirname(__file__), "..", "autoconf", "config.sub")
-    # Config.sub doesn't like the *-windows-msvc/*-windows-gnu triplets, so
+    # Config.sub doesn't like the *-windows-msvc/*-windows-gnu/*-ios-sim triplets, so
     # munge those before and after calling config.sub.
     suffix = None
     munging = {
         "-windows-msvc": "-mingw32",
         "-windows-gnu": "-mingw32",
+        "-ios-sim": "-ios",
     }
     for check_suffix, replacement in munging.items():
         if triplet.endswith(check_suffix):
