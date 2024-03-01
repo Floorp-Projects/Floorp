@@ -1162,6 +1162,10 @@ class FullParseHandler {
                TaggedParserAtomIndex::WellKnown::async();
   }
 
+  bool isArgumentsLength(Node node) {
+    return node->isKind(ParseNodeKind::ArgumentsLength);
+  }
+
   bool isPrivateName(Node node) {
     return node->isKind(ParseNodeKind::PrivateName);
   }

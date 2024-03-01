@@ -664,12 +664,36 @@ bool ParseContext::declareFunctionArgumentsObject(
   // Time to implement the odd semantics of 'arguments'.
   auto argumentsName = TaggedParserAtomIndex::WellKnown::arguments();
 
-  bool tryDeclareArguments;
-  // When delazifying simply defer to the function box
+  bool tryDeclareArguments = false;
+  bool needsArgsObject = false;
+
+  // When delazifying simply defer to the function box.
   if (canSkipLazyClosedOverBindings) {
     tryDeclareArguments = funbox->shouldDeclareArguments();
+    needsArgsObject = funbox->needsArgsObj();
   } else {
-    tryDeclareArguments = hasUsedFunctionSpecialName(usedNames, argumentsName);
+    // We cannot compute these values when delazifying, hence why we need to
+    // rely on the function box flags instead.
+    bool bindingClosedOver =
+        hasClosedOverFunctionSpecialName(usedNames, argumentsName);
+    bool bindingUsedOnlyHere =
+        hasUsedFunctionSpecialName(usedNames, argumentsName) &&
+        !bindingClosedOver;
+
+    // Declare arguments if there's a closed-over consumer of the binding, or if
+    // there is a non-length use and we will reference the binding during
+    // bytecode emission.
+    tryDeclareArguments =
+        !funbox->isEligibleForArgumentsLength() || bindingClosedOver;
+    // If we have a use and the binding isn't closed over, then we will do
+    // bytecode emission with the arguments intrinsic.
+    if (bindingUsedOnlyHere && funbox->isEligibleForArgumentsLength()) {
+      // If we're using the intrinsic we should not be declaring the binding.
+      MOZ_ASSERT(!tryDeclareArguments);
+      funbox->setUsesArgumentsIntrinsics();
+    } else if (tryDeclareArguments) {
+      needsArgsObject = true;
+    }
   }
 
   // ES 9.2.12 steps 19 and 20 say formal parameters, lexical bindings,
@@ -691,7 +715,9 @@ bool ParseContext::declareFunctionArgumentsObject(
     } else {
       // A binding in the function scope (since varScope and functionScope are
       // the same) exists, so arguments is used.
-      funbox->setNeedsArgsObj();
+      if (needsArgsObject) {
+        funbox->setNeedsArgsObj();
+      }
 
       // There is no point in continuing on below: We know we already have
       // a declaration of arguments in the function scope.
@@ -708,7 +734,9 @@ bool ParseContext::declareFunctionArgumentsObject(
         return false;
       }
       funbox->setShouldDeclareArguments();
-      funbox->setNeedsArgsObj();
+      if (needsArgsObject) {
+        funbox->setNeedsArgsObj();
+      }
     }
   }
   return true;
