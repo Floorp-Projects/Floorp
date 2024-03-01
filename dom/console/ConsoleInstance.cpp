@@ -106,8 +106,9 @@ ConsoleLogLevel PrefToValue(const nsACString& aPref,
     return aLevel;
   }
 
-  int index = FindEnumStringIndexImpl(value.get(), value.Length(),
-                                      ConsoleLogLevelValues::strings);
+  int index = FindEnumStringIndexImpl(
+      value.get(), value.Length(),
+      binding_detail::EnumStrings<ConsoleLogLevel>::Values);
   if (NS_WARN_IF(index < 0)) {
     nsString message;
     message.AssignLiteral("Invalid Console.maxLogLevelPref value: ");

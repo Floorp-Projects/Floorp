@@ -1082,7 +1082,7 @@ static nsCString ToCString(const nsString& aString) {
 
 static nsCString ToCString(const MediaKeysRequirement aValue) {
   nsCString str("'");
-  str.AppendASCII(MediaKeysRequirementValues::GetString(aValue));
+  str.AppendASCII(GetEnumString(aValue));
   str.AppendLiteral("'");
   return str;
 }

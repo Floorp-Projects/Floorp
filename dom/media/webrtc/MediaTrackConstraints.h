@@ -23,8 +23,8 @@ class MediaDevice;
 template <class EnumValuesStrings, class Enum>
 static Enum StringToEnum(const EnumValuesStrings& aStrings,
                          const nsAString& aValue, Enum aDefaultValue) {
-  for (size_t i = 0; aStrings[i].value; i++) {
-    if (aValue.EqualsASCII(aStrings[i].value)) {
+  for (size_t i = 0; i < ArrayLength(aStrings); i++) {
+    if (aValue.EqualsASCII(aStrings[i].get())) {
       return Enum(i);
     }
   }

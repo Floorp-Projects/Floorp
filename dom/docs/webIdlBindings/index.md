@@ -894,10 +894,7 @@ which becomes the value `_empty`.
 
 For a Web IDL enum named `MyEnum`, the C++ enum is named `MyEnum` and
 placed in the `mozilla::dom` namespace, while the values are placed in
-the `mozilla::dom::MyEnum` namespace. There is also a
-`mozilla::dom::MyEnumValues::strings` which is an array of
-`mozilla::dom::EnumEntry` structs that gives access to the string
-representations of the values.
+the `mozilla::dom::MyEnum` namespace.
 
 The type of the enum class is automatically selected to be the smallest
 unsigned integer type that can hold all the values.  In practice, this
@@ -924,11 +921,13 @@ enum class MyEnum : uint8_t {
   _empty,
   Another
 };
-
-namespace MyEnumValues {
-extern const EnumEntry strings[10];
-} // namespace MyEnumValues
 ```
+
+`mozilla::dom::GetEnumString` is a templated helper function declared in
+[`BindingUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h)
+and exported to `mozilla/dom/BindingUtils.h` that can be used to convert an enum
+value to its corresponding string value. It returns a `const nsCString&`
+containing the string value.
 
 #### Callback function types
 
