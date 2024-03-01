@@ -362,7 +362,6 @@ function makeWeatherResult({
       temperatureUnit,
       url: MerinoTestUtils.WEATHER_SUGGESTION.url,
       iconId: "6",
-      helpUrl: QuickSuggest.HELP_URL,
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",
       provider: "accuweather",

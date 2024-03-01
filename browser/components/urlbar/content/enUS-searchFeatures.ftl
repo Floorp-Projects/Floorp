@@ -60,6 +60,11 @@ urlbar-result-menu-learn-more-about-firefox-suggest =
     .label = Learn more about { -firefox-suggest-brand-name }
     .accesskey = L
 
+# Manage menu item shown in the result menu of Firefox Suggest results.
+urlbar-result-menu-manage-firefox-suggest =
+    .label = Manage { -firefox-suggest-brand-name }
+    .accesskey = M
+
 # A message shown in a result when the user gives feedback on it.
 firefox-suggest-feedback-acknowledgment = Thanks for your feedback
 

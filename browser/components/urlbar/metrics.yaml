@@ -316,6 +316,7 @@ urlbar:
           `go_button`,
           `help`,
           `inaccurate_location`,
+          `manage`,
           `not_interested`,
           `not_relevant`,
           `paste_go`,
