@@ -10926,6 +10926,11 @@ GeneralParser<ParseHandler, Unit>::memberPropertyAccess(
     MOZ_ASSERT(!handler_.isSuperBase(lhs));
     return handler_.newOptionalPropertyAccess(lhs, name);
   }
+
+  if (handler_.isArgumentsName(lhs) && handler_.isLengthName(name)) {
+    return handler_.newArgumentsLength(lhs, name);
+  }
+
   return handler_.newPropertyAccess(lhs, name);
 }
 
