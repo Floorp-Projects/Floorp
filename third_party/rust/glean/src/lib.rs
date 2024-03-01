@@ -23,7 +23,7 @@
 //! let cfg = ConfigurationBuilder::new(true, "/tmp/data", "org.mozilla.glean_core.example").build();
 //! glean::initialize(cfg, ClientInfoMetrics::unknown());
 //!
-//! let prototype_ping = PingType::new("prototype", true, true, true, vec!());
+//! let prototype_ping = PingType::new("prototype", true, true, true, true, vec!());
 //!
 //! prototype_ping.submit(None);
 //! ```

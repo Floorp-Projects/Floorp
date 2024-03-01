@@ -195,6 +195,15 @@ impl ExperimentMetric {
     /// the RecordedExperiment.
     ///
     /// This doesn't clear the stored value.
+    ///
+    /// # Arguments
+    ///
+    /// * `ping_name` - the optional name of the ping to retrieve the metric
+    ///                 for. Defaults to the first value in `send_in_pings`.
+    ///
+    /// # Returns
+    ///
+    /// The stored value or `None` if nothing stored.
     pub fn test_get_value(&self, glean: &Glean) -> Option<RecordedExperiment> {
         match StorageManager.snapshot_metric_for_test(
             glean.storage(),

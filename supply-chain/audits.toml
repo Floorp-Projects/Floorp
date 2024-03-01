@@ -232,7 +232,7 @@ notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 [[wildcard-audits.glean]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 66068 # Travis Long (travis79)
+user-id = 66068
 start = "2024-02-12"
 end = "2025-02-13"
 
@@ -247,7 +247,7 @@ notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 [[wildcard-audits.glean-core]]
 who = "Travis Long <tlong@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 66068 # Travis Long (travis79)
+user-id = 66068
 start = "2020-07-10"
 end = "2025-02-13"
 

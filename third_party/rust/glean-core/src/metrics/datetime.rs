@@ -262,8 +262,8 @@ impl DatetimeMetric {
     ///
     /// # Arguments
     ///
-    /// * `glean` - the Glean instance this metric belongs to.
-    /// * `storage_name` - the storage name to look into.
+    /// * `ping_name` - the optional name of the ping to retrieve the metric
+    ///                 for. Defaults to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///
@@ -284,8 +284,8 @@ impl DatetimeMetric {
     ///
     /// # Arguments
     ///
-    /// * `glean` - the Glean instance this metric belongs to.
-    /// * `storage_name` - the storage name to look into.
+    /// * `ping_name` - the optional name of the ping to retrieve the metric
+    ///                 for. Defaults to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///
@@ -311,8 +311,6 @@ impl DatetimeMetric {
     /// # Arguments
     ///
     /// * `error` - The type of error
-    /// * `ping_name` - represents the optional name of the ping to retrieve the
-    ///   metric for. inner to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

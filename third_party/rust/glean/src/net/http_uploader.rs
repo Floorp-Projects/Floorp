@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use crate::net::{PingUploader, UploadResult};
+use crate::net::{PingUploadRequest, PingUploader, UploadResult};
 
 /// A simple mechanism to upload pings over HTTPS.
 #[derive(Debug)]
@@ -13,12 +13,9 @@ impl PingUploader for HttpUploader {
     ///
     /// # Arguments
     ///
-    /// * `url` - the URL path to upload the data to.
-    /// * `body` - the serialized text data to send.
-    /// * `headers` - a vector of tuples containing the headers to send with
-    ///   the request, i.e. (Name, Value).
-    fn upload(&self, url: String, _body: Vec<u8>, _headers: Vec<(String, String)>) -> UploadResult {
-        log::debug!("TODO bug 1675468: submitting to {:?}", url);
+    /// * `upload_request` - the requested upload.
+    fn upload(&self, upload_request: PingUploadRequest) -> UploadResult {
+        log::debug!("TODO bug 1675468: submitting to {:?}", upload_request.url);
         UploadResult::http_status(200)
     }
 }

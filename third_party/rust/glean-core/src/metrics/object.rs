@@ -2,23 +2,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::sync::Arc;
+
 use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
+use crate::metrics::JsonValue;
 use crate::metrics::Metric;
 use crate::metrics::MetricType;
 use crate::storage::StorageManager;
 use crate::CommonMetricData;
 use crate::Glean;
 
-/// A quantity metric.
+/// An object metric.
 ///
-/// Used to store explicit non-negative integers.
+/// Record structured data.
+/// The value must adhere to a predefined structure and is serialized into JSON.
 #[derive(Clone, Debug)]
-pub struct QuantityMetric {
-    meta: CommonMetricDataInternal,
+pub struct ObjectMetric {
+    meta: Arc<CommonMetricDataInternal>,
 }
 
-impl MetricType for QuantityMetric {
+impl MetricType for ObjectMetric {
     fn meta(&self) -> &CommonMetricDataInternal {
         &self.meta
     }
@@ -28,56 +32,59 @@ impl MetricType for QuantityMetric {
 //
 // When changing this implementation, make sure all the operations are
 // also declared in the related trait in `../traits/`.
-impl QuantityMetric {
-    /// Creates a new quantity metric.
+impl ObjectMetric {
+    /// Creates a new object metric.
     pub fn new(meta: CommonMetricData) -> Self {
-        Self { meta: meta.into() }
+        Self {
+            meta: Arc::new(meta.into()),
+        }
     }
 
-    /// Sets the value. Must be non-negative.
+    /// Sets to the specified structure.
     ///
     /// # Arguments
     ///
-    /// * `value` - The value. Must be non-negative.
+    /// * `glean` - the Glean instance this metric belongs to.
+    /// * `value` - the value to set.
+    #[doc(hidden)]
+    pub fn set_sync(&self, glean: &Glean, value: JsonValue) {
+        let value = Metric::Object(serde_json::to_string(&value).unwrap());
+        glean.storage().record(glean, &self.meta, &value)
+    }
+
+    /// Sets to the specified structure.
     ///
-    /// ## Notes
+    /// No additional verification is done.
+    /// The shape needs to be externally verified.
     ///
-    /// Logs an error if the `value` is negative.
-    pub fn set(&self, value: i64) {
+    /// # Arguments
+    ///
+    /// * `value` - the value to set.
+    pub fn set(&self, value: JsonValue) {
         let metric = self.clone();
         crate::launch_with_glean(move |glean| metric.set_sync(glean, value))
     }
 
-    /// Sets the value synchronously. Must be non-negative.
-    #[doc(hidden)]
-    pub fn set_sync(&self, glean: &Glean, value: i64) {
-        if !self.should_record(glean) {
-            return;
-        }
-
-        if value < 0 {
-            record_error(
-                glean,
-                &self.meta,
-                ErrorType::InvalidValue,
-                format!("Set negative value {}", value),
-                None,
-            );
-            return;
-        }
-
-        glean
-            .storage()
-            .record(glean, &self.meta, &Metric::Quantity(value))
+    /// Record an `InvalidValue` error for this metric.
+    ///
+    /// Only to be used by the RLB.
+    // TODO(bug 1691073): This can probably go once we have a more generic mechanism to record
+    // errors
+    pub fn record_schema_error(&self) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| {
+            let msg = "Value did not match predefined schema";
+            record_error(glean, &metric.meta, ErrorType::InvalidValue, msg, None);
+        });
     }
 
-    /// Get current value.
+    /// Get current value
     #[doc(hidden)]
     pub fn get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         glean: &Glean,
         ping_name: S,
-    ) -> Option<i64> {
+    ) -> Option<String> {
         let queried_ping_name = ping_name
             .into()
             .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
@@ -88,28 +95,21 @@ impl QuantityMetric {
             &self.meta.identifier(glean),
             self.meta.inner.lifetime,
         ) {
-            Some(Metric::Quantity(i)) => Some(i),
+            Some(Metric::Object(o)) => Some(o),
             _ => None,
         }
     }
 
     /// **Test-only API (exported for FFI purposes).**
     ///
-    /// Gets the currently stored value as an integer.
+    /// Gets the currently stored value as JSON.
     ///
     /// This doesn't clear the stored value.
-    ///
-    /// # Arguments
-    ///
-    /// * `ping_name` - the optional name of the ping to retrieve the metric
-    ///                 for. Defaults to the first value in `send_in_pings`.
-    ///
-    /// # Returns
-    ///
-    /// The stored value or `None` if nothing stored.
-    pub fn test_get_value(&self, ping_name: Option<String>) -> Option<i64> {
+    pub fn test_get_value(&self, ping_name: Option<String>) -> Option<JsonValue> {
         crate::block_on_dispatcher();
-        crate::core::with_glean(|glean| self.get_value(glean, ping_name.as_deref()))
+        let value = crate::core::with_glean(|glean| self.get_value(glean, ping_name.as_deref()));
+        // We only store valid JSON
+        value.map(|val| serde_json::from_str(&val).unwrap())
     }
 
     /// **Exported for test purposes.**
@@ -119,6 +119,8 @@ impl QuantityMetric {
     /// # Arguments
     ///
     /// * `error` - The type of error
+    /// * `ping_name` - represents the optional name of the ping to retrieve the
+    ///   metric for. inner to the first value in `send_in_pings`.
     ///
     /// # Returns
     ///

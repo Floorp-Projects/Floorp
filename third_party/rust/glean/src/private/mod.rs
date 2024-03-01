@@ -5,6 +5,7 @@
 //! The different metric types supported by the Glean SDK to handle data.
 
 mod event;
+mod object;
 mod ping;
 
 pub use event::EventMetric;
@@ -26,6 +27,7 @@ pub use glean_core::UrlMetric;
 pub use glean_core::UuidMetric;
 pub use glean_core::{AllowLabeled, LabeledMetric};
 pub use glean_core::{Datetime, DatetimeMetric};
+pub use object::ObjectMetric;
 pub use ping::PingType;
 
 // Re-export types that are used by the glean_parser-generated code.
