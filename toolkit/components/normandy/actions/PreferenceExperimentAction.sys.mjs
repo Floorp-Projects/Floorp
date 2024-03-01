@@ -160,7 +160,7 @@ export class PreferenceExperimentAction extends BaseStudyAction {
     }
   }
 
-  async _run(recipe) {
+  async _run() {
     throw new Error("_run shouldn't be called anymore");
   }
 
