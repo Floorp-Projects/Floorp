@@ -26,7 +26,7 @@ let gAddEngineDialog = {
     document.addEventListener("dialogaccept", this.onAddEngine.bind(this));
   },
 
-  async onAddEngine(event) {
+  async onAddEngine() {
     let url = document
       .getElementById("engineUrl")
       .value.replace(/%s/, "{searchTerms}");
