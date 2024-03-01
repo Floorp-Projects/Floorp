@@ -10,7 +10,7 @@ async function check_journal_size(db) {
       handleResult(resultSet) {
         resolve(resultSet.getNextRow().getResultByIndex(0));
       },
-      handleError(error) {
+      handleError() {
         reject();
       },
       handleCompletion() {},

@@ -463,13 +463,13 @@ function test_partial_listener_works() {
   var stmt = makeTestStatement("DELETE FROM test WHERE id = ?");
   stmt.bindByIndex(0, 0);
   stmt.executeAsync({
-    handleResult(aResultSet) {},
+    handleResult() {},
   });
   stmt.executeAsync({
-    handleError(aError) {},
+    handleError() {},
   });
   stmt.executeAsync({
-    handleCompletion(aReason) {},
+    handleCompletion() {},
   });
   stmt.finalize();
 
