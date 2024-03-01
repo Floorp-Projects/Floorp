@@ -119,3 +119,69 @@ add_task(async function test_purging_skip_open_tab_extra_window() {
 
   bounceTrackingProtection.clearAll();
 });
+
+add_task(async function test_purging_skip_content_blocking_allow_list() {
+  initBounceTrackerState();
+
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    window.ContentBlockingAllowList.add(browser);
+  });
+
+  Assert.deepEqual(
+    await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+    ["example.net"],
+    "Should only purge example.net. example.org is within the grace period, example.com is allow-listed."
+  );
+
+  info(
+    "Remove  the allow-list entry for example.com and test that it gets purged now."
+  );
+
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    window.ContentBlockingAllowList.remove(browser);
+  });
+  Assert.deepEqual(
+    await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+    ["example.com"],
+    "example.com should have been purged now that it is no longer allow-listed."
+  );
+
+  bounceTrackingProtection.clearAll();
+});
+
+add_task(
+  async function test_purging_skip_content_blocking_allow_list_subdomain() {
+    initBounceTrackerState();
+
+    await BrowserTestUtils.withNewTab(
+      "https://test1.example.com",
+      async browser => {
+        window.ContentBlockingAllowList.add(browser);
+      }
+    );
+
+    Assert.deepEqual(
+      await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+      ["example.net"],
+      "Should only purge example.net. example.org is within the grace period, example.com is allow-listed via test1.example.com."
+    );
+
+    info(
+      "Remove  the allow-list entry for test1.example.com and test that it gets purged now."
+    );
+
+    await BrowserTestUtils.withNewTab(
+      "https://test1.example.com",
+      async browser => {
+        window.ContentBlockingAllowList.remove(browser);
+      }
+    );
+    Assert.deepEqual(
+      await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+      ["example.com"],
+      "example.com should have been purged now that test1.example.com it is no longer allow-listed."
+    );
+
+    bounceTrackingProtection.clearAll();
+  }
+);

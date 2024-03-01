@@ -17,7 +17,9 @@
 #include "nsICookieJarSettings.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsIPermission.h"
 #include "nsNetUtil.h"
+#include "nsString.h"
 
 using namespace mozilla;
 
@@ -254,4 +256,71 @@ nsresult ContentBlockingAllowList::Check(
 
   returnInputArgument.release();
   principal.forget(aPrincipal);
+}
+
+// ContentBlockingAllowListCache
+
+nsresult ContentBlockingAllowListCache::CheckForBaseDomain(
+    const nsACString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+    bool& aIsAllowListed) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  NS_ENSURE_TRUE(!aBaseDomain.IsEmpty(), NS_ERROR_INVALID_ARG);
+  aIsAllowListed = false;
+
+  // Ensure we have the permission list.
+  nsresult rv = EnsureInit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aOriginAttributes.mPrivateBrowsingId > 0) {
+    aIsAllowListed = mEntriesPrivateBrowsing.Contains(aBaseDomain);
+  } else {
+    aIsAllowListed = mEntries.Contains(aBaseDomain);
+  }
+
+  return NS_OK;
+}
+
+nsresult ContentBlockingAllowListCache::EnsureInit() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mIsInitialized) {
+    return NS_OK;
+  }
+  mIsInitialized = true;
+
+  // 1. Get all permissions representing allow-list entries.
+  PermissionManager* permManager = PermissionManager::GetInstance();
+  NS_ENSURE_TRUE(permManager, NS_ERROR_FAILURE);
+
+  nsTArray<nsCString> types;
+  types.AppendElement("trackingprotection");
+  types.AppendElement("trackingprotection-pb");
+
+  nsTArray<RefPtr<nsIPermission>> permissions;
+  nsresult rv = permManager->GetAllByTypes(types, permissions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // 2. Populate mEntries and mEntriesPrivateBrowsing from permission list for
+  //    faster lookup.
+  for (auto& permission : permissions) {
+    MOZ_ASSERT(permission);
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = permission->GetPrincipal(getter_AddRefs(principal));
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(principal);
+
+    nsAutoCString baseDomain;
+    rv = principal->GetBaseDomain(baseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Sort base domains into sets for normal / private browsing.
+    if (principal->OriginAttributesRef().mPrivateBrowsingId > 0) {
+      mEntriesPrivateBrowsing.Insert(baseDomain);
+    } else {
+      mEntries.Insert(baseDomain);
+    }
+  }
+
+  return NS_OK;
 }
