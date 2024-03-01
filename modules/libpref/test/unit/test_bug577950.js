@@ -6,7 +6,7 @@ function run_test() {
   var observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-    observe: function observe(aSubject, aTopic, aState) {
+    observe: function observe() {
       // Don't do anything.
     },
   };
