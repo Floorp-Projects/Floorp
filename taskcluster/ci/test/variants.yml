@@ -296,7 +296,7 @@ webrender-sw:
 webgl-ipc:
     description: "{description} with WebGL IPC process enabled"
     component: "Core::Graphics: CanvasWebGL"
-    expiration: "2024-03-01"
+    expiration: "2024-09-01"
     suffix: "gli"
     merge:
         mozharness:
