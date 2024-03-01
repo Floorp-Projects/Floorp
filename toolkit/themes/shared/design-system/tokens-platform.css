@@ -14,6 +14,8 @@
     --button-background-color: var(--button-bgcolor);
     --button-background-color-hover: var(--button-hover-bgcolor);
     --button-background-color-active: var(--button-active-bgcolor);
+    --button-text-color: var(--button-color);
+    --button-text-color-primary: var(--button-primary-color);
 
     /** Color **/
     --color-accent-primary: var(--button-primary-bgcolor, AccentColor);

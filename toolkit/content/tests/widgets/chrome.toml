@@ -22,6 +22,8 @@ skip-if = ["os == 'linux'"] # Bug 1116215
 ["test_menubar.xhtml"]
 skip-if = ["os == 'mac'"]
 
+["test_moz_button.html"]
+
 ["test_moz_button_group.html"]
 
 ["test_moz_card.html"]

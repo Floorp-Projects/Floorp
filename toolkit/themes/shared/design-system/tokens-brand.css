@@ -15,6 +15,9 @@
     --button-background-color: color-mix(in srgb, currentColor 7%, transparent);
     --button-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
     --button-background-color-active: color-mix(in srgb, currentColor 21%, transparent);
+    --button-border-color-primary: transparent;
+    --button-text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+    --button-text-color-primary: light-dark(var(--color-gray-05), var(--color-gray-100));
 
     /** Link **/
     --link-color: var(--color-accent-primary);
@@ -37,5 +40,18 @@
 
     /** Text **/
     --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+  }
+}
+
+@layer tokens-prefers-contrast {
+  @media (prefers-contrast) {
+    :root,
+    :host(.anonymous-content-host) {
+      /* Border */
+      --border-interactive-color: var(--text-color);
+      --border-interactive-color-hover: var(--border-interactive-color);
+      --border-interactive-color-active: var(--border-interactive-color);
+      --border-interactive-color-disabled: var(--border-interactive-color);
+    }
   }
 }
