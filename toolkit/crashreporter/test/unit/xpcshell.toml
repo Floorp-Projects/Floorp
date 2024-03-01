@@ -40,10 +40,6 @@ run-if = ["os == 'win'"]
 reason = "Test covering Windows-specific module handling"
 run-sequentially = "very high failure rate in parallel"
 
-["test_crash_modules_linux.js"]
-run-if = ["os == 'linux'"]
-reason = "Test covering Linux-specific module handling"
-
 ["test_crash_moz_crash.js"]
 
 ["test_crash_oom.js"]
