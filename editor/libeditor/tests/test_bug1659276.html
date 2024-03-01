@@ -63,7 +63,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {
   function waitForTickOfRefeshDriver() {
     function awaitOneRefresh() {
-      return new Promise(function(aResolve, aReject) {
+      return new Promise(function(aResolve) {
         requestAnimationFrame(aResolve);
       });
     }

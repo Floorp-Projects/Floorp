@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
     QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
                                             "nsISupportsWeakReference"]),
 
-    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
+    onStateChange(aWebProgress, aRequest, aStateFlags)
     {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         {
@@ -71,25 +71,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
     },
 
 
-    onProgressChange(aWebProgress, aRequest,
-                                aCurSelfProgress, aMaxSelfProgress,
-                                aCurTotalProgress, aMaxTotalProgress)
+    onProgressChange()
       {
       },
 
-    onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
+    onLocationChange()
       {
       },
 
-    onStatusChange(aWebProgress, aRequest, aStatus, aMessage)
+    onStatusChange()
       {
       },
 
-    onSecurityChange(aWebProgress, aRequest, aState)
+    onSecurityChange()
       {
       },
 
-    onContentBlockingEvent(aWebProgress, aRequest, aEvent)
+    onContentBlockingEvent()
       {
       },
 

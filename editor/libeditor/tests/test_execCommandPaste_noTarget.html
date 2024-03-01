@@ -32,7 +32,7 @@
 
     // Check that reading text from the clipboard in non-privileged contexts
     // still doesn't work.
-    function onpstfail(e) {
+    function onpstfail() {
       ok(false, "Should not see paste event triggered by non-privileged call");
     }
     document.addEventListener("paste", onpstfail);

@@ -320,7 +320,7 @@ function initForBodyEditableDocumentTests() {
   frameDocument.getElementById("editor2").removeEventListener("click", clickEventHandler);
 
   iframe.onload =
-    function(aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
+    function() { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
   iframe.srcdoc = "<body contenteditable>body:</body>";
 }
 
