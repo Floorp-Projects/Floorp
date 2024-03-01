@@ -144,8 +144,8 @@
             //   <mask-reference> ||
             //   <position> [ / <bg-size> ]? ||
             //   <repeat-style> ||
-            //   <geometry-box> ||
-            //   [ <geometry-box> | no-clip ] ||
+            //   <coord-box> ||
+            //   [ <coord-box> | no-clip ] ||
             //   <compositing-operator> ||
             //   <masking-mode>
             // https://drafts.fxtf.org/css-masking-1/#the-mask
@@ -198,12 +198,21 @@
                     writer.item(repeat)?;
                 }
 
-                // <geometry-box>
-                if has_origin {
+                // <coord-box>
+                // Note:
+                // Even if 'mask-origin' is at its initial value 'border-box',
+                // we still have to serialize it to avoid ambiguity iF the
+                // 'mask-clip' longhand has some other <coord-box> value
+                // (i.e. neither 'border-box' nor 'no-clip'). (If we naively
+                // declined to serialize the 'mask-origin' value in this
+                // situation, then whatever value we serialize for 'mask-clip'
+                // would implicitly also represent 'mask-origin' and would be
+                // providing the wrong value for that longhand.)
+                if has_origin || (has_clip && *clip != Clip::NoClip) {
                     writer.item(origin)?;
                 }
 
-                // [ <geometry-box> | no-clip ]
+                // [ <coord-box> | no-clip ]
                 if has_clip && *clip != From::from(*origin) {
                     writer.item(clip)?;
                 }
