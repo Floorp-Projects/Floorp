@@ -180,10 +180,6 @@ class SharedContext {
   // FunctionBox::copyUpdated* methods.
   bool isScriptExtraFieldCopiedToStencil : 1;
 
-  // Indicates this shared context is eligible to use JSOp::ArgumentsLength
-  // when emitting the ArgumentsLength parse node.
-  bool eligibleForArgumentsLength : 1;
-
   // End of fields.
 
   enum class Kind : uint8_t { FunctionBox, Global, Eval, Module };
@@ -276,11 +272,6 @@ class SharedContext {
     localStrict = strict;
     return retVal;
   }
-
-  bool isEligibleForArgumentsLength() {
-    return eligibleForArgumentsLength && !bindingsAccessedDynamically();
-  }
-  void setIneligibleForArgumentsLength() { eligibleForArgumentsLength = false; }
 
   void copyScriptExtraFields(ScriptStencilExtra& scriptExtra);
 };

@@ -75,7 +75,6 @@ class FunctionBox;
   F(PostDecrementExpr, UnaryNode)                                \
   F(PropertyNameExpr, NameNode)                                  \
   F(DotExpr, PropertyAccess)                                     \
-  F(ArgumentsLength, ArgumentsLength)                            \
   F(ElemExpr, PropertyByValue)                                   \
   F(PrivateMemberExpr, PrivateMemberAccess)                      \
   F(OptionalDotExpr, OptionalPropertyAccess)                     \
@@ -617,7 +616,6 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(ClassNames)                        \
   MACRO(ForNode)                           \
   MACRO(PropertyAccess)                    \
-  MACRO(ArgumentsLength)                   \
   MACRO(OptionalPropertyAccess)            \
   MACRO(PropertyByValue)                   \
   MACRO(OptionalPropertyByValue)           \
@@ -2016,8 +2014,7 @@ class PropertyAccessBase : public BinaryNode {
 
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::DotExpr) ||
-                 node.isKind(ParseNodeKind::OptionalDotExpr) ||
-                 node.isKind(ParseNodeKind::ArgumentsLength);
+                 node.isKind(ParseNodeKind::OptionalDotExpr);
     MOZ_ASSERT_IF(match, node.is<BinaryNode>());
     MOZ_ASSERT_IF(match, node.as<BinaryNode>().right()->isKind(
                              ParseNodeKind::PropertyNameExpr));
@@ -2045,8 +2042,7 @@ class PropertyAccess : public PropertyAccessBase {
   }
 
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::DotExpr) ||
-                 node.isKind(ParseNodeKind::ArgumentsLength);
+    bool match = node.isKind(ParseNodeKind::DotExpr);
     MOZ_ASSERT_IF(match, node.is<PropertyAccessBase>());
     return match;
   }
@@ -2055,26 +2051,6 @@ class PropertyAccess : public PropertyAccessBase {
     // ParseNodeKind::SuperBase cannot result from any expression syntax.
     return expression().isKind(ParseNodeKind::SuperBase);
   }
-
- protected:
-  using PropertyAccessBase::PropertyAccessBase;
-};
-
-class ArgumentsLength : public PropertyAccess {
- public:
-  ArgumentsLength(ParseNode* lhs, NameNode* name, uint32_t begin, uint32_t end)
-      : PropertyAccess(ParseNodeKind::ArgumentsLength, lhs, name, begin, end) {
-    MOZ_ASSERT(lhs);
-    MOZ_ASSERT(name);
-  }
-
-  static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::ArgumentsLength);
-    MOZ_ASSERT_IF(match, node.is<PropertyAccessBase>());
-    return match;
-  }
-
-  bool isSuper() const { return false; }
 };
 
 class OptionalPropertyAccess : public PropertyAccessBase {
