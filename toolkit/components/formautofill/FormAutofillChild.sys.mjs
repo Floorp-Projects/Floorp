@@ -327,11 +327,7 @@ export class FormAutofillChild extends JSWindowActorChild {
 
   shouldIgnoreFormAutofillEvent(event) {
     let nodePrincipal = event.target.nodePrincipal;
-    return (
-      nodePrincipal.isSystemPrincipal ||
-      nodePrincipal.isNullPrincipal ||
-      nodePrincipal.schemeIs("about")
-    );
+    return nodePrincipal.isSystemPrincipal || nodePrincipal.schemeIs("about");
   }
 
   handleEvent(evt) {
