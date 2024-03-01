@@ -399,9 +399,7 @@ function sortItems(a, b) {
   } else if (a.type == "directory" && b.type == "directory") {
     return a.path.localeCompare(b.path);
   } else if (a.type == "source" && b.type == "source") {
-    return a.source.displayURL.filename.localeCompare(
-      b.source.displayURL.filename
-    );
+    return a.source.longName.localeCompare(b.source.longName);
   }
   return 0;
 }

@@ -272,6 +272,11 @@ function createSourceObject({
       ? getRawSourceURL(displayURL.filename)
       : getFormattedSourceId(id),
 
+    // Same as short name, but with the query parameters.
+    longName: url
+      ? getRawSourceURL(displayURL.filename + displayURL.search)
+      : getFormattedSourceId(id),
+
     // Only set for generated sources that are WebExtension sources.
     // This is especially useful to display the extension name for content scripts
     // that executes against the page we are debugging.

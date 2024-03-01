@@ -156,10 +156,7 @@ class SourceTreeItem extends Component {
       );
     }
     if (item.type == "source") {
-      const { displayURL } = item.source;
-      const name =
-        displayURL.filename + (displayURL.search ? displayURL.search : "");
-      return safeDecodeItemName(name);
+      return safeDecodeItemName(item.source.longName);
     }
 
     return null;

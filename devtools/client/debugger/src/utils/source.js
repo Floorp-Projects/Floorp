@@ -217,10 +217,7 @@ export function getFormattedSourceId(id) {
  * Provides a middle-truncated filename displayed in Tab titles
  */
 export function getTruncatedFileName(source) {
-  return truncateMiddleText(
-    `${source.shortName}${source.displayURL.search}`,
-    30
-  );
+  return truncateMiddleText(source.longName, 30);
 }
 
 /* Gets path for files with same filename for editor tabs, breakpoints, etc.
