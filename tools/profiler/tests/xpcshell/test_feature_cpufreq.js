@@ -87,7 +87,7 @@ function getInflatedCPUFreqMarkers(thread) {
  *   schema: MarkerSchema;
  * }}
  */
-async function runProfilerWithCPUSpeed(features, filename) {
+async function runProfilerWithCPUSpeed(features) {
   const entries = 10000;
   const interval = 10;
   const threads = [];

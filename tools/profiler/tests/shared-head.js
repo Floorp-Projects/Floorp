@@ -547,7 +547,7 @@ Object.assign(Assert, {
 const Expect = {
   any:
     () =>
-    actual => {} /* We don't check anything more than the presence of this property. */,
+    () => {} /* We don't check anything more than the presence of this property. */,
 };
 
 /* These functions are part of the Assert object, and we want to reuse them. */
