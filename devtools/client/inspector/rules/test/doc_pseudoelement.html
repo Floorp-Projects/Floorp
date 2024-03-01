@@ -133,7 +133,15 @@ dialog::backdrop {
     }
 }
 
-
+input::slider-fill {
+    background: tomato;
+}
+input::slider-thumb {
+    background: gold;
+}
+input::slider-track {
+    background: seagreen;
+}
     </style>
   </head>
   <body>
@@ -160,6 +168,9 @@ dialog::backdrop {
     </ol>
 
     <dialog>In dialog</dialog>
+
+    <label>Range <input type="range" class="slider"></label>
+    <label>Not range <input type="text" class="slider"></label>
 
     <section class="highlights-container">
         Firefox Developer Tools is a set of web developer tools built into Firefox.
