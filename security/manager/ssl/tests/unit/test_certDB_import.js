@@ -28,11 +28,11 @@ const gCertificateDialogs = {
     trust.value = Ci.nsIX509CertDB.TRUSTED_EMAIL;
     return true;
   },
-  setPKCS12FilePassword: (ctx, password) => {
+  setPKCS12FilePassword: () => {
     // This is only relevant to exporting.
     ok(false, "setPKCS12FilePassword() should not have been called");
   },
-  getPKCS12FilePassword: (ctx, password) => {
+  getPKCS12FilePassword: () => {
     // We don't test anything that calls this method yet.
     ok(false, "getPKCS12FilePassword() should not have been called");
   },

@@ -163,7 +163,7 @@ function storeCertOverride(port, cert) {
 function startClient(port) {
   let req = new XMLHttpRequest();
   req.open("GET", `https://${hostname}:${port}`);
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     req.onload = () => {
       ok(false, "should not have gotten load event");
       resolve();

@@ -44,7 +44,7 @@ var gPrompt = {
 
 const gPromptFactory = {
   QueryInterface: ChromeUtils.generateQI(["nsIPromptFactory"]),
-  getPrompt: (aWindow, aIID) => gPrompt,
+  getPrompt: () => gPrompt,
 };
 
 function run_test() {

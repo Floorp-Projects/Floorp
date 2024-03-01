@@ -393,7 +393,7 @@ class IntermediatePreloads {
     );
   }
 
-  async onObservePollEnd(subject, topic, data) {
+  async onObservePollEnd(subject, topic) {
     lazy.log.debug(`onObservePollEnd ${subject} ${topic}`);
 
     try {
@@ -404,7 +404,7 @@ class IntermediatePreloads {
   }
 
   // This method returns a promise to RemoteSettingsClient.maybeSync method.
-  async onSync({ data: { current, created, updated, deleted } }) {
+  async onSync({ data: { deleted } }) {
     if (!Services.prefs.getBoolPref(INTERMEDIATES_ENABLED_PREF, true)) {
       lazy.log.debug("Intermediate Preloading is disabled");
       return;
@@ -538,7 +538,7 @@ class CRLiteFilters {
     }
   }
 
-  async onObservePollEnd(subject, topic, data) {
+  async onObservePollEnd() {
     if (!Services.prefs.getBoolPref(CRLITE_FILTERS_ENABLED_PREF, true)) {
       lazy.log.debug("CRLite filter downloading is disabled");
       Services.obs.notifyObservers(

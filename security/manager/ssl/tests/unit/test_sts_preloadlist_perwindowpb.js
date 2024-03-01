@@ -6,7 +6,7 @@ var gSSService = Cc["@mozilla.org/ssservice;1"].getService(
 
 function Observer() {}
 Observer.prototype = {
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "last-pb-context-exited") {
       run_next_test();
     }

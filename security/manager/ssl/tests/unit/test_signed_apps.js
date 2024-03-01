@@ -96,7 +96,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
   }
 }
 
-function removeEntry(entry, entryInput) {
+function removeEntry() {
   return [null, null];
 }
 

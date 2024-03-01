@@ -225,7 +225,7 @@ function asyncDetermineUsages(cert) {
   );
   Object.keys(certificateUsages).forEach(usageString => {
     promises.push(
-      new Promise((resolve, reject) => {
+      new Promise(resolve => {
         let usage = certificateUsages[usageString];
         certdb.asyncVerifyCertAtTime(
           cert,
@@ -233,7 +233,7 @@ function asyncDetermineUsages(cert) {
           0,
           null,
           now,
-          (aPRErrorCode, aVerifiedChain, aHasEVPolicy) => {
+          (aPRErrorCode, aVerifiedChain) => {
             resolve({
               usageString,
               errorCode: aPRErrorCode,

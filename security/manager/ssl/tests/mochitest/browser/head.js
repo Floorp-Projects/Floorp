@@ -70,7 +70,7 @@ function readCertificate(filename, trustString) {
  */
 async function openCertManager() {
   let win = window.openDialog("chrome://pippki/content/certManager.xhtml");
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     win.addEventListener(
       "load",
       function () {

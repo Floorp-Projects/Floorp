@@ -84,7 +84,7 @@ function asyncTestEV(
   ocspResponseTypes = undefined
 ) {
   let now = Date.now() / 1000;
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let ocspResponder = expectedOCSPRequestPaths.length
       ? startOCSPResponder(
           SERVER_PORT,
@@ -157,7 +157,7 @@ function verifyWithFlags_LOCAL_ONLY_and_MUST_BE_EV(testcase, expectSuccess) {
   if (expectSuccess && gEVExpected) {
     expectedErrorCode = PRErrorCodeSuccess;
   }
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let ocspResponder = failingOCSPResponder();
     let result = new EVCertVerificationResult(
       cert.subjectName,

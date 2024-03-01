@@ -38,7 +38,7 @@ const gMockPKCS11ModuleDB = {
     }
   },
 
-  deleteModule(moduleName) {
+  deleteModule() {
     Assert.ok(false, `deleteModule: should not be called`);
   },
 

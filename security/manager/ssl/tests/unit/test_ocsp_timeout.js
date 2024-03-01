@@ -21,7 +21,7 @@ var gSocketListener = {
     socketTransport.setTimeout(Ci.nsISocketTransport.TIMEOUT_READ_WRITE, 30);
   },
 
-  onStopListening(serverSocket, status) {},
+  onStopListening() {},
 };
 
 function run_test() {

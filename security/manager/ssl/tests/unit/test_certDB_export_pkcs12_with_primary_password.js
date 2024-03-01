@@ -30,7 +30,7 @@ var gPrompt = {
     ok(false, "not expecting alert() to be called");
   },
 
-  promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
+  promptPassword(dialogTitle, text, password, checkMsg) {
     equal(
       text,
       "Please enter your Primary Password.",
@@ -44,7 +44,7 @@ var gPrompt = {
 
 const gPromptFactory = {
   QueryInterface: ChromeUtils.generateQI(["nsIPromptFactory"]),
-  getPrompt: (aWindow, aIID) => gPrompt,
+  getPrompt: () => gPrompt,
 };
 
 function findCertByCommonName(commonName) {
