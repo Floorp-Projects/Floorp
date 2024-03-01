@@ -161,7 +161,7 @@ export class RecipeExecutor {
    * Config:
    *  Not configurable
    */
-  conditionallyNmfTag(item, config) {
+  conditionallyNmfTag(item) {
     let nestedNmfTags = {};
     let parentTags = {};
     let parentWeights = {};
@@ -1052,7 +1052,7 @@ export class RecipeExecutor {
     } else if (config.operation === "overwrite") {
       op = (a, b) => b;
     } else if (config.operation === "count") {
-      op = (a, b) => a + 1;
+      op = a => a + 1;
     } else {
       return null;
     }

@@ -947,7 +947,7 @@ export class _ASRouter {
     return this.state;
   }
 
-  async _onLocaleChanged(subject, topic, data) {
+  async _onLocaleChanged() {
     await this._maybeUpdateL10nAttachment();
   }
 
@@ -1743,7 +1743,7 @@ export class _ASRouter {
     }
     // Update storage
     this._storage.set("groupImpressions", newGroupImpressions);
-    return this.setState(({ groups }) => ({
+    return this.setState(() => ({
       groupImpressions: newGroupImpressions,
     }));
   }

@@ -49,7 +49,7 @@
       return ["fluent-remote-id"];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback() {
       this.render();
     }
 

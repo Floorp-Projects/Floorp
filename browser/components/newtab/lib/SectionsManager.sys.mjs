@@ -31,7 +31,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * `${feed_pref_name}.options`.
  */
 
-const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
+const BUILT_IN_SECTIONS = ({ pocketNewtab }) => ({
   "feeds.section.topstories": options => ({
     id: "topstories",
     pref: {
@@ -107,7 +107,7 @@ const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
     shouldSendImpressionStats: true,
     dedupeFrom: ["highlights"],
   }),
-  "feeds.section.highlights": options => ({
+  "feeds.section.highlights": () => ({
     id: "highlights",
     pref: {
       titleString: {

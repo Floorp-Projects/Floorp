@@ -105,8 +105,8 @@ const TEST_GLOBAL = {
   JSWindowActorParent,
   JSWindowActorChild,
   AboutReaderParent: {
-    addMessageListener: (messageName, listener) => {},
-    removeMessageListener: (messageName, listener) => {},
+    addMessageListener: (_messageName, _listener) => {},
+    removeMessageListener: (_messageName, _listener) => {},
   },
   AboutWelcomeTelemetry: class {
     submitGleanPingForPing() {}
@@ -289,8 +289,8 @@ const TEST_GLOBAL = {
   },
   dump() {},
   EveryWindow: {
-    registerCallback: (id, init, uninit) => {},
-    unregisterCallback: id => {},
+    registerCallback: (_id, _init, _uninit) => {},
+    unregisterCallback: _id => {},
   },
   setTimeout: window.setTimeout.bind(window),
   clearTimeout: window.clearTimeout.bind(window),
@@ -410,7 +410,7 @@ const TEST_GLOBAL = {
     },
     urlFormatter: { formatURL: str => str, formatURLPref: str => str },
     mm: {
-      addMessageListener: (msg, cb) => this.receiveMessage(),
+      addMessageListener: (_msg, _cb) => this.receiveMessage(),
       removeMessageListener() {},
     },
     obs: {
@@ -420,7 +420,7 @@ const TEST_GLOBAL = {
     },
     telemetry: {
       setEventRecordingEnabled: () => {},
-      recordEvent: eventDetails => {},
+      recordEvent: _eventDetails => {},
       scalarSet: () => {},
       keyedScalarAdd: () => {},
     },
@@ -578,7 +578,7 @@ const TEST_GLOBAL = {
     finish: () => {},
   },
   Sampling: {
-    ratioSample(seed, ratios) {
+    ratioSample(_seed, _ratios) {
       return Promise.resolve(0);
     },
   },

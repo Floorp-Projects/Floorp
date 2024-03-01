@@ -19,7 +19,7 @@ describe("Personality Provider", () => {
     RemoteSettingsOffStub = sandbox.stub().returns();
     RemoteSettingsGetStub = sandbox.stub().returns([]);
 
-    RemoteSettingsStub = name => ({
+    RemoteSettingsStub = () => ({
       get: RemoteSettingsGetStub,
       on: RemoteSettingsOnStub,
       off: RemoteSettingsOffStub,
@@ -142,7 +142,7 @@ describe("Personality Provider", () => {
         },
       ]);
       sinon.spy(instance, "getAttachment");
-      RemoteSettingsStub = name => ({
+      RemoteSettingsStub = () => ({
         get: RemoteSettingsGetStub,
         on: RemoteSettingsOnStub,
         off: RemoteSettingsOffStub,
