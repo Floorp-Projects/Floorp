@@ -28,17 +28,3 @@ export function getRelativePath(url) {
   }
   return "";
 }
-
-/**
- *
- * @param {String} name: Name (e.g. computed in SourcesTreeItem renderItemName),
- *                       which might include URI search.
- * @returns {String} result of `decodedURI(name)`, or name if it `name` is malformed.
- */
-export function safeDecodeItemName(name) {
-  try {
-    return decodeURI(name);
-  } catch (e) {
-    return name;
-  }
-}
