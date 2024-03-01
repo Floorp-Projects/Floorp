@@ -37,6 +37,10 @@ class BounceTrackingStateGlobal final {
 
   bool ShouldPersistToDisk() const { return !IsPrivateBrowsing(); }
 
+  const OriginAttributes& OriginAttributesRef() const {
+    return mOriginAttributes;
+  };
+
   bool HasUserActivation(const nsACString& aSiteHost) const;
 
   // Store a user interaction flag for  the given host. This will remove the
