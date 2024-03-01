@@ -75,6 +75,11 @@ add_task(async () => {
     function testFunc() {}
 
     var testLocale = new Intl.Locale("de-latn-de-u-ca-gregory-co-phonebk-hc-h23-kf-true-kn-false-nu-latn");
+
+    var testFormData = new FormData();
+    var testHeaders = new Headers();
+    var testURLSearchParams = new URLSearchParams();
+    var testReadableStream = new ReadableStream();
   </script>
   <body id="body1" class="class2"><h1>Body text</h1></body>
   </html>`);
@@ -97,6 +102,7 @@ add_task(async () => {
   await doEagerEvalESGetters(commands);
   await doEagerEvalDOMGetters(commands);
   await doEagerEvalOtherNativeGetters(commands);
+  await doEagerEvalDOMMethods(commands);
   await doEagerEvalAsyncFunctions(commands);
 
   await commands.destroy();
@@ -984,6 +990,53 @@ async function doEagerEvalOtherNativeGetters(commands) {
   ];
 
   for (const code of testData) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: { type: "undefined" },
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+}
+
+async function doEagerEvalDOMMethods(commands) {
+  // The following "values" methods share single native function with different
+  // JitInfo, while ReadableStream's "values" isn't side-effect free.
+
+  const testDataAllowed = [
+    [`testFormData.values().constructor.name`, "Object"],
+    [`testHeaders.values().constructor.name`, "Object"],
+    [`testURLSearchParams.values().constructor.name`, "Object"],
+  ];
+
+  for (const [code, expectedResult] of testDataAllowed) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: expectedResult,
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+
+  const testDataDisallowed = ["testReadableStream.values()"];
+
+  for (const code of testDataDisallowed) {
     const response = await commands.scriptCommand.execute(code, {
       eager: true,
     });
