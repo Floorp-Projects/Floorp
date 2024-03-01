@@ -661,8 +661,12 @@ class ParseContext : public Nestable<ParseContext> {
 
   bool hasUsedName(const UsedNameTracker& usedNames,
                    TaggedParserAtomIndex name);
+  bool hasClosedOverName(const UsedNameTracker& usedNames,
+                         TaggedParserAtomIndex name);
   bool hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
                                   TaggedParserAtomIndex name);
+  bool hasClosedOverFunctionSpecialName(const UsedNameTracker& usedNames,
+                                        TaggedParserAtomIndex name);
 
   bool declareFunctionThis(const UsedNameTracker& usedNames,
                            bool canSkipLazyClosedOverBindings);
