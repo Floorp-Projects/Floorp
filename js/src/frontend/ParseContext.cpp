@@ -659,13 +659,13 @@ bool ParseContext::declareFunctionArgumentsObject(
   ParseContext::Scope& funScope = functionScope();
   ParseContext::Scope& _varScope = varScope();
 
-  bool usesArguments = false;
   bool hasExtraBodyVarScope = &funScope != &_varScope;
 
   // Time to implement the odd semantics of 'arguments'.
   auto argumentsName = TaggedParserAtomIndex::WellKnown::arguments();
 
   bool tryDeclareArguments;
+  // When delazifying simply defer to the function box
   if (canSkipLazyClosedOverBindings) {
     tryDeclareArguments = funbox->shouldDeclareArguments();
   } else {
@@ -685,9 +685,17 @@ bool ParseContext::declareFunctionArgumentsObject(
   DeclaredNamePtr p = _varScope.lookupDeclaredName(argumentsName);
   if (p && p->value()->kind() == DeclarationKind::Var) {
     if (hasExtraBodyVarScope) {
+      // While there is a binding in the var scope, we should declare
+      // the binding in the function scope.
       tryDeclareArguments = true;
     } else {
-      usesArguments = true;
+      // A binding in the function scope (since varScope and functionScope are
+      // the same) exists, so arguments is used.
+      funbox->setNeedsArgsObj();
+
+      // There is no point in continuing on below: We know we already have
+      // a declaration of arguments in the function scope.
+      return true;
     }
   }
 
@@ -700,17 +708,9 @@ bool ParseContext::declareFunctionArgumentsObject(
         return false;
       }
       funbox->setShouldDeclareArguments();
-      usesArguments = true;
-    } else if (hasExtraBodyVarScope) {
-      // Formal parameters shadow the arguments object.
-      return true;
+      funbox->setNeedsArgsObj();
     }
   }
-
-  if (usesArguments) {
-    funbox->setNeedsArgsObj();
-  }
-
   return true;
 }
 
