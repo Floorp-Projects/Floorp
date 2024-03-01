@@ -26,44 +26,37 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
  */
 class SiteSecurityRobot {
 
-    fun verifyQuickActionSheet(url: String = "", isConnectionSecure: Boolean) = assertQuickActionSheet(url, isConnectionSecure)
+    fun verifyQuickActionSheet(url: String = "", isConnectionSecure: Boolean) {
+        quickActionSheet().waitForExists(waitingTime)
+        assertUIObjectExists(
+            quickActionSheetUrl(url.tryGetHostFromUrl()),
+            quickActionSheetSecurityInfo(isConnectionSecure),
+            quickActionSheetTrackingProtectionSwitch(),
+            quickActionSheetClearSiteData(),
+        )
+    }
     fun openSecureConnectionSubMenu(isConnectionSecure: Boolean) {
         quickActionSheetSecurityInfo(isConnectionSecure).click()
         mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
     }
-    fun verifySecureConnectionSubMenu(pageTitle: String = "", url: String = "", isConnectionSecure: Boolean) =
-        assertSecureConnectionSubMenu(pageTitle, url, isConnectionSecure)
+    fun verifySecureConnectionSubMenu(pageTitle: String = "", url: String = "", isConnectionSecure: Boolean) {
+        secureConnectionSubMenu().waitForExists(waitingTime)
+        assertUIObjectExists(
+            secureConnectionSubMenuPageTitle(pageTitle),
+            secureConnectionSubMenuPageUrl(url),
+            secureConnectionSubMenuSecurityInfo(isConnectionSecure),
+            secureConnectionSubMenuLockIcon(),
+            secureConnectionSubMenuCertificateInfo(),
+        )
+    }
     fun clickQuickActionSheetClearSiteData() = quickActionSheetClearSiteData().click()
-    fun verifyClearSiteDataPrompt(url: String) = assertClearSiteDataPrompt(url)
+    fun verifyClearSiteDataPrompt(url: String) {
+        assertUIObjectExists(clearSiteDataPrompt(url))
+        cancelClearSiteDataButton.check(matches(isDisplayed()))
+        deleteSiteDataButton.check(matches(isDisplayed()))
+    }
 
     class Transition
-}
-
-private fun assertQuickActionSheet(url: String = "", isConnectionSecure: Boolean) {
-    quickActionSheet().waitForExists(waitingTime)
-    assertUIObjectExists(
-        quickActionSheetUrl(url.tryGetHostFromUrl()),
-        quickActionSheetSecurityInfo(isConnectionSecure),
-        quickActionSheetTrackingProtectionSwitch(),
-        quickActionSheetClearSiteData(),
-    )
-}
-
-private fun assertSecureConnectionSubMenu(pageTitle: String = "", url: String = "", isConnectionSecure: Boolean) {
-    secureConnectionSubMenu().waitForExists(waitingTime)
-    assertUIObjectExists(
-        secureConnectionSubMenuPageTitle(pageTitle),
-        secureConnectionSubMenuPageUrl(url),
-        secureConnectionSubMenuSecurityInfo(isConnectionSecure),
-        secureConnectionSubMenuLockIcon(),
-        secureConnectionSubMenuCertificateInfo(),
-    )
-}
-
-private fun assertClearSiteDataPrompt(url: String) {
-    assertUIObjectExists(clearSiteDataPrompt(url))
-    cancelClearSiteDataButton.check(matches(isDisplayed()))
-    deleteSiteDataButton.check(matches(isDisplayed()))
 }
 
 private fun quickActionSheet() =
