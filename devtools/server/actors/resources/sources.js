@@ -69,13 +69,13 @@ class SourceWatcher {
     // Before fetching all sources, process existing ones.
     // The ThreadActor is already up and running before this code runs
     // and have sources already registered and for which newSource event already fired.
-    onAvailable(
-      threadActor.sourcesManager.iter().map(s => {
-        const resource = s.form();
-        resource.resourceType = SOURCE;
-        return resource;
-      })
-    );
+    const sources = [];
+    for (const sourceActor of threadActor.sourcesManager.iter()) {
+      const resource = sourceActor.form();
+      resource.resourceType = SOURCE;
+      sources.push(resource);
+    }
+    onAvailable(sources);
 
     // Requesting all sources should end up emitting newSource on threadActor.sourcesManager
     threadActor.addAllSources();

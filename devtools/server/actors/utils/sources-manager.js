@@ -341,8 +341,13 @@ class SourcesManager extends EventEmitter {
     return this.blackBoxedSources.set(url, ranges);
   }
 
+  /**
+   * List all currently registered source actors.
+   *
+   * @return Iterator<SourceActor>
+   */
   iter() {
-    return [...this._sourceActors.values()];
+    return this._sourceActors.values();
   }
 
   /**

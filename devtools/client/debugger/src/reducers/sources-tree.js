@@ -25,6 +25,11 @@ const IGNORED_EXTENSIONS = ["css", "svg", "png"];
 import { isPretty, getRawSourceURL } from "../utils/source";
 import { prefs } from "../utils/prefs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
+});
+
 export function initialSourcesTreeState() {
   return {
     // List of all Thread Tree Items.
@@ -224,8 +229,10 @@ function addThread(state, thread) {
     // (this is also used by sortThreadItems to sort the thread as a Tree in the Browser Toolbox)
     threadItem.thread = thread;
 
-    // We have to re-sort all threads because of the new `thread` attribute on current thread item
-    state.threadItems.sort(sortThreadItems);
+    // We have to remove and re-insert the thread as its order will be based on the newly set `thread` attribute
+    state.threadItems = [...state.threadItems];
+    state.threadItems.splice(state.threadItems.indexOf(threadItem), 1);
+    addSortedItem(state.threadItems, threadItem, sortThreadItems);
   }
 }
 
@@ -303,13 +310,12 @@ function isSourceVisibleInSourceTree(
  *        The already sorted into which a value should be added.
  * @param {any} newValue
  *        The value to add in the array while keeping the array sorted.
- * @param {Function} sortFunction
+ * @param {Function} comparator
  *        A function to compare two array values and their ordering.
  *        Follow same behavior as Array sorting function.
  */
-function addSortedItem(array, newValue, sortFunction) {
-  let index = array.findIndex(value => sortFunction(value, newValue) === 1);
-  index = index >= 0 ? index : array.length;
+function addSortedItem(array, newValue, comparator) {
+  const index = lazy.BinarySearch.insertionIndexOf(comparator, array, newValue);
   array.splice(index, 0, newValue);
 }
 
@@ -396,6 +402,8 @@ function sortItems(a, b) {
     return -1;
   } else if (b.type == "directory" && a.type == "source") {
     return 1;
+  } else if (a.type == "group" && b.type == "group") {
+    return a.groupName.localeCompare(b.groupName);
   } else if (a.type == "directory" && b.type == "directory") {
     return a.path.localeCompare(b.path);
   } else if (a.type == "source" && b.type == "source") {
@@ -445,7 +453,7 @@ function sortThreadItems(a, b) {
   if (a.thread.processID > b.thread.processID) {
     return 1;
   } else if (a.thread.processID < b.thread.processID) {
-    return 0;
+    return -1;
   }
 
   // Order the frame targets and the worker targets by their target name
