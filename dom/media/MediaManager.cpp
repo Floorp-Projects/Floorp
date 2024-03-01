@@ -872,8 +872,7 @@ MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
       mCanRequestOsLevelPrompt(canRequestOsLevelPrompt == OsPromptable::Yes),
       mIsFake(mEngine->IsFake()),
       mIsPlaceholder(aIsPlaceholder == IsPlaceholder::Yes),
-      mType(
-          NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
+      mType(NS_ConvertASCIItoUTF16(dom::GetEnumString(mKind))),
       mRawID(aRawID),
       mRawGroupID(aRawGroupID),
       mRawName(aRawName) {
@@ -895,8 +894,7 @@ MediaDevice::MediaDevice(MediaEngine* aEngine,
       mCanRequestOsLevelPrompt(false),
       mIsFake(false),
       mIsPlaceholder(false),
-      mType(
-          NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
+      mType(NS_ConvertASCIItoUTF16(dom::GetEnumString(mKind))),
       mRawID(aRawID),
       mRawGroupID(mAudioDeviceInfo->GroupID()),
       mRawName(mAudioDeviceInfo->Name()) {}
@@ -1064,8 +1062,7 @@ LocalMediaDevice::GetMediaSource(nsAString& aMediaSource) {
   if (Kind() == MediaDeviceKind::Audiooutput) {
     aMediaSource.Truncate();
   } else {
-    aMediaSource.AssignASCII(
-        dom::MediaSourceEnumValues::GetString(GetMediaSource()));
+    aMediaSource.AssignASCII(dom::GetEnumString(GetMediaSource()));
   }
   return NS_OK;
 }
@@ -2747,10 +2744,11 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
     auto& vc = c.mVideo.GetAsMediaTrackConstraints();
     if (!vc.mMediaSource.WasPassed()) {
       vc.mMediaSource.Construct().AssignASCII(
-          dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Camera));
+          dom::GetEnumString(MediaSourceEnum::Camera));
     }
-    videoType = StringToEnum(dom::MediaSourceEnumValues::strings,
-                             vc.mMediaSource.Value(), MediaSourceEnum::Other);
+    videoType = StringToEnum(
+        dom::binding_detail::EnumStrings<dom::MediaSourceEnum>::Values,
+        vc.mMediaSource.Value(), MediaSourceEnum::Other);
     Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_TYPE,
                           (uint32_t)videoType);
     switch (videoType) {
@@ -2815,8 +2813,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       if (videoType == MediaSourceEnum::Screen ||
           videoType == MediaSourceEnum::Browser) {
         videoType = MediaSourceEnum::Window;
-        vc.mMediaSource.Value().AssignASCII(
-            dom::MediaSourceEnumValues::GetString(videoType));
+        vc.mMediaSource.Value().AssignASCII(dom::GetEnumString(videoType));
       }
       // only allow privileged content to set the window id
       if (vc.mBrowserWindow.WasPassed()) {
@@ -2840,10 +2837,11 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
     auto& ac = c.mAudio.GetAsMediaTrackConstraints();
     if (!ac.mMediaSource.WasPassed()) {
       ac.mMediaSource.Construct(NS_ConvertASCIItoUTF16(
-          dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Microphone)));
+          dom::GetEnumString(MediaSourceEnum::Microphone)));
     }
-    audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
-                             ac.mMediaSource.Value(), MediaSourceEnum::Other);
+    audioType = StringToEnum(
+        dom::binding_detail::EnumStrings<dom::MediaSourceEnum>::Values,
+        ac.mMediaSource.Value(), MediaSourceEnum::Other);
     Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_TYPE,
                           (uint32_t)audioType);
 
@@ -4004,8 +4002,7 @@ void DeviceListener::Activate(RefPtr<LocalMediaDevice> aDevice,
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   LOG("DeviceListener %p activating %s device %p", this,
-      nsCString(dom::MediaDeviceKindValues::GetString(aDevice->Kind())).get(),
-      aDevice.get());
+      dom::GetEnumString(aDevice->Kind()).get(), aDevice.get());
 
   MOZ_ASSERT(!mStopped, "Cannot activate stopped device listener");
   MOZ_ASSERT(!Activated(), "Already activated");
@@ -4061,18 +4058,15 @@ DeviceListener::InitializeAsync() {
                }
                if (NS_FAILED(rv)) {
                  nsCString log;
-                 log.AppendPrintf(
-                     "Starting %s failed",
-                     nsCString(dom::MediaDeviceKindValues::GetString(kind))
-                         .get());
+                 log.AppendPrintf("Starting %s failed",
+                                  dom::GetEnumString(kind).get());
                  aHolder.Reject(
                      MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
                                                std::move(log)),
                      __func__);
                  return;
                }
-               LOG("started %s device %p",
-                   nsCString(dom::MediaDeviceKindValues::GetString(kind)).get(),
+               LOG("started %s device %p", dom::GetEnumString(kind).get(),
                    device.get());
                aHolder.Resolve(true, __func__);
              })
@@ -4180,9 +4174,7 @@ auto DeviceListener::UpdateDevice(bool aOn) -> RefPtr<DeviceOperationPromise> {
             }
             LOG("DeviceListener %p turning %s %s input device %s", this,
                 aOn ? "on" : "off",
-                nsCString(
-                    dom::MediaDeviceKindValues::GetString(GetDevice()->Kind()))
-                    .get(),
+                dom::GetEnumString(GetDevice()->Kind()).get(),
                 NS_SUCCEEDED(aResult) ? "succeeded" : "failed");
 
             if (NS_FAILED(aResult) && aResult != NS_ERROR_ABORT) {
@@ -4215,8 +4207,7 @@ void DeviceListener::SetDeviceEnabled(bool aEnable) {
 
   LOG("DeviceListener %p %s %s device", this,
       aEnable ? "enabling" : "disabling",
-      nsCString(dom::MediaDeviceKindValues::GetString(GetDevice()->Kind()))
-          .get());
+      dom::GetEnumString(GetDevice()->Kind()).get());
 
   state.mTrackEnabled = aEnable;
 
@@ -4272,9 +4263,7 @@ void DeviceListener::SetDeviceEnabled(bool aEnable) {
 
             LOG("DeviceListener %p %s %s device - starting device operation",
                 this, aEnable ? "enabling" : "disabling",
-                nsCString(
-                    dom::MediaDeviceKindValues::GetString(GetDevice()->Kind()))
-                    .get());
+                dom::GetEnumString(GetDevice()->Kind()).get());
 
             if (state.mStopped) {
               // Source was stopped between timer resolving and this runnable.
@@ -4343,8 +4332,7 @@ void DeviceListener::SetDeviceMuted(bool aMute) {
   DeviceState& state = *mDeviceState;
 
   LOG("DeviceListener %p %s %s device", this, aMute ? "muting" : "unmuting",
-      nsCString(dom::MediaDeviceKindValues::GetString(GetDevice()->Kind()))
-          .get());
+      dom::GetEnumString(GetDevice()->Kind()).get());
 
   if (state.mStopped) {
     // Device terminally stopped. Updating device state is pointless.
@@ -4358,8 +4346,7 @@ void DeviceListener::SetDeviceMuted(bool aMute) {
 
   LOG("DeviceListener %p %s %s device - starting device operation", this,
       aMute ? "muting" : "unmuting",
-      nsCString(dom::MediaDeviceKindValues::GetString(GetDevice()->Kind()))
-          .get());
+      dom::GetEnumString(GetDevice()->Kind()).get());
 
   state.mDeviceMuted = aMute;
 
@@ -4465,9 +4452,7 @@ RefPtr<DeviceListener::DeviceListenerPromise> DeviceListener::ApplyConstraints(
 
   if (mStopped || mDeviceState->mStopped) {
     LOG("DeviceListener %p %s device applyConstraints, but device is stopped",
-        this,
-        nsCString(dom::MediaDeviceKindValues::GetString(GetDevice()->Kind()))
-            .get());
+        this, dom::GetEnumString(GetDevice()->Kind()).get());
     return DeviceListenerPromise::CreateAndResolve(false, __func__);
   }
 

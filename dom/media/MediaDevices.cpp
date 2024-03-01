@@ -550,7 +550,7 @@ already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
   // for us.
   vc.mMediaSource.Reset();
   vc.mMediaSource.Construct().AssignASCII(
-      dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Screen));
+      dom::GetEnumString(MediaSourceEnum::Screen));
 
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()

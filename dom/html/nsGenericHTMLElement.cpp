@@ -1269,25 +1269,24 @@ bool nsGenericHTMLElement::ParseImageAttribute(nsAtom* aAttribute,
 bool nsGenericHTMLElement::ParseReferrerAttribute(const nsAString& aString,
                                                   nsAttrValue& aResult) {
   using mozilla::dom::ReferrerInfo;
+  // This is a bit sketchy, we assume GetEnumString(…).get() points to a static
+  // buffer, relying on the fact that GetEnumString(…) returns a literal string.
   static const nsAttrValue::EnumTable kReferrerPolicyTable[] = {
-      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::No_referrer),
+      {GetEnumString(ReferrerPolicy::No_referrer).get(),
        static_cast<int16_t>(ReferrerPolicy::No_referrer)},
-      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Origin),
+      {GetEnumString(ReferrerPolicy::Origin).get(),
        static_cast<int16_t>(ReferrerPolicy::Origin)},
-      {ReferrerInfo::ReferrerPolicyToString(
-           ReferrerPolicy::Origin_when_cross_origin),
+      {GetEnumString(ReferrerPolicy::Origin_when_cross_origin).get(),
        static_cast<int16_t>(ReferrerPolicy::Origin_when_cross_origin)},
-      {ReferrerInfo::ReferrerPolicyToString(
-           ReferrerPolicy::No_referrer_when_downgrade),
+      {GetEnumString(ReferrerPolicy::No_referrer_when_downgrade).get(),
        static_cast<int16_t>(ReferrerPolicy::No_referrer_when_downgrade)},
-      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Unsafe_url),
+      {GetEnumString(ReferrerPolicy::Unsafe_url).get(),
        static_cast<int16_t>(ReferrerPolicy::Unsafe_url)},
-      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Strict_origin),
+      {GetEnumString(ReferrerPolicy::Strict_origin).get(),
        static_cast<int16_t>(ReferrerPolicy::Strict_origin)},
-      {ReferrerInfo::ReferrerPolicyToString(ReferrerPolicy::Same_origin),
+      {GetEnumString(ReferrerPolicy::Same_origin).get(),
        static_cast<int16_t>(ReferrerPolicy::Same_origin)},
-      {ReferrerInfo::ReferrerPolicyToString(
-           ReferrerPolicy::Strict_origin_when_cross_origin),
+      {GetEnumString(ReferrerPolicy::Strict_origin_when_cross_origin).get(),
        static_cast<int16_t>(ReferrerPolicy::Strict_origin_when_cross_origin)},
       {nullptr, ReferrerPolicy::_empty}};
   return aResult.ParseEnumValue(aString, kReferrerPolicyTable, false);

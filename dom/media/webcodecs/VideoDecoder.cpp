@@ -170,9 +170,7 @@ nsString VideoDecoderConfigInternal::ToString() const {
   if (mDescription.isSome()) {
     rv.AppendPrintf("extradata: %zu bytes", mDescription.value()->Length());
   }
-  rv.AppendPrintf(
-      "hw accel: %s",
-      HardwareAccelerationValues::GetString(mHardwareAcceleration).data());
+  rv.AppendPrintf("hw accel: %s", GetEnumString(mHardwareAcceleration).get());
   if (mOptimizeForLatency.isSome()) {
     rv.AppendPrintf("optimize for latency: %s",
                     mOptimizeForLatency.value() ? "true" : "false");
@@ -822,9 +820,7 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
   LOG("VideoDecoder %p ctor", this);
 }
 
-VideoDecoder::~VideoDecoder() {
-  LOG("VideoDecoder %p dtor", this);
-}
+VideoDecoder::~VideoDecoder() { LOG("VideoDecoder %p dtor", this); }
 
 JSObject* VideoDecoder::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {

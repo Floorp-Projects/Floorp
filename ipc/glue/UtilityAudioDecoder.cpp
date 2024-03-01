@@ -6,6 +6,7 @@
 
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ipc/UtilityAudioDecoder.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/ipc/UtilityProcessChild.h"
 
 namespace mozilla::ipc {
@@ -34,8 +35,7 @@ UtilityActorName GetAudioActorName(const SandboxingKind aSandbox) {
 nsCString GetChildAudioActorName() {
   RefPtr<ipc::UtilityProcessChild> s = ipc::UtilityProcessChild::Get();
   MOZ_ASSERT(s, "Has UtilityProcessChild");
-  return nsCString(dom::WebIDLUtilityActorNameValues::GetString(
-      GetAudioActorName(s->mSandbox)));
+  return dom::GetEnumString(GetAudioActorName(s->mSandbox));
 }
 
 }  // namespace mozilla::ipc

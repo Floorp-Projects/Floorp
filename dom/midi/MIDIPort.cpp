@@ -104,14 +104,14 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled,
   mPortHolder.Init(port.forget());
   LOG("MIDIPort::Initialize (%s, %s)",
       NS_ConvertUTF16toUTF8(Port()->Name()).get(),
-      MIDIPortTypeValues::strings[uint32_t(Port()->Type())].value);
+      GetEnumString(Port()->Type()).get());
   return true;
 }
 
 void MIDIPort::UnsetIPCPort() {
   LOG("MIDIPort::UnsetIPCPort (%s, %s)",
       NS_ConvertUTF16toUTF8(Port()->Name()).get(),
-      MIDIPortTypeValues::strings[uint32_t(Port()->Type())].value);
+      GetEnumString(Port()->Type()).get());
   mPortHolder.Clear();
 }
 

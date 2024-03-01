@@ -624,8 +624,7 @@ void RespondWithHandler::ResolvedCallback(JSContext* aCx,
 
   if (response->Type() == ResponseType::Opaque &&
       mRequestMode != RequestMode::No_cors) {
-    NS_ConvertASCIItoUTF16 modeString(
-        RequestModeValues::GetString(mRequestMode));
+    NS_ConvertASCIItoUTF16 modeString(GetEnumString(mRequestMode));
 
     autoCancel.SetCancelMessage("BadOpaqueInterceptionRequestModeWithURL"_ns,
                                 mRequestURL, modeString);
