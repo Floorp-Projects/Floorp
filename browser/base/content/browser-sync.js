@@ -837,9 +837,19 @@ var gSync = {
         this.updateFxAPanel(UIState.get());
         this.updateCTAPanel();
         PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
-      } else {
+      } else if (anchor == document.getElementById("fxa-toolbar-menu-button")) {
+        // The fxa toolbar button doesn't have much context before the user
+        // clicks it so instead of going straight to the login page,
+        // we take them to a page that has more information
         this.emitFxaToolbarTelemetry("toolbar_icon", anchor);
         openTrustedLinkIn("about:preferences#sync", "tab");
+        PanelUI.hide();
+      } else {
+        let panel =
+          anchor.id == "appMenu-fxa-label2"
+            ? PanelMultiView.getViewNode(document, "PanelUI-fxa")
+            : undefined;
+        this.openFxAEmailFirstPageFromFxaMenu(panel);
         PanelUI.hide();
       }
       return;
