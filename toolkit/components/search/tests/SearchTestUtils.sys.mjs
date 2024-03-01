@@ -541,11 +541,11 @@ export var SearchTestUtils = {
     QueryInterface: ChromeUtils.generateQI(["nsIUserIdleService"]),
     idleTime: 19999,
 
-    addIdleObserver(observer, time) {
+    addIdleObserver(observer) {
       this._observers.add(observer);
     },
 
-    removeIdleObserver(observer, time) {
+    removeIdleObserver(observer) {
       this._observers.delete(observer);
     },
   },

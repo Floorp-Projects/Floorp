@@ -53,7 +53,7 @@
       this._setupEventListeners();
       let searchbar = this;
       this.observer = {
-        observe(aEngine, aTopic, aVerb) {
+        observe(aEngine, aTopic) {
           if (aTopic == "browser-search-engine-modified") {
             // Make sure the engine list is refetched next time it's needed
             searchbar._engines = null;
@@ -115,7 +115,7 @@
         window.requestIdleCallback(() => {
           Services.search
             .init()
-            .then(aStatus => {
+            .then(() => {
               // Bail out if the binding's been destroyed
               if (!this._initialized) {
                 return;
@@ -470,7 +470,7 @@
     }
 
     _setupEventListeners() {
-      this.addEventListener("click", event => {
+      this.addEventListener("click", () => {
         this._maybeSelectAll();
       });
 
@@ -484,17 +484,17 @@
         true
       );
 
-      this.addEventListener("input", event => {
+      this.addEventListener("input", () => {
         this.updateGoButtonVisibility();
       });
 
-      this.addEventListener("drop", event => {
+      this.addEventListener("drop", () => {
         this.updateGoButtonVisibility();
       });
 
       this.addEventListener(
         "blur",
-        event => {
+        () => {
           // Reset the flag since we can't capture enter keyup event if the event happens
           // after moving the focus.
           this._needBrowserFocusAtEnterKeyUp = false;
@@ -508,7 +508,7 @@
 
       this.addEventListener(
         "focus",
-        event => {
+        () => {
           // Speculatively connect to the current engine's search URI (and
           // suggest URI, if different) to reduce request latency
           this.currentEngine.speculativeConnect({
@@ -576,7 +576,7 @@
     }
 
     _setupTextboxEventListeners() {
-      this.textbox.addEventListener("input", event => {
+      this.textbox.addEventListener("input", () => {
         this.textbox.popup.removeAttribute("showonlysettings");
       });
 
@@ -826,7 +826,7 @@
         }
       };
 
-      this.textbox.onkeyup = event => {
+      this.textbox.onkeyup = () => {
         // Pressing Enter key while pressing Meta key, and next, even when
         // releasing Enter key before releasing Meta key, the keyup event is not
         // fired. Therefore, if Enter keydown is detecting, continue the post

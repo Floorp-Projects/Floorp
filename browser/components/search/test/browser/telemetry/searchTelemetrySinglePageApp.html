@@ -204,7 +204,7 @@
       }
     })
 
-    window.addEventListener("DOMContentLoaded", (event) => {
+    window.addEventListener("DOMContentLoaded", () => {
       let url = new URL(window.location.href);
       searchKey = url.searchParams.has("r") ? "r": "s";
 
@@ -219,7 +219,7 @@
       updateSuggestions();
     });
 
-    window.addEventListener("popstate", (event) => {
+    window.addEventListener("popstate", () => {
       let baseUrl = new URL(window.location.href);
       let page = baseUrl.searchParams.get("page");
       switch (page) {

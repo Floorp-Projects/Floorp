@@ -28,7 +28,7 @@ function countCacheEntries() {
     );
     storage.asyncVisitStorage(
       {
-        onCacheStorageInfo(num, consumption) {
+        onCacheStorageInfo(num) {
           this._num = num;
         },
         onCacheEntryInfo(uri) {

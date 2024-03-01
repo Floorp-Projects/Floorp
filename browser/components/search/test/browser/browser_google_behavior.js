@@ -55,7 +55,7 @@ if (code) {
 }
 
 function promiseContentSearchReady(browser) {
-  return SpecialPowers.spawn(browser, [], async function (args) {
+  return SpecialPowers.spawn(browser, [], async function () {
     return new Promise(resolve => {
       SpecialPowers.pushPrefEnv({
         set: [
@@ -175,7 +175,7 @@ async function testSearchEngine(engineDetails) {
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
-        await SpecialPowers.spawn(tab.linkedBrowser, [], async function (args) {
+        await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
           let input = content.document.querySelector("input[id*=search-]");
           input.focus();
           input.value = "foo";

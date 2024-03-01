@@ -123,7 +123,7 @@ async function searchInSearchbar(inputText, win = window) {
   return sb.textbox.popup;
 }
 
-function clearSearchbarHistory(win = window) {
+function clearSearchbarHistory() {
   info("cleanup the search history");
   return FormHistory.update({ op: "remove", fieldname: "searchbar-history" });
 }

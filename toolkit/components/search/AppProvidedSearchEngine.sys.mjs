@@ -68,7 +68,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
    * @param {object} options.configuration
    *   The search engine configuration for application provided engines.
    */
-  update({ locale, configuration } = {}) {
+  update({ configuration } = {}) {
     this._urls = [];
     this._iconMapObj = null;
     this.#init(configuration);

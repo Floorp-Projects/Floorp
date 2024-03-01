@@ -18,7 +18,7 @@
     constructor() {
       super();
 
-      this.addEventListener("popupshowing", event => {
+      this.addEventListener("popupshowing", () => {
         // First handle deciding if we are showing the reduced version of the
         // popup containing only the preferences button. We do this if the
         // glass icon has been clicked if the text field is empty.
@@ -47,7 +47,7 @@
         );
       });
 
-      this.addEventListener("popuphiding", event => {
+      this.addEventListener("popuphiding", () => {
         this._oneOffButtons.removeEventListener(
           "SelectedOneOffButtonChanged",
           this

@@ -106,8 +106,8 @@ class LoadListener {
   }
 
   // nsIProgressEventSink
-  onProgress(request, progress, progressMax) {}
-  onStatus(request, status, statusArg) {}
+  onProgress() {}
+  onStatus() {}
 }
 
 export var SearchUtils = {
