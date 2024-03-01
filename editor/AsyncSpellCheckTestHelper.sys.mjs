@@ -50,7 +50,7 @@ export function maybeOnSpellCheck(editableElement, callback) {
   let waitingForEnded = isc && isc.spellCheckPending;
   let count = 0;
 
-  function observe(subj, topic, data) {
+  function observe(subj, topic) {
     if (subj != editor) {
       return;
     }

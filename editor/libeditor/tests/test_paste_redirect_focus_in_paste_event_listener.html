@@ -57,7 +57,7 @@ SimpleTest.waitForFocus(async () => {
       const editableElementDesc = `<${
         editableElement.tagName.toLocaleLowerCase()
       }${editableElement.hasAttribute("contenteditable") ? " contenteditable" : ""}>`;
-      (test_from_editableElement_to_input => {
+      (() => {
         const input = document.querySelector("#dest > input");
         editableElement.focus();
         editableElement.addEventListener(
@@ -84,7 +84,7 @@ SimpleTest.waitForFocus(async () => {
         input.value = "";
       })();
 
-      (test_from_editableElement_to_contenteditable => {
+      (() => {
         const contentEditable = document.querySelector("#dest > div[contenteditable]");
         editableElement.focus();
         editableElement.addEventListener(
@@ -111,7 +111,7 @@ SimpleTest.waitForFocus(async () => {
         contentEditable.innerHTML = "<br>";
       })();
 
-      (test_from_editableElement_to_non_editable => {
+      (() => {
         const button = document.querySelector("#dest > button");
         editableElement.focus();
         editableElement.addEventListener(

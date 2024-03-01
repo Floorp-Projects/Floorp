@@ -23,9 +23,9 @@ SimpleTest.waitForFocus(() => {
   );
   const editActionListener = {
     QueryInterface: SpecialPowers.ChromeUtils.generateQI(["nsIEditActionListener"]),
-    WillDeleteText: (textNode, offset, length) => {},
-    DidInsertText: (textNode, offset, aString) => {},
-    WillDeleteRanges: (rangesToDelete) => {},
+    WillDeleteText: () => {},
+    DidInsertText: () => {},
+    WillDeleteRanges: () => {},
   };
   // Highlight "a"
   findSelection.setBaseAndExtent(

@@ -41,7 +41,7 @@ var helperAppDlgPromise = new Promise(function(resolve) {
   }
 
   HelperAppLauncherDialog.prototype = {
-    show(aLauncher, aWindowContext, aReason) {
+    show() {
       ok(true, "Whether showing Dialog");
       resolve();
       registrar.unregisterFactory(MOCK_HELPERAPP_DIALOG_CID,

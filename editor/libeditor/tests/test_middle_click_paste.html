@@ -224,7 +224,7 @@ async function doTextareaTests(aTextarea) {
   aTextarea.value = "";
 
   let pasteEventCount = 0;
-  function pasteEventLogger(event) {
+  function pasteEventLogger() {
     pasteEventCount++;
   }
   aTextarea.addEventListener("paste", pasteEventLogger);
@@ -381,7 +381,7 @@ async function doContenteditableTests(aEditableDiv) {
   aEditableDiv.innerHTML = "";
 
   let pasteEventCount = 0;
-  function pasteEventLogger(event) {
+  function pasteEventLogger() {
     pasteEventCount++;
   }
   aEditableDiv.addEventListener("paste", pasteEventLogger);

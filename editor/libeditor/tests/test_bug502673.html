@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502673
           editor.removeDocumentStateListener(this);
         },
 
-        NotifyDocumentStateChanged(aNowDirty) {
+        NotifyDocumentStateChanged() {
           var editor = SpecialPowers.wrap(this.input).editor;
           editor.removeDocumentStateListener(this);
         },

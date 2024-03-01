@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1649005
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script>
   /** Test for bug 1649005, bug 1779343 **/
-  window.addEventListener("DOMContentLoaded", (event) => {
+  window.addEventListener("DOMContentLoaded", () => {
     SimpleTest.waitForExplicitFinish();
     SimpleTest.waitForFocus(function() {
       document.body.textContent = ""; // It would be \n\n otherwise...
