@@ -47,7 +47,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += ["TestNetworkLinkIdHashingWindows.cpp"]
 
 # run the test on mac only
-if CONFIG["OS_TARGET"] == "Darwin":
+if CONFIG["TARGET_OS"] == "OSX":
     UNIFIED_SOURCES += ["TestNetworkLinkIdHashingDarwin.cpp"]
 
 TEST_HARNESS_FILES.gtest += [
@@ -70,7 +70,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     LOCAL_INCLUDES += ["/netwerk/system/win32"]
 
 # mac includes only
-if CONFIG["OS_TARGET"] == "Darwin":
+if CONFIG["TARGET_OS"] == "OSX":
     LOCAL_INCLUDES += ["/netwerk/system/mac"]
 
 include("/ipc/chromium/chromium-config.mozbuild")

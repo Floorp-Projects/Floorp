@@ -126,7 +126,7 @@ PREPROCESSED_IPDL_SOURCES += [
     "PGMPContent.ipdl",
 ]
 
-if CONFIG["OS_TARGET"] in ["WINNT", "Darwin"]:
+if CONFIG["TARGET_OS"] in ["WINNT", "OSX"]:
     DEFINES["SUPPORT_STORAGE_ID"] = 1
 
 include("/ipc/chromium/chromium-config.mozbuild")
