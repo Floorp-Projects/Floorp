@@ -216,7 +216,7 @@ add_task(function test_fog_custom_pings() {
   Assert.ok("onePingOnly" in GleanPings);
   let submitted = false;
   Glean.testOnly.onePingOneBool.set(false);
-  GleanPings.onePingOnly.testBeforeNextSubmit(reason => {
+  GleanPings.onePingOnly.testBeforeNextSubmit(() => {
     submitted = true;
     Assert.equal(false, Glean.testOnly.onePingOneBool.testGetValue());
   });
@@ -227,7 +227,7 @@ add_task(function test_fog_custom_pings() {
 add_task(function test_recursive_testBeforeNextSubmit() {
   Assert.ok("onePingOnly" in GleanPings);
   let submitted = 0;
-  let rec = reason => {
+  let rec = () => {
     submitted++;
     GleanPings.onePingOnly.testBeforeNextSubmit(rec);
   };
@@ -266,10 +266,7 @@ add_task(async function test_fog_timing_distribution_works() {
   // But we can guarantee it's only two samples.
   Assert.equal(
     2,
-    Object.entries(data.values).reduce(
-      (acc, [bucket, count]) => acc + count,
-      0
-    ),
+    Object.entries(data.values).reduce((acc, [, count]) => acc + count, 0),
     "Only two buckets with samples"
   );
 });

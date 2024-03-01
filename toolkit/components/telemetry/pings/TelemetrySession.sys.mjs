@@ -1122,7 +1122,7 @@ var Impl = {
   /**
    * This observer drives telemetry.
    */
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     this._log.trace("observe - " + aTopic + " notified.");
 
     switch (aTopic) {

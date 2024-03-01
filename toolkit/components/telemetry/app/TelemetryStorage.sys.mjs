@@ -664,10 +664,10 @@ var TelemetryStorageImpl = {
     let promise = this._saveArchivedPingTask(ping);
     this._activelyArchiving.add(promise);
     promise.then(
-      r => {
+      () => {
         this._activelyArchiving.delete(promise);
       },
-      e => {
+      () => {
         this._activelyArchiving.delete(promise);
       }
     );
@@ -1047,7 +1047,7 @@ var TelemetryStorageImpl = {
           ping.id,
           ping.timestampCreated,
           ping.type
-        ).catch(e =>
+        ).catch(() =>
           this._log.error(
             "_enforceArchiveQuota - failed to remove archived ping" + ping.id
           )

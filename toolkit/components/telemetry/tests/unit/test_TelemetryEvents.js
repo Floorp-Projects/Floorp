@@ -279,7 +279,7 @@ add_task(async function test_recording() {
 
   // Check that the events were summarized properly.
   let summaries = {};
-  expected.forEach(({ optout, event }) => {
+  expected.forEach(({ event }) => {
     let [category, eObject, method] = event;
     let uniqueEventName = `${category}#${eObject}#${method}`;
     if (!(uniqueEventName in summaries)) {

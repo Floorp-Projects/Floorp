@@ -91,7 +91,7 @@ function assertReceivedPings(aExpectedNum) {
  *
  * @param aRequest the HTTP request sent from HttpServer.
  */
-function pingHandler(aRequest) {
+function pingHandler() {
   gSeenPings++;
 }
 

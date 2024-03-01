@@ -514,8 +514,7 @@ var TelemetryReportingPolicyImpl = {
       aBrowser,
       aWebProgress,
       aRequest,
-      aStateFlags,
-      aStatus
+      aStateFlags
     ) => {
       if (
         aWebProgress.isTopLevel &&
@@ -555,7 +554,7 @@ var TelemetryReportingPolicyImpl = {
     return true;
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic != "sessionstore-windows-restored") {
       return;
     }

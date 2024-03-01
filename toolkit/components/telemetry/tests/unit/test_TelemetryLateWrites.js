@@ -112,11 +112,7 @@ function actual_test() {
   Assert.ok("memoryMap" in lateWrites);
   Assert.equal(lateWrites.memoryMap.length, N_MODULES);
   for (let id in LOADED_MODULES) {
-    let matchingLibrary = lateWrites.memoryMap.filter(function (
-      library,
-      idx,
-      array
-    ) {
+    let matchingLibrary = lateWrites.memoryMap.filter(function (library) {
       return library[1] == id;
     });
     Assert.equal(matchingLibrary.length, 1);
@@ -132,7 +128,7 @@ function actual_test() {
   let second_stack = lateWrites.stacks[1];
   function stackChecker(canonicalStack) {
     let unevalCanonicalStack = uneval(canonicalStack);
-    return function (obj, idx, array) {
+    return function (obj) {
       return unevalCanonicalStack == obj;
     };
   }

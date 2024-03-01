@@ -923,7 +923,7 @@ add_task(async function test_dailyDuplication() {
   Assert.equal(ping.payload.info.reason, REASON_DAILY);
 
   // We don't expect to receive any other daily ping in this test, so assert if we do.
-  PingServer.registerPingHandler((req, res) => {
+  PingServer.registerPingHandler(() => {
     Assert.ok(
       false,
       "No more daily pings should be sent/received in this test."
@@ -967,7 +967,7 @@ add_task(async function test_dailyOverdue() {
   fakeNow(now);
 
   // Assert if we receive something!
-  PingServer.registerPingHandler((req, res) => {
+  PingServer.registerPingHandler(() => {
     Assert.ok(false, "No daily ping should be received if not overdue!.");
   });
 
@@ -1396,7 +1396,7 @@ add_task(async function test_sendFirstShutdownPing() {
     // the appropriate behavior from the preference flags.
 
     // Assert failure if we recive a ping.
-    PingServer.registerPingHandler((req, res) => {
+    PingServer.registerPingHandler(req => {
       const receivedPing = decodeRequestPayload(req);
       Assert.ok(
         false,
@@ -2038,7 +2038,7 @@ add_task(async function test_schedulerEnvironmentReschedules() {
   );
 
   // We don't expect to receive any daily ping in this test, so assert if we do.
-  PingServer.registerPingHandler((req, res) => {
+  PingServer.registerPingHandler(req => {
     const receivedPing = decodeRequestPayload(req);
     Assert.ok(
       false,
@@ -2072,7 +2072,7 @@ add_task(async function test_schedulerNothingDue() {
   await TelemetryController.testReset();
 
   // We don't expect to receive any ping in this test, so assert if we do.
-  PingServer.registerPingHandler((req, res) => {
+  PingServer.registerPingHandler(req => {
     const receivedPing = decodeRequestPayload(req);
     Assert.ok(
       false,
