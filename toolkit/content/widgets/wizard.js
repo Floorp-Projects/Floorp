@@ -359,7 +359,7 @@
       this._wizardButtons.onPageChange();
     }
 
-    _advanceFocusToPage(aPage) {
+    _advanceFocusToPage() {
       if (!this._hasLoaded) {
         return;
       }

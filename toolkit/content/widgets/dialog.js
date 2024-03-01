@@ -146,7 +146,7 @@
       if (document.readyState == "complete") {
         this._postLoadInit();
       } else {
-        window.addEventListener("load", event => this._postLoadInit());
+        window.addEventListener("load", () => this._postLoadInit());
       }
     }
 

@@ -729,7 +729,7 @@
         direction = 1,
         wrap = false,
         startWithAdjacent = true,
-        filter = tab => true,
+        filter = () => true,
       } = opts;
 
       let tab = startTab;
@@ -804,7 +804,7 @@
       }
     }
 
-    _canAdvanceToTab(aTab) {
+    _canAdvanceToTab() {
       return true;
     }
 

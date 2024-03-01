@@ -82,7 +82,7 @@ export default class MozSupportLink extends HTMLAnchorElement {
     }
   }
 
-  attributeChangedCallback(attrName, oldVal, newVal) {
+  attributeChangedCallback(attrName) {
     if (attrName === "support-page" || attrName === "utm-content") {
       this.#setHref();
     }

@@ -44,7 +44,7 @@ export default class MozButtonGroup extends MozLitElement {
     }
   }
 
-  onSlotchange(e) {
+  onSlotchange() {
     for (let child of this.defaultSlotEl.assignedNodes()) {
       if (!(child instanceof Element)) {
         // Text nodes won't support classList or getAttribute.

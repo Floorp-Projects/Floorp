@@ -515,7 +515,7 @@
       }
     }
 
-    _onDragMouseUp(aEvent) {
+    _onDragMouseUp() {
       var col = document.treecolDragging;
       if (!col) {
         return;
@@ -786,7 +786,7 @@
         }
       });
 
-      this.addEventListener("touchend", event => {
+      this.addEventListener("touchend", () => {
         this._touchY = -1;
       });
 
@@ -840,7 +840,7 @@
         }
       });
 
-      this.addEventListener("focus", event => {
+      this.addEventListener("focus", () => {
         this.focused = true;
         if (this.currentIndex == -1 && this.view.rowCount > 0) {
           this.currentIndex = this.getFirstVisibleRow();
@@ -1651,7 +1651,7 @@
       this.ensureRowIsVisible(edge);
     }
 
-    _handleEnter(event) {
+    _handleEnter() {
       if (this._editingColumn) {
         this.stopEditing(true);
         this.focus();

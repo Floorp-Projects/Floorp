@@ -156,7 +156,7 @@
       this.getRootNode().removeEventListener("keypress", this);
     }
 
-    attributeChangedCallback(name, oldVal, newVal) {
+    attributeChangedCallback(name) {
       if (name == "orientation") {
         if (this.isVertical) {
           this.setAttribute("aria-orientation", this.orientation);

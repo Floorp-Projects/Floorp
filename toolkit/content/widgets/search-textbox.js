@@ -214,7 +214,7 @@
       }
     }
 
-    on_mousedown(event) {
+    on_mousedown() {
       if (!this.hasAttribute("focused")) {
         this.setSelectionRange(0, 0);
         this.focus();

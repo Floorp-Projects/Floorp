@@ -572,7 +572,7 @@
     }
 
     setListeners() {
-      this.addEventListener("popupshowing", event => {
+      this.addEventListener("popupshowing", () => {
         // If normalMaxRows wasn't already set by the input, then set it here
         // so that we restore the correct number when the popup is hidden.
 
@@ -584,14 +584,14 @@
         this.mPopupOpen = true;
       });
 
-      this.addEventListener("popupshown", event => {
+      this.addEventListener("popupshown", () => {
         if (this._adjustHeightOnPopupShown) {
           this._adjustHeightOnPopupShown = false;
           this.adjustHeight();
         }
       });
 
-      this.addEventListener("popuphiding", event => {
+      this.addEventListener("popuphiding", () => {
         var isListActive = true;
         if (this.selectedIndex == -1) {
           isListActive = false;
