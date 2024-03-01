@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import {
-  getFilename,
   getTruncatedFileName,
   getFileURL,
   getDisplayPath,
@@ -28,48 +27,6 @@ import { isFulfilled } from "../async-value.js";
 describe("sources", () => {
   const unicode = "\u6e2c";
   const encodedUnicode = encodeURIComponent(unicode);
-
-  describe("getFilename", () => {
-    it("should give us a default of (index)", () => {
-      expect(
-        getFilename(makeMockSource("http://localhost.com:7999/increment/"))
-      ).toBe("(index)");
-    });
-    it("should give us the filename", () => {
-      expect(
-        getFilename(
-          makeMockSource("http://localhost.com:7999/increment/hello.html")
-        )
-      ).toBe("hello.html");
-    });
-    it("should give us the readable Unicode filename if encoded", () => {
-      expect(
-        getFilename(
-          makeMockSource(
-            `http://localhost.com:7999/increment/${encodedUnicode}.html`
-          )
-        )
-      ).toBe(`${unicode}.html`);
-    });
-    it("should give us the filename excluding the query strings", () => {
-      expect(
-        getFilename(
-          makeMockSource(
-            "http://localhost.com:7999/increment/hello.html?query_strings"
-          )
-        )
-      ).toBe("hello.html");
-    });
-    it("should give us the proper filename for pretty files", () => {
-      expect(
-        getFilename(
-          makeMockSource(
-            "http://localhost.com:7999/increment/hello.html:formatted"
-          )
-        )
-      ).toBe("hello.html");
-    });
-  });
 
   describe("getTruncatedFileName", () => {
     it("should truncate the file name when it is more than 30 chars", () => {

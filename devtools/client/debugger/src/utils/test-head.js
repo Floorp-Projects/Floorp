@@ -105,6 +105,7 @@ function createSourceObject(filename, props = {}) {
   return {
     id: filename,
     url: makeSourceURL(filename),
+    shortName: filename,
     isPrettyPrinted: false,
     isExtension: false,
     isOriginal: filename.includes("originalSource"),

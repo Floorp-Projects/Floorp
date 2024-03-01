@@ -214,25 +214,11 @@ export function getFormattedSourceId(id) {
 }
 
 /**
- * Gets a readable filename from a source URL for display purposes.
- * If the source does not have a URL, the source ID will be returned instead.
- */
-export function getFilename(source) {
-  const { id } = source;
-  if (!source.url) {
-    return getFormattedSourceId(id);
-  }
-
-  const { filename } = source.displayURL;
-  return getRawSourceURL(filename);
-}
-
-/**
  * Provides a middle-truncated filename displayed in Tab titles
  */
 export function getTruncatedFileName(source) {
   return truncateMiddleText(
-    `${getFilename(source)}${source.displayURL.search}`,
+    `${source.shortName}${source.displayURL.search}`,
     30
   );
 }
@@ -246,13 +232,13 @@ export function getTruncatedFileName(source) {
 
 export function getDisplayPath(mySource, sources) {
   const rawSourceURL = getRawSourceURL(mySource.url);
-  const filename = getFilename(mySource);
+  const filename = mySource.shortName;
 
   // Find sources that have the same filename, but different paths
   // as the original source
   const similarSources = sources.filter(source => {
     const rawSource = getRawSourceURL(source.url);
-    return rawSourceURL != rawSource && filename == getFilename(source);
+    return rawSourceURL != rawSource && filename == source.shortName;
   });
 
   if (!similarSources.length) {

@@ -56,6 +56,9 @@ const def = {
  *        This is augmented with custom properties like:
  *        - `group`, which is mostly the host of the source's URL.
  *          This is used to sort sources in the Source tree.
+ *        - `filename` which may not be quite matching the URL.
+ *           When files are loaded from "/", they won't have a real name,
+ *           but instead this will report "(index)".
  *        - `fileExtension`, lowercased file extension of the source
  *          (if any extension is available)
  *        - `path` and `pathname` have some special behavior.
@@ -67,6 +70,7 @@ export function getDisplayURL(url, extensionName = null) {
   }
 
   const { pathname, search, protocol, host } = parse(url);
+
   const filename = getUnicodeUrlPath(getFilenameFromPath(pathname));
 
   switch (protocol) {

@@ -32,7 +32,7 @@ import {
   isSelectedMappedSourceLoading,
 } from "../../selectors/index";
 
-import { isPretty, getFilename, shouldBlackbox } from "../../utils/source";
+import { isPretty, shouldBlackbox } from "../../utils/source";
 
 import { PaneToggleButton } from "../shared/Button/index";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -194,12 +194,11 @@ class SourceFooter extends PureComponent {
         : "sourceFooter.mappedGeneratedSource.tooltip",
       mappedSource.url
     );
-    const filename = getFilename(mappedSource);
     const label = L10N.getFormatStr(
       mappedSource.isOriginal
         ? "sourceFooter.mappedOriginalSource.title"
         : "sourceFooter.mappedGeneratedSource.title",
-      filename
+      mappedSource.shortName
     );
     return button(
       {

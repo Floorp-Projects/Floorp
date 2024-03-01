@@ -11,7 +11,11 @@ import {
   getSourceCount,
 } from "../../selectors/index";
 import { features } from "../../utils/prefs";
-import { isUrlExtension } from "../../utils/source";
+import {
+  isUrlExtension,
+  getRawSourceURL,
+  getFormattedSourceId,
+} from "../../utils/source";
 import { createLocation } from "../../utils/location";
 import { getDisplayURL } from "../../utils/sources-tree/getURL";
 
@@ -242,6 +246,7 @@ function createSourceObject({
   isOriginal = false,
   isHTML = false,
 }) {
+  const displayURL = getDisplayURL(url, extensionName);
   return {
     // The ID, computed by:
     // * `makeSourceId` for generated,
@@ -254,7 +259,18 @@ function createSourceObject({
     // A (slightly tweaked) URL object to represent the source URL.
     // The URL object is augmented of a "group" attribute and some other standard attributes
     // are modified from their typical value. See getDisplayURL implementation.
-    displayURL: getDisplayURL(url, extensionName),
+    displayURL,
+
+    // Short label for this source.
+    //
+    // * For inlined/eval sources without a URL, the name will refer to the internal source ID,
+    // * For pretty printed source, we take care to ignore the internal ":formatted" suffix used in the URL,
+    // * For index files, i.e. sources loaded without a filename, they will be named "(index)".
+    // * Special characters are decoded from the URL string.
+    // (most of this is done by getDisplayURL)
+    shortName: url
+      ? getRawSourceURL(displayURL.filename)
+      : getFormattedSourceId(id),
 
     // Only set for generated sources that are WebExtension sources.
     // This is especially useful to display the extension name for content scripts

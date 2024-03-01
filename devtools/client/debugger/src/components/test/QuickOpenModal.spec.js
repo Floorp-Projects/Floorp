@@ -130,6 +130,7 @@ describe("QuickOpenModal", () => {
         displayedSources: [
           {
             url: "mozilla.com",
+            shortName: "mozilla.com",
             displayURL: getDisplayURL("mozilla.com"),
           },
         ],
@@ -147,6 +148,7 @@ describe("QuickOpenModal", () => {
         value: "mozilla.com",
         source: {
           url: "mozilla.com",
+          shortName: "mozilla.com",
           displayURL: getDisplayURL("mozilla.com"),
         },
       },

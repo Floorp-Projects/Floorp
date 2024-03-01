@@ -5,7 +5,6 @@
 import { createSelector } from "devtools/client/shared/vendor/reselect";
 import { getSelectedSource } from "./sources";
 import { getBreakpointsList } from "./breakpoints";
-import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/selected-location";
 
 // Returns a list of sources with their related breakpoints:
@@ -37,16 +36,15 @@ export const getBreakpointSources = createSelector(
         sources.set(source, {
           source,
           breakpoints: [breakpoint],
-          filename: getFilename(source),
         });
       } else {
         sources.get(source).breakpoints.push(breakpoint);
       }
     }
 
-    // Returns an array of breakpoints info per source, sorted by source's filename
+    // Returns an array of breakpoints info per source, sorted by source's displayed name
     return [...sources.values()].sort((a, b) =>
-      a.filename.localeCompare(b.filename)
+      a.source.shortName.localeCompare(b.source.shortName)
     );
   }
 );
