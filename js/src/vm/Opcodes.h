@@ -2937,7 +2937,8 @@
     /*
      * Push the number of actual arguments as Int32Value.
      *
-     * This is emitted for the ArgumentsLength() intrinsic in self-hosted code.
+     * This is emitted for the ArgumentsLength() intrinsic in self-hosted code,
+     * and if the script uses only arguments.length.
      *
      *   Category: Variables and scopes
      *   Type: Getting binding values
