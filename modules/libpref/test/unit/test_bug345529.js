@@ -9,7 +9,7 @@ function run_test() {
   var observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-    observe: function observe(aSubject, aTopic, aState) {
+    observe: function observe() {
       Services.prefs.removeObserver(PREF_NAME, observer);
     },
   };

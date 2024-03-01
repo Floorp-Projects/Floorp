@@ -51,7 +51,7 @@ add_task(async function sanitized_pref_test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: PAGE_URL },
-    async function (browser) {}
+    async function () {}
   );
 
   // Needed because otherwise we advance too quickly
