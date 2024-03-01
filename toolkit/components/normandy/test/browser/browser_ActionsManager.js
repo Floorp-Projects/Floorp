@@ -14,7 +14,7 @@ const { ActionSchemas } = ChromeUtils.importESModule(
 );
 
 // Test life cycle methods for actions
-decorate_task(async function (reportActionStub, Stub) {
+decorate_task(async function () {
   let manager = new ActionsManager();
   const recipe = { id: 1, action: "test-local-action-used" };
 

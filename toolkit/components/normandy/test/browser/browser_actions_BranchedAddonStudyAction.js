@@ -719,7 +719,7 @@ decorate_task(
   ensureAddonCleanup(),
   AddonStudies.withStudies([branchedAddonStudyFactory({ active: false })]),
   withSendEventSpy(),
-  async ({ addonStudies: [study], sendEventSpy }) => {
+  async ({ addonStudies: [study] }) => {
     const action = new BranchedAddonStudyAction();
     await Assert.rejects(
       action.unenroll(study.recipeId),
