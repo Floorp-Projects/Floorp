@@ -2885,7 +2885,8 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
     }
 
     case ParseNodeKind::DotExpr:
-    case ParseNodeKind::OptionalDotExpr: {
+    case ParseNodeKind::OptionalDotExpr:
+    case ParseNodeKind::ArgumentsLength: {
       PropertyAccessBase* prop = &pn->as<PropertyAccessBase>();
       MOZ_ASSERT(prop->pn_pos.encloses(prop->expression().pn_pos));
 
