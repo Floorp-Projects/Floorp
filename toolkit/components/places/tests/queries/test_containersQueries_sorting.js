@@ -113,7 +113,7 @@ function cartProd(aSequences, aCallback) {
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
-  var seqEltPtrs = aSequences.map(i => 0);
+  var seqEltPtrs = aSequences.map(() => 0);
 
   var numProds = 0;
   var done = false;
@@ -407,7 +407,7 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
   var comparator;
   switch (aExpectedSortingMode) {
     case Ci.nsINavHistoryQueryOptions.SORT_BY_NONE:
-      comparator = function (a, b) {
+      comparator = function () {
         return 0;
       };
       break;

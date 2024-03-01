@@ -927,7 +927,7 @@ PlacesTreeView.prototype = {
     }
   },
 
-  nodeTitleChanged: function PTV_nodeTitleChanged(aNode, aNewTitle) {
+  nodeTitleChanged: function PTV_nodeTitleChanged(aNode) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
   },
 
@@ -949,8 +949,7 @@ PlacesTreeView.prototype = {
 
   nodeHistoryDetailsChanged: function PTV_nodeHistoryDetailsChanged(
     aNode,
-    aOldVisitDate,
-    aOldVisitCount
+    aOldVisitDate
   ) {
     this._nodeDetails.delete(
       makeNodeDetailsKey({
@@ -969,24 +968,17 @@ PlacesTreeView.prototype = {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_TAGS);
   },
 
-  nodeKeywordChanged(aNode, aNewKeyword) {},
+  nodeKeywordChanged() {},
 
-  nodeDateAddedChanged: function PTV_nodeDateAddedChanged(aNode, aNewValue) {
+  nodeDateAddedChanged: function PTV_nodeDateAddedChanged(aNode) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_DATEADDED);
   },
 
-  nodeLastModifiedChanged: function PTV_nodeLastModifiedChanged(
-    aNode,
-    aNewValue
-  ) {
+  nodeLastModifiedChanged: function PTV_nodeLastModifiedChanged(aNode) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_LASTMODIFIED);
   },
 
-  containerStateChanged: function PTV_containerStateChanged(
-    aNode,
-    aOldState,
-    aNewState
-  ) {
+  containerStateChanged: function PTV_containerStateChanged(aNode) {
     this.invalidateContainer(aNode);
   },
 
@@ -1340,7 +1332,7 @@ PlacesTreeView.prototype = {
     return props + " " + properties;
   },
 
-  getColumnProperties(aColumn) {
+  getColumnProperties() {
     return "";
   },
 
@@ -1576,7 +1568,7 @@ PlacesTreeView.prototype = {
     return node.icon;
   },
 
-  getCellValue(aRow, aColumn) {},
+  getCellValue() {},
 
   getCellText: function PTV_getCellText(aRow, aColumn) {
     let node = this._getNodeForRow(aRow);
@@ -1858,5 +1850,5 @@ PlacesTreeView.prototype = {
   },
 
   selectionChanged() {},
-  cycleCell(aRow, aColumn) {},
+  cycleCell() {},
 };

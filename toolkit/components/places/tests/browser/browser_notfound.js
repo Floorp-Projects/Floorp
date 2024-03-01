@@ -23,7 +23,7 @@ add_task(async function () {
       gBrowser,
       url,
     },
-    async browser => {
+    async () => {
       info("awaiting for the visit");
       await promiseVisited;
 

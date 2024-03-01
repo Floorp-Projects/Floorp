@@ -816,7 +816,7 @@ export var PlacesUtils = {
   },
 
   // nsIObserver
-  observe: function PU_observe(aSubject, aTopic, aData) {
+  observe: function PU_observe(aSubject, aTopic) {
     switch (aTopic) {
       case this.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, this.TOPIC_SHUTDOWN);
@@ -1180,7 +1180,7 @@ export var PlacesUtils = {
       {
         url: { requiredIf: b => !b.guid },
         guid: { requiredIf: b => !b.url },
-        visits: { requiredIf: b => validateVisits },
+        visits: { requiredIf: () => validateVisits },
       }
     );
   },
@@ -2303,7 +2303,7 @@ PlacesUtils.metadata = {
         }
         return true;
       })
-      .map(([key, value]) => key);
+      .map(([key]) => key);
     if (keysToDelete.length) {
       await this.deleteWithConnection(db, ...keysToDelete);
       if (keysToDelete.length == pairs.size) {

@@ -29,7 +29,7 @@ add_task(async function test() {
       gBrowser,
       url,
     },
-    async browser => {
+    async () => {
       info("awaiting for the visit");
 
       Assert.equal(

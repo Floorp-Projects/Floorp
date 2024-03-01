@@ -15,14 +15,14 @@
     constructor() {
       super();
 
-      this.addEventListener("focus", event => {
+      this.addEventListener("focus", () => {
         this._cachedInsertionPoint = undefined;
         // See select handler. We need the sidebar's places commandset to be
         // updated as well
         document.commandDispatcher.updateCommands("focus");
       });
 
-      this.addEventListener("select", event => {
+      this.addEventListener("select", () => {
         this._cachedInsertionPoint = undefined;
 
         // This additional complexity is here for the sidebars
@@ -125,7 +125,7 @@
         event.stopPropagation();
       });
 
-      this.addEventListener("dragend", event => {
+      this.addEventListener("dragend", () => {
         this._isDragSource = false;
         PlacesControllerDragHelper.currentDropTarget = null;
       });
@@ -841,7 +841,7 @@
       return this.controller.buildContextMenu(aPopup);
     }
 
-    destroyContextMenu(aPopup) {}
+    destroyContextMenu() {}
 
     disconnectedCallback() {
       window.removeEventListener("unload", this.disconnectedCallback);

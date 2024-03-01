@@ -377,7 +377,7 @@ add_task(async function test_sidebar_folder_contextmenu_contents() {
 
   await withSidebarTree("bookmarks", async tree => {
     await checkContextMenu(
-      async bookmark => {
+      async () => {
         let folder = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           title: "folder",
@@ -416,7 +416,7 @@ add_task(async function test_sidebar_multiple_folders_contextmenu_contents() {
 
   await withSidebarTree("bookmarks", async tree => {
     await checkContextMenu(
-      async bookmark => {
+      async () => {
         let folder1 = await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.toolbarGuid,
           title: "folder 1",
@@ -556,7 +556,7 @@ add_task(async function test_library_bookmark_contextmenu_contents() {
     );
   }
 
-  await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
+  await withLibraryWindow("BookmarksToolbar", async ({ right }) => {
     await checkContextMenu(
       async bookmark => {
         let contextMenu = right.ownerDocument.getElementById("placesContext");
@@ -594,7 +594,7 @@ add_task(async function test_library_bookmark_search_contextmenu_contents() {
     );
   }
 
-  await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
+  await withLibraryWindow("BookmarksToolbar", async ({ right }) => {
     await checkContextMenu(
       async bookmark => {
         info("Checking bookmark library menu contents in search context");
@@ -704,7 +704,7 @@ add_task(async function test_sidebar_multiple_links_contextmenu_contents() {
 
   await withSidebarTree("history", async tree => {
     await checkContextMenu(
-      async bookmark => {
+      async () => {
         await PlacesTestUtils.addVisits([
           "http://example-1.com/",
           "http://example-2.com/",
@@ -774,9 +774,9 @@ add_task(async function test_library_noselection_contextmenu_contents() {
     "placesContext_paste",
   ];
 
-  await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
+  await withLibraryWindow("BookmarksToolbar", async ({ right }) => {
     await checkContextMenu(
-      async bookmark => {
+      async () => {
         let contextMenu = right.ownerDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,

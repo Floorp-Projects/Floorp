@@ -345,7 +345,7 @@ add_task(async function bookmark_with_invalid_default_folder() {
   await test_bookmarks_popup({
     isNewBookmark: true,
     shouldAutoClose: true,
-    async popupShowFn(browser) {
+    async popupShowFn() {
       EventUtils.synthesizeKey("d", { accelKey: true }, win);
     },
   });
@@ -510,7 +510,7 @@ add_task(async function contextmenu_new_bookmark_keypress_no_autoclose() {
 add_task(async function bookmarks_menu_new_bookmark_remove_bookmark() {
   await test_bookmarks_popup({
     isNewBookmark: true,
-    popupShowFn(browser) {
+    popupShowFn() {
       win.document.getElementById("menu_bookmarkThisPage").doCommand();
     },
     shouldAutoClose: true,
@@ -524,7 +524,7 @@ add_task(async function bookmarks_menu_new_bookmark_remove_bookmark() {
 add_task(async function ctrl_d_edit_bookmark_remove_bookmark() {
   await test_bookmarks_popup({
     isNewBookmark: false,
-    popupShowFn(browser) {
+    popupShowFn() {
       EventUtils.synthesizeKey("D", { accelKey: true }, win);
     },
     shouldAutoClose: true,
@@ -544,7 +544,7 @@ add_task(async function enter_on_remove_bookmark_should_remove_bookmark() {
 
   await test_bookmarks_popup({
     isNewBookmark: true,
-    popupShowFn(browser) {
+    popupShowFn() {
       EventUtils.synthesizeKey("D", { accelKey: true }, win);
     },
     shouldAutoClose: true,
@@ -589,7 +589,7 @@ add_task(async function mouse_hovering_panel_should_prevent_autoclose() {
 add_task(async function ctrl_d_new_bookmark_mousedown_mouseout_no_autoclose() {
   await test_bookmarks_popup({
     isNewBookmark: true,
-    popupShowFn(browser) {
+    popupShowFn() {
       EventUtils.synthesizeKey("D", { accelKey: true }, win);
     },
     async popupEditFn() {
@@ -635,7 +635,7 @@ add_task(async function ctrl_d_new_bookmark_mousedown_mouseout_no_autoclose() {
 add_task(async function enter_during_autocomplete_should_prevent_autoclose() {
   await test_bookmarks_popup({
     isNewBookmark: false,
-    async popupShowFn(browser) {
+    async popupShowFn() {
       PlacesUtils.tagging.tagURI(makeURI(TEST_URL), ["Abc"]);
       EventUtils.synthesizeKey("d", { accelKey: true }, win);
     },
@@ -673,7 +673,7 @@ add_task(async function enter_during_autocomplete_should_prevent_autoclose() {
 add_task(async function escape_during_autocomplete_should_prevent_autoclose() {
   await test_bookmarks_popup({
     isNewBookmark: false,
-    async popupShowFn(browser) {
+    async popupShowFn() {
       PlacesUtils.tagging.tagURI(makeURI(TEST_URL), ["Abc"]);
       EventUtils.synthesizeKey("d", { accelKey: true }, win);
     },

@@ -48,10 +48,10 @@ async function simulateDrop(
       mozCursor: "auto",
       mozItemCount: 1,
       types: [PlacesUtils.TYPE_X_MOZ_PLACE],
-      mozTypesAt(i) {
+      mozTypesAt() {
         return [this._data[0].type];
       },
-      mozGetDataAt(i) {
+      mozGetDataAt() {
         return this._data[0].data;
       },
       mozSetDataAt(type, data, index) {
@@ -247,10 +247,10 @@ add_task(async function test_move_within_itself() {
       mozCursor: "auto",
       mozItemCount: bookmarks.length,
       types: [PlacesUtils.TYPE_X_MOZ_PLACE],
-      mozTypesAt(i) {
+      mozTypesAt() {
         return [this._data[0].type];
       },
-      mozGetDataAt(i) {
+      mozGetDataAt() {
         return this._data[0].data;
       },
       mozSetDataAt(type, data, index) {

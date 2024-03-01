@@ -88,7 +88,7 @@ gTests.push({
     let unloadPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        function (event) {
+        function () {
           tagsField.popup.removeEventListener(
             "popuphidden",
             popupListener,
@@ -216,7 +216,7 @@ gTests.push({
     let hiddenPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        function (event) {
+        function () {
           tagsField.popup.removeEventListener(
             "popuphidden",
             popupListener,
@@ -340,7 +340,7 @@ gTests.push({
     let unloadPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        event => {
+        () => {
           Assert.ok(
             self._cleanShutdown,
             "Dialog window should not be closed by pressing ESC in folder name textbox"

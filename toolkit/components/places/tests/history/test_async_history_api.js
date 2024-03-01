@@ -32,7 +32,7 @@ function VisitInfo(aTransitionType, aVisitTime) {
 }
 
 function promiseUpdatePlaces(aPlaces, aOptions = {}) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     asyncHistory.updatePlaces(
       aPlaces,
       Object.assign(
@@ -974,7 +974,7 @@ add_task(async function test_title_change_notifies() {
   place.title = "title 1";
   let expectedNotification = false;
   let titleChangeObserver;
-  let titleChangePromise = new Promise((resolve, reject) => {
+  let titleChangePromise = new Promise(resolve => {
     titleChangeObserver = new TitleChangedObserver(
       place.uri,
       place.title,
@@ -1032,8 +1032,8 @@ add_task(async function test_visit_notifies() {
   };
   Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
-  function promiseVisitObserver(aPlace) {
-    return new Promise((resolve, reject) => {
+  function promiseVisitObserver() {
+    return new Promise(resolve => {
       let callbackCount = 0;
       let finisher = function () {
         if (++callbackCount == 2) {
@@ -1137,7 +1137,7 @@ add_task(async function test_omit_frecency_notifications() {
   // we won't get a ranking changed notification until recalculation happens.
   await PlacesUtils.history.clear();
   let notified = false;
-  let listener = events => {
+  let listener = () => {
     notified = true;
     PlacesUtils.observers.removeListener(["pages-rank-changed"], listener);
   };

@@ -321,7 +321,7 @@ TaggingService.prototype = {
   },
 
   // nsIObserver
-  observe: function TS_observe(aSubject, aTopic, aData) {
+  observe: function TS_observe(aSubject, aTopic) {
     if (aTopic == TOPIC_SHUTDOWN) {
       PlacesUtils.observers.removeListener(
         [

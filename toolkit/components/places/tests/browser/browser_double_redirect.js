@@ -16,7 +16,7 @@ add_task(async function () {
   let promiseVisits = new Promise(resolve => {
     let observer = {
       _notified: [],
-      onVisit(uri, id, time, referrerId, transition) {
+      onVisit(uri) {
         info("Received onVisit: " + uri);
         this._notified.push(uri);
 

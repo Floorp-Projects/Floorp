@@ -185,7 +185,7 @@ add_task(async function test_update_frecencies() {
     let frecencies = await promiseAllURLFrecencies();
     let urlsWithFrecency = mapFilterIterator(
       frecencies.entries(),
-      ([href, { frecency, recalc }]) => (recalc == 0 ? href : null)
+      ([href, { recalc }]) => (recalc == 0 ? href : null)
     );
 
     // A is unchanged, and we should recalculate frecency for three more
@@ -236,7 +236,7 @@ add_task(async function test_update_frecencies() {
     let frecencies = await promiseAllURLFrecencies();
     let urlsWithoutFrecency = mapFilterIterator(
       frecencies.entries(),
-      ([href, { frecency, recalc }]) => (recalc == 1 ? href : null)
+      ([href, { recalc }]) => (recalc == 1 ? href : null)
     );
     deepEqual(
       urlsWithoutFrecency,

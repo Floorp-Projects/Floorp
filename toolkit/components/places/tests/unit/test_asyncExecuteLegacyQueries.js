@@ -30,7 +30,7 @@ add_task(async function test_history_query() {
           "Async execution error (" + aError.result + "): " + aError.message
         );
       },
-      handleCompletion(aReason) {
+      handleCompletion() {
         cleanupTest().then(resolve);
       },
     });
@@ -69,7 +69,7 @@ add_task(async function test_bookmarks_query() {
           "Async execution error (" + aError.result + "): " + aError.message
         );
       },
-      handleCompletion(aReason) {
+      handleCompletion() {
         cleanupTest().then(resolve);
       },
     });

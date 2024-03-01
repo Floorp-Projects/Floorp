@@ -95,8 +95,8 @@ add_task(async function test_blocker_state() {
   let buf = await SyncedBookmarksMirror.open({
     path: "blocker_state_buf.sqlite",
     finalizeAt: barrier.client,
-    recordStepTelemetry(...args) {},
-    recordValidationTelemetry(...args) {},
+    recordStepTelemetry() {},
+    recordValidationTelemetry() {},
   });
   await storeRecords(buf, [
     {

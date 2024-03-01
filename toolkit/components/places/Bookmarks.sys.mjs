@@ -1681,7 +1681,7 @@ export var Bookmarks = Object.freeze({
    */
   // TODO must implement these methods yet:
   // PlacesUtils.promiseBookmarksTree()
-  fetchTree(guid = "", options = {}) {
+  fetchTree() {
     throw new Error("Not yet implemented");
   },
 

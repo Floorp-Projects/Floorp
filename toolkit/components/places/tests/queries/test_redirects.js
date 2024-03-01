@@ -42,7 +42,7 @@ function check_results_callback(aSequence) {
   }
 
   // Build expectedData array.
-  let expectedData = visits.filter(function (aVisit, aIndex, aArray) {
+  let expectedData = visits.filter(function (aVisit) {
     // Embed visits never appear in results.
     if (aVisit.transType == Ci.nsINavHistoryService.TRANSITION_EMBED) {
       return false;
@@ -154,7 +154,7 @@ function cartProd(aSequences, aCallback) {
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
-  let seqEltPtrs = aSequences.map(i => 0);
+  let seqEltPtrs = aSequences.map(() => 0);
 
   let numProds = 0;
   let done = false;

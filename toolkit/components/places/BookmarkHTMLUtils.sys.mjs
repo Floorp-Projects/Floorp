@@ -428,7 +428,7 @@ BookmarkImporter.prototype = {
    *       We also don't import ADD_DATE or LAST_MODIFIED for separators because
    *       pre-Places bookmarks did not support them.
    */
-  _handleSeparator: function handleSeparator(aElt) {
+  _handleSeparator: function handleSeparator() {
     let frame = this._curFrame;
 
     let separator = {

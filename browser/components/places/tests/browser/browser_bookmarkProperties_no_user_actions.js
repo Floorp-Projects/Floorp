@@ -50,10 +50,10 @@ add_task(async function test_change_title_from_BookmarkStar() {
     mozCursor: "auto",
     mozItemCount: 1,
     types: [PlacesUtils.TYPE_X_MOZ_PLACE],
-    mozTypesAt(i) {
+    mozTypesAt() {
       return this.types;
     },
-    mozGetDataAt(i) {
+    mozGetDataAt() {
       return bookmarkWithId;
     },
   };

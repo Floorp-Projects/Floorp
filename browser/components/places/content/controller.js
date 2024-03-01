@@ -102,7 +102,7 @@ PlacesController.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIClipboardOwner"]),
 
   // nsIClipboardOwner
-  LosingOwnership: function PC_LosingOwnership(aXferable) {
+  LosingOwnership: function PC_LosingOwnership() {
     this.cutNodes = [];
   },
 
@@ -333,7 +333,7 @@ PlacesController.prototype = {
     }
   },
 
-  onEvent: function PC_onEvent(eventName) {},
+  onEvent: function PC_onEvent() {},
 
   /**
    * Determine whether or not the selection can be removed, either by the

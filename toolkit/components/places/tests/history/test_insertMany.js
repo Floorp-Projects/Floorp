@@ -189,7 +189,7 @@ add_task(async function test_transitions() {
   await PlacesUtils.history.insertMany(places);
   // Check callbacks.
   let count = 0;
-  await PlacesUtils.history.insertMany(places, pageInfo => {
+  await PlacesUtils.history.insertMany(places, () => {
     ++count;
   });
   Assert.equal(count, Object.keys(PlacesUtils.history.TRANSITIONS).length);

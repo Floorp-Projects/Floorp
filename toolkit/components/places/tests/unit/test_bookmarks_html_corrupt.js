@@ -112,7 +112,7 @@ var database_check = async function () {
   await new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(
       uri(TEST_FAVICON_PAGE_URL),
-      (aURI, aDataLen, aData, aMimeType) => {
+      (aURI, aDataLen) => {
         // aURI should never be null when aDataLen > 0.
         Assert.notEqual(aURI, null);
         // Favicon data is stored in the bookmarks file as a "data:" URI.  For

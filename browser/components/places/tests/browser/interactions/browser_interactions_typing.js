@@ -118,7 +118,7 @@ add_task(async function test_load_type_and_navigate_away() {
 
 add_task(async function test_no_typing_close_tab() {
   await Interactions.reset();
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {});
+  await BrowserTestUtils.withNewTab(TEST_URL, async () => {});
 
   await assertDatabaseValues([
     {

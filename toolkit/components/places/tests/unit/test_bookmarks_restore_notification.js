@@ -115,7 +115,7 @@ async function checkObservers(expectPromises, expectedData) {
 /**
  * Run after every test cases.
  */
-async function teardown(file, begin, success, fail) {
+async function teardown(file) {
   // On restore failed, file may not exist, so wrap in try-catch.
   await IOUtils.remove(file, { ignoreAbsent: true });
 

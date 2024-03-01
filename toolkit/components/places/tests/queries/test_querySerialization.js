@@ -86,11 +86,11 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasBeginTime",
     matches: flagSwitchMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.beginTime = Date.now() * 1000;
         aQuery.beginTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_EPOCH;
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.beginTime = Date.now() * 1000;
         aQuery.beginTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY;
       },
@@ -103,11 +103,11 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasEndTime",
     matches: flagSwitchMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.endTime = Date.now() * 1000;
         aQuery.endTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_EPOCH;
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.endTime = Date.now() * 1000;
         aQuery.endTimeReference = Ci.nsINavHistoryQuery.TIME_RELATIVE_TODAY;
       },
@@ -120,10 +120,10 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasSearchTerms",
     matches: flagSwitchMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.searchTerms = "shrimp and white wine";
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.searchTerms = "";
       },
     ],
@@ -135,15 +135,15 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasDomain",
     matches: flagSwitchMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.domain = "mozilla.com";
         aQuery.domainIsHost = false;
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.domain = "www.mozilla.com";
         aQuery.domainIsHost = true;
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.domain = "";
       },
     ],
@@ -155,7 +155,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.hasUri",
     matches: flagSwitchMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.uri = uri("http://mozilla.com");
       },
     ],
@@ -167,7 +167,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.minVisits",
     matches: simplePropertyMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.minVisits = 0x7fffffff; // 2^31 - 1
       },
     ],
@@ -178,7 +178,7 @@ const querySwitches = [
     desc: "nsINavHistoryQuery.maxVisits",
     matches: simplePropertyMatches,
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.maxVisits = 0x7fffffff; // 2^31 - 1
       },
     ],
@@ -205,13 +205,13 @@ const querySwitches = [
       return true;
     },
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.setParents([]);
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.setParents([PlacesUtils.bookmarks.rootGuid]);
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.setParents([
           PlacesUtils.bookmarks.rootGuid,
           PlacesUtils.bookmarks.tagsGuid,
@@ -244,13 +244,13 @@ const querySwitches = [
       return true;
     },
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.tags = [];
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.tags = [""];
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.tags = [
           "foo",
           "七難",
@@ -263,7 +263,7 @@ const querySwitches = [
           "あいうえお",
         ];
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.tags = [
           "foo",
           "七難",
@@ -301,13 +301,13 @@ const querySwitches = [
       return true;
     },
     runs: [
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.setTransitions([]);
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD]);
       },
-      function (aQuery, aQueryOptions) {
+      function (aQuery) {
         aQuery.setTransitions([
           Ci.nsINavHistoryService.TRANSITION_TYPED,
           Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
@@ -455,7 +455,7 @@ function cartProd(aSequences, aCallback) {
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
-  var seqEltPtrs = aSequences.map(i => 0);
+  var seqEltPtrs = aSequences.map(() => 0);
 
   var numProds = 0;
   var done = false;

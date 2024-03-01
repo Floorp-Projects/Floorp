@@ -62,7 +62,7 @@ add_task(async function test_interactions_simple_load_and_change_to_non_http() {
 
 add_task(async function test_interactions_close_tab() {
   await Interactions.reset();
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+  await BrowserTestUtils.withNewTab(TEST_URL, async () => {
     Interactions._pageViewStartTime = Cu.now() - 20000;
   });
 
@@ -373,7 +373,7 @@ add_task(async function test_interactions_idle() {
   await Interactions.reset();
   let lastViewTime;
 
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+  await BrowserTestUtils.withNewTab(TEST_URL, async () => {
     Interactions._pageViewStartTime = Cu.now() - 10000;
 
     Interactions.observe(null, "idle", "");

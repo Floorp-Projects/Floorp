@@ -19,7 +19,7 @@ function waitForBookmarkElements(expectedCount) {
   }
   return new Promise(resolve => {
     info("Waiting for bookmarks");
-    let mut = new MutationObserver(mutations => {
+    let mut = new MutationObserver(() => {
       info("Elements appeared");
       if (container.childElementCount == expectedCount) {
         resolve();
@@ -160,7 +160,7 @@ add_task(async function clickWithPrefSet() {
 
   // With loadBookmarksInTabs, reuse current tab if blank
   for (let button of [0, 1]) {
-    await BrowserTestUtils.withNewTab({ gBrowser }, async tab => {
+    await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
       promise = waitForLoad(gBrowser.selectedBrowser, TEST_PAGES[1]);
       EventUtils.synthesizeMouseAtCenter(gBookmarkElements[1], {
         button,

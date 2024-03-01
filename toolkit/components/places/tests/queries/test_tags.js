@@ -190,7 +190,7 @@ add_task(async function many_tags_no_bookmark() {
     "Querying on many tags associated with a URI and tags not associated " +
       "with that URI should not return that URI"
   );
-  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function () {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["foo", "bar", "bogus"]);
@@ -202,7 +202,7 @@ add_task(async function many_tags_no_bookmark() {
 
 add_task(async function nonexistent_tags() {
   info("Querying on nonexistent tag should return no results");
-  await task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  await task_doWithBookmark(["foo", "bar", "baz"], function () {
     var [query, opts] = makeQuery(["bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["bogus", "gnarly"]);
@@ -449,7 +449,7 @@ function addBookmark(aURI) {
 /**
  * Asynchronous task that removes all pages from history and bookmarks.
  */
-async function task_cleanDatabase(aCallback) {
+async function task_cleanDatabase() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 }
