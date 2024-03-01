@@ -5424,7 +5424,6 @@ bool PresShell::IsTransparentContainerElement() const {
         case dom::PrefersColorSchemeOverride::Dark:
           return pc->DefaultBackgroundColorScheme() == ColorScheme::Dark;
         case dom::PrefersColorSchemeOverride::None:
-        case dom::PrefersColorSchemeOverride::EndGuard_:
           break;
       }
     }

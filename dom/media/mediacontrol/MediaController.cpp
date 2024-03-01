@@ -186,9 +186,10 @@ bool MediaController::ShouldPropagateActionToAllContexts(
   // These three actions have default action handler for each frame, so we
   // need to propagate to all contexts. We would handle default handlers in
   // `ContentMediaController::HandleMediaKey`.
-  return aAction.mKey == MediaControlKey::Play ||
-         aAction.mKey == MediaControlKey::Pause ||
-         aAction.mKey == MediaControlKey::Stop;
+  return aAction.mKey.isSome() &&
+         (aAction.mKey.value() == MediaControlKey::Play ||
+          aAction.mKey.value() == MediaControlKey::Pause ||
+          aAction.mKey.value() == MediaControlKey::Stop);
 }
 
 void MediaController::UpdateMediaControlActionToContentMediaIfNeeded(

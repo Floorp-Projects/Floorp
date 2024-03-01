@@ -6,6 +6,8 @@
 
 #include "FileSystemDirectoryHandle.h"
 
+#include <cstdint>
+
 #include "FileSystemDirectoryIteratorFactory.h"
 #include "fs/FileSystemRequestHandler.h"
 #include "js/StructuredClone.h"
@@ -153,7 +155,7 @@ already_AddRefed<FileSystemDirectoryHandle>
 FileSystemDirectoryHandle::ReadStructuredClone(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     JSStructuredCloneReader* aReader) {
-  uint32_t kind = static_cast<uint32_t>(FileSystemHandleKind::EndGuard_);
+  uint32_t kind = UINT32_MAX;
 
   if (!JS_ReadBytes(aReader, reinterpret_cast<void*>(&kind),
                     sizeof(uint32_t))) {

@@ -239,7 +239,6 @@ SdpDirectionAttribute::Direction ToSdpDirection(
     case dom::RTCRtpTransceiverDirection::Inactive:
     case dom::RTCRtpTransceiverDirection::Stopped:
       return SdpDirectionAttribute::Direction::kInactive;
-    case dom::RTCRtpTransceiverDirection::EndGuard_:;
   }
   MOZ_CRASH("Invalid transceiver direction!");
 }

@@ -12331,14 +12331,7 @@ def getEnumValueName(value):
         raise SyntaxError('"_empty" is not an IDL enum value we support yet')
     if value == "":
         return "_empty"
-    nativeName = MakeNativeName(value)
-    if nativeName == "EndGuard_":
-        raise SyntaxError(
-            'Enum value "' + value + '" cannot be used because it'
-            " collides with our internal EndGuard_ value.  Please"
-            " rename our internal EndGuard_ to something else"
-        )
-    return nativeName
+    return MakeNativeName(value)
 
 
 class CGEnumToJSValue(CGAbstractMethod):
@@ -12385,8 +12378,6 @@ class CGEnum(CGThing):
             static_assert(mozilla::ArrayLength(binding_detail::EnumStrings<${name}>::Values) == Count,
                           "Mismatch between enum strings and enum count");
 
-            static_assert(static_cast<size_t>(${name}::EndGuard_) == Count,
-                          "Mismatch between enum value and enum count");
             """,
             count=self.nEnumStrings(),
             name=self.enum.identifier.name,
@@ -12452,7 +12443,6 @@ class CGEnum(CGThing):
             """
             enum class ${name} : ${ty} {
               $*{enums}
-              EndGuard_
             };
             """,
             name=self.enum.identifier.name,

@@ -3927,7 +3927,6 @@ HttpBaseChannel::GetRequestMode(RequestMode* aMode) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetRequestMode(RequestMode aMode) {
-  MOZ_ASSERT(aMode != RequestMode::EndGuard_);
   mRequestMode = aMode;
   return NS_OK;
 }
