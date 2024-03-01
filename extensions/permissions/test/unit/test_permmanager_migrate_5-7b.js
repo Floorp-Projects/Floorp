@@ -108,7 +108,7 @@ add_task(function test() {
     ["http://localhost", "B", 2, 0, 0, 0],
   ];
 
-  let found = expected.map(it => 0);
+  let found = expected.map(() => 0);
 
   // This will force the permission-manager to reload the data.
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");

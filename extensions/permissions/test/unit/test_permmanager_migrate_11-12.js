@@ -139,7 +139,7 @@ add_task(async function test() {
     ["https://[::1]", "3rdPartyStorage^https://www.a.co.uk", 2, 0, 0, 0],
   ];
 
-  let found = expected.map(it => 0);
+  let found = expected.map(() => 0);
 
   // Add some places to the places database
   await PlacesTestUtils.addVisits(
