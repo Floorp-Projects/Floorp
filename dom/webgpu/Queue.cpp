@@ -69,18 +69,32 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     return;
   }
 
-  dom::ProcessTypedArraysFixed(aData, [&](const Span<const uint8_t>& aData) {
-    uint64_t length = aData.Length();
-    const auto checkedSize = aSize.WasPassed()
-                                 ? CheckedInt<size_t>(aSize.Value())
-                                 : CheckedInt<size_t>(length) - aDataOffset;
-    if (!checkedSize.isValid()) {
+  size_t elementByteSize = aData.IsArrayBufferView()
+                               ? byteSize(aData.GetAsArrayBufferView().Type())
+                               : 1;
+  dom::ProcessTypedArraysFixed(aData, [&, elementByteSize](
+                                          const Span<const uint8_t>& aData) {
+    uint64_t byteLength = aData.Length();
+
+    auto checkedByteOffset =
+        CheckedInt<uint64_t>(aDataOffset) * elementByteSize;
+    if (!checkedByteOffset.isValid()) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
+    auto offset = checkedByteOffset.value();
 
-    const auto& size = checkedSize.value();
-    if (aDataOffset + size > length) {
+    const auto checkedByteSize =
+        aSize.WasPassed() ? CheckedInt<size_t>(aSize.Value()) * elementByteSize
+                          : CheckedInt<size_t>(byteLength) - offset;
+    if (!checkedByteSize.isValid()) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    auto size = checkedByteSize.value();
+
+    auto checkedByteEnd = CheckedInt<uint64_t>(offset) + size;
+    if (!checkedByteEnd.isValid() || checkedByteEnd.value() > byteLength) {
       aRv.ThrowAbortError(nsPrintfCString("Wrong data size %" PRIuPTR, size));
       return;
     }
