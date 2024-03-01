@@ -448,9 +448,6 @@ class _Interactions {
 
   /**
    * Handles a window going inactive.
-   *
-   * @param {DOMWindow} win
-   *   The window that is going inactive.
    */
   #onDeactivateWindow() {
     lazy.logConsole.debug("Window deactivate");
@@ -504,8 +501,6 @@ class _Interactions {
    *   The subject of the notification.
    * @param {string} topic
    *   The topic of the notification.
-   * @param {string} data
-   *   The data attached to the notification.
    */
   observe(subject, topic) {
     switch (topic) {
