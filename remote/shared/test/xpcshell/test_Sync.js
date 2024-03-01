@@ -50,14 +50,14 @@ class MockElement {
     }
   }
 
-  dispatchEvent(event) {
+  dispatchEvent() {
     if (this.wantUntrusted) {
       this.untrusted = true;
     }
     this.click();
   }
 
-  removeEventListener(name, func) {
+  removeEventListener() {
     this.capture = false;
     this.eventName = null;
     this.func = null;
@@ -213,12 +213,12 @@ add_task(async function test_EventPromise_checkFnCallback() {
     { checkFn: null, expected_count: 0 },
     { checkFn: undefined, expected_count: 0 },
     {
-      checkFn: event => {
+      checkFn: () => {
         throw new Error("foo");
       },
       expected_count: 0,
     },
-    { checkFn: event => count++ > 0, expected_count: 2 },
+    { checkFn: () => count++ > 0, expected_count: 2 },
   ];
 
   for (const { checkFn, expected_count } of data) {
@@ -417,7 +417,7 @@ add_task(async function test_PollPromise_resolve() {
   const timeout = 100;
 
   await new PollPromise(
-    (resolve, reject) => {
+    resolve => {
       resolve();
     },
     { timeout, errorMessage }

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function raisesWithoutArguments({ client, tab }) {
+add_task(async function raisesWithoutArguments({ client }) {
   const { Target } = client;
 
   await Assert.rejects(
@@ -13,7 +13,7 @@ add_task(async function raisesWithoutArguments({ client, tab }) {
   );
 });
 
-add_task(async function raisesWithUnknownTargetId({ client, tab }) {
+add_task(async function raisesWithUnknownTargetId({ client }) {
   const { Target } = client;
 
   await Assert.rejects(

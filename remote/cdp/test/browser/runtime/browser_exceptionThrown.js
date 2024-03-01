@@ -76,12 +76,7 @@ add_task(async function eventsForScriptErrorWithException({ client }) {
   is(callFrames[1].url, PAGE_CONSOLE_EVENTS, "Got expected url");
 });
 
-async function runExceptionThrownTest(
-  client,
-  eventCount,
-  callback,
-  options = {}
-) {
+async function runExceptionThrownTest(client, eventCount, callback) {
   const { Runtime } = client;
 
   const EVENT_EXCEPTION_THROWN = "Runtime.exceptionThrown";

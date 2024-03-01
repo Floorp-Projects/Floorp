@@ -328,7 +328,7 @@ browser.Context = class {
    * @param {XULBrowser} target
    *     The <xul:browser> that was the target of the originating message.
    */
-  register(target) {
+  register() {
     if (!this.tabBrowser) {
       return;
     }

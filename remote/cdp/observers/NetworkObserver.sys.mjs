@@ -186,7 +186,7 @@ export class NetworkObserver {
     this._redirectMap.set(newChannel, oldChannel);
   }
 
-  _onRequest(channel, topic) {
+  _onRequest(channel) {
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
     const browser = loadContext?.topFrameElement;
@@ -242,7 +242,7 @@ export class NetworkObserver {
     });
   }
 
-  _onResponse(fromCache, httpChannel, topic) {
+  _onResponse(fromCache, httpChannel) {
     const loadContext = getLoadContext(httpChannel);
     if (
       !loadContext ||

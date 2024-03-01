@@ -37,7 +37,7 @@ async function installAddon(file) {
     throw new lazy.error.UnknownError(ERRORS[install.error]);
   }
 
-  return install.install().catch(err => {
+  return install.install().catch(() => {
     throw new lazy.error.UnknownError(ERRORS[install.error]);
   });
 }

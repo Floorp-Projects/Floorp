@@ -49,7 +49,7 @@ export class ContextualIdentityListener {
     this.stopListening();
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case OBSERVER_TOPIC_CREATED:
         this.emit("created", { identity: subject.wrappedJSObject });

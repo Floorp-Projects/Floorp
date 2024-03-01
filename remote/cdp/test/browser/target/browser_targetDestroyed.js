@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function eventFiredWhenTabIsClosed({ client, tab }) {
+add_task(async function eventFiredWhenTabIsClosed({ client }) {
   const { Target } = client;
   const { newTab } = await openTab(Target);
 

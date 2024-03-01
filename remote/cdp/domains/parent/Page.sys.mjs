@@ -677,7 +677,7 @@ export class Page extends Domain {
    * @param {boolean=} options.enabled
    *     Enabled state of file chooser interception.
    */
-  setInterceptFileChooserDialog(options = {}) {}
+  setInterceptFileChooserDialog() {}
 
   _getCurrentHistoryIndex() {
     const { window } = this.session.target;

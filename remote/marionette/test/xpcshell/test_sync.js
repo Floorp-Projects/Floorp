@@ -28,7 +28,7 @@ class MessageManager {
     this.message = message;
   }
 
-  removeMessageListener(message) {
+  removeMessageListener() {
     this.func = null;
     this.message = null;
   }
@@ -55,7 +55,7 @@ class MockTimer {
     this.cancelled = false;
   }
 
-  initWithCallback(cb, timeout, type) {
+  initWithCallback(cb) {
     this.ticks++;
     if (this.ticks >= this.goal) {
       cb();
@@ -216,7 +216,7 @@ add_task(function test_TimedPromise_timeoutTypes() {
 
 add_task(async function test_TimedPromise_errorMessage() {
   try {
-    await new TimedPromise(resolve => {}, { timeout: 0 });
+    await new TimedPromise(() => {}, { timeout: 0 });
     ok(false, "Expected Timeout error not raised");
   } catch (e) {
     ok(
@@ -226,7 +226,7 @@ add_task(async function test_TimedPromise_errorMessage() {
   }
 
   try {
-    await new TimedPromise(resolve => {}, {
+    await new TimedPromise(() => {}, {
       errorMessage: "Not found",
       timeout: 0,
     });

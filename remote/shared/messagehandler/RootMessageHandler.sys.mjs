@@ -51,7 +51,7 @@ export class RootMessageHandler extends MessageHandler {
    * The ROOT MessageHandler is unique for a given MessageHandler network
    * (ie for a given sessionId). Reuse the type as context id here.
    */
-  static getIdFromContext(context) {
+  static getIdFromContext() {
     return RootMessageHandler.type;
   }
 

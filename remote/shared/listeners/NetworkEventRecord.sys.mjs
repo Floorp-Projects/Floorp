@@ -169,7 +169,7 @@ export class NetworkEventRecord {
    * @param {boolean} isRacing
    *     True if the corresponding channel raced the cache and network requests.
    */
-  addSecurityInfo(info, isRacing) {}
+  addSecurityInfo() {}
 
   /**
    * Add network event timings.
@@ -185,7 +185,7 @@ export class NetworkEventRecord {
    * @param {object} offsets
    *     The har-like timings, but as offset from the request start.
    */
-  addEventTimings(total, timings, offsets) {}
+  addEventTimings() {}
 
   /**
    * Add response cache entry.
@@ -197,7 +197,7 @@ export class NetworkEventRecord {
    * @param {object} options
    *     An object which contains a single responseCache property.
    */
-  addResponseCache(options) {}
+  addResponseCache() {}
 
   /**
    * Add response content.
@@ -237,7 +237,7 @@ export class NetworkEventRecord {
    * @param {Array} serverTimings
    *     The server timings.
    */
-  addServerTimings(serverTimings) {}
+  addServerTimings() {}
 
   /**
    * Add service worker timings.
@@ -249,7 +249,7 @@ export class NetworkEventRecord {
    * @param {object} serviceWorkerTimings
    *     The server timings.
    */
-  addServiceWorkerTimings(serviceWorkerTimings) {}
+  addServiceWorkerTimings() {}
 
   onAuthPrompt(authDetails, authCallbacks) {
     this.#emitAuthRequired(authCallbacks);

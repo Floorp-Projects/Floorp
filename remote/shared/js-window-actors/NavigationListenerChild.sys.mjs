@@ -56,12 +56,12 @@ export class NavigationListenerChild extends JSWindowActorChild {
   /**
    * See note above
    */
-  handleEvent(event) {}
+  handleEvent() {}
 
   /**
    * See note above
    */
-  receiveMessage(message) {}
+  receiveMessage() {}
 
   /**
    * A browsing context might be replaced before reaching the parent process,
