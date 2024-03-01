@@ -1,6 +1,7 @@
 use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::BTreeSet as Set;
+use syn::parse::discouraged::Speculative;
 use syn::parse::ParseStream;
 use syn::{
     braced, bracketed, parenthesized, token, Attribute, Error, Ident, Index, LitInt, LitStr, Meta,
@@ -20,6 +21,7 @@ pub struct Display<'a> {
     pub original: &'a Attribute,
     pub fmt: LitStr,
     pub args: TokenStream,
+    pub requires_fmt_machinery: bool,
     pub has_bonus_display: bool,
     pub implied_bounds: Set<(usize, Trait)>,
 }
@@ -103,10 +105,24 @@ fn parse_error_attribute<'a>(attrs: &mut Attrs<'a>, attr: &'a Attribute) -> Resu
             return Ok(());
         }
 
+        let fmt: LitStr = input.parse()?;
+
+        let ahead = input.fork();
+        ahead.parse::<Option<Token![,]>>()?;
+        let args = if ahead.is_empty() {
+            input.advance_to(&ahead);
+            TokenStream::new()
+        } else {
+            parse_token_expr(input, false)?
+        };
+
+        let requires_fmt_machinery = !args.is_empty();
+
         let display = Display {
             original: attr,
-            fmt: input.parse()?,
-            args: parse_token_expr(input, false)?,
+            fmt,
+            args,
+            requires_fmt_machinery,
             has_bonus_display: false,
             implied_bounds: Set::new(),
         };
@@ -196,8 +212,18 @@ impl ToTokens for Display<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let fmt = &self.fmt;
         let args = &self.args;
-        tokens.extend(quote! {
-            ::core::write!(__formatter, #fmt #args)
+
+        // Currently `write!(f, "text")` produces less efficient code than
+        // `f.write_str("text")`. We recognize the case when the format string
+        // has no braces and no interpolated values, and generate simpler code.
+        tokens.extend(if self.requires_fmt_machinery {
+            quote! {
+                ::core::write!(__formatter, #fmt #args)
+            }
+        } else {
+            quote! {
+                __formatter.write_str(#fmt)
+            }
         });
     }
 }
