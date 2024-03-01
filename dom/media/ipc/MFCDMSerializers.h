@@ -5,9 +5,9 @@
 #ifndef DOM_MEDIA_IPC_MFCDMSERIALIZERS_H_
 #define DOM_MEDIA_IPC_MFCDMSERIALIZERS_H_
 
-#include "ipc/EnumSerializer.h"
 #include "MediaData.h"
 #include "mozilla/KeySystemConfig.h"
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"
 
@@ -35,23 +35,17 @@ struct ParamTraits<mozilla::CryptoScheme>
 
 template <>
 struct ParamTraits<mozilla::dom::MediaKeyMessageType>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::MediaKeyMessageType,
-          mozilla::dom::MediaKeyMessageType::License_request,
-          mozilla::dom::MediaKeyMessageType::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::MediaKeyMessageType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::MediaKeyStatus>
-    : public ContiguousEnumSerializer<mozilla::dom::MediaKeyStatus,
-                                      mozilla::dom::MediaKeyStatus::Usable,
-                                      mozilla::dom::MediaKeyStatus::EndGuard_> {
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::MediaKeyStatus> {
 };
 
 template <>
 struct ParamTraits<mozilla::dom::HDCPVersion>
-    : public ContiguousEnumSerializer<mozilla::dom::HDCPVersion,
-                                      mozilla::dom::HDCPVersion::_1_0,
-                                      mozilla::dom::HDCPVersion::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::HDCPVersion> {};
 
 }  // namespace IPC
 

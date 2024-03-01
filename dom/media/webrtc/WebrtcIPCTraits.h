@@ -9,6 +9,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "mozilla/media/webrtc/WebrtcGlobal.h"
 #include "mozilla/dom/CandidateInfo.h"
@@ -62,17 +63,15 @@ struct ParamTraits<mozilla::dom::OwningStringOrStringSequence> {
   }
 };
 
-template <typename T>
-struct WebidlEnumSerializer
-    : public ContiguousEnumSerializer<T, T(0), T::EndGuard_> {};
-
 template <>
 struct ParamTraits<mozilla::dom::RTCIceCredentialType>
-    : public WebidlEnumSerializer<mozilla::dom::RTCIceCredentialType> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::RTCIceCredentialType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::RTCIceTransportPolicy>
-    : public WebidlEnumSerializer<mozilla::dom::RTCIceTransportPolicy> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::RTCIceTransportPolicy> {};
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServer, mCredential,
                                   mCredentialType, mUrl, mUrls, mUsername)

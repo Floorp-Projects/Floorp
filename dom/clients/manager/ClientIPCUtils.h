@@ -9,6 +9,7 @@
 #include "ipc/EnumSerializer.h"
 
 #include "X11UndefineNone.h"
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
@@ -17,21 +18,16 @@
 namespace IPC {
 template <>
 struct ParamTraits<mozilla::dom::ClientType>
-    : public ContiguousEnumSerializer<mozilla::dom::ClientType,
-                                      mozilla::dom::ClientType::Window,
-                                      mozilla::dom::ClientType::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::ClientType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::FrameType>
-    : public ContiguousEnumSerializer<mozilla::dom::FrameType,
-                                      mozilla::dom::FrameType::Auxiliary,
-                                      mozilla::dom::FrameType::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::FrameType> {};
 
 template <>
 struct ParamTraits<mozilla::dom::VisibilityState>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::VisibilityState, mozilla::dom::VisibilityState::Hidden,
-          mozilla::dom::VisibilityState::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<mozilla::dom::VisibilityState> {
+};
 
 template <>
 struct ParamTraits<mozilla::StorageAccess>

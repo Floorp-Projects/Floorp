@@ -323,7 +323,9 @@ struct ParamTraits<mozilla::dom::PredefinedColorSpace> final
           mozilla::dom::PredefinedColorSpace> {
   using T = mozilla::dom::PredefinedColorSpace;
 
-  static bool Validate(const T& val) { return val < T::EndGuard_; }
+  static bool Validate(const T& val) {
+    return val <= mozilla::ContiguousEnumValues<T>::max;
+  }
 };
 
 template <>
