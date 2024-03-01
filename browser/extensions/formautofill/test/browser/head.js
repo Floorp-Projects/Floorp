@@ -45,6 +45,8 @@ const ADDRESS_FORM_WITH_PAGE_NAVIGATION_BUTTONS =
   "https://example.org" +
   HTTP_TEST_PATH +
   "address/capture_address_on_page_navigation.html";
+const FORM_IFRAME_SANDBOXED_URL =
+  "https://example.org" + HTTP_TEST_PATH + "autocomplete_iframe_sandboxed.html";
 const CREDITCARD_FORM_URL =
   "https://example.org" +
   HTTP_TEST_PATH +
