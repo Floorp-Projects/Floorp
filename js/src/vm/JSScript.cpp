@@ -3245,8 +3245,10 @@ void JSScript::resetWarmUpCounterToDelayIonCompilation() {
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 void BaseScript::dumpStringContent(js::GenericPrinter& out) const {
-  out.printf("%s:%u:%u @ 0x%p", filename() ? filename() : "<null>", lineno(),
-             column().oneOriginValue(), this);
+  StringEscape esc('"');
+  EscapePrinter ep(out, esc);
+  ep.printf("%s:%u:%u @ 0x%p", filename() ? filename() : "<null>", lineno(),
+            column().oneOriginValue(), this);
 }
 
 void JSScript::dump(JSContext* cx) {
