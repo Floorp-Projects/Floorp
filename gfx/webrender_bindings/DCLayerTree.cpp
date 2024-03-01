@@ -1781,8 +1781,10 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
   }
 
   const UINT vendorId = GetVendorId(videoDevice);
+  const auto powerIsCharging = RenderThread::Get()->GetPowerIsCharging();
   if (vendorId == 0x10DE &&
-      StaticPrefs::gfx_webrender_super_resolution_nvidia_AtStartup()) {
+      StaticPrefs::gfx_webrender_super_resolution_nvidia_AtStartup() &&
+      powerIsCharging) {
     SetNvidiaVideoSuperRes(videoContext, videoProcessor, true);
   }
 
