@@ -674,7 +674,7 @@ EnvironmentAddonBuilder.prototype = {
   },
 
   // nsIObserver
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     this._environment._log.trace("observe - Topic " + aTopic);
     if (aTopic == GMP_PROVIDER_REGISTERED_TOPIC) {
       Services.obs.removeObserver(this, GMP_PROVIDER_REGISTERED_TOPIC);

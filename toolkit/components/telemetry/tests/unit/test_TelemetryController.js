@@ -536,7 +536,7 @@ add_task(async function test_midnightPingSendFuzzing() {
   // A ping after midnight within the fuzzing delay should not get sent.
   now = new Date(2030, 5, 2, 0, 40, 0);
   fakeNow(now);
-  PingServer.registerPingHandler((req, res) => {
+  PingServer.registerPingHandler(() => {
     Assert.ok(false, "No ping should be received yet.");
   });
   let timerPromise = waitForTimer();

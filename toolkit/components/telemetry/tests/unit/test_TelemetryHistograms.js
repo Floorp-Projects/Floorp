@@ -12,7 +12,7 @@ function numberRange(lower, upper) {
   return a;
 }
 
-function check_histogram(histogram_type, name, min, max, bucket_count) {
+function check_histogram(histogram_type, name, min, max) {
   var h = Telemetry.getHistogramById(name);
   h.add(0);
   var s = h.snapshot();
@@ -507,7 +507,7 @@ add_task(async function test_keyed_boolean_histogram() {
     sum: 1,
     values: { 0: 0, 1: 1, 2: 0 },
   };
-  let testHistograms = numberRange(0, 3).map(i =>
+  let testHistograms = numberRange(0, 3).map(() =>
     JSON.parse(JSON.stringify(histogramBase))
   );
   let testKeys = [];
@@ -558,7 +558,7 @@ add_task(async function test_keyed_count_histogram() {
     sum: 0,
     values: { 0: 1, 1: 0 },
   };
-  let testHistograms = numberRange(0, 5).map(i =>
+  let testHistograms = numberRange(0, 5).map(() =>
     JSON.parse(JSON.stringify(histogramBase))
   );
   let testKeys = [];

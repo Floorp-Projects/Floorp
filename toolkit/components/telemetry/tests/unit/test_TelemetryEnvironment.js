@@ -426,7 +426,7 @@ add_task(async function test_addonsWatch_InterestingChange() {
     return new Promise(resolve =>
       TelemetryEnvironment.registerChangeListener(
         "testWatchAddons_Changes" + aExpected,
-        (reason, data) => {
+        reason => {
           Assert.equal(reason, "addons-changed");
           receivedNotifications++;
           resolve();
@@ -630,13 +630,10 @@ add_task(async function test_addons() {
   };
 
   let deferred = Promise.withResolvers();
-  TelemetryEnvironment.registerChangeListener(
-    "test_WebExtension",
-    (reason, data) => {
-      Assert.equal(reason, "addons-changed");
-      deferred.resolve();
-    }
-  );
+  TelemetryEnvironment.registerChangeListener("test_WebExtension", reason => {
+    Assert.equal(reason, "addons-changed");
+    deferred.resolve();
+  });
 
   // Install an add-on so we have some data.
   let addon = await installXPIFromURL(ADDON_INSTALL_URL);
@@ -881,7 +878,7 @@ add_task(async function test_collectionWithbrokenAddonData() {
     return new Promise(resolve =>
       TelemetryEnvironment.registerChangeListener(
         "testBrokenAddon_collection" + aExpected,
-        (reason, data) => {
+        reason => {
           Assert.equal(reason, "addons-changed");
           receivedNotifications++;
           resolve();
@@ -1052,7 +1049,7 @@ add_task(async function test_experimentsAPI() {
   const EXPERIMENT2 = "experiment-2";
   const EXPERIMENT2_BRANCH = "other-branch";
 
-  let checkExperiment = (environmentData, id, branch, type = null) => {
+  let checkExperiment = (environmentData, id, branch) => {
     Assert.ok(
       "experiments" in environmentData,
       "The current environment must report the experiment annotations."

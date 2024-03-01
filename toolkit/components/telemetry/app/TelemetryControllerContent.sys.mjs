@@ -67,7 +67,7 @@ var Impl = {
   /**
    * This observer drives telemetry.
    */
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic == "content-process-ready-for-script") {
       TelemetryControllerBase.configureLogging();
 

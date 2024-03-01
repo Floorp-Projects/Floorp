@@ -12,7 +12,7 @@ const CONTENT_CREATED = "ipc:content-created";
 async function waitForProcessesScalars(
   aProcesses,
   aKeyed,
-  aAdditionalCondition = data => true
+  aAdditionalCondition = () => true
 ) {
   await TestUtils.waitForCondition(() => {
     const scalars = aKeyed

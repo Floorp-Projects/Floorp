@@ -293,7 +293,7 @@ add_task(async function test_jog_custom_pings() {
   Assert.ok("jogPing" in GleanPings);
   let submitted = false;
   Glean.jogCat.jogPingBool.set(false);
-  GleanPings.jogPing.testBeforeNextSubmit(reason => {
+  GleanPings.jogPing.testBeforeNextSubmit(() => {
     submitted = true;
     Assert.equal(false, Glean.jogCat.jogPingBool.testGetValue());
   });
@@ -338,10 +338,7 @@ add_task(async function test_jog_timing_distribution_works() {
   // But we can guarantee it's only two samples.
   Assert.equal(
     2,
-    Object.entries(data.values).reduce(
-      (acc, [bucket, count]) => acc + count,
-      0
-    ),
+    Object.entries(data.values).reduce((acc, [, count]) => acc + count, 0),
     "Only two buckets with samples"
   );
 });

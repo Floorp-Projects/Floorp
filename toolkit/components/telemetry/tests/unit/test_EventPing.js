@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
   TelemetryEventPing: "resource://gre/modules/EventPing.sys.mjs",
 });
 
-function checkPingStructure(type, payload, options) {
+function checkPingStructure(type, payload) {
   Assert.equal(
     type,
     TelemetryEventPing.EVENT_PING_TYPE,
@@ -84,7 +84,7 @@ add_task(async function test_eventLimitReached() {
   fakePolicy(pass, pass, fail);
   recordEvents(999);
   fakePolicy(
-    (callback, delay) => {
+    () => {
       Telemetry.recordEvent("telemetry.test", "test2", "object1");
       fakePolicy(pass, pass, (type, payload, options) => {
         checkPingStructure(type, payload, options);
@@ -120,7 +120,7 @@ add_task(async function test_eventLimitReached() {
   fakePolicy(fail, fail, fail);
   recordEvents(998);
   fakePolicy(
-    (callback, delay) => {
+    callback => {
       Telemetry.recordEvent("telemetry.test", "test2", "object2");
       Telemetry.recordEvent("telemetry.test", "test2", "object2");
       fakePolicy(pass, pass, (type, payload, options) => {
@@ -162,7 +162,7 @@ add_task(async function test_eventLimitReached() {
   // the two events we lost.
   fakePolicy(fail, fail, fail);
   recordEvents(999);
-  fakePolicy((callback, delay) => {
+  fakePolicy(callback => {
     fakePolicy(pass, pass, (type, payload, options) => {
       checkPingStructure(type, payload, options);
       Assert.ok(options.addClientId, "Adds the client id.");

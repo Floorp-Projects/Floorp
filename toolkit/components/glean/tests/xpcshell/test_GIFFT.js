@@ -176,10 +176,7 @@ add_task(async function test_gifft_timing_dist() {
   // But we can guarantee it's only two samples.
   Assert.equal(
     2,
-    Object.entries(data.values).reduce(
-      (acc, [bucket, count]) => acc + count,
-      0
-    ),
+    Object.entries(data.values).reduce((acc, [, count]) => acc + count, 0),
     "Only two buckets with samples"
   );
 
@@ -188,10 +185,7 @@ add_task(async function test_gifft_timing_dist() {
   Assert.greaterOrEqual(data.sum, 13, "Histogram's in milliseconds");
   Assert.equal(
     2,
-    Object.entries(data.values).reduce(
-      (acc, [bucket, count]) => acc + count,
-      0
-    ),
+    Object.entries(data.values).reduce((acc, [, count]) => acc + count, 0),
     "Only two samples"
   );
 });

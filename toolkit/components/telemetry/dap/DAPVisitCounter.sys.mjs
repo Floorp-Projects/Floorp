@@ -50,7 +50,7 @@ export const DAPVisitCounter = new (class {
       }
     };
 
-    lazy.NimbusFeatures.dapTelemetry.onUpdate(async (event, reason) => {
+    lazy.NimbusFeatures.dapTelemetry.onUpdate(async () => {
       if (typeof this.counters !== "undefined") {
         await this.send(30 * 1000, "nimbus-update");
       }

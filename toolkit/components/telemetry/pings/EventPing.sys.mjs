@@ -103,7 +103,7 @@ export var TelemetryEventPing = {
     this._clearTimer();
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case EVENT_LIMIT_REACHED_TOPIC:
         this._log.trace("event limit reached");

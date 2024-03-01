@@ -291,10 +291,7 @@ add_task(
     // but we can assert there are only two samples.
     Assert.equal(
       2,
-      Object.entries(times.values).reduce(
-        (acc, [bucket, count]) => acc + count,
-        0
-      )
+      Object.entries(times.values).reduce((acc, [, count]) => acc + count, 0)
     );
     const timingHist = histSnapshot.content.TELEMETRY_TEST_EXPONENTIAL;
     Assert.greaterOrEqual(timingHist.sum, 13, "Histogram's in milliseconds.");
@@ -303,7 +300,7 @@ add_task(
     Assert.equal(
       2,
       Object.entries(timingHist.values).reduce(
-        (acc, [bucket, count]) => acc + count,
+        (acc, [, count]) => acc + count,
         0
       ),
       "Only two samples"

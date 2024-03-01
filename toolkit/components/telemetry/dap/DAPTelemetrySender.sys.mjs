@@ -73,7 +73,7 @@ export const DAPTelemetrySender = new (class {
           this.timeout_value()
         );
 
-        lazy.NimbusFeatures.dapTelemetry.onUpdate(async (event, reason) => {
+        lazy.NimbusFeatures.dapTelemetry.onUpdate(async () => {
           if (typeof this.counters !== "undefined") {
             await this.sendTestReports(tasks, 30 * 1000, "nimbus-update");
           }

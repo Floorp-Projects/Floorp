@@ -248,7 +248,7 @@ export var TelemetryScheduler = {
   /**
    * The notifications handler.
    */
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     this._log.trace("observe - aTopic: " + aTopic);
     switch (aTopic) {
       case "idle":
