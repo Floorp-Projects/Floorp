@@ -2002,7 +2002,9 @@ class AnnotationEditorUIManager {
         target: el
       }) => !(el instanceof HTMLButtonElement) && self.#container.contains(el) && !self.isEnterHandled
     }], [[" ", "mac+ "], proto.addNewEditorFromKeyboard, {
-      checker: self => self.#container.contains(document.activeElement)
+      checker: (self, {
+        target: el
+      }) => !(el instanceof HTMLButtonElement) && self.#container.contains(document.activeElement)
     }], [["Escape", "mac+Escape"], proto.unselectAll], [["ArrowLeft", "mac+ArrowLeft"], proto.translateSelectedEditors, {
       args: [-small, 0],
       checker: arrowChecker
@@ -2153,7 +2155,10 @@ class AnnotationEditorUIManager {
       return;
     }
     const {
-      anchorNode
+      anchorNode,
+      anchorOffset,
+      focusNode,
+      focusOffset
     } = selection;
     const anchorElement = anchorNode.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
     const textLayer = anchorElement.closest(".textLayer");
@@ -2172,7 +2177,11 @@ class AnnotationEditorUIManager {
           y: 0
         }, false, {
           methodOfCreation,
-          boxes
+          boxes,
+          anchorNode,
+          anchorOffset,
+          focusNode,
+          focusOffset
         });
         break;
       }
@@ -2424,6 +2433,9 @@ class AnnotationEditorUIManager {
         source: this,
         details: Object.assign(this.#previousStates, details)
       });
+      if (this.#mode === AnnotationEditorType.HIGHLIGHT && details.hasSelectedEditor === false) {
+        this.#dispatchUpdateUI([[AnnotationEditorParamsType.HIGHLIGHT_FREE, true]]);
+      }
     }
   }
   #dispatchUpdateUI(details) {
@@ -8957,7 +8969,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.235",
+    apiVersion: "4.1.247",
     data,
     password,
     disableAutoFetch,
@@ -10589,8 +10601,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.235";
-const build = "9fe15d4a0";
+const version = "4.1.247";
+const build = "29c493d36";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -14571,14 +14583,19 @@ class ColorPicker {
 
 
 class HighlightEditor extends AnnotationEditor {
+  #anchorNode = null;
+  #anchorOffset = 0;
   #boxes;
   #clipPathId = null;
   #colorPicker = null;
   #focusOutlines = null;
+  #focusNode = null;
+  #focusOffset = 0;
   #highlightDiv = null;
   #highlightOutlines = null;
   #id = null;
   #isFreeHighlight = false;
+  #boundKeydown = this.#keydown.bind(this);
   #lastPoint = null;
   #opacity;
   #outlineId = null;
@@ -14593,6 +14610,18 @@ class HighlightEditor extends AnnotationEditor {
   static _freeHighlightId = -1;
   static _freeHighlight = null;
   static _freeHighlightClipId = "";
+  static get _keyboardManager() {
+    const proto = HighlightEditor.prototype;
+    return shadow(this, "_keyboardManager", new KeyboardManager([[["ArrowLeft", "mac+ArrowLeft"], proto._moveCaret, {
+      args: [0]
+    }], [["ArrowRight", "mac+ArrowRight"], proto._moveCaret, {
+      args: [1]
+    }], [["ArrowUp", "mac+ArrowUp"], proto._moveCaret, {
+      args: [2]
+    }], [["ArrowDown", "mac+ArrowDown"], proto._moveCaret, {
+      args: [3]
+    }]]));
+  }
   constructor(params) {
     super({
       ...params,
@@ -14609,6 +14638,10 @@ class HighlightEditor extends AnnotationEditor {
       this.#createFreeOutlines(params);
       this.#addToDrawLayer();
     } else {
+      this.#anchorNode = params.anchorNode;
+      this.#anchorOffset = params.anchorOffset;
+      this.#focusNode = params.focusNode;
+      this.#focusOffset = params.focusOffset;
       this.#createOutlines();
       this.#addToDrawLayer();
       this.rotate(this.rotation);
@@ -14617,7 +14650,7 @@ class HighlightEditor extends AnnotationEditor {
   get telemetryInitialData() {
     return {
       action: "added",
-      type: this.#telemetryType,
+      type: this.#isFreeHighlight ? "free_highlight" : "highlight",
       color: this._uiManager.highlightColorNames.get(this.color),
       thickness: this.#thickness,
       methodOfCreation: this.#methodOfCreation
@@ -14633,9 +14666,6 @@ class HighlightEditor extends AnnotationEditor {
     return {
       numberOfColors: data.get("color").size
     };
-  }
-  get #telemetryType() {
-    return this.#isFreeHighlight ? "free_highlight" : "highlight";
   }
   #createOutlines() {
     const outliner = new Outliner(this.#boxes, 0.001);
@@ -14950,6 +14980,8 @@ class HighlightEditor extends AnnotationEditor {
     const div = super.render();
     if (this.#isFreeHighlight) {
       div.classList.add("free");
+    } else {
+      this.div.addEventListener("keydown", this.#boundKeydown);
     }
     const highlightDiv = this.#highlightDiv = document.createElement("div");
     div.append(highlightDiv);
@@ -14967,6 +14999,33 @@ class HighlightEditor extends AnnotationEditor {
   pointerleave() {
     this.parent.drawLayer.removeClass(this.#outlineId, "hovered");
   }
+  #keydown(event) {
+    HighlightEditor._keyboardManager.exec(this, event);
+  }
+  _moveCaret(direction) {
+    this.parent.unselect(this);
+    switch (direction) {
+      case 0:
+      case 2:
+        this.#setCaret(true);
+        break;
+      case 1:
+      case 3:
+        this.#setCaret(false);
+        break;
+    }
+  }
+  #setCaret(start) {
+    if (!this.#anchorNode) {
+      return;
+    }
+    const selection = window.getSelection();
+    if (start) {
+      selection.setPosition(this.#anchorNode, this.#anchorOffset);
+    } else {
+      selection.setPosition(this.#focusNode, this.#focusOffset);
+    }
+  }
   select() {
     super.select();
     this.parent?.drawLayer.removeClass(this.#outlineId, "hovered");
@@ -14975,18 +15034,20 @@ class HighlightEditor extends AnnotationEditor {
   unselect() {
     super.unselect();
     this.parent?.drawLayer.removeClass(this.#outlineId, "selected");
+    if (!this.#isFreeHighlight) {
+      this.#setCaret(false);
+    }
   }
   #getRotation() {
     return this.#isFreeHighlight ? this.rotation : 0;
   }
-  #serializeBoxes(rect) {
+  #serializeBoxes() {
     if (this.#isFreeHighlight) {
       return null;
     }
     const [pageWidth, pageHeight] = this.pageDimensions;
     const boxes = this.#boxes;
     const quadPoints = new Array(boxes.length * 8);
-    const [tx, ty] = rect;
     let i = 0;
     for (const {
       x,
@@ -14994,8 +15055,8 @@ class HighlightEditor extends AnnotationEditor {
       width,
       height
     } of boxes) {
-      const sx = tx + x * pageWidth;
-      const sy = ty + (1 - y - height) * pageHeight;
+      const sx = x * pageWidth;
+      const sy = (1 - y - height) * pageHeight;
       quadPoints[i] = quadPoints[i + 4] = sx;
       quadPoints[i + 1] = quadPoints[i + 3] = sy;
       quadPoints[i + 2] = quadPoints[i + 6] = sx + width * pageWidth;
@@ -15105,7 +15166,7 @@ class HighlightEditor extends AnnotationEditor {
       color,
       opacity: this.#opacity,
       thickness: this.#thickness,
-      quadPoints: this.#serializeBoxes(rect),
+      quadPoints: this.#serializeBoxes(),
       outlines: this.#serializeOutlines(rect),
       pageIndex: this.pageIndex,
       rect,
@@ -17083,8 +17144,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.235";
-const pdfjsBuild = "9fe15d4a0";
+const pdfjsVersion = "4.1.247";
+const pdfjsBuild = "29c493d36";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

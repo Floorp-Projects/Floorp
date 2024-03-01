@@ -8459,7 +8459,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.235";
+    const viewerVersion = "4.1.247";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12591,8 +12591,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.235";
-const pdfjsBuild = "9fe15d4a0";
+const pdfjsVersion = "4.1.247";
+const pdfjsBuild = "29c493d36";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
