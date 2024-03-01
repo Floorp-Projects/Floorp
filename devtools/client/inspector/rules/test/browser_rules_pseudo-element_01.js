@@ -11,6 +11,7 @@ const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 add_task(async function () {
   await pushPref(PSEUDO_PREF, true);
   await pushPref("dom.customHighlightAPI.enabled", true);
+  await pushPref("layout.css.modern-range-pseudos.enabled", true);
 
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
@@ -24,6 +25,7 @@ add_task(async function () {
   await testList(inspector, view);
   await testDialogBackdrop(inspector, view);
   await testCustomHighlight(inspector, view);
+  await testSlider(inspector, view);
 });
 
 async function testTopLeft(inspector, view) {
@@ -344,6 +346,36 @@ async function testCustomHighlight(inspector, view) {
   assertGutters(view);
 }
 
+async function testSlider(inspector, view) {
+  await assertPseudoElementRulesNumbers(
+    "input[type=range].slider",
+    inspector,
+    view,
+    {
+      elementRulesNb: 3,
+      sliderFillRulesNb: 1,
+      sliderThumbRulesNb: 1,
+      sliderTrackRulesNb: 1,
+    }
+  );
+  assertGutters(view);
+
+  info(
+    "Check that ::slider-* pseudo elements are not displayed for non-range inputs"
+  );
+  await assertPseudoElementRulesNumbers(
+    "input[type=text].slider",
+    inspector,
+    view,
+    {
+      elementRulesNb: 3,
+      sliderFillRulesNb: 0,
+      sliderThumbRulesNb: 0,
+      sliderTrackRulesNb: 0,
+    }
+  );
+}
+
 function convertTextPropsToString(textProps) {
   return textProps
     .map(
@@ -395,6 +427,15 @@ async function assertPseudoElementRulesNumbers(
     highlightRules: elementStyle.rules.filter(rule =>
       rule.pseudoElement?.startsWith("::highlight(")
     ),
+    sliderFillRules: elementStyle.rules.filter(
+      rule => rule.pseudoElement === "::slider-fill"
+    ),
+    sliderThumbRules: elementStyle.rules.filter(
+      rule => rule.pseudoElement === "::slider-thumb"
+    ),
+    sliderTrackRules: elementStyle.rules.filter(
+      rule => rule.pseudoElement === "::slider-track"
+    ),
   };
 
   is(
@@ -436,6 +477,21 @@ async function assertPseudoElementRulesNumbers(
     rules.highlightRules.length,
     ruleNbs.highlightRulesNb || 0,
     selector + " has the correct number of ::highlight rules"
+  );
+  is(
+    rules.sliderFillRules.length,
+    ruleNbs.sliderFillRulesNb || 0,
+    selector + " has the correct number of ::slider-fill rules"
+  );
+  is(
+    rules.sliderThumbRules.length,
+    ruleNbs.sliderThumbRulesNb || 0,
+    selector + " has the correct number of ::slider-thumb rules"
+  );
+  is(
+    rules.sliderTrackRules.length,
+    ruleNbs.sliderTrackRulesNb || 0,
+    selector + " has the correct number of ::slider-track rules"
   );
 
   // If we do have pseudo element rules displayed, ensure we don't mark their selectors
