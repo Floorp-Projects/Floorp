@@ -24,7 +24,7 @@ add_task(async function () {
       url: "https://example.com/",
       forceNewProcess: true,
     },
-    async function (browser) {
+    async function () {
       // browser.frameLoader.remoteTab.osPid is the child pid; once we
       // have a way to get notifications about child process termination
       // events, that could be useful.

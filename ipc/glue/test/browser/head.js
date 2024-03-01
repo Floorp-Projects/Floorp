@@ -340,7 +340,7 @@ async function checkAudioDecoder(
   const doc = typeof content !== "undefined" ? content.document : document;
   let audio = doc.querySelector("audio");
   const checkPromise = new Promise((resolve, reject) => {
-    const timeUpdateHandler = async ev => {
+    const timeUpdateHandler = async () => {
       const debugInfo = await SpecialPowers.wrap(audio).mozRequestDebugInfo();
       const audioDecoderName = debugInfo.decoder.reader.audioDecoderName;
 
@@ -371,7 +371,7 @@ async function checkAudioDecoder(
       }
     };
 
-    const startPlaybackHandler = async ev => {
+    const startPlaybackHandler = async () => {
       ok(
         await audio.play().then(
           _ => true,
@@ -383,7 +383,7 @@ async function checkAudioDecoder(
       audio.addEventListener("timeupdate", timeUpdateHandler, { once: true });
     };
 
-    audio.addEventListener("error", async err => {
+    audio.addEventListener("error", async () => {
       info(
         `Received HTML media error: ${audio.error.code}: ${audio.error.message}`
       );

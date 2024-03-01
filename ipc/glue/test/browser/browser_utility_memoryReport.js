@@ -23,7 +23,7 @@ add_task(async () => {
 
   var utilityReports = [];
 
-  const performCollection = new Promise((resolve, reject) => {
+  const performCollection = new Promise(resolve => {
     // Record the reports from the live memory reporters then process them.
     let handleReport = function (
       aProcess,
