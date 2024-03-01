@@ -2,7 +2,7 @@
 
 PartitionedStorageHelper.runTest(
   "LockManager works in both first and third party contexts",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     let locks = [];
     ok(win1stParty.isSecureContext, "1st party is in a secure context");
     ok(win3rdParty.isSecureContext, "3rd party is in a secure context");
@@ -20,7 +20,7 @@ PartitionedStorageHelper.runTest(
   },
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });

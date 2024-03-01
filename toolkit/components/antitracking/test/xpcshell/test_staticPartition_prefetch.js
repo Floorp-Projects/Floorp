@@ -34,7 +34,7 @@ async function checkCache(originAttributes) {
   const data = await new Promise(resolve => {
     let cacheEntries = [];
     let cacheVisitor = {
-      onCacheStorageInfo(num, consumption) {},
+      onCacheStorageInfo() {},
       onCacheEntryInfo(uri, idEnhance) {
         cacheEntries.push({ uri, idEnhance });
       },

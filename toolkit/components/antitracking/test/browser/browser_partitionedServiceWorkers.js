@@ -25,7 +25,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -42,7 +42,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - enable partitioning",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Partitioned serviceWorkers are enabled in third-party context.
     await win3rdParty.navigator.serviceWorker.register("empty.js").then(
       _ => {
@@ -71,7 +71,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -88,7 +88,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - MatchAll",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     if (!win1stParty.sw) {
       win1stParty.sw = await registerServiceWorker(win1stParty, "matchAll.js");
     }
@@ -113,7 +113,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -130,7 +130,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - Partition ScriptContext",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Register service worker for the first-party window.
     if (!win1stParty.sw) {
       win1stParty.sw = await registerServiceWorker(
@@ -197,7 +197,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -214,7 +214,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - Partition DOM Cache",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Register service worker for the first-party window.
     if (!win1stParty.sw) {
       win1stParty.sw = await registerServiceWorker(
@@ -299,7 +299,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -316,7 +316,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - Partition IndexedDB",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Register service worker for the first-party window.
     if (!win1stParty.sw) {
       win1stParty.sw = await registerServiceWorker(
@@ -383,7 +383,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -400,7 +400,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - Partition Intercept",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Register service worker for the first-party window.
     if (!win1stParty.sw) {
       win1stParty.sw = await registerServiceWorker(
@@ -470,7 +470,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -547,7 +547,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -594,7 +594,7 @@ PartitionedStorageHelper.runTest(
     // Post a message to the dedicated worker and wait until the message circles
     // back.
     await new Promise(resolve => {
-      thirdPartyWorker.port.onmessage = msg => {
+      thirdPartyWorker.port.onmessage = () => {
         resolve();
       };
       thirdPartyWorker.onerror = _ => {
@@ -609,7 +609,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -626,7 +626,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - Private Browsing with partitioning disabled",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Partitioned serviceWorkers are disabled in third-party context.
     ok(
       !win3rdParty.navigator.serviceWorker,
@@ -640,7 +640,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });
@@ -661,7 +661,7 @@ PartitionedStorageHelper.runTest(
 
 PartitionedStorageHelper.runTest(
   "ServiceWorkers - Private Browsing with partitioning enabled",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // Partitioned serviceWorkers are disabled in third-party context.
     ok(
       !win3rdParty.navigator.serviceWorker,
@@ -675,7 +675,7 @@ PartitionedStorageHelper.runTest(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });

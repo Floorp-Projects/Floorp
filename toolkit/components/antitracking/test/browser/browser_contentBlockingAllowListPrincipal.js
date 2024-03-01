@@ -90,7 +90,7 @@ function createFrame(browser, src, id, sandboxAttr) {
   );
 }
 
-add_task(async setup => {
+add_task(async () => {
   // Disable heuristics. We don't need them and if enabled the resulting
   // telemetry can race with the telemetry in the next test.
   // See Bug 1686836, Bug 1686894.
@@ -108,7 +108,7 @@ add_task(async setup => {
  * Test that we get the correct allow list principal which matches the content
  * principal for an https site.
  */
-add_task(async test_contentPrincipalHTTPS => {
+add_task(async () => {
   await runTestInNormalAndPrivateMode("https://example.com", browser => {
     checkAllowListPrincipal(browser, "content");
   });
@@ -118,7 +118,7 @@ add_task(async test_contentPrincipalHTTPS => {
  * Tests that the scheme of the allowlist principal is HTTPS, even though the
  * site is loaded via HTTP.
  */
-add_task(async test_contentPrincipalHTTP => {
+add_task(async () => {
   await runTestInNormalAndPrivateMode(
     "http://example.net",
     (browser, isPrivateBrowsing) => {
@@ -136,7 +136,7 @@ add_task(async test_contentPrincipalHTTP => {
  * Tests that the allow list principal is a system principal for the preferences
  * about site.
  */
-add_task(async test_systemPrincipal => {
+add_task(async () => {
   await runTestInNormalAndPrivateMode("about:preferences", browser => {
     checkAllowListPrincipal(browser, "system");
   });
@@ -146,7 +146,7 @@ add_task(async test_systemPrincipal => {
  * Tests that we get a valid content principal for top level sandboxed pages,
  * and not the document principal which is a null principal.
  */
-add_task(async test_TopLevelSandbox => {
+add_task(async () => {
   await runTestInNormalAndPrivateMode(
     TEST_SANDBOX_URL,
     (browser, isPrivateBrowsing) => {
@@ -168,7 +168,7 @@ add_task(async test_TopLevelSandbox => {
  * Tests that we get a valid content principal for a new tab opened via
  * window.open.
  */
-add_task(async test_windowOpen => {
+add_task(async () => {
   await runTestInNormalAndPrivateMode("https://example.com", async browser => {
     checkAllowListPrincipal(browser, "content");
 
@@ -195,7 +195,7 @@ add_task(async test_windowOpen => {
  * Tests that we get a valid content principal for a new tab opened via
  * window.open from a sandboxed iframe.
  */
-add_task(async test_windowOpenFromSandboxedFrame => {
+add_task(async () => {
   await runTestInNormalAndPrivateMode(
     "https://example.com",
     async (browser, isPrivateBrowsing) => {

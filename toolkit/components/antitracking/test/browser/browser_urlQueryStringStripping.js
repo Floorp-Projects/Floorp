@@ -43,7 +43,7 @@ const TEST_CASES = [
 let listService;
 
 function observeChannel(uri, expected) {
-  return TestUtils.topicObserved("http-on-modify-request", (subject, data) => {
+  return TestUtils.topicObserved("http-on-modify-request", subject => {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     let channelURI = channel.URI;
 

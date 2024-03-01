@@ -1,4 +1,4 @@
-window.addEventListener("message", e => {
+window.addEventListener("message", () => {
   let bc = new BroadcastChannel("a");
   bc.postMessage("ready!");
 });

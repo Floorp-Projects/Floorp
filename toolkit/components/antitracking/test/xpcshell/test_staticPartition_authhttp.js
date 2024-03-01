@@ -38,7 +38,7 @@ Requestor.prototype = {
     return true;
   },
 
-  asyncPromptAuth(chan, cb, ctx, lvl, info) {
+  asyncPromptAuth() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };

@@ -356,7 +356,7 @@ this.AntiTracking = {
     let cnt = 0;
 
     return new Promise(resolve => {
-      Services.obs.addObserver(function observer(subject, topic, data) {
+      Services.obs.addObserver(function observer(subject, topic) {
         if (topic != targetTopic) {
           return;
         }
@@ -1174,8 +1174,7 @@ this.AntiTracking = {
           let windowClosed = new content.Promise(resolve => {
             Services.ww.registerNotification(function notification(
               aSubject,
-              aTopic,
-              aData
+              aTopic
             ) {
               if (aTopic == "domwindowclosed") {
                 Services.ww.unregisterNotification(notification);
@@ -1279,8 +1278,7 @@ this.AntiTracking = {
           let windowClosed = new content.Promise(resolve => {
             Services.ww.registerNotification(function notification(
               aSubject,
-              aTopic,
-              aData
+              aTopic
             ) {
               if (aTopic == "domwindowclosed") {
                 Services.ww.unregisterNotification(notification);
@@ -1366,12 +1364,12 @@ this.AntiTracking = {
 
       function Listener() {}
       Listener.prototype = {
-        onStartRequest(request) {},
+        onStartRequest() {},
         onDataAvailable(request, stream, off, cnt) {
           // Consume the data to prevent hitting the assertion.
           NetUtil.readInputStreamToString(stream, cnt);
         },
-        onStopRequest(request, st) {
+        onStopRequest(request) {
           let status = request.QueryInterface(Ci.nsIHttpChannel).responseStatus;
           if (status == 200) {
             resolve();

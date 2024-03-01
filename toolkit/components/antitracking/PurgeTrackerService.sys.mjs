@@ -52,7 +52,7 @@ PurgeTrackerService.prototype = {
   // protection list, so we cache the result for faster future lookups.
   _trackingState: new Map(),
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "idle-daily":
         // only allow one idle-daily listener to trigger until the list has been fully parsed.

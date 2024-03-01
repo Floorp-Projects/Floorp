@@ -15,7 +15,7 @@ const TEST_REDIRECT_URI = TEST_DOMAIN + TEST_PATH + "redirect.sjs";
 const TEST_QUERY_STRING = "paramToStrip=1";
 
 function observeChannel(uri, expected) {
-  return TestUtils.topicObserved("http-on-before-connect", (subject, data) => {
+  return TestUtils.topicObserved("http-on-before-connect", subject => {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     let channelURI = channel.URI;
 

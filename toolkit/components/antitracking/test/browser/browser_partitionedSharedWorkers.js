@@ -1,6 +1,6 @@
 PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "SharedWorkers",
-  async (win3rdParty, win1stParty, allowed) => {
+  async (win3rdParty, win1stParty) => {
     // This test fails if run with an HTTPS 3rd-party URL because the shared worker
     // which would start from the window opened from 3rdPartyStorage.html will become
     // secure context and per step 11.4.3 of
@@ -40,7 +40,7 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
 
   async _ => {
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
         resolve()
       );
     });

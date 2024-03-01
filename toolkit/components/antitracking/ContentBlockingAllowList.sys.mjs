@@ -26,7 +26,7 @@ export const ContentBlockingAllowList = {
           "nsISupportsWeakReference",
         ]),
 
-        observe(subject, topic, data) {
+        observe(subject, topic) {
           if (topic == "last-pb-context-exited") {
             Services.perms.removeByType("trackingprotection-pb");
           }
