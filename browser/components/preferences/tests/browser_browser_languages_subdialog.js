@@ -194,7 +194,7 @@ function assertTelemetryRecorded(events) {
 
   // Only look at the related events after stripping the timestamp and category.
   let relatedEvents = snapshot.parent
-    .filter(([timestamp, category]) => category == TELEMETRY_CATEGORY)
+    .filter(([, category]) => category == TELEMETRY_CATEGORY)
     .map(relatedEvent => relatedEvent.slice(2, 6));
 
   // Events are now an array of: method, object[, value[, extra]] as expected.
@@ -297,7 +297,7 @@ add_task(async function testDisabledBrowserLanguages() {
   // Search for more languages.
   available.menupopup.lastElementChild.doCommand();
   available.menupopup.hidePopup();
-  await waitForMutation(available.menupopup, { childList: true }, target =>
+  await waitForMutation(available.menupopup, { childList: true }, () =>
     Array.from(available.menupopup.children).some(
       locale => locale.value == "pl"
     )
@@ -352,7 +352,7 @@ add_task(async function testReorderingBrowserLanguages() {
   // Install all the available langpacks.
   let langpacks = await createTestLangpacks();
   let addons = await Promise.all(
-    langpacks.map(async ([locale, file]) => {
+    langpacks.map(async ([, file]) => {
       let install = await AddonTestUtils.promiseInstallFile(file);
       return install.addon;
     })
@@ -458,7 +458,7 @@ add_task(async function testAddAndRemoveSelectedLanguages() {
 
   let langpacks = await createTestLangpacks();
   let addons = await Promise.all(
-    langpacks.map(async ([locale, file]) => {
+    langpacks.map(async ([, file]) => {
       let install = await AddonTestUtils.promiseInstallFile(file);
       return install.addon;
     })
@@ -603,7 +603,7 @@ add_task(async function testInstallFromAMO() {
     await waitForMutation(
       available.menupopup,
       { childList: true },
-      target => available.itemCount > 1
+      () => available.itemCount > 1
     );
   }
 
@@ -685,7 +685,7 @@ add_task(async function testInstallFromAMO() {
     await waitForMutation(
       available.menupopup,
       { childList: true },
-      target => available.itemCount > 1
+      () => available.itemCount > 1
     );
   }
   assertLocaleOrder(selected, "en-US");
@@ -793,7 +793,7 @@ add_task(async function testReorderMainPane() {
 
   let langpacks = await createTestLangpacks();
   let addons = await Promise.all(
-    langpacks.map(async ([locale, file]) => {
+    langpacks.map(async ([, file]) => {
       let install = await AddonTestUtils.promiseInstallFile(file);
       return install.addon;
     })
@@ -860,7 +860,7 @@ add_task(async function testLiveLanguageReloading() {
 
   let langpacks = await createTestLangpacks();
   let addons = await Promise.all(
-    langpacks.map(async ([locale, file]) => {
+    langpacks.map(async ([, file]) => {
       let install = await AddonTestUtils.promiseInstallFile(file);
       return install.addon;
     })
@@ -928,7 +928,7 @@ add_task(async function testLiveLanguageReloadingBidiOff() {
 
   let langpacks = await createTestLangpacks();
   let addons = await Promise.all(
-    langpacks.map(async ([locale, file]) => {
+    langpacks.map(async ([, file]) => {
       let install = await AddonTestUtils.promiseInstallFile(file);
       return install.addon;
     })
@@ -1006,7 +1006,7 @@ add_task(async function testLiveLanguageReloadingBidiOn() {
 
   let langpacks = await createTestLangpacks();
   let addons = await Promise.all(
-    langpacks.map(async ([locale, file]) => {
+    langpacks.map(async ([, file]) => {
       let install = await AddonTestUtils.promiseInstallFile(file);
       return install.addon;
     })
