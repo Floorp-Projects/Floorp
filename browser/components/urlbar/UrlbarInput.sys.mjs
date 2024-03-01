@@ -935,9 +935,16 @@ export class UrlbarInput {
             ? "tiphelp"
             : element.dataset.command,
       });
+
+      if (element.dataset.command == "manage") {
+        this.window.openPreferences("search-locationBar");
+        return;
+      }
+
       if (element.dataset.command == "help") {
         urlOverride = result.payload.helpUrl;
       }
+
       urlOverride ||= element.dataset.url;
       if (!urlOverride) {
         return;

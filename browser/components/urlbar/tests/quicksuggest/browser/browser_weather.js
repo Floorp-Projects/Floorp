@@ -396,6 +396,42 @@ async function doSessionOngoingCommandTest(command) {
   await doDismissTest("not_interested");
 }
 
+// Test for menu item to mange the suggest.
+add_tasks_with_rust(async function manage() {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async browser => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: MerinoTestUtils.WEATHER_KEYWORD,
+    });
+
+    let resultIndex = 1;
+    let details = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      resultIndex
+    );
+    assertIsWeatherResult(details.result, true);
+
+    const managePage = "about:preferences#search";
+    let onManagePageLoaded = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      managePage
+    );
+    // Click the command.
+    await UrlbarTestUtils.openResultMenuAndClickItem(window, "manage", {
+      resultIndex,
+    });
+    await onManagePageLoaded;
+    Assert.equal(
+      browser.currentURI.spec,
+      managePage,
+      "The manage page is loaded"
+    );
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
 // Test for simple UI.
 add_tasks_with_rust(async function simpleUI() {
   const testData = [

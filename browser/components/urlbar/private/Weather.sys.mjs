@@ -33,8 +33,8 @@ const NOTIFICATIONS = {
 };
 
 const RESULT_MENU_COMMAND = {
-  HELP: "help",
   INACCURATE_LOCATION: "inaccurate_location",
+  MANAGE: "manage",
   NOT_INTERESTED: "not_interested",
   NOT_RELEVANT: "not_relevant",
   SHOW_LESS_FREQUENTLY: "show_less_frequently",
@@ -356,7 +356,6 @@ export class Weather extends BaseFeature {
         {
           url: suggestion.url,
           iconId: suggestion.current_conditions.icon_id,
-          helpUrl: lazy.QuickSuggest.HELP_URL,
           requestId: suggestion.request_id,
           dynamicType: WEATHER_DYNAMIC_TYPE,
           city: suggestion.city_name,
@@ -496,9 +495,9 @@ export class Weather extends BaseFeature {
       },
       { name: "separator" },
       {
-        name: RESULT_MENU_COMMAND.HELP,
+        name: RESULT_MENU_COMMAND.MANAGE,
         l10n: {
-          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+          id: "urlbar-result-menu-manage-firefox-suggest",
         },
       }
     );
@@ -508,8 +507,8 @@ export class Weather extends BaseFeature {
 
   handleCommand(view, result, selType) {
     switch (selType) {
-      case RESULT_MENU_COMMAND.HELP:
-        // "help" is handled by UrlbarInput, no need to do anything here.
+      case RESULT_MENU_COMMAND.MANAGE:
+        // "manage" is handled by UrlbarInput, no need to do anything here.
         break;
       // selType == "dismiss" when the user presses the dismiss key shortcut.
       case "dismiss":
