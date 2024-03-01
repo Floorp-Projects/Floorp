@@ -4,6 +4,7 @@ support-files = [
   "./fathom/**",
   "../fixtures/autocomplete_basic.html",
   "../fixtures/autocomplete_iframe.html",
+  "../fixtures/autocomplete_iframe_sandboxed.html",
   "../fixtures/autocomplete_simple_basic.html",
   "../fixtures/page_navigation.html",
   "./empty.html",
@@ -25,6 +26,8 @@ skip-if = [
 ["browser_autofill_address_select.js"]
 
 ["browser_autofill_duplicate_fields.js"]
+
+["browser_autofill_sandboxed_iframe.js"]
 
 ["browser_check_installed.js"]
 
