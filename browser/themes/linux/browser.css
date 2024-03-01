@@ -138,6 +138,7 @@ menuitem.bookmark-item {
 
 #TabsToolbar {
   min-height: 0;
+  background-color: ActiveCaption !important;
 }
 
 #titlebar {
