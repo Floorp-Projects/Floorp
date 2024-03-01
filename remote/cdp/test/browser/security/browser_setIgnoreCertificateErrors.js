@@ -68,7 +68,7 @@ function isSecurityState(browser, expectedState) {
   );
 }
 
-add_task(async function testDefault({ Security }) {
+add_task(async function testDefault() {
   for (const url of BAD_CERTS) {
     info(`Navigating to ${url}`);
     const loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);

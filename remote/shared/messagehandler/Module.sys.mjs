@@ -66,7 +66,7 @@ export class Module {
    * @returns {object}
    *     The modified event payload.
    */
-  interceptEvent(name, payload) {
+  interceptEvent(name) {
     throw new Error(
       `Could not intercept event ${name}, interceptEvent is not implemented in windowglobal-in-root module`
     );

@@ -68,7 +68,7 @@ function writeString(output, data) {
       }
 
       output.asyncWait(
-        stream => {
+        () => {
           try {
             const written = output.write(data, data.length);
             data = data.slice(written);

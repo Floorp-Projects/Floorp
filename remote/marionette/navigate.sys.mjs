@@ -265,7 +265,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     checkDone({ finished: true });
   };
 
-  const onTimer = timer => {
+  const onTimer = () => {
     // For the command "Element Click" we want to detect a potential navigation
     // as early as possible. The `beforeunload` event is an indication for that
     // but could still cause the navigation to get aborted by the user. As such
@@ -356,7 +356,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     }
   };
 
-  const onUnload = event => {
+  const onUnload = () => {
     lazy.logger.trace(
       "Canceled page load listener " +
         "because the top-browsing context has been closed"

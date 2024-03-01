@@ -151,7 +151,7 @@ export class Network extends Domain {
    * @returns {Array<Cookie>}
    *     Array of cookie objects.
    */
-  async getAllCookies(options = {}) {
+  async getAllCookies() {
     const cookies = [];
     for (const cookie of Services.cookies.cookies) {
       cookies.push(_buildCookie(cookie));

@@ -121,7 +121,7 @@ export class ContextObserver {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "document-element-inserted":
         const window = subject.defaultView;

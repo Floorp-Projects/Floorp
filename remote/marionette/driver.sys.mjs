@@ -540,7 +540,7 @@ GeckoDriver.prototype.handleEvent = function ({ target, type }) {
   }
 };
 
-GeckoDriver.prototype.observe = async function (subject, topic, data) {
+GeckoDriver.prototype.observe = async function (subject, topic) {
   switch (topic) {
     case TOPIC_BROWSER_READY:
       this.registerWindow(subject);

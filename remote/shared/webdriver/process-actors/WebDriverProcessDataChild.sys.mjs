@@ -17,7 +17,7 @@ class BrowsingContextObserver {
     this.actor = actor;
   }
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     if (topic === "browsing-context-discarded") {
       this.actor.cleanUp({ browsingContext: subject });
     }

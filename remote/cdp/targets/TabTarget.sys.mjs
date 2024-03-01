@@ -94,7 +94,7 @@ export class TabTarget extends Target {
 
   /** @returns {Promise<string|null>} */
   get faviconUrl() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       lazy.Favicons.getFaviconURLForPage(this.browser.currentURI, url => {
         if (url) {
           resolve(url.spec);
@@ -143,7 +143,7 @@ export class TabTarget extends Target {
 
   // nsIObserver
 
-  observe(subject, topic, data) {
+  observe(subject) {
     if (subject === this.mm && subject == "message-manager-disconnect") {
       // disconnect debugging target if <browser> is disconnected,
       // otherwise this is just a host process change

@@ -24,7 +24,7 @@ const ID_THUNDERBIRD = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 export const AppInfo = new Proxy(
   {},
   {
-    get(target, prop, receiver) {
+    get(target, prop) {
       if (target.hasOwnProperty(prop)) {
         return target[prop];
       }

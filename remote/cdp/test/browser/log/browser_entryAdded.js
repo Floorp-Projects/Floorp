@@ -100,7 +100,7 @@ add_task(async function eventsForScriptErrorContent({ client }) {
   is(events[0].lineNumber, 2, "Got expected line number");
 });
 
-async function runEntryAddedTest(client, eventCount, callback, options = {}) {
+async function runEntryAddedTest(client, eventCount, callback) {
   const { Log } = client;
 
   const EVENT_ENTRY_ADDED = "Log.entryAdded";
@@ -109,7 +109,7 @@ async function runEntryAddedTest(client, eventCount, callback, options = {}) {
   history.addRecorder({
     event: Log.entryAdded,
     eventName: EVENT_ENTRY_ADDED,
-    messageFn: payload => `Received "${EVENT_ENTRY_ADDED}"`,
+    messageFn: () => `Received "${EVENT_ENTRY_ADDED}"`,
   });
 
   const timeBefore = Date.now();

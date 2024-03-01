@@ -30,26 +30,19 @@ BrowserDOMWindow.prototype = {
     return null;
   },
 
-  createContentWindow(
-    aURI,
-    aOpenWindowInfo,
-    aWhere,
-    aFlags,
-    aTriggeringPrincipal,
-    aCsp
-  ) {
+  createContentWindow(aURI, aOpenWindowInfo, aWhere) {
     return this._maybeOpen(aOpenWindowInfo, aWhere)?.browsingContext;
   },
 
-  openURI(aURI, aOpenWindowInfo, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
+  openURI(aURI, aOpenWindowInfo, aWhere) {
     return this._maybeOpen(aOpenWindowInfo, aWhere)?.browsingContext;
   },
 
-  createContentWindowInFrame(aURI, aParams, aWhere, aFlags, aName) {
+  createContentWindowInFrame(aURI, aParams, aWhere) {
     return this._maybeOpen(aParams.openWindowInfo, aWhere);
   },
 
-  openURIInFrame(aURI, aParams, aWhere, aFlags, aName) {
+  openURIInFrame(aURI, aParams, aWhere) {
     return this._maybeOpen(aParams.openWindowInfo, aWhere);
   },
 

@@ -17,7 +17,7 @@ class WindowGlobalToRootModule extends Module {
    * Commands
    */
 
-  testHandleCommandToRoot(params, destination) {
+  testHandleCommandToRoot() {
     return this.messageHandler.handleCommand({
       moduleName: "windowglobaltoroot",
       commandName: "getValueFromRoot",
@@ -27,7 +27,7 @@ class WindowGlobalToRootModule extends Module {
     });
   }
 
-  testSendRootCommand(params, destination) {
+  testSendRootCommand() {
     return this.messageHandler.sendRootCommand({
       moduleName: "windowglobaltoroot",
       commandName: "getValueFromRoot",

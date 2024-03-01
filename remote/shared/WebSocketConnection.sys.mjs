@@ -89,7 +89,7 @@ export class WebSocketConnection {
    * @param {Session} session
    *     The session to register.
    */
-  registerSession(session) {
+  registerSession() {
     throw new Error("Not implemented");
   }
 
@@ -140,7 +140,7 @@ export class WebSocketConnection {
   /**
    * Called by the `transport` when the connection is closed.
    */
-  onConnectionClose(status) {
+  onConnectionClose() {
     lazy.logger.debug(`${this.constructor.name} ${this.id} closed`);
   }
 

@@ -613,7 +613,7 @@ export class Runtime extends ContentProcessDomain {
    * @param {nsIConsoleMessage} subject
    *     Console message.
    */
-  observe(subject, topic, data) {
+  observe(subject) {
     if (subject instanceof Ci.nsIScriptError && subject.hasException) {
       let entry = fromScriptError(subject);
       this._emitExceptionThrown(entry);
