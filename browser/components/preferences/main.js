@@ -882,7 +882,7 @@ var gMainPane = {
     this.readBrowserContainersCheckbox();
   },
 
-  async onGetStarted(aEvent) {
+  async onGetStarted() {
     if (!AppConstants.MOZ_DEV_EDITION) {
       return;
     }
@@ -1983,7 +1983,7 @@ var gMainPane = {
     }
   },
 
-  async checkBrowserContainers(event) {
+  async checkBrowserContainers() {
     let checkbox = document.getElementById("browserContainersCheckbox");
     if (checkbox.checked) {
       Services.prefs.setBoolPref("privacy.userContext.enabled", true);
@@ -2138,7 +2138,7 @@ var gMainPane = {
     })().catch(console.error);
   },
 
-  onMigrationButtonCommand(command) {
+  onMigrationButtonCommand() {
     // Even though we're going to be showing the migration wizard here in
     // about:preferences, we'll delegate the call to
     // `MigrationUtils.showMigrationWizard`, as this will allow us to
@@ -2291,7 +2291,7 @@ var gMainPane = {
     }
   },
 
-  updatePerformanceSettingsBox({ duringChangeEvent }) {
+  updatePerformanceSettingsBox() {
     let defaultPerformancePref = Preferences.get(
       "browser.preferences.defaultPerformanceSettings.enabled"
     );
@@ -4209,7 +4209,7 @@ const AppearanceChooser = {
     this._update();
   },
 
-  observe(subject, topic, data) {
+  observe() {
     this._update();
   },
 

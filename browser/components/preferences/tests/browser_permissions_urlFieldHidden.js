@@ -3,7 +3,7 @@
 const PERMISSIONS_URL =
   "chrome://browser/content/preferences/dialogs/permissions.xhtml";
 
-add_task(async function urlFieldVisibleForPopupPermissions(finish) {
+add_task(async function urlFieldVisibleForPopupPermissions() {
   await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
     leaveOpen: true,
   });
