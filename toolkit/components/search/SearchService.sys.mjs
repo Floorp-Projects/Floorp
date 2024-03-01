@@ -3825,7 +3825,7 @@ class SearchDefaultOverrideAllowlistHandler {
    * @param {Function} listener
    *   A listener for configuration update changes.
    */
-  constructor(listener) {
+  constructor() {
     this._remoteConfig = lazy.RemoteSettings(
       lazy.SearchUtils.SETTINGS_ALLOWLIST_KEY
     );

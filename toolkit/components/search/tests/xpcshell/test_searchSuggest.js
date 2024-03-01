@@ -581,7 +581,7 @@ add_task(async function stop_search() {
   let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
     SEARCH_TELEMETRY_LATENCY
   );
-  let controller = new SearchSuggestionController(result => {
+  let controller = new SearchSuggestionController(() => {
     do_throw("The callback shouldn't be called after stop()");
   });
   let resultPromise = controller.fetch("mo", false, getEngine);

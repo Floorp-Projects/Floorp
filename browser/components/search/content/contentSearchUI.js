@@ -557,11 +557,11 @@ this.ContentSearchUIController = (function () {
       }
     },
 
-    _onMsgFocusInput(event) {
+    _onMsgFocusInput() {
       this.input.focus();
     },
 
-    _onMsgBlur(event) {
+    _onMsgBlur() {
       this.input.blur();
       this._hideSuggestions();
     },

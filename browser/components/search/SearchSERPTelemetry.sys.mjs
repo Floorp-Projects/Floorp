@@ -1217,7 +1217,7 @@ class ContentHandler {
     );
   }
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "http-on-stop-request":
         this._reportChannelBandwidth(aSubject);
@@ -2089,7 +2089,7 @@ class CategorizationEventScheduler {
     this.#init = false;
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "idle":
         lazy.logConsole.debug("Triggering all callbacks due to idle.");

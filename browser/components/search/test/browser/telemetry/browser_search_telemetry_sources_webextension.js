@@ -152,7 +152,7 @@ async function track_ad_click(
 
 add_task(async function test_source_webextension_search() {
   /* global browser */
-  async function background(SEARCH_TERM) {
+  async function background() {
     // Search with no tabId
     browser.search.search({ query: "searchSuggestion", engine: "Example" });
   }
@@ -184,7 +184,7 @@ add_task(async function test_source_webextension_search() {
 });
 
 add_task(async function test_source_webextension_query() {
-  async function background(SEARCH_TERM) {
+  async function background() {
     // Search with no tabId
     browser.search.query({
       text: "searchSuggestion",

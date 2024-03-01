@@ -525,14 +525,14 @@ export class SearchSuggestionController {
       this.#onRemoteLoaded(context, deferredResponse);
     });
 
-    request.addEventListener("error", evt => {
+    request.addEventListener("error", () => {
       this.#reportTelemetryForEngine(context);
       deferredResponse.resolve("HTTP error");
     });
 
     // Reject for an abort assuming it's always from .stop() in which case we
     // shouldn't return local or remote results for existing searches.
-    request.addEventListener("abort", evt => {
+    request.addEventListener("abort", () => {
       context.timer.cancel();
       this.#reportTelemetryForEngine(context);
       deferredResponse.reject("HTTP request aborted");
