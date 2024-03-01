@@ -251,7 +251,17 @@ def _populate_nightly_history(product, branch, maxbuilds=4, maxsearch=10):
                     builds[platform][locale] = dict()
                 if len(builds[platform][locale]) >= maxbuilds:
                     continue
+                if "buildID" not in history["platforms"][platform]["locales"][locale]:
+                    continue
                 buildid = history["platforms"][platform]["locales"][locale]["buildID"]
+                if (
+                    "completes" not in history["platforms"][platform]["locales"][locale]
+                    or len(
+                        history["platforms"][platform]["locales"][locale]["completes"]
+                    )
+                    == 0
+                ):
+                    continue
                 url = history["platforms"][platform]["locales"][locale]["completes"][0][
                     "fileUrl"
                 ]
