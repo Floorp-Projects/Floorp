@@ -8280,7 +8280,7 @@
 # Whether to respect align-content on blocks.
 - name: layout.css.align-content.blocks.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
