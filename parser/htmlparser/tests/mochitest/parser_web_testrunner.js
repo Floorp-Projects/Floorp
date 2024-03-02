@@ -60,7 +60,7 @@ function writeErrorSummary(input, expected, got, isTodo) {
  * event handler returned by makeTestChecker() or the callback returned by
  * makeFragmentTestChecker() until the 'testcases' iterator is spent.
  */
-function makeTestChecker(input, expected, errors) {
+function makeTestChecker(input, expected) {
   return function (e) {
     var domAsString = docToTestOutput(e.target.contentDocument);
     if (html5Exceptions[input]) {

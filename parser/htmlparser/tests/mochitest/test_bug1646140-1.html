@@ -7,7 +7,7 @@
 SimpleTest.waitForExplicitFinish();
 
 window.svgRanScript = false;
-const o = new MutationObserver(mutations => {
+const o = new MutationObserver(() => {
   o.disconnect();
   setTimeout(() => {
     ok(!svgRanScript, "svg onload must not fire");

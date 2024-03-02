@@ -13,7 +13,7 @@
 /**
  * A few utility functions.
  */
-function log(entry) {}
+function log() {}
 
 function startsWith(s, s2) {
   return s.indexOf(s2) == 0;
