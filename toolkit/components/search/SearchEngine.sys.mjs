@@ -11,6 +11,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
 });
 
 const BinaryInputStream = Components.Constructor(
@@ -925,7 +926,7 @@ export class SearchEngine {
   /**
    * This sets the urls for the search engine based on the supplied parameters.
    * If you add anything here, please consider if it needs to be handled in the
-   * overrideWithExtension / removeExtensionOverride functions as well.
+   * overrideWithEngine / removeExtensionOverride functions as well.
    *
    * @param {object} details
    *   The details of the engine.
@@ -1042,22 +1043,22 @@ export class SearchEngine {
   }
 
   /**
-   * Overrides the urls/parameters with those of the provided extension.
-   * The parameters are not saved to the search settings - the code handling
+   * Overrides the urls/parameters with those of the provided engine or extension.
+   * The url parameters are not saved to the search settings - the code handling
    * the extension should set these on every restart, this avoids potential
    * third party modifications and means that we can verify the WebExtension is
    * still in the allow list.
    *
    * @param {string} options
    *   The options for this function.
-   * @param {AddonSearchEngine} [options.engine]
+   * @param {AddonSearchEngine|OpenSearchEngine} [options.engine]
    *   The search engine to override with this engine. If not specified, `manifest`
    *   must be provided.
    * @param {object} [options.extension]
    *   An object representing the WebExtensions. If not specified,
    *   `engine` must be provided
    */
-  overrideWithExtension({ engine, extension }) {
+  overrideWithEngine({ engine, extension }) {
     this._overriddenData = {
       urls: this._urls,
       queryCharset: this._queryCharset,
@@ -1068,7 +1069,10 @@ export class SearchEngine {
       this.copyUserSettingsFrom(engine);
 
       this._urls = engine._urls;
-      this.setAttr("overriddenBy", engine._extensionID);
+      this.setAttr("overriddenBy", engine._extensionID ?? engine.id);
+      if (engine instanceof lazy.OpenSearchEngine) {
+        this.setAttr("overriddenByOpenSearch", engine.toJSON());
+      }
     } else {
       this._urls = [];
       this.setAttr("overriddenBy", extension.id);
@@ -1108,8 +1112,9 @@ export class SearchEngine {
    * Copies settings from the supplied search engine. Typically used for
    * restoring settings when removing an override.
    *
-   * @param {SearchEngine} engine
-   *   The engine to copy the settings from.
+   * @param {SearchEngine|object} engine
+   *   The engine to copy the settings from, or the engine settings from
+   *   the user's saved settings.
    */
   copyUserSettingsFrom(engine) {
     for (let attribute of USER_ATTRIBUTES) {

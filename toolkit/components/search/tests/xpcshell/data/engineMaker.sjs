@@ -36,7 +36,9 @@ function handleRequest(request, response) {
 function createOpenSearchEngine(response, engineData) {
   let params = "";
   let queryString = "";
-  if (engineData.method == "POST") {
+  if (engineData.queryString) {
+    queryString = engineData.queryString.replace("&", "&amp;");
+  } else if (engineData.method == "POST") {
     params = "<Param name='q' value='{searchTerms}'/>";
   } else {
     queryString = "?q={searchTerms}";
