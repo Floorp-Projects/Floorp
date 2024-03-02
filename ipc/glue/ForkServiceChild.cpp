@@ -3,11 +3,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "ForkServiceChild.h"
 #include "ForkServer.h"
-#include "mozilla/ipc/IPDLParamTraits.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Services.h"
@@ -23,6 +25,7 @@ namespace ipc {
 extern LazyLogModule gForkServiceLog;
 
 mozilla::UniquePtr<ForkServiceChild> ForkServiceChild::sForkServiceChild;
+Atomic<bool> ForkServiceChild::sForkServiceUsed;
 
 static bool ConfigurePipeFd(int aFd) {
   int flags = fcntl(aFd, F_GETFD, 0);
@@ -55,6 +58,7 @@ void ForkServiceChild::StartForkServer() {
     return;
   }
 
+  sForkServiceUsed = true;
   sForkServiceChild =
       mozilla::MakeUnique<ForkServiceChild>(server.release(), subprocess);
 }

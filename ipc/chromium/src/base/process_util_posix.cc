@@ -198,7 +198,7 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
 bool IsProcessDead(ProcessHandle handle, bool blocking) {
   auto handleForkServer = [handle]() -> mozilla::Maybe<bool> {
 #ifdef MOZ_ENABLE_FORKSERVER
-    if (errno == ECHILD && mozilla::ipc::ForkServiceChild::Get()) {
+    if (errno == ECHILD && mozilla::ipc::ForkServiceChild::WasUsed()) {
       // We only know if a process exists, but not if it has crashed.
       //
       // Since content processes are not direct children of the chrome
