@@ -298,8 +298,9 @@ class nsCocoaUtils {
   static nsresult CreateNSImageFromImageContainer(
       imgIContainer* aImage, uint32_t aWhichFrame,
       const nsPresContext* aPresContext,
-      const mozilla::ComputedStyle* aComputedStyle, NSImage** aResult,
-      CGFloat scaleFactor, bool* aIsEntirelyBlack = nullptr);
+      const mozilla::ComputedStyle* aComputedStyle,
+      const NSSize& aPreferredSize, NSImage** aResult, CGFloat scaleFactor,
+      bool* aIsEntirelyBlack = nullptr);
 
   /** Creates a Cocoa <code>NSImage</code> from a frame of an
      <code>imgIContainer</code>. The new <code>NSImage</code> will have both a
@@ -317,7 +318,8 @@ class nsCocoaUtils {
   static nsresult CreateDualRepresentationNSImageFromImageContainer(
       imgIContainer* aImage, uint32_t aWhichFrame,
       const nsPresContext* aPresContext,
-      const mozilla::ComputedStyle* aComputedStyle, NSImage** aResult,
+      const mozilla::ComputedStyle* aComputedStyle,
+      const NSSize& aPreferredSize, NSImage** aResult,
       bool* aIsEntirelyBlack = nullptr);
 
   /**

@@ -32,11 +32,11 @@
   if (aScaleFactor != 0.0f) {
     rv = nsCocoaUtils::CreateNSImageFromImageContainer(
         aImage, imgIContainer::FRAME_CURRENT, aPresContext, aComputedStyle,
-        &retainedImage, aScaleFactor, &isEntirelyBlack);
+        aSize, &retainedImage, aScaleFactor, &isEntirelyBlack);
   } else {
     rv = nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
         aImage, imgIContainer::FRAME_CURRENT, aPresContext, aComputedStyle,
-        &retainedImage, &isEntirelyBlack);
+        aSize, &retainedImage, &isEntirelyBlack);
   }
 
   NSImage* image = [retainedImage autorelease];
@@ -44,10 +44,6 @@
   if (NS_FAILED(rv) || !image) {
     return nil;
   }
-
-  int32_t origWidth = 0, origHeight = 0;
-  aImage->GetWidth(&origWidth);
-  aImage->GetHeight(&origHeight);
 
   // If all the color channels in the image are black, treat the image as a
   // template. This will cause macOS to use the image's alpha channel as a mask

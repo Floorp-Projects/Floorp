@@ -515,11 +515,27 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage,
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(
     imgIContainer* aImage, uint32_t aWhichFrame,
     const nsPresContext* aPresContext, const ComputedStyle* aComputedStyle,
-    NSImage** aResult, CGFloat scaleFactor, bool* aIsEntirelyBlack) {
+    const NSSize& aPreferredSize, NSImage** aResult, CGFloat scaleFactor,
+    bool* aIsEntirelyBlack) {
   RefPtr<SourceSurface> surface;
-  int32_t width = 0, height = 0;
-  aImage->GetWidth(&width);
-  aImage->GetHeight(&height);
+  int32_t width = 0;
+  int32_t height = 0;
+  {
+    const bool gotWidth = NS_SUCCEEDED(aImage->GetWidth(&width));
+    const bool gotHeight = NS_SUCCEEDED(aImage->GetHeight(&height));
+    if (auto ratio = aImage->GetIntrinsicRatio()) {
+      if (gotWidth != gotHeight) {
+        if (gotWidth) {
+          height = ratio->Inverted().ApplyTo(width);
+        } else {
+          width = ratio->ApplyTo(height);
+        }
+      } else if (!gotWidth) {
+        height = std::ceil(aPreferredSize.height);
+        width = ratio->ApplyTo(height);
+      }
+    }
+  }
 
   // Render a vector image at the correct resolution on a retina display
   if (aImage->GetType() == imgIContainer::TYPE_VECTOR) {
@@ -582,21 +598,18 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(
 nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
     imgIContainer* aImage, uint32_t aWhichFrame,
     const nsPresContext* aPresContext, const ComputedStyle* aComputedStyle,
-    NSImage** aResult, bool* aIsEntirelyBlack) {
-  int32_t width = 0, height = 0;
-  aImage->GetWidth(&width);
-  aImage->GetHeight(&height);
-  NSSize size = NSMakeSize(width, height);
-  *aResult = [[NSImage alloc] init];
-  [*aResult setSize:size];
-
+    const NSSize& aPreferredSize, NSImage** aResult, bool* aIsEntirelyBlack) {
   NSImage* newRepresentation = nil;
   nsresult rv = CreateNSImageFromImageContainer(
-      aImage, aWhichFrame, aPresContext, aComputedStyle, &newRepresentation,
-      1.0f, aIsEntirelyBlack);
+      aImage, aWhichFrame, aPresContext, aComputedStyle, aPreferredSize,
+      &newRepresentation, 1.0f, aIsEntirelyBlack);
   if (NS_FAILED(rv) || !newRepresentation) {
     return NS_ERROR_FAILURE;
   }
+
+  NSSize size = newRepresentation.size;
+  *aResult = [[NSImage alloc] init];
+  [*aResult setSize:size];
 
   [[[newRepresentation representations] objectAtIndex:0] setSize:size];
   [*aResult
@@ -604,9 +617,9 @@ nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
   [newRepresentation release];
   newRepresentation = nil;
 
-  rv = CreateNSImageFromImageContainer(aImage, aWhichFrame, aPresContext,
-                                       aComputedStyle, &newRepresentation, 2.0f,
-                                       aIsEntirelyBlack);
+  rv = CreateNSImageFromImageContainer(
+      aImage, aWhichFrame, aPresContext, aComputedStyle, aPreferredSize,
+      &newRepresentation, 2.0f, aIsEntirelyBlack);
   if (NS_FAILED(rv) || !newRepresentation) {
     return NS_ERROR_FAILURE;
   }
