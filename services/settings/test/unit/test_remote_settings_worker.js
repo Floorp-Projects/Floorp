@@ -82,8 +82,8 @@ add_task(async function test_throws_error_if_worker_fails_async() {
   // should be reported to the caller.
   await new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase("remote-settings");
-    request.onsuccess = event => resolve();
-    request.onblocked = event => reject(new Error("Cannot delete DB"));
+    request.onsuccess = () => resolve();
+    request.onblocked = () => reject(new Error("Cannot delete DB"));
     request.onerror = event => reject(event.target.error);
   });
   let error;

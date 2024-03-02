@@ -480,7 +480,7 @@ add_task(async function test_post_override_content_type() {
 add_task(async function test_weave_backoff() {
   _("X-Weave-Backoff header notifies observer");
   let backoffInterval;
-  function onBackoff(subject, data) {
+  function onBackoff(subject) {
     backoffInterval = subject;
   }
   Observers.add("weave:service:backoff:interval", onBackoff);

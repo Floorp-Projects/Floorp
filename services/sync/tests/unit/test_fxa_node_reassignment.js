@@ -46,7 +46,7 @@ function prepareServer(cbAfterTokenFetch) {
   // A server callback to ensure we don't accidentally hit the wrong endpoint
   // after a node reassignment.
   let callback = {
-    onRequest(req, resp) {
+    onRequest(req) {
       let full = `${req.scheme}://${req.host}:${req.port}${req.path}`;
       let expected = config.fxaccount.token.endpoint;
       Assert.ok(

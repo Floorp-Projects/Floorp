@@ -87,7 +87,7 @@ const UIStateInternal = {
     this._initialized = false;
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "weave:service:sync:start":
         this.toggleSyncActivity(true);

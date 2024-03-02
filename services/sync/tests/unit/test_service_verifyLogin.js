@@ -78,13 +78,10 @@ add_task(async function test_verifyLogin() {
     Service._updateCachedURLs();
     Assert.ok(!Service.status.enforceBackoff);
     let backoffInterval;
-    Svc.Obs.add(
-      "weave:service:backoff:interval",
-      function observe(subject, data) {
-        Svc.Obs.remove("weave:service:backoff:interval", observe);
-        backoffInterval = subject;
-      }
-    );
+    Svc.Obs.add("weave:service:backoff:interval", function observe(subject) {
+      Svc.Obs.remove("weave:service:backoff:interval", observe);
+      backoffInterval = subject;
+    });
     Assert.equal(false, await Service.verifyLogin());
     Assert.ok(Service.status.enforceBackoff);
     Assert.equal(backoffInterval, 42);

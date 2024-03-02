@@ -29,7 +29,7 @@ export function FakeFilesystemService(contents) {
     self.fakeContents["weave/" + filePath + ".json"] = JSON.stringify(json);
   };
 
-  Utils.jsonLoad = async function jsonLoad(filePath, that) {
+  Utils.jsonLoad = async function jsonLoad(filePath) {
     let obj;
     let json = self.fakeContents["weave/" + filePath + ".json"];
     if (json) {
@@ -38,14 +38,14 @@ export function FakeFilesystemService(contents) {
     return obj;
   };
 
-  Utils.jsonMove = function jsonMove(aFrom, aTo, that) {
+  Utils.jsonMove = function jsonMove(aFrom, aTo) {
     const fromPath = "weave/" + aFrom + ".json";
     self.fakeContents["weave/" + aTo + ".json"] = self.fakeContents[fromPath];
     delete self.fakeContents[fromPath];
     return Promise.resolve();
   };
 
-  Utils.jsonRemove = function jsonRemove(filePath, that) {
+  Utils.jsonRemove = function jsonRemove(filePath) {
     delete self.fakeContents["weave/" + filePath + ".json"];
     return Promise.resolve();
   };
@@ -79,19 +79,17 @@ export function FakeCryptoService() {
   delete Weave.Crypto; // get rid of the getter first
   Weave.Crypto = this;
 
-  RawCryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(
-    keyBundle
-  ) {
+  RawCryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC() {
     return fakeSHA256HMAC(this.ciphertext);
   };
 }
 
 FakeCryptoService.prototype = {
-  async encrypt(clearText, symmetricKey, iv) {
+  async encrypt(clearText) {
     return clearText;
   },
 
-  async decrypt(cipherText, symmetricKey, iv) {
+  async decrypt(cipherText) {
     return cipherText;
   },
 
@@ -104,7 +102,7 @@ FakeCryptoService.prototype = {
     return btoa("fake-fake-fake-random-iv");
   },
 
-  expandData: function expandData(data, len) {
+  expandData: function expandData(data) {
     return data;
   },
 

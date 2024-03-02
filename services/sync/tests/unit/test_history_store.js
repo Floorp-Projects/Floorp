@@ -17,7 +17,7 @@ const TIMESTAMP3 = (Date.now() - 123894) * 1000;
 
 function promiseOnVisitObserved() {
   return new Promise(res => {
-    let listener = new PlacesWeakCallbackWrapper(events => {
+    let listener = new PlacesWeakCallbackWrapper(() => {
       PlacesObservers.removeListener(["page-visited"], listener);
       res();
     });

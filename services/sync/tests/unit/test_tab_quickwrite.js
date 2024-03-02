@@ -179,7 +179,7 @@ add_task(async function test_tab_quickWrite_telemetry() {
   let telem = get_sync_test_telemetry();
   telem.payloads = [];
   let oldSubmit = telem.submit;
-  let submitPromise = new Promise((resolve, reject) => {
+  let submitPromise = new Promise(resolve => {
     telem.submit = function (ping) {
       telem.submit = oldSubmit;
       resolve(ping);

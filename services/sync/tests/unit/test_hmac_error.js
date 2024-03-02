@@ -171,7 +171,7 @@ add_task(async function hmac_error_during_node_reassignment() {
   }
   let onSyncFinished = function () {};
   let obs = {
-    observe: function observe(subject, topic, data) {
+    observe: function observe(subject, topic) {
       switch (topic) {
         case "weave:service:sync:error":
           onSyncError();

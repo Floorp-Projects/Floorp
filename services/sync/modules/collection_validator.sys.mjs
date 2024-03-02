@@ -114,13 +114,13 @@ export class CollectionValidator {
 
   // Return whether or not a server item should be present on the client. Expected
   // to be overridden.
-  clientUnderstands(item) {
+  clientUnderstands() {
     return true;
   }
 
   // Return whether or not a client item should be present on the server. Expected
   // to be overridden
-  async syncedByClient(item) {
+  async syncedByClient() {
     return true;
   }
 

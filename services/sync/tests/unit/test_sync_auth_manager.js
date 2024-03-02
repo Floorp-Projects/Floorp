@@ -1002,7 +1002,7 @@ function mockTokenServer(func) {
     requestLog.addAppender(new Log.DumpAppender());
     requestLog.level = Log.Level.Trace;
   }
-  function MockRESTRequest(url) {}
+  function MockRESTRequest() {}
   MockRESTRequest.prototype = {
     _log: requestLog,
     setHeader() {},

@@ -430,7 +430,7 @@ export const TabProvider = {
         .then(iconData => {
           thisTab.icon = iconData.uri.spec;
         })
-        .catch(ex => {
+        .catch(() => {
           log.trace(
             `Failed to fetch favicon for ${url}`,
             thisTab.urlHistory[0]
@@ -503,7 +503,7 @@ TabTracker.prototype = {
     }
   },
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     switch (topic) {
       case "domwindowopened":
         let onLoad = () => {

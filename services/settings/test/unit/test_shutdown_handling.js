@@ -41,7 +41,7 @@ add_task(async function test_shutdown_abort_after_start() {
         const request = store
           .index("cid")
           .openCursor(IDBKeyRange.only("foopydoo/foo"));
-        request.onsuccess = event => {
+        request.onsuccess = () => {
           makeRequest();
         };
       }
@@ -74,7 +74,7 @@ add_task(async function test_shutdown_immediate_abort() {
       let request = store
         .index("cid")
         .openCursor(IDBKeyRange.only("foopydoo/foo"));
-      request.onsuccess = event => {
+      request.onsuccess = () => {
         // Abort immediately.
         Database._shutdownHandler();
         request = store

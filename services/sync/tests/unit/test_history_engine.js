@@ -16,13 +16,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "mozIAsyncHistory"
 );
 async function rawAddVisit(id, uri, visitPRTime, transitionType) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let results = [];
     let handler = {
       handleResult(result) {
         results.push(result);
       },
-      handleError(resultCode, placeInfo) {
+      handleError(resultCode) {
         do_throw(`updatePlaces gave error ${resultCode}!`);
       },
       handleCompletion(count) {

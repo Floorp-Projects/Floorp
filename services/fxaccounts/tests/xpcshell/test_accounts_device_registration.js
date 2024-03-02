@@ -80,7 +80,7 @@ function MockFxAccountsClient(device) {
 
   // mock calls up to the auth server to determine whether the
   // user account has been verified
-  this.recoveryEmailStatus = function (sessionToken) {
+  this.recoveryEmailStatus = function () {
     // simulate a call to /recovery_email/status
     return Promise.resolve({
       email: this._email,
@@ -104,8 +104,7 @@ function MockFxAccountsClient(device) {
     return Promise.resolve(!!uid && !this._deletedOnServer);
   };
 
-  this.registerDevice = (st, name, type) =>
-    Promise.resolve({ id: device.id, name });
+  this.registerDevice = (st, name) => Promise.resolve({ id: device.id, name });
   this.updateDevice = (st, id, name) => Promise.resolve({ id, name });
   this.signOut = () => Promise.resolve({});
   this.getDeviceList = st =>
@@ -655,7 +654,7 @@ add_task(async function test_verification_updates_registration() {
     };
   });
 
-  fxa._internal.checkEmailStatus = async function (sessionToken) {
+  fxa._internal.checkEmailStatus = async function () {
     credentials.verified = true;
     return credentials;
   };
@@ -792,7 +791,7 @@ add_task(async function test_refreshDeviceList() {
   };
   const deviceListUpdateObserver = {
     count: 0,
-    observe(subject, topic, data) {
+    observe() {
       this.count++;
     },
   };

@@ -52,7 +52,7 @@ FxAccountsProfile.prototype = {
   // making another request to determine if it is fresh or not.
   PROFILE_FRESHNESS_THRESHOLD: 120000, // 2 minutes
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     // If we get a profile change notification from our webchannel it means
     // the user has just changed their profile via the web, so we want to
     // ignore our "freshness threshold"

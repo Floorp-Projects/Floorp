@@ -94,7 +94,7 @@ Object.setPrototypeOf(
   FxAccountsClient.prototype
 );
 
-function MockFxAccounts(device = {}) {
+function MockFxAccounts() {
   return new FxAccounts({
     fxAccountsClient: new MockFxAccountsClient(),
     newAccountState(credentials) {

@@ -778,7 +778,7 @@ add_task(async function test_onFaviconChanged() {
         iconURI,
         true,
         PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-        (uri, dataLen, data, mimeType) => {
+        () => {
           resolve();
         },
         Services.scriptSecurityManager.getSystemPrincipal()

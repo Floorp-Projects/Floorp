@@ -164,7 +164,7 @@ SyncAuthManager.prototype = {
     this._token = null;
   },
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     this._log.debug("observed " + topic);
     if (!this.username) {
       this._log.info("Sync is not configured, so ignoring the notification");
@@ -276,7 +276,7 @@ SyncAuthManager.prototype = {
    * allows us to avoid a network request for when we actually need the
    * migration info.
    */
-  prefetchMigrationSentinel(service) {
+  prefetchMigrationSentinel() {
     // nothing to do here until we decide to migrate away from FxA.
   },
 

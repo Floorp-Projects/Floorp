@@ -40,7 +40,7 @@ add_test(function test_delay() {
   const delay = 100;
   let that = {};
   let t0 = Date.now();
-  function callback(timer) {
+  function callback() {
     // Difference should be ~2*delay, but hard to predict on all platforms,
     // particularly Windows XP.
     Assert.ok(Date.now() - t0 > delay);
@@ -57,7 +57,7 @@ add_test(function test_clear() {
   const delay = 0;
   let that = {};
   CommonUtils.namedTimer(
-    function callback(timer) {
+    function callback() {
       do_throw("Shouldn't fire!");
     },
     delay,

@@ -160,7 +160,7 @@ add_task(async function test_dont_track_expiration() {
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
 
   // Observe expiration.
-  Services.obs.addObserver(function onExpiration(aSubject, aTopic, aData) {
+  Services.obs.addObserver(function onExpiration(aSubject, aTopic) {
     Services.obs.removeObserver(onExpiration, aTopic);
     // Remove the remaining page to update its score.
     PlacesUtils.history.remove(uriToRemove);

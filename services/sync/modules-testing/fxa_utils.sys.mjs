@@ -23,7 +23,7 @@ export var initializeIdentityWithTokenServerResponse = function (response) {
   }
 
   // A mock request object.
-  function MockRESTRequest(url) {}
+  function MockRESTRequest() {}
   MockRESTRequest.prototype = {
     _log: requestLog,
     setHeader() {},

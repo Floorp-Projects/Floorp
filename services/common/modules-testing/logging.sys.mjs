@@ -51,6 +51,6 @@ export function initTestLogging(level) {
   return logStats;
 }
 
-export function getTestLogger(component) {
+export function getTestLogger() {
   return Log.repository.getLogger("Testing");
 }

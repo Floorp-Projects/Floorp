@@ -498,7 +498,7 @@ FxAccountsClient.prototype = {
    */
   accountExists(email) {
     return this.signIn(email, "").then(
-      cantHappen => {
+      () => {
         throw new Error("How did I sign in with an empty password?");
       },
       expectedError => {

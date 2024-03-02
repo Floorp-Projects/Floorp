@@ -189,7 +189,7 @@ FormStore.prototype = {
     await this._processChange(change);
   },
 
-  async update(record) {
+  async update() {
     this._log.trace("Ignoring form record update request!");
   },
 

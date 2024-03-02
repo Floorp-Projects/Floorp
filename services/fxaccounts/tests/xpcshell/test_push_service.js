@@ -179,7 +179,7 @@ add_test(function observePushTopicDeviceConnected() {
       return this;
     },
   };
-  let obs = (subject, topic, data) => {
+  let obs = (subject, topic) => {
     Services.obs.removeObserver(obs, topic);
     run_next_test();
   };
@@ -392,7 +392,7 @@ add_test(function observePushTopicProfileUpdated() {
       return this;
     },
   };
-  let obs = (subject, topic, data) => {
+  let obs = (subject, topic) => {
     Services.obs.removeObserver(obs, topic);
     run_next_test();
   };

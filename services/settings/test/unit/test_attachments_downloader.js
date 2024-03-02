@@ -68,9 +68,9 @@ async function clear_state() {
 
   downloader = new Downloader("main", "some-collection");
   const dummyCacheImpl = {
-    get: async attachmentId => {},
-    set: async (attachmentId, attachment) => {},
-    delete: async attachmentId => {},
+    get: async () => {},
+    set: async () => {},
+    delete: async () => {},
   };
   // The download() method requires a cacheImpl, but the Downloader
   // class does not have one. Define a dummy no-op one.
@@ -388,7 +388,7 @@ async function doTestDownloadCacheImpl({ simulateCorruption }) {
         throw new Error("Simulation of corrupted cache (write)");
       }
     },
-    async delete(attachmentId) {},
+    async delete() {},
   };
   Object.defineProperty(downloader, "cacheImpl", { value: cacheImpl });
 

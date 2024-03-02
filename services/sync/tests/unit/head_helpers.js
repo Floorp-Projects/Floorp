@@ -530,8 +530,8 @@ async function sync_engine_and_validate_telem(
 
 // Returns a promise that resolves once the specified observer notification
 // has fired.
-function promiseOneObserver(topic, callback) {
-  return new Promise((resolve, reject) => {
+function promiseOneObserver(topic) {
+  return new Promise(resolve => {
     let observer = function (subject, data) {
       Svc.Obs.remove(topic, observer);
       resolve({ subject, data });

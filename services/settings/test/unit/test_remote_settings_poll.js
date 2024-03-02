@@ -188,7 +188,7 @@ add_task(async function test_check_success() {
   // Ensure that the remote-settings:changes-poll-end notification works
   let notificationObserved = false;
   const observer = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
       notificationObserved = true;
     },
@@ -258,7 +258,7 @@ add_task(async function test_update_timer_interface() {
   await new Promise(resolve => {
     const e = "remote-settings:changes-poll-end";
     const changesPolledObserver = {
-      observe(aSubject, aTopic, aData) {
+      observe() {
         Services.obs.removeObserver(this, e);
         resolve();
       },
@@ -288,7 +288,7 @@ add_task(async function test_check_up_to_date() {
   // Ensure that the remote-settings:changes-poll-end notification is sent.
   let notificationObserved = false;
   const observer = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
       notificationObserved = true;
     },
@@ -686,7 +686,7 @@ add_task(async function test_server_error() {
 
   let notificationObserved = false;
   const observer = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       Services.obs.removeObserver(this, "remote-settings:changes-poll-end");
       notificationObserved = true;
     },
@@ -807,7 +807,7 @@ add_task(async function test_client_error() {
 
   let notificationsObserved = [];
   const observer = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       Services.obs.removeObserver(this, aTopic);
       notificationsObserved.push([aTopic, aSubject.wrappedJSObject]);
     },
@@ -935,7 +935,7 @@ add_task(
     // Wait for the "sync-broken-error" notification.
     let notificationObserved = false;
     const observer = {
-      observe(aSubject, aTopic, aData) {
+      observe() {
         notificationObserved = true;
       },
     };

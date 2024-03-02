@@ -174,7 +174,7 @@ add_task(async function test_sendtab_receive() {
 
   const fxai = FxaInternalMock();
   const sendTab = new SendTab(commands, fxai);
-  sendTab._encrypt = (bytes, device) => {
+  sendTab._encrypt = bytes => {
     return bytes;
   };
   sendTab._decrypt = bytes => {
@@ -387,7 +387,7 @@ add_task(async function test_commands_handleCommands() {
     },
   };
   const commands = new FxAccountsCommands(fxAccounts);
-  commands.sendTab.handle = (sender, data, reason) => {
+  commands.sendTab.handle = () => {
     return {
       title: "testTitle",
       uri: "https://testURI",
@@ -436,7 +436,7 @@ add_task(async function test_commands_handleCommands_invalid_tab() {
     },
   };
   const commands = new FxAccountsCommands(fxAccounts);
-  commands.sendTab.handle = (sender, data, reason) => {
+  commands.sendTab.handle = () => {
     return {
       title: "badUriTab",
       uri: "file://path/to/pdf",

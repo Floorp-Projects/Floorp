@@ -48,7 +48,7 @@ add_task(async function run_test() {
     Svc.PrefBranch.setIntPref("lastPing", Math.floor(Date.now() / 1000));
 
     let threw = false;
-    Svc.Obs.add("weave:service:sync:error", function (subject, data) {
+    Svc.Obs.add("weave:service:sync:error", function () {
       threw = true;
     });
 
