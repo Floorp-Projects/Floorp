@@ -22,7 +22,6 @@ this.pictureInPictureParent = class extends ExtensionAPI {
    * Override ExtensionAPI with PiP override's specific API
    * Relays the site overrides to this extension's child process
    *
-   * @param {ExtensionContext} context the context of our extension
    * @returns {object} returns the necessary API structure required to manage sharedData in PictureInPictureParent
    */
   getAPI() {

@@ -22,7 +22,6 @@ class PictureInPictureVideoWrapper {
    * The Netflix player returns the current time in milliseconds so we convert
    * to seconds before returning.
    *
-   * @param {HTMLVideoElement} video The original video element
    * @returns {number} The current time in seconds
    */
   getCurrentTime() {
@@ -32,7 +31,6 @@ class PictureInPictureVideoWrapper {
    * The Netflix player returns the duration in milliseconds so we convert to
    * seconds before returning.
    *
-   * @param {HTMLVideoElement} video The original video element
    * @returns {number} The duration in seconds
    */
   getDuration() {
