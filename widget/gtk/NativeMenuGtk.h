@@ -1,4 +1,3 @@
-
 /* -*- Mode: c++; tab-width: 2; indent-tabs-mode: nil; -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -65,10 +64,12 @@ class NativeMenuGtk : public NativeMenu {
 class DBusMenuBar final : public RefCounted<DBusMenuBar> {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(DBusMenuBar)
-  explicit DBusMenuBar(dom::Element* aElement);
+  static RefPtr<DBusMenuBar> Create(dom::Element*);
   ~DBusMenuBar();
 
  protected:
+  explicit DBusMenuBar(dom::Element* aElement);
+
   static void NameOwnerChangedCallback(GObject*, GParamSpec*, gpointer);
   void OnNameOwnerChanged();
 
