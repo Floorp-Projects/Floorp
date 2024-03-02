@@ -35,8 +35,9 @@ static UtilityActorName UtilityActorNameFromString(
 }
 
 // Find the utility process with the given actor or any utility process if
-// the actor is UtilityActorName::EndGuard_.
-static SandboxingKind FindUtilityProcessWithActor(UtilityActorName aActorName) {
+// aActorName is Nothing().
+static SandboxingKind FindUtilityProcessWithActor(
+    const Maybe<UtilityActorName>& aActorName) {
   RefPtr<UtilityProcessManager> utilityProc =
       UtilityProcessManager::GetSingleton();
   MOZ_ASSERT(utilityProc, "No UtilityprocessManager?");
@@ -46,11 +47,11 @@ static SandboxingKind FindUtilityProcessWithActor(UtilityActorName aActorName) {
     if (!utilityProc->Process(sbKind)) {
       continue;
     }
-    if (aActorName == UtilityActorName::EndGuard_) {
+    if (aActorName.isNothing()) {
       return sbKind;
     }
     for (auto actor : utilityProc->GetActors(sbKind)) {
-      if (actor == aActorName) {
+      if (actor == aActorName.ref()) {
         return sbKind;
       }
     }
@@ -230,9 +231,9 @@ UtilityProcessTest::StopProcess(const char* aActorName) {
   if (aActorName) {
     const nsDependentCString actorStringName(aActorName);
     UtilityActorName actorName = UtilityActorNameFromString(actorStringName);
-    sbKind = FindUtilityProcessWithActor(actorName);
+    sbKind = FindUtilityProcessWithActor(Some(actorName));
   } else {
-    sbKind = FindUtilityProcessWithActor(UtilityActorName::EndGuard_);
+    sbKind = FindUtilityProcessWithActor(Nothing());
   }
 
   if (sbKind == SandboxingKind::COUNT) {
