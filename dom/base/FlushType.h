@@ -40,7 +40,7 @@ enum class FlushType : uint8_t {
 
 // Flush type strings that will be displayed in the profiler
 // clang-format off
-const EnumeratedArray<FlushType, const char*, FlushType::Count>
+const EnumeratedArray<FlushType, const char*, size_t(FlushType::Count)>
     kFlushTypeNames = {
   "",
   "Event",

@@ -126,7 +126,7 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
   MOZ_ASSERT(NS_IsMainThread());
 
   static constexpr EnumeratedArray<AsyncAttribute, nsLiteralCString,
-                                   AsyncAttribute::Last>
+                                   size_t(AsyncAttribute::Last)>
       attributeKeys{"SupportsDuplex"_ns, "SupportsColor"_ns,
                     "SupportsMonochrome"_ns, "SupportsCollation"_ns,
                     "PrinterInfo"_ns};
