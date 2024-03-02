@@ -41,7 +41,7 @@ class PictureInPictureVideoWrapper {
     container = document.querySelector(".shaka-text-container");
     if (container) {
       updateCaptionsFunction("");
-      const callback = function (mutationsList, observer) {
+      const callback = function () {
         let textNodeList = container?.querySelectorAll("span");
         if (!textNodeList) {
           updateCaptionsFunction("");

@@ -5,7 +5,7 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
-  isLive(video) {
+  isLive() {
     return !document.querySelector(".seekbar-bar");
   }
   getDuration(video) {

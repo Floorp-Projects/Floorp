@@ -57,7 +57,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function (mutationsList, observer) {
+      const callback = function (mutationsList) {
         // eslint-disable-next-line no-unused-vars
         for (const mutation of mutationsList) {
           let text;

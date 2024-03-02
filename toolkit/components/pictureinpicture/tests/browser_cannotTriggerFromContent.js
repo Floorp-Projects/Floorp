@@ -18,7 +18,7 @@ add_task(async () => {
       // if we receive the PictureInPicture:Request message.
       const MESSAGE = "PictureInPicture:Request";
       let sawMessage = false;
-      let listener = msg => {
+      let listener = () => {
         sawMessage = true;
       };
       browser.messageManager.addMessageListener(MESSAGE, listener);

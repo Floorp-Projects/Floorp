@@ -10,7 +10,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function (mutationsList, observer) {
+      const callback = function () {
         let text = container.querySelector(".cueWrap-2P4Ue4VQ")?.innerText;
         if (!text) {
           updateCaptionsFunction("");

@@ -247,10 +247,10 @@ let Player = {
       this.audioScrubbing = true;
       this.handleAudioScrubbing(event.target.value);
     });
-    this.audioScrubber.addEventListener("change", event => {
+    this.audioScrubber.addEventListener("change", () => {
       this.audioScrubbing = false;
     });
-    this.audioScrubber.addEventListener("pointerdown", event => {
+    this.audioScrubber.addEventListener("pointerdown", () => {
       if (this.isMuted) {
         this.audioScrubber.max = 1;
       }
@@ -1140,7 +1140,7 @@ let Player = {
    * @param {Event} event
    *  Event context data object
    */
-  onResize(event) {
+  onResize() {
     this.toggleSubtitlesSettingsPanel({ forceHide: true });
     this.resizeDebouncer.disarm();
     this.resizeDebouncer.arm();
@@ -1152,7 +1152,7 @@ let Player = {
    * @param {Event} event
    *  Event context data object
    */
-  onCommand(event) {
+  onCommand() {
     this.closePipWindow({ reason: "shortcut" });
   },
 

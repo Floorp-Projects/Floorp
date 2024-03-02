@@ -10,7 +10,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function (mutationsList, observer) {
+      const callback = function () {
         let text = container?.querySelector(
           `[data-id="captionsComponent"]:not([style="display: none;"])`
         )?.innerText;
