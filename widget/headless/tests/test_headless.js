@@ -22,7 +22,7 @@ registerCleanupFunction(() => {
 const progressListeners = new Map();
 
 function loadContentWindow(windowlessBrowser, uri) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let loadURIOptions = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
@@ -46,7 +46,7 @@ function loadContentWindow(windowlessBrowser, uri) {
         progressListeners.delete(progressListener);
         contentWindow.addEventListener(
           "load",
-          event => {
+          () => {
             resolve(contentWindow);
           },
           { once: true }

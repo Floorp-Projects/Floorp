@@ -177,7 +177,7 @@ function fireWheelScrollEvent(aForward)
   }, window);
 }
 
-function onScrollView(aEvent)
+function onScrollView()
 {
   if (gIgnoreScrollEvent)
     return;
@@ -187,7 +187,7 @@ function onScrollView(aEvent)
   gTimer = setTimeout(runNextTest, 0);
 }
 
-function onMouseScrollFailed(aEvent)
+function onMouseScrollFailed()
 {
   clearTimer();
   gIgnoreScrollEvent = true;
@@ -197,7 +197,7 @@ function onMouseScrollFailed(aEvent)
   runNextTest();
 }
 
-function onTransactionTimeout(aEvent)
+function onTransactionTimeout()
 {
   if (!gTimer)
     return;

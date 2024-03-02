@@ -1131,7 +1131,7 @@ add_task(async () => {
 
   // Set up an APZ aware event listener and...
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    content.document.documentElement.addEventListener("wheel", e => {}, {
+    content.document.documentElement.addEventListener("wheel", () => {}, {
       passive: false,
     });
     await content.wrappedJSObject.promiseApzFlushedRepaints();

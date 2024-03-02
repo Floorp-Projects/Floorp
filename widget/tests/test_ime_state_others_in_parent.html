@@ -96,7 +96,7 @@ function runTestPasswordFieldOnDialog() {
   WindowObserver.prototype = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-    observe(subject, topic, data) {
+    observe(subject, topic) {
       if (topic === "domwindowopened") {
         ok(true, "dialog window is created");
         dialog = subject;

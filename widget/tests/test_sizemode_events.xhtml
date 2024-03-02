@@ -31,7 +31,7 @@ const kAsyncChanges = kIsLinux || kIsMacOS;
 let gSizeModeDidChange = false;
 let gSizeModeDidChangeTo = 0;
 
-function sizemodeChanged(e) {
+function sizemodeChanged() {
   gSizeModeDidChange = true;
   gSizeModeDidChangeTo = gWindow.windowState;
 }

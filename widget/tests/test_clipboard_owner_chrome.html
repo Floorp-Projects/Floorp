@@ -20,7 +20,7 @@ function testClipboardOwner(aClipboardType, aAsync) {
   const clipboardOwner = {
     QueryInterface: ChromeUtils.generateQI(["nsIClipboardOwner"]),
     // nsIClipboardOwner
-    LosingOwnership(aTransferable) {
+    LosingOwnership() {
       losingOwnership = true;
     },
   };
