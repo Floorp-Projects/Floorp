@@ -91,7 +91,7 @@ function COWTests() {
     });
 
     // Test function objects.
-    var func = function(x) { return 42; };
+    var func = function() { return 42; };
     func.foo = "foo property";
     var funcCOW = getCOW(func);
     try {

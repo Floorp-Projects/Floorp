@@ -40,13 +40,10 @@ add_task(async function test() {
       // eslint-disable-next-line no-unused-vars
       let doc = content.document;
 
-      let promise = TestUtils.topicObserved(
-        "inner-window-nuked",
-        (subject, data) => {
-          let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-          return id == args.innerWindowId;
-        }
-      );
+      let promise = TestUtils.topicObserved("inner-window-nuked", subject => {
+        let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+        return id == args.innerWindowId;
+      });
       content.location = "http://mochi.test:8888/";
       await promise;
 

@@ -22,10 +22,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799348
   var gCalledOnload = false;
   var myObserver = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(win, topic, data) {
+    observe(win, topic) {
       if (topic == "domwindowopened") {
         ok(!gCalledOnload, "domwindowopened notification fired before onload");
-        win.addEventListener("load", function(evt) {
+        win.addEventListener("load", function() {
           gCalledOnload = true;
           win.close();
         });

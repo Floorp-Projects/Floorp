@@ -121,6 +121,14 @@ module.exports = {
             message: "'const' declarations are disallowed to avoid TDZ checks, use 'var' instead",
           },
         ],
+        // Method signatures are important in builtins so disable unused argument errors.
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "local",
+          },
+        ],
       },
 
       globals: {
