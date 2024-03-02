@@ -128,9 +128,6 @@ static Maybe<ffi::WGPUFeatures> ToWGPUFeatures(
 
     case dom::GPUFeatureName::Float32_filterable:
       return Some(WGPUFeatures_FLOAT32_FILTERABLE);
-
-    case dom::GPUFeatureName::EndGuard_:
-      break;
   }
   MOZ_CRASH("Bad GPUFeatureName.");
 }

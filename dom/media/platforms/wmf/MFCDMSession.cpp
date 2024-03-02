@@ -304,8 +304,7 @@ void MFCDMSession::OnSessionKeyMessage(
       case MF_MEDIAKEYSESSION_MESSAGETYPE_INDIVIDUALIZATION_REQUEST:
         return dom::MediaKeyMessageType::Individualization_request;
       default:
-        MOZ_ASSERT_UNREACHABLE("Unknown session message type");
-        return dom::MediaKeyMessageType::EndGuard_;
+        MOZ_CRASH("Unknown session message type");
     }
   };
   LOG("Notify 'keymessage' for %s", NS_ConvertUTF16toUTF8(*mSessionId).get());

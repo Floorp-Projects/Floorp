@@ -169,8 +169,7 @@ fn eval_color_gamut(context: &Context, query_value: Option<ColorGamut>) -> bool 
     // Match if our color gamut is at least as wide as the query value
     query_value <=
         match color_gamut {
-            // EndGuard_ is not a valid color gamut, so the default color-gamut is used.
-            ScreenColorGamut::Srgb | ScreenColorGamut::EndGuard_ => ColorGamut::Srgb,
+            ScreenColorGamut::Srgb => ColorGamut::Srgb,
             ScreenColorGamut::P3 => ColorGamut::P3,
             ScreenColorGamut::Rec2020 => ColorGamut::Rec2020,
         }

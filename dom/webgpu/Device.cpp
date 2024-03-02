@@ -321,8 +321,6 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
         case dom::GPUTextureSampleType::Depth:
           data.type = ffi::WGPURawTextureSampleType_Depth;
           break;
-        case dom::GPUTextureSampleType::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE();
       }
     }
     if (entry.mStorageTexture.WasPassed()) {
@@ -350,8 +348,6 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
         case dom::GPUBufferBindingType::Read_only_storage:
           e.ty = ffi::WGPURawBindingType_ReadonlyStorageBuffer;
           break;
-        case dom::GPUBufferBindingType::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE();
       }
       e.has_dynamic_offset = entry.mBuffer.Value().mHasDynamicOffset;
     }
@@ -393,8 +389,6 @@ already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
         case dom::GPUSamplerBindingType::Comparison:
           e.sampler_compare = true;
           break;
-        case dom::GPUSamplerBindingType::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE();
       }
     }
     entries.AppendElement(e);

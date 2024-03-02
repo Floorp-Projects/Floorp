@@ -1502,7 +1502,6 @@ Maybe<RTCRtpSender::VideoConfig> RTCRtpSender::GetNewVideoConfig() {
 
       case dom::MediaSourceEnum::Microphone:
       case dom::MediaSourceEnum::AudioCapture:
-      case dom::MediaSourceEnum::EndGuard_:
         MOZ_ASSERT(false);
         break;
     }

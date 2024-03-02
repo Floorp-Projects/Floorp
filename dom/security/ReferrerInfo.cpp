@@ -1697,7 +1697,9 @@ void ReferrerInfo::RecordTelemetry(nsIHttpChannel* aChannel) {
   // requests and the rest 9 buckets are for cross-site requests.
   uint32_t telemetryOffset =
       IsCrossSiteRequest(aChannel)
-          ? static_cast<uint32_t>(ReferrerPolicy::EndGuard_)
+          ? UnderlyingValue(
+                MaxContiguousEnumValue<dom::ReferrerPolicy>::value) +
+                1
           : 0;
 
   Telemetry::Accumulate(Telemetry::REFERRER_POLICY_COUNT,

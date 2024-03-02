@@ -67,8 +67,6 @@ inline constexpr bool IsEnumCase(const dom::WebGLPowerPreference raw) {
     case dom::WebGLPowerPreference::Low_power:
     case dom::WebGLPowerPreference::High_performance:
       return true;
-    case dom::WebGLPowerPreference::EndGuard_:
-      break;
   }
   return false;
 }
@@ -78,8 +76,6 @@ inline constexpr bool IsEnumCase(const dom::PredefinedColorSpace raw) {
     case dom::PredefinedColorSpace::Srgb:
     case dom::PredefinedColorSpace::Display_p3:
       return true;
-    case dom::PredefinedColorSpace::EndGuard_:
-      break;
   }
   return false;
 }
