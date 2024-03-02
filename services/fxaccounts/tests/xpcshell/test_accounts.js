@@ -120,7 +120,7 @@ function MockFxAccountsClient() {
 
   // mock calls up to the auth server to determine whether the
   // user account has been verified
-  this.recoveryEmailStatus = async function (sessionToken) {
+  this.recoveryEmailStatus = async function () {
     // simulate a call to /recovery_email/status
     return {
       email: this._email,
@@ -139,7 +139,7 @@ function MockFxAccountsClient() {
     return !this._deletedOnServer;
   };
 
-  this.accountKeys = function (keyFetchToken) {
+  this.accountKeys = function () {
     return new Promise(resolve => {
       do_timeout(50, () => {
         resolve({
@@ -188,7 +188,7 @@ Object.setPrototypeOf(
  * mock the now() method, so that we can simulate the passing of
  * time and verify that signatures expire correctly.
  */
-function MockFxAccounts(credentials = null) {
+function MockFxAccounts() {
   let result = new FxAccounts({
     VERIFICATION_POLL_TIMEOUT_INITIAL: 100, // 100ms
 
@@ -453,10 +453,10 @@ add_test(function test_polling_timeout() {
 
   fxa.setSignedInUser(test_user).then(() => {
     p.then(
-      success => {
+      () => {
         do_throw("this should not succeed");
       },
-      fail => {
+      () => {
         removeObserver();
         fxa.signOut().then(run_next_test);
       }
@@ -471,7 +471,7 @@ add_task(async function test_onverified_once() {
 
   let numNotifications = 0;
 
-  function observe(aSubject, aTopic, aData) {
+  function observe() {
     numNotifications += 1;
   }
   Services.obs.addObserver(observe, ONVERIFIED_NOTIFICATION);
@@ -971,17 +971,17 @@ add_test(function test_fetchAndUnwrapAndDeriveKeys_no_token() {
 
   makeObserver(ONLOGOUT_NOTIFICATION, function () {
     log.debug("test_fetchAndUnwrapKeys_no_token observed logout");
-    fxa._internal.getUserAccountData().then(user2 => {
+    fxa._internal.getUserAccountData().then(() => {
       fxa._internal.abortExistingFlow().then(run_next_test);
     });
   });
 
   fxa
     .setSignedInUser(user)
-    .then(user2 => {
+    .then(() => {
       return fxa.keys._fetchAndUnwrapAndDeriveKeys();
     })
-    .catch(error => {
+    .catch(() => {
       log.info("setSignedInUser correctly rejected");
     });
 });
@@ -1272,11 +1272,7 @@ add_task(async function test_getOAuthTokenCachedScopeNormalization() {
   let numOAuthTokenCalls = 0;
 
   let client = fxa._internal.fxAccountsClient;
-  client.accessTokenWithSessionToken = async (
-    _sessionTokenHex,
-    _clientId,
-    scopeString
-  ) => {
+  client.accessTokenWithSessionToken = async (_sessionTokenHex, _clientId) => {
     numOAuthTokenCalls++;
     return MOCK_TOKEN_RESPONSE;
   };

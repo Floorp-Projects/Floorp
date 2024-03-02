@@ -16,7 +16,7 @@ export var BrowserWindows = {
    * @param aPrivate The private option.
    * @return nothing
    */
-  Add(aPrivate, fn) {
+  Add(aPrivate) {
     return new Promise(resolve => {
       let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
       let win = mainWindow.OpenBrowserWindow({ private: aPrivate });

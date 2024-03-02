@@ -51,7 +51,7 @@ add_task(async function setup() {
   // Don't remove stale clients when syncing. This is a test-only workaround
   // that lets us add clients directly to the store, without losing them on
   // the next sync.
-  clientsEngine._removeRemoteClient = async id => {};
+  clientsEngine._removeRemoteClient = async () => {};
 });
 
 add_task(async function test_successful_sync_adjustSyncInterval() {

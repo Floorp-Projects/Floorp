@@ -61,7 +61,7 @@ const fxAccounts = {
   },
   _internal: {
     keys: {
-      getKeyForScope(scope) {
+      getKeyForScope() {
         return {
           kid: "123456",
           k: KSYNC,

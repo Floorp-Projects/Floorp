@@ -25,7 +25,7 @@ WeaveCrypto.prototype = {
       "nsISupportsWeakReference",
     ]),
 
-    observe(subject, topic, data) {
+    observe(subject, topic) {
       let self = this._self;
       self.log("Observed " + topic + " topic.");
       if (topic == "nsPref:changed") {

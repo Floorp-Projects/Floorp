@@ -108,7 +108,7 @@ function executeIDB(db, storeNames, mode, callback, desc) {
           desc || "execute()"
         )
       );
-    transaction.oncomplete = event => resolve(result);
+    transaction.oncomplete = () => resolve(result);
     // Simplify access to a single datastore:
     if (stores.length == 1) {
       stores = stores[0];

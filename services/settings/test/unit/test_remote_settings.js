@@ -545,7 +545,7 @@ add_task(async function test_get_does_not_verify_signature_if_load_dump() {
 
   let called;
   clientWithDump._verifier = {
-    async asyncVerifyContentSignature(serialized, signature) {
+    async asyncVerifyContentSignature() {
       called = true;
       return true;
     },
@@ -583,7 +583,7 @@ add_task(
     const backup = clientWithDump._verifier;
     let callCount = 0;
     clientWithDump._verifier = {
-      async asyncVerifyContentSignature(serialized, signature) {
+      async asyncVerifyContentSignature() {
         callCount++;
         return true;
       },
@@ -640,7 +640,7 @@ add_task(
 
     let called;
     clientWithDump._verifier = {
-      async asyncVerifyContentSignature(serialized, signature) {
+      async asyncVerifyContentSignature() {
         called = true;
         return true;
       },
@@ -1174,7 +1174,7 @@ add_task(clear_state);
 
 add_task(async function test_sync_event_is_not_sent_from_get_when_no_dump() {
   let called = false;
-  client.on("sync", e => {
+  client.on("sync", () => {
     called = true;
   });
 

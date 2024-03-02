@@ -156,7 +156,7 @@ AboutWeaveLog.prototype = {
     "nsISupportsWeakReference",
   ]),
 
-  getURIFlags(aURI) {
+  getURIFlags() {
     return 0;
   },
 

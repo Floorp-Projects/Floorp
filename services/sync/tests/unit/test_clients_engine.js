@@ -779,7 +779,7 @@ add_task(async function test_filter_duplicate_names() {
 
     // Check that a subsequent Sync doesn't report anything as being processed.
     let counts;
-    Svc.Obs.add("weave:engine:sync:applied", function observe(subject, data) {
+    Svc.Obs.add("weave:engine:sync:applied", function observe(subject) {
       Svc.Obs.remove("weave:engine:sync:applied", observe);
       counts = subject;
     });

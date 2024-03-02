@@ -79,7 +79,7 @@ add_task(async function testOldMeta() {
 
   let declinedEngines = new DeclinedEngines(Service);
 
-  function onNotDeclined(subject, topic, data) {
+  function onNotDeclined(subject) {
     Observers.remove("weave:engines:notdeclined", onNotDeclined);
     Assert.ok(
       subject.undecided.has("actual"),
@@ -129,7 +129,7 @@ add_task(async function testDeclinedMeta() {
 
   let declinedEngines = new DeclinedEngines(Service);
 
-  function onNotDeclined(subject, topic, data) {
+  function onNotDeclined(subject) {
     Observers.remove("weave:engines:notdeclined", onNotDeclined);
     Assert.ok(
       subject.undecided.has("actual"),

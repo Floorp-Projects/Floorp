@@ -202,7 +202,7 @@ add_test(function test_error_message_remove_profile_path() {
   const toTest = Object.keys(errors).length;
   for (const key in errors) {
     let error = errors[key];
-    channel._channel.send = (message, context) => {
+    channel._channel.send = message => {
       equal(
         message.data.error.message,
         error.expected,
@@ -403,7 +403,7 @@ add_test(function test_fxa_status_message() {
   });
 
   channel._channel = {
-    send(response, sendingContext) {
+    send(response) {
       Assert.equal(response.command, "fxaccounts:fxa_status");
       Assert.equal(response.messageId, 123);
 
@@ -513,7 +513,7 @@ add_task(async function test_helpers_login_set_previous_account_name_hash() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       _internal: {
-        setSignedInUser(accountData) {
+        setSignedInUser() {
           return new Promise(resolve => {
             // previously signed in user preference is updated.
             Assert.equal(
@@ -554,7 +554,7 @@ add_task(
     let helpers = new FxAccountsWebChannelHelpers({
       fxAccounts: {
         _internal: {
-          setSignedInUser(accountData) {
+          setSignedInUser() {
             return new Promise(resolve => {
               // previously signed in user preference should not be updated.
               Assert.equal(

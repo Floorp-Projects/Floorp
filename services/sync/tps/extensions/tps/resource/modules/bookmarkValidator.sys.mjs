@@ -602,7 +602,7 @@ class ServerRecordInspection {
 
     await lazy.Async.yieldingForEach(
       this.liveRecords,
-      (record, i) => {
+      record => {
         if (!seen.has(record.id)) {
           // We intentionally don't record the parentid here, since we only record
           // that if the record refers to a parent that doesn't exist, which we

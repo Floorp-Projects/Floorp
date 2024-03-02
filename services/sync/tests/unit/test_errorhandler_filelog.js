@@ -82,7 +82,7 @@ function readFile(file, callback) {
       uri: NetUtil.newURI(file),
       loadUsingSystemPrincipal: true,
     },
-    function (inputStream, statusCode, request) {
+    function (inputStream, statusCode) {
       let data = NetUtil.readInputStreamToString(
         inputStream,
         inputStream.available()

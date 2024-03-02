@@ -314,7 +314,7 @@ add_task(async function test_syncError() {
 
 function observeUIUpdate() {
   return new Promise(resolve => {
-    let obs = (aSubject, aTopic, aData) => {
+    let obs = (aSubject, aTopic) => {
       Services.obs.removeObserver(obs, aTopic);
       const state = UIState.get();
       resolve(state);

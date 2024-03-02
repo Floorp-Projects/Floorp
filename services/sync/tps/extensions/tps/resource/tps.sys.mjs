@@ -168,7 +168,7 @@ export var TPS = {
     "nsISupportsWeakReference",
   ]),
 
-  observe: function TPS__observe(subject, topic, data) {
+  observe: function TPS__observe(subject, topic) {
     try {
       lazy.Logger.logInfo("----------event observed: " + topic);
 

@@ -513,7 +513,7 @@ BookmarksEngine.prototype = {
     await this._apply();
   },
 
-  async _reconcile(item) {
+  async _reconcile() {
     return true;
   },
 
@@ -752,7 +752,7 @@ BookmarksStore.prototype = {
     });
   },
 
-  async applyIncomingBatch(records, countTelemetry) {
+  async applyIncomingBatch(records) {
     let buf = await this.ensureOpenMirror();
     for (let chunk of lazy.PlacesUtils.chunkArray(
       records,
@@ -921,11 +921,11 @@ Object.setPrototypeOf(BookmarksTracker.prototype, Tracker.prototype);
 class BookmarksChangeset extends Changeset {
   // Only `_reconcile` calls `getModifiedTimestamp` and `has`, and the engine
   // does its own reconciliation.
-  getModifiedTimestamp(id) {
+  getModifiedTimestamp() {
     throw new Error("Don't use timestamps to resolve bookmark conflicts");
   }
 
-  has(id) {
+  has() {
     throw new Error("Don't use the changeset to resolve bookmark conflicts");
   }
 

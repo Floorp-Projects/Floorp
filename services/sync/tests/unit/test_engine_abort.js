@@ -37,7 +37,7 @@ add_task(async function test_processIncoming_abort() {
   );
   meta_global.payload.engines = { rotary: { version: engine.version, syncID } };
   _("Fake applyIncoming to abort.");
-  engine._store.applyIncoming = async function (record) {
+  engine._store.applyIncoming = async function () {
     let ex = {
       code: SyncEngine.prototype.eEngineAbortApplyIncoming,
       cause: "Nooo",

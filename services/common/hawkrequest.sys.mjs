@@ -162,7 +162,7 @@ Intl.prototype = {
     Services.prefs.removeObserver("intl.accept_languages", this);
   },
 
-  observe(subject, topic, data) {
+  observe() {
     this.readPref();
   },
 

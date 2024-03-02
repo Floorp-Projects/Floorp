@@ -160,7 +160,7 @@ add_task(async function test_storage_request() {
 
   async function deleteWBONotExists() {
     let req = localRequest(server, keysURL);
-    server.callback.onItemDeleted = function (username, collection, wboID) {
+    server.callback.onItemDeleted = function () {
       do_throw("onItemDeleted should not have been called.");
     };
 

@@ -15,7 +15,7 @@ RemoteSettingsTimer.prototype = {
   contractID: "@mozilla.org/services/settings;1",
 
   // By default, this timer fires once every 24 hours. See the "services.settings.poll_interval" pref.
-  notify(timer) {
+  notify() {
     lazy.RemoteSettings.pollChanges({ trigger: "timer" }).catch(e =>
       console.error(e)
     );

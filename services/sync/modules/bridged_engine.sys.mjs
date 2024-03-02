@@ -43,7 +43,7 @@ class BridgedStore {
     this._batchChunkSize = 500;
   }
 
-  async applyIncomingBatch(records, countTelemetry) {
+  async applyIncomingBatch(records) {
     for (let chunk of lazy.PlacesUtils.chunkArray(
       records,
       this._batchChunkSize

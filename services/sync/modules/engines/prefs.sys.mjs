@@ -386,7 +386,7 @@ PrefStore.prototype = {
     return allprefs;
   },
 
-  async changeItemID(oldID, newID) {
+  async changeItemID() {
     this._log.trace("PrefStore GUID is constant!");
   },
 
@@ -406,11 +406,11 @@ PrefStore.prototype = {
     return record;
   },
 
-  async create(record) {
+  async create() {
     this._log.trace("Ignoring create request");
   },
 
-  async remove(record) {
+  async remove() {
     this._log.trace("Ignoring remove request");
   },
 

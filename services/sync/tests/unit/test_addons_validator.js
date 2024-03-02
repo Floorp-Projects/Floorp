@@ -49,7 +49,7 @@ function getDummyServerAndClient() {
 add_task(async function test_valid() {
   let { server, client } = getDummyServerAndClient();
   let validator = new AddonValidator({
-    _findDupe(item) {
+    _findDupe() {
       return null;
     },
     isAddonSyncable(item) {

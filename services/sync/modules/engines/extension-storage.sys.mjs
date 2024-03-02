@@ -124,7 +124,7 @@ ExtensionStorageEngineBridge.prototype = {
   },
 
   _takeMigrationInfo() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.component
         .QueryInterface(Ci.mozIExtensionStorageArea)
         .takeMigrationInfo({
@@ -291,7 +291,7 @@ ExtensionStorageTracker.prototype = {
     lazy.Svc.Obs.remove("ext.storage.sync-changed", this.asyncObserver);
   },
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     if (this.ignoreAll) {
       return;
     }

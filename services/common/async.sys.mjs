@@ -289,7 +289,7 @@ class Watchdog {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "timer-callback") {
       this.abortReason = "timeout";
     } else if (topic == "quit-application") {

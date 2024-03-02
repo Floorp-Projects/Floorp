@@ -182,7 +182,7 @@ RawCryptoWrapper.prototype = {
    * @param   {Cleartext} outgoingCleartext The cleartext to upload.
    * @returns {String}                      The serialized cleartext.
    */
-  transformBeforeEncrypt(outgoingCleartext) {
+  transformBeforeEncrypt() {
     throw new TypeError("Override to stringify outgoing records");
   },
 
@@ -194,7 +194,7 @@ RawCryptoWrapper.prototype = {
    * @param   {String} incomingCleartext The decrypted cleartext string.
    * @returns {Cleartext}                The parsed cleartext.
    */
-  transformAfterDecrypt(incomingCleartext) {
+  transformAfterDecrypt() {
     throw new TypeError("Override to parse incoming records");
   },
 
@@ -527,7 +527,7 @@ CollectionKeyManager.prototype = {
   /**
    * Create a WBO for the current keys.
    */
-  asWBO(collection, id) {
+  asWBO() {
     return this._makeWBO(this._collections, this._default);
   },
 

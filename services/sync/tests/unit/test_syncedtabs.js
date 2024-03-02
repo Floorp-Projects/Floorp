@@ -87,7 +87,7 @@ let MockClientsEngine = {
     return tabsEngine.clients[id].fxaDeviceId;
   },
 
-  getClientType(id) {
+  getClientType() {
     return "desktop";
   },
 };

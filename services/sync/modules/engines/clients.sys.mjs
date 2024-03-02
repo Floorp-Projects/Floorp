@@ -1107,7 +1107,7 @@ ClientsTracker.prototype = {
     Svc.Obs.remove("fxaccounts:new_device_id", this.asyncObserver);
   },
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     switch (topic) {
       case "nsPref:changed":
         this._log.debug("client.name preference changed");
