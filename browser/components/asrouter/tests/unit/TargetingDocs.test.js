@@ -50,7 +50,7 @@ describe("ASRTargeting docs", () => {
 
   describe("All targeting params documented in targeting-attributes.md", () => {
     for (const targetingParam of ASRTargetingAttributes) {
-      // If this test is failing, you probably forgot to add docs to content-src/asrouter/targeting-attributes.md
+      // If this test is failing, you probably forgot to add docs to asrouter/docs/targeting-attributes.md
       // for a new targeting attribute, or you forgot to put it in the table of contents up top.
       it(`should have docs and table of contents entry for ${targetingParam}`, () => {
         assert.include(

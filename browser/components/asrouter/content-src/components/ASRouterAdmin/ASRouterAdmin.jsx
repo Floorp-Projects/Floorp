@@ -1473,7 +1473,7 @@ export class ASRouterAdminInner extends React.PureComponent {
               Need help using these tools? Check out our{" "}
               <a
                 target="blank"
-                href="https://firefox-source-docs.mozilla.org/browser/components/newtab/content-src/asrouter/docs/debugging-docs.html"
+                href="https://firefox-source-docs.mozilla.org/browser/components/asrouter/docs/debugging-docs.html"
               >
                 documentation
               </a>
