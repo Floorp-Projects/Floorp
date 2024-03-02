@@ -1789,15 +1789,13 @@ nsCString VideoFrame::ToString() const {
     return rv;
   }
 
-  rv.AppendPrintf(
-      "VideoFrame ts: %" PRId64
-      ", %s, coded[%dx%d] visible[%dx%d], display[%dx%d] color: %s",
-      mTimestamp,
-      dom::VideoPixelFormatValues::GetString(mResource->mFormat->PixelFormat())
-          .data(),
-      mCodedSize.width, mCodedSize.height, mVisibleRect.width,
-      mVisibleRect.height, mDisplaySize.width, mDisplaySize.height,
-      ColorSpaceInitToString(mColorSpace).get());
+  rv.AppendPrintf("VideoFrame ts: %" PRId64
+                  ", %s, coded[%dx%d] visible[%dx%d], display[%dx%d] color: %s",
+                  mTimestamp,
+                  dom::GetEnumString(mResource->mFormat->PixelFormat()).get(),
+                  mCodedSize.width, mCodedSize.height, mVisibleRect.width,
+                  mVisibleRect.height, mDisplaySize.width, mDisplaySize.height,
+                  ColorSpaceInitToString(mColorSpace).get());
 
   if (mDuration) {
     rv.AppendPrintf(" dur: %" PRId64, mDuration.value());

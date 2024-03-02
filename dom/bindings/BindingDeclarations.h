@@ -131,11 +131,6 @@ template <class T>
 constexpr bool is_dom_union_with_typedarray_members =
     std::is_base_of_v<UnionWithTypedArraysBase, T>;
 
-struct EnumEntry {
-  const char* value;
-  size_t length;
-};
-
 enum class CallerType : uint32_t;
 
 class MOZ_STACK_CLASS GlobalObject {
@@ -561,6 +556,13 @@ typedef void (*CreateInterfaceObjectsMethod)(JSContext* aCx,
 JS::Handle<JSObject*> GetPerInterfaceObjectHandle(
     JSContext* aCx, size_t aSlotId, CreateInterfaceObjectsMethod aCreator,
     bool aDefineOnGlobal);
+
+namespace binding_detail {
+
+template <typename Enum>
+struct EnumStrings;
+
+}  // namespace binding_detail
 
 }  // namespace dom
 }  // namespace mozilla

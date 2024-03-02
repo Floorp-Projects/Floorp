@@ -170,9 +170,7 @@ nsString VideoDecoderConfigInternal::ToString() const {
   if (mDescription.isSome()) {
     rv.AppendPrintf("extradata: %zu bytes", mDescription.value()->Length());
   }
-  rv.AppendPrintf(
-      "hw accel: %s",
-      HardwareAccelerationValues::GetString(mHardwareAcceleration).data());
+  rv.AppendPrintf("hw accel: %s", GetEnumString(mHardwareAcceleration).get());
   if (mOptimizeForLatency.isSome()) {
     rv.AppendPrintf("optimize for latency: %s",
                     mOptimizeForLatency.value() ? "true" : "false");

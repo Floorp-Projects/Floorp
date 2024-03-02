@@ -36,8 +36,6 @@ class ArrayBufferViewOrArrayBuffer;
 class MediaKeyError;
 class MediaKeyStatusMap;
 
-nsCString ToCString(MediaKeySessionType aType);
-
 nsString ToString(MediaKeySessionType aType);
 
 class MediaKeySession final : public DOMEventTargetHelper,

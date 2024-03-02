@@ -108,8 +108,7 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
     Maybe<VideoFacingModeEnum> facingMode =
         GetFacingMode(mMediaDevice->mRawName);
     if (facingMode.isSome()) {
-      NS_ConvertASCIItoUTF16 facingString(
-          dom::VideoFacingModeEnumValues::GetString(*facingMode));
+      NS_ConvertASCIItoUTF16 facingString(dom::GetEnumString(*facingMode));
       mSettings->mFacingMode.Construct(facingString);
       mFacingMode.emplace(facingString);
     }
