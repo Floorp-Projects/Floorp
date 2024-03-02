@@ -1,6 +1,0 @@
-In file included from missing_ctor.cpp:5:
-./missing_ctor.h:11:1: warning: [chromium-style] Complex class/struct needs an explicit out-of-line constructor.
-class MissingCtorsArentOKInHeader {
-^
-./missing_ctor.h:11:1: warning: [chromium-style] Complex class/struct needs an explicit out-of-line destructor.
-2 warnings generated.
