@@ -122,8 +122,8 @@ already_AddRefed<Promise> XRSystem::IsSessionSupported(XRSessionMode aMode,
 }
 
 already_AddRefed<Promise> XRSystem::RequestSession(
-    JSContext* aCx, XRSessionMode aMode, const XRSessionInit& aOptions,
-    CallerType aCallerType, ErrorResult& aRv) {
+    XRSessionMode aMode, const XRSessionInit& aOptions, CallerType aCallerType,
+    ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = GetParentObject();
   NS_ENSURE_TRUE(global, nullptr);
 
@@ -166,49 +166,27 @@ already_AddRefed<Promise> XRSystem::RequestSession(
     requiredReferenceSpaceTypes.AppendElement(XRReferenceSpaceType::Local);
   }
 
-  BindingCallContext callCx(aCx, "XRSystem.requestSession");
-
   if (aOptions.mRequiredFeatures.WasPassed()) {
-    const Sequence<JS::Value>& arr = (aOptions.mRequiredFeatures.Value());
-    for (const JS::Value& val : arr) {
-      if (!val.isNull() && !val.isUndefined()) {
-        bool bFound = false;
-        JS::Rooted<JS::Value> v(aCx, val);
-        int index = 0;
-        if (FindEnumStringIndex<false>(
-                callCx, v, XRReferenceSpaceTypeValues::strings,
-                "XRReferenceSpaceType", "Argument 2 of XR.requestSession",
-                &index)) {
-          if (index >= 0) {
-            requiredReferenceSpaceTypes.AppendElement(
-                static_cast<XRReferenceSpaceType>(index));
-            bFound = true;
-          }
-        }
-        if (!bFound) {
-          promise->MaybeRejectWithNotSupportedError(
-              "A required feature for the XRSession is not available.");
-          return promise.forget();
-        }
+    for (const nsString& val : aOptions.mRequiredFeatures.Value()) {
+      int index = FindEnumStringIndexImpl(val.BeginReading(), val.Length(),
+                                          XRReferenceSpaceTypeValues::strings);
+      if (index < 0) {
+        promise->MaybeRejectWithNotSupportedError(
+            "A required feature for the XRSession is not available.");
+        return promise.forget();
       }
+      requiredReferenceSpaceTypes.AppendElement(
+          static_cast<XRReferenceSpaceType>(index));
     }
   }
 
   if (aOptions.mOptionalFeatures.WasPassed()) {
-    const Sequence<JS::Value>& arr = (aOptions.mOptionalFeatures.Value());
-    for (const JS::Value& val : arr) {
-      if (!val.isNull() && !val.isUndefined()) {
-        JS::Rooted<JS::Value> v(aCx, val);
-        int index = 0;
-        if (FindEnumStringIndex<false>(
-                callCx, v, XRReferenceSpaceTypeValues::strings,
-                "XRReferenceSpaceType", "Argument 2 of XR.requestSession",
-                &index)) {
-          if (index >= 0) {
-            optionalReferenceSpaceTypes.AppendElement(
-                static_cast<XRReferenceSpaceType>(index));
-          }
-        }
+    for (const nsString& val : aOptions.mOptionalFeatures.Value()) {
+      int index = FindEnumStringIndexImpl(val.BeginReading(), val.Length(),
+                                          XRReferenceSpaceTypeValues::strings);
+      if (index >= 0) {
+        optionalReferenceSpaceTypes.AppendElement(
+            static_cast<XRReferenceSpaceType>(index));
       }
     }
   }
