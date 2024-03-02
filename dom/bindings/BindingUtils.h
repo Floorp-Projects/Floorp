@@ -24,6 +24,8 @@
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/EnumTypeTraits.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -1427,6 +1429,12 @@ inline const nsCString& GetEnumString(Enum stringId) {
       mozilla::ArrayLength(binding_detail::EnumStrings<Enum>::Values));
   return binding_detail::EnumStrings<Enum>::Values[static_cast<size_t>(
       stringId)];
+}
+
+template <typename Enum>
+constexpr mozilla::detail::EnumeratedRange<Enum> MakeWebIDLEnumeratedRange() {
+  return MakeInclusiveEnumeratedRange(ContiguousEnumValues<Enum>::min,
+                                      ContiguousEnumValues<Enum>::max);
 }
 
 inline nsWrapperCache* GetWrapperCache(const ParentObject& aParentObject) {
@@ -3279,6 +3287,7 @@ already_AddRefed<Promise> CreateRejectedPromiseFromThrownException(
 }  // namespace binding_detail
 
 }  // namespace dom
+
 }  // namespace mozilla
 
 #endif /* mozilla_dom_BindingUtils_h__ */

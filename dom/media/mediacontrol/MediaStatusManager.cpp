@@ -401,9 +401,8 @@ CopyableTArray<MediaSessionAction> MediaStatusManager::GetSupportedActions()
 
   MediaSessionInfo info =
       mMediaSessionInfoMap.Get(*mActiveMediaSessionContextId);
-  const uint8_t actionNums = uint8_t(MediaSessionAction::EndGuard_);
-  for (uint8_t actionValue = 0; actionValue < actionNums; actionValue++) {
-    MediaSessionAction action = ConvertToMediaSessionAction(actionValue);
+  for (MediaSessionAction action :
+       MakeWebIDLEnumeratedRange<MediaSessionAction>()) {
     if (info.IsActionSupported(action)) {
       supportedActions.AppendElement(action);
     }
