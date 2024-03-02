@@ -790,6 +790,10 @@ DBusMenuBar::DBusMenuBar(dom::Element* aElement)
       mServer(dont_AddRef(dbusmenu_server_new(mObjectPath.get()))) {
   mMenuModel->RecomputeModelIfNeeded();
   dbusmenu_server_set_root(mServer.get(), mMenuModel->Root());
+}
+
+RefPtr<DBusMenuBar> DBusMenuBar::Create(dom::Element* aElement) {
+  RefPtr self = MakeRefPtr<DBusMenuBar>(aElement);
   widget::CreateDBusProxyForBus(
       G_BUS_TYPE_SESSION,
       GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
@@ -799,16 +803,17 @@ DBusMenuBar::DBusMenuBar(dom::Element* aElement)
       "/com/canonical/AppMenu/Registrar", "com.canonical.AppMenu.Registrar")
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}](RefPtr<GDBusProxy>&& aProxy) {
+          [self](RefPtr<GDBusProxy>&& aProxy) {
             self->mProxy = std::move(aProxy);
             g_signal_connect(self->mProxy, "notify::g-name-owner",
                              G_CALLBACK(NameOwnerChangedCallback), self.get());
             self->OnNameOwnerChanged();
           },
-          [self = RefPtr{this}](GUniquePtr<GError>&& aError) {
+          [](GUniquePtr<GError>&& aError) {
             g_printerr("Failed to create DBUS proxy for menubar: %s\n",
                        aError->message);
           });
+  return self;
 }
 
 DBusMenuBar::~DBusMenuBar() = default;

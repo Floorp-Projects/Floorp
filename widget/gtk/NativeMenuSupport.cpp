@@ -21,7 +21,7 @@ void NativeMenuSupport::CreateNativeMenuBar(nsIWidget* aParent,
   if (aMenuBarElement && StaticPrefs::widget_gtk_global_menu_enabled() &&
       DBusMenuFunctions::Init()) {
     static_cast<nsWindow*>(aParent)->SetDBusMenuBar(
-        MakeRefPtr<DBusMenuBar>(aMenuBarElement));
+        DBusMenuBar::Create(aMenuBarElement));
   }
 }
 
