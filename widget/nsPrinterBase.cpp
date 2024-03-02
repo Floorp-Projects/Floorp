@@ -10,6 +10,7 @@
 #include "nsIPrintSettings.h"
 #include "nsPrintSettingsService.h"
 #include "PrintBackgroundTask.h"
+#include "mozilla/EnumeratedArrayCycleCollection.h"
 #include "mozilla/dom/Promise.h"
 
 using namespace mozilla;
@@ -83,25 +84,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPrinterInfo)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPrinterInfo)
 
-template <typename Index, Index Size, typename Value>
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    EnumeratedArray<Index, Size, Value>& aArray, const char* aName,
-    uint32_t aFlags = 0) {
-  aFlags |= CycleCollectionEdgeNameArrayFlag;
-  for (Value& element : aArray) {
-    ImplCycleCollectionTraverse(aCallback, element, aName, aFlags);
-  }
-}
-
-template <typename Index, Index Size, typename Value>
-inline void ImplCycleCollectionUnlink(
-    EnumeratedArray<Index, Size, Value>& aArray) {
-  for (Value& element : aArray) {
-    ImplCycleCollectionUnlink(element);
-  }
-}
-
 namespace mozilla {
 
 template <>
@@ -143,8 +125,8 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
     BackgroundTask<T, Args...> aBackgroundTask, Args... aArgs) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  static constexpr EnumeratedArray<AsyncAttribute, AsyncAttribute::Last,
-                                   nsLiteralCString>
+  static constexpr EnumeratedArray<AsyncAttribute, nsLiteralCString,
+                                   AsyncAttribute::Last>
       attributeKeys{"SupportsDuplex"_ns, "SupportsColor"_ns,
                     "SupportsMonochrome"_ns, "SupportsCollation"_ns,
                     "PrinterInfo"_ns};

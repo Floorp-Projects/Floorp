@@ -241,7 +241,7 @@ class PathUtils::DirectoryCache final {
   void ResolveWithDirectory(Promise* aPromise, const Directory aRequestedDir);
 
   template <typename T>
-  using DirectoryArray = EnumeratedArray<Directory, Directory::Count, T>;
+  using DirectoryArray = EnumeratedArray<Directory, T, Directory::Count>;
 
   DirectoryArray<nsString> mDirectories;
   DirectoryArray<MozPromiseHolder<PopulateDirectoriesPromise>> mPromises;

@@ -191,8 +191,8 @@ class Image {
   virtual ~Image() = default;
 
   mozilla::EnumeratedArray<mozilla::layers::LayersBackend,
-                           mozilla::layers::LayersBackend::LAYERS_LAST,
-                           UniquePtr<ImageBackendData>>
+                           UniquePtr<ImageBackendData>,
+                           mozilla::layers::LayersBackend::LAYERS_LAST>
       mBackendData;
 
   void* mImplData;

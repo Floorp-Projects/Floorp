@@ -381,12 +381,11 @@ class Nursery {
         KeyCount
   };
 
-  using ProfileTimes =
-      mozilla::EnumeratedArray<ProfileKey, ProfileKey::KeyCount,
-                               mozilla::TimeStamp>;
+  using ProfileTimes = mozilla::EnumeratedArray<ProfileKey, mozilla::TimeStamp,
+                                                ProfileKey::KeyCount>;
   using ProfileDurations =
-      mozilla::EnumeratedArray<ProfileKey, ProfileKey::KeyCount,
-                               mozilla::TimeDuration>;
+      mozilla::EnumeratedArray<ProfileKey, mozilla::TimeDuration,
+                               ProfileKey::KeyCount>;
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
