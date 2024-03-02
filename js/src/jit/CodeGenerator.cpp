@@ -18799,35 +18799,6 @@ void CodeGenerator::visitWasmTrapIfNull(LWasmTrapIfNull* lir) {
   masm.bind(&nonNull);
 }
 
-static void BranchWasmRefIsSubtype(MacroAssembler& masm, Register ref,
-                                   const wasm::RefType& sourceType,
-                                   const wasm::RefType& destType, Label* label,
-                                   Register superSTV, Register scratch1,
-                                   Register scratch2) {
-  switch (destType.hierarchy()) {
-    case wasm::RefTypeHierarchy::Any: {
-      masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label,
-                                     /*onSuccess=*/true, superSTV, scratch1,
-                                     scratch2);
-    } break;
-    case wasm::RefTypeHierarchy::Func: {
-      masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label,
-                                      /*onSuccess=*/true, superSTV, scratch1,
-                                      scratch2);
-    } break;
-    case wasm::RefTypeHierarchy::Extern: {
-      masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
-                                        /*onSuccess=*/true);
-    } break;
-    case wasm::RefTypeHierarchy::Exn: {
-      masm.branchWasmRefIsSubtypeExn(ref, sourceType, destType, label,
-                                     /*onSuccess=*/true);
-    } break;
-    default:
-      MOZ_CRASH("could not generate casting code for unknown type hierarchy");
-  }
-}
-
 void CodeGenerator::visitWasmRefIsSubtypeOfAbstract(
     LWasmRefIsSubtypeOfAbstract* ins) {
   MOZ_ASSERT(gen->compilingWasm());
@@ -18843,8 +18814,9 @@ void CodeGenerator::visitWasmRefIsSubtypeOfAbstract(
   Label onSuccess;
   Label onFail;
   Label join;
-  BranchWasmRefIsSubtype(masm, ref, mir->sourceType(), mir->destType(),
-                         &onSuccess, superSTV, scratch1, scratch2);
+  masm.branchWasmRefIsSubtype(ref, mir->sourceType(), mir->destType(),
+                              &onSuccess, /*onSuccess=*/true, superSTV,
+                              scratch1, scratch2);
   masm.bind(&onFail);
   masm.xor32(result, result);
   masm.jump(&join);
@@ -18867,8 +18839,9 @@ void CodeGenerator::visitWasmRefIsSubtypeOfConcrete(
   Register result = ToRegister(ins->output());
   Label onSuccess;
   Label join;
-  BranchWasmRefIsSubtype(masm, ref, mir->sourceType(), mir->destType(),
-                         &onSuccess, superSTV, scratch1, scratch2);
+  masm.branchWasmRefIsSubtype(ref, mir->sourceType(), mir->destType(),
+                              &onSuccess, /*onSuccess=*/true, superSTV,
+                              scratch1, scratch2);
   masm.move32(Imm32(0), result);
   masm.jump(&join);
   masm.bind(&onSuccess);
@@ -18883,9 +18856,9 @@ void CodeGenerator::visitWasmRefIsSubtypeOfAbstractAndBranch(
   Register scratch1 = ToTempRegisterOrInvalid(ins->temp0());
   Label* onSuccess = getJumpLabelForBranch(ins->ifTrue());
   Label* onFail = getJumpLabelForBranch(ins->ifFalse());
-  BranchWasmRefIsSubtype(masm, ref, ins->sourceType(), ins->destType(),
-                         onSuccess, Register::Invalid(), scratch1,
-                         Register::Invalid());
+  masm.branchWasmRefIsSubtype(
+      ref, ins->sourceType(), ins->destType(), onSuccess, /*onSuccess=*/true,
+      Register::Invalid(), scratch1, Register::Invalid());
   masm.jump(onFail);
 }
 
@@ -18898,8 +18871,9 @@ void CodeGenerator::visitWasmRefIsSubtypeOfConcreteAndBranch(
   Register scratch2 = ToTempRegisterOrInvalid(ins->temp1());
   Label* onSuccess = getJumpLabelForBranch(ins->ifTrue());
   Label* onFail = getJumpLabelForBranch(ins->ifFalse());
-  BranchWasmRefIsSubtype(masm, ref, ins->sourceType(), ins->destType(),
-                         onSuccess, superSTV, scratch1, scratch2);
+  masm.branchWasmRefIsSubtype(ref, ins->sourceType(), ins->destType(),
+                              onSuccess, /*onSuccess=*/true, superSTV, scratch1,
+                              scratch2);
   masm.jump(onFail);
 }
 

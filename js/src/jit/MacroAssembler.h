@@ -312,6 +312,12 @@ struct ReturnCallAdjustmentInfo {
 };
 #endif  // ENABLE_WASM_TAIL_CALLS
 
+struct BranchWasmRefIsSubtypeRegisters {
+  bool needSuperSTV;
+  bool needScratch1;
+  bool needScratch2;
+};
+
 // [SMDOC] Code generation invariants (incomplete)
 //
 // ## 64-bit GPRs carrying 32-bit values
@@ -3952,13 +3958,30 @@ class MacroAssembler : public MacroAssemblerSpecific {
                               Register tmp,
                               wasm::BytecodeOffset bytecodeOffset);
 
+  // Returns information about which registers are necessary for a
+  // branchWasmRefIsSubtype call.
+  static BranchWasmRefIsSubtypeRegisters regsForBranchWasmRefIsSubtype(
+      wasm::RefType type);
+
+  // Perform a subtype check that `ref` is a subtype of `type`, branching to
+  // `label` depending on `onSuccess`.
+  //
+  // Will select one of the other branchWasmRefIsSubtype* functions depending on
+  // destType. See each function for the register allocation requirements, as
+  // well as which registers will be preserved.
+  void branchWasmRefIsSubtype(Register ref, wasm::RefType sourceType,
+                              wasm::RefType destType, Label* label,
+                              bool onSuccess, Register superSTV,
+                              Register scratch1, Register scratch2);
+
   // Perform a subtype check that `ref` is a subtype of `type`, branching to
   // `label` depending on `onSuccess`. `type` must be in the `any` hierarchy.
   //
   // `superSTV` is required iff the destination type is a concrete
   // type. `scratch1` is required iff the destination type is eq or lower and
   // not none. `scratch2` is required iff the destination type is a concrete
-  // type and its `subTypingDepth` is >= wasm::MinSuperTypeVectorLength.
+  // type and its `subTypingDepth` is >= wasm::MinSuperTypeVectorLength. See
+  // regsForBranchWasmRefIsSubtype.
   //
   // `ref` and `superSTV` are preserved. Scratch registers are
   // clobbered.
@@ -3966,9 +3989,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                  wasm::RefType destType, Label* label,
                                  bool onSuccess, Register superSTV,
                                  Register scratch1, Register scratch2);
-  static bool needScratch1ForBranchWasmRefIsSubtypeAny(wasm::RefType type);
-  static bool needScratch2ForBranchWasmRefIsSubtypeAny(wasm::RefType type);
-  static bool needSuperSTVForBranchWasmRefIsSubtypeAny(wasm::RefType type);
 
   // Perform a subtype check that `ref` is a subtype of `type`, branching to
   // `label` depending on `onSuccess`. `type` must be in the `func` hierarchy.
@@ -3976,7 +3996,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // `superSTV` and `scratch1` are required iff the destination type
   // is a concrete type (not func and not nofunc). `scratch2` is required iff
   // the destination type is a concrete type and its `subTypingDepth` is >=
-  // wasm::MinSuperTypeVectorLength.
+  // wasm::MinSuperTypeVectorLength. See regsForBranchWasmRefIsSubtype.
   //
   // `ref` and `superSTV` are preserved. Scratch registers are
   // clobbered.
@@ -3984,9 +4004,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                   wasm::RefType destType, Label* label,
                                   bool onSuccess, Register superSTV,
                                   Register scratch1, Register scratch2);
-  static bool needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-      wasm::RefType type);
-  static bool needScratch2ForBranchWasmRefIsSubtypeFunc(wasm::RefType type);
 
   // Perform a subtype check that `ref` is a subtype of `destType`, branching to
   // `label` depending on `onSuccess`. `type` must be in the `extern` hierarchy.
