@@ -83,7 +83,7 @@ function IDForEventTarget(event) {
 }
 
 var progressListener = {
-  onStateChange(webprogress, request, flags, status) {
+  onStateChange(webprogress, request, flags) {
     let uri;
     try {
       request.QueryInterface(Ci.nsIChannel);
@@ -286,7 +286,7 @@ function setupViewport(contentRootElement) {
   // XXX support viewconfig when needed
 }
 
-function setupDisplayport(contentRootElement) {
+function setupDisplayport() {
   let promise = content.windowGlobalChild
     .getActor("ReftestFission")
     .SetupDisplayportRoot();
@@ -896,7 +896,7 @@ function WaitForTestEnd(
         LogInfo("MakeProgress: STATE_WAITING_FOR_APZ_FLUSH");
         gFailureReason = "timed out waiting for APZ flush to complete";
 
-        var flushWaiter = function (aSubject, aTopic, aData) {
+        var flushWaiter = function (aSubject, aTopic) {
           if (aTopic) {
             LogInfo("MakeProgress: apz-repaints-flushed fired");
           }
@@ -1357,9 +1357,7 @@ function SynchronizeForSnapshot(flags) {
 
       // Setup async scroll offsets now, because any scrollable layers should
       // have had their AsyncPanZoomControllers created.
-      return setupAsyncScrollOffsets({ allowFailure: false }).then(function (
-        result
-      ) {
+      return setupAsyncScrollOffsets({ allowFailure: false }).then(function () {
         setupAsyncZoom({ allowFailure: false });
       });
     },
@@ -1370,9 +1368,7 @@ function SynchronizeForSnapshot(flags) {
 
       // Setup async scroll offsets now, because any scrollable layers should
       // have had their AsyncPanZoomControllers created.
-      return setupAsyncScrollOffsets({ allowFailure: false }).then(function (
-        result
-      ) {
+      return setupAsyncScrollOffsets({ allowFailure: false }).then(function () {
         setupAsyncZoom({ allowFailure: false });
       });
     }
@@ -1380,7 +1376,7 @@ function SynchronizeForSnapshot(flags) {
 }
 
 function RegisterMessageListeners() {
-  addMessageListener("reftest:Clear", function (m) {
+  addMessageListener("reftest:Clear", function () {
     RecvClear();
   });
   addMessageListener("reftest:LoadScriptTest", function (m) {
@@ -1392,7 +1388,7 @@ function RegisterMessageListeners() {
   addMessageListener("reftest:LoadTest", function (m) {
     RecvLoadTest(m.json.type, m.json.uri, m.json.uriTargetType, m.json.timeout);
   });
-  addMessageListener("reftest:ResetRenderingState", function (m) {
+  addMessageListener("reftest:ResetRenderingState", function () {
     RecvResetRenderingState();
   });
   addMessageListener("reftest:PrintDone", function (m) {
@@ -1552,7 +1548,7 @@ function SendPrintResult(runtimeMs, status, fileName) {
   });
 }
 
-function SendExpectProcessCrash(runtimeMs) {
+function SendExpectProcessCrash() {
   sendAsyncMessage("reftest:ExpectProcessCrash");
 }
 

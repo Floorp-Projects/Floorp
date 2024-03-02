@@ -110,7 +110,7 @@ this.reftest = class extends ExtensionAPI {
         // find it by its type nor will domwindowcreated be fired.
         // So we listen to either initial-document-element-inserted which
         // indicates when it's okay to search for the main window by type again.
-        Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+        Services.obs.addObserver(function observer(aSubject, aTopic) {
           Services.obs.removeObserver(observer, aTopic);
           startAndroid(GetMainWindow());
         }, "initial-document-element-inserted");
