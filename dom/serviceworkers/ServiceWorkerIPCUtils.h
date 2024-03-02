@@ -11,6 +11,7 @@
 // Undo X11/X.h's definition of None
 #undef None
 
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 
@@ -18,17 +19,13 @@ namespace IPC {
 
 template <>
 struct ParamTraits<mozilla::dom::ServiceWorkerState>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::ServiceWorkerState,
-          mozilla::dom::ServiceWorkerState::Parsed,
-          mozilla::dom::ServiceWorkerState::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::ServiceWorkerState> {};
 
 template <>
 struct ParamTraits<mozilla::dom::ServiceWorkerUpdateViaCache>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::ServiceWorkerUpdateViaCache,
-          mozilla::dom::ServiceWorkerUpdateViaCache::Imports,
-          mozilla::dom::ServiceWorkerUpdateViaCache::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::ServiceWorkerUpdateViaCache> {};
 
 }  // namespace IPC
 
