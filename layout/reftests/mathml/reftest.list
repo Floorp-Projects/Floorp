@@ -1,7 +1,3 @@
-random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview,201-216,200-250) fuzzy-if(winWidget,114-255,245-361) fuzzy-if(cocoaWidget,79-153,240-250) == mirror-op-1.html mirror-op-1-ref.html
-!= mirror-op-2.html mirror-op-2-ref.html
-!= mirror-op-3.html mirror-op-3-ref.html
-!= mirror-op-4.html mirror-op-4-ref.html
 == overbar-width-1.xhtml overbar-width-1-ref.xhtml
 == stretchy-largeop-1.html stretchy-largeop-1-ref.html
 == stretchy-largeop-2.html stretchy-largeop-2-ref.html
