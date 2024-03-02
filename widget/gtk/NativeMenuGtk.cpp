@@ -730,56 +730,51 @@ void DBusMenuBar::OnNameOwnerChanged() {
     return;
   }
 
+#ifdef MOZ_WAYLAND
   if (auto* display = widget::WaylandDisplayGet()) {
-    // modern path
-
     xdg_dbus_annotation_manager_v1* annotationManager =
         display->GetXdgDbusAnnotationManager();
-    if (annotationManager == nullptr) {
-      NS_WARNING("annotation manager is not there");
+    if (NS_WARN_IF(!annotationManager)) {
       return;
     }
 
     wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWin);
-
-    if (surface == nullptr) {
-      NS_WARNING("surface is not there");
+    if (NS_WARN_IF(!surface)) {
       return;
     }
-
-    xdg_dbus_annotation_v1* annotation =
-        xdg_dbus_annotation_manager_v1_create_surface(
-            annotationManager, "com.canonical.dbusmenu", surface);
 
     GDBusConnection* connection = g_dbus_proxy_get_connection(mProxy);
     const char* myServiceName = g_dbus_connection_get_unique_name(connection);
-    if (!myServiceName) {
-      NS_WARNING("we do not have a unique name on the bus");
+    if (NS_WARN_IF(!myServiceName)) {
       return;
     }
 
+    // FIXME(emilio, bug 1883209): Nothing deletes this as of right now.
+    mAnnotation = xdg_dbus_annotation_manager_v1_create_surface(
+        annotationManager, "com.canonical.dbusmenu", surface);
+
     xdg_dbus_annotation_v1_set_address(annotation, myServiceName,
                                        mObjectPath.get());
-
-    mAnnotation = annotation;
-  } else {
-    // legacy path
-    auto xid = GDK_WINDOW_XID(gdkWin);
-    widget::DBusProxyCall(mProxy, "RegisterWindow",
-                          g_variant_new("(uo)", xid, mObjectPath.get()),
-                          G_DBUS_CALL_FLAGS_NONE)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [self = RefPtr{this}](RefPtr<GVariant>&& aResult) {
-              self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden, true);
-            },
-            [self = RefPtr{this}](GUniquePtr<GError>&& aError) {
-              g_printerr("Failed to register window menubar: %s\n",
-                         aError->message);
-              self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden,
-                                                       false);
-            });
+    return;
   }
+#endif
+#ifdef MOZ_X11
+  // legacy path
+  auto xid = GDK_WINDOW_XID(gdkWin);
+  widget::DBusProxyCall(mProxy, "RegisterWindow",
+                        g_variant_new("(uo)", xid, mObjectPath.get()),
+                        G_DBUS_CALL_FLAGS_NONE)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}](RefPtr<GVariant>&& aResult) {
+            self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden, true);
+          },
+          [self = RefPtr{this}](GUniquePtr<GError>&& aError) {
+            g_printerr("Failed to register window menubar: %s\n",
+                       aError->message);
+            self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden, false);
+          });
+#endif
 }
 
 static unsigned sID = 0;
