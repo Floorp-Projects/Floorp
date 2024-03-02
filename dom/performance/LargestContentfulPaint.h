@@ -73,16 +73,6 @@ struct LCPImageEntryKey {
     return element == otherElement && imgRequest == otherImgRequest;
   }
 
-  bool Equals(const Element* aElement,
-              const imgRequestProxy* aImgRequestProxy) const {
-    Element* element = GetElement();
-    if (!element || !mImageRequestProxy) {
-      return false;
-    }
-
-    return element == aElement && mImageRequestProxy == mImageRequestProxy;
-  }
-
   nsWeakPtr mElement;
 
   WeakPtr<PreloaderBase> mImageRequestProxy;
