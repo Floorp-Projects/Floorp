@@ -168,27 +168,23 @@ already_AddRefed<Promise> XRSystem::RequestSession(
 
   if (aOptions.mRequiredFeatures.WasPassed()) {
     for (const nsString& val : aOptions.mRequiredFeatures.Value()) {
-      int index = FindEnumStringIndexImpl(
-          val.BeginReading(), val.Length(),
-          binding_detail::EnumStrings<XRReferenceSpaceType>::Values);
-      if (index < 0) {
+      Maybe<XRReferenceSpaceType> type =
+          StringToEnum<XRReferenceSpaceType>(val);
+      if (type.isNothing()) {
         promise->MaybeRejectWithNotSupportedError(
             "A required feature for the XRSession is not available.");
         return promise.forget();
       }
-      requiredReferenceSpaceTypes.AppendElement(
-          static_cast<XRReferenceSpaceType>(index));
+      requiredReferenceSpaceTypes.AppendElement(type.value());
     }
   }
 
   if (aOptions.mOptionalFeatures.WasPassed()) {
     for (const nsString& val : aOptions.mOptionalFeatures.Value()) {
-      int index = FindEnumStringIndexImpl(
-          val.BeginReading(), val.Length(),
-          binding_detail::EnumStrings<XRReferenceSpaceType>::Values);
-      if (index >= 0) {
-        optionalReferenceSpaceTypes.AppendElement(
-            static_cast<XRReferenceSpaceType>(index));
+      Maybe<XRReferenceSpaceType> type =
+          StringToEnum<XRReferenceSpaceType>(val);
+      if (type.isSome()) {
+        optionalReferenceSpaceTypes.AppendElement(type.value());
       }
     }
   }

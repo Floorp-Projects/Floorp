@@ -352,15 +352,13 @@ static bool SupportsEncryptionScheme(
 
 static bool ToSessionType(const nsAString& aSessionType,
                           MediaKeySessionType& aOutType) {
-  if (aSessionType.Equals(ToString(MediaKeySessionType::Temporary))) {
-    aOutType = MediaKeySessionType::Temporary;
-    return true;
+  Maybe<MediaKeySessionType> type =
+      StringToEnum<MediaKeySessionType>(aSessionType);
+  if (type.isNothing()) {
+    return false;
   }
-  if (aSessionType.Equals(ToString(MediaKeySessionType::Persistent_license))) {
-    aOutType = MediaKeySessionType::Persistent_license;
-    return true;
-  }
-  return false;
+  aOutType = type.value();
+  return true;
 }
 
 // 5.1.1 Is persistent session type?

@@ -20,17 +20,6 @@ namespace mozilla {
 class LocalMediaDevice;
 class MediaDevice;
 
-template <class EnumValuesStrings, class Enum>
-static Enum StringToEnum(const EnumValuesStrings& aStrings,
-                         const nsAString& aValue, Enum aDefaultValue) {
-  for (size_t i = 0; i < ArrayLength(aStrings); i++) {
-    if (aValue.EqualsASCII(aStrings[i].get())) {
-      return Enum(i);
-    }
-  }
-  return aDefaultValue;
-}
-
 // Helper classes for orthogonal constraints without interdependencies.
 // Instead of constraining values, constrain the constraints themselves.
 class NormalizedConstraintSet {

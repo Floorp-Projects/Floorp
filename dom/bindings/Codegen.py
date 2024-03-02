@@ -7045,10 +7045,10 @@ def getJSToNativeConversionInfo(
             """
             {
               int index;
-              if (!FindEnumStringIndex<${invalidEnumValueFatal}>(cx, $${val},
-                                                                 binding_detail::EnumStrings<${enumtype}>::Values,
-                                                                 "${enumtype}", "${sourceDescription}",
-                                                                 &index)) {
+              if (!binding_detail::FindEnumStringIndex<${invalidEnumValueFatal}>(cx, $${val},
+                                                                                 binding_detail::EnumStrings<${enumtype}>::Values,
+                                                                                 "${enumtype}", "${sourceDescription}",
+                                                                                 &index)) {
                 $*{exceptionCode}
               }
               $*{handleInvalidEnumValueCode}
