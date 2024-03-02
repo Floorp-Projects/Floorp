@@ -120,7 +120,7 @@ class XRSystem final : public DOMEventTargetHelper,
   // WebIDL Members
   already_AddRefed<Promise> IsSessionSupported(XRSessionMode aMode,
                                                ErrorResult& aRv);
-  already_AddRefed<Promise> RequestSession(JSContext* aCx, XRSessionMode aMode,
+  already_AddRefed<Promise> RequestSession(XRSessionMode aMode,
                                            const XRSessionInit& aOptions,
                                            CallerType aCallerType,
                                            ErrorResult& aRv);
