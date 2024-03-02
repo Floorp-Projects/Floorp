@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<title>pageconceal navigationactivation for push navigations from user click</title>
+<title>pageswap navigationactivation for push navigations from user click</title>
 <link rel="help" href="https://html.spec.whatwg.org/">
 <link rel="author" href="mailto:khushalsagar@chromium.org">
 <script src="/resources/testharness.js"></script>
@@ -21,7 +21,7 @@ const channel = new BroadcastChannel("testchannel");
 
 if (is_test_page) {
   const expectedUrl = location.href + "?new";
-  const expectedEvents = ["pageconceal", expectedUrl, "push","from", "pagehide"];
+  const expectedEvents = ["pageswap", expectedUrl, "push","from", "pagehide"];
 
   promise_test(async t => {
     let popup;
@@ -51,10 +51,10 @@ if (is_test_page) {
           }
       }));
     });
-  }, `pageconceal on navigation from user click`);
+  }, `pageswap on navigation from user click`);
 } else if (is_popup_page) {
-  onpageconceal = (e) => {
-    window.opener.events.push("pageconceal");
+  onpageswap = (e) => {
+    window.opener.events.push("pageswap");
     if (e.viewTransition != null)
       window.opener.events.push("transition");
     window.opener.events.push(e.activation.entry.url);
@@ -70,5 +70,5 @@ if (is_test_page) {
 }
 </script>
 <body>
-  <a id="nav_link" href='/html/browsers/browsing-the-web/history-traversal/pageconceal/pageconceal-push-from-click.html?new'>Click me</a>
+  <a id="nav_link" href='/html/browsers/browsing-the-web/history-traversal/pageswap/pageswap-push-from-click.html?new'>Click me</a>
  </body>
