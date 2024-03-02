@@ -7,6 +7,7 @@
 #if defined(ENABLE_TESTS)
 #  include "mozilla/ipc/UtilityProcessManager.h"
 #  include "mozilla/ipc/UtilityProcessTest.h"
+#  include "mozilla/dom/ChromeUtilsBinding.h"
 #  include "mozilla/dom/Promise.h"
 #  include "mozilla/ProcInfo.h"
 #  include "mozilla/IntentionalCrash.h"
@@ -26,14 +27,9 @@ namespace mozilla::ipc {
 static UtilityActorName UtilityActorNameFromString(
     const nsACString& aStringName) {
   using namespace mozilla::dom;
-
-  // We use WebIDLUtilityActorNames because UtilityActorNames is not designed
-  // for iteration.
-  for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
-    auto idlName = static_cast<UtilityActorName>(i);
-    if (GetEnumString(idlName).Equals(aStringName)) {
-      return idlName;
-    }
+  auto idlName = StringToEnum<UtilityActorName>(aStringName);
+  if (idlName.isSome()) {
+    return idlName.value();
   }
   MOZ_CRASH("Unknown utility actor name");
 }

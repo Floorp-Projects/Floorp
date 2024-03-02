@@ -2746,9 +2746,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       vc.mMediaSource.Construct().AssignASCII(
           dom::GetEnumString(MediaSourceEnum::Camera));
     }
-    videoType = StringToEnum(
-        dom::binding_detail::EnumStrings<dom::MediaSourceEnum>::Values,
-        vc.mMediaSource.Value(), MediaSourceEnum::Other);
+    videoType = dom::StringToEnum<MediaSourceEnum>(vc.mMediaSource.Value())
+                    .valueOr(MediaSourceEnum::Other);
     Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_TYPE,
                           (uint32_t)videoType);
     switch (videoType) {
@@ -2839,9 +2838,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       ac.mMediaSource.Construct(NS_ConvertASCIItoUTF16(
           dom::GetEnumString(MediaSourceEnum::Microphone)));
     }
-    audioType = StringToEnum(
-        dom::binding_detail::EnumStrings<dom::MediaSourceEnum>::Values,
-        ac.mMediaSource.Value(), MediaSourceEnum::Other);
+    audioType = dom::StringToEnum<MediaSourceEnum>(ac.mMediaSource.Value())
+                    .valueOr(MediaSourceEnum::Other);
     Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_TYPE,
                           (uint32_t)audioType);
 
