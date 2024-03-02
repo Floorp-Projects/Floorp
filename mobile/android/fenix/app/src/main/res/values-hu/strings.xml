@@ -255,6 +255,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Oldal fordítása</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Az oldal lefordítva %1$s nyelvről %2$s nyelvre.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Kiválasztott nyelv</string>
@@ -333,11 +338,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox adatvédelmi nyilatkozat</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" tools:ignore="UnusedResources">További információk az adatvédelmi nyilatkozatunkban</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Szeretjük biztonságban tartani Önt</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Tudja meg, hogy miért szeretik milliók a Firefoxot</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Biztonságos böngészés, több választási lehetőséggel</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">A nonprofit szervezet által támogatott böngészőnk segít megakadályozni, hogy a cégek titokban kövessék Önt a weben.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Több mint 100 millió ember védi a magánszféráját azzal, hogy egy nonprofit szervezet által támogatott böngészőt választ.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Ismert követők? Automatikusan blokkolva. Kiegészítők? Próbálja ki mind a 700-at. PDF-ek? A beépített olvasónk megkönnyíti a kezelésüket.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">A nonprofit szervezet által támogatott böngészőnk segít megakadályozni, hogy a cégek titokban nyomon kövessék Önt az interneten.\n\nTovábbi információk az adatvédelmi nyilatkozatban találhatók.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -694,9 +709,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Könyvjelzők</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Bejelentkezések</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Jelszavak</string>
+    <string name="preferences_sync_logins_2">Jelszavak</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Nyitott lapok</string>
     <!-- Preference for signing out -->
@@ -722,9 +737,9 @@
     <string name="default_device_name_2">%1$s ezen: %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Bankkártyák</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Bankkártyák</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Fizetési módok</string>
+    <string name="preferences_sync_credit_cards_2">Fizetési módok</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Címek</string>
 
@@ -1674,13 +1689,13 @@
     <string name="add_to_homescreen_description_2">Könnyedén hozzáadhatja ezt a weboldalt az eszköze Kezdőképernyőhöz, és azonnal elérheti azt, így gyorsabban böngészve, miközben alkalmazásszerű élményt kap.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Bejelentkezések és jelszavak</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések és jelszavak</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Jelszavak</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Jelszavak</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Bejelentkezések és jelszavak mentése</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések és jelszavak mentése</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Jelszavak mentése</string>
+    <string name="preferences_passwords_save_logins_2">Jelszavak mentése</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Kérdés mentés előtt</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1695,47 +1710,47 @@
     <string name="preferences_android_autofill_description">Felhasználónevek és jelszavak kitöltése más alkalmazásokban az eszközén.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Bejelentkezés hozzáadása</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezés hozzáadása</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Jelszó hozzáadása</string>
+    <string name="preferences_logins_add_login_2">Jelszó hozzáadása</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Bejelentkezések szinkronizálása</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Jelszavak szinkronizálása</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések szinkronizálása</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Jelszavak szinkronizálása</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Bejelentkezések szinkronizálása az eszközök között</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések szinkronizálása az eszközök között</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Jelszavak szinkronizálása az eszközök közt</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Jelszavak szinkronizálása az eszközök közt</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Mentett bejelentkezések</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Mentett bejelentkezések</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Mentett jelszavak</string>
+    <string name="preferences_passwords_saved_logins_2">Mentett jelszavak</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Itt jelennek meg a mentett vagy a %s böngészővel szinkronizált bejelentkezések.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Itt jelennek meg a mentett vagy a %s böngészővel szinkronizált bejelentkezések.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Itt jelennek meg a %sba mentett vagy szinkronizált jelszavak. Az összes mentett jelszó titkosítva van.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Itt jelennek meg a %sba mentett vagy szinkronizált jelszavak. Az összes mentett jelszó titkosítva van.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Tudjon meg többet a Syncről.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Tudjon meg többet a Syncről.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Tudjon meg többet a szinkronizálásról</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Tudjon meg többet a szinkronizálásról</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Kivételek</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Itt jelennek meg a nem mentett bejelentkezések és jelszavak.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Itt jelennek meg a nem mentett bejelentkezések és jelszavak.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">A %s nem menti el a jelszavakat az itt felsorolt webhelyektől.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">A %s nem menti el a jelszavakat az itt felsorolt webhelyektől.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">A bejelentkezéseket és a jelszavak nem lesznek elmentve ezeknél a webhelyeknél.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">A bejelentkezéseket és a jelszavak nem lesznek elmentve ezeknél a webhelyeknél.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">A %s nem menti el a jelszavakat ezekről a webhelyektől.</string>
+    <string name="preferences_passwords_exceptions_description_2">A %s nem menti el a jelszavakat ezekről a webhelyektől.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Összes kivétel törlése</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Bejelentkezések keresése</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések keresése</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Jelszavak keresése</string>
+    <string name="preferences_passwords_saved_logins_search_2">Jelszavak keresése</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Webhely</string>
     <!-- The header for the username for a login -->
@@ -1763,17 +1778,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Jelszó elrejtése</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Feloldás a mentett bejelentkezések megtekintéshez</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Feloldás a mentett bejelentkezések megtekintéshez</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Feloldás a mentett jelszavak megtekintéshez</string>
+    <string name="logins_biometric_prompt_message_2">Feloldás a mentett jelszavak megtekintéshez</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Helyezze biztonságba bejelentkezéseit és jelszavait</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Helyezze biztonságba bejelentkezéseit és jelszavait</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Helyezze biztonságba a mentett jelszavait</string>
+    <string name="logins_warning_dialog_title_2">Helyezze biztonságba a mentett jelszavait</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett bejelentkezéseit és jelszavait, ha valaki hozzáfér az eszközéhez.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett bejelentkezéseit és jelszavait, ha valaki hozzáfér az eszközéhez.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett jelszavait, ha valaki hozzáfér az eszközéhez.</string>
+    <string name="logins_warning_dialog_message_2">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett jelszavait, ha valaki hozzáfér az eszközéhez.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Később</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1790,10 +1805,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Legutóbbi használat</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Bejelentkezések menü rendezése</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezések menü rendezése</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Jelszavak rendezése menü</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Jelszavak rendezése menü</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1801,44 +1816,44 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Címek</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Bankkártyák</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Bankkártyák</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Fizetési módok</string>
+    <string name="preferences_credit_cards_2">Fizetési módok</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Kártyák mentése és automatikus kitöltése</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kártyák mentése és automatikus kitöltése</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Fizetési módok mentése és kitöltése</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Fizetési módok mentése és kitöltése</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Az adatok titkosítottak</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Az adatok titkosítottak</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">A %s titkosítja az összes elmentett fizetési módot</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">A %s titkosítja az összes elmentett fizetési módot</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kártyák szinkronizálása az eszközök közt</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Kártyák szinkronizálása</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Bankkártya hozzáadása</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Bankkártya hozzáadása</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Kártya hozzáadása</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Kártya hozzáadása</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Mentett kártyák kezelése</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Mentett kártyák kezelése</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kártyák kezelése</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Kártyák kezelése</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Cím hozzáadása</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Címek kezelése</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Címek mentése és automatikus kitöltése</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Címek mentése és automatikus kitöltése</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Címek mentése és kitöltése</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Címek mentése és kitöltése</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Olyan információk belevétele, mint a számok, e-mail-címek és szállítási címek</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Olyan információk belevétele, mint a számok, e-mail-címek és szállítási címek</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Telefonszámok és e-mail-címek belevétele</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefonszámok és e-mail-címek belevétele</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kártya hozzáadása</string>
@@ -1859,9 +1874,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kártya törlése</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Biztos, hogy törli ezt a bankkártyát?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Biztos, hogy törli ezt a bankkártyát?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Törli a kártyát?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Törli a kártyát?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Törlés</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1875,24 +1890,24 @@
     <string name="credit_cards_saved_cards">Mentett kártyák</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Adjon meg egy érvényes bankkártyaszámot</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Adjon meg egy érvényes bankkártyaszámot</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Adjon meg egy érvényes kártyaszámot</string>
+    <string name="credit_cards_number_validation_error_message_2">Adjon meg egy érvényes kártyaszámot</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Töltse ki ezt a mezőt</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Töltse ki ezt a mezőt</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Adjon hozzá egy nevet</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Adjon hozzá egy nevet</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Feloldás a mentett kártyák megtekintéshez</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Biztosítsa bankkártyáit</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Biztosítsa bankkártyáit</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Helyezze biztonságba a fizetési módjait</string>
+    <string name="credit_cards_warning_dialog_title_2">Helyezze biztonságba a fizetési módjait</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett bankkártyáit, ha valaki hozzáfér az eszközéhez.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett bankkártyáit, ha valaki hozzáfér az eszközéhez.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett fizetési módjait, ha valaki hozzáfér az eszközéhez.</string>
+    <string name="credit_cards_warning_dialog_message_3">Állítsa be az eszköz lezárási mintáját, PIN-kódját vagy jelszavát, hogy megvédje a mentett fizetési módjait, ha valaki hozzáfér az eszközéhez.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Beállítás most</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1901,10 +1916,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Eszköz feloldása</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Oldja fel, hogy a tárolt bankkártya-információkat használja</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Oldja fel, hogy a tárolt bankkártya-információkat használja</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Oldja fel a zárolást a mentett fizetési módok használatához</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Oldja fel a zárolást a mentett fizetési módok használatához</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Cím hozzáadása</string>
     <!-- Title of the "Edit address" screen -->
@@ -1912,11 +1927,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Címek kezelése</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Utónév</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Utónév</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Egyéb név</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Egyéb név</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Vezetéknév</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Vezetéknév</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Név</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Utca, házszám</string>
     <!-- The header for the city of an address -->
@@ -1941,9 +1958,9 @@
     <string name="addressess_delete_address_button">Cím törlése</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Biztos, hogy törli ezt a címet?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Biztos, hogy törli ezt a címet?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Törli ezt a címet?</string>
+    <string name="addressess_confirm_dialog_message_2">Törli ezt a címet?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Törlés</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2041,49 +2058,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Szerkesztés</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Biztos, hogy törölni szeretné ezt a bejelentkezést?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Biztos, hogy törölni szeretné ezt a bejelentkezést?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Biztos, hogy törli ezt a jelszót?</string>
+    <string name="login_deletion_confirmation_2">Biztos, hogy törli ezt a jelszót?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Törlés</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Mégse</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Bejelentkezési lehetőségek</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Bejelentkezési lehetőségek</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Jelszóbeállítások</string>
+    <string name="login_options_menu_2">Jelszóbeállítások</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">A bejelentkezés webcíméhéz használandó szerkeszthető szövegmező.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">A bejelentkezés webcíméhéz használandó szerkeszthető szövegmező.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">A webhely címének szerkeszthető szövegmezője.</string>
+    <string name="saved_login_hostname_description_3">A webhely címének szerkeszthető szövegmezője.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">A bejelentkezés felhasználónevéhez használandó szerkeszthető szövegmező.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">A bejelentkezés felhasználónevéhez használandó szerkeszthető szövegmező.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">A felhasználónév szerkeszthető szövegmezője.</string>
+    <string name="saved_login_username_description_3">A felhasználónév szerkeszthető szövegmezője.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">A bejelentkezés jelszavához használandó szerkeszthető szövegmező.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">A bejelentkezés jelszavához használandó szerkeszthető szövegmező.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">A jelszó szerkeszthető szövegmezője.</string>
+    <string name="saved_login_password_description_2">A jelszó szerkeszthető szövegmezője.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Módosítások mentése a bejelentkezéshez.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Módosítások mentése a bejelentkezéshez.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Változások mentése.</string>
+    <string name="save_changes_to_login_2">Változások mentése.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Szerkesztés</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Szerkesztés</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Jelszó szerkesztése</string>
+    <string name="edit_2">Jelszó szerkesztése</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Új bejelentkezés hozzáadása</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Új bejelentkezés hozzáadása</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Jelszó hozzáadása</string>
+    <string name="add_login_2">Jelszó hozzáadása</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Jelszó szükséges</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Jelszó szükséges</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Adjon meg egy jelszót</string>
+    <string name="saved_login_password_required_2">Adjon meg egy jelszót</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Felhasználónév szükséges</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Felhasználónév szükséges</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Adjon meg egy felhasználónevet</string>
+    <string name="saved_login_username_required_2">Adjon meg egy felhasználónevet</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Gépnév szükséges</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2196,7 +2213,7 @@
     <string name="radio_preference_info_content_description">Kattintson a további részletekért</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Navigálás fel</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Navigálás fel</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Bezárás</string>
@@ -2236,8 +2253,6 @@
     <string name="review_quality_check_grade_title">Mennyire megbízhatók ezek az értékelések?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Módosított értékelés</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">A nem megbízható értékelések eltávolítva</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Megbízható értékelések alapján</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2296,10 +2311,6 @@
     <string name="review_quality_check_product_availability_warning_body">Ha úgy látja, hogy a termék újra raktáron van, akkor jelentse, és akkor dolgozni fogunk az értékelések ellenőrzésén.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Jelentés, hogy a termék raktáron van</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Értékelési minőség ellenőrzése</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Értékelési minőség ellenőrzése</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Értékelési minőség ellenőrzése (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2347,13 +2358,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">További tudnivalók</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Az „Igen, kipróbálom” kiválasztásával elfogadja a következőt: a %1$s by Mozilla %2$s és %3$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Az „Igen, kipróbálom” kiválasztásával elfogadja a következőt: a %1$s by Mozilla %2$s és %3$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Az „Igen, kipróbálás” kiválasztásával elfogadja a %1$s dokumentumait:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Az „Igen, kipróbálom” kiválasztásával elfogadja a következőket: a %1$s %2$s és a %3$s %4$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Az „Igen, kipróbálom” kiválasztásával elfogadja a következőket: a %1$s %2$s és a %3$s %4$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">adatvédelmi irányelvei</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">adatvédelmi irányelvei</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Adatvédelmi irányelvek</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">adatvédelmi nyilatkozatota</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">felhasználási feltételei</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2426,6 +2443,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Lefordítja az oldalt?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Az oldal lefordítva %1$s nyelvről %2$s nyelvre</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Próbálja ki a privát fordításokat a %1$sban</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2438,6 +2459,8 @@
     <string name="translations_bottom_sheet_translate_to">Fordítás erre:</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Most nem</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Eredeti megjelenítése</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Kész</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2459,6 +2482,9 @@
     <string name="translation_error_language_not_supported_warning_text">Sajnos még nem támogatjuk ezt a nyelvet: %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">További tudnivalók</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Fordítás…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

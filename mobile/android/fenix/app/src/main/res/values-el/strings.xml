@@ -260,6 +260,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Μετάφραση σελίδας</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Η σελίδα μεταφράστηκε από τα %1$s στα %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Επιλεγμένη γλώσσα</string>
@@ -338,11 +343,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Σημείωση απορρήτου του Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" tools:ignore="UnusedResources">Μάθετε περισσότερα στη σημείωση απορρήτου μας</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Μας αρέσει να σας προστατεύουμε</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Μάθετε γιατί εκατομμύρια άνθρωποι αγαπούν το Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Ασφαλής περιήγηση με περισσότερες επιλογές</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Το πρόγραμμα περιήγησης του μη κερδοσκοπικού μας οργανισμού σταματά τις εταιρείες από το να σας ακολουθούν κρυφά σε όλο το διαδίκτυο.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Περισσότεροι από 100 εκατομμύρια χρήστες προστατεύουν το απόρρητό τους επιλέγοντας ένα πρόγραμμα περιήγησης που υποστηρίζεται από έναν μη κερδοσκοπικό οργανισμό.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Γνωστοί ιχνηλάτες; Αποκλείονται αυτόματα. Επεκτάσεις; Δοκιμάστε και τις 700. PDF; Το ενσωματωμένο εργαλείο ανάγνωσης καθιστά εύκολη τη διαχείρισή τους.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Το πρόγραμμα περιήγησης του μη κερδοσκοπικού μας οργανισμού σταματά τις εταιρείες από το να σας ακολουθούν κρυφά σε όλο το διαδίκτυο.\n\nΜάθετε περισσότερα στη σημείωση απορρήτου μας.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -701,9 +716,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Σελιδοδείκτες</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Συνδέσεις</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Συνδέσεις</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Κωδικοί πρόσβασης</string>
+    <string name="preferences_sync_logins_2">Κωδικοί πρόσβασης</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Ανοικτές καρτέλες</string>
     <!-- Preference for signing out -->
@@ -729,9 +744,9 @@
     <string name="default_device_name_2">%1$s στο %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Πιστωτικές κάρτες</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Πιστωτικές κάρτες</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Μέθοδοι πληρωμής</string>
+    <string name="preferences_sync_credit_cards_2">Μέθοδοι πληρωμής</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Διευθύνσεις</string>
 
@@ -1681,13 +1696,13 @@
     <string name="add_to_homescreen_description_2">Μπορείτε εύκολα να προσθέσετε αυτόν τον ιστότοπο στην αρχική οθόνη για άμεση πρόσβαση και ταχύτερη περιήγηση, σαν να ήταν εφαρμογή.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Συνδέσεις και κωδικοί πρόσβασης</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Συνδέσεις και κωδικοί πρόσβασης</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Κωδικοί πρόσβασης</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Κωδικοί πρόσβασης</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Αποθήκευση συνδέσεων και κωδικών πρόσβασης</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Αποθήκευση συνδέσεων και κωδικών πρόσβασης</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Αποθήκευση κωδικών πρόσβασης</string>
+    <string name="preferences_passwords_save_logins_2">Αποθήκευση κωδικών πρόσβασης</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Ερώτηση για αποθήκευση</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1703,47 +1718,47 @@
     <string name="preferences_android_autofill_description">Συμπλήρωση στοιχείων σύνδεσης σε άλλες εφαρμογές της συσκευής σας.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Προσθήκη σύνδεσης</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Προσθήκη σύνδεσης</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Προσθήκη κωδικού πρόσβασης</string>
+    <string name="preferences_logins_add_login_2">Προσθήκη κωδικού πρόσβασης</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Συγχρονισμός συνδέσεων</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Συγχρονισμός κωδικών πρόσβασης</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Συγχρονισμός συνδέσεων</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Συγχρονισμός κωδικών πρόσβασης</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Συγχρονισμός συνδέσεων μεταξύ συσκευών</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Συγχρονισμός συνδέσεων μεταξύ συσκευών</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Συγχρονισμός κωδικών πρόσβασης μεταξύ των συσκευών σας</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Συγχρονισμός κωδικών πρόσβασης μεταξύ των συσκευών σας</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Αποθηκευμένες συνδέσεις</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Αποθηκευμένες συνδέσεις</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Αποθηκευμένοι κωδικοί πρόσβασης</string>
+    <string name="preferences_passwords_saved_logins_2">Αποθηκευμένοι κωδικοί πρόσβασης</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Οι συνδέσεις που αποθηκεύετε ή συγχρονίζετε στο %s θα εμφανίζονται εδώ.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Οι συνδέσεις που αποθηκεύετε ή συγχρονίζετε στο %s θα εμφανίζονται εδώ.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Οι κωδικοί πρόσβασης που αποθηκεύετε ή συγχρονίζετε στο %s θα εμφανίζονται εδώ. Όλοι οι κωδικοί πρόσβασης που αποθηκεύετε κρυπτογραφούνται.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Οι κωδικοί πρόσβασης που αποθηκεύετε ή συγχρονίζετε στο %s θα εμφανίζονται εδώ. Όλοι οι κωδικοί πρόσβασης που αποθηκεύετε κρυπτογραφούνται.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Μάθετε περισσότερα σχετικά με το Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Μάθετε περισσότερα σχετικά με το Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Μάθετε περισσότερα σχετικά με τον συγχρονισμό</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Μάθετε περισσότερα σχετικά με τον συγχρονισμό</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Εξαιρέσεις</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Εδώ εμφανίζονται οι συνδέσεις και οι κωδικοί πρόσβασης που δεν αποθηκεύονται.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Εδώ εμφανίζονται οι συνδέσεις και οι κωδικοί πρόσβασης που δεν αποθηκεύονται.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">Το %s δεν θα αποθηκεύει κωδικούς πρόσβασης για τους ιστοτόπους που αναφέρονται εδώ.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">Το %s δεν θα αποθηκεύει κωδικούς πρόσβασης για τους ιστοτόπους που αναφέρονται εδώ.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Δεν θα αποθηκεύονται στοιχεία σύνδεσης για τους εξής ιστοτόπους.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Δεν θα αποθηκεύονται στοιχεία σύνδεσης για τους εξής ιστοτόπους.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">Το %s δεν θα αποθηκεύει κωδικούς πρόσβασης για αυτούς τους ιστοτόπους.</string>
+    <string name="preferences_passwords_exceptions_description_2">Το %s δεν θα αποθηκεύει κωδικούς πρόσβασης για αυτούς τους ιστοτόπους.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Διαγραφή όλων των εξαιρέσεων</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Αναζήτηση συνδέσεων</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Αναζήτηση συνδέσεων</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Αναζήτηση κωδικών πρόσβασης</string>
+    <string name="preferences_passwords_saved_logins_search_2">Αναζήτηση κωδικών πρόσβασης</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Ιστότοπος</string>
     <!-- The header for the username for a login -->
@@ -1771,17 +1786,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Απόκρυψη κωδικού πρόσβασης</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Ξεκλειδώστε για να δείτε τις αποθηκευμένες συνδέσεις σας</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ξεκλειδώστε για να δείτε τις αποθηκευμένες συνδέσεις σας</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Ξεκλειδώστε για να δείτε τους αποθηκευμένους κωδικούς πρόσβασής σας</string>
+    <string name="logins_biometric_prompt_message_2">Ξεκλειδώστε για να δείτε τους αποθηκευμένους κωδικούς πρόσβασής σας</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Προστασία στοιχείων σύνδεσης</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Προστασία στοιχείων σύνδεσης</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Προστασία των αποθηκευμένων κωδικών πρόσβασής σας</string>
+    <string name="logins_warning_dialog_title_2">Προστασία των αποθηκευμένων κωδικών πρόσβασής σας</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για προστασία των αποθηκευμένων στοιχείων σύνδεσης, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για προστασία των αποθηκευμένων στοιχείων σύνδεσης, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για την προστασία των αποθηκευμένων κωδικών πρόσβασής σας, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
+    <string name="logins_warning_dialog_message_2">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για την προστασία των αποθηκευμένων κωδικών πρόσβασής σας, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Αργότερα</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1798,10 +1813,10 @@
     <string name="saved_logins_sort_strategy_last_used">Τελευταία χρήση</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ταξινόμηση μενού σύνδεσης</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ταξινόμηση μενού σύνδεσης</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Μενού ταξινόμησης κωδικών πρόσβασης</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Μενού ταξινόμησης κωδικών πρόσβασης</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1809,44 +1824,44 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Διευθύνσεις</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Πιστωτικές κάρτες</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Πιστωτικές κάρτες</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Μέθοδοι πληρωμής</string>
+    <string name="preferences_credit_cards_2">Μέθοδοι πληρωμής</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Αποθήκευση και αυτόματη συμπλήρωση στοιχείων καρτών</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Αποθήκευση και αυτόματη συμπλήρωση στοιχείων καρτών</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Αποθήκευση και συμπλήρωση μεθόδων πληρωμής</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Αποθήκευση και συμπλήρωση μεθόδων πληρωμής</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Τα δεδομένα κρυπτογραφούνται</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Τα δεδομένα κρυπτογραφούνται</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">Το %s κρυπτογραφεί όλες τις μεθόδους πληρωμής που αποθηκεύετε</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">Το %s κρυπτογραφεί όλες τις μεθόδους πληρωμής που αποθηκεύετε</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Συγχρονισμός καρτών μεταξύ συσκευών</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Συγχρονισμός καρτών</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Προσθήκη πιστωτικής κάρτας</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Προσθήκη πιστωτικής κάρτας</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Προσθήκη κάρτας</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Προσθήκη κάρτας</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Διαχείριση αποθηκευμένων καρτών</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Διαχείριση αποθηκευμένων καρτών</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Διαχείριση καρτών</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Διαχείριση καρτών</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Προσθήκη διεύθυνσης</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Διαχείριση διευθύνσεων</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Αποθήκευση και αυτόματη συμπλήρωση διευθύνσεων</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Αποθήκευση και αυτόματη συμπλήρωση διευθύνσεων</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Αποθήκευση και συμπλήρωση διευθύνσεων</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Αποθήκευση και συμπλήρωση διευθύνσεων</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Συμπεριλάβετε πληροφορίες, όπως αριθμούς, email και διευθύνσεις αποστολής</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Συμπεριλάβετε πληροφορίες, όπως αριθμούς, email και διευθύνσεις αποστολής</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Περιλαμβάνει αριθμούς τηλεφώνου και διευθύνσεις email</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Περιλαμβάνει αριθμούς τηλεφώνου και διευθύνσεις email</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
@@ -1867,9 +1882,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Διαγραφή κάρτας</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Θέλετε σίγουρα να διαγράψετε αυτήν την πιστωτική κάρτα;</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Θέλετε σίγουρα να διαγράψετε αυτήν την πιστωτική κάρτα;</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Διαγραφή κάρτας;</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Διαγραφή κάρτας;</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Διαγραφή</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1883,24 +1898,24 @@
     <string name="credit_cards_saved_cards">Αποθηκευμένες κάρτες</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Παρακαλώ εισαγάγετε έναν έγκυρο αριθμό πιστωτικής κάρτας</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Παρακαλώ εισαγάγετε έναν έγκυρο αριθμό πιστωτικής κάρτας</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Εισαγάγετε έγκυρο αριθμό κάρτας</string>
+    <string name="credit_cards_number_validation_error_message_2">Εισαγάγετε έγκυρο αριθμό κάρτας</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Παρακαλώ συμπληρώστε αυτό το πεδίο</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Παρακαλώ συμπληρώστε αυτό το πεδίο</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Προσθήκη ονόματος</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Προσθήκη ονόματος</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Ξεκλειδώστε για να δείτε τις αποθηκευμένες κάρτες σας</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Ασφαλίστε τις πιστωτικές κάρτες σας</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Ασφαλίστε τις πιστωτικές κάρτες σας</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Προστασία των αποθηκευμένων μεθόδων πληρωμής σας</string>
+    <string name="credit_cards_warning_dialog_title_2">Προστασία των αποθηκευμένων μεθόδων πληρωμής σας</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για την προστασία των αποθηκευμένων πιστωτικών καρτών σας, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ορίστε ένα μοτίβο κλειδώματος συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για την προστασία των αποθηκευμένων πιστωτικών καρτών σας, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Ορίστε ένα μοτίβο κλειδώματος της συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για την προστασία των αποθηκευμένων καρτών σας, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
+    <string name="credit_cards_warning_dialog_message_3">Ορίστε ένα μοτίβο κλειδώματος της συσκευής, ένα ΡΙΝ ή έναν κωδικό πρόσβασης για την προστασία των αποθηκευμένων καρτών σας, σε περίπτωση που κάποιος τρίτος αποκτήσει πρόσβαση στη συσκευή σας.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Ρύθμιση τώρα</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1909,10 +1924,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Ξεκλειδώστε τη συσκευή σας</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Ξεκλειδώστε για χρήση των στοιχείων πιστωτικής κάρτας</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ξεκλειδώστε για χρήση των στοιχείων πιστωτικής κάρτας</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Ξεκλειδώστε για χρήση των αποθηκευμένων μεθόδων πληρωμής</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Ξεκλειδώστε για χρήση των αποθηκευμένων μεθόδων πληρωμής</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Προσθήκη διεύθυνσης</string>
     <!-- Title of the "Edit address" screen -->
@@ -1920,11 +1935,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Διαχείριση διευθύνσεων</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Όνομα</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Όνομα</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Μεσαίο όνομα</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Μεσαίο όνομα</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Επώνυμο</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Επώνυμο</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Όνομα</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Διεύθυνση</string>
     <!-- The header for the city of an address -->
@@ -1949,9 +1966,9 @@
     <string name="addressess_delete_address_button">Διαγραφή διεύθυνσης</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Θέλετε σίγουρα να διαγράψετε αυτήν τη διεύθυνση;</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Θέλετε σίγουρα να διαγράψετε αυτήν τη διεύθυνση;</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Διαγραφή διεύθυνσης;</string>
+    <string name="addressess_confirm_dialog_message_2">Διαγραφή διεύθυνσης;</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Διαγραφή</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2052,49 +2069,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Επεξεργασία</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Θέλετε σίγουρα να διαγράψετε αυτή τη σύνδεση;</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Θέλετε σίγουρα να διαγράψετε αυτή τη σύνδεση;</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Θέλετε σίγουρα να διαγράψετε αυτόν τον κωδικό πρόσβασης;</string>
+    <string name="login_deletion_confirmation_2">Θέλετε σίγουρα να διαγράψετε αυτόν τον κωδικό πρόσβασης;</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Διαγραφή</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Ακύρωση</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Επιλογές σύνδεσης</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Επιλογές σύνδεσης</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Επιλογές κωδικών πρόσβασης</string>
+    <string name="login_options_menu_2">Επιλογές κωδικών πρόσβασης</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Το επεξεργάσιμο πεδίο κειμένου της διεύθυνσης ιστού της σύνδεσης.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Το επεξεργάσιμο πεδίο κειμένου της διεύθυνσης ιστού της σύνδεσης.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Το επεξεργάσιμο πεδίο κειμένου της διεύθυνσης ιστοτόπου.</string>
+    <string name="saved_login_hostname_description_3">Το επεξεργάσιμο πεδίο κειμένου της διεύθυνσης ιστοτόπου.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Το επεξεργάσιμο πεδίο κειμένου για το όνομα χρήστη της σύνδεσης.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Το επεξεργάσιμο πεδίο κειμένου για το όνομα χρήστη της σύνδεσης.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Το επεξεργάσιμο πεδίο κειμένου για το όνομα χρήστη.</string>
+    <string name="saved_login_username_description_3">Το επεξεργάσιμο πεδίο κειμένου για το όνομα χρήστη.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Το επεξεργάσιμο πεδίο κειμένου για τον κωδικό πρόσβασης της σύνδεσης.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Το επεξεργάσιμο πεδίο κειμένου για τον κωδικό πρόσβασης της σύνδεσης.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Το επεξεργάσιμο πεδίο κειμένου για τον κωδικό πρόσβασης.</string>
+    <string name="saved_login_password_description_2">Το επεξεργάσιμο πεδίο κειμένου για τον κωδικό πρόσβασης.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Αποθήκευση αλλαγών στη σύνδεση.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Αποθήκευση αλλαγών στη σύνδεση.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Αποθήκευση αλλαγών.</string>
+    <string name="save_changes_to_login_2">Αποθήκευση αλλαγών.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Επεξεργασία</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Επεξεργασία</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Επεξεργασία κωδικού πρόσβασης</string>
+    <string name="edit_2">Επεξεργασία κωδικού πρόσβασης</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Προσθήκη νέας σύνδεσης</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Προσθήκη νέας σύνδεσης</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Προσθήκη κωδικού πρόσβασης</string>
+    <string name="add_login_2">Προσθήκη κωδικού πρόσβασης</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Απαιτείται κωδικός πρόσβασης</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Απαιτείται κωδικός πρόσβασης</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Εισαγάγετε έναν κωδικό πρόσβασης</string>
+    <string name="saved_login_password_required_2">Εισαγάγετε έναν κωδικό πρόσβασης</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Απαιτείται όνομα χρήστη</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Απαιτείται όνομα χρήστη</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Εισαγάγετε ένα όνομα χρήστη</string>
+    <string name="saved_login_username_required_2">Εισαγάγετε ένα όνομα χρήστη</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Απαιτείται όνομα κεντρικού υπολογιστή</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2207,7 +2224,7 @@
     <string name="radio_preference_info_content_description">Πατήστε για περισσότερες λεπτομέρειες</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Πλοήγηση προς τα πάνω</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Πλοήγηση προς τα πάνω</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Κλείσιμο</string>
@@ -2247,8 +2264,6 @@
     <string name="review_quality_check_grade_title">Πόσο αξιόπιστες είναι αυτές οι κριτικές;</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Αναπροσαρμοσμένη βαθμολογία</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Οι αναξιόπιστες κριτικές αφαιρέθηκαν</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Με βάση αξιόπιστες κριτικές</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2305,10 +2320,6 @@
     <string name="review_quality_check_product_availability_warning_body">Εάν παρατηρήσετε ότι αυτό το προϊόν είναι ξανά σε απόθεμα, αναφέρετέ το σε μας και θα αρχίσουμε τον έλεγχο των κριτικών.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Αναφέρετε ότι το προϊόν είναι σε απόθεμα</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Έλεγχος ποιότητας κριτικής</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Έλεγχος ποιότητας κριτικής</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Έλεγχος ποιότητας κριτικής (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2354,13 +2365,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Μάθετε περισσότερα</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Επιλέγοντας «Έναρξη δοκιμής», αποδέχεστε την %2$s και τους %3$s του %1$s, που παρέχεται από τη Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Επιλέγοντας «Έναρξη δοκιμής», αποδέχεστε την %2$s και τους %3$s του %1$s, που παρέχεται από τη Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Επιλέγοντας «Έναρξη δοκιμής», συμφωνείτε με τα ακόλουθα από το %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Επιλέγοντας «Έναρξη δοκιμής», αποδέχεστε τη %2$s του %1$s και τους %4$s του %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Επιλέγοντας «Έναρξη δοκιμής», αποδέχεστε τη %2$s του %1$s και τους %4$s του %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">πολιτική απορρήτου</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">πολιτική απορρήτου</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Πολιτική απορρήτου</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">σημείωση απορρήτου</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">όρους χρήσης</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2432,6 +2449,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Μετάφραση σελίδας;</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Η σελίδα μεταφράστηκε από τα %1$s στα %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Ιδιωτικές μεταφράσεις στο %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2444,6 +2465,8 @@
     <string name="translations_bottom_sheet_translate_to">Μετάφραση σε</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Όχι τώρα</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Εμφάνιση πρωτότυπου</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Τέλος</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2465,6 +2488,9 @@
     <string name="translation_error_language_not_supported_warning_text">Δυστυχώς, δεν υποστηρίζουμε ακόμα τα %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Μάθετε περισσότερα</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Μετάφραση…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

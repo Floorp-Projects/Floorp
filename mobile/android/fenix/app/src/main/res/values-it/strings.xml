@@ -258,6 +258,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Traduci pagina</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Pagina tradotta da %1$s a %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Lingua selezionata</string>
@@ -336,11 +341,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Informativa sulla privacy di Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" tools:ignore="UnusedResources">Ulteriori informazioni nella nostra informativa sulla privacy</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ci piace mantenerti al sicuro</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Scopri perché milioni di persone amano Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Navigazione sicura con più scelta</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Il nostro browser, supportato da un’organizzazione senza fini di lucro, blocca automaticamente le società che, di nascosto, cercano di seguire le tue attività sul Web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Più di 100 milioni di persone proteggono la propria privacy scegliendo un browser supportato da un’organizzazione senza fini di lucro.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Elementi traccianti conosciuti? Bloccati automaticamente. Estensioni? Provale tutte, ce ne sono più di 700. PDF? Facili da gestire grazie al lettore integrato.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Il nostro browser, supportato da un’organizzazione senza fini di lucro, blocca automaticamente le società che, di nascosto, cercano di seguire le tue attività sul Web.\n\nScopri ulteriori informazioni nella nostra informativa sulla privacy.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -701,9 +716,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Segnalibri</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Credenziali</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Credenziali</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Password</string>
+    <string name="preferences_sync_logins_2">Password</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Schede aperte</string>
     <!-- Preference for signing out -->
@@ -729,9 +744,9 @@
     <string name="default_device_name_2">%1$s su %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Carte di credito</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Carte di credito</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Metodi di pagamento</string>
+    <string name="preferences_sync_credit_cards_2">Metodi di pagamento</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Indirizzi</string>
 
@@ -1700,13 +1715,13 @@
     <string name="add_to_homescreen_description_2">È possibile aggiungere questo sito web alla schermata principale del dispositivo per accedervi più rapidamente, come se si trattasse di un’app.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Credenziali e password</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Credenziali e password</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Password</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Password</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Salva credenziali e password</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Salva credenziali e password</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Salva password</string>
+    <string name="preferences_passwords_save_logins_2">Salva password</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Chiedi prima di salvare</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1722,47 +1737,47 @@
     <string name="preferences_android_autofill_description">Compila nomi utente e password nelle altre app del tuo dispositivo.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Aggiungi credenziali</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aggiungi credenziali</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Aggiungi password</string>
+    <string name="preferences_logins_add_login_2">Aggiungi password</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincronizza le credenziali</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sincronizza password</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincronizza le credenziali</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Sincronizza password</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sincronizza credenziali tra dispositivi</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincronizza credenziali tra dispositivi</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sincronizza le password tra i tuoi dispositivi</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Sincronizza le password tra i tuoi dispositivi</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Credenziali salvate</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Credenziali salvate</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Password salvate</string>
+    <string name="preferences_passwords_saved_logins_2">Password salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Le credenziali salvate o sincronizzate in %s verranno visualizzate qui.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Le credenziali salvate o sincronizzate in %s verranno visualizzate qui.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Le password salvate o sincronizzate con %s verranno visualizzate qui. Tutte le password salvate sono crittate.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Le password salvate o sincronizzate con %s verranno visualizzate qui. Tutte le password salvate sono crittate.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Ulteriori informazioni su Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Ulteriori informazioni su Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Ulteriori informazioni sulla sincronizzazione</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Ulteriori informazioni sulla sincronizzazione</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eccezioni</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Le credenziali e le password non salvate verranno mostrate qui.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Le credenziali e le password non salvate verranno mostrate qui.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s non salverà le password per i siti elencati qui.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s non salverà le password per i siti elencati qui.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Le credenziali e le password non verranno salvate per questi siti.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Le credenziali e le password non verranno salvate per questi siti.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s non salverà le password per questi siti.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s non salverà le password per questi siti.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Elimina tutte le eccezioni</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Cerca credenziali</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Cerca credenziali</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Cerca nelle password</string>
+    <string name="preferences_passwords_saved_logins_search_2">Cerca nelle password</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sito</string>
     <!-- The header for the username for a login -->
@@ -1790,17 +1805,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Nascondi password</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Sblocca per visualizzare le credenziali salvate</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Sblocca per visualizzare le credenziali salvate</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Sblocca per visualizzare le password salvate</string>
+    <string name="logins_biometric_prompt_message_2">Sblocca per visualizzare le password salvate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Proteggi le credenziali di accesso</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Proteggi le credenziali di accesso</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Proteggi le password salvate</string>
+    <string name="logins_warning_dialog_title_2">Proteggi le password salvate</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le tue credenziali.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le tue credenziali.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le password salvate.</string>
+    <string name="logins_warning_dialog_message_2">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le password salvate.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Più tardi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1818,10 +1833,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Ultimo utilizzo</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordina il menu delle credenziali di accesso</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ordina il menu delle credenziali di accesso</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menu per ordinare le password</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Menu per ordinare le password</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1829,43 +1844,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Indirizzi</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Carte di credito</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Carte di credito</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Metodi di pagamento</string>
+    <string name="preferences_credit_cards_2">Metodi di pagamento</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Salvare e compilare automaticamente le carte</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvare e compilare automaticamente le carte</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Salva e compila i metodi di pagamento</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Salva e compila i metodi di pagamento</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">I dati sono crittati</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">I dati sono crittati</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s critta tutti i metodi di pagamento salvati</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s critta tutti i metodi di pagamento salvati</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincronizza le carte tra più dispositivi</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sincronizza carte di credito</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Aggiungi una carta di credito</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Aggiungi una carta di credito</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Aggiungi carta</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Aggiungi carta</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Gestione carte salvate</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Gestione carte salvate</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Gestisci carte</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Gestisci carte</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Aggiungi indirizzo</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Gestione indirizzi</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Salvare e compilare automaticamente gli indirizzi</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvare e compilare automaticamente gli indirizzi</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Salva e compila indirizzi</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Salva e compila indirizzi</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Includere informazioni come numeri, email e indirizzi di spedizione</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Includere informazioni come numeri, email e indirizzi di spedizione</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Include numeri di telefono e indirizzi email</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Include numeri di telefono e indirizzi email</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Aggiungi carta</string>
@@ -1887,9 +1902,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Elimina carta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Eliminare questa carta di credito?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Eliminare questa carta di credito?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Eliminare la carta?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Eliminare la carta?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Elimina</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1903,24 +1918,24 @@
     <string name="credit_cards_saved_cards">Carte salvate</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Inserire un numero di carta di credito valido</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Inserire un numero di carta di credito valido</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Inserisci un numero di carta valido</string>
+    <string name="credit_cards_number_validation_error_message_2">Inserisci un numero di carta valido</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Compilare questo campo</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Compilare questo campo</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Aggiungi un nome</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Aggiungi un nome</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Sblocca per visualizzare le carte di credito salvate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Proteggi le tue carte di credito</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Proteggi le tue carte di credito</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Proteggi i metodi di pagamento salvati</string>
+    <string name="credit_cards_warning_dialog_title_2">Proteggi i metodi di pagamento salvati</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le carte di credito salvate.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare le carte di credito salvate.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare i metodi di pagamento salvati.</string>
+    <string name="credit_cards_warning_dialog_message_3">Imposta una sequenza di blocco, PIN o password per impedire a chi si impossessa del dispositivo di visualizzare i metodi di pagamento salvati.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Imposta adesso</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1929,10 +1944,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Sblocca il dispositivo</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Sblocca per utilizzare le informazioni delle carte di credito salvate</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Sblocca per utilizzare le informazioni delle carte di credito salvate</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Sblocca per utilizzare i metodi di pagamento salvati</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Sblocca per utilizzare i metodi di pagamento salvati</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Aggiungi indirizzo</string>
     <!-- Title of the "Edit address" screen -->
@@ -1940,11 +1955,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gestione indirizzi</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Nome</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Nome</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Secondo nome</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Secondo nome</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Cognome</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Cognome</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Nome</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Indirizzo</string>
     <!-- The header for the city of an address -->
@@ -1970,9 +1987,9 @@
     <string name="addressess_delete_address_button">Elimina indirizzo</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Eliminare questo indirizzo?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Eliminare questo indirizzo?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Eliminare questo indirizzo?</string>
+    <string name="addressess_confirm_dialog_message_2">Eliminare questo indirizzo?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Elimina</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2070,49 +2087,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Modifica</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Rimuovere queste credenziali?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Rimuovere queste credenziali?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Eliminare questa password?</string>
+    <string name="login_deletion_confirmation_2">Eliminare questa password?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Rimuovi</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Annulla</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Opzioni credenziali</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Opzioni credenziali</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Opzioni password</string>
+    <string name="login_options_menu_2">Opzioni password</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Il campo di testo modificabile per l’indirizzo web delle credenziali</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Il campo di testo modificabile per l’indirizzo web delle credenziali</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Il campo di testo modificabile per l’indirizzo del sito web.</string>
+    <string name="saved_login_hostname_description_3">Il campo di testo modificabile per l’indirizzo del sito web.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Il campo di testo modificabile per il nome utente delle credenziali</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Il campo di testo modificabile per il nome utente delle credenziali</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Il campo di testo modificabile per il nome utente.</string>
+    <string name="saved_login_username_description_3">Il campo di testo modificabile per il nome utente.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Il campo di testo modificabile per la password delle credenziali</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Il campo di testo modificabile per la password delle credenziali</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Il campo di testo modificabile per la password.</string>
+    <string name="saved_login_password_description_2">Il campo di testo modificabile per la password.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Salva le modifiche alle credenziali.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Salva le modifiche alle credenziali.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Salva modifiche.</string>
+    <string name="save_changes_to_login_2">Salva modifiche.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Modifica</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Modifica</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Modifica password</string>
+    <string name="edit_2">Modifica password</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Aggiungi nuove credenziali</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aggiungi nuove credenziali</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Aggiungi password</string>
+    <string name="add_login_2">Aggiungi password</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Password obbligatoria</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Password obbligatoria</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Inserisci una password</string>
+    <string name="saved_login_password_required_2">Inserisci una password</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Nome utente obbligatorio</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Nome utente obbligatorio</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Inserisci un nome utente</string>
+    <string name="saved_login_username_required_2">Inserisci un nome utente</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Nome server obbligatorio</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2226,7 +2243,7 @@
     <string name="radio_preference_info_content_description">Fare clic per ulteriori dettagli</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Vai su</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Vai su</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Chiudi</string>
@@ -2266,8 +2283,6 @@
     <string name="review_quality_check_grade_title">Quanto sono affidabili queste recensioni?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Valutazione rettificata</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Recensioni inaffidabili rimosse</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Basato su recensioni affidabili</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2326,10 +2341,6 @@
 
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Segnala che il prodotto è disponibile</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Verifica qualità recensioni</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Verifica qualità recensioni</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Verifica qualità recensioni (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2377,13 +2388,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Ulteriori informazioni</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Selezionando “Sì, provala” accetti l’%2$s e i %3$s di %1$s by Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Selezionando “Sì, provala” accetti l’%2$s e i %3$s di %1$s by Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Selezionando “Sì, provalo” accetti le condizioni di %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Selezionando “Sì, provala” accetti l’%2$s di %1$s e le %4$s di %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Selezionando “Sì, provala” accetti l’%2$s di %1$s e le %4$s di %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">informativa sulla privacy</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">informativa sulla privacy</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Informativa sulla privacy</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">informativa sulla privacy</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">condizioni di utilizzo del servizio</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2454,6 +2471,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Tradurre questa pagina?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Pagina tradotta da %1$s a %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Prova le traduzioni riservate di %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2466,6 +2487,8 @@
     <string name="translations_bottom_sheet_translate_to">Traduci in</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Non ora</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Mostra originale</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Fatto</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2487,6 +2510,9 @@
     <string name="translation_error_language_not_supported_warning_text">Siamo spiacenti, %1$s non è ancora supportato.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Ulteriori informazioni</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Traduzione…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

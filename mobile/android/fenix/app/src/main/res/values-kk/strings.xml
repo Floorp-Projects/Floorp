@@ -251,6 +251,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Парақты аудару</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Бет %1$s тілінен %2$s тіліне аударылды.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Таңдалған тіл</string>
@@ -329,9 +334,13 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox жекелік ескертуі</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" tools:ignore="UnusedResources">Біздің жекелік ескертуімізден көбірек біліңіз</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Біз сіздің қауіпсіздігіңізді қамтамасыз етуді жақсы көреміз</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Миллиондаған адам неге Firefox-ты жақсы көретінін біліңіз</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Коммерциялық емес ұйымы қолдауымен жасалатын біздің браузер компанияларды интернетте сізді жасырын түрде бақылауын автоматты түрде тоқтатуға көмектеседі.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -690,9 +699,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Бетбелгілер</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Логиндер</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндер</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Парольдер</string>
+    <string name="preferences_sync_logins_2">Парольдер</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Ашық беттер</string>
     <!-- Preference for signing out -->
@@ -717,9 +726,9 @@
     <string name="default_device_name_2">%1$s, %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Несиелік карталар</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Несиелік карталар</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Төлем әдістері</string>
+    <string name="preferences_sync_credit_cards_2">Төлем әдістері</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Адрестер</string>
 
@@ -1659,13 +1668,13 @@
     <string name="add_to_homescreen_description_2">Бұл веб-сайтты жылдам қатынау және қолданба тектес режимде жылдам шолу мақсатымен құрылғыңыздың үй бетіңізге қосуға болады.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Логиндер және парольдер</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндер және парольдер</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Парольдер</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Парольдер</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Логиндер және парольдерді сақтау</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндер және парольдерді сақтау</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Парольдерді сақтау</string>
+    <string name="preferences_passwords_save_logins_2">Парольдерді сақтау</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Сақтау алдында сұрау</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1682,47 +1691,47 @@
     <string name="preferences_android_autofill_description">Құрылғыңыздағы басқа қолданбаларда пайдаланушы аттары мен парольдерін толтыру.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Логинді қосу</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Логинді қосу</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Парольді қосу</string>
+    <string name="preferences_logins_add_login_2">Парольді қосу</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Логиндерді синхрондау</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Парольдерді синхрондау</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндерді синхрондау</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Парольдерді синхрондау</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Логиндерді құрылғылар арасында синхрондау</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндерді құрылғылар арасында синхрондау</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Парольдерді құрылғылар арасында синхрондау</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Парольдерді құрылғылар арасында синхрондау</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Сақталған логиндер</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Сақталған логиндер</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Сақталған парольдер</string>
+    <string name="preferences_passwords_saved_logins_2">Сақталған парольдер</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Сіз %s ішінде сақтаған немесе синхрондаған логиндер осында көрсетіледі.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Сіз %s ішінде сақтаған немесе синхрондаған логиндер осында көрсетіледі.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Сіз %s ішіне сақтаған немесе синхрондаған парольдер осында тізіліп көрсетіледі. Сіз сақтаған барлық парольдер шифрленген.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Сіз %s ішіне сақтаған немесе синхрондаған парольдер осында тізіліп көрсетіледі. Сіз сақтаған барлық парольдер шифрленген.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Синхрондау туралы көбірек біліңіз.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Синхрондау туралы көбірек біліңіз.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Синхрондау туралы көбірек біліңіз</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Синхрондау туралы көбірек біліңіз</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Ережеден бөлек</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Сақталмаған логиндер мен парольдер осында көрсетіледі.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Сақталмаған логиндер мен парольдер осында көрсетіледі.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s осы жерде тізімделген сайттар үшін парольдерді сақтамайтын болады.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s осы жерде тізімделген сайттар үшін парольдерді сақтамайтын болады.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Бұл сайттар үшін логиндер мен парольдер сақталмайды.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Бұл сайттар үшін логиндер мен парольдер сақталмайды.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s бұл сайттар үшін парольдерді сақтамайтын болады.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s бұл сайттар үшін парольдерді сақтамайтын болады.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Барлық ережеден тыс жағдайларды өшіру</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Логиндерден іздеу</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндерден іздеу</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Парольдерді іздеу</string>
+    <string name="preferences_passwords_saved_logins_search_2">Парольдерді іздеу</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сайт</string>
     <!-- The header for the username for a login -->
@@ -1750,17 +1759,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Парольді жасыру</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Сақталған логиндеріңізді көру үшін бұғаттауын ашыңыз</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Сақталған логиндеріңізді көру үшін бұғаттауын ашыңыз</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Сақталған парольдеріңізді көру үшін бұғаттауын ашыңыз</string>
+    <string name="logins_biometric_prompt_message_2">Сақталған парольдеріңізді көру үшін бұғаттауын ашыңыз</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Логиндер және парольдерді қорғаңыз</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндер және парольдерді қорғаңыз</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Сақталған парольдерді қорғаңыз</string>
+    <string name="logins_warning_dialog_title_2">Сақталған парольдерді қорғаңыз</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Бөтен адам сіздің құрылғыңызда болса, одан сақталған логиндер мен парольдерді қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Бөтен адам сіздің құрылғыңызда болса, одан сақталған логиндер мен парольдерді қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Бөтен адам сіздің құрылғыңызда болса, одан сақталған парольдеріңізді қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <string name="logins_warning_dialog_message_2">Бөтен адам сіздің құрылғыңызда болса, одан сақталған парольдеріңізді қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Кейінірек</string>
 
@@ -1777,10 +1786,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Соңғы қолданылған</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Логиндерді сұрыптау мәзірі</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиндерді сұрыптау мәзірі</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Парольдерді сұрыптау мәзірі</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Парольдерді сұрыптау мәзірі</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1788,43 +1797,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Адрестер</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Несиелік карталар</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Несиелік карталар</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Төлем әдістері</string>
+    <string name="preferences_credit_cards_2">Төлем әдістері</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Карталарды сақтау және автотолтыру</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Карталарды сақтау және автотолтыру</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Төлем әдістерін сақтау және толтыру</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Төлем әдістерін сақтау және толтыру</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Деректер шифрленген</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Деректер шифрленген</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s сіз сақтаған барлық төлем әдістерін шифрлейді</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s сіз сақтаған барлық төлем әдістерін шифрлейді</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Карталарды құрылғылар арасында синхрондау</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Карталарды синхрондау</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Несиелік картаны қосу</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Несиелік картаны қосу</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Картаны қосу</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Картаны қосу</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Сақталған карталарды басқару</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Сақталған карталарды басқару</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Карталарды басқару</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Карталарды басқару</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Адресті қосу</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Адрестерді басқару</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Адрестерді сақтау және автотолтыру</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Адрестерді сақтау және автотолтыру</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Адрестерді сақтау және толтыру</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Адрестерді сақтау және толтыру</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Нөмірлер, эл. пошта және жеткізу адрестері сияқты ақпаратты қосу</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Нөмірлер, эл. пошта және жеткізу адрестері сияқты ақпаратты қосу</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Телефон нөмірлері мен электрондық пошта адрестерін қамтиды</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Телефон нөмірлері мен электрондық пошта адрестерін қамтиды</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Картаны қосу</string>
@@ -1845,9 +1854,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Картаны өшіру</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Бұл несие картасын өшіруді шынымен қалайсыз ба?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Бұл несие картасын өшіруді шынымен қалайсыз ба?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Картаны өшіру керек пе?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Картаны өшіру керек пе?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Өшіру</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1861,24 +1870,24 @@
     <string name="credit_cards_saved_cards">Сақталған карталар</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Несиелік картаның жарамды нөмірін енгізіңіз</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Несиелік картаның жарамды нөмірін енгізіңіз</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Жарамды карта нөмірін енгізіңіз</string>
+    <string name="credit_cards_number_validation_error_message_2">Жарамды карта нөмірін енгізіңіз</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Бұл өрісті толтырыңыз</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Бұл өрісті толтырыңыз</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Атын қосыңыз</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Атын қосыңыз</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Сақталған карталарыңызды көру үшін бұғаттауын ашыңыз</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Несиелік карталарыңызды қорғаңыз</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Несиелік карталарыңызды қорғаңыз</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Сақталған төлем әдістерін қорғаңыз</string>
+    <string name="credit_cards_warning_dialog_title_2">Сақталған төлем әдістерін қорғаңыз</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Бөтен адам сіздің құрылғыңызда болса, одан сақталған несиелік карталарды қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Бөтен адам сіздің құрылғыңызда болса, одан сақталған несиелік карталарды қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Бөтен адам сіздің құрылғыңызда болса, одан сақталған төлем әдістерін қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
+    <string name="credit_cards_warning_dialog_message_3">Бөтен адам сіздің құрылғыңызда болса, одан сақталған төлем әдістерін қорғау үшін құрылғының бұғаттау үлгісін, PIN-кодын немесе парольді орнатыңыз.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Қазір баптау</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1887,10 +1896,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Құрылғының бұғаттауын ашыңыз</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Сақталған несиелік карта ақпаратын қолдану үшін бұғаттауын ашыңыз</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Сақталған несиелік карта ақпаратын қолдану үшін бұғаттауын ашыңыз</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Сақталған төлем әдістерін қолдану үшін құлыптан босатыңыз</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Сақталған төлем әдістерін қолдану үшін құлыптан босатыңыз</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Адресті қосу</string>
     <!-- Title of the "Edit address" screen -->
@@ -1898,11 +1907,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Адрестерді басқару</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Аты</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Аты</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Әкесінің аты</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Әкесінің аты</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Тегi</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Тегi</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Аты</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Көше адресі</string>
     <!-- The header for the city of an address -->
@@ -1928,9 +1939,9 @@
     <string name="addressess_delete_address_button">Адресті өшіру</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Бұл адресті өшіруді шынымен қалайсыз ба?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Бұл адресті өшіруді шынымен қалайсыз ба?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Бұл адресті өшіру керек пе?</string>
+    <string name="addressess_confirm_dialog_message_2">Бұл адресті өшіру керек пе?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Өшіру</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2027,50 +2038,50 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Түзету</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Бұл логинді өшіруді қалайсыз ба?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Бұл логинді өшіруді қалайсыз ба?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Бұл парольді өшіруді шынымен қалайсыз ба?</string>
+    <string name="login_deletion_confirmation_2">Бұл парольді өшіруді шынымен қалайсыз ба?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Өшіру</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Бас тарту</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Логин баптаулары</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Логин баптаулары</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Пароль опциялары</string>
+    <string name="login_options_menu_2">Пароль опциялары</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Логиннің веб-адресі үшін түзетуге болатын мәтіндік өрісі.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиннің веб-адресі үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Веб-сайт адресі үшін түзетуге болатын мәтіндік өрісі.</string>
+    <string name="saved_login_hostname_description_3">Веб-сайт адресі үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Логиннің пайдаланушы аты үшін түзетуге болатын мәтіндік өрісі.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиннің пайдаланушы аты үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Пайдаланушы аты үшін түзетуге болатын мәтіндік өрісі.</string>
+    <string name="saved_login_username_description_3">Пайдаланушы аты үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Логиннің паролі үшін түзетуге болатын мәтіндік өрісі.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Логиннің паролі үшін түзетуге болатын мәтіндік өрісі.</string>
 
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Пароль үшін түзетуге болатын мәтіндік өрісі.</string>
+    <string name="saved_login_password_description_2">Пароль үшін түзетуге болатын мәтіндік өрісі.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Логин өзгерістерін сақтау.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Логин өзгерістерін сақтау.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Өзгерістерді сақтау.</string>
+    <string name="save_changes_to_login_2">Өзгерістерді сақтау.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Түзету</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Түзету</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Парольді түзету</string>
+    <string name="edit_2">Парольді түзету</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Жаңа логинді қосу</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Жаңа логинді қосу</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Парольді қосу</string>
+    <string name="add_login_2">Парольді қосу</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Пароль керек</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Пароль керек</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Парольді енгізіңіз</string>
+    <string name="saved_login_password_required_2">Парольді енгізіңіз</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Пайдаланушы аты керек</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Пайдаланушы аты керек</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Пайдаланушы атын енгізіңіз</string>
+    <string name="saved_login_username_required_2">Пайдаланушы атын енгізіңіз</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Хост атауы керек</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2182,7 +2193,7 @@
     <string name="radio_preference_info_content_description">Көбірек білу үшін шертіңіз</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Жоғары жылжу</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Жоғары жылжу</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Жабу</string>
@@ -2222,8 +2233,6 @@
     <string name="review_quality_check_grade_title">Бұл пікірлер қаншалықты сенімді?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Түзетілген рейтинг</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Сенімсіз пікірлер өшірілді</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Сенімді пікірлерге негізделген</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2280,10 +2289,6 @@
     <string name="review_quality_check_product_availability_warning_body">Бұл өнімнің қоймаға қайта оралғанын көрсеңіз, оны бізге хабарлаңыз, біз пікірлерді тексереміз.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Өнімнің қоймада бар болғанын хабарлау</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Пікір сапасын тексеру</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Пікір сапасын тексеру</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Пікір сапасын тексеру (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2329,11 +2334,11 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Көбірек білу</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">&quot;Иә, қолданып көру&quot; опциясын таңдау арқылы сіз Mozilla ұсынған %1$s қолданбасының %2$s және %3$s шарттарымен келісесіз.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">&quot;Иә, қолданып көру&quot; опциясын таңдау арқылы сіз Mozilla ұсынған %1$s қолданбасының %2$s және %3$s шарттарымен келісесіз.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">&quot;Иә, қолданып көру&quot; опциясын таңдау арқылы сіз %1$s ұсынған келесімен келісесіз:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">жекелік саясаты</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">жекелік саясаты</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Жекелік саясаты</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->

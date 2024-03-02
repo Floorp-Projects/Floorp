@@ -253,6 +253,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Þýða síðu</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Síða þýdd úr %1$s yfir í %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Valið tungumál</string>
@@ -330,11 +335,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Meðferð persónuupplýsinga í Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" tools:ignore="UnusedResources">Sjáðu nánar í persónuverndaryfirlýsingu okkar</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Við fáum kikk út úr því að halda þér öruggum</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Sjáðu hvers vegna milljónum manns líkar við Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Öruggt vafur með fleiri valmöguleikum</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Vafrinn okkar, sem ekki er rekinn í hagnaðarskyni, hjálpar til við að koma í veg fyrir að fyrirtæki laumist til að fylgjast með þér á ferðum þínum um vefinn.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Meira en 100 milljónir manna vernda friðhelgi sína með því að velja vafra sem er studdur af félagasamtökum án hagnaðarmarkmiða.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Þekktir rekjarar? Lokað sjálfkrafa á þá. Forritsaukar? Prófaðu alla þessa 700. PDF-skjöl? Innbyggði lesarinn okkar gerir auðvelt að stjórna þeim.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Vafrinn okkar, sem ekki er rekinn í hagnaðarskyni, hjálpar til við að koma í veg fyrir að fyrirtæki laumist til að fylgjast með ferðum þínum um vefinn.\n\nFrekari upplýsingar má sjá í persónuverndaryfirlýsingu okkar.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -690,9 +705,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Bókamerki</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Innskráningar</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Innskráningar</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Lykilorð</string>
+    <string name="preferences_sync_logins_2">Lykilorð</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Opnir flipar</string>
     <!-- Preference for signing out -->
@@ -718,9 +733,9 @@
     <string name="default_device_name_2">%1$s á %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Greiðslukort</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Greiðslukort</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Greiðslumátar</string>
+    <string name="preferences_sync_credit_cards_2">Greiðslumátar</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Vistföng</string>
 
@@ -1656,13 +1671,13 @@
     <string name="add_to_homescreen_description_2">Þú getur á auðveldan hátt bætt þessu vefsvæði á upphafsskjáinn þinn fyrir auðveldara aðgengi og hraðara vafur.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Innskráning og lykilorð</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Innskráning og lykilorð</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Lykilorð</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Lykilorð</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Vista innskráningu og lykilorð</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Vista innskráningu og lykilorð</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Vista lykilorð</string>
+    <string name="preferences_passwords_save_logins_2">Vista lykilorð</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Biðja um að vista</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1677,49 +1692,49 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Fylltu út notendanöfn og lykilorð í öðrum forritum á tækinu þínu.</string>
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Bæta við innskráningu</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Bæta við innskráningu</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Bæta við lykilorði</string>
+    <string name="preferences_logins_add_login_2">Bæta við lykilorði</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Samstilla innskráningar</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Samstilla lykilorð</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Samstilla innskráningar</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Samstilla lykilorð</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Samstilla innskráningar milli tækja</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Samstilla innskráningar milli tækja</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Samstilla lykilorð milli tækja</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Samstilla lykilorð milli tækja</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Vistaðar innskráningar</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Vistaðar innskráningar</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Vistuð lykilorð</string>
+    <string name="preferences_passwords_saved_logins_2">Vistuð lykilorð</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Innskráningarnar sem þú vistar eða samstillir við %s birtast hér.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Innskráningarnar sem þú vistar eða samstillir við %s birtast hér.</string>
 
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Lykilorðin sem þú vistar eða samstillir við %s verða skráð hér. Öll lykilorð sem þú vistar eru dulrituð.
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Lykilorðin sem þú vistar eða samstillir við %s verða skráð hér. Öll lykilorð sem þú vistar eru dulrituð.
 </string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Læra meira um samstillingu.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Læra meira um samstillingu.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Frekari upplýsingar um samstillingu</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Frekari upplýsingar um samstillingu</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Undanþágur</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Innskráningar og lykilorð sem ekki eru vistuð sjást hér.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Innskráningar og lykilorð sem ekki eru vistuð sjást hér.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s mun ekki vista lykilorð fyrir vefsvæði sem skráð eru hér.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s mun ekki vista lykilorð fyrir vefsvæði sem skráð eru hér.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Innskráningar og lykilorð verða ekki vistuð fyrir þessi vefsvæði.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Innskráningar og lykilorð verða ekki vistuð fyrir þessi vefsvæði.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s mun ekki vista lykilorð fyrir þessi vefsvæði.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s mun ekki vista lykilorð fyrir þessi vefsvæði.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Eyða öllum undantekningum</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Leita að innskráningu</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Leita að innskráningu</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Leita að lykilorðum</string>
+    <string name="preferences_passwords_saved_logins_search_2">Leita að lykilorðum</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Vefsvæði</string>
     <!-- The header for the username for a login -->
@@ -1747,17 +1762,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Fela lykilorð</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Aflæstu til að skoða vistaðar innskráningar</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Aflæstu til að skoða vistaðar innskráningar</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Aflæstu til að skoða vistuð lykilorð</string>
+    <string name="logins_biometric_prompt_message_2">Aflæstu til að skoða vistuð lykilorð</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Verndaðu innskráningar þínar og lykilorð</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Verndaðu innskráningar þínar og lykilorð</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Tryggðu öryggi vistuðu lykilorðanna þinna</string>
+    <string name="logins_warning_dialog_title_2">Tryggðu öryggi vistuðu lykilorðanna þinna</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Settu upp læsimynstur, PIN eða lykilorð til að vernda vistaðar innskráningar og lykilorð ef ske kynni að einhver annar komist yfir tækið þitt.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Settu upp læsimynstur, PIN eða lykilorð til að vernda vistaðar innskráningar og lykilorð ef ske kynni að einhver annar komist yfir tækið þitt.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Settu upp læsimynstur, PIN-númer eða lykilorð til að vernda vistuðu lykilorðin þín ef ske kynni að einhver annar komist yfir tækið þitt.</string>
+    <string name="logins_warning_dialog_message_2">Settu upp læsimynstur, PIN-númer eða lykilorð til að vernda vistuðu lykilorðin þín ef ske kynni að einhver annar komist yfir tækið þitt.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Síðar</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1775,10 +1790,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Síðast notað</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Raða innskráningarvalmyndinni</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Raða innskráningarvalmyndinni</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Raða lykilorðavalmynd</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Raða lykilorðavalmynd</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1786,42 +1801,42 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Tölvupóstföng</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Greiðslukort</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Greiðslukort</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Greiðslumátar</string>
+    <string name="preferences_credit_cards_2">Greiðslumátar</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Vista og fylla sjálfkrafa út í greiðslukort</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Vista og fylla sjálfkrafa út í greiðslukort</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Vista og fylla út greiðslumáta</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Vista og fylla út greiðslumáta</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Gögn eru dulrituð</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Gögn eru dulrituð</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s dulritar alla greiðslumáta sem þú vistar</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s dulritar alla greiðslumáta sem þú vistar</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Samstilla greiðslukort milli tækja</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Samstilla kort</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Bæta við greiðslukorti</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Bæta við greiðslukorti</string>
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Bæta við korti</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Bæta við korti</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Sýsla með vistuð greiðslukort</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Sýsla með vistuð greiðslukort</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Sýsla með greiðslukort</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Sýsla með greiðslukort</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Bæta við tölvupóstfangi</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Sýsla með tölvupóstföng</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Vista og fylla sjálfkrafa út heimilisföng</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Vista og fylla sjálfkrafa út heimilisföng</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Vista og fylla út í heimilisföng</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Vista og fylla út í heimilisföng</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Láta upplýsingar eins og símanúmer, tölvupóstföng og heimilisföng fylgja með</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Láta upplýsingar eins og símanúmer, tölvupóstföng og heimilisföng fylgja með</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Þar með talin símanúmer og tölvupóstföng</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Þar með talin símanúmer og tölvupóstföng</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Bæta við korti</string>
@@ -1843,9 +1858,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Eyða korti</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Ertu viss um að þú viljir eyða þessu greiðslukorti?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ertu viss um að þú viljir eyða þessu greiðslukorti?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Eyða korti?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Eyða korti?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Eyða</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1857,23 +1872,23 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Vistuð greiðslukort</string>
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Settu inn gilt kortanúmer</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Settu inn gilt kortanúmer</string>
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Settu inn gilt kortanúmer</string>
+    <string name="credit_cards_number_validation_error_message_2">Settu inn gilt kortanúmer</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Fylltu út í þennan reit</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Fylltu út í þennan reit</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Bættu við nafni</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Bættu við nafni</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Aflæsa til að skoða vistuð greiðslukort</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Haltu kreditkortunum þínum öruggum</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Haltu kreditkortunum þínum öruggum</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Tryggðu öryggi vistuðu greiðslumátanna þinna</string>
+    <string name="credit_cards_warning_dialog_title_2">Tryggðu öryggi vistuðu greiðslumátanna þinna</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Settu upp læsimynstur, PIN-númer eða lykilorð til að vernda vistuðu greiðslukortin þín ef ske kynni að einhver annar komist yfir tækið þitt.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Settu upp læsimynstur, PIN-númer eða lykilorð til að vernda vistuðu greiðslukortin þín ef ske kynni að einhver annar komist yfir tækið þitt.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Settu upp læsimynstur, PIN-númer eða lykilorð til að vernda vistuðu greiðslumátana þína ef ske kynni að einhver annar komist yfir tækið þitt.</string>
+    <string name="credit_cards_warning_dialog_message_3">Settu upp læsimynstur, PIN-númer eða lykilorð til að vernda vistuðu greiðslumátana þína ef ske kynni að einhver annar komist yfir tækið þitt.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Setja upp núna</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1881,10 +1896,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Aflæstu tækinu þínu</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Aflæstu til að nota geymdar kreditkortaupplýsingar</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Aflæstu til að nota geymdar kreditkortaupplýsingar</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Aflæstu til að nota vistaða greiðslumáta</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Aflæstu til að nota vistaða greiðslumáta</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Bæta við tölvupóstfangi</string>
     <!-- Title of the "Edit address" screen -->
@@ -1892,11 +1907,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Sýsla með tölvupóstföng</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Skírnarnafn</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Skírnarnafn</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Millinafn</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Millinafn</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Eftirnafn</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Eftirnafn</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Nafn</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Heimilisfang</string>
     <!-- The header for the city of an address -->
@@ -1921,9 +1938,9 @@
     <string name="addressess_delete_address_button">Eyða heimilisfangi</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Ertu viss um að þú viljir eyða þessu póstfangi?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ertu viss um að þú viljir eyða þessu póstfangi?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Eyða þessu heimilisfangi?</string>
+    <string name="addressess_confirm_dialog_message_2">Eyða þessu heimilisfangi?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Eyða</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2022,49 +2039,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Breyta</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Ertu viss um að þú viljir eyða þessari innskráningu?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ertu viss um að þú viljir eyða þessari innskráningu?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Ertu viss um að þú viljir eyða þessu lykilorði?</string>
+    <string name="login_deletion_confirmation_2">Ertu viss um að þú viljir eyða þessu lykilorði?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Eyða</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Hætta við</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Innskráningarvalkostir</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Innskráningarvalkostir</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Valkostir lykilorðs</string>
+    <string name="login_options_menu_2">Valkostir lykilorðs</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Breytilegi textareiturinn fyrir veffang þessarar innskráningarinnar.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Breytilegi textareiturinn fyrir veffang þessarar innskráningarinnar.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Breytanlegi textareiturinn fyrir vistfang vefsvæðisins.</string>
+    <string name="saved_login_hostname_description_3">Breytanlegi textareiturinn fyrir vistfang vefsvæðisins.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Breytilegi textareiturinn fyrir notandanafn innskráningarinnar.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Breytilegi textareiturinn fyrir notandanafn innskráningarinnar.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Breytanlegi textareiturinn fyrir notandanafnið.</string>
+    <string name="saved_login_username_description_3">Breytanlegi textareiturinn fyrir notandanafnið.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Breytilegi textareiturinn fyrir lykilorð innskráningarinnar.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Breytilegi textareiturinn fyrir lykilorð innskráningarinnar.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Breytanlegi textareiturinn fyrir lykilorðið.</string>
+    <string name="saved_login_password_description_2">Breytanlegi textareiturinn fyrir lykilorðið.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Vista breytingar á innskráningu.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Vista breytingar á innskráningu.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Vista breytingar.</string>
+    <string name="save_changes_to_login_2">Vista breytingar.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Breyta</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Breyta</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Breyta lykilorði</string>
+    <string name="edit_2">Breyta lykilorði</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Bæta við nýrri innskráningu</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Bæta við nýrri innskráningu</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Bæta við lykilorði</string>
+    <string name="add_login_2">Bæta við lykilorði</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Lykilorðs krafist</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Lykilorðs krafist</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Settu inn lykilorð</string>
+    <string name="saved_login_password_required_2">Settu inn lykilorð</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Notandanafn er nauðsynlegt</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Notandanafn er nauðsynlegt</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Settu inn notandanafn</string>
+    <string name="saved_login_username_required_2">Settu inn notandanafn</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hýsingarheiti er nauðsynlegt</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2176,7 +2193,7 @@
     <string name="radio_preference_info_content_description">Smelltu til að fá frekari upplýsingar</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Flakka upp</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Flakka upp</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Loka</string>
@@ -2216,8 +2233,6 @@
     <string name="review_quality_check_grade_title">Hversu áreiðanlegar eru þessar umsagnir?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Aðlöguð einkunn</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Óáreiðanlegar umsagnir fjarlægðar</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Byggt á áreiðanlegum umsögnum</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2276,10 +2291,6 @@
     <string name="review_quality_check_product_availability_warning_body">Ef þú sérð að þessi vara er aftur komin á lager skaltu tilkynna það til okkar og við munum vinna að því að uppfæra greininguna.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Tilkynna þegar vara er til á lager</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Athugar gæði umsagna</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Athugar gæði umsagna</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Athugar gæði umsagna (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2325,13 +2336,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Frekari upplýsingar</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Með því að velja „Já, prófum það“ samþykkir þú %2$s og %3$s hjá %1$s frá Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Með því að velja „Já, prófum það“ samþykkir þú %2$s og %3$s hjá %1$s frá Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Með því að velja „Já, prófa það“ samþykkir þú eftirfarandi frá %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Með því að velja „Já, prófum það“ samþykkir þú %2$s frá %1$s og %4$s frá %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Með því að velja „Já, prófum það“ samþykkir þú %2$s frá %1$s og %4$s frá %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">persónuverndarstefnu</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">persónuverndarstefnu</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Meðferð persónuupplýsinga</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">persónuverndaryfirlýsing</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">notkunarskilmála</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2402,6 +2419,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Þýða þessa síðu?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Síða þýdd úr %1$s yfir í %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Prófaðu einkaþýðingar í %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2414,6 +2435,8 @@
     <string name="translations_bottom_sheet_translate_to">Þýða á</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ekki núna</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Sýna upprunalegt</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Lokið</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2435,6 +2458,9 @@
     <string name="translation_error_language_not_supported_warning_text">Því miður styðjum við ekki %1$s ennþá.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Kanna nánar</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Þýðing…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

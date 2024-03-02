@@ -255,6 +255,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Sayfayı çevir</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Sayfa %1$s dilinden %2$s diline çevrildi.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Seçili dil</string>
@@ -333,7 +338,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox gizlilik bildirimi</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Sizi güvende tutmayı seviyoruz</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -694,9 +698,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Yer imleri</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Hesaplar</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesaplar</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Parolalar</string>
+    <string name="preferences_sync_logins_2">Parolalar</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Açık sekmeler</string>
     <!-- Preference for signing out -->
@@ -722,9 +726,9 @@
     <string name="default_device_name_2">%1$s - %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Kredi kartları</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredi kartları</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Ödeme yöntemleri</string>
+    <string name="preferences_sync_credit_cards_2">Ödeme yöntemleri</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresler</string>
 
@@ -1668,13 +1672,13 @@
     <string name="add_to_homescreen_description_2">Bu siteyi cihazınızın ana ekranına ekleyerek ona hızlıca erişebilir, site bir uygulamaymış gibi daha hızlı gezinti yapabilirsiniz.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Hesaplar ve parolalar</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesaplar ve parolalar</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Parolalar</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Parolalar</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Kullanıcı adı ve parolaları kaydet</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Kullanıcı adı ve parolaları kaydet</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Parolaları kaydet</string>
+    <string name="preferences_passwords_save_logins_2">Parolaları kaydet</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Kaydetmeyi sor</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1689,47 +1693,47 @@
     <string name="preferences_android_autofill_description">Cihazınızdaki diğer uygulamalarda kullanıcı adı ve parolalar doldurulsun.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Hesap ekle</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesap ekle</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Parola ekle</string>
+    <string name="preferences_logins_add_login_2">Parola ekle</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Hesapları eşitle</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Parolaları eşitle</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesapları eşitle</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Parolaları eşitle</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Hesapları cihazlar arasında eşitle</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesapları cihazlar arasında eşitle</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Parolaları cihazlar arasında eşitle</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Parolaları cihazlar arasında eşitle</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Kayıtlı hesaplar</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Kayıtlı hesaplar</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Kayıtlı parolalar</string>
+    <string name="preferences_passwords_saved_logins_2">Kayıtlı parolalar</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Kaydettiğiniz veya %s ile eşitlediğiniz hesaplar burada görünecektir.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Kaydettiğiniz veya %s ile eşitlediğiniz hesaplar burada görünecektir.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">%s tarayıcısına kaydettiğiniz veya eşitlediğiniz parolalar burada listelenecektir. Kaydettiğiniz tüm parolalar şifrelenir.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">%s tarayıcısına kaydettiğiniz veya eşitlediğiniz parolalar burada listelenecektir. Kaydettiğiniz tüm parolalar şifrelenir.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sync hakkında bilgi alın.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Sync hakkında bilgi alın.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Eşitlemeyle ilgili bilgi al</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Eşitlemeyle ilgili bilgi al</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">İstisnalar</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Kaydedilmeyen hesaplar ve parolalar burada görünecektir.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Kaydedilmeyen hesaplar ve parolalar burada görünecektir.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s, burada listelenen sitelerin parolalarını kaydetmeyecektir.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s, burada listelenen sitelerin parolalarını kaydetmeyecektir.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Bu sitelere ait hesaplar ve parolalar kaydedilmeyecektir.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Bu sitelere ait hesaplar ve parolalar kaydedilmeyecektir.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s bu sitelerin parolalarını kaydetmeyecektir.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s bu sitelerin parolalarını kaydetmeyecektir.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Tüm istisnaları sil</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Hesaplarda ara</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesaplarda ara</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Parolalarda ara</string>
+    <string name="preferences_passwords_saved_logins_search_2">Parolalarda ara</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Site</string>
     <!-- The header for the username for a login -->
@@ -1757,17 +1761,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Parolayı gizle</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Kayıtlı hesaplarınızı görmek için kilidi açın</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Kayıtlı hesaplarınızı görmek için kilidi açın</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Kayıtlı parolalarınızı görmek için kilidi açın</string>
+    <string name="logins_biometric_prompt_message_2">Kayıtlı parolalarınızı görmek için kilidi açın</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Hesaplarınızı güvence altına alın</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesaplarınızı güvence altına alın</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Kayıtlı parolalarınızı güvence altına alın</string>
+    <string name="logins_warning_dialog_title_2">Kayıtlı parolalarınızı güvence altına alın</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Cihazınız başka birinin eline geçerse kayıtlı hesaplarına erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Cihazınız başka birinin eline geçerse kayıtlı hesaplarına erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Cihazınız başka birinin eline geçerse kayıtlı parolalarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
+    <string name="logins_warning_dialog_message_2">Cihazınız başka birinin eline geçerse kayıtlı parolalarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Daha sonra</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1785,10 +1789,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Son kullanım</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Hesapları sırala menüsü</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesapları sırala menüsü</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Parolaları sırala menüsü</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Parolaları sırala menüsü</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1796,43 +1800,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adresler</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Kredi kartları</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredi kartları</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Ödeme yöntemleri</string>
+    <string name="preferences_credit_cards_2">Ödeme yöntemleri</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Kartları kaydedip otomatik doldur</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kartları kaydedip otomatik doldur</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Ödeme yöntemlerini kaydet ve doldur</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Ödeme yöntemlerini kaydet ve doldur</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Veriler şifrelenir</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Veriler şifrelenir</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s kaydettiğiniz tüm ödeme yöntemlerini şifreler</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s kaydettiğiniz tüm ödeme yöntemlerini şifreler</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kartları cihazlar arasında eşitle</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Kartları eşitle</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Kredi kartı ekle</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredi kartı ekle</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Kart ekle</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Kart ekle</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Kayıtlı kartları yönet</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kayıtlı kartları yönet</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kartları yönet</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Kartları yönet</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Adres ekle</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adresleri yönet</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Adresleri kaydedip otomatik doldur</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Adresleri kaydedip otomatik doldur</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Adresleri kaydet ve doldur</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Adresleri kaydet ve doldur</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Numaralar, e-posta ve gönderim adresleri gibi bilgileri dahil et</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Numaralar, e-posta ve gönderim adresleri gibi bilgileri dahil et</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Telefon numaraları ve e-posta adresleri de dahildir</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefon numaraları ve e-posta adresleri de dahildir</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kart ekle</string>
@@ -1853,9 +1857,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kartı sil</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Bu kredi kartını silmek istediğinizden emin misiniz?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Bu kredi kartını silmek istediğinizden emin misiniz?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Kart silinsin mi?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Kart silinsin mi?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Sil</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1869,24 +1873,24 @@
     <string name="credit_cards_saved_cards">Kayıtlı kartlar</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Lütfen geçerli bir kredi kartı numarası girin</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Lütfen geçerli bir kredi kartı numarası girin</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Geçerli bir kart numarası girin</string>
+    <string name="credit_cards_number_validation_error_message_2">Geçerli bir kart numarası girin</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Lütfen bu alanı doldurun</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Lütfen bu alanı doldurun</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Adınızı yazın</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Adınızı yazın</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Kayıtlı kartlarınızı görmek için kilidi açın</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Kredi kartlarını güvence altına al</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Kredi kartlarını güvence altına al</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Kayıtlı ödeme yöntemlerinizi güvence altına alın</string>
+    <string name="credit_cards_warning_dialog_title_2">Kayıtlı ödeme yöntemlerinizi güvence altına alın</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Cihazınız başka birinin eline geçerse kayıtlı kartlarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Cihazınız başka birinin eline geçerse kayıtlı kartlarınıza erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Cihazınız başka birinin eline geçerse kayıtlı ödeme yöntemlerinize erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
+    <string name="credit_cards_warning_dialog_message_3">Cihazınız başka birinin eline geçerse kayıtlı ödeme yöntemlerinize erişilmesini önlemek için cihaz kilidi deseni, PIN veya parola ayarlayın.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Hemen ayarla</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1895,10 +1899,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Cihazınızın kilidini açın</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Depolanan kredi kartı bilgilerini kullanmak için kilidi açın</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Depolanan kredi kartı bilgilerini kullanmak için kilidi açın</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Kayıtlı ödeme yöntemlerinizi kullanmak için kilidi açın</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Kayıtlı ödeme yöntemlerinizi kullanmak için kilidi açın</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Adres ekle</string>
     <!-- Title of the "Edit address" screen -->
@@ -1906,11 +1910,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Adresleri yönet</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Ad</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Ad</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">İkinci ad</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">İkinci ad</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Soyadı</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Soyadı</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Ad</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Sokak adresi</string>
     <!-- The header for the city of an address -->
@@ -1935,9 +1941,9 @@
     <string name="addressess_delete_address_button">Adresi sil</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Bu adresi silmek istediğinizden emin misiniz?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Bu adresi silmek istediğinizden emin misiniz?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Bu adres silinsin mi?</string>
+    <string name="addressess_confirm_dialog_message_2">Bu adres silinsin mi?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Sil</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2035,49 +2041,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Düzenle</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Bu hesabı silmek istediğinizden emin misiniz?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Bu hesabı silmek istediğinizden emin misiniz?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Bu parolayı silmek istediğinizden emin misiniz?</string>
+    <string name="login_deletion_confirmation_2">Bu parolayı silmek istediğinizden emin misiniz?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Sil</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Vazgeç</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Hesap seçenekleri</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesap seçenekleri</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Parola seçenekleri</string>
+    <string name="login_options_menu_2">Parola seçenekleri</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Hesabın web adresi için düzenlenebilir metin alanı.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesabın web adresi için düzenlenebilir metin alanı.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Web sitesi adresi için düzenlenebilir metin alanı.</string>
+    <string name="saved_login_hostname_description_3">Web sitesi adresi için düzenlenebilir metin alanı.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Hesabın kullanıcı adı için düzenlenebilir metin alanı.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesabın kullanıcı adı için düzenlenebilir metin alanı.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Kullanıcı adı için düzenlenebilir metin alanı.</string>
+    <string name="saved_login_username_description_3">Kullanıcı adı için düzenlenebilir metin alanı.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Hesabın parolası için düzenlenebilir metin alanı.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Hesabın parolası için düzenlenebilir metin alanı.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Parola için düzenlenebilir metin alanı.</string>
+    <string name="saved_login_password_description_2">Parola için düzenlenebilir metin alanı.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Değişiklikleri hesaba kaydet.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Değişiklikleri hesaba kaydet.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Değişiklikleri kaydet.</string>
+    <string name="save_changes_to_login_2">Değişiklikleri kaydet.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Düzenle</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Düzenle</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Parola düzenle</string>
+    <string name="edit_2">Parola düzenle</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Yeni hesap ekle</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Yeni hesap ekle</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Parola ekle</string>
+    <string name="add_login_2">Parola ekle</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Parola gerekli</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Parola gerekli</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Parolayı girin</string>
+    <string name="saved_login_password_required_2">Parolayı girin</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Kullanıcı adı gereklidir</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Kullanıcı adı gereklidir</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Kullanıcı adını girin</string>
+    <string name="saved_login_username_required_2">Kullanıcı adını girin</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Sunucu gereklidir</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2189,7 +2195,7 @@
     <string name="radio_preference_info_content_description">Ayrıntılar için tıklayın</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Yukarı</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Yukarı</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Kapat</string>
@@ -2229,8 +2235,6 @@
     <string name="review_quality_check_grade_title">Bu değerlendirmeler ne kadar güvenilir?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Düzeltilmiş puan</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Güvenilmez değerlendirmeler kaldırıldı</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Güvenilir değerlendirmelere dayanarak</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2287,10 +2291,6 @@
     <string name="review_quality_check_product_availability_warning_body">Bu ürünün yeniden stoka girdiğini görürseniz bize bildirin, biz de değerlendirmeleri kontrol etmeye çalışalım.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Ürünün stokta olduğunu bildir</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Değerlendirme kalitesi kontrol ediliyor</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Değerlendirme kalitesi kontrol ediliyor</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Değerlendirme kalitesi kontrol ediliyor (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2336,13 +2336,15 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Daha fazla bilgi alın</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">“Evet, deneyeceğim”i seçtiğinizde Mozilla %1$s %2$s ve %3$snı kabul etmiş olursunuz.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">“Evet, deneyeceğim”i seçtiğinizde Mozilla %1$s %2$s ve %3$snı kabul etmiş olursunuz.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">“Evet, deneyeceğim”i seçtiğinizde %1$s için şunları kabul etmiş olursunuz:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">gizlilik politikası</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">gizlilik politikası</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Gizlilik politikası</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">gizlilik bildirimi</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">kullanım koşulları</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2416,6 +2418,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Bu sayfa çevrilsin mi?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Sayfa %1$s dilinden %2$s diline çevrildi</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">%1$s ile gizli çevirileri deneyin</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2428,6 +2434,8 @@
     <string name="translations_bottom_sheet_translate_to">Bu dile</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Şimdi değil</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Orijinalini göster</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Tamam</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2449,6 +2457,9 @@
     <string name="translation_error_language_not_supported_warning_text">Maalesef henüz %1$s dilini desteklemiyoruz.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Daha fazla bilgi al</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Çevriliyor…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

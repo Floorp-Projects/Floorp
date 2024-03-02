@@ -198,12 +198,16 @@
     <string name="mozac_feature_addons_failed_to_install">Cʼhwitadenn war staliadur %1$s</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic">Staliadur an askouezh c’hwitet.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">An askouezh-mañ n’hall ket bezañ pellgarget en abeg d’ur fazi kennask.</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
     <string name="mozac_feature_addons_failed_to_install_corrupt_error">An askouezh-mañ n’hall ket bezañ staliet rak kontronet eo war ar seblant.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error">An askouezh-mañ n’hall ket bezañ staliet rak n’eo ket bet gwiriet.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s n’hall ket bezañ staliet rak ne glot ket gant %2$s %3$s.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s n’hall ket bezañ staliet rak gallout a ra degas ur riskl bras a-fet stabilded pe diogelroez.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Gweredekaet %1$s gant berzh</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

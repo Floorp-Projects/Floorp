@@ -258,6 +258,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Käännä sivu</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Sivu käännetty kielestä %1$s kielelle %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Valittu kieli</string>
@@ -336,11 +341,19 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefoxin tietosuojakäytäntö</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Lue lisää tietosuojakäytännöstämme</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Turvaamisesi on tärkeää meille</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Ota selvää, miksi miljoonat rakastavat Firefoxia</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Turvallista selausta ja enemmän vaihtoehtoja</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Voittoa tavoittelemattoman tahon tukema selaimemme auttaa estämään yrityksiä seuraamasta sinua salaa verkossa.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Tunnetut seuraimet? Estetty automaattisesti. Laajennukset? Kokeile kaikkia 700:aa. PDF-tiedostoja? Sisäänrakennettu lukija tekee niistä helposti hallittavia.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Voittoa tavoittelemattoman tahon tukema selaimemme auttaa estämään yrityksiä seuraamasta sinua salaa verkossa.\n\nLisätietoja on tietosuojakäytännössämme.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -698,9 +711,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Kirjanmerkit</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Kirjautumistiedot</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Kirjautumistiedot</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Salasanat</string>
+    <string name="preferences_sync_logins_2">Salasanat</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Avoimet välilehdet</string>
     <!-- Preference for signing out -->
@@ -726,9 +739,9 @@
     <string name="default_device_name_2">%1$s laitteella %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Luottokortit</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Luottokortit</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Maksutavat</string>
+    <string name="preferences_sync_credit_cards_2">Maksutavat</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Osoitteet</string>
 
@@ -1681,13 +1694,13 @@
     <string name="add_to_homescreen_description_2">Voit lisätä tämän sivuston laitteesi aloitusnäytölle, jolloin sivuston käyttö onnistuu nopeasti ja tarjoaa sovelluksen kaltaisen kokemuksen.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Käyttäjätunnukset ja salasanat</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Käyttäjätunnukset ja salasanat</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Salasanat</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Salasanat</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Tallenna käyttäjätunnukset ja salasanat</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Tallenna käyttäjätunnukset ja salasanat</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Tallenna salasanat</string>
+    <string name="preferences_passwords_save_logins_2">Tallenna salasanat</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Kysy tallennusta</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1703,47 +1716,47 @@
     <string name="preferences_android_autofill_description">Täytä käyttäjätunnukset ja salasanat muissa laitteesi sovelluksissa.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Lisää kirjautumistieto</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Lisää kirjautumistieto</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Lisää salasana</string>
+    <string name="preferences_logins_add_login_2">Lisää salasana</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Synkronoi kirjautumistiedot</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Synkronoi salasanat</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Synkronoi kirjautumistiedot</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Synkronoi salasanat</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Synkronoi kirjautumistiedot laitteiden välillä</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Synkronoi kirjautumistiedot laitteiden välillä</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Synkronoi salasanat eri laitteiden välillä</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Synkronoi salasanat eri laitteiden välillä</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Tallennetut kirjautumistiedot</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Tallennetut kirjautumistiedot</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Tallennetut salasanat</string>
+    <string name="preferences_passwords_saved_logins_2">Tallennetut salasanat</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">%siin tallentamasi tai synkronoimasi kirjautumistiedot näkyvät täällä.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">%siin tallentamasi tai synkronoimasi kirjautumistiedot näkyvät täällä.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">%siin tallentamasi tai synkronoimasi salasanat näkyvät tässä. Kaikki tallentamasi salasanat ovat salattuja.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">%siin tallentamasi tai synkronoimasi salasanat näkyvät tässä. Kaikki tallentamasi salasanat ovat salattuja.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Lue lisää Syncista.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Lue lisää Syncista.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Lisätietoja synkronoinnista</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Lisätietoja synkronoinnista</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Poikkeukset</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Käyttäjätunnukset ja salanat, joita ei tallenneta, näytetään täällä.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Käyttäjätunnukset ja salanat, joita ei tallenneta, näytetään täällä.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s ei tallenna tässä lueteltujen sivustojen salasanoja.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s ei tallenna tässä lueteltujen sivustojen salasanoja.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Käyttäjätunnuksia ja salasanoja ei tallenneta näille sivustoille.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Käyttäjätunnuksia ja salasanoja ei tallenneta näille sivustoille.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s ei tallenna näiden sivustojen salasanoja.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s ei tallenna näiden sivustojen salasanoja.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Poista kaikki poikkeukset</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Etsi kirjautumistiedoista</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Etsi kirjautumistiedoista</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Etsi salasanoja</string>
+    <string name="preferences_passwords_saved_logins_search_2">Etsi salasanoja</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sivusto</string>
     <!-- The header for the username for a login -->
@@ -1771,17 +1784,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Piilota salasana</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Avaa lukitus nähdäksesi tallennetut kirjautumistiedot</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Avaa lukitus nähdäksesi tallennetut kirjautumistiedot</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Avaa lukitus nähdäksesi tallennetut salasanat</string>
+    <string name="logins_biometric_prompt_message_2">Avaa lukitus nähdäksesi tallennetut salasanat</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Suojaa käyttäjätunnuksesi ja salasanasi</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Suojaa käyttäjätunnuksesi ja salasanasi</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Suojaa tallennetut salasanat</string>
+    <string name="logins_warning_dialog_title_2">Suojaa tallennetut salasanat</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut kirjautumistiedot ja salasanat siltä varalta, että joku saa laitteesi haltuunsa.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut kirjautumistiedot ja salasanat siltä varalta, että joku saa laitteesi haltuunsa.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja salasanojasi, jos laitteesi on jollain toisella.</string>
+    <string name="logins_warning_dialog_message_2">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja salasanojasi, jos laitteesi on jollain toisella.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Myöhemmin</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1799,10 +1812,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Viimeksi käytetty</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Järjestä kirjautumistietojen valikko</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Järjestä kirjautumistietojen valikko</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Salasanojen järjestysvalikko</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Salasanojen järjestysvalikko</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1810,43 +1823,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Osoitteet</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Luottokortit</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Luottokortit</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Maksutavat</string>
+    <string name="preferences_credit_cards_2">Maksutavat</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Tallenna ja täytä kortit automaattisesti</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Tallenna ja täytä kortit automaattisesti</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Tallenna ja täytä maksutavat</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Tallenna ja täytä maksutavat</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Tiedot on salattu</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Tiedot on salattu</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s salaa kaikki tallentamasi maksutavat</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s salaa kaikki tallentamasi maksutavat</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synkronoi kortit laitteiden välillä</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Synkronoi kortit</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Lisää luottokortti</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Lisää luottokortti</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Lisää kortti</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Lisää kortti</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Hallinnoi tallennettuja kortteja</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Hallinnoi tallennettuja kortteja</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Hallitse kortteja</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Hallitse kortteja</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Lisää osoite</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Hallitse osoitteita</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Tallenna ja täytä osoitteet automaattisesti</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Tallenna ja täytä osoitteet automaattisesti</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Tallenna ja täytä osoitteet</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Tallenna ja täytä osoitteet</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Sisällytä tiedot kuten numerot, sähköpostiosoitteet ja toimitusosoitteet</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Sisällytä tiedot kuten numerot, sähköpostiosoitteet ja toimitusosoitteet</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Sisältää puhelinnumerot ja sähköpostiosoitteet</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Sisältää puhelinnumerot ja sähköpostiosoitteet</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Lisää kortti</string>
@@ -1867,9 +1880,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Poista kortti</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Haluatko varmasti poistaa tämän luottokortin?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Haluatko varmasti poistaa tämän luottokortin?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Poistetaanko kortti?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Poistetaanko kortti?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Poista</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1883,24 +1896,24 @@
     <string name="credit_cards_saved_cards">Tallennetut kortit</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Kirjoita kelvollinen luottokortin numero</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Kirjoita kelvollinen luottokortin numero</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Anna kelvollinen kortin numero</string>
+    <string name="credit_cards_number_validation_error_message_2">Anna kelvollinen kortin numero</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Täytä tämä kenttä</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Täytä tämä kenttä</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Lisää nimi</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Lisää nimi</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Avaa lukitus nähdäksesi tallennetut kortit</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Suojaa luottokorttisi</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Suojaa luottokorttisi</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Suojaa tallennetut maksutavat</string>
+    <string name="credit_cards_warning_dialog_title_2">Suojaa tallennetut maksutavat</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut luottokorttitiedot siltä varalta, että joku saa laitteesi haltuunsa.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Aseta laitteen avaukseen tarkoitettu kuvio, PIN-koodi tai salasana suojataksesi tallennetut luottokorttitiedot siltä varalta, että joku saa laitteesi haltuunsa.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja maksutapojasi, jos laitteesi on jollain toisella.</string>
+    <string name="credit_cards_warning_dialog_message_3">Määritä laitteen lukituskuvio, PIN-koodi tai salasana suojataksesi tallennettuja maksutapojasi, jos laitteesi on jollain toisella.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Aseta nyt</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1909,10 +1922,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Avaa laitteen lukitus</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Avaa lukitus käyttääksesi tallennettuja luottokorttitietoja</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Avaa lukitus käyttääksesi tallennettuja luottokorttitietoja</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Avaa lukitus käyttääksesi tallennettuja maksutapoja</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Avaa lukitus käyttääksesi tallennettuja maksutapoja</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Lisää osoite</string>
     <!-- Title of the "Edit address" screen -->
@@ -1920,11 +1933,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Hallitse osoitteita</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Etunimi</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Etunimi</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Toinen nimi</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Toinen nimi</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Sukunimi</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Sukunimi</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Nimi</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Katuosoite</string>
     <!-- The header for the city of an address -->
@@ -1949,9 +1964,9 @@
     <string name="addressess_delete_address_button">Poista osoite</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Haluatko varmasti poistaa tämän osoitteen?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Haluatko varmasti poistaa tämän osoitteen?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Poistetaanko tämä osoite?</string>
+    <string name="addressess_confirm_dialog_message_2">Poistetaanko tämä osoite?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Poista</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2050,49 +2065,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Muokkaa</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Haluatko varmasti poistaa tämän kirjautumistiedon?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Haluatko varmasti poistaa tämän kirjautumistiedon?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Haluatko varmasti poistaa tämän salasanan?</string>
+    <string name="login_deletion_confirmation_2">Haluatko varmasti poistaa tämän salasanan?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Poista</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Peruuta</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Kirjautumistietojen valinnat</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Kirjautumistietojen valinnat</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Salasanojen asetukset</string>
+    <string name="login_options_menu_2">Salasanojen asetukset</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Muokattava tekstikenttä kirjautumisen verkkosivua varten.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Muokattava tekstikenttä kirjautumisen verkkosivua varten.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Verkkosivuston muokattava tekstikenttä.</string>
+    <string name="saved_login_hostname_description_3">Verkkosivuston muokattava tekstikenttä.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Muokattava tekstikenttä kirjautumisen käyttäjätunnusta varten.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Muokattava tekstikenttä kirjautumisen käyttäjätunnusta varten.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Käyttäjätunnuksen muokattava tekstikenttä.</string>
+    <string name="saved_login_username_description_3">Käyttäjätunnuksen muokattava tekstikenttä.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Muokattava tekstikenttä kirjautumisen salasanaa varten.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Muokattava tekstikenttä kirjautumisen salasanaa varten.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Salasanan muokattava tekstikenttä.</string>
+    <string name="saved_login_password_description_2">Salasanan muokattava tekstikenttä.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Tallenna muutokset kirjautumistietoihin.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Tallenna muutokset kirjautumistietoihin.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Tallenna muutokset.</string>
+    <string name="save_changes_to_login_2">Tallenna muutokset.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Muokkaa</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Muokkaa</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Muokkaa salasanaa</string>
+    <string name="edit_2">Muokkaa salasanaa</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Lisää uusi kirjautumistieto</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Lisää uusi kirjautumistieto</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Lisää salasana</string>
+    <string name="add_login_2">Lisää salasana</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Salasana vaaditaan</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Salasana vaaditaan</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Kirjoita salasana</string>
+    <string name="saved_login_password_required_2">Kirjoita salasana</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Käyttäjätunnus vaaditaan</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Käyttäjätunnus vaaditaan</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Kirjoita käyttäjätunnus</string>
+    <string name="saved_login_username_required_2">Kirjoita käyttäjätunnus</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Isäntänimi vaaditaan</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2205,7 +2220,7 @@
     <string name="radio_preference_info_content_description">Napsauta saadaksesi lisätietoja</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Liiku ylöspäin</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Liiku ylöspäin</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Sulje</string>
@@ -2245,8 +2260,6 @@
     <string name="review_quality_check_grade_title">Kuinka luotettavia nämä arvostelut ovat?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Oikaistu arvosana</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Epäluotettavat arvostelut poistettu</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Luotettavien arvostelujen pohjalta</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2299,10 +2312,6 @@
     <string name="review_quality_check_product_availability_warning_body">Jos huomaat, että tämä tuote on jälleen varastossa, ilmoita siitä, niin tarkistamme arvostelut.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Ilmoita, että tuoteta on varastossa</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Tarkistetaan arvostelun laatua</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Tarkistetaan arvostelun laatua</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Tarkistetaan arvostelun laatua (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2410,6 +2419,10 @@
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Käännetäänkö sivu?</string>
 
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Sivu käännetty kielestä %1$s kielelle %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Kokeile yksityisiä käännöksiä %1$sissa</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2422,6 +2435,8 @@
     <string name="translations_bottom_sheet_translate_to">Käännä kielelle</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ei nyt</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Näytä alkuperäinen</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Valmis</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2444,6 +2459,9 @@
     <string name="translation_error_language_not_supported_warning_text">Valitettavasti kieltä %1$s ei tueta vielä.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Lue lisää</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Käännetään…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
