@@ -10,6 +10,7 @@
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
 
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/indexedDB/Key.h"
 #include "mozilla/dom/indexedDB/KeyPath.h"
 #include "mozilla/dom/IDBCursor.h"
@@ -61,10 +62,8 @@ struct ParamTraits<mozilla::dom::indexedDB::KeyPath> {
 
 template <>
 struct ParamTraits<mozilla::dom::IDBCursor::Direction>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::IDBCursor::Direction,
-          mozilla::dom::IDBCursor::Direction::Next,
-          mozilla::dom::IDBCursor::Direction::EndGuard_> {};
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::IDBCursor::Direction> {};
 
 template <>
 struct ParamTraits<mozilla::dom::IDBTransaction::Mode>

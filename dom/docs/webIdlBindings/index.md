@@ -938,6 +938,13 @@ value passed to it as an argument is not one of the string values for the enum
 then it returns `mozilla::Nothing()`, else it returns the right enum value in
 the `mozilla::Maybe`.
 
+`mozilla::dom::WebIDLEnumSerializer` is a templated alias in
+[`BindingIPCUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingIPCUtils.h)
+exported to `mozilla/dom/BindingIPCUtils.h` to implement an IPC serializer with
+the right validation for WebIDL enums. It uses a
+`mozilla::MaxContinuousEnumValue` that is generated for every WebIDL enum to
+implement the validation.
+
 #### Callback function types
 
 Callback functions are represented as an object, inheriting from

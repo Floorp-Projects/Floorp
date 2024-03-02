@@ -6,8 +6,17 @@
 #ifndef _mozilla_dom_BindingIPCUtils_h
 #define _mozilla_dom_BindingIPCUtils_h
 
+#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "ipc/EnumSerializer.h"
+
+namespace mozilla::dom {
+
+template <class Enum>
+using WebIDLEnumSerializer = IPC::ContiguousEnumSerializerInclusive<
+    Enum, ContiguousEnumValues<Enum>::min, ContiguousEnumValues<Enum>::max>;
+
+}  // namespace mozilla::dom
 
 namespace IPC {
 template <>
