@@ -360,7 +360,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     return typedArrayClasses.includes(classname);
   }
 
-  function propertyIsGetter(obj, name, classname) {
+  function propertyIsGetter(obj, name) {
     return !!Object.getOwnPropertyDescriptor(obj, name).get;
   }
 
@@ -1058,7 +1058,7 @@ for (var prop of props) {
     is(t.delete(null), true, "Key null can be deleted");
 
     let values = [];
-    t.forEach((value, key) => values.push(value));
+    t.forEach((value) => values.push(value));
     is(values.toString(), "a,5", "forEach enumerates values correctly");
 
     t.clear();

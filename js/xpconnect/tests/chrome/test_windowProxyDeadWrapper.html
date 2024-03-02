@@ -51,7 +51,7 @@ async function go() {
         // once the window is destroyed.
         frame.remove();
 
-        TestUtils.topicObserved("outer-window-nuked", (subject, data) => {
+        TestUtils.topicObserved("outer-window-nuked", (subject) => {
             let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
             return id == winID;
         }).then(() => {
