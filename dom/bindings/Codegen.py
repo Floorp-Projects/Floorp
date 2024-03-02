@@ -51,7 +51,6 @@ LEGACYCALLER_HOOK_NAME = "_legacycaller"
 RESOLVE_HOOK_NAME = "_resolve"
 MAY_RESOLVE_HOOK_NAME = "_mayResolve"
 NEW_ENUMERATE_HOOK_NAME = "_newEnumerate"
-ENUM_ENTRY_VARIABLE_NAME = "strings"
 INSTANCE_RESERVED_SLOTS = 1
 
 # This size is arbitrary. It is a power of 2 to make using it as a modulo
@@ -7046,7 +7045,10 @@ def getJSToNativeConversionInfo(
             """
             {
               int index;
-              if (!FindEnumStringIndex<${invalidEnumValueFatal}>(cx, $${val}, ${values}, "${enumtype}", "${sourceDescription}", &index)) {
+              if (!FindEnumStringIndex<${invalidEnumValueFatal}>(cx, $${val},
+                                                                 binding_detail::EnumStrings<${enumtype}>::Values,
+                                                                 "${enumtype}", "${sourceDescription}",
+                                                                 &index)) {
                 $*{exceptionCode}
               }
               $*{handleInvalidEnumValueCode}
@@ -7054,7 +7056,6 @@ def getJSToNativeConversionInfo(
             }
             """,
             enumtype=enumName,
-            values=enumName + "Values::" + ENUM_ENTRY_VARIABLE_NAME,
             invalidEnumValueFatal=toStringBool(invalidEnumValueFatal),
             handleInvalidEnumValueCode=handleInvalidEnumValueCode,
             exceptionCode=exceptionCode,
@@ -12343,7 +12344,7 @@ def getEnumValueName(value):
 class CGEnumToJSValue(CGAbstractMethod):
     def __init__(self, enum):
         enumType = enum.identifier.name
-        self.stringsArray = enumType + "Values::" + ENUM_ENTRY_VARIABLE_NAME
+        self.stringsArray = "binding_detail::EnumStrings<" + enumType + ">::Values"
         CGAbstractMethod.__init__(
             self,
             None,
@@ -12361,8 +12362,8 @@ class CGEnumToJSValue(CGAbstractMethod):
             """
             MOZ_ASSERT(uint32_t(aArgument) < ArrayLength(${strings}));
             JSString* resultStr =
-              JS_NewStringCopyN(aCx, ${strings}[uint32_t(aArgument)].value,
-                                ${strings}[uint32_t(aArgument)].length);
+              JS_NewStringCopyN(aCx, ${strings}[uint32_t(aArgument)].BeginReading(),
+                                ${strings}[uint32_t(aArgument)].Length());
             if (!resultStr) {
               return false;
             }
@@ -12379,48 +12380,54 @@ class CGEnum(CGThing):
         self.enum = enum
         entryDecl = fill(
             """
-            extern const EnumEntry ${entry_array}[${entry_count}];
+            static constexpr size_t Count = ${count};
 
-            static constexpr size_t Count = ${real_entry_count};
-
-            // Our "${entry_array}" contains an extra entry with a null string.
-            static_assert(mozilla::ArrayLength(${entry_array}) - 1 == Count,
+            static_assert(mozilla::ArrayLength(binding_detail::EnumStrings<${name}>::Values) == Count,
                           "Mismatch between enum strings and enum count");
 
             static_assert(static_cast<size_t>(${name}::EndGuard_) == Count,
                           "Mismatch between enum value and enum count");
-
-            inline auto GetString(${name} stringId) {
-              MOZ_ASSERT(static_cast<${type}>(stringId) < Count);
-              const EnumEntry& entry = ${entry_array}[static_cast<${type}>(stringId)];
-              return Span<const char>{entry.value, entry.length};
-            }
             """,
-            entry_array=ENUM_ENTRY_VARIABLE_NAME,
-            entry_count=self.nEnumStrings(),
-            # -1 because nEnumStrings() includes a string for EndGuard_
-            real_entry_count=self.nEnumStrings() - 1,
+            count=self.nEnumStrings(),
             name=self.enum.identifier.name,
             type=CGEnum.underlyingType(enum),
         )
-        strings = CGNamespace(
-            self.stringsNamespace(),
-            CGGeneric(
-                declare=entryDecl,
-                define=fill(
-                    """
-                          extern const EnumEntry ${name}[${count}] = {
-                            $*{entries}
-                            { nullptr, 0 }
-                          };
-                          """,
-                    name=ENUM_ENTRY_VARIABLE_NAME,
-                    count=self.nEnumStrings(),
-                    entries="".join(
-                        '{"%s", %d},\n' % (val, len(val)) for val in self.enum.values()
+        strings = CGList(
+            [
+                CGNamespace(
+                    "binding_detail",
+                    CGGeneric(
+                        declare=fill(
+                            """
+                            template <> struct EnumStrings<${name}> {
+                              static const nsLiteralCString Values[${count}];
+                            };
+                            """,
+                            name=self.enum.identifier.name,
+                            count=self.nEnumStrings(),
+                        ),
+                        define=fill(
+                            """
+                            const nsLiteralCString EnumStrings<${name}>::Values[${count}] = {
+                              $*{entries}
+                            };
+                            """,
+                            name=self.enum.identifier.name,
+                            count=self.nEnumStrings(),
+                            entries="".join(
+                                '"%s"_ns,\n' % val for val in self.enum.values()
+                            ),
+                        ),
                     ),
                 ),
-            ),
+                CGNamespace(
+                    self.stringsNamespace(),
+                    CGGeneric(
+                        declare=entryDecl,
+                    ),
+                ),
+            ],
+            "\n",
         )
         toJSValue = CGEnumToJSValue(enum)
         self.cgThings = CGList([strings, toJSValue], "\n")
@@ -12429,7 +12436,7 @@ class CGEnum(CGThing):
         return self.enum.identifier.name + "Values"
 
     def nEnumStrings(self):
-        return len(self.enum.values()) + 1
+        return len(self.enum.values())
 
     @staticmethod
     def underlyingType(enum):

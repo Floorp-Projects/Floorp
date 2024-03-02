@@ -123,9 +123,8 @@ void MediaKeySession::UpdateKeyStatusMap() {
         nsPrintfCString("MediaKeySession[%p,'%s'] key statuses change {", this,
                         NS_ConvertUTF16toUTF8(mSessionId).get()));
     for (const CDMCaps::KeyStatus& status : keyStatuses) {
-      message.AppendPrintf(
-          " (%s,%s)", ToHexString(status.mId).get(),
-          nsCString(MediaKeyStatusValues::GetString(status.mStatus)).get());
+      message.AppendPrintf(" (%s,%s)", ToHexString(status.mId).get(),
+                           GetEnumString(status.mStatus).get());
     }
     message.AppendLiteral(" }");
     // Use %s so we aren't exposing random strings to printf interpolation.
@@ -542,8 +541,7 @@ void MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
     EME_LOG(
         "MediaKeySession[%p,'%s'] DispatchKeyMessage() type=%s message='%s'",
         this, NS_ConvertUTF16toUTF8(mSessionId).get(),
-        nsCString(MediaKeyMessageTypeValues::GetString(aMessageType)).get(),
-        ToHexString(aMessage).get());
+        GetEnumString(aMessageType).get(), ToHexString(aMessage).get());
   }
 
   RefPtr<MediaKeyMessageEvent> event(
@@ -611,12 +609,8 @@ void MediaKeySession::SetOnmessage(EventHandlerNonNull* aCallback) {
   SetEventHandler(nsGkAtoms::onmessage, aCallback);
 }
 
-nsCString ToCString(MediaKeySessionType aType) {
-  return nsCString(MediaKeySessionTypeValues::GetString(aType));
-}
-
 nsString ToString(MediaKeySessionType aType) {
-  return NS_ConvertUTF8toUTF16(ToCString(aType));
+  return NS_ConvertUTF8toUTF16(GetEnumString(aType));
 }
 
 }  // namespace mozilla::dom

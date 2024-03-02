@@ -2077,7 +2077,7 @@ void ChromeUtils::GetAllPossibleUtilityActorNames(GlobalObject& aGlobal,
   aNames.Clear();
   for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
     auto idlName = static_cast<UtilityActorName>(i);
-    aNames.AppendElement(WebIDLUtilityActorNameValues::GetString(idlName));
+    aNames.AppendElement(GetEnumString(idlName));
   }
 }
 

@@ -31,9 +31,7 @@ static UtilityActorName UtilityActorNameFromString(
   // for iteration.
   for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
     auto idlName = static_cast<UtilityActorName>(i);
-    const nsDependentCSubstring idlNameString(
-        WebIDLUtilityActorNameValues::GetString(idlName));
-    if (idlNameString.Equals(aStringName)) {
+    if (GetEnumString(idlName).Equals(aStringName)) {
       return idlName;
     }
   }

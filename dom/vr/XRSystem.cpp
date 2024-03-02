@@ -168,8 +168,9 @@ already_AddRefed<Promise> XRSystem::RequestSession(
 
   if (aOptions.mRequiredFeatures.WasPassed()) {
     for (const nsString& val : aOptions.mRequiredFeatures.Value()) {
-      int index = FindEnumStringIndexImpl(val.BeginReading(), val.Length(),
-                                          XRReferenceSpaceTypeValues::strings);
+      int index = FindEnumStringIndexImpl(
+          val.BeginReading(), val.Length(),
+          binding_detail::EnumStrings<XRReferenceSpaceType>::Values);
       if (index < 0) {
         promise->MaybeRejectWithNotSupportedError(
             "A required feature for the XRSession is not available.");
@@ -182,8 +183,9 @@ already_AddRefed<Promise> XRSystem::RequestSession(
 
   if (aOptions.mOptionalFeatures.WasPassed()) {
     for (const nsString& val : aOptions.mOptionalFeatures.Value()) {
-      int index = FindEnumStringIndexImpl(val.BeginReading(), val.Length(),
-                                          XRReferenceSpaceTypeValues::strings);
+      int index = FindEnumStringIndexImpl(
+          val.BeginReading(), val.Length(),
+          binding_detail::EnumStrings<XRReferenceSpaceType>::Values);
       if (index >= 0) {
         optionalReferenceSpaceTypes.AppendElement(
             static_cast<XRReferenceSpaceType>(index));

@@ -493,8 +493,8 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
   if (cache != RequestCache::EndGuard_) {
     if (cache == RequestCache::Only_if_cached &&
         request->Mode() != RequestMode::Same_origin) {
-      nsCString modeString(RequestModeValues::GetString(request->Mode()));
-      aRv.ThrowTypeError<MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN>(modeString);
+      aRv.ThrowTypeError<MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN>(
+          GetEnumString(request->Mode()));
       return nullptr;
     }
     request->SetCacheMode(cache);

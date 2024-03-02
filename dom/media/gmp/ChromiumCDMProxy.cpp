@@ -605,8 +605,7 @@ void ChromiumCDMProxy::GetStatusForPolicy(
   MOZ_ASSERT(NS_IsMainThread());
   EME_LOG("ChromiumCDMProxy::GetStatusForPolicy(this=%p, pid=%" PRIu32
           ") minHdcpVersion=%s",
-          this, aPromiseId,
-          dom::HDCPVersionValues::GetString(aMinHdcpVersion).data());
+          this, aPromiseId, dom::GetEnumString(aMinHdcpVersion).get());
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   if (!cdm) {
