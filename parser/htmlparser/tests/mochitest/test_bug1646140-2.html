@@ -10,7 +10,7 @@ document.addEventListener("copy", ev => {
   ev.preventDefault();
   ev.clipboardData.setData('text/html', "<svg><style><svg/onload=\"window.svgRanScript=true\">");
 });
-const o = new MutationObserver(mutations => {
+const o = new MutationObserver(() => {
   o.disconnect();
   setTimeout(() => {
     ok(!svgRanScript, "svg onload must not fire");
