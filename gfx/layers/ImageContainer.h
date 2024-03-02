@@ -192,7 +192,7 @@ class Image {
 
   mozilla::EnumeratedArray<mozilla::layers::LayersBackend,
                            UniquePtr<ImageBackendData>,
-                           mozilla::layers::LayersBackend::LAYERS_LAST>
+                           size_t(mozilla::layers::LayersBackend::LAYERS_LAST)>
       mBackendData;
 
   void* mImplData;

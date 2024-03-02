@@ -245,7 +245,7 @@ class EffectCompositor {
   // indicate that the style rule on the element is out of date but without
   // posting a restyle to update it.
   EnumeratedArray<CascadeLevel, nsTHashMap<PseudoElementHashEntry, bool>,
-                  CascadeLevel(kCascadeLevelCount)>
+                  kCascadeLevelCount>
       mElementsToRestyle;
 
   bool mIsInPreTraverse = false;

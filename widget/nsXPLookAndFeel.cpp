@@ -57,7 +57,7 @@ using FontID = mozilla::LookAndFeel::FontID;
 
 template <typename Index, typename Value, Index kEnd>
 class EnumeratedCache {
-  mozilla::EnumeratedArray<Index, Value, kEnd> mEntries;
+  mozilla::EnumeratedArray<Index, Value, size_t(kEnd)> mEntries;
   std::bitset<size_t(kEnd)> mValidity;
 
  public:

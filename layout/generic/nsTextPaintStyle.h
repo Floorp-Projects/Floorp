@@ -146,7 +146,7 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
   };
   mozilla::EnumeratedArray<SelectionStyleIndex,
                            mozilla::Maybe<nsSelectionStyle>,
-                           SelectionStyleIndex::Count>
+                           size_t(SelectionStyleIndex::Count)>
       mSelectionStyle;
 
   // Color initializations

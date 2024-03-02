@@ -197,13 +197,14 @@ constexpr auto SomeAllocKinds(AllocKind first = AllocKind::FIRST,
 // with each index corresponding to a particular alloc kind.
 template <typename ValueType>
 using AllAllocKindArray =
-    mozilla::EnumeratedArray<AllocKind, ValueType, AllocKind::LIMIT>;
+    mozilla::EnumeratedArray<AllocKind, ValueType, size_t(AllocKind::LIMIT)>;
 
 // ObjectAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
 // with each index corresponding to a particular object alloc kind.
 template <typename ValueType>
 using ObjectAllocKindArray =
-    mozilla::EnumeratedArray<AllocKind, ValueType, AllocKind::OBJECT_LIMIT>;
+    mozilla::EnumeratedArray<AllocKind, ValueType,
+                             size_t(AllocKind::OBJECT_LIMIT)>;
 
 /*
  * Map from C++ type to alloc kind for non-object types. JSObject does not have

@@ -418,7 +418,7 @@ struct StyleIDs {
   LookAndFeel::FloatID mLineRelativeSize;
 };
 EnumeratedArray<nsTextPaintStyle::SelectionStyleIndex, StyleIDs,
-                nsTextPaintStyle::SelectionStyleIndex::Count>
+                size_t(nsTextPaintStyle::SelectionStyleIndex::Count)>
     SelectionStyleIDs = {
         StyleIDs{LookAndFeel::ColorID::IMERawInputForeground,
                  LookAndFeel::ColorID::IMERawInputBackground,

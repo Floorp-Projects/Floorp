@@ -106,12 +106,10 @@ class nsGridContainerFrame final : public nsContainerFrame,
   using NamedArea = mozilla::StyleNamedArea;
 
   template <typename T>
-  using PerBaseline = mozilla::EnumeratedArray<BaselineSharingGroup, T,
-                                               BaselineSharingGroup(2)>;
+  using PerBaseline = mozilla::EnumeratedArray<BaselineSharingGroup, T, 2>;
 
   template <typename T>
-  using PerLogicalAxis =
-      mozilla::EnumeratedArray<LogicalAxis, T, LogicalAxis(2)>;
+  using PerLogicalAxis = mozilla::EnumeratedArray<LogicalAxis, T, 2>;
 
   // nsIFrame overrides
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,

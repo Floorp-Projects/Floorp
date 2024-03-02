@@ -49,7 +49,8 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
   // Array mapping call arguments to OperandId.
   using ArgumentKindArray =
-      mozilla::EnumeratedArray<ArgumentKind, OperandId, ArgumentKind::NumKinds>;
+      mozilla::EnumeratedArray<ArgumentKind, OperandId,
+                               size_t(ArgumentKind::NumKinds)>;
   ArgumentKindArray argumentOperandIds_;
 
   void setArgumentId(ArgumentKind kind, OperandId id) {

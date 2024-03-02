@@ -51,7 +51,7 @@ using namespace gfx;
 // should be launched serially. Protects sLaunchPromise
 StaticMutex sLaunchMutex;
 static EnumeratedArray<RemoteDecodeIn, StaticRefPtr<GenericNonExclusivePromise>,
-                       RemoteDecodeIn::SENTINEL>
+                       size_t(RemoteDecodeIn::SENTINEL)>
     sLaunchPromises MOZ_GUARDED_BY(sLaunchMutex);
 
 // Only modified on the main-thread, read on any thread. While it could be read
@@ -62,7 +62,7 @@ static StaticDataMutex<StaticRefPtr<nsIThread>>
 
 // Only accessed from sRemoteDecoderManagerChildThread
 static EnumeratedArray<RemoteDecodeIn, StaticRefPtr<RemoteDecoderManagerChild>,
-                       RemoteDecodeIn::SENTINEL>
+                       size_t(RemoteDecodeIn::SENTINEL)>
     sRemoteDecoderManagerChildForProcesses;
 
 static StaticAutoPtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
@@ -71,7 +71,7 @@ static StaticAutoPtr<nsTArray<RefPtr<Runnable>>> sRecreateTasks;
 // processes.
 StaticMutex sProcessSupportedMutex;
 static EnumeratedArray<RemoteDecodeIn, Maybe<media::MediaCodecsSupported>,
-                       RemoteDecodeIn::SENTINEL>
+                       size_t(RemoteDecodeIn::SENTINEL)>
     sProcessSupported MOZ_GUARDED_BY(sProcessSupportedMutex);
 
 class ShutdownObserver final : public nsIObserver {

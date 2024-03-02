@@ -102,7 +102,7 @@ class BuiltinModuleFunc {
 class BuiltinModuleFuncs {
   using Storage =
       mozilla::EnumeratedArray<BuiltinModuleFuncId, BuiltinModuleFunc,
-                               BuiltinModuleFuncId::Limit>;
+                               size_t(BuiltinModuleFuncId::Limit)>;
   Storage funcs_;
 
   static BuiltinModuleFuncs* singleton_;
