@@ -74,6 +74,11 @@ class ForkServiceChild {
     return child == nullptr || child->mFailed ? nullptr : child;
   }
 
+  /**
+   * Returns whether the fork server was ever active.  Thread-safe.
+   */
+  static bool WasUsed() { return sForkServiceUsed; }
+
  private:
   // Called when a message is received.
   void OnMessageReceived(UniquePtr<IPC::Message> message);
@@ -81,6 +86,7 @@ class ForkServiceChild {
 
   UniquePtr<MiniTransceiver> mTcver;
   static UniquePtr<ForkServiceChild> sForkServiceChild;
+  static Atomic<bool> sForkServiceUsed;
   pid_t mRecvPid;
   bool mFailed;  // The forkserver has crashed or disconnected.
   GeckoChildProcessHost* mProcess;
