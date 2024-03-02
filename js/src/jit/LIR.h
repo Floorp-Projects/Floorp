@@ -1833,6 +1833,12 @@ class LSafepoint : public TempObject {
   }
 };
 
+struct WasmRefIsSubtypeDefs {
+  LAllocation superSTV;
+  LDefinition scratch1;
+  LDefinition scratch2;
+};
+
 class LInstruction::InputIterator {
  private:
   LInstruction& ins_;

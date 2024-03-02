@@ -6196,26 +6196,60 @@ void MacroAssembler::wasmBoundsCheckRange32(
   bind(&ok);
 }
 
-bool MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
+BranchWasmRefIsSubtypeRegisters MacroAssembler::regsForBranchWasmRefIsSubtype(
     wasm::RefType type) {
   MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isAnyHierarchy());
-  return !type.isNone() && !type.isAny();
+  switch (type.hierarchy()) {
+    case wasm::RefTypeHierarchy::Any:
+      return BranchWasmRefIsSubtypeRegisters{
+          .needSuperSTV = type.isTypeRef(),
+          .needScratch1 = !type.isNone() && !type.isAny(),
+          .needScratch2 =
+              type.isTypeRef() && type.typeDef()->subTypingDepth() >=
+                                      wasm::MinSuperTypeVectorLength,
+      };
+    case wasm::RefTypeHierarchy::Func:
+      return BranchWasmRefIsSubtypeRegisters{
+          .needSuperSTV = type.isTypeRef(),
+          .needScratch1 = type.isTypeRef(),
+          .needScratch2 =
+              type.isTypeRef() && type.typeDef()->subTypingDepth() >=
+                                      wasm::MinSuperTypeVectorLength,
+      };
+    case wasm::RefTypeHierarchy::Extern:
+    case wasm::RefTypeHierarchy::Exn:
+      return BranchWasmRefIsSubtypeRegisters{
+          .needSuperSTV = false,
+          .needScratch1 = false,
+          .needScratch2 = false,
+      };
+    default:
+      MOZ_CRASH("unknown type hierarchy for cast");
+  }
 }
 
-bool MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(
-    wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isAnyHierarchy());
-  return type.isTypeRef() &&
-         type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
-}
-
-bool MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(
-    wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isAnyHierarchy());
-  return type.isTypeRef();
+void MacroAssembler::branchWasmRefIsSubtype(
+    Register ref, wasm::RefType sourceType, wasm::RefType destType,
+    Label* label, bool onSuccess, Register superSTV, Register scratch1,
+    Register scratch2) {
+  switch (destType.hierarchy()) {
+    case wasm::RefTypeHierarchy::Any: {
+      branchWasmRefIsSubtypeAny(ref, sourceType, destType, label, onSuccess,
+                                superSTV, scratch1, scratch2);
+    } break;
+    case wasm::RefTypeHierarchy::Func: {
+      branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label, onSuccess,
+                                 superSTV, scratch1, scratch2);
+    } break;
+    case wasm::RefTypeHierarchy::Extern: {
+      branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label, onSuccess);
+    } break;
+    case wasm::RefTypeHierarchy::Exn: {
+      branchWasmRefIsSubtypeExn(ref, sourceType, destType, label, onSuccess);
+    } break;
+    default:
+      MOZ_CRASH("unknown type hierarchy for wasm cast");
+  }
 }
 
 void MacroAssembler::branchWasmRefIsSubtypeAny(
@@ -6226,12 +6260,12 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
   MOZ_ASSERT(destType.isValid());
   MOZ_ASSERT(sourceType.isAnyHierarchy());
   MOZ_ASSERT(destType.isAnyHierarchy());
-  MOZ_ASSERT_IF(needScratch1ForBranchWasmRefIsSubtypeAny(destType),
-                scratch1 != Register::Invalid());
-  MOZ_ASSERT_IF(needScratch2ForBranchWasmRefIsSubtypeAny(destType),
-                scratch2 != Register::Invalid());
-  MOZ_ASSERT_IF(needSuperSTVForBranchWasmRefIsSubtypeAny(destType),
-                superSTV != Register::Invalid());
+
+  mozilla::DebugOnly<BranchWasmRefIsSubtypeRegisters> needs =
+      regsForBranchWasmRefIsSubtype(destType);
+  MOZ_ASSERT_IF(needs.value.needSuperSTV, superSTV != Register::Invalid());
+  MOZ_ASSERT_IF(needs.value.needScratch1, scratch1 != Register::Invalid());
+  MOZ_ASSERT_IF(needs.value.needScratch2, scratch2 != Register::Invalid());
 
   Label fallthrough;
   Label* successLabel = onSuccess ? label : &fallthrough;
@@ -6320,21 +6354,6 @@ void MacroAssembler::branchWasmRefIsSubtypeAny(
   bind(&fallthrough);
 }
 
-bool MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-    wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isFuncHierarchy());
-  return type.isTypeRef();
-}
-
-bool MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(
-    wasm::RefType type) {
-  MOZ_ASSERT(type.isValid());
-  MOZ_ASSERT(type.isFuncHierarchy());
-  return type.isTypeRef() &&
-         type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
-}
-
 void MacroAssembler::branchWasmRefIsSubtypeFunc(
     Register ref, wasm::RefType sourceType, wasm::RefType destType,
     Label* label, bool onSuccess, Register superSTV, Register scratch1,
@@ -6343,11 +6362,12 @@ void MacroAssembler::branchWasmRefIsSubtypeFunc(
   MOZ_ASSERT(destType.isValid());
   MOZ_ASSERT(sourceType.isFuncHierarchy());
   MOZ_ASSERT(destType.isFuncHierarchy());
-  MOZ_ASSERT_IF(
-      needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(destType),
-      superSTV != Register::Invalid() && scratch1 != Register::Invalid());
-  MOZ_ASSERT_IF(needScratch2ForBranchWasmRefIsSubtypeFunc(destType),
-                scratch2 != Register::Invalid());
+
+  mozilla::DebugOnly<BranchWasmRefIsSubtypeRegisters> needs =
+      regsForBranchWasmRefIsSubtype(destType);
+  MOZ_ASSERT_IF(needs.value.needSuperSTV, superSTV != Register::Invalid());
+  MOZ_ASSERT_IF(needs.value.needScratch1, scratch1 != Register::Invalid());
+  MOZ_ASSERT_IF(needs.value.needScratch2, scratch2 != Register::Invalid());
 
   Label fallthrough;
   Label* successLabel = onSuccess ? label : &fallthrough;

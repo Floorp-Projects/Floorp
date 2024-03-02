@@ -3226,6 +3226,13 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
                                               RefType sourceType,
                                               RefType destType,
                                               bool onSuccess) {
+  // Temporarily take the result registers so that branchIfRefSubtype
+  // doesn't use them.
+  needIntegerResultRegisters(b->resultType);
+  BranchIfRefSubtypeRegisters regs =
+      allocRegistersForBranchIfRefSubtype(destType);
+  freeIntegerResultRegisters(b->resultType);
+
   if (b->hasBlockResults()) {
     StackHeight resultsBase(0);
     if (!topBranchParams(b->resultType, &resultsBase)) {
@@ -3233,13 +3240,12 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
     if (b->stackHeight != resultsBase) {
       Label notTaken;
-      // Temporarily take the result registers so that branchIfRefSubtype
-      // doesn't use them.
-      needIntegerResultRegisters(b->resultType);
-      branchIfRefSubtype(
+
+      masm.branchWasmRefIsSubtype(
           object, sourceType, destType, &notTaken,
-          /*onSuccess=*/b->invertBranch ? onSuccess : !onSuccess);
-      freeIntegerResultRegisters(b->resultType);
+          /*onSuccess=*/b->invertBranch ? onSuccess : !onSuccess, regs.superSTV,
+          regs.scratch1, regs.scratch2);
+      freeRegistersForBranchIfRefSubtype(regs);
 
       // Shuffle stack args.
       shuffleStackResultsBeforeBranch(resultsBase, b->stackHeight,
@@ -3250,8 +3256,11 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
   }
 
-  branchIfRefSubtype(object, sourceType, destType, b->label,
-                     /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
+  masm.branchWasmRefIsSubtype(
+      object, sourceType, destType, b->label,
+      /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess, regs.superSTV,
+      regs.scratch1, regs.scratch2);
+  freeRegistersForBranchIfRefSubtype(regs);
   return true;
 }
 #endif
@@ -8341,103 +8350,30 @@ bool BaseCompiler::emitI31Get(FieldWideningOp wideningOp) {
   return true;
 }
 
-void BaseCompiler::emitRefTestCommon(RefType sourceType, RefType destType) {
-  Label success;
-  Label join;
-  RegRef ref = popRef();
-  RegI32 result = needI32();
-
-  branchIfRefSubtype(ref, sourceType, destType, &success,
-                     /*onSuccess=*/true);
-  masm.xor32(result, result);
-  masm.jump(&join);
-  masm.bind(&success);
-  masm.move32(Imm32(1), result);
-  masm.bind(&join);
-
-  pushI32(result);
-  freeRef(ref);
+BranchIfRefSubtypeRegisters BaseCompiler::allocRegistersForBranchIfRefSubtype(
+    RefType destType) {
+  BranchWasmRefIsSubtypeRegisters needs =
+      MacroAssembler::regsForBranchWasmRefIsSubtype(destType);
+  return BranchIfRefSubtypeRegisters{
+      .superSTV = needs.needSuperSTV
+                      ? loadSuperTypeVector(
+                            moduleEnv_.types->indexOf(*destType.typeDef()))
+                      : RegPtr::Invalid(),
+      .scratch1 = needs.needScratch1 ? needI32() : RegI32::Invalid(),
+      .scratch2 = needs.needScratch2 ? needI32() : RegI32::Invalid(),
+  };
 }
 
-void BaseCompiler::emitRefCastCommon(RefType sourceType, RefType destType) {
-  RegRef ref = popRef();
-
-  Label success;
-  branchIfRefSubtype(ref, sourceType, destType, &success, /*onSuccess=*/true);
-  masm.wasmTrap(Trap::BadCast, bytecodeOffset());
-  masm.bind(&success);
-  pushRef(ref);
-}
-
-void BaseCompiler::branchIfRefSubtype(RegRef ref, RefType sourceType,
-                                      RefType destType, Label* label,
-                                      bool onSuccess) {
-  switch (destType.hierarchy()) {
-    case wasm::RefTypeHierarchy::Any: {
-      RegPtr superSTV;
-      if (MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(destType)) {
-        uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-        superSTV = loadSuperTypeVector(typeIndex);
-      }
-      RegI32 scratch1 =
-          MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(destType)
-              ? needI32()
-              : RegI32::Invalid();
-      RegI32 scratch2 =
-          MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(destType)
-              ? needI32()
-              : RegI32::Invalid();
-
-      masm.branchWasmRefIsSubtypeAny(ref, sourceType, destType, label,
-                                     onSuccess, superSTV, scratch1, scratch2);
-
-      if (scratch2.isValid()) {
-        freeI32(scratch2);
-      }
-      if (scratch1.isValid()) {
-        freeI32(scratch1);
-      }
-      if (superSTV.isValid()) {
-        freePtr(superSTV);
-      }
-    } break;
-    case wasm::RefTypeHierarchy::Func: {
-      RegPtr superSTV;
-      RegI32 scratch1;
-      if (MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-              destType)) {
-        uint32_t typeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-        superSTV = loadSuperTypeVector(typeIndex);
-        scratch1 = needI32();
-      }
-      RegI32 scratch2 =
-          MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(destType)
-              ? needI32()
-              : RegI32::Invalid();
-
-      masm.branchWasmRefIsSubtypeFunc(ref, sourceType, destType, label,
-                                      onSuccess, superSTV, scratch1, scratch2);
-
-      if (scratch2.isValid()) {
-        freeI32(scratch2);
-      }
-      if (scratch1.isValid()) {
-        freeI32(scratch1);
-      }
-      if (superSTV.isValid()) {
-        freePtr(superSTV);
-      }
-    } break;
-    case wasm::RefTypeHierarchy::Extern: {
-      masm.branchWasmRefIsSubtypeExtern(ref, sourceType, destType, label,
-                                        onSuccess);
-    } break;
-    case wasm::RefTypeHierarchy::Exn: {
-      masm.branchWasmRefIsSubtypeExn(ref, sourceType, destType, label,
-                                     onSuccess);
-    } break;
-    default:
-      MOZ_CRASH("unknown type hierarchy in cast");
+void BaseCompiler::freeRegistersForBranchIfRefSubtype(
+    const BranchIfRefSubtypeRegisters& regs) {
+  if (regs.superSTV.isValid()) {
+    freePtr(regs.superSTV);
+  }
+  if (regs.scratch1.isValid()) {
+    freeI32(regs.scratch1);
+  }
+  if (regs.scratch2.isValid()) {
+    freeI32(regs.scratch2);
   }
 }
 
@@ -8453,7 +8389,26 @@ bool BaseCompiler::emitRefTest(bool nullable) {
     return true;
   }
 
-  emitRefTestCommon(sourceType, destType);
+  Label success;
+  Label join;
+  RegRef ref = popRef();
+  RegI32 result = needI32();
+
+  BranchIfRefSubtypeRegisters regs =
+      allocRegistersForBranchIfRefSubtype(destType);
+  masm.branchWasmRefIsSubtype(ref, sourceType, destType, &success,
+                              /*onSuccess=*/true, regs.superSTV, regs.scratch1,
+                              regs.scratch2);
+  freeRegistersForBranchIfRefSubtype(regs);
+
+  masm.xor32(result, result);
+  masm.jump(&join);
+  masm.bind(&success);
+  masm.move32(Imm32(1), result);
+  masm.bind(&join);
+
+  pushI32(result);
+  freeRef(ref);
 
   return true;
 }
@@ -8470,7 +8425,19 @@ bool BaseCompiler::emitRefCast(bool nullable) {
     return true;
   }
 
-  emitRefCastCommon(sourceType, destType);
+  RegRef ref = popRef();
+
+  Label success;
+  BranchIfRefSubtypeRegisters regs =
+      allocRegistersForBranchIfRefSubtype(destType);
+  masm.branchWasmRefIsSubtype(ref, sourceType, destType, &success,
+                              /*onSuccess=*/true, regs.superSTV, regs.scratch1,
+                              regs.scratch2);
+  freeRegistersForBranchIfRefSubtype(regs);
+
+  masm.wasmTrap(Trap::BadCast, bytecodeOffset());
+  masm.bind(&success);
+  pushRef(ref);
 
   return true;
 }

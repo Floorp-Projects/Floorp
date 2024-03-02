@@ -1071,30 +1071,13 @@ void LIRGenerator::visitTest(MTest* test) {
   if (opd->isWasmRefIsSubtypeOfAbstract() && opd->isEmittedAtUses()) {
     MWasmRefIsSubtypeOfAbstract* isSubTypeOf =
         opd->toWasmRefIsSubtypeOfAbstract();
-    LAllocation ref = useRegister(isSubTypeOf->ref());
-    LDefinition scratch1 = LDefinition();
-    switch (isSubTypeOf->destType().hierarchy()) {
-      case wasm::RefTypeHierarchy::Any: {
-        // As in visitWasmRefIsSubtypeOfAbstract, we know we do not need
-        // scratch2 and superSTV because we know this is not a
-        // concrete type.
-        scratch1 = MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
-                       isSubTypeOf->destType())
-                       ? temp()
-                       : LDefinition();
-      } break;
-      case wasm::RefTypeHierarchy::Func:
-      case wasm::RefTypeHierarchy::Extern:
-      case wasm::RefTypeHierarchy::Exn:
-        // scratch1 is not necessary for abstract casts in other hierarchies
-        break;
-      default:
-        MOZ_CRASH("unknown type hierarchy when folding abstract casts");
-    }
 
+    LAllocation ref = useRegister(isSubTypeOf->ref());
+    WasmRefIsSubtypeDefs regs =
+        useWasmRefIsSubtype(isSubTypeOf->destType(), /*superSTV=*/nullptr);
     add(new (alloc()) LWasmRefIsSubtypeOfAbstractAndBranch(
             ifTrue, ifFalse, isSubTypeOf->sourceType(), isSubTypeOf->destType(),
-            ref, scratch1),
+            ref, regs.scratch1),
         test);
     return;
   }
@@ -1102,39 +1085,13 @@ void LIRGenerator::visitTest(MTest* test) {
   if (opd->isWasmRefIsSubtypeOfConcrete() && opd->isEmittedAtUses()) {
     MWasmRefIsSubtypeOfConcrete* isSubTypeOf =
         opd->toWasmRefIsSubtypeOfConcrete();
-    LAllocation ref = useRegister(isSubTypeOf->ref());
-    LAllocation superSTV = useRegister(isSubTypeOf->superSTV());
-    LDefinition scratch1 = LDefinition();
-    LDefinition scratch2 = LDefinition();
-    switch (isSubTypeOf->destType().hierarchy()) {
-      case wasm::RefTypeHierarchy::Any: {
-        // As in visitWasmRefIsSubtypeOfConcrete, we know we need scratch1
-        // because we know this is a concrete type.
-        scratch1 = temp();
-        scratch2 = MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(
-                       isSubTypeOf->destType())
-                       ? temp()
-                       : LDefinition();
-      } break;
-      case wasm::RefTypeHierarchy::Func: {
-        // As in visitWasmRefIsSubtypeOfConcrete again...
-        scratch1 = temp();
-        scratch2 = MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(
-                       isSubTypeOf->destType())
-                       ? temp()
-                       : LDefinition();
-      } break;
-      case wasm::RefTypeHierarchy::Extern:
-      case wasm::RefTypeHierarchy::Exn:
-        MOZ_CRASH(
-            "concrete casts are not possible in the extern or exn hierarchies");
-      default:
-        MOZ_CRASH("unknown type hierarchy when folding abstract casts");
-    }
 
+    LAllocation ref = useRegister(isSubTypeOf->ref());
+    WasmRefIsSubtypeDefs regs =
+        useWasmRefIsSubtype(isSubTypeOf->destType(), isSubTypeOf->superSTV());
     add(new (alloc()) LWasmRefIsSubtypeOfConcreteAndBranch(
             ifTrue, ifFalse, isSubTypeOf->sourceType(), isSubTypeOf->destType(),
-            ref, superSTV, scratch1, scratch2),
+            ref, regs.superSTV, regs.scratch1, regs.scratch2),
         test);
     return;
   }
@@ -7578,6 +7535,17 @@ void LIRGenerator::visitWasmStoreElementRefKA(MWasmStoreElementRefKA* ins) {
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
+WasmRefIsSubtypeDefs LIRGenerator::useWasmRefIsSubtype(wasm::RefType destType,
+                                                       MDefinition* superSTV) {
+  BranchWasmRefIsSubtypeRegisters needs =
+      MacroAssembler::regsForBranchWasmRefIsSubtype(destType);
+  return WasmRefIsSubtypeDefs{
+      .superSTV = needs.needSuperSTV ? useRegister(superSTV) : LAllocation(),
+      .scratch1 = needs.needScratch1 ? temp() : LDefinition(),
+      .scratch2 = needs.needScratch2 ? temp() : LDefinition(),
+  };
+}
+
 void LIRGenerator::visitWasmRefIsSubtypeOfAbstract(
     MWasmRefIsSubtypeOfAbstract* ins) {
   if (CanEmitAtUseForSingleTest(ins)) {
@@ -7586,41 +7554,9 @@ void LIRGenerator::visitWasmRefIsSubtypeOfAbstract(
   }
 
   LAllocation ref = useRegister(ins->ref());
-  LDefinition scratch1 = LDefinition();
-  switch (ins->destType().hierarchy()) {
-    case wasm::RefTypeHierarchy::Any: {
-      // See comment on MacroAssembler::branchWasmRefIsSubtypeAny.
-      // We know we do not need scratch2 and superSTV because we know
-      // this is not a concrete type.
-      MOZ_ASSERT(!MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(
-          ins->destType()));
-      MOZ_ASSERT(!MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(
-          ins->destType()));
-
-      scratch1 = MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
-                     ins->destType())
-                     ? temp()
-                     : LDefinition();
-    } break;
-    case wasm::RefTypeHierarchy::Func: {
-      // See comment on MacroAssembler::branchWasmRefIsSubtypeFunc.
-      // We know we do not need any supertype vectors or scratch registers
-      // because this is not a concrete cast.
-      MOZ_ASSERT(
-          !MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-              ins->destType()));
-      MOZ_ASSERT(!MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(
-          ins->destType()));
-    } break;
-    case wasm::RefTypeHierarchy::Extern:
-    case wasm::RefTypeHierarchy::Exn: {
-      // no scratch registers needed for casts in the extern or exn hierarchies
-    } break;
-    default:
-      MOZ_CRASH("unknown type hierarchy for abstract cast");
-  }
-
-  define(new (alloc()) LWasmRefIsSubtypeOfAbstract(ref, scratch1), ins);
+  WasmRefIsSubtypeDefs regs =
+      useWasmRefIsSubtype(ins->destType(), /*superSTV=*/nullptr);
+  define(new (alloc()) LWasmRefIsSubtypeOfAbstract(ref, regs.scratch1), ins);
 }
 
 void LIRGenerator::visitWasmRefIsSubtypeOfConcrete(
@@ -7630,50 +7566,11 @@ void LIRGenerator::visitWasmRefIsSubtypeOfConcrete(
     return;
   }
 
-  // This gets a bit wild because it needs to handle concrete casts in all
-  // hierarchies. Supertype vectors are always required (that's what concrete
-  // means) but the scratch registers can vary.
-
   LAllocation ref = useRegister(ins->ref());
-  LAllocation superSTV = useRegister(ins->superSTV());
-  LDefinition scratch1 = LDefinition();
-  LDefinition scratch2 = LDefinition();
-  switch (ins->destType().hierarchy()) {
-    case wasm::RefTypeHierarchy::Any: {
-      // See comment on MacroAssembler::branchWasmRefIsSubtypeAny.
-      // We know we need scratch1 because we know this is a concrete type.
-      MOZ_ASSERT(MacroAssembler::needSuperSTVForBranchWasmRefIsSubtypeAny(
-          ins->destType()));
-      MOZ_ASSERT(MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
-          ins->destType()));
-      scratch1 = temp();
-      scratch2 = MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeAny(
-                     ins->destType())
-                     ? temp()
-                     : LDefinition();
-    } break;
-    case wasm::RefTypeHierarchy::Func: {
-      // See comment on MacroAssembler::branchWasmRefIsSubtypeFunc.
-      // We know we need scratch1 because we know this is a concrete type.
-      MOZ_ASSERT(
-          MacroAssembler::needSuperSTVAndScratch1ForBranchWasmRefIsSubtypeFunc(
-              ins->destType()));
-      scratch1 = temp();
-      scratch2 = MacroAssembler::needScratch2ForBranchWasmRefIsSubtypeFunc(
-                     ins->destType())
-                     ? temp()
-                     : LDefinition();
-    } break;
-    case wasm::RefTypeHierarchy::Extern:
-    case wasm::RefTypeHierarchy::Exn:
-      MOZ_CRASH(
-          "concrete casts are impossible in the extern and exn hierarchies");
-    default:
-      MOZ_CRASH("unknown type hierarchy for concrete cast");
-  }
-
-  define(new (alloc())
-             LWasmRefIsSubtypeOfConcrete(ref, superSTV, scratch1, scratch2),
+  WasmRefIsSubtypeDefs regs =
+      useWasmRefIsSubtype(ins->destType(), ins->superSTV());
+  define(new (alloc()) LWasmRefIsSubtypeOfConcrete(
+             ref, regs.superSTV, regs.scratch1, regs.scratch2),
          ins);
 }
 
