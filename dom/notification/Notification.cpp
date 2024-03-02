@@ -714,7 +714,12 @@ Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
   }
 }
 
-nsresult Notification::Init() {
+nsresult Notification::MaybeObserveWindowFrozenOrDestroyed() {
+  // NOTE: Non-persistent notifications can also be opened from workers, but we
+  // don't care and nobody else cares. And it's not clear whether we even should
+  // do this for window at all, see
+  // https://github.com/whatwg/notifications/issues/204.
+  // TODO: Somehow extend GlobalTeardownObserver to deal with FROZEN_TOPIC?
   if (!mWorkerPrivate) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
@@ -774,6 +779,10 @@ already_AddRefed<Notification> Notification::Constructor(
   RefPtr<Notification> notification =
       CreateAndShow(aGlobal.Context(), global, aTitle, aOptions, u""_ns, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  if (NS_WARN_IF(
+          NS_FAILED(notification->MaybeObserveWindowFrozenOrDestroyed()))) {
     return nullptr;
   }
 
@@ -915,8 +924,6 @@ already_AddRefed<Notification> Notification::CreateInternal(
       aGlobal, id, aTitle, aOptions.mBody, aOptions.mDir, aOptions.mLang,
       aOptions.mTag, aOptions.mIcon, aOptions.mRequireInteraction, silent,
       std::move(vibrate), aOptions.mMozbehavior);
-  rv = notification->Init();
-  NS_ENSURE_SUCCESS(rv, nullptr);
   return notification.forget();
 }
 
