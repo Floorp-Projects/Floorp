@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-02-12T11:38:43.189353'
+updated_at: '2024-02-21T11:15:29.585462'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2229,10 +2229,10 @@ modules:
         - Core::Networking
         - 'Core::Networking: Cache'
         - 'Core::Networking: Cookies'
-        - 'Core::Networking: FTP'
         - 'Core::Networking: File'
         - 'Core::Networking: HTTP'
         - 'Core::Networking: JAR'
+        - 'Core::Networking: Proxy'
         - 'Core::Networking: Websockets'
         - 'Core::DOM: Networking'
     owners:
@@ -4223,5 +4223,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 308df3f31d4c18ad2b33ff42089ec56cca1566a1
-  export: de95c24371652728c9a29fb28c859cc845d9e04a
+  config: 54f91ca2462a64360545ffc2403badb529932325
+  export: 0c8a2059514a6c6499bd16522f51bb3831cfb3aa
