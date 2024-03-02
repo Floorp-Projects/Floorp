@@ -57,7 +57,7 @@ var window2 = window.open("http://test1.example.org:80/tests/docshell/test/navig
 var window3 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/parent.html", "window3", "width=10,height=10");
 
 function waitForLoad(w) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     // If we already got the "ready" message, resolve immediately.
     if (windows.has(w)) {
       resolve();

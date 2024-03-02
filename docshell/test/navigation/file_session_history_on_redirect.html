@@ -6,7 +6,7 @@
       opener.is(event.persisted, false, "Should have disabled bfcache for this test.");
     }
 
-    window.onpageshow = function(event) {
+    window.onpageshow = function() {
       opener.pageshow();
     }
   </script>

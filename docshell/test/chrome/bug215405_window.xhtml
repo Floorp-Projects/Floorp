@@ -58,7 +58,7 @@
       });
     }
 
-    function onLoad(e) {
+    function onLoad() {
       gBrowser = document.getElementById("content");
       gBrowser.addEventListener("pageshow", eventListener, true);
 
@@ -66,7 +66,7 @@
       nextTest();
     }
 
-    function eventListener(event) {
+    function eventListener() {
       setTimeout(nextTest, 0);
     }
 

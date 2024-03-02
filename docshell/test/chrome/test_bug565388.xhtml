@@ -35,7 +35,7 @@ function test() {
       this.callback();
     },
 
-    onStateChange (webProgress, req, flags, status) {
+    onStateChange (webProgress, req, flags) {
       if (req.name.startsWith("data:application/vnd.mozilla.xul")) {
         if (flags & Ci.nsIWebProgressListener.STATE_STOP)
           this.finish();

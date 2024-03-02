@@ -10,7 +10,7 @@ function test() {
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(image);
 }
 
-function image(event) {
+function image() {
   ok(
     !gBrowser.selectedTab.mayEnableCharacterEncodingMenu,
     "Docshell should say the menu should be disabled for images."
@@ -24,7 +24,7 @@ function image(event) {
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(pdf);
 }
 
-function pdf(event) {
+function pdf() {
   ok(
     !gBrowser.selectedTab.mayEnableCharacterEncodingMenu,
     "Docshell should say the menu should be disabled for PDF.js."

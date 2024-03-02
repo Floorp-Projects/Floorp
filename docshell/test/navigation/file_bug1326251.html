@@ -171,9 +171,9 @@
     ];
 
     function awaitOnload(frame, occurances = 1) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function(resolve) {
         let count = 0;
-        frame.addEventListener("load", function listener(e) {
+        frame.addEventListener("load", function listener() {
           if (++count == occurances) {
             frame.removeEventListener("load", listener);
             setTimeout(resolve, 0);

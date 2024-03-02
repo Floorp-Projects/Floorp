@@ -164,7 +164,7 @@ function executeTest() {
   let bc = new BroadcastChannel("bfcache_blocking");
 
   function promiseMessage(type) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       bc.addEventListener("message", (e) => {
         if (e.data.type == type) {
           resolve(e.data);
@@ -177,11 +177,11 @@ function executeTest() {
     return promiseMessage("pageshow").then(data => data.persisted == shouldBePersisted);
   }
 
-  function promisePageShowFromBFCache(e) {
+  function promisePageShowFromBFCache() {
     return promisePageShow(true);
   }
 
-  function promisePageShowNotFromBFCache(e) {
+  function promisePageShowNotFromBFCache() {
     return promisePageShow(false);
   }
 

@@ -161,7 +161,7 @@ add_task(async function test_ip_address() {
   let didResolve = false;
   let topic = "uri-fixup-check-dns";
   let observer = {
-    observe(aSubject, aTopicInner, aData) {
+    observe(aSubject, aTopicInner) {
       if (aTopicInner == topic) {
         didResolve = true;
       }

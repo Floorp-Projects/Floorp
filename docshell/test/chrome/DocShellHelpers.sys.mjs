@@ -31,7 +31,7 @@ export class DocShellHelpersChild extends JSWindowActorChild {
   constructor() {
     super();
   }
-  receiveMessage({ name, data }) {
+  receiveMessage({ name }) {
     if (name == "docshell_helpers:preventBFCache") {
       // Add an RTCPeerConnection to prevent the page from being bfcached.
       let win = this.contentWindow;

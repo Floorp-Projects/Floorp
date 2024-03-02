@@ -59,7 +59,7 @@ add_task(async function test_data_csp_inheritance_regular_click() {
 });
 
 add_task(async function test_data_csp_inheritance_ctrl_click() {
-  await BrowserTestUtils.withNewTab(HTML_URI, async function (browser) {
+  await BrowserTestUtils.withNewTab(HTML_URI, async function () {
     let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI, true);
     // set the data href + simulate ctrl+click
     await setDataHrefOnLink(gBrowser.selectedBrowser, DATA_URI);
@@ -77,7 +77,7 @@ add_task(async function test_data_csp_inheritance_ctrl_click() {
 
 add_task(
   async function test_data_csp_inheritance_right_click_open_link_in_new_tab() {
-    await BrowserTestUtils.withNewTab(HTML_URI, async function (browser) {
+    await BrowserTestUtils.withNewTab(HTML_URI, async function () {
       let loadPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
         DATA_URI,

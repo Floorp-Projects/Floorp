@@ -1,7 +1,7 @@
 function run_test() {
   var notifications = 0;
   var obs = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       Assert.equal(aTopic, "last-pb-context-exited");
       notifications++;
     },

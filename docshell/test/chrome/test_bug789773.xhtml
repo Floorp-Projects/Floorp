@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
   var calledListenerForBrowserChromeURL = false;
   var testProgressListener = {
     START_DOC: Ci.nsIWebProgressListener.STATE_START | Ci.nsIWebProgressListener.STATE_IS_DOCUMENT,
-    onStateChange(wp, req, stateFlags, status) {
+    onStateChange(wp, req, stateFlags) {
       let browserChromeFileName = AppConstants.BROWSER_CHROME_URL.split("/").reverse()[0];
       if (req.name.includes(browserChromeFileName)) {
         wp.DOMWindow; // Force the lazy creation of a DOM window.

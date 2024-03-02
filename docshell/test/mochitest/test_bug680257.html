@@ -20,7 +20,7 @@ var popup = window.open("file_bug680257.html");
 var gTestContinuation = null;
 function continueAsync() {
   popup.addEventListener("hashchange",
-    function(e) { gTestContinuation.next(); }, { once: true });
+    function() { gTestContinuation.next(); }, { once: true });
 }
 
 // The popup will call into popupLoaded() once it loads.

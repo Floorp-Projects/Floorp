@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1342989
       this.callback(success);
     },
 
-    onStateChange (webProgress, req, flags, status) {
+    onStateChange (webProgress, req, flags) {
       if (!(flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) &&
           !(flags & Ci.nsIWebProgressListener.STATE_IS_REDIRECTED_DOCUMENT))
         return;

@@ -209,7 +209,7 @@ function waitForNextDocumentStart(webProgress) {
         "nsIWebProgressListener",
         "nsISupportsWeakReference",
       ]),
-      onStateChange(progress, request, flags, status) {
+      onStateChange(progress, request, flags) {
         if (
           flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT &&
           flags & Ci.nsIWebProgressListener.STATE_START

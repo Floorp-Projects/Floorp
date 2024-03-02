@@ -83,7 +83,7 @@ var RequestWatcher = {
     this.callback();
   },
 
-  onStateChange(webProgress, req, flags, status) {
+  onStateChange(webProgress, req, flags) {
     // We are checking requests - if there isn't one, ignore it.
     if (!req) {
       return;

@@ -14,7 +14,7 @@ add_task(async function () {
       let webprogress = content.docShell.QueryInterface(Ci.nsIWebProgress);
       let locationChangeCount = 0;
       let listener = {
-        onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+        onLocationChange(aWebProgress, aRequest, aLocation) {
           info("onLocationChange: " + aLocation.spec);
           locationChangeCount++;
           this.resolve();
@@ -24,7 +24,7 @@ add_task(async function () {
           "nsISupportsWeakReference",
         ]),
       };
-      let locationPromise = new Promise((resolve, reject) => {
+      let locationPromise = new Promise(resolve => {
         listener.resolve = resolve;
       });
       webprogress.addProgressListener(

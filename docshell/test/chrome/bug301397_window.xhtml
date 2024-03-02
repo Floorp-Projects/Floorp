@@ -18,7 +18,7 @@
     // content.
     //
     async function verifyIframeInnerHtml(string) {
-      var iframeInnerHtml = await SpecialPowers.spawn(document.getElementById("content"), [string], (string) =>
+      var iframeInnerHtml = await SpecialPowers.spawn(document.getElementById("content"), [string], () =>
           content.document.getElementById("iframe").contentDocument.body.innerHTML);
       ok(iframeInnerHtml.includes(string),
          "iframe contains wrong document: " + iframeInnerHtml);

@@ -30,7 +30,7 @@
         // First focus the parent window and then close this one.
         SimpleTest.waitForFocus(function() {
           let ww = SpecialPowers.Services.ww;
-          ww.registerNotification(function windowObs(subject, topic, data) {
+          ww.registerNotification(function windowObs(subject, topic) {
             if (topic == "domwindowclosed") {
               ww.unregisterNotification(windowObs);
 

@@ -6,7 +6,7 @@ var observer = {
     "nsISupportsWeakReference",
   ]),
 
-  privateModeChanged(enabled) {
+  privateModeChanged() {
     gNotifications++;
   },
 };

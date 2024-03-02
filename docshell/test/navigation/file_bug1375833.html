@@ -10,7 +10,7 @@
     function test() {
       let iframe = document.querySelector("#testFrame");
       setTimeout(function() { iframe.src = "file_bug1375833-frame1.html"; }, 0);
-      iframe.onload = function(e) {
+      iframe.onload = function() {
         setTimeout(function() { iframe.src = "file_bug1375833-frame2.html"; }, 0);
         iframe.onload = function() {
           opener.postMessage(iframe.contentWindow.location.href, "*");

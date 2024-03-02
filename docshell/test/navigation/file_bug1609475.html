@@ -3,7 +3,7 @@
     <script>
 
     var loadCount = 0;
-    function loadListener(event) {
+    function loadListener() {
       ++loadCount;
       if (loadCount == 2) {
         // Use a timer to ensure we don't get extra load events.
