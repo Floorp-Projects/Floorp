@@ -15905,6 +15905,14 @@
   mirror: always
 #endif
 
+# Whether native GTK global menubar support is enabled.
+# Disabled because there are some minor bugs and it needs deeper integration
+# with the front-end.
+- name: widget.gtk.global-menu.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether native GTK context menus are enabled.
 # Disabled because at the very least there's missing custom icon support.
 - name: widget.gtk.native-context-menus

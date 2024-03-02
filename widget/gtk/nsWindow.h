@@ -113,6 +113,7 @@ class CurrentX11TimeGetter;
 #endif
 
 namespace widget {
+class DBusMenuBar;
 class Screen;
 }  // namespace widget
 }  // namespace mozilla
@@ -372,6 +373,8 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect GetTitlebarRect();
   void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;
+
+  void SetDBusMenuBar(RefPtr<mozilla::widget::DBusMenuBar> aDbusMenuBar);
 
   // HiDPI scale conversion
   gint GdkCeiledScaleFactor();
@@ -904,6 +907,8 @@ class nsWindow final : public nsBaseWidget {
   // Next/Previous popups in Wayland popup hierarchy.
   RefPtr<nsWindow> mWaylandPopupNext;
   RefPtr<nsWindow> mWaylandPopupPrev;
+
+  RefPtr<mozilla::widget::DBusMenuBar> mDBusMenuBar;
 
   // When popup is resized by Gtk by move-to-rect callback,
   // we store final popup size here. Then we use mMoveToRectPopupSize size

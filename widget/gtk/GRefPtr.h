@@ -13,6 +13,9 @@
 #include <gtk/gtk.h>
 #include "mozilla/RefPtr.h"
 
+typedef struct _DbusmenuMenuitem DbusmenuMenuitem;
+typedef struct _DbusmenuServer DbusmenuServer;
+
 namespace mozilla {
 
 template <typename T>
@@ -25,6 +28,8 @@ struct GObjectRefPtrTraits {
   template <>                 \
   struct RefPtrTraits<type_> : public GObjectRefPtrTraits<type_> {};
 
+GOBJECT_TRAITS(DbusmenuMenuitem)
+GOBJECT_TRAITS(DbusmenuServer)
 GOBJECT_TRAITS(GtkWidget)
 GOBJECT_TRAITS(GFile)
 GOBJECT_TRAITS(GFileMonitor)

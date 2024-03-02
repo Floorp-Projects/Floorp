@@ -55,6 +55,8 @@ class KeymapWrapper {
    */
   static CodeNameIndex ComputeDOMCodeNameIndex(const GdkEventKey* aGdkKeyEvent);
 
+  static guint ConvertGeckoKeyCodeToGDKKeyval(const nsAString& aKeyCode);
+
   /**
    * We need to translate modifiers masks from Gdk to Gecko.
    * MappedModifier is a table of mapped modifiers, we ignore other

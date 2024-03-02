@@ -19,6 +19,7 @@
 #include "mozilla/widget/linux-dmabuf-unstable-v1-client-protocol.h"
 #include "mozilla/widget/viewporter-client-protocol.h"
 #include "mozilla/widget/xdg-activation-v1-client-protocol.h"
+#include "mozilla/widget/xdg-dbus-annotation-v1-client-protocol.h"
 #include "mozilla/widget/xdg-output-unstable-v1-client-protocol.h"
 
 namespace mozilla::widget {
@@ -48,6 +49,9 @@ class nsWaylandDisplay {
   }
   zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
   xdg_activation_v1* GetXdgActivation() { return mXdgActivation; };
+  xdg_dbus_annotation_manager_v1* GetXdgDbusAnnotationManager() {
+    return mXdgDbusAnnotationManager;
+  }
   wp_fractional_scale_manager_v1* GetFractionalScaleManager() {
     return mFractionalScaleManager;
   }
@@ -64,6 +68,8 @@ class nsWaylandDisplay {
   void SetPointerConstraints(zwp_pointer_constraints_v1* aPointerConstraints);
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
   void SetXdgActivation(xdg_activation_v1* aXdgActivation);
+  void SetXdgDbusAnnotationManager(
+      xdg_dbus_annotation_manager_v1* aXdgDbusAnnotationManager);
   void SetFractionalScaleManager(wp_fractional_scale_manager_v1* aManager) {
     mFractionalScaleManager = aManager;
   }
@@ -84,6 +90,7 @@ class nsWaylandDisplay {
   wp_viewporter* mViewporter = nullptr;
   zwp_linux_dmabuf_v1* mDmabuf = nullptr;
   xdg_activation_v1* mXdgActivation = nullptr;
+  xdg_dbus_annotation_manager_v1* mXdgDbusAnnotationManager = nullptr;
   wp_fractional_scale_manager_v1* mFractionalScaleManager = nullptr;
   bool mExplicitSync = false;
   bool mIsPrimarySelectionEnabled = false;

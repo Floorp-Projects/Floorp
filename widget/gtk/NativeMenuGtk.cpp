@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "NativeMenuGtk.h"
+#include "AsyncDBus.h"
+#include "gdk/gdkkeysyms-compat.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/XULCommandEvent.h"
@@ -15,6 +18,9 @@
 #include "nsStubMutationObserver.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "DBusMenu.h"
+#include "nsLayoutUtils.h"
+#include "nsGtkKeyUtils.h"
 
 #include <dlfcn.h>
 #include <gtk/gtk.h>
@@ -35,7 +41,8 @@ static bool IsDisabled(const dom::Element& aElement) {
 }
 static bool NodeIsRelevant(const nsINode& aNode) {
   return aNode.IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuseparator,
-                                  nsGkAtoms::menuitem, nsGkAtoms::menugroup);
+                                  nsGkAtoms::menuitem, nsGkAtoms::menugroup,
+                                  nsGkAtoms::menubar);
 }
 
 // If this is a radio / checkbox menuitem, get the current value.
@@ -155,7 +162,7 @@ void Actions::Clear() {
   mNextActionIndex = 0;
 }
 
-class MenuModel final : public nsStubMutationObserver {
+class MenuModel : public nsStubMutationObserver {
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
@@ -166,6 +173,44 @@ class MenuModel final : public nsStubMutationObserver {
  public:
   explicit MenuModel(dom::Element* aElement) : mElement(aElement) {
     mElement->AddMutationObserver(this);
+  }
+
+  dom::Element* Element() { return mElement; }
+
+  void RecomputeModelIfNeeded() {
+    if (!mDirty) {
+      return;
+    }
+    RecomputeModel();
+    mDirty = false;
+  }
+
+  bool IsShowing() { return mShowing; }
+  void WillShow() {
+    mShowing = true;
+    RecomputeModelIfNeeded();
+  }
+  void DidHide() { mShowing = false; }
+
+ protected:
+  virtual void RecomputeModel() = 0;
+  virtual ~MenuModel() { mElement->RemoveMutationObserver(this); }
+
+  void DirtyModel() {
+    mDirty = true;
+    if (mShowing) {
+      RecomputeModelIfNeeded();
+    }
+  }
+
+  RefPtr<dom::Element> mElement;
+  bool mDirty = true;
+  bool mShowing = false;
+};
+
+class MenuModelGMenu final : public MenuModel {
+ public:
+  explicit MenuModelGMenu(dom::Element* aElement) : MenuModel(aElement) {
     mGMenu = dont_AddRef(g_menu_new());
     mActions.mGroup = dont_AddRef(g_simple_action_group_new());
   }
@@ -175,32 +220,13 @@ class MenuModel final : public nsStubMutationObserver {
     return G_ACTION_GROUP(mActions.mGroup.get());
   }
 
-  dom::Element* Element() { return mElement; }
+ protected:
+  void RecomputeModel() override;
+  static void RecomputeModelFor(GMenu* aMenu, Actions& aActions,
+                                const dom::Element& aElement);
 
-  void RecomputeModelIfNeeded();
-
-  bool IsShowing() { return mPoppedUp; }
-  void WillShow() {
-    mPoppedUp = true;
-    RecomputeModelIfNeeded();
-  }
-  void DidHide() { mPoppedUp = false; }
-
- private:
-  virtual ~MenuModel() { mElement->RemoveMutationObserver(this); }
-
-  void DirtyModel() {
-    mDirty = true;
-    if (mPoppedUp) {
-      RecomputeModelIfNeeded();
-    }
-  }
-
-  RefPtr<dom::Element> mElement;
   RefPtr<GMenu> mGMenu;
   Actions mActions;
-  bool mDirty = true;
-  bool mPoppedUp = false;
 };
 
 NS_IMPL_ISUPPORTS(MenuModel, nsIMutationObserver)
@@ -243,8 +269,8 @@ static const dom::Element* GetMenuPopupChild(const dom::Element& aElement) {
   return nullptr;
 }
 
-static void RecomputeModelFor(GMenu* aMenu, Actions& aActions,
-                              const dom::Element& aElement) {
+void MenuModelGMenu::RecomputeModelFor(GMenu* aMenu, Actions& aActions,
+                                       const dom::Element& aElement) {
   RefPtr<GMenu> sectionMenu;
   auto FlushSectionMenu = [&] {
     if (sectionMenu) {
@@ -305,10 +331,7 @@ static void RecomputeModelFor(GMenu* aMenu, Actions& aActions,
   FlushSectionMenu();
 }
 
-void MenuModel::RecomputeModelIfNeeded() {
-  if (!mDirty) {
-    return;
-  }
+void MenuModelGMenu::RecomputeModel() {
   mActions.Clear();
   g_menu_remove_all(mGMenu.get());
   RecomputeModelFor(mGMenu.get(), mActions, *mElement);
@@ -341,7 +364,7 @@ METHOD_SIGNAL(Unmap);
 #undef METHOD_SIGNAL
 
 NativeMenuGtk::NativeMenuGtk(dom::Element* aElement)
-    : mMenuModel(MakeRefPtr<MenuModel>(aElement)) {
+    : mMenuModel(MakeRefPtr<MenuModelGMenu>(aElement)) {
   // Floating, so no need to dont_AddRef.
   mNativeMenu = gtk_menu_new_from_model(mMenuModel->GetModel());
   gtk_widget_insert_action_group(mNativeMenu.get(), "menu",
@@ -420,5 +443,374 @@ void NativeMenuGtk::OpenSubmenu(dom::Element*) {
 void NativeMenuGtk::CloseSubmenu(dom::Element*) {
   // TODO: For testing mostly.
 }
+
+class MenubarModelDBus final : public MenuModel {
+ public:
+  explicit MenubarModelDBus(dom::Element* aElement) : MenuModel(aElement) {
+    mRoot = dont_AddRef(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_set_root(mRoot.get(), true);
+    mShowing = true;
+  }
+
+  DbusmenuMenuitem* Root() const { return mRoot.get(); }
+
+ protected:
+  void RecomputeModel() override;
+  static void AppendMenuItem(DbusmenuMenuitem* aParent,
+                             const dom::Element* aElement);
+  static void AppendSeparator(DbusmenuMenuitem* aParent);
+  static void AppendSubmenu(DbusmenuMenuitem* aParent,
+                            const dom::Element* aMenu,
+                            const dom::Element* aPopup);
+  static uint RecomputeModelFor(DbusmenuMenuitem* aParent,
+                                const dom::Element& aElement);
+
+  RefPtr<DbusmenuMenuitem> mRoot;
+};
+
+void MenubarModelDBus::RecomputeModel() {
+  while (GList* children = dbusmenu_menuitem_get_children(mRoot.get())) {
+    auto* first = static_cast<DbusmenuMenuitem*>(children->data);
+    if (!first) {
+      break;
+    }
+    dbusmenu_menuitem_child_delete(mRoot.get(), first);
+  }
+  RecomputeModelFor(mRoot, *Element());
+}
+
+static const dom::Element* RelevantElementForKeys(
+    const dom::Element* aElement) {
+  nsAutoString key;
+  aElement->GetAttr(nsGkAtoms::key, key);
+  if (!key.IsEmpty()) {
+    dom::Document* document = aElement->OwnerDoc();
+    dom::Element* element = document->GetElementById(key);
+    if (element) {
+      return element;
+    }
+  }
+  return aElement;
+}
+
+static uint32_t ParseKey(const nsAString& aKey, const nsAString& aKeyCode) {
+  guint key = 0;
+  if (!aKey.IsEmpty()) {
+    key = gdk_unicode_to_keyval(*aKey.BeginReading());
+  }
+
+  if (key == 0 && !aKeyCode.IsEmpty()) {
+    key = KeymapWrapper::ConvertGeckoKeyCodeToGDKKeyval(aKeyCode);
+  }
+
+  return key;
+}
+
+static uint32_t KeyFrom(const dom::Element* aElement) {
+  const auto* element = RelevantElementForKeys(aElement);
+
+  nsAutoString key;
+  nsAutoString keycode;
+  element->GetAttr(nsGkAtoms::key, key);
+  element->GetAttr(nsGkAtoms::keycode, keycode);
+
+  return ParseKey(key, keycode);
+}
+
+// TODO(emilio): Unifiy with nsMenuUtilsX::GeckoModifiersForNodeAttribute (or
+// at least switch to strtok_r).
+static uint32_t ParseModifiers(const nsAString& aModifiers) {
+  if (aModifiers.IsEmpty()) {
+    return 0;
+  }
+
+  uint32_t modifier = 0;
+  char* str = ToNewUTF8String(aModifiers);
+  char* token = strtok(str, ", \t");
+  while (token) {
+    if (nsCRT::strcmp(token, "shift") == 0) {
+      modifier |= GDK_SHIFT_MASK;
+    } else if (nsCRT::strcmp(token, "alt") == 0) {
+      modifier |= GDK_MOD1_MASK;
+    } else if (nsCRT::strcmp(token, "meta") == 0) {
+      modifier |= GDK_META_MASK;
+    } else if (nsCRT::strcmp(token, "control") == 0) {
+      modifier |= GDK_CONTROL_MASK;
+    } else if (nsCRT::strcmp(token, "accel") == 0) {
+      auto accel = WidgetInputEvent::AccelModifier();
+      if (accel == MODIFIER_META) {
+        modifier |= GDK_META_MASK;
+      } else if (accel == MODIFIER_ALT) {
+        modifier |= GDK_MOD1_MASK;
+      } else if (accel == MODIFIER_CONTROL) {
+        modifier |= GDK_CONTROL_MASK;
+      }
+    }
+
+    token = strtok(nullptr, ", \t");
+  }
+
+  free(str);
+
+  return modifier;
+}
+
+static uint32_t ModifiersFrom(const dom::Element* aContent) {
+  const auto* element = RelevantElementForKeys(aContent);
+
+  nsAutoString modifiers;
+  element->GetAttr(nsGkAtoms::modifiers, modifiers);
+
+  return ParseModifiers(modifiers);
+}
+
+static void UpdateAccel(DbusmenuMenuitem* aItem, const nsIContent* aContent) {
+  uint32_t key = KeyFrom(aContent->AsElement());
+  if (key != 0) {
+    dbusmenu_menuitem_property_set_shortcut(
+        aItem, key,
+        static_cast<GdkModifierType>(ModifiersFrom(aContent->AsElement())));
+  }
+}
+
+static void UpdateRadioOrCheck(DbusmenuMenuitem* aItem,
+                               const dom::Element* aContent) {
+  static mozilla::dom::Element::AttrValuesArray attrs[] = {
+      nsGkAtoms::checkbox, nsGkAtoms::radio, nullptr};
+  int32_t type = aContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+                                           attrs, eCaseMatters);
+
+  if (type < 0 || type >= 2) {
+    return;
+  }
+
+  if (type == 0) {
+    dbusmenu_menuitem_property_set(aItem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                   DBUSMENU_MENUITEM_TOGGLE_CHECK);
+  } else {
+    dbusmenu_menuitem_property_set(aItem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                   DBUSMENU_MENUITEM_TOGGLE_RADIO);
+  }
+
+  bool isChecked = aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                         nsGkAtoms::_true, eCaseMatters);
+  dbusmenu_menuitem_property_set_int(
+      aItem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+      isChecked ? DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED
+                : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+}
+
+static void UpdateEnabled(DbusmenuMenuitem* aItem, const nsIContent* aContent) {
+  bool disabled = aContent->AsElement()->AttrValueIs(
+      kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
+
+  dbusmenu_menuitem_property_set_bool(aItem, DBUSMENU_MENUITEM_PROP_ENABLED,
+                                      !disabled);
+}
+
+// we rebuild the dbus model when elements are removed from the DOM,
+// so this isn't going to trigger for asynchronous
+static MOZ_CAN_RUN_SCRIPT void DBusActivationCallback(
+    DbusmenuMenuitem* aMenuitem, guint aTimestamp, gpointer aUserData) {
+  RefPtr element = static_cast<dom::Element*>(aUserData);
+  ActivateItem(*element);
+}
+
+static void ConnectActivated(DbusmenuMenuitem* aItem,
+                             const dom::Element* aContent) {
+  g_signal_connect(G_OBJECT(aItem), DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                   G_CALLBACK(DBusActivationCallback),
+                   const_cast<dom::Element*>(aContent));
+}
+
+static MOZ_CAN_RUN_SCRIPT void DBusAboutToShowCallback(
+    DbusmenuMenuitem* aMenuitem, gpointer aUserData) {
+  RefPtr element = static_cast<dom::Element*>(aUserData);
+  FireEvent(element, eXULPopupShowing);
+  FireEvent(element, eXULPopupShown);
+}
+
+static void ConnectAboutToShow(DbusmenuMenuitem* aItem,
+                               const dom::Element* aContent) {
+  g_signal_connect(G_OBJECT(aItem), DBUSMENU_MENUITEM_SIGNAL_ABOUT_TO_SHOW,
+                   G_CALLBACK(DBusAboutToShowCallback),
+                   const_cast<dom::Element*>(aContent));
+}
+
+void MenubarModelDBus::AppendMenuItem(DbusmenuMenuitem* aParent,
+                                      const dom::Element* aChild) {
+  nsAutoString label;
+  aChild->GetAttr(nsGkAtoms::label, label);
+  if (label.IsEmpty()) {
+    aChild->GetAttr(nsGkAtoms::aria_label, label);
+  }
+  RefPtr<DbusmenuMenuitem> child = dont_AddRef(dbusmenu_menuitem_new());
+  dbusmenu_menuitem_property_set(child, DBUSMENU_MENUITEM_PROP_LABEL,
+                                 NS_ConvertUTF16toUTF8(label).get());
+  dbusmenu_menuitem_child_append(aParent, child);
+  UpdateAccel(child, aChild);
+  UpdateRadioOrCheck(child, aChild);
+  UpdateEnabled(child, aChild);
+  ConnectActivated(child, aChild);
+  // TODO: icons
+}
+
+void MenubarModelDBus::AppendSeparator(DbusmenuMenuitem* aParent) {
+  RefPtr<DbusmenuMenuitem> child = dont_AddRef(dbusmenu_menuitem_new());
+  dbusmenu_menuitem_property_set(child, DBUSMENU_MENUITEM_PROP_TYPE,
+                                 "separator");
+  dbusmenu_menuitem_child_append(aParent, child);
+}
+
+void MenubarModelDBus::AppendSubmenu(DbusmenuMenuitem* aParent,
+                                     const dom::Element* aMenu,
+                                     const dom::Element* aPopup) {
+  RefPtr<DbusmenuMenuitem> submenu = dont_AddRef(dbusmenu_menuitem_new());
+  if (RecomputeModelFor(submenu, *aPopup) == 0) {
+    RefPtr<DbusmenuMenuitem> placeholder = dont_AddRef(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_child_append(submenu, placeholder);
+  }
+  nsAutoString label;
+  aMenu->GetAttr(nsGkAtoms::label, label);
+  ConnectAboutToShow(submenu, aPopup);
+  dbusmenu_menuitem_property_set(submenu, DBUSMENU_MENUITEM_PROP_LABEL,
+                                 NS_ConvertUTF16toUTF8(label).get());
+  dbusmenu_menuitem_child_append(aParent, submenu);
+}
+
+uint MenubarModelDBus::RecomputeModelFor(DbusmenuMenuitem* aParent,
+                                         const dom::Element& aElement) {
+  uint childCount = 0;
+  for (const nsIContent* child = aElement.GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    if (child->IsXULElement(nsGkAtoms::menuitem) &&
+        !IsDisabled(*child->AsElement())) {
+      AppendMenuItem(aParent, child->AsElement());
+      childCount++;
+      continue;
+    }
+    if (child->IsXULElement(nsGkAtoms::menuseparator)) {
+      AppendSeparator(aParent);
+      childCount++;
+      continue;
+    }
+    if (child->IsXULElement(nsGkAtoms::menu) &&
+        !IsDisabled(*child->AsElement())) {
+      if (const auto* popup = GetMenuPopupChild(*child->AsElement())) {
+        childCount++;
+        AppendSubmenu(aParent, child->AsElement(), popup);
+      }
+    }
+  }
+  return childCount;
+}
+
+void DBusMenuBar::NameOwnerChangedCallback(GObject*, GParamSpec*,
+                                           gpointer user_data) {
+  static_cast<DBusMenuBar*>(user_data)->OnNameOwnerChanged();
+}
+
+void DBusMenuBar::OnNameOwnerChanged() {
+  GUniquePtr<gchar> nameOwner(g_dbus_proxy_get_name_owner(mProxy));
+  if (!nameOwner) {
+    return;
+  }
+
+  RefPtr win = mMenuModel->Element()->OwnerDoc()->GetInnerWindow();
+  if (NS_WARN_IF(!win)) {
+    return;
+  }
+  nsIWidget* widget = nsGlobalWindowInner::Cast(win.get())->GetNearestWidget();
+  if (NS_WARN_IF(!widget)) {
+    return;
+  }
+  auto* gdkWin =
+      static_cast<GdkWindow*>(widget->GetNativeData(NS_NATIVE_WINDOW));
+  if (NS_WARN_IF(!gdkWin)) {
+    return;
+  }
+
+  if (auto* display = widget::WaylandDisplayGet()) {
+    // modern path
+
+    xdg_dbus_annotation_manager_v1* annotationManager =
+        display->GetXdgDbusAnnotationManager();
+    if (annotationManager == nullptr) {
+      NS_WARNING("annotation manager is not there");
+      return;
+    }
+
+    wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWin);
+
+    if (surface == nullptr) {
+      NS_WARNING("surface is not there");
+      return;
+    }
+
+    xdg_dbus_annotation_v1* annotation =
+        xdg_dbus_annotation_manager_v1_create_surface(
+            annotationManager, "com.canonical.dbusmenu", surface);
+
+    GDBusConnection* connection = g_dbus_proxy_get_connection(mProxy);
+    const char* myServiceName = g_dbus_connection_get_unique_name(connection);
+    if (!myServiceName) {
+      NS_WARNING("we do not have a unique name on the bus");
+      return;
+    }
+
+    xdg_dbus_annotation_v1_set_address(annotation, myServiceName,
+                                       mObjectPath.get());
+
+    mAnnotation = annotation;
+  } else {
+    // legacy path
+    auto xid = GDK_WINDOW_XID(gdkWin);
+    widget::DBusProxyCall(mProxy, "RegisterWindow",
+                          g_variant_new("(uo)", xid, mObjectPath.get()),
+                          G_DBUS_CALL_FLAGS_NONE)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self = RefPtr{this}](RefPtr<GVariant>&& aResult) {
+              self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden, true);
+            },
+            [self = RefPtr{this}](GUniquePtr<GError>&& aError) {
+              g_printerr("Failed to register window menubar: %s\n",
+                         aError->message);
+              self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden,
+                                                       false);
+            });
+  }
+}
+
+static unsigned sID = 0;
+
+DBusMenuBar::DBusMenuBar(dom::Element* aElement)
+    : mObjectPath(nsPrintfCString("/com/canonical/menu/%u", sID++)),
+      mMenuModel(MakeRefPtr<MenubarModelDBus>(aElement)),
+      mServer(dont_AddRef(dbusmenu_server_new(mObjectPath.get()))) {
+  mMenuModel->RecomputeModelIfNeeded();
+  dbusmenu_server_set_root(mServer.get(), mMenuModel->Root());
+  widget::CreateDBusProxyForBus(
+      G_BUS_TYPE_SESSION,
+      GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+                      G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS |
+                      G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
+      nullptr, "com.canonical.AppMenu.Registrar",
+      "/com/canonical/AppMenu/Registrar", "com.canonical.AppMenu.Registrar")
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}](RefPtr<GDBusProxy>&& aProxy) {
+            self->mProxy = std::move(aProxy);
+            g_signal_connect(self->mProxy, "notify::g-name-owner",
+                             G_CALLBACK(NameOwnerChangedCallback), self.get());
+            self->OnNameOwnerChanged();
+          },
+          [self = RefPtr{this}](GUniquePtr<GError>&& aError) {
+            g_printerr("Failed to create DBUS proxy for menubar: %s\n",
+                       aError->message);
+          });
+}
+
+DBusMenuBar::~DBusMenuBar() = default;
 
 }  // namespace mozilla::widget
