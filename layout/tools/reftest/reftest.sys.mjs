@@ -1770,19 +1770,19 @@ function RegisterMessageListenersAndLoadContentScript(aReload) {
   );
   g.browserMessageManager.addMessageListener(
     "reftest:FailedNoPaint",
-    function (m) {
+    function () {
       RecvFailedNoPaint();
     }
   );
   g.browserMessageManager.addMessageListener(
     "reftest:FailedNoDisplayList",
-    function (m) {
+    function () {
       RecvFailedNoDisplayList();
     }
   );
   g.browserMessageManager.addMessageListener(
     "reftest:FailedDisplayList",
-    function (m) {
+    function () {
       RecvFailedDisplayList();
     }
   );
@@ -1800,7 +1800,7 @@ function RegisterMessageListenersAndLoadContentScript(aReload) {
   );
   g.browserMessageManager.addMessageListener(
     "reftest:InitCanvasWithSnapshot",
-    function (m) {
+    function () {
       RecvInitCanvasWithSnapshot();
     }
   );
@@ -1836,13 +1836,13 @@ function RegisterMessageListenersAndLoadContentScript(aReload) {
   );
   g.browserMessageManager.addMessageListener(
     "reftest:UpdateWholeCanvasForInvalidation",
-    function (m) {
+    function () {
       RecvUpdateWholeCanvasForInvalidation();
     }
   );
   g.browserMessageManager.addMessageListener(
     "reftest:ExpectProcessCrash",
-    function (m) {
+    function () {
       RecvExpectProcessCrash();
     }
   );
@@ -2018,7 +2018,7 @@ async function RecvUpdateWholeCanvasForInvalidation() {
   SendUpdateCurrentCanvasWithSnapshotDone(true);
 }
 
-function OnProcessCrashed(subject, topic, data) {
+function OnProcessCrashed(subject, topic) {
   let id;
   let additionalDumps;
   let propbag = subject.QueryInterface(Ci.nsIPropertyBag2);
