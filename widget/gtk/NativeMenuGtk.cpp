@@ -793,7 +793,7 @@ DBusMenuBar::DBusMenuBar(dom::Element* aElement)
 }
 
 RefPtr<DBusMenuBar> DBusMenuBar::Create(dom::Element* aElement) {
-  RefPtr self = MakeRefPtr<DBusMenuBar>(aElement);
+  RefPtr<DBusMenuBar> self = new DBusMenuBar(aElement);
   widget::CreateDBusProxyForBus(
       G_BUS_TYPE_SESSION,
       GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
