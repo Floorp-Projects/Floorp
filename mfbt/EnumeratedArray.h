@@ -33,13 +33,13 @@ namespace mozilla {
  *     Count
  *   };
  *
- *   EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int> headCount;
+ *   EnumeratedArray<AnimalSpecies, int, AnimalSpecies::Count> headCount;
  *
  *   headCount[AnimalSpecies::Cow] = 17;
  *   headCount[AnimalSpecies::Sheep] = 30;
  *
  */
-template <typename IndexType, IndexType SizeAsEnumValue, typename ValueType>
+template <typename IndexType, typename ValueType, IndexType SizeAsEnumValue>
 class EnumeratedArray {
  public:
   static const size_t kSize = size_t(SizeAsEnumValue);

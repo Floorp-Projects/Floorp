@@ -115,7 +115,7 @@ class GlobalHelperThreadState {
       PromiseHelperTaskVector;
 
   // Count of running task by each threadType.
-  mozilla::EnumeratedArray<ThreadType, ThreadType::THREAD_TYPE_MAX, size_t>
+  mozilla::EnumeratedArray<ThreadType, size_t, ThreadType::THREAD_TYPE_MAX>
       runningTaskCount;
   size_t totalCountRunningTasks;
 

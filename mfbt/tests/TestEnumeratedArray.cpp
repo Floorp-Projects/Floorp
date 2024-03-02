@@ -10,7 +10,7 @@ using mozilla::EnumeratedArray;
 
 enum class AnimalSpecies { Cow, Sheep, Pig, Count };
 
-using TestArray = EnumeratedArray<AnimalSpecies, AnimalSpecies::Count, int>;
+using TestArray = EnumeratedArray<AnimalSpecies, int, AnimalSpecies::Count>;
 
 void TestInitialValueByConstructor() {
   // Style 1

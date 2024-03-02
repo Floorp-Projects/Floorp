@@ -70,7 +70,7 @@ class IOUtils final {
 
   template <typename T>
   using PhaseArray =
-      EnumeratedArray<IOUtils::ShutdownPhase, IOUtils::ShutdownPhase::Count, T>;
+      EnumeratedArray<IOUtils::ShutdownPhase, T, IOUtils::ShutdownPhase::Count>;
 
   static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,

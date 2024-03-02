@@ -2167,7 +2167,7 @@ class CreateDependentString {
     NotInlineString,
     Count
   };
-  mozilla::EnumeratedArray<FallbackKind, FallbackKind::Count, Label> fallbacks_,
+  mozilla::EnumeratedArray<FallbackKind, Label, FallbackKind::Count> fallbacks_,
       joins_;
 
  public:

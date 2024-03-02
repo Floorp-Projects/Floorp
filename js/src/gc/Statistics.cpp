@@ -154,11 +154,11 @@ struct PhaseInfo {
 };
 
 // A table of PhaseInfo indexed by Phase.
-using PhaseTable = EnumeratedArray<Phase, Phase::LIMIT, PhaseInfo>;
+using PhaseTable = EnumeratedArray<Phase, PhaseInfo, Phase::LIMIT>;
 
 // A table of PhaseKindInfo indexed by PhaseKind.
 using PhaseKindTable =
-    EnumeratedArray<PhaseKind, PhaseKind::LIMIT, PhaseKindInfo>;
+    EnumeratedArray<PhaseKind, PhaseKindInfo, PhaseKind::LIMIT>;
 
 #include "gc/StatsPhasesGenerated.inc"
 
