@@ -12371,60 +12371,32 @@ class CGEnum(CGThing):
     def __init__(self, enum):
         CGThing.__init__(self)
         self.enum = enum
-        entryDecl = fill(
-            """
-            static constexpr size_t Count = ${count};
-
-            static_assert(mozilla::ArrayLength(binding_detail::EnumStrings<${name}>::Values) == Count,
-                          "Mismatch between enum strings and enum count");
-
-            """,
-            count=self.nEnumStrings(),
-            name=self.enum.identifier.name,
-            type=CGEnum.underlyingType(enum),
-        )
-        strings = CGList(
-            [
-                CGNamespace(
-                    "binding_detail",
-                    CGGeneric(
-                        declare=fill(
-                            """
-                            template <> struct EnumStrings<${name}> {
-                              static const nsLiteralCString Values[${count}];
-                            };
-                            """,
-                            name=self.enum.identifier.name,
-                            count=self.nEnumStrings(),
-                        ),
-                        define=fill(
-                            """
-                            const nsLiteralCString EnumStrings<${name}>::Values[${count}] = {
-                              $*{entries}
-                            };
-                            """,
-                            name=self.enum.identifier.name,
-                            count=self.nEnumStrings(),
-                            entries="".join(
-                                '"%s"_ns,\n' % val for val in self.enum.values()
-                            ),
-                        ),
-                    ),
+        strings = CGNamespace(
+            "binding_detail",
+            CGGeneric(
+                declare=fill(
+                    """
+                    template <> struct EnumStrings<${name}> {
+                      static const nsLiteralCString Values[${count}];
+                    };
+                    """,
+                    name=self.enum.identifier.name,
+                    count=self.nEnumStrings(),
                 ),
-                CGNamespace(
-                    self.stringsNamespace(),
-                    CGGeneric(
-                        declare=entryDecl,
-                    ),
+                define=fill(
+                    """
+                    const nsLiteralCString EnumStrings<${name}>::Values[${count}] = {
+                      $*{entries}
+                    };
+                    """,
+                    name=self.enum.identifier.name,
+                    count=self.nEnumStrings(),
+                    entries="".join('"%s"_ns,\n' % val for val in self.enum.values()),
                 ),
-            ],
-            "\n",
+            ),
         )
         toJSValue = CGEnumToJSValue(enum)
         self.cgThings = CGList([strings, toJSValue], "\n")
-
-    def stringsNamespace(self):
-        return self.enum.identifier.name + "Values"
 
     def nEnumStrings(self):
         return len(self.enum.values())
@@ -12475,6 +12447,8 @@ class CGMaxContiguousEnumValue(CGThing):
 
               static_assert(static_cast<${ty}>(dom::${name}::${minValue}) == 0,
                             "We rely on this in ContiguousEnumValues");
+              static_assert(mozilla::ArrayLength(dom::binding_detail::EnumStrings<dom::${name}>::Values) - 1 == UnderlyingValue(value),
+                            "Mismatch between enum strings and enum count");
             };
             """,
             name=self.enum.identifier.name,
