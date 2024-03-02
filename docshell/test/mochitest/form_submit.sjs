@@ -13,7 +13,7 @@ const BinaryOutputStream = CC(
   "setOutputStream"
 );
 
-function log(str) {
+function log() {
   // dump(`LOG: ${str}\n`);
 }
 

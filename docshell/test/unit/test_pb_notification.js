@@ -8,7 +8,7 @@ function destroy_transient_docshell() {
 
 function run_test() {
   var obs = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       Assert.equal(aTopic, "last-pb-context-exited");
       do_test_finished();
     },

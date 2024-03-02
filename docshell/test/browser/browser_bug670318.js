@@ -101,7 +101,7 @@ add_task(async function test() {
               return new Promise(resolve => {
                 addEventListener(
                   "load",
-                  evt => {
+                  () => {
                     let history = docShell.QueryInterface(
                       Ci.nsIWebNavigation
                     ).sessionHistory;

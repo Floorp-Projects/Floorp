@@ -50,7 +50,7 @@ let thunks = new Set();
 function promiseStateStop(webProgress) {
   return new Promise(resolve => {
     let listener = {
-      onStateChange(aWebProgress, request, stateFlags, status) {
+      onStateChange(aWebProgress, request, stateFlags) {
         if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
           webProgress.removeProgressListener(listener);
 

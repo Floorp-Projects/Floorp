@@ -79,7 +79,7 @@ function verifyResult(
 }
 
 async function simulateCspInheritanceForNewTab(aTestName, aSamePID) {
-  await BrowserTestUtils.withNewTab(TEST_URI, async function (browser) {
+  await BrowserTestUtils.withNewTab(TEST_URI, async function () {
     // do some sanity checks
     let currentURI = await getCurrentURI(gBrowser.selectedBrowser);
     is(currentURI, TEST_URI, aTestName + ": correct test uri loaded");

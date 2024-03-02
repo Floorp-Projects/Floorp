@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
           }
         },
 
-        onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+        onStateChange(aWebProgress) {
           // Wait until the documentURI changes (from about:blank) this should
           // be the error page URI.
           var documentURI = frame.contentDocument.documentURI;

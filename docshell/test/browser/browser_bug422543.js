@@ -172,7 +172,7 @@ class SHistoryListener {
     this.last = "initial";
   }
 
-  OnHistoryNewEntry(aNewURI) {
+  OnHistoryNewEntry() {
     this.last = "newentry";
   }
 

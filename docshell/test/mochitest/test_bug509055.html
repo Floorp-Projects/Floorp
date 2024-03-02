@@ -28,14 +28,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=509055
       setTimeout(function() { gGen.next(); }, 0, false);
     }
 
-    function onChildHashchange(e) {
+    function onChildHashchange() {
       // gGen might be undefined when we refresh the page, so we have to check here
       dump("onChildHashchange() called.\n");
       if (gGen)
         gGen.next();
     }
 
-    function onChildLoad(e) {
+    function onChildLoad() {
       if (gGen)
         gGen.next();
     }

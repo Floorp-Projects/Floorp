@@ -28,7 +28,7 @@ async function assignToken(tokenToAssign) {
                             newToken => { this.content.token = newToken });
 }
 
-async function pollForPage(win) {
+async function pollForPage() {
   while (true) {
     try {
       // When we do our navigation, there may be an interstitial about:blank

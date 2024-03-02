@@ -32,7 +32,7 @@ function test() {
             let iframe = content.document.getElementById("iframe");
             iframe.addEventListener(
               "load",
-              function listener(aEvent) {
+              function listener() {
                 // Wait for the iframe to load the new document, not about:blank.
                 if (!iframe.src) {
                   return;

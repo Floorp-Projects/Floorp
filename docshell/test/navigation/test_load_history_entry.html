@@ -163,7 +163,7 @@
 
     async function waitForPopstate(win) {
         return new Promise(resolve => {
-            win.addEventListener("popstate", (e) => {
+            win.addEventListener("popstate", () => {
                 setTimeout(resolve, 0);
             }, {once: true});
         });

@@ -6,7 +6,7 @@ add_task(async function test() {
       let numLocationChanges = 0;
 
       let listener = {
-        onLocationChange(browser, webProgress, request, uri, flags) {
+        onLocationChange(browser, webProgress, request, uri) {
           info("location change: " + (uri && uri.spec));
           numLocationChanges++;
         },

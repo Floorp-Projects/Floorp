@@ -52,7 +52,7 @@
 
     info("wait for message from popup");
     let messagePromise = new Promise(resolve => {
-      addEventListener("message", evt => {
+      addEventListener("message", () => {
         resolve();
       }, { once: true });
     });
@@ -93,7 +93,7 @@
     });
 
     let messagePromise2 = new Promise(resolve => {
-      addEventListener("message", evt => {
+      addEventListener("message", () => {
         resolve();
       }, { once: true });
     });

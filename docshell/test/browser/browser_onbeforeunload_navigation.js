@@ -15,7 +15,7 @@ var tabStateListener = {
   resolveLoad: null,
   expectLoad: null,
 
-  onStateChange(webprogress, request, flags, status) {
+  onStateChange(webprogress, request, flags) {
     const WPL = Ci.nsIWebProgressListener;
     if (flags & WPL.STATE_IS_WINDOW) {
       if (flags & WPL.STATE_START) {

@@ -42,7 +42,7 @@
     function doTheTest() {
       var strs = { "f1": "", "f2" : "" };
       function attachListener(node, type) {
-        var listener = function(e) {
+        var listener = function() {
           if (strs[node.id]) strs[node.id] += " ";
           strs[node.id] += node.id + ".page" + type;
         }

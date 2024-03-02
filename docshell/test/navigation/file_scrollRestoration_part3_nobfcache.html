@@ -16,7 +16,7 @@
       // If onpopstate event takes place, check if we need to call 'test()'
       var callTest = false;
       var nextCase = 0;
-      window.onpopstate = (e) => {
+      window.onpopstate = () => {
         if (callTest) {
           callTest = false;
           setTimeout(() => {

@@ -24,7 +24,7 @@ add_task(async function test() {
 
           let listenerCalled = false;
           let listener = {
-            OnHistoryNewEntry: aNewURI => {},
+            OnHistoryNewEntry: () => {},
             OnHistoryReload: () => {
               listenerCalled = true;
               this.content.setTimeout(() => {
@@ -64,7 +64,7 @@ add_task(async function test() {
 
       let listenerCalled = false;
       let listener = {
-        OnHistoryNewEntry: aNewURI => {},
+        OnHistoryNewEntry: () => {},
         OnHistoryReload: () => {
           listenerCalled = true;
           setTimeout(() => {

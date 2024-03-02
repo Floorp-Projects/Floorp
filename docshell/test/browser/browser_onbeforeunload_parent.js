@@ -22,7 +22,7 @@ add_task(async function () {
     );
 
     info(`Testing tab close from parent process`);
-    await doTest(actions, -1, (tab, frames) => {
+    await doTest(actions, -1, tab => {
       let eventLoopSpun = false;
       Services.tm.dispatchToMainThread(() => {
         eventLoopSpun = true;

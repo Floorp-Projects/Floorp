@@ -10,7 +10,7 @@ window.onload = () => {
 };
 
 // eslint-disable-next-line no-shadow
-function promiseMessage(source, filter = event => true) {
+function promiseMessage(source, filter = () => true) {
   return new Promise(resolve => {
     function listener(event) {
       if (event.source == source && filter(event)) {

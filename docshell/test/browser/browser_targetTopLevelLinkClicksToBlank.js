@@ -246,7 +246,7 @@ add_task(async function skip_blank_target_for_some_loads() {
   await SpecialPowers.spawn(currentBrowser, [TEST_PAGE], async newPageURL => {
     let anchor = content.document.querySelector(`a[href=".."]`);
     anchor.href = "javascript:void(0);";
-    anchor.addEventListener("click", e => {
+    anchor.addEventListener("click", () => {
       content.location.href = newPageURL;
     });
     let userInput = content.windowUtils.setHandlingUserInput(true);
@@ -268,7 +268,7 @@ add_task(async function skip_blank_target_for_some_loads() {
   await SpecialPowers.spawn(currentBrowser, [TEST_PAGE], async newPageURL => {
     let anchor = content.document.querySelector(`a[href=".."]`);
     anchor.href = `javascript:"string-to-navigate-to"`;
-    anchor.addEventListener("click", e => {
+    anchor.addEventListener("click", () => {
       content.location.href = newPageURL;
     });
     let userInput = content.windowUtils.setHandlingUserInput(true);

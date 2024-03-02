@@ -67,7 +67,7 @@
 
         // Because adding visits is async, we will not be notified immediately.
         let visitObserver = {
-          observe(aSubject, aTopic, aData)
+          observe(aSubject, aTopic)
           {
             if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
               return;

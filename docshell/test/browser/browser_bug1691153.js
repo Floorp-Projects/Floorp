@@ -28,7 +28,7 @@ add_task(async () => {
     browser,
     [],
     async function () {
-      let blobPromise = new Promise((resolve, reject) => {
+      let blobPromise = new Promise(resolve => {
         content.addEventListener("message", event => {
           if (event.data.bloburl) {
             info("Sanity check: recvd blob URL as " + event.data.bloburl);
