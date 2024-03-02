@@ -25,7 +25,7 @@ this.pictureInPictureParent = class extends ExtensionAPI {
    * @param {ExtensionContext} context the context of our extension
    * @returns {object} returns the necessary API structure required to manage sharedData in PictureInPictureParent
    */
-  getAPI(context) {
+  getAPI() {
     return {
       pictureInPictureParent: {
         setOverrides(overrides) {

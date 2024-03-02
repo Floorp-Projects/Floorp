@@ -30,7 +30,7 @@ add_task(async () => {
 
       // Remove other page elements before reading PiP toggle's client rect.
       // Otherwise, we will provide the wrong coordinates when simulating the touch event.
-      await SpecialPowers.spawn(browser, [], async args => {
+      await SpecialPowers.spawn(browser, [], async () => {
         info(
           "Removing other elements first to make the PiP toggle more visible"
         );

@@ -5,12 +5,12 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
-  play(video) {
+  play() {
     let playPauseButton = document.querySelector("#player .play-pause-button");
     playPauseButton.click();
   }
 
-  pause(video) {
+  pause() {
     let invalidSelector = "#player .pause-button";
     let playPauseButton = document.querySelector(invalidSelector);
     playPauseButton.click();

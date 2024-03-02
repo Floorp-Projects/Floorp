@@ -25,7 +25,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function (mutationsList, observer) {
+      const callback = function () {
         let text = container.querySelector(
           '[data-testid="CueBoxContainer"]'
         )?.innerText;

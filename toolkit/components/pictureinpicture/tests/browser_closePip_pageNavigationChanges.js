@@ -65,7 +65,7 @@ add_task(async function test_close_pagehide() {
       ok(pipWin, "Got Picture-in-Picture window.");
 
       let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
-      await SpecialPowers.spawn(browser, [{ videoID }], async args => {
+      await SpecialPowers.spawn(browser, [{ videoID }], async () => {
         content.location.href = "otherpage.html";
       });
 
@@ -92,7 +92,7 @@ add_task(async function test_open_pip_window_history_nav() {
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
 
-      await SpecialPowers.spawn(browser, [{ videoID }], async args => {
+      await SpecialPowers.spawn(browser, [{ videoID }], async () => {
         let popStatePromise = ContentTaskUtils.waitForEvent(
           content,
           "popstate"

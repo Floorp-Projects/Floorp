@@ -10,7 +10,7 @@ class PictureInPictureVideoWrapper {
 
     if (container) {
       updateCaptionsFunction("");
-      const callback = function (mutationsList, observer) {
+      const callback = function () {
         let textNodeList = container.querySelectorAll(".avp-captions-line");
         if (!textNodeList.length) {
           updateCaptionsFunction("");

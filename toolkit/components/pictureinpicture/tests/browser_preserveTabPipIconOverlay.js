@@ -12,8 +12,8 @@ var EventUtils = {};
 Services.scriptloader.loadSubScript(EVENTUTILS_URL, EventUtils);
 
 async function detachTab(tab) {
-  let newWindowPromise = new Promise((resolve, reject) => {
-    let observe = (win, topic, data) => {
+  let newWindowPromise = new Promise(resolve => {
+    let observe = win => {
       Services.obs.removeObserver(observe, "domwindowopened");
       resolve(win);
     };

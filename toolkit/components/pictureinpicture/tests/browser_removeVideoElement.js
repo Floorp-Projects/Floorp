@@ -28,7 +28,7 @@ add_task(async () => {
           let otherVideo = doc.querySelector(`video:not([id="${videoID}"])`);
           let eventFired = false;
 
-          let listener = e => {
+          let listener = () => {
             eventFired = true;
           };
 
