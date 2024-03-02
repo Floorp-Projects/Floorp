@@ -945,6 +945,11 @@ the right validation for WebIDL enums. It uses a
 `mozilla::MaxContinuousEnumValue` that is generated for every WebIDL enum to
 implement the validation.
 
+`mozilla::dom::MakeWebIDLEnumeratedRange` is a templated helper function in
+[`BindingUtils.h`](https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h)
+and exported to `mozilla/dom/BindingUtils.h` that can be used to create a
+`mozilla::EnumeratedRange` for a WebIDL enum.
+
 #### Callback function types
 
 Callback functions are represented as an object, inheriting from
