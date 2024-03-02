@@ -1839,7 +1839,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "a8d3d70737b7290a4dcef697c47c3bebf62793fe"
+        "revision": "6226918a72cb63a24f0f08c7f7244a80eef4b869"
     },
     "trs": {
         "pin": false,
@@ -1983,7 +1983,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1731d20764b398fc1af3086ad43598542520e383"
+        "revision": "eb2c3380bf3518abdd1b3e42714cbe681d82d74c"
     },
     "zh-TW": {
         "pin": false,
