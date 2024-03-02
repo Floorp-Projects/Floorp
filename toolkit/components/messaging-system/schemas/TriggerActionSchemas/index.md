@@ -114,7 +114,7 @@ same reason, the trigger only fires after a 10-second delay. The trigger context
 includes an `event` and `type` that can be used in targeting. Possible events
 include `add`, `update`, and `use`. Possible types are `card` and `address`.
 This trigger is especially intended to be used in tandem with the
-`creditCardsSaved` and `addressesSaved` [targeting attributes](../../../../../browser/components/newtab/content-src/asrouter/docs/targeting-attributes.md).
+`creditCardsSaved` and `addressesSaved` [targeting attributes](/browser/components/asrouter/docs/targeting-attributes.md).
 
 ```js
 {
