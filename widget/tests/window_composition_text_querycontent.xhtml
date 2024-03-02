@@ -6270,7 +6270,7 @@ function runQueryContentEventRelativeToInsertionPoint()
   synthesizeComposition({ type: "compositioncommitasis" });
 
   // Move start of composition at first compositionupdate event.
-  function onCompositionUpdate(aEvent)
+  function onCompositionUpdate()
   {
     startOffset = textarea.selectionStart = textarea.selectionEnd = textarea.selectionStart - 1;
     textarea.removeEventListener("compositionupdate", onCompositionUpdate);

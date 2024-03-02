@@ -30,7 +30,7 @@ SimpleTest.waitForExplicitFinish();
 var idleObserver =
 {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe: function _observe(subject, topic, data)
+    observe: function _observe(subject, topic)
     {
         if (topic != "idle")
             return;

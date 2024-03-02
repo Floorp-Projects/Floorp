@@ -63,7 +63,7 @@ async function clipboardAsyncGetData(aBrowser, aClipboardType) {
             "nsIAsyncClipboardGetCallback",
           ]),
           // nsIAsyncClipboardGetCallback
-          onSuccess: aAsyncGetClipboardData => {
+          onSuccess: () => {
             resolve();
           },
           onError: aResult => {

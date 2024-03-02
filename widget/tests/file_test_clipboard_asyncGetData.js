@@ -94,7 +94,7 @@ clipboardTypes.forEach(function (type) {
       () => {
         ok(false, "asyncClipboardRequestGetData should not success");
       },
-      e => {
+      () => {
         ok(true, "asyncClipboardRequestGetData should reject");
       }
     );
@@ -133,7 +133,7 @@ clipboardTypes.forEach(function (type) {
       () => {
         ok(false, "asyncClipboardRequestGetData should not success");
       },
-      e => {
+      () => {
         ok(true, "asyncClipboardRequestGetData should reject");
       }
     );

@@ -214,7 +214,7 @@ var gPreparingSteps = [
     target: gP1, x: 10, y: 10, window,
     modifiers: 0,
     additionalFlags: 0,
-    onLineScrollEvent(aEvent) {
+    onLineScrollEvent() {
       return true;
     },
     onPixelScrollEvent(aEvent) {
@@ -234,7 +234,7 @@ var gPreparingSteps = [
     target: gP1, x: 10, y: 10, window,
     modifiers: 0,
     additionalFlags: 0,
-    onLineScrollEvent(aEvent) {
+    onLineScrollEvent() {
       return true;
     },
     onPixelScrollEvent(aEvent) {
@@ -250,7 +250,7 @@ var gPreparingSteps = [
     target: gP1, x: 10, y: 10, window,
     modifiers: 0,
     additionalFlags: 0,
-    onLineScrollEvent(aEvent) {
+    onLineScrollEvent() {
       return true;
     },
     onPixelScrollEvent(aEvent) {
@@ -270,7 +270,7 @@ var gPreparingSteps = [
     target: gP1, x: 10, y: 10, window,
     modifiers: 0,
     additionalFlags: 0,
-    onLineScrollEvent(aEvent) {
+    onLineScrollEvent() {
       return true;
     },
     onPixelScrollEvent(aEvent) {
@@ -1100,7 +1100,7 @@ var gDeactiveWindowTests = [
       SpecialPowers.setIntPref(kVAmountPref, 3);
       SpecialPowers.setIntPref(kHAmountPref, 3);
     },
-    onLineScrollEvent(aEvent) {
+    onLineScrollEvent() {
       var fm = Services.focus;
       is(fm.activeWindow, gOtherWindow, "The other window isn't activated");
     },

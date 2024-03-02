@@ -141,13 +141,13 @@
       let popupShowingFired = false;
       let itemActivated = false;
 
-      menupopup.addEventListener("popupshowing", function (e) {
+      menupopup.addEventListener("popupshowing", function () {
         popupShowingFired = true;
 
         let menuitem = document.createElementNS(XUL_NS, "menuitem");
         menuitem.setAttribute("label", "detached menu item");
         /* eslint-disable-next-line no-shadow */
-        menuitem.addEventListener("command", function (e) {
+        menuitem.addEventListener("command", function () {
           itemActivated = true;
         })
         menupopup.appendChild(menuitem);
