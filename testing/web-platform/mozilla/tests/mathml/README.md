@@ -46,6 +46,11 @@ any specification:
    interpretation is unclear in current version of MathML Core.
    See [issue 132](https://github.com/w3c/mathml-core/issues/132).
 
+- `rtl`: Tests for RTL MathML, for aspects not completely defined in
+   MathML Core or for which we use things like scale transform for
+   mirroring.
+   See [issue 67](https://github.com/w3c/mathml-core/issues/67).
+
 - `tables`: Tests for
    [table features](https://www.w3.org/TR/MathML3/chapter3.html#presm.tabmat)
    that are in the initial version of MathML Core.
