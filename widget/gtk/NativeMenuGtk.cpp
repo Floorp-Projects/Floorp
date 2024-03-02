@@ -753,7 +753,7 @@ void DBusMenuBar::OnNameOwnerChanged() {
     mAnnotation = xdg_dbus_annotation_manager_v1_create_surface(
         annotationManager, "com.canonical.dbusmenu", surface);
 
-    xdg_dbus_annotation_v1_set_address(annotation, myServiceName,
+    xdg_dbus_annotation_v1_set_address(mAnnotation, myServiceName,
                                        mObjectPath.get());
     return;
   }
