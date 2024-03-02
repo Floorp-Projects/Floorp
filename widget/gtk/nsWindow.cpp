@@ -100,6 +100,7 @@
 #include "ScreenHelperGTK.h"
 #include "SystemTimeConverter.h"
 #include "WidgetUtilsGtk.h"
+#include "NativeMenuGtk.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/LocalAccessible.h"
@@ -6985,6 +6986,11 @@ void nsWindow::UpdateWindowDraggingRegion(
   if (mDraggableRegion != aRegion) {
     mDraggableRegion = aRegion;
   }
+}
+
+void nsWindow::SetDBusMenuBar(
+    RefPtr<mozilla::widget::DBusMenuBar> aDbusMenuBar) {
+  mDBusMenuBar = std::move(aDbusMenuBar);
 }
 
 LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {

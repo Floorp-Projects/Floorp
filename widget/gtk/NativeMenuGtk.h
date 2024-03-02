@@ -7,9 +7,12 @@
 #ifndef mozilla_widget_NativeMenuGtk_h
 #define mozilla_widget_NativeMenuGtk_h
 
+#include "mozilla/RefCounted.h"
 #include "mozilla/widget/NativeMenu.h"
 #include "mozilla/EventForwards.h"
 #include "GRefPtr.h"
+
+struct xdg_dbus_annotation_v1;
 
 namespace mozilla {
 
@@ -19,7 +22,8 @@ class Element;
 
 namespace widget {
 
-class MenuModel;
+class MenuModelGMenu;
+class MenubarModelDBus;
 
 class NativeMenuGtk : public NativeMenu {
  public:
@@ -54,8 +58,25 @@ class NativeMenuGtk : public NativeMenu {
 
   bool mPoppedUp = false;
   RefPtr<GtkWidget> mNativeMenu;
-  RefPtr<MenuModel> mMenuModel;
+  RefPtr<MenuModelGMenu> mMenuModel;
   nsTArray<NativeMenu::Observer*> mObservers;
+};
+
+class DBusMenuBar final : public RefCounted<DBusMenuBar> {
+ public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(DBusMenuBar)
+  explicit DBusMenuBar(dom::Element* aElement);
+  ~DBusMenuBar();
+
+ protected:
+  static void NameOwnerChangedCallback(GObject*, GParamSpec*, gpointer);
+  void OnNameOwnerChanged();
+
+  nsCString mObjectPath;
+  RefPtr<MenubarModelDBus> mMenuModel;
+  RefPtr<DbusmenuServer> mServer;
+  RefPtr<GDBusProxy> mProxy;
+  xdg_dbus_annotation_v1* mAnnotation = nullptr;
 };
 
 }  // namespace widget

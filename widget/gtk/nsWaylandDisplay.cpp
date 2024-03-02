@@ -93,6 +93,11 @@ void nsWaylandDisplay::SetXdgActivation(xdg_activation_v1* aXdgActivation) {
   mXdgActivation = aXdgActivation;
 }
 
+void nsWaylandDisplay::SetXdgDbusAnnotationManager(
+    xdg_dbus_annotation_manager_v1* aXdgDbusAnnotationManager) {
+  mXdgDbusAnnotationManager = aXdgDbusAnnotationManager;
+}
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -140,6 +145,11 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* activation = WaylandRegistryBind<xdg_activation_v1>(
         registry, id, &xdg_activation_v1_interface, 1);
     display->SetXdgActivation(activation);
+  } else if (iface.EqualsLiteral("xdg_dbus_annotation_manager_v1")) {
+    auto* annotationManager =
+        WaylandRegistryBind<xdg_dbus_annotation_manager_v1>(
+            registry, id, &xdg_dbus_annotation_manager_v1_interface, 1);
+    display->SetXdgDbusAnnotationManager(annotationManager);
   } else if (iface.EqualsLiteral("wl_seat")) {
     // Install keyboard handlers for main thread only
     auto* seat =

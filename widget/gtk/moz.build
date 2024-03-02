@@ -63,6 +63,7 @@ UNIFIED_SOURCES += [
     "AsyncGtkClipboardRequest.cpp",
     "CompositorWidgetChild.cpp",
     "CompositorWidgetParent.cpp",
+    "DBusMenu.cpp",
     "DMABufLibWrapper.cpp",
     "DMABufSurface.cpp",
     "GfxInfo.cpp",

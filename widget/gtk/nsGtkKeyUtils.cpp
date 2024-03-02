@@ -2125,6 +2125,212 @@ guint KeymapWrapper::GetGDKKeyvalWithoutModifier(
   return keyval;
 }
 
+struct KeyCodeData {
+  const char* str;
+  size_t strlength;
+  uint32_t keycode;
+};
+
+static struct KeyCodeData gKeyCodes[] = {
+#define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
+  {#aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode},
+#include "mozilla/VirtualKeyCodeList.h"
+#undef NS_DEFINE_VK
+    {nullptr, 0, 0}};
+
+struct KeyPair {
+  uint32_t DOMKeyCode;
+  guint GDKKeyval;
+};
+
+//
+// Netscape keycodes are defined in widget/public/nsGUIEvent.h
+// GTK keycodes are defined in <gdk/gdkkeysyms.h>
+//
+static const KeyPair gKeyPairs[] = {
+    {NS_VK_CANCEL, GDK_Cancel},
+    {NS_VK_BACK, GDK_BackSpace},
+    {NS_VK_TAB, GDK_Tab},
+    {NS_VK_CLEAR, GDK_Clear},
+    {NS_VK_RETURN, GDK_Return},
+    {NS_VK_SHIFT, GDK_Shift_L},
+    {NS_VK_CONTROL, GDK_Control_L},
+    {NS_VK_ALT, GDK_Alt_L},
+    {NS_VK_META, GDK_Meta_L},
+
+    // Assume that Super or Hyper is always mapped to physical Win key.
+    {NS_VK_WIN, GDK_Super_L},
+
+    // GTK's AltGraph key is similar to Mac's Option (Alt) key.  However,
+    // unfortunately, browsers on Mac are using NS_VK_ALT for it even though
+    // it's really different from Alt key on Windows.
+    // On the other hand, GTK's AltGrapsh keys are really different from
+    // Alt key.  However, there is no AltGrapsh key on Windows.  On Windows,
+    // both Ctrl and Alt keys are pressed internally when AltGr key is pressed.
+    // For some languages' users, AltGraph key is important, so, web
+    // applications on such locale may want to know AltGraph key press.
+    // Therefore, we should map AltGr keycode for them only on GTK.
+    {NS_VK_ALTGR, GDK_ISO_Level3_Shift},
+
+    {NS_VK_PAUSE, GDK_Pause},
+    {NS_VK_CAPS_LOCK, GDK_Caps_Lock},
+    {NS_VK_ESCAPE, GDK_Escape},
+    // { NS_VK_ACCEPT,     GDK_XXX },
+    // { NS_VK_MODECHANGE, GDK_XXX },
+    {NS_VK_SPACE, GDK_space},
+    {NS_VK_PAGE_UP, GDK_Page_Up},
+    {NS_VK_PAGE_DOWN, GDK_Page_Down},
+    {NS_VK_END, GDK_End},
+    {NS_VK_HOME, GDK_Home},
+    {NS_VK_LEFT, GDK_Left},
+    {NS_VK_UP, GDK_Up},
+    {NS_VK_RIGHT, GDK_Right},
+    {NS_VK_DOWN, GDK_Down},
+    {NS_VK_SELECT, GDK_Select},
+    {NS_VK_PRINT, GDK_Print},
+    {NS_VK_EXECUTE, GDK_Execute},
+    {NS_VK_PRINTSCREEN, GDK_Print},
+    {NS_VK_INSERT, GDK_Insert},
+    {NS_VK_DELETE, GDK_Delete},
+    {NS_VK_HELP, GDK_Help},
+
+    {NS_VK_NUM_LOCK, GDK_Num_Lock},
+    {NS_VK_SCROLL_LOCK, GDK_Scroll_Lock},
+
+    // Function keys
+    {NS_VK_F1, GDK_F1},
+    {NS_VK_F2, GDK_F2},
+    {NS_VK_F3, GDK_F3},
+    {NS_VK_F4, GDK_F4},
+    {NS_VK_F5, GDK_F5},
+    {NS_VK_F6, GDK_F6},
+    {NS_VK_F7, GDK_F7},
+    {NS_VK_F8, GDK_F8},
+    {NS_VK_F9, GDK_F9},
+    {NS_VK_F10, GDK_F10},
+    {NS_VK_F11, GDK_F11},
+    {NS_VK_F12, GDK_F12},
+    {NS_VK_F13, GDK_F13},
+    {NS_VK_F14, GDK_F14},
+    {NS_VK_F15, GDK_F15},
+    {NS_VK_F16, GDK_F16},
+    {NS_VK_F17, GDK_F17},
+    {NS_VK_F18, GDK_F18},
+    {NS_VK_F19, GDK_F19},
+    {NS_VK_F20, GDK_F20},
+    {NS_VK_F21, GDK_F21},
+    {NS_VK_F22, GDK_F22},
+    {NS_VK_F23, GDK_F23},
+    {NS_VK_F24, GDK_F24},
+
+    // context menu key, keysym 0xff67, typically keycode 117 on 105-key
+    // (Microsoft) x86 keyboards, located between right 'Windows' key and right
+    // Ctrl key
+    {NS_VK_CONTEXT_MENU, GDK_Menu},
+    {NS_VK_SLEEP, GDK_Sleep},
+
+    {NS_VK_ATTN, GDK_3270_Attn},
+    {NS_VK_CRSEL, GDK_3270_CursorSelect},
+    {NS_VK_EXSEL, GDK_3270_ExSelect},
+    {NS_VK_EREOF, GDK_3270_EraseEOF},
+    {NS_VK_PLAY, GDK_3270_Play},
+    //{ NS_VK_ZOOM,       GDK_XXX },
+    {NS_VK_PA1, GDK_3270_PA1},
+
+    {NS_VK_MULTIPLY, GDK_KP_Multiply},
+    {NS_VK_ADD, GDK_KP_Add},
+    {NS_VK_SEPARATOR, GDK_KP_Separator},
+    {NS_VK_SUBTRACT, GDK_KP_Subtract},
+    {NS_VK_DECIMAL, GDK_KP_Decimal},
+    {NS_VK_DIVIDE, GDK_KP_Divide},
+    {NS_VK_NUMPAD0, GDK_KP_0},
+    {NS_VK_NUMPAD1, GDK_KP_1},
+    {NS_VK_NUMPAD2, GDK_KP_2},
+    {NS_VK_NUMPAD3, GDK_KP_3},
+    {NS_VK_NUMPAD4, GDK_KP_4},
+    {NS_VK_NUMPAD5, GDK_KP_5},
+    {NS_VK_NUMPAD6, GDK_KP_6},
+    {NS_VK_NUMPAD7, GDK_KP_7},
+    {NS_VK_NUMPAD8, GDK_KP_8},
+    {NS_VK_NUMPAD9, GDK_KP_9},
+    {NS_VK_SPACE, GDK_space},
+    {NS_VK_COLON, GDK_colon},
+    {NS_VK_SEMICOLON, GDK_semicolon},
+    {NS_VK_LESS_THAN, GDK_less},
+    {NS_VK_EQUALS, GDK_equal},
+    {NS_VK_GREATER_THAN, GDK_greater},
+    {NS_VK_QUESTION_MARK, GDK_question},
+    {NS_VK_AT, GDK_at},
+    {NS_VK_CIRCUMFLEX, GDK_asciicircum},
+    {NS_VK_EXCLAMATION, GDK_exclam},
+    {NS_VK_DOUBLE_QUOTE, GDK_quotedbl},
+    {NS_VK_HASH, GDK_numbersign},
+    {NS_VK_DOLLAR, GDK_dollar},
+    {NS_VK_PERCENT, GDK_percent},
+    {NS_VK_AMPERSAND, GDK_ampersand},
+    {NS_VK_UNDERSCORE, GDK_underscore},
+    {NS_VK_OPEN_PAREN, GDK_parenleft},
+    {NS_VK_CLOSE_PAREN, GDK_parenright},
+    {NS_VK_ASTERISK, GDK_asterisk},
+    {NS_VK_PLUS, GDK_plus},
+    {NS_VK_PIPE, GDK_bar},
+    {NS_VK_HYPHEN_MINUS, GDK_minus},
+    {NS_VK_OPEN_CURLY_BRACKET, GDK_braceleft},
+    {NS_VK_CLOSE_CURLY_BRACKET, GDK_braceright},
+    {NS_VK_TILDE, GDK_asciitilde},
+    {NS_VK_COMMA, GDK_comma},
+    {NS_VK_PERIOD, GDK_period},
+    {NS_VK_SLASH, GDK_slash},
+    {NS_VK_BACK_QUOTE, GDK_grave},
+    {NS_VK_OPEN_BRACKET, GDK_bracketleft},
+    {NS_VK_BACK_SLASH, GDK_backslash},
+    {NS_VK_CLOSE_BRACKET, GDK_bracketright},
+    {NS_VK_QUOTE, GDK_apostrophe},
+};
+
+/* static */
+guint KeymapWrapper::ConvertGeckoKeyCodeToGDKKeyval(const nsAString& aKeyCode) {
+  NS_ConvertUTF16toUTF8 keyName(aKeyCode);
+  ToUpperCase(keyName);  // We want case-insensitive comparison with data
+                         // stored as uppercase.
+
+  uint32_t keyCode = 0;
+
+  uint32_t keyNameLength = keyName.Length();
+  const char* keyNameStr = keyName.get();
+  for (const auto& code : gKeyCodes) {
+    if (keyNameLength == code.strlength &&
+        !nsCRT::strcmp(code.str, keyNameStr)) {
+      keyCode = code.keycode;
+      break;
+    }
+  }
+
+  // First, try to handle alphanumeric input, not listed in nsKeycodes:
+  // most likely, more letters will be getting typed in than things in
+  // the key list, so we will look through these first.
+
+  if (keyCode >= NS_VK_A && keyCode <= NS_VK_Z) {
+    // gdk and DOM both use the ASCII codes for these keys.
+    return keyCode;
+  }
+
+  // numbers
+  if (keyCode >= NS_VK_0 && keyCode <= NS_VK_9) {
+    // gdk and DOM both use the ASCII codes for these keys.
+    return keyCode - NS_VK_0 + GDK_0;
+  }
+
+  // misc other things
+  for (const auto& pair : gKeyPairs) {
+    if (pair.DOMKeyCode == keyCode) {
+      return pair.GDKKeyval;
+    }
+  }
+
+  return 0;
+}
+
 /* static */
 uint32_t KeymapWrapper::GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval) {
   switch (aGdkKeyval) {

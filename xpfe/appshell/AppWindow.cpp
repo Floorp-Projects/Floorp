@@ -78,7 +78,7 @@
 
 #include "mozilla/dom/DocumentL10n.h"
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
 #  include "mozilla/widget/NativeMenuSupport.h"
 #  define USE_NATIVE_MENUS
 #endif
@@ -491,10 +491,10 @@ NS_IMETHODIMP AppWindow::ShowModal() {
 
 #ifdef USE_NATIVE_MENUS
   if (!gfxPlatform::IsHeadless()) {
-    // macOS only: For modals created early in startup.
-    // (e.g. ProfileManager/ProfileDowngrade) this creates a fallback menu for
-    // the menu bar which only contains a "Quit" menu item.
-    // This allows the user to quit the application in a regular way with cmd+Q.
+    // On macOS, for modals created early in startup. (e.g.
+    // ProfileManager/ProfileDowngrade) this creates a fallback menu for the
+    // menu bar which only contains a "Quit" menu item. This allows the user to
+    // quit the application in a regular way with cmd+Q.
     widget::NativeMenuSupport::CreateNativeMenuBar(mWindow, nullptr);
   }
 #endif
@@ -3140,22 +3140,15 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
   nsCOMPtr<nsINodeList> menubarElements = aDoc->GetElementsByTagNameNS(
-      nsLiteralString(
-          u"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
+      u"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"_ns,
       u"menubar"_ns);
 
-  nsCOMPtr<nsINode> menubarNode;
+  RefPtr<Element> menubar;
   if (menubarElements) {
-    menubarNode = menubarElements->Item(0);
+    menubar = Element::FromNodeOrNull(menubarElements->Item(0));
   }
 
-  using widget::NativeMenuSupport;
-  if (menubarNode) {
-    nsCOMPtr<Element> menubarContent(do_QueryInterface(menubarNode));
-    NativeMenuSupport::CreateNativeMenuBar(aParentWindow, menubarContent);
-  } else {
-    NativeMenuSupport::CreateNativeMenuBar(aParentWindow, nullptr);
-  }
+  widget::NativeMenuSupport::CreateNativeMenuBar(aParentWindow, menubar);
 
   if (!sHiddenWindowLoadedNativeMenus) {
     sHiddenWindowLoadedNativeMenus = true;
@@ -3197,13 +3190,11 @@ class L10nReadyPromiseHandler final : public dom::PromiseNativeHandler {
 NS_IMPL_ISUPPORTS0(L10nReadyPromiseHandler)
 
 static void BeginLoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
-  RefPtr<DocumentL10n> l10n = aDoc->GetL10n();
-  if (l10n) {
+  if (RefPtr<DocumentL10n> l10n = aDoc->GetL10n()) {
     // Wait for l10n to be ready so the menus are localized.
     RefPtr<Promise> promise = l10n->Ready();
     MOZ_ASSERT(promise);
-    RefPtr<L10nReadyPromiseHandler> handler =
-        new L10nReadyPromiseHandler(aDoc, aParentWindow);
+    RefPtr handler = new L10nReadyPromiseHandler(aDoc, aParentWindow);
     promise->AppendNativeHandler(handler);
   } else {
     // Something went wrong loading the doc and l10n wasn't created. This
