@@ -168,8 +168,12 @@ void ContentMediaControlKeyHandler::HandleMediaControlAction(
   if (!aContext->GetDocShell()) {
     return;
   }
+  if (aAction.mKey.isNothing()) {
+    MOZ_ASSERT_UNREACHABLE("Invalid media control key.");
+    return;
+  }
   ContentPlaybackController controller(aContext);
-  switch (aAction.mKey) {
+  switch (aAction.mKey.value()) {
     case MediaControlKey::Focus:
       controller.Focus();
       return;
@@ -178,6 +182,9 @@ void ContentMediaControlKeyHandler::HandleMediaControlAction(
       return;
     case MediaControlKey::Pause:
       controller.Pause();
+      return;
+    case MediaControlKey::Playpause:
+      MOZ_ASSERT_UNREACHABLE("Invalid media control key.");
       return;
     case MediaControlKey::Stop:
       controller.Stop();

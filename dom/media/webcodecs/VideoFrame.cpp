@@ -598,8 +598,6 @@ static bool IsYUVFormat(const VideoPixelFormat& aFormat) {
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       return false;
-    case VideoPixelFormat::EndGuard_:
-      MOZ_ASSERT_UNREACHABLE("unsupported format");
   }
   return false;
 }
@@ -641,8 +639,6 @@ static VideoColorSpaceInit PickColorSpace(
       colorSpace.mPrimaries.SetValue(VideoColorPrimaries::Bt709);
       colorSpace.mTransfer.SetValue(VideoTransferCharacteristics::Iec61966_2_1);
       break;
-    case VideoPixelFormat::EndGuard_:
-      MOZ_ASSERT_UNREACHABLE("unsupported format");
   }
 
   return colorSpace;
@@ -881,8 +877,6 @@ static Result<RefPtr<layers::Image>, nsCString> CreateImageFromBuffer(
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       return CreateRGBAImageFromBuffer(aFormat, aSize, aBuffer);
-    case VideoPixelFormat::EndGuard_:
-      MOZ_ASSERT_UNREACHABLE("unsupported format");
   }
   return Err(nsCString("Invalid image format"));
 }
@@ -2031,8 +2025,6 @@ gfx::SurfaceFormat VideoFrame::Format::ToSurfaceFormat() const {
     case VideoPixelFormat::BGRX:
       format = gfx::SurfaceFormat::B8G8R8X8;
       break;
-    case VideoPixelFormat::EndGuard_:
-      MOZ_ASSERT_UNREACHABLE("unsupported format");
   }
   return format;
 }
@@ -2055,8 +2047,6 @@ void VideoFrame::Format::MakeOpaque() {
     case VideoPixelFormat::RGBX:
     case VideoPixelFormat::BGRX:
       return;
-    case VideoPixelFormat::EndGuard_:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported format");
 }
@@ -2076,8 +2066,6 @@ nsTArray<VideoFrame::Format::Plane> VideoFrame::Format::Planes() const {
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       return {Plane::RGBA};
-    case VideoPixelFormat::EndGuard_:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported format");
   return {};
@@ -2124,8 +2112,6 @@ uint32_t VideoFrame::Format::SampleBytes(const Plane& aPlane) const {
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       return 4;  // 8 bits/sample, 32 bits/pixel
-    case VideoPixelFormat::EndGuard_:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported format");
   return 0;
@@ -2153,7 +2139,6 @@ gfx::IntSize VideoFrame::Format::SampleSize(const Plane& aPlane) const {
         case VideoPixelFormat::RGBX:
         case VideoPixelFormat::BGRA:
         case VideoPixelFormat::BGRX:
-        case VideoPixelFormat::EndGuard_:
           MOZ_ASSERT_UNREACHABLE("invalid format");
           return {0, 0};
       }
@@ -2176,8 +2161,6 @@ bool VideoFrame::Format::IsValidSize(const gfx::IntSize& aSize) const {
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       return true;
-    case VideoPixelFormat::EndGuard_:
-      break;
   }
   MOZ_ASSERT_UNREACHABLE("unsupported format");
   return false;
@@ -2204,8 +2187,6 @@ size_t VideoFrame::Format::SampleCount(const gfx::IntSize& aSize) const {
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
       return (count * 4).value();
-    case VideoPixelFormat::EndGuard_:
-      break;
   }
 
   MOZ_ASSERT_UNREACHABLE("unsupported format");
@@ -2251,8 +2232,6 @@ uint32_t VideoFrame::Resource::Stride(const Format::Plane& aPlane) const {
         case VideoPixelFormat::BGRA:
         case VideoPixelFormat::BGRX:
           return (width * mFormat->SampleBytes(aPlane)).value();
-        case VideoPixelFormat::EndGuard_:
-          MOZ_ASSERT_UNREACHABLE("invalid format");
       }
       return 0;
     case Format::Plane::U:  // and UV
@@ -2268,7 +2247,6 @@ uint32_t VideoFrame::Resource::Stride(const Format::Plane& aPlane) const {
         case VideoPixelFormat::RGBX:
         case VideoPixelFormat::BGRA:
         case VideoPixelFormat::BGRX:
-        case VideoPixelFormat::EndGuard_:
           MOZ_ASSERT_UNREACHABLE("invalid format");
       }
       return 0;
