@@ -224,6 +224,8 @@ support-files = [
 
 ["test_menulist_in_popup.xhtml"]
 
+["test_menulist_initial_selection.xhtml"]
+
 ["test_menulist_keynav.xhtml"]
 
 ["test_menulist_null_value.xhtml"]

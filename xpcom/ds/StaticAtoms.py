@@ -732,6 +732,7 @@ STATIC_ATOMS = [
     Atom("noembed", "noembed"),
     Atom("noframes", "noframes"),
     Atom("nohref", "nohref"),
+    Atom("noinitialselection", "noinitialselection"),
     Atom("nomodule", "nomodule"),
     Atom("nonce", "nonce"),
     Atom("none", "none"),
