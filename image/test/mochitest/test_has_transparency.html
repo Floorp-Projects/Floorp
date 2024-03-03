@@ -80,11 +80,11 @@ function loadNext() {
   gImg.setAttribute("src", currentFile);
 }
 
-function onHasTransparency(aRequest) {
+function onHasTransparency() {
   gHasTransparencyWasCalled = true;
 }
 
-function onDecodeComplete(aRequest) {
+function onDecodeComplete() {
   if (!gCurrentFileIsTransparent) {
     ok(!gHasTransparencyWasCalled,
        "onHasTransparency was not called for non-transparent file " + gImg.src);

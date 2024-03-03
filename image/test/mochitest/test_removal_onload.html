@@ -45,10 +45,10 @@ function* fileToLoad() {
   yield "rillybad.jpg";
 }
 
-function onSizeAvailable(aRequest) {
+function onSizeAvailable() {
   ok(true, "AfterLoad.onSizeAvailable called for " + gImg.src);
 }
-function onLoadComplete(aRequest) {
+function onLoadComplete() {
   ok(gExpected > gLoads, "AfterLoad.onLoadComplete called for " + gImg.src);
   gLoads++;
   SimpleTest.executeSoon(function() {
@@ -60,7 +60,7 @@ function onLoadComplete(aRequest) {
     maybeAdvance();
   });
 }
-function onDecodeComplete(aRequest) {
+function onDecodeComplete() {
   ok(true, "AfterLoad.onDecodeComplete called for " + gImg.src);
 }
 

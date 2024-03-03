@@ -26,7 +26,7 @@ window.onload = function() {
     .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
 
   var amount = 0;
-  var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+  var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount) {
     amount += aAmount;
   }
 
