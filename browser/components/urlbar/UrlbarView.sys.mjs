@@ -693,7 +693,7 @@ export class UrlbarView {
     this.#cacheL10nStrings();
   }
 
-  onQueryCancelled(queryContext) {
+  onQueryCancelled() {
     this.#queryWasCancelled = true;
     this.#cancelRemoveStaleRowsTimer();
   }
@@ -1326,7 +1326,7 @@ export class UrlbarView {
     return item;
   }
 
-  #createRowContent(item, result) {
+  #createRowContent(item) {
     // The url is the only element that can wrap, thus all the other elements
     // are child of noWrap.
     let noWrap = this.#createElement("span");
@@ -1505,7 +1505,7 @@ export class UrlbarView {
     return classes;
   }
 
-  #createRowContentForRichSuggestion(item, result) {
+  #createRowContentForRichSuggestion(item) {
     item._content.toggleAttribute("selectable", true);
 
     let favicon = this.#createElement("img");
@@ -3272,7 +3272,7 @@ export class UrlbarView {
     }
   }
 
-  on_blur(event) {
+  on_blur() {
     // If the view is open without the input being focused, it will not close
     // automatically when the window loses focus. We might be in this state
     // after a Search Tip is shown on an engine homepage.

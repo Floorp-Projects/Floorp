@@ -74,7 +74,7 @@ add_setup(async function () {
 });
 
 add_task(async function emptySearch() {
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
     });
@@ -109,7 +109,7 @@ add_task(async function emptySearch_withRestyledHistory() {
     // Can be restyled but does not dupe form history.
     "http://mochi.test:8888/?terms=ciao",
   ]);
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update2.emptySearchBehavior", 2]],
     });
@@ -162,7 +162,7 @@ add_task(async function emptySearch_withRestyledHistory_noSearchHistory() {
     // Can be restyled but does not dupe form history.
     "http://mochi.test:8888/?terms=ciao",
   ]);
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["browser.urlbar.update2.emptySearchBehavior", 2],
@@ -204,7 +204,7 @@ add_task(async function emptySearch_behavior() {
   // URLs with the same host as the search engine.
   await PlacesTestUtils.addVisits([`http://mochi.test/`]);
 
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update2.emptySearchBehavior", 0]],
     });
@@ -245,7 +245,7 @@ add_task(async function emptySearch_behavior() {
     await SpecialPowers.popPrefEnv();
   });
 
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update2.emptySearchBehavior", 1]],
     });
@@ -269,7 +269,7 @@ add_task(async function emptySearch_behavior() {
 add_task(async function emptySearch_local() {
   await PlacesTestUtils.addVisits([`http://mochi.test/`]);
 
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.update2.emptySearchBehavior", 0]],
     });
@@ -300,7 +300,7 @@ add_task(async function emptySearch_local() {
 });
 
 add_task(async function nonEmptySearch() {
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     let query = "hello";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -348,7 +348,7 @@ add_task(async function nonEmptySearch() {
 });
 
 add_task(async function nonEmptySearch_nonMatching() {
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     let query = "ciao";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -422,7 +422,7 @@ add_task(async function nonEmptySearch_withHistory() {
     };
   }
 
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: query,
@@ -520,7 +520,7 @@ add_task(async function nonEmptySearch_withHistory() {
 });
 
 add_task(async function nonEmptySearch_url() {
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     let query = "http://www.example.com/";
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,

@@ -95,7 +95,7 @@ async function test_window(win) {
     // we just wait for the expected currentURI value.
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url, waitForLoad: false },
-      async browser => {
+      async () => {
         await TestUtils.waitForCondition(
           () => win.gBrowser.currentURI.spec == url,
           "Ensure we're on the expected page"

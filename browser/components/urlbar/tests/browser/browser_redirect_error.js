@@ -67,7 +67,7 @@ var gWebProgressListener = {
   // onSecurityChange: function() {},
   // ----------------------------------------------------------------------------
 
-  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+  onLocationChange(aWebProgress, aRequest, aLocation) {
     if (!aRequest) {
       // This is bug 673752, or maybe initial "about:blank".
       return;

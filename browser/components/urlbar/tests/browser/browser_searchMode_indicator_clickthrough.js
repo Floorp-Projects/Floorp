@@ -14,7 +14,7 @@ add_task(async function test() {
     set: [["browser.search.suggest.enabled", false]],
   });
 
-  await BrowserTestUtils.withNewTab("about:robots", async browser => {
+  await BrowserTestUtils.withNewTab("about:robots", async () => {
     // View open, with string.
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -69,7 +69,7 @@ add_task(async function test() {
     Assert.ok(!BrowserTestUtils.isVisible(labelBox));
   });
 
-  await BrowserTestUtils.withNewTab("about:robots", async browser => {
+  await BrowserTestUtils.withNewTab("about:robots", async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "test",

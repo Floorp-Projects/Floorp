@@ -163,7 +163,7 @@ class ProviderWeather extends UrlbarProvider {
    *   update depend on element IDs, as some ARIA attributes do.
    * @returns {object} An object describing the view update.
    */
-  getViewUpdate(result, idsByName) {
+  getViewUpdate(result) {
     return lazy.QuickSuggest.weather.getViewUpdate(result);
   }
 

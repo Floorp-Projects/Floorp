@@ -627,7 +627,7 @@ export class UrlbarInput {
   handleNavigation({ event, oneOffParams, triggeringPrincipal }) {
     let element = this.view.selectedElement;
     let result = this.view.getResultFromElement(element);
-    let openParams = oneOffParams?.openParams || {};
+    let openParams = oneOffParams?.openParams || { triggeringPrincipal };
 
     // If the value was submitted during composition, the result may not have
     // been updated yet, because the input event happens after composition end.
@@ -794,7 +794,7 @@ export class UrlbarInput {
           this.pickResult(newResult, event, null, browser);
         }
       })
-      .catch(ex => {
+      .catch(() => {
         if (url) {
           // Something went wrong, we should always have a heuristic result,
           // otherwise it means we're not able to search at all, maybe because
@@ -3472,11 +3472,11 @@ export class UrlbarInput {
     Services.obs.notifyObservers(null, "urlbar-focus");
   }
 
-  _on_mouseover(event) {
+  _on_mouseover() {
     this._updateUrlTooltip();
   }
 
-  _on_draggableregionleftmousedown(event) {
+  _on_draggableregionleftmousedown() {
     if (!lazy.UrlbarPrefs.get("ui.popup.disable_autohide")) {
       this.view.close();
     }
@@ -3650,7 +3650,7 @@ export class UrlbarInput {
     });
   }
 
-  _on_selectionchange(event) {
+  _on_selectionchange() {
     // Confirm placeholder as user text if it gets explicitly deselected. This
     // happens when the user wants to modify the autofilled text by either
     // clicking on it, or pressing HOME, END, RIGHT, …
@@ -3665,7 +3665,7 @@ export class UrlbarInput {
     }
   }
 
-  _on_select(event) {
+  _on_select() {
     // On certain user input, AutoCopyListener::OnSelectionChange() updates
     // the primary selection with user-selected text (when supported).
     // Selection::NotifySelectionListeners() then dispatches a "select" event
@@ -3856,11 +3856,11 @@ export class UrlbarInput {
     return new lazy.UrlbarQueryContext(options);
   }
 
-  _on_scrollend(event) {
+  _on_scrollend() {
     this.updateTextOverflow();
   }
 
-  _on_TabSelect(event) {
+  _on_TabSelect() {
     this._gotTabSelect = true;
     this._afterTabSelectAndFocusChange();
   }
@@ -3935,7 +3935,7 @@ export class UrlbarInput {
     }
   }
 
-  _on_compositionstart(event) {
+  _on_compositionstart() {
     if (this._compositionState == lazy.UrlbarUtils.COMPOSITION.COMPOSING) {
       throw new Error("Trying to start a nested composition?");
     }

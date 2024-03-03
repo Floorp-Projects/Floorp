@@ -113,7 +113,7 @@ class ProviderClipboard extends UrlbarProvider {
     return null;
   }
 
-  getPriority(queryContext) {
+  getPriority() {
     // Zero-prefix suggestions have the same priority as top sites.
     return 1;
   }

@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 async function doTopsitesTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await addTopSites("https://example.com/");
 
     await showResultByArrowDown();
@@ -120,7 +120,7 @@ async function doTopsitesSearchTest({ trigger, assert }) {
 }
 
 async function doTypedTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
 
     await trigger();
@@ -129,7 +129,7 @@ async function doTypedTest({ trigger, assert }) {
 }
 
 async function doTypedWithResultsPopupTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await showResultByArrowDown();
     EventUtils.synthesizeKey("x");
     await UrlbarTestUtils.promiseSearchComplete(window);
@@ -140,7 +140,7 @@ async function doTypedWithResultsPopupTest({ trigger, assert }) {
 }
 
 async function doPastedTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await doPaste("www.example.com");
 
     await trigger();
@@ -149,7 +149,7 @@ async function doPastedTest({ trigger, assert }) {
 }
 
 async function doPastedWithResultsPopupTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await showResultByArrowDown();
     await doPaste("x");
 
@@ -189,7 +189,7 @@ async function doReturnedRestartedRefinedTest({ trigger, assert }) {
   ];
 
   for (const { firstInput, secondInput, expected } of testData) {
-    await doTest(async browser => {
+    await doTest(async () => {
       await openPopup(firstInput);
       await doBlur();
 
@@ -210,7 +210,7 @@ async function doReturnedRestartedRefinedTest({ trigger, assert }) {
 }
 
 async function doPersistedSearchTermsTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
     await doEnter();
 
@@ -256,7 +256,7 @@ async function doPersistedSearchTermsRestartedRefinedTest({
   ];
 
   for (const { firstInput, secondInput, expected } of testData) {
-    await doTest(async browser => {
+    await doTest(async () => {
       await openPopup(firstInput);
       await doEnter();
 
@@ -311,7 +311,7 @@ async function doPersistedSearchTermsRestartedRefinedViaAbandonmentTest({
   ];
 
   for (const { firstInput, secondInput, expected } of testData) {
-    await doTest(async browser => {
+    await doTest(async () => {
       await openPopup("any search");
       await doEnter();
 

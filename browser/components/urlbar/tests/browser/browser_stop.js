@@ -57,7 +57,7 @@ async function typeAndSubmitAndStop(url) {
   // urlbar value has been updated, add our own progress listener here.
   let progressPromise = new Promise(resolve => {
     let listener = {
-      onStateChange(browser, webProgress, request, stateFlags, status) {
+      onStateChange(browser, webProgress, request, stateFlags) {
         if (
           webProgress.isTopLevel &&
           stateFlags & Ci.nsIWebProgressListener.STATE_STOP

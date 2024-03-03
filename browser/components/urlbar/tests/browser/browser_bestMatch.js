@@ -117,11 +117,7 @@ add_task(async function keySelection() {
   });
 });
 
-async function checkBestMatchRow({
-  result,
-  isSponsored = false,
-  hasHelpUrl = false,
-}) {
+async function checkBestMatchRow({ result, hasHelpUrl = false }) {
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
     1,

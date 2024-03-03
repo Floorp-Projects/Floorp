@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 async function doHeuristicsTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
 
     await trigger();
@@ -24,7 +24,7 @@ async function doAdaptiveHistoryTest({ trigger, assert }) {
     set: [["browser.urlbar.autoFill", false]],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await PlacesTestUtils.addVisits(["https://example.com/test"]);
     await UrlbarUtils.addToInputHistory("https://example.com/test", "examp");
 
@@ -46,7 +46,7 @@ async function doSearchHistoryTest({ trigger, assert }) {
     ],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await UrlbarTestUtils.formHistory.add(["foofoo", "foobar"]);
 
     await openPopup("foo");
@@ -64,7 +64,7 @@ async function doRecentSearchTest({ trigger, assert }) {
     set: [["browser.urlbar.recentsearches.featureGate", true]],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await UrlbarTestUtils.formHistory.add([
       { value: "foofoo", source: Services.search.defaultEngine.name },
     ]);
@@ -87,7 +87,7 @@ async function doSearchSuggestTest({ trigger, assert }) {
     ],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("foo");
     await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
 
@@ -101,7 +101,7 @@ async function doSearchSuggestTest({ trigger, assert }) {
 async function doTailSearchSuggestTest({ trigger, assert }) {
   const cleanup = await _useTailSuggestionsEngine();
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("hello");
     await selectRowByProvider("SearchSuggestions");
 
@@ -127,7 +127,7 @@ async function doTopPickTest({ trigger, assert }) {
     ],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("navigational");
     await selectRowByURL("https://example.com/navigational-suggestion");
 
@@ -139,7 +139,7 @@ async function doTopPickTest({ trigger, assert }) {
 }
 
 async function doTopSiteTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await addTopSites("https://example.com/");
 
     await showResultByArrowDown();
@@ -158,7 +158,7 @@ async function doClipboardTest({ trigger, assert }) {
     ],
   });
   SpecialPowers.clipboardCopyString("https://example.com/clipboard");
-  await doTest(async browser => {
+  await doTest(async () => {
     await showResultByArrowDown();
     await selectRowByURL("https://example.com/clipboard");
 
@@ -173,7 +173,7 @@ async function doClipboardTest({ trigger, assert }) {
 async function doRemoteTabTest({ trigger, assert }) {
   const remoteTab = await loadRemoteTab("https://example.com");
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("example");
     await selectRowByProvider("RemoteTabs");
 
@@ -188,7 +188,7 @@ async function doAddonTest({ trigger, assert }) {
   const addon = loadOmniboxAddon({ keyword: "omni" });
   await addon.startup();
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("omni test");
 
     await trigger();
@@ -199,7 +199,7 @@ async function doAddonTest({ trigger, assert }) {
 }
 
 async function doGeneralBookmarkTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: "https://example.com/bookmark",
@@ -219,7 +219,7 @@ async function doGeneralHistoryTest({ trigger, assert }) {
     set: [["browser.urlbar.autoFill", false]],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await PlacesTestUtils.addVisits("https://example.com/test");
 
     await openPopup("example");
@@ -235,7 +235,7 @@ async function doGeneralHistoryTest({ trigger, assert }) {
 async function doSuggestTest({ trigger, assert }) {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("nonsponsored");
     await selectRowByURL("https://example.com/nonsponsored");
 
@@ -251,7 +251,7 @@ async function doAboutPageTest({ trigger, assert }) {
     set: [["browser.urlbar.maxRichResults", 3]],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("about:");
     await selectRowByURL("about:robots");
 
@@ -267,7 +267,7 @@ async function doSuggestedIndexTest({ trigger, assert }) {
     set: [["browser.urlbar.unitConversion.enabled", true]],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("1m to cm");
     await selectRowByProvider("UnitConversion");
 

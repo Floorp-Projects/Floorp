@@ -321,5 +321,5 @@ function promiseEngine(expectedData, expectedEngineName) {
         expectedEngineName == engine.wrappedJSObject.name
       );
     }
-  ).then(([engine, data]) => engine);
+  ).then(([engine]) => engine);
 }

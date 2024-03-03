@@ -544,7 +544,7 @@ class ProviderInterventions extends UrlbarProvider {
     );
   }
 
-  async _setCurrentTipFromAppUpdaterStatus(waitForCheck) {
+  async _setCurrentTipFromAppUpdaterStatus() {
     // The update tips depend on the app's update status, so check for updates
     // now (if we haven't already checked within the update-check period).  If
     // we're running in an xpcshell test, then checkForBrowserUpdate's attempt
@@ -671,7 +671,7 @@ class ProviderInterventions extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext the query context object to cancel
    *        query for.
    */
-  cancelQuery(queryContext) {
+  cancelQuery() {
     // If we're waiting for appUpdater to finish its update check,
     // this._appUpdaterListener will be defined.  We can stop listening now.
     if (this._appUpdaterListener) {

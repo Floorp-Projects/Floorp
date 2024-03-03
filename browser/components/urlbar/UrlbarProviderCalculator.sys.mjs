@@ -157,7 +157,7 @@ class ProviderCalculator extends UrlbarProvider {
     return viewUpdate;
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details) {
     let { result } = details;
     if (result?.providerName == this.name) {
       lazy.ClipboardHelper.copyString(result.payload.value);
@@ -306,7 +306,7 @@ Parser.prototype = {
   // This method returns an array of objects with these properties:
   // - number: true/false
   // - value:  the token value
-  parse(input) {
+  parse() {
     // The input must be a "block" without any digit left.
     if (!this._tokenizeBlock() || this._chars.length) {
       throw new Error("Wrong input");

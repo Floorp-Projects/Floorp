@@ -54,7 +54,7 @@ add_task(async function test_switchtab_override() {
   info("Override switch-to-tab");
   let deferred = Promise.withResolvers();
   // In case of failure this would switch tab.
-  let onTabSelect = event => {
+  let onTabSelect = () => {
     deferred.reject(new Error("Should have overridden switch to tab"));
   };
   gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect);

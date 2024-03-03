@@ -7,7 +7,7 @@ add_task(async function () {
       gBrowser,
       url: "http://example.com",
     },
-    async function (browser) {
+    async function () {
       let originalValue = gURLBar.value;
       let tab = gBrowser.selectedTab;
       info("Put a typed value.");

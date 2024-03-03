@@ -5,7 +5,7 @@
 
 const TEST_URL = `${TEST_BASE_URL}file_urlbar_edit_dos.html`;
 
-async function checkURLBarValueStays(browser) {
+async function checkURLBarValueStays() {
   gURLBar.select();
   EventUtils.sendString("a");
   is(gURLBar.value, "a", "URL bar value should match after sending a key");

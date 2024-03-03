@@ -22,7 +22,7 @@ class NoResponseTestProvider extends UrlbarTestUtils.TestProvider {
     return UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
   }
 
-  async startQuery(context, addCallback) {
+  async startQuery(_context, _addCallback) {
     await this.#deferred.promise;
   }
 
@@ -98,7 +98,7 @@ add_task(async function engagement_before_showing_results() {
   };
   registerCleanupFunction(cleanup);
 
-  await doTest(async browser => {
+  await doTest(async () => {
     // Try to show the results.
     await UrlbarTestUtils.inputIntoURLBar(window, "exam");
 
@@ -156,7 +156,7 @@ add_task(async function engagement_after_closing_results() {
   ];
 
   for (const trigger of TRIGGERS) {
-    await doTest(async browser => {
+    await doTest(async () => {
       await openPopup("test");
       await UrlbarTestUtils.promisePopupClose(window, () => {
         trigger();
@@ -186,7 +186,7 @@ add_task(async function engagement_after_closing_results() {
 });
 
 add_task(async function enter_to_reload_current_url() {
-  await doTest(async browser => {
+  await doTest(async () => {
     // Open a URL once.
     await openPopup("https://example.com");
     await doEnter();

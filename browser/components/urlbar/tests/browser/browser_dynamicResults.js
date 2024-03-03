@@ -580,7 +580,7 @@ add_task(async function highlighting() {
       addCallback(this, result);
     }
 
-    getViewUpdate(result, idsByName) {
+    getViewUpdate(_result, _idsByName) {
       return {};
     }
   }
@@ -617,7 +617,7 @@ add_task(async function highlighting() {
    * Provides a dynamic result with highlighted text that is then overridden.
    */
   class TestHighlightProviderOveridden extends TestHighlightProvider {
-    getViewUpdate(result, idsByName) {
+    getViewUpdate(_result, _idsByName) {
       return {
         text: {
           textContent: "Test title",
@@ -904,7 +904,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     };
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details, _controller) {
     if (this._pickPromiseResolve) {
       let { result, element } = details;
       this._pickPromiseResolve([result, element]);

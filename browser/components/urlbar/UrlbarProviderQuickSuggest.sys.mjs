@@ -786,7 +786,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   #recordNavSuggestionTelemetry({
     queryContext,
     result,
-    resultSelType,
     resultClicked,
     details,
   }) {
@@ -833,7 +832,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext
    *   The query context.
    */
-  cancelQuery(queryContext) {
+  cancelQuery() {
     // Cancel the Rust query.
     let backend = lazy.QuickSuggest.getFeature("SuggestBackendRust");
     if (backend?.isEnabled) {

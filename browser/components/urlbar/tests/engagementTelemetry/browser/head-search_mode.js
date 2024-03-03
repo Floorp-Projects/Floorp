@@ -6,7 +6,7 @@
 /* import-globals-from head.js */
 
 async function doNotSearchModeTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
 
     await trigger();
@@ -15,7 +15,7 @@ async function doNotSearchModeTest({ trigger, assert }) {
 }
 
 async function doSearchEngineTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
     await UrlbarTestUtils.enterSearchMode(window);
 
@@ -25,7 +25,7 @@ async function doSearchEngineTest({ trigger, assert }) {
 }
 
 async function doBookmarksTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       url: "https://example.com/bookmark",
@@ -47,7 +47,7 @@ async function doHistoryTest({ trigger, assert }) {
     set: [["browser.urlbar.autoFill", false]],
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await PlacesTestUtils.addVisits("https://example.com/test");
     await openPopup("example");
     await UrlbarTestUtils.enterSearchMode(window, {
@@ -65,7 +65,7 @@ async function doHistoryTest({ trigger, assert }) {
 async function doTabTest({ trigger, assert }) {
   const tab = BrowserTestUtils.addTab(gBrowser, "https://example.com/");
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("example");
     await UrlbarTestUtils.enterSearchMode(window, {
       source: UrlbarUtils.RESULT_SOURCE.TABS,
@@ -80,7 +80,7 @@ async function doTabTest({ trigger, assert }) {
 }
 
 async function doActionsTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("add");
     await UrlbarTestUtils.enterSearchMode(window, {
       source: UrlbarUtils.RESULT_SOURCE.ACTIONS,

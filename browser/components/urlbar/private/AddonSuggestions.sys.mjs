@@ -178,7 +178,7 @@ export class AddonSuggestions extends BaseFeature {
     );
   }
 
-  getResultCommands(result) {
+  getResultCommands() {
     const commands = [];
 
     if (this.canShowLessFrequently) {

@@ -138,7 +138,7 @@ function loadTab(tab, url) {
   // Because adding visits is async, we will not be notified immediately.
   let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let visited = new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
       if (url != aSubject.QueryInterface(Ci.nsIURI).spec) {
         return;
       }

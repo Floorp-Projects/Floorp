@@ -62,7 +62,7 @@ async function runURLBarSearchTest({
   for (let i = 0; i < setValueFns.length; ++i) {
     await setValueFns[i](valueToOpen);
     let topic = "uri-fixup-check-dns";
-    let observer = (aSubject, aTopicInner, aData) => {
+    let observer = (aSubject, aTopicInner) => {
       if (aTopicInner == topic) {
         gDNSResolved = true;
       }
@@ -248,7 +248,7 @@ function get_test_function_for_localhost_with_hostname(
         gBrowser: win.gBrowser,
         url: "about:blank",
       },
-      browser =>
+      () =>
         runURLBarSearchTest({
           valueToOpen: hostName,
           expectSearch: true,
@@ -268,7 +268,7 @@ function get_test_function_for_localhost_with_hostname(
         gBrowser: win.gBrowser,
         url: "about:blank",
       },
-      browser =>
+      () =>
         runURLBarSearchTest({
           valueToOpen: hostName,
           expectSearch: true,
@@ -289,7 +289,7 @@ function get_test_function_for_localhost_with_hostname(
         gBrowser: win.gBrowser,
         url: "about:blank",
       },
-      browser =>
+      () =>
         runURLBarSearchTest({
           valueToOpen: hostName,
           expectSearch: isPrivate,
@@ -325,7 +325,7 @@ add_task(async function test_dnsResolveSingleWordsAfterSearch() {
       gBrowser,
       url: "about:blank",
     },
-    browser =>
+    () =>
       runURLBarSearchTest({
         valueToOpen: "localhost",
         expectSearch: true,

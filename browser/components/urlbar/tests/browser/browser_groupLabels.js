@@ -139,7 +139,7 @@ add_task(async function generalBeforeSuggestions() {
 add_task(async function generalBeforeSuggestions_suggestionsOnly() {
   await PlacesUtils.history.clear();
 
-  await withSuggestions(async engine => {
+  await withSuggestions(async () => {
     await SpecialPowers.pushPrefEnv({
       set: [[SUGGESTIONS_FIRST_PREF, false]],
     });
@@ -196,7 +196,7 @@ add_task(async function suggestedIndex_only() {
   let provider = new SuggestedIndexProvider(index);
   UrlbarProvidersManager.registerProvider(provider);
 
-  await withSuggestions(async engine => {
+  await withSuggestions(async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "test",

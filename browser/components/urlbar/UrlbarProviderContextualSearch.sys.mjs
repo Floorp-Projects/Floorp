@@ -135,7 +135,6 @@ class ProviderContextualSearch extends UrlbarProvider {
       engine = (
         await lazy.UrlbarSearchUtils.enginesForDomainPrefix(host, {
           matchAllDomainLevels: true,
-          onlyEnabled: false,
         })
       )[0];
     }
@@ -220,7 +219,7 @@ class ProviderContextualSearch extends UrlbarProvider {
    *   the DOM, as defined by the browser.
    * @returns {object} An object describing the view update.
    */
-  getViewUpdate(result, idsByName) {
+  getViewUpdate(result) {
     return {
       icon: {
         attributes: {

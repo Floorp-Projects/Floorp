@@ -115,10 +115,10 @@ class TipProvider extends UrlbarProvider {
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
-  isActive(context) {
+  isActive(_context) {
     return true;
   }
-  getPriority(context) {
+  getPriority(_context) {
     return 1;
   }
   async startQuery(context, addCallback) {

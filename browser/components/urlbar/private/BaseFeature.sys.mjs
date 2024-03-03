@@ -92,7 +92,7 @@ export class BaseFeature {
    * @param {boolean} enabled
    *   Whether the feature should be enabled or not.
    */
-  enable(enabled) {}
+  enable(_enabled) {}
 
   /**
    * If the feature manages suggestions from remote settings that should be
@@ -105,7 +105,7 @@ export class BaseFeature {
    * @returns {Array}
    *   An array of matching suggestions, or null if not implemented.
    */
-  async queryRemoteSettings(searchString) {
+  async queryRemoteSettings(_searchString) {
     return null;
   }
 
@@ -117,7 +117,7 @@ export class BaseFeature {
    * @param {RemoteSettings} rs
    *   The `RemoteSettings` client object.
    */
-  async onRemoteSettingsSync(rs) {}
+  async onRemoteSettingsSync(_rs) {}
 
   /**
    * If the feature manages suggestions that either aren't served by Merino or
@@ -131,7 +131,7 @@ export class BaseFeature {
    * @returns {string}
    *   The suggestion's telemetry type.
    */
-  getSuggestionTelemetryType(suggestion) {
+  getSuggestionTelemetryType(_suggestion) {
     return this.merinoProvider;
   }
 
@@ -149,7 +149,7 @@ export class BaseFeature {
    * @returns {boolean}
    *   Whether the suggestion type is enabled.
    */
-  isRustSuggestionTypeEnabled(type) {
+  isRustSuggestionTypeEnabled(_type) {
     return true;
   }
 
@@ -169,7 +169,7 @@ export class BaseFeature {
    * @returns {UrlbarResult}
    *   A new result for the suggestion.
    */
-  async makeResult(queryContext, suggestion, searchString) {
+  async makeResult(_queryContext, _suggestion, _searchString) {
     return null;
   }
 

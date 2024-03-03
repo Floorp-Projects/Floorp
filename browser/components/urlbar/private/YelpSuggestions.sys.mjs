@@ -55,7 +55,7 @@ export class YelpSuggestions extends BaseFeature {
     return !cap || this.showLessFrequentlyCount < cap;
   }
 
-  getSuggestionTelemetryType(suggestion) {
+  getSuggestionTelemetryType() {
     return "yelp";
   }
 
@@ -127,7 +127,7 @@ export class YelpSuggestions extends BaseFeature {
     );
   }
 
-  getResultCommands(result) {
+  getResultCommands() {
     let commands = [
       {
         name: RESULT_MENU_COMMAND.INACCURATE_LOCATION,

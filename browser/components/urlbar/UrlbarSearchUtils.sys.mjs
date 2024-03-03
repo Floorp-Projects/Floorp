@@ -71,10 +71,7 @@ class SearchUtils {
    * @returns {Array<nsISearchEngine>}
    *   An array of all matching engines. An empty array if there are none.
    */
-  async enginesForDomainPrefix(
-    prefix,
-    { matchAllDomainLevels = false, onlyEnabled = false } = {}
-  ) {
+  async enginesForDomainPrefix(prefix, { matchAllDomainLevels = false } = {}) {
     try {
       await this.init();
     } catch {

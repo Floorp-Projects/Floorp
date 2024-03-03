@@ -28,7 +28,7 @@ let MockClientsEngine = {
     Assert.ok(guid.endsWith("desktop") || guid.endsWith("mobile"));
     return guid.endsWith("mobile") ? "phone" : "desktop";
   },
-  remoteClientExists(id) {
+  remoteClientExists(_id) {
     return true;
   },
   getClientName(id) {
@@ -662,7 +662,7 @@ add_task(async function test_duplicate_remote_tabs() {
   let url = "http://foo.remote.com/";
   let tabs = Array(3)
     .fill(0)
-    .map((e, i) => ({
+    .map(() => ({
       urlHistory: [url],
       title: "A title",
       lastUsed: Math.floor(Date.now() / 1000),

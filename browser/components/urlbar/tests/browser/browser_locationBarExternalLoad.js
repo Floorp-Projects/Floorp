@@ -52,7 +52,7 @@ function promiseLoaded(browser) {
   });
 }
 
-async function testURL(url, loadFunc, endFunc) {
+async function testURL(url, loadFunc) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   let browser = tab.linkedBrowser;
 
@@ -70,7 +70,7 @@ async function testURL(url, loadFunc, endFunc) {
   await SpecialPowers.spawn(
     browser,
     [{ isRemote: gMultiProcessBrowser }],
-    async function (arg) {
+    async function () {
       Assert.equal(
         Services.focus.focusedElement,
         null,

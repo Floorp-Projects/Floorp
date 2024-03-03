@@ -46,7 +46,7 @@ add_task(async function () {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     // This is sync, so by the time we return we should have changed the URL bar.
     content.location.reload();
-  }).catch(e => {
+  }).catch(() => {
     // Ignore expected exception.
   });
   is(

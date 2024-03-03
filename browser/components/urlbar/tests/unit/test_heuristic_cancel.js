@@ -126,7 +126,7 @@ add_task(async function timerIsCancelled() {
   // Then they will be queued up in a _heuristicProvidersTimer, waiting for
   // the results from SlowProvider.
   let resultsAddedPromise = new Promise(resolve => {
-    let observe = async (subject, topic, data) => {
+    let observe = async () => {
       Services.obs.removeObserver(observe, "results-added");
       // Fire the second query to cancel the first.
       await controller.startQuery(secondContext);

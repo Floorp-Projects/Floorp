@@ -65,14 +65,10 @@ add_task(async function onlyEnabled_option_nomatch() {
   let domain = engine.searchUrlDomain;
   let token = domain.substr(0, 1);
   engine.hideOneOffButton = true;
-  let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
-    onlyEnabled: true,
-  });
+  let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token);
   Assert.notEqual(matchedEngines[0].searchUrlDomain, domain);
   engine.hideOneOffButton = false;
-  matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
-    onlyEnabled: true,
-  });
+  matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token);
   Assert.equal(matchedEngines[0].searchUrlDomain, domain);
 });
 

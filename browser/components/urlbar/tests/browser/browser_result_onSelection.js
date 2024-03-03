@@ -48,7 +48,7 @@ add_task(async function test() {
   let provider = new UrlbarTestUtils.TestProvider({
     results,
     priority: 1,
-    onSelection: (result, element) => {
+    onSelection: () => {
       selectionCount++;
     },
   });

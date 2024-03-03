@@ -41,7 +41,7 @@ add_setup(async function () {
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async browser => {
+    async () => {
       await checkOpensOnFocus();
     }
   );

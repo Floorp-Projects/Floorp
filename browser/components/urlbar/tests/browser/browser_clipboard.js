@@ -52,7 +52,7 @@ add_task(async function testFormattingOfClipboardSuggestion() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
-    async browser => {
+    async () => {
       let { result } = await searchEmptyStringAndGetFirstRow();
 
       Assert.equal(
