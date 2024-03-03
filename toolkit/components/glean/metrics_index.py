@@ -124,6 +124,7 @@ firefox_desktop_pings = [
     "browser/components/search/pings.yaml",
     "browser/components/urlbar/pings.yaml",
     "toolkit/components/crashes/pings.yaml",
+    "toolkit/components/resistfingerprinting/pings.yaml",
     "toolkit/components/telemetry/pings.yaml",
     "toolkit/modules/pings.yaml",
 ]
