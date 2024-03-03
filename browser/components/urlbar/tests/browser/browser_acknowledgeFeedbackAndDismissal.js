@@ -291,7 +291,7 @@ async function doDismissTest({ command, shouldBeSelected, resultIndex = -1 }) {
  * A provider that acknowledges feedback and dismissals.
  */
 class TestProvider extends UrlbarTestUtils.TestProvider {
-  getResultCommands(result) {
+  getResultCommands(_result) {
     // The l10n values aren't important.
     return [
       {

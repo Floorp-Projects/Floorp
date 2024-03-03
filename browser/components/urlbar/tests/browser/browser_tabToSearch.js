@@ -284,14 +284,14 @@ add_task(async function tab_key_race() {
       get type() {
         return UrlbarUtils.PROVIDER_TYPE.PROFILE;
       }
-      isActive(context) {
+      isActive(_context) {
         executeSoon(resolve);
         return false;
       }
-      isRestricting(context) {
+      isRestricting(_context) {
         return false;
       }
-      async startQuery(context, addCallback) {
+      async startQuery(_context, _addCallback) {
         // Nothing to do.
       }
     }

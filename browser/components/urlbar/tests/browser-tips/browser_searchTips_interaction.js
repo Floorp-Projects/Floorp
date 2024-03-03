@@ -680,7 +680,7 @@ add_task(async function noActionWhenDisabled() {
     ],
   });
 
-  await withDNSRedirect("www.bing.com", "/", async url => {
+  await withDNSRedirect("www.bing.com", "/", async () => {
     Assert.ok(
       !UrlbarTestUtils.isPopupOpen(window),
       "The UrlbarView should not be open."

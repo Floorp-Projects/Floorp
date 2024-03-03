@@ -7,7 +7,7 @@
 
 async function doNCharsTest({ trigger, assert }) {
   for (const input of ["x", "xx", "xx x", "xx x "]) {
-    await doTest(async browser => {
+    await doTest(async () => {
       await openPopup(input);
 
       await trigger();
@@ -17,7 +17,7 @@ async function doNCharsTest({ trigger, assert }) {
 }
 
 async function doNCharsWithOverMaxTextLengthCharsTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     let input = "";
     for (let i = 0; i < UrlbarUtils.MAX_TEXT_LENGTH * 2; i++) {
       input += "x";
@@ -31,7 +31,7 @@ async function doNCharsWithOverMaxTextLengthCharsTest({ trigger, assert }) {
 
 async function doNWordsTest({ trigger, assert }) {
   for (const input of ["x", "xx", "xx x", "xx x "]) {
-    await doTest(async browser => {
+    await doTest(async () => {
       await openPopup(input);
 
       await trigger();
@@ -42,7 +42,7 @@ async function doNWordsTest({ trigger, assert }) {
 }
 
 async function doNWordsWithOverMaxTextLengthCharsTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     const word = "1234 ";
     let input = "";
     while (input.length < UrlbarUtils.MAX_TEXT_LENGTH * 2) {

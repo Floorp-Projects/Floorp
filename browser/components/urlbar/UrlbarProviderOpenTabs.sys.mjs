@@ -60,7 +60,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
-  isActive(queryContext) {
+  isActive() {
     // For now we don't actually use this provider to query open tabs, instead
     // we join the temp table in UrlbarProviderPlaces.
     return false;

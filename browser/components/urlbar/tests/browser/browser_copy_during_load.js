@@ -13,7 +13,7 @@ add_task(async function () {
       "http://www.example.com"
     ) + "slow-page.sjs";
 
-  await BrowserTestUtils.withNewTab(gBrowser, async tab => {
+  await BrowserTestUtils.withNewTab(gBrowser, async () => {
     gURLBar.focus();
     gURLBar.value = SLOW_PAGE;
     let promise = TestUtils.waitForCondition(

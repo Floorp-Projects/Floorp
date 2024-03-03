@@ -186,7 +186,7 @@ add_task(async function test_searchMode_removeRestyledHistory() {
   let url = `https://example.com/?q=${query}bar`;
   await PlacesTestUtils.addVisits(url);
 
-  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: query,

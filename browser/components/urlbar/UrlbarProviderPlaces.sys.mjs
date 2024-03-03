@@ -1475,7 +1475,7 @@ class ProviderPlaces extends UrlbarProvider {
    *
    * @param {object} queryContext The query context object
    */
-  cancelQuery(queryContext) {
+  cancelQuery() {
     if (this._currentSearch) {
       this._currentSearch.stop();
     }

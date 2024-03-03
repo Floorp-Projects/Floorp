@@ -6,7 +6,7 @@
 /* import-globals-from head.js */
 
 async function doSearchEngineDefaultIdTest({ trigger, assert }) {
-  await doTest(async browser => {
+  await doTest(async () => {
     info("Test with current engine");
     const defaultEngine = await Services.search.getDefault();
 
@@ -15,7 +15,7 @@ async function doSearchEngineDefaultIdTest({ trigger, assert }) {
     await assert(defaultEngine.telemetryId);
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     info("Test with new engine");
     const defaultEngine = await Services.search.getDefault();
     const newEngineName = "NewDummyEngine";

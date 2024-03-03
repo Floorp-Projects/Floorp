@@ -102,11 +102,11 @@ export class UrlbarEventBufferer {
     }
   }
 
-  onQueryCancelled(queryContext) {
+  onQueryCancelled() {
     this._lastQuery.status = QUERY_STATUS.COMPLETE;
   }
 
-  onQueryFinished(queryContext) {
+  onQueryFinished() {
     this._lastQuery.status = QUERY_STATUS.COMPLETE;
   }
 

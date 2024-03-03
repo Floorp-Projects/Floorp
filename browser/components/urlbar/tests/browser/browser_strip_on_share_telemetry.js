@@ -80,7 +80,7 @@ add_task(async function testMultiQueryParams() {
 });
 
 async function testStripOnShare(validUrl, strippedUrl) {
-  await BrowserTestUtils.withNewTab(validUrl, async function (browser) {
+  await BrowserTestUtils.withNewTab(validUrl, async function () {
     gURLBar.focus();
     gURLBar.select();
     let menuitem = await promiseContextualMenuitem("strip-on-share");

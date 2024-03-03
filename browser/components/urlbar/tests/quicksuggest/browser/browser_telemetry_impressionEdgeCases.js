@@ -172,7 +172,7 @@ add_task(async function hiddenRow() {
   // mutation listener to the view so we can tell when the quick suggest row is
   // added.
   let mutationPromise = new Promise(resolve => {
-    let observer = new MutationObserver(mutations => {
+    let observer = new MutationObserver(() => {
       let rows = UrlbarTestUtils.getResultsContainer(window).children;
       for (let row of rows) {
         if (row.result.providerName == "UrlbarProviderQuickSuggest") {

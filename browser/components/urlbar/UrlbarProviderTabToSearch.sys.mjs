@@ -146,7 +146,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
-  getPriority(queryContext) {
+  getPriority() {
     return 0;
   }
 
@@ -161,7 +161,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    *   the DOM, as defined by the browser.
    * @returns {object} An object describing the view update.
    */
-  getViewUpdate(result, idsByName) {
+  getViewUpdate(result) {
     return {
       icon: {
         attributes: {
@@ -205,7 +205,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    * @param {Element} element
    *   The element in the result's view that was selected.
    */
-  onSelection(result, element) {
+  onSelection(result) {
     // We keep track of the number of times the user interacts with
     // tab-to-search onboarding results so we stop showing them after
     // `tabToSearch.onboard.interactionsLeft` interactions.
@@ -232,7 +232,7 @@ class ProviderTabToSearch extends UrlbarProvider {
     }
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details) {
     let { result, element } = details;
     if (
       result?.providerName == this.name &&
@@ -354,7 +354,6 @@ class ProviderTabToSearch extends UrlbarProvider {
       searchStr,
       {
         matchAllDomainLevels: true,
-        onlyEnabled: true,
       }
     );
     if (!engines.length) {

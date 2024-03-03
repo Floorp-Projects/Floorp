@@ -67,7 +67,7 @@ function waitForLoadStartOrTimeout(win = window, timeoutMs = 1000) {
   return Promise.race([
     new Promise(resolve => {
       listener = {
-        onStateChange(browser, webprogress, request, flags, status) {
+        onStateChange(browser, webprogress, request, flags) {
           if (flags & Ci.nsIWebProgressListener.STATE_START) {
             resolve(request.QueryInterface(Ci.nsIChannel).URI);
           }

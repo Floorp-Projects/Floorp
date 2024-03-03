@@ -299,7 +299,7 @@ async function triggerCommand(eventType, details = {}) {
 function promiseLoadStarted() {
   return new Promise(resolve => {
     gBrowser.addTabsProgressListener({
-      onStateChange(browser, webProgress, req, flags, status) {
+      onStateChange(browser, webProgress, req, flags) {
         if (flags & Ci.nsIWebProgressListener.STATE_START) {
           gBrowser.removeTabsProgressListener(this);
           resolve();

@@ -25,7 +25,7 @@ add_task(async function () {
   let firstSelectedElement;
   let delayResultsPromise = new Promise(resolve => {
     gURLBar.controller.addQueryListener({
-      async onQueryResults(queryContext) {
+      async onQueryResults() {
         Assert.ok(!receivedResults, "Should execute only once");
         gURLBar.controller.removeQueryListener(this);
         receivedResults = true;

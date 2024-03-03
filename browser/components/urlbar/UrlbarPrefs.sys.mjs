@@ -1269,7 +1269,7 @@ class Preferences {
     }
   }
 
-  _migrateFirefoxSuggestPrefsTo_2(scenario) {
+  _migrateFirefoxSuggestPrefsTo_2() {
     // In previous versions of the prefs for online, suggestions were disabled
     // by default; in version 2, they're enabled by default. For users who were
     // already in online and did not enable suggestions (because they did not

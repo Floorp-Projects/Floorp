@@ -363,10 +363,10 @@ add_task(async function onNimbusChanged() {
   // Add an observer that throws an Error and an observer that does not define
   // anything to check whether the other observers can get notifications.
   UrlbarPrefs.addObserver({
-    onPrefChanged(pref) {
+    onPrefChanged() {
       throw new Error("From onPrefChanged");
     },
-    onNimbusChanged(pref) {
+    onNimbusChanged() {
       throw new Error("From onNimbusChanged");
     },
   });
@@ -407,10 +407,10 @@ add_task(async function onPrefChanged() {
   // Add an observer that throws an Error and an observer that does not define
   // anything to check whether the other observers can get notifications.
   UrlbarPrefs.addObserver({
-    onPrefChanged(pref) {
+    onPrefChanged() {
       throw new Error("From onPrefChanged");
     },
-    onNimbusChanged(pref) {
+    onNimbusChanged() {
       throw new Error("From onNimbusChanged");
     },
   });

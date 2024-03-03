@@ -14,7 +14,7 @@ add_setup(async function () {
 });
 
 add_task(async function engagement_type_click() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
     await doClick();
 
@@ -23,7 +23,7 @@ add_task(async function engagement_type_click() {
 });
 
 add_task(async function engagement_type_enter() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
     await doEnter();
 
@@ -32,7 +32,7 @@ add_task(async function engagement_type_enter() {
 });
 
 add_task(async function engagement_type_go_button() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("x");
     EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, {});
 
@@ -41,7 +41,7 @@ add_task(async function engagement_type_go_button() {
 });
 
 add_task(async function engagement_type_drop_go() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await doDropAndGo("example.com");
 
     assertEngagementTelemetry([{ engagement_type: "drop_go" }]);
@@ -49,7 +49,7 @@ add_task(async function engagement_type_drop_go() {
 });
 
 add_task(async function engagement_type_paste_go() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await doPasteAndGo("www.example.com");
 
     assertEngagementTelemetry([{ engagement_type: "paste_go" }]);
@@ -59,7 +59,7 @@ add_task(async function engagement_type_paste_go() {
 add_task(async function engagement_type_dismiss() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("sponsored");
 
     const originalResultCount = UrlbarTestUtils.getResultCount(window);
@@ -84,7 +84,7 @@ add_task(async function engagement_type_dismiss() {
     ]);
   });
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("sponsored");
 
     const originalResultCount = UrlbarTestUtils.getResultCount(window);
@@ -103,7 +103,7 @@ add_task(async function engagement_type_dismiss() {
 add_task(async function engagement_type_help() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
-  await doTest(async browser => {
+  await doTest(async () => {
     await openPopup("sponsored");
     await selectRowByURL("https://example.com/sponsored");
     const onTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);

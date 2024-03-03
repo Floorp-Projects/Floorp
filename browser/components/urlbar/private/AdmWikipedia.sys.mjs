@@ -135,7 +135,7 @@ export class AdmWikipedia extends BaseFeature {
     this.#suggestionsMap = suggestionsMap;
   }
 
-  makeResult(queryContext, suggestion, searchString) {
+  makeResult(queryContext, suggestion) {
     let originalUrl;
     if (suggestion.source == "rust") {
       // The Rust backend defines `rawUrl` on AMP suggestions, and its value is

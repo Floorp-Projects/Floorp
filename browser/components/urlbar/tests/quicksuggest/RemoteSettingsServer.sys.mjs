@@ -586,7 +586,7 @@ export class RemoteSettingsServer {
    * @param {object} options.body
    *   The response body, if any.
    */
-  #logResponse({ request, status, statusText, headers, body }) {
+  #logResponse({ request, status, headers, body }) {
     this.#log.info(`> ${status} ${request.path}`);
     for (let [name, value] of Object.entries(headers)) {
       this.#log.debug(`${name}: ${value}`);

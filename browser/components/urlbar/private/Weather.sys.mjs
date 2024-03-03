@@ -171,14 +171,14 @@ export class Weather extends BaseFeature {
     return ["Weather"];
   }
 
-  isRustSuggestionTypeEnabled(type) {
+  isRustSuggestionTypeEnabled() {
     // When weather keywords are defined in Nimbus, weather suggestions are
     // served by UrlbarProviderWeather. Return false here so the quick suggest
     // provider doesn't try to serve them too.
     return !lazy.UrlbarPrefs.get("weatherKeywords");
   }
 
-  getSuggestionTelemetryType(suggestion) {
+  getSuggestionTelemetryType() {
     return "weather";
   }
 
@@ -454,7 +454,7 @@ export class Weather extends BaseFeature {
     };
   }
 
-  getResultCommands(result) {
+  getResultCommands() {
     let commands = [
       {
         name: RESULT_MENU_COMMAND.INACCURATE_LOCATION,

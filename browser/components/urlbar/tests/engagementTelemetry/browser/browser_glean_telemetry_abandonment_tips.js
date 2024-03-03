@@ -38,7 +38,7 @@ add_setup(async function () {
 });
 
 add_task(async function tip_persist() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await showPersistSearchTip("test");
     gURLBar.focus();
     await UrlbarTestUtils.promisePopupClose(window, () => {

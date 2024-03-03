@@ -1536,11 +1536,11 @@ class TestProvider extends UrlbarProvider {
     return this._type;
   }
 
-  getPriority(context) {
+  getPriority(_context) {
     return this.priority;
   }
 
-  isActive(context) {
+  isActive(_context) {
     return true;
   }
 
@@ -1565,7 +1565,7 @@ class TestProvider extends UrlbarProvider {
     }
   }
 
-  cancelQuery(context) {
+  cancelQuery(_context) {
     this._onCancel?.();
   }
 

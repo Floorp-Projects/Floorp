@@ -112,7 +112,7 @@ async function testMenuItemDisabled(url, prefEnabled, selection) {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.strip_on_share.enabled", prefEnabled]],
   });
-  await BrowserTestUtils.withNewTab(url, async function (browser) {
+  await BrowserTestUtils.withNewTab(url, async function () {
     gURLBar.focus();
     if (selection) {
       //select only part of the url
@@ -175,7 +175,7 @@ async function testMenuItemEnabled({
     await listService.testSetList(testJson);
   }
 
-  await BrowserTestUtils.withNewTab(validUrl, async function (browser) {
+  await BrowserTestUtils.withNewTab(validUrl, async function () {
     gURLBar.focus();
     if (selectWholeUrl) {
       gURLBar.select();

@@ -523,7 +523,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
 function promiseLastRowAppended(predicate) {
   return new Promise(resolve => {
     let rows = UrlbarTestUtils.getResultsContainer(window);
-    let observer = new MutationObserver(mutations => {
+    let observer = new MutationObserver(() => {
       let lastRow = rows.children[rows.children.length - 1];
       info(
         "Observed mutation, lastRow.result is: " +

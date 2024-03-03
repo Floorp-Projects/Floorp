@@ -43,7 +43,7 @@ function simulateURLBarDrop(content) {
 }
 
 add_task(async function checkDragURL() {
-  await BrowserTestUtils.withNewTab(TEST_URL, function (browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, function () {
     info("Check dragging a normal url to the urlbar");
     const DRAG_URL = "http://www.example.com/";
     simulateURLBarDrop({ type: "text/plain", data: DRAG_URL });
@@ -61,7 +61,7 @@ add_task(async function checkDragURL() {
 });
 
 add_task(async function checkDragForbiddenURL() {
-  await BrowserTestUtils.withNewTab(TEST_URL, function (browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, function () {
     // See also browser_removeUnsafeProtocolsFromURLBarPaste.js for other
     // examples. In general we trust that function, we pick some testcases to
     // ensure we disallow dropping trimmed text.

@@ -39,7 +39,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     });
   }
 
-  getViewUpdate(result, idsByName) {
+  getViewUpdate(_result, _idsByName) {
     return {
       title: {
         textContent: "This is a dynamic result.",

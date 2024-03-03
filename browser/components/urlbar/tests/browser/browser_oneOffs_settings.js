@@ -36,7 +36,7 @@ add_setup(async function () {
 async function selectSettings(win, activateFn) {
   await BrowserTestUtils.withNewTab(
     { gBrowser: win.gBrowser, url: "about:blank" },
-    async browser => {
+    async () => {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window: win,
         value: "example.com",
