@@ -7,8 +7,6 @@
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 pref(mathml.stixgeneral_operator_stretching.disabled,false) == semantics-5.html semantics-5-ref.html # bug 1309429; bug 1648335
-fuzzy-if(cocoaWidget,0-16,0-8) == mstyle-3.xhtml mstyle-3-ref.xhtml
-fuzzy-if(cocoaWidget,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
 fails-if(cocoaWidget) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
