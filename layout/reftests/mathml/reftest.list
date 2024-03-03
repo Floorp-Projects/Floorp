@@ -17,9 +17,6 @@ fails-if(cocoaWidget) == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml
 == munderover-empty-scripts.html munderover-empty-scripts-ref.html
 == mo-glyph-size.html mo-glyph-size-ref.html
 fuzzy(0-1,0-80) fuzzy-if(Android,0-255,0-105) fuzzy-if(gtkWidget,0-255,0-136) skip-if(winWidget) == multiscripts-1.html multiscripts-1-ref.html # Windows: bug 1314684; Android: bug 1392254; Linux: bug 1599638
-== mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
-== mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
-== mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
 
 # radicalbar*.html tests rely on reftest-zoom to verify the visibility of the
