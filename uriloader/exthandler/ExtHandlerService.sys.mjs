@@ -324,7 +324,7 @@ HandlerService.prototype = {
   },
 
   // nsIObserver
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic != "handlersvc-json-replace") {
       return;
     }
@@ -726,7 +726,7 @@ HandlerService.prototype = {
     this._mockedProtocol = protocol;
     this._mockedHandler = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsILocalHandlerApp]),
-      launchWithURI(uri, context) {
+      launchWithURI(uri) {
         Services.obs.notifyObservers(uri, "mocked-protocol-handler");
       },
       name: "Mocked handler",

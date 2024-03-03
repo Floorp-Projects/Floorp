@@ -41,7 +41,7 @@ add_task(async function open_from_dialog() {
 
   let openingPromise = TestUtils.topicObserved(
     "test-only-opening-downloaded-file",
-    (subject, data) => {
+    subject => {
       subject.QueryInterface(Ci.nsISupportsPRBool);
       // Block opening the file:
       subject.data = false;
@@ -92,7 +92,7 @@ add_task(async function open_directly() {
 
   let openingPromise = TestUtils.topicObserved(
     "test-only-opening-downloaded-file",
-    (subject, data) => {
+    subject => {
       subject.QueryInterface(Ci.nsISupportsPRBool);
       // Block opening the file:
       subject.data = false;

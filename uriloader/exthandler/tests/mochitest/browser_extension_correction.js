@@ -172,7 +172,7 @@ async function checkDownloadWithExtensionState(
  * we enforce a useful extension.
  */
 add_task(async function test_enforce_useful_extension() {
-  await BrowserTestUtils.withNewTab("data:text/html,", async browser => {
+  await BrowserTestUtils.withNewTab("data:text/html,", async () => {
     await testLinkWithoutExtension("image/png", true);
     await testLinkWithoutExtension("audio/ogg", true);
     await testLinkWithoutExtension("video/webm", true);

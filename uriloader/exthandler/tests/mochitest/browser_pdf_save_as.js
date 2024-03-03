@@ -18,7 +18,7 @@ const { saveToDisk, alwaysAsk, handleInternally, useSystemDefault } =
 const MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window.browsingContext);
 
-async function testPdfFilePicker(mimeInfo) {
+async function testPdfFilePicker() {
   await BrowserTestUtils.withNewTab(
     `data:text/html,<a id="test-link" href="${TEST_PATH}/file_pdf_application_pdf.pdf">Test PDF Link</a>`,
     async browser => {

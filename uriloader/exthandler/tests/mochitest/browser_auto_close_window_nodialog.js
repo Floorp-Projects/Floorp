@@ -26,13 +26,13 @@ let curSaveResolve = null;
 function HelperAppLauncherDialog() {}
 
 HelperAppLauncherDialog.prototype = {
-  show(aLauncher, aWindowContext, aReason) {
+  show(aLauncher) {
     ok(false, "Shouldn't be showing the helper app dialog");
     executeSoon(() => {
       aLauncher.cancel(Cr.NS_ERROR_ABORT);
     });
   },
-  promptForSaveToFileAsync(aLauncher, aWindowContext, aReason) {
+  promptForSaveToFileAsync(aLauncher, aWindowContext) {
     ok(true, "Shouldn't be showing the helper app dialog");
     curSaveResolve(aWindowContext);
     executeSoon(() => {

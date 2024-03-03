@@ -26,7 +26,7 @@ let curDialogResolve = null;
 function HelperAppLauncherDialog() {}
 
 HelperAppLauncherDialog.prototype = {
-  show(aLauncher, aWindowContext, aReason) {
+  show(aLauncher, aWindowContext) {
     ok(true, "Showing the helper app dialog");
     curDialogResolve(aWindowContext);
     executeSoon(() => {

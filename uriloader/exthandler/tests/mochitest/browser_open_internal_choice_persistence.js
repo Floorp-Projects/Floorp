@@ -66,7 +66,7 @@ function ensureMIMEState({ preferredAction, alwaysAskBeforeHandling }) {
 }
 
 function waitDelay(delay) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     /* eslint-disable mozilla/no-arbitrary-setTimeout */
     window.setTimeout(resolve, delay);
   });
