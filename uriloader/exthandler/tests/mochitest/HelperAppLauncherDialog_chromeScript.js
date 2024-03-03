@@ -34,7 +34,7 @@ Services.prefs.setCharPref("browser.download.dir", tmpDir.path);
 const FAKE_CID = Services.uuid.generateUUID();
 function HelperAppLauncherDialog() {}
 HelperAppLauncherDialog.prototype = {
-  show(aLauncher, aWindowContext, aReason) {
+  show(aLauncher) {
     if (
       Services.prefs.getBoolPref(
         "browser.download.always_ask_before_handling_new_types"
@@ -49,13 +49,7 @@ HelperAppLauncherDialog.prototype = {
     }
     aLauncher.cancel(Cr.NS_BINDING_ABORTED);
   },
-  promptForSaveToFileAsync(
-    appLauncher,
-    parent,
-    filename,
-    extension,
-    forceSave
-  ) {
+  promptForSaveToFileAsync(appLauncher, parent, filename) {
     if (
       !Services.prefs.getBoolPref(
         "browser.download.always_ask_before_handling_new_types"

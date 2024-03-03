@@ -50,7 +50,7 @@ add_task(async function aDownloadSavedToDiskPromptsForFolder() {
     await publicList.removeFinished();
   });
   let filePickerShownPromise = new Promise(resolve => {
-    MockFilePicker.showCallback = function (fp) {
+    MockFilePicker.showCallback = function () {
       setTimeout(resolve, 0);
       return Ci.nsIFilePicker.returnCancel;
     };
@@ -81,7 +81,7 @@ add_task(async function testFilesHandledInternally() {
   );
 
   let filePickerShown = false;
-  MockFilePicker.showCallback = function (fp) {
+  MockFilePicker.showCallback = function () {
     filePickerShown = true;
     return Ci.nsIFilePicker.returnCancel;
   };
@@ -120,7 +120,7 @@ add_task(async function testFilesHandledBySystemDefaultApp() {
   ensureMIMEState({ preferredAction: useSystemDefault });
 
   let filePickerShown = false;
-  MockFilePicker.showCallback = function (fp) {
+  MockFilePicker.showCallback = function () {
     filePickerShown = true;
     return Ci.nsIFilePicker.returnCancel;
   };
@@ -178,7 +178,7 @@ add_task(async function testFilesHandledByHelperApp() {
   });
 
   let filePickerShown = false;
-  MockFilePicker.showCallback = function (fp) {
+  MockFilePicker.showCallback = function () {
     filePickerShown = true;
     return Ci.nsIFilePicker.returnCancel;
   };
