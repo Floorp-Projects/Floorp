@@ -295,41 +295,7 @@
   display: inline;
 }
 
-#protections-popup-sendReportView-description > label {
-  display: inline;
-}
-
 /* CONTENT BLOCKING / TRACKING PROTECTION */
-
-#protections-popup-sendReportView-heading,
-#protections-popup-sendReportView-body,
-#protections-popup-siteNotWorkingView-body {
-  padding: var(--vertical-section-padding) var(--horizontal-padding);
-}
-
-.protections-popup-sendReportView-collection-section {
-  margin-bottom: 16px;
-}
-
-#protections-popup-sendReportView-collection-url {
-  appearance: none;
-  border: none;
-  margin: 4px 0;
-}
-
-#protections-popup-sendReportView-collection-comments {
-  height: 120px;
-  resize: vertical;
-}
-
-.protections-popup-sendReportView-collection-section label {
-  margin-bottom: 2px;
-}
-
-#protections-popup-sendReportView-report-error {
-  margin-bottom: 24px;
-  color: #d74345;
-}
 
 #protections-popup-not-blocking-section-why:hover,
 #protections-popup-show-report-stack:hover > .protections-popup-footer-button {
@@ -574,10 +540,6 @@
   font-weight: 600;
 }
 
-#protections-popup-siteNotWorkingView-body-issue-list {
-  padding-inline-start: 1em;
-}
-
 /* Protection popup footer categories */
 
 #protections-popup-trackers-blocked-counter-box {
@@ -684,8 +646,7 @@
 }
 
 .protections-popup-section-header,
-.protections-popup-switch-section-header,
-#protections-popup-siteNotWorkingView-header {
+.protections-popup-switch-section-header {
   padding: var(--arrowpanel-menuitem-padding);
   margin: var(--arrowpanel-menuitem-margin);
 }

@@ -49,18 +49,6 @@
               <html:moz-toggle id="protections-popup-tp-switch" data-l10n-attrs="label, description"></html:moz-toggle>
             </vbox>
           </hbox>
-          <hbox id="protections-popup-tp-switch-section-footer">
-            <toolbarbutton id="protections-popup-tp-switch-breakage-link"
-                           oncommand="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');"
-                           class="subviewbutton subviewbutton-nav" align="center" flex="1">
-              <label flex="1" class="toolbarbutton-text" data-l10n-id="protections-panel-site-not-working"></label>
-            </toolbarbutton>
-            <toolbarbutton id="protections-popup-tp-switch-breakage-fixed-link"
-                           oncommand="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('sitenotworking_link', 'sitefixed');"
-                           class="subviewbutton subviewbutton-nav" align="center" flex="1">
-              <label flex="1" class="toolbarbutton-text" data-l10n-id="protections-panel-sitefixedsendreport-label"></label>
-            </toolbarbutton>
-          </hbox>
         </vbox>
 
         <toolbarseparator observes="cmd_reportBrokenSite"></toolbarseparator>
@@ -182,36 +170,6 @@
           </toolbarbutton>
         </hbox>
       </vbox>
-    </panelview>
-
-    <!-- Site Not Working? SubView -->
-    <panelview id="protections-popup-siteNotWorkingView"
-               class="PanelUI-subView"
-               role="document"
-               data-l10n-id="protections-panel-site-not-working-view">
-        <hbox id="protections-popup-siteNotWorkingView-header">
-          <vbox class="protections-popup-tp-switch-box" flex="1" align="stretch">
-            <html:moz-toggle id="protections-popup-siteNotWorking-tp-switch" data-l10n-attrs="label, description"></html:moz-toggle>
-          </vbox>
-        </hbox>
-        <toolbarseparator></toolbarseparator>
-        <vbox id="protections-popup-siteNotWorkingView-body" class="panel-subview-body" align="start">
-          <label role="heading" aria-level="2" data-l10n-id="protections-panel-site-not-working-view-header"></label>
-          <label>
-            <html:ul id="protections-popup-siteNotWorkingView-body-issue-list">
-              <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-login-fields"></html:li>
-              <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-forms"></html:li>
-              <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-payments"></html:li>
-              <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-comments"></html:li>
-              <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-videos"></html:li>
-              <html:li data-l10n-id="protections-panel-site-not-working-view-issue-list-fonts"
-                       id="protections-panel-site-not-working-view-issue-list-fonts"></html:li>
-            </html:ul>
-          </label>
-          <label id="protections-popup-siteNotWorkingView-sendReport"
-            onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('send_report_link');"
-            class="text-link" data-l10n-id="protections-panel-site-not-working-view-send-report"></label>
-        </vbox>
     </panelview>
 
     <!-- Trackers SubView -->
@@ -349,46 +307,6 @@
                   data-l10n-id="protections-panel-content-blocking-manage-settings"
                   class="subviewbutton panel-subview-footer-button"
                   oncommand="gProtectionsHandler.openPreferences(); gProtectionsHandler.recordClick('subview_settings', 'cryptominers');"/>
-    </panelview>
-
-    <!-- Send Report SubView -->
-    <panelview id="protections-popup-sendReportView"
-               class="PanelUI-subView"
-               data-l10n-id="protections-panel-content-blocking-breakage-report-view">
-        <vbox id="protections-popup-sendReportView-heading">
-          <description id="protections-popup-sendReportView-description">
-            <label data-l10n-id="protections-panel-content-blocking-breakage-report-view-description2"/>
-            <html:a id="protections-popup-sendReportView-learn-more"
-                   is="moz-support-link"
-                   support-page="blocking-breakage" />
-          </description>
-        </vbox>
-        <toolbarseparator></toolbarseparator>
-        <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
-          <vbox class="protections-popup-sendReportView-collection-section">
-            <label control="protections-popup-sendReportView-collection-url" data-l10n-id="protections-panel-content-blocking-breakage-report-view-collection-url"></label>
-            <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url" data-l10n-id="protections-panel-content-blocking-breakage-report-view-collection-url-label"/>
-          </vbox>
-          <vbox class="protections-popup-sendReportView-collection-section">
-            <label control="protections-popup-sendReportView-collection-comments" data-l10n-id="protections-panel-content-blocking-breakage-report-view-collection-comments"></label>
-            <html:textarea id="protections-popup-sendReportView-collection-comments" data-l10n-id="protections-panel-content-blocking-breakage-report-view-collection-comments-label"/>
-          </vbox>
-          <label id="protections-popup-sendReportView-report-error"
-            data-l10n-id="protections-panel-sendreportview-error"
-            hidden="true" role="alert"></label>
-        </vbox>
-        <html:moz-button-group id="protections-popup-sendReportView-footer"
-              class="panel-footer">
-          <button id="protections-popup-sendReportView-cancel"
-                  class="footer-button"
-                  data-l10n-id="protections-panel-content-blocking-breakage-report-view-cancel"
-                  oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"/>
-          <button id="protections-popup-sendReportView-submit"
-                  class="footer-button"
-                  default="true"
-                  data-l10n-id="protections-panel-content-blocking-breakage-report-view-send-report"
-                  oncommand="gProtectionsHandler.onSendReportClicked(); gProtectionsHandler.recordClick('send_report_submit');"/>
-        </html:moz-button-group>
     </panelview>
 
     <!-- Cookie Banner SubView -->
