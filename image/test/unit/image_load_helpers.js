@@ -31,12 +31,12 @@ function ImageListener(start_callback, stop_callback) {
       this.start_callback(this, aRequest);
     }
   };
-  this.frameComplete = function onFrameComplete(aRequest) {
+  this.frameComplete = function onFrameComplete() {
     Assert.ok(!this.synchronous);
 
     this.state |= FRAME_COMPLETE;
   };
-  this.decodeComplete = function onDecodeComplete(aRequest) {
+  this.decodeComplete = function onDecodeComplete() {
     Assert.ok(!this.synchronous);
 
     this.state |= DECODE_COMPLETE;
@@ -50,7 +50,7 @@ function ImageListener(start_callback, stop_callback) {
       this.stop_callback(this, aRequest);
     }
   };
-  this.frameUpdate = function onFrameUpdate(aRequest) {};
+  this.frameUpdate = function onFrameUpdate() {};
   this.isAnimated = function onIsAnimated() {};
 
   // Initialize the synchronous flag to true to start. This must be set to

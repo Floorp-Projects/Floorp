@@ -30,7 +30,7 @@ var observer = {
     throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     ok(topic == "net:failed-to-process-uri-content", "wrong topic");
     subject = subject.QueryInterface(Ci.nsIURI);
     is(subject.asciiSpec, `${location.origin}/tests/image/test/mochitest/invalid.jpg`, "wrong subject");

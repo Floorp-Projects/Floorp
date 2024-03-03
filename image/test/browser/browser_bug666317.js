@@ -15,11 +15,11 @@ var gScriptedObserver;
 var gClonedRequest;
 
 function ImageObserver(decodeCallback, discardCallback) {
-  this.decodeComplete = function onDecodeComplete(aRequest) {
+  this.decodeComplete = function onDecodeComplete() {
     decodeCallback();
   };
 
-  this.discard = function onDiscard(request) {
+  this.discard = function onDiscard() {
     if (!gWaitingForDiscard) {
       return;
     }

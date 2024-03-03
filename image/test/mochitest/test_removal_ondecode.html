@@ -45,7 +45,7 @@ function* fileToLoad() {
   yield "rillybad.jpg";
 }
 
-function onSizeAvailable(aRequest) {
+function onSizeAvailable() {
   ok(true, "AfterLoad.onSizeAvailable called for " + gImg.src);
 }
 function onLoadComplete(aRequest) {
@@ -68,7 +68,7 @@ function onLoadComplete(aRequest) {
   }
 }
 
-function onDecodeComplete(aRequest) {
+function onDecodeComplete() {
   ok(gExpected > gRemovals, "AfterLoad.onDecodeComplete called for " + gImg.src);
   SimpleTest.executeSoon(function() {
     try {

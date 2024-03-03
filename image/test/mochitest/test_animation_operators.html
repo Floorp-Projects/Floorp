@@ -101,7 +101,7 @@ function startTest(i)
     element.setAttribute("scrolling", "no");
     element.src = url;
     document.body.appendChild(element);
-    function handleLoad(event)
+    function handleLoad()
     {
       iframe.loaded = true;
       if (iframe == reference) {

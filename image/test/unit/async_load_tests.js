@@ -50,7 +50,7 @@ function checkClone(other_listener, aRequest) {
   // For as long as clone notification is synchronous, we can't test the clone state reliably.
   var listener = new ImageListener(
     null,
-    function (foo, bar) {
+    function () {
       do_test_finished();
     } /* getCloneStopCallback(other_listener)*/
   );
@@ -63,7 +63,7 @@ function checkClone(other_listener, aRequest) {
 }
 
 // Ensure that all the callbacks were called on aRequest.
-function checkSizeAndLoad(listener, aRequest) {
+function checkSizeAndLoad(listener) {
   Assert.notEqual(listener.state & SIZE_AVAILABLE, 0);
   Assert.notEqual(listener.state & LOAD_COMPLETE, 0);
 
@@ -127,7 +127,7 @@ function checkSecondLoad() {
   listener.synchronous = false;
 }
 
-function firstLoadDone(oldlistener, aRequest) {
+function firstLoadDone() {
   checkSecondLoad(uri);
 
   do_test_finished();
@@ -136,7 +136,7 @@ function firstLoadDone(oldlistener, aRequest) {
 // Return a closure that allows us to check the stream listener's status when the
 // image finishes loading.
 function getChannelLoadImageStopCallback(streamlistener, next) {
-  return function channelLoadStop(imglistener, aRequest) {
+  return function channelLoadStop() {
     next();
 
     do_test_finished();
@@ -216,7 +216,7 @@ function startImageCallback(otherCb) {
   return function (listener, request) {
     // Make sure we can load the same image immediately out of the cache.
     do_test_pending();
-    var listener2 = new ImageListener(null, function (foo, bar) {
+    var listener2 = new ImageListener(null, function () {
       do_test_finished();
     });
     var outer = Cc["@mozilla.org/image/tools;1"]
