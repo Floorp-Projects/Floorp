@@ -11,7 +11,6 @@ TEST_DIRS += ["tests"]
 
 UNIFIED_SOURCES += [
     "nsRFPService.cpp",
-    "nsUserCharacteristics.cpp",
     "RelativeTimeline.cpp",
 ]
 
@@ -24,7 +23,6 @@ EXPORTS.mozilla += [
     "RelativeTimeline.h",
     "RFPTargetIPCUtils.h",
 ]
-EXPORTS.mozilla.gtest += ["nsUserCharacteristics.h"]
 
 EXTRA_JS_MODULES += [
     "FingerprintingWebCompatService.sys.mjs",
