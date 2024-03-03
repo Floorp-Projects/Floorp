@@ -653,7 +653,7 @@ export class DownloadSummary {
   }
 
   // DownloadList callback
-  onDownloadChanged(download) {
+  onDownloadChanged() {
     this._onListChanged();
   }
 

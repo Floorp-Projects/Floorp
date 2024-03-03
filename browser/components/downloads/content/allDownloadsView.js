@@ -734,7 +734,7 @@ DownloadsPlacesView.prototype = {
     goUpdateCommand("downloadsCmd_clearDownloads");
   },
 
-  onContextMenu(aEvent) {
+  onContextMenu() {
     let element = this._richlistbox.selectedItem;
     if (!element || !element._shell) {
       return false;
@@ -910,7 +910,7 @@ function goUpdateDownloadCommands() {
 
 document.addEventListener("DOMContentLoaded", function () {
   let richListBox = document.getElementById("downloadsListBox");
-  richListBox.addEventListener("scroll", function (event) {
+  richListBox.addEventListener("scroll", function () {
     return this._placesView.onScroll();
   });
   richListBox.addEventListener("keypress", function (event) {
@@ -938,7 +938,7 @@ document.addEventListener("DOMContentLoaded", function () {
   dropNode.addEventListener("drop", function (event) {
     richListBox._placesView.onDrop(event);
   });
-  richListBox.addEventListener("select", function (event) {
+  richListBox.addEventListener("select", function () {
     this._placesView.onSelect();
   });
   richListBox.addEventListener("focus", goUpdateDownloadCommands);

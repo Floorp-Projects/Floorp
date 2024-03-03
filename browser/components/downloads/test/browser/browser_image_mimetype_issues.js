@@ -98,7 +98,7 @@ add_task(async function test_save_link_webp_with_jpeg_extension() {
 add_task(async function test_save_page_on_image_document() {
   await BrowserTestUtils.withNewTab(
     `${TEST_ROOT}/not-really-a-jpeg.jpeg?convert=webp`,
-    async browser => {
+    async () => {
       await new Promise(resolve => {
         MockFilePicker.showCallback = function (fp) {
           ok(
@@ -119,7 +119,7 @@ add_task(async function test_save_page_on_image_document() {
  * get it replaced with .jpeg.
  */
 add_task(async function test_save_page_on_JPEG_image_document() {
-  await BrowserTestUtils.withNewTab(`${TEST_ROOT}/blank.JPG`, async browser => {
+  await BrowserTestUtils.withNewTab(`${TEST_ROOT}/blank.JPG`, async () => {
     await new Promise(resolve => {
       MockFilePicker.showCallback = function (fp) {
         ok(

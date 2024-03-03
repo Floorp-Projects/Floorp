@@ -22,7 +22,7 @@ function waitForChildren(element, callback) {
   });
 }
 
-async function waitForChildrenLength(element, length, callback) {
+async function waitForChildrenLength(element, length) {
   if (element.childElementCount != length) {
     await waitForChildren(element, () => element.childElementCount == length);
   }

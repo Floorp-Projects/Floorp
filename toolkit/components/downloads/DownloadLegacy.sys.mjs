@@ -166,12 +166,7 @@ DownloadLegacyTransfer.prototype = {
   onLocationChange() {},
 
   // nsIWebProgressListener
-  onStatusChange: function DLT_onStatusChange(
-    aWebProgress,
-    aRequest,
-    aStatus,
-    aMessage
-  ) {
+  onStatusChange: function DLT_onStatusChange(aWebProgress, aRequest, aStatus) {
     // The status change may optionally be received in addition to the state
     // change, but if no network request actually started, it is possible that
     // we only receive a status change with an error status code.
@@ -243,12 +238,7 @@ DownloadLegacyTransfer.prototype = {
   _delayedMaxTotalProgress: 0,
 
   // nsIWebProgressListener2
-  onRefreshAttempted: function DLT_onRefreshAttempted(
-    aWebProgress,
-    aRefreshURI,
-    aMillis,
-    aSameURI
-  ) {
+  onRefreshAttempted: function DLT_onRefreshAttempted() {
     // Indicate that refreshes and redirects are allowed by default.  However,
     // note that download components don't usually call this method at all.
     return true;

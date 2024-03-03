@@ -48,7 +48,7 @@ var observer = {
     "nsISupportsWeakReference",
   ]),
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "last-pb-context-exited":
         gDownloadLastDirFile = null;

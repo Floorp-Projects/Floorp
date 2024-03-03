@@ -29,7 +29,7 @@ var ContentAreaDownloadsView = {
       { once: true }
     );
     let view = new DownloadsPlacesView(box, true, suppressionFlag);
-    document.addEventListener("visibilitychange", aEvent => {
+    document.addEventListener("visibilitychange", () => {
       let indicator = DownloadsCommon.getIndicatorData(window);
       if (document.visibilityState === "visible") {
         indicator.attentionSuppressed |= suppressionFlag;

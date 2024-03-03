@@ -599,7 +599,7 @@ export var DownloadIntegration = {
    * @param [optional] aExtension
    *        The file extension, which can match instead of the MIME type.
    */
-  shouldViewDownloadInternally(aMimeType, aExtension) {
+  shouldViewDownloadInternally() {
     // Refuse all files by default, this is meant to be replaced with a check
     // for specific types via Integration.downloads.register().
     return false;
