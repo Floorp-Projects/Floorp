@@ -621,6 +621,19 @@ pref("toolkit.telemetry.dap_helper", "https://dap.services.mozilla.com");
 pref("toolkit.telemetry.dap_helper_owner", "Mozilla");
 pref("toolkit.telemetry.dap.logLevel", "Warn");
 
+// pref for mozilla to induce a new ping from users. This value should only ever be increased
+// and doing so will induce a new data ping from all users, so be careful. Mozilla may edit
+// this pref via our remote update/experimentation system
+pref("toolkit.telemetry.user_characteristics_ping.current_version", 0);
+// pref containing the value for the user of the last version of the ping we sent
+// if a user wants to disable this type of ping explicitly, set this to -1
+// firefox/mozilla will not modify this value if a negative number is present.
+pref("toolkit.telemetry.user_characteristics_ping.last_version_sent", 0);
+// A unique identifier for the user characteristics ping. This is not the same as
+// the telemetry client id (which is not sent in this ping), it is cleared when a
+// user opts-out of telemetry, it is set upon first telemetry submission
+pref("toolkit.telemetry.user_characteristics_ping.uuid", "");
+
 // AsyncShutdown delay before crashing in case of shutdown freeze
 // ASan, TSan and code coverage builds can be considerably slower. Extend the
 // grace period for both the asyncshutdown and the terminator.
