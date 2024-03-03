@@ -253,6 +253,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">תרגום הדף</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">הדף תורגם מ%1$s ל%2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">שפה נבחרת</string>
@@ -330,11 +335,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">הצהרת הפרטיות של Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">מידע נוסף בהצהרת הפרטיות שלנו</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">אנחנו אוהבים לשמור עליך</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">גלו מדוע מיליונים אוהבים את Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">גלישה בטוחה עם אפשרויות נוספות</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">הדפדפן שלנו שמגובה בקרן ללא מטרות רווח מסייע למנוע מחברות לעקוב אחריך בסתר ברחבי הרשת.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">יותר מ־100 מיליון אנשים מגנים על הפרטיות שלהם על־ידי בחירה בדפדפן שמגובה על־ידי עמותה שאינה למטרות רווח.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">רכיבי מעקב ידועים? נחסמים באופן אוטומטי. הרחבות? נסו את כל ה־700 שיש לנו. קובצי PDF? עם הקורא המובנה שלנו קל לנהל אותם.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">הדפדפן שלנו שמגובה בקרן ללא מטרות רווח מסייע למנוע מחברות לעקוב אחריך בסתר ברחבי הרשת.\n\nמידע נוסף בהצהרת הפרטיות שלנו.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -692,9 +707,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">סימניות</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">כניסות</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">כניסות</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">ססמאות</string>
+    <string name="preferences_sync_logins_2">ססמאות</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">לשוניות פתוחות</string>
     <!-- Preference for signing out -->
@@ -720,9 +735,9 @@
     <string name="default_device_name_2">‏%1$s על %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">כרטיסי אשראי</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">כרטיסי אשראי</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">אמצעי תשלום</string>
+    <string name="preferences_sync_credit_cards_2">אמצעי תשלום</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">כתובות</string>
 
@@ -1664,13 +1679,13 @@
     <string name="add_to_homescreen_description_2">באפשרותך להוסיף בקלות אתר זה למסך הבית של המכשיר שלך כדי לקבל גישה מיידית ולגלוש מהר יותר עם חוויה שמדמה שימוש ביישומון.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">כניסות וססמאות</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">כניסות וססמאות</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">ססמאות</string>
+    <string name="preferences_passwords_logins_and_passwords_2">ססמאות</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">שמירת כניסות וססמאות</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">שמירת כניסות וססמאות</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">שמירת ססמאות</string>
+    <string name="preferences_passwords_save_logins_2">שמירת ססמאות</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">לבקש לשמור</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1687,47 +1702,47 @@
     <string name="preferences_android_autofill_description">מילוי ושמירת שמות משתמשים וססמאות ביישומונים אחרים במכשיר שלך.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">הוספת כניסה</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">הוספת כניסה</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">הוספת ססמה</string>
+    <string name="preferences_logins_add_login_2">הוספת ססמה</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">סנכרון כניסות</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">סנכרון ססמאות</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">סנכרון כניסות</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">סנכרון ססמאות</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">סנכרון כניסות בין מכשירים</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">סנכרון כניסות בין מכשירים</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">סנכרון ססמאות בין מכשירים</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">סנכרון ססמאות בין מכשירים</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">כניסות שמורות</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">כניסות שמורות</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">ססמאות שמורות</string>
+    <string name="preferences_passwords_saved_logins_2">ססמאות שמורות</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">הכניסות שיישמרו או יסתנכרנו אל %s יופיעו כאן.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">הכניסות שיישמרו או יסתנכרנו אל %s יופיעו כאן.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">הססמאות שיישמרו או יסונכרנו עם %s יופיעו כאן. כל הססמאות השמורות הינן מוצפנות.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">הססמאות שיישמרו או יסונכרנו עם %s יופיעו כאן. כל הססמאות השמורות הינן מוצפנות.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">מידע נוסף על Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">מידע נוסף על Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">מידע נוסף על סנכרון</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">מידע נוסף על סנכרון</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">חריגות</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">כניסות וססמאות שאינן שמורות יופיעו כאן.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">כניסות וססמאות שאינן שמורות יופיעו כאן.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">‏%s לא ישמור ססמאות לאתרים המפורטים כאן.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">‏%s לא ישמור ססמאות לאתרים המפורטים כאן.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">כניסות וססמאות לא יישמרו עבור אתרים אלו.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">כניסות וססמאות לא יישמרו עבור אתרים אלו.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">‏%s לא ישמור ססמאות לאתרים אלו.</string>
+    <string name="preferences_passwords_exceptions_description_2">‏%s לא ישמור ססמאות לאתרים אלו.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">מחיקת כל החריגות</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">חיפוש כניסות</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">חיפוש כניסות</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">חיפוש ססמאות</string>
+    <string name="preferences_passwords_saved_logins_search_2">חיפוש ססמאות</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">אתר</string>
     <!-- The header for the username for a login -->
@@ -1755,17 +1770,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">הסתרת ססמה</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להציג את הססמאות השמורות שלך</string>
+    <string name="logins_biometric_prompt_message_2">יש לבטל את הנעילה כדי להציג את הססמאות השמורות שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">שמירה מאובטחת של הכניסות והססמאות שלך</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">שמירה מאובטחת של הכניסות והססמאות שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">אבטחת הססמאות השמורות שלך</string>
+    <string name="logins_warning_dialog_title_2">אבטחת הססמאות השמורות שלך</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על פרטי הגישה והססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על פרטי הגישה והססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על הססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <string name="logins_warning_dialog_message_2">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על הססמאות השמורות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">מאוחר יותר</string>
 
@@ -1783,10 +1798,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">שימוש אחרון</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">תפריט מיון כניסות</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">תפריט מיון כניסות</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">תפריט מיון ססמאות</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">תפריט מיון ססמאות</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1794,44 +1809,44 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">כתובות</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">כרטיסי אשראי</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">כרטיסי אשראי</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">אמצעי תשלום</string>
+    <string name="preferences_credit_cards_2">אמצעי תשלום</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">שמירה ומילוי אוטומטי של כרטיסים</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">שמירה ומילוי אוטומטי של כרטיסים</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">שמירה ומילוי אמצעי תשלום</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">שמירה ומילוי אמצעי תשלום</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">הנתונים מוצפנים</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">הנתונים מוצפנים</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">‏%s מצפין את כל אמצעי התשלום השמורים</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">‏%s מצפין את כל אמצעי התשלום השמורים</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">סנכרון כרטיסים בין מכשירים</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">סנכרון כרטיסים</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">הוספת כרטיס אשראי</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">הוספת כרטיס אשראי</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">הוספת כרטיס</string>
+    <string name="preferences_credit_cards_add_credit_card_2">הוספת כרטיס</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">ניהול כרטיסים שמורים</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ניהול כרטיסים שמורים</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">ניהול כרטיסים</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">ניהול כרטיסים</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">הוספת כתובת</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ניהול כתובות</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">שמירה ומילוי אוטומטי של כתובות</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">שמירה ומילוי אוטומטי של כתובות</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">שמירה ומילוי כתובות</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">שמירה ומילוי כתובות</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">לכלול מידע כמו מספרים, כתובות דוא״ל וכתובות למשלוח</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">לכלול מידע כמו מספרים, כתובות דוא״ל וכתובות למשלוח</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">כולל מספרי טלפון וכתובות דוא״ל</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">כולל מספרי טלפון וכתובות דוא״ל</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">הוספת כרטיס</string>
@@ -1852,9 +1867,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">מחיקת כרטיס</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">האם ברצונך למחוק את כרטיס האשראי הזה?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">האם ברצונך למחוק את כרטיס האשראי הזה?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">למחוק את הכרטיס?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">למחוק את הכרטיס?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">מחיקה</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1868,24 +1883,24 @@
     <string name="credit_cards_saved_cards">כרטיסים שמורים</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">נא להכניס מספר כרטיס אשראי תקין</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">נא להכניס מספר כרטיס אשראי תקין</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">נא להכניס מספר כרטיס תקני</string>
+    <string name="credit_cards_number_validation_error_message_2">נא להכניס מספר כרטיס תקני</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">נא למלא שדה זה</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">נא למלא שדה זה</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">הוספת שם</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">הוספת שם</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכרטיסים השמורים שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">אבטחת כרטיסי האשראי שלך</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">אבטחת כרטיסי האשראי שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">אבטחת אמצעי התשלום השמורים שלך</string>
+    <string name="credit_cards_warning_dialog_title_2">אבטחת אמצעי התשלום השמורים שלך</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על כרטיסי האשראי השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על כרטיסי האשראי השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על אמצעי התשלום השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
+    <string name="credit_cards_warning_dialog_message_3">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על אמצעי התשלום השמורים שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">להגדיר כעת</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1894,10 +1909,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">שחרור נעילת המכשיר שלך</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">יש לבטל את הנעילה כדי להשתמש בפרטי כרטיס האשראי השמור</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להשתמש בפרטי כרטיס האשראי השמור</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">יש לבטל את הנעילה כדי להשתמש באמצעי התשלום השמורים שלך</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">יש לבטל את הנעילה כדי להשתמש באמצעי התשלום השמורים שלך</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">הוספת כתובת</string>
     <!-- Title of the "Edit address" screen -->
@@ -1905,11 +1920,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ניהול כתובות</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">שם פרטי</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">שם פרטי</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">שם אמצעי</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">שם אמצעי</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">שם משפחה</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">שם משפחה</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">שם</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">כתובת רחוב</string>
     <!-- The header for the city of an address -->
@@ -1932,10 +1949,10 @@
     <string name="addressess_delete_address_button">מחיקת כתובת</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">האם ברצונך למחוק את כתובת זו?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">האם ברצונך למחוק את כתובת זו?</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">למחוק את הכתובת הזאת?</string>
+    <string name="addressess_confirm_dialog_message_2">למחוק את הכתובת הזאת?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">מחיקה</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2034,49 +2051,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">עריכה</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">האם ברצונך למחוק את כניסה זו?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">האם ברצונך למחוק את כניסה זו?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">האם ברצונך למחוק ססמה זו?</string>
+    <string name="login_deletion_confirmation_2">האם ברצונך למחוק ססמה זו?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">מחיקה</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ביטול</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">אפשרויות כניסה</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">אפשרויות כניסה</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">אפשרויות ססמה</string>
+    <string name="login_options_menu_2">אפשרויות ססמה</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">שדה הטקסט הניתן לעריכה עבור כתובת האתר של הכניסה.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור כתובת האתר של הכניסה.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור כתובת האתר.</string>
+    <string name="saved_login_hostname_description_3">שדה הטקסט הניתן לעריכה עבור כתובת האתר.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">שדה הטקסט הניתן לעריכה עבור שם המשתמש של הכניסה.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור שם המשתמש של הכניסה.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור שם המשתמש.</string>
+    <string name="saved_login_username_description_3">שדה הטקסט הניתן לעריכה עבור שם המשתמש.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">שדה הטקסט הניתן לעריכה עבור הססמה של הכניסה.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור הססמה של הכניסה.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">שדה הטקסט הניתן לעריכה עבור הססמה.</string>
+    <string name="saved_login_password_description_2">שדה הטקסט הניתן לעריכה עבור הססמה.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">שמירת השינויים של הכניסה.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">שמירת השינויים של הכניסה.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">שמירת שינויים.</string>
+    <string name="save_changes_to_login_2">שמירת שינויים.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">עריכה</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">עריכה</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">עריכת הססמה</string>
+    <string name="edit_2">עריכת הססמה</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">הוספת כניסה חדשה</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">הוספת כניסה חדשה</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">הוספת ססמה</string>
+    <string name="add_login_2">הוספת ססמה</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">נדרשת ססמה</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">נדרשת ססמה</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">נא להכניס ססמה</string>
+    <string name="saved_login_password_required_2">נא להכניס ססמה</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">דרוש שם משתמש</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">דרוש שם משתמש</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">נא להכניס שם משתמש</string>
+    <string name="saved_login_username_required_2">נא להכניס שם משתמש</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">דרוש שם מארח</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2190,7 +2207,7 @@
     <string name="radio_preference_info_content_description">יש ללחוץ לפרטים נוספים</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">ניווט למעלה</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">ניווט למעלה</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">סגירה</string>
@@ -2230,8 +2247,6 @@
     <string name="review_quality_check_grade_title">עד כמה הסקירות האלו אמינות?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">דירוג מותאם</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">סקירות בלתי אמינות הוסרו</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">מבוסס על סקירות אמינות</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2287,10 +2302,6 @@
     <string name="review_quality_check_product_availability_warning_body">אם מוצר זה חזר למלאי, נא לדווח על כך ואנו נעבוד על בדיקת הסקירות.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">שליחת דיווח שמוצר זה חזר למלאי</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">בתהליך בדיקת איכות הסקירות</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">בתהליך בדיקת איכות הסקירות</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">בתהליך בדיקת איכות הסקירות (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2338,13 +2349,19 @@
     <string name="review_quality_check_contextual_onboarding_learn_more_link">מידע נוסף</string>
 
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">בחירה באפשרות ״כן, ארצה לנסות״ מהווה הסכמה ל%2$s ול%3$s של %1$s מאת Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">בחירה באפשרות ״כן, ארצה לנסות״ מהווה הסכמה ל%2$s ול%3$s של %1$s מאת Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">בחירה באפשרות ״כן, ארצה לנסות״ מהווה הסכמה לתנאים הבאים מאת %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">בחירה באפשרות ״כן, ארצה לנסות״ מהווה הסכמה ל%2$s של %1$s ול%4$s של %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">בחירה באפשרות ״כן, ארצה לנסות״ מהווה הסכמה ל%2$s של %1$s ול%4$s של %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">הצהרת הפרטיות</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">מדיניות הפרטיות</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">מדיניות הפרטיות</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">הצהרת הפרטיות</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">תנאי השימוש</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2415,6 +2432,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">לתרגם את הדף הזה?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">הדף תורגם מ%1$s ל%2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">לנסות תרגומים פרטיים ב־%1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2427,6 +2448,8 @@
     <string name="translations_bottom_sheet_translate_to">שפת יעד</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">לא כעת</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">הצגת המקור</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">סיום</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2448,6 +2471,9 @@
     <string name="translation_error_language_not_supported_warning_text">איננו תומכים ב%1$s עדיין, עמך הסליחה.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">מידע נוסף</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">בתהליך תרגום…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

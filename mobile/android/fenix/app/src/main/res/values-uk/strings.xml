@@ -267,7 +267,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Сканувати</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Налаштування пошукових засобів</string>
+    <string name="search_shortcuts_engine_settings">Налаштування пошукових систем</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Заповнити посилання з буфера обміну</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -278,7 +278,7 @@
     <string name="search_suggestions_onboarding_title">Дозволяти пошукові пропозиції у приватних сеансах?</string>
 
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s відправлятиме все, що ви вводите в адресному рядку, вашому типовому провайдеру пошуку.</string>
+    <string name="search_suggestions_onboarding_text">%s відправлятиме все, що ви вводите в адресному рядку, вашій типовій пошуковій системі.</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Пошук в %s</string>
@@ -292,7 +292,7 @@
     <string name="search_header_menu_item_2">Шукати в:</string>
 
     <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
-    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Засіб пошуку %s</string>
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Пошукова система %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -333,7 +333,6 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Положення про приватність Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ми дбаємо про вашу безпеку</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -342,7 +341,7 @@
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Наш некомерційний браузер не дозволяє компаніям таємно стежити за вами в інтернеті.\n\nДокладніше в нашому Положенні про приватність.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">політиці приватності</string>
+    <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">положенні про приватність</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Встановити типовим браузером</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -401,19 +400,19 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Оберіть</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_2">Керуйте альтернативними засобами пошуку</string>
+    <string name="preferences_manage_search_shortcuts_2">Альтернативні пошукові системи</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary">Редагувати засоби пошуку, доступні в меню</string>
+    <string name="preferences_manage_search_shortcuts_summary">Редагувати системи, доступні в меню пошуку</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu">Засоби пошуку, доступні в меню</string>
+    <string name="preferences_category_engines_in_search_menu">Системи, доступні в меню пошуку</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_default_search_engine">Типовий засіб пошуку</string>
+    <string name="preferences_default_search_engine">Типова пошукова система</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Пошук</string>
     <!-- Preference for settings related to Search engines -->
-    <string name="preferences_search_engines">Засоби пошуку</string>
+    <string name="preferences_search_engines">Пошукові системи</string>
     <!-- Preference for settings related to Search engines suggestions-->
-    <string name="preferences_search_engines_suggestions">Пропозиції засобів пошуку</string>
+    <string name="preferences_search_engines_suggestions">Пропозиції від пошукових систем</string>
     <!-- Preference Category for settings related to Search address bar -->
     <string name="preferences_settings_address_bar">Налаштування панелі адреси</string>
     <!-- Preference Category for settings to Firefox Suggest -->
@@ -697,9 +696,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Закладки</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Паролі</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Паролі</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Паролі</string>
+    <string name="preferences_sync_logins_2">Паролі</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Вкладки</string>
     <!-- Preference for signing out -->
@@ -725,9 +724,9 @@
     <string name="default_device_name_2">%1$s на %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Кредитні картки</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Кредитні картки</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Способи оплати</string>
+    <string name="preferences_sync_credit_cards_2">Способи оплати</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Адреси</string>
 
@@ -1670,13 +1669,13 @@
     <string name="add_to_homescreen_description_2">Ви можете легко додати цей вебсайт на головний екран вашого пристрою, щоб мати миттєвий доступ до нього і працювати швидше.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Паролі</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Паролі</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Паролі</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Паролі</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Зберігати паролі</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Зберігати паролі</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Зберігати паролі</string>
+    <string name="preferences_passwords_save_logins_2">Зберігати паролі</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Питати про збереження</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1691,49 +1690,49 @@
     <string name="preferences_android_autofill_description">Заповнювати імена користувачів і паролі в інших програмах на цьому пристрої.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Додати пароль</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Додати пароль</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Додати пароль</string>
+    <string name="preferences_logins_add_login_2">Додати пароль</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Синхронізація паролів</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Синхронізувати паролі</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Синхронізація паролів</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Синхронізувати паролі</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Синхронізувати паролі між пристроями</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Синхронізувати паролі між пристроями</string>
 
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Синхронізація паролів між пристроями</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Синхронізація паролів між пристроями</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Збережені паролі</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Збережені паролі</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Збережені паролі</string>
+    <string name="preferences_passwords_saved_logins_2">Збережені паролі</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Тут з’являтимуться ваші збережені та синхронізовані з %s паролі.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Тут з’являтимуться ваші збережені та синхронізовані з %s паролі.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Тут з\'являтимуться паролі, які ви зберігаєте чи синхронізуєте в %s. Усі паролі зашифровано.
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Тут з\'являтимуться паролі, які ви зберігаєте чи синхронізуєте в %s. Усі паролі зашифровано.
 </string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Докладніше про синхронізацію.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Докладніше про синхронізацію.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Докладніше про синхронізацію</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Докладніше про синхронізацію</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Винятки</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Не збережені паролі з’являтимуться тут.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Не збережені паролі з’являтимуться тут.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s не зберігатиме паролі для вказаних тут сайтів.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s не зберігатиме паролі для вказаних тут сайтів.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Паролі для цих сайтів не зберігатимуться.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Паролі для цих сайтів не зберігатимуться.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s не зберігатиме паролі для цих сайтів.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s не зберігатиме паролі для цих сайтів.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Видалити всі винятки</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Шукати паролі</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Шукати паролі</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Пошук паролів</string>
+    <string name="preferences_passwords_saved_logins_search_2">Пошук паролів</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сайт</string>
     <!-- The header for the username for a login -->
@@ -1762,17 +1761,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Приховати пароль</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Розблокуйте для перегляду збережених паролів</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Розблокуйте для перегляду збережених паролів</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Розблокуйте, щоб переглянути збережені паролі</string>
+    <string name="logins_biometric_prompt_message_2">Розблокуйте, щоб переглянути збережені паролі</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Захистіть свої паролі</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Захистіть свої паролі</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Захистіть збережені паролі</string>
+    <string name="logins_warning_dialog_title_2">Захистіть збережені паролі</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених паролів від інших, хто може отримати доступ до вашого пристрою.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених паролів від інших, хто може отримати доступ до вашого пристрою.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених паролів від інших, хто може отримати доступ до вашого пристрою.</string>
+    <string name="logins_warning_dialog_message_2">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених паролів від інших, хто може отримати доступ до вашого пристрою.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Пізніше</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1790,10 +1789,10 @@
     <string name="saved_logins_sort_strategy_last_used">Востаннє використано</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню впорядкування паролів</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Меню впорядкування паролів</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Меню сортування паролів</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Меню сортування паролів</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1801,43 +1800,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Адреси</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Кредитні картки</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Кредитні картки</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Способи оплати</string>
+    <string name="preferences_credit_cards_2">Способи оплати</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Зберігати та автоматично заповнювати дані карток</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Зберігати та автоматично заповнювати дані карток</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Зберігати й заповнювати способи оплати</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Зберігати й заповнювати способи оплати</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Дані зашифровано</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Дані зашифровано</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s шифрує всі збережені способи оплати</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s шифрує всі збережені способи оплати</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Синхронізувати картки між пристроями</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Синхронізувати картки</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Додати кредитну картку</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Додати кредитну картку</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Додати картку</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Додати картку</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Керувати збереженими картками</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Керувати збереженими картками</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Керувати картками</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Керувати картками</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Додати адресу</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Керувати адресами</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Зберігати та автоматично заповнювати адреси</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Зберігати та автоматично заповнювати адреси</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Зберігати й заповнювати адреси</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Зберігати й заповнювати адреси</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Включити дані, як-от номери, електронні адреси та адреси доставлення</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Включити дані, як-от номери, електронні адреси та адреси доставлення</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Містить номери телефонів і адреси електронної пошти</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Містить номери телефонів і адреси електронної пошти</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Додати картку</string>
@@ -1858,9 +1857,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Видалити картку</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Ви впевнені, що хочете видалити цю кредитну картку?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ви впевнені, що хочете видалити цю кредитну картку?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Видалити картку?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Видалити картку?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Видалити</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1874,24 +1873,24 @@
     <string name="credit_cards_saved_cards">Збережені картки</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Введіть дійсний номер кредитної картки</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Введіть дійсний номер кредитної картки</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Введіть дійсний номер картки</string>
+    <string name="credit_cards_number_validation_error_message_2">Введіть дійсний номер картки</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Будь ласка, заповніть це поле</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Будь ласка, заповніть це поле</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Додайте назву</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Додайте назву</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Розблокуйте для перегляду збережених карток</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Захистіть свої банківські картки</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Захистіть свої банківські картки</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Захистіть свої збережені способи оплати</string>
+    <string name="credit_cards_warning_dialog_title_2">Захистіть свої збережені способи оплати</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених банківських карток від інших, хто може отримати доступ до вашого пристрою.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених банківських карток від інших, хто може отримати доступ до вашого пристрою.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених способів оплати від інших, хто може отримати доступ до вашого пристрою.</string>
+    <string name="credit_cards_warning_dialog_message_3">Встановіть графічний ключ, PIN-код чи пароль для захисту збережених способів оплати від інших, хто може отримати доступ до вашого пристрою.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Встановити</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1900,10 +1899,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Розблокуйте свій пристрій</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Розблокуйте, щоб використовувати збережену інформацію про кредитну картку</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Розблокуйте, щоб використовувати збережену інформацію про кредитну картку</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Розблокуйте, щоб використати збережені способи оплати</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Розблокуйте, щоб використати збережені способи оплати</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Додати адресу</string>
     <!-- Title of the "Edit address" screen -->
@@ -1911,11 +1910,11 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Керувати адресами</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Ім’я</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Ім’я</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">По батькові</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">По батькові</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Прізвище</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Прізвище</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Вулиця</string>
     <!-- The header for the city of an address -->
@@ -1940,9 +1939,9 @@
     <string name="addressess_delete_address_button">Видалити адресу</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Ви дійсно хочете видалити цю адресу?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ви дійсно хочете видалити цю адресу?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Видалити цю адресу?</string>
+    <string name="addressess_confirm_dialog_message_2">Видалити цю адресу?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Видалити</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -1953,11 +1952,11 @@
     <string name="address_menu_delete_address">Видалити адресу</string>
 
     <!-- Title of the Add search engine screen -->
-    <string name="search_engine_add_custom_search_engine_title">Додати засіб пошуку</string>
+    <string name="search_engine_add_custom_search_engine_title">Додати пошукову систему</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description">Додати новий засіб пошуку</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Додати нову пошукову систему</string>
     <!-- Title of the Edit search engine screen -->
-    <string name="search_engine_edit_custom_search_engine_title">Змінити засіб пошуку</string>
+    <string name="search_engine_edit_custom_search_engine_title">Змінити пошукову систему</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Змінити</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -1966,7 +1965,7 @@
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Назва</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2">Назва засобу пошуку</string>
+    <string name="search_add_custom_engine_name_hint_2">Назва пошукової системи</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL рядка пошуку</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
@@ -1975,7 +1974,7 @@
     <string name="search_add_custom_engine_search_string_example" formatted="false">Змініть запит на “%s”. Зразок:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
-    <string name="search_add_custom_engine_form_description">Подробиці власного засобу пошуку</string>
+    <string name="search_add_custom_engine_form_description">Подробиці власної пошукової системи</string>
 
     <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
     <string name="search_add_custom_engine_suggest_url_label">API пошукових пропозицій (необов’язково)</string>
@@ -1987,7 +1986,7 @@
     <string name="search_custom_engine_save_button">Зберегти</string>
 
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">Введіть назву засобу пошуку</string>
+    <string name="search_add_custom_engine_error_empty_name">Введіть назву пошукової системи</string>
 
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Введіть пошуковий запит</string>
@@ -2041,49 +2040,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Змінити</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Ви дійсно хочете видалити цей запис?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ви дійсно хочете видалити цей запис?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Ви дійсно хочете видалити цей пароль?</string>
+    <string name="login_deletion_confirmation_2">Ви дійсно хочете видалити цей пароль?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Видалити</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Скасувати</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Опції запису</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Опції запису</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Параметри пароля</string>
+    <string name="login_options_menu_2">Параметри пароля</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Текстове поле для редагування вебадреси запису.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Текстове поле для редагування вебадреси запису.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Текстове поле для редагування адреси вебсайту.</string>
+    <string name="saved_login_hostname_description_3">Текстове поле для редагування адреси вебсайту.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Текстове поле для редагування імені користувача запису.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Текстове поле для редагування імені користувача запису.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Текстове поле для редагування імені користувача.</string>
+    <string name="saved_login_username_description_3">Текстове поле для редагування імені користувача.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Текстове поле для редагування пароля запису.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Текстове поле для редагування пароля запису.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Текстове поле для редагування пароля.</string>
+    <string name="saved_login_password_description_2">Текстове поле для редагування пароля.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Зберегти зміни.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Зберегти зміни.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Зберегти зміни.</string>
+    <string name="save_changes_to_login_2">Зберегти зміни.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Змінити</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Змінити</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Редагувати пароль</string>
+    <string name="edit_2">Редагувати пароль</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Додати новий пароль</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Додати новий пароль</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Додати пароль</string>
+    <string name="add_login_2">Додати пароль</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Потрібен пароль</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Потрібен пароль</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Введіть пароль</string>
+    <string name="saved_login_password_required_2">Введіть пароль</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Необхідно вказати ім’я користувача</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Необхідно вказати ім’я користувача</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Введіть ім’я користувача</string>
+    <string name="saved_login_username_required_2">Введіть ім’я користувача</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Необхідно вказати назву вузла</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2195,7 +2194,7 @@
     <string name="radio_preference_info_content_description">Показати подробиці</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Вгору</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Вгору</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Закрити</string>
@@ -2235,8 +2234,6 @@
     <string name="review_quality_check_grade_title">Наскільки надійні ці відгуки?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Скоригований рейтинг</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Сумнівні відгуки прибрано</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">На основі надійних відгуків</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2293,10 +2290,6 @@
     <string name="review_quality_check_product_availability_warning_body">Якщо цей товар знову з’явиться, повідомте про це нам, і ми його проаналізуємо.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Повідомити про наявність товару</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Перевірка якості відгуку</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Перевірка якості відгуку</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Перевірка якості відгуку (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2342,11 +2335,11 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Докладніше</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Вибравши “Так, спробувати”, ви погоджуєтеся з %1$s %2$s і %3$s від Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Вибравши “Так, спробувати”, ви погоджуєтеся з %1$s %2$s і %3$s від Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Вибираючи “Спробувати”, ви погоджуєтеся з такими умовами від %1$s:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">політикою приватності</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">політикою приватності</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Політика приватності</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->

@@ -256,7 +256,7 @@
     <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
          The first parameter is the name of the language that is displayed in the original page. (For example: English)
          The second parameter is the name of the language which the page was translated to. (For example: French) -->
-    <string name="browser_toolbar_translated_successfully">Tudalen wedi\'i chyfieithu o %1$s i %2$s.</string>
+    <string name="browser_toolbar_translated_successfully">Tudalen wedi\'i chyfieithu o\'r %1$s i\'r %2$s.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -335,20 +335,20 @@
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Hysbysiad preifatrwydd Firefox</string>
     <!-- Description for learning more about our privacy notice. -->
-    <string name="juno_onboarding_privacy_notice_text_2" tools:ignore="UnusedResources">Darllenwch ein hysbysiad preifatrwydd</string>
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Darllenwch ein hysbysiad preifatrwydd</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Rydyn ni wrth ein bodd yn eich cadw chi’n ddiogel</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Darganfyddwch pam mae miliynau yn caru Firefox</string>
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Deall pam mae miliynau\'n caru Firefox</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Pori diogel gyda mwy o ddewisiadau</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Mae ein porwr gan gorff dim-er-elw\'n atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Mae mwy na 100 miliwn o bobl yn amddiffyn eu preifatrwydd trwy ddewis porwr a gefnogir gan ddielw.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Mae mwy na 100 miliwn o bobl yn diogelu eu preifatrwydd trwy ddewis porwr sy\'n cael ei gefnogi gan gorff dim-er-elw.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Tracwyr hysbys? Wedi\'i rwystro\'n awtomatig. Estyniadau? Rhowch gynnig ar bob 700. PDF? Mae ein darllenydd adeiledig yn eu gwneud yn hawdd i\'w rheoli.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Tracwyr hysbys? Wedi\'u rwystro\'n awtomatig. Estyniadau? Rhowch gynnig ar bob un o\'r 700. PDF? Mae ein darllenydd mewnol yn eu gwneud yn hawdd i\'w rheoli.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Mae ein porwr gan gorff dim-er-elw yn helpu i atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we.\n\nDarllenwch ragor yn ein hysbysiad preifatrwydd.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -2344,9 +2344,9 @@
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Wrth ddewis “Iawn, rhowch gynnig arni” rydych yn cytuno i’r canlynol o %1$s:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
-    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Drwy ddewis &quot;Ie, rhowch gynnig arni&quot; rydych yn cytuno i %2$s %1$s a %3$s %4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Drwy ddewis “Iawn, rhoi cynnig arni” rydych yn cytuno i %2$s %1$s a %3$s %4$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
-    <string name="review_quality_check_contextual_onboarding_caption_4">Drwy ddewis &quot;Ie, rhowch gynnig arni&quot; rydych yn cytuno i %2$s %1$s a %3$s %4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption_4">Drwy ddewis “Iawn, rhoi cynnig arni” rydych yn cytuno i %1$s %2$s a %3$s %4$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">polisi preifatrwydd</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2426,7 +2426,7 @@
     <!-- Title for the translation dialog after a translation was completed successfully.
     The first parameter is the name of the language that the page was translated from, for example, "French".
     The second parameter is the name of the language that the page was translated to, for example, "English". -->
-    <string name="translations_bottom_sheet_title_translation_completed">Tudalen wedi\'i chyfieithu o %1$s i %2$s</string>
+    <string name="translations_bottom_sheet_title_translation_completed">Tudalen wedi\'i chyfieithu o\'r %1$s i\'r %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Rhowch gynnig ar gyfieithu preifat yn %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->

@@ -189,13 +189,13 @@
     <string name="preference_show_search_suggestions">Отримувати пошукові пропозиції</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">%1$s буде відправляти провайдеру пошуку текст, введений в рядку адреси</string>
+    <string name="preference_show_search_suggestions_summary">%1$s відправлятиме пошуковій системі текст, введений в адресному рядку</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
-    <string name="preference_search_engine_default">Типовий</string>
+    <string name="preference_search_engine_default">Типова</string>
 
     <!-- This label is shown above the currently selected search engine in settings -->
-    <string name="preference_search_engine_label">Засіб пошуку</string>
+    <string name="preference_search_engine_label">Пошукова система</string>
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">Увімкнено</string>
@@ -368,39 +368,39 @@
     <string name="preference_about">Про %1$s</string>
 
     <!-- Header for the list of installed search engines -->
-    <string name="preference_search_installed_search_engines">Встановлені засоби пошуку</string>
+    <string name="preference_search_installed_search_engines">Встановлені пошукові системи</string>
 
     <!-- Header for the list of installed search engines -->
-    <string name="preference_choose_search_engine">Виберіть засіб пошуку</string>
+    <string name="preference_choose_search_engine">Виберіть пошукову систему</string>
 
     <!-- Action for restoring the default list of search engines -->
-    <string name="preference_search_restore">Відновити типові засоби пошуку</string>
+    <string name="preference_search_restore">Відновити типові пошукові системи</string>
 
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
-    <string name="preference_search_add2">+ Додати інший засіб пошуку</string>
-    <string name="preference_search_remove_title">Вилучити засоби пошуку</string>
+    <string name="preference_search_add2">+ Додати іншу пошукову систему</string>
+    <string name="preference_search_remove_title">Вилучити пошукові системи</string>
     <string name="preference_search_remove">Вилучити</string>
 
     <!-- Action for dding an additional search engine to the list -->
-    <string name="preference_search_add3">Додати інший засіб пошуку</string>
+    <string name="preference_search_add3">Додати іншу пошукову систему</string>
     <!-- Explanation text above the list of search engines-->
-    <string name="preference_select_preferred_engine">Оберіть бажаний засіб пошуку:</string>
+    <string name="preference_select_preferred_engine">Виберіть бажану пошукову систему:</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
-    <string name="action_option_add_search_engine">Додати засіб пошуку</string>
+    <string name="action_option_add_search_engine">Додати пошукову систему</string>
 
-    <string name="search_add_manually_name_hint">Назва засобу пошуку</string>
+    <string name="search_add_manually_name_hint">Назва пошукової системи</string>
     <string name="search_add_manually_string">Запит для пошуку</string>
     <string name="search_add_manually_save">Зберегти</string>
 
     <!-- Example of search engine url -->
     <string name="search_add_manually_example">Зразок: example.com/search/?q=%s</string>
 
-    <string name="search_add_confirmation">Новий засіб пошуку додано.</string>
+    <string name="search_add_confirmation">Нову пошукову систему додано.</string>
 
-    <string name="search_add_error_empty_name">Введіть назву засобу пошуку</string>
-    <string name="search_add_error_duplicate_name">Ця назва вже використовується у встановленому засобі пошуку.</string>
+    <string name="search_add_error_empty_name">Введіть назву пошукової системи</string>
+    <string name="search_add_error_duplicate_name">Ця назва вже використовується у встановленій пошуковій системі.</string>
 
     <string name="search_add_error_empty_search">Введіть пошуковий запит</string>
 
@@ -555,7 +555,7 @@
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Ваш пошук, ваш шлях</string>
     <!-- First run tour (Search): Text -->
-    <string name="firstrun_search_text">Шукаєте щось інше? Оберіть інший пошуковий засіб в налаштуваннях.</string>
+    <string name="firstrun_search_text">Шукаєте щось інше? Виберіть іншу пошукову систему в налаштуваннях.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Додавайте ярлики на головний екран</string>
@@ -880,7 +880,7 @@
 
     <!-- Description for the prompt to enable search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="enable_search_suggestion_description"> Для отримання пропозицій %1$s повинен відправляти введений в адресному рядку текст провайдеру пошуку.</string>
+    <string name="enable_search_suggestion_description"> Для отримання пропозицій %1$s повинен відправляти пошуковій системі введений в адресному рядку текст.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ні</string>
@@ -889,7 +889,7 @@
     <string name="enable_search_suggestions_yes">Так</string>
 
     <!-- Message displayed when using a search engine that doesn't provide suggestions -->
-    <string name="no_suggestions_message">Деякі засоби пошуку не можуть показувати пропозиції.</string>
+    <string name="no_suggestions_message">Деякі пошукові системи не можуть показувати пропозиції.</string>
 
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">Відхилити</string>
