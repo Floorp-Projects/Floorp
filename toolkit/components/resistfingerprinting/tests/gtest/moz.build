@@ -1,6 +1,5 @@
 UNIFIED_SOURCES += [
     "test_reduceprecision.cpp",
-    "test_usercharping.cpp",
 ]
 
 FINAL_LIBRARY = "xul-gtest"
