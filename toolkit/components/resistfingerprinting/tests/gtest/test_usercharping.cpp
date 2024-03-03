@@ -21,7 +21,6 @@ TEST(ResistFingerprinting, UserCharacteristics_Simple)
   mozilla::glean_pings::UserCharacteristics.TestBeforeNextSubmit(
       [&submitted](const nsACString& aReason) {
         submitted = true;
-
       });
   mozilla::glean_pings::UserCharacteristics.Submit();
   ASSERT_TRUE(submitted);
