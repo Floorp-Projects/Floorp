@@ -214,9 +214,6 @@ class ProviderContextualSearch extends UrlbarProvider {
    * See the base UrlbarProvider class for more.
    *
    * @param {UrlbarResult} result The result whose view will be updated.
-   * @param {Map} idsByName
-   *   A Map from an element's name, as defined by the provider; to its ID in
-   *   the DOM, as defined by the browser.
    * @returns {object} An object describing the view update.
    */
   getViewUpdate(result) {

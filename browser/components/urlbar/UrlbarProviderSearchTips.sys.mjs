@@ -160,7 +160,6 @@ class ProviderSearchTips extends UrlbarProvider {
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
    *
-   * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive() {
@@ -170,7 +169,6 @@ class ProviderSearchTips extends UrlbarProvider {
   /**
    * Gets the provider's priority.
    *
-   * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
   getPriority() {

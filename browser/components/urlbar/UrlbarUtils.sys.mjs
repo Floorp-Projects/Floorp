@@ -2918,8 +2918,6 @@ export class L10nCache {
    *   The subject of the notification.
    * @param {string} topic
    *   The topic of the notification.
-   * @param {string} data
-   *   The data attached to the notification.
    */
   async observe(subject, topic) {
     switch (topic) {

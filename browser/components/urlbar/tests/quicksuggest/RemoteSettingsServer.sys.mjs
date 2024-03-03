@@ -579,8 +579,6 @@ export class RemoteSettingsServer {
    *   The associated request.
    * @param {integer} options.status
    *   The HTTP status code of the response.
-   * @param {string} options.statusText
-   *   The description of the status code.
    * @param {object} options.headers
    *   An object mapping from response header names to values.
    * @param {object} options.body

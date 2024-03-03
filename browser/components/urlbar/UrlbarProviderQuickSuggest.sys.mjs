@@ -773,9 +773,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @param {UrlbarResult} options.result
    *   The quick suggest result related to the engagement, or null if no result
    *   was present.
-   * @param {string} options.resultSelType
-   *   If an element in the result's row was clicked, this should be its
-   *   `selType`. Otherwise it should be an empty string.
    * @param {boolean} options.resultClicked
    *   True if the main part of the result's row was clicked; false if a button
    *   like help or dismiss was clicked or if no part of the row was clicked.
@@ -828,9 +825,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   /**
    * Cancels the current query.
-   *
-   * @param {UrlbarQueryContext} queryContext
-   *   The query context.
    */
   cancelQuery() {
     // Cancel the Rust query.
