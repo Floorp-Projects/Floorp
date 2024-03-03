@@ -631,10 +631,6 @@ void nsWindow::Destroy() {
 
   DestroyLayerManager();
 
-  // mSurfaceProvider holds reference to this nsWindow so we need to explicitly
-  // clear it here to avoid nsWindow leak.
-  mSurfaceProvider.CleanupResources();
-
   g_signal_handlers_disconnect_by_data(gtk_settings_get_default(), this);
 
   if (mIMContext) {
