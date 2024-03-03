@@ -93,7 +93,7 @@ add_task(async function return_nothing_for_no_matching_message() {
 
 add_task(async function check_other_error_handling() {
   let called = false;
-  function onError(...args) {
+  function onError() {
     called = true;
   }
 

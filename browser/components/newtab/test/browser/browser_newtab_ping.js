@@ -187,7 +187,7 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
     let { sessions } =
       AboutNewTab.activityStream.store.feeds.get("feeds.telemetry");
     return !Array.from(sessions.entries()).filter(
-      ([k, v]) => v.session_id === sessionId
+      ([, v]) => v.session_id === sessionId
     ).length;
   }, "Waiting for sessions to clean up.");
   // Session ended without a ping being sent. Success!
