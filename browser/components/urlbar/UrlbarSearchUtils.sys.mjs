@@ -65,9 +65,6 @@ class SearchUtils {
    *   Match at each sub domain, for example "a.b.c.com" will be matched at
    *   "a.b.c.com", "b.c.com", and "c.com". Partial matches are always returned
    *   after perfect matches.
-   * @param {boolean} [options.onlyEnabled]
-   *   Match only engines that have not been disabled on the Search Preferences
-   *   list.
    * @returns {Array<nsISearchEngine>}
    *   An array of all matching engines. An empty array if there are none.
    */

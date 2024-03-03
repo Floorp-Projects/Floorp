@@ -143,7 +143,6 @@ class ProviderTabToSearch extends UrlbarProvider {
   /**
    * Gets the provider's priority.
    *
-   * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
   getPriority() {
@@ -156,9 +155,6 @@ class ProviderTabToSearch extends UrlbarProvider {
    * describing the view update.
    *
    * @param {UrlbarResult} result The result whose view will be updated.
-   * @param {Map} idsByName
-   *   A Map from an element's name, as defined by the provider; to its ID in
-   *   the DOM, as defined by the browser.
    * @returns {object} An object describing the view update.
    */
   getViewUpdate(result) {
@@ -202,8 +198,6 @@ class ProviderTabToSearch extends UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result that was selected.
-   * @param {Element} element
-   *   The element in the result's view that was selected.
    */
   onSelection(result) {
     // We keep track of the number of times the user interacts with

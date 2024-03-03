@@ -89,7 +89,7 @@ export class BaseFeature {
    * This method should initialize or uninitialize any state related to the
    * feature.
    *
-   * @param {boolean} enabled
+   * @param {boolean} _enabled
    *   Whether the feature should be enabled or not.
    */
   enable(_enabled) {}
@@ -100,7 +100,7 @@ export class BaseFeature {
    * method. It should return remote settings suggestions matching the given
    * search string.
    *
-   * @param {string} searchString
+   * @param {string} _searchString
    *   The search string.
    * @returns {Array}
    *   An array of matching suggestions, or null if not implemented.
@@ -114,7 +114,7 @@ export class BaseFeature {
    * override this method. It should fetch the data and build whatever data
    * structures are necessary to support the feature.
    *
-   * @param {RemoteSettings} rs
+   * @param {RemoteSettings} _rs
    *   The `RemoteSettings` client object.
    */
   async onRemoteSettingsSync(_rs) {}
@@ -126,7 +126,7 @@ export class BaseFeature {
    * given suggestion. A telemetry type uniquely identifies a type of suggestion
    * as well as the kind of `UrlbarResult` instances created from it.
    *
-   * @param {object} suggestion
+   * @param {object} _suggestion
    *   A suggestion from either remote settings or Merino.
    * @returns {string}
    *   The suggestion's telemetry type.
@@ -143,7 +143,7 @@ export class BaseFeature {
    * fine to rely on the default implementation here because the suggestion type
    * will be enabled iff the feature itself is enabled.
    *
-   * @param {string} type
+   * @param {string} _type
    *   A Rust suggestion type name as defined in `suggest.udl`. See also
    *   `rustSuggestionTypes`.
    * @returns {boolean}
@@ -158,11 +158,11 @@ export class BaseFeature {
    * override this method. It should return a new `UrlbarResult` for a given
    * suggestion, which can come from either remote settings or Merino.
    *
-   * @param {UrlbarQueryContext} queryContext
+   * @param {UrlbarQueryContext} _queryContext
    *   The query context.
-   * @param {object} suggestion
+   * @param {object} _suggestion
    *   The suggestion from either remote settings or Merino.
-   * @param {string} searchString
+   * @param {string} _searchString
    *   The search string that was used to fetch the suggestion. It may be
    *   different from `queryContext.searchString` due to trimming, lower-casing,
    *   etc. This is included as a param in case it's useful.

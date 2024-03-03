@@ -317,8 +317,6 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
   /**
    * Cancels a running query.
-   *
-   * @param {object} queryContext The query context object
    */
   cancelQuery() {
     if (this._suggestionsController) {

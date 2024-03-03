@@ -392,7 +392,6 @@ class ProviderAutofill extends UrlbarProvider {
   /**
    * Gets the provider's priority.
    *
-   * @param {UrlbarQueryContext} queryContext The query context object
    * @returns {number} The provider's priority for the given query.
    */
   getPriority() {
@@ -426,8 +425,6 @@ class ProviderAutofill extends UrlbarProvider {
 
   /**
    * Cancels a running query.
-   *
-   * @param {object} queryContext The query context object
    */
   cancelQuery() {
     if (this._autofillData?.instance == this.queryInstance) {
