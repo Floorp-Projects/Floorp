@@ -289,6 +289,9 @@
     }
 
     setInitialSelection() {
+      if (this.getAttribute("noinitialselection") === "true") {
+        return;
+      }
       var popup = this.menupopup;
       if (popup) {
         var arr = popup.getElementsByAttribute("selected", "true");

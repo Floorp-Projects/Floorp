@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist Initial Selection Test"
+        onload="setTimeout(runTest, 0)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+async function runTest() {
+  const panel = document.querySelector("panel");
+  const menulist1 = document.getElementById("menulist1");
+  const menulist2 = document.getElementById("menulist2");
+
+  const panelShown = new Promise(r => panel.addEventListener("popupshown", r, { once: true }));
+  info("opening panel");
+  panel.openPopup(null, { x: 0, y: 0 });
+  await panelShown;
+  info("panel opened");
+
+  is(menulist1.value, "1", "menulist1 should have the first menuitem's value");
+  is(menulist1.label, "One", "menulist1 should have the first menuitem's label");
+
+  is(menulist2.value, "", "menulist2 should not be selected to the first item's value");
+  is(menulist2.label, "None", "menulist2 should not be selected to the first item's value");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+<panel>
+  <menulist id="menulist1" value="" label="None">
+    <menupopup id="menulistpopup">
+      <menuitem value="1" label="One"/>
+      <menuitem value="2" label="Two"/>
+      <menuitem value="3" label="Three"/>
+    </menupopup>
+  </menulist>
+  <menulist id="menulist2" value="" label="None" noinitialselection="true">
+    <menupopup id="menulistpopup">
+      <menuitem value="1" label="One"/>
+      <menuitem value="2" label="Two"/>
+      <menuitem value="3" label="Three"/>
+    </menupopup>
+  </menulist>
+</panel>
+
+</window>
