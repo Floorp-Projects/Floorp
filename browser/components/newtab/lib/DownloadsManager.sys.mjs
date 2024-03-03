@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const DOWNLOAD_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for downloads changed events
 
 export class DownloadsManager {
-  constructor(store) {
+  constructor() {
     this._downloadData = null;
     this._store = null;
     this._downloadItems = new Map();

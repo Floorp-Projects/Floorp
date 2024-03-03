@@ -143,7 +143,7 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
     );
   }
 
-  restorePrefDefaults(event) {
+  restorePrefDefaults() {
     this.props.dispatch(
       ac.OnlyToMain({
         type: at.DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS,

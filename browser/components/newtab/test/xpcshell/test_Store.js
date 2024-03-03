@@ -41,7 +41,7 @@ add_task(async function test_messagechannel() {
   let sandbox = sinon.createSandbox();
   sandbox
     .stub(ActivityStreamMessageChannel.prototype, "middleware")
-    .returns(s => next => action => next(action));
+    .returns(() => next => action => next(action));
   let store = new Store();
 
   info(

@@ -731,7 +731,7 @@ const CopyButton = ({
   }, [inputSelector, transformer]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", _extends({
     className: className,
-    onClick: e => onClick()
+    onClick: () => onClick()
   }, props), copied && copiedLabel || label);
 };
 
@@ -1194,7 +1194,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       type: "RESET_PROVIDER_PREF"
     });
   }
-  resetGroups(id, value) {
+  resetGroups() {
     _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "RESET_GROUPS_STATE"
     }).then(this.setStateFromParent);
@@ -1331,7 +1331,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
   }
 
   // Simulate a copy event that sets to clipboard all targeting paramters and values
-  onCopyTargetingParams(event) {
+  onCopyTargetingParams() {
     const stringTargetingParameters = {
       ...this.state.stringTargetingParameters
     };
@@ -1419,13 +1419,13 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     // eslint-disable-next-line no-nested-ternary
     isBlocked ? null : isModified ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "button restore",
-      onClick: e => this.resetJSON(msg)
+      onClick: () => this.resetJSON(msg)
     }, "Reset") : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "button show",
       onClick: this.handleOverride(msg.id)
     }, "Show"), isBlocked ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "button modify",
-      onClick: e => this.modifyJson(msg)
+      onClick: () => this.modifyJson(msg)
     }, "Modify"), aboutMessagePreviewSupported ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_CopyButton__WEBPACK_IMPORTED_MODULE_4__.CopyButton, {
       transformer: text => `about:messagepreview?json=${encodeURIComponent(btoa(text))}`,
       label: "Share",
@@ -1441,7 +1441,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       name: msg.id,
       className: "general-textarea",
       disabled: isBlocked,
-      onChange: e => this.handleChange(msg.id)
+      onChange: () => this.handleChange(msg.id)
     }, JSON.stringify(msg, null, 2))))));
   }
   selectPBMessage(msgId) {
@@ -1500,7 +1500,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       onClick: isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)
     }, isBlocked ? "Unblock" : "Block"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "ASRouterButton slim button",
-      onClick: e => this.resetPBJSON(msg)
+      onClick: () => this.resetPBJSON(msg)
     }, "Reset JSON")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("td", {
       className: `message-summary`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("pre", {
@@ -1531,7 +1531,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
     const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter && message.template !== "pb_newtab");
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "ASRouterButton slim",
-      onClick: e => this.toggleAllMessages(messagesToShow)
+      onClick: () => this.toggleAllMessages(messagesToShow)
     }, "Collapse/Expand All"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", {
       className: "helpLink"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", {
@@ -1715,7 +1715,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       };
     });
   }
-  setAttribution(e) {
+  setAttribution() {
     _asrouter_utils__WEBPACK_IMPORTED_MODULE_0__.ASRouterUtils.sendMessage({
       type: "FORCE_ATTRIBUTION",
       data: this.state.attributionParameters
@@ -1833,7 +1833,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       }
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h2", null, "Messages"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("button", {
       className: "ASRouterButton slim button",
-      onClick: e => this.toggleAllMessages(messagesToShow)
+      onClick: () => this.toggleAllMessages(messagesToShow)
     }, "Collapse/Expand All"), this.renderPBMessages()));
   }
   getSection() {
@@ -1857,7 +1857,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
           enabled,
           frequency,
           userPreferences = []
-        }, index) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(Row, {
+        }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(Row, {
           key: id
         }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("td", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(TogglePrefCheckbox, {
           checked: enabled,

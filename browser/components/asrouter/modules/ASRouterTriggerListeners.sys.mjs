@@ -446,7 +446,7 @@ export const ASRouterTriggerListeners = new Map([
         }
       },
 
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (aSubject.currentURI.asciiHost === "accounts.firefox.com") {
           // Don't notify about saved logins on the FxA login origin since this
           // trigger is used to promote login Sync and getting a recommendation
@@ -562,7 +562,7 @@ export const ASRouterTriggerListeners = new Map([
       _sessionPageLoad: 0,
       onLocationChange: null,
 
-      init(triggerHandler, params, patterns) {
+      init(triggerHandler, params) {
         params.forEach(p => this._events.push(p));
 
         if (!this._initialized) {
@@ -610,7 +610,7 @@ export const ASRouterTriggerListeners = new Map([
         this._sessionPageLoad = 0;
       },
 
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         switch (aTopic) {
           case "SiteProtection:ContentBlockingEvent":
             const { browser, host, event } = aSubject.wrappedJSObject;
@@ -690,7 +690,7 @@ export const ASRouterTriggerListeners = new Map([
         this._triggerHandler = triggerHandler;
       },
 
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         switch (aTopic) {
           case "captive-portal-login-success":
             const browser = Services.wm.getMostRecentBrowserWindow();

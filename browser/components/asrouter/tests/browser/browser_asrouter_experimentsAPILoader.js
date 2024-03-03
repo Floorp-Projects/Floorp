@@ -444,7 +444,7 @@ add_task(async function test_emptyMessage() {
   );
 
   // Clear all messages
-  ASRouter.setState(state => ({
+  ASRouter.setState(() => ({
     messages: [],
   }));
 

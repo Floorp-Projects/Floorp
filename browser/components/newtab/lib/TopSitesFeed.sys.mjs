@@ -165,7 +165,7 @@ class TopSitesTelemetry {
       {},
       ...Object.entries(this.allSponsoredTiles)
         .filter(
-          ([k, v]) =>
+          ([, v]) =>
             v.display_fail_reason === null ||
             v.display_fail_reason === undefined
         )
@@ -196,8 +196,8 @@ class TopSitesTelemetry {
 
   clearTilesForProvider(provider) {
     Object.entries(this.allSponsoredTiles)
-      .filter(([k, v]) => k.startsWith(provider))
-      .map(([k, v]) => delete this.allSponsoredTiles[k]);
+      .filter(([k]) => k.startsWith(provider))
+      .map(([k]) => delete this.allSponsoredTiles[k]);
   }
 
   _getAdvertiser(tile) {
