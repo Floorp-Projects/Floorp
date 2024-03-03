@@ -32,8 +32,6 @@ support-files = [
   "../../../../../toolkit/components/gfx/content/videotest.mp4",
 ]
 
-["browser_site_not_working_fallback.js"]
-
 ["browser_tab_key_order.js"]
 
 ["browser_tab_switch_handling.js"]

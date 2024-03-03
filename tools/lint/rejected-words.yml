@@ -41,7 +41,6 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/protectionsUI/browser_protectionsUI_cryptominers.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_fingerprinters.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_pbmode_exceptions.js
-        - browser/base/content/test/protectionsUI/browser_protectionsUI_report_breakage.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_socialtracking.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_state.js
         - browser/base/content/test/protectionsUI/browser_protectionsUI_subview_shim.js

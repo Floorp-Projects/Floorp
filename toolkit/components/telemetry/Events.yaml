@@ -2513,9 +2513,6 @@ security.ui.protectionspopup:
     objects: [
       "etp_toggle_on",
       "etp_toggle_off",
-      "sitenotworking_link",
-      "send_report_link",
-      "send_report_submit",
       "social",
       "cookies",
       "trackers",

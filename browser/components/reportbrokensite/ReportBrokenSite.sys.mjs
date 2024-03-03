@@ -469,15 +469,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       reportSiteIssue.hidden = this.enabled || !this.reportSiteIssueEnabledPref;
       reportSiteIssue.disabled = !canReportUrl;
     }
-
-    // "Site not working?" on the protections panel should be hidden when
-    // Report Broken Site is visible (bug 1868527).
-    const siteNotWorking = document.getElementById(
-      "protections-popup-tp-switch-section-footer"
-    );
-    if (siteNotWorking) {
-      siteNotWorking.hidden = this.enabled;
-    }
   }
 
   #checkPrefs(whichChanged) {
@@ -755,7 +746,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
           .getElementById("protections-popup-multiView")
           .showSubView(ReportBrokenSite.MAIN_PANELVIEW_ID);
         break;
-      case "help_reportBrokenSite":
+      case "help_reportBrokenSite": {
         // hide the hamburger menu first, as we overlap with it.
         const appMenuPopup = document.getElementById("appMenu-popup");
         appMenuPopup?.hidePopup();
@@ -765,6 +756,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
           ownerGlobal.PanelUI.menuButton
         );
         break;
+      }
     }
   }
 })();
