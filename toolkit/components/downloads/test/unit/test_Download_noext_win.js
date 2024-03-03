@@ -47,7 +47,7 @@ add_task(async function () {
  */
 function waitForDirectoryShown() {
   return new Promise(resolve => {
-    let waitFn = base => ({
+    let waitFn = () => ({
       showContainingDirectory(path) {
         Integration.downloads.unregister(waitFn);
         resolve(path);

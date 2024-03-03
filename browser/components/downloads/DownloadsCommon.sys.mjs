@@ -1166,7 +1166,7 @@ const DownloadsViewPrototype = {
    *
    * @note Subclasses should override this.
    */
-  onDownloadStateChanged(download) {
+  onDownloadStateChanged() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 

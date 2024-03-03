@@ -38,14 +38,14 @@ add_task(async function test_unknownContentType_dialog_layout() {
       opened: Promise.withResolvers(),
       closed: Promise.withResolvers(),
 
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         let win = aSubject;
 
         switch (aTopic) {
           case "domwindowopened":
             win.addEventListener(
               "load",
-              function onLoad(event) {
+              function onLoad() {
                 // Let the dialog initialize
                 SimpleTest.executeSoon(function () {
                   UCTObserver.opened.resolve(win);

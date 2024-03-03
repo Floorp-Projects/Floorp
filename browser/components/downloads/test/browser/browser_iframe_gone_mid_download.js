@@ -22,7 +22,7 @@ function test_deleted_iframe(perSitePref, windowOptions = {}) {
     ok(iframe.contentWindow, "iframe should have a window");
     let gDownloadLastDir = new DownloadLastDir(iframe.contentWindow);
     let cw = iframe.contentWindow;
-    let promiseIframeWindowGone = new Promise((resolve, reject) => {
+    let promiseIframeWindowGone = new Promise(resolve => {
       Services.obs.addObserver(function obs(subject, topic) {
         if (subject == cw) {
           Services.obs.removeObserver(obs, topic);

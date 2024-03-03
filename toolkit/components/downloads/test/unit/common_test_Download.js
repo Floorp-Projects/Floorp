@@ -85,7 +85,7 @@ async function expectNonZeroDownloadTargetSize(downloadTarget) {
  */
 function waitForFileLaunched() {
   return new Promise(resolve => {
-    let waitFn = base => ({
+    let waitFn = () => ({
       launchFile(file, mimeInfo) {
         Integration.downloads.unregister(waitFn);
         if (
@@ -109,7 +109,7 @@ function waitForFileLaunched() {
  */
 function waitForDirectoryShown() {
   return new Promise(resolve => {
-    let waitFn = base => ({
+    let waitFn = () => ({
       showContainingDirectory(path) {
         Integration.downloads.unregister(waitFn);
         resolve(path);
@@ -716,7 +716,7 @@ add_task(async function test_empty_noprogress() {
       aResponse.setHeader("Content-Type", "text/plain", false);
       deferRequestReceived.resolve();
     },
-    function secondPart(aRequest, aResponse) {}
+    function secondPart() {}
   );
 
   // Start the download, without allowing the request to finish.
@@ -1892,7 +1892,7 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
  * Download with parental controls enabled.
  */
 add_task(async function test_blocked_parental_controls() {
-  let blockFn = base => ({
+  let blockFn = () => ({
     shouldBlockForParentalControls: () => Promise.resolve(true),
   });
 
@@ -2001,7 +2001,7 @@ add_task(async function test_blocked_applicationReputation() {
 add_task(async function test_blocked_applicationReputation_race() {
   let isFirstShouldBlockCall = true;
 
-  let blockFn = base => ({
+  let blockFn = () => ({
     shouldBlockForReputationCheck(download) {
       if (isFirstShouldBlockCall) {
         isFirstShouldBlockCall = false;
@@ -2680,23 +2680,20 @@ add_task(async function test_partitionKey() {
   Services.prefs.setBoolPref("privacy.partition.network_state", true);
 
   function promiseVerifyDownloadChannel(url, partitionKey) {
-    return TestUtils.topicObserved(
-      "http-on-modify-request",
-      (subject, data) => {
-        let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
-        if (httpChannel.URI.spec != url) {
-          return false;
-        }
-
-        let reqLoadInfo = httpChannel.loadInfo;
-        let cookieJarSettings = reqLoadInfo.cookieJarSettings;
-
-        // Check the partitionKey of the cookieJarSettings.
-        Assert.equal(cookieJarSettings.partitionKey, partitionKey);
-
-        return true;
+    return TestUtils.topicObserved("http-on-modify-request", subject => {
+      let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
+      if (httpChannel.URI.spec != url) {
+        return false;
       }
-    );
+
+      let reqLoadInfo = httpChannel.loadInfo;
+      let cookieJarSettings = reqLoadInfo.cookieJarSettings;
+
+      // Check the partitionKey of the cookieJarSettings.
+      Assert.equal(cookieJarSettings.partitionKey, partitionKey);
+
+      return true;
+    });
   }
 
   let test_url = httpUrl("source.txt");

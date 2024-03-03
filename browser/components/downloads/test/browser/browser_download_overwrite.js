@@ -31,7 +31,7 @@ add_setup(async function () {
   let destDir = gTestTargetFile.parent;
 
   MockFilePicker.displayDirectory = destDir;
-  MockFilePicker.showCallback = function (fp) {
+  MockFilePicker.showCallback = function () {
     MockFilePicker.setFiles([gTestTargetFile]);
     return MockFilePicker.returnOK;
   };

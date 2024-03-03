@@ -322,7 +322,7 @@ add_task(async function test_history_expiration() {
   let deferred = Promise.withResolvers();
   let removeNotifications = 0;
   let downloadView = {
-    onDownloadRemoved(aDownload) {
+    onDownloadRemoved() {
       if (++removeNotifications == 2) {
         deferred.resolve();
       }
@@ -369,7 +369,7 @@ add_task(async function test_history_clear() {
   let deferred = Promise.withResolvers();
   let removeNotifications = 0;
   let downloadView = {
-    onDownloadRemoved(aDownload) {
+    onDownloadRemoved() {
       if (++removeNotifications == 2) {
         deferred.resolve();
       }

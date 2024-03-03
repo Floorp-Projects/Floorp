@@ -1458,7 +1458,7 @@ var DownloadsSummary = {
    * @param aEvent
    *        The click event being handled.
    */
-  onClick(aEvent) {
+  onClick() {
     DownloadsPanel.showDownloadsHistory();
   },
 

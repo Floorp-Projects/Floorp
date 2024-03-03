@@ -44,7 +44,7 @@ class TestView {
     }
     this.checkForExpectedDownloads();
   }
-  onDownloadChanged(download) {
+  onDownloadChanged() {
     this.checkForExpectedDownloads();
   }
   onDownloadRemoved(download) {

@@ -13,14 +13,14 @@ let UCTObserver = {
   opened: Promise.withResolvers(),
   closed: Promise.withResolvers(),
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     let win = aSubject;
 
     switch (aTopic) {
       case "domwindowopened":
         win.addEventListener(
           "load",
-          function onLoad(event) {
+          function onLoad() {
             // Let the dialog initialize
             SimpleTest.executeSoon(function () {
               UCTObserver.opened.resolve(win);
@@ -40,7 +40,7 @@ let UCTObserver = {
 };
 
 function waitDelay(delay) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     /* eslint-disable mozilla/no-arbitrary-setTimeout */
     window.setTimeout(resolve, delay);
   });

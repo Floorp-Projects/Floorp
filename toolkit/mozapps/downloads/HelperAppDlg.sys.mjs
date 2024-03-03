@@ -72,33 +72,19 @@ nsUnknownContentTypeDialogProgressListener.prototype = {
   },
 
   // Ignore onProgressChange, onProgressChange64, onStateChange, onLocationChange, onSecurityChange, onContentBlockingEvent and onRefreshAttempted notifications.
-  onProgressChange(
-    aWebProgress,
-    aRequest,
-    aCurSelfProgress,
-    aMaxSelfProgress,
-    aCurTotalProgress,
-    aMaxTotalProgress
-  ) {},
+  onProgressChange() {},
 
-  onProgressChange64(
-    aWebProgress,
-    aRequest,
-    aCurSelfProgress,
-    aMaxSelfProgress,
-    aCurTotalProgress,
-    aMaxTotalProgress
-  ) {},
+  onProgressChange64() {},
 
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {},
+  onStateChange() {},
 
-  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {},
+  onLocationChange() {},
 
-  onSecurityChange(aWebProgress, aRequest, aState) {},
+  onSecurityChange() {},
 
-  onContentBlockingEvent(aWebProgress, aRequest, aEvent) {},
+  onContentBlockingEvent() {},
 
-  onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
+  onRefreshAttempted() {
     return true;
   },
 };

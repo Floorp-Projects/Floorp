@@ -2027,7 +2027,7 @@ DownloadSaver.prototype = {
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  async execute(aSetProgressBytesFn, aSetPropertiesFn) {
+  async execute() {
     throw new Error("Not implemented.");
   },
 
@@ -2052,7 +2052,7 @@ DownloadSaver.prototype = {
    * @resolves When the operation has finished successfully.
    * @rejects Never.
    */
-  async removeData(canRemoveFinalTarget) {},
+  async removeData() {},
 
   /**
    * This can be called by the saver implementation when the download is already

@@ -67,7 +67,7 @@ export let DownloadsViewableInternally = {
     this._updateAllHandlers();
 
     // Register the check for use in DownloadIntegration
-    lazy.Integration.downloads.register(base => ({
+    lazy.Integration.downloads.register(() => ({
       shouldViewDownloadInternally:
         this._shouldViewDownloadInternally.bind(this),
     }));
