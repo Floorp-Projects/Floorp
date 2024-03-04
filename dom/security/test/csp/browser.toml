@@ -16,7 +16,7 @@ support-files = [
 
 ["browser_pdfjs_not_subject_to_csp.js"]
 support-files = [
-  "empty.pdf",
+  "dummy.pdf",
   "file_pdfjs_not_subject_to_csp.html",
 ]
 
