@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
@@ -11,6 +12,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
@@ -26,6 +28,7 @@ class SitePermissionsRobot {
             assertItemTextEquals(denyPagePermissionButton(), expectedText = "Don’t allow")
             assertItemTextEquals(allowPagePermissionButton(), expectedText = "Allow")
         } catch (e: AssertionError) {
+            Log.i(TAG, "verifyMicrophonePermissionPrompt: AssertionError caught, executing fallback methods")
             browserScreen {
             }.openThreeDotMenu {
             }.refreshPage {
@@ -43,6 +46,7 @@ class SitePermissionsRobot {
             assertItemTextEquals(denyPagePermissionButton(), expectedText = "Don’t allow")
             assertItemTextEquals(allowPagePermissionButton(), expectedText = "Allow")
         } catch (e: AssertionError) {
+            Log.i(TAG, "verifyCameraPermissionPrompt: AssertionError caught, executing fallback methods")
             browserScreen {
             }.openThreeDotMenu {
             }.refreshPage {
@@ -66,6 +70,7 @@ class SitePermissionsRobot {
             assertItemTextEquals(denyPagePermissionButton(), expectedText = "Don’t allow")
             assertItemTextEquals(allowPagePermissionButton(), expectedText = "Allow")
         } catch (e: AssertionError) {
+            Log.i(TAG, "verifyLocationPermissionPrompt: AssertionError caught, executing fallback methods")
             browserScreen {
             }.openThreeDotMenu {
             }.refreshPage {
@@ -84,6 +89,7 @@ class SitePermissionsRobot {
                 assertItemTextEquals(denyPagePermissionButton(), expectedText = "Never")
                 assertItemTextEquals(allowPagePermissionButton(), expectedText = "Always")
             } catch (e: AssertionError) {
+                Log.i(TAG, "verifyNotificationsPermissionPrompt: AssertionError caught, executing fallback methods")
                 browserScreen {
                 }.openThreeDotMenu {
                 }.refreshPage {
@@ -106,6 +112,7 @@ class SitePermissionsRobot {
             assertItemTextEquals(denyPagePermissionButton(), expectedText = "Don’t allow")
             assertItemTextEquals(allowPagePermissionButton(), expectedText = "Allow")
         } catch (e: AssertionError) {
+            Log.i(TAG, "verifyPersistentStoragePermissionPrompt: AssertionError caught, executing fallback methods")
             browserScreen {
             }.openThreeDotMenu {
             }.refreshPage {
@@ -123,6 +130,7 @@ class SitePermissionsRobot {
             assertItemTextEquals(denyPagePermissionButton(), expectedText = "Don’t allow")
             assertItemTextEquals(allowPagePermissionButton(), expectedText = "Allow")
         } catch (e: AssertionError) {
+            Log.i(TAG, "verifyDRMContentPermissionPrompt: AssertionError caught, executing fallback methods")
             browserScreen {
             }.openThreeDotMenu {
             }.refreshPage {
@@ -135,39 +143,73 @@ class SitePermissionsRobot {
     }
 
     fun verifyCrossOriginCookiesPermissionPrompt(originSite: String, currentSite: String) {
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Waiting for $waitingTime ms for \"Allow $originSite to use its cookies on $currentSite?\" prompt to exist")
         mDevice.findObject(UiSelector().text("Allow $originSite to use its cookies on $currentSite?"))
             .waitForExists(waitingTime)
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Waited for $waitingTime ms for \"Allow $originSite to use its cookies on $currentSite?\" prompt to exist")
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Trying to verify that the the storage access permission prompt title is displayed")
         onView(ViewMatchers.withText("Allow $originSite to use its cookies on $currentSite?")).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Verified that the the storage access permission prompt title is displayed")
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Trying to verify that the storage access permission prompt message is displayed")
         onView(ViewMatchers.withText("You may want to block access if it's not clear why $originSite needs this data.")).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Verified that the storage access permission prompt message is displayed")
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Trying to verify that the storage access permission prompt learn more link is displayed")
         onView(ViewMatchers.withText("Learn more")).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Verified that the storage access permission prompt learn more link is displayed")
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Trying to verify that the \"Block\" storage access permission prompt button is displayed")
         onView(ViewMatchers.withText("Block")).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Verified that the \"Block\" storage access permission prompt button is displayed")
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Trying to verify that the \"Allow\" storage access permission prompt button is displayed")
         onView(ViewMatchers.withText("Allow")).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyCrossOriginCookiesPermissionPrompt: Verified that the \"Allow\" storage access permission prompt button is displayed")
     }
 
     fun selectRememberPermissionDecision() {
+        Log.i(TAG, "selectRememberPermissionDecision: Waiting for $waitingTime ms for the \"Remember decision for this site\" check box to exist")
         mDevice.findObject(UiSelector().resourceId("$packageName:id/do_not_ask_again"))
             .waitForExists(waitingTime)
+        Log.i(TAG, "selectRememberPermissionDecision: Waited for $waitingTime ms for the \"Remember decision for this site\" check box to exist")
+        Log.i(TAG, "selectRememberPermissionDecision: Trying to click the \"Remember decision for this site\" check box")
         onView(withId(R.id.do_not_ask_again))
             .check(matches(isDisplayed()))
             .click()
+        Log.i(TAG, "selectRememberPermissionDecision: Clicked the \"Remember decision for this site\" check box")
     }
 
     class Transition {
         fun clickPagePermissionButton(allow: Boolean, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             if (allow) {
+                Log.i(TAG, "clickPagePermissionButton: Waiting for $waitingTime ms for the \"Allow\" prompt button to exist")
                 allowPagePermissionButton().waitForExists(waitingTime)
+                Log.i(TAG, "clickPagePermissionButton: Waited for $waitingTime ms for the \"Allow\" prompt button to exist")
+                Log.i(TAG, "clickPagePermissionButton: Trying to click the \"Allow\" prompt button")
                 allowPagePermissionButton().click()
+                Log.i(TAG, "clickPagePermissionButton: Clicked the \"Allow\" prompt button")
                 // sometimes flaky, the prompt is not dismissed, retrying
+                Log.i(TAG, "clickPagePermissionButton: Waiting for $waitingTime ms for the \"Allow\" prompt button to be gone")
                 if (!allowPagePermissionButton().waitUntilGone(waitingTime)) {
+                    Log.i(TAG, "clickPagePermissionButton: The \"Allow\" prompt button is not gone")
+                    Log.i(TAG, "clickPagePermissionButton: Trying to click again the \"Allow\" prompt button")
                     allowPagePermissionButton().click()
+                    Log.i(TAG, "clickPagePermissionButton: Clicked again the \"Allow\" prompt button")
                 }
+                Log.i(TAG, "clickPagePermissionButton: Waited for $waitingTime ms for the \"Allow\" prompt button to be gone")
             } else {
+                Log.i(TAG, "clickPagePermissionButton: Waiting for $waitingTime ms for the \"Don’t allow\" prompt button to exist")
                 denyPagePermissionButton().waitForExists(waitingTime)
+                Log.i(TAG, "clickPagePermissionButton: Waited for $waitingTime ms for the \"Don’t allow\" prompt button to exist")
+                Log.i(TAG, "clickPagePermissionButton: Trying to click the \"Don’t allow\" prompt button")
                 denyPagePermissionButton().click()
+                Log.i(TAG, "clickPagePermissionButton: Clicked the \"Don’t allow\" prompt button")
+                Log.i(TAG, "clickPagePermissionButton: Waiting for $waitingTime ms for the \"Don’t allow\" prompt button to be gone")
                 // sometimes flaky, the prompt is not dismissed, retrying
                 if (!denyPagePermissionButton().waitUntilGone(waitingTime)) {
+                    Log.i(TAG, "clickPagePermissionButton: The \"Don’t allow\" prompt button is not gone")
+                    Log.i(TAG, "clickPagePermissionButton: Trying to click again the \"Don’t allow\" prompt button")
                     denyPagePermissionButton().click()
+                    Log.i(TAG, "clickPagePermissionButton: Clicked again the \"Don’t allow\" prompt button")
                 }
+                Log.i(TAG, "clickPagePermissionButton: Waited for $waitingTime ms for the \"Don’t allow\" prompt button to be gone")
             }
 
             BrowserRobot().interact()
