@@ -5875,11 +5875,7 @@ void nsWindow::ConfigureGdkWindow() {
 
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
-    GdkVisual* gdkVisual = gdk_window_get_visual(mGdkWindow);
-    Visual* visual = gdk_x11_visual_get_xvisual(gdkVisual);
-    int depth = gdk_visual_get_depth(gdkVisual);
-    mSurfaceProvider.Initialize(GetX11Window(), visual, depth,
-                                GetShapedState());
+    mSurfaceProvider.Initialize(GetX11Window(), GetShapedState());
 
     // Set window manager hint to keep fullscreen windows composited.
     //

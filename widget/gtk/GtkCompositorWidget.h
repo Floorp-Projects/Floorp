@@ -84,7 +84,7 @@ class GtkCompositorWidget : public CompositorWidget,
   bool SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
 
 #if defined(MOZ_X11)
-  Window XWindow() const { return mXWindow; }
+  Window XWindow() const { return mProvider.GetXWindow(); }
 #endif
 #if defined(MOZ_WAYLAND)
   RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
@@ -123,11 +123,9 @@ class GtkCompositorWidget : public CompositorWidget,
   // of the two.
   DataMutex<LayoutDeviceIntSize> mClientSize;
 
+  // Holds rendering resources
   WindowSurfaceProvider mProvider;
 
-#if defined(MOZ_X11)
-  Window mXWindow = {};
-#endif
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
 #endif
