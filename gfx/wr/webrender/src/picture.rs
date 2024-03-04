@@ -6128,22 +6128,28 @@ impl PicturePrimitive {
                     PictureCompositeMode::TileCache { slice_id } => {
                         let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
 
+                        // Get the complete scale-offset from local space to device space
+                        let local_to_device = get_relative_scale_offset(
+                            tile_cache.spatial_node_index,
+                            frame_context.root_spatial_node_index,
+                            frame_context.spatial_tree,
+                        );
+                        let local_to_cur_raster_scale = local_to_device.scale.x / tile_cache.current_raster_scale;
+
                         // We only update the raster scale if we're in high quality zoom mode, or there is no
-                        // pinch-zoom active. This means that in low quality pinch-zoom, we retain the initial
-                        // scale factor until the zoom ends, then select a high quality zoom factor for the next
-                        // frame to be drawn.
-                        let update_raster_scale =
-                            !frame_context.fb_config.low_quality_pinch_zoom ||
-                            !frame_context.spatial_tree.get_spatial_node(tile_cache.spatial_node_index).is_ancestor_or_self_zooming;
-
-                        if update_raster_scale {
-                            // Get the complete scale-offset from local space to device space
-                            let local_to_device = get_relative_scale_offset(
-                                tile_cache.spatial_node_index,
-                                frame_context.root_spatial_node_index,
-                                frame_context.spatial_tree,
-                            );
-
+                        // pinch-zoom active, or the zoom has doubled or halved since the raster scale was
+                        // last updated. During a low-quality zoom we therefore typically retain the previous
+                        // scale factor, which avoids expensive re-rasterizations, except for when the zoom
+                        // has become too large or too small when we re-rasterize to avoid bluriness or a
+                        // proliferation of picture cache tiles. When the zoom ends we select a high quality
+                        // scale factor for the next frame to be drawn.
+                        if !frame_context.fb_config.low_quality_pinch_zoom
+                            || !frame_context
+                                .spatial_tree.get_spatial_node(tile_cache.spatial_node_index)
+                                .is_ancestor_or_self_zooming
+                            || local_to_cur_raster_scale <= 0.5
+                            || local_to_cur_raster_scale >= 2.0
+                        {
                             tile_cache.current_raster_scale = local_to_device.scale.x;
                         }
 
