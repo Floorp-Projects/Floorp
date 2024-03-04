@@ -1,0 +1,11 @@
+---
+# Objective C formatting rules.
+# Since this doesn't derive from the Cpp section, we need to redifine the root rules here.
+Language: ObjC
+BasedOnStyle: Google
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+SortIncludes: false
+ColumnLimit: 80
+IndentPPDirectives: AfterHash
