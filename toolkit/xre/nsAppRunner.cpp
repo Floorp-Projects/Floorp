@@ -4769,6 +4769,21 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     if (gWaylandProxy) {
       gWaylandProxy->RestoreWaylandDisplay();
     }
+    if (PR_GetEnv("WAYLAND_DISPLAY") && GdkIsX11Display()) {
+      // Gtk somehow switched to X11 display but we want Wayland.
+      // It may happen if compositor response is missig or it's slow
+      // or WAYLAND_DISPLAY is wrong. In such case throw warning but
+      // run with X11.
+      Output(true,
+             "Error: Failed to open Wayland display, fallback to X11. "
+             "WAYLAND_DISPLAY='%s' DISPLAY='%s'\n",
+             PR_GetEnv("WAYLAND_DISPLAY"), PR_GetEnv("DISPLAY"));
+
+      // We need to unset WAYLAND_DISPLAY. Gfx probe code doesn't have fallback
+      // to X11 and we'll end with Browser running SW rendering only then.
+      g_unsetenv("WAYLAND_DISPLAY");
+      gWaylandProxy = nullptr;
+    }
 #  endif
     if (!gdk_display_get_default()) {
       Output(true,
