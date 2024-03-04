@@ -196,6 +196,8 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
   static nsresult AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
                                            nsCOMPtr<nsIPrincipal>* aPrincipal);
 
+  nsresult EnsureBackgroundActor();
+
   [[nodiscard]] RefPtr<IDBOpenDBRequest> OpenInternal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
       const Optional<uint64_t>& aVersion, bool aDeleting,
