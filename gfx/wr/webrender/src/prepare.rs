@@ -1814,6 +1814,12 @@ pub fn update_clip_task(
             unadjusted_device_rect,
             device_pixel_scale,
         );
+
+        if device_rect.size().to_i32().is_empty() {
+            log::warn!("Bad adjusted clip task size {:?} (was {:?})", device_rect.size(), unadjusted_device_rect.size());
+            return false;
+        }
+
         let clip_task_id = RenderTaskKind::new_mask(
             device_rect,
             instance.vis.clip_chain.clips_range,
@@ -1865,7 +1871,7 @@ pub fn update_brush_segment_clip_task(
         return ClipMaskKind::None;
     }
 
-    let device_rect = match frame_state.surfaces[surface_index.0].get_surface_rect(
+    let unadjusted_device_rect = match frame_state.surfaces[surface_index.0].get_surface_rect(
         &clip_chain.pic_coverage_rect,
         frame_context.spatial_tree,
     ) {
@@ -1873,7 +1879,12 @@ pub fn update_brush_segment_clip_task(
         None => return ClipMaskKind::Clipped,
     };
 
-    let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(device_rect, device_pixel_scale);
+    let (device_rect, device_pixel_scale) = adjust_mask_scale_for_max_size(unadjusted_device_rect, device_pixel_scale);
+
+    if device_rect.size().to_i32().is_empty() {
+        log::warn!("Bad adjusted mask size {:?} (was {:?})", device_rect.size(), unadjusted_device_rect.size());
+        return ClipMaskKind::Clipped;
+    }
 
     let clip_task_id = RenderTaskKind::new_mask(
         device_rect,
