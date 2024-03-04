@@ -106,7 +106,7 @@ add_task(async function testTabRemovalEvent() {
   async function background() {
     function awaitLoad(tabId) {
       return new Promise(resolve => {
-        browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+        browser.tabs.onUpdated.addListener(function listener(tabId_, changed) {
           if (tabId == tabId_ && changed.status == "complete") {
             browser.tabs.onUpdated.removeListener(listener);
             resolve();
@@ -115,7 +115,7 @@ add_task(async function testTabRemovalEvent() {
       });
     }
 
-    chrome.tabs.onRemoved.addListener((tabId, info) => {
+    chrome.tabs.onRemoved.addListener((tabId) => {
       browser.test.log("Make sure the removed tab is not available in the tabs.query callback.");
       chrome.tabs.query({}, tabs => {
         for (const tab of tabs) {

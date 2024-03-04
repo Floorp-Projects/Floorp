@@ -70,7 +70,7 @@
       .getElementById("three")
       .scrollTo({ top: 200, behavior: "instant" });
 
-    document.getElementById("four").addEventListener("touchstart", e => {
+    document.getElementById("four").addEventListener("touchstart", () => {
       console.log("not preventing default");
     });
 

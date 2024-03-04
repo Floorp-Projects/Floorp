@@ -112,7 +112,7 @@ export var GeckoViewSessionStore = {
   // For each <browser> element, records the SHistoryListener.
   _browserSHistoryListener: new WeakMap(),
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     debug`observe ${aTopic}`;
 
     switch (aTopic) {

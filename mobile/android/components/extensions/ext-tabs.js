@@ -28,7 +28,7 @@ const tabListener = {
     }
   },
 
-  onLocationChange(browser, webProgress, request, locationURI, flags) {
+  onLocationChange(browser, webProgress, request) {
     if (webProgress.isTopLevel) {
       const { tab } = browser.ownerGlobal;
 
@@ -103,7 +103,7 @@ this.tabs = class extends ExtensionAPIPersistent {
   }
 
   PERSISTENT_EVENTS = {
-    onActivated({ fire, context }, params) {
+    onActivated({ fire, context }) {
       const listener = (eventName, event) => {
         const { windowId, tabId, isPrivate } = event;
         if (isPrivate && !context.privateBrowsingAllowed) {
@@ -140,7 +140,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         });
       },
     }),
-    onUpdated({ fire }, params) {
+    onUpdated({ fire }) {
       const { tabManager } = this.extension;
       const restricted = ["url", "favIconUrl", "title"];
 
@@ -328,7 +328,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         onAttached: new EventManager({
           context,
           name: "tabs.onAttached",
-          register: fire => {
+          register: () => {
             return () => {};
           },
         }).api(),
@@ -336,7 +336,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         onDetached: new EventManager({
           context,
           name: "tabs.onDetached",
-          register: fire => {
+          register: () => {
             return () => {};
           },
         }).api(),
@@ -351,7 +351,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         onReplaced: new EventManager({
           context,
           name: "tabs.onReplaced",
-          register: fire => {
+          register: () => {
             return () => {};
           },
         }).api(),
@@ -359,7 +359,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         onMoved: new EventManager({
           context,
           name: "tabs.onMoved",
-          register: fire => {
+          register: () => {
             return () => {};
           },
         }).api(),
@@ -378,7 +378,6 @@ this.tabs = class extends ExtensionAPIPersistent {
           index,
           openInReaderMode,
           pinned,
-          title,
           url,
         } = {}) {
           if (active === null) {

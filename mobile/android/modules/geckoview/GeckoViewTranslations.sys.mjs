@@ -182,7 +182,7 @@ export const GeckoViewTranslationsSettings = {
         if (operation === "delete") {
           if (operationLevel === "all") {
             lazy.TranslationsParent.deleteAllLanguageFiles().then(
-              function (value) {
+              function () {
                 aCallback.onSuccess();
               },
               function (error) {
@@ -201,7 +201,7 @@ export const GeckoViewTranslationsSettings = {
               return;
             }
             lazy.TranslationsParent.deleteLanguageFiles(language).then(
-              function (value) {
+              function () {
                 aCallback.onSuccess();
               },
               function (error) {
@@ -216,7 +216,7 @@ export const GeckoViewTranslationsSettings = {
         if (operation === "download") {
           if (operationLevel === "all") {
             lazy.TranslationsParent.downloadAllFiles().then(
-              function (value) {
+              function () {
                 aCallback.onSuccess();
               },
               function (error) {
@@ -235,7 +235,7 @@ export const GeckoViewTranslationsSettings = {
               return;
             }
             lazy.TranslationsParent.downloadLanguageFiles(language).then(
-              function (value) {
+              function () {
                 aCallback.onSuccess();
               },
               function (error) {

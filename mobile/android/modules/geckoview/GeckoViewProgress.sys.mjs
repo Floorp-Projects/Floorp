@@ -557,7 +557,7 @@ export class GeckoViewProgress extends GeckoViewModule {
     }
   }
 
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
 
     switch (aEvent) {
@@ -617,7 +617,7 @@ export class GeckoViewProgress extends GeckoViewModule {
   }
 
   // nsIObserver event handler
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     debug`observe: topic=${aTopic}`;
 
     switch (aTopic) {

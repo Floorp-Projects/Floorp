@@ -146,7 +146,7 @@ class DownloadItem {
 
 this.downloads = class extends ExtensionAPIPersistent {
   PERSISTENT_EVENTS = {
-    onChanged({ fire }, params) {
+    onChanged({ fire }) {
       const listener = (eventName, event) => {
         const { delta, downloadItem } = event;
         const { extension } = this;
@@ -248,23 +248,23 @@ this.downloads = class extends ExtensionAPIPersistent {
             });
         },
 
-        removeFile(downloadId) {
+        removeFile() {
           throw new ExtensionError("Not implemented");
         },
 
-        search(query) {
+        search() {
           throw new ExtensionError("Not implemented");
         },
 
-        pause(downloadId) {
+        pause() {
           throw new ExtensionError("Not implemented");
         },
 
-        resume(downloadId) {
+        resume() {
           throw new ExtensionError("Not implemented");
         },
 
-        cancel(downloadId) {
+        cancel() {
           throw new ExtensionError("Not implemented");
         },
 
@@ -272,19 +272,19 @@ this.downloads = class extends ExtensionAPIPersistent {
           throw new ExtensionError("Not implemented");
         },
 
-        erase(query) {
+        erase() {
           throw new ExtensionError("Not implemented");
         },
 
-        open(downloadId) {
+        open() {
           throw new ExtensionError("Not implemented");
         },
 
-        show(downloadId) {
+        show() {
           throw new ExtensionError("Not implemented");
         },
 
-        getFileIcon(downloadId, options) {
+        getFileIcon() {
           throw new ExtensionError("Not implemented");
         },
 

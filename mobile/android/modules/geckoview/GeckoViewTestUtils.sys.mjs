@@ -20,7 +20,7 @@ export const GeckoViewTabUtil = {
   async createNewTab(url = "about:blank") {
     let sessionId = "";
     const windowPromise = new Promise(resolve => {
-      const openingObserver = (subject, topic, data) => {
+      const openingObserver = subject => {
         if (subject.name === sessionId) {
           Services.obs.removeObserver(
             openingObserver,

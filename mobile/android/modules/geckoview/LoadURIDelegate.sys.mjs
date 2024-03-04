@@ -75,7 +75,7 @@ export const LoadURIDelegate = {
           Components.returnCode = Cr.NS_ERROR_ABORT;
         }
       },
-      e => {
+      () => {
         errorPageURI = null;
         Components.returnCode = Cr.NS_ERROR_ABORT;
       }

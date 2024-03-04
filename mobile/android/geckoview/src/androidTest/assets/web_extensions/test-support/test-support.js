@@ -30,7 +30,7 @@ function connectNativePort() {
     }
   });
 
-  function sendResponse(id, response, exception) {
+  function sendResponse(id, response) {
     Promise.resolve(response).then(
       value => sendSyncResponse(id, value),
       reason => sendSyncResponse(id, null, reason)

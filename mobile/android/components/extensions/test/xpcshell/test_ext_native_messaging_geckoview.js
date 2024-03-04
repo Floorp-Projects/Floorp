@@ -34,7 +34,7 @@ class EmbedderPort {
   onPortDisconnect() {
     Assert.ok(false, "onPortDisconnect not expected to be called");
   }
-  onPortMessage(holder) {
+  onPortMessage() {
     Assert.ok(false, "onPortMessage not expected to be called");
   }
   triggerPortDisconnect() {

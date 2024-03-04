@@ -28,7 +28,7 @@ const BROWSER_ACTION_PROPERTIES = [
 
 class BrowserAction extends BrowserActionBase {
   constructor(extension, clickDelegate) {
-    const tabContext = new TabContext(tabId => this.getContextData(null));
+    const tabContext = new TabContext(() => this.getContextData(null));
     super(tabContext, extension);
     this.clickDelegate = clickDelegate;
     this.helper = new ExtensionActionHelper({
@@ -86,7 +86,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     return GeckoViewWebExtension.browserActions.get(extension);
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     const { extension } = this;
     this.action = new BrowserAction(extension, this);
     await this.action.loadIconData();

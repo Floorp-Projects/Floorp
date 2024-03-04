@@ -65,7 +65,7 @@ export class GeckoViewProcessHangMonitor extends GeckoViewModule {
   }
 
   // Bundle event handler.
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
 
     if (this._reportIndex.has(aData.hangId)) {
@@ -84,7 +84,7 @@ export class GeckoViewProcessHangMonitor extends GeckoViewModule {
   }
 
   // nsIObserver event handler
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     debug`observe(aTopic=${aTopic})`;
     aSubject.QueryInterface(Ci.nsIHangReport);
     if (!aSubject.isReportForBrowserOrChildren(this.browser.frameLoader)) {

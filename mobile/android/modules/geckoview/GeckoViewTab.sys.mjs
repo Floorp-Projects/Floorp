@@ -116,7 +116,7 @@ export const GeckoViewTabBridge = {
     // need to start waiting before we send the message.
     const windowPromise = new Promise(resolve => {
       const handler = {
-        observe(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic) {
           if (
             aTopic === "geckoview-window-created" &&
             aSubject.name === newSessionId
@@ -203,7 +203,7 @@ export class GeckoViewTab extends GeckoViewModule {
     this.registerListener(["GeckoView:WebExtension:SetTabActive"]);
   }
 
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
 
     switch (aEvent) {

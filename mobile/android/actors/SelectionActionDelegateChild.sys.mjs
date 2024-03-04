@@ -97,17 +97,17 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
     {
       id: "org.mozilla.geckoview.COLLAPSE_TO_START",
       predicate: e => !e.collapsed && e.selectionEditable,
-      perform: e => this.docShell.doCommand("cmd_moveLeft"),
+      perform: () => this.docShell.doCommand("cmd_moveLeft"),
     },
     {
       id: "org.mozilla.geckoview.COLLAPSE_TO_END",
       predicate: e => !e.collapsed && e.selectionEditable,
-      perform: e => this.docShell.doCommand("cmd_moveRight"),
+      perform: () => this.docShell.doCommand("cmd_moveRight"),
     },
     {
       id: "org.mozilla.geckoview.UNSELECT",
       predicate: e => !e.collapsed && !e.selectionEditable,
-      perform: e => this.docShell.doCommand("cmd_selectNone"),
+      perform: () => this.docShell.doCommand("cmd_selectNone"),
     },
     {
       id: "org.mozilla.geckoview.SELECT_ALL",
@@ -134,7 +134,7 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
         }
         return true;
       },
-      perform: e => this.docShell.doCommand("cmd_selectAll"),
+      perform: () => this.docShell.doCommand("cmd_selectAll"),
     },
   ];
 

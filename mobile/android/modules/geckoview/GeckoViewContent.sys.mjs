@@ -345,7 +345,7 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   // nsIObserver event handler
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     debug`observe: ${aTopic}`;
     this._contentCrashed = false;
     const browser = aSubject.ownerElement;

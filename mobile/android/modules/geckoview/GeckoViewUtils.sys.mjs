@@ -257,9 +257,7 @@ export var GeckoViewUtils = {
       (handlers, observer, args) => {
         if (!once) {
           Services.prefs.removeObserver(args[2], observer);
-          handlers.forEach(handler =>
-            Services.prefs.addObserver(args[2], observer)
-          );
+          handlers.forEach(() => Services.prefs.addObserver(args[2], observer));
         }
         handlers.forEach(handler => handler.observe(...args));
       }
