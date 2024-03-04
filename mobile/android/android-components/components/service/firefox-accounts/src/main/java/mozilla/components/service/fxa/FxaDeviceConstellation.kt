@@ -87,6 +87,12 @@ class FxaDeviceConstellation(
             ServiceResult.Ok
         } else {
             val capabilities = config.capabilities.map { it.into() }.toSet()
+            // Note: sending the event for the result to the the state machine checker is split
+            //       between here and `FxaAccountManager`
+            //    - This function reports successes and auth failures, since it's the only one that
+            //      knows if `initializeDevice()` or `EnsureDeviceCapabilities()` was called.
+            //    - `FxaAccountManager` reports other failures, since it runs this code inside
+            //      `withServiceRetries` so it's the only one that knows if the call will be retried
             if (finalizeAction == DeviceFinalizeAction.Initialize) {
                 try {
                     AppServicesStateMachineChecker.checkInternalState(FxaStateCheckerState.InitializeDevice)
@@ -94,13 +100,11 @@ class FxaDeviceConstellation(
                     AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.InitializeDeviceSuccess)
                     ServiceResult.Ok
                 } catch (e: FxaPanicException) {
-                    AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                     throw e
                 } catch (e: FxaUnauthorizedException) {
                     AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                     ServiceResult.AuthError
                 } catch (e: FxaException) {
-                    AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                     ServiceResult.OtherError
                 }
             } else {
@@ -112,7 +116,6 @@ class FxaDeviceConstellation(
                     )
                     ServiceResult.Ok
                 } catch (e: FxaPanicException) {
-                    AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                     throw e
                 } catch (e: FxaUnauthorizedException) {
                     AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.EnsureCapabilitiesAuthError)
@@ -125,7 +128,6 @@ class FxaDeviceConstellation(
                     )
                     ServiceResult.AuthError
                 } catch (e: FxaException) {
-                    AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                     ServiceResult.OtherError
                 }
             }

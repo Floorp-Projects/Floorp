@@ -185,19 +185,18 @@ object AppServicesStateMachineChecker {
                 )
             }
             Event.Progress.FailedToRecoverFromAuthenticationProblem -> {
-                // `via` should always be `AuthenticationError` if not, we'll probably see a state
-                // check error down the line.
-                if (via is Event.Account.AuthenticationError) {
-                    if (via.errorCountWithinTheTimeWindow >= AUTH_CHECK_CIRCUIT_BREAKER_COUNT) {
-                        // In this case, the state machine fails early and doesn't actualy make any
-                        // calls
-                        return
-                    }
-                    AppServicesStateMachineChecker.checkInternalState(FxaStateCheckerState.CheckAuthorizationStatus)
-                    AppServicesStateMachineChecker.handleInternalEvent(
-                        FxaStateCheckerEvent.CheckAuthorizationStatusSuccess(false),
-                    )
+                if (via is Event.Account.AuthenticationError &&
+                    via.errorCountWithinTheTimeWindow >= AUTH_CHECK_CIRCUIT_BREAKER_COUNT
+                ) {
+                    // In this case, the state machine fails early and doesn't actualy make any
+                    // calls
+                    return
                 }
+
+                AppServicesStateMachineChecker.checkInternalState(FxaStateCheckerState.CheckAuthorizationStatus)
+                AppServicesStateMachineChecker.handleInternalEvent(
+                    FxaStateCheckerEvent.CheckAuthorizationStatusSuccess(false),
+                )
             }
             else -> Unit
         }

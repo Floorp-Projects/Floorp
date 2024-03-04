@@ -617,6 +617,7 @@ open class FxaAccountManager(
                         Event.Account.AuthenticationError("finalizeDevice")
                     }
                     ServiceResult.OtherError -> {
+                        AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
                         Event.Progress.FailedToCompleteAuthRestore
                     }
                 }
@@ -640,7 +641,11 @@ open class FxaAccountManager(
                 }
                 val finalize = suspend {
                     // Note: finalizeDevice state checking happens in the DeviceConstellation.kt
-                    withServiceRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }
+                    withServiceRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }.also {
+                        if (it is ServiceResult.OtherError) {
+                            AppServicesStateMachineChecker.handleInternalEvent(FxaStateCheckerEvent.CallError)
+                        }
+                    }
                 }
                 // If we can't 'complete', we won't run 'finalize' due to short-circuiting.
                 if (completeAuth() is Result.Failure || finalize() !is ServiceResult.Ok) {
