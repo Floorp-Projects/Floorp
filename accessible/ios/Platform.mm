@@ -8,6 +8,8 @@
 #include "RemoteAccessible.h"
 #include "DocAccessibleParent.h"
 
+#import "MUIAccessible.h"
+
 namespace mozilla {
 namespace a11y {
 
@@ -20,9 +22,17 @@ void PlatformInit() {}
 
 void PlatformShutdown() {}
 
-void ProxyCreated(RemoteAccessible* aProxy) {}
+void ProxyCreated(RemoteAccessible* aProxy) {
+  MUIAccessible* mozWrapper = [[MUIAccessible alloc] initWithAccessible:aProxy];
+  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));
+}
 
-void ProxyDestroyed(RemoteAccessible* aProxy) {}
+void ProxyDestroyed(RemoteAccessible* aProxy) {
+  MUIAccessible* wrapper = GetNativeFromGeckoAccessible(aProxy);
+  [wrapper expire];
+  [wrapper release];
+  aProxy->SetWrapper(0);
+}
 
 void PlatformEvent(Accessible*, uint32_t) {}
 

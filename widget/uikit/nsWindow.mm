@@ -19,6 +19,10 @@
 
 #include "nsWindow.h"
 #include "nsAppShell.h"
+#ifdef ACCESSIBILITY
+#  include "nsAccessibilityService.h"
+#  include "mozilla/a11y/LocalAccessible.h"
+#endif
 
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
@@ -40,6 +44,9 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/Logging.h"
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/MUIRootAccessibleProtocol.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -75,7 +82,11 @@ class nsAutoRetainUIKitObject {
   id mObject;  // [STRONG]
 };
 
+#ifdef ACCESSIBILITY
+@interface ChildView : UIView <UIKeyInput, MUIRootAccessibleProtocol> {
+#else
 @interface ChildView : UIView <UIKeyInput> {
+#endif
  @public
   nsWindow* mGeckoChild;  // weak ref
   BOOL mWaitingForPaint;
@@ -106,6 +117,13 @@ class nsAutoRetainUIKitObject {
 
 - (void)activateWindow:(NSNotification*)notification;
 - (void)deactivateWindow:(NSNotification*)notification;
+
+#ifdef ACCESSIBILITY
+// MUIRootAccessible
+- (BOOL)hasRepresentedView;
+- (id)representedView;
+#endif
+
 @end
 
 @implementation ChildView
@@ -528,6 +546,33 @@ class nsAutoRetainUIKitObject {
   }
   return NO;
 }
+
+#ifdef ACCESSIBILITY
+// MUIRootAccessible
+
+- (id<MUIRootAccessibleProtocol>)accessible {
+  if (!mGeckoChild) return nil;
+
+  id<MUIRootAccessibleProtocol> nativeAccessible = nil;
+
+  // nsAutoRetainCocoaObject kungFuDeathGrip(self);
+  RefPtr<nsWindow> geckoChild(mGeckoChild);
+  RefPtr<a11y::LocalAccessible> accessible = geckoChild->GetRootAccessible();
+  if (!accessible) return nil;
+
+  accessible->GetNativeInterface((void**)&nativeAccessible);
+
+  return nativeAccessible;
+}
+
+- (BOOL)hasRepresentedView {
+  return YES;
+}
+
+- (id)representedView {
+  return self;
+}
+#endif
 
 @end
 

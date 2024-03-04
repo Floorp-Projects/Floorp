@@ -12,6 +12,8 @@
 #ifndef mozilla_a11y_AccessibleWrap_h_
 #define mozilla_a11y_AccessibleWrap_h_
 
+#include <objc/objc.h>
+
 #include "nsCOMPtr.h"
 #include "LocalAccessible.h"
 
@@ -22,6 +24,21 @@ class AccessibleWrap : public LocalAccessible {
  public:  // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~AccessibleWrap() = default;
+
+  virtual void Shutdown() override;
+
+  /**
+   * Get the native Obj-C object (MUIAccessible).
+   */
+  virtual void GetNativeInterface(void** aOutAccessible) override;
+
+ protected:
+  id GetNativeObject();
+
+ private:
+  id mNativeObject;
+
+  bool mNativeInited;
 };
 
 }  // namespace a11y
