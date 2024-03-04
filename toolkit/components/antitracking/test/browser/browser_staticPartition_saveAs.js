@@ -102,6 +102,7 @@ add_task(async function testContextMenuSaveImage() {
         set: [
           ["privacy.partition.network_state", networkIsolation],
           ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+          ["dom.block_download_insecure", false],
         ],
       });
 
@@ -197,6 +198,7 @@ add_task(async function testContextMenuSaveVideo() {
         set: [
           ["privacy.partition.network_state", networkIsolation],
           ["privacy.dynamic_firstparty.use_site", partitionPerSite],
+          ["dom.block_download_insecure", false],
         ],
       });
 
