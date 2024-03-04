@@ -326,11 +326,6 @@ struct pollfd* ProxiedConnection::LoadPollFd(struct pollfd* aPfds) {
 }
 
 bool ProxiedConnection::ConnectToCompositor() {
-  if (!(mCompositorFlags & POLLOUT)) {
-    // Try again later
-    return true;
-  }
-
   struct sockaddr_un addr = {};
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, mWaylandDisplay);
