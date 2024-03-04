@@ -112,6 +112,10 @@ class ProxiedConnection {
   // We don't have connected compositor yet. Try to connect
   bool mCompositorConnected = false;
 
+  // Don't cycle endlessly over compositor connection
+  int mFailedCompositorConnections = 0;
+  static constexpr int sMaxFailedCompositorConnections = 100;
+
   // We're disconnected from app or compositor. We will close this connection.
   bool mFailed = false;
 
@@ -343,6 +347,11 @@ bool ProxiedConnection::ConnectToCompositor() {
       case EINTR:
       case EISCONN:
       case ETIMEDOUT:
+        mFailedCompositorConnections++;
+        if (mFailedCompositorConnections > sMaxFailedCompositorConnections) {
+          Error("ConnectToCompositor() connect() failed repeatedly");
+          return false;
+        }
         // We can recover from these errors and try again
         Warning("ConnectToCompositor() try again");
         return true;
