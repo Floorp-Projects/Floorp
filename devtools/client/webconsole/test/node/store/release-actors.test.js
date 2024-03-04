@@ -31,9 +31,7 @@ describe("Release actor enhancer:", () => {
         webConsoleUI: getWebConsoleUiMock({
           commands: {
             client: {
-              mainRoot: {
-                supportsReleaseActors: true,
-              },
+              mainRoot: {},
             },
             objectCommand: {
               releaseObjects: async frontsToRelease => {
@@ -85,9 +83,7 @@ describe("Release actor enhancer:", () => {
         webConsoleUI: getWebConsoleUiMock({
           commands: {
             client: {
-              mainRoot: {
-                supportsReleaseActors: true,
-              },
+              mainRoot: {},
             },
             objectCommand: {
               releaseObjects: async frontsToRelease => {
@@ -146,9 +142,7 @@ describe("Release actor enhancer:", () => {
         webConsoleUI: getWebConsoleUiMock({
           commands: {
             client: {
-              mainRoot: {
-                supportsReleaseActors: true,
-              },
+              mainRoot: {},
             },
             objectCommand: {
               releaseObjects: async frontsToRelease => {

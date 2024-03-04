@@ -21,10 +21,6 @@ class ObjectCommand {
    *        List of fronts for the object to release.
    */
   async releaseObjects(frontsToRelease) {
-    // @backward-compat { version 123 } A new Objects Manager front has a new "releaseActors" method.
-    // Only supportsReleaseActors=true codepath can be kept once 123 is the release channel.
-    const { supportsReleaseActors } = this.#commands.client.mainRoot.traits;
-
     // First group all object fronts per target
     const actorsPerTarget = new Map();
     const promises = [];
@@ -40,20 +36,14 @@ class ObjectCommand {
         actorIDsToRemove = [];
         actorsPerTarget.set(targetFront, actorIDsToRemove);
       }
-      if (supportsReleaseActors) {
-        actorIDsToRemove.push(frontToRelease.actorID);
-        frontToRelease.destroy();
-      } else {
-        promises.push(frontToRelease.release());
-      }
+      actorIDsToRemove.push(frontToRelease.actorID);
+      frontToRelease.destroy();
     }
 
-    if (supportsReleaseActors) {
-      // Then release all fronts by bulk per target
-      for (const [targetFront, actorIDs] of actorsPerTarget) {
-        const objectsManagerFront = await targetFront.getFront("objects-manager");
-        promises.push(objectsManagerFront.releaseObjects(actorIDs));
-      }
+    // Then release all fronts by bulk per target
+    for (const [targetFront, actorIDs] of actorsPerTarget) {
+      const objectsManagerFront = await targetFront.getFront("objects-manager");
+      promises.push(objectsManagerFront.releaseObjects(actorIDs));
     }
 
     await Promise.all(promises);
