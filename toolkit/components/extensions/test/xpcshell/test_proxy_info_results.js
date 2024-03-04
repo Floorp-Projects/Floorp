@@ -186,14 +186,15 @@ add_task(async function test_proxyInfo_results() {
     {
       proxy: [
         {
-          type: "http",
+          type: "socks",
           host: "foo.bar",
           port: 3128,
           proxyAuthorizationHeader: "test",
         },
       ],
       expected: {
-        error: 'ProxyInfoData: ProxyAuthorizationHeader requires type "https"',
+        error:
+          'ProxyInfoData: ProxyAuthorizationHeader requires type "https" or "http"',
       },
     },
     {
@@ -442,6 +443,26 @@ add_task(async function test_proxyInfo_results() {
           host: "foo.bar",
           port: "3128",
           type: "https",
+          proxyAuthorizationHeader: "test",
+          connectionIsolationKey: "key",
+        },
+      },
+    },
+    {
+      proxy: [
+        {
+          type: "http",
+          host: "foo.bar",
+          port: 3128,
+          proxyAuthorizationHeader: "test",
+          connectionIsolationKey: "key",
+        },
+      ],
+      expected: {
+        proxyInfo: {
+          host: "foo.bar",
+          port: "3128",
+          type: "http",
           proxyAuthorizationHeader: "test",
           connectionIsolationKey: "key",
         },
