@@ -127,17 +127,7 @@ impl BuilderExt for Builder {
             .size_t_is_usize(true)
             .disable_untagged_union();
 
-        let rustfmt_path = env::var_os("RUSTFMT")
-            // This can be replaced with
-            // > .filter(|p| !p.is_empty()).map(PathBuf::from)
-            // once we can use 1.27+.
-            .and_then(|p| {
-                if p.is_empty() {
-                    None
-                } else {
-                    Some(PathBuf::from(p))
-                }
-            });
+        let rustfmt_path = env::var_os("RUSTFMT").filter(|p| !p.is_empty()).map(PathBuf::from);
         if let Some(path) = rustfmt_path {
             builder = builder.with_rustfmt(path);
         }
