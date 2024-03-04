@@ -63,24 +63,34 @@ WindowSurfaceProvider::~WindowSurfaceProvider() {
 }
 
 #ifdef MOZ_WAYLAND
-void WindowSurfaceProvider::Initialize(RefPtr<nsWindow> aWidget) {
+bool WindowSurfaceProvider::Initialize(RefPtr<nsWindow> aWidget) {
   mWindowSurfaceValid = false;
   mWidget = std::move(aWidget);
+  return true;
 }
-void WindowSurfaceProvider::Initialize(GtkCompositorWidget* aCompositorWidget) {
+bool WindowSurfaceProvider::Initialize(GtkCompositorWidget* aCompositorWidget) {
   mWindowSurfaceValid = false;
   mCompositorWidget = aCompositorWidget;
   mWidget = static_cast<nsWindow*>(aCompositorWidget->RealWidget());
+  return true;
 }
 #endif
 #ifdef MOZ_X11
-void WindowSurfaceProvider::Initialize(Window aWindow, Visual* aVisual,
-                                       int aDepth, bool aIsShaped) {
+bool WindowSurfaceProvider::Initialize(Window aWindow, bool aIsShaped) {
   mWindowSurfaceValid = false;
+
+  // Grab the window's visual and depth
+  XWindowAttributes windowAttrs;
+  if (!XGetWindowAttributes(DefaultXDisplay(), aWindow, &windowAttrs)) {
+    NS_WARNING("GtkCompositorWidget(): XGetWindowAttributes() failed!");
+    return false;
+  }
+
   mXWindow = aWindow;
-  mXVisual = aVisual;
-  mXDepth = aDepth;
+  mXVisual = windowAttrs.visual;
+  mXDepth = windowAttrs.depth;
   mIsShaped = aIsShaped;
+  return true;
 }
 #endif
 
