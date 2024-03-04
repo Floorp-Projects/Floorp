@@ -17,6 +17,7 @@ SOURCES += [
     "nsWidgetFactory.mm",
     "nsWindow.mm",
     "TextInputHandler.mm",
+    "UIKitUtils.mm",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

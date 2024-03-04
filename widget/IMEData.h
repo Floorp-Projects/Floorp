@@ -451,18 +451,20 @@ struct InputContext final {
 
   bool IsInputAttributeChanged(const InputContext& aOldContext) const {
     return mIMEState.mEnabled != aOldContext.mIMEState.mEnabled ||
-#if defined(ANDROID) || defined(MOZ_WIDGET_GTK) || defined(XP_WIN)
+#if defined(ANDROID) || defined(MOZ_WIDGET_GTK) || defined(XP_WIN) || \
+    defined(XP_IOS)
            // input type and inputmode are supported by Windows IME API, GTK
-           // IME API and Android IME API
+           // IME API, Android IME API and iOS API.
            mHTMLInputType != aOldContext.mHTMLInputType ||
            mHTMLInputMode != aOldContext.mHTMLInputMode ||
 #endif
-#if defined(ANDROID) || defined(MOZ_WIDGET_GTK)
-           // autocapitalize is supported by Android IME API and GTK IME API
+#if defined(ANDROID) || defined(MOZ_WIDGET_GTK) || defined(XP_IOS)
+           // autocapitalize is supported by Android IME API, GTK IME API, and
+           // iOS API
            mAutocapitalize != aOldContext.mAutocapitalize ||
 #endif
-#if defined(ANDROID)
-           // enterkeyhint is only supported by Android IME API.
+#if defined(ANDROID) || defined(XP_IOS)
+           // enterkeyhint is only supported by Android IME API and iOS API.
            mActionHint != aOldContext.mActionHint ||
 #endif
            false;
