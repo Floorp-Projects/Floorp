@@ -35,9 +35,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 role HTMLFormAccessible::NativeRole() const {
-  nsAutoString name;
-  const_cast<HTMLFormAccessible*>(this)->Name(name);
-  return name.IsEmpty() ? roles::FORM : roles::FORM_LANDMARK;
+  return NameIsEmpty() ? roles::FORM : roles::FORM_LANDMARK;
 }
 
 void HTMLFormAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
@@ -293,7 +291,7 @@ already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
   nsString placeholderText;
   if (mContent->AsElement()->GetAttr(nsGkAtoms::placeholder, placeholderText)) {
     nsAutoString name;
-    const_cast<HTMLTextFieldAccessible*>(this)->Name(name);
+    Name(name);
     if (!name.Equals(placeholderText)) {
       attributes->SetAttribute(nsGkAtoms::placeholder,
                                std::move(placeholderText));
