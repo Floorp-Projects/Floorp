@@ -256,7 +256,7 @@ void PlatformRoleChangedEvent(Accessible* aTarget, const a11y::role& aRole,
       mozilla::Telemetry::ScalarSet(
           mozilla::Telemetry::ScalarID::A11Y_INSTANTIATORS, client);
 #endif  // defined(MOZ_TELEMETRY_REPORTING)
-      CrashReporter::AnnotateCrashReport(
+      CrashReporter::RecordAnnotationNSCString(
           CrashReporter::Annotation::AccessibilityClient,
           NS_ConvertUTF16toUTF8(client));
     }

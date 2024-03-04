@@ -289,9 +289,8 @@ void CrashStatsLogForwarder::UpdateCrashReport() {
             << " (t=" << std::get<2>(it) << ") ";
   }
 
-  nsCString reportString(message.str().c_str());
-  nsresult annotated =
-      CrashReporter::AnnotateCrashReport(mCrashCriticalKey, reportString);
+  nsresult annotated = CrashReporter::RecordAnnotationCString(
+      mCrashCriticalKey, message.str().c_str());
 
   if (annotated != NS_OK) {
     printf("Crash Annotation %s: %s",
@@ -2693,7 +2692,7 @@ void gfxPlatform::InitWebRenderConfig() {
           StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold()));
 
   if (WebRenderResourcePathOverride()) {
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationBool(
         CrashReporter::Annotation::IsWebRenderResourcePathOverridden, true);
   }
 

@@ -11,7 +11,6 @@
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
-#include "CrashAnnotations.h"
 #include "DllBlocklist.h"
 #include "LoaderPrivateAPI.h"
 #include "ModuleLoadFrame.h"
@@ -136,12 +135,8 @@ void NativeNtBlockSet::Write(WritableBuffer& aBuffer) {
 
 static NativeNtBlockSet gBlockSet;
 
-extern "C" void MOZ_EXPORT
-NativeNtBlockSet_Write(CrashReporter::AnnotationWriter& aWriter) {
-  WritableBuffer buffer;
-  gBlockSet.Write(buffer);
-  aWriter.Write(CrashReporter::Annotation::BlockedDllList, buffer.Data(),
-                buffer.Length());
+extern "C" void MOZ_EXPORT NativeNtBlockSet_Write(WritableBuffer& aBuffer) {
+  gBlockSet.Write(aBuffer);
 }
 
 enum class BlockAction {

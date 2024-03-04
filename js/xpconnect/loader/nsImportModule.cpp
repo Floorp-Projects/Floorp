@@ -39,7 +39,7 @@ static void AnnotateCrashReportWithJSException(JSContext* aCx,
                                 aURI, file.get(), line, column,
                                 NS_ConvertUTF16toUTF8(msg).get());
 
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationNSCString(
         CrashReporter::Annotation::JSModuleLoadError, errorString);
   }
 }

@@ -814,7 +814,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadURL(
   }
   docShell->LoadURI(aLoadState, true);
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, spec);
+  CrashReporter::RecordAnnotationNSCString(CrashReporter::Annotation::URL,
+                                           spec);
   return IPC_OK();
 }
 
@@ -3481,8 +3482,8 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
         annotationURI = aLocation;
       }
 
-      CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL,
-                                         annotationURI->GetSpecOrDefault());
+      CrashReporter::RecordAnnotationNSCString(
+          CrashReporter::Annotation::URL, annotationURI->GetSpecOrDefault());
     }
 #endif
   }

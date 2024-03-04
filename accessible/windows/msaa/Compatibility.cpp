@@ -103,7 +103,7 @@ void Compatibility::Init() {
   // Note we collect some AT statistics/telemetry here for convenience.
   InitConsumers();
 
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::AccessibilityInProcClient,
       nsPrintfCString("0x%X", sConsumers));
 

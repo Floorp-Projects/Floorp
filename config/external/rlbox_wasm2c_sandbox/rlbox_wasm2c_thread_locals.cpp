@@ -38,7 +38,7 @@ void moz_wasm2c_memgrow_failed() {
 #  ifdef WASM_RT_GROW_FAILED_CRASH
   MOZ_CRASH("wasm2c memory grow failed");
 #  else
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationBool(
       CrashReporter::Annotation::WasmLibrarySandboxMallocFailed, true);
 #  endif
 }

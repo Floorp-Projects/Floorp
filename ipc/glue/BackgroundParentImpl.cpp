@@ -148,8 +148,8 @@ void BackgroundParentImpl::ProcessingError(Result aCode, const char* aReason) {
       GetIPCChannel()->InduceConnectionError();
     }
   } else {
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::ipc_channel_error, reason);
+    CrashReporter::RecordAnnotationCString(
+        CrashReporter::Annotation::ipc_channel_error, aReason);
 
     MOZ_CRASH("in-process BackgroundParent abort due to IPC error");
   }

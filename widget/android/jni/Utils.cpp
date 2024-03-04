@@ -221,7 +221,7 @@ bool HandleUncaughtException(JNIEnv* aEnv) {
 bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack) {
   bool result = true;
 
-  result &= NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
+  result &= NS_SUCCEEDED(CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::JavaStackTrace,
       String::Ref::From(aStack)->ToCString()));
 

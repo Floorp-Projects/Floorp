@@ -4,10 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <functional>
-
 #include "nsExceptionHandler.h"
-#include "nsExceptionHandlerUtils.h"
 
 namespace CrashReporter {
 
@@ -38,41 +35,71 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
 
 nsresult UnsetExceptionHandler() { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult AnnotateCrashReport(Annotation key, bool data) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+const bool* RegisterAnnotationBool(Annotation aKey, const bool* aData) {
+  return nullptr;
 }
 
-nsresult AnnotateCrashReport(Annotation key, int data) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+const uint32_t* RegisterAnnotationU32(Annotation aKey, const uint32_t* aData) {
+  return nullptr;
 }
 
-nsresult AnnotateCrashReport(Annotation key, unsigned int data) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+const uint64_t* RegisterAnnotationU64(Annotation aKey, const uint64_t* aData) {
+  return nullptr;
 }
 
-nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+const size_t* RegisterAnnotationUSize(Annotation aKey, const size_t* aData) {
+  return nullptr;
 }
 
-nsresult AppendToCrashReportAnnotation(Annotation key, const nsACString& data) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+const char* RegisterAnnotationCString(Annotation aKey, const char* aData) {
+  return nullptr;
 }
 
-nsresult RemoveCrashReportAnnotation(Annotation key) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+const nsCString* RegisterAnnotationNSCString(Annotation aKey,
+                                             const nsCString* aData) {
+  return nullptr;
 }
 
-AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, bool data) {}
+nsresult RecordAnnotationBool(Annotation aKey, bool aData) {
+  return NS_ERROR_FAILURE;
+}
 
-AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key, int data) {}
+nsresult RecordAnnotationU32(Annotation aKey, uint32_t aData) {
+  return NS_ERROR_FAILURE;
+}
 
-AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key,
-                                                 unsigned data) {}
+nsresult RecordAnnotationU64(Annotation aKey, uint64_t aData) {
+  return NS_ERROR_FAILURE;
+}
 
-AutoAnnotateCrashReport::AutoAnnotateCrashReport(Annotation key,
-                                                 const nsACString& data) {}
+nsresult RecordAnnotationUSize(Annotation aKey, size_t aData) {
+  return NS_ERROR_FAILURE;
+}
 
-AutoAnnotateCrashReport::~AutoAnnotateCrashReport() {}
+nsresult RecordAnnotationCString(Annotation aKey, const char* aData) {
+  return NS_ERROR_FAILURE;
+}
+
+nsresult RecordAnnotationNSCString(Annotation aKey, const nsACString& aData) {
+  return NS_ERROR_FAILURE;
+}
+
+nsresult RecordAnnotationNSString(Annotation aKey, const nsAString& aData) {
+  return NS_ERROR_FAILURE;
+}
+
+nsresult UnrecordAnnotation(Annotation aKey) { return NS_ERROR_FAILURE; }
+
+AutoRecordAnnotation::AutoRecordAnnotation(Annotation key, bool data) {}
+
+AutoRecordAnnotation::AutoRecordAnnotation(Annotation key, int data) {}
+
+AutoRecordAnnotation::AutoRecordAnnotation(Annotation key, unsigned data) {}
+
+AutoRecordAnnotation::AutoRecordAnnotation(Annotation key,
+                                           const nsACString& data) {}
+
+AutoRecordAnnotation::~AutoRecordAnnotation() {}
 
 void MergeCrashAnnotations(AnnotationTable& aDst, const AnnotationTable& aSrc) {
 }

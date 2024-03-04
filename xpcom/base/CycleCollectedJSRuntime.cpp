@@ -1793,8 +1793,8 @@ void CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
           ? CrashReporter::Annotation::JSOutOfMemory
           : CrashReporter::Annotation::JSLargeAllocationFailure;
 
-  CrashReporter::AnnotateCrashReport(
-      annotation, nsDependentCString(OOMStateToString(aNewState)));
+  CrashReporter::RecordAnnotationCString(annotation,
+                                         OOMStateToString(aNewState));
 }
 
 void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus,

@@ -350,11 +350,11 @@ GfxInfo::GetDrmRenderDevice(nsACString& aDrmRenderDevice) {
 }
 
 void GfxInfo::AddCrashReportAnnotations() {
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID,
-                                     mGLStrings->Vendor());
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
-                                     mGLStrings->Renderer());
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
+      CrashReporter::Annotation::AdapterVendorID, mGLStrings->Vendor());
+  CrashReporter::RecordAnnotationNSCString(
+      CrashReporter::Annotation::AdapterDeviceID, mGLStrings->Renderer());
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::AdapterDriverVersion, mGLStrings->Version());
 }
 

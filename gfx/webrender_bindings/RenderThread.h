@@ -293,7 +293,8 @@ class RenderThread final {
   bool SyncObjectNeeded();
 
   size_t RendererCount() const;
-  size_t ActiveRendererCount() const;
+  size_t ActiveRendererCount() const { return sActiveRendererCount; };
+  void UpdateActiveRendererCount();
 
   void BeginRecordingForWindow(wr::WindowId aWindowId,
                                const TimeStamp& aRecordingStart,
@@ -307,6 +308,9 @@ class RenderThread final {
   bool GetPowerIsCharging();
 
  private:
+  static size_t sRendererCount;
+  static size_t sActiveRendererCount;
+
   enum class RenderTextureOp {
     PrepareForUse,
     NotifyForUse,

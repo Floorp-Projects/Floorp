@@ -2271,7 +2271,7 @@ void QuotaManager::Shutdown() {
                               quotaManager->mQuotaManagerShutdownSteps.get());
     }
 
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationNSCString(
         CrashReporter::Annotation::QuotaManagerShutdownTimeout, annotation);
 
     MOZ_CRASH("Quota manager shutdown timed out");

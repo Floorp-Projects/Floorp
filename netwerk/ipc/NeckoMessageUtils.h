@@ -10,15 +10,15 @@
 
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
+#include "mozilla/net/DNS.h"
 #include "nsExceptionHandler.h"
+#include "nsIDNSService.h"
 #include "nsIHttpChannel.h"
+#include "nsITRRSkipReason.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "prio.h"
-#include "mozilla/net/DNS.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
-#include "nsITRRSkipReason.h"
-#include "nsIDNSService.h"
 
 namespace IPC {
 
@@ -92,9 +92,9 @@ struct ParamTraits<mozilla::net::NetAddr> {
 #endif
     } else {
       if (XRE_IsParentProcess()) {
-        nsPrintfCString msg("%d", aParam.raw.family);
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::UnknownNetAddrSocketFamily, msg);
+        CrashReporter::RecordAnnotationU32(
+            CrashReporter::Annotation::UnknownNetAddrSocketFamily,
+            aParam.raw.family);
       }
 
       MOZ_CRASH("Unknown socket family");

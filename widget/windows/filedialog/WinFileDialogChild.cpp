@@ -40,11 +40,8 @@ WinFileDialogChild::~WinFileDialogChild() {
 template <size_t N>
 WinFileDialogChild::IPCResult WinFileDialogChild::MakeIpcFailure(
     HRESULT hr, const char (&what)[N]) {
-  // The crash-report annotator stringifies integer values anyway. We do so
-  // eagerly here to avoid questions about C int/long conversion semantics.
-  nsPrintfCString data("%lu", hr);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::WindowsFileDialogErrorCode, data);
+  CrashReporter::RecordAnnotationU32(
+      CrashReporter::Annotation::WindowsFileDialogErrorCode, hr);
 
   return IPC_FAIL(this, what);
 }

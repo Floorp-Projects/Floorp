@@ -770,13 +770,15 @@ bool GMPParent::EnsureProcessLoaded() {
 
 void GMPParent::AddCrashAnnotations() {
   if (mCrashReporter) {
-    mCrashReporter->AddAnnotation(CrashReporter::Annotation::GMPPlugin, true);
-    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginFilename,
-                                  NS_ConvertUTF16toUTF8(mName));
-    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginName,
-                                  mDisplayName);
-    mCrashReporter->AddAnnotation(CrashReporter::Annotation::PluginVersion,
-                                  mVersion);
+    mCrashReporter->AddAnnotationBool(CrashReporter::Annotation::GMPPlugin,
+                                      true);
+    mCrashReporter->AddAnnotationNSCString(
+        CrashReporter::Annotation::PluginFilename,
+        NS_ConvertUTF16toUTF8(mName));
+    mCrashReporter->AddAnnotationNSCString(
+        CrashReporter::Annotation::PluginName, mDisplayName);
+    mCrashReporter->AddAnnotationNSCString(
+        CrashReporter::Annotation::PluginVersion, mVersion);
   }
 }
 

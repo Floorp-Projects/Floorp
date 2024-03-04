@@ -507,7 +507,7 @@ CGFontRef CTFontEntry::CreateOrCopyFontRef() {
     return mFontRef;
   }
 
-  CrashReporter::AutoAnnotateCrashReport autoFontName(
+  CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, mName);
 
   // Create a new CGFont; caller will own the only reference to it.
@@ -676,7 +676,7 @@ bool CTFontEntry::SupportsOpenTypeFeature(Script aScript,
       return mHasAATSmallCaps;
     }
 
-    CrashReporter::AutoAnnotateCrashReport autoFontName(
+    CrashReporter::AutoRecordAnnotation autoFontName(
         CrashReporter::Annotation::FontName, FamilyName());
 
     AutoCFRelease<CTFontRef> ctFont =
@@ -1384,7 +1384,7 @@ gfxFontEntry* CoreTextFontList::LookupLocalFont(
 
   AutoLock lock(mLock);
 
-  CrashReporter::AutoAnnotateCrashReport autoFontName(
+  CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, aFontName);
 
   AutoCFRelease<CFStringRef> faceName = CreateCFStringForString(aFontName);
@@ -1461,7 +1461,7 @@ gfxFontEntry* CoreTextFontList::MakePlatformFont(const nsACString& aFontName,
     return nullptr;
   }
 
-  CrashReporter::AutoAnnotateCrashReport autoFontName(
+  CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, aFontName);
 
   AutoCFRelease<CGDataProviderRef> provider =
@@ -1521,7 +1521,7 @@ class CTFontInfo final : public FontInfoData {
 };
 
 void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
-  CrashReporter::AutoAnnotateCrashReport autoFontName(
+  CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, aFamilyName);
   // Prevent this from running concurrently with CGFont operations on the main
   // thread, because the macOS font cache is fragile with concurrent access.
@@ -1743,7 +1743,7 @@ void CoreTextFontList::GetFacesInitDataForFamily(
     const fontlist::Family* aFamily, nsTArray<fontlist::Face::InitData>& aFaces,
     bool aLoadCmaps) const {
   auto name = aFamily->Key().AsString(SharedFontList());
-  CrashReporter::AutoAnnotateCrashReport autoFontName(
+  CrashReporter::AutoRecordAnnotation autoFontName(
       CrashReporter::Annotation::FontName, name);
 
   struct Context {

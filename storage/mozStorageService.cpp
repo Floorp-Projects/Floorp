@@ -727,7 +727,7 @@ Service::Observe(nsISupports*, const char* aTopic, const char16_t*) {
       if (!connections[i]->isClosed()) {
         // getFilename is only the leaf name for the database file,
         // so it shouldn't contain privacy-sensitive information.
-        CrashReporter::AnnotateCrashReport(
+        CrashReporter::RecordAnnotationNSCString(
             CrashReporter::Annotation::StorageConnectionNotClosed,
             connections[i]->getFilename());
         printf_stderr("Storage connection not closed: %s",

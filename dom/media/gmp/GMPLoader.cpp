@@ -84,7 +84,7 @@ class PassThroughGMPAdapter : public GMPAdapter {
 
 bool GMPLoader::Load(const char* aUTF8LibPath, uint32_t aUTF8LibPathLen,
                      const GMPPlatformAPI* aPlatformAPI, GMPAdapter* aAdapter) {
-  CrashReporter::AutoAnnotateCrashReport autoLibPath(
+  CrashReporter::AutoRecordAnnotation autoLibPath(
       CrashReporter::Annotation::GMPLibraryPath,
       nsDependentCString(aUTF8LibPath));
 
