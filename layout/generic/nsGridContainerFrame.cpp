@@ -28,6 +28,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 #include "nsFieldSetFrame.h"
+#include "nsGfxScrollFrame.h"
 #include "nsHashKeys.h"
 #include "nsIFrameInlines.h"  // for nsIFrame::GetLogicalNormalPosition (don't remove)
 #include "nsLayoutUtils.h"
@@ -3685,7 +3686,8 @@ static Subgrid* SubgridComputeMarginBorderPadding(
       sz.ComputedLogicalMargin(cbWM) + sz.ComputedLogicalBorderPadding(cbWM);
 
   if (aGridItem.mFrame != subgridFrame) {
-    nsIScrollableFrame* scrollFrame = aGridItem.mFrame->GetScrollTargetFrame();
+    nsHTMLScrollFrame* scrollFrame =
+        do_QueryFrame(aGridItem.mFrame->GetScrollTargetFrame());
     if (scrollFrame) {
       MOZ_ASSERT(
           sz.ComputedLogicalMargin(cbWM) == LogicalMargin(cbWM) &&
@@ -3699,7 +3701,7 @@ static Subgrid* SubgridComputeMarginBorderPadding(
           szScrollFrame.ComputedLogicalMargin(cbWM) +
           szScrollFrame.ComputedLogicalBorder(cbWM);
 
-      nsMargin ssz = scrollFrame->GetActualScrollbarSizes();
+      nsMargin ssz = scrollFrame->IntrinsicScrollbarGutterSize();
       subgrid->mMarginBorderPadding += LogicalMargin(cbWM, ssz);
     }
 

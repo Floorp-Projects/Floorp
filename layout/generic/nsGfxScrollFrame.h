@@ -112,6 +112,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   // scrollbar that scrolls in the block axis).
   nscoord IntrinsicScrollbarGutterSizeAtInlineEdges() const;
 
+  // Return the size of space created by scrollbar-gutter or actual scrollbars,
+  // assuming that the content is *not* overflowing the container. In other
+  // words, this space is created by stable scrollbar-gutter or by scrollbars
+  // due to "overflow: scroll".
+  nsMargin IntrinsicScrollbarGutterSize() const;
+
   // Compute stable scrollbar-gutter from scrollbar-width and scrollbar-gutter
   // properties.
   //
