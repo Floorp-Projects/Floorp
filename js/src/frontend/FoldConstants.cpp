@@ -407,6 +407,7 @@ restart:
     case ParseNodeKind::ObjectExpr:
     case ParseNodeKind::PropertyNameExpr:
     case ParseNodeKind::DotExpr:
+    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::ElemExpr:
     case ParseNodeKind::Arguments:
     case ParseNodeKind::CallExpr:
