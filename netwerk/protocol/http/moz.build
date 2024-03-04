@@ -164,6 +164,7 @@ UNIFIED_SOURCES += [
     "TlsHandshaker.cpp",
     "TLSTransportLayer.cpp",
     "TRRServiceChannel.cpp",
+    "WebTransportCertificateVerifier.cpp",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
