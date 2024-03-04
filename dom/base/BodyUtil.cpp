@@ -267,7 +267,7 @@ class MOZ_STACK_CLASS FormDataParser {
     }
 
     // Determine boundary from mimetype.
-    UniquePtr<CMimeType> parsed = CMimeType::Parse(mMixedCaseMimeType);
+    RefPtr<CMimeType> parsed = CMimeType::Parse(mMixedCaseMimeType);
     if (!parsed) {
       return false;
     }

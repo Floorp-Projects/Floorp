@@ -1208,13 +1208,13 @@ bool XMLHttpRequestMainThread::IsSafeHeader(
 
 bool XMLHttpRequestMainThread::GetContentType(nsACString& aValue) const {
   MOZ_ASSERT(mChannel);
-  nsCOMPtr<nsIURI> uri;
-  if (NS_SUCCEEDED(mChannel->GetURI(getter_AddRefs(uri))) &&
-      uri->SchemeIs("data")) {
-    nsDataChannel* dchan = static_cast<nsDataChannel*>(mChannel.get());
-    MOZ_ASSERT(dchan);
-    aValue.Assign(dchan->MimeType());
-    return true;
+  nsCOMPtr<nsIBaseChannel> baseChan = do_QueryInterface(mChannel);
+  if (baseChan) {
+    RefPtr<CMimeType> fullMimeType(baseChan->FullMimeType());
+    if (fullMimeType) {
+      fullMimeType->Serialize(aValue);
+      return true;
+    }
   }
   if (NS_SUCCEEDED(mChannel->GetContentType(aValue))) {
     nsCString value;
@@ -3141,7 +3141,7 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
       if (uploadContentType.IsVoid()) {
         uploadContentType = defaultContentType;
       } else if (aBodyIsDocumentOrString) {
-        UniquePtr<CMimeType> contentTypeRecord =
+        RefPtr<CMimeType> contentTypeRecord =
             CMimeType::Parse(uploadContentType);
         nsAutoCString charset;
         if (contentTypeRecord &&
@@ -3404,7 +3404,7 @@ void XMLHttpRequestMainThread::OverrideMimeType(const nsAString& aMimeType,
     return;
   }
 
-  UniquePtr<MimeType> parsed = MimeType::Parse(aMimeType);
+  RefPtr<MimeType> parsed = MimeType::Parse(aMimeType);
   if (parsed) {
     parsed->Serialize(mOverrideMimeType);
   } else {

@@ -1039,7 +1039,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
 
   bool foundOpaqueRedirect = false;
 
-  nsAutoCString contentType;
+  nsAutoCString contentType(VoidCString());
 
   int64_t contentLength = InternalResponse::UNKNOWN_BODY_SIZE;
   rv = channel->GetContentLength(&contentLength);
@@ -1119,13 +1119,13 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       MOZ_ASSERT(!result.Failed());
     }
 
-    nsCOMPtr<nsIURI> uri;
-    channel->GetURI(getter_AddRefs(uri));
-    if (uri && uri->SchemeIs("data")) {
-      nsDataChannel* dchan = static_cast<nsDataChannel*>(channel.get());
-      MOZ_ASSERT(dchan);
-      contentType.Assign(dchan->MimeType());
-    } else {
+    if (baseChan) {
+      RefPtr<CMimeType> fullMimeType(baseChan->FullMimeType());
+      if (fullMimeType) {
+        fullMimeType->Serialize(contentType);
+      }
+    }
+    if (contentType.IsVoid()) {
       channel->GetContentType(contentType);
       if (!contentType.IsEmpty()) {
         nsAutoCString contentCharset;

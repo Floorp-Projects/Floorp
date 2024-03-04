@@ -8,7 +8,6 @@
 #define mozilla_dom_MimeType_h
 
 #include "mozilla/TextUtils.h"
-#include "mozilla/UniquePtr.h"
 #include "nsTHashMap.h"
 #include "nsTArray.h"
 
@@ -26,6 +25,8 @@ struct HashKeyType<char> {
 template <typename char_type>
 class TMimeType final {
  private:
+  ~TMimeType() = default;
+
   class ParameterValue : public nsTString<char_type> {
    public:
     bool mRequiresQuoting;
@@ -48,8 +49,8 @@ class TMimeType final {
             const nsTSubstring<char_type>& aSubtype)
       : mType(aType), mSubtype(aSubtype) {}
 
-  static mozilla::UniquePtr<TMimeType<char_type>> Parse(
-      const nsTSubstring<char_type>& aStr);
+  static RefPtr<TMimeType<char_type>> Parse(
+      const nsTSubstring<char_type>& aMimeType);
 
   // @param aMimeType - the mimetype string
   // @param aOutEssence - will hold the value of the content-type
@@ -84,6 +85,8 @@ class TMimeType final {
   // @param aValue - the value of the parameter
   void SetParameterValue(const nsTSubstring<char_type>& aName,
                          const nsTSubstring<char_type>& aValue);
+
+  NS_INLINE_DECL_REFCOUNTING(TMimeType)
 };
 
 using MimeType = TMimeType<char16_t>;
