@@ -44,7 +44,7 @@ function startTest(test, token) {
   }
 
   // data avaliable.
-  mediaRecorder.ondataavailable = function(evt) {}
+  mediaRecorder.ondataavailable = function() {}
 
   mediaRecorder.onerror = function(err) {
     ok(false, 'Unexpected error fired with:' + err);

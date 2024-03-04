@@ -45,7 +45,7 @@ async function expectBlockedToplevelData() {
         }
       };
 
-      function observer(subject, topic) {
+      function observer(subject) {
         if (!bcs.includes(subject.webProgress)) {
           bcs.push(subject.webProgress);
           subject.webProgress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);

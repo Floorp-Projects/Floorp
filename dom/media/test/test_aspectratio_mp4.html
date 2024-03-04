@@ -28,7 +28,7 @@ v.onloadedmetadata = function() {
   is(v.videoHeight, resource.height, "Intrinsic height should match video height");
   SimpleTest.finish();
 }
-v.addEventListener("error", function(ev) {
+v.addEventListener("error", function() {
   if (v.readyState < v.HAVE_METADATA) {
     info("Video element returns with readyState " + v.readyState + " error.code " + v.error.code);
     todo(false, "This platform doesn't support to retrieve MP4 metadata.");

@@ -23,7 +23,7 @@ async function useMessagePort(contentWindow) {
   mc.port1.postMessage("foo");
 
   await new Promise(resolve => {
-    mc.port2.onmessage = e => {
+    mc.port2.onmessage = () => {
       contentWindow.messageCount += 1;
       resolve();
     };

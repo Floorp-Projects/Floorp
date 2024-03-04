@@ -24,7 +24,7 @@ add_task(async function test_register_invalid_channel() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
@@ -33,7 +33,7 @@ add_task(async function test_register_invalid_channel() {
             })
           );
         },
-        onRegister(request) {
+        onRegister() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "register",

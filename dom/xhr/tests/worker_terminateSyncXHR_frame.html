@@ -16,7 +16,7 @@
           parent.postMessage(event.data, "*");
         };
 
-        worker.onerror = function(event) {
+        worker.onerror = function() {
           parent.postMessage("ERROR!", "*");
         }
       }

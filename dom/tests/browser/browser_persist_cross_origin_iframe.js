@@ -120,7 +120,7 @@ add_task(async function () {
       gTestDir = createTemporarySaveDirectory();
 
       MockFilePicker.displayDirectory = gTestDir;
-      MockFilePicker.showCallback = function (fp) {
+      MockFilePicker.showCallback = function () {
         let destFile = gTestDir.clone();
         destFile.append("first.html");
         MockFilePicker.setFiles([destFile]);
@@ -154,7 +154,7 @@ add_task(async function () {
         "second_files/image_data/dummy.png",
       ]);
 
-      MockFilePicker.showCallback = function (fp) {
+      MockFilePicker.showCallback = function () {
         let destFile = gTestDir.clone();
         destFile.append("second.html");
         MockFilePicker.setFiles([destFile]);
@@ -176,7 +176,7 @@ add_task(async function () {
         "third_files/dummy.png",
       ]);
 
-      MockFilePicker.showCallback = function (fp) {
+      MockFilePicker.showCallback = function () {
         let destFile = gTestDir.clone();
         destFile.append("third.html");
         MockFilePicker.setFiles([destFile]);

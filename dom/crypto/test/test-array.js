@@ -112,7 +112,7 @@ function WorkerTest(worker, name, test) {
 
     // We expect only boolean responses from the worker script.
     worker.onmessage = e => this.complete(e.data);
-    worker.onerror = e => this.complete(false);
+    worker.onerror = () => this.complete(false);
   };
 
   var base = new Test(name, test);

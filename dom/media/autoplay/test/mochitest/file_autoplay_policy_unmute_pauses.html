@@ -22,8 +22,8 @@
         window.is = window.opener.is;
         window.info = window.opener.info;
 
-        function testAutoplayUnmutePauses(testCase, parent_window) {
-          return new Promise(function (resolve, reject) {
+        function testAutoplayUnmutePauses(testCase) {
+          return new Promise(function (resolve) {
 
             info("testAutoplayUnmutePauses: " + testCase.property);
 

@@ -77,7 +77,7 @@ function* testSteps() {
   for (let i in keys) {
     request = objectStore.add("foo", keys[i]);
     request.onerror = errorHandler;
-    request.onsuccess = function (event) {
+    request.onsuccess = function () {
       if (++keyIndex == keys.length) {
         testGenerator.next();
       }
@@ -233,7 +233,7 @@ function* testSteps() {
       if (keyIndex == 4) {
         request = cursor.update("bar");
         request.onerror = errorHandler;
-        request.onsuccess = function (event) {
+        request.onsuccess = function () {
           keyIndex++;
           cursor.continue();
         };

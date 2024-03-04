@@ -28,14 +28,14 @@ add_task(async function () {
   var tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   var browser = gBrowser.selectedBrowser;
 
-  const windowId = await ContentTask.spawn(browser, null, async function (opt) {
+  const windowId = await ContentTask.spawn(browser, null, async function () {
     let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
       Ci.nsIConsoleAPIStorage
     );
 
     let observerPromise = new Promise(resolve => {
       let apiCallCount = 0;
-      function observe(aSubject) {
+      function observe() {
         apiCallCount++;
         info(`Received ${apiCallCount} console log events`);
         if (apiCallCount == 4) {

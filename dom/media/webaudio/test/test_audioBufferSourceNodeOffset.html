@@ -34,7 +34,7 @@ addLoadEvent(function() {
 
   var source = context.createBufferSource();
 
-  source.onended = function(e) {
+  source.onended = function() {
     // The timing at which the audioprocess and ended listeners are called can
     // change, hence the fuzzy equal here.
     var errorRatio = samplesFromSource / (0.5 * context.sampleRate);

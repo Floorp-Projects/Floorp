@@ -74,7 +74,7 @@ function* testSteps() {
       badObjectStoreData[i].key
     );
     request.onerror = errorHandler;
-    request.onsuccess = function (event) {
+    request.onsuccess = function () {
       if (++addedData == badObjectStoreData.length) {
         executeSoon(function () {
           testGenerator.next();

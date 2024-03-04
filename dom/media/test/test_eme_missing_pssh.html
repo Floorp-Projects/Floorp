@@ -63,7 +63,7 @@
       }
 
       function DownloadMedia(url, type, mediaSource) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           var sourceBuffer = mediaSource.addSourceBuffer(type);
           fetchWithXHR(url, (response) => {
             once(sourceBuffer, "updateend", resolve);

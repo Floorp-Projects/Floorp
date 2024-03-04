@@ -20,7 +20,7 @@ add_task(async function test_registrations_error() {
   PushService.init({
     serverURI: "wss://push.example.org/",
     db: makeStub(db, {
-      getByIdentifiers(prev, scope) {
+      getByIdentifiers() {
         return Promise.reject("Database error");
       },
     }),

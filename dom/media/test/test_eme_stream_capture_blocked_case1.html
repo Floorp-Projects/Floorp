@@ -35,7 +35,7 @@ function startTest(test, token)
 
   var context = new AudioContext();
   context.createMediaElementSource(v1);
-  v1.addEventListener("loadeddata", function(ev) {
+  v1.addEventListener("loadeddata", function() {
     ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
   });
 

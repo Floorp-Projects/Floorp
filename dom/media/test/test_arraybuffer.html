@@ -49,14 +49,14 @@ function startTest(test, token) {
     events.forEach(function(e) {
       v.addEventListener(e, logEvent);
     });
-    once(v, "stalled", function(e) {
+    once(v, "stalled", function() {
       // Resource fetch algorithm in local mode should never fire stalled event.
       // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-resource
       ok(false, test.name + ": got stalled");
       removeNodeAndSource(v);
       manager.finished(token);
     });
-    once(v, "canplaythrough", function(e) {
+    once(v, "canplaythrough", function() {
       ok(true, test.name + ": got canplaythrough");
       is(v.readyState, v.HAVE_ENOUGH_DATA, test.name + ": readyState is HAVE_ENOUGH_DATA");
       removeNodeAndSource(v);

@@ -28,19 +28,19 @@ async function startTest() {
     return;
   }
 
-  element.audioTracks.onaddtrack = function(e) {
+  element.audioTracks.onaddtrack = function() {
     audioOnaddtrack++;
   };
 
-  element.audioTracks.onchange = function(e) {
+  element.audioTracks.onchange = function() {
     audioOnchange++;
   };
 
-  element.videoTracks.onaddtrack = function(e) {
+  element.videoTracks.onaddtrack = function() {
     videoOnaddtrack++;
   };
 
-  element.videoTracks.onchange = function(e) {
+  element.videoTracks.onchange = function() {
     videoOnchange++;
   };
 

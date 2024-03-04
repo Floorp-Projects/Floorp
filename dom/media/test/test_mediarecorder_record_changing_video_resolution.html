@@ -70,7 +70,7 @@ function startTest() {
     video.src = URL.createObjectURL(blob);
     video.preload = "metadata";
 
-    video.onerror = err => {
+    video.onerror = () => {
       ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
       SimpleTest.finish();
     };

@@ -43,7 +43,7 @@ async function test() {
 
               domwindow.addEventListener("load", onModalLoad, true);
             },
-            onCloseWindow(aXULWindow) {},
+            onCloseWindow() {},
           };
 
           Services.wm.addListener(listener);

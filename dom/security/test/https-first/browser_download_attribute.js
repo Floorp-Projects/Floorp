@@ -31,7 +31,7 @@ let msgCounter = 0;
 function shouldConsoleTryUpgradeAndError() {
   // Waits until CONSOLE_ERROR_MESSAGE was logged.
   // Checks if download was tried via http://
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     function listener(msgObj) {
       let text = msgObj.message;
       // Verify upgrade messages

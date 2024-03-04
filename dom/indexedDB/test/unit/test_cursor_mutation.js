@@ -101,10 +101,10 @@ function* testSteps() {
 
       if (count == 1) {
         let objectStore = event.target.transaction.objectStore("foo");
-        objectStore.delete(objectStoreData[0].ss).onsuccess = function (event) {
+        objectStore.delete(objectStoreData[0].ss).onsuccess = function () {
           objectStore.add(
             objectStoreData[objectStoreData.length - 1]
-          ).onsuccess = function (event) {
+          ).onsuccess = function () {
             cursor.continue();
           };
         };

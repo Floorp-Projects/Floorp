@@ -9,7 +9,7 @@ var Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 var EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
 
-function debug(msg) {
+function debug() {
   // dump("BrowserElementPromptService - " + msg + "\n");
 }
 
@@ -30,7 +30,7 @@ BrowserElementPrompt.prototype = {
     });
   },
 
-  alertCheck(title, text, checkMsg, checkState) {
+  alertCheck(title, text) {
     // Treat this like a normal alert() call, ignoring the checkState.  The
     // front-end can do its own suppression of the alert() if it wants.
     this.alert(title, text);
@@ -45,7 +45,7 @@ BrowserElementPrompt.prototype = {
     });
   },
 
-  confirmCheck(title, text, checkMsg, checkState) {
+  confirmCheck(title, text) {
     return this.confirm(title, text);
   },
 
@@ -98,7 +98,7 @@ BrowserElementPrompt.prototype = {
     return buttonProperties.indexToButtonNumberMap[ret.selectedButton];
   },
 
-  prompt(title, text, value, checkMsg, checkState) {
+  prompt(title, text, value) {
     let rv = this._browserElementChild.showModalPrompt(this._win, {
       promptType: "prompt",
       title,
@@ -117,15 +117,15 @@ BrowserElementPrompt.prototype = {
     return rv !== null;
   },
 
-  promptUsernameAndPassword(title, text, username, password) {
+  promptUsernameAndPassword() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  promptPassword(title, text, password) {
+  promptPassword() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  select(title, text, aSelectList, aOutSelection) {
+  select() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
@@ -227,7 +227,7 @@ function BrowserElementAuthPrompt() {}
 BrowserElementAuthPrompt.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIAuthPrompt2"]),
 
-  promptAuth: function promptAuth(channel, level, authInfo) {
+  promptAuth: function promptAuth() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
@@ -706,7 +706,7 @@ var BrowserElementPromptService = {
     delete this._browserElementChildMap[outerWindowID.data];
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "outer-window-destroyed":
         this._observeOuterWindowDestroyed(subject);

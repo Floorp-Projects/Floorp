@@ -21,7 +21,7 @@ addLoadEvent(function() {
   sp.connect(ctx.destination);
   source.start(0);
 
-  sp.onaudioprocess = function(e) {
+  sp.onaudioprocess = function() {
     // Now set the buffer
     source.buffer = buffer;
 

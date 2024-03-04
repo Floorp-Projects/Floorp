@@ -23,8 +23,8 @@ add_task(async function test_globals() {
 });
 
 add_task(async function test_promiseID() {
-  let p1 = new Promise(resolve => {});
-  let p2 = new Promise(resolve => {});
+  let p1 = new Promise(() => {});
+  let p2 = new Promise(() => {});
   let p3 = p2.catch(null);
   let promise = [p1, p2, p3];
 
@@ -111,7 +111,7 @@ add_task(async function test_observe_uncaught() {
   let onConsumed = new CallbackResults("onConsumed");
 
   let observer = {
-    onLeftUncaught(promise, data) {
+    onLeftUncaught(promise) {
       onLeftUncaught.observe(promise);
     },
     onConsumed(promise) {
@@ -121,7 +121,7 @@ add_task(async function test_observe_uncaught() {
 
   let resolveLater = function (delay = 20) {
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    return new Promise((resolve, reject) => setTimeout(resolve, delay));
+    return new Promise(resolve => setTimeout(resolve, delay));
   };
   let rejectLater = function (delay = 20) {
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout

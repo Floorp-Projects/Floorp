@@ -26,8 +26,8 @@
        let input = access.inputs.get(await MIDITestUtils.inputInfo.id);
        let portEventRes;
        let accessEventRes;
-       let portEventPromise = new Promise((resolve, reject) => { portEventRes = resolve; });
-       let accessEventPromise = new Promise((resolve, reject) => { accessEventRes = resolve; });
+       let portEventPromise = new Promise((resolve) => { portEventRes = resolve; });
+       let accessEventPromise = new Promise((resolve) => { accessEventRes = resolve; });
        let shouldClose = false;
        let checkPort = (event) => {
          ok(input === event.port, "input port object and event port object are same object");
@@ -77,8 +77,8 @@
          out_access.removeEventListener("statechange", outputEventHandler);
        }
        ok(true, "Starting MIDI port closing test");
-       portEventPromise = new Promise((resolve, reject) => { portEventRes = resolve; });
-       accessEventPromise = new Promise((resolve, reject) => { accessEventRes = resolve; });
+       portEventPromise = new Promise((resolve) => { portEventRes = resolve; });
+       accessEventPromise = new Promise((resolve) => { accessEventRes = resolve; });
        input.addEventListener("statechange", inputEventHandler);
        access.addEventListener("statechange", accessEventHandler);
        shouldClose = true;

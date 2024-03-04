@@ -77,7 +77,7 @@ add_task(async function test_expiration_origin_threshold() {
   let updates = 0;
   let notifyPromise = promiseObserverNotification(
     PushServiceComponent.pushTopic,
-    (subject, data) => {
+    () => {
       updates++;
       return updates == 6;
     }
@@ -91,7 +91,7 @@ add_task(async function test_expiration_origin_threshold() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
@@ -140,7 +140,7 @@ add_task(async function test_expiration_origin_threshold() {
         },
         // We expect to receive acks, but don't care about their
         // contents.
-        onACK(request) {},
+        onACK() {},
       });
     },
   });

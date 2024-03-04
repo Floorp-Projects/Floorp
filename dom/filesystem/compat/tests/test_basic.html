@@ -168,7 +168,7 @@ function test_directoryEntry_getFile_simple() {
   function(e) {
     is(e.name, "foo.txt", "We have the right FileEntry.");
     test_getParent(e, directoryEntry, /* nested */ false);
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -178,7 +178,7 @@ function test_directoryEntry_getFile_deep() {
   function(e) {
     is(e.name, "bar..txt", "We have the right FileEntry.");
     test_getParent(e, directoryEntry, /* nested */ true);
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -228,7 +228,7 @@ function test_directoryEntry_getDirectory_simple() {
   function(e) {
     is(e.name, "subdir", "We have the right DirectoryEntry.");
     test_getParent(e, directoryEntry, /* nested */ false);
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -238,7 +238,7 @@ function test_directoryEntry_getDirectory_deep() {
   function(e) {
     is(e.name, "subsubdir", "We have the right DirectoryEntry.");
     test_getParent(e, directoryEntry, /* nested */ true);
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -308,7 +308,7 @@ function test_root_getFile_simple() {
   function(e) {
     is(e.name, fileEntry.name, "We have the right FileEntry.");
     next();
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -318,7 +318,7 @@ function test_root_getFile_deep() {
   function(e) {
     is(e.name, "bar..txt", "We have the right FileEntry.");
     next();
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -368,7 +368,7 @@ function test_root_getDirectory_simple() {
   function(e) {
     is(e.name, directoryEntry.name, "We have the right DirectoryEntry.");
     next();
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -378,7 +378,7 @@ function test_root_getDirectory_deep() {
   function(e) {
     is(e.name, "subsubdir", "We have the right DirectoryEntry.");
     next();
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }
@@ -402,7 +402,7 @@ function test_getParent(entry, parentEntry, nested) {
     } else {
       test_getParent(e, parentEntry, false);
     }
-  }, function(e) {
+  }, function() {
     ok(false, "This should not happen.");
   });
 }

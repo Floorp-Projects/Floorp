@@ -61,7 +61,7 @@ runWithMSE(async function(ms, el) {
       await once(el, "seeked");
       dump("dump: seeked to " + seekTime);
       is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
-      await audiosb.appendBufferAsync(audioBuffer).catch(async function(ex2) {
+      await audiosb.appendBufferAsync(audioBuffer).catch(async function() {
         ok(false, "Shouldn't throw another time when data can be evicted");
         dump(JSON.stringify(await SpecialPowers.wrap(el).mozRequestDebugInfo()));
         SimpleTest.finish();
@@ -73,7 +73,7 @@ runWithMSE(async function(ms, el) {
         await audiosb.removeAsync(ms.duration + 1, Infinity).catch(async function(ex4) {
           ok(true, "remove promise got rejected with start > duration");
           is(ex4.name, "TypeError");
-          await audiosb.removeAsync(0, Infinity).catch(function(ex5) {
+          await audiosb.removeAsync(0, Infinity).catch(function() {
             ok(false, "shouldn't throw");
           });
           ok(true, "remove succeeded");

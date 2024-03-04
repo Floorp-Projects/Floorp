@@ -131,7 +131,7 @@ const options = {...data, checkConformance: true } ;
     },
     warn: "The id member must have the same origin as the start_url member.",
   }
-].forEach((test, index) => {
+].forEach((test) => {
   test.func();
   const result = processor.process(options);
   let messages = [];

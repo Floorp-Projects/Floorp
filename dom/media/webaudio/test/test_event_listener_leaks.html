@@ -18,7 +18,7 @@
 // exercise the leak condition.
 async function useAudioContext(contentWindow) {
   let ctx = new contentWindow.AudioContext();
-  ctx.onstatechange = e => {
+  ctx.onstatechange = () => {
     contentWindow.stateChangeCount += 1;
   };
 

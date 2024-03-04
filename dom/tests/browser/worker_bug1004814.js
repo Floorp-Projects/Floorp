@@ -1,4 +1,4 @@
-onmessage = function (evt) {
+onmessage = function () {
   console.time("bug1004814");
   setTimeout(function () {
     console.timeEnd("bug1004814");

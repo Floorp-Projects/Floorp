@@ -50,7 +50,7 @@ add_task(async function test_expiration_origin_threshold() {
   let updates = 0;
   let notifyPromise = promiseObserverNotification(
     PushServiceComponent.pushTopic,
-    (subject, data) => {
+    () => {
       updates++;
       return updates == numMessages;
     }
@@ -59,7 +59,7 @@ add_task(async function test_expiration_origin_threshold() {
   let modifications = 0;
   let modifiedPromise = promiseObserverNotification(
     PushServiceComponent.subscriptionModifiedTopic,
-    (subject, data) => {
+    () => {
       // Each subscription should be modified twice: once to update the message
       // count and last push time, and the second time to update the quota.
       modifications++;
@@ -67,7 +67,7 @@ add_task(async function test_expiration_origin_threshold() {
     }
   );
 
-  let updateQuotaPromise = new Promise((resolve, reject) => {
+  let updateQuotaPromise = new Promise(resolve => {
     let quotaUpdateCount = 0;
     PushService._updateQuotaTestCallback = function () {
       quotaUpdateCount++;
@@ -82,7 +82,7 @@ add_task(async function test_expiration_origin_threshold() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
@@ -107,12 +107,12 @@ add_task(async function test_expiration_origin_threshold() {
             );
           }
         },
-        onUnregister(request) {
+        onUnregister() {
           ok(false, "Channel should not be unregistered.");
         },
         // We expect to receive acks, but don't care about their
         // contents.
-        onACK(request) {},
+        onACK() {},
       });
     },
   });

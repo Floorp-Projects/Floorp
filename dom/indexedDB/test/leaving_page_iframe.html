@@ -23,7 +23,7 @@ function madeMod() {
     parent.postMessage("didcommit", "*");
   };
 
-  store.put({ hello: "officer" }, 42).onsuccess = function(e) {
+  store.put({ hello: "officer" }, 42).onsuccess = function() {
     // Make this transaction run until the end of time or until the page is
     // navigated away, whichever comes first.
     function doGet() {

@@ -74,7 +74,7 @@ function triggerSecondaryCommand(popup, win) {
   EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {}, win);
 }
 
-function dismissNotification(popup) {
+function dismissNotification() {
   info("dismissing notification");
   executeSoon(function () {
     EventUtils.synthesizeKey("KEY_Escape");

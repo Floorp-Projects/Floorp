@@ -9,7 +9,7 @@ if (DEBUG) {
     dump("-*- IndexedDBHelper: " + s + "\n");
   };
 } else {
-  debug = function (s) {};
+  debug = function () {};
 }
 
 function getErrorName(err) {
@@ -70,7 +70,7 @@ IndexedDBHelper.prototype = {
         debug("Opened database:" + self.dbName + " " + self.dbVersion);
       }
       self._db = event.target.result;
-      self._db.onversionchange = function (event) {
+      self._db.onversionchange = function () {
         if (DEBUG) {
           debug("WARNING: DB modified from a different window.");
         }
@@ -106,7 +106,7 @@ IndexedDBHelper.prototype = {
       }
       invokeCallbacks(getErrorName(aEvent.target.error));
     };
-    req.onblocked = function (aEvent) {
+    req.onblocked = function () {
       if (DEBUG) {
         debug("Opening database request is blocked.");
       }

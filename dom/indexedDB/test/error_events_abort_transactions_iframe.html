@@ -29,7 +29,7 @@
       finishTest();
     }
 
-    function unexpectedSuccessHandler(event) {
+    function unexpectedSuccessHandler() {
       ok(false, "got success when it was not expected!");
       finishTest();
     }
@@ -43,7 +43,7 @@
       }, 0);
     }
 
-    window.onerror = function(message, filename, lineno) {
+    window.onerror = function(message) {
       is(message, "ConstraintError", "Expect a constraint error");
     };
 
@@ -82,7 +82,7 @@
 
       request = objectStore.add({}, 1);
       request.onsuccess = unexpectedSuccessHandler;
-      request.onerror = function(event) {
+      request.onerror = function() {
         // Don't do anything! ConstraintError is expected in window.onerror.
       };
       event = yield undefined;

@@ -18,7 +18,7 @@ function startTest(test, token) {
   manager.started(token);
 
   // Set up event handlers. Seeing any of these is a failure.
-  function badEvent(type) { return function(e) {
+  function badEvent(type) { return function() {
     ok(false, test.name + " should not fire '" + type + "' event");
   }};
   var events = [
@@ -31,7 +31,7 @@ function startTest(test, token) {
   });
 
   // Seeing a decoder error is a success.
-  v.addEventListener("error", function onerror(e) {
+  v.addEventListener("error", function onerror() {
     if (v.readyState == v.HAVE_NOTHING) {
       is(v.error.code, v.error.MEDIA_ERR_SRC_NOT_SUPPORTED,
          "decoder should reject " + test.name);

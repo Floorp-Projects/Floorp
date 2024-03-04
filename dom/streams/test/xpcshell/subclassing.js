@@ -19,7 +19,7 @@ add_task(function subclass_helper() {
   // The base class constructor is called.
   let stream = new PartyStreamer({
     // (The ReadableStream constructor calls this start method.)
-    start(c) {
+    start() {
       started = true;
     },
   });

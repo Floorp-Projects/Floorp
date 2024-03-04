@@ -101,7 +101,7 @@ function fetch(url, fetched_callback) {
   xhr.open("GET", url, true);
   xhr.responseType = "blob";
 
-  var loaded = function (event) {
+  var loaded = function () {
     if (xhr.status == 200 || xhr.status == 206) {
       // Request fulfilled. Note sometimes we get 206... Presumably because either
       // httpd.js or Necko cached the result.

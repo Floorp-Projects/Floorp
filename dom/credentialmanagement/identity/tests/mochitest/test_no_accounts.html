@@ -20,9 +20,9 @@
           }
         });
       }
-    ).then((cred) => {
+    ).then(() => {
       ok(false, "incorrectly got a credential");
-    }).catch((err) => {
+    }).catch(() => {
       ok(true, "correctly got an error");
     }).finally(() => {
       SimpleTest.finish();

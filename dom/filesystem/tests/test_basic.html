@@ -40,7 +40,7 @@ function create_fileList(aPath) {
   script.sendAsyncMessage("dir.open", { path: aPath });
 }
 
-function test_simpleFilePicker(aPath) {
+function test_simpleFilePicker() {
   var url = SimpleTest.getTestFileURL("script_fileList.js");
   var script = SpecialPowers.loadChromeScript(url);
 

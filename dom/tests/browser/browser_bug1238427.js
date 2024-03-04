@@ -31,7 +31,7 @@ add_task(async function () {
       gBrowser,
       url: TEST_URI,
     },
-    function (browser) {
+    function () {
       /* ... */
     }
   );

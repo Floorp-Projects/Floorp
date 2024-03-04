@@ -11,7 +11,7 @@ add_task(async function() {
   const TOPIC = "dangerous:test-only:new-browser-child-ready";
 
   let found = false;
-  function observer(subject, topic, data) {
+  function observer(subject) {
     let win = SpecialPowers.wrap(subject);
     if (SpecialPowers.compare(win.opener, window)) {
       found = true;

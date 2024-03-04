@@ -12,7 +12,7 @@ async function idbCheckFunc() {
   try {
     console.log("opening db");
     const req = factory.open("db", 1);
-    const result = await new Promise((resolve, reject) => {
+    const result = await new Promise(resolve => {
       req.onerror = () => {
         resolve("error");
       };
@@ -21,7 +21,7 @@ async function idbCheckFunc() {
         resolve("created");
       };
       // ...so this will lose the race
-      req.onsuccess = event => {
+      req.onsuccess = () => {
         resolve("already-exists");
       };
     });

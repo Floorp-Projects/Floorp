@@ -184,7 +184,7 @@ function enableMediaFullScreenInIframe(tab) {
 }
 
 function waitUntilIframeMediaStartedPlaying(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [IFRAME_URL], async url => {
+  return SpecialPowers.spawn(tab.linkedBrowser, [IFRAME_URL], async () => {
     info(`check if media in iframe starts playing`);
     const iframe = content.document.getElementById("iframe");
     iframe.contentWindow.postMessage("check-playing", "*");

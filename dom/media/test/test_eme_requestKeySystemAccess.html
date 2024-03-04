@@ -20,7 +20,7 @@ function ValidateConfig(name, expected, observed) {
 
   is(observed.label, expected.label, name + " label should match");
   if (expected.initDataTypes) {
-    ok(expected.initDataTypes.every((element, index, array) => observed.initDataTypes.includes(element)), name + " initDataTypes should match.");
+    ok(expected.initDataTypes.every((element) => observed.initDataTypes.includes(element)), name + " initDataTypes should match.");
   }
 
   if (expected.audioCapabilities) {
@@ -45,7 +45,7 @@ function ValidateConfig(name, expected, observed) {
 
 function Test(test) {
   var name = "'" + test.name + "'";
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var p;
     if (test.options) {
       var keySystem = (test.keySystem !== undefined) ? test.keySystem : CLEARKEY_KEYSYSTEM;

@@ -25,7 +25,7 @@ add_task(async function test_register_invalid_json() {
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",

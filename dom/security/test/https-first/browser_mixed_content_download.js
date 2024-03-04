@@ -57,7 +57,7 @@ const DOWNLOAD_URL =
 // falls back since download is not available via https
 let msgCounter = 0;
 function shouldConsoleError() {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     function listener(msgObj) {
       let text = msgObj.message;
       if (text.includes(CONSOLE_UPGRADE_MESSAGE) && msgCounter == 0) {

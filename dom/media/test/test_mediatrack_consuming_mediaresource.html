@@ -29,27 +29,27 @@ function startTest(test, token) {
   isnot(element.videoTracks, undefined,
         'HTMLMediaElement::VideoTracks() property should be available.');
 
-  element.audioTracks.onaddtrack = function(e) {
+  element.audioTracks.onaddtrack = function() {
     audioOnaddtrack++;
   }
 
-  element.audioTracks.onremovetrack = function(e) {
+  element.audioTracks.onremovetrack = function() {
     audioOnremovetrack++;
   }
 
-  element.audioTracks.onchange = function(e) {
+  element.audioTracks.onchange = function() {
     audioOnchange++;
   }
 
-  element.videoTracks.onaddtrack = function(e) {
+  element.videoTracks.onaddtrack = function() {
     videoOnaddtrack++;
   }
 
-  element.videoTracks.onremovetrack = function(e) {
+  element.videoTracks.onremovetrack = function() {
     videoOnremovetrack++;
   }
 
-  element.videoTracks.onchange = function(e) {
+  element.videoTracks.onchange = function() {
     videoOnchange++;
   }
 

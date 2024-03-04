@@ -104,7 +104,7 @@ function* testSteps() {
   let objectId = 0;
   while (true) {
     let addRequest = objectStore.add({ foo: "foo" }, objectId);
-    addRequest.onerror = function (event) {
+    addRequest.onerror = function () {
       info("addRequest.onerror, objectId: " + objectId);
       txn.onerror = grabEventAndContinueHandler;
       testGenerator.next(true);
@@ -200,7 +200,7 @@ function* testSteps() {
 
   let numberOfReadObjects = 0;
   let readRequest = objectStore.openCursor();
-  readRequest.onerror = function (event) {
+  readRequest.onerror = function () {
     info("readRequest.onerror, numberOfReadObjects: " + numberOfReadObjects);
     testGenerator.next(true);
   };

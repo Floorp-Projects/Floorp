@@ -817,7 +817,7 @@ var gOggTrackInfoResults = {
 function makeAbsolutePathConverter() {
   const url = SimpleTest.getTestFileURL("chromeHelper.js");
   const script = SpecialPowers.loadChromeScript(url);
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     script.addMessageListener("media-test:cwd", cwd => {
       if (!cwd) {
         ok(false, "Failed to find path to test files");
@@ -2241,7 +2241,7 @@ function removeNodeAndSource(n) {
 }
 
 function once(target, name, cb) {
-  var p = new Promise(function (resolve, reject) {
+  var p = new Promise(function (resolve) {
     target.addEventListener(
       name,
       function () {
@@ -2262,7 +2262,7 @@ function once(target, name, cb) {
  * @returns {Promise} A promise that is resolved when event happens.
  */
 function nextEvent(video, eventName) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     let f = function (event) {
       video.removeEventListener(eventName, f);
       resolve(event);

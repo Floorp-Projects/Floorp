@@ -39,7 +39,7 @@ function runTests() {
     }
   }
 
-  function expectNoThrow(charnum, nchars, expected) {
+  function expectNoThrow(charnum, nchars) {
     try {
       text.selectSubString(charnum, nchars);
       ok(true,

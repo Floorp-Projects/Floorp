@@ -25,7 +25,7 @@
       let browser = document.getElementById('thebrowser');
 
       let observerPromise = new Promise(resolve => {
-        let crashObserver = (subject, topic, data) => {
+        let crashObserver = (subject, topic) => {
           is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
           ok(subject instanceof Ci.nsIPropertyBag2,
              'Subject implements nsIPropertyBag2.');

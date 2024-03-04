@@ -7,7 +7,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 var gExpectedHeader = {};
 
-function checkSecFetchUser(subject, topic, data) {
+function checkSecFetchUser(subject) {
   let channel = subject.QueryInterface(Ci.nsIHttpChannel);
   if (!channel.URI.spec.startsWith("https://example.com")) {
     return;
@@ -45,7 +45,7 @@ add_task(async function external_load() {
   Services.obs.addObserver(checkSecFetchUser, "http-on-stop-request");
 
   let headersChecked = new Promise(resolve => {
-    let reqStopped = async (subject, topic, data) => {
+    let reqStopped = async () => {
       Services.obs.removeObserver(reqStopped, "http-on-stop-request");
       resolve();
     };

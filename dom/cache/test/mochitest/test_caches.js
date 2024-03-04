@@ -17,7 +17,7 @@ function testHas() {
       ok(!has, name + " should not exist yet");
       return caches.open(name);
     })
-    .then(function (c) {
+    .then(function () {
       return caches.has(name);
     })
     .then(function (has) {

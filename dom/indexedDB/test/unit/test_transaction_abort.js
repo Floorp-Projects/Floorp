@@ -150,7 +150,7 @@ function* testSteps() {
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
 
-  event.target.transaction.onabort = function (event) {
+  event.target.transaction.onabort = function () {
     ok(false, "Shouldn't see an abort event!");
   };
   event.target.transaction.oncomplete = grabEventAndContinueHandler;
@@ -168,7 +168,7 @@ function* testSteps() {
   key = event.target.result;
 
   event.target.transaction.onabort = grabEventAndContinueHandler;
-  event.target.transaction.oncomplete = function (event) {
+  event.target.transaction.oncomplete = function () {
     ok(false, "Shouldn't see a complete event here!");
   };
 
@@ -303,7 +303,7 @@ function* testSteps() {
     r.onerror = abortErrorHandler;
   }
   makeNewRequest();
-  transaction.objectStore("foo").get(1).onsuccess = function (event) {
+  transaction.objectStore("foo").get(1).onsuccess = function () {
     executeSoon(function () {
       transaction.abort();
       expectedAbortEventCount++;
@@ -315,7 +315,7 @@ function* testSteps() {
   // During COMMITTING
   transaction = db.transaction("foo", "readwrite");
   transaction.objectStore("foo").put({ hello: "world" }, 1).onsuccess =
-    function (event) {
+    function () {
       continueToNextStep();
     };
   yield undefined;
@@ -335,11 +335,10 @@ function* testSteps() {
   // Abort both failing and succeeding requests
   transaction = db.transaction("foo", "readwrite");
   transaction.onabort = transaction.oncomplete = grabEventAndContinueHandler;
-  transaction.objectStore("foo").add({ indexKey: "key" }).onsuccess = function (
-    event
-  ) {
-    transaction.abort();
-  };
+  transaction.objectStore("foo").add({ indexKey: "key" }).onsuccess =
+    function () {
+      transaction.abort();
+    };
   let request1 = transaction.objectStore("foo").add({ indexKey: "key" });
   request1.onsuccess = grabEventAndContinueHandler;
   request1.onerror = grabEventAndContinueHandler;

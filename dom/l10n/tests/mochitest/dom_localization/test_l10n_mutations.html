@@ -37,7 +37,7 @@ title2 = Hello Another World
     is(h1.textContent, "Hello World");
 
 
-    const mo = new MutationObserver(function onMutations(mutations) {
+    const mo = new MutationObserver(function onMutations() {
       is(h1.textContent, "Hello Another World");
       mo.disconnect();
       SimpleTest.finish();

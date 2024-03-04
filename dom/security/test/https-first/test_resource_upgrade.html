@@ -44,7 +44,7 @@
       // returns after the server has received all the expected requests.
       var myXHR = new XMLHttpRequest();
       myXHR.open("GET", "file_upgrade_insecure_server.sjs?queryresult");
-      myXHR.onload = function (e) {
+      myXHR.onload = function () {
         var results = myXHR.responseText.split(",");
         for (var index in results) {
           checkResult(results[index]);

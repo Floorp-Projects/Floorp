@@ -29,7 +29,7 @@ for (var i = 0; i < nodeTypes.length; ++i) {
   }
 }
 
-var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount) {
   if (aPath in usages) {
     usages[aPath] += aAmount;
   }

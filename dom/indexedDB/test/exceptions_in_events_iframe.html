@@ -31,7 +31,7 @@
       finishTest();
     }
 
-    function unexpectedSuccessHandler(event) {
+    function unexpectedSuccessHandler() {
       ok(false, "got success when it was not expected!");
       finishTest();
     }
@@ -105,7 +105,7 @@
       ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
 
       request = objectStore.add({}, 1);
-      request.onsuccess = function(event) {
+      request.onsuccess = function() {
         throw new Error("foo");
       };
 

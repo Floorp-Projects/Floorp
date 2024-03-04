@@ -42,7 +42,7 @@ windows.
        "Both browsers should belong to the same document.");
     let winID = getOuterWindowID(browser1.ownerGlobal);
 
-    let getChildRootOuterId = browser => { 
+    let getChildRootOuterId = () => { 
       try {
         return docShell.browserChild?.chromeOuterWindowID;
       } catch(ex) { }

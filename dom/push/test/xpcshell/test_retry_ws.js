@@ -33,7 +33,7 @@ add_task(async function test_ws_retry() {
   // Use a mock timer to avoid waiting for the backoff interval.
   let reconnects = 0;
   PushServiceWebSocket._backoffTimer = {
-    init(observer, delay, type) {
+    init(observer, delay) {
       reconnects++;
       ok(
         delay >= 5 && delay <= 2000,
@@ -51,7 +51,7 @@ add_task(async function test_ws_retry() {
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           if (reconnects == 10) {
             this.serverSendMsg(
               JSON.stringify({

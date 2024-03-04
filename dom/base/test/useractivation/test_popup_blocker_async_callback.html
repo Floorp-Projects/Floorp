@@ -16,7 +16,7 @@ SimpleTest.requestFlakyTimeout("Need to test setTimeout");
 function startTest(aTestAsyncFun, aAllowPopup = true) {
   return new Promise(aResolve => {
     let target = document.getElementById("target");
-    target.addEventListener("click", (e) => {
+    target.addEventListener("click", () => {
       aTestAsyncFun(() => {
         let w = window.open("about:blank");
         is(!!w, aAllowPopup, `Should ${aAllowPopup ? "allow" : "block"} popup`);

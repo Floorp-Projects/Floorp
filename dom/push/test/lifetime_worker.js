@@ -20,7 +20,7 @@ self.onfetch = function (event) {
     state = "update";
   } else if (event.request.url.includes("wait")) {
     event.respondWith(
-      new Promise(function (res, rej) {
+      new Promise(function (res) {
         if (resolvePromiseCallback) {
           dump("ERROR: service worker was already waiting on a promise.\n");
         }
@@ -50,7 +50,7 @@ self.onmessage = function (event) {
   state = event.data;
   if (state === "wait") {
     event.waitUntil(
-      new Promise(function (res, rej) {
+      new Promise(function (res) {
         if (resolvePromiseCallback) {
           dump("ERROR: service worker was already waiting on a promise.\n");
         }

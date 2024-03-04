@@ -36,11 +36,11 @@ function startTest(test, token)
 
   let finish = new EMEPromise;
 
-  function onVideoEnded(ev) {
+  function onVideoEnded() {
     ok(true, TimeStamp(token) + " (ENCRYPTED) content playback ended.");
 
     function playClearVideo() {
-      var p1 = once(v, 'loadeddata', (e) => {
+      var p1 = once(v, 'loadeddata', () => {
         ok(true, TimeStamp(token) + " Receiving event 'loadeddata' for (CLEAR) content.");
         let canvasElem = document.createElement('canvas');
         document.body.appendChild(canvasElem);

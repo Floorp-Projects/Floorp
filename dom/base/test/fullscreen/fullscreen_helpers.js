@@ -83,7 +83,7 @@ function waitWidgetFullscreenEvent(
   aIsInFullscreen,
   aWaitUntil = false
 ) {
-  return BrowserTestUtils.waitForEvent(aWindow, "fullscreen", false, aEvent => {
+  return BrowserTestUtils.waitForEvent(aWindow, "fullscreen", false, () => {
     if (
       aWaitUntil &&
       aIsInFullscreen !=
@@ -106,7 +106,7 @@ function waitForFullScreenObserver(
   aIsInFullscreen,
   aWaitUntil = false
 ) {
-  return TestUtils.topicObserved("fullscreen-painted", (subject, data) => {
+  return TestUtils.topicObserved("fullscreen-painted", () => {
     if (
       aWaitUntil &&
       aIsInFullscreen !=

@@ -233,15 +233,11 @@ async function setFormatDiagnosticsReportForMimeType(tab, params) {
 
 async function setDecodeError(tab, params) {
   info(`start check for ${params.error}`);
-  await SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [params],
-    async (params, shouldReportNotification) => {
-      const video = content.document.createElement("video");
-      SpecialPowers.wrap(video).setDecodeError(params.error);
-      await content._waitForReport(params, params.shouldReportNotification);
-    }
-  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [params], async params => {
+    const video = content.document.createElement("video");
+    SpecialPowers.wrap(video).setDecodeError(params.error);
+    await content._waitForReport(params, params.shouldReportNotification);
+  });
   ok(true, `finished check for ${params.error}`);
 }
 

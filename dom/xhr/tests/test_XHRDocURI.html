@@ -89,7 +89,7 @@ function* runTest() {
   // use content XHR and access URI properties from content privileged script
   var xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -108,7 +108,7 @@ function* runTest() {
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -126,7 +126,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.text");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     is(xhr.responseXML, null, "should not have document");
     if (xhr.readyState == 4) {
       gen.next();
@@ -137,7 +137,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -156,7 +156,7 @@ function* runTest() {
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -174,7 +174,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -193,7 +193,7 @@ function* runTest() {
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -211,7 +211,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.text");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     is(xhr.responseXML, null, "should not have document");
     if (xhr.readyState == 4) {
       gen.next();
@@ -225,7 +225,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -246,7 +246,7 @@ function* runTest() {
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -266,7 +266,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -287,7 +287,7 @@ function* runTest() {
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -307,7 +307,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -328,7 +328,7 @@ function* runTest() {
   xhr = new XMLHttpRequest;
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -351,7 +351,7 @@ function* runTest() {
   SpecialPowers.addPermission("systemXHR", true, document);
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -370,7 +370,7 @@ function* runTest() {
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -388,7 +388,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -407,7 +407,7 @@ function* runTest() {
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }
@@ -425,7 +425,7 @@ function* runTest() {
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.responseXML) {
       return;
     }
@@ -444,7 +444,7 @@ function* runTest() {
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
-  xhr.onreadystatechange = function(e) {
+  xhr.onreadystatechange = function() {
     if (!xhr.response) {
       return;
     }

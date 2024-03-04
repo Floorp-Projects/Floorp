@@ -59,7 +59,7 @@ function runTextDecoderOptions() {
  * - This function is not testing the decode function.
  *
  */
-function testConstructorFatalOption(data, expectedString) {
+function testConstructorFatalOption() {
   //invalid string to decode passed, fatal = false
   testCharset({
     fatal: false,

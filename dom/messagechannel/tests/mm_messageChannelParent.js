@@ -72,7 +72,7 @@ function close_test(finish) {
     is(msg.data.message, "OK", "");
     ok(port, "");
 
-    port.onmessage = message => {
+    port.onmessage = () => {
       ok(false, "Port is alive.");
       finish();
     };
@@ -92,7 +92,7 @@ function close_test(finish) {
 function empty_transferable(finish) {
   ok(mm, "empty_transferable");
 
-  let finishPrepare = msg => {
+  let finishPrepare = () => {
     ok(true, "Same basic test.");
     mm.removeMessageListener("EmptyTest:FinishPrepare", finishPrepare);
     finish();
@@ -106,7 +106,7 @@ function empty_transferable(finish) {
 function not_transferable(finish) {
   ok(mm, "not_transferable");
 
-  let finishPrepare = msg => {
+  let finishPrepare = () => {
     ok(true, "Same basic test.");
     finish();
   };
@@ -118,7 +118,7 @@ function not_transferable(finish) {
 /*
  * Test preparation
  */
-function finishLoad(msg) {
+function finishLoad() {
   run_tests();
 }
 

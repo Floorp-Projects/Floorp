@@ -19,7 +19,7 @@ addLoadEvent(function() {
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
     var context = new AudioContext();
-    context.decodeAudioData(xhr.response, function(b) {
+    context.decodeAudioData(xhr.response, function() {
       ok(true, "We can decode an mp3 using decodeAudioData");
       SimpleTest.finish();
     }, function() {

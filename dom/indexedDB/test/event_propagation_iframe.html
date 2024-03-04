@@ -101,7 +101,7 @@
       event = yield undefined;
 
       request = objectStore.add({}, 1);
-      request.onsuccess = function(event) {
+      request.onsuccess = function() {
         ok(false, "Did not expect second add to succeed.");
       };
       request.onerror = errorEventCounter;
@@ -119,7 +119,7 @@
       event = yield undefined;
 
       request = objectStore.add({}, 1);
-      request.onsuccess = function(event) {
+      request.onsuccess = function() {
         ok(false, "Did not expect second add to succeed.");
       };
       request.onerror = errorEventCounter;

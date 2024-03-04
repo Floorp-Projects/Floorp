@@ -23,7 +23,7 @@ add_task(async function () {
     // 1. Upgrade a page to https://
     BrowserTestUtils.startLoadingURIString(browser, kTestURI);
     await loaded;
-    await ContentTask.spawn(browser, {}, async args => {
+    await ContentTask.spawn(browser, {}, async () => {
       ok(
         content.document.location.href.startsWith("https://"),
         "Should be https"

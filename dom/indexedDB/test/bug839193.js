@@ -6,7 +6,7 @@ const nsIQuotaManagerService = Ci.nsIQuotaManagerService;
 
 var gURI = Services.io.newURI("http://localhost");
 
-function onUsageCallback(request) {}
+function onUsageCallback() {}
 
 function onLoad() {
   var quotaManagerService = Cc[

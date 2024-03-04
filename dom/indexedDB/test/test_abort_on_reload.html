@@ -17,7 +17,7 @@
       openedWindow = window.open("abort_on_reload.html");
     }
 
-    function messageListener(event) {
+    function messageListener() {
       ok(true, "reload recorded");
 
       if (++reloads == 20) {

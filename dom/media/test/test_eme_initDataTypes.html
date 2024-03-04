@@ -93,7 +93,7 @@ function PrepareInitData(initDataType, initData)
 }
 
 function Test(test) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var configs = [{
       initDataTypes: [test.initDataType],
       videoCapabilities: [{contentType: 'video/mp4' }],
@@ -113,7 +113,7 @@ function Test(test) {
           var initData = PrepareInitData(test.initDataType, test.initData);
           return session.generateRequest(test.initDataType, initData);
         }
-      ).catch((x) => {
+      ).catch(() => {
         ok(!test.expectPass, "'" + test.name + "' expected to fail.");
         resolve();
       });

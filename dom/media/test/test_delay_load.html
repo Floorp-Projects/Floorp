@@ -87,7 +87,7 @@ var w = window.open("", "testWindow", "width=400,height=400");
 testWindows.push(w);
 
 v = createVideo(test.name, test.type, "4");
-v.onloadstart = function(e) {
+v.onloadstart = function() {
   // Using a new window to do this is a bit annoying, but if we use an iframe here,
   // delaying of the iframe's load event might interfere with the firing of our load event
   // in some confusing way. So it's simpler just to use another window.

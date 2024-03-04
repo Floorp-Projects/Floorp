@@ -74,7 +74,7 @@ function testSendString(socket) {
 
   socket.send(HELLO_WORLD, '127.0.0.1', socket.localPort);
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     socket.addEventListener('message', function(msg) {
       let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
@@ -89,7 +89,7 @@ function testSendArrayBuffer(socket) {
 
   socket.send(DATA_ARRAY_BUFFER, '127.0.0.1', socket.localPort);
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     socket.addEventListener('message', function(msg) {
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
       ok(is_same_buffer(msg.data, DATA_ARRAY_BUFFER), 'expected same buffer data');
@@ -103,7 +103,7 @@ function testSendArrayBufferView(socket) {
 
   socket.send(TYPED_DATA_ARRAY, '127.0.0.1', socket.localPort);
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     socket.addEventListener('message', function(msg) {
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
       ok(is_same_buffer(msg.data, TYPED_DATA_ARRAY), 'expected same buffer data');
@@ -118,7 +118,7 @@ function testSendBlob(socket) {
   let blob = new Blob([HELLO_WORLD], {type : 'text/plain'});
   socket.send(blob, '127.0.0.1', socket.localPort);
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     socket.addEventListener('message', function(msg) {
       let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
@@ -133,7 +133,7 @@ function testSendBigArray(socket) {
 
   socket.send(BIG_TYPED_ARRAY, '127.0.0.1', socket.localPort);
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     let byteReceived = 0;
     socket.addEventListener('message', function recv_callback(msg) {
       let byteBegin = byteReceived;
@@ -154,7 +154,7 @@ function testSendBigBlob(socket) {
   let blob = new Blob([BIG_TYPED_ARRAY]);
   socket.send(blob, '127.0.0.1', socket.localPort);
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     let byteReceived = 0;
     socket.addEventListener('message', function recv_callback(msg) {
       let byteBegin = byteReceived;
@@ -185,7 +185,7 @@ function testUDPOptions(socket) {
 
   return remoteSocket.opened.then(function() {
     remoteSocket.send(HELLO_WORLD);
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       socket.addEventListener('message', function(msg) {
         let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
         is(msg.remotePort, remoteSocket.localPort, 'expected packet from ' + remoteSocket.localPort);
@@ -224,7 +224,7 @@ function testMulticast() {
   return socket.opened.then(function() {
     socket.send(HELLO_WORLD, MCAST_ADDRESS, socket.localPort);
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       socket.addEventListener('message', function(msg) {
         let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
         is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
@@ -344,7 +344,7 @@ async function testBFCache() {
   socket.send(HELLO_WORLD, '127.0.0.1', msg.remotePort);
 
   await new Promise(resolve => {
-    function recv_again_callback(message) {
+    function recv_again_callback() {
       socket.removeEventListener('message', recv_again_callback);
       ok(false, 'should not receive packet after page unload');
     }

@@ -7,8 +7,8 @@
 
 "use strict";
 
-function debug(msg) {
-  // dump("BrowserElementChild - " + msg + "\n");
+function debug(_msg) {
+  // dump("BrowserElementChild - " + _msg + "\n");
 }
 
 var BrowserElementIsReady;

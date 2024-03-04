@@ -32,7 +32,7 @@ function maketest(attach_media, name, type, check_metadata) {
           manager.finished(token);
         });
     } else {
-      e.addEventListener('error', function onerror(event) {
+      e.addEventListener('error', function onerror() {
         is(errorRun, false, "error handler should run once only!");
         errorRun = true;
         is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
@@ -46,7 +46,7 @@ function maketest(attach_media, name, type, check_metadata) {
   }
 }
 
-function set_src(element, name, type) {
+function set_src(element, name) {
   element.src = name;
   document.body.appendChild(element);
 }

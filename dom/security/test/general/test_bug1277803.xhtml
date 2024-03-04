@@ -27,7 +27,7 @@
 
     function runTest() {
       // Register our observer to intercept favicon requests.
-      function observer(aSubject, aTopic, aData) {
+      function observer(aSubject, aTopic) {
         // Make sure this is a favicon request.
         let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
         if (FAVICON_URI != httpChannel.URI.spec) {

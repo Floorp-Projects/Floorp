@@ -37,7 +37,7 @@ function doTest() {
 
   win.Object.defineProperty(win.Array.prototype, "0",
     {
-      set(val) {
+      set() {
              setterCalled = true;
            },
     });

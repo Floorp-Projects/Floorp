@@ -153,7 +153,7 @@ addMessageListener("dir.open", function (e) {
   });
 });
 
-addMessageListener("file.open", function (e) {
+addMessageListener("file.open", function () {
   var testFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("ProfD", Ci.nsIFile);
@@ -164,7 +164,7 @@ addMessageListener("file.open", function (e) {
   });
 });
 
-addMessageListener("symlink.open", function (e) {
+addMessageListener("symlink.open", function () {
   let testDir = createTestFile();
   let testFile = testDir.clone();
   testFile.append("subdir");

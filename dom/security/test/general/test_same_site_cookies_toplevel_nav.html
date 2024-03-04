@@ -83,7 +83,7 @@ function checkResult(aCookieVal) {
 function setupQueryResultAndRunTest() {
   var myXHR = new XMLHttpRequest();
   myXHR.open("GET", "file_same_site_cookies_toplevel_nav.sjs?queryresult" + curTest);
-  myXHR.onload = function(e) { 
+  myXHR.onload = function() { 
     checkResult( myXHR.responseText);
   }
   myXHR.onerror = function(e) {

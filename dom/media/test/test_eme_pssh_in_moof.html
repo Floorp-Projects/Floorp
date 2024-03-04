@@ -61,7 +61,7 @@
     // Specialized create media keys function, since the one in eme.js relies
     // on listening for encrypted events, and we want to manage those
     // ourselves within this test.
-    async function createAndSetMediaKeys(video, test, token) {
+    async function createAndSetMediaKeys(video, test) {
       function streamType(type) {
         var x = test.tracks.find(o => o.name == type);
         return x ? x.type : undefined;

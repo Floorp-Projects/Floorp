@@ -7,7 +7,7 @@ var db;
 var unregisterDefers = {};
 var userAgentID = "4ce480ef-55b2-4f83-924c-dcd35ab978b4";
 
-function promiseUnregister(keyID, code) {
+function promiseUnregister(keyID) {
   return new Promise(r => (unregisterDefers[keyID] = r));
 }
 
@@ -41,7 +41,7 @@ add_task(async function setup() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",

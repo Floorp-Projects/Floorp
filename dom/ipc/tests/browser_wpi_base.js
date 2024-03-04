@@ -183,7 +183,7 @@ const heuristics = [
   },
   {
     name: "hasSavedLogin",
-    setup_com: async expected => {
+    setup_com: async () => {
       // add .com to the password manager
       let LoginInfo = new Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
@@ -208,7 +208,7 @@ const heuristics = [
   },
   {
     name: "isLoggedIn",
-    setup_com: async expected => {
+    setup_com: async () => {
       let p = new Promise(resolve => {
         Services.obs.addObserver(function obs() {
           Services.obs.removeObserver(

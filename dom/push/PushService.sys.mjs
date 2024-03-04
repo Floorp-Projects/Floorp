@@ -623,7 +623,7 @@ export var PushService = {
         this._db.close();
         this._db = null;
       },
-      err => {
+      () => {
         this._db.close();
         this._db = null;
       }
@@ -1162,17 +1162,15 @@ export var PushService = {
     let keyPromise;
     if (aPageRecord.appServerKey && aPageRecord.appServerKey.length) {
       let keyView = new Uint8Array(aPageRecord.appServerKey);
-      keyPromise = lazy.PushCrypto.validateAppServerKey(keyView).catch(
-        error => {
-          // Normalize Web Crypto exceptions. `nsIPushService` will forward the
-          // error result to the DOM API implementation in `PushManager.cpp` or
-          // `Push.js`, which will convert it to the correct `DOMException`.
-          throw errorWithResult(
-            "Invalid app server key",
-            Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR
-          );
-        }
-      );
+      keyPromise = lazy.PushCrypto.validateAppServerKey(keyView).catch(() => {
+        // Normalize Web Crypto exceptions. `nsIPushService` will forward the
+        // error result to the DOM API implementation in `PushManager.cpp` or
+        // `Push.js`, which will convert it to the correct `DOMException`.
+        throw errorWithResult(
+          "Invalid app server key",
+          Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR
+        );
+      });
     } else {
       keyPromise = Promise.resolve(null);
     }

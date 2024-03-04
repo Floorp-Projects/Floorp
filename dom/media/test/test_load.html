@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479859
 <pre id="test">
 <script type="text/javascript">
 
-function log(msg) {
+function log() {
   //document.getElementById('log').innerHTML += "<p>" + msg + "</p>";
 }
 
@@ -89,7 +89,7 @@ function prependSource(src, type) {
 var gTests = [
   {
     // Test 0: adding video to doc, then setting src should load implicitly.
-    create(src, type) {
+    create(src) {
         document.body.appendChild(gMedia);
         gMedia.src = src;
       },
@@ -126,7 +126,7 @@ var gTests = [
         addSource("404a", type);
         var s2 = addSource("404b", type);
         s2.addEventListener("error",
-          function(e) {
+          function() {
             // Should awaken waiting load, causing successful load.
             addSource(src, type);
           });
@@ -143,7 +143,7 @@ var gTests = [
         addSource("404a", type);
         var s2 = addSource("404b", type);
         s2.addEventListener("error",
-          function(e) {
+          function() {
             // Should awaken waiting load, causing successful load.
             if (!prepended) {
               prependSource(src, type);

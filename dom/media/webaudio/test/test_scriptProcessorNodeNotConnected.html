@@ -15,7 +15,7 @@ addLoadEvent(function() {
   var context = new AudioContext();
 
   var sp = context.createScriptProcessor(2048, 2, 2);
-  sp.onaudioprocess = function(e) {
+  sp.onaudioprocess = function() {
     ok(false, "Should not call onaudioprocess if the node is not connected.");
     sp.onaudioprocess = null;
     SimpleTest.finish();

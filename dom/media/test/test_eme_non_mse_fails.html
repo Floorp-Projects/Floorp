@@ -65,7 +65,7 @@ function TestSetSrc(test, token)
   manager.started(token);
 
   var v = document.createElement("video");
-  v.addEventListener("error", function(err) {
+  v.addEventListener("error", function() {
     ok(true, token + " got error setting src on video element, as expected");
     manager.finished(token);
   });

@@ -35,7 +35,7 @@ function startTest(test, token) {
     checkMetadata(t.name, v, t);
   }}(test, video);
 
-  var noLoad = function(t, v) { return function() {
+  var noLoad = function(t) { return function() {
     ok(false, t.name + " should not fire 'load' event");
   }}(test, video);
 

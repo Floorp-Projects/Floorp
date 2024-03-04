@@ -6,7 +6,7 @@ const kTestPath = getRootDirectory(gTestPath).replace(
 );
 const kTestURI = kTestPath + "file_data_text_csv.html";
 
-function addWindowListener(aURL, aCallback) {
+function addWindowListener(aURL) {
   return new Promise(resolve => {
     Services.wm.addListener({
       onOpenWindow(aXULWindow) {
@@ -22,7 +22,7 @@ function addWindowListener(aURL, aCallback) {
           resolve(domwindow);
         }, domwindow);
       },
-      onCloseWindow(aXULWindow) {},
+      onCloseWindow() {},
     });
   });
 }

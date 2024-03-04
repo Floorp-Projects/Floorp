@@ -29,7 +29,7 @@
           var elem = shadowRoot.firstChild;
           var gotFullscreenEvent = false;
 
-          document.addEventListener("fullscreenchange", function (e) {
+          document.addEventListener("fullscreenchange", function () {
             if (document.fullscreenElement === host) {
               is(shadowRoot.fullscreenElement, elem,
                  "Expected element entered fullsceen");

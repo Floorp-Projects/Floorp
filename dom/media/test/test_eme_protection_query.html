@@ -53,7 +53,7 @@ async function setupEme(video) {
   let session = video.mediaKeys.createSession();
 
   video.onencrypted = async encryptedEvent => {
-    session.onmessage = messageEvent => {
+    session.onmessage = () => {
       // Handle license messages. Hard code the license because we always test
       // with the same file and we know what the license should be.
       const license = {

@@ -88,7 +88,7 @@ async function test_data_single() {
   let blockingPromises = [];
   for (let i = 0; i < 10; ++i) {
     let unblocker;
-    let promise = new Promise((resolve, reject) => {
+    let promise = new Promise((resolve) => {
       unblocker = resolve;
     });
     unblockers.push(unblocker);

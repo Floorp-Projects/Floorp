@@ -72,7 +72,7 @@ function appendVideoToDocWithoutLoad(token, width, height) {
 }
 
 function loadAndWaitUntilLoadedmetadata(video, url, preloadType = "metadata") {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     video.preload = preloadType;
     video.addEventListener(
       "loadedmetadata",

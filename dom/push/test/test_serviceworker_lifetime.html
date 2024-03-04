@@ -42,7 +42,7 @@
   }
 
   function waitForActiveServiceWorker(ctx) {
-    return waitForActive(ctx.registration).then(function(result) {
+    return waitForActive(ctx.registration).then(function() {
       ok(ctx.registration.active, "Service Worker is active");
       return ctx;
     });
@@ -57,13 +57,13 @@
   }
 
   function registerPushNotification(ctx) {
-    var p = new Promise(function(res, rej) {
+    var p = new Promise(function(res) {
       ctx.registration.pushManager.subscribe().then(
         function(pushSubscription) {
           ok(true, "successful registered for push notification");
           ctx.subscription = pushSubscription;
           res(ctx);
-        }, function(error) {
+        }, function() {
           ok(false, "could not register for push notification");
           res(ctx);
         });
@@ -103,7 +103,7 @@
   }
 
   function createIframe(ctx) {
-    var p = new Promise(function(res, rej) {
+    var p = new Promise(function(res) {
       var iframe = document.createElement("iframe");
       // This file doesn't exist, the service worker will give us an empty
       // document.
@@ -120,7 +120,7 @@
 
   function closeIframe(ctx) {
     ctx.iframe.remove();
-    return new Promise(function(res, rej) {
+    return new Promise(function(res) {
       // XXXcatalinb: give the worker more time to "notice" it stopped
       // controlling documents
       ctx.iframe = null;
@@ -135,7 +135,7 @@
       this.navigator.serviceWorker.onmessage = null;
       resolve();
     }
-    return new Promise(function(res, rej) {
+    return new Promise(function(res) {
       contentWindow.navigator.serviceWorker.onmessage =
         checkMessage.bind(contentWindow, expected, res);
     });
@@ -148,7 +148,7 @@
     return p;
   }
 
-  function pushEvent(ctx, expected_state, new_state) {
+  function pushEvent(ctx, expected_state) {
     var expected = {type: "push", state: expected_state};
     var p = waitAndCheckMessage(ctx.iframe.contentWindow, expected);
     sendPushToPushServer(ctx.subscription.endpoint);
@@ -184,9 +184,9 @@
     return function(ctx) {
       cancelShutdownObserver(ctx);
 
-      ctx.observer_promise = new Promise(function(res, rej) {
+      ctx.observer_promise = new Promise(function(res) {
         ctx.observer = {
-          observe(subject, topic, data) {
+          observe(subject, topic) {
             ok((topic == shutdownTopic) && expectingEvent, "Service worker was terminated.");
             this.remove(ctx);
           },
@@ -217,7 +217,7 @@
 
   function subTest(test) {
     return function(ctx) {
-      return new Promise(function(res, rej) {
+      return new Promise(function(res) {
         function run() {
           test.steps(ctx).catch(function(e) {
             ok(false, "Some test failed with error: " + e);
@@ -322,7 +322,7 @@
           ["dom.serviceWorkers.idle_extended_timeout", 0],
         ],
         steps(context) {
-          return new Promise(function(res, rej) {
+          return new Promise(function(res) {
             context.iframe.contentWindow.navigator.serviceWorker.controller.postMessage("ping");
             res(context);
           });

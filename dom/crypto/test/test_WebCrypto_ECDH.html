@@ -61,7 +61,7 @@ TestArray.addTest(
     function setKeyPair(x) { pair = x; }
 
     function doDerive(n) {
-      return function(x) {
+      return function() {
         return crypto.subtle.deriveBits({ name: "ECDH", public: pair.publicKey }, pair.privateKey, n * 8);
       };
     }

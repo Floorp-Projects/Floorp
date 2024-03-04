@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
     var notificationsCreated = [];
 
     const mockAlertsService = {
-      showAlert(alert, alertListener) {
+      showAlert(alert) {
         notificationsCreated.push(alert.name);
         if (notificationsCreated.length == 3) {
           // notifications created by the test1 origin
@@ -78,10 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
         textClickable,
         cookie,
         alertListener,
-        name,
-        dir,
-        lang,
-        data
+        name
       ) {
         this.showAlert({ name });
       },

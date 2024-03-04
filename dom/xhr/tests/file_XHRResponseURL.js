@@ -51,7 +51,7 @@ function info(aMessage) {
 }
 
 function request(aURL) {
-  return new Promise(function (aResolve, aReject) {
+  return new Promise(function (aResolve) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", aURL);
     xhr.addEventListener("load", function () {
@@ -272,7 +272,7 @@ function testNotToLeakResponseURLWhileDoingRedirects() {
 function testNotToLeakResponseURLWhileDoingRedirectsInWindow() {
   var xhr = new XMLHttpRequest();
   var requestObserver = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       is(xhr.readyState, XMLHttpRequest.OPENED, "assert for XHR state");
       is(
         xhr.responseURL,
@@ -286,7 +286,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWindow() {
     "specialpowers-http-notify-request"
   );
 
-  return new Promise(function (aResolve, aReject) {
+  return new Promise(function (aResolve) {
     xhr.open(
       "GET",
       "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
@@ -322,7 +322,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
     }
   };
 
-  return new Promise(function (aResolve, aReject) {
+  return new Promise(function (aResolve) {
     self.addEventListener("message", testRedirect);
     message({ type: "redirect_test", status: "start" });
     xhr.open(
@@ -334,7 +334,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
       message({ type: "redirect_test", status: "end" });
       aResolve();
     });
-    xhr.addEventListener("error", function (e) {
+    xhr.addEventListener("error", function () {
       ok(false, "unexpected request falilure");
       self.removeEventListener("message", testRedirect);
       message({ type: "redirect_test", status: "end" });
@@ -345,7 +345,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
 }
 
 function waitForAllMessagesProcessed() {
-  return new Promise(function (aResolve, aReject) {
+  return new Promise(function (aResolve) {
     var id = setInterval(function () {
       if (message.ping === message.pong) {
         clearInterval(id);

@@ -72,10 +72,10 @@ function tryLegalOpeerationsOnClosedContext(ctx) {
     });
   });
   loadFile("ting-44.1k-1ch.ogg", function(buf) {
-    ctx.decodeAudioData(buf).then(function(decodedBuf) {
+    ctx.decodeAudioData(buf).then(function() {
       ok(true, "decodeAudioData on a closed context should work, it did.")
       finish();
-    }).catch(function(e){
+    }).catch(function(){
       ok(false, "decodeAudioData on a closed context should work, it did not");
       finish();
     });
@@ -103,7 +103,7 @@ function testMultiContextOutput() {
       silentBuffersInARow = 0;
 
 
-    sp2.onaudioprocess = function(e) {
+    sp2.onaudioprocess = function() {
       ac1.suspend().then(function() {
         is(ac1.state, "suspended", "ac1 is suspended");
         sp2.onaudioprocess = checkSilence;
@@ -350,7 +350,7 @@ function testOfflineAudioContext() {
 
   o.onstatechange = beforeStartRendering;
 
-  o.startRendering().then(function(buffer) {
+  o.startRendering().then(function() {
     finishedRendering = true;
   });
 }

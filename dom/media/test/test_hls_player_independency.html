@@ -27,12 +27,12 @@ function startTest() {
   var v4x3 = document.getElementById('player4x3');
   var v16x9 = document.getElementById('player16x9');
 
-  var p1 = once(v4x3, 'ended', function onended(e) {
+  var p1 = once(v4x3, 'ended', function onended() {
     is(v4x3.videoWidth, 400, "4x3 content, the width should be 400.");
     is(v4x3.videoHeight, 300, "4x3 content, the height should be 300.");
   });
 
-  var p2 = once(v16x9, 'ended', function onended(e) {
+  var p2 = once(v16x9, 'ended', function onended() {
     is(v16x9.videoWidth, 416, "16x9 content, the width should be 416.");
     is(v16x9.videoHeight, 234, "16x9 content, the height should be 234.");
   });

@@ -18,14 +18,14 @@ function startTest(test, token) {
   manager.started(token);
 
   // Seeing a decoder error is a success.
-  v.addEventListener("error", function onerror(e) {
+  v.addEventListener("error", function onerror() {
     is(v.error.code, v.error.MEDIA_ERR_DECODE,
        "decoder should reject " + test.name);
     v.removeEventListener("error", onerror);
     manager.finished(token);
   });
 
-  v.addEventListener("ended", function onended(e) {
+  v.addEventListener("ended", function onended() {
     ok(false, "decoder should have rejected file before playback ended");
     v.removeEventListener("ended", onended);
     manager.finished(token);

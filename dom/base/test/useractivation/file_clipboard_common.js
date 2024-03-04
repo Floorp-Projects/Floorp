@@ -373,10 +373,10 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
       case 0:
         // Keyboard issued
         cutCopyAll(
-          function docut(aSucc) {
+          function docut() {
             synthesizeKey("x", { accelKey: true });
           },
-          function docopy(aSucc) {
+          function docopy() {
             synthesizeKey("c", { accelKey: true });
           },
           function done() {
@@ -411,14 +411,14 @@ function allMechanisms(aCb, aClipOverride, aNegateAll) {
       case 2:
         // Not triggered by user gesture
         cutCopyAll(
-          function doCut(aSucc) {
+          function doCut() {
             is(
               false,
               document.execCommand("cut"),
               "Can't directly execCommand not in a user callback"
             );
           },
-          function doCopy(aSucc) {
+          function doCopy() {
             is(
               false,
               document.execCommand("copy"),

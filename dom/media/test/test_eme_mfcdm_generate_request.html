@@ -65,11 +65,11 @@ async function testKeySystemRequest(keySystem) {
   }];
   info(`requestMediaKeySystemAccess for ${keySystem}`);
   let access = await navigator.requestMediaKeySystemAccess(keySystem, configs)
-      .catch(e => ok(false, `failed to create key system access`));
+      .catch(() => ok(false, `failed to create key system access`));
 
   info('creating media key');
   let mediaKeys = await access.createMediaKeys()
-    .catch(e => ok(false, `failed to create media key`));;
+    .catch(() => ok(false, `failed to create media key`));;
 
   info(`creating a temporary media key session`);
   let session = mediaKeys.createSession(sessionType);
@@ -84,7 +84,7 @@ async function testKeySystemRequest(keySystem) {
   await session.generateRequest(
       'keyids',
       new TextEncoder().encode(fakeKID))
-        .catch(e => ok(false, `failed to generate request`));
+        .catch(() => ok(false, `failed to generate request`));
   await messagePromise;
 }
 

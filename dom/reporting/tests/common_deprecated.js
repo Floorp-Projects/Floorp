@@ -124,7 +124,7 @@ function test_deprecatedMethodWithDataURI() {
     };
   </script>`;
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     window.open(uri);
     window.addEventListener("message", e => {
       is(e.data, "passed", "The data URI is truncated");

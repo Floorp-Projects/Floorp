@@ -76,7 +76,7 @@ TestArray.addTest(
     function doVerify(x) {
       return crypto.subtle.verify(alg.name, x, tv.rsassa.sig256, tv.rsassa.data);
     }
-    function fail(x) { error(that); }
+    function fail() { error(that); }
 
     crypto.subtle.importKey("jwk", tv.rsassa.jwk_pub, alg, false, ["verify"])
       .then( doVerify, fail )

@@ -54,7 +54,7 @@ async function openMediaTab(url) {
       return new Promise(resolve => {
         element.addEventListener(
           "timeupdate",
-          e => {
+          () => {
             resolve();
           },
           { once: true }

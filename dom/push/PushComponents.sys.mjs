@@ -78,7 +78,7 @@ PushServiceBase.prototype = {
     return this._messages.includes(message.name);
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic === "android-push-service") {
       // Load PushService immediately.
       this.ensureReady();
@@ -165,7 +165,7 @@ Object.assign(PushServiceParent.prototype, {
         result => {
           callback.onUnsubscribe(Cr.NS_OK, result);
         },
-        error => {
+        () => {
           callback.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
         }
       )
@@ -192,10 +192,10 @@ Object.assign(PushServiceParent.prototype, {
       domain,
     })
       .then(
-        result => {
+        () => {
           callback.onClear(Cr.NS_OK);
         },
-        error => {
+        () => {
           callback.onClear(Cr.NS_ERROR_FAILURE);
         }
       )

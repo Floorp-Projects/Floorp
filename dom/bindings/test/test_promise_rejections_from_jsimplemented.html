@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     is(exn.stack, stack, "Should have the right stack in test " + testNumber);
   }
 
-  function ensurePromiseFail(testNumber, value) {
+  function ensurePromiseFail(testNumber) {
     ok(false, "Test " + testNumber + " should not have a fulfilled promise");
   }
 

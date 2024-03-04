@@ -22,7 +22,7 @@ function setupTestIframe() {
 }
 
 function resetStorage() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var qms = SpecialPowers.Services.qms;
     var principal = SpecialPowers.wrap(document).nodePrincipal;
     var request = qms.resetStoragesForPrincipal(principal);
@@ -47,9 +47,9 @@ SpecialPowers.pushPrefEnv({
   }).then(function() {
     return resetStorage();
   }).then(function() {
-    return cache.match(url).then(function(resp) {
+    return cache.match(url).then(function() {
       ok(false, "old cache reference should not work after reset");
-    }).catch(function(err) {
+    }).catch(function() {
       ok(true, "old cache reference should not work after reset");
     });
   }).then(function() {

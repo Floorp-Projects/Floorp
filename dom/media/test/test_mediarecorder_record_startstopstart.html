@@ -18,7 +18,7 @@ function startTest() {
   var stopCount = 0;
   var dataavailable = 0;
   var expectedMimeType = 'audio/ogg; codecs=opus';
-  recorder.onstop = function (e) {
+  recorder.onstop = function () {
     info('onstop fired');
     is(recorder.stream, dest.stream,
        'Media recorder stream = element stream post recording');
@@ -45,7 +45,7 @@ function startTest() {
     }
     dataavailable++;
   }
-  recorder.onerror = function (e) {
+  recorder.onerror = function () {
     ok(false, 'it should execute normally without exception');
   }
   recorder.onwarning = function() {

@@ -14,7 +14,7 @@ add_task(async function test_unregister_not_found() {
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",

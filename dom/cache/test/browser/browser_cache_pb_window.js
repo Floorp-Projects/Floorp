@@ -2,15 +2,15 @@
 var name = "pb-window-cache";
 
 function testMatch(browser) {
-  return SpecialPowers.spawn(browser, [name], function (name) {
+  return SpecialPowers.spawn(browser, [name], function () {
     return new Promise((resolve, reject) => {
       content.caches
         .match("http://foo.com")
-        .then(function (response) {
+        .then(function () {
           ok(true, "caches.match() should be successful");
           resolve();
         })
-        .catch(function (err) {
+        .catch(function () {
           ok(false, "caches.match() should not throw error");
           reject();
         });
@@ -23,11 +23,11 @@ function testHas(browser) {
     return new Promise(function (resolve, reject) {
       content.caches
         .has(name)
-        .then(function (result) {
+        .then(function () {
           ok(true, "caches.has() should be successful");
           resolve();
         })
-        .catch(function (err) {
+        .catch(function () {
           ok(false, "caches.has() should not throw error");
           reject();
         });
@@ -40,11 +40,11 @@ function testOpen(browser) {
     return new Promise(function (resolve, reject) {
       content.caches
         .open(name)
-        .then(function (c) {
+        .then(function () {
           ok(true, "caches.open() should be successful");
           resolve();
         })
-        .catch(function (err) {
+        .catch(function () {
           ok(false, "caches.open() should not throw error");
           reject();
         });
@@ -57,11 +57,11 @@ function testDelete(browser) {
     return new Promise(function (resolve, reject) {
       content.caches
         .delete(name)
-        .then(function (result) {
+        .then(function () {
           ok(true, "caches.delete() should be successful");
           resolve();
         })
-        .catch(function (err) {
+        .catch(function () {
           ok(false, "caches.delete should not throw error");
           reject();
         });
@@ -70,15 +70,15 @@ function testDelete(browser) {
 }
 
 function testKeys(browser) {
-  return SpecialPowers.spawn(browser, [name], function (name) {
+  return SpecialPowers.spawn(browser, [name], function () {
     return new Promise(function (resolve, reject) {
       content.caches
         .keys()
-        .then(function (names) {
+        .then(function () {
           ok(true, "caches.keys() should be successful");
           resolve();
         })
-        .catch(function (err) {
+        .catch(function () {
           ok(false, "caches.keys should not throw error");
           reject();
         });
@@ -129,7 +129,7 @@ function test() {
       privateTab = BrowserTestUtils.addTab(pw.gBrowser, "http://example.com/");
       return BrowserTestUtils.browserLoaded(privateTab.linkedBrowser);
     })
-    .then(tab => {
+    .then(() => {
       return Promise.all([
         testMatch(privateTab.linkedBrowser),
         testHas(privateTab.linkedBrowser),

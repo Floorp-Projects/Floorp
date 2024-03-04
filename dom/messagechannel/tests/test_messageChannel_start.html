@@ -36,12 +36,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     var events = 2;
 
-    a.port1.onmessage = function(evt) {
+    a.port1.onmessage = function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     }
 
-    a.port2.onmessage = function(evt) {
+    a.port2.onmessage = function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     }
@@ -55,11 +55,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     a.port2.postMessage(43);
     ok(true, "MessagePort{1,2}.postmessage() invoked");
 
-    a.port1.addEventListener('message', function(evt) {
+    a.port1.addEventListener('message', function() {
       ok(false, "This method should not be called");
     });
 
-    a.port2.addEventListener('message', function(evt) {
+    a.port2.addEventListener('message', function() {
       ok(false, "This method should not be called");
     });
 
@@ -76,12 +76,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     var events = 2;
 
-    a.port1.addEventListener('message', function(evt) {
+    a.port1.addEventListener('message', function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     });
 
-    a.port2.addEventListener('message', function(evt) {
+    a.port2.addEventListener('message', function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     });
@@ -100,12 +100,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     var events = 1;
 
-    a.port1.addEventListener('message', function(evt) {
+    a.port1.addEventListener('message', function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     });
 
-    a.port2.addEventListener('message', function(evt) {
+    a.port2.addEventListener('message', function() {
       ok(false, "This method should not be called");
     });
 
@@ -122,11 +122,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     var events = 1;
 
-    a.port1.addEventListener('message', function(evt) {
+    a.port1.addEventListener('message', function() {
       ok(false, "This method should not be called");
     });
 
-    a.port2.addEventListener('message', function(evt) {
+    a.port2.addEventListener('message', function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     });
@@ -144,12 +144,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     setTimeout(function() {
       var events = 2;
-      a.port1.onmessage = function(evt) {
+      a.port1.onmessage = function() {
         ok(true, "This method should be called");
         if (!--events) runTests();
       }
 
-      a.port2.onmessage = function(evt) {
+      a.port2.onmessage = function() {
         ok(true, "This method should be called");
         if (!--events) runTests();
       }
@@ -167,13 +167,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     var events = 2;
 
     a.port1.start();
-    a.port1.addEventListener('message', function(evt) {
+    a.port1.addEventListener('message', function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     });
 
     a.port2.start();
-    a.port2.addEventListener('message', function(evt) {
+    a.port2.addEventListener('message', function() {
       ok(true, "This method should be called");
       if (!--events) runTests();
     });
@@ -191,17 +191,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     addEventListener('message', testOnMessageCloneCb, false);
     function testOnMessageCloneCb(event) {
-      a.port1.onmessage = function(evt) {
+      a.port1.onmessage = function() {
         ok(true, "This method should be called");
         testOnMessageCloneFinish();
       }
 
-      event.data.onmessage = function(evt) {
+      event.data.onmessage = function() {
         ok(true, "This method should be called");
         testOnMessageCloneFinish();
       }
 
-      a.port2.onmessage = function(evt) {
+      a.port2.onmessage = function() {
         ok(false, "This method should not be called");
       }
     }

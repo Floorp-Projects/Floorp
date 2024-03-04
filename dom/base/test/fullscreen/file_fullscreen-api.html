@@ -112,7 +112,7 @@ function enter2(event) {
   promise = document.exitFullscreen();
 }
 
-function exit2(event) {
+function exit2() {
   is(document.fullscreenElement, null,
      "Full-screen element should have rolled back.");
   is(iframe.contentDocument.fullscreenElement, null,
@@ -156,7 +156,7 @@ function exit3(event) {
   promise = outOfDocElement.requestFullscreen();
 }
 
-function error1(event) {
+function error1() {
   ok(!document.fullscreenElement,
      "Requests for full-screen from not-in-doc elements should fail.");
   assertPromiseRejected(promise, "in error1");
@@ -181,7 +181,7 @@ function enter4(event) {
      "Should not have a full-screen element again.");
 }
 
-async function exit_to_arg_test_1(event) {
+async function exit_to_arg_test_1() {
   ok(!document.fullscreenElement,
      "Should have left full-screen mode (third time).");
   addFullscreenChangeContinuation("enter", enter_from_arg_test_1);
@@ -196,14 +196,14 @@ async function exit_to_arg_test_1(event) {
   ok(!threw, "requestFullscreen with bogus arg (123) shouldn't throw exception");
 }
 
-function enter_from_arg_test_1(event) {
+function enter_from_arg_test_1() {
   ok(document.fullscreenElement,
      "Should have entered full-screen after calling with bogus (ignored) argument (fourth time)");
   addFullscreenChangeContinuation("exit", exit_to_arg_test_2);
   document.exitFullscreen();
 }
 
-async function exit_to_arg_test_2(event) {
+async function exit_to_arg_test_2() {
   ok(!document.fullscreenElement,
      "Should have left full-screen mode (fourth time).");
   addFullscreenChangeContinuation("enter", enter_from_arg_test_2);
@@ -218,14 +218,14 @@ async function exit_to_arg_test_2(event) {
   ok(!threw, "requestFullscreen with { vrDisplay: null } shouldn't throw exception");
 }
 
-function enter_from_arg_test_2(event) {
+function enter_from_arg_test_2() {
   ok(document.fullscreenElement,
      "Should have entered full-screen after calling with vrDisplay null argument (fifth time)");
   addFullscreenChangeContinuation("exit", exit4);
   document.exitFullscreen();
 }
 
-function exit4(event) {
+function exit4() {
   ok(!document.fullscreenElement,
      "Should be back in non-full-screen mode (fifth time)");
   SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", true]]}, function() {
@@ -234,7 +234,7 @@ function exit4(event) {
   });
 }
 
-function error2(event) {
+function error2() {
   ok(!document.fullscreenElement,
      "Should still be in normal mode, because calling context isn't trusted.");
   button = document.createElement("button");
@@ -246,13 +246,13 @@ function error2(event) {
   sendMouseClick(button);
 }
 
-function enter5(event) {
+function enter5() {
   ok(document.fullscreenElement, "Moved to full-screen after mouse click");
   addFullscreenChangeContinuation("exit", exit5);
   document.exitFullscreen();
 }
 
-function exit5(event) {
+function exit5() {
   ok(!document.fullscreenElement,
      "Should have left full-screen mode (last time).");
   SpecialPowers.pushPrefEnv({
@@ -264,7 +264,7 @@ function exit5(event) {
   });
 }
 
-function error3(event) {
+function error3() {
   ok(!document.fullscreenElement,
      "Should still be in normal mode, because pref is not enabled.");
 

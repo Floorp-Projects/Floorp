@@ -10,7 +10,7 @@ async function setup() {
   waitForExplicitFinish();
 }
 
-function checkSecFetchUser(subject, topic, data) {
+function checkSecFetchUser(subject) {
   let channel = subject.QueryInterface(Ci.nsIHttpChannel);
   if (!channel.URI.spec.startsWith("https://example.com/")) {
     return;

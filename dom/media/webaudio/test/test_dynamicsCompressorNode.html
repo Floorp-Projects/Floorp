@@ -48,7 +48,7 @@ addLoadEvent(function() {
 
   osc.start();
   var iteration = 0;
-  sp.onaudioprocess = function(e) {
+  sp.onaudioprocess = function() {
     if (iteration > 10) {
       ok(compressor.reduction < 0,
          "Feeding a full-scale sine to a compressor should result in an db" +

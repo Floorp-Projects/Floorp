@@ -78,7 +78,7 @@ function createPromiseForTransferComplete() {
 }
 
 function createPromiseForConsoleError(message) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     function listener(msgObj) {
       let text = msgObj.message;
       if (text.includes(message)) {

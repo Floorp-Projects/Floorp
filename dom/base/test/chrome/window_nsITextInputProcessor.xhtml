@@ -4120,7 +4120,7 @@ function runUnloadTests1()
     let oldSrc = iframe.src;
     let parentWindow = window;
 
-    iframe.addEventListener("load", function (aEvent) {
+    iframe.addEventListener("load", function () {
       ok(true, description + "dummy page is loaded");
       childWindow = iframe.contentWindow;
       textareaInFrame = null;
@@ -4181,7 +4181,7 @@ function runUnloadTests2()
 
     let oldSrc = iframe.src;
 
-    iframe.addEventListener("load", function (aEvent) {
+    iframe.addEventListener("load", function () {
       ok(true, description + "dummy page is loaded");
       childWindow = iframe.contentWindow;
       textareaInFrame = null;

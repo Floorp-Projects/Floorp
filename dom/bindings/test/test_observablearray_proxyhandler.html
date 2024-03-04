@@ -184,7 +184,7 @@ add_task(function testObservableArrayExoticObjects_defineProperty_callback_throw
 
   const minLen = 3;
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback(value) {
       setCallbackCount++;
       if (value) {
         throw new Error("setBooleanCallback");
@@ -300,7 +300,7 @@ add_task(function testObservableArrayExoticObjects_deleteProperty() {
   let deleteCallbackTests = null;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback() {
       setCallbackCount++;
     },
     deleteBooleanCallback(value, index) {
@@ -384,10 +384,10 @@ add_task(function testObservableArrayExoticObjects_deleteProperty_callback_throw
   let deleteCallbackCount = 0;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback() {
       setCallbackCount++;
     },
-    deleteBooleanCallback(value, index) {
+    deleteBooleanCallback(value) {
       deleteCallbackCount++;
       if (value) {
         throw new Error("deleteBooleanCallback");
@@ -731,7 +731,7 @@ add_task(function testObservableArrayExoticObjects_set_callback_throw() {
 
   const minLen = 3;
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback(value) {
       setCallbackCount++;
       if (value) {
         throw new Error("setBooleanCallback");

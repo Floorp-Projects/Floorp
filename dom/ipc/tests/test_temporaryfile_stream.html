@@ -54,7 +54,7 @@ function startTest() {
       video.id = "recorded-video";
       video.src = URL.createObjectURL(xhr.response);
       video.play();
-      video.onerror = err => {
+      video.onerror = () => {
         ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
         SimpleTest.finish();
       };

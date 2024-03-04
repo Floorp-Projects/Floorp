@@ -21,7 +21,7 @@ add_task(async function test_register_request_queue() {
   let onHello;
   let helloPromise = new Promise(
     resolve =>
-      (onHello = after(2, function onHelloReceived(request) {
+      (onHello = after(2, function onHelloReceived() {
         this.serverSendMsg(
           JSON.stringify({
             messageType: "hello",

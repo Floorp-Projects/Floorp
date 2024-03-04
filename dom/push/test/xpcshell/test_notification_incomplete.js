@@ -56,7 +56,7 @@ add_task(async function test_notification_incomplete() {
     await db.put(record);
   }
 
-  function observeMessage(subject, topic, data) {
+  function observeMessage() {
     ok(false, "Should not deliver malformed updates");
   }
   registerCleanupFunction(() =>
@@ -79,7 +79,7 @@ add_task(async function test_notification_incomplete() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",

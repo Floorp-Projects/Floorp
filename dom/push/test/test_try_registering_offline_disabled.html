@@ -23,7 +23,7 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
-  function debug(str) {
+  function debug() {
   //  console.log(str + "\n");
   }
 
@@ -54,12 +54,12 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function subscribeFail(swr) {
-    return new Promise((res, rej) => {
+    return new Promise((res) => {
       swr.pushManager.subscribe()
-        .then(sub => {
+        .then(() => {
           ok(false, "successful registered for push notification");
           throw new Error("Should fail");
-        }, err => {
+        }, () => {
           ok(true, "could not register for push notification");
           res(swr);
         });
@@ -118,7 +118,7 @@ http://creativecommons.org/licenses/publicdomain/
   };
 
   function changeOfflineState(offline) {
-    return new Promise(function(res, rej) {
+    return new Promise(function(res) {
       // eslint-disable-next-line mozilla/use-services
       const obsService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
         .getService(SpecialPowers.Ci.nsIObserverService);

@@ -37,7 +37,7 @@ async function useIDB(contentWindow) {
     store.get(0).onsuccess = spin;
   }
 
-  store.put(0, "purgatory").onsuccess = e => {
+  store.put(0, "purgatory").onsuccess = () => {
     contentWindow.putCount += 1;
     spin();
   };

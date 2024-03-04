@@ -34,11 +34,11 @@ function errorExpectedWithFile(file, errorMsg) {
   xhr.open("GET", file, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
-    ctx.decodeAudioData(xhr.response, buffer => {
+    ctx.decodeAudioData(xhr.response, () => {
       ok(false, "You should not be able to decode that");
       finish();
     }, e => test(e))
-    .then(buffer => {
+    .then(() => {
       ok(false, "You should not be able to decode that");
       finish();
     })

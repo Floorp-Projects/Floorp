@@ -23,14 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874090
   const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 
   var mockAlertsService = {
-    showAlert(alert, alertListener) {
+    showAlert() {
       ok(true, "System principal was granted permission and is able to call showAlert.");
       unregisterMock();
       SimpleTest.finish();
     },
 
-    showAlertNotification(imageUrl, title, text, textClickable,
-                          cookie, alertListener, name, dir, lang, data) {
+    showAlertNotification() {
       this.showAlert();
     },
 

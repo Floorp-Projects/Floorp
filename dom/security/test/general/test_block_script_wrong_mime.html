@@ -25,7 +25,7 @@ const MIMETypes = [
 
 // <script src="">
 function testScript([mime, shouldLoad]) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let script = document.createElement("script");
     script.onload = () => {
       document.body.removeChild(script);
@@ -44,7 +44,7 @@ function testScript([mime, shouldLoad]) {
 
 // new Worker()
 function testWorker([mime, shouldLoad]) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let worker = new Worker("file_block_script_wrong_mime_server.sjs?type=worker&mime="+mime);
     worker.onmessage = (event) => {
       ok(shouldLoad, `worker with mime '${mime}' should load`)
@@ -62,7 +62,7 @@ function testWorker([mime, shouldLoad]) {
 
 // new Worker() with importScripts()
 function testWorkerImportScripts([mime, shouldLoad]) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let worker = new Worker("file_block_script_wrong_mime_server.sjs?type=worker-import&mime="+mime);
     worker.onmessage = (event) => {
       ok(shouldLoad, `worker/importScripts with mime '${mime}' should load`)

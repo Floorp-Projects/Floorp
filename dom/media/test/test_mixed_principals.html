@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
     }
 
     function runTest(origin, shouldReadBackOnLoad) {
-      return new Promise(function (resolve, reject) {
+      return new Promise(function (resolve) {
         // Load will redirect mid-flight, which will be detected and should error,
         // and we should no longer be able to readback.
         var video = document.createElement("video");

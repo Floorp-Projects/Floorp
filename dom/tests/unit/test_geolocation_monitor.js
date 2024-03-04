@@ -56,7 +56,7 @@ function watchPosition() {
 let observer = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     Assert.equal(topic, "geolocation-position-events");
     observer._countEvents++;
     observer._lastData = toJSON(subject);

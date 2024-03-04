@@ -56,7 +56,7 @@ function promiseReject() {
   var promise = new Promise(function(resolve, reject) {
     reject(42);
   });
-  promise.then(function(what) {
+  promise.then(function() {
     ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
@@ -70,7 +70,7 @@ function promiseRejectNoHandler() {
   // This test only checks that the code that reports unhandled errors in the
   // Promises implementation does not crash or leak.
 
-  new Promise(function(res, rej) {
+  new Promise(function() {
     // eslint-disable-next-line no-undef
     noSuchMethod();
   });
@@ -81,7 +81,7 @@ function promiseRejectNoArg() {
   var promise = new Promise(function(resolve, reject) {
     reject();
   });
-  promise.then(function(what) {
+  promise.then(function() {
     ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
@@ -92,11 +92,11 @@ function promiseRejectNoArg() {
 }
 
 function promiseException() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function() {
     // eslint-disable-next-line no-throw-literal
     throw 42;
   });
-  promise.then(function(what) {
+  promise.then(function() {
     ok(false, "Then - resolveCb has been called");
     runTest();
   }, function(what) {
@@ -108,10 +108,10 @@ function promiseException() {
 
 function promiseGC() {
   var resolve;
-  var promise = new Promise(function(r1, r2) {
+  var promise = new Promise(function(r1) {
     resolve = r1;
   });
-  promise.then(function(what) {
+  promise.then(function() {
     ok(true, "Then - promise is still alive");
     runTest();
   });
@@ -199,7 +199,7 @@ function promiseAsync_SyncXHR() {
 
 function promiseDoubleThen() {
   var steps = 0;
-  var promise = new Promise(function(r1, r2) {
+  var promise = new Promise(function(r1) {
     r1(42);
   });
 
@@ -207,7 +207,7 @@ function promiseDoubleThen() {
     ok(true, "Then.resolve has been called");
     is(what, 42, "Value == 42");
     steps++;
-  }, function(what) {
+  }, function() {
     ok(false, "Then.reject has been called");
   });
 
@@ -216,28 +216,28 @@ function promiseDoubleThen() {
     is(steps, 1, "Then.resolve - step == 1");
     is(what, 42, "Value == 42");
     runTest();
-  }, function(what) {
+  }, function() {
     ok(false, "Then.reject has been called");
   });
 }
 
 function promiseThenException() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function(resolve) {
     resolve(42);
   });
 
-  promise.then(function(what) {
+  promise.then(function() {
     ok(true, "Then.resolve has been called");
     // eslint-disable-next-line no-throw-literal
     throw "booh";
-  }).catch(function(e) {
+  }).catch(function() {
     ok(true, "window.onerror has been called!");
     runTest();
   });
 }
 
 function promiseThenCatchThen() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function(resolve) {
     resolve(42);
   });
 
@@ -245,7 +245,7 @@ function promiseThenCatchThen() {
     ok(true, "Then.resolve has been called");
     is(what, 42, "Value == 42");
     return what + 1;
-  }, function(what) {
+  }, function() {
     ok(false, "Then.reject has been called");
   });
 
@@ -255,7 +255,7 @@ function promiseThenCatchThen() {
     ok(true, "Then.resolve has been called");
     is(what, 43, "Value == 43");
     return what + 1;
-  }, function(what) {
+  }, function() {
     ok(false, "Then.reject has been called");
   }).catch(function() {
     ok(false, "Catch has been called");
@@ -263,13 +263,13 @@ function promiseThenCatchThen() {
     ok(true, "Then.resolve has been called");
     is(what, 44, "Value == 44");
     runTest();
-  }, function(what) {
+  }, function() {
     ok(false, "Then.reject has been called");
   });
 }
 
 function promiseThenNoArg() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function(resolve) {
     resolve(42);
   });
 
@@ -318,7 +318,7 @@ function promiseRejectThenCatchThen() {
     reject(42);
   });
 
-  var promise2 = promise.then(function(what) {
+  var promise2 = promise.then(function() {
     ok(false, "Then.resolve has been called");
   }, function(what) {
     ok(true, "Then.reject has been called");
@@ -332,7 +332,7 @@ function promiseRejectThenCatchThen() {
     ok(true, "Then.resolve has been called");
     is(what, 43, "Value == 43");
     return what + 1;
-  }).catch(function(what) {
+  }).catch(function() {
     ok(false, "Catch has been called");
   }).then(function(what) {
     ok(true, "Then.resolve has been called");
@@ -366,7 +366,7 @@ function promiseRejectThenCatchExceptionThen() {
     reject(42);
   });
 
-  promise.then(function(what) {
+  promise.then(function() {
     ok(false, "Then.resolve has been called");
   }, function(what) {
     ok(true, "Then.reject has been called");
@@ -386,7 +386,7 @@ function promiseRejectThenCatchExceptionThen() {
 
 function promiseThenCatchOrderingResolve() {
   var global = 0;
-  var f = new Promise(function(r1, r2) {
+  var f = new Promise(function(r1) {
     r1(42);
   });
 
@@ -446,8 +446,8 @@ function promiseCatchNoArg() {
 }
 
 function promiseNestedPromise() {
-  new Promise(function(resolve, reject) {
-    resolve(new Promise(function(res, rej) {
+  new Promise(function(resolve) {
+    resolve(new Promise(function(res) {
       ok(true, "Nested promise is executed");
       res(42);
     }));
@@ -458,8 +458,8 @@ function promiseNestedPromise() {
 }
 
 function promiseNestedNestedPromise() {
-  new Promise(function(resolve, reject) {
-    resolve(new Promise(function(res, rej) {
+  new Promise(function(resolve) {
+    resolve(new Promise(function(res) {
       ok(true, "Nested promise is executed");
       res(42);
     }).then(function(what) { return what + 1; }));
@@ -471,7 +471,7 @@ function promiseNestedNestedPromise() {
 
 function promiseWrongNestedPromise() {
   new Promise(function(resolve, reject) {
-    resolve(new Promise(function(r, r2) {
+    resolve(new Promise(function(r) {
       ok(true, "Nested promise is executed");
       r(42);
     }));
@@ -479,16 +479,16 @@ function promiseWrongNestedPromise() {
   }).then(function(value) {
     is(value, 42, "Nested promise is executed and then == 42");
     runTest();
-  }, function(value) {
+  }, function() {
      ok(false, "This is wrong");
   });
 }
 
 function promiseLoop() {
-  new Promise(function(resolve, reject) {
-    resolve(new Promise(function(res, rej) {
+  new Promise(function(resolve) {
+    resolve(new Promise(function(res) {
       ok(true, "Nested promise is executed");
-      res(new Promise(function(resInner, rejInner) {
+      res(new Promise(function(resInner) {
         ok(true, "Nested nested promise is executed");
         resInner(42);
       }));
@@ -496,14 +496,14 @@ function promiseLoop() {
   }).then(function(value) {
     is(value, 42, "Nested nested promise is executed and then == 42");
     runTest();
-  }, function(value) {
+  }, function() {
      ok(false, "This is wrong");
   });
 }
 
 function promiseStaticReject() {
   var promise = Promise.reject(42);
-  promise.then(function(what) {
+  promise.then(function() {
     ok(false, "This should not be called");
   }, function(what) {
     is(what, 42, "Value == 42");
@@ -522,7 +522,7 @@ function promiseStaticResolve() {
 }
 
 function promiseResolveNestedPromise() {
-  var promise = Promise.resolve(new Promise(function(r, r2) {
+  var promise = Promise.resolve(new Promise(function(r) {
     ok(true, "Nested promise is executed");
     r(42);
   }, function() {
@@ -538,21 +538,21 @@ function promiseResolveNestedPromise() {
 
 function promiseSimpleThenableResolve() {
   var thenable = { then(resolve) { resolve(5); } };
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function(resolve) {
     resolve(thenable);
   });
 
   promise.then(function(v) {
     ok(v === 5, "promiseSimpleThenableResolve");
     runTest();
-  }, function(e) {
+  }, function() {
     ok(false, "promiseSimpleThenableResolve: Should not reject");
   });
 }
 
 function promiseSimpleThenableReject() {
   var thenable = { then(resolve, reject) { reject(5); } };
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function(resolve) {
     resolve(thenable);
   });
 
@@ -574,7 +574,7 @@ function promiseThenableThrowsBeforeCallback() {
   }};
 
   var promise = Promise.resolve(thenable);
-  promise.then(function(v) {
+  promise.then(function() {
     ok(false, "promiseThenableThrowsBeforeCallback: Should've rejected");
     runTest();
   }, function(e) {
@@ -593,7 +593,7 @@ function promiseThenableThrowsAfterCallback() {
   promise.then(function(v) {
     ok(v === 5, "promiseThenableThrowsAfterCallback");
     runTest();
-  }, function(e) {
+  }, function() {
     ok(false, "promiseThenableThrowsAfterCallback: Should've resolved");
     runTest();
   });
@@ -606,7 +606,7 @@ function promiseThenableRejectThenResolve() {
   }};
 
   var promise = Promise.resolve(thenable);
-  promise.then(function(v) {
+  promise.then(function() {
     ok(false, "promiseThenableRejectThenResolve should have rejected");
     runTest();
   }, function(e) {
@@ -617,7 +617,7 @@ function promiseThenableRejectThenResolve() {
 
 function promiseWithThenReplaced() {
   // Ensure that we call the 'then' on the promise and not the internal then.
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function(resolve) {
     resolve(5);
   });
 
@@ -627,7 +627,7 @@ function promiseWithThenReplaced() {
   };
 
   var promise2 = Promise.resolve(promise);
-  promise2.then(function(v) {
+  promise2.then(function() {
     ok(false, "promiseWithThenReplaced: Should've rejected");
     runTest();
   }, function(e) {
@@ -646,7 +646,7 @@ function promiseStrictHandlers() {
 }
 
 function promiseStrictExecutorThisArg() {
-  new Promise(function(resolve, reject) {
+  new Promise(function() {
     "use strict";
     ok(this === undefined, "thisArg should be undefined.");
     runTest();
@@ -667,12 +667,12 @@ function promiseResolveArray() {
 }
 
 function promiseResolveThenable() {
-  var p = Promise.resolve({ then(onFulfill, onReject) { onFulfill(2); } });
+  var p = Promise.resolve({ then(onFulfill) { onFulfill(2); } });
   ok(p instanceof Promise, "Should cast to a Promise.");
   p.then(function(v) {
     is(v, 2, "Should resolve to 2.");
     runTest();
-  }, function(e) {
+  }, function() {
     ok(false, "promiseResolveThenable should've resolved");
     runTest();
   });
@@ -748,7 +748,7 @@ function promiseTestAsyncThenableResolution() {
 
 // Bug 1062323
 function promiseWrapperAsyncResolution() {
-  var p = new Promise(function(resolve, reject) {
+  var p = new Promise(function(resolve) {
     resolve();
   });
 

@@ -15,7 +15,7 @@ async function waitForGCBegin() {
   // This fixes a ReferenceError for Date, it's weird.
   ok(Date.now(), "Date.now()");
   var when = await new Promise(resolve => {
-    observer.observe = function (subject, topic, data) {
+    observer.observe = function () {
       resolve(Date.now());
     };
 
@@ -40,7 +40,7 @@ async function waitForGCEnd() {
   // This fixes a ReferenceError for Date, it's weird.
   ok(Date.now(), "Date.now()");
   let when = await new Promise(resolve => {
-    observer.observe = function (subject, topic, data) {
+    observer.observe = function () {
       resolve(Date.now());
     };
 

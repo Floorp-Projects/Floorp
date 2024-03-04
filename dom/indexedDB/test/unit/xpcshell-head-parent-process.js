@@ -28,7 +28,7 @@ function isnot(a, b, msg) {
   Assert.notEqual(a, b, msg);
 }
 
-function todo(condition, name, diag) {
+function todo(condition) {
   todo_check_true(condition);
 }
 
@@ -122,7 +122,7 @@ function expectedErrorHandler(name) {
   };
 }
 
-function expectUncaughtException(expecting) {
+function expectUncaughtException() {
   // This is dummy for xpcshell test.
 }
 
@@ -196,19 +196,19 @@ function compareKeys(k1, k2) {
   return false;
 }
 
-function addPermission(permission, url) {
+function addPermission() {
   throw new Error("addPermission");
 }
 
-function removePermission(permission, url) {
+function removePermission() {
   throw new Error("removePermission");
 }
 
-function allowIndexedDB(url) {
+function allowIndexedDB() {
   throw new Error("allowIndexedDB");
 }
 
-function disallowIndexedDB(url) {
+function disallowIndexedDB() {
   throw new Error("disallowIndexedDB");
 }
 
@@ -240,7 +240,7 @@ function scheduleGC() {
 function setTimeout(fun, timeout) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   var event = {
-    notify(timer) {
+    notify() {
       fun();
     },
   };

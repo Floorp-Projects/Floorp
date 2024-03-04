@@ -56,7 +56,7 @@ ResourceLoader.prototype = {
     this.data += stream.read(count);
   },
 
-  onStartRequest(request) {},
+  onStartRequest() {},
 
   onStopRequest(request, status) {
     if (Components.isSuccessCode(status)) {

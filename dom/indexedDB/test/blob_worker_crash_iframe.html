@@ -80,7 +80,7 @@ dump("EXCEPTION IN CREATION: " + e + "\n " + e.stack + "\n");
       objectStore.delete(42).onsuccess = closeDBTellOwningThread;
     }
 
-    function closeDBTellOwningThread(event) {
+    function closeDBTellOwningThread() {
       // Now that worker has latched the blob, clean up the database.
       db.close();
       db = null;

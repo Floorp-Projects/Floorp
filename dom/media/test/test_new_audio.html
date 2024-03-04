@@ -33,7 +33,7 @@ function startTest(test, token) {
   a.autoplay = true;
   document.body.appendChild(a);
   a.addEventListener("ended",
-                     function(e){
+                     function(){
                         ok(true, "[" + a.src + "]We should get to the end. Oh look we did.");
                         a.remove();
                         manager.finished(token);

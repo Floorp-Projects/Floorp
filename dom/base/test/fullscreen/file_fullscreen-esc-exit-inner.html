@@ -33,7 +33,7 @@ function is(a, b, msg) {
 var escKeyReceived = false;
 var escKeySent = false;
 
-function keyHandler(event) {
+function keyHandler() {
   if (escKeyReceived == KeyboardEvent.DOM_VK_ESC) {
     escKeyReceived = true;
   }

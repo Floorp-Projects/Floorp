@@ -33,7 +33,7 @@ function* testSteps() {
     let db = request.result;
     is(db.version, 1, "Got version 1");
 
-    db.onversionchange = function (event) {
+    db.onversionchange = function () {
       info("Closing database " + thisIndex);
       db.close();
 
@@ -51,7 +51,7 @@ function* testSteps() {
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
-  request.onblocked = function (event) {
+  request.onblocked = function () {
     ok(false, "Should not receive a blocked event");
   };
 
@@ -95,7 +95,7 @@ function* testSteps() {
     let db = request.result;
     is(db.version, 1, "Got version 1");
 
-    db.onversionchange = function (event) {
+    db.onversionchange = function () {
       if (thisIndex == databaseCount - 1) {
         info("Closing all databases with version 1");
 
@@ -121,7 +121,7 @@ function* testSteps() {
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
 
-  request.onblocked = function (event) {
+  request.onblocked = function () {
     ok(false, "Should not receive a blocked event");
   };
 

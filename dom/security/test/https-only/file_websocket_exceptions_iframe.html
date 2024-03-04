@@ -5,17 +5,17 @@
 <script>
 
 window.addEventListener("message", receiveMessage);
-function receiveMessage(event) {
+function receiveMessage() {
   window.removeEventListener("message", receiveMessage);
 
   var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/https-only/file_upgrade_insecure");
-  mySocket.onopen = function(e) {
+  mySocket.onopen = function() {
     parent.dispatchEvent(new CustomEvent("WebSocketEnded", {
       detail: { url: mySocket.url, state: "onopen" }
     }));
     mySocket.close();
   };
-  mySocket.onerror = function(e) {
+  mySocket.onerror = function() {
     parent.dispatchEvent(new CustomEvent("WebSocketEnded", {
       detail: { url: mySocket.url, state: "onerror" }
     }));

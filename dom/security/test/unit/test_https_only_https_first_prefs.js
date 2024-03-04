@@ -272,10 +272,10 @@ ChannelListener.prototype = {
     var authHeader = httpChan.getRequestHeader("Authorization");
     Assert.equal(authHeader, "Basic user:pass", curTest.description);
   },
-  onDataAvailable(request, stream, offset, count) {
+  onDataAvailable() {
     do_throw("Should not get any data!");
   },
-  onStopRequest(request, status) {
+  onStopRequest(request) {
     var chan = request.QueryInterface(Ci.nsIChannel);
     let requestURL = chan.URI;
     Assert.equal(
@@ -331,7 +331,7 @@ function setUpChannel() {
   return chan;
 }
 
-function serverHandler(metadata, response) {
+function serverHandler() {
   // dummy implementation
 }
 

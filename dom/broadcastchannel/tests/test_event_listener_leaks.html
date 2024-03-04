@@ -28,7 +28,7 @@ async function useBroadcastChannel(contentWindow) {
   outer.postMessage("foo");
 
   await new Promise(resolve => {
-    bc.onmessage = e => {
+    bc.onmessage = () => {
       contentWindow.messageCount += 1;
       resolve();
     };

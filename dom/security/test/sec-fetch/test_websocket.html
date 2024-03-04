@@ -21,7 +21,7 @@ function checkTestsDone() {
 
 var script = SpecialPowers.loadChromeScript(() => {
   /* eslint-env mozilla/chrome-script */
-  Services.obs.addObserver(function onExamResp(subject, topic, data) {
+  Services.obs.addObserver(function onExamResp(subject) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     if (!channel.URI.spec.startsWith("https://example.com/tests/dom/security/test/sec-fetch/file_websocket")) {
       return;
@@ -61,11 +61,11 @@ script.addMessageListener("test-end", () => {
 });
 
 var wssSocket = new WebSocket("wss://example.com/tests/dom/security/test/sec-fetch/file_websocket");
-wssSocket.onopen = function(e) {
+wssSocket.onopen = function() {
   ok(true, "sanity: wssSocket onopen");
   checkTestsDone();
 };
-wssSocket.onerror = function(e) {
+wssSocket.onerror = function() {
   ok(false, "sanity: wssSocket onerror");
 };
 

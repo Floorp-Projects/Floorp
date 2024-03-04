@@ -3,7 +3,7 @@
 Cu.importGlobalProperties(["File", "Directory"]);
 var tmpFile, tmpDir;
 
-addMessageListener("entries.open", function (e) {
+addMessageListener("entries.open", function () {
   tmpFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("TmpD", Ci.nsIFile);
@@ -40,7 +40,7 @@ addMessageListener("entries.open", function (e) {
   });
 });
 
-addMessageListener("entries.delete", function (e) {
+addMessageListener("entries.delete", function () {
   tmpFile.remove(true);
   tmpDir.remove(true);
   sendAsyncMessage("entries.deleted");

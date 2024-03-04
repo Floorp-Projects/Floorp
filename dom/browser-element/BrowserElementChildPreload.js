@@ -6,7 +6,7 @@
 
 /* eslint-env mozilla/frame-script */
 
-function debug(msg) {
+function debug() {
   // dump("BrowserElementChildPreload - " + msg + "\n");
 }
 

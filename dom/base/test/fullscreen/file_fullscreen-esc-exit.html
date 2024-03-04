@@ -34,14 +34,14 @@ function finish() {
   opener.nextTest();
 }
 
-function fullscreenchange1(event) {
+function fullscreenchange1() {
   is(document.fullscreenElement, document.body, "FSE should be doc");
   addFullscreenChangeContinuation("exit", fullscreenchange2);
   ok(!document.getElementById("subdoc").contentWindow.escKeySent, "Should not yet have sent ESC key press.");
   document.getElementById("subdoc").contentWindow.startTest();
 }
 
-function fullscreenchange2(event) {
+function fullscreenchange2() {
   ok(document.getElementById("subdoc").contentWindow.escKeySent, "Should have sent ESC key press.");
   ok(!document.getElementById("subdoc").contentWindow.escKeyReceived, "ESC key press to exit should not be delivered.");
   ok(!document.fullscreenElement, "Should have left full-screen mode on ESC key press");

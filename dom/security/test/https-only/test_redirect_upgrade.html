@@ -28,12 +28,12 @@ Test that 302 redirect requests get upgraded to https:// with HTTPS-Only Mode en
       // Make a request to a site (eg. https://file_redirect.sjs?301), which will redirect to http://file_redirect.sjs?check.
       // The response will either be secure-ok, if the request has been upgraded to https:// or secure-error if it didn't.
       myXHR.open("GET", `https://example.com/tests/dom/security/test/https-only/file_redirect.sjs?${currentCode}`);
-      myXHR.onload = (e) => {
+      myXHR.onload = () => {
         is(myXHR.responseText, "secure-ok", `a ${currentCode} redirect when posting violation report should be blocked`)
         testDone();
       }
       // This should not happen
-      myXHR.onerror = (e) => {
+      myXHR.onerror = () => {
         ok(false, `Could not query results from server for ${currentCode}-redirect test (" + e.message + ")`);
         testDone();
       }

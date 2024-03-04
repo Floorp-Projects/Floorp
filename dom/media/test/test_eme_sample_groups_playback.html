@@ -81,7 +81,7 @@
             });
             var request = new TextEncoder().encode(json);
             session.generateRequest("keyids", request)
-              .then(e => {
+              .then(() => {
                 Log(test.name, "Request license success");
               }, reason => {
                 Log("Request license failed! " + reason);
@@ -90,7 +90,7 @@
       }
 
       function DownloadMedia(url, type, mediaSource) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           var sourceBuffer = mediaSource.addSourceBuffer(type);
           fetchWithXHR(url, (response) => {
             once(sourceBuffer, "updateend", resolve);

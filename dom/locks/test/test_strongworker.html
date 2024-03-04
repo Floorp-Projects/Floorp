@@ -34,7 +34,7 @@
       SpecialPowers.DOMWindowUtils.garbageCollect();
     });
 
-    channel.onmessage = async event => {
+    channel.onmessage = async () => {
       const query = await navigator.locks.query();
       is(query.pending.length, 0, "No pending request");
       SimpleTest.finish();

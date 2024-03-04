@@ -169,7 +169,7 @@ declTest("getActor with iframe messageManagerGroups match", {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
-    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
@@ -189,7 +189,7 @@ declTest("getActor with iframe messageManagerGroups mismatch", {
       "Should throw if its messageManagerGroups doesn't match."
     );
 
-    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(

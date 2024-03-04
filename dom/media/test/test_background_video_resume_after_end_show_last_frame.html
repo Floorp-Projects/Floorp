@@ -79,7 +79,7 @@ function waitUntilSeekToLastFrame(video) {
     );
   }
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     video.seenEnded = false;
     video.addEventListener("ended", () => {
       video.seenEnded = true;

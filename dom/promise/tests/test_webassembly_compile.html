@@ -207,7 +207,7 @@ function compileStreamingDoubleUseFail() {
       })
       .then(
         () => ok(false, "should have failed on second use"),
-        err => { ok(true, "failed on second use"); runTest(); }
+        () => { ok(true, "failed on second use"); runTest(); }
       );
   });
 }

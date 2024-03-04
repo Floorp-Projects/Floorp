@@ -98,7 +98,7 @@ class MockWebSocket {
     this._isActive = false;
   }
 
-  onHello(request) {
+  onHello() {
     this.serverSendMsg(
       JSON.stringify({
         messageType: "hello",
@@ -131,7 +131,7 @@ class MockWebSocket {
     );
   }
 
-  onAck(request) {
+  onAck() {
     // Do nothing.
   }
 
@@ -222,7 +222,7 @@ function setupPrefsAndMockSocket(mockSocket) {
 }
 
 function injectControlledFrame(target = document.body) {
-  return new Promise(function (res, rej) {
+  return new Promise(function (res) {
     var iframe = document.createElement("iframe");
     iframe.src = "/tests/dom/push/test/frame.html";
 
@@ -266,7 +266,7 @@ function waitForActive(swr) {
       resolve(swr);
       return;
     }
-    sw.addEventListener("statechange", function onStateChange(evt) {
+    sw.addEventListener("statechange", function onStateChange() {
       if (sw.state === "activated") {
         sw.removeEventListener("statechange", onStateChange);
         resolve(swr);

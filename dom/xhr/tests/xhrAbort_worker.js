@@ -57,11 +57,11 @@ function runTest() {
     events.push(str);
   }
 
-  xhr.onerror = function (event) {
+  xhr.onerror = function () {
     throw new Error("Error: " + xhr.statusText);
   };
 
-  xhr.onload = function (event) {
+  xhr.onload = function () {
     throw new Error("Shouldn't have gotten load event!");
   };
 

@@ -3,7 +3,7 @@
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["File"]);
 
-addMessageListener("file.open", function (e) {
+addMessageListener("file.open", function () {
   var testFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("ProfD", Ci.nsIFile);
@@ -29,7 +29,7 @@ addMessageListener("file.open", function (e) {
   });
 });
 
-addMessageListener("emptyfile.open", function (e) {
+addMessageListener("emptyfile.open", function () {
   var testFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("ProfD", Ci.nsIFile);

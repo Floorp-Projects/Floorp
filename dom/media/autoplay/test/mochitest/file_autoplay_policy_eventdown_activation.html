@@ -36,8 +36,8 @@
 
           let x = eventNames.map(
             (eventName) => {
-              return new Promise(function (resolve, reject) {
-                window.addEventListener(eventName, async function (event) {
+              return new Promise(function (resolve) {
+                window.addEventListener(eventName, async function () {
                   let p = await element.play().then(() => true, () => false);
                   ok(p, "Expect to be activated already in " + eventName);
                   resolve();
