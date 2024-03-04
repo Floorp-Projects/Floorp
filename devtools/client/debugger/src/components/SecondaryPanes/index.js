@@ -136,7 +136,7 @@ class SecondaryPanes extends Component {
         },
         "plus",
         "active",
-        L10N.getStr("expressions.placeholder")
+        L10N.getStr("expressions.placeholder2")
       )
     );
     return buttons;

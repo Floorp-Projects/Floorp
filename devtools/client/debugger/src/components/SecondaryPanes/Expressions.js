@@ -374,7 +374,7 @@ class Expressions extends Component {
       input({
         className: "input-expression",
         type: "text",
-        placeholder: L10N.getStr("expressions.placeholder"),
+        placeholder: L10N.getStr("expressions.placeholder2"),
         onChange: this.handleChange,
         onBlur: this.hideInput,
         onKeyDown: this.handleKeyDown,
