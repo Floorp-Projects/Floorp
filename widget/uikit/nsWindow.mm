@@ -122,6 +122,18 @@ class nsAutoRetainUIKitObject {
 // MUIRootAccessible
 - (BOOL)hasRepresentedView;
 - (id)representedView;
+
+// MUIAccessible
+- (BOOL)isAccessibilityElement;
+- (NSString*)accessibilityLabel;
+- (CGRect)accessibilityFrame;
+- (NSString*)accessibilityValue;
+- (uint64_t)accessibilityTraits;
+- (NSInteger)accessibilityElementCount;
+- (nullable id)accessibilityElementAtIndex:(NSInteger)index;
+- (NSInteger)indexOfAccessibilityElement:(id)element;
+- (NSArray* _Nullable)accessibilityElements;
+- (UIAccessibilityContainerType)accessibilityContainerType;
 #endif
 
 @end
@@ -571,6 +583,84 @@ class nsAutoRetainUIKitObject {
 
 - (id)representedView {
   return self;
+}
+
+- (BOOL)isAccessibilityElement {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super isAccessibilityElement];
+  }
+
+  return [[self accessible] isAccessibilityElement];
+}
+
+- (NSString*)accessibilityLabel {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityLabel];
+  }
+
+  return [[self accessible] accessibilityLabel];
+}
+
+- (CGRect)accessibilityFrame {
+  // Use the UIView implementation here. We rely on the position of this
+  // frame to place gecko bounds in the right offset.
+  return [super accessibilityFrame];
+}
+
+- (NSString*)accessibilityValue {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityValue];
+  }
+
+  return [[self accessible] accessibilityValue];
+}
+
+- (uint64_t)accessibilityTraits {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityTraits];
+  }
+
+  return [[self accessible] accessibilityTraits];
+}
+
+- (NSInteger)accessibilityElementCount {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityElementCount];
+  }
+
+  return [[self accessible] accessibilityElementCount];
+}
+
+- (nullable id)accessibilityElementAtIndex:(NSInteger)index {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityElementAtIndex:index];
+  }
+
+  return [[self accessible] accessibilityElementAtIndex:index];
+}
+
+- (NSInteger)indexOfAccessibilityElement:(id)element {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super indexOfAccessibilityElement:element];
+  }
+
+  return [[self accessible] indexOfAccessibilityElement:element];
+}
+
+- (NSArray* _Nullable)accessibilityElements {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityElements];
+  }
+
+  return [[self accessible] accessibilityElements];
+}
+
+- (UIAccessibilityContainerType)accessibilityContainerType {
+  if (!mozilla::a11y::ShouldA11yBeEnabled()) {
+    return [super accessibilityContainerType];
+  }
+
+  return [[self accessible] accessibilityContainerType];
 }
 #endif
 

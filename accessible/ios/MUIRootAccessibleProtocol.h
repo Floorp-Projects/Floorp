@@ -24,4 +24,28 @@
 
 - (nullable id)representedView;
 
+// UIAccessibility
+
+- (BOOL)isAccessibilityElement;
+
+- (nullable NSString*)accessibilityLabel;
+
+- (CGRect)accessibilityFrame;
+
+- (nullable NSString*)accessibilityValue;
+
+- (uint64_t)accessibilityTraits;
+
+// UIAccessibilityContainer
+
+- (NSInteger)accessibilityElementCount;
+
+- (nullable id)accessibilityElementAtIndex:(NSInteger)index;
+
+- (NSInteger)indexOfAccessibilityElement:(nonnull id)element;
+
+- (nullable NSArray*)accessibilityElements;
+
+- (UIAccessibilityContainerType)accessibilityContainerType;
+
 @end

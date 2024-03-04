@@ -12,6 +12,8 @@
 
 #include "RootAccessible.h"
 
+struct CGRect;
+
 namespace mozilla {
 
 class PresShell;
@@ -30,6 +32,8 @@ class RootAccessibleWrap : public RootAccessible {
   // Lets our native accessible get in touch with the
   // native cocoa view that is our accessible parent.
   void GetNativeWidget(void** aOutView);
+
+  CGRect DevPixelsRectToUIKit(const LayoutDeviceIntRect& aRect);
 };
 
 }  // namespace a11y

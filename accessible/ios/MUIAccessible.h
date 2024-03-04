@@ -44,14 +44,27 @@ inline MUIAccessible* _Nullable GetNativeFromGeckoAccessible(
 // inits with the given accessible
 - (nonnull id)initWithAccessible:(nonnull mozilla::a11y::Accessible*)aAcc;
 
+// allows for gecko accessible access outside of the class
+- (mozilla::a11y::Accessible* _Nullable)geckoAccessible;
+
 - (void)expire;
 
 // override
 - (void)dealloc;
 
-// MUIAccessible
-- (BOOL)hasRepresentedView;
-- (id)representedView;
+// UIAccessibility
+- (BOOL)isAccessibilityElement;
+- (nullable NSString*)accessibilityLabel;
+- (CGRect)accessibilityFrame;
+- (nullable NSString*)accessibilityValue;
+- (uint64_t)accessibilityTraits;
+
+// UIAccessibilityContainer
+- (NSInteger)accessibilityElementCount;
+- (nullable id)accessibilityElementAtIndex:(NSInteger)index;
+- (NSInteger)indexOfAccessibilityElement:(nonnull id)element;
+- (nullable NSArray*)accessibilityElements;
+- (UIAccessibilityContainerType)accessibilityContainerType;
 
 @end
 
