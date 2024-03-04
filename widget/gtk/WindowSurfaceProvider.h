@@ -45,11 +45,12 @@ class WindowSurfaceProvider final {
    * while WindowSurfaceProvider is used.
    */
 #ifdef MOZ_WAYLAND
-  void Initialize(RefPtr<nsWindow> aWidget);
-  void Initialize(GtkCompositorWidget* aCompositorWidget);
+  bool Initialize(RefPtr<nsWindow> aWidget);
+  bool Initialize(GtkCompositorWidget* aCompositorWidget);
 #endif
 #ifdef MOZ_X11
-  void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
+  bool Initialize(Window aWindow, bool aIsShaped);
+  Window GetXWindow() const { return mXWindow; }
 #endif
 
   /**
