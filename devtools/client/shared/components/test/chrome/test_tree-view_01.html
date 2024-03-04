@@ -63,6 +63,26 @@ window.onload = function() {
       el.focus();
     }
 
+    function getExpectedActiveElementForFinalShiftTab() {
+      if (!SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element")) {
+        return treeViewEl.ownerDocument.documentElement;
+      }
+
+      // When tab focus mode is applied, the "Run Chrome Tests" button is not
+      // focusable, so this Shift+Tab moves the focus to a Chrome UI element
+      // instead of the "Run Chrome Tests" button, which makes the focus to
+      // move to a browsing context that has a different top level browsing context
+      // than the current browsing context. Since top level browsing contexts are
+      // different, the activeElement in the old document is not cleared. Also
+      // this is only the case when e10s is enabled.
+      if (SpecialPowers.getBoolPref("accessibility.tabfocus_applies_to_xul") &&
+          SpecialPowers.Services.appinfo.browserTabsRemoteAutostart) {
+        return treeViewEl;
+      }
+
+      return treeViewEl.ownerDocument.body;
+    }
+
     const tests = [{
       name: "Test default TreeView state. Keyboard focus is set to document " +
             "body by default.",
@@ -255,8 +275,9 @@ window.onload = function() {
         synthesizeKey("KEY_Tab", { shiftKey: true });
       },
       state: { selected: "/B", active: null },
-      activeElement: treeViewEl.ownerDocument.documentElement,
-    }];
+      activeElement: getExpectedActiveElementForFinalShiftTab(),
+    }
+    ];
 
     for (const test of tests) {
       const { action, event, state, name } = test;

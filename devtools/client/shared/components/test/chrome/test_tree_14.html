@@ -82,6 +82,26 @@ window.onload = async function() {
       },
     };
 
+    function getExpectedActiveElementForFinalShiftTab() {
+      if (!SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element")) {
+        return document.documentElement;
+      }
+
+      // When tab focus mode is applied, the "Run Chrome Tests" button is not
+      // focusable, so this Shift+Tab moves the focus to a Chrome UI element
+      // instead of the "Run Chrome Tests" button, which makes the focus to
+      // move to a browsing context that has a different top level browsing context
+      // than the current browsing context. Since top level browsing contexts are
+      // different, the activeElement in the old document is not cleared. Also
+      // this is only the case when e10s is enabled.
+      if (SpecialPowers.getBoolPref("accessibility.tabfocus_applies_to_xul") &&
+          SpecialPowers.Services.appinfo.browserTabsRemoteAutostart) {
+        return "tree";
+      }
+
+      return document.body;
+    }
+
     const tests = [{
       name: "Test default Tree props. Keyboard focus is set to document body by default.",
       props: { focused: undefined, active: undefined },
@@ -204,7 +224,7 @@ window.onload = async function() {
         synthesizeKey("KEY_Tab", { shiftKey: true });
       },
       props: { focused: "A", active: null },
-      activeElement: document.documentElement,
+      activeElement: getExpectedActiveElementForFinalShiftTab(),
     }];
 
     for (const test of tests) {
