@@ -215,9 +215,6 @@ class SyntaxParseHandler {
     if (name == TaggedParserAtomIndex::WellKnown::arguments()) {
       return NodeArgumentsName;
     }
-    if (name == TaggedParserAtomIndex::WellKnown::length()) {
-      return NodeLengthName;
-    }
     if (pos.begin + strlen("async") == pos.end &&
         name == TaggedParserAtomIndex::WellKnown::async()) {
       return NodePotentialAsyncKeyword;
@@ -580,6 +577,9 @@ class SyntaxParseHandler {
   NameNodeResult newPropertyName(TaggedParserAtomIndex name,
                                  const TokenPos& pos) {
     lastAtom = name;
+    if (name == TaggedParserAtomIndex::WellKnown::length()) {
+      return NodeLengthName;
+    }
     return NodeGeneric;
   }
 
@@ -797,6 +797,8 @@ class SyntaxParseHandler {
   bool isLengthName(Node node) { return node == NodeLengthName; }
   bool isEvalName(Node node) { return node == NodeEvalName; }
   bool isAsyncKeyword(Node node) { return node == NodePotentialAsyncKeyword; }
+
+  bool isArgumentsLength(Node node) { return node == NodeArgumentsLength; }
 
   bool isPrivateName(Node node) { return node == NodePrivateName; }
   bool isPrivateMemberAccess(Node node) {
