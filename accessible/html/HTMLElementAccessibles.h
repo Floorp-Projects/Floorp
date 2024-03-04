@@ -136,6 +136,23 @@ class HTMLHeaderOrFooterAccessible : public HyperTextAccessible {
 };
 
 /**
+ * Used for aside elements.
+ */
+class HTMLAsideAccessible : public HyperTextAccessible {
+ public:
+  HTMLAsideAccessible(nsIContent* aContent, DocAccessible* aDoc)
+      : HyperTextAccessible(aContent, aDoc) {}
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLAsideAccessible, HyperTextAccessible)
+
+  // LocalAccessible
+  virtual a11y::role NativeRole() const override;
+
+ protected:
+  virtual ~HTMLAsideAccessible() = default;
+};
+
+/**
  * Used for HTML section element.
  */
 class HTMLSectionAccessible : public HyperTextAccessible {
