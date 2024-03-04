@@ -332,9 +332,15 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Obvestilo o zasebnosti za Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Preberite več v obvestilu o zasebnosti</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Z veseljem skrbimo za vašo varnost</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Odkrijte, zakaj milijoni prisegajo na Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Varno brskanje z več izbire</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Naš neprofitni brskalnik preprečuje podjetjem, da bi vas skrivaj spremljala po spletu.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -693,9 +699,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Zaznamki</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Prijave</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Prijave</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Gesla</string>
+    <string name="preferences_sync_logins_2">Gesla</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Odprti zavihki</string>
     <!-- Preference for signing out -->
@@ -722,9 +728,9 @@
     <string name="default_device_name_2">%1$s na %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Kreditne kartice</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditne kartice</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Načini plačila</string>
+    <string name="preferences_sync_credit_cards_2">Načini plačila</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Naslove</string>
 
@@ -1674,13 +1680,13 @@
     <string name="add_to_homescreen_description_2">To stran lahko preprosto dodate na svoj domači zaslon naprave za lažji dostop in hitrejše brskanje v načinu, podobnem aplikaciji.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Prijave in gesla</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Prijave in gesla</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Gesla</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Gesla</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Shranjevanje prijav in gesel</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Shranjevanje prijav in gesel</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Shranjuj gesla</string>
+    <string name="preferences_passwords_save_logins_2">Shranjuj gesla</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Vprašaj pred shranjevanjem</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1697,43 +1703,43 @@
     <string name="preferences_android_autofill_description">Izpolnjuj uporabniška imena in gesla v drugih aplikacijah na napravi.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Dodaj prijavo</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Dodaj prijavo</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Dodaj geslo</string>
+    <string name="preferences_logins_add_login_2">Dodaj geslo</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sinhronizacija prijav</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sinhroniziraj gesla</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sinhronizacija prijav</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Sinhroniziraj gesla</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sinhroniziraj prijave med napravami</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sinhroniziraj prijave med napravami</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sinhroniziraj gesla med napravami</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Sinhroniziraj gesla med napravami</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Shranjene prijave</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Shranjene prijave</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Shranjena gesla</string>
+    <string name="preferences_passwords_saved_logins_2">Shranjena gesla</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Tu se prikažejo prijave, ki jih shranite ali sinhronizirate v %s.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Tu se prikažejo prijave, ki jih shranite ali sinhronizirate v %s.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Več o Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Več o Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Več o sinhronizaciji</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Več o sinhronizaciji</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Izjeme</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Tu bodo prikazane prijave in gesla, ki niso shranjena.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Tu bodo prikazane prijave in gesla, ki niso shranjena.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">Za tukaj navedena mesta %s ne bo shranjeval gesel.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">Za tukaj navedena mesta %s ne bo shranjeval gesel.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Prijave in gesla za te strani ne bodo shranjene.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Prijave in gesla za te strani ne bodo shranjene.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">Za ta spletna mesta %s ne bo shranjeval gesel.</string>
+    <string name="preferences_passwords_exceptions_description_2">Za ta spletna mesta %s ne bo shranjeval gesel.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Izbriši vse izjeme</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Iskanje prijav</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Iskanje prijav</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stran</string>
     <!-- The header for the username for a login -->
@@ -1761,15 +1767,15 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Skrij geslo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Odklenite za ogled shranjenih prijav</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Odklenite za ogled shranjenih prijav</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Zavarujte svoje prijave in gesla</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zavarujte svoje prijave in gesla</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Zavarujte shranjena gesla</string>
+    <string name="logins_warning_dialog_title_2">Zavarujte shranjena gesla</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih prijav in gesel, če vašo napravo uporablja še kdo.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih prijav in gesel, če vašo napravo uporablja še kdo.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih gesel, če vašo napravo uporablja še kdo.</string>
+    <string name="logins_warning_dialog_message_2">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih gesel, če vašo napravo uporablja še kdo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pozneje</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1789,7 +1795,7 @@
     <string name="saved_logins_sort_strategy_last_used">Času zadnje uporabe</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Meni razvrščanja prijav</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Meni razvrščanja prijav</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1797,41 +1803,41 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Naslovi</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Kreditne kartice</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditne kartice</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Shrani in samodejno izpolni kartice</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Shrani in samodejno izpolni kartice</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Shranjuj in izpolnjuj načine plačila</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Shranjuj in izpolnjuj načine plačila</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Podatki so šifrirani</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Podatki so šifrirani</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s šifrira vse načine plačila, ki jih shranite</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s šifrira vse načine plačila, ki jih shranite</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinhroniziraj kartice med napravami</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sinhroniziraj kartice</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Dodaj kreditno kartico</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Dodaj kreditno kartico</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Dodaj kartico</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Dodaj kartico</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Upravljanje shranjenih kartic</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Upravljanje shranjenih kartic</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Upravljanje kartic</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Upravljanje kartic</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Dodaj naslov</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Upravljanje naslovov</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Shranjuj in samodejno izpolnjuj naslove</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Shranjuj in samodejno izpolnjuj naslove</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Shranjuj in izpolnjuj naslove</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Shranjuj in izpolnjuj naslove</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Vključi podatke, kot so številke, e-poštni naslovi in naslovi za dostavo</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Vključi podatke, kot so številke, e-poštni naslovi in naslovi za dostavo</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Vključuje telefonske številke in e-poštne naslove</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Vključuje telefonske številke in e-poštne naslove</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Dodaj kartico</string>
@@ -1852,7 +1858,7 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Izbriši kartico</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Ali ste prepričani, da želite izbrisati to kreditno kartico?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ali ste prepričani, da želite izbrisati to kreditno kartico?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Izbriši</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1866,20 +1872,20 @@
     <string name="credit_cards_saved_cards">Shranjene kartice</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Vnesite veljavno številko kreditne kartice</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Vnesite veljavno številko kreditne kartice</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Vnesite veljavno številko kartice</string>
+    <string name="credit_cards_number_validation_error_message_2">Vnesite veljavno številko kartice</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Izpolnite to polje</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Izpolnite to polje</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Dodajte ime</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Dodajte ime</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Odklenite za ogled shranjenih kartic</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Zavarujte svoje kreditne kartice</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zavarujte svoje kreditne kartice</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do kreditnih kartic, če vašo napravo uporablja še kdo.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do kreditnih kartic, če vašo napravo uporablja še kdo.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Nastavi zdaj</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1888,7 +1894,7 @@
     <string name="credit_cards_biometric_prompt_message_pin">Odklenite svojo napravo</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Odklenite za uporabo shranjenih podatkov o kreditnih karticah</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Odklenite za uporabo shranjenih podatkov o kreditnih karticah</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Dodaj naslov</string>
@@ -1897,11 +1903,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Upravljanje naslovov</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Ime</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Ime</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Drugo ime</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Drugo ime</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Priimek</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Priimek</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Ime</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Ulica</string>
     <!-- The header for the city of an address -->
@@ -1926,7 +1934,7 @@
     <string name="addressess_delete_address_button">Izbriši naslov</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Res želite izbrisati ta naslov?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Res želite izbrisati ta naslov?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Izbriši</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2026,49 +2034,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Uredi</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Ali ste prepričani, da želite izbrisati to prijavo?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ali ste prepričani, da želite izbrisati to prijavo?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Ali ste prepričani, da želite izbrisati to geslo?</string>
+    <string name="login_deletion_confirmation_2">Ali ste prepričani, da želite izbrisati to geslo?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Izbriši</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Prekliči</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Možnosti prijave</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Možnosti prijave</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Možnosti gesel</string>
+    <string name="login_options_menu_2">Možnosti gesel</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Besedilno polje za urejanje spletnega naslova prijave.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Besedilno polje za urejanje spletnega naslova prijave.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Besedilno polje za urejanje spletnega naslova.</string>
+    <string name="saved_login_hostname_description_3">Besedilno polje za urejanje spletnega naslova.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Besedilno polje za urejanje uporabniškega imena prijave.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Besedilno polje za urejanje uporabniškega imena prijave.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Besedilno polje za urejanje uporabniškega imena.</string>
+    <string name="saved_login_username_description_3">Besedilno polje za urejanje uporabniškega imena.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Besedilno polje za urejanje gesla prijave.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Besedilno polje za urejanje gesla prijave.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Besedilno polje za urejanje gesla.</string>
+    <string name="saved_login_password_description_2">Besedilno polje za urejanje gesla.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Shrani spremembe v prijavo.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Shrani spremembe v prijavo.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Shrani spremembe.</string>
+    <string name="save_changes_to_login_2">Shrani spremembe.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Urejanje</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Urejanje</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Uredi geslo</string>
+    <string name="edit_2">Uredi geslo</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Dodaj novo prijavo</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Dodaj novo prijavo</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Dodaj geslo</string>
+    <string name="add_login_2">Dodaj geslo</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Zahtevano je geslo</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Zahtevano je geslo</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Vnesite geslo</string>
+    <string name="saved_login_password_required_2">Vnesite geslo</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Zahtevano je uporabniško ime</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Zahtevano je uporabniško ime</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Vnesite uporabniško ime</string>
+    <string name="saved_login_username_required_2">Vnesite uporabniško ime</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Zahtevano je ime domene</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2183,7 +2191,7 @@
     <string name="radio_preference_info_content_description">Kliknite za podrobnosti</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Pojdi gor</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Pojdi gor</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Zapri</string>
@@ -2223,8 +2231,6 @@
     <string name="review_quality_check_grade_title">Kako zanesljiva so ta mnenja?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Prilagojena ocena</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Nezanesljiva mnenja odstranjena</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Poudarki iz nedavnih mnenj</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
@@ -2279,10 +2285,6 @@
     <string name="review_quality_check_product_availability_warning_body">Če opazite, da je izdelek znova na zalogi, nam to sporočite in preverili bomo mnenja.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Sporoči, da je izdelek znova na zalogi</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Preverjanje kakovosti mnenj</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Preverjanje kakovosti mnenj</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">To lahko traja približno 60 sekund.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2326,11 +2328,11 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Več o tem</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Z izbiro “Da, poskusi” se strinjate z %2$s in %3$s Mozilla %1$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Z izbiro “Da, poskusi” se strinjate z %2$s in %3$s Mozilla %1$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Z izbiro “Da, poskusi” se strinjate z naslednjimi dokumenti %1$sa:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">pravilnikom o zasebnosti</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">pravilnikom o zasebnosti</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Pravilnik o zasebnosti</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->

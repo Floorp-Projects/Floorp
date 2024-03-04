@@ -256,6 +256,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Itzuli orria</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Orria %1$s hizkuntzatik %2$s hizkuntzara itzuli da.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Hautatutako hizkuntza</string>
@@ -334,11 +339,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefoxen pribatutasun-oharra</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Argibide gehiago gure pribatutasun-oharrean</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Zu seguru mantentzea dugu xede</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Ezagutu zergatik milioika pertsonek atsegin duten Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Nabigatze segurua aukera gehiagorekin</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Irabazi asmorik gabeko erakundeak babestutako gure nabigatzaileak laguntzen du eragozten enpresek zure webeko jarraipena sekretupean egin dezaten.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">100 milioi pertsona baino gehiagok beraien pribatutasuna babesten duten irabazi-asmorik gabeko batek sostengatutako nabigatzailea aukeratuz.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Jarraipen-elementu ezagunak? Automatikoki blokeatzen dira. Hedapenak? Probatu denak, 700 guztira. PDFak? Integratutako gure irakurgailuarekin erraz kudea daitezke.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Irabazi asmorik gabeko erakundeak babestutako gure nabigatzaileak laguntzen du
 eragozten enpresek zure webeko jarraipena sekretupean egin dezaten.\n\n
@@ -697,9 +712,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Laster-markak</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Saio-hasierak</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Saio-hasierak</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Pasahitzak</string>
+    <string name="preferences_sync_logins_2">Pasahitzak</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Irekitako fitxak</string>
     <!-- Preference for signing out -->
@@ -726,9 +741,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="default_device_name_2">%1$s / %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Kreditu-txartelak</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditu-txartelak</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Ordainketa metodoak</string>
+    <string name="preferences_sync_credit_cards_2">Ordainketa metodoak</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Helbideak</string>
 
@@ -1675,13 +1690,13 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="add_to_homescreen_description_2">Modu errazean gehi dezakezu webgune hau zure gailuaren hasierako pantailan berehalako sarbidea izan eta aplikazio-moduko esperientziarekin azkarrago nabigatzeko.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Saio-hasierak eta pasahitzak</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Saio-hasierak eta pasahitzak</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Pasahitzak</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Pasahitzak</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Gorde saio-hasierak eta pasahitzak</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Gorde saio-hasierak eta pasahitzak</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Gorde pasahitzak</string>
+    <string name="preferences_passwords_save_logins_2">Gorde pasahitzak</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Galdetu gorde aurretik</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1696,48 +1711,48 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="preferences_android_autofill_description">Bete erabiltzaile-izen eta pasahitzak zure gailuko beste aplikazioetan.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Gehitu saio-hasiera</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Gehitu saio-hasiera</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Gehitu pasahitza</string>
+    <string name="preferences_logins_add_login_2">Gehitu pasahitza</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sinkronizatu saio-hasierak</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sinkronizatu pasahitzak</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sinkronizatu saio-hasierak</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Sinkronizatu pasahitzak</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sinkronizatu saio-hasierak gailuen artean</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sinkronizatu saio-hasierak gailuen artean</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sinkronizatu pasahitzak gailuen artean</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Sinkronizatu pasahitzak gailuen artean</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Gordetako saio-hasierak</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Gordetako saio-hasierak</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Gordetako pasahitzak</string>
+    <string name="preferences_passwords_saved_logins_2">Gordetako pasahitzak</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">%s(e)n gordetzen edo sinkronizatzen dituzun saio-hasierak hemen agertuko dira.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">%s(e)n gordetzen edo sinkronizatzen dituzun saio-hasierak hemen agertuko dira.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">%s(e)n gordetzen edo sinkronizatzen dituzun pasahitzak hemen agertuko dira. Gordetzen dituzun pasahitz guztiak zifratuta daude.
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">%s(e)n gordetzen edo sinkronizatzen dituzun pasahitzak hemen agertuko dira. Gordetzen dituzun pasahitz guztiak zifratuta daude.
 </string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sinkronizazioari buruzko argibide gehiago.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Sinkronizazioari buruzko argibide gehiago.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Sinkronizazioari buruzko argibide gehiago</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Sinkronizazioari buruzko argibide gehiago</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Salbuespenak</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Gorde gabeko saio-hasiera eta pasahitzak hemen erakutsiko dira.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Gorde gabeko saio-hasiera eta pasahitzak hemen erakutsiko dira.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s(e)k ez du pasahitzik gordeko hemen zerrendatutako guneetarako.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s(e)k ez du pasahitzik gordeko hemen zerrendatutako guneetarako.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Gune hauetarako ez da saio-hasiera eta pasahitzik gordeko.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Gune hauetarako ez da saio-hasiera eta pasahitzik gordeko.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s(e)k ez du pasahitzik gordeko gune hauetarako.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s(e)k ez du pasahitzik gordeko gune hauetarako.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Ezabatu salbuespen guztiak</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Bilatu saio-hasierak</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Bilatu saio-hasierak</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Bilatu pasahitzak</string>
+    <string name="preferences_passwords_saved_logins_search_2">Bilatu pasahitzak</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Gunea</string>
     <!-- The header for the username for a login -->
@@ -1765,17 +1780,17 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Ezkutatu pasahitza</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Desblokeatu gordetako saio-hasierak ikusteko</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Desblokeatu gordetako saio-hasierak ikusteko</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Desblokeatu gordetako pasahitzak ikusteko</string>
+    <string name="logins_biometric_prompt_message_2">Desblokeatu gordetako pasahitzak ikusteko</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Lortu zure saio-hasierak eta pasahitzak</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Lortu zure saio-hasierak eta pasahitzak</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Bermatu gordetako zure pasahitzak</string>
+    <string name="logins_warning_dialog_title_2">Bermatu gordetako zure pasahitzak</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure saio-hasierak eta pasahitzak babesteko zure gailua beste norbaitek izango balu.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure saio-hasierak eta pasahitzak babesteko zure gailua beste norbaitek izango balu.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure gordetako pasahitzak babesteko zure gailua beste norbaitek izango balu.</string>
+    <string name="logins_warning_dialog_message_2">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure gordetako pasahitzak babesteko zure gailua beste norbaitek izango balu.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Geroago</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1793,10 +1808,10 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Azkenekoz erabilia</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordenatu saio-hasieren menua</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ordenatu saio-hasieren menua</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Ordenatu pasahitzen menua</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Ordenatu pasahitzen menua</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1804,44 +1819,44 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Helbideak</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Kreditu-txartelak</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditu-txartelak</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Ordainketa metodoak</string>
+    <string name="preferences_credit_cards_2">Ordainketa metodoak</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Gorde eta osatu automatikoki kreditu-txartelak</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Gorde eta osatu automatikoki kreditu-txartelak</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Gorde eta bete ordainketa metodoak</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Gorde eta bete ordainketa metodoak</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Datuak zifratuta daude</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Datuak zifratuta daude</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">Gordetzen dituzun ordainketa metodo guztiak zifratzen ditu %s(e)k</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">Gordetzen dituzun ordainketa metodo guztiak zifratzen ditu %s(e)k</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinkronizatu txartelak gailuen artean</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sinkronizatu txartelak</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Gehitu kreditu-txartela</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Gehitu kreditu-txartela</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Gehitu txartela</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Gehitu txartela</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Kudeatu gordetako txartelak</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kudeatu gordetako txartelak</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kudeatu txartelak</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Kudeatu txartelak</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Gehitu helbidea</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Kudeatu helbideak</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Gorde eta osatu automatikoki helbideak</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Gorde eta osatu automatikoki helbideak</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Gorde eta osatu helbideak</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Gorde eta osatu helbideak</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Kontuan izan zenbakiak, helbide elektronikoak eta bidalketa-helbideak</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Kontuan izan zenbakiak, helbide elektronikoak eta bidalketa-helbideak</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Telefono zenbakiak eta helbide elektronikoak ere baditu</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefono zenbakiak eta helbide elektronikoak ere baditu</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Gehitu txartela</string>
@@ -1862,9 +1877,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Ezabatu txartela</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Ziur zaude kreditu-txartel hau ezabatu nahi duzula?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ziur zaude kreditu-txartel hau ezabatu nahi duzula?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Ezabatu txartela?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Ezabatu txartela?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Ezabatu</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1877,24 +1892,24 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="credit_cards_saved_cards">Gordetako txartelak</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Idatzi baliozko kreditu-txartel zenbakia</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Idatzi baliozko kreditu-txartel zenbakia</string>
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Idatzi baliozko txartel-zenbakia</string>
+    <string name="credit_cards_number_validation_error_message_2">Idatzi baliozko txartel-zenbakia</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Bete eremu hau mesedez</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Bete eremu hau mesedez</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Gehitu izena</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Gehitu izena</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Desblokeatu gordetako txartelak ikusteko</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Bermatu zure kreditu-txartelak</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Bermatu zure kreditu-txartelak</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Bermatu gordetako zure ordainketa metodoak</string>
+    <string name="credit_cards_warning_dialog_title_2">Bermatu gordetako zure ordainketa metodoak</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure gordetako kreditu-txartelak babesteko zure gailua beste norbaitek izango balu.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza zure gordetako kreditu-txartelak babesteko zure gailua beste norbaitek izango balu.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza gordetako zure ordainketa metodoak babesteko zure gailua beste norbaitek izango balu.</string>
+    <string name="credit_cards_warning_dialog_message_3">Konfiguratu gailua blokeatzeko patroia, PINa edo pasahitza gordetako zure ordainketa metodoak babesteko zure gailua beste norbaitek izango balu.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Konfiguratu orain</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1902,10 +1917,10 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Desblokeatu zure gailua</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Desblokeatu gordetako kreditu txartelaren informazioa erabiltzeko</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Desblokeatu gordetako kreditu txartelaren informazioa erabiltzeko</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Desblokeatu gordetako ordainketa metodoak erabiltzeko</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Desblokeatu gordetako ordainketa metodoak erabiltzeko</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Gehitu helbidea</string>
     <!-- Title of the "Edit address" screen -->
@@ -1913,11 +1928,13 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Kudeatu helbideak</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Izena</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Izena</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Bigarren izena</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Bigarren izena</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Abizena</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Abizena</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Izena</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Helbidea</string>
     <!-- The header for the city of an address -->
@@ -1941,9 +1958,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Ezabatu helbidea</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Ziur zaude helbide hau ezabatu nahi duzula?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ziur zaude helbide hau ezabatu nahi duzula?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Ezabatu helbidea?</string>
+    <string name="addressess_confirm_dialog_message_2">Ezabatu helbidea?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Ezabatu</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2041,49 +2058,49 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Editatu</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Ziur zaude saio-hasiera hau ezabatu nahi duzula?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ziur zaude saio-hasiera hau ezabatu nahi duzula?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Ziur zaude pasahitz hau ezabatu nahi duzula?</string>
+    <string name="login_deletion_confirmation_2">Ziur zaude pasahitz hau ezabatu nahi duzula?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Ezabatu</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Utzi</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Saio-hasieren aukerak</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Saio-hasieren aukerak</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Pasahitzaren aukerak</string>
+    <string name="login_options_menu_2">Pasahitzaren aukerak</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Saio-hasieraren web helbiderako testu-eremu editagarria.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Saio-hasieraren web helbiderako testu-eremu editagarria.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">Webgunearen helbidearen testu-eremu editagarria.</string>
+    <string name="saved_login_hostname_description_3">Webgunearen helbidearen testu-eremu editagarria.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Saio-hasieraren erabiltzaile-izenerako testu-eremu editagarria.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Saio-hasieraren erabiltzaile-izenerako testu-eremu editagarria.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">Erabiltzaile-izenaren testu-eremu editagarria.</string>
+    <string name="saved_login_username_description_3">Erabiltzaile-izenaren testu-eremu editagarria.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Saio-hasieraren pasahitzerako testu-eremu editagarria.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Saio-hasieraren pasahitzerako testu-eremu editagarria.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Pasahitzaren testu-eremu editagarria.</string>
+    <string name="saved_login_password_description_2">Pasahitzaren testu-eremu editagarria.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Gorde saio-hasieraren aldaketak.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Gorde saio-hasieraren aldaketak.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Gorde aldaketak.</string>
+    <string name="save_changes_to_login_2">Gorde aldaketak.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Editatu</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Editatu</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Editatu pasahitza</string>
+    <string name="edit_2">Editatu pasahitza</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Gehitu saio-hasiera berria</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Gehitu saio-hasiera berria</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Gehitu pasahitza</string>
+    <string name="add_login_2">Gehitu pasahitza</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Pasahitza behar da</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Pasahitza behar da</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Idatzi pasahitz bat</string>
+    <string name="saved_login_password_required_2">Idatzi pasahitz bat</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Erabiltzaile-izena behar da</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Erabiltzaile-izena behar da</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Idatzi erabiltzaile-izen bat</string>
+    <string name="saved_login_username_required_2">Idatzi erabiltzaile-izen bat</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Ostalari-izena behar da</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2196,7 +2213,7 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="radio_preference_info_content_description">Egin klik xehetasun gehiagorako</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Nabigatu gora</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Nabigatu gora</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Itxi</string>
@@ -2236,8 +2253,6 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="review_quality_check_grade_title">Zenbateraino dira fidagarriak balorazio hauek?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Egokitutako balorazioa</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Balorazio fidagaitzak kenduta</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Balorazio fidagarrietan oinarrituta</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2295,10 +2310,6 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="review_quality_check_product_availability_warning_body">Produktua berriz ere erabilgarri dagoela ikusten baduzu, jakinaraz iezaguzu eta balorazioak egiaztatzeari ekingo diogu.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Jakinarazi produktua berriz ere erabilgarri dagoela</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Balorazioaren kalitatea egiaztatzen</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Balorazioaren kalitatea egiaztatzen</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Balorazioaren kalitatea egiaztatzen (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2345,13 +2356,19 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Argibide gehiago</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">&quot;Bai, probatu&quot; aukeratuta, Mozillaren %1$s(r)en %2$s eta %3$s onartzen dituzu.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">&quot;Bai, probatu&quot; aukeratuta, Mozillaren %1$s(r)en %2$s eta %3$s onartzen dituzu.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">&quot;Bai, probatu&quot; hautatuz gero, ondorengoa onartzen duzu %1$s(e)tik:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">&quot;Bai, probatu&quot; aukeratuta, %1$s(r)en %2$s eta %3$s(r)en %4$s onartzen dituzu.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">&quot;Bai, probatu&quot; aukeratuta, %1$s(r)en %2$s eta %3$s(r)en %4$s onartzen dituzu.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">pribatutasun-politika</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">pribatutasun-politika</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Pribatutasun-politika</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">pribatutasun-oharra</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">erabilera-baldintzak</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2422,6 +2439,10 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Itzuli orria?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Orria %1$s hizkuntzatik %2$s hizkuntzara itzuli da</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Probatu itzulpen pribatuak %1$s(e)n</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2434,6 +2455,8 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="translations_bottom_sheet_translate_to">Itzuli hona</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Une honetan ez</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Erakutsi jatorrizkoa</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Eginda</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2455,6 +2478,9 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="translation_error_language_not_supported_warning_text">Barkatu, %1$s ez dugu onartzen oraindik.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Argibide gehiago</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Itzultzen…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

@@ -84,7 +84,11 @@
     <string name="share_dialog_title">다음으로 공유</string>
 
     <string name="notification_erase_title_android_14">방문 기록을 삭제하시겠습니까?</string>
-    <string name="notification_erase_text_android_14">검색 기록을 안전하게 삭제하려면 이 알림을 탭하거나 지우세요.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">검색 기록을 안전하게 삭제하려면 이 알림을 탭하거나 지우세요.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">이 알림을 탭하거나 스와이프하면 인터넷 사용 기록이 안전하게 삭제됩니다.</string>
 
     <string name="notification_erase_text">방문 기록 지우기</string>
 

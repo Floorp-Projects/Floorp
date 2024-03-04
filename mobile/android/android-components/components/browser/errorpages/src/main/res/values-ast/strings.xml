@@ -25,7 +25,7 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
         <li>Esto podría ser un problema cola configuración del sirvidor o que daquién tea tentando de suplantalu.</li>
-        <li>Si nel pasáu te conectesti correutamente al sirvidor, l\'error quiciabes seya temporal polo qu\'anueva la páxina dempués.</li>
+        <li>Si nel pasáu te conectesti correutamente al sirvidor, ye posible que l\'error seya temporal polo qu\'anueva la páxina dempués.</li>
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
