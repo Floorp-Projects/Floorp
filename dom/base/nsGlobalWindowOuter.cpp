@@ -99,7 +99,6 @@
 
 // Other Classes
 #include "mozilla/dom/BarProps.h"
-#include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/dom/WorkerCommon.h"

@@ -23,7 +23,6 @@
 #include "nsImportModule.h"
 #include "nsPrintfCString.h"
 #include "nsComponentManagerUtils.h"
-#include "nsContentCID.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIContent.h"
 #include "txMozillaXMLOutput.h"

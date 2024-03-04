@@ -13,7 +13,6 @@
 #include "mozilla/ModuleUtils.h"
 #include "nsImageModule.h"
 #include "nsLayoutStatics.h"
-#include "nsContentCID.h"
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDataDocumentContentPolicy.h"

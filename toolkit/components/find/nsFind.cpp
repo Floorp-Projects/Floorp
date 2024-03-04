@@ -8,7 +8,6 @@
 
 #include "nsFind.h"
 #include "mozilla/Likely.h"
-#include "nsContentCID.h"
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsIFrame.h"

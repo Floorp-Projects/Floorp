@@ -12,7 +12,6 @@
 #include "XULButtonElement.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
 #include "nsIScriptContext.h"

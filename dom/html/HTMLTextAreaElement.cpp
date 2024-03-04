@@ -19,7 +19,6 @@
 #include "mozilla/TextControlState.h"
 #include "nsAttrValueInlines.h"
 #include "nsBaseCommandController.h"
-#include "nsContentCID.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsFocusManager.h"

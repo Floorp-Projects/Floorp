@@ -11,7 +11,6 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "nsAttrName.h"
 #include "nsCOMPtr.h"
-#include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsHTMLParts.h"

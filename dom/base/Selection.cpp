@@ -46,7 +46,6 @@
 #include "nsString.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionListener.h"
-#include "nsContentCID.h"
 #include "nsDeviceContext.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"

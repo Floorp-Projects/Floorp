@@ -6,7 +6,6 @@
 
 #include "ContentProcessMessageManager.h"
 
-#include "nsContentCID.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
@@ -31,7 +30,7 @@ ContentProcessMessageManager::~ContentProcessMessageManager() {
 
 ContentProcessMessageManager* ContentProcessMessageManager::Get() {
   nsCOMPtr<nsIMessageSender> service =
-      do_GetService(NS_CHILDPROCESSMESSAGEMANAGER_CONTRACTID);
+      do_GetService("@mozilla.org/childprocessmessagemanager;1");
   if (!service) {
     return nullptr;
   }

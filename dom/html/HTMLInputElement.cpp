@@ -49,7 +49,6 @@
 #include "nsSearchControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsRepeatService.h"
-#include "nsContentCID.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

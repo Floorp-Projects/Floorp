@@ -16,7 +16,6 @@
 #include "mozilla/dom/XPathNSResolverBinding.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
-#include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsDOMString.h"
 #include "nsError.h"

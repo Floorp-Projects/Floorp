@@ -18,7 +18,6 @@
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 
-#include "nsContentCID.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 
