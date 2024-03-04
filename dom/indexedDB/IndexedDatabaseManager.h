@@ -104,6 +104,9 @@ class IndexedDatabaseManager final {
                                    const nsACString& aOrigin,
                                    const nsAString& aDatabaseFilePath);
 
+  const nsTArray<SafeRefPtr<DatabaseFileManager>>& GetFileManagers(
+      PersistenceType aPersistenceType, const nsACString& aOrigin);
+
   void AddFileManager(SafeRefPtr<DatabaseFileManager> aFileManager);
 
   void InvalidateAllFileManagers();
