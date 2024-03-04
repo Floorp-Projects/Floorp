@@ -56,10 +56,12 @@ function runTest(aObjectOrEmbed)
   const pbutton = document.getElementById("pbutton");
   pbutton.focus();
 
-  synthesizeKey("KEY_Tab");
-  is(document.activeElement, aObjectOrEmbed, `${desc}: focus in parent after tab`);
-  is(childDoc.activeElement, childDoc.documentElement, `${desc}: focus in child after tab`);
-
+  let canTabMoveFocusToRootElement = !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element");
+  if (canTabMoveFocusToRootElement) {
+    synthesizeKey("KEY_Tab");
+    is(document.activeElement, aObjectOrEmbed, `${desc}: focus in parent after tab`);
+    is(childDoc.activeElement, childDoc.documentElement, `${desc}: focus in child after tab`);
+  }
   synthesizeKey("KEY_Tab");
   is(document.activeElement, aObjectOrEmbed, `${desc}: focus in parent after tab 2`);
   is(childDoc.activeElement, button, `${desc}: focus in child after tab 2`);

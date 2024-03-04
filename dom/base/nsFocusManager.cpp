@@ -4522,7 +4522,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
     if (aCurrentTabIndex == (aForward ? 0 : 1)) {
       // if going backwards, the canvas should be focused once the beginning
       // has been reached, so get the root element.
-      if (!aForward) {
+      if (!aForward && !StaticPrefs::dom_disable_tab_focus_to_root_element()) {
         nsCOMPtr<nsPIDOMWindowOuter> window = GetCurrentWindow(aRootContent);
         NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
@@ -4576,7 +4576,7 @@ bool nsFocusManager::TryToMoveFocusToSubDocument(
   NS_ASSERTION(doc, "content not in document");
   Document* subdoc = doc->GetSubDocumentFor(aCurrentContent);
   if (subdoc && !subdoc->EventHandlingSuppressed()) {
-    if (aForward) {
+    if (aForward && !StaticPrefs::dom_disable_tab_focus_to_root_element()) {
       // When tabbing forward into a frame, return the root
       // frame so that the canvas becomes focused.
       if (nsCOMPtr<nsPIDOMWindowOuter> subframe = subdoc->GetWindow()) {
@@ -4595,6 +4595,13 @@ bool nsFocusManager::TryToMoveFocusToSubDocument(
             aNavigateByKey, false, aResultContent);
         NS_ENSURE_SUCCESS(rv, false);
         if (*aResultContent) {
+          return true;
+        }
+        if (rootElement->IsEditable() &&
+            StaticPrefs::dom_disable_tab_focus_to_root_element()) {
+          // Only move to the root element with a valid reason
+          *aResultContent = rootElement;
+          NS_ADDREF(*aResultContent);
           return true;
         }
       }

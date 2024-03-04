@@ -2530,6 +2530,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvNavigateByKey(
         aForward
             ? (aForDocumentNavigation
                    ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FIRSTDOC)
+               : StaticPrefs::dom_disable_tab_focus_to_root_element()
+                   ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FIRST)
                    : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_ROOT))
             : (aForDocumentNavigation
                    ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_LASTDOC)
