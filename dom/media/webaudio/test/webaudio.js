@@ -42,7 +42,7 @@ function expectRejectedPromise(that, func, exceptionName) {
   ok(promise instanceof Promise, "Expect a Promise");
 
   promise
-    .then(function (res) {
+    .then(function () {
       ok(false, "Promise resolved when it should have been rejected.");
     })
     .catch(function (err) {

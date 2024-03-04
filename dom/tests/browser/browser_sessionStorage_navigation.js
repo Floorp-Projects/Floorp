@@ -66,7 +66,7 @@ add_task(async function () {
     await SpecialPowers.spawn(
       browser,
       [ORIGIN2, key, value],
-      async (ORIGIN, key, value) => {
+      async (ORIGIN, key) => {
         is(content.window.origin, ORIGIN, `Navigate to ${ORIGIN} as expected`);
 
         let value1 = content.window.sessionStorage.getItem(key);

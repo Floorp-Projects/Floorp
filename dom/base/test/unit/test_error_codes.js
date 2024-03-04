@@ -10,7 +10,7 @@ function asyncXHR(expectedStatus, nextTestFunc) {
   xhr.open("GET", "http://localhost:4444/test_error_code.xml", true);
 
   var sawError = false;
-  xhr.addEventListener("loadend", function doAsyncRequest_onLoad(event) {
+  xhr.addEventListener("loadend", function doAsyncRequest_onLoad() {
     Assert.ok(sawError, "Should have received an error");
     nextTestFunc();
   });

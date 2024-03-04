@@ -16,7 +16,7 @@
          is(await props[prop], obj[prop], type + " property value " + prop + " is " + props[prop]);
        }
      };
-     let failOnCall = (event) => {
+     let failOnCall = () => {
        ok(false, "No connect/state events should be received on startup!");
      };
      async function runTests () {

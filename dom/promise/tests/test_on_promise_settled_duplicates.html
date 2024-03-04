@@ -38,7 +38,7 @@ Bug 1084065 - Test that Debugger.prototype.onPromiseResolved doesn't get dupes.
     seen.add(wp);
   };
 
-  var promise = new Promise(function(fulfill, reject) {
+  var promise = new Promise(function(fulfill) {
     fulfill(1);
     fulfill(2);
     fulfill(3);

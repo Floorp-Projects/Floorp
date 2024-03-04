@@ -12,7 +12,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(async (ms, v) => {
+runWithMSE(async (ms) => {
   await once(ms, "sourceopen");
   const sb = ms.addSourceBuffer("video/webm");
 

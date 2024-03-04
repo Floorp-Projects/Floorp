@@ -30,7 +30,7 @@ add_task(async function test_register_rollback() {
   PushService.init({
     serverURI: "wss://push.example.org/",
     db: makeStub(db, {
-      put(prev, record) {
+      put() {
         return Promise.reject("universe has imploded");
       },
     }),

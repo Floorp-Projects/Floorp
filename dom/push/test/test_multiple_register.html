@@ -23,7 +23,7 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
-  function debug(str) {
+  function debug() {
   //  console.log(str + "\n");
   }
 
@@ -46,12 +46,12 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function setupPushNotification(swr) {
-    var p = new Promise(function(res, rej) {
+    var p = new Promise(function(res) {
       swr.pushManager.subscribe().then(
         function(pushSubscription) {
           ok(true, "successful registered for push notification");
           res({swr, pushSubscription});
-        }, function(error) {
+        }, function() {
           ok(false, "could not register for push notification");
           res(null);
         }
@@ -61,12 +61,12 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function setupSecondEndpoint(result) {
-    var p = new Promise(function(res, rej) {
+    var p = new Promise(function(res) {
       result.swr.pushManager.subscribe().then(
         function(pushSubscription) {
           ok(result.pushSubscription.endpoint == pushSubscription.endpoint, "setupSecondEndpoint - Got the same endpoint back.");
           res(result);
-        }, function(error) {
+        }, function() {
           ok(false, "could not register for push notification");
           res(null);
         }
@@ -76,12 +76,12 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function getEndpointExpectNull(swr) {
-    var p = new Promise(function(res, rej) {
+    var p = new Promise(function(res) {
       swr.pushManager.getSubscription().then(
         function(pushSubscription) {
           ok(pushSubscription == null, "getEndpoint should return null when app not subscribed.");
           res(swr);
-        }, function(error) {
+        }, function() {
           ok(false, "could not register for push notification");
           res(null);
         }
@@ -91,13 +91,13 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function getEndpoint(result) {
-    var p = new Promise(function(res, rej) {
+    var p = new Promise(function(res) {
       result.swr.pushManager.getSubscription().then(
         function(pushSubscription) {
           ok(result.pushSubscription.endpoint == pushSubscription.endpoint, "getEndpoint - Got the same endpoint back.");
 
           res(pushSubscription);
-        }, function(error) {
+        }, function() {
           ok(false, "could not register for push notification");
           res(null);
         }

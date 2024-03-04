@@ -142,7 +142,7 @@ declTest("destroy actor by page navigates", {
 declTest("destroy actor by tab being closed", {
   allFrames: true,
 
-  async test(browser) {
+  async test() {
     info("creating a new tab");
     let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
     let newTabBrowser = newTab.linkedBrowser;
@@ -158,7 +158,7 @@ declTest("destroy actor by tab being closed", {
     let didDestroyPromise = new Promise(resolve => {
       Services.ppmm.addMessageListener(
         "test-jswindowactor-diddestroy",
-        function onmessage(msg) {
+        function onmessage() {
           Services.ppmm.removeMessageListener(
             "test-jswindowactor-diddestroy",
             onmessage

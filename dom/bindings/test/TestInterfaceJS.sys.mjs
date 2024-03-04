@@ -93,12 +93,12 @@ TestInterfaceJS.prototype = {
   pingPongNullableUnion(x) {
     return x;
   },
-  returnBadUnion(x) {
+  returnBadUnion() {
     return 3;
   },
 
-  testSequenceOverload(arg) {},
-  testSequenceUnion(arg) {},
+  testSequenceOverload() {},
+  testSequenceUnion() {},
 
   testThrowError() {
     throw new this._win.Error("We are an Error");
@@ -121,7 +121,7 @@ TestInterfaceJS.prototype = {
     throw Cr.NS_BINDING_ABORTED;
   },
 
-  testThrowNsresultFromNative(x) {
+  testThrowNsresultFromNative() {
     // We want to throw an exception that we generate from an nsresult thrown
     // by a C++ component.
     Services.io.notImplemented();

@@ -64,7 +64,7 @@ function checkIndividualResults(aTestname, aExpectedImg, aName) {
 
           advance();
         },
-        function(xhr) {
+        function() {
           ok(false, "Can't get results from the counter server.");
           SimpleTest.finish();
         });
@@ -73,7 +73,7 @@ function checkIndividualResults(aTestname, aExpectedImg, aName) {
 function resetState() {
   doXHR('/tests/dom/security/test/referrer-policy/img_referrer_testserver.sjs?action=resetState',
     advance,
-    function(xhr) {
+    function() {
       ok(false, "error in reset state");
       SimpleTest.finish();
     });

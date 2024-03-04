@@ -13,7 +13,7 @@ const { BrowserElementPromptService } = ChromeUtils.import(
   "resource://gre/modules/BrowserElementPromptService.jsm"
 );
 
-function debug(msg) {
+function debug() {
   // dump("BrowserElementParent - " + msg + "\n");
 }
 

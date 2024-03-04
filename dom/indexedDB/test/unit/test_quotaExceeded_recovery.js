@@ -82,14 +82,14 @@ function* testSteps() {
         event.stopPropagation();
       };
 
-      trans.oncomplete = function (event) {
+      trans.oncomplete = function () {
         if (iter == 1) {
           i++;
         }
         j++;
         testGenerator.next(true);
       };
-      trans.onabort = function (event) {
+      trans.onabort = function () {
         is(trans.error.name, "QuotaExceededError", "Reached quota limit");
         testGenerator.next(false);
       };

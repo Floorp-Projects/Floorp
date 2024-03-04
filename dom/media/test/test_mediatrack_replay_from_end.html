@@ -34,19 +34,19 @@ function startTest(test, token) {
   let isPlaying = false;
   let steps = 0;
 
-  element.audioTracks.onaddtrack = function(e) {
+  element.audioTracks.onaddtrack = function() {
     audioOnaddtrack++;
   }
 
-  element.audioTracks.onremovetrack = function(e) {
+  element.audioTracks.onremovetrack = function() {
     audioOnremovetrack++;
   }
 
-  element.videoTracks.onaddtrack = function(e) {
+  element.videoTracks.onaddtrack = function() {
     videoOnaddtrack++;
   }
 
-  element.videoTracks.onremovetrack = function(e) {
+  element.videoTracks.onremovetrack = function() {
     videoOnremovetrack++;
   }
 

@@ -4,7 +4,7 @@ function check_ogg(v, enabled, finish) {
   }
 
   function basic_test() {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       // Ogg types
       check("video/ogg", "maybe");
       check("audio/ogg", "maybe");

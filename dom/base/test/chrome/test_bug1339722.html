@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
       // behave similarly.
       const TOPIC = "document-on-modify-request";
       let win;
-      const observe = (subject, topic, data) => {
+      const observe = (subject, topic) => {
         info("Got " + topic);
         Services.obs.removeObserver(observe, TOPIC);
 
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
 
           // Remove the iframe to cause frameloader destroy.
           iframe.remove();
-          setTimeout($ => {
+          setTimeout(() => {
             ok(!document.getElementById("testFrame"), "verify iframe removed");
             SimpleTest.finish();
           }, 0);

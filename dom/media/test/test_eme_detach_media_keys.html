@@ -15,7 +15,7 @@
 SimpleTest.waitForExplicitFinish();
 
 function createAndSet() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var m;
     navigator.requestMediaKeySystemAccess(CLEARKEY_KEYSYSTEM, gCencMediaKeySystemConfig)
     .then(function (access) {

@@ -45,11 +45,11 @@ var tests = [
 function ChannelListener() {}
 
 ChannelListener.prototype = {
-  onStartRequest(request) {},
-  onDataAvailable(request, stream, offset, count) {
+  onStartRequest() {},
+  onDataAvailable() {
     do_throw("Should not get any data!");
   },
-  onStopRequest(request, status) {
+  onStopRequest(request) {
     var upgrade_insecure_header = false;
     try {
       if (request.getRequestHeader("Upgrade-Insecure-Requests")) {
@@ -76,7 +76,7 @@ function setupChannel(aContentType) {
   return chan;
 }
 
-function serverHandler(metadata, response) {
+function serverHandler() {
   // no need to perform anything here
 }
 

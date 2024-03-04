@@ -1,10 +1,10 @@
 "use strict";
 
-add_task(async function (test) {
+add_task(async function () {
   return new Response(new Blob([], { type: "text/plain" })).body.cancel();
 });
 
-add_task(function (test) {
+add_task(function () {
   var response = new Response(
     new Blob(["This is data"], { type: "text/plain" })
   );
@@ -13,14 +13,14 @@ add_task(function (test) {
   return reader.cancel();
 });
 
-add_task(function (test) {
+add_task(function () {
   var response = new Response(new Blob(["T"], { type: "text/plain" }));
   var reader = response.body.getReader();
 
   var closedPromise = reader.closed.then(function () {
     return reader.cancel();
   });
-  reader.read().then(function readMore({ done, value }) {
+  reader.read().then(function readMore({ done }) {
     if (!done) {
       return reader.read().then(readMore);
     }

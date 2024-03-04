@@ -18,8 +18,8 @@ add_task(async function test() {
   async function fn() {
     try {
       let stream = new ReadableStream({
-        start(controller) {},
-        pull(controller) {
+        start() {},
+        pull() {
           // eslint-disable-next-line no-debugger
           debugger;
         },

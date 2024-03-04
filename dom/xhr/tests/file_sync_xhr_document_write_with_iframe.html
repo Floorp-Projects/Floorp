@@ -7,7 +7,7 @@ function syncXHR() {
   xhr.send(null);
 }
 
-addEventListener('load', evt => {
+addEventListener('load', () => {
   syncXHR();
   document.open();
   document.write(

@@ -33,7 +33,7 @@ function* testSteps() {
   for (let i in values) {
     request = objectStore.add(values[i]);
     request.onerror = errorHandler;
-    request.onsuccess = function (event) {
+    request.onsuccess = function () {
       if (++addedCount == values.length) {
         executeSoon(function () {
           testGenerator.next();

@@ -68,7 +68,7 @@
       Notification.requestPermission({})
         .then(_ => {
           ok(false, "Non callable arg to requestPermission should reject promise");
-        }, err => {
+        }, () => {
           ok(true, "Non callable arg to requestPermission should reject promise");
         })
         .then(done);

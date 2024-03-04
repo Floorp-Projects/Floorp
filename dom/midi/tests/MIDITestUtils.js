@@ -1,7 +1,7 @@
 var MIDITestUtils = {
   permissionSetup: allow => {
     let permPromiseRes;
-    let permPromise = new Promise((res, rej) => {
+    let permPromise = new Promise(res => {
       permPromiseRes = res;
     });
     SpecialPowers.pushPrefEnv(

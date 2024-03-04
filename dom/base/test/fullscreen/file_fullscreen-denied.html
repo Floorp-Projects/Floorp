@@ -137,7 +137,7 @@ function requestFullscreenMouseBtn(event, button) {
   synthesizeMouseAtCenter(clickEl, { button });
 }
 
-async function testFullscreenMouseBtn(event, button, next) {
+async function testFullscreenMouseBtn() {
   await SpecialPowers.pushPrefEnv({
     "set": [["full-screen-api.mouse-event-allow-left-button-only", true]]
   });

@@ -73,7 +73,7 @@ function* testSteps() {
           is(cursor.key, modifiedEntry, "Correct key");
 
           cursor.value.index = unique ? 30 : 35;
-          cursor.update(cursor.value).onsuccess = function (event) {
+          cursor.update(cursor.value).onsuccess = function () {
             cursor.continue();
           };
         } else {
@@ -106,7 +106,7 @@ function* testSteps() {
           is(cursor.key, modifiedEntry, "Correct key");
 
           delete cursor.value.index;
-          cursor.update(cursor.value).onsuccess = function (event) {
+          cursor.update(cursor.value).onsuccess = function () {
             indexCount--;
             cursor.continue();
           };

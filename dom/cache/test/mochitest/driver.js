@@ -32,14 +32,14 @@ function runTests(testFile, order) {
 
   // adapted from dom/indexedDB/test/helpers.js
   function clearStorage() {
-    var clearUnpartitionedStorage = new Promise(function (resolve, reject) {
+    var clearUnpartitionedStorage = new Promise(function (resolve) {
       var qms = SpecialPowers.Services.qms;
       var principal = SpecialPowers.wrap(document).nodePrincipal;
       var request = qms.clearStoragesForPrincipal(principal);
       var cb = SpecialPowers.wrapCallback(resolve);
       request.callback = cb;
     });
-    var clearPartitionedStorage = new Promise(function (resolve, reject) {
+    var clearPartitionedStorage = new Promise(function (resolve) {
       var qms = SpecialPowers.Services.qms;
       var principal = SpecialPowers.wrap(document).partitionedPrincipal;
       var request = qms.clearStoragesForPrincipal(principal);
@@ -77,7 +77,7 @@ function runTests(testFile, order) {
       navigator.serviceWorker == null &&
       SpecialPowers.getBoolPref("dom.cache.privateBrowsing.enabled")
     ) {
-      return new Promise(function (resolve, reject) {
+      return new Promise(function (resolve) {
         resolve(true);
       });
     }
@@ -86,7 +86,7 @@ function runTests(testFile, order) {
   }
 
   function runFrameTest() {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       var iframe = document.createElement("iframe");
       iframe.src = "frame.html";
       iframe.onload = function () {

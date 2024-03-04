@@ -71,6 +71,6 @@ function emptyTest(msg) {
   sendAsyncMessage("EmptyTest:FinishPrepare", { message: "OK" });
 }
 
-function notTransferableTest(msg) {
+function notTransferableTest() {
   sendAsyncMessage("NotTransferableTest:FinishPrepare", { message: "OK" });
 }

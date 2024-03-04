@@ -7,5 +7,5 @@ var stream = new ReadableStream({
 var response = new Response(stream);
 var text = response.text().then(
   () => {},
-  e => {}
+  () => {}
 );

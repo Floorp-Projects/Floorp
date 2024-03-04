@@ -56,7 +56,7 @@ TestArray.addTest(
     crypto.subtle.importKey("raw", tv.raw, alg, true, ["encrypt"])
       .then(
         error(that),
-        complete(that, function(x) { return true; })
+        complete(that, function() { return true; })
       );
   }
 );
@@ -982,7 +982,7 @@ TestArray.addTest(
       .then(doVerify)
       .then(
         error(that),
-        complete(that, function(x) { return true; })
+        complete(that, function() { return true; })
       );
   }
 );

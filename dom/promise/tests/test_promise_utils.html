@@ -69,7 +69,7 @@ function promiseAllIterable() {
     is(values[1], 1, "Array values should match.");
     is(values[2], undefined, "Array values should match.");
     runTest();
-  }, function(e) {
+  }, function() {
     ok(false, "Promise.all shouldn't fail when an iterable is passed.");
     runTest();
   });
@@ -125,7 +125,7 @@ function promiseAllRejectFails() {
   ];
 
   var p = Promise.all(arr);
-  p.then(function(values) {
+  p.then(function() {
     ok(false, "Promise.all shouldn't resolve when iterable has rejected Promises.");
     runTest();
   }, function(e) {
@@ -140,7 +140,7 @@ function promiseAllCastError() {
     throw new ReferenceError("placeholder for nonexistent function call");
   } }]);
   ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
+  p.then(function() {
     ok(false, "promiseAllCastError: should've rejected.");
     runTest();
   }, function(e) {
@@ -161,7 +161,7 @@ function promiseAllEnumerable() {
     }
     is(count, 3, "Resolved array from Promise.all should be enumerable");
     runTest();
-  }, function(e) {
+  }, function() {
     ok(false, "promiseAllEnumerable: should've resolved.");
     runTest();
   });
@@ -230,7 +230,7 @@ function promiseRaceIterable() {
   Promise.race(participants()).then(function(winner) {
     is(winner, 10, "Winner should be the one that finished earlier.");
     runTest();
-  }, function(e) {
+  }, function() {
     ok(false, "Promise.race shouldn't throw when an iterable is passed!");
     runTest();
   });
@@ -257,7 +257,7 @@ function promiseRaceReject() {
 
 function promiseRaceThrow() {
   var p = Promise.race([
-    new Promise(function(resolve) {
+    new Promise(function() {
       throw new ReferenceError("placeholder for nonexistent function call");
     }),
     new Promise(function(resolve) {

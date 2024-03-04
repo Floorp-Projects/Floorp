@@ -102,7 +102,7 @@ function* testSteps() {
           let obj = cursor.value;
           obj.updated = true;
 
-          cursor.update(obj).onsuccess = function (event) {
+          cursor.update(obj).onsuccess = function () {
             ok(true, "Object updated");
             cursor.continue();
             keyIndex++;
@@ -110,7 +110,7 @@ function* testSteps() {
           return;
         }
 
-        cursor.delete().onsuccess = function (event) {
+        cursor.delete().onsuccess = function () {
           ok(true, "Object deleted");
           cursor.continue();
           keyIndex++;

@@ -69,7 +69,7 @@ var NotificationDB = {
     }
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (DEBUG) {
       debug("Topic: " + aTopic);
     }
@@ -132,7 +132,7 @@ var NotificationDB = {
       },
 
       // If read failed, we assume we have no notifications to load.
-      reason => {
+      () => {
         this.loaded = true;
         return this.createStore();
       }

@@ -67,7 +67,7 @@ caches
         );
         return snafu.put(req, res);
       })
-      .then(function (v) {
+      .then(function () {
         return snafu;
       });
   })

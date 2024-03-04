@@ -44,24 +44,24 @@ function testHaveXray() {
 }
 
 function testConstructor1() {
-  var p = new win.Promise(function(resolve, reject) { resolve(win.Promise.resolve(5)); });
+  var p = new win.Promise(function(resolve) { resolve(win.Promise.resolve(5)); });
   p.then(
     function(arg) {
       is(arg, 5, "Content Promise constructor resolved with content promise should work");
     },
-    function(e) {
+    function() {
       ok(false, "Content Promise constructor resolved with content promise should not fail");
     }
   ).then(nextTest);
 }
 
 function testConstructor2() {
-  var p = new win.Promise(function(resolve, reject) { resolve(Promise.resolve(5)); });
+  var p = new win.Promise(function(resolve) { resolve(Promise.resolve(5)); });
   p.then(
     function(arg) {
       is(arg, 5, "Content Promise constructor resolved with chrome promise should work");
     },
-    function(e) {
+    function() {
       ok(false, "Content Promise constructor resolved with chrome promise should not fail");
     }
   ).then(nextTest);
@@ -223,20 +223,20 @@ function testResolve3() {
     function(arg) {
       is(arg, 5, "Promise.resolve with chrome Promise should work");
     },
-    function(e) {
+    function() {
       ok(false, "Promise.resolve with chrome Promise should not fail");
     }
   ).then(nextTest);
 }
 
 function testResolve4() {
-  var p = new win.Promise((res, rej) => {});
+  var p = new win.Promise(() => {});
   Cu.getJSTestingFunctions().resolvePromise(p, 42);
   p.then(
     function(arg) {
       is(arg, 42, "Resolving an Xray to a promise with TestingFunctions resolvePromise should work");
     },
-    function(e) {
+    function() {
       ok(false, "Resolving an Xray to a promise with TestingFunctions resolvePromise should not fail");
     }
   ).then(nextTest);
@@ -246,7 +246,7 @@ function testReject1() {
   var p = win.Promise.reject(5);
   ok(p instanceof win.Promise, "Promise.reject should return a promise");
   p.then(
-    function(arg) {
+    function() {
       ok(false, "Promise should be rejected");
     },
     function(e) {
@@ -256,10 +256,10 @@ function testReject1() {
 }
 
 function testReject2() {
-  var p = new win.Promise((res, rej) => {});
+  var p = new win.Promise(() => {});
   Cu.getJSTestingFunctions().rejectPromise(p, 42);
   p.then(
-    function(arg) {
+    function() {
       ok(false, "Rejecting an Xray to a promise with TestingFunctions rejectPromise should trigger catch handler");
     },
     function(e) {
@@ -277,7 +277,7 @@ function testThen1() {
     function(arg) {
       is(arg, 25, "Promise.then should work");
     },
-    function(e) {
+    function() {
       ok(false, "Promise.then should not fail");
     }
   ).then(nextTest);
@@ -292,7 +292,7 @@ function testThen2() {
     function(arg) {
       is(arg, 25, "Promise.then resolved with chrome promise should work");
     },
-    function(e) {
+    function() {
       ok(false, "Promise.then resolved with chrome promise should not fail");
     }
   ).then(nextTest);
@@ -308,7 +308,7 @@ function testCatch1() {
     function(arg) {
       is(arg, 25, "Promise.catch should work");
     },
-    function(e) {
+    function() {
       ok(false, "Promise.catch should not fail");
     }
   ).then(nextTest);

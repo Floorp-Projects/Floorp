@@ -146,7 +146,7 @@ add_task(async function () {
   Services.obs.removeObserver(observer, "http-on-examine-response");
 });
 
-function observer(subject, topic, state) {
+function observer(subject, topic) {
   info("observer called with " + topic);
   if (topic == "http-on-examine-response") {
     onExamineResponse(subject);

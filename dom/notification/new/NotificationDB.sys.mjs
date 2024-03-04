@@ -74,7 +74,7 @@ var NotificationDB = {
     }
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (DEBUG) {
       debug("Topic: " + aTopic);
     }

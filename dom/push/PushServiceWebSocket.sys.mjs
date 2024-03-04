@@ -80,11 +80,11 @@ PushWebSocketListener.prototype = {
     this._pushService._wsOnStop(context, statusCode);
   },
 
-  onAcknowledge(context, size) {
+  onAcknowledge() {
     // EMPTY
   },
 
-  onBinaryMessageAvailable(context, message) {
+  onBinaryMessageAvailable() {
     // EMPTY
   },
 
@@ -971,7 +971,7 @@ export var PushServiceWebSocket = {
     // Otherwise, we're still setting up. If we don't have a request queue,
     // make one now.
     if (!this._notifyRequestQueue) {
-      let promise = new Promise((resolve, reject) => {
+      let promise = new Promise(resolve => {
         this._notifyRequestQueue = resolve;
       });
       this._enqueue(_ => promise);
@@ -1037,7 +1037,7 @@ export var PushServiceWebSocket = {
   },
 
   // begin Push protocol handshake
-  _wsOnStart(context) {
+  _wsOnStart() {
     lazy.console.debug("wsOnStart()");
 
     if (this._currentState != STATE_WAITING_FOR_WS_START) {

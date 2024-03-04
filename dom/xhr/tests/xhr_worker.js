@@ -53,21 +53,21 @@ function onprogress(event) {
 }
 xhr.addEventListener("progress", onprogress);
 
-xhr.addEventListener("foopety", function (event) {});
-xhr.removeEventListener("doopety", function (event) {});
+xhr.addEventListener("foopety", function () {});
+xhr.removeEventListener("doopety", function () {});
 
-xhr.onloadend = function (event) {
+xhr.onloadend = function () {
   const message = { type: "loadend" };
   postMessage(message);
 };
 
 var upload = xhr.upload;
-upload.onprogress = function (event) {};
-upload.addEventListener("foo", function (event) {});
-upload.removeEventListener("foo", function (event) {});
-upload.addEventListener("load", function (event) {});
-upload.removeEventListener("foo", function (event) {});
-upload.onload = function (event) {
+upload.onprogress = function () {};
+upload.addEventListener("foo", function () {});
+upload.removeEventListener("foo", function () {});
+upload.addEventListener("load", function () {});
+upload.removeEventListener("foo", function () {});
+upload.onload = function () {
   const message = { type: "upload.load" };
   postMessage(message);
 };

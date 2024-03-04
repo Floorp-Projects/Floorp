@@ -5,7 +5,7 @@
   var winID = SpecialPowers.wrap(this).windowGlobalChild.innerWindowId;
 
   var observer = {
-    observe(subject, topic) {
+    observe(subject) {
       var currID = SpecialPowers.wrap(subject).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
       if (currID != winID) {
         return;

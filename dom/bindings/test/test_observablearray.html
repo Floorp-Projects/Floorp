@@ -21,7 +21,7 @@ add_task(function testObservableArray_length() {
   let deleteCallbackTests = null;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback() {
       setCallbackCount++;
     },
     deleteBooleanCallback(value, index) {
@@ -82,10 +82,10 @@ add_task(function testObservableArray_length_callback_throw() {
   let deleteCallbackCount = 0;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback() {
       setCallbackCount++;
     },
-    deleteBooleanCallback(value, index) {
+    deleteBooleanCallback(value) {
       deleteCallbackCount++;
       if (value) {
         throw new Error("deleteBooleanCallback");
@@ -268,7 +268,7 @@ add_task(function testObservableArray_setter_callback_throw() {
         throw new Error("setBooleanCallback");
       }
     },
-    deleteBooleanCallback(value, index) {
+    deleteBooleanCallback(value) {
       deleteCallbackCount++;
       if (value) {
         throw new Error("deleteBooleanCallback");
@@ -437,7 +437,7 @@ add_task(function testObservableArray_indexed_setter_callback_throw() {
   let deleteCallbackCount = 0;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback(value) {
       setCallbackCount++;
       if (value) {
         throw new Error("setBooleanCallback");
@@ -501,7 +501,7 @@ add_task(function testObservableArray_object() {
       is(index, callbackIndex++, "setCallbackTests: test index argument");
       isDeeply(values[index], value, "setCallbackTests: test value argument");
     },
-    deleteObjectCallback(value, index) {
+    deleteObjectCallback() {
       deleteCallbackCount++;
     },
   });
@@ -521,10 +521,10 @@ add_task(function testObservableArray_object() {
 
 add_task(function testObservableArray_xrays() {
   let m = new TestInterfaceObservableArray({
-    setObjectCallback(value, index) {
+    setObjectCallback() {
       ok(false, "Shouldn't reach setObjectCallback");
     },
-    deleteObjectCallback(value, index) {
+    deleteObjectCallback() {
       ok(false, "Shouldn't reach deleteObjectCallback");
     },
   });

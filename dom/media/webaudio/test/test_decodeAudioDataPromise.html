@@ -27,7 +27,7 @@ var ac = new AudioContext();
 expectNoException(function() {
   var p = ac.decodeAudioData(" ");
   ok(p instanceof Promise, "AudioContext.decodeAudioData should return a Promise");
-  p.then(function(data) {
+  p.then(function() {
     ok(false, "Promise should not resolve with an invalid source buffer.");
     finish();
   }).catch(function(e) {

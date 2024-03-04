@@ -17,7 +17,7 @@
   var channel = new MessageChannel();
   ok(channel, "MessageChannel is created");
 
-  channel.port1.onmessage = function(evt) {
+  channel.port1.onmessage = function() {
     ok(true, "message received!");
     SimpleTest.finish();
   }

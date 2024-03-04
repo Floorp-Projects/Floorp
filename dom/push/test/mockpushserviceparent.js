@@ -85,7 +85,7 @@ addMessageListener("socket-setup", function () {
   });
 });
 
-addMessageListener("socket-teardown", function (msg) {
+addMessageListener("socket-teardown", function () {
   pushService
     .restoreServiceBackend()
     .then(_ => {

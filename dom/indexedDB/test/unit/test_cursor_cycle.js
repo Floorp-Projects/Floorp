@@ -34,7 +34,7 @@ function* testSteps() {
     let cursor = event.target.result;
     if (cursor) {
       let objectStore = event.target.transaction.objectStore("foo");
-      objectStore.delete(Bob.ss).onsuccess = function (event) {
+      objectStore.delete(Bob.ss).onsuccess = function () {
         cursor.continue();
       };
     }

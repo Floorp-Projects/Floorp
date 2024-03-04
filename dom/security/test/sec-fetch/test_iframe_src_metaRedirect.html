@@ -25,7 +25,7 @@ let testPassCounter = 0;
 
 var script = SpecialPowers.loadChromeScript(() => {
   /* eslint-env mozilla/chrome-script */
-  Services.obs.addObserver(function onExamResp(subject, topic, data) {
+  Services.obs.addObserver(function onExamResp(subject) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     if (!channel.URI.spec.startsWith("https://example.com/tests/dom/security/test/sec-fetch/file_redirect.sjs")) {
       return;

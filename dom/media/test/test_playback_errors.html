@@ -24,7 +24,7 @@ function startTest(test, token) {
     v.remove();
     manager.finished(token);
   }
-  var checkError = function(t, v) { return function(evt) {
+  var checkError = function(t, v) { return function() {
     v._errorCount++;
     is(v._errorCount, 1, t.name + " only one error fired");
     endedTest(v);

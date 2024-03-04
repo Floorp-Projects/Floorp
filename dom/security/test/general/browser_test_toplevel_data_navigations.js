@@ -15,7 +15,7 @@ add_task(async function test_nav_data_uri() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
-  await BrowserTestUtils.withNewTab(kDataURI, async function (browser) {
+  await BrowserTestUtils.withNewTab(kDataURI, async function () {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [{ kDataBody }],

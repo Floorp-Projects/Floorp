@@ -72,7 +72,7 @@ function startTest(test, token)
       ok(false, " Failed to set original mediakeys back.");
     }
 
-    function onCanPlayAgain(ev) {
+    function onCanPlayAgain() {
       Promise.all([closeSessions()])
       .then(() => {
         ok(true, " (ENCRYPTED) Playback can be resumed.");
@@ -91,7 +91,7 @@ function startTest(test, token)
     v.currentTime = v.duration / 2;
   }
 
-  function onCanPlay(ev) {
+  function onCanPlay() {
     function onSetMediaKeysToNullOK() {
       ok(true, TimeStamp(token) + " Set MediaKeys to null. OK!");
 

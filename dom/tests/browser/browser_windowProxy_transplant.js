@@ -59,7 +59,7 @@ add_task(async function () {
           return new Promise(resolve => {
             iframe.addEventListener(
               "load",
-              event => {
+              () => {
                 info("Got an iframe load event!");
                 resolve();
               },

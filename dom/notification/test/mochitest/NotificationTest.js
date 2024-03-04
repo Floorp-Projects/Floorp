@@ -75,7 +75,7 @@ var NotificationTest = (function () {
       );
     },
 
-    clickNotification(notification) {
+    clickNotification() {
       // TODO: how??
     },
 

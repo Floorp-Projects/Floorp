@@ -100,7 +100,7 @@ export class GlobalPCList {
     if (this._list[winID] === undefined) {
       return;
     }
-    this._list[winID] = this._list[winID].filter(function (e, i, a) {
+    this._list[winID] = this._list[winID].filter(function (e) {
       return e.get() !== null;
     });
 
@@ -996,7 +996,7 @@ export class RTCPeerConnection {
     return this._async(() => this._createAnswer(optionsOrOnSucc));
   }
 
-  _createAnswer(options) {
+  _createAnswer() {
     this._checkClosed();
     return this._chain(() => this._createAnAnswer());
   }

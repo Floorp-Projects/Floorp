@@ -6,7 +6,7 @@
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-  window.onload = (event) => {
+  window.onload = () => {
     let myLoc = window.location.href;
     window.opener.parent.postMessage({location: myLoc}, "*");
     window.close();

@@ -28,11 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   }
 
   var asyncPPML = false;
-  function ppmASL(m) {
+  function ppmASL() {
     asyncPPML = true;
   }
   var syncPPML = false;
-  function ppmSL(m) {
+  function ppmSL() {
     syncPPML = true;
   }
   ppm.addMessageListener("processmessageAsync", ppmASL);
@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   cpm.sendSyncMessage("processmessageSync", "");
 
   var asyncCPML = false;
-  function cpmASL(m) {
+  function cpmASL() {
     asyncCPML = true;
   }
   cpm.addMessageListener("childprocessmessage", cpmASL);
@@ -93,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var weakListener = {
     QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
-    receiveMessage(msg) {
+    receiveMessage() {
       if (weakMessageReceived) {
         ok(false, 'Weak listener fired twice.');
         return;
@@ -109,7 +109,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var weakListener2 = {
     QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
-    receiveMessage(msg) {
+    receiveMessage() {
       ok(false, 'Should not have received a message.');
     }
   };

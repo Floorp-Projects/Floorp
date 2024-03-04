@@ -110,7 +110,7 @@ add_task(function testObservableArray_helper_replaceElementAt_callback_throw() {
   let deleteCallbackCount = 0;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback(value) {
       setCallbackCount++;
       if (value) {
         throw new Error("setBooleanCallback");
@@ -170,7 +170,7 @@ add_task(function testObservableArray_helper_appendElement() {
         setCallbackTests(value, index);
       }
     },
-    deleteBooleanCallback(value, index) {
+    deleteBooleanCallback() {
       deleteCallbackCount++;
     },
   });
@@ -211,13 +211,13 @@ add_task(function testObservableArray_helper_appendElement_callback_throw() {
   let deleteCallbackCount = 0;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback(value) {
       setCallbackCount++;
       if (value) {
         throw new Error("setBooleanCallback");
       }
     },
-    deleteBooleanCallback(value, index) {
+    deleteBooleanCallback() {
       deleteCallbackCount++;
     },
   });
@@ -257,7 +257,7 @@ add_task(function testObservableArray_helper_removeLastElement() {
   let deleteCallbackTests = null;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback() {
       setCallbackCount++;
     },
     deleteBooleanCallback(value, index) {
@@ -316,10 +316,10 @@ add_task(function testObservableArray_helper_removeLastElement_callback_throw() 
   let deleteCallbackCount = 0;
 
   let m = new TestInterfaceObservableArray({
-    setBooleanCallback(value, index) {
+    setBooleanCallback() {
       setCallbackCount++;
     },
-    deleteBooleanCallback(value, index) {
+    deleteBooleanCallback(value) {
       deleteCallbackCount++;
       if (value) {
         throw new Error("deleteBooleanCallback");

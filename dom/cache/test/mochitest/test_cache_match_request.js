@@ -162,7 +162,7 @@ function testRequest(
     .then(function () {
       return caches
         .match(request, { cacheName: name + "mambojambo" })
-        .then(function (result) {
+        .then(function () {
           is(
             typeof r,
             "undefined",

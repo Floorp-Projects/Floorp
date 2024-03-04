@@ -36,7 +36,7 @@ add_task(async function testPeriodicTimeupdateShouldOnlyBeDispatchedOnceWithin25
       info(`seeking ends`);
       video._ignoreEvents = false;
     }
-    function checkTimeupdate(event) {
+    function checkTimeupdate() {
       // When reaching to the end, video would perform a seek to the start
       // position where one mandatory `timeupdate` would be dispatched.
       if (video._ignoreEvents) {

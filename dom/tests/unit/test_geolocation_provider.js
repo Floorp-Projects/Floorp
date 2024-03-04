@@ -12,10 +12,10 @@ function terminate(succ) {
   geolocation.clearWatch(watchID);
 }
 
-function successCallback(pos) {
+function successCallback() {
   terminate(true);
 }
-function errorCallback(pos) {
+function errorCallback() {
   terminate(false);
 }
 

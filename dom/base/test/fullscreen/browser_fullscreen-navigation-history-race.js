@@ -82,7 +82,7 @@ function preventBFCache(aBrowsingContext, aPrevent) {
               let target = content.document.getElementById("div");
               target.addEventListener(
                 "mousedown",
-                function (e) {
+                function () {
                   content.window.history.back();
                 },
                 { once: true }

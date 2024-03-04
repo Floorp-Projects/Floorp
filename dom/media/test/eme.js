@@ -440,7 +440,7 @@ function SetupEME(v, test, token) {
 }
 
 function fetchWithXHR(uri, onLoadFunction) {
-  var p = new Promise(function (resolve, reject) {
+  var p = new Promise(function (resolve) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
@@ -463,7 +463,7 @@ function fetchWithXHR(uri, onLoadFunction) {
 }
 
 function once(target, name, cb) {
-  var p = new Promise(function (resolve, reject) {
+  var p = new Promise(function (resolve) {
     target.addEventListener(
       name,
       function (arg) {

@@ -28,7 +28,7 @@ function* testSteps() {
   for (let i = 0; i < 100; i++) {
     request = objectStore.add({ foo: i });
     request.onerror = errorHandler;
-    request.onsuccess = function (event) {
+    request.onsuccess = function () {
       if (++addedCount == 100) {
         executeSoon(function () {
           testGenerator.next();

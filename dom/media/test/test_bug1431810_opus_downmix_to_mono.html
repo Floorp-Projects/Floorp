@@ -116,14 +116,14 @@ function mediaElementWithPhaseInversionDisabled(audioContext, mediaElement, succ
 
 let ac = new AudioContext();
 
-function testPhaseInversion(mediaElement) {
-  return new Promise((accept, reject) => {
+function testPhaseInversion() {
+  return new Promise((accept) => {
     mediaElementWithPhaseInversion(ac, a, accept);
   });
 }
 
-function testPhaseInversionDisabled(mediaElement) {
-  return new Promise((accept, reject) => {
+function testPhaseInversionDisabled() {
+  return new Promise((accept) => {
     mediaElementWithPhaseInversionDisabled(ac, b, accept);
   });
 }

@@ -49,7 +49,7 @@ ConsoleAPIStorageService.prototype = {
     "nsIObserver",
   ]),
 
-  observe: function CS_observe(aSubject, aTopic, aData) {
+  observe: function CS_observe(aSubject, aTopic) {
     if (aTopic == "xpcom-shutdown") {
       Services.obs.removeObserver(this, "xpcom-shutdown");
       Services.obs.removeObserver(this, "inner-window-destroyed");

@@ -10,7 +10,7 @@ const URL1 = `https://example.com/${PATH}`;
 const URL2 = `https://example.org/${PATH}`;
 
 function listenForCrash(win) {
-  function listener(event) {
+  function listener() {
     ok(false, "a crash occurred");
   }
 

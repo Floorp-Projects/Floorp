@@ -70,7 +70,7 @@ async function WaitRemoveDocumentAndCloseTab(aBrowser, aBrowsingContext) {
     return new Promise(resolve => {
       content.document.addEventListener(
         "fullscreenchange",
-        e => {
+        () => {
           resolve();
         },
         { once: true }

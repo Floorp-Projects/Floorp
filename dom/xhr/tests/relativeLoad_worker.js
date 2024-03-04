@@ -6,7 +6,7 @@
 /* global workerURL */
 const importURL = "relativeLoad_import.js";
 
-onmessage = function (event) {
+onmessage = function () {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "worker_testXHR.txt", false);
   xhr.send(null);

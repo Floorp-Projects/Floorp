@@ -23,10 +23,10 @@ function runTest() {
   [{}, {}, {}, {}, {}].reduce(Promise.resolve.bind(Promise));
   ok(true, "No leaks with resolve?");
 
-  [{}, {}, {}, {}, {}].reduce(function(a, b, c, d) { return new Promise(function(r1, r2) { throw a; }); });
+  [{}, {}, {}, {}, {}].reduce(function(a) { return new Promise(function() { throw a; }); });
   ok(true, "No leaks with exception?");
 
-  [{}, {}, {}, {}, {}].reduce(function(a, b, c, d) { return new Promise(function(r1, r2) { }); });
+  [{}, {}, {}, {}, {}].reduce(function() { return new Promise(function() { }); });
   ok(true, "No leaks with empty promise?");
 
   SimpleTest.finish();

@@ -11,7 +11,7 @@ function removeNodeAndSource(n) {
 }
 
 function once(target, name, cb) {
-  var p = new Promise(function (resolve, reject) {
+  var p = new Promise(function (resolve) {
     target.addEventListener(
       name,
       function () {

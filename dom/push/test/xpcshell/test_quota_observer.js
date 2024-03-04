@@ -77,7 +77,7 @@ add_task(async function test_expiration_history_observer() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(request) {
+        onHello() {
           this.serverSendMsg(
             JSON.stringify({
               messageType: "hello",
@@ -106,7 +106,7 @@ add_task(async function test_expiration_history_observer() {
           equal(request.code, 201, "Expected quota exceeded unregister reason");
           unregisterDone();
         },
-        onACK(request) {},
+        onACK() {},
       });
     },
   });

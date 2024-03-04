@@ -23,7 +23,7 @@
 }
 
 function clearStorage() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var qms = SpecialPowers.Services.qms;
     var principal = SpecialPowers.wrap(document).nodePrincipal;
     var request = qms.clearStoragesForPrincipal(principal);

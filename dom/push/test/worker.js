@@ -82,7 +82,7 @@ function handlePush(event) {
 }
 
 var testHandlers = {
-  publicKey(data) {
+  publicKey() {
     return self.registration.pushManager
       .getSubscription()
       .then(subscription => ({
@@ -116,7 +116,7 @@ var testHandlers = {
       });
   },
 
-  denySubscribe(data) {
+  denySubscribe() {
     return self.registration.pushManager
       .getSubscription()
       .then(subscription => {

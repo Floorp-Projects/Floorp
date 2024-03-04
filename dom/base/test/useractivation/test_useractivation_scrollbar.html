@@ -78,7 +78,7 @@ if (!opener) {
   SimpleTest.waitForFocus(async function() {
     function waitForEvent(aTarget, aEvent) {
       return new Promise((aResolve) => {
-        aTarget.addEventListener(aEvent, function listener(event) {
+        aTarget.addEventListener(aEvent, function listener() {
           aResolve();
         }, { once: true });
       });

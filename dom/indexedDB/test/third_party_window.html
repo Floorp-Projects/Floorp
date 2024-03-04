@@ -14,7 +14,7 @@
         let iframe = document.getElementById("iframe1");
         iframe.src = evt.data.iframeUrl;
 
-        iframe.addEventListener("load", e => {
+        iframe.addEventListener("load", () => {
           iframe.contentWindow.postMessage(JSON.stringify(evt.data), "*");
         });
 

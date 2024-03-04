@@ -19,7 +19,7 @@ var testDecodeAudioDataOnDetachedBuffer = function(buffer) {
   is(buffer.byteLength, 0, "Buffer should be detached");
 
   // call decodeAudioData on detached buffer
-  context.decodeAudioData(buffer).then(function(b) {
+  context.decodeAudioData(buffer).then(function() {
     ok(false, "We should not be able to decode the detached buffer but we do");
     SimpleTest.finish();
   }, function(r) {

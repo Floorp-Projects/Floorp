@@ -6,7 +6,7 @@
   request.onupgradeneeded = function(e) {
     var db = e.target.result;
     // This should never be called
-    db.onversionchange = function(e) {
+    db.onversionchange = function() {
       db.transaction(["mystore"]).objectStore("mystore").put({ hello: "fail" }, 42);
     };
     var trans = e.target.transaction;

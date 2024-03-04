@@ -33,7 +33,7 @@ async function getURIs() {
   return { location: location.href, docURI, curURI };
 }
 
-addEventListener("load", async e => {
+addEventListener("load", async () => {
   // If a payload parameter was included, just send the message.
   const payloadStr = url.searchParams.get("payload");
   if (payloadStr) {

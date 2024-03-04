@@ -100,7 +100,7 @@ add_task(async function test_image_download() {
     });
     let httpOnModifyPromise = TestUtils.topicObserved(
       "http-on-modify-request",
-      (s, t, d) => {
+      s => {
         let channel = s.QueryInterface(Ci.nsIChannel);
         let uri = channel.URI && channel.URI.spec;
         if (!uri.endsWith("dummy.png")) {

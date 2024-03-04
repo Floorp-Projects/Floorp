@@ -89,7 +89,7 @@ add_task(async function testGetStatusForPolicy() {
         "Should have set MediaKeys on media element");
       let keyStatus = await
           video.mediaKeys.getStatusForPolicy({minHdcpVersion : result.minHdcpVersion})
-          .catch(e => ok(false, "getStatusForPolicy failed!"));
+          .catch(() => ok(false, "getStatusForPolicy failed!"));
       info(`getStatusForPolicy for HDCP ${result.minHdcpVersion} : ${keyStatus}`);
       is(keyStatus, result.expectedResult,
           `Expected ${result.expectedResult}, got ${keyStatus}`);

@@ -79,8 +79,8 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       v.src = test.name;
       document.body.appendChild(v); // Causes implicit load, which will be halted due to preload:none.
@@ -105,8 +105,8 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "metadata";
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("loadeddata", this.loadeddata);
       v.src = test.name;
       document.body.appendChild(v); // Causes implicit load, which will be halted after
@@ -128,8 +128,8 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "auto";
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("canplaythrough", this.canplaythrough);
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
@@ -163,8 +163,8 @@ var tests = [
       v._gotLoadedMetaData = false;
       v._gotSuspend = false;
       v.preload = "none";
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       v.addEventListener("ended", this.ended);
       v.src = test.name;
@@ -190,8 +190,8 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       document.body.appendChild(v); // Causes implicit load, which will be halted due to no resource.
       v.src = test.name; // Load should start, and halt at preload:none.
@@ -216,8 +216,8 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       document.body.appendChild(v); // Causes implicit load, which will be halted due to no resource.
       var s = document.createElement("source");
@@ -256,14 +256,14 @@ var tests = [
       v._gotLoadedMetaData = false;
       v.preload = "none";
       v._gotErrorEvent = false;
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       v.addEventListener("ended", this.ended);
       var s1 = document.createElement("source");
       s1.src = "not-a-real-file.404"
       s1.type = test.type;
-      s1.addEventListener("error", function(e){v._gotErrorEvent = true;});
+      s1.addEventListener("error", function(){v._gotErrorEvent = true;});
       v.appendChild(s1);
       var s2 = document.createElement("source");
       s2.src = test.name;
@@ -288,8 +288,8 @@ var tests = [
     setup(v) {
       v._gotLoadedMetaData = false;
       v.preload = "none";
-      v.addEventListener("loadstart", function(e){v.preload = "metadata";});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v.preload = "metadata";});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("loadeddata", this.loadeddata);
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
@@ -333,8 +333,8 @@ var tests = [
     setup(v) {
       v._gotLoadedMetaData = false;
       v.preload = "none";
-      v.addEventListener("loadstart", function(e){v.preload = "auto";});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v.preload = "auto";});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("canplaythrough", this.canplaythrough);
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
@@ -356,8 +356,8 @@ var tests = [
     setup(v) {
       v._gotLoadedMetaData = false;
       v.preload = "none";
-      v.addEventListener("loadstart", function(e){v.preload = "metadata";});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v.preload = "metadata";});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("loadeddata", this.loadeddata);
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
@@ -384,8 +384,8 @@ var tests = [
       v.preload = "auto";
       v.src = test.name;
       v.preload = "none";
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       document.body.appendChild(v); // Causes implicit load, should load according to preload none
       document.createElement("source");
@@ -415,8 +415,8 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "metadata";
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("ended", this.ended);
       v.addEventListener("loadeddata", this.loadeddata);
       v.src = test.name;
@@ -439,8 +439,8 @@ var tests = [
       v._gotLoadedMetaData = false;
       v.preload = "none";
       v.autoplay = true;
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;});
+      v.addEventListener("loadstart", function(){v._gotLoadStart = true;});
+      v.addEventListener("loadedmetadata", function(){v._gotLoadedMetaData = true;});
       v.addEventListener("ended", this.ended);
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);

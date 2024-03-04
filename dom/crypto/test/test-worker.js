@@ -31,7 +31,7 @@ function memcmp_complete(test, value) {
   };
 }
 
-function error(test) {
+function error() {
   return function (x) {
     throw x;
   };

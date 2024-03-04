@@ -33,14 +33,14 @@ add_task(async function () {
 
     return new Promise(resolve => {
       let doc = content.document.getElementById("edit").contentDocument;
-      doc.addEventListener("focus", function (event) {
+      doc.addEventListener("focus", function () {
         focusOccurred = true;
         if (blurOccurred) {
           resolve(true);
         }
       });
 
-      doc.addEventListener("blur", function (event) {
+      doc.addEventListener("blur", function () {
         blurOccurred = true;
         if (focusOccurred) {
           resolve(false);

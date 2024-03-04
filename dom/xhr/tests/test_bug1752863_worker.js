@@ -24,7 +24,7 @@ async function handleLoadstart() {
   }
 }
 
-self.onmessage = async function (ev) {
+self.onmessage = async function () {
   xhr = new XMLHttpRequest({ mozAnon: false });
   myself = self;
   xhr.addEventListener("loadstart", handleLoadstart, true);

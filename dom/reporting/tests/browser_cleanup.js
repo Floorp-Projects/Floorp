@@ -57,7 +57,7 @@ add_task(async function () {
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });
@@ -89,7 +89,7 @@ add_task(async function () {
   ok(ChromeUtils.hasReportingHeaderForOrigin(TEST_DOMAIN), "We have data");
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_REPORTS, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_REPORTS, () =>
       resolve()
     );
   });
@@ -125,7 +125,7 @@ add_task(async function () {
       TEST_HOST,
       true,
       Ci.nsIClearDataService.CLEAR_REPORTS,
-      value => resolve()
+      () => resolve()
     );
   });
 
@@ -269,7 +269,7 @@ add_task(async function () {
 add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

@@ -23,10 +23,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975270
 
   is(a.networkState, HTMLMediaElement.NETWORK_EMPTY, "Shouldn't be loading");
 
-  a.addEventListener("abort", function(e) { a._abort++; });
-  a.addEventListener("emptied", function(e) { a._emptied++; });
+  a.addEventListener("abort", function() { a._abort++; });
+  a.addEventListener("emptied", function() { a._emptied++; });
   a.addEventListener("loadedmetadata",
-    function(e) {
+    function() {
       is(a._abort, 0, "Should not have received 'abort' before 'loadedmetadata");
       is(a._emptied, 0, "Should not have received 'emptied' before 'loadedmetadata");
 

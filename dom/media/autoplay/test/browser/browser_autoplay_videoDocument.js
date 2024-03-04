@@ -31,8 +31,8 @@ async function checkIsIframeVideoDocumentAutoplay(browser) {
     const iframe = content.document.createElement("iframe");
     iframe.src = pageURL;
     content.document.body.appendChild(iframe);
-    const iframeLoaded = new Promise((resolve, reject) => {
-      iframe.addEventListener("load", e => resolve(), { once: true });
+    const iframeLoaded = new Promise(resolve => {
+      iframe.addEventListener("load", () => resolve(), { once: true });
     });
     await iframeLoaded;
     return iframe.browsingContext;

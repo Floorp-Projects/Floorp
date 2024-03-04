@@ -2,7 +2,7 @@
 
 var log = [];
 const stream = new ReadableStream({
-  start(controller) {
+  start() {
     log.push("started");
   },
   pull(controller) {

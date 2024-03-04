@@ -17,7 +17,7 @@ function SetPrefs(prefs) {
 }
 
 function observe() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var observer = function(subject, topic, data) {
       SpecialPowers.Services.obs.removeObserver(observer, "mediakeys-request");
       resolve(JSON.parse(data).status);
@@ -70,7 +70,7 @@ var tests = [
 
 SimpleTest.waitForExplicitFinish();
 tests
-  .reduce(function(p, c, i, array) {
+  .reduce(function(p, c) {
     return p.then(function() {
       return Test(c);
     });

@@ -109,7 +109,7 @@ function startTest(test, token)
   var gotEncrypted = 0;
   let finish = new EMEPromise;
 
-  v.addEventListener("encrypted", function(ev) {
+  v.addEventListener("encrypted", function() {
     gotEncrypted += 1;
   });
 
@@ -119,7 +119,7 @@ function startTest(test, token)
     is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
   });
 
-  v.addEventListener("ended", function(ev) {
+  v.addEventListener("ended", function() {
     ok(true, TimeStamp(token) + " got ended event");
 
     is(gotEncrypted, test.sessionCount,

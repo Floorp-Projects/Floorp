@@ -14,7 +14,7 @@ importScripts("chrome://mochikit/content/tests/SimpleTest/WorkerSimpleTest.js");
 
 importScripts("file_ioutils_test_fixtures.js");
 
-self.onmessage = async function (msg) {
+self.onmessage = async function () {
   const tmpDir = await PathUtils.getTempDir();
 
   // IOUtils functionality is the same when called from the main thread, or a

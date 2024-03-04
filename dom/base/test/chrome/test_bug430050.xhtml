@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430050
   }
 
   function startTest() {
-    const observer = new MutationObserver((aMutationList, aObserver) => {
+    const observer = new MutationObserver(() => {
       document.getElementById('b').setAttribute("src",
                                                 "data:text/plain,failed");
       const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();

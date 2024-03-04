@@ -23,7 +23,7 @@ function setupTestIframe() {
 }
 
 function clearStorage() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var qms = SpecialPowers.Services.qms;
     var principal = SpecialPowers.wrap(document).nodePrincipal;
     var request = qms.clearStoragesForPrincipal(principal);
@@ -33,7 +33,7 @@ function clearStorage() {
 }
 
 function storageUsage() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var qms = SpecialPowers.Services.qms;
     var principal = SpecialPowers.wrap(document).nodePrincipal;
     var cb = SpecialPowers.wrapCallback(function(request) {
@@ -45,7 +45,7 @@ function storageUsage() {
 }
 
 function resetStorage() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     var qms = SpecialPowers.Services.qms;
     var principal = SpecialPowers.wrap(document).nodePrincipal;
     var request = qms.resetStoragesForPrincipal(principal);
@@ -55,7 +55,7 @@ function resetStorage() {
 }
 
 function gc() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     SpecialPowers.exactGC(resolve);
   });
 }

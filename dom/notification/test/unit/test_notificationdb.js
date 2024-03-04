@@ -112,7 +112,7 @@ add_test(function test_send_two_get_one() {
   };
 
   let msgSaveReply = "Notification:Save:Return:OK";
-  let msgSaveHandler = function (message) {
+  let msgSaveHandler = function () {
     calls += 1;
     if (calls === 2) {
       addAndSend("Notification:GetAll", msgGetReply, msgGetHandler, {

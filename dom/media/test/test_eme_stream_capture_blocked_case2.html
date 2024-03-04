@@ -20,7 +20,7 @@ function startTest(test, token)
   var case2token = token + "_case2";
   let v2 = document.createElement("video");
 
-  v2.addEventListener("loadeddata", function(ev) {
+  v2.addEventListener("loadeddata", function() {
     ok(true, case2token + " should reach loadeddata");
     var threw = false;
     try {

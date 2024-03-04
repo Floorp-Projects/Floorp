@@ -70,7 +70,7 @@ function* testSteps() {
 
   request = db.transaction("foo").objectStore("foo").openCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function () {
     let cursor = request.result;
     if (cursor) {
       ok(false, "Shouldn't have any entries");

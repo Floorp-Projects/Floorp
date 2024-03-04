@@ -55,7 +55,7 @@
     );
     if (AppConstants.platform !== "android") {
       var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/https-only/file_upgrade_insecure");
-      mySocket.onopen = function(e) {
+      mySocket.onopen = function() {
         if (mySocket.url.includes("wss://")) {
           window.parent.postMessage({result: "websocket-ok"}, "*");
         }

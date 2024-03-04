@@ -391,7 +391,7 @@ NetworkGeolocationProvider.prototype = {
     }
   },
 
-  notify(timer) {
+  notify() {
     this.onStatus(false, "wifi-timeout");
     this.sendLocationRequest(null);
   },

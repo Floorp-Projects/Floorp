@@ -31,7 +31,7 @@
       is(cred.type,
         "identity",
         "Correct type on the credential");
-    }).catch((err) => {
+    }).catch(() => {
       ok(false, "must not have an error");
     }).finally(() => {
       SimpleTest.finish();

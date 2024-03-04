@@ -3,7 +3,7 @@
  */
 
 function resetStorage() {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     var qms = Services.qms;
     var request = qms.reset();
     request.callback = resolve;

@@ -111,7 +111,7 @@ function runNextTest() {
           // otherwise, the fullscreen request might be denied.
           if (testWindow.document.hidden) {
             info("Waiting for document to unhide");
-            waitForEvent(testWindow.document, "visibilitychange", (event) => {
+            waitForEvent(testWindow.document, "visibilitychange", () => {
               return !testWindow.document.hidden;
             }, testWindow.begin);
             return;

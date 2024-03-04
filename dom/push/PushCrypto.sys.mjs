@@ -377,7 +377,7 @@ class Decoder {
    * @param {BufferSource} ikm The ECDH shared secret.
    * @returns {Array} A `[gcmBits, nonce]` tuple.
    */
-  async deriveKeyAndNonce(ikm) {
+  async deriveKeyAndNonce() {
     throw new Error("Missing `deriveKeyAndNonce` implementation");
   }
 
@@ -408,7 +408,7 @@ class Decoder {
    * @param {Uint8Array} chunk The decrypted block with padding.
    * @returns {Uint8Array} The block with padding removed.
    */
-  unpadChunk(chunk, last) {
+  unpadChunk() {
     throw new Error("Missing `unpadChunk` implementation");
   }
 

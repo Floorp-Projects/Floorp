@@ -154,7 +154,7 @@ http://creativecommons.org/licenses/publicdomain/
     is(message.data.text, "Hi! \ud83d\udc40", "Wrong text for message with emoji");
     var text = await new Promise((resolve, reject) => {
       var reader = new FileReader();
-      reader.onloadend = event => {
+      reader.onloadend = () => {
         if (reader.error) {
           reject(reader.error);
         } else {

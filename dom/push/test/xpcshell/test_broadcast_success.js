@@ -189,7 +189,7 @@ add_task(async function test_handle_hello_broadcasts() {
           );
         },
 
-        onBroadcastSubscribe(data) {},
+        onBroadcastSubscribe() {},
       });
     },
   });
@@ -239,7 +239,7 @@ add_task(async function test_broadcast_context() {
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
-        onHello(data) {},
+        onHello() {},
       });
     },
   });

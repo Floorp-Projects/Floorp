@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function (event) {
+onmessage = function () {
   throw new Error("No messages should reach me!");
 };
 

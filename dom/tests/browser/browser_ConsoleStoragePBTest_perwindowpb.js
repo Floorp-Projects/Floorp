@@ -33,7 +33,7 @@ function test() {
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
       () => {
-        function observe(aSubject) {
+        function observe() {
           afterEvents = ConsoleAPIStorage.getEvents(innerID);
           is(
             beforeEvents.length == afterEvents.length - 1,

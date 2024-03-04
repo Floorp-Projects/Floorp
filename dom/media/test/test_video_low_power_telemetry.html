@@ -124,7 +124,7 @@ steps we run before each video. We keep track of which test we are running with 
     }
   }
 
-  async function doPostTest(v) {
+  async function doPostTest() {
     info(`Test ${testIndex} attempting to retrieve telemetry.`);
     let snap = await retrieveSnapshotAndClearTelemetry();
     ok(snap, `Test ${testIndex} should have telemetry.`);

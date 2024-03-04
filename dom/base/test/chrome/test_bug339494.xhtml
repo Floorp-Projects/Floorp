@@ -55,7 +55,7 @@ SimpleTest.waitForExplicitFinish();
     s.setAttribute("ggg", "testvalue");
     await promiseFlushingMutationObserver();
 
-    const observer = new MutationObserver((aMutationList, aObserver) => {
+    const observer = new MutationObserver(() => {
       ok(s.hasAttribute("ggg"), "Value check 3. There should be a value");
       isnot(s.getAttribute("ggg"), "testvalue", "Value check 4");
       is(s.getAttribute("ggg"), "othervalue", "Value check 5");

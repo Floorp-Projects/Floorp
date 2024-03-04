@@ -92,7 +92,7 @@ addLoadEvent(function() {
       ctx.startRendering().then(function() {
         ok(false, "Promise should not resolve when startRendering is called a second time on an OfflineAudioContext")
         finish();
-      }).catch(function(err) {
+      }).catch(function() {
         ok(true, "Promise should reject when startRendering is called a second time on an OfflineAudioContext")
         finish();
       });
@@ -106,7 +106,7 @@ addLoadEvent(function() {
     ctx.startRendering().then(function(b) {
       is(renderedBuffer, null, "The promise callback should be called first.");
       setOrCompareRenderedBuffer(b);
-    }).catch(function (error) {
+    }).catch(function () {
        ok(false, "The promise from OfflineAudioContext.startRendering should never be rejected");
     });
   });

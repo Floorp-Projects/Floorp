@@ -53,7 +53,7 @@ async function startTest() {
 
       // We'll stop recording upon the 1st blob being received
       if (dataAvailableCount === 1) {
-        mediaRecorder.onstop = function (event) {
+        mediaRecorder.onstop = function () {
           info('onstop fired');
 
           if (!onDataAvailableFirst) {

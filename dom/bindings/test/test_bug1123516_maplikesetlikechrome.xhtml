@@ -50,9 +50,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123516
              ok(true, "Calling iterators via xrays should fail");
            }
 
-           setlike.forEach((v,k,t) => { is(v, win.document.documentElement, "Cross-compartment forEach works"); });
+           setlike.forEach((v) => { is(v, win.document.documentElement, "Cross-compartment forEach works"); });
            TestInterfaceSetlikeNode.prototype.forEach.call(setlike,
-                                                           (v,k,t) => { is(v, win.document.documentElement, "Cross-compartment forEach works"); });
+                                                           (v) => { is(v, win.document.documentElement, "Cross-compartment forEach works"); });
            is(TestInterfaceSetlikeNode.prototype.delete.call(setlike, win.document.documentElement), true,
               "Cross-compartment unwrapping/comparison delete works");
             /* eslint-disable-next-line no-shadow */

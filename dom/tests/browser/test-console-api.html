@@ -54,7 +54,7 @@
       }
 
       function nativeCallback() {
-        new Promise(function(resolve, reject) { resolve(42); }).then(console.log);
+        new Promise(function(resolve) { resolve(42); }).then(console.log);
       }
 
       function timeStamp(val) {

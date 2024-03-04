@@ -81,7 +81,7 @@ function doReadOnlyTransaction(db, key, remaining) {
     let cursor = event.target.result;
     ok(cursor, "Got readonly cursor");
 
-    objectStore.get(cursor.primaryKey).onsuccess = function (event) {
+    objectStore.get(cursor.primaryKey).onsuccess = function () {
       if (++key == objDataCount) {
         key = 0;
       }
@@ -113,7 +113,7 @@ function doReadWriteTransaction(db, key, remaining) {
     let value = cursor.value;
     value[idxKeyPathProp]++;
 
-    cursor.update(value).onsuccess = function (event) {
+    cursor.update(value).onsuccess = function () {
       if (++key == objDataCount) {
         key = 0;
       }

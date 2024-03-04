@@ -46,7 +46,7 @@ function startTest(test, token) {
     );
   }
 
-  var onLoadedmetadata = function(t, v) { return function() {
+  var onLoadedmetadata = function() { return function() {
     callSeekToNextFrame();
   }}(test, video);
 
