@@ -23,6 +23,7 @@ https://tools.ietf.org/html/draft-ietf-httpbis-alt-svc-06
 #ifndef mozilla_net_AlternateServices_h
 #define mozilla_net_AlternateServices_h
 
+#include "nsHttp.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsIDataStorage.h"
@@ -53,7 +54,8 @@ class AltSvcMapping {
                 bool privateBrowsing, uint32_t expiresAt,
                 const nsACString& alternateHost, int32_t alternatePort,
                 const nsACString& npnToken,
-                const OriginAttributes& originAttributes, bool aIsHttp3);
+                const OriginAttributes& originAttributes, bool aIsHttp3,
+                SupportedAlpnRank aRank);
 
  public:
   AltSvcMapping(nsIDataStorage* storage, int32_t storageEpoch,
@@ -103,6 +105,7 @@ class AltSvcMapping {
 
   bool IsHttp3() { return mIsHttp3; }
   const nsCString& NPNToken() const { return mNPNToken; }
+  SupportedAlpnRank AlpnRank() const { return mAlpnRank; }
 
  private:
   virtual ~AltSvcMapping() = default;
@@ -138,6 +141,7 @@ class AltSvcMapping {
 
   bool mSyncOnlyOnSuccess{false};
   bool mIsHttp3{false};
+  SupportedAlpnRank mAlpnRank{SupportedAlpnRank::NOT_SUPPORTED};
 };
 
 class AltSvcOverride : public nsIInterfaceRequestor,

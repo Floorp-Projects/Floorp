@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "AlternateServices.h"
+#include <algorithm>
 #include "LoadInfo.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -87,16 +88,15 @@ void AltSvcMapping::ProcessHeader(
   ParsedHeaderValueListList parsedAltSvc(buf);
   int32_t numEntriesInHeader = parsedAltSvc.mValues.Length();
 
-  // Only use one http3 version.
-  bool http3Found = false;
-
+  nsTArray<RefPtr<AltSvcMapping>> h3Mappings;
+  nsTArray<RefPtr<AltSvcMapping>> otherMappings;
   for (uint32_t index = 0; index < parsedAltSvc.mValues.Length(); ++index) {
     uint32_t maxage = 86400;  // default
     nsAutoCString hostname;
     nsAutoCString npnToken;
     int32_t portno = originPort;
     bool clearEntry = false;
-    bool isHttp3 = false;
+    SupportedAlpnRank alpnRank = SupportedAlpnRank::NOT_SUPPORTED;
 
     for (uint32_t pairIndex = 0;
          pairIndex < parsedAltSvc.mValues[index].mValues.Length();
@@ -116,7 +116,7 @@ void AltSvcMapping::ProcessHeader(
 
         // h2=[hostname]:443 or h3-xx=[hostname]:port
         // XX is current version we support and it is define in nsHttp.h.
-        isHttp3 = gHttpHandler->IsHttp3VersionSupported(currentName);
+        alpnRank = IsAlpnSupported(currentName);
         npnToken = currentName;
 
         int32_t colonIndex = currentValue.FindChar(':');
@@ -153,12 +153,7 @@ void AltSvcMapping::ProcessHeader(
     // update nsCString length
     nsUnescape(npnToken.BeginWriting());
     npnToken.SetLength(strlen(npnToken.BeginReading()));
-
-    if (http3Found && isHttp3) {
-      LOG(("Alt Svc ignore multiple Http3 options (%s)", npnToken.get()));
-      continue;
-    }
-
+    bool isHttp3 = net::IsHttp3(alpnRank);
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (!(npnToken.Equals(spdyInfo->VersionString) &&
           StaticPrefs::network_http_http2_enabled()) &&
@@ -169,16 +164,13 @@ void AltSvcMapping::ProcessHeader(
       continue;
     }
 
-    if (isHttp3) {
-      http3Found = true;
-    }
-
-    RefPtr<AltSvcMapping> mapping =
-        new AltSvcMapping(gHttpHandler->AltServiceCache()->GetStoragePtr(),
-                          gHttpHandler->AltServiceCache()->StorageEpoch(),
-                          originScheme, originHost, originPort, username,
-                          privateBrowsing, NowInSeconds() + maxage, hostname,
-                          portno, npnToken, originAttributes, isHttp3);
+    LOG(("AltSvcMapping created npnToken=%s", npnToken.get()));
+    RefPtr<AltSvcMapping> mapping = new AltSvcMapping(
+        gHttpHandler->AltServiceCache()->GetStoragePtr(),
+        gHttpHandler->AltServiceCache()->StorageEpoch(), originScheme,
+        originHost, originPort, username, privateBrowsing,
+        NowInSeconds() + maxage, hostname, portno, npnToken, originAttributes,
+        isHttp3, alpnRank);
     if (mapping->TTL() <= 0) {
       LOG(("Alt Svc invalid map"));
       mapping = nullptr;
@@ -186,14 +178,38 @@ void AltSvcMapping::ProcessHeader(
       // as that would have happened if we had accepted the parameters.
       gHttpHandler->AltServiceCache()->ClearHostMapping(originHost, originPort,
                                                         originAttributes);
-    } else if (!aDontValidate) {
-      gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps,
-                                            originAttributes);
     } else {
-      gHttpHandler->UpdateAltServiceMappingWithoutValidation(
-          mapping, proxyInfo, callbacks, caps, originAttributes);
+      if (isHttp3) {
+        h3Mappings.AppendElement(std::move(mapping));
+      } else {
+        otherMappings.AppendElement(std::move(mapping));
+      }
     }
   }
+
+  auto doUpdateAltSvcMapping = [&](AltSvcMapping* aMapping) {
+    if (!aDontValidate) {
+      gHttpHandler->UpdateAltServiceMapping(aMapping, proxyInfo, callbacks,
+                                            caps, originAttributes);
+    } else {
+      gHttpHandler->UpdateAltServiceMappingWithoutValidation(
+          aMapping, proxyInfo, callbacks, caps, originAttributes);
+    }
+  };
+
+  if (!h3Mappings.IsEmpty()) {
+    // Select the HTTP/3 (h3) AltSvcMapping with the highest ALPN rank from
+    // h3Mappings.
+    RefPtr<AltSvcMapping> latestH3Mapping = *std::max_element(
+        h3Mappings.begin(), h3Mappings.end(),
+        [](const RefPtr<AltSvcMapping>& a, const RefPtr<AltSvcMapping>& b) {
+          return a->AlpnRank() < b->AlpnRank();
+        });
+    doUpdateAltSvcMapping(latestH3Mapping);
+  }
+
+  std::for_each(otherMappings.begin(), otherMappings.end(),
+                doUpdateAltSvcMapping);
 
   if (numEntriesInHeader) {  // Ignore headers that were just "alt-svc: clear"
     Telemetry::Accumulate(Telemetry::HTTP_ALTSVC_ENTRIES_PER_HEADER,
@@ -209,7 +225,7 @@ AltSvcMapping::AltSvcMapping(nsIDataStorage* storage, int32_t epoch,
                              const nsACString& alternateHost,
                              int32_t alternatePort, const nsACString& npnToken,
                              const OriginAttributes& originAttributes,
-                             bool aIsHttp3)
+                             bool aIsHttp3, SupportedAlpnRank aRank)
     : mStorage(storage),
       mStorageEpoch(epoch),
       mAlternateHost(alternateHost),
@@ -221,7 +237,8 @@ AltSvcMapping::AltSvcMapping(nsIDataStorage* storage, int32_t epoch,
       mExpiresAt(expiresAt),
       mNPNToken(npnToken),
       mOriginAttributes(originAttributes),
-      mIsHttp3(aIsHttp3) {
+      mIsHttp3(aIsHttp3),
+      mAlpnRank(aRank) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_FAILED(SchemeIsHTTPS(originScheme, mHttps))) {
