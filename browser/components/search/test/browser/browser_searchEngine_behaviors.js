@@ -10,7 +10,8 @@
 const SEARCH_ENGINE_DETAILS = [
   {
     alias: "a",
-    baseURL: "https://www.amazon.com/s?k=foo",
+    baseURL:
+      "https://www.amazon.com/s?tag=admarketus-20&ref=pd_sl_a71c226e8a96bfdb7ae5bc6d1f30e9e88d9e4e3436d7bfb941a95d0a&mfadid=adm&k=foo",
     codes: {
       context: "",
       keyword: "",
