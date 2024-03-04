@@ -13,6 +13,12 @@ UNIFIED_SOURCES += [
     "nsRFPService.cpp",
     "RelativeTimeline.cpp",
 ]
+# Because nsUserCharacteristics doesn't `use namespace mozilla` (because we're going to wind
+# up with a million includes on this file and pollution will get confusing), unified build
+# will mask a lot of errors that would cause backouts. This exposes them locally.
+SOURCES += [
+    "nsUserCharacteristics.cpp",
+]
 
 SPHINX_TREES["resistfingerprinting"] = "docs"
 

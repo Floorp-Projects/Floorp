@@ -100,6 +100,10 @@ static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 #define RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF \
   "privacy.fingerprintingProtection.overrides"
+#define GLEAN_DATA_SUBMISSION_PREF "datareporting.healthreport.uploadEnabled"
+#define USER_CHARACTERISTICS_UUID_PREF \
+  "toolkit.telemetry.user_characteristics_ping.uuid"
+
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
 
@@ -156,6 +160,7 @@ already_AddRefed<nsRFPService> nsRFPService::GetOrCreate() {
 
 static const char* gCallbackPrefs[] = {
     RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF,
+    GLEAN_DATA_SUBMISSION_PREF,
     nullptr,
 };
 
@@ -290,10 +295,21 @@ void nsRFPService::PrefChanged(const char* aPref, void* aSelf) {
 }
 
 void nsRFPService::PrefChanged(const char* aPref) {
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Info,
+          ("Pref Changed: %s", aPref));
   nsDependentCString pref(aPref);
 
   if (pref.EqualsLiteral(RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF)) {
     UpdateFPPOverrideList();
+  } else if (pref.EqualsLiteral(GLEAN_DATA_SUBMISSION_PREF)) {
+    if (XRE_IsParentProcess() &&
+        !Preferences::GetBool(GLEAN_DATA_SUBMISSION_PREF, false)) {
+      MOZ_LOG(gResistFingerprintingLog, LogLevel::Info, ("Clearing UUID"));
+      // If the user has unset the telemetry pref, wipe out the UUID pref value
+      // (The data will also be erased server-side via the "deletion-request"
+      // ping)
+      Preferences::SetCString(USER_CHARACTERISTICS_UUID_PREF, ""_ns);
+    }
   }
 }
 

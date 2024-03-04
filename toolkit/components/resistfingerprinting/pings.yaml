@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+user-characteristics:
+  description: |
+    A ping representing user hardware and software settings.  Note that this
+    ping does not include client_id.  More details are available in Bug 1879151
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154#c8
+  notification_emails:
+    - tritter@mozilla.com
