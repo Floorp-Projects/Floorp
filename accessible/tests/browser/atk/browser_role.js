@@ -11,7 +11,7 @@ addAccessibleTask(
   `
 <p id="p">p</p>
   `,
-  async function (browser, docAcc) {
+  async function () {
     let role = await runPython(`
       global doc
       doc = getDoc()

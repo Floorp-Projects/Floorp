@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
 
       // register 'click' event handler
       gClickHandler = {
-        handleEvent: function handleEvent(aEvent) {
+        handleEvent: function handleEvent() {
         },
       };
       td3Node.addEventListener("click", gClickHandler);
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
           actionName: "click",
           actionIndex: 0,
           events: CLICK_EVENTS,
-          checkOnClickEvent: function check(aEvent) {
+          checkOnClickEvent: function check() {
             // unregister click event handler
             this.ID.removeEventListener("click", gClickHandler);
 

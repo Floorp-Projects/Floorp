@@ -218,7 +218,7 @@
     }
 
     // Check to see that a reframed body gets its children pruned correctly.
-    async function bodyReframe(argument) {
+    async function bodyReframe() {
       // Load sub-document in iframe.
       let event = waitForEvent(EVENT_REORDER, "iframe", "bodyReframe");
       getNode("iframe").src =

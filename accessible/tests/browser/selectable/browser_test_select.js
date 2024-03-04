@@ -313,7 +313,7 @@ addAccessibleTask(
   </select>
 </form>
   `,
-  async function (browser, docAcc) {
+  async function (browser) {
     let selected = waitForEvent(EVENT_SELECTION_WITHIN, "select");
     await invokeContentTask(browser, [], () => {
       const form = content.document.getElementById("form");

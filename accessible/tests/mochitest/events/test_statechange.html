@@ -28,7 +28,7 @@
       await p;
     }
 
-    async function makeEditableDoc(aDocNode, aIsEnabled) {
+    async function makeEditableDoc(aDocNode) {
       let p = waitForStateChange(aDocNode, EXT_STATE_EDITABLE, true, true);
       aDocNode.designMode = "on";
       await p;

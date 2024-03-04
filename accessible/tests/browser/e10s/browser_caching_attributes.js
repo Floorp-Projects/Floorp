@@ -733,7 +733,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<div id="popover" popover>popover</div>`,
-  async function testIspopup(browser, docAcc) {
+  async function testIspopup(browser) {
     info("Showing popover");
     let shown = waitForEvent(EVENT_SHOW, "popover");
     await invokeContentTask(browser, [], () => {

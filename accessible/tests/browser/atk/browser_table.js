@@ -20,7 +20,7 @@ addAccessibleTask(
   </tr>
 </table>
   `,
-  async function (browser, docAcc) {
+  async function () {
     let result = await runPython(`
       global doc
       doc = getDoc()

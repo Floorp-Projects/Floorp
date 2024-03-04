@@ -31,7 +31,7 @@
     {
       this.__proto__ = new focusChecker(aAcc);
 
-      this.check = function focusChecker_check(aEvent)
+      this.check = function focusChecker_check()
       {
         var states = aStates ? aStates : 0;
         testStates(this.target, STATE_FOCUSED | STATE_SELECTED | states);
@@ -71,7 +71,7 @@
           actionIndex: 1,
           events: CLICK_EVENTS,
           targetID: treeBodyNode,
-          checkOnClickEvent: function check(aEvent)
+          checkOnClickEvent: function check()
           {
             testStates(this.ID, STATE_EXPANDED);
           }
@@ -82,7 +82,7 @@
           actionIndex: 1,
           events: CLICK_EVENTS,
           targetID: treeBodyNode,
-          checkOnClickEvent: function check(aEvent)
+          checkOnClickEvent: function check()
           {
             testStates(this.ID, STATE_COLLAPSED);
           }

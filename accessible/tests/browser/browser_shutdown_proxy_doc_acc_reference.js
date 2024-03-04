@@ -30,7 +30,7 @@ add_task(async function () {
         <body id="body"></body>
       </html>`,
     },
-    async function (browser) {
+    async function () {
       let docLoadedEvent = await docLoaded;
       let docAcc = docLoadedEvent.accessibleDocument;
       ok(docAcc, "Accessible document proxy is created");
@@ -43,7 +43,7 @@ add_task(async function () {
       const [a11yShutdownObserver, a11yShutdownPromise] = shutdownAccService();
       await a11yShutdownObserver;
       const a11yShutdown = new Promise((resolve, reject) =>
-        a11yShutdownPromise.then(flag =>
+        a11yShutdownPromise.then(() =>
           canShutdown
             ? resolve()
             : reject("Accessible service was shut down incorrectly")

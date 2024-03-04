@@ -171,11 +171,11 @@ AutoCompleteResult.prototype = {
     return this.comments[aIndex];
   },
 
-  getStyleAt(aIndex) {
+  getStyleAt() {
     return null;
   },
 
-  getImageAt(aIndex) {
+  getImageAt() {
     return "";
   },
 
@@ -183,11 +183,11 @@ AutoCompleteResult.prototype = {
     return this.getValueAt(aIndex);
   },
 
-  isRemovableAt(aRowIndex) {
+  isRemovableAt() {
     return true;
   },
 
-  removeValueAt(aRowIndex) {},
+  removeValueAt() {},
 
   // nsISupports implementation
   QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),

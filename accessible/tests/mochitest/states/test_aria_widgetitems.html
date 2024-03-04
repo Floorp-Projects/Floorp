@@ -26,7 +26,7 @@
         this.DOMNode.focus();
       };
 
-      this.check = function focusARIAItem_check(aEvent) {
+      this.check = function focusARIAItem_check() {
         testStates(this.DOMNode, aIsSelected ? STATE_SELECTED : 0, 0,
                    aIsSelected ? 0 : STATE_SELECTED);
       };
@@ -47,7 +47,7 @@
         this.widgetDOMNode.focus();
       };
 
-      this.check = function focusActiveDescendantItem_check(aEvent) {
+      this.check = function focusActiveDescendantItem_check() {
         testStates(this.DOMNode, aIsSelected ? STATE_SELECTED : 0, 0,
                    aIsSelected ? 0 : STATE_SELECTED);
       };

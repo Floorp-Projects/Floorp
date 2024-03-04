@@ -68,10 +68,10 @@ class TipTestProvider extends UrlbarProvider {
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
-  isActive(context) {
+  isActive() {
     return true;
   }
-  isRestricting(context) {
+  isRestricting() {
     return true;
   }
   async startQuery(context, addCallback) {

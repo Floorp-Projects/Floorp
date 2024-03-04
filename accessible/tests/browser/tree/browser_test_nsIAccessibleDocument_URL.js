@@ -25,7 +25,7 @@ async function promiseEventDocumentLoadComplete(expectedURL) {
 add_task(async function testInDataURI() {
   const kURL = "data:text/html,Some text";
   const waitForDocumentLoadComplete = promiseEventDocumentLoadComplete("");
-  await BrowserTestUtils.withNewTab(kURL, async browser => {
+  await BrowserTestUtils.withNewTab(kURL, async () => {
     is(
       (await waitForDocumentLoadComplete).URL,
       "",
@@ -44,7 +44,7 @@ add_task(async function testInHTTPSURIContainingPrivateThings() {
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html?query=some#ref";
   const waitForDocumentLoadComplete =
     promiseEventDocumentLoadComplete(kURLWithoutUserPass);
-  await BrowserTestUtils.withNewTab(kURL, async browser => {
+  await BrowserTestUtils.withNewTab(kURL, async () => {
     is(
       (await waitForDocumentLoadComplete).URL,
       kURLWithoutUserPass,

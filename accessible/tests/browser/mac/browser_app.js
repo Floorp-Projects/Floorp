@@ -138,7 +138,7 @@ add_task(async () => {
       gBrowser,
       url: "about:license",
     },
-    async browser => {
+    async () => {
       let root = await getMacAccessible(document);
       let rootChildCount = () => root.getAttributeValue("AXChildren").length;
 
@@ -227,7 +227,7 @@ add_task(async () => {
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       url: "http://example.com",
     },
-    async browser => {
+    async () => {
       let input = await getMacAccessible("urlbar-input");
       is(
         input.getAttributeValue("AXValue"),

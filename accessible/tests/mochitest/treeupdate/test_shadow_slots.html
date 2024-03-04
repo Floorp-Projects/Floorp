@@ -55,7 +55,7 @@
 
     async function changeSlotFlat() {
       await _dynamicShadowTest("changeSlotFlat",
-        (container, host) => {
+        (container) => {
           container.querySelector('.red').removeAttribute('slot');
           container.querySelector('.green').setAttribute('slot', 'myslot');
         }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
@@ -63,7 +63,7 @@
 
     async function changeSlotOneDeep() {
       await _dynamicShadowTest("changeSlotOneDeep",
-        (container, host) => {
+        (container) => {
           container.querySelector('.red').removeAttribute('slot');
           container.querySelector('.green').setAttribute('slot', 'myslot');
         }, { SECTION: [{ SECTION: [{ SECTION: [{ name: "green"} ] }] }] }, ["shadowdiv"]);
@@ -72,7 +72,7 @@
     // Nested roots and slots
     async function changeSlotNested() {
       await _dynamicShadowTest("changeSlotNested",
-        (container, host) => {
+        (container) => {
           testAccessibleTree(getNode("changeSlotNested"),
             { SECTION: [{ SECTION: [{ SECTION: [{ name: "red"} ] }] }] });
           container.querySelector('.red').removeAttribute('slot');
@@ -82,14 +82,14 @@
 
     async function changeSlotSingleChild() {
       await _dynamicShadowTest("changeSlotSingleChild",
-        (container, host) => {
+        (container) => {
           container.querySelector('.red').setAttribute('slot', 'invalid');
         }, { SECTION: [{ SECTION: [] }] });
     }
 
     async function changeSlotNoShadow() {
       await _dynamicShadowTest("changeSlotNoShadow",
-        (container, host) => {
+        (container) => {
           // Make sure changing the slot attribute doesn't remove an element
           // even when it remains in the flat tree.
           container.querySelector('.red').setAttribute('slot', 'invalid');

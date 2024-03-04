@@ -108,7 +108,7 @@ add_task(async function () {
       const [contentA11yShutdownObserver, contentA11yShutdownPromise] =
         shutdownAccService(browser);
       const contentA11yShutdown = new Promise((resolve, reject) =>
-        contentA11yShutdownPromise.then(flag =>
+        contentA11yShutdownPromise.then(() =>
           contentCanShutdown
             ? resolve()
             : reject("Accessible service was shut down incorrectly")

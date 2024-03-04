@@ -82,7 +82,7 @@ addAccessibleTask(
   Hello <a href="#" id="link">World</a>,
   I <a href="#" style="user-select: none;" id="unselectable_link">love</a>
   <button id="button">you</button></p>`,
-  async (browser, accDoc) => {
+  async browser => {
     // Set up an AXSelectedTextChanged listener here. It will get resolved
     // on the first non-root event it encounters, so if we test its data at the end
     // of this test it will show us the first text-selectable object that was focused,

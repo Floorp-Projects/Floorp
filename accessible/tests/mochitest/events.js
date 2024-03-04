@@ -928,10 +928,7 @@ function eventQueue(aEventType) {
     return invoker.getID();
   };
 
-  this.setInvokerStatus = function eventQueue_setInvokerStatus(
-    aStatus,
-    aLogMsg
-  ) {
+  this.setInvokerStatus = function eventQueue_setInvokerStatus(aStatus) {
     this.mNextInvokerStatus = aStatus;
 
     // Uncomment it to debug invoker processing logic.
@@ -2348,7 +2345,7 @@ var gA11yEventApplicantsCount = 0;
 
 var gA11yEventObserver = {
   // eslint-disable-next-line complexity
-  observe: function observe(aSubject, aTopic, aData) {
+  observe: function observe(aSubject, aTopic) {
     if (aTopic != "accessible-event") {
       return;
     }

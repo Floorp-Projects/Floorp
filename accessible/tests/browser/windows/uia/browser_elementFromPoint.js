@@ -9,7 +9,7 @@ addUiaTask(
 <button id="button">button</p>
 <a id="a" href="#">a</a>
   `,
-  async function (browser, docAcc) {
+  async function () {
     ok(
       await runPython(`
         global doc
