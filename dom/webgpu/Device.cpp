@@ -679,8 +679,12 @@ RawId CreateComputePipelineImpl(PipelineCreationContext* const aContext,
     MOZ_ASSERT_UNREACHABLE();
   }
   desc.stage.module = aDesc.mCompute.mModule->mId;
-  CopyUTF16toUTF8(aDesc.mCompute.mEntryPoint, entryPoint);
-  desc.stage.entry_point = entryPoint.get();
+  if (aDesc.mCompute.mEntryPoint.WasPassed()) {
+    CopyUTF16toUTF8(aDesc.mCompute.mEntryPoint.Value(), entryPoint);
+    desc.stage.entry_point = entryPoint.get();
+  } else {
+    desc.stage.entry_point = nullptr;
+  }
 
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_compute_pipeline(
@@ -725,8 +729,12 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
   {
     const auto& stage = aDesc.mVertex;
     vertexState.stage.module = stage.mModule->mId;
-    CopyUTF16toUTF8(stage.mEntryPoint, vsEntry);
-    vertexState.stage.entry_point = vsEntry.get();
+    if (stage.mEntryPoint.WasPassed()) {
+      CopyUTF16toUTF8(stage.mEntryPoint.Value(), vsEntry);
+      vertexState.stage.entry_point = vsEntry.get();
+    } else {
+      vertexState.stage.entry_point = nullptr;
+    }
 
     for (const auto& vertex_desc : stage.mBuffers) {
       ffi::WGPUVertexBufferLayout vb_desc = {};
@@ -761,8 +769,12 @@ RawId CreateRenderPipelineImpl(PipelineCreationContext* const aContext,
   if (aDesc.mFragment.WasPassed()) {
     const auto& stage = aDesc.mFragment.Value();
     fragmentState.stage.module = stage.mModule->mId;
-    CopyUTF16toUTF8(stage.mEntryPoint, fsEntry);
-    fragmentState.stage.entry_point = fsEntry.get();
+    if (stage.mEntryPoint.WasPassed()) {
+      CopyUTF16toUTF8(stage.mEntryPoint.Value(), fsEntry);
+      fragmentState.stage.entry_point = fsEntry.get();
+    } else {
+      fragmentState.stage.entry_point = nullptr;
+    }
 
     // Note: we pre-collect the blend states into a different array
     // so that we can have non-stale pointers into it.
