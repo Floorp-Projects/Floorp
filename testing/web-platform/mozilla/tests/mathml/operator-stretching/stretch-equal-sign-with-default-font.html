@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Horizontal stretching of U+003D EQUAL SIGN with default font</title>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=854339">
+    <link rel="help" href="https://w3c.github.io/mathml-core/#unicode-based-glyph-assemblies">
+    <link rel="mismatch" href="stretch-equal-sign-with-default-font-ref.html">
+    <meta name="assert" content="Verify EQUAL SIGN can be stretched horizontally with default fonts.">
+  </head>
+  <body>
+    <math>
+      <munder>
+        <mi>AVERYLONGBASE</mi>
+        <mo stretchy="true">=</mo>
+      </munder>
+    </math>
+  </body>
+</html>
