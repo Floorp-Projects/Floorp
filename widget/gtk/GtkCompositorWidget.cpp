@@ -39,11 +39,11 @@ GtkCompositorWidget::GtkCompositorWidget(
                   "GtkCompositorWidget::mClientSize") {
 #if defined(MOZ_X11)
   if (GdkIsX11Display()) {
-    mXWindow = (Window)aInitData.XWindow();
-    ConfigureX11Backend(mXWindow, aInitData.Shaped());
+    ConfigureX11Backend((Window)aInitData.XWindow(), aInitData.Shaped());
     LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p "
         "mIsRenderingSuspended %d\n",
-        (void*)mWidget.get(), (void*)mXWindow, !!mIsRenderingSuspended);
+        (void*)mWidget.get(), (void*)aInitData.XWindow(),
+        !!mIsRenderingSuspended);
   }
 #endif
 #if defined(MOZ_WAYLAND)
@@ -123,8 +123,8 @@ EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
     window = (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
   }
 #if defined(MOZ_X11)
-  if (mXWindow) {
-    window = (EGLNativeWindowType)mXWindow;
+  else {
+    window = (EGLNativeWindowType)mProvider.GetXWindow();
   }
 #endif
   LOG("GtkCompositorWidget::GetEGLNativeWindow [%p] window %p\n", mWidget.get(),
@@ -173,9 +173,6 @@ void GtkCompositorWidget::DisableRendering() {
   LOG("GtkCompositorWidget::DisableRendering [%p]\n", (void*)mWidget.get());
   mIsRenderingSuspended = true;
   mProvider.CleanupResources();
-#if defined(MOZ_X11)
-  mXWindow = {};
-#endif
 }
 
 #if defined(MOZ_WAYLAND)
@@ -187,27 +184,13 @@ bool GtkCompositorWidget::ConfigureWaylandBackend() {
 
 #if defined(MOZ_X11)
 bool GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
-  mXWindow = aXWindow;
-
   // We don't have X window yet.
-  if (!mXWindow) {
+  if (!aXWindow) {
     mIsRenderingSuspended = true;
     return false;
   }
-
-  // Grab the window's visual and depth
-  XWindowAttributes windowAttrs;
-  if (!XGetWindowAttributes(DefaultXDisplay(), mXWindow, &windowAttrs)) {
-    NS_WARNING("GtkCompositorWidget(): XGetWindowAttributes() failed!");
-    return false;
-  }
-
-  Visual* visual = windowAttrs.visual;
-  int depth = windowAttrs.depth;
-
   // Initialize the window surface provider
-  mProvider.Initialize(mXWindow, visual, depth, aShaped);
-  return true;
+  return mProvider.Initialize(aXWindow, aShaped);
 }
 #endif
 
