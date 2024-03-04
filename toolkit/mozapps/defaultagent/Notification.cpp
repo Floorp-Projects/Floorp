@@ -40,9 +40,9 @@ using mozilla::intl::Localization;
 
 #define SEVEN_DAYS_IN_SECONDS (7 * 24 * 60 * 60)
 
-// If the notification hasn't been activated or dismissed within 12 hours,
-// stop waiting for it.
-#define NOTIFICATION_WAIT_TIMEOUT_MS (12 * 60 * 60 * 1000)
+// If the notification hasn't been activated or dismissed within 11 hours 55
+// minutes, stop waiting for it.
+#define NOTIFICATION_WAIT_TIMEOUT_MS (11 * 60 * 60 * 1000 + 55 * 60 * 1000)
 // If the mutex hasn't been released within a few minutes, something is wrong
 // and we should give up on it
 #define MUTEX_TIMEOUT_MS (10 * 60 * 1000)
