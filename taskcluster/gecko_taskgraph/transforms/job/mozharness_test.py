@@ -15,6 +15,7 @@ from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_u
 from gecko_taskgraph.transforms.job.common import get_expiration, support_vcs_checkout
 from gecko_taskgraph.transforms.test import normpath, test_description_schema
 from gecko_taskgraph.util.attributes import is_try
+from gecko_taskgraph.util.perftest import is_external_browser
 
 VARIANTS = [
     "shippable",
@@ -63,9 +64,13 @@ def test_packages_url(taskdesc):
     )
     # for android shippable we need to add 'en-US' to the artifact url
     test = taskdesc["run"]["test"]
-    if "android" in test["test-platform"] and (
-        get_variant(test["test-platform"])
-        in ("shippable", "shippable-qr", "shippable-lite", "shippable-lite-qr")
+    if (
+        "android" in test["test-platform"]
+        and (
+            get_variant(test["test-platform"])
+            in ("shippable", "shippable-qr", "shippable-lite", "shippable-lite-qr")
+        )
+        and not is_external_browser(test.get("try-name", ""))
     ):
         head, tail = os.path.split(artifact_url)
         artifact_url = os.path.join(head, "en-US", tail)
