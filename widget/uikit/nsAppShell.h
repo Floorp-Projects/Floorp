@@ -41,8 +41,8 @@ class nsAppShell : public nsBaseAppShell {
   virtual ~nsAppShell();
 
   static void ProcessGeckoEvents(void* aInfo);
-  virtual void ScheduleNativeEventCallback();
-  virtual bool ProcessNextNativeEvent(bool aMayWait);
+  void ScheduleNativeEventCallback() override;
+  bool ProcessNextNativeEvent(bool aMayWait) override;
 
   NSAutoreleasePool* mAutoreleasePool;
   AppShellDelegate* mDelegate;

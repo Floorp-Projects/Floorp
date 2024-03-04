@@ -1562,7 +1562,7 @@ UniquePtr<ScrollbarDrawing> Theme::ScrollbarStyle() {
     return MakeUnique<ScrollbarDrawingWin11>();
   }
   return MakeUnique<ScrollbarDrawingWin>();
-#elif MOZ_WIDGET_COCOA
+#elif defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
   return MakeUnique<ScrollbarDrawingCocoa>();
 #elif MOZ_WIDGET_GTK
   return MakeUnique<ScrollbarDrawingGTK>();

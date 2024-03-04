@@ -11,7 +11,6 @@ SOURCES += [
     "GfxInfo.cpp",
     "nsAppShell.mm",
     "nsLookAndFeel.mm",
-    "nsScreenManager.mm",
     "nsWidgetFactory.mm",
     "nsWindow.mm",
 ]
@@ -21,4 +20,8 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/widget",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
 ]

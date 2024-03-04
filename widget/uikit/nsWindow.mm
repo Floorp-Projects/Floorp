@@ -17,18 +17,17 @@
 #include <algorithm>
 
 #include "nsWindow.h"
-#include "nsScreenManager.h"
 #include "nsAppShell.h"
 
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 
+#include "gfxPlatform.h"
 #include "gfxQuartzSurface.h"
 #include "gfxUtils.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "nsRegion.h"
-#include "Layers.h"
 #include "nsTArray.h"
 
 #include "mozilla/BasicEvents.h"
@@ -36,10 +35,12 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/gfx/Logging.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
+using mozilla::dom::Touch;
 
 #define ALOG(args...)    \
   fprintf(stderr, args); \
@@ -144,9 +145,8 @@ class nsAutoRetainUIKitObject {
 
   event.mRefPoint = aPoint;
   event.mClickCount = 1;
-  event.button = MouseButton::ePrimary;
-  event.mTime = PR_IntervalNow();
-  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
+  event.mButton = MouseButton::ePrimary;
+  event.mInputSource = mozilla::dom::MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
 
   nsEventStatus status;
   aWindow->DispatchEvent(&event, status);
@@ -169,20 +169,20 @@ class nsAutoRetainUIKitObject {
   WidgetTouchEvent event(true, aType, aWindow);
   // XXX: I think nativeEvent.timestamp * 1000 is probably usable here but
   // I don't care that much right now.
-  event.mTime = PR_IntervalNow();
   event.mTouches.SetCapacity(aTouches.count);
   for (UITouch* touch in aTouches) {
     LayoutDeviceIntPoint loc = UIKitPointsToDevPixels(
         [touch locationInView:self], [self contentScaleFactor]);
-    LayoutDeviceIntPoint radius =
-        UIKitPointsToDevPixels([touch majorRadius], [touch majorRadius]);
+    LayoutDeviceIntPoint radius = UIKitPointsToDevPixels(
+        CGPointMake([touch majorRadius], [touch majorRadius]),
+        [self contentScaleFactor]);
     void* value;
     if (!CFDictionaryGetValueIfPresent(mTouches, touch, (const void**)&value)) {
       // This shouldn't happen.
       NS_ASSERTION(false, "Got a touch that we didn't know about");
       continue;
     }
-    int id = reinterpret_cast<int>(value);
+    int id = [value intValue];
     RefPtr<Touch> t = new Touch(id, loc, radius, 0.0f, 1.0f);
     event.mRefPoint = loc;
     event.mTouches.AppendElement(t);
@@ -326,7 +326,8 @@ class nsAutoRetainUIKitObject {
   CGContextScaleCTM(aContext, 1.0 / scale, 1.0 / scale);
 
   CGSize viewSize = [self bounds].size;
-  gfx::IntSize backingSize(viewSize.width * scale, viewSize.height * scale);
+  gfx::IntSize backingSize(NSToIntRound(viewSize.width * scale),
+                           NSToIntRound(viewSize.height * scale));
 
   CGContextSaveGState(aContext);
 
@@ -339,13 +340,12 @@ class nsAutoRetainUIKitObject {
   // Create Cairo objects.
   RefPtr<gfxQuartzSurface> targetSurface;
 
-  UniquePtrPtr<gfxContext> targetContext;
+  UniquePtr<gfxContext> targetContext;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(
           gfx::BackendType::CAIRO)) {
     // This is dead code unless you mess with prefs, but keep it around for
     // debugging.
     targetSurface = new gfxQuartzSurface(aContext, backingSize);
-    targetSurface->SetAllowUseAsSource(false);
     RefPtr<gfx::DrawTarget> dt =
         gfxPlatform::CreateDrawTargetForSurface(targetSurface, backingSize);
     if (!dt || !dt->IsValid()) {
@@ -442,20 +442,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (parent == nullptr && nativeParent) parent = nativeParent->mGeckoChild;
   if (parent && nativeParent == nullptr) nativeParent = parent->mNativeView;
 
-  // for toplevel windows, bounds are fixed to full screen size
-  if (parent == nullptr) {
-    if (nsAppShell::gWindow == nil) {
-      mBounds = UIKitScreenManager::GetBounds();
-    } else {
-      CGRect cgRect = [nsAppShell::gWindow bounds];
-      mBounds.x = cgRect.origin.x;
-      mBounds.y = cgRect.origin.y;
-      mBounds.width = cgRect.size.width;
-      mBounds.height = cgRect.size.height;
-    }
-  } else {
-    mBounds = aRect;
-  }
+  mBounds = aRect;
 
   ALOG("nsWindow[%p]::Create bounds: %d %d %d %d", (void*)this, mBounds.x,
        mBounds.y, mBounds.width, mBounds.height);
@@ -507,8 +494,6 @@ void nsWindow::Destroy() {
   TearDownView();
 
   nsBaseWidget::OnDestroy();
-
-  return NS_OK;
 }
 
 void nsWindow::Show(bool aState) {
@@ -595,16 +580,12 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
   if (!mNativeView || !mVisible) return;
 
-  MOZ_RELEASE_ASSERT(
-      GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_WR,
-      "Shouldn't need to invalidate with accelerated OMTC layers!");
-
   [mNativeView setNeedsLayout];
   [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(
                                          mBounds, BackingScaleFactor())];
 }
 
-void nsWindow::SetFocus(Raise) {
+void nsWindow::SetFocus(Raise, mozilla::dom::CallerType) {
   [[mNativeView window] makeKeyWindow];
   [mNativeView becomeFirstResponder];
 }
@@ -672,8 +653,8 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
     temp = [nsAppShell::gWindow convertPoint:temp toWindow:nil];
   }
 
-  offset.x += temp.x;
-  offset.y += temp.y;
+  offset.x += static_cast<int32_t>(temp.x);
+  offset.y += static_cast<int32_t>(temp.y);
 
   return offset;
 }
