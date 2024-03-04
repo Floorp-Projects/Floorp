@@ -31,8 +31,7 @@ class WebNotificationTest : BaseSessionTest() {
 
         // Grant "desktop notification" permission
         mainSession.delegateUntilTestEnd(object : PermissionDelegate {
-            override fun onContentPermissionRequest(session: GeckoSession, perm: PermissionDelegate.ContentPermission):
-                GeckoResult<Int>? {
+            override fun onContentPermissionRequest(session: GeckoSession, perm: PermissionDelegate.ContentPermission): GeckoResult<Int>? {
                 assertThat("Should grant DESKTOP_NOTIFICATIONS permission", perm.permission, equalTo(PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
                 return GeckoResult.fromValue(PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
@@ -336,7 +335,11 @@ class WebNotificationTest : BaseSessionTest() {
 
         // Test that we can serialize a notification
         val parcel = Parcel.obtain()
-        notification.writeToParcel(parcel, /* ignored */ -1)
+        notification.writeToParcel(
+            parcel,
+            /* ignored */
+            -1,
+        )
 
         assertThat("Promise should have been resolved.", promiseResult.value as Double, equalTo(1.0))
     }
@@ -375,7 +378,11 @@ class WebNotificationTest : BaseSessionTest() {
 
         // Test that we can serialize a notification with an imageUrl.length >= 150
         val parcel = Parcel.obtain()
-        notification.writeToParcel(parcel, /* ignored */ -1)
+        notification.writeToParcel(
+            parcel,
+            /* ignored */
+            -1,
+        )
         parcel.setDataPosition(0)
 
         val serializedNotification = WebNotification.CREATOR.createFromParcel(parcel)

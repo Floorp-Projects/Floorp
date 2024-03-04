@@ -2407,7 +2407,7 @@ class AutocompleteTest : BaseSessionTest() {
                     "Hint should match",
                     option.hint,
                     equalTo(LoginSaveOption.Hint.GENERATED))
-                */
+                 */
 
                 assertThat(
                     "Password should not be empty",
