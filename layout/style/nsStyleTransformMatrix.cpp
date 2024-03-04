@@ -101,7 +101,8 @@ static nsRect GetSVGBox(const nsIFrame* aFrame) {
       // FIXME: Bug 1849054. We may have to update
       // SVGGeometryFrame::GetBBoxContribution() to get tighter stroke bounds.
       nsRect strokeBox = nsLayoutUtils::ComputeSVGReferenceRect(
-          const_cast<nsIFrame*>(aFrame), StyleGeometryBox::StrokeBox);
+          const_cast<nsIFrame*>(aFrame), StyleGeometryBox::StrokeBox,
+          nsLayoutUtils::MayHaveNonScalingStrokeCyclicDependency::Yes);
       // The |nsIFrame::mRect| includes markers, so we have to compute the
       // offsets without markers.
       return nsRect{strokeBox.x - aFrame->GetPosition().x,
