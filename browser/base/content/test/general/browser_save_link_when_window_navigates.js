@@ -36,7 +36,7 @@ function triggerSave(aWindow, aCallback) {
   var fileName;
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   let testURI =
-    "https://example.com/browser/browser/base/content/test/general/navigating_window_with_download.html";
+    "http://mochi.test:8888/browser/browser/base/content/test/general/navigating_window_with_download.html";
 
   // Only observe the UTC dialog if it's enabled by pref
   if (Services.prefs.getBoolPref(ALWAYS_ASK_PREF)) {
