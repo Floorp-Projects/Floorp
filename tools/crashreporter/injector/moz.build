@@ -19,7 +19,12 @@ UNIFIED_SOURCES += [
     "/toolkit/crashreporter/breakpad-client/linux/minidump_writer/linux_ptrace_dumper.cc",
     "/toolkit/crashreporter/breakpad-client/linux/minidump_writer/minidump_writer.cc",
     "/toolkit/crashreporter/breakpad-client/minidump_file_writer.cc",
+    "/toolkit/crashreporter/linux_utils.cc",
     "injector.cc",
+]
+
+LOCAL_INCLUDES += [
+    "/toolkit/crashreporter/",
 ]
 
 USE_LIBS += [
