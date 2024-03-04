@@ -1172,7 +1172,7 @@ void nsHTMLScrollFrame::PlaceScrollArea(ScrollReflowInput& aState,
       scrolledArea, ReflowChildFlags::Default);
 }
 
-nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges() {
+nscoord nsHTMLScrollFrame::IntrinsicScrollbarGutterSizeAtInlineEdges() const {
   const bool isVerticalWM = GetWritingMode().IsVertical();
   if (PresContext()->UseOverlayScrollbars()) {
     return 0;
