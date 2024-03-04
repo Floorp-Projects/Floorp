@@ -187,7 +187,7 @@ void WaylandMessage::Read(int aSocket) {
     int* data = (int*)CMSG_DATA(header);
     int filenum = (int)((header->cmsg_len - CMSG_LEN(0)) / sizeof(int));
     if (filenum > MAX_LIBWAY_FDS) {
-      ErrorPlain("WaylandMessage::Read(): too many files to read");
+      ErrorPlain("WaylandMessage::Read(): too many files to read\n");
       mFailed = true;
       return;
     }
@@ -517,21 +517,21 @@ bool WaylandProxy::SetupWaylandDisplays() {
   if (!waylandDisplay) {
     waylandDisplay = getenv("WAYLAND_DISPLAY");
     if (!waylandDisplay || waylandDisplay[0] == '\0') {
-      ErrorPlain("WaylandProxy::SetupWaylandDisplays(), Missing Wayland display, WAYLAND_DISPLAY is empty.");
+      ErrorPlain("WaylandProxy::SetupWaylandDisplays(), Missing Wayland display, WAYLAND_DISPLAY is empty.\n");
       return false;
     }
   }
 
   char* XDGRuntimeDir = getenv("XDG_RUNTIME_DIR");
   if (!XDGRuntimeDir) {
-    ErrorPlain("WaylandProxy::SetupWaylandDisplays() Missing XDG_RUNTIME_DIR");
+    ErrorPlain("WaylandProxy::SetupWaylandDisplays() Missing XDG_RUNTIME_DIR\n");
     return false;
   }
 
   // WAYLAND_DISPLAY can be absolute path
   if (waylandDisplay[0] == '/') {
     if (strlen(mWaylandDisplay) >= sMaxDisplayNameLen) {
-      ErrorPlain("WaylandProxy::SetupWaylandDisplays() WAYLAND_DISPLAY is too large.");
+      ErrorPlain("WaylandProxy::SetupWaylandDisplays() WAYLAND_DISPLAY is too large.\n");
       return false;
     }
     strcpy(mWaylandDisplay, waylandDisplay);
@@ -539,7 +539,7 @@ bool WaylandProxy::SetupWaylandDisplays() {
     int ret = snprintf(mWaylandDisplay, sMaxDisplayNameLen, "%s/%s",
                        XDGRuntimeDir, waylandDisplay);
     if (ret < 0 || ret >= sMaxDisplayNameLen) {
-      ErrorPlain("WaylandProxy::SetupWaylandDisplays() WAYLAND_DISPLAY/XDG_RUNTIME_DIR is too large.");
+      ErrorPlain("WaylandProxy::SetupWaylandDisplays() WAYLAND_DISPLAY/XDG_RUNTIME_DIR is too large.\n");
       return false;
     }
   }
@@ -551,7 +551,7 @@ bool WaylandProxy::SetupWaylandDisplays() {
   int ret = snprintf(mWaylandProxy, sMaxDisplayNameLen,
                      "%s/wayland-proxy-%d", XDGRuntimeDir, getpid());
   if (ret < 0 || ret >= sMaxDisplayNameLen) {
-    ErrorPlain("WaylandProxy::SetupWaylandDisplays() WAYLAND_DISPLAY/XDG_RUNTIME_DIR is too large.");
+    ErrorPlain("WaylandProxy::SetupWaylandDisplays() WAYLAND_DISPLAY/XDG_RUNTIME_DIR is too large.\n");
     return false;
   }
 
@@ -774,7 +774,7 @@ std::unique_ptr<WaylandProxy> WaylandProxy::Create() {
 
 bool WaylandProxy::RunChildApplication(char* argv[]) {
   if (!argv[0]) {
-    ErrorPlain("WaylandProxy::RunChildApplication: missing application to run");
+    ErrorPlain("WaylandProxy::RunChildApplication: missing application to run\n");
     return false;
   }
 
