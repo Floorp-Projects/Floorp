@@ -40,6 +40,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/net/ContentRange.h"
 #include "mozilla/PreloaderBase.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -863,7 +864,7 @@ bool XMLHttpRequestMainThread::IsDeniedCrossSiteCORSRequest() {
   return false;
 }
 
-Maybe<nsBaseChannel::ContentRange>
+Maybe<mozilla::net::ContentRange>
 XMLHttpRequestMainThread::GetRequestedContentRange() const {
   MOZ_ASSERT(mChannel);
   nsBaseChannel* baseChan = static_cast<nsBaseChannel*>(mChannel.get());
@@ -878,7 +879,7 @@ void XMLHttpRequestMainThread::GetContentRangeHeader(nsACString& out) const {
     out.SetIsVoid(true);
     return;
   }
-  Maybe<nsBaseChannel::ContentRange> range = GetRequestedContentRange();
+  Maybe<mozilla::net::ContentRange> range = GetRequestedContentRange();
   if (range.isSome()) {
     range->AsHeader(out);
   } else {

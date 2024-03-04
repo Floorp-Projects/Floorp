@@ -507,7 +507,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   void AbortInternal(ErrorResult& aRv);
 
-  Maybe<nsBaseChannel::ContentRange> GetRequestedContentRange() const;
+  Maybe<mozilla::net::ContentRange> GetRequestedContentRange() const;
   void GetContentRangeHeader(nsACString&) const;
 
   struct PendingEvent {
