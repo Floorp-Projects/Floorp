@@ -148,7 +148,7 @@ void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
             actorsName += ", "_ns + GetUtilityActorName(actor);
           }
         }
-        mCrashReporter->AddAnnotation(
+        mCrashReporter->AddAnnotationNSCString(
             CrashReporter::Annotation::UtilityActorsName, actorsName);
       }
 #endif

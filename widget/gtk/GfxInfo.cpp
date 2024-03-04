@@ -75,17 +75,17 @@ nsresult GfxInfo::Init() {
 }
 
 void GfxInfo::AddCrashReportAnnotations() {
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID,
-                                     mVendorId);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
-                                     mDeviceId);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
+      CrashReporter::Annotation::AdapterVendorID, mVendorId);
+  CrashReporter::RecordAnnotationNSCString(
+      CrashReporter::Annotation::AdapterDeviceID, mDeviceId);
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::AdapterDriverVendor, mDriverVendor);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::IsWayland,
-                                     mIsWayland);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationBool(CrashReporter::Annotation::IsWayland,
+                                      mIsWayland);
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::DesktopEnvironment,
       GetDesktopEnvironmentIdentifier());
 

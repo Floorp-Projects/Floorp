@@ -95,11 +95,11 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
 
   void AddParentAnnotation(CrashReporter::Annotation aAnnotation,
                            nsAutoCString aString) {
-    CrashReporter::AnnotateCrashReport(aAnnotation, aString);
+    CrashReporter::RecordAnnotationNSCString(aAnnotation, aString);
   }
   void AddParentAnnotation(CrashReporter::Annotation aAnnotation,
                            uint32_t aData) {
-    CrashReporter::AnnotateCrashReport(aAnnotation, aData);
+    CrashReporter::RecordAnnotationU32(aAnnotation, aData);
   }
 
   void LowMemoryResponse();
@@ -251,18 +251,18 @@ nsresult nsAvailableMemoryWatcher::Init() {
   // Set the initial state of all annotations for parent crash reports.
   // Content process crash reports are set when a crash occurs and
   // AddChildAnnotations() is called.
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressure, mLevelStr);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressureNormalTime, mNormalTimeStr);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressureWarningTime, mWarningTimeStr);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressureCriticalTime,
       mCriticalTimeStr);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationU32(
       CrashReporter::Annotation::MacMemoryPressureSysctl, mLevelSysctl);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationU32(
       CrashReporter::Annotation::MacAvailableMemorySysctl, mAvailMemSysctl);
 
   // To support running experiments, handle pref
@@ -441,18 +441,18 @@ void nsAvailableMemoryWatcher::OnMemoryPressureChangedInternal(
 // Add all annotations to the provided crash reporter instance.
 void nsAvailableMemoryWatcher::AddChildAnnotations(
     const UniquePtr<ipc::CrashReporterHost>& aCrashReporter) {
-  aCrashReporter->AddAnnotation(CrashReporter::Annotation::MacMemoryPressure,
-                                mLevelStr);
-  aCrashReporter->AddAnnotation(
+  aCrashReporter->AddAnnotationNSCString(
+      CrashReporter::Annotation::MacMemoryPressure, mLevelStr);
+  aCrashReporter->AddAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressureNormalTime, mNormalTimeStr);
-  aCrashReporter->AddAnnotation(
+  aCrashReporter->AddAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressureWarningTime, mWarningTimeStr);
-  aCrashReporter->AddAnnotation(
+  aCrashReporter->AddAnnotationNSCString(
       CrashReporter::Annotation::MacMemoryPressureCriticalTime,
       mCriticalTimeStr);
-  aCrashReporter->AddAnnotation(
+  aCrashReporter->AddAnnotationU32(
       CrashReporter::Annotation::MacMemoryPressureSysctl, mLevelSysctl);
-  aCrashReporter->AddAnnotation(
+  aCrashReporter->AddAnnotationU32(
       CrashReporter::Annotation::MacAvailableMemorySysctl, mAvailMemSysctl);
 }
 

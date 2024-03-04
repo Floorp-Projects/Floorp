@@ -104,10 +104,9 @@ nsIXULRuntime::ContentWin32kLockdownState GetContentWin32kLockdownState() {
   static auto getLockdownState = [] {
     auto state = GetWin32kLockdownState();
 
-    const char* stateStr = ContentWin32kLockdownStateToString(state);
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationCString(
         CrashReporter::Annotation::ContentSandboxWin32kState,
-        nsDependentCString(stateStr));
+        ContentWin32kLockdownStateToString(state));
 
     return state;
   };

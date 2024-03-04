@@ -419,21 +419,17 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }
 
 void GfxInfo::AddCrashReportAnnotations() {
   nsString deviceID, vendorID, driverVersion;
-  nsAutoCString narrowDeviceID, narrowVendorID, narrowDriverVersion;
 
   GetAdapterDeviceID(deviceID);
-  CopyUTF16toUTF8(deviceID, narrowDeviceID);
   GetAdapterVendorID(vendorID);
-  CopyUTF16toUTF8(vendorID, narrowVendorID);
   GetAdapterDriverVersion(driverVersion);
-  CopyUTF16toUTF8(driverVersion, narrowDriverVersion);
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID,
-                                     narrowVendorID);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
-                                     narrowDeviceID);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::AdapterDriverVersion, narrowDriverVersion);
+  CrashReporter::RecordAnnotationNSString(
+      CrashReporter::Annotation::AdapterVendorID, vendorID);
+  CrashReporter::RecordAnnotationNSString(
+      CrashReporter::Annotation::AdapterDeviceID, deviceID);
+  CrashReporter::RecordAnnotationNSString(
+      CrashReporter::Annotation::AdapterDriverVersion, driverVersion);
 }
 
 // We don't support checking driver versions on Mac.

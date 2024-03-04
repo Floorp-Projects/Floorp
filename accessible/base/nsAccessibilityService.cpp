@@ -1522,8 +1522,8 @@ bool nsAccessibilityService::Init() {
   NS_ADDREF(gApplicationAccessible);  // will release in Shutdown()
   gApplicationAccessible->Init();
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::Accessibility,
-                                     "Active"_ns);
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::Accessibility, "Active");
 
   // Now its safe to start platform accessibility.
   if (XRE_IsParentProcess()) PlatformInit();

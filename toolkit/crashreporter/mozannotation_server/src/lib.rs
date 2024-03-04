@@ -9,22 +9,21 @@ use crate::errors::*;
 use process_reader::ProcessReader;
 
 use mozannotation_client::{Annotation, AnnotationContents, AnnotationMutex};
-use nsstring::nsCString;
 use std::cmp::min;
 use std::iter::FromIterator;
-use std::mem::size_of;
+use std::mem::{size_of, ManuallyDrop};
 use std::ptr::null_mut;
 use thin_vec::ThinVec;
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum AnnotationData {
     Empty,
-    UsizeData(usize),
-    NSCStringData(nsCString),
     ByteBuffer(ThinVec<u8>),
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct CAnnotation {
     id: u32,
     data: AnnotationData,
@@ -100,33 +99,33 @@ pub fn retrieve_annotations(
 
 // Read an annotation from the given address
 fn read_annotation(reader: &ProcessReader, address: usize) -> Result<CAnnotation, ReadError> {
-    let raw_annotation = reader.copy_object::<Annotation>(address)?;
+    let raw_annotation = ManuallyDrop::new(reader.copy_object::<Annotation>(address)?);
     let mut annotation = CAnnotation {
         id: raw_annotation.id,
         data: AnnotationData::Empty,
     };
 
+    if raw_annotation.address == 0 {
+        return Ok(annotation);
+    }
+
     match raw_annotation.contents {
         AnnotationContents::Empty => {}
-        AnnotationContents::NSCString => {
+        AnnotationContents::NSCStringPointer => {
             let string = copy_nscstring(reader, raw_annotation.address)?;
-            annotation.data = AnnotationData::NSCStringData(string);
+            annotation.data = AnnotationData::ByteBuffer(string);
+        }
+        AnnotationContents::CStringPointer => {
+            let buffer = copy_null_terminated_string_pointer(reader, raw_annotation.address)?;
+            annotation.data = AnnotationData::ByteBuffer(buffer);
         }
         AnnotationContents::CString => {
-            let string = copy_null_terminated_string_pointer(reader, raw_annotation.address)?;
-            annotation.data = AnnotationData::NSCStringData(string);
+            let buffer = copy_null_terminated_string(reader, raw_annotation.address)?;
+            annotation.data = AnnotationData::ByteBuffer(buffer);
         }
-        AnnotationContents::CharBuffer => {
-            let string = copy_null_terminated_string(reader, raw_annotation.address)?;
-            annotation.data = AnnotationData::NSCStringData(string);
-        }
-        AnnotationContents::USize => {
-            let value = reader.copy_object::<usize>(raw_annotation.address)?;
-            annotation.data = AnnotationData::UsizeData(value);
-        }
-        AnnotationContents::ByteBuffer(size) => {
-            let value = copy_bytebuffer(reader, raw_annotation.address, size)?;
-            annotation.data = AnnotationData::ByteBuffer(value);
+        AnnotationContents::ByteBuffer(size) | AnnotationContents::OwnedByteBuffer(size) => {
+            let buffer = copy_bytebuffer(reader, raw_annotation.address, size)?;
+            annotation.data = AnnotationData::ByteBuffer(buffer);
         }
     };
 
@@ -136,7 +135,7 @@ fn read_annotation(reader: &ProcessReader, address: usize) -> Result<CAnnotation
 fn copy_null_terminated_string_pointer(
     reader: &ProcessReader,
     address: usize,
-) -> Result<nsCString, ReadError> {
+) -> Result<ThinVec<u8>, ReadError> {
     let buffer_address = reader.copy_object::<usize>(address)?;
     copy_null_terminated_string(reader, buffer_address)
 }
@@ -144,7 +143,7 @@ fn copy_null_terminated_string_pointer(
 fn copy_null_terminated_string(
     reader: &ProcessReader,
     address: usize,
-) -> Result<nsCString, ReadError> {
+) -> Result<ThinVec<u8>, ReadError> {
     // Try copying the string word-by-word first, this is considerably faster
     // than one byte at a time.
     if let Ok(string) = copy_null_terminated_string_word_by_word(reader, address) {
@@ -155,7 +154,7 @@ fn copy_null_terminated_string(
     // at a time. It's slow but it might work in situations where the string
     // alignment causes word-by-word access to straddle page boundaries.
     let mut length = 0;
-    let mut string = Vec::<u8>::new();
+    let mut string = ThinVec::<u8>::new();
 
     loop {
         let char = reader.copy_object::<u8>(address + length)?;
@@ -167,33 +166,34 @@ fn copy_null_terminated_string(
         }
     }
 
-    Ok(nsCString::from(&string[..length]))
+    Ok(string)
 }
 
 fn copy_null_terminated_string_word_by_word(
     reader: &ProcessReader,
     address: usize,
-) -> Result<nsCString, ReadError> {
+) -> Result<ThinVec<u8>, ReadError> {
     const WORD_SIZE: usize = size_of::<usize>();
     let mut length = 0;
-    let mut string = Vec::<u8>::new();
+    let mut string = ThinVec::<u8>::new();
 
     loop {
-        let mut array = reader.copy_array::<u8>(address + length, WORD_SIZE)?;
+        let array = reader.copy_array::<u8>(address + length, WORD_SIZE)?;
         let null_terminator = array.iter().position(|&e| e == 0);
         length += null_terminator.unwrap_or(WORD_SIZE);
-        string.append(&mut array);
+        string.extend(array.into_iter());
 
         if null_terminator.is_some() {
+            string.truncate(length);
             break;
         }
     }
 
-    Ok(nsCString::from(&string[..length]))
+    Ok(string)
 }
 
-fn copy_nscstring(reader: &ProcessReader, address: usize) -> Result<nsCString, ReadError> {
-    // HACK: This assumes the layout of the string
+fn copy_nscstring(reader: &ProcessReader, address: usize) -> Result<ThinVec<u8>, ReadError> {
+    // HACK: This assumes the layout of the nsCString object
     let length_address = address + size_of::<usize>();
     let length = reader.copy_object::<u32>(length_address)?;
 
@@ -201,9 +201,9 @@ fn copy_nscstring(reader: &ProcessReader, address: usize) -> Result<nsCString, R
         let data_address = reader.copy_object::<usize>(address)?;
         reader
             .copy_array::<u8>(data_address, length as _)
-            .map(nsCString::from)
+            .map(ThinVec::from)
     } else {
-        Ok(nsCString::new())
+        Ok(ThinVec::<u8>::new())
     }
 }
 

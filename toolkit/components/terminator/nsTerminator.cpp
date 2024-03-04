@@ -606,9 +606,7 @@ void nsTerminator::UpdateTelemetry() {
 
 void nsTerminator::UpdateCrashReport(const char* aTopic) {
   // In case of crash, we wish to know where in shutdown we are
-  nsAutoCString report(aTopic);
-
-  Unused << CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::ShutdownProgress, report);
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::ShutdownProgress, aTopic);
 }
 }  // namespace mozilla

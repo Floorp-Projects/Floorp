@@ -611,12 +611,11 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   }
   mQueuedPrefs.Clear();
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GPUProcessStatus, "Running"_ns);
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::GPUProcessStatus, "Running");
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GPUProcessLaunchCount,
-      static_cast<int>(mTotalProcessAttempts));
+  CrashReporter::RecordAnnotationU32(
+      CrashReporter::Annotation::GPUProcessLaunchCount, mTotalProcessAttempts);
 
   ReinitializeRendering();
 }
@@ -792,8 +791,9 @@ void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(aReason));
   }
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::DeviceResetReason, int(aReason));
+  CrashReporter::RecordAnnotationU32(
+      CrashReporter::Annotation::DeviceResetReason,
+      static_cast<uint32_t>(aReason));
 }
 
 bool GPUProcessManager::OnDeviceReset(bool aTrackThreshold) {
@@ -1105,8 +1105,8 @@ void GPUProcessManager::DestroyProcess(bool aUnexpectedShutdown) {
     mBatteryObserver = nullptr;
   }
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GPUProcessStatus, "Destroyed"_ns);
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::GPUProcessStatus, "Destroyed");
 }
 
 already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(

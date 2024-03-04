@@ -170,8 +170,8 @@ RefPtr<GenericNonExclusivePromise> RDDProcessManager::LaunchRDDProcess() {
         }
         mQueuedPrefs.Clear();
 
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::RDDProcessStatus, "Running"_ns);
+        CrashReporter::RecordAnnotationCString(
+            CrashReporter::Annotation::RDDProcessStatus, "Running");
 
         if (!CreateVideoBridge()) {
           mNumProcessAttempts++;
@@ -271,8 +271,8 @@ void RDDProcessManager::DestroyProcess() {
   mRDDChild = nullptr;
   mQueuedPrefs.Clear();
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::RDDProcessStatus, "Destroyed"_ns);
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::RDDProcessStatus, "Destroyed");
 }
 
 bool RDDProcessManager::CreateContentBridge(

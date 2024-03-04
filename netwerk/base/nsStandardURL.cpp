@@ -292,8 +292,8 @@ void nsStandardURL::SanityCheck() {
         (uint32_t)mExtension.mPos, (int32_t)mExtension.mLen,
         (uint32_t)mQuery.mPos, (int32_t)mQuery.mLen, (uint32_t)mRef.mPos,
         (int32_t)mRef.mLen);
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URLSegments,
-                                       msg);
+    CrashReporter::RecordAnnotationNSCString(
+        CrashReporter::Annotation::URLSegments, msg);
 
     MOZ_CRASH("nsStandardURL::SanityCheck failed");
   }

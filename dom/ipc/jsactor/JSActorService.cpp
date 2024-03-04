@@ -106,9 +106,9 @@ void JSActorService::RegisterWindowActor(const nsACString& aName,
 
 void JSActorService::UnregisterWindowActor(const nsACString& aName) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-  CrashReporter::AutoAnnotateCrashReport autoActorName(
+  CrashReporter::AutoRecordAnnotation autoActorName(
       CrashReporter::Annotation::JSActorName, aName);
-  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+  CrashReporter::AutoRecordAnnotation autoMessageName(
       CrashReporter::Annotation::JSActorMessage, "<Unregister>"_ns);
 
   nsAutoCString name(aName);
@@ -268,9 +268,9 @@ void JSActorService::RegisterProcessActor(const nsACString& aName,
 
 void JSActorService::UnregisterProcessActor(const nsACString& aName) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-  CrashReporter::AutoAnnotateCrashReport autoActorName(
+  CrashReporter::AutoRecordAnnotation autoActorName(
       CrashReporter::Annotation::JSActorName, aName);
-  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+  CrashReporter::AutoRecordAnnotation autoMessageName(
       CrashReporter::Annotation::JSActorMessage, "<Unregister>"_ns);
 
   nsAutoCString name(aName);

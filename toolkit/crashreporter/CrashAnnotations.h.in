@@ -50,6 +50,16 @@ ${skiplist}
 };
 
 /**
+ * Return the type of a crash annotation.
+ *
+ * @param aAnnotation a crash annotation
+ * @returns The type of this annotation
+ */
+static inline AnnotationType TypeOfAnnotation(Annotation aAnnotation) {
+  return kAnnotationTypes[static_cast<uint32_t>(aAnnotation)];
+}
+
+/**
  * Return the string representation of a crash annotation.
  *
  * @param aAnnotation a crash annotation
@@ -97,8 +107,16 @@ class AnnotationWriter {
  public:
   virtual void Write(Annotation aAnnotation, const char* aValue,
                      size_t aLen = 0) = 0;
+  virtual void Write(Annotation aAnnotation, bool aValue) = 0;
   virtual void Write(Annotation aAnnotation, uint64_t aValue) = 0;
 };
+
+#ifdef XP_WIN
+
+extern void RecordDllAnnotations(bool* aBlocklistInitFailed,
+                                 bool* aUser32BeforeBlocklist);
+
+#endif  // XP_WIN
 
 }  // namespace CrashReporter
 

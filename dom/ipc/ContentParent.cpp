@@ -4441,11 +4441,11 @@ void ContentParent::GeneratePairedMinidump(const char* aReason) {
     // minidump tagging along, so we have to tell the crash reporter that
     // it exists and is being appended.
     nsAutoCString additionalDumps("browser");
-    mCrashReporter->AddAnnotation(
+    mCrashReporter->AddAnnotationNSCString(
         CrashReporter::Annotation::additional_minidumps, additionalDumps);
     nsDependentCString reason(aReason);
-    mCrashReporter->AddAnnotation(CrashReporter::Annotation::ipc_channel_error,
-                                  reason);
+    mCrashReporter->AddAnnotationNSCString(
+        CrashReporter::Annotation::ipc_channel_error, reason);
 
     // Generate the report and insert into the queue for submittal.
     if (mCrashReporter->GenerateMinidumpAndPair(this, "browser"_ns)) {

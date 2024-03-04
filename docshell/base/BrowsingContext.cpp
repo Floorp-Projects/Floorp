@@ -161,6 +161,9 @@ static StaticAutoPtr<BrowsingContextMap> sBrowsingContexts;
 // Top-level Content BrowsingContexts only, indexed by BrowserId instead of Id
 static StaticAutoPtr<BrowsingContextMap> sCurrentTopByBrowserId;
 
+static bool gIPCEnabledAnnotation = false;
+static bool gFissionEnabledAnnotation = false;
+
 static void UnregisterBrowserId(BrowsingContext* aBrowsingContext) {
   if (!aBrowsingContext->IsTopContent() || !sCurrentTopByBrowserId) {
     return;
@@ -248,6 +251,11 @@ void BrowsingContext::Init() {
     sCurrentTopByBrowserId = new BrowsingContextMap();
     ClearOnShutdown(&sBrowsingContexts);
     ClearOnShutdown(&sCurrentTopByBrowserId);
+    CrashReporter::RegisterAnnotationBool(
+        CrashReporter::Annotation::DOMIPCEnabled, &gIPCEnabledAnnotation);
+    CrashReporter::RegisterAnnotationBool(
+        CrashReporter::Annotation::DOMFissionEnabled,
+        &gFissionEnabledAnnotation);
   }
 }
 
@@ -1658,11 +1666,8 @@ NS_IMETHODIMP BrowsingContext::SetRemoteTabs(bool aUseRemoteTabs) {
     return NS_ERROR_FAILURE;
   }
 
-  static bool annotated = false;
-  if (aUseRemoteTabs && !annotated) {
-    annotated = true;
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::DOMIPCEnabled,
-                                       true);
+  if (aUseRemoteTabs && !gIPCEnabledAnnotation) {
+    gIPCEnabledAnnotation = true;
   }
 
   // Don't allow non-remote tabs with remote subframes.
@@ -1686,11 +1691,8 @@ NS_IMETHODIMP BrowsingContext::SetRemoteSubframes(bool aUseRemoteSubframes) {
     return NS_ERROR_FAILURE;
   }
 
-  static bool annotated = false;
-  if (aUseRemoteSubframes && !annotated) {
-    annotated = true;
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::DOMFissionEnabled, true);
+  if (aUseRemoteSubframes && !gFissionEnabledAnnotation) {
+    gFissionEnabledAnnotation = true;
   }
 
   // Don't allow non-remote tabs with remote subframes.

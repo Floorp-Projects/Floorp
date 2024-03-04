@@ -560,12 +560,10 @@ mozilla::ipc::IPCResult HangMonitorChild::RecvRequestContentJSInterrupt() {
   // In order to cancel JS execution on shutdown, we expect that
   // ProcessChild::NotifiedImpendingShutdown has been called before.
   if (mozilla::ipc::ProcessChild::ExpectingShutdown()) {
-    CrashReporter::AppendToCrashReportAnnotation(
-        CrashReporter::Annotation::IPCShutdownState,
+    ProcessChild::AppendToIPCShutdownStateAnnotation(
         "HangMonitorChild::RecvRequestContentJSInterrupt (expected)"_ns);
   } else {
-    CrashReporter::AppendToCrashReportAnnotation(
-        CrashReporter::Annotation::IPCShutdownState,
+    ProcessChild::AppendToIPCShutdownStateAnnotation(
         "HangMonitorChild::RecvRequestContentJSInterrupt (unexpected)"_ns);
   }
   JS_RequestInterruptCallback(mContext);

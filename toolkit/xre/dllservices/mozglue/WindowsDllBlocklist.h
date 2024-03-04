@@ -10,10 +10,9 @@
     (defined(_M_IX86) || defined(_M_X64) || defined(_M_ARM64))
 
 #  include <windows.h>
-#  include "CrashAnnotations.h"
-#  include "mozilla/Attributes.h"
 #  include "mozilla/ProcessType.h"
 #  include "mozilla/Types.h"
+#  include <algorithm>
 
 #  define HAS_DLL_BLOCKLIST
 
@@ -47,8 +46,12 @@ extern uint32_t gBlocklistInitFlags;
 
 MFBT_API void DllBlocklist_Initialize(
     uint32_t aInitFlags = eDllBlocklistInitFlagDefault);
-MFBT_API void DllBlocklist_WriteNotes(CrashReporter::AnnotationWriter& aWriter);
+MFBT_API void DllBlocklist_WriteNotes();
 MFBT_API bool DllBlocklist_CheckStatus();
+
+MFBT_API bool* DllBlocklist_GetBlocklistInitFailedPointer();
+MFBT_API bool* DllBlocklist_GetUser32BeforeBlocklistPointer();
+MFBT_API const char* DllBlocklist_GetBlocklistWriterData();
 
 // This export intends to clean up after DllBlocklist_Initialize().
 // It's disabled in release builds for performance and to limit callers' ability

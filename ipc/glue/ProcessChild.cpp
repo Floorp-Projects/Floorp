@@ -21,7 +21,6 @@
 
 #include "nsAppRunner.h"
 #include "mozilla/AppShutdown.h"
-#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/GeckoArgs.h"
 
@@ -29,6 +28,8 @@ namespace mozilla {
 namespace ipc {
 
 ProcessChild* ProcessChild::gProcessChild;
+StaticMutex ProcessChild::gIPCShutdownStateLock;
+nsCString ProcessChild::gIPCShutdownStateAnnotation;
 
 static Atomic<bool> sExpectingShutdown(false);
 
@@ -39,6 +40,9 @@ ProcessChild::ProcessChild(ProcessId aParentPid, const nsID& aMessageChannelId)
       mMessageChannelId(aMessageChannelId) {
   MOZ_ASSERT(mUILoop, "UILoop should be created by now");
   MOZ_ASSERT(!gProcessChild, "should only be one ProcessChild");
+  CrashReporter::RegisterAnnotationNSCString(
+      CrashReporter::Annotation::IPCShutdownState,
+      &gIPCShutdownStateAnnotation);
   gProcessChild = this;
 }
 
@@ -101,14 +105,14 @@ ProcessChild::~ProcessChild() {
   // we'll get into late IPC shutdown with processes still running.
   SleepIfEnv("MOZ_TEST_CHILD_EXIT_HANG");
 #endif
+  gIPCShutdownStateAnnotation = ""_ns;
   gProcessChild = nullptr;
 }
 
 /* static */
 void ProcessChild::NotifiedImpendingShutdown() {
   sExpectingShutdown = true;
-  CrashReporter::AppendToCrashReportAnnotation(
-      CrashReporter::Annotation::IPCShutdownState,
+  ProcessChild::AppendToIPCShutdownStateAnnotation(
       "NotifiedImpendingShutdown"_ns);
 }
 

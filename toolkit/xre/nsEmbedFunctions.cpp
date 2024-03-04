@@ -207,13 +207,13 @@ void SetTaskbarGroupId(const nsString& aId) {
 #if defined(MOZ_SANDBOX)
 void AddContentSandboxLevelAnnotation() {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    int level = GetEffectiveContentSandboxLevel();
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::ContentSandboxLevel, level);
+    uint32_t contentSandboxLevel = GetEffectiveContentSandboxLevel();
+    CrashReporter::RecordAnnotationU32(
+        CrashReporter::Annotation::ContentSandboxLevel, contentSandboxLevel);
   } else if (XRE_GetProcessType() == GeckoProcessType_GPU) {
-    int level = GetEffectiveGpuSandboxLevel();
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::GpuSandboxLevel, level);
+    uint32_t gpuSandboxLevel = GetEffectiveGpuSandboxLevel();
+    CrashReporter::RecordAnnotationU32(
+        CrashReporter::Annotation::GpuSandboxLevel, gpuSandboxLevel);
   }
 }
 #endif /* MOZ_SANDBOX */

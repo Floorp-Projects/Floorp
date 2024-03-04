@@ -214,8 +214,8 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
         }
         p->mQueuedPrefs.Clear();
 
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::UtilityProcessStatus, "Running"_ns);
+        CrashReporter::RecordAnnotationCString(
+            CrashReporter::Annotation::UtilityProcessStatus, "Running");
 
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
@@ -592,8 +592,8 @@ void UtilityProcessManager::DestroyProcess(SandboxingKind aSandbox) {
 
   mProcesses[aSandbox] = nullptr;
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::UtilityProcessStatus, "Destroyed"_ns);
+  CrashReporter::RecordAnnotationCString(
+      CrashReporter::Annotation::UtilityProcessStatus, "Destroyed");
 
   if (NoMoreProcesses()) {
     sSingleton = nullptr;

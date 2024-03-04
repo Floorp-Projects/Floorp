@@ -237,16 +237,15 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
 bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
   nsCOMPtr<nsIFile> libFile;
 
-#define GMP_PATH_CRASH(explain)                          \
-  do {                                                   \
-    nsAutoString path;                                   \
-    if (!libFile || NS_FAILED(libFile->GetPath(path))) { \
-      path = mPluginPath;                                \
-    }                                                    \
-    CrashReporter::AnnotateCrashReport(                  \
-        CrashReporter::Annotation::GMPLibraryPath,       \
-        NS_ConvertUTF16toUTF8(path));                    \
-    MOZ_CRASH(explain);                                  \
+#define GMP_PATH_CRASH(explain)                           \
+  do {                                                    \
+    nsAutoString path;                                    \
+    if (!libFile || NS_FAILED(libFile->GetPath(path))) {  \
+      path = mPluginPath;                                 \
+    }                                                     \
+    CrashReporter::RecordAnnotationNSString(              \
+        CrashReporter::Annotation::GMPLibraryPath, path); \
+    MOZ_CRASH(explain);                                   \
   } while (false)
 
   nsresult rv = NS_NewLocalFile(mPluginPath, true, getter_AddRefs(libFile));
@@ -514,7 +513,7 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
 
   nsAutoCString libPath;
   if (!GetUTF8LibPath(libPath)) {
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationNSCString(
         CrashReporter::Annotation::GMPLibraryPath,
         NS_ConvertUTF16toUTF8(mPluginPath));
 
@@ -556,7 +555,7 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
     NS_WARNING("Failed to load GMP");
 #endif
     delete platformAPI;
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationNSCString(
         CrashReporter::Annotation::GMPLibraryPath,
         NS_ConvertUTF16toUTF8(mPluginPath));
 
@@ -727,21 +726,21 @@ mozilla::ipc::IPCResult GMPChild::RecvShutdown(ShutdownResolver&& aResolver) {
   }
 
   const bool isProfiling = profiler_is_active();
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::ProfilerChildShutdownPhase,
-      isProfiling ? "Profiling - GrabShutdownProfileAndShutdown"_ns
-                  : "Not profiling - GrabShutdownProfileAndShutdown"_ns);
+      isProfiling ? "Profiling - GrabShutdownProfileAndShutdown"
+                  : "Not profiling - GrabShutdownProfileAndShutdown");
   ProfileAndAdditionalInformation shutdownProfileAndAdditionalInformation =
       mProfilerController->GrabShutdownProfileAndShutdown();
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::ProfilerChildShutdownPhase,
-      isProfiling ? "Profiling - Destroying ChildProfilerController"_ns
-                  : "Not profiling - Destroying ChildProfilerController"_ns);
+      isProfiling ? "Profiling - Destroying ChildProfilerController"
+                  : "Not profiling - Destroying ChildProfilerController");
   mProfilerController = nullptr;
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::ProfilerChildShutdownPhase,
-      isProfiling ? "Profiling - SendShutdownProfile (resovling)"_ns
-                  : "Not profiling - SendShutdownProfile (resolving)"_ns);
+      isProfiling ? "Profiling - SendShutdownProfile (resovling)"
+                  : "Not profiling - SendShutdownProfile (resolving)");
   if (const size_t len = shutdownProfileAndAdditionalInformation.SizeOf();
       len >= size_t(IPC::Channel::kMaximumMessageSize)) {
     shutdownProfileAndAdditionalInformation.mProfile =
@@ -752,10 +751,10 @@ mozilla::ipc::IPCResult GMPChild::RecvShutdown(ShutdownResolver&& aResolver) {
   // Send the shutdown profile to the parent process through our own
   // message channel, which we know will survive for long enough.
   aResolver(shutdownProfileAndAdditionalInformation.mProfile);
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::ProfilerChildShutdownPhase,
-      isProfiling ? "Profiling - SendShutdownProfile (resolved)"_ns
-                  : "Not profiling - SendShutdownProfile (resolved)"_ns);
+      isProfiling ? "Profiling - SendShutdownProfile (resolved)"
+                  : "Not profiling - SendShutdownProfile (resolved)");
   return IPC_OK();
 }
 

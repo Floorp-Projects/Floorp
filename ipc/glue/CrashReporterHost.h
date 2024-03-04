@@ -84,10 +84,10 @@ class CrashReporterHost {
     return CrashReporter::GetIDFromMinidump(targetDump, mDumpID);
   }
 
-  void AddAnnotation(CrashReporter::Annotation aKey, bool aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, int aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, unsigned int aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, const nsACString& aValue);
+  void AddAnnotationBool(CrashReporter::Annotation aKey, bool aValue);
+  void AddAnnotationU32(CrashReporter::Annotation aKey, uint32_t aValue);
+  void AddAnnotationNSCString(CrashReporter::Annotation aKey,
+                              const nsACString& aValue);
 
   bool HasMinidump() const { return !mDumpID.IsEmpty(); }
   const nsString& MinidumpID() const {

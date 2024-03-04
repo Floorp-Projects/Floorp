@@ -197,9 +197,8 @@ static void AccumulateInstantiatorTelemetry(const nsAString& aValue) {
 #if defined(MOZ_TELEMETRY_REPORTING)
     Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, aValue);
 #endif  // defined(MOZ_TELEMETRY_REPORTING)
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::AccessibilityClient,
-        NS_ConvertUTF16toUTF8(aValue));
+    CrashReporter::RecordAnnotationNSString(
+        CrashReporter::Annotation::AccessibilityClient, aValue);
   }
 }
 

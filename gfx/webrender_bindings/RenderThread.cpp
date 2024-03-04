@@ -70,6 +70,8 @@ static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 #ifdef DEBUG
 static bool sRenderThreadEverStarted = false;
 #endif
+size_t RenderThread::sRendererCount = 0;
+size_t RenderThread::sActiveRendererCount = 0;
 
 RenderThread::RenderThread(RefPtr<nsIThread> aThread)
     : mThread(std::move(aThread)),
@@ -150,6 +152,11 @@ void RenderThread::Start(uint32_t aNamespace) {
   }
 
   sRenderThread = new RenderThread(thread);
+  CrashReporter::RegisterAnnotationUSize(
+      CrashReporter::Annotation::GraphicsNumRenderers, &sRendererCount);
+  CrashReporter::RegisterAnnotationUSize(
+      CrashReporter::Annotation::GraphicsNumActiveRenderers,
+      &sActiveRendererCount);
 #ifdef XP_WIN
   widget::WinCompositorWindowThread::Start();
 #endif
@@ -322,9 +329,7 @@ void RenderThread::AddRenderer(wr::WindowId aWindowId,
   }
 
   mRenderers[aWindowId] = std::move(aRenderer);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GraphicsNumRenderers,
-      (unsigned int)mRenderers.size());
+  sRendererCount = mRenderers.size();
 
   auto windows = mWindowInfos.Lock();
   windows->emplace(AsUint64(aWindowId), new WindowInfo());
@@ -342,9 +347,7 @@ void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
   }
 
   mRenderers.erase(aWindowId);
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GraphicsNumRenderers,
-      (unsigned int)mRenderers.size());
+  sRendererCount = mRenderers.size();
 
   if (mRenderers.empty()) {
     if (mHandlingDeviceReset) {
@@ -391,7 +394,7 @@ size_t RenderThread::RendererCount() const {
   return mRenderers.size();
 }
 
-size_t RenderThread::ActiveRendererCount() const {
+void RenderThread::UpdateActiveRendererCount() {
   MOZ_ASSERT(IsInRenderThread());
   size_t num_active = 0;
   for (const auto& it : mRenderers) {
@@ -399,7 +402,7 @@ size_t RenderThread::ActiveRendererCount() const {
       num_active++;
     }
   }
-  return num_active;
+  sActiveRendererCount = num_active;
 }
 
 void RenderThread::WrNotifierEvent_WakeUp(WrWindowId aWindowId,
@@ -863,9 +866,7 @@ void RenderThread::Pause(wr::WindowId aWindowId) {
   auto& renderer = it->second;
   renderer->Pause();
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GraphicsNumActiveRenderers,
-      (unsigned int)ActiveRendererCount());
+  UpdateActiveRendererCount();
 }
 
 bool RenderThread::Resume(wr::WindowId aWindowId) {
@@ -882,9 +883,7 @@ bool RenderThread::Resume(wr::WindowId aWindowId) {
   auto& renderer = it->second;
   bool resumed = renderer->Resume();
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::GraphicsNumActiveRenderers,
-      (unsigned int)ActiveRendererCount());
+  UpdateActiveRendererCount();
 
   return resumed;
 }

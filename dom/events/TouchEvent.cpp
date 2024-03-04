@@ -233,7 +233,7 @@ bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
       // The touch screen data seems to be inaccurate in the parent process,
       // and we really need the crash annotation in child processes.
       if (firstTime && !XRE_IsParentProcess()) {
-        CrashReporter::AnnotateCrashReport(
+        CrashReporter::RecordAnnotationBool(
             CrashReporter::Annotation::HasDeviceTouchScreen, enabled);
         firstTime = false;
       }

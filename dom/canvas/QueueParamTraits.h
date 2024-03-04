@@ -354,13 +354,13 @@ struct EnumSerializer {
   static bool Read(ConsumerView<U>& aConsumerView, ParamType* aResult) {
     DataType value;
     if (!aConsumerView.ReadParam(&value)) {
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCReadErrorReason, "Bad iter"_ns);
+      CrashReporter::RecordAnnotationCString(
+          CrashReporter::Annotation::IPCReadErrorReason, "Bad iter");
       return false;
     }
     if (!EnumValidator::IsLegalValue(static_cast<DataType>(value))) {
-      CrashReporter::AnnotateCrashReport(
-          CrashReporter::Annotation::IPCReadErrorReason, "Illegal value"_ns);
+      CrashReporter::RecordAnnotationCString(
+          CrashReporter::Annotation::IPCReadErrorReason, "Illegal value");
       return false;
     }
 

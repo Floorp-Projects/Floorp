@@ -672,11 +672,11 @@ void AutoNestedEventLoopAnnotation::AnnotateXPCOMSpinEventLoopStack(
   if (aStack.Length() > 0) {
     nsCString prefixedStack(XRE_GetProcessTypeString());
     prefixedStack += ": "_ns + aStack;
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationNSCString(
         CrashReporter::Annotation::XPCOMSpinEventLoopStack, prefixedStack);
   } else {
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::XPCOMSpinEventLoopStack, ""_ns);
+    CrashReporter::UnrecordAnnotation(
+        CrashReporter::Annotation::XPCOMSpinEventLoopStack);
   }
 }
 

@@ -121,6 +121,12 @@ nsresult nsAvailableMemoryWatcher::Init() {
     return NS_ERROR_FAILURE;
   }
 
+  static_assert(sizeof(sNumLowPhysicalMemEvents) == sizeof(uint32_t));
+
+  CrashReporter::RegisterAnnotationU32(
+      CrashReporter::Annotation::LowPhysicalMemoryEvents,
+      reinterpret_cast<uint32_t*>(&sNumLowPhysicalMemEvents));
+
   return NS_OK;
 }
 
@@ -172,9 +178,6 @@ VOID CALLBACK nsAvailableMemoryWatcher::LowMemoryCallback(PVOID aContext,
 // static
 void nsAvailableMemoryWatcher::RecordLowMemoryEvent() {
   sNumLowPhysicalMemEvents++;
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::LowPhysicalMemoryEvents,
-      sNumLowPhysicalMemEvents);
 }
 
 bool nsAvailableMemoryWatcher::RegisterMemoryResourceHandler(

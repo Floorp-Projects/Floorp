@@ -294,7 +294,7 @@ void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
           ipc::SandboxingKind::WINDOWS_FILE_DIALOG);
     } else {
       // ... which (presumably) is us
-      CrashReporter::AnnotateCrashReport(
+      CrashReporter::AutoRecordAnnotation(
           CrashReporter::Annotation::ipc_channel_error, reason);
 
       MOZ_CRASH("IPC error");

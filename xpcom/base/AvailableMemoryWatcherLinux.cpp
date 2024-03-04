@@ -206,7 +206,7 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
 
 void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&)
     MOZ_REQUIRES(mMutex) {
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::RecordAnnotationBool(
       CrashReporter::Annotation::LinuxUnderMemoryPressure,
       mUnderMemoryPressure);
 }

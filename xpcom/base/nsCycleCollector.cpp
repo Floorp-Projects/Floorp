@@ -628,8 +628,8 @@ void PtrInfo::AnnotatedReleaseAssert(bool aCondition, const char* aMessage) {
   }
   nsPrintfCString msg("%s, for class %s", aMessage, piName);
   NS_WARNING(msg.get());
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::CycleCollector,
-                                     msg);
+  CrashReporter::RecordAnnotationNSCString(
+      CrashReporter::Annotation::CycleCollector, msg);
 
   MOZ_CRASH();
 }

@@ -141,7 +141,7 @@ void gfx_wr_set_crash_annotation(mozilla::wr::CrashAnnotation aAnnotation,
     return;
   }
 
-  CrashReporter::AnnotateCrashReport(annotation, nsDependentCString(aValue));
+  CrashReporter::RecordAnnotationCString(annotation, aValue);
 }
 
 void gfx_wr_clear_crash_annotation(mozilla::wr::CrashAnnotation aAnnotation) {
@@ -150,7 +150,7 @@ void gfx_wr_clear_crash_annotation(mozilla::wr::CrashAnnotation aAnnotation) {
     return;
   }
 
-  CrashReporter::RemoveCrashReportAnnotation(annotation);
+  CrashReporter::UnrecordAnnotation(annotation);
 }
 }
 
@@ -1188,7 +1188,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
       IsRootWebRenderBridgeParent());
 
   if (!IsRootWebRenderBridgeParent()) {
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
+    CrashReporter::RecordAnnotationNSCString(CrashReporter::Annotation::URL,
+                                             aTxnURL);
   }
 
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
@@ -1330,7 +1331,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
       IsRootWebRenderBridgeParent());
 
   if (!IsRootWebRenderBridgeParent()) {
-    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
+    CrashReporter::RecordAnnotationNSCString(CrashReporter::Annotation::URL,
+                                             aTxnURL);
   }
 
   AUTO_PROFILER_TRACING_MARKER("Paint", "EmptyTransaction", GRAPHICS);

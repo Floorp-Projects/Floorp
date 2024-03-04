@@ -145,9 +145,9 @@ void JSActorManager::ReceiveRawMessage(
     Maybe<ipc::StructuredCloneData>&& aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
-  CrashReporter::AutoAnnotateCrashReport autoActorName(
+  CrashReporter::AutoRecordAnnotation autoActorName(
       CrashReporter::Annotation::JSActorName, aMetadata.actorName());
-  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+  CrashReporter::AutoRecordAnnotation autoMessageName(
       CrashReporter::Annotation::JSActorMessage,
       NS_LossyConvertUTF16toASCII(aMetadata.messageName()));
 
@@ -239,7 +239,7 @@ void JSActorManager::JSActorWillDestroy() {
 
 void JSActorManager::JSActorDidDestroy() {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-  CrashReporter::AutoAnnotateCrashReport autoMessageName(
+  CrashReporter::AutoRecordAnnotation autoMessageName(
       CrashReporter::Annotation::JSActorMessage, "<DidDestroy>"_ns);
 
   // Swap the table with `mJSActors` so that we don't invalidate it while
@@ -247,7 +247,7 @@ void JSActorManager::JSActorDidDestroy() {
   const nsRefPtrHashtable<nsCStringHashKey, JSActor> actors =
       std::move(mJSActors);
   for (const auto& entry : actors.Values()) {
-    CrashReporter::AutoAnnotateCrashReport autoActorName(
+    CrashReporter::AutoRecordAnnotation autoActorName(
         CrashReporter::Annotation::JSActorName, entry->Name());
     // Do not risk to run script very late in shutdown
     if (!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {

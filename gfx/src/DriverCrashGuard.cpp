@@ -156,7 +156,7 @@ DriverCrashGuard::~DriverCrashGuard() {
     dom::ContentChild::GetSingleton()->SendEndDriverCrashGuard(uint32_t(mType));
   }
 
-  CrashReporter::RemoveCrashReportAnnotation(
+  CrashReporter::UnrecordAnnotation(
       CrashReporter::Annotation::GraphicsStartupTest);
 }
 
@@ -195,7 +195,7 @@ void DriverCrashGuard::ActivateGuard() {
   // attribute a random parent process crash to a graphics problem in a child
   // process.
   if (mMode != Mode::Proxy) {
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::RecordAnnotationBool(
         CrashReporter::Annotation::GraphicsStartupTest, true);
   }
 
