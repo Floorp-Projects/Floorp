@@ -225,7 +225,5 @@ role HTMLHeaderOrFooterAccessible::NativeRole() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 role HTMLSectionAccessible::NativeRole() const {
-  nsAutoString name;
-  const_cast<HTMLSectionAccessible*>(this)->Name(name);
-  return name.IsEmpty() ? roles::SECTION : roles::REGION;
+  return NameIsEmpty() ? roles::SECTION : roles::REGION;
 }

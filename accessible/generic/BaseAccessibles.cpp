@@ -120,8 +120,7 @@ const LocalAccessible* LinkableAccessible::ActionWalk(bool* aIsLink,
 }
 
 KeyBinding LinkableAccessible::AccessKey() const {
-  if (const LocalAccessible* actionAcc =
-          const_cast<LinkableAccessible*>(this)->ActionWalk()) {
+  if (const LocalAccessible* actionAcc = ActionWalk()) {
     return actionAcc->AccessKey();
   }
 
