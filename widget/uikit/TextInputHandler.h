@@ -31,11 +31,12 @@ class TextInputHandler final : public TextEventDispatcherListener {
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                        const IMENotification& aNotification) override;
   NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() override;
-  NS_IMETHOD_(void) OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
+  NS_IMETHOD_(void)
+  OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
   NS_IMETHOD_(void)
   WillDispatchKeyboardEvent(TextEventDispatcher* aTextEventDispatcher,
-                            WidgetKeyboardEvent& aKeyboardEvent, uint32_t aIndexOfKeypress,
-                            void* aData) override;
+                            WidgetKeyboardEvent& aKeyboardEvent,
+                            uint32_t aIndexOfKeypress, void* aData) override;
 
   // UIKeyInput delegation
   bool InsertText(NSString* aText);
@@ -46,14 +47,15 @@ class TextInputHandler final : public TextEventDispatcherListener {
  private:
   virtual ~TextInputHandler() = default;
 
-  bool DispatchKeyDownEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex, char16_t aCharCode,
-                            nsEventStatus& aStatus);
-  bool DispatchKeyUpEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex, char16_t aCharCode,
-                          nsEventStatus& aStatus);
-  bool DispatchKeyPressEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex, char16_t aCharCode,
-                             nsEventStatus& aStatus);
+  bool DispatchKeyDownEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex,
+                            char16_t aCharCode, nsEventStatus& aStatus);
+  bool DispatchKeyUpEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex,
+                          char16_t aCharCode, nsEventStatus& aStatus);
+  bool DispatchKeyPressEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex,
+                             char16_t aCharCode, nsEventStatus& aStatus);
 
-  bool EmulateKeyboardEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex, char16_t charCode);
+  bool EmulateKeyboardEvent(uint32_t aKeyCode, KeyNameIndex aKeyNameIndex,
+                            char16_t charCode);
 
   bool Destroyed() { return !mWidget; }
 
