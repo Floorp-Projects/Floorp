@@ -136,7 +136,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         }
     }
 
+    @OptIn(ExperimentalTestApi::class)
     fun verifyNormalTabsList() {
+        composeTestRule.waitUntilDoesNotExist(hasTestTag("tabstray.tabList.normal.empty"), waitingTime)
         Log.i(TAG, "verifyNormalTabsList: Trying to verify that the normal tabs list exists")
         composeTestRule.normalTabsList().assertExists()
         Log.i(TAG, "verifyNormalTabsList: Verified that the normal tabs list exists")
