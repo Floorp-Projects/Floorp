@@ -47,7 +47,17 @@
 
       // focus on not editable document
       gQueue.push(new synthFocus(frame2InputAcc));
-      gQueue.push(new synthShiftTab(frame2DocAcc, new focusChecker(frame2DocAcc)));
+      var canTabMoveFocusToRootElement =
+          !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element");
+      if (canTabMoveFocusToRootElement) {
+        // Moves the focus to the root element
+        gQueue.push(new synthShiftTab(frame2DocAcc, new focusChecker(frame2DocAcc)));
+      } else {
+        // Skips the root element, so the focus got moved to buttonAcc2.
+        var buttonAcc2 = getAccessible("b2");
+        gQueue.push(new synthShiftTab(buttonAcc2, new focusChecker(buttonAcc2)));
+      }
+
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
