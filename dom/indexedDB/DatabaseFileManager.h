@@ -38,6 +38,8 @@ class DatabaseFileManager final
   LazyInitializedOnce<const nsString> mDirectoryPath;
   LazyInitializedOnce<const nsString> mJournalDirectoryPath;
 
+  uint64_t mDatabaseVersion;
+
   const bool mEnforcingQuota;
   const bool mIsInPrivateBrowsingMode;
 
@@ -86,6 +88,12 @@ class DatabaseFileManager final
   const nsCString& DatabaseID() const { return mDatabaseID; }
 
   const nsAString& DatabaseFilePath() const { return mDatabaseFilePath; }
+
+  uint64_t DatabaseVersion() const { return mDatabaseVersion; }
+
+  void UpdateDatabaseVersion(uint64_t aDatabaseVersion) {
+    mDatabaseVersion = aDatabaseVersion;
+  }
 
   IndexedDBCipherKeyManager& MutableCipherKeyManagerRef() const {
     MOZ_ASSERT(mIsInPrivateBrowsingMode);
