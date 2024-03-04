@@ -186,15 +186,6 @@ if test "$GNU_CC"; then
         ASFLAGS="$ASFLAGS -fPIC"
     fi
 
-    AC_MSG_CHECKING([for --ignore-unresolved-symbol option to ld])
-    HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED=
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,--ignore-unresolved-symbol,environ"
-    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
-                  [HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED=1],
-                  AC_MSG_RESULT([no]))
-    LDFLAGS=$_SAVE_LDFLAGS
-
     DSO_LDOPTS='-shared'
     if test "$GCC_USE_GNU_LD"; then
         # Some tools like ASan use a runtime library that is only
@@ -207,7 +198,7 @@ if test "$GNU_CC"; then
             # BSDs need `environ' exposed for posix_spawn (bug 753046)
             case "$OS_TARGET" in
             DragonFly|FreeBSD|NetBSD|OpenBSD)
-                if test -n "$HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED"; then
+                if test "$HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED" = 1; then
                     DSO_LDOPTS="$DSO_LDOPTS -Wl,--ignore-unresolved-symbol,environ"
                 else
                     DSO_LDOPTS="$DSO_LDOPTS -Wl,--warn-unresolved-symbols"
