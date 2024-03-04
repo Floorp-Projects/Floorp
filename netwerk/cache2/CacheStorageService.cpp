@@ -933,9 +933,13 @@ NS_IMETHODIMP CacheStorageService::PurgeFromMemoryRunnable::Run() {
   }
 
   if (mService) {
-    // TODO not all flags apply to both pools
-    mService->Pool(MemoryPool::EType::DISK).PurgeAll(mWhat);
-    mService->Pool(MemoryPool::EType::MEMORY).PurgeAll(mWhat);
+    // Note that we seem to come here only in the case of "memory-pressure"
+    // being notified (or in case of tests), so we start from purging in-memory
+    // entries first and ignore minprogress for disk entries.
+    // TODO not all flags apply to both pools.
+    mService->Pool(MemoryPool::EType::MEMORY)
+        .PurgeAll(mWhat, StaticPrefs::network_cache_purge_minprogress_memory());
+    mService->Pool(MemoryPool::EType::DISK).PurgeAll(mWhat, 0);
     mService = nullptr;
   }
 
@@ -1349,24 +1353,37 @@ void CacheStorageService::PurgeExpiredOrOverMemoryLimit() {
 
   mLastPurgeTime = now;
 
-  Pool(MemoryPool::EType::DISK).PurgeExpiredOrOverMemoryLimit();
+  // We start purging memory entries first as we care more about RAM over
+  // disk space beeing freed in case we are interrupted.
   Pool(MemoryPool::EType::MEMORY).PurgeExpiredOrOverMemoryLimit();
+  Pool(MemoryPool::EType::DISK).PurgeExpiredOrOverMemoryLimit();
 }
 
 void CacheStorageService::MemoryPool::PurgeExpiredOrOverMemoryLimit() {
   TimeStamp start(TimeStamp::Now());
 
   uint32_t const memoryLimit = Limit();
+  size_t minprogress =
+      (mType == EType::DISK)
+          ? StaticPrefs::network_cache_purge_minprogress_disk()
+          : StaticPrefs::network_cache_purge_minprogress_memory();
 
   // We always purge expired entries, even if under our limit.
-  size_t numExpired = PurgeExpired();
+  size_t numExpired = PurgeExpired(minprogress);
   if (numExpired > 0) {
     LOG(("  found and purged %zu expired entries", numExpired));
   }
+  minprogress = (minprogress > numExpired) ? minprogress - numExpired : 0;
 
   // If we are still under pressure, purge LFU entries until we aren't.
   if (mMemorySize > memoryLimit) {
-    auto r = PurgeByFrecency();
+    // Do not enter PurgeByFrecency if we reached the minimum and are asked to
+    // deliver entries.
+    if (minprogress == 0 && CacheIOThread::YieldAndRerun()) {
+      return;
+    }
+
+    auto r = PurgeByFrecency(minprogress);
     if (MOZ_LIKELY(r.isOk())) {
       size_t numPurged = r.unwrap();
       LOG((
@@ -1374,7 +1391,7 @@ void CacheStorageService::MemoryPool::PurgeExpiredOrOverMemoryLimit() {
           numPurged));
     } else {
       // If we hit an error (OOM), do an emergency PurgeAll.
-      size_t numPurged = PurgeAll(CacheEntry::PURGE_WHOLE);
+      size_t numPurged = PurgeAll(CacheEntry::PURGE_WHOLE, minprogress);
       LOG(
           ("  memory data consumption over the limit, emergency purged all %zu "
            "entries",
@@ -1386,13 +1403,12 @@ void CacheStorageService::MemoryPool::PurgeExpiredOrOverMemoryLimit() {
 }
 
 // This function purges ALL expired entries.
-size_t CacheStorageService::MemoryPool::PurgeExpired() {
+size_t CacheStorageService::MemoryPool::PurgeExpired(size_t minprogress) {
   MOZ_ASSERT(IsOnManagementThread());
 
   uint32_t now = NowInSeconds();
 
   size_t numPurged = 0;
-
   // Scan for items to purge. mManagedEntries is not sorted but comparing just
   // one integer should be faster than anything else, so go scan.
   RefPtr<CacheEntry> entry = mManagedEntries.getFirst();
@@ -1412,8 +1428,8 @@ size_t CacheStorageService::MemoryPool::PurgeExpired() {
     entry = std::move(nextEntry);
 
     // To have some progress even under load, we do the check only after
-    // purging at least one item if under pressure.
-    if ((numPurged > 0 || mMemorySize <= Limit()) &&
+    // purging at least minprogress items if under pressure.
+    if ((numPurged >= minprogress || mMemorySize <= Limit()) &&
         CacheIOThread::YieldAndRerun()) {
       break;
     }
@@ -1422,7 +1438,8 @@ size_t CacheStorageService::MemoryPool::PurgeExpired() {
   return numPurged;
 }
 
-Result<size_t, nsresult> CacheStorageService::MemoryPool::PurgeByFrecency() {
+Result<size_t, nsresult> CacheStorageService::MemoryPool::PurgeByFrecency(
+    size_t minprogress) {
   MOZ_ASSERT(IsOnManagementThread());
 
   // Pretend the limit is 10% lower so that we get rid of more entries at one
@@ -1473,13 +1490,6 @@ Result<size_t, nsresult> CacheStorageService::MemoryPool::PurgeByFrecency() {
 
   size_t numPurged = 0;
 
-  // Given that sorting is expensive, let's ensure to interrupt only if we
-  // made at least some progress. We expect purging of memory entries to be
-  // less expensive than disk entries.
-  size_t minprogress =
-      (mType == EType::DISK)
-          ? StaticPrefs::network_cache_purgebyfrecency_minprogress_disk()
-          : StaticPrefs::network_cache_purgebyfrecency_minprogress_memory();
   for (auto& checkPurge : mayPurgeSorted) {
     if (mMemorySize <= memoryLimit) {
       break;
@@ -1504,7 +1514,8 @@ Result<size_t, nsresult> CacheStorageService::MemoryPool::PurgeByFrecency() {
   return numPurged;
 }
 
-size_t CacheStorageService::MemoryPool::PurgeAll(uint32_t aWhat) {
+size_t CacheStorageService::MemoryPool::PurgeAll(uint32_t aWhat,
+                                                 size_t minprogress) {
   LOG(("CacheStorageService::MemoryPool::PurgeAll aWhat=%d", aWhat));
   MOZ_ASSERT(IsOnManagementThread());
 
@@ -1512,7 +1523,7 @@ size_t CacheStorageService::MemoryPool::PurgeAll(uint32_t aWhat) {
 
   RefPtr<CacheEntry> entry = mManagedEntries.getFirst();
   while (entry) {
-    if (numPurged > 0 && CacheIOThread::YieldAndRerun()) break;
+    if (numPurged >= minprogress && CacheIOThread::YieldAndRerun()) break;
 
     // Get the next entry before we may be removed from our list.
     RefPtr<CacheEntry> nextEntry = entry->getNext();

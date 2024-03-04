@@ -13017,19 +13017,16 @@
   value: false
   mirror: always
 
-# CacheStorageService::MemoryPool::PurgeByFrecency does a rather expensive
-# sort we cannot interrupt by an incoming cache operation, so we want the
-# purging to do some progress to not have just wasted cycles.
-# Initial default 0, see bug 1879814.
-- name: network.cache.purgebyfrecency_minprogress_disk
+# How much progress we want to do minimum when purging under pressure.
+# On disk, we may see blocking I/O, so for now we keep 0 here.
+- name: network.cache.purge_minprogress_disk
   type: RelaxedAtomicUint32
   value: 0
   mirror: always
 
-# CacheStorageService::MemoryPool::PurgeByFrecency does a rather expensive
-# sort we cannot interrupt by an incoming cache operation, so we want the
-# purging to do at least some progress to not have just wasted cycles.
-- name: network.cache.purgebyfrecency_minprogress_memory
+# How much progress we want to do minimum when purging under pressure.
+# In memory, purging is cheap and memory is precious.
+- name: network.cache.purge_minprogress_memory
   type: RelaxedAtomicUint32
   value: 32
   mirror: always

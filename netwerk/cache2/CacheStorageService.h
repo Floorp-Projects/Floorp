@@ -349,9 +349,9 @@ class CacheStorageService final : public nsICacheStorageService,
      * Purges entries from memory based on the frecency ordered array.
      */
     void PurgeExpiredOrOverMemoryLimit();
-    size_t PurgeExpired();
-    Result<size_t, nsresult> PurgeByFrecency();
-    size_t PurgeAll(uint32_t aWhat);
+    size_t PurgeExpired(size_t minprogress);
+    Result<size_t, nsresult> PurgeByFrecency(size_t minprogress);
+    size_t PurgeAll(uint32_t aWhat, size_t minprogress);
 
    private:
     uint32_t Limit() const;
