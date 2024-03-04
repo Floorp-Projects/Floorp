@@ -283,7 +283,49 @@ static bool isAccessibilityElementInternal(Accessible* aAccessible) {
 }
 
 - (NSString*)accessibilityValue {
-  return nil;
+  if (!mGeckoAccessible) {
+    return nil;
+  }
+
+  uint64_t state = mGeckoAccessible->State();
+  if (state & states::LINKED) {
+    // Value returns the URL. We don't want to expose that as the value on iOS.
+    return nil;
+  }
+
+  if (state & states::CHECKABLE) {
+    if (state & states::CHECKED) {
+      return @"1";
+    }
+    if (state & states::MIXED) {
+      return @"2";
+    }
+    return @"0";
+  }
+
+  if (mGeckoAccessible->IsPassword()) {
+    // Accessible::Value returns an empty string. On iOS, we need to return the
+    // masked password so that AT knows how many characters are in the password.
+    Accessible* leaf = mGeckoAccessible->FirstChild();
+    if (!leaf) {
+      return nil;
+    }
+    nsAutoString masked;
+    leaf->AppendTextTo(masked);
+    return ToNSString(masked);
+  }
+
+  // If there is a heading ancestor, self has the header trait, so value should
+  // be the heading level.
+  for (Accessible* acc = mGeckoAccessible; acc; acc = acc->Parent()) {
+    if (acc->Role() == roles::HEADING) {
+      return [NSString stringWithFormat:@"%d", acc->GroupPosition().level];
+    }
+  }
+
+  nsAutoString value;
+  mGeckoAccessible->Value(value);
+  return ToNSString(value);
 }
 
 static uint64_t GetAccessibilityTraits(Accessible* aAccessible) {
