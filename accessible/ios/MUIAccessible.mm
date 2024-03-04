@@ -401,7 +401,7 @@ static uint64_t GetAccessibilityTraits(Accessible* aAccessible) {
     traits |= Trait::TextEntry;
     if (state & states::FOCUSED) {
       // XXX: Also add "has text cursor" trait
-      traits |= Trait::TextOperationsAvailable;
+      traits |= Trait::IsEditing | Trait::TextOperationsAvailable;
     }
 
     if (aAccessible->IsSearchbox()) {
@@ -468,6 +468,30 @@ static uint64_t GetAccessibilityTraits(Accessible* aAccessible) {
 
 - (UIAccessibilityContainerType)accessibilityContainerType {
   return UIAccessibilityContainerTypeNone;
+}
+
+- (NSRange)_accessibilitySelectedTextRange {
+  if (!mGeckoAccessible || !mGeckoAccessible->IsHyperText()) {
+    return NSMakeRange(NSNotFound, 0);
+  }
+  // XXX This will only work in simple plain text boxes. It will break horribly
+  // if there are any embedded objects. Also, it only supports caret, not
+  // selection.
+  int32_t caret = mGeckoAccessible->AsHyperTextBase()->CaretOffset();
+  if (caret != -1) {
+    return NSMakeRange(caret, 0);
+  }
+  return NSMakeRange(NSNotFound, 0);
+}
+
+- (void)_accessibilitySetSelectedTextRange:(NSRange)range {
+  if (!mGeckoAccessible || !mGeckoAccessible->IsHyperText()) {
+    return;
+  }
+  // XXX This will only work in simple plain text boxes. It will break horribly
+  // if there are any embedded objects. Also, it only supports caret, not
+  // selection.
+  mGeckoAccessible->AsHyperTextBase()->SetCaretOffset(range.location);
 }
 
 @end
