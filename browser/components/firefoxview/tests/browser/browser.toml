@@ -45,7 +45,6 @@ fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is no
 fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_history_firefoxview.js"]
-skip-if = ["true"] # Bug 1877594
 
 ["browser_notification_dot.js"]
 skip-if = ["true"] # Bug 1851453
