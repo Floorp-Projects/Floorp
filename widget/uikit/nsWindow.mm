@@ -672,9 +672,15 @@ void nsWindow::ReportSizeModeEvent(nsSizeMode aMode) {
 }
 
 void nsWindow::ReportSizeEvent() {
+  LayoutDeviceIntRect innerBounds = GetClientBounds();
+
   if (mWidgetListener) {
-    LayoutDeviceIntRect innerBounds = GetClientBounds();
     mWidgetListener->WindowResized(this, innerBounds.width, innerBounds.height);
+  }
+
+  if (mAttachedWidgetListener) {
+    mAttachedWidgetListener->WindowResized(this, innerBounds.width,
+                                           innerBounds.height);
   }
 }
 
@@ -706,8 +712,11 @@ nsresult nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
   aStatus = nsEventStatus_eIgnore;
   nsCOMPtr<nsIWidget> kungFuDeathGrip(aEvent->mWidget);
 
-  if (mWidgetListener)
+  if (mAttachedWidgetListener) {
+    aStatus = mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+  } else if (mWidgetListener) {
     aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+  }
 
   return NS_OK;
 }
