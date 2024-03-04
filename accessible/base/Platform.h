@@ -47,10 +47,10 @@ EPlatformDisabledState PlatformDisabledState();
 void PreInit();
 #endif
 
-#if defined(MOZ_ACCESSIBILITY_ATK) || defined(XP_MACOSX)
+#if defined(MOZ_ACCESSIBILITY_ATK) || defined(XP_DARWIN)
 /**
  * Is platform accessibility enabled.
- * Only used on linux with atk and MacOS for now.
+ * Only used on Linux, MacOS and iOS for now.
  */
 bool ShouldA11yBeEnabled();
 #endif

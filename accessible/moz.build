@@ -14,6 +14,8 @@ elif toolkit == "cocoa":
     DIRS += ["mac"]
 elif toolkit == "android":
     DIRS += ["android"]
+elif toolkit == "uikit":
+    DIRS += ["ios"]
 else:
     DIRS += ["other"]
 
