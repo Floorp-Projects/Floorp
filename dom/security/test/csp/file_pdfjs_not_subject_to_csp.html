@@ -8,7 +8,7 @@
 <button id="pdfButton">click to load pdf</button>
 <script nonce="allowPDF">
   async function loadPDFIntoIframe() {
-    let response = await fetch("empty.pdf");
+    let response = await fetch("dummy.pdf");
     let blob = await response.blob();
     var blobUrl = URL.createObjectURL(blob);
     var pdfFrame = document.getElementById("pdfFrame");
