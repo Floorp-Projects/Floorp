@@ -10,6 +10,7 @@ from voluptuous import Extra, Optional, Required
 
 from gecko_taskgraph.transforms.test import test_description_schema
 from gecko_taskgraph.util.copy_task import copy_task
+from gecko_taskgraph.util.perftest import is_external_browser
 
 transforms = TransformSequence()
 task_transforms = TransformSequence()
@@ -318,6 +319,25 @@ def add_extra_options(config, tests):
                 )
 
         extra_options.append("--project={}".format(config.params.get("project")))
+
+        yield test
+
+
+@transforms.add
+def modify_mozharness_configs(config, tests):
+    for test in tests:
+        if not is_external_browser(test["app"]):
+            yield test
+            continue
+
+        test_platform = test["test-platform"]
+        mozharness = test.setdefault("mozharness", {})
+        if "mac" in test_platform:
+            mozharness["config"] = ["raptor/mac_external_browser_config.py"]
+        elif "windows" in test_platform:
+            mozharness["config"] = ["raptor/windows_external_browser_config.py"]
+        elif "linux" in test_platform:
+            mozharness["config"] = ["raptor/linux_external_browser_config.py"]
 
         yield test
 

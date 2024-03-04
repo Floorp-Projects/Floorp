@@ -16,6 +16,7 @@ from taskgraph.util.taskcluster import get_artifact_path, get_index_url
 from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.transforms.test.variant import TEST_VARIANTS
+from gecko_taskgraph.util.perftest import is_external_browser
 from gecko_taskgraph.util.platforms import platform_family
 from gecko_taskgraph.util.templates import merge
 
@@ -256,6 +257,20 @@ def handle_keyed_by(config, tasks):
                 project=config.params["project"],
                 variant=task["attributes"].get("unittest_variant"),
             )
+        yield task
+
+
+@transforms.add
+def setup_raptor_external_browser_platforms(config, tasks):
+    for task in tasks:
+        if task["suite"] != "raptor":
+            yield task
+            continue
+
+        if is_external_browser(task["try-name"]):
+            task["build-platform"] = "linux64/opt"
+            task["build-label"] = "build-linux64/opt"
+
         yield task
 
 
