@@ -12,6 +12,7 @@
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "MsaaAccessible.h"
+#include "nsTextEquivUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -228,6 +229,12 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
 
       break;
     }
+
+    case UIA_IsControlElementPropertyId:
+    case UIA_IsContentElementPropertyId:
+      aPropertyValue->vt = VT_BOOL;
+      aPropertyValue->boolVal = IsControl() ? VARIANT_TRUE : VARIANT_FALSE;
+      return S_OK;
   }
 
   return S_OK;
@@ -241,4 +248,69 @@ uiaRawElmProvider::get_HostRawElementProvider(
   // This method is not used with IAccessibleEx implementations.
   *aRawElmProvider = nullptr;
   return S_OK;
+}
+
+// Private methods
+
+bool uiaRawElmProvider::IsControl() {
+  // UIA provides multiple views of the tree: raw, control and content. The
+  // control and content views should only contain elements which a user cares
+  // about when navigating.
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  if (acc->IsTextLeaf()) {
+    // If an ancestor control allows the name to be generated from content, do
+    // not expose this text leaf as a control. Otherwise, the user will see the
+    // text twice: once as the label of the control and once for the text leaf.
+    for (Accessible* ancestor = acc->Parent(); ancestor && !ancestor->IsDoc();
+         ancestor = ancestor->Parent()) {
+      if (nsTextEquivUtils::HasNameRule(ancestor, eNameFromSubtreeRule)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (acc->HasNumericValue() || acc->ActionCount() > 0) {
+    return true;
+  }
+  uint64_t state = acc->State();
+  if (state & states::FOCUSABLE) {
+    return true;
+  }
+  if (state & states::EDITABLE) {
+    Accessible* parent = acc->Parent();
+    if (parent && !(parent->State() & states::EDITABLE)) {
+      // This is the root of a rich editable control.
+      return true;
+    }
+  }
+
+  // Don't treat generic or text containers as controls unless they have a name
+  // or description.
+  switch (acc->Role()) {
+    case roles::EMPHASIS:
+    case roles::MARK:
+    case roles::PARAGRAPH:
+    case roles::SECTION:
+    case roles::STRONG:
+    case roles::SUBSCRIPT:
+    case roles::SUPERSCRIPT:
+    case roles::TEXT:
+    case roles::TEXT_CONTAINER: {
+      if (!acc->NameIsEmpty()) {
+        return true;
+      }
+      nsAutoString text;
+      acc->Description(text);
+      if (!text.IsEmpty()) {
+        return true;
+      }
+      return false;
+    }
+    default:
+      break;
+  }
+
+  return true;
 }
