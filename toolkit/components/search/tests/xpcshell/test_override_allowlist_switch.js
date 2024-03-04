@@ -22,7 +22,7 @@ const ALLOWLIST = [
     ],
   },
   {
-    thirdPartyId: "opensearch@tests.mozilla.org",
+    thirdPartyId: "opensearch@search.mozilla.org",
     engineName: ENGINE_NAME,
     overridesId: "simple@search.mozilla.org",
     urls: [
