@@ -47,7 +47,7 @@ impl ProgrammableStageDescriptor {
     fn to_wgpu(&self) -> wgc::pipeline::ProgrammableStageDescriptor {
         wgc::pipeline::ProgrammableStageDescriptor {
             module: self.module,
-            entry_point: Some(cow_label(&self.entry_point).unwrap()),
+            entry_point: cow_label(&self.entry_point),
         }
     }
 }
