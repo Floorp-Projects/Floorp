@@ -643,18 +643,12 @@ panel-item[action="report"]::part(button) {
   text-decoration: none;
 }
 
-.addon-inline-options {
+.inline-options-stack {
+  /* If the options browser triggers an alert we need room to show it. */
+  min-height: 250px;
   width: 100%;
   background-color: white;
   margin-block: 4px;
-  /*
-   * Makes sure the browser minimal height is going to be the same as when
-   * this browser element was wrapper in a stack and a min-height was necessary
-   * for the prompts to fit inside the browser element.
-   * That stack element has been removed as part of Bug 1881055, but keeping
-   * the min-height unchanged to avoid potential regressions in the short term.
-   */
-  min-height: 250px;
 }
 
 addon-permissions-list > .addon-detail-row {

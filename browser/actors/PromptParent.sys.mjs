@@ -140,7 +140,8 @@ export class PromptParent extends JSWindowActorParent {
           (args.modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
             !lazy.contentPromptSubDialog) ||
           (args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB &&
-            !lazy.tabChromePromptSubDialog)
+            !lazy.tabChromePromptSubDialog) ||
+          this.isAboutAddonsOptionsPage(this.browsingContext)
         ) {
           return this.openContentPrompt(args, id);
         }
@@ -261,11 +262,6 @@ export class PromptParent extends JSWindowActorParent {
     let browsingContext = this.browsingContext.top;
 
     let browser = browsingContext.embedderElement;
-
-    if (this.isAboutAddonsOptionsPage(browsingContext)) {
-      browser = browser.ownerGlobal.browsingContext.embedderElement;
-    }
-
     let promptRequiresBrowser =
       args.modalType === Services.prompt.MODAL_TYPE_TAB ||
       args.modalType === Services.prompt.MODAL_TYPE_CONTENT;
