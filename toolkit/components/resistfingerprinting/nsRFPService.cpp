@@ -71,6 +71,7 @@
 #include "nsTLiteralString.h"
 #include "nsTPromiseFlatString.h"
 #include "nsTStringRepr.h"
+#include "nsUserCharacteristics.h"
 #include "nsXPCOM.h"
 
 #include "nsICookieJarSettings.h"
@@ -106,6 +107,7 @@ static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
+#define IDLE_TOPIC "browser-idle-startup-tasks-finished"
 
 static constexpr uint32_t kVideoFramesPerSec = 30;
 static constexpr uint32_t kVideoDroppedRatio = 5;
@@ -180,6 +182,9 @@ nsresult nsRFPService::Init() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = obs->AddObserver(this, OBSERVER_TOPIC_IDLE_DAILY, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = obs->AddObserver(this, IDLE_TOPIC, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -278,6 +283,7 @@ void nsRFPService::StartShutdown() {
     if (XRE_IsParentProcess()) {
       obs->RemoveObserver(this, LAST_PB_SESSION_EXITED_TOPIC);
       obs->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
+      obs->RemoveObserver(this, IDLE_TOPIC);
     }
   }
 
@@ -326,6 +332,10 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
     OriginAttributesPattern pattern;
     pattern.mPrivateBrowsingId.Construct(1);
     ClearBrowsingSessionKey(pattern);
+  }
+
+  if (!strcmp(IDLE_TOPIC, aTopic)) {
+    nsUserCharacteristics::MaybeSubmitPing();
   }
 
   if (!strcmp(OBSERVER_TOPIC_IDLE_DAILY, aTopic)) {
