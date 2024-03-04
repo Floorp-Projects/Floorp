@@ -622,7 +622,7 @@
 
   async function createNotificationMessageElement() {
     await window.ensureCustomElements("moz-message-bar");
-    let MozMessageBar = customElements.get("moz-message-bar");
+    let MozMessageBar = await customElements.whenDefined("moz-message-bar");
     class NotificationMessage extends MozMessageBar {
       static queries = {
         ...MozMessageBar.queries,
