@@ -15,16 +15,24 @@ let k = 399;
 let stepSize = 1;
 
 let num = 0;
+let numMs = 100;
 
 const move = () => {
   stepSize = -1 * stepSize;
   tx += 0.0001 * stepSize;
   ty += 0.0001 * stepSize;
   g.setAttribute("transform", `translate(${tx},${ty}) scale(${k})`)
-  window.setTimeout(move, 100);
+  window.setTimeout(move, numMs);
   num++;
   if (num == 5) {
   	document.documentElement.className = "";
+  }
+  if (num == 100 && navigator.appVersion.includes("Android")) {
+    // Android doesn't get a chance to paint and finish the reftest if another
+    // paint gets queued if we tweak the transfer, so if its taking a long time
+    // increase the timeout, this timeout value still reproduced the bug when
+    // test was landed.
+    numMs = 200;
   }
 }
 
