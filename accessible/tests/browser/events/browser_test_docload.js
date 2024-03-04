@@ -30,7 +30,7 @@ function urlChecker(url) {
   };
 }
 
-async function runTests(browser, accDoc) {
+async function runTests(browser) {
   let onLoadEvents = waitForEvents({
     expected: [
       [EVENT_REORDER, getAccessible(browser)],

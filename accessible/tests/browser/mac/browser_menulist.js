@@ -74,7 +74,7 @@ addAccessibleTask(
       "First menu item is selected"
     );
     // focus the second item, and verify it is selected
-    event = waitForMacEvent("AXFocusedUIElementChanged", (iface, data) => {
+    event = waitForMacEvent("AXFocusedUIElementChanged", iface => {
       try {
         return iface.getAttributeValue("AXTitle") == "100%";
       } catch (e) {

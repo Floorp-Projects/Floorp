@@ -91,11 +91,11 @@ nsTreeView.prototype = {
 
     return data.text + aCol.id;
   },
-  getCellValue: function getCellValue(aRow, aCol) {
+  getCellValue: function getCellValue(aRow) {
     var data = this.getDataForIndex(aRow);
     return data.value;
   },
-  getRowProperties: function getRowProperties(aIndex) {
+  getRowProperties: function getRowProperties() {
     return "";
   },
   getCellProperties: function getCellProperties(aIndex, aCol) {
@@ -106,19 +106,19 @@ nsTreeView.prototype = {
     var data = this.getDataForIndex(aIndex);
     return this.mCyclerStates[data.cyclerState];
   },
-  getColumnProperties: function getColumnProperties(aCol) {
+  getColumnProperties: function getColumnProperties() {
     return "";
   },
   getParentIndex: function getParentIndex(aRowIndex) {
     var info = this.getInfoByIndex(aRowIndex);
     return info.parentIndex;
   },
-  hasNextSibling: function hasNextSibling(aRowIndex, aAfterIndex) {},
+  hasNextSibling: function hasNextSibling() {},
   getLevel: function getLevel(aIndex) {
     var info = this.getInfoByIndex(aIndex);
     return info.level;
   },
-  getImageSrc: function getImageSrc(aRow, aCol) {},
+  getImageSrc: function getImageSrc() {},
   isContainer: function isContainer(aIndex) {
     var data = this.getDataForIndex(aIndex);
     return data.open != undefined;
@@ -131,7 +131,7 @@ nsTreeView.prototype = {
     var data = this.getDataForIndex(aIndex);
     return data.open == undefined;
   },
-  isSeparator: function isSeparator(aIndex) {},
+  isSeparator: function isSeparator() {},
   isSorted: function isSorted() {},
   toggleOpenState: function toggleOpenState(aIndex) {
     var data = this.getDataForIndex(aIndex);
@@ -146,14 +146,14 @@ nsTreeView.prototype = {
     }
   },
   selectionChanged: function selectionChanged() {},
-  cycleHeader: function cycleHeader(aCol) {},
+  cycleHeader: function cycleHeader() {},
   cycleCell: function cycleCell(aRow, aCol) {
     var data = this.getDataForIndex(aRow);
     data.cyclerState = (data.cyclerState + 1) % 3;
 
     this.mTree.invalidateCell(aRow, aCol);
   },
-  isEditable: function isEditable(aRow, aCol) {
+  isEditable: function isEditable() {
     return true;
   },
   setCellText: function setCellText(aRow, aCol, aValue) {

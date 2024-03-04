@@ -13,7 +13,7 @@ addUiaTask(
   `
 <button id="button">button</button>
   `,
-  async function (browser, docAcc) {
+  async function () {
     let controlType = await runPython(`
       global doc
       doc = getDocUia()

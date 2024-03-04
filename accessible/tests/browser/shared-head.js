@@ -830,7 +830,7 @@ const CACHE_WAIT_TIMEOUT_MS = 5000;
  * be used to record a pass or fail in the test.
  */
 function untilCacheCondition(conditionFunc, argsFunc) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let args = argsFunc();
     if (conditionFunc(...args)) {
       resolve(args);
@@ -838,7 +838,7 @@ function untilCacheCondition(conditionFunc, argsFunc) {
     }
 
     let cacheObserver = {
-      observe(subject) {
+      observe() {
         args = argsFunc();
         if (conditionFunc(...args)) {
           clearTimeout(this.timer);
@@ -945,7 +945,7 @@ function runPython(code) {
       "ws://mochi.test:8888/browser/accessible/tests/browser/python_runner"
     );
     if (gPythonSocket.readyState != WebSocket.OPEN) {
-      gPythonSocket.onopen = evt => {
+      gPythonSocket.onopen = () => {
         gPythonSocket.send(code);
         gPythonSocket.onopen = null;
       };

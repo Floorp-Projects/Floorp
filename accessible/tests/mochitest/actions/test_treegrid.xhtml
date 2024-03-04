@@ -37,7 +37,7 @@
       {
         return "focus handling";
       }
-      this.check = function focusChecker_check(aEvent)
+      this.check = function focusChecker_check()
       {
         var states = aStates ? aStates : 0;
         testStates(this.target, STATE_FOCUSED | STATE_SELECTED | states);
@@ -52,7 +52,7 @@
       {
         return "state change handling";
       }
-      this.check = function stateChangeChecker_check(aEvent)
+      this.check = function stateChangeChecker_check()
       {
         if (aIsEnabled)
           testStates(this.target, STATE_CHECKED);
@@ -95,7 +95,7 @@
           actionIndex: 1,
           events: CLICK_EVENTS,
           targetID: treeBodyNode,
-          check: function check(aEvent)
+          check: function check()
           {
             testStates(this.ID, STATE_EXPANDED);
           }
@@ -106,7 +106,7 @@
           actionIndex: 1,
           events: CLICK_EVENTS,
           targetID: treeBodyNode,
-          check: function check(aEvent)
+          check: function check()
           {
             testStates(this.ID, STATE_COLLAPSED);
           }

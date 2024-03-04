@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 // test basic translation
 addAccessibleTask(
   `<p id="translate">hello world</p>`,
-  async function (browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     await testBoundsWithContent(iframeDocAcc, "translate", browser);
 
@@ -42,7 +42,7 @@ addAccessibleTask(
 // test basic rotation
 addAccessibleTask(
   `<p id="rotate">hello world</p>`,
-  async function (browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     await testBoundsWithContent(iframeDocAcc, "rotate", browser);
 
@@ -60,7 +60,7 @@ addAccessibleTask(
 // test basic scale
 addAccessibleTask(
   `<p id="scale">hello world</p>`,
-  async function (browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     await testBoundsWithContent(iframeDocAcc, "scale", browser);
 

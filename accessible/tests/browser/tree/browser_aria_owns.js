@@ -176,7 +176,7 @@ addAccessibleTask(
 addAccessibleTask(
   `
   <select id="container" aria-owns="boom" multiple></select>`,
-  async function (browser, accDoc) {
+  async function () {
     ok(true, "Did not crash");
   }
 );

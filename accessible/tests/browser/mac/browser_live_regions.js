@@ -131,7 +131,7 @@ addAccessibleTask(
   <button id="button" aria-label="Start"></button>
   </div>
   `,
-  async (browser, accDoc) => {
+  async browser => {
     let liveRegionChanged = waitForMacEvent("AXLiveRegionChanged", "live");
     await SpecialPowers.spawn(browser, [], () => {
       content.document.getElementById("time").textContent = "4:56pm";

@@ -477,7 +477,7 @@ markupTests.forEach(({ id, ruleset, markup, expected }) =>
     markup,
     async function (browser, accDoc) {
       const observer = {
-        observe(subject, topic, data) {
+        observe(subject) {
           const event = subject.QueryInterface(nsIAccessibleEvent);
           console.log(eventToString(event));
         },

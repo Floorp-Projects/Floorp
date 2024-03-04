@@ -128,7 +128,7 @@ addAccessibleTask(
 
     // Changing from checked to mixed fires two events. Make sure we wait until
     // the second so we're asserting based on the latest state.
-    evt = waitForMacEvent("AXValueChanged", (iface, data) => {
+    evt = waitForMacEvent("AXValueChanged", iface => {
       return (
         iface.getAttributeValue("AXDOMIdentifier") == "checkbox" &&
         iface.getAttributeValue("AXValue") == 2

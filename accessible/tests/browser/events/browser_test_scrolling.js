@@ -128,7 +128,7 @@ addAccessibleTask(
     <p>b</p>
     <p id="c">c</p>
   `,
-  async function (browser, accDoc) {
+  async function (browser) {
     let onScrollingStart = waitForEvent(EVENT_SCROLLING_START, "c");
     await SpecialPowers.spawn(browser, [], () => {
       content.location.hash = "#c";
@@ -146,7 +146,7 @@ addAccessibleTask(
   <h1 style="height: 300%;" id="inside-scrollable">test</h1>
 </div>
   `,
-  async function (browser, accDoc) {
+  async function (browser) {
     let onScrollingStart = waitForEvent(
       EVENT_SCROLLING_START,
       "inside-scrollable"

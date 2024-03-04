@@ -976,7 +976,7 @@ function prettyName(aIdentifier) {
  * @param aString the string to shorten.
  * @returns the shortened string.
  */
-function shortenString(aString, aMaxLength) {
+function shortenString(aString) {
   if (aString.length <= MAX_TRIM_LENGTH) {
     return aString;
   }

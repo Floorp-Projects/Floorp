@@ -52,7 +52,7 @@
       };
     }
 
-    function closeContextMenu(aID) {
+    function closeContextMenu() {
       this.eventSeq = [
         new invokerChecker(EVENT_MENUPOPUP_END,
                            getAccessible(getContextMenuNode())),

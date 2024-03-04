@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       this.getID = function focusChecker_getID() {
         return "focus handling";
       };
-      this.check = function focusChecker_check(aEvent) {
+      this.check = function focusChecker_check() {
         testStates(this.target, STATE_FOCUSED);
       };
     }

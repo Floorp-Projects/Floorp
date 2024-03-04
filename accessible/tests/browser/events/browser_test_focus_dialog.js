@@ -11,7 +11,7 @@ loadScripts(
   { name: "role.js", dir: MOCHITESTS_DIR }
 );
 
-async function runTests(browser, accDoc) {
+async function runTests(browser) {
   let onFocus = waitForEvent(EVENT_FOCUS, "button");
   await SpecialPowers.spawn(browser, [], () => {
     content.document.getElementById("button").focus();

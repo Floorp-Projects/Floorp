@@ -482,7 +482,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<table><tr id="tr"></tr></table>`,
-  async function (browser, docAcc) {
+  async function (browser) {
     let reordered = waitForEvent(EVENT_REORDER, "tr");
     await invokeContentTask(browser, [], () => {
       const iframe = content.document.createElement("iframe");

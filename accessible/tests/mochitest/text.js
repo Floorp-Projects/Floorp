@@ -197,9 +197,17 @@ function testTextAfterOffset(
   aBoundaryType,
   aText,
   aStartOffset,
-  aEndOffset
+  aEndOffset,
+  ...aArgs
 ) {
-  testTextSuperHelper("getTextAfterOffset", arguments);
+  testTextSuperHelper("getTextAfterOffset", [
+    aOffset,
+    aBoundaryType,
+    aText,
+    aStartOffset,
+    aEndOffset,
+    ...aArgs,
+  ]);
 }
 
 /**
@@ -261,9 +269,17 @@ function testTextBeforeOffset(
   aBoundaryType,
   aText,
   aStartOffset,
-  aEndOffset
+  aEndOffset,
+  ...aArgs
 ) {
-  testTextSuperHelper("getTextBeforeOffset", arguments);
+  testTextSuperHelper("getTextBeforeOffset", [
+    aOffset,
+    aBoundaryType,
+    aText,
+    aStartOffset,
+    aEndOffset,
+    ...aArgs,
+  ]);
 }
 
 /**

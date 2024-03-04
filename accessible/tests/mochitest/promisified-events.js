@@ -141,7 +141,7 @@ function matchEvent(event, matchCriteria) {
 function waitForEvent(eventType, matchCriteria, message) {
   return new Promise(resolve => {
     let eventObserver = {
-      observe(subject, topic, data) {
+      observe(subject, topic) {
         if (topic !== "accessible-event") {
           return;
         }
@@ -185,7 +185,7 @@ class UnexpectedEvents {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic !== "accessible-event") {
       return;
     }
