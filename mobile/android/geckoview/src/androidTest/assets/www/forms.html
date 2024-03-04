@@ -24,7 +24,7 @@
     <iframe id="iframe"></iframe>
   </body>
   <script>
-    addEventListener("load", function (e) {
+    addEventListener("load", function () {
       if (window.parent === window) {
         document.getElementById("iframe").contentWindow.location.href =
           window.location.href;

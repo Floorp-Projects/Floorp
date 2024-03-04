@@ -255,7 +255,7 @@ var ModuleManager = {
     this._moduleByActorName[aActorName].receiveMessage(aMessage);
   },
 
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent ${aEvent} ${aData}`;
     switch (aEvent) {
       case "GeckoView:UpdateModuleState": {
@@ -865,11 +865,11 @@ function startup() {
       ModuleManager.afterBrowserRemotenessChange(switchId);
   }
 
-  browser.addEventListener("WillChangeBrowserRemoteness", event =>
+  browser.addEventListener("WillChangeBrowserRemoteness", () =>
     ModuleManager.willChangeBrowserRemoteness()
   );
 
-  browser.addEventListener("DidChangeBrowserRemoteness", event =>
+  browser.addEventListener("DidChangeBrowserRemoteness", () =>
     ModuleManager.didChangeBrowserRemoteness()
   );
 

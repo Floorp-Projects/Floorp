@@ -44,7 +44,7 @@ add_task(async function test_onUpdated() {
         }
       });
 
-      browser.runtime.onMessage.addListener(async msg => {
+      browser.runtime.onMessage.addListener(async () => {
         if (collectedSequence.length !== expectedSequence.length) {
           browser.test.assertEq(
             JSON.stringify(expectedSequence),

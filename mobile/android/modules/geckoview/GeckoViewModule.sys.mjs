@@ -132,7 +132,7 @@ class EventProxy {
     }
   }
 
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     if (this._enableQueuing) {
       debug`queue ${aEvent}, data=${aData}`;
       this._eventQueue.unshift(arguments);
@@ -146,7 +146,7 @@ class EventProxy {
     this._enableQueuing = aEnable;
   }
 
-  _dispatch(aEvent, aData, aCallback) {
+  _dispatch(aEvent, aData) {
     debug`dispatch ${aEvent}, data=${aData}`;
     if (this.listener.onEvent) {
       this.listener.onEvent(...arguments);

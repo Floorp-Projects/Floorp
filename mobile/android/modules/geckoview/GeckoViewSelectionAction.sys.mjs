@@ -20,7 +20,7 @@ export class GeckoViewSelectionAction extends GeckoViewModule {
   }
 
   // Bundle event handler.
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent: ${aEvent}`;
 
     switch (aEvent) {

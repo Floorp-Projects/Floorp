@@ -11,10 +11,10 @@ class ChildActorDispatcher {
   }
 
   // TODO: Bug 1658980
-  registerListener(aListener, aEvents) {
+  registerListener() {
     throw new Error("Cannot registerListener in child actor");
   }
-  unregisterListener(aListener, aEvents) {
+  unregisterListener() {
     throw new Error("Cannot registerListener in child actor");
   }
 

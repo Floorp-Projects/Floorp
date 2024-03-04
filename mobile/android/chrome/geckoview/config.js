@@ -147,7 +147,7 @@ var NewPrefDialog = {
 
   // New prefs create dialog only allows creating a non-existing preference, doesn't allow for
   // Changing an existing one on-the-fly, tap existing/displayed line item pref for that
-  create: function AC_create(aEvent) {
+  create: function AC_create() {
     if (this._positiveButton.getAttribute("disabled") == "true") {
       return;
     }
@@ -342,7 +342,7 @@ var AboutConfig = {
   },
 
   // If scrolling at the bottom, maybe add some more entries
-  onScroll: function AC_onScroll(aEvent) {
+  onScroll: function AC_onScroll() {
     if (
       this._prefsContainer.scrollHeight -
         (window.pageYOffset + window.innerHeight) <

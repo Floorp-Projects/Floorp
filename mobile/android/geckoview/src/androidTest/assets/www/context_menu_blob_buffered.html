@@ -8,7 +8,7 @@
     <video id="video" controls preload></video>
   </body>
   <script>
-    window.addEventListener("DOMContentLoaded", function (e) {
+    window.addEventListener("DOMContentLoaded", function () {
       const video = document.getElementById("video");
       const mediaSource = new MediaSource();
       video.src = URL.createObjectURL(mediaSource);

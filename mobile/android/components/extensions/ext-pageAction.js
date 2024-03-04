@@ -26,7 +26,7 @@ const PAGE_ACTION_PROPERTIES = [
 
 class PageAction extends PageActionBase {
   constructor(extension, clickDelegate) {
-    const tabContext = new TabContext(tabId => this.getContextData(null));
+    const tabContext = new TabContext(() => this.getContextData(null));
     super(tabContext, extension);
     this.clickDelegate = clickDelegate;
     this.helper = new ExtensionActionHelper({
@@ -80,7 +80,7 @@ this.pageAction = class extends ExtensionAPIPersistent {
     return GeckoViewWebExtension.pageActions.get(extension);
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     const { extension } = this;
     const action = new PageAction(extension, this);
     await action.loadIconData();

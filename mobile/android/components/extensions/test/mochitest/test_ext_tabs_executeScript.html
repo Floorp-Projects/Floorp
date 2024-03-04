@@ -40,7 +40,7 @@ add_task(async function testExecuteScript() {
         browser.tabs.executeScript({
           file: "script.js",
           code: "42",
-        }).then(result => {
+        }).then(() => {
           browser.test.fail("Expected not to be able to execute a script with both file and code");
         }, error => {
           browser.test.assertTrue(/a 'code' or a 'file' property, but not both/.test(error.message),
@@ -99,7 +99,7 @@ add_task(async function testExecuteScript() {
 
         browser.tabs.executeScript({
           code: "window",
-        }).then(result => {
+        }).then(() => {
           browser.test.fail("Expected error when returning non-structured-clonable object");
         }, error => {
           browser.test.assertEq("<anonymous code>", error.fileName, "Got expected fileName");
@@ -109,7 +109,7 @@ add_task(async function testExecuteScript() {
 
         browser.tabs.executeScript({
           code: "Promise.resolve(window)",
-        }).then(result => {
+        }).then(() => {
           browser.test.fail("Expected error when returning non-structured-clonable object");
         }, error => {
           browser.test.assertEq("<anonymous code>", error.fileName, "Got expected fileName");
@@ -119,7 +119,7 @@ add_task(async function testExecuteScript() {
 
         browser.tabs.executeScript({
           file: "script3.js",
-        }).then(result => {
+        }).then(() => {
           browser.test.fail("Expected error when returning non-structured-clonable object");
         }, error => {
           const expected = /Script '.*script3.js' result is non-structured-clonable data/;
@@ -130,7 +130,7 @@ add_task(async function testExecuteScript() {
         browser.tabs.executeScript({
           frameId: Number.MAX_SAFE_INTEGER,
           code: "42",
-        }).then(result => {
+        }).then(() => {
           browser.test.fail("Expected error when specifying invalid frame ID");
         }, error => {
           browser.test.assertEq(
@@ -143,7 +143,7 @@ add_task(async function testExecuteScript() {
         browser.tabs.create({url: "http://example.net/", active: false}).then(async tab => {
           await browser.tabs.executeScript(tab.id, {
             code: "42",
-          }).then(result => {
+          }).then(() => {
             browser.test.fail("Expected error when trying to execute on invalid domain");
           }, error => {
             browser.test.assertEq(`Missing host permission for the tab`,

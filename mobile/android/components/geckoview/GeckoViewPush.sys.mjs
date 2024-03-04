@@ -22,7 +22,6 @@ const OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED = "push-subscription-modified";
 
 function createSubscription({
   scope,
-  principal,
   browserPublicKey,
   authSecret,
   endpoint,
@@ -59,7 +58,7 @@ export class PushService {
 
   // nsIObserver methods
 
-  observe(subject, topic, data) {}
+  observe() {}
 
   // nsIPushService methods
 
@@ -151,13 +150,13 @@ export class PushService {
 
   // nsIPushQuotaManager methods
 
-  notificationForOriginShown(origin) {}
+  notificationForOriginShown() {}
 
-  notificationForOriginClosed(origin) {}
+  notificationForOriginClosed() {}
 
   // nsIPushErrorReporter methods
 
-  reportDeliveryError(messageId, reason) {}
+  reportDeliveryError() {}
 }
 
 PushService.prototype.classID = Components.ID(

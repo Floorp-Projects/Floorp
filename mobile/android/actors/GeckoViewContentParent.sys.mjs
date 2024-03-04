@@ -62,7 +62,7 @@ export class GeckoViewContentParent extends GeckoViewActorParent {
     const progressListener = {
       QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener"]),
 
-      onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+      onLocationChange(aWebProgress) {
         if (!aWebProgress.isTopLevel) {
           return;
         }

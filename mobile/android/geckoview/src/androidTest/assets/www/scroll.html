@@ -51,7 +51,7 @@
         e.preventDefault();
       });
 
-      document.getElementById("three").addEventListener("touchstart", e => {
+      document.getElementById("three").addEventListener("touchstart", () => {
         console.log("not preventing default");
       });
     </script>

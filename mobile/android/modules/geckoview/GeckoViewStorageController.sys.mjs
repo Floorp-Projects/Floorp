@@ -308,7 +308,7 @@ export const GeckoViewStorageController = {
 
     new Promise(resolve => {
       Services.clearData.deleteData(flags, resolve);
-    }).then(resultFlags => {
+    }).then(() => {
       aCallback.onSuccess();
     });
   },
@@ -321,7 +321,7 @@ export const GeckoViewStorageController = {
         convertFlags(aFlags),
         resolve
       );
-    }).then(resultFlags => {
+    }).then(() => {
       aCallback.onSuccess();
     });
   },
@@ -334,7 +334,7 @@ export const GeckoViewStorageController = {
         convertFlags(aFlags),
         resolve
       );
-    }).then(resultFlags => {
+    }).then(() => {
       aCallback.onSuccess();
     });
   },

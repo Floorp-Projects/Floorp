@@ -67,7 +67,7 @@ export class GeckoViewMediaControl extends GeckoViewModule {
     return this.browser.browsingContext.mediaController;
   }
 
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
 
     switch (aEvent) {

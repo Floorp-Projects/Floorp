@@ -197,7 +197,7 @@ global.makeGlobalEvent = function makeGlobalEvent(
     name,
     register: fire => {
       const listener2 = {
-        onEvent(event, data, callback) {
+        onEvent(event, data) {
           listener(fire, data);
         },
       };

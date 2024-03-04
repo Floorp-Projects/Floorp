@@ -27,7 +27,7 @@ function createScopeAndPrincipal(scopeAndAttrs) {
 }
 
 export const GeckoViewPushController = {
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent ${aEvent} ${aData}`;
 
     switch (aEvent) {

@@ -41,7 +41,7 @@ add_task(async function test_remoteType() {
   let listener;
   const crashReportPromise = new Promise(resolve => {
     listener = {
-      onEvent(aEvent, aData, aCallback) {
+      onEvent(aEvent, aData) {
         resolve([aEvent, aData]);
       },
     };
@@ -79,7 +79,7 @@ add_task(async function test_extensions_process_crash() {
   let listener;
   const crashReportPromise = new Promise(resolve => {
     listener = {
-      onEvent(aEvent, aData, aCallback) {
+      onEvent(aEvent, aData) {
         resolve([aEvent, aData]);
       },
     };

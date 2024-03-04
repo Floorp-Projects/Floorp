@@ -41,7 +41,7 @@
       }
       div.style.touchAction = searchParams.get("touch-action");
       if (searchParams.has("event")) {
-        div.addEventListener("touchstart", e => {});
+        div.addEventListener("touchstart", () => {});
       }
     </script>
   </body>

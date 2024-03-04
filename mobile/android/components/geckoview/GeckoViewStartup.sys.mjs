@@ -95,7 +95,7 @@ const JSWINDOWACTORS = {
 
 export class GeckoViewStartup {
   /* ----------  nsIObserver  ---------- */
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     debug`observe: ${aTopic}`;
     switch (aTopic) {
       case "content-process-ready-for-script":
@@ -284,7 +284,7 @@ export class GeckoViewStartup {
     }
   }
 
-  onEvent(aEvent, aData, aCallback) {
+  onEvent(aEvent, aData) {
     debug`onEvent ${aEvent}`;
 
     switch (aEvent) {

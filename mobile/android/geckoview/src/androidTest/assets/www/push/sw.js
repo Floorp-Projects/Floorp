@@ -22,7 +22,7 @@ self.addEventListener("push", async function (e) {
   } catch (e) {}
 });
 
-self.addEventListener("pushsubscriptionchange", async function (e) {
+self.addEventListener("pushsubscriptionchange", async function () {
   const clients = await self.clients.matchAll();
   clients.forEach(function (client) {
     client.postMessage({ type: "pushsubscriptionchange" });

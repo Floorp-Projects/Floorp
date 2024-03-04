@@ -2,7 +2,7 @@
 
 function setupRedirect(fromUrl, redirectUrl) {
   browser.webRequest.onBeforeRequest.addListener(
-    details => {
+    () => {
       console.log(`Extension redirects from ${fromUrl} to ${redirectUrl}`);
       return { redirectUrl };
     },
