@@ -393,8 +393,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             override fun onShowClipboardPermissionRequest(
                 session: GeckoSession,
                 perm: ClipboardPermission,
-            ):
-                GeckoResult<AllowOrDeny> {
+            ): GeckoResult<AllowOrDeny> {
                 assertThat(
                     "Type should match",
                     perm.type,
@@ -408,8 +407,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             override fun onAlertPrompt(
                 session: GeckoSession,
                 prompt: PromptDelegate.AlertPrompt,
-            ):
-                GeckoResult<PromptDelegate.PromptResponse> {
+            ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Message should match", "allow", equalTo(prompt.message))
                 result.complete(null)
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -440,8 +438,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             override fun onShowClipboardPermissionRequest(
                 session: GeckoSession,
                 perm: ClipboardPermission,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "Type should match",
                     perm.type,
@@ -454,8 +451,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             override fun onAlertPrompt(
                 session: GeckoSession,
                 prompt: PromptDelegate.AlertPrompt,
-            ):
-                GeckoResult<PromptDelegate.PromptResponse> {
+            ): GeckoResult<PromptDelegate.PromptResponse> {
                 assertThat("Message should match", "deny", equalTo(prompt.message))
                 result.complete(null)
                 return GeckoResult.fromValue(prompt.dismiss())
@@ -486,8 +482,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             override fun onShowClipboardPermissionRequest(
                 session: GeckoSession,
                 perm: ClipboardPermission,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "Type should match",
                     perm.type,
@@ -533,8 +528,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             override fun onShowClipboardPermissionRequest(
                 session: GeckoSession,
                 perm: ClipboardPermission,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "Type should match",
                     perm.type,

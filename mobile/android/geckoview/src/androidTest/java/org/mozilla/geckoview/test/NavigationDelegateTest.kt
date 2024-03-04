@@ -67,8 +67,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 override fun onLoadRequest(
                     session: GeckoSession,
                     request: LoadRequest,
-                ):
-                    GeckoResult<AllowOrDeny>? {
+                ): GeckoResult<AllowOrDeny>? {
                     assertThat(
                         "URI should be " + testLoader.getUri(),
                         request.uri,
@@ -493,8 +492,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 override fun onLoadRequest(
                     session: GeckoSession,
                     request: LoadRequest,
-                ):
-                    GeckoResult<AllowOrDeny>? {
+                ): GeckoResult<AllowOrDeny>? {
                     assertThat("The URLs must match", request.uri, equalTo(forEachCall(uri, httpsUri)))
                     return null
                 }
@@ -553,8 +551,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 override fun onLoadRequest(
                     session: GeckoSession,
                     request: LoadRequest,
-                ):
-                    GeckoResult<AllowOrDeny>? {
+                ): GeckoResult<AllowOrDeny>? {
                     assertThat("The URLs must match", request.uri, equalTo(forEachCall(uri, httpsUri)))
                     return null
                 }
@@ -613,8 +610,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 override fun onLoadRequest(
                     session: GeckoSession,
                     request: LoadRequest,
-                ):
-                    GeckoResult<AllowOrDeny>? {
+                ): GeckoResult<AllowOrDeny>? {
                     assertThat("The URLs must match", request.uri, equalTo(forEachCall(uri, httpsUri)))
                     return null
                 }
@@ -668,8 +664,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 override fun onLoadRequest(
                     session: GeckoSession,
                     request: LoadRequest,
-                ):
-                    GeckoResult<AllowOrDeny>? {
+                ): GeckoResult<AllowOrDeny>? {
                     // We set http scheme only in case it's not iFrame
                     assertThat("The URLs must match", request.uri, equalTo(uri))
                     return null
@@ -720,8 +715,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "URI should be HTTP then redirected to HTTPS",
                     request.uri,
@@ -777,8 +771,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onSubframeLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should not be null", request.uri, notNullValue())
                 assertThat("URI should match", request.uri, endsWith(iframeUri))
                 return null
@@ -865,8 +858,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", request.uri, notNullValue())
                 assertThat(
@@ -916,8 +908,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("App requested this load", request.isDirectNavigation, equalTo(true))
                 assertThat("URI should not be null", request.uri, notNullValue())
@@ -930,8 +921,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onSubframeLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("App did not request this load", request.isDirectNavigation, equalTo(false))
                 assertThat("URI should not be null", request.uri, notNullValue())
@@ -963,8 +953,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 override fun onLoadRequest(
                     session: GeckoSession,
                     request: LoadRequest,
-                ):
-                    GeckoResult<AllowOrDeny>? {
+                ): GeckoResult<AllowOrDeny>? {
                     assertThat("Session should not be null", session, notNullValue())
                     assertThat("URI should not be null", request.uri, notNullValue())
                     assertThat(
@@ -1026,8 +1015,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("URL should match", request.uri, equalTo(forEachCall(uri, redirectUri)))
                 assertThat(
                     "From app should be correct",
@@ -1450,8 +1438,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URI should not be null", request.uri, notNullValue())
                 assertThat("URI should match", request.uri, endsWith(HELLO_HTML_PATH))
@@ -1730,8 +1717,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should match", request.uri, endsWith(HELLO_HTML_PATH))
                 assertThat(
                     "Trigger URL should be null",
@@ -1807,8 +1793,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "Load should not be direct",
                     request.isDirectNavigation,
@@ -1852,8 +1837,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "Load should not be direct",
                     request.isDirectNavigation,
@@ -1896,8 +1880,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 if (request.uri.endsWith(HELLO_HTML_PATH)) {
                     return GeckoResult.deny()
                 } else {
@@ -1937,8 +1920,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should be correct", request.uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
                 assertThat(
                     "Trigger URL should match",
@@ -1993,8 +1975,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat("URI should be correct", request.uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
                 assertThat(
                     "Trigger URL should be null",
@@ -2104,8 +2085,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 // Pretend we handled the target="_blank" link click.
                 if (request.uri.endsWith(NEW_SESSION_CHILD_HTML_PATH)) {
                     return GeckoResult.deny()
@@ -2126,8 +2106,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "URI must match",
                     request.uri,
@@ -2175,8 +2154,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         mainSession.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
-            override fun onLoadRequest(session: GeckoSession, request: LoadRequest):
-                GeckoResult<AllowOrDeny>? {
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "URL should be correct",
                     request.uri,
@@ -2196,8 +2174,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onNewSession(session: GeckoSession, uri: String):
-                GeckoResult<GeckoSession>? {
+            override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
                 assertThat("URL should be correct", uri, endsWith("form_blank.html?"))
                 return null
             }
@@ -2727,8 +2704,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 assertThat(
                     "Load should not be direct",
                     request.isDirectNavigation,
@@ -2756,8 +2732,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onLoadRequest(
                 session: GeckoSession,
                 request: LoadRequest,
-            ):
-                GeckoResult<AllowOrDeny>? {
+            ): GeckoResult<AllowOrDeny>? {
                 return null
             }
 

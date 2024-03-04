@@ -72,8 +72,7 @@ class GeolocationTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: GeckoSession.PermissionDelegate.ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
             }
             override fun onAndroidPermissionsRequest(

@@ -214,8 +214,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -302,8 +301,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 return GeckoResult.fromValue(ContentPermission.VALUE_DENY)
             }
 
@@ -517,8 +515,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -589,8 +586,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 return GeckoResult.fromValue(ContentPermission.VALUE_DENY)
             }
         })
@@ -651,8 +647,7 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         mainSession.waitUntilCalled(object : PermissionDelegate {
             @AssertCalled(count = 2)
-            override fun onContentPermissionRequest(session: GeckoSession, perm: ContentPermission):
-                GeckoResult<Int> {
+            override fun onContentPermissionRequest(session: GeckoSession, perm: ContentPermission): GeckoResult<Int> {
                 val expectedType = if (sessionRule.currentCall.counter == 1) PermissionDelegate.PERMISSION_AUTOPLAY_AUDIBLE else PermissionDelegate.PERMISSION_AUTOPLAY_INAUDIBLE
                 assertThat("Type should match", perm.permission, equalTo(expectedType))
                 return GeckoResult.fromValue(ContentPermission.VALUE_DENY)
@@ -672,8 +667,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -738,8 +732,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -807,8 +800,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -878,8 +870,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -956,8 +947,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",
@@ -1002,8 +992,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 return GeckoResult.fromValue(ContentPermission.VALUE_PROMPT)
             }
         })
@@ -1028,8 +1017,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
                 perm: ContentPermission,
-            ):
-                GeckoResult<Int> {
+            ): GeckoResult<Int> {
                 assertThat("URI should match", perm.uri, endsWith(url))
                 assertThat(
                     "Type should match",

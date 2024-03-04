@@ -277,8 +277,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
         mainSession.loadUri("about:config")
         mainSession.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled
-            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError):
-                GeckoResult<String>? {
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
                 assertThat("about:config should not load.", uri, equalTo("about:config"))
                 return null
             }
