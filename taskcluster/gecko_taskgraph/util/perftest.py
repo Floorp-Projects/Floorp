@@ -10,6 +10,8 @@ def is_external_browser(label):
             "safari",
             "chrome",
             "custom-car",
+            "chrome-m",
+            "cstm-car-m",
         )
     ):
         return True

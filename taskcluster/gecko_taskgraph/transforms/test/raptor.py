@@ -338,6 +338,9 @@ def modify_mozharness_configs(config, tests):
             mozharness["config"] = ["raptor/windows_external_browser_config.py"]
         elif "linux" in test_platform:
             mozharness["config"] = ["raptor/linux_external_browser_config.py"]
+        elif "android" in test_platform:
+            test["target"] = "target.tar.bz2"
+            mozharness["config"] = ["raptor/android_hw_external_browser_config.py"]
 
         yield test
 
