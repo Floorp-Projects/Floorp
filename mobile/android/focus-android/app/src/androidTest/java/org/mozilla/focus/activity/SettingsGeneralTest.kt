@@ -73,6 +73,7 @@ class SettingsGeneralTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun englishSystemLocaleTest() {
         /* Go to Settings and change language to French*/
