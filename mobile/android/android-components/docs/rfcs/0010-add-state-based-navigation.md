@@ -9,7 +9,7 @@ permalink: /rfc/0010-add-state-based-navigation
 
 ## Summary
 
-Following the acceptance of [0009 - Remove Interactors and Controllers](0009-remove-interactors-and-controllers), Fenix should have a method of navigation that is tied to the `lib-state` model to  provide a method of handling navigation side-effects that is consistent with architectural goals. This architecture is defined at a high-level [here](https://github.com/mozilla-mobile/firefox-android/blob/9edfde0a1382b4d5fb4342792d98d4c1d4d41bef/fenix/docs/architecture-overview.md) and has example code in [this folder](https://github.com/mozilla-mobile/firefox-android/tree/9edfde0a1382b4d5fb4342792d98d4c1d4d41bef/fenix/docs/architectureexample). 
+Following the acceptance of [0009 - Remove Interactors and Controllers](0009-remove-interactors-and-controllers), Fenix should have a method of navigation that is tied to the `lib-state` model to  provide a method of handling navigation side-effects that is consistent with architectural goals. This architecture is defined at a high-level [here](https://github.com/mozilla-mobile/firefox-android/blob/9edfde0a1382b4d5fb4342792d98d4c1d4d41bef/fenix/docs/architecture-overview.md) and has example code in [this folder](https://github.com/mozilla-mobile/firefox-android/tree/9edfde0a1382b4d5fb4342792d98d4c1d4d41bef/fenix/docs/architectureexample).
 
 ## Motivation
 
@@ -23,7 +23,7 @@ To move to a more consistent Redux-like model, we need a way for features to fir
 
 ## Proposal
 
-Moving forward, navigation should be initiated through middlewares that respond to `Action`s. How these middleware handle navigation side-effects can be addressed on a per-case basis, but this proposal includes some generalized advice for 3 common use cases. 
+Moving forward, navigation should be initiated through middlewares that respond to `Action`s. How these middleware handle navigation side-effects can be addressed on a per-case basis, but this proposal includes some generalized advice for 3 common use cases.
 
 ### 1. Screen-based navigation
 
@@ -160,9 +160,8 @@ private val navigationObserver by lazy {
 
 However, this implies some several issues:
 1. We end up replicating the state of a `NavController` manually in a our custom State, risking out-of-sync issues.
-2. We lose specificity of Actions by generalizing them globally. For example, instead of a `ToolbarAction.HomeClicked`, it would encourage re-use of a single `AppAction.NavigateHome`. Though seemingly convenient at first, it implies downstream problems for things like telemetry. To know where the navigation to home originated from, we would need to include additional properties (like direction) in the `Action`. Any future changes to the behavior of these Actions would need to be generalized for the whole app. 
+2. We lose specificity of Actions by generalizing them globally. For example, instead of a `ToolbarAction.HomeClicked`, it would encourage re-use of a single `AppAction.NavigateHome`. Though seemingly convenient at first, it implies downstream problems for things like telemetry. To know where the navigation to home originated from, we would need to include additional properties (like direction) in the `Action`. Any future changes to the behavior of these Actions would need to be generalized for the whole app.
 
-### 2. Global navigation middleware attached to the AppStore. 
+### 2. Global navigation middleware attached to the AppStore.
 
 This carries risk of the 2 issue listed above, and runs into immediate technical constraints. When the `AppStore` is constructed in `Core`, we do not have reference to an `Activity` and cannot retrieve a `NavController`. This could be mitigated by a mutable property or lazy getter that is set as Fragments or the Activity come into and out of scope. The current proposal will localize navigation transitions to feature areas which should keep them isolated in scope.
-
