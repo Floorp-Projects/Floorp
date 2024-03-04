@@ -174,9 +174,9 @@ const ProxyInfoData = {
         `ProxyInfoData: Invalid proxy server authorization header: "${proxyAuthorizationHeader}"`
       );
     }
-    if (type !== "https") {
+    if (type !== "https" && type !== "http") {
       throw new ExtensionError(
-        `ProxyInfoData: ProxyAuthorizationHeader requires type "https"`
+        `ProxyInfoData: ProxyAuthorizationHeader requires type "https" or "http"`
       );
     }
   },
