@@ -331,17 +331,21 @@ class OpenTabsTarget extends EventTarget {
     return [];
   }
 
+  /**
+   * Get an aggregated list of tabs from all the same-privateness browser windows.
+   *
+   * @returns {MozTabbrowserTab[]}
+   */
+  getAllTabs() {
+    return this.currentWindows.flatMap(win => this.getTabsForWindow(win));
+  }
+
   /*
    * @returns {Array<Tab>}
    *    A by-recency-sorted, aggregated list of tabs from all the same-privateness browser windows.
    */
   getRecentTabs() {
-    const tabs = [];
-    for (let win of this.currentWindows) {
-      tabs.push(...this.getTabsForWindow(win));
-    }
-    tabs.sort(lastSeenActiveSort);
-    return tabs;
+    return this.getAllTabs().sort(lastSeenActiveSort);
   }
 
   handleEvent({ detail, target, type }) {

@@ -60,6 +60,7 @@ if CONFIG["MOZ_PLACES"]:
     EXTRA_JS_MODULES += [
         "BookmarkHTMLUtils.sys.mjs",
         "BookmarkJSONUtils.sys.mjs",
+        "BookmarkList.sys.mjs",
         "Bookmarks.sys.mjs",
         "ExtensionSearchHandler.sys.mjs",
         "History.sys.mjs",
