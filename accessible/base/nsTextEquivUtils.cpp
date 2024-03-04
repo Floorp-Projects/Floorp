@@ -306,7 +306,7 @@ bool nsTextEquivUtils::AppendString(nsAString* aString,
 
 uint32_t nsTextEquivUtils::GetRoleRule(role aRole) {
 #define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, nameRule)                     \
+             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)       \
   case roles::geckoRole:                                                    \
     return nameRule;
 
