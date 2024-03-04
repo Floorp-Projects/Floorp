@@ -14,7 +14,7 @@ add_task(async function () {
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   BrowserTestUtils.startLoadingURIString(
     gBrowser,
-    "http://mochi.test:8888/browser/browser/base/content/test/general/web_video.html"
+    "https://example.com/browser/browser/base/content/test/general/web_video.html"
   );
   await loadPromise;
 
