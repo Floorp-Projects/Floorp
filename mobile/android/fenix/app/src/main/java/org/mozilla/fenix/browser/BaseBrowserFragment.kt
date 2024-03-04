@@ -1626,7 +1626,7 @@ abstract class BaseBrowserFragment :
                 initializeEngineView(toolbarHeight)
                 browserToolbarView.expand()
             }
-            if (requireContext().settings().isTabletAndTabStripEnabled) {
+            if (customTabSessionId == null && requireContext().settings().isTabletAndTabStripEnabled) {
                 binding.tabStripView.isVisible = true
             }
         }
