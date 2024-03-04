@@ -221,6 +221,35 @@ role HTMLHeaderOrFooterAccessible::NativeRole() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// HTMLAsideAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+role HTMLAsideAccessible::NativeRole() const {
+  // Per the HTML-AAM spec, there are two cases for aside elements:
+  //   1. scoped to body or main elements -> 'complementary' role
+  //   2. scoped to sectioning content elements
+  //       -> if the element has an accessible name, 'complementary' role
+  //       -> otherwise, 'generic' role
+  // To implement this, walk ancestors until we find a sectioning content
+  // element, or a body/main element, then take actions based on the rules
+  // above.
+  nsIContent* parent = mContent->GetParent();
+  while (parent) {
+    if (parent->IsAnyOfHTMLElements(nsGkAtoms::article, nsGkAtoms::aside,
+                                    nsGkAtoms::nav, nsGkAtoms::section)) {
+      return !NameIsEmpty() ? roles::LANDMARK : roles::SECTION;
+    }
+    if (parent->IsAnyOfHTMLElements(nsGkAtoms::main, nsGkAtoms::body)) {
+      return roles::LANDMARK;
+    }
+    parent = parent->GetParent();
+  }
+
+  // Fall back to landmark, though we always expect to find a body element.
+  return roles::LANDMARK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // HTMLSectionAccessible
 ////////////////////////////////////////////////////////////////////////////////
 

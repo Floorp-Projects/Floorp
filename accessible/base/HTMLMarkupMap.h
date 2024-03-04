@@ -34,7 +34,12 @@ MARKUPMAP(address, New_HyperText, roles::GROUPING)
 
 MARKUPMAP(article, New_HyperText, roles::ARTICLE, Attr(xmlroles, article))
 
-MARKUPMAP(aside, New_HyperText, roles::LANDMARK)
+MARKUPMAP(
+    aside,
+    [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
+      return new HTMLAsideAccessible(aElement, aContext->Document());
+    },
+    0)
 
 MARKUPMAP(blockquote, New_HyperText, roles::BLOCKQUOTE)
 
