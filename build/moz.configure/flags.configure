@@ -169,6 +169,15 @@ check_and_add_linker_flag("-Wl,-z,nocopyreloc", when=building_with_gnu_cc)
 
 check_and_add_linker_optimize_flag("-Wl,-dead_strip", when=target_is_darwin & ~dtrace)
 
+have_linker_support_ignore_unresolved = try_link(
+    flags=["-Wl,--ignore-unresolved-symbol,environ"],
+    check_msg="for --ignore-unresolved-symbol option to the linker",
+    when=building_with_gnu_cc & gcc_use_gnu_ld,
+)
+add_old_configure_assignment(
+    "HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED", have_linker_support_ignore_unresolved
+)
+
 
 @depends("--enable-address-sanitizer", building_with_gnu_cc)
 def check_Bsymbolic(enable_asan, building_with_gnu_cc):
