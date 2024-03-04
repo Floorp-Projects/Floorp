@@ -9,6 +9,7 @@ import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_AUDIO
 import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
+import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.Manifest.permission.RECORD_AUDIO
 import android.annotation.SuppressLint
 import android.content.Context
@@ -43,7 +44,9 @@ internal sealed class MimeType(
         },
     ) : MimeType(
         "image/",
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            listOf(CAMERA, READ_MEDIA_IMAGES, READ_MEDIA_VISUAL_USER_SELECTED)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             listOf(CAMERA, READ_MEDIA_IMAGES)
         } else {
             listOf(CAMERA)
@@ -72,7 +75,9 @@ internal sealed class MimeType(
 
     object Video : MimeType(
         "video/",
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            listOf(CAMERA, READ_MEDIA_VIDEO, READ_MEDIA_VISUAL_USER_SELECTED)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             listOf(CAMERA, READ_MEDIA_VIDEO)
         } else {
             listOf(CAMERA)
