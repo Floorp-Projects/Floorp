@@ -1708,6 +1708,7 @@ class InlineOptionsBrowser extends HTMLElement {
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("messagemanagergroup", "webext-browsers");
     browser.setAttribute("id", "addon-inline-options");
+    browser.setAttribute("class", "addon-inline-options");
     browser.setAttribute("transparent", "true");
     browser.setAttribute("forcemessagemanager", "true");
     browser.setAttribute("autocompletepopup", "PopupAutoComplete");
@@ -1744,12 +1745,7 @@ class InlineOptionsBrowser extends HTMLElement {
       readyPromise = promiseEvent("load", browser, true);
     }
 
-    // TODO(rpl): we can remove this stack element once we are ripping off
-    // the content prompt support (and `prompts.contentPromptSubDialog` pref).
-    let stack = document.createXULElement("stack");
-    stack.classList.add("inline-options-stack");
-    stack.appendChild(browser);
-    this.appendChild(stack);
+    this.appendChild(browser);
     this.browser = browser;
 
     // Force bindings to apply synchronously.
