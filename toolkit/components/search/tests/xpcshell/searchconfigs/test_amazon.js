@@ -31,7 +31,7 @@ const test = new SearchConfigTest({
     },
     {
       domain: "amazon.com",
-      telemetryId: "amazondotcom-us",
+      telemetryId: "amazondotcom-us-adm",
       aliases: ["@amazon"],
       included: [
         {
@@ -39,6 +39,7 @@ const test = new SearchConfigTest({
         },
       ],
       noSuggestionsURL: true,
+      searchUrlCode: "tag=admarketus-20",
     },
   ],
 });
@@ -64,9 +65,10 @@ add_task(
     );
     // For pre-89, Amazon has a slightly different config.
     let details = test._config.details.find(
-      d => d.telemetryId == "amazondotcom-us"
+      d => d.telemetryId == "amazondotcom-us-adm"
     );
     details.telemetryId = "amazondotcom";
+    delete details.searchUrlCode;
 
     await test.run();
   }
