@@ -101,7 +101,7 @@ function shouldTriggerDownload(action = "save") {
   });
 }
 
-const CONSOLE_ERROR_MESSAGE = "We blocked a download that’s not secure";
+const CONSOLE_ERROR_MESSAGE = "Blocked downloading insecure content";
 
 function shouldConsoleError() {
   // Waits until CONSOLE_ERROR_MESSAGE was logged
