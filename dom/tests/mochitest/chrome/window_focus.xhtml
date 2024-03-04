@@ -46,6 +46,9 @@ var gChildWindow = null;
 
 var gOldExpectedWindow = null;
 var gNewExpectedWindow = null;
+var gCanTabMoveFocusToRootElement =
+    !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element");
+
 
 function is(l, r, n) { window.arguments[0].SimpleTest.is(l,r,n); }
 function ok(v, n) { window.arguments[0].SimpleTest.ok(v,n); }
@@ -398,8 +401,18 @@ function startTest()
 
   gLastFocusMethod = fm.FLAG_BYKEY;
   if (gPartialTabbing) {
-    var partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14", "t15",
-                          "t16", "t19", "t20", "t21", "t22", "t26", "t27", "t28", "t29", "t30"];
+    var partialTabList;
+    if (gCanTabMoveFocusToRootElement) {
+      partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t13", "t14", "t15",
+                        "t16", "t19", "t20", "t21", "t22", "t26", "t27", "t28", "t29", "t30"];
+    } else {
+      // !gCanTabMoveFocusToRootElement
+      // t13 is the <html> element in child_focus_frame.html,
+      // and it's not getting the focus
+      // when gCanTabMoveFocusToRootElement is false.
+      partialTabList = ["t3", "t5", "t9", "t10", "t11", "t12", "t14", "t15",
+                        "t16", "t19", "t20", "t21", "t22", "t26", "t27", "t28", "t29", "t30"];
+    }
     for (var idx = 0; idx < partialTabList.length; idx++) {
       expectFocusShift(pressTab, null, getById(partialTabList[idx]), true, "partial tab key " + partialTabList[idx]);
     }
@@ -415,6 +428,13 @@ function startTest()
   else {
     // TAB key
     for (var idx = 1; idx <= kTabbableSteps; idx++) {
+      if (!gCanTabMoveFocusToRootElement) {
+        if (idx == kChildDocumentRootIndex)
+          // t13 is the <html> element in child_focus_frame.html,
+          // and it's not getting the focus
+          // when gCanTabMoveFocusToRootElement is false.
+          continue;
+      }
       expectFocusShift(pressTab, null, getById("t" + idx), true, "tab key t" + idx);
     }
 
@@ -427,6 +447,14 @@ function startTest()
     // Shift+TAB key
     setFocusTo("o5", window);
     for (idx = kTabbableSteps; idx > 0; idx--) {
+      if (!gCanTabMoveFocusToRootElement) {
+        if (idx == kChildDocumentRootIndex) {
+          // t13 is the <html> element in child_focus_frame.html,
+          // and it's not getting the focus
+          // when gCanTabMoveFocusToRootElement is false.
+          continue;
+        }
+      }
       expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                        null, getById("t" + idx), true, "shift tab key t" + idx);
     }
@@ -1158,29 +1186,38 @@ function framesetWindowLoaded(framesetWindow)
   gOldExpectedWindow = getTopWindow(framesetWindow);
 
   gMoveToFocusFrame = true;
-  for (var idx = 1; idx <= 8; idx++) {
-    gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
-    if (idx % 2)
+  let steps = gCanTabMoveFocusToRootElement ? 8 : 4;
+  for (var idx = 1; idx <= steps; idx++) {
+    let frameIndex = gCanTabMoveFocusToRootElement ? (idx - 1) >> 1 : idx - 1;
+    gNewExpectedWindow = framesetWindow.frames[frameIndex];
+    if (gCanTabMoveFocusToRootElement) {
+      if (idx % 2) {
+        initEvents(gNewExpectedWindow);
+      }
+    } else {
       initEvents(gNewExpectedWindow);
+    }
     expectFocusShift(() => synthesizeKey("KEY_Tab", {}, framesetWindow),
-                     gNewExpectedWindow, getById("f" + idx), true, "frameset tab key f" + idx);
+                     gNewExpectedWindow, getById("f" + (gCanTabMoveFocusToRootElement ? idx : idx * 2)), true, "frameset tab key f" + idx);
     gMoveToFocusFrame = false;
     gOldExpectedWindow = gNewExpectedWindow;
   }
 
   gNewExpectedWindow = framesetWindow.frames[0];
   expectFocusShift(() => synthesizeKey("KEY_Tab", {}, framesetWindow),
-                   gNewExpectedWindow, getById("f1"), true, "frameset tab key wrap to start");
+                   gNewExpectedWindow, gCanTabMoveFocusToRootElement ? getById("f1") : getById("f2"), true, "frameset tab key wrap to start");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
   expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}, framesetWindow),
                    gNewExpectedWindow, getById("f8"), true, "frameset shift tab key wrap to end");
 
-  for (idx = 7; idx >= 1; idx--) {
+  steps = gCanTabMoveFocusToRootElement ? 7 : 3;
+  for (idx = steps; idx >= 1; idx--) {
     gOldExpectedWindow = gNewExpectedWindow;
-    gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
+    let frameIndex = gCanTabMoveFocusToRootElement ? (idx - 1) >> 1 : idx - 1;
+    gNewExpectedWindow = framesetWindow.frames[frameIndex];
     expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}, framesetWindow),
-                     gNewExpectedWindow, getById("f" + idx), true, "frameset shift tab key f" + idx);
+                     gNewExpectedWindow, getById("f" + (gCanTabMoveFocusToRootElement ? idx : idx * 2)), true, "frameset shift tab key f" + idx);
   }
 
   // document shifting
