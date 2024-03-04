@@ -1,45 +1,34 @@
 ﻿<!DOCTYPE html>
-<!-- Test that non-stretchy largeops do not stretch -->
-
-<html class="reftest-wait">
+<html>
   <head>
-    <title>Largeop stretching</title>
-    <meta charset="utf-8" />
+    <title>Stretchy/Largeop with default fonts</title>
+    <meta charset="utf-8"/>
+    <link rel="help" href="https://www.w3.org/TR/mathml-core/#layout-of-operators">
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1092053">
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
     <script type="text/javascript">
-
-      function almostEqual(aX, aY) {
-        var epsilon = 2;
-        return Math.abs(aX - aY) < epsilon;
+      function contentOf(aElement) {
+        return document.getElementById(aElement).textContent;
       }
-
-      function verifySize(aElement, aReference) {
-        /* Verify if the size of the element matches the reference, and
-           otherwise paint the element in red. */
-        var element = document.getElementById(aElement);
-        var ref = document.getElementById(aReference);
-        if (!almostEqual(element.getBoundingClientRect().height,
-                         ref.getBoundingClientRect().height) ||
-            !almostEqual(element.getBoundingClientRect().width,
-                         ref.getBoundingClientRect().width)) {
-          element.setAttribute("mathcolor", "red");
-        }
-      }
-
-      function doTest() {
-        /* Ensure that largeops are bigger in displaystyle */
-        var numTests = 10; // zero indexed
-        var opPrefix = "mo";
-        var refPrefix = "moRef";
-        for (var i = 0; i < numTests; i++)
-        {
-          verifySize(opPrefix + i, refPrefix + i);
-        }
-        document.documentElement.removeAttribute("class");
-
-      }
+      promise_test(() => {
+        return new Promise(resolve => {
+          window.addEventListener("load", resolve);
+        }).then(() => {
+          const numTests = 10; // zero indexed
+          const epsilon = 2;
+          for (let i = 0; i < numTests; i++) {
+            const operatorName = contentOf(`mo${i}`);
+            const box = document.getElementById(`mo${i}`).getBoundingClientRect();
+            const ref = document.getElementById(`moRef${i}`).getBoundingClientRect();
+            assert_approx_equals(box.width, ref.width, epsilon, `width of largeop '${operatorName}'`);
+            assert_approx_equals(box.height, ref.height, epsilon, `height of largeop '${operatorName}'`);
+          }
+        });
+      }, "Test that non-stretchy largeops do not stretch.");
     </script>
   </head>
-  <body onload="doTest();">
+  <body>
     <p>
       <math displaystyle="true">
         <mrow>

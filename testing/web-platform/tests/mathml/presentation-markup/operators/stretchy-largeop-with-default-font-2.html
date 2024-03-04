@@ -1,38 +1,33 @@
 ﻿<!DOCTYPE html>
-<!-- Test that non-stretchy largeops are bigger in display mode -->
-
-<html class="reftest-wait">
+<html>
   <head>
-    <title>Largeop stretching</title>
+    <title>Stretchy/Largeop with default fonts</title>
     <meta charset="utf-8"/>
+    <link rel="help" href="https://www.w3.org/TR/mathml-core/#layout-of-operators">
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1092053">
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
     <script type="text/javascript">
-
-      function verifyGreaterThan(aElement, aReference) {
-        /* Verify that the height of the element is greater than that of the
-           reference, and otherwise paint the element in red. */
-        var element = document.getElementById(aElement);
-        var ref = document.getElementById(aReference);
-        if (element.getBoundingClientRect().height -
-            ref.getBoundingClientRect().height <= 1) {
-          element.setAttribute("mathcolor", "red");
-        }
+      function contentOf(aElement) {
+        return document.getElementById(aElement).textContent;
       }
-
-      function doTest() {
-        /* Ensure that largeops are bigger in displaystyle */
-        var numTests = 10; // zero indexed
-        var opPrefix = "mo";
-        var refPrefix = "moRef";
-        for (var i = 0; i < numTests; i++)
-        {
-          verifyGreaterThan(opPrefix + i, refPrefix + i);
-        }
-        document.documentElement.removeAttribute("class");
-
+      function heightOf(aElement) {
+        return document.getElementById(aElement).getBoundingClientRect().height;
       }
+      promise_test(() => {
+        return new Promise(resolve => {
+          window.addEventListener("load", resolve);
+        }).then(() => {
+          const numTests = 10; // zero indexed
+          for (let i = 0; i < numTests; i++) {
+            const operatorName = contentOf(`mo${i}`);
+            assert_greater_than(heightOf(`mo${i}`), heightOf(`moRef${i}`), `size of largeop '${operatorName}'`);
+          }
+        });
+      }, "Test that non-stretchy largeops are bigger in display mode.");
     </script>
   </head>
-  <body onload="doTest();">
+  <body>
     <p>
       <math displaystyle="true">
         <mo id="mo0">&bigodot;</mo>
