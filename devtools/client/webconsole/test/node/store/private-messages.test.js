@@ -207,9 +207,7 @@ describe("private messages", () => {
       webConsoleUI: getWebConsoleUiMock({
         commands: {
           client: {
-            mainRoot: {
-              supportsReleaseActors: true,
-            },
+            mainRoot: {},
           },
           objectCommand: {
             releaseObjects: async frontsToRelease => {
