@@ -76,6 +76,11 @@ add_task(async function test_disabled() {
 
 add_task(async function test_noCustomPreferences() {
   info("Applying preferences without any custom preference should not throw");
+
+  // First call invokes setting of default preferences
+  RecommendedPreferences.applyPreferences();
+
+  // Second call does nothing
   RecommendedPreferences.applyPreferences();
 
   cleanup();

@@ -310,6 +310,9 @@ const COMMON_PREFERENCES = new Map([
   // Privacy and Tracking Protection
   ["privacy.trackingprotection.enabled", false],
 
+  // Used to check if recommended preferences are applied
+  ["remote.prefs.recommended.applied", true],
+
   // Don't do network connections for mitm priming
   ["security.certerrors.mitm.priming.enabled", false],
 
@@ -362,7 +365,7 @@ export const RecommendedPreferences = {
    * @param {Map<string, object>=} preferences
    *     Map of preference name to preference value.
    */
-  applyPreferences(preferences) {
+  applyPreferences(preferences = new Map()) {
     if (!lazy.useRecommendedPrefs) {
       // If remote.prefs.recommended is set to false, do not set any preference
       // here. Needed for our Firefox CI.
@@ -374,11 +377,7 @@ export const RecommendedPreferences = {
     if (!this.isInitialized) {
       // Merge common preferences and optionally provided preferences in a
       // single map. Hereby the extra preferences have higher priority.
-      if (preferences) {
-        preferences = new Map([...COMMON_PREFERENCES, ...preferences]);
-      } else {
-        preferences = COMMON_PREFERENCES;
-      }
+      preferences = new Map([...COMMON_PREFERENCES, ...preferences]);
 
       Services.obs.addObserver(this, "quit-application");
       this.isInitialized = true;

@@ -9,6 +9,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
   HttpServer: "chrome://remote/content/server/httpd.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  RecommendedPreferences:
+    "chrome://remote/content/shared/RecommendedPreferences.sys.mjs",
   WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.sys.mjs",
 });
 
@@ -31,7 +33,6 @@ const DEFAULT_PORT = 9222;
 
 const isRemote =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
-
 class RemoteAgentParentProcess {
   #allowHosts;
   #allowOrigins;
@@ -393,6 +394,9 @@ class RemoteAgentParentProcess {
           Services.obs.addObserver(this, "browser-idle-startup-tasks-finished");
           Services.obs.addObserver(this, "mail-idle-startup-tasks-finished");
           Services.obs.addObserver(this, "quit-application");
+
+          // Apply the common set of preferences for all supported protocols
+          lazy.RecommendedPreferences.applyPreferences();
 
           // With Bug 1717899 we will extend the lifetime of the Remote Agent to
           // the whole Firefox session, which will be identical to Marionette. For
