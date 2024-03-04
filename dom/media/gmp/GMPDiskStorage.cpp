@@ -13,7 +13,6 @@
 #include "mozilla/EndianUtils.h"
 #include "nsClassHashtable.h"
 #include "prio.h"
-#include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla::gmp {

@@ -16,7 +16,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsNodeInfoManager.h"
 #include "nsString.h"
-#include "nsContentCID.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsIViewSourceChannel.h"

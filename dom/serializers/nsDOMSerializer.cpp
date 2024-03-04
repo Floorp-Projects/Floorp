@@ -10,7 +10,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsComponentManagerUtils.h"
-#include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsINode.h"

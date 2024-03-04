@@ -29,7 +29,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "nsContainerFrame.h"
-#include "nsContentCID.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "txMozillaTextOutput.h"
-#include "nsContentCID.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentTransformer.h"

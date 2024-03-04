@@ -12,7 +12,6 @@
 #include "nsIRefreshURI.h"
 #include "nsPIDOMWindow.h"
 #include "nsIContent.h"
-#include "nsContentCID.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
 #include "txLog.h"

@@ -29,7 +29,6 @@
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsContentCID.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMAttributeMap.h"
 #include "nsFrameLoader.h"

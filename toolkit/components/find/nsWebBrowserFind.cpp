@@ -22,7 +22,6 @@
 #include "nsITextControlFrame.h"
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
-#include "nsContentCID.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsFind.h"

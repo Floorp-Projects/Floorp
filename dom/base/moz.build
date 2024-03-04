@@ -50,7 +50,6 @@ EXPORTS += [
     "nsAttrValueInlines.h",
     "nsCaseTreatment.h",
     "nsChildContentList.h",
-    "nsContentCID.h",
     "nsContentCreatorFunctions.h",
     "nsContentList.h",
     "nsContentListDeclarations.h",

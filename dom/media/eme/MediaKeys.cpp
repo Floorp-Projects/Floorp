@@ -23,7 +23,6 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
-#include "nsContentCID.h"
 #include "nsContentTypeParser.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
