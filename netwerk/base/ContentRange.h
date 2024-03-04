@@ -21,6 +21,8 @@ namespace mozilla::net {
 
 class ContentRange {
  private:
+  ~ContentRange() = default;
+
   uint64_t mStart{0};
   uint64_t mEnd{0};
   uint64_t mSize{0};
@@ -34,6 +36,8 @@ class ContentRange {
       : mStart(aStart), mEnd(aEnd), mSize(aSize) {}
   ContentRange(const nsACString& aRangeHeader, uint64_t aSize);
   void AsHeader(nsACString& aOutString) const;
+
+  NS_INLINE_DECL_REFCOUNTING(ContentRange)
 };
 
 }  // namespace mozilla::net

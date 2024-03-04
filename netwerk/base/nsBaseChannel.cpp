@@ -8,7 +8,6 @@
 #include "nsContentUtils.h"
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
-#include "nsMimeTypes.h"
 #include "nsUnknownDecoder.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsMimeTypes.h"
@@ -302,6 +301,7 @@ NS_IMPL_RELEASE(nsBaseChannel)
 NS_INTERFACE_MAP_BEGIN(nsBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
@@ -965,4 +965,18 @@ NS_IMETHODIMP nsBaseChannel::GetCanceled(bool* aCanceled) {
 
 void nsBaseChannel::SetupNeckoTarget() {
   mNeckoTarget = GetMainThreadSerialEventTarget();
+}
+
+NS_IMETHODIMP nsBaseChannel::GetContentRange(
+    RefPtr<mozilla::net::ContentRange>* aRange) {
+  if (aRange) {
+    *aRange = mContentRange;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBaseChannel::SetContentRange(
+    RefPtr<mozilla::net::ContentRange> aRange) {
+  mContentRange = aRange;
+  return NS_OK;
 }

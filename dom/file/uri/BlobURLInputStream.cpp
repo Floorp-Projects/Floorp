@@ -489,9 +489,9 @@ nsresult BlobURLInputStream::StoreBlobImplStream(
   // If a Range header was in the request then fetch/XHR will have set a
   // ContentRange on the channel earlier so we may slice the blob now.
   blobImpl->GetType(blobContentType);
-  const Maybe<mozilla::net::ContentRange>& contentRange =
-      mChannel->GetContentRange();
-  if (contentRange.isSome()) {
+  const RefPtr<mozilla::net::ContentRange>& contentRange =
+      mChannel->ContentRange();
+  if (contentRange) {
     IgnoredErrorResult result;
     uint64_t start = contentRange->Start();
     uint64_t end = contentRange->End();

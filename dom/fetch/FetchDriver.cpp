@@ -13,6 +13,7 @@
 #include "mozilla/dom/ReferrerInfo.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/dom/Document.h"
+#include "nsIBaseChannel.h"
 #include "nsICookieJarSettings.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -28,7 +29,6 @@
 #include "nsIPipe.h"
 #include "nsIRedirectHistoryEntry.h"
 
-#include "nsBaseChannel.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDataChannel.h"
 #include "nsDataHandler.h"
@@ -1100,13 +1100,10 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
     // Should set a Content-Range header for blob scheme
     // (https://fetch.spec.whatwg.org/#scheme-fetch)
     nsAutoCString contentRange(VoidCString());
-    nsCOMPtr<nsIURI> uri;
-    channel->GetURI(getter_AddRefs(uri));
-    if (IsBlobURI(uri)) {
-      nsBaseChannel* bchan = static_cast<nsBaseChannel*>(channel.get());
-      MOZ_ASSERT(bchan);
-      Maybe<mozilla::net::ContentRange> range = bchan->GetContentRange();
-      if (range.isSome()) {
+    nsCOMPtr<nsIBaseChannel> baseChan = do_QueryInterface(mChannel);
+    if (baseChan) {
+      RefPtr<mozilla::net::ContentRange> range = baseChan->ContentRange();
+      if (range) {
         range->AsHeader(contentRange);
       }
     }
@@ -1122,6 +1119,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       MOZ_ASSERT(!result.Failed());
     }
 
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
     if (uri && uri->SchemeIs("data")) {
       nsDataChannel* dchan = static_cast<nsDataChannel*>(channel.get());
       MOZ_ASSERT(dchan);
