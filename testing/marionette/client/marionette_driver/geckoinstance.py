@@ -138,6 +138,8 @@ class GeckoInstance(object):
         "network.manage-offline-status": False,
         # Make sure SNTP requests don't hit the network
         "network.sntp.pools": "%(server)s",
+        # Disabled for causing marionette crashes on OSX. See bug 1882856
+        "network.dns.native_https_query": False,
         # Privacy and Tracking Protection
         "privacy.trackingprotection.enabled": False,
         # Disable recommended automation prefs in CI
