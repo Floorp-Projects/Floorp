@@ -468,7 +468,7 @@ void Accessible::DebugPrint(const char* aPrefix,
   } else {
     desc.AssignLiteral("[null]");
   }
-#  if defined(ANDROID)
+#  if defined(ANDROID) || defined(MOZ_WIDGET_UIKIT)
   printf_stderr("%s %s\n", aPrefix, desc.get());
 #  else
   printf("%s %s\n", aPrefix, desc.get());
