@@ -160,13 +160,14 @@ var gHomePane = {
       }
 
       let extensionOptions;
+      await ExtensionSettingsStore.initialize();
       if (select.id === "homeMode") {
-        extensionOptions = await ExtensionSettingsStore.getAllSettings(
+        extensionOptions = ExtensionSettingsStore.getAllSettings(
           PREF_SETTING_TYPE,
           HOMEPAGE_OVERRIDE_KEY
         );
       } else {
-        extensionOptions = await ExtensionSettingsStore.getAllSettings(
+        extensionOptions = ExtensionSettingsStore.getAllSettings(
           URL_OVERRIDES_TYPE,
           NEW_TAB_KEY
         );
