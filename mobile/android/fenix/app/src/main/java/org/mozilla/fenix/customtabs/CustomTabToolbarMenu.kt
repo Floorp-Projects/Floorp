@@ -22,6 +22,7 @@ import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getStringWithArgSafe
@@ -54,6 +55,7 @@ class CustomTabToolbarMenu(
     @VisibleForTesting
     internal val session: CustomTabSessionState? get() = sessionId?.let { store.state.findCustomTab(it) }
     private val appName = context.getString(R.string.app_name)
+    private val shouldShowMenuToolbar = !IncompleteRedesignToolbarFeature(context.settings()).isEnabled
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
@@ -119,7 +121,7 @@ class CustomTabToolbarMenu(
     } ?: false
 
     private val menuItems by lazy {
-        val menuItems = listOf(
+        val menuItems = listOfNotNull(
             poweredBy.apply { visible = { !isSandboxCustomTab } },
             BrowserMenuDivider().apply { visible = { !isSandboxCustomTab } },
             desktopMode,
@@ -127,7 +129,7 @@ class CustomTabToolbarMenu(
             openInApp.apply { visible = ::shouldShowOpenInApp },
             openInFenix.apply { visible = { !isSandboxCustomTab } },
             BrowserMenuDivider(),
-            menuToolbar,
+            if (shouldShowMenuToolbar) menuToolbar else null,
         )
         if (shouldReverseItems) {
             menuItems.reversed()

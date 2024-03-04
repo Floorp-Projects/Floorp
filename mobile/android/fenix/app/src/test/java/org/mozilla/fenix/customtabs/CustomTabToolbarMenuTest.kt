@@ -5,6 +5,7 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import mozilla.components.browser.state.state.BrowserState
@@ -15,6 +16,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 
 class CustomTabToolbarMenuTest {
 
@@ -26,6 +28,7 @@ class CustomTabToolbarMenuTest {
     @Before
     fun setUp() {
         context = mockk(relaxed = true)
+        every { context.settings() } returns mockk(relaxed = true)
 
         firefoxCustomTab = createCustomTab(url = "https://firefox.com", id = "123")
 
