@@ -1320,11 +1320,12 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
                             mDCLayerTree->GetVideoProcessor());
   const bool contentIsHDR = false;  // XXX for now, only non-HDR is supported.
   const bool monitorIsHDR = gfx::DeviceManagerDx::Get()->SystemHDREnabled();
+  const bool powerIsCharging = RenderThread::Get()->GetPowerIsCharging();
 
   bool useVpAutoHDR =
       StaticPrefs::gfx_webrender_video_true_hdr_nvidia_AtStartup() &&
       !contentIsHDR && monitorIsHDR && driverSupportsTrueHDR &&
-      !mVpAutoHDRFailed;
+      powerIsCharging && !mVpAutoHDRFailed;
 
   if (!mVideoSwapChain || mSwapChainSize != swapChainSize || mIsDRM != isDRM ||
       mUseVpAutoHDR != useVpAutoHDR) {
