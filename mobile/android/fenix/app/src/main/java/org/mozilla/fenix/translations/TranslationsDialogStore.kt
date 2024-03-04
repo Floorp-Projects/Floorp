@@ -41,6 +41,8 @@ class TranslationsDialogStore(
  * @property translationDownloadSize A data class to contain information
  * related to the download size required for a given translation to/from pair.
  * @property error An error that can occur during the translation process.
+ * @property documentLangDisplayName Language name to display in
+ * case [TranslationError.LanguageNotSupportedError] appears.
  * @property dismissDialogState Whether the dialog bottom sheet should be dismissed.
  * @property initialFrom Initial "from" language, based on the translation state and page state.
  * @property initialTo Initial "to" language, based on the translation state and page state.
@@ -54,6 +56,7 @@ data class TranslationsDialogState(
     val positiveButtonType: PositiveButtonType? = null,
     val translationDownloadSize: TranslationDownloadSize? = null,
     val error: TranslationError? = null,
+    val documentLangDisplayName: String? = null,
     val dismissDialogState: DismissDialogState? = null,
     val initialFrom: Language? = null,
     val initialTo: Language? = null,
@@ -101,6 +104,7 @@ sealed class TranslationsDialogAction : Action {
      */
     data class UpdateTranslationError(
         val translationError: TranslationError? = null,
+        val documentLangDisplayName: String? = null,
     ) : TranslationsDialogAction()
 
     /**
@@ -285,6 +289,7 @@ internal object TranslationsDialogReducer {
             is TranslationsDialogAction.UpdateTranslationError -> {
                 state.copy(
                     error = action.translationError,
+                    documentLangDisplayName = action.documentLangDisplayName,
                     positiveButtonType = if (action.translationError is TranslationError.LanguageNotSupportedError) {
                         PositiveButtonType.Disabled
                     } else {

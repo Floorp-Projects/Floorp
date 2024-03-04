@@ -163,14 +163,16 @@ class TranslationsDialogReducerTest {
         val updatedState = TranslationsDialogReducer.reduce(
             translationsDialogState,
             TranslationsDialogAction.UpdateTranslationError(
-                TranslationError.LanguageNotSupportedError(
+                translationError = TranslationError.LanguageNotSupportedError(
                     null,
                 ),
+                documentLangDisplayName = "Deutsch",
             ),
         )
 
         assertTrue(updatedState.error is TranslationError.LanguageNotSupportedError)
         assertEquals(PositiveButtonType.Disabled, updatedState.positiveButtonType)
+        assertEquals(updatedState.documentLangDisplayName, "Deutsch")
 
         val updatedStateTwo = TranslationsDialogReducer.reduce(
             translationsDialogState,

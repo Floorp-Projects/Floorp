@@ -15,6 +15,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.initialFromLanguage
 import mozilla.components.concept.engine.translate.initialToLanguage
 import mozilla.components.lib.state.helpers.AbstractBinding
+import org.mozilla.fenix.utils.LocaleUtils
+import java.util.Locale
 
 /**
  * Helper for observing Translation state from both [BrowserState.translationEngine]
@@ -130,8 +132,17 @@ class TranslationsDialogBinding(
 
                 // A session error may override a browser error
                 if (sessionTranslationsState.translationError != null) {
+                    var documentLangDisplayName: String? = null
+                    sessionTranslationsState.translationEngineState?.detectedLanguages?.documentLangTag?.let {
+                        val documentLanguage = Locale.forLanguageTag(it)
+                        documentLangDisplayName = LocaleUtils.getDisplayName(documentLanguage)
+                    }
+
                     translationsDialogStore.dispatch(
-                        TranslationsDialogAction.UpdateTranslationError(sessionTranslationsState.translationError),
+                        TranslationsDialogAction.UpdateTranslationError(
+                            translationError = sessionTranslationsState.translationError,
+                            documentLangDisplayName = documentLangDisplayName,
+                        ),
                     )
                 }
 

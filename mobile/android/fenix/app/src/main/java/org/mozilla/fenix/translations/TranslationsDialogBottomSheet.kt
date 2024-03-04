@@ -157,13 +157,9 @@ private fun DialogContentBaseOnTranslationState(
 ) {
     if (translationsDialogState.error != null) {
         DialogContentAnErrorOccurred(
-            error = translationsDialogState.error,
+            translationsDialogState = translationsDialogState,
             learnMoreUrl = learnMoreUrl,
             onLearnMoreClicked = onLearnMoreClicked,
-            fromLanguages = translationsDialogState.fromLanguages,
-            toLanguages = translationsDialogState.toLanguages,
-            initialFrom = translationsDialogState.initialFrom,
-            initialTo = translationsDialogState.initialTo,
             onFromDropdownSelected = onFromDropdownSelected,
             onToDropdownSelected = onToDropdownSelected,
             onPositiveButtonClicked = onPositiveButtonClicked,
@@ -247,13 +243,9 @@ private fun DialogContentTranslated(
 /**
  * Dialog content if an [TranslationError] appears during the translation process.
  *
- * @param error An error that can occur during the translation process.
+ * @param translationsDialogState The current state of the Translations bottom sheet dialog.
  * @param learnMoreUrl The learn more link for translations website.
  * @param onLearnMoreClicked Invoked when the user clicks on the learn more button.
- * @param fromLanguages Translation menu items to be shown in the translate from dropdown.
- * @param toLanguages Translation menu items to be shown in the translate to dropdown.
- * @param initialFrom Initial "from" language, based on the translation state and page state.
- * @param initialTo Initial "to" language, based on the translation state and page state.
  * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
  * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
  * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
@@ -262,62 +254,64 @@ private fun DialogContentTranslated(
 @Suppress("LongParameterList")
 @Composable
 private fun DialogContentAnErrorOccurred(
-    error: TranslationError,
+    translationsDialogState: TranslationsDialogState,
     learnMoreUrl: String,
     onLearnMoreClicked: () -> Unit,
-    fromLanguages: List<Language>?,
-    toLanguages: List<Language>?,
-    initialFrom: Language? = null,
-    initialTo: Language? = null,
     onFromDropdownSelected: (Language) -> Unit,
     onToDropdownSelected: (Language) -> Unit,
     onPositiveButtonClicked: () -> Unit,
     onNegativeButtonClicked: () -> Unit,
 ) {
-    TranslationErrorWarning(
-        error,
-        learnMoreUrl = learnMoreUrl,
-        onLearnMoreClicked = onLearnMoreClicked,
-    )
+    translationsDialogState.error?.let { translationError ->
+        TranslationErrorWarning(
+            translationError = translationError,
+            documentLangDisplayName = translationsDialogState.documentLangDisplayName,
+            learnMoreUrl = learnMoreUrl,
+            onLearnMoreClicked = onLearnMoreClicked,
+        )
 
-    Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-    if (error !is TranslationError.CouldNotLoadLanguagesError) {
-        TranslationsDialogContent(
-            translateFromLanguages = fromLanguages,
-            translateToLanguages = toLanguages,
-            initialFrom = initialFrom,
-            initialTo = initialTo,
-            onFromDropdownSelected = onFromDropdownSelected,
-            onToDropdownSelected = onToDropdownSelected,
+        if (translationError !is TranslationError.CouldNotLoadLanguagesError) {
+            TranslationsDialogContent(
+                translateFromLanguages = translationsDialogState.fromLanguages,
+                translateToLanguages = translationsDialogState.toLanguages,
+                initialFrom = translationsDialogState.initialFrom,
+                initialTo = translationsDialogState.initialTo,
+                onFromDropdownSelected = onFromDropdownSelected,
+                onToDropdownSelected = onToDropdownSelected,
+            )
+        }
+
+        val negativeButtonTitle =
+            if (translationError is TranslationError.LanguageNotSupportedError) {
+                stringResource(id = R.string.translations_bottom_sheet_negative_button_error)
+            } else {
+                stringResource(id = R.string.translations_bottom_sheet_negative_button)
+            }
+
+        val positiveButtonTitle =
+            if (translationError is TranslationError.CouldNotLoadLanguagesError) {
+                stringResource(id = R.string.translations_bottom_sheet_positive_button_error)
+            } else {
+                stringResource(id = R.string.translations_bottom_sheet_positive_button)
+            }
+
+        val positiveButtonType =
+            if (translationError is TranslationError.LanguageNotSupportedError) {
+                PositiveButtonType.Disabled
+            } else {
+                PositiveButtonType.Enabled
+            }
+
+        TranslationsDialogActionButtons(
+            positiveButtonText = positiveButtonTitle,
+            negativeButtonText = negativeButtonTitle,
+            positiveButtonType = positiveButtonType,
+            onNegativeButtonClicked = onNegativeButtonClicked,
+            onPositiveButtonClicked = onPositiveButtonClicked,
         )
     }
-
-    val negativeButtonTitle = if (error is TranslationError.LanguageNotSupportedError) {
-        stringResource(id = R.string.translations_bottom_sheet_negative_button_error)
-    } else {
-        stringResource(id = R.string.translations_bottom_sheet_negative_button)
-    }
-
-    val positiveButtonTitle = if (error is TranslationError.CouldNotLoadLanguagesError) {
-        stringResource(id = R.string.translations_bottom_sheet_positive_button_error)
-    } else {
-        stringResource(id = R.string.translations_bottom_sheet_positive_button)
-    }
-
-    val positiveButtonType = if (error is TranslationError.LanguageNotSupportedError) {
-        PositiveButtonType.Disabled
-    } else {
-        PositiveButtonType.Enabled
-    }
-
-    TranslationsDialogActionButtons(
-        positiveButtonText = positiveButtonTitle,
-        negativeButtonText = negativeButtonTitle,
-        positiveButtonType = positiveButtonType,
-        onNegativeButtonClicked = onNegativeButtonClicked,
-        onPositiveButtonClicked = onPositiveButtonClicked,
-    )
 }
 
 @Composable
@@ -474,6 +468,7 @@ private fun TranslationsDialogHeader(
 @Composable
 private fun TranslationErrorWarning(
     translationError: TranslationError,
+    documentLangDisplayName: String? = null,
     learnMoreUrl: String,
     onLearnMoreClicked: () -> Unit,
 ) {
@@ -502,21 +497,23 @@ private fun TranslationErrorWarning(
             val learnMoreText =
                 stringResource(id = R.string.translation_error_language_not_supported_learn_more)
 
-            ReviewQualityCheckInfoCard(
-                title = stringResource(
-                    id = R.string.translation_error_language_not_supported_warning_text,
-                    "Uzbek",
-                ),
-                type = ReviewQualityCheckInfoType.Info,
-                modifier = modifier,
-                footer = stringResource(
-                    id = R.string.translation_error_language_not_supported_learn_more,
-                ) to LinkTextState(
-                    text = learnMoreText,
-                    url = learnMoreUrl,
-                    onClick = { onLearnMoreClicked() },
-                ),
-            )
+            documentLangDisplayName?.let {
+                ReviewQualityCheckInfoCard(
+                    title = stringResource(
+                        id = R.string.translation_error_language_not_supported_warning_text,
+                        it,
+                    ),
+                    type = ReviewQualityCheckInfoType.Info,
+                    modifier = modifier,
+                    footer = stringResource(
+                        id = R.string.translation_error_language_not_supported_learn_more,
+                    ) to LinkTextState(
+                        text = learnMoreText,
+                        url = learnMoreUrl,
+                        onClick = { onLearnMoreClicked() },
+                    ),
+                )
+            }
         }
 
         else -> {}
