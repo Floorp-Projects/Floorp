@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Tests for for-of loops</title>
+  <title>Test for using TAB to move focus and scroll into view</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
@@ -11,10 +11,18 @@
 <div id="content" style="display: none"></div>
 <script>
 function doTest() {
+  var canTabMoveFocusToRootElement =
+    !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element");
   document.getElementById("button").focus();
+  const iframe = document.querySelector("iframe");
   is(window.scrollY, 0, "Scrolled position initially 0");
   synthesizeKey("KEY_Tab");
-  ok(window.scrollY > 200, "Scrolled child frame into view");
+  is(document.activeElement, iframe, "Focus moved to the iframe");
+  if (canTabMoveFocusToRootElement) {
+    ok(window.scrollY > 200, "Scrolled child frame into view");
+  } else {
+    is(window.scrollY, 0, "Scrolled position remained the same");
+  }
   SimpleTest.finish();
 }
 SimpleTest.waitForExplicitFinish();

@@ -246,7 +246,10 @@ window.onload = function() {
         synthesizeKey("KEY_Tab", { shiftKey: true });
       },
       state: { current: 0, active: null },
-      activeElement: listEl.ownerDocument.documentElement,
+      activeElement:
+        !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element.enabled")
+          ? listEl.ownerDocument.documentElement
+          : defaultFocus,
     }];
 
     for (const test of tests) {

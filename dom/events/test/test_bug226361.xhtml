@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=226361
 
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -43,8 +43,11 @@ function tab_to(id) {
 }
 
 function tab_iframe() {
-  doc = document;
-  tab_to('iframe');
+  let canTabMoveFocusToRootElement = !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element");
+  if (canTabMoveFocusToRootElement) {
+    doc = document;
+    tab_to('iframe');
+  }
 
   // inside iframe
   doc = document.getElementById('iframe').contentDocument

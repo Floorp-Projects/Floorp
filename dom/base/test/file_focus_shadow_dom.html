@@ -79,10 +79,16 @@
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element in shadow DOM. (3)");
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element with a calendar button in shadow DOM. (3)");
-        synthesizeKey("KEY_Tab");
-        opener.is(shadowIframe.contentDocument.activeElement,
-                  shadowIframe.contentDocument.documentElement,
-                  "Should have focused document element in shadow iframe. (3)");
+
+        let canTabMoveFocusToRootElement =
+          !SpecialPowers.getBoolPref("dom.disable_tab_focus_to_root_element");
+        if (canTabMoveFocusToRootElement) {
+          synthesizeKey("KEY_Tab");
+          opener.is(shadowIframe.contentDocument.activeElement,
+                    shadowIframe.contentDocument.documentElement,
+                    "Should have focused document element in shadow iframe. (3)");
+        }
+
         synthesizeKey("KEY_Tab");
         opener.is(shadowIframe.contentDocument.activeElement,
                   shadowIframe.contentDocument.body.firstChild,
@@ -99,10 +105,12 @@
         opener.is(shadowIframe.contentDocument.activeElement,
                   shadowIframe.contentDocument.body.firstChild,
                   "Should have focused input element in shadow iframe. (4)");
-        synthesizeKey("KEY_Tab", {shiftKey: true});
-        opener.is(shadowIframe.contentDocument.activeElement,
-                  shadowIframe.contentDocument.documentElement,
-                  "Should have focused document element in shadow iframe. (4)");
+        if (canTabMoveFocusToRootElement) {
+          synthesizeKey("KEY_Tab", {shiftKey: true});
+          opener.is(shadowIframe.contentDocument.activeElement,
+                    shadowIframe.contentDocument.documentElement,
+                    "Should have focused document element in shadow iframe. (4)");
+        }
         synthesizeKey("KEY_Tab", {shiftKey: true});
         opener.is(lastFocusTarget, shadowDate, "Should have focused date element with a calendar button in shadow DOM. (4)");
         synthesizeKey("KEY_Tab", {shiftKey: true});
