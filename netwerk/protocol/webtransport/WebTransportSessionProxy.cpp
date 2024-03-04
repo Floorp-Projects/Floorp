@@ -27,8 +27,7 @@ namespace mozilla::net {
 LazyLogModule webTransportLog("nsWebTransport");
 
 NS_IMPL_ISUPPORTS(WebTransportSessionProxy, WebTransportSessionEventListener,
-                  WebTransportConnectionSettings, nsIWebTransport,
-                  nsIRedirectResultListener, nsIStreamListener,
+                  nsIWebTransport, nsIRedirectResultListener, nsIStreamListener,
                   nsIChannelEventSink, nsIInterfaceRequestor);
 
 WebTransportSessionProxy::WebTransportSessionProxy()
@@ -64,17 +63,17 @@ WebTransportSessionProxy::~WebTransportSessionProxy() {
 //-----------------------------------------------------------------------------
 
 nsresult WebTransportSessionProxy::AsyncConnect(
-    nsIURI* aURI, bool aDedicated,
+    nsIURI* aURI,
     const nsTArray<RefPtr<nsIWebTransportHash>>& aServerCertHashes,
     nsIPrincipal* aPrincipal, uint32_t aSecurityFlags,
     WebTransportSessionEventListener* aListener) {
-  return AsyncConnectWithClient(aURI, aDedicated, std::move(aServerCertHashes),
-                                aPrincipal, aSecurityFlags, aListener,
+  return AsyncConnectWithClient(aURI, std::move(aServerCertHashes), aPrincipal,
+                                aSecurityFlags, aListener,
                                 Maybe<dom::ClientInfo>());
 }
 
 nsresult WebTransportSessionProxy::AsyncConnectWithClient(
-    nsIURI* aURI, bool aDedicated,
+    nsIURI* aURI,
     const nsTArray<RefPtr<nsIWebTransportHash>>& aServerCertHashes,
     nsIPrincipal* aPrincipal, uint32_t aSecurityFlags,
     WebTransportSessionEventListener* aListener,
@@ -127,10 +126,7 @@ nsresult WebTransportSessionProxy::AsyncConnectWithClient(
     return NS_ERROR_ABORT;
   }
 
-  mDedicatedConnection = aDedicated;
-
   if (!aServerCertHashes.IsEmpty()) {
-    mServerCertHashes.Clear();
     mServerCertHashes.AppendElements(aServerCertHashes);
   }
 
@@ -236,18 +232,6 @@ WebTransportSessionProxy::CloseSession(uint32_t status,
     case SESSION_CLOSE_PENDING:
       break;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP WebTransportSessionProxy::GetDedicated(bool* dedicated) {
-  *dedicated = mDedicatedConnection;
-  return NS_OK;
-}
-
-NS_IMETHODIMP WebTransportSessionProxy::GetServerCertificateHashes(
-    nsTArray<RefPtr<nsIWebTransportHash>>& aServerCertHashes) {
-  aServerCertHashes.Clear();
-  aServerCertHashes.AppendElements(mServerCertHashes);
   return NS_OK;
 }
 
@@ -589,7 +573,8 @@ WebTransportSessionProxy::OnStartRequest(nsIRequest* aRequest) {
         nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
         if (!httpChannel ||
             NS_FAILED(httpChannel->GetResponseStatus(&status)) ||
-            !(status >= 200 && status < 300)) {
+            !(status >= 200 && status < 300) ||
+            !CheckServerCertificateIfNeeded()) {
           listener = mListener;
           mListener = nullptr;
           mChannel = nullptr;
@@ -1003,6 +988,57 @@ void WebTransportSessionProxy::CallOnSessionClosed() {
     MutexAutoUnlock unlock(mMutex);
     listener->OnSessionClosed(cleanly, closeStatus, reason);
   }
+}
+
+bool WebTransportSessionProxy::CheckServerCertificateIfNeeded() {
+  if (mServerCertHashes.IsEmpty()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  MOZ_ASSERT(httpChannel, "Not a http channel ?");
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  httpChannel->GetSecurityInfo(getter_AddRefs(tsi));
+  MOZ_ASSERT(tsi,
+             "We shouln't reach this code before setting the security info.");
+  nsCOMPtr<nsIX509Cert> cert;
+  nsresult rv = tsi->GetServerCert(getter_AddRefs(cert));
+  if (!cert || NS_WARN_IF(NS_FAILED(rv))) return true;
+  nsTArray<uint8_t> certDER;
+  if (NS_FAILED(cert->GetRawDER(certDER))) {
+    return false;
+  }
+  // https://w3c.github.io/webtransport/#compute-a-certificate-hash
+  nsTArray<uint8_t> certHash;
+  if (NS_FAILED(Digest::DigestBuf(SEC_OID_SHA256, certDER.Elements(),
+                                  certDER.Length(), certHash)) ||
+      certHash.Length() != SHA256_LENGTH) {
+    return false;
+  }
+  auto verifyCertDer = [&certHash](const auto& hash) {
+    return certHash.Length() == hash.Length() &&
+           memcmp(certHash.Elements(), hash.Elements(), certHash.Length()) == 0;
+  };
+
+  // https://w3c.github.io/webtransport/#verify-a-certificate-hash
+  for (const auto& hash : mServerCertHashes) {
+    nsCString algorithm;
+    if (NS_FAILED(hash->GetAlgorithm(algorithm)) || algorithm != "sha-256") {
+      continue;
+      LOG(("Unexpected non-SHA-256 hash"));
+    }
+
+    nsTArray<uint8_t> value;
+    if (NS_FAILED(hash->GetValue(value))) {
+      continue;
+      LOG(("Unexpected corrupted hash"));
+    }
+
+    if (verifyCertDer(value)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void WebTransportSessionProxy::ChangeState(

@@ -222,9 +222,6 @@ class nsHttpConnectionInfo final : public ARefBase {
   void SetWebTransport(bool aWebTransport);
   bool GetWebTransport() const { return mWebTransport; }
 
-  void SetWebTransportId(uint64_t id);
-  uint32_t GetWebTransportId() const { return mWebTransportId; };
-
   const nsCString& GetNPNToken() { return mNPNToken; }
   const nsCString& GetUsername() { return mUsername; }
 
@@ -309,9 +306,6 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   bool mHasIPHintAddress = false;
   nsCString mEchConfig;
-
-  uint64_t mWebTransportId = 0;  // current dedicated Id only used for
-                                 // Webtransport, zero means not dedicated
 
   // for RefPtr
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo, override)

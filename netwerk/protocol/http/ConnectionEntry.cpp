@@ -1098,16 +1098,5 @@ void ConnectionEntry::SetRetryDifferentIPFamilyForHttp3(uint16_t aIPFamily) {
   MOZ_DIAGNOSTIC_ASSERT(mPreferIPv4 ^ mPreferIPv6);
 }
 
-void ConnectionEntry::SetServerCertHashes(
-    nsTArray<RefPtr<nsIWebTransportHash>>&& aHashes) {
-  mServerCertHashes = std::move(aHashes);
-}
-
-const nsTArray<RefPtr<nsIWebTransportHash>>&
-ConnectionEntry::GetServerCertHashes() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  return mServerCertHashes;
-}
-
 }  // namespace net
 }  // namespace mozilla

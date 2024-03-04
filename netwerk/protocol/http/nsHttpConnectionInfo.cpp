@@ -258,12 +258,6 @@ void nsHttpConnectionInfo::BuildHashKey() {
     }
   }
 
-  if (mWebTransportId) {
-    mHashKey.AppendLiteral("{wId");
-    mHashKey.AppendInt(mWebTransportId, 16);
-    mHashKey.AppendLiteral("}");
-  }
-
   nsAutoCString originAttributes;
   mOriginAttributes.CreateSuffix(originAttributes);
   mHashKey.Append(originAttributes);
@@ -332,7 +326,6 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   clone->SetIPv6Disabled(GetIPv6Disabled());
   clone->SetHasIPHintAddress(HasIPHintAddress());
   clone->SetEchConfig(GetEchConfig());
-  clone->SetWebTransportId(GetWebTransportId());
   MOZ_ASSERT(clone->Equals(this));
 
   return clone.forget();
@@ -425,7 +418,6 @@ void nsHttpConnectionInfo::SerializeHttpConnectionInfo(
   aArgs.hasIPHintAddress() = aInfo->HasIPHintAddress();
   aArgs.echConfig() = aInfo->GetEchConfig();
   aArgs.webTransport() = aInfo->GetWebTransport();
-  aArgs.webTransportId() = aInfo->GetWebTransportId();
 
   if (!aInfo->ProxyInfo()) {
     return;
@@ -456,8 +448,6 @@ nsHttpConnectionInfo::DeserializeHttpConnectionInfoCloneArgs(
         aInfoArgs.routedHost(), aInfoArgs.routedPort(), aInfoArgs.isHttp3(),
         aInfoArgs.webTransport());
   }
-  // Transfer Webtransport ids
-  cinfo->SetWebTransportId(aInfoArgs.webTransportId());
 
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
   cinfo->SetAnonymous(aInfoArgs.anonymous());
@@ -548,13 +538,6 @@ void nsHttpConnectionInfo::SetIPv6Disabled(bool aNoIPv6) {
 void nsHttpConnectionInfo::SetWebTransport(bool aWebTransport) {
   if (mWebTransport != aWebTransport) {
     mWebTransport = aWebTransport;
-    RebuildHashKey();
-  }
-}
-
-void nsHttpConnectionInfo::SetWebTransportId(uint64_t id) {
-  if (mWebTransportId != id) {
-    mWebTransportId = id;
     RebuildHashKey();
   }
 }
