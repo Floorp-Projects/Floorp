@@ -346,6 +346,12 @@ class SVGUtils final {
     // For a frame with a clip-path, if this flag is set then the result
     // will not be clipped to the bbox of the content inside the clip-path.
     eDoNotClipToBBoxOfContentInsideClipPath = 1 << 10,
+    // For some cases, e.g. when using transform-box: stroke-box, we may have
+    // the cyclical dependency if any of the elements in the subtree has
+    // non-scaling-stroke. In this case, we should break it and use
+    // transform-box:fill-box instead.
+    // https://github.com/w3c/csswg-drafts/issues/9640
+    eAvoidCycleIfNonScalingStroke = 1 << 11,
   };
   /**
    * This function in primarily for implementing the SVG DOM function getBBox()

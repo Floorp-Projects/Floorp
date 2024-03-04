@@ -9492,8 +9492,9 @@ nsRect nsLayoutUtils::ComputeSVGOriginBox(SVGViewportElement* aElement) {
 }
 
 /* static */
-nsRect nsLayoutUtils::ComputeSVGReferenceRect(nsIFrame* aFrame,
-                                              StyleGeometryBox aGeometryBox) {
+nsRect nsLayoutUtils::ComputeSVGReferenceRect(
+    nsIFrame* aFrame, StyleGeometryBox aGeometryBox,
+    MayHaveNonScalingStrokeCyclicDependency aMayHaveCyclicDependency) {
   MOZ_ASSERT(aFrame->GetContent()->IsSVGElement());
   nsRect r;
 
@@ -9502,9 +9503,12 @@ nsRect nsLayoutUtils::ComputeSVGReferenceRect(nsIFrame* aFrame,
       // XXX Bug 1299876
       // The size of stroke-box is not correct if this graphic element has
       // specific stroke-linejoin or stroke-linecap.
-      gfxRect bbox =
-          SVGUtils::GetBBox(aFrame, SVGUtils::eBBoxIncludeFillGeometry |
-                                        SVGUtils::eBBoxIncludeStroke);
+      const uint32_t flags = SVGUtils::eBBoxIncludeFillGeometry |
+                             SVGUtils::eBBoxIncludeStroke |
+                             (bool(aMayHaveCyclicDependency)
+                                  ? SVGUtils::eAvoidCycleIfNonScalingStroke
+                                  : 0);
+      gfxRect bbox = SVGUtils::GetBBox(aFrame, flags);
       r = nsLayoutUtils::RoundGfxRectToAppRect(bbox, AppUnitsPerCSSPixel());
       break;
     }

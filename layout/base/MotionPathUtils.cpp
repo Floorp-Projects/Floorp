@@ -111,9 +111,11 @@ CSSCoord MotionPathUtils::GetRayContainReferenceSize(nsIFrame* aFrame) {
   const auto size = CSSSize::FromAppUnits(
       (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)
            ? nsLayoutUtils::ComputeSVGReferenceRect(
-                 aFrame, aFrame->StyleSVGReset()->HasNonScalingStroke()
-                             ? StyleGeometryBox::FillBox
-                             : StyleGeometryBox::StrokeBox)
+                 aFrame,
+                 aFrame->StyleSVGReset()->HasNonScalingStroke()
+                     ? StyleGeometryBox::FillBox
+                     : StyleGeometryBox::StrokeBox,
+                 nsLayoutUtils::MayHaveNonScalingStrokeCyclicDependency::Yes)
            : nsLayoutUtils::ComputeHTMLReferenceRect(
                  aFrame, StyleGeometryBox::BorderBox))
           .Size());

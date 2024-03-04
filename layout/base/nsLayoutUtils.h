@@ -2913,7 +2913,13 @@ class nsLayoutUtils {
 
   // Compute the geometry box for SVG layout. The caller should map the CSS box
   // into the proper SVG box.
-  static nsRect ComputeSVGReferenceRect(nsIFrame*, StyleGeometryBox);
+  // |aMayHaveCyclicDependency| is used for stroke-box to avoid the cyclic
+  // dependency if any of its descendants uses non-scaling-stroke.
+  enum class MayHaveNonScalingStrokeCyclicDependency : bool { No, Yes };
+  static nsRect ComputeSVGReferenceRect(
+      nsIFrame*, StyleGeometryBox,
+      MayHaveNonScalingStrokeCyclicDependency =
+          MayHaveNonScalingStrokeCyclicDependency::No);
 
   // Compute the geometry box for CSS layout. The caller should map the SVG box
   // into the proper CSS box.
