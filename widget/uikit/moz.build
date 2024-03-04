@@ -7,12 +7,16 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget")
 
+with Files("*TextInput*"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 SOURCES += [
     "GfxInfo.cpp",
     "nsAppShell.mm",
     "nsLookAndFeel.mm",
     "nsWidgetFactory.mm",
     "nsWindow.mm",
+    "TextInputHandler.mm",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

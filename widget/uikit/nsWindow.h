@@ -15,6 +15,10 @@
 @class UIView;
 @class ChildView;
 
+namespace mozilla::widget {
+class TextInputHandler;
+}
+
 class nsWindow final : public nsBaseWidget {
   typedef nsBaseWidget Inherited;
 
@@ -79,6 +83,13 @@ class nsWindow final : public nsBaseWidget {
   void SetInputContext(const InputContext& aContext,
                        const InputContextAction& aAction) override;
   InputContext GetInputContext() override;
+  TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
+
+  mozilla::widget::TextInputHandler* GetTextInputHandler() const {
+    return mTextInputHandler;
+  }
+  bool IsVirtualKeyboardDisabled() const;
+
   /*
   virtual bool ExecuteNativeKeyBinding(
                       NativeKeyBindingsType aType,
@@ -102,7 +113,9 @@ class nsWindow final : public nsBaseWidget {
   nsSizeMode mSizeMode;
   nsTArray<nsWindow*> mChildren;
   nsWindow* mParent;
-  InputContext mInputContext;
+
+  mozilla::widget::InputContext mInputContext;
+  RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
 
   void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 

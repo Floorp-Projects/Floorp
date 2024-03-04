@@ -27,8 +27,10 @@
 #include "gfxUtils.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#include "nsObjCExceptions.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
+#include "TextInputHandler.h"
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ProfilerLabels.h"
@@ -70,7 +72,7 @@ class nsAutoRetainUIKitObject {
   id mObject;  // [STRONG]
 };
 
-@interface ChildView : UIView {
+@interface ChildView : UIView <UIKeyInput> {
  @public
   nsWindow* mGeckoChild;  // weak ref
   BOOL mWaitingForPaint;
@@ -278,6 +280,17 @@ class nsAutoRetainUIKitObject {
                 widget:mGeckoChild];
 }
 
+- (BOOL)canBecomeFirstResponder {
+  if (!mGeckoChild) {
+    return NO;
+  }
+
+  if (mGeckoChild->IsVirtualKeyboardDisabled()) {
+    return NO;
+  }
+  return YES;
+}
+
 - (void)setNeedsDisplayInRect:(CGRect)aRect {
   if ([self isUsingMainThreadOpenGL]) {
     // Draw without calling drawRect. This prevent us from
@@ -441,6 +454,44 @@ class nsAutoRetainUIKitObject {
   CGContextStrokeRect(aContext, aRect);
 #endif
 }
+
+// UIKeyInput
+
+- (void)insertText:(NSString*)text {
+  if (!mGeckoChild || mGeckoChild->Destroyed()) {
+    return;
+  }
+  widget::TextInputHandler* textInputHandler =
+      mGeckoChild->GetTextInputHandler();
+  if (!textInputHandler) {
+    return;
+  }
+  textInputHandler->InsertText(text);
+}
+
+- (void)deleteBackward {
+  if (!mGeckoChild || mGeckoChild->Destroyed()) {
+    return;
+  }
+  widget::TextInputHandler* textInputHandler =
+      mGeckoChild->GetTextInputHandler();
+  if (!textInputHandler) {
+    return;
+  }
+  textInputHandler->HandleCommand(Command::DeleteCharBackward);
+}
+
+- (BOOL)hasText {
+  if (!mGeckoChild || mGeckoChild->Destroyed()) {
+    return NO;
+  }
+  widget::InputContext context = mGeckoChild->GetInputContext();
+  if (context.mIMEState.mEnabled == mozilla::widget::IMEEnabled::Disabled) {
+    return NO;
+  }
+  return YES;
+}
+
 @end
 
 nsWindow::nsWindow()
@@ -516,6 +567,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     [nsAppShell::gTopLevelViews addObject:mNativeView];
   }
 
+  mTextInputHandler = new widget::TextInputHandler(this);
+
   return NS_OK;
 }
 
@@ -526,6 +579,11 @@ void nsWindow::Destroy() {
   }
 
   if (mParent) mParent->mChildren.RemoveElement(this);
+
+  if (mTextInputHandler) {
+    mTextInputHandler->OnDestroyed();
+  }
+  mTextInputHandler = nullptr;
 
   [mNativeView widgetDestroyed];
 
@@ -723,12 +781,42 @@ nsresult nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
 
 void nsWindow::SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction) {
-  // TODO: actually show VKB
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
   mInputContext = aContext;
+
+  if (IsVirtualKeyboardDisabled()) {
+    [mNativeView resignFirstResponder];
+    return;
+  }
+
+  [mNativeView becomeFirstResponder];
+
+  if (aAction.UserMightRequestOpenVKB()) {
+    [mNativeView reloadInputViews];
+  }
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-mozilla::widget::InputContext nsWindow::GetInputContext() {
+widget::InputContext nsWindow::GetInputContext() {
+  if (!mTextInputHandler) {
+    InputContext context;
+    context.mIMEState.mEnabled = IMEEnabled::Disabled;
+    context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+    return context;
+  }
   return mInputContext;
+}
+
+widget::TextEventDispatcherListener*
+nsWindow::GetNativeTextEventDispatcherListener() {
+  return mTextInputHandler;
+}
+
+bool nsWindow::IsVirtualKeyboardDisabled() const {
+  return mInputContext.mIMEState.mEnabled == IMEEnabled::Disabled ||
+         mInputContext.mHTMLInputMode.EqualsLiteral("none");
 }
 
 void nsWindow::SetBackgroundColor(const nscolor& aColor) {
