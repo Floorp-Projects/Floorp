@@ -11,7 +11,7 @@
   <script type="application/javascript">
 
 async function test() {
-  document.getElementById("overlay").addEventListener("touchstart", function(e) {
+  document.getElementById("overlay").addEventListener("touchstart", function() {
     // no need to do anything here. Just having a non-passive touchstart
     // listener will force APZ to wait for the main thread to handle the
     // touch event. The bug is that the touch-action:none property on the
@@ -34,7 +34,7 @@ async function test() {
   // This promise will resolve after the main thread has processed
   // all the synthesized touch events.
   let promiseTouchEnd = new Promise(resolve => {
-    var waitForTouchEnd = function(e) {
+    var waitForTouchEnd = function() {
       dump("touchend listener hit\n");
       resolve();
     };

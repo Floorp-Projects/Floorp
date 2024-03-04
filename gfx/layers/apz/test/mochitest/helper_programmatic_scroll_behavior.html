@@ -35,7 +35,7 @@ async function test() {
   // trigger one scroll event, so a scroll event count of 1 indicates that a
   // instant scroll was conducted.
   let scrollCount = 0;
-  window.addEventListener("scroll", (e) => {
+  window.addEventListener("scroll", () => {
     scrollCount += 1;
   });
 

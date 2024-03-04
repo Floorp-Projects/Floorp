@@ -70,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1274663
       windowutils.triggerDeviceReset();
 
       SimpleTest.waitForExplicitFinish();
-      window.addEventListener("MozAfterPaint", function paintHandle(e) {
+      window.addEventListener("MozAfterPaint", function paintHandle() {
          // Add more latency before calling runCanvasTest()
          // runCanvasTest() needs to be called after gecko's device reset handling.
          // Since Bug 1757879 fix, the triggerDeviceReset() does the device reset

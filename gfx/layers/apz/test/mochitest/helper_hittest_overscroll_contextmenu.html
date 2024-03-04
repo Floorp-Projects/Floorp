@@ -43,7 +43,7 @@ function startListeningForContextmenuEventsInChrome() {
       topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
     }
     let chromeReceivedContextmenu = false;
-    function chromeListener(e) {
+    function chromeListener() {
       chromeReceivedContextmenu = true;
     }
     topWin.addEventListener("contextmenu", chromeListener);
@@ -95,7 +95,7 @@ async function test() {
   let midGutter = 4 / deviceScale;  // gutter is 8 *screen* pixels
   startListeningForContextmenuEventsInChrome();
   let contentReceivedContextmenu = false;
-  let contentListener = function(e) {
+  let contentListener = function() {
     contentReceivedContextmenu = true;
   };
   document.addEventListener("contextmenu", contentListener);

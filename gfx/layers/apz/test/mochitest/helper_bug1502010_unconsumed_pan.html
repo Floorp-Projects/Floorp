@@ -38,7 +38,7 @@
 
     async function test() {
         var target = document.getElementById("carousel");
-        target.addEventListener("pointercancel", (event) => {
+        target.addEventListener("pointercancel", () => {
             ok(false, "Received pointercancel, uh-oh!");
             endEventReceived = true;
             setTimeout(checkForTestEnd, 0);

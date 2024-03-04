@@ -66,7 +66,7 @@ let make_oopif_scrollable = function() {
     FissionTestHelper.fireEventInEmbedder("OOPIF:Scrollable", result);
   });
   // Also register a scroll listener for when it actually gets scrolled.
-  window.addEventListener("scroll", function(e) {
+  window.addEventListener("scroll", function() {
     dump(`OOPIF got scroll event, now at ${window.scrollY}\n`);
     let result = { y: window.scrollY };
     FissionTestHelper.fireEventInEmbedder("OOPIF:Scrolled", result);

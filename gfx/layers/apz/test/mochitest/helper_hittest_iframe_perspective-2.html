@@ -44,7 +44,7 @@ async function test() {
       }
     });
 
-    window.addEventListener("mousedown", event => {
+    window.addEventListener("mousedown", () => {
       ok(true, "Parent document should have received mouse-down");
       resolve();
     });

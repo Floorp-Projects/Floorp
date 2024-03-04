@@ -62,14 +62,14 @@ waitUntilApzStable().then(async () => {
   let target0 = window.document.getElementById("target0");
   let target0_events = ["pointerdown", "pointermove"];
 
-  target0_events.forEach((elem, index, arr) => {
+  target0_events.forEach((elem) => {
     target0.addEventListener(elem, (event) => {
       is(event.type, target0_events[0], "receive " + event.type + " on target0");
       target0_events.shift();
     }, { once: true });
   });
 
-  target0.addEventListener("pointercancel", (event) => {
+  target0.addEventListener("pointercancel", () => {
     ok(false, "Shouldn't receive pointercancel when content prevents default on touchstart");
     // Wait until the event is done processing before we end the subtest,
     // otherwise on Android the pointer events pref is flipped back to false
@@ -81,7 +81,7 @@ waitUntilApzStable().then(async () => {
     event.preventDefault();
   }, { once: true });
 
-  target0.addEventListener("pointerup", (event) => {
+  target0.addEventListener("pointerup", () => {
     ok(!target0_events.length, " should receive " + target0_events + " on target0");
     // Wait until the event is done processing before we end the subtest,
     // otherwise on Android the pointer events pref is flipped back to false

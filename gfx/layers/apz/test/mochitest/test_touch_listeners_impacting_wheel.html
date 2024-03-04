@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1203140
 
 const kResponseTimeoutMs = 2 * 60 * 1000; // 2 minutes
 
-function takeSnapshots(e) {
+function takeSnapshots() {
   // Grab some snapshots, and make sure some of them are different (i.e. check
   // the page is scrolling in the compositor, concurrently with this wheel
   // listener running).
@@ -69,7 +69,7 @@ async function test() {
   // Ensure the div is layerized by scrolling it
   await promiseMoveMouseAndScrollWheelOver(box, 10, 10);
 
-  box.addEventListener("touchstart", function(e) {
+  box.addEventListener("touchstart", function() {
     ok(false, "This should never be run");
   });
   box.addEventListener("wheel", takeSnapshots, { capture: false, passive: true });

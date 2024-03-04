@@ -98,7 +98,7 @@ add_task(async () => {
       return new Promise(resolve => {
         content.window.addEventListener(
           "scroll",
-          event => {
+          () => {
             dump("Got a scroll event in the popup content document\n");
             resolve();
           },

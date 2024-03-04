@@ -11,7 +11,7 @@ div { height: 1000vh; }
 </style>
 <div id='target'></div>
 <script>
-window.addEventListener('wheel', (e) => {
+window.addEventListener('wheel', () => {
  const timeAtStart = window.performance.now();
  while (window.performance.now() - timeAtStart < 200) {
   // Make a 200ms busy state.

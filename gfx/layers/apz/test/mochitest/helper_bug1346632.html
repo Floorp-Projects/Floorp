@@ -28,7 +28,7 @@
 async function test() {
   var root = document.scrollingElement;
   var scrollPos = root.scrollTop;
-  var scrollPromise = new Promise((resolve, reject) => {
+  var scrollPromise = new Promise((resolve) => {
     document.addEventListener("scroll", () => {
       ok(root.scrollTop > scrollPos, "document scrolled after dragging scrollbar");
       resolve();
