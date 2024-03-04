@@ -3059,9 +3059,9 @@ class FactoryOp
 
   const PrincipalInfo mPrincipalInfo;
   OriginMetadata mOriginMetadata;
-  nsString mDatabaseName;
-  nsCString mDatabaseId;
-  nsString mDatabaseFilePath;
+  Maybe<nsString> mDatabaseName;
+  Maybe<nsCString> mDatabaseId;
+  Maybe<nsString> mDatabaseFilePath;
   int64_t mDirectoryLockId;
   const PersistenceType mPersistenceType;
   State mState;
@@ -3080,14 +3080,14 @@ class FactoryOp
   bool DatabaseFilePathIsKnown() const {
     AssertIsOnOwningThread();
 
-    return !mDatabaseFilePath.IsEmpty();
+    return mDatabaseFilePath.isSome();
   }
 
   const nsAString& DatabaseFilePath() const {
     AssertIsOnOwningThread();
-    MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
+    MOZ_ASSERT(mDatabaseFilePath);
 
-    return mDatabaseFilePath;
+    return mDatabaseFilePath.ref();
   }
 
   void NoteDatabaseBlocked(Database* aDatabase);
@@ -3106,8 +3106,8 @@ class FactoryOp
   FactoryOp(SafeRefPtr<Factory> aFactory,
             const Maybe<ContentParentId>& aContentParentId,
             const PersistenceType aPersistenceType,
-            const PrincipalInfo& aPrincipalInfo, const nsString& aDatabaseName,
-            bool aDeleting);
+            const PrincipalInfo& aPrincipalInfo,
+            const Maybe<nsString>& aDatabaseName, bool aDeleting);
 
   ~FactoryOp() override {
     // Normally this would be out-of-line since it is a virtual function but
@@ -3174,7 +3174,7 @@ class FactoryRequestOp : public FactoryOp,
       : FactoryOp(std::move(aFactory), aContentParentId,
                   aCommonParams.metadata().persistenceType(),
                   aCommonParams.principalInfo(),
-                  aCommonParams.metadata().name(), aDeleting),
+                  Some(aCommonParams.metadata().name()), aDeleting),
         mCommonParams(aCommonParams) {}
 
   // IPDL methods.
@@ -4967,6 +4967,7 @@ class Maintenance final : public Runnable {
   PRTime mStartTime;
   RefPtr<UniversalDirectoryLock> mPendingDirectoryLock;
   RefPtr<UniversalDirectoryLock> mDirectoryLock;
+  nsCOMPtr<nsIRunnable> mCompleteCallback;
   nsTArray<DirectoryInfo> mDirectoryInfos;
   nsTHashMap<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
   nsresult mResultCode;
@@ -5008,11 +5009,21 @@ class Maintenance final : public Runnable {
 
   void UnregisterDatabaseMaintenance(DatabaseMaintenance* aDatabaseMaintenance);
 
+  bool HasDatabaseMaintenances() const { return mDatabaseMaintenances.Count(); }
+
   RefPtr<DatabaseMaintenance> GetDatabaseMaintenance(
       const nsAString& aDatabasePath) const {
     AssertIsOnBackgroundThread();
 
     return mDatabaseMaintenances.Get(aDatabasePath);
+  }
+
+  void WaitForCompletion(nsIRunnable* aCallback) {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mDatabaseMaintenances.Count());
+    MOZ_ASSERT(!mCompleteCallback);
+
+    mCompleteCallback = aCallback;
   }
 
   void Stringify(nsACString& aResult) const;
@@ -10778,7 +10789,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mOpenDatabaseOp);
   MOZ_ASSERT(!!mActorWasAlive == !!mOpenDatabaseOp->mDatabase);
-  MOZ_ASSERT_IF(mActorWasAlive, !mOpenDatabaseOp->mDatabaseId.IsEmpty());
+  MOZ_ASSERT_IF(mActorWasAlive, !mOpenDatabaseOp->mDatabaseId.ref().IsEmpty());
 
   if (IsActorDestroyed() || !mActorWasAlive) {
     return;
@@ -12915,6 +12926,10 @@ void Maintenance::UnregisterDatabaseMaintenance(
     return;
   }
 
+  if (mCompleteCallback) {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback.forget()));
+  }
+
   mState = State::Finishing;
   Finish();
 }
@@ -14473,7 +14488,7 @@ FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
                      const Maybe<ContentParentId>& aContentParentId,
                      const PersistenceType aPersistenceType,
                      const PrincipalInfo& aPrincipalInfo,
-                     const nsString& aDatabaseName, bool aDeleting)
+                     const Maybe<nsString>& aDatabaseName, bool aDeleting)
     : DatabaseOperationBase(aFactory->GetLoggingInfo()->Id(),
                             aFactory->GetLoggingInfo()->NextRequestSN()),
       mFactory(std::move(aFactory)),
@@ -14532,7 +14547,7 @@ void FactoryOp::NoteDatabaseClosed(Database* const aDatabase) {
   }
 
   DatabaseActorInfo* info;
-  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
+  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId.ref(), &info));
   MOZ_ASSERT(info->mWaitingFactoryOp == this);
 
   if (AreActorsAlive()) {
@@ -14681,30 +14696,39 @@ nsresult FactoryOp::Open() {
     MOZ_ASSERT(false);
   }
 
-  QuotaManager::GetStorageId(mPersistenceType, mOriginMetadata.mOrigin,
-                             Client::IDB, mDatabaseId);
+  if (mDatabaseName.isSome()) {
+    nsCString databaseId;
 
-  mDatabaseId.Append('*');
-  mDatabaseId.Append(NS_ConvertUTF16toUTF8(mDatabaseName));
+    QuotaManager::GetStorageId(mPersistenceType, mOriginMetadata.mOrigin,
+                               Client::IDB, databaseId);
 
-  // Need to get database file path before opening the directory.
-  // XXX: For what reason?
-  QM_TRY_UNWRAP(
-      mDatabaseFilePath,
-      ([this, quotaManager]() -> mozilla::Result<nsString, nsresult> {
-        QM_TRY_INSPECT(const auto& dbFile,
-                       quotaManager->GetOriginDirectory(mOriginMetadata));
+    databaseId.Append('*');
+    databaseId.Append(NS_ConvertUTF16toUTF8(mDatabaseName.ref()));
 
-        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
-            NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
+    mDatabaseId = Some(std::move(databaseId));
 
-        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
-            GetDatabaseFilenameBase(mDatabaseName, mOriginMetadata.mIsPrivate) +
-            kSQLiteSuffix)));
+    // Need to get database file path before opening the directory.
+    // XXX: For what reason?
+    QM_TRY_UNWRAP(
+        auto databaseFilePath,
+        ([this, quotaManager]() -> mozilla::Result<nsString, nsresult> {
+          QM_TRY_INSPECT(const auto& dbFile,
+                         quotaManager->GetOriginDirectory(mOriginMetadata));
 
-        QM_TRY_RETURN(
-            MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
-      }()));
+          QM_TRY(MOZ_TO_RESULT(dbFile->Append(
+              NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
+
+          QM_TRY(MOZ_TO_RESULT(dbFile->Append(
+              GetDatabaseFilenameBase(mDatabaseName.ref(),
+                                      mOriginMetadata.mIsPrivate) +
+              kSQLiteSuffix)));
+
+          QM_TRY_RETURN(
+              MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
+        }()));
+
+    mDatabaseFilePath = Some(std::move(databaseFilePath));
+  }
 
   // Open directory
   mState = State::DirectoryOpenPending;
@@ -14728,7 +14752,6 @@ nsresult FactoryOp::DirectoryOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
   MOZ_ASSERT(gFactoryOps);
 
   // See if this FactoryOp needs to wait.
@@ -14756,10 +14779,15 @@ nsresult FactoryOp::DirectoryOpen() {
 
         if (RefPtr<Maintenance> currentMaintenance =
                 quotaClient->GetCurrentMaintenance()) {
-          if (RefPtr<DatabaseMaintenance> databaseMaintenance =
-                  currentMaintenance->GetDatabaseMaintenance(
-                      self.mDatabaseFilePath)) {
-            databaseMaintenance->WaitForCompletion(&self);
+          if (self.mDatabaseFilePath.isSome()) {
+            if (RefPtr<DatabaseMaintenance> databaseMaintenance =
+                    currentMaintenance->GetDatabaseMaintenance(
+                        self.mDatabaseFilePath.ref())) {
+              databaseMaintenance->WaitForCompletion(&self);
+              return true;
+            }
+          } else if (currentMaintenance->HasDatabaseMaintenances()) {
+            currentMaintenance->WaitForCompletion(&self);
             return true;
           }
         }
@@ -14802,13 +14830,13 @@ void FactoryOp::WaitForTransactions() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::BeginVersionChange ||
              mState == State::WaitingForOtherDatabasesToClose);
-  MOZ_ASSERT(!mDatabaseId.IsEmpty());
+  MOZ_ASSERT(!mDatabaseId.ref().IsEmpty());
   MOZ_ASSERT(!IsActorDestroyed());
 
   mState = State::WaitingForTransactionsToComplete;
 
   RefPtr<WaitForTransactionsHelper> helper =
-      new WaitForTransactionsHelper(mDatabaseId, this);
+      new WaitForTransactionsHelper(mDatabaseId.ref(), this);
   helper->WaitForTransactions();
 }
 
@@ -14885,11 +14913,23 @@ nsresult FactoryOp::SendVersionChangeMessages(
 bool FactoryOp::MustWaitFor(const FactoryOp& aExistingOp) {
   AssertIsOnOwningThread();
 
-  // Things for the same persistence type, the same origin and the same
-  // database must wait.
-  return aExistingOp.mPersistenceType == mPersistenceType &&
-         aExistingOp.mOriginMetadata.mOrigin == mOriginMetadata.mOrigin &&
-         aExistingOp.mDatabaseId == mDatabaseId;
+  // If the persistence types don't overlap, the op can proceed.
+  if (aExistingOp.mPersistenceType != mPersistenceType) {
+    return false;
+  }
+
+  // If the origins don't overlap, the op can proceed.
+  if (aExistingOp.mOriginMetadata.mOrigin != mOriginMetadata.mOrigin) {
+    return false;
+  }
+
+  // If the database ids don't overlap, the op can proceed.
+  if (!aExistingOp.mDatabaseId.isNothing() && !mDatabaseId.isNothing() &&
+      aExistingOp.mDatabaseId.ref() != mDatabaseId.ref()) {
+    return false;
+  }
+
+  return true;
 }
 
 // Run() assumes that the caller holds a strong reference to the object that
@@ -15113,7 +15153,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
         const auto& databaseFilePath,
         MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
 
-    MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+    MOZ_ASSERT(databaseFilePath == mDatabaseFilePath.ref());
   }
 #endif
 
@@ -15130,7 +15170,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 
   if (!fileManager) {
     fileManager = MakeSafeRefPtr<DatabaseFileManager>(
-        persistenceType, mOriginMetadata, databaseName, mDatabaseId,
+        persistenceType, mOriginMetadata, databaseName, mDatabaseId.ref(),
         mEnforcingQuota, mInPrivateBrowsing);
   }
 
@@ -15571,7 +15611,7 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   MOZ_ASSERT(!mDatabase->IsClosed());
 
   DatabaseActorInfo* info;
-  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
+  MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId.ref(), &info));
 
   MOZ_ASSERT(info->mLiveDatabases.Contains(mDatabase.unsafeGetRawPtr()));
   MOZ_ASSERT(!info->mWaitingFactoryOp);
@@ -15715,9 +15755,9 @@ void OpenDatabaseOp::SendResults() {
   MOZ_ASSERT_IF(!HasFailed(), !mVersionChangeTransaction);
 
   DebugOnly<DatabaseActorInfo*> info = nullptr;
-  MOZ_ASSERT_IF(
-      gLiveDatabaseHashtable && gLiveDatabaseHashtable->Get(mDatabaseId, &info),
-      !info->mWaitingFactoryOp);
+  MOZ_ASSERT_IF(mDatabaseId.isSome() && gLiveDatabaseHashtable &&
+                    gLiveDatabaseHashtable->Get(mDatabaseId.ref(), &info),
+                !info->mWaitingFactoryOp);
 
   if (mVersionChangeTransaction) {
     MOZ_ASSERT(HasFailed());
@@ -15783,7 +15823,7 @@ void OpenDatabaseOp::SendResults() {
         &OpenDatabaseOp::ConnectionClosedCallback);
 
     RefPtr<WaitForTransactionsHelper> helper =
-        new WaitForTransactionsHelper(mDatabaseId, callback);
+        new WaitForTransactionsHelper(mDatabaseId.ref(), callback);
     helper->WaitForTransactions();
   } else {
     CleanupMetadata();
@@ -15808,7 +15848,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
              mState == State::DatabaseWorkVersionChange ||
              mState == State::SendingResults);
   MOZ_ASSERT(!HasFailed());
-  MOZ_ASSERT(!mDatabaseFilePath.IsEmpty());
+  MOZ_ASSERT(mDatabaseFilePath.isSome());
   MOZ_ASSERT(!IsActorDestroyed());
 
   if (mDatabase) {
@@ -15816,13 +15856,13 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   }
 
   MOZ_ASSERT(mMetadata->mDatabaseId.IsEmpty());
-  mMetadata->mDatabaseId = mDatabaseId;
+  mMetadata->mDatabaseId = mDatabaseId.ref();
 
   MOZ_ASSERT(mMetadata->mFilePath.IsEmpty());
-  mMetadata->mFilePath = mDatabaseFilePath;
+  mMetadata->mFilePath = mDatabaseFilePath.ref();
 
   DatabaseActorInfo* info;
-  if (gLiveDatabaseHashtable->Get(mDatabaseId, &info)) {
+  if (gLiveDatabaseHashtable->Get(mDatabaseId.ref(), &info)) {
     AssertMetadataConsistency(*info->mMetadata);
     mMetadata = info->mMetadata.clonePtr();
   }
@@ -15849,7 +15889,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
     // XXX Maybe use LookupOrInsertWith above, to avoid a second lookup here?
     info = gLiveDatabaseHashtable
                ->InsertOrUpdate(
-                   mDatabaseId,
+                   mDatabaseId.ref(),
                    MakeUnique<DatabaseActorInfo>(
                        mMetadata.clonePtr(),
                        WrapNotNullUnchecked(mDatabase.unsafeGetRawPtr())))
@@ -16144,7 +16184,7 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
 
   if (!fileManager) {
     fileManager = MakeSafeRefPtr<DatabaseFileManager>(
-        persistenceType, mOriginMetadata, databaseName, mDatabaseId,
+        persistenceType, mOriginMetadata, databaseName, mDatabaseId.ref(),
         mEnforcingQuota, mInPrivateBrowsing);
   }
 
@@ -16253,7 +16293,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
         const auto& databaseFilePath,
         MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
 
-    MOZ_ASSERT(databaseFilePath == mDatabaseFilePath);
+    MOZ_ASSERT(databaseFilePath == mDatabaseFilePath.ref());
   }
 #endif
 
@@ -16287,7 +16327,7 @@ nsresult DeleteDatabaseOp::BeginVersionChange() {
   }
 
   DatabaseActorInfo* info;
-  if (gLiveDatabaseHashtable->Get(mDatabaseId, &info)) {
+  if (gLiveDatabaseHashtable->Get(mDatabaseId.ref(), &info)) {
     MOZ_ASSERT(!info->mWaitingFactoryOp);
 
     nsresult rv =
@@ -16361,9 +16401,9 @@ void DeleteDatabaseOp::SendResults() {
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
 
   DebugOnly<DatabaseActorInfo*> info = nullptr;
-  MOZ_ASSERT_IF(
-      gLiveDatabaseHashtable && gLiveDatabaseHashtable->Get(mDatabaseId, &info),
-      !info->mWaitingFactoryOp);
+  MOZ_ASSERT_IF(gLiveDatabaseHashtable &&
+                    gLiveDatabaseHashtable->Get(mDatabaseId.ref(), &info),
+                !info->mWaitingFactoryOp);
 
   if (!IsActorDestroyed()) {
     FactoryRequestResponse response;
@@ -16444,7 +16484,7 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
 
     // Inform all the other databases that they are now invalidated. That
     // should remove the previous metadata from our table.
-    if (gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId, &info)) {
+    if (gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId.ref(), &info)) {
       MOZ_ASSERT(!info->mLiveDatabases.IsEmpty());
       MOZ_ASSERT(!info->mWaitingFactoryOp);
 
@@ -16470,7 +16510,7 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
           database->Invalidate();
         }
 
-        MOZ_ASSERT(!gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId));
+        MOZ_ASSERT(!gLiveDatabaseHashtable->Get(deleteOp->mDatabaseId.ref()));
       }
     }
   }
