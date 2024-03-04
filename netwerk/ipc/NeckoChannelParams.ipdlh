@@ -420,6 +420,7 @@ struct HttpConnectionInfoCloneArgs
   nsCString topWindowOrigin;
   bool isHttp3;
   bool webTransport;
+  uint64_t webTransportId;
   bool hasIPHintAddress;
   nsCString echConfig;
   ProxyInfoCloneArgs[] proxyInfo;

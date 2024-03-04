@@ -200,6 +200,10 @@ class ConnectionEntry {
   bool AllowToRetryDifferentIPFamilyForHttp3(nsresult aError);
   void SetRetryDifferentIPFamilyForHttp3(uint16_t aIPFamily);
 
+  void SetServerCertHashes(nsTArray<RefPtr<nsIWebTransportHash>>&& aHashes);
+
+  const nsTArray<RefPtr<nsIWebTransportHash>>& GetServerCertHashes();
+
  private:
   void InsertIntoIdleConnections_internal(nsHttpConnection* conn);
   void RemoveFromIdleConnectionsIndex(size_t inx);
@@ -218,6 +222,9 @@ class ConnectionEntry {
 
   nsTArray<RefPtr<DnsAndConnectSocket>>
       mDnsAndConnectSockets;  // dns resolution and half open connections
+
+  // If serverCertificateHashes are used, these are stored here
+  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes;
 
   PendingTransactionQueue mPendingQ;
   ~ConnectionEntry();

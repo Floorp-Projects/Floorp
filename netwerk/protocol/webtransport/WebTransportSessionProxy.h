@@ -121,6 +121,7 @@ class WebTransportStreamCallbackWrapper;
 
 class WebTransportSessionProxy final : public nsIWebTransport,
                                        public WebTransportSessionEventListener,
+                                       public WebTransportConnectionSettings,
                                        public nsIStreamListener,
                                        public nsIChannelEventSink,
                                        public nsIRedirectResultListener,
@@ -129,6 +130,7 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBTRANSPORT
   NS_DECL_WEBTRANSPORTSESSIONEVENTLISTENER
+  NS_DECL_WEBTRANSPORTCONNECTIONSETTINGS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSICHANNELEVENTSINK
@@ -170,11 +172,9 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   void OnMaxDatagramSizeInternal(uint64_t aSize);
   void OnOutgoingDatagramOutComeInternal(
       uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome);
-  bool CheckServerCertificateIfNeeded();
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIChannel> mRedirectChannel;
-  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes;
   nsCOMPtr<WebTransportSessionEventListener> mListener MOZ_GUARDED_BY(mMutex);
   RefPtr<Http3WebTransportSession> mWebTransportSession MOZ_GUARDED_BY(mMutex);
   uint64_t mSessionId MOZ_GUARDED_BY(mMutex) = UINT64_MAX;
@@ -188,6 +188,8 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   nsTArray<std::function<void(nsresult)>> mPendingCreateStreamEvents
       MOZ_GUARDED_BY(mMutex);
   nsCOMPtr<nsIEventTarget> mTarget MOZ_GUARDED_BY(mMutex);
+  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes;
+  bool mDedicatedConnection;  // for WebTranport
 };
 
 }  // namespace mozilla::net
