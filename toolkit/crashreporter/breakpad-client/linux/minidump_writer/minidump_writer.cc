@@ -717,8 +717,16 @@ class MinidumpWriter {
 
     char file_name[NAME_MAX];
     char file_path[NAME_MAX];
-    dumper_->GetMappingEffectiveNameAndPath(
-        mapping, file_path, sizeof(file_path), file_name, sizeof(file_name));
+    uint32_t version[4] = { 0, 0, 0, 0 };
+    dumper_->GetMappingEffectiveNamePathAndVersion(
+        mapping, file_path, sizeof(file_path), file_name, sizeof(file_name), version);
+
+    mod->version_info.signature = MD_VSFIXEDFILEINFO_SIGNATURE;
+    mod->version_info.struct_version |= MD_VSFIXEDFILEINFO_VERSION;
+    mod->version_info.file_version_hi = version[0];
+    mod->version_info.file_version_lo = version[1];
+    mod->version_info.product_version_hi = version[2];
+    mod->version_info.product_version_lo = version[3];
 
     MDLocationDescriptor ld;
     if (!minidump_writer_.WriteString(file_path, my_strlen(file_path), &ld))

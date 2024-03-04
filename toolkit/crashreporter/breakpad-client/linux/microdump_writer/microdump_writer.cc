@@ -466,8 +466,8 @@ class MicrodumpWriter {
 
     char file_name[NAME_MAX];
     char file_path[NAME_MAX];
-    dumper_->GetMappingEffectiveNameAndPath(
-        mapping, file_path, sizeof(file_path), file_name, sizeof(file_name));
+    dumper_->GetMappingEffectiveNamePathAndVersion(
+        mapping, file_path, sizeof(file_path), file_name, sizeof(file_name), nullptr);
 
     LogAppend("M ");
     LogAppend(static_cast<uintptr_t>(mapping.start_addr));

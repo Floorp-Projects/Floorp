@@ -468,11 +468,12 @@ bool ElfFileSoName(const LinuxDumper& dumper,
 }  // namespace
 
 
-void LinuxDumper::GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
+void LinuxDumper::GetMappingEffectiveNamePathAndVersion(const MappingInfo& mapping,
                                                  char* file_path,
                                                  size_t file_path_size,
                                                  char* file_name,
-                                                 size_t file_name_size) {
+                                                 size_t file_name_size,
+                                                 uint32_t* version) {
   my_strlcpy(file_path, mapping.name, file_path_size);
 
   // Tools such as minidump_stackwalk use the name of the module to look up
@@ -487,6 +488,9 @@ void LinuxDumper::GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
     const char* basename = my_strrchr(file_path, '/');
     basename = basename == NULL ? file_path : (basename + 1);
     my_strlcpy(file_name, basename, file_name_size);
+    if (version) {
+      ElfFileSoVersion(mapping.name, version);
+    }
     return;
   }
 
@@ -511,6 +515,10 @@ void LinuxDumper::GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
     } else {
       my_strlcpy(file_path, file_name, file_path_size);
     }
+  }
+
+  if (version) {
+    ElfFileSoVersion(mapping.name, version);
   }
 }
 

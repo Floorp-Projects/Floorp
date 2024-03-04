@@ -56,6 +56,10 @@
 #include "common/memory_allocator.h"
 #include "google_breakpad/common/minidump_format.h"
 
+#if defined(XP_LINUX)
+#  include "linux_utils.h"
+#endif // defined(XP_LINUX)
+
 namespace google_breakpad {
 
 // Typedef for our parsing of the auxv variables in /proc/pid/auxv.
@@ -213,11 +217,12 @@ class LinuxDumper {
   // other cases, however, a library can be mapped from an archive (e.g., when
   // loading .so libs from an apk on Android) and this method is able to
   // reconstruct the original file name.
-  void GetMappingEffectiveNameAndPath(const MappingInfo& mapping,
+  void GetMappingEffectiveNamePathAndVersion(const MappingInfo& mapping,
                                       char* file_path,
                                       size_t file_path_size,
                                       char* file_name,
-                                      size_t file_name_size);
+                                      size_t file_name_size,
+                                      uint32_t* version);
 
  protected:
   bool ReadAuxv();
