@@ -58,6 +58,70 @@ enum class IsAccessibilityElementRule {
   IfBrokenUp,
 };
 
+class Trait {
+ public:
+  static const uint64_t None = 0;
+  static const uint64_t Button = ((uint64_t)0x1) << 0;
+  static const uint64_t Link = ((uint64_t)0x1) << 1;
+  static const uint64_t Image = ((uint64_t)0x1) << 2;
+  static const uint64_t Selected = ((uint64_t)0x1) << 3;
+  static const uint64_t PlaysSound = ((uint64_t)0x1) << 4;
+  static const uint64_t KeyboardKey = ((uint64_t)0x1) << 5;
+  static const uint64_t StaticText = ((uint64_t)0x1) << 6;
+  static const uint64_t SummaryElement = ((uint64_t)0x1) << 7;
+  static const uint64_t NotEnabled = ((uint64_t)0x1) << 8;
+  static const uint64_t UpdatesFrequently = ((uint64_t)0x1) << 9;
+  static const uint64_t SearchField = ((uint64_t)0x1) << 10;
+  static const uint64_t StartsMediaSession = ((uint64_t)0x1) << 11;
+  static const uint64_t Adjustable = ((uint64_t)0x1) << 12;
+  static const uint64_t AllowsDirectInteraction = ((uint64_t)0x1) << 13;
+  static const uint64_t CausesPageTurn = ((uint64_t)0x1) << 14;
+  static const uint64_t TabBar = ((uint64_t)0x1) << 15;
+  static const uint64_t Header = ((uint64_t)0x1) << 16;
+  static const uint64_t WebContent = ((uint64_t)0x1) << 17;
+  static const uint64_t TextEntry = ((uint64_t)0x1) << 18;
+  static const uint64_t PickerElement = ((uint64_t)0x1) << 19;
+  static const uint64_t RadioButton = ((uint64_t)0x1) << 20;
+  static const uint64_t IsEditing = ((uint64_t)0x1) << 21;
+  static const uint64_t LaunchIcon = ((uint64_t)0x1) << 22;
+  static const uint64_t StatusBarElement = ((uint64_t)0x1) << 23;
+  static const uint64_t SecureTextField = ((uint64_t)0x1) << 24;
+  static const uint64_t Inactive = ((uint64_t)0x1) << 25;
+  static const uint64_t Footer = ((uint64_t)0x1) << 26;
+  static const uint64_t BackButton = ((uint64_t)0x1) << 27;
+  static const uint64_t TabButton = ((uint64_t)0x1) << 28;
+  static const uint64_t AutoCorrectCandidate = ((uint64_t)0x1) << 29;
+  static const uint64_t DeleteKey = ((uint64_t)0x1) << 30;
+  static const uint64_t SelectionDismissesItem = ((uint64_t)0x1) << 31;
+  static const uint64_t Visited = ((uint64_t)0x1) << 32;
+  static const uint64_t Scrollable = ((uint64_t)0x1) << 33;
+  static const uint64_t Spacer = ((uint64_t)0x1) << 34;
+  static const uint64_t TableIndex = ((uint64_t)0x1) << 35;
+  static const uint64_t Map = ((uint64_t)0x1) << 36;
+  static const uint64_t TextOperationsAvailable = ((uint64_t)0x1) << 37;
+  static const uint64_t Draggable = ((uint64_t)0x1) << 38;
+  static const uint64_t GesturePracticeRegion = ((uint64_t)0x1) << 39;
+  static const uint64_t PopupButton = ((uint64_t)0x1) << 40;
+  static const uint64_t AllowsNativeSliding = ((uint64_t)0x1) << 41;
+  static const uint64_t MathEquation = ((uint64_t)0x1) << 42;
+  static const uint64_t ContainedByTable = ((uint64_t)0x1) << 43;
+  static const uint64_t ContainedByList = ((uint64_t)0x1) << 44;
+  static const uint64_t TouchContainer = ((uint64_t)0x1) << 45;
+  static const uint64_t SupportsZoom = ((uint64_t)0x1) << 46;
+  static const uint64_t TextArea = ((uint64_t)0x1) << 47;
+  static const uint64_t BookContent = ((uint64_t)0x1) << 48;
+  static const uint64_t ContainedByLandmark = ((uint64_t)0x1) << 49;
+  static const uint64_t FolderIcon = ((uint64_t)0x1) << 50;
+  static const uint64_t ReadOnly = ((uint64_t)0x1) << 51;
+  static const uint64_t MenuItem = ((uint64_t)0x1) << 52;
+  static const uint64_t Toggle = ((uint64_t)0x1) << 53;
+  static const uint64_t IgnoreItemChooser = ((uint64_t)0x1) << 54;
+  static const uint64_t SupportsTrackingDetail = ((uint64_t)0x1) << 55;
+  static const uint64_t Alert = ((uint64_t)0x1) << 56;
+  static const uint64_t ContainedByFieldset = ((uint64_t)0x1) << 57;
+  static const uint64_t AllowsLayoutChangeInStatusBar = ((uint64_t)0x1) << 58;
+};
+
 #pragma mark -
 
 @interface NSObject (AccessibilityPrivate)
@@ -222,8 +286,107 @@ static bool isAccessibilityElementInternal(Accessible* aAccessible) {
   return nil;
 }
 
+static uint64_t GetAccessibilityTraits(Accessible* aAccessible) {
+  uint64_t state = aAccessible->State();
+  uint64_t traits = Trait::WebContent;
+  switch (aAccessible->Role()) {
+    case roles::LINK:
+      traits |= Trait::Link;
+      break;
+    case roles::GRAPHIC:
+      traits |= Trait::Image;
+      break;
+    case roles::PAGETAB:
+      traits |= Trait::TabButton;
+      break;
+    case roles::PUSHBUTTON:
+    case roles::SUMMARY:
+    case roles::COMBOBOX:
+    case roles::BUTTONMENU:
+    case roles::TOGGLE_BUTTON:
+    case roles::CHECKBUTTON:
+    case roles::SWITCH:
+      traits |= Trait::Button;
+      break;
+    case roles::RADIOBUTTON:
+      traits |= Trait::RadioButton;
+      break;
+    case roles::HEADING:
+      traits |= Trait::Header;
+      break;
+    case roles::STATICTEXT:
+    case roles::TEXT_LEAF:
+      traits |= Trait::StaticText;
+      break;
+    case roles::SLIDER:
+    case roles::SPINBUTTON:
+      traits |= Trait::Adjustable;
+      break;
+    case roles::MENUITEM:
+    case roles::PARENT_MENUITEM:
+    case roles::CHECK_MENU_ITEM:
+    case roles::RADIO_MENU_ITEM:
+      traits |= Trait::MenuItem;
+      break;
+    case roles::PASSWORD_TEXT:
+      traits |= Trait::SecureTextField;
+      break;
+    default:
+      break;
+  }
+
+  if ((traits & Trait::Link) && (state & states::TRAVERSED)) {
+    traits |= Trait::Visited;
+  }
+
+  if ((traits & Trait::Button) && (state & states::HASPOPUP)) {
+    traits |= Trait::PopupButton;
+  }
+
+  if (state & states::SELECTED) {
+    traits |= Trait::Selected;
+  }
+
+  if (state & states::CHECKABLE) {
+    traits |= Trait::Toggle;
+  }
+
+  if (!(state & states::ENABLED)) {
+    traits |= Trait::NotEnabled;
+  }
+
+  if (state & states::EDITABLE) {
+    traits |= Trait::TextEntry;
+    if (state & states::FOCUSED) {
+      // XXX: Also add "has text cursor" trait
+      traits |= Trait::TextOperationsAvailable;
+    }
+
+    if (aAccessible->IsSearchbox()) {
+      traits |= Trait::SearchField;
+    }
+
+    if (state & states::MULTI_LINE) {
+      traits |= Trait::TextArea;
+    }
+  }
+
+  return traits;
+}
+
 - (uint64_t)accessibilityTraits {
-  return 1ul << 17;  // web content
+  if (!mGeckoAccessible) {
+    return Trait::None;
+  }
+
+  uint64_t traits = GetAccessibilityTraits(mGeckoAccessible);
+
+  for (Accessible* parent = mGeckoAccessible->Parent(); parent;
+       parent = parent->Parent()) {
+    traits |= GetAccessibilityTraits(parent);
+  }
+
+  return traits;
 }
 
 - (NSInteger)accessibilityElementCount {
