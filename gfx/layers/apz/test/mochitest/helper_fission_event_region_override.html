@@ -29,7 +29,7 @@ let code_for_oopif_to_run = function() {
     let result = { x: e.clientX, y: e.clientY };
     FissionTestHelper.fireEventInEmbedder("OOPIF:WheelData", result);
   }, { passive: true });
-  document.addEventListener("scroll", function(e) {
+  document.addEventListener("scroll", function() {
     dump(`OOPIF got scroll to ${window.scrollX},${window.scrollY}\n`);
     let result = { x: window.scrollX, y: window.scrollY };
     FissionTestHelper.fireEventInEmbedder("OOPIF:Scrolled", result);

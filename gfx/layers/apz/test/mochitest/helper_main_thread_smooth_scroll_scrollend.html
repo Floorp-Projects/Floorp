@@ -25,7 +25,7 @@
 async function test() {
   let scrollendCount = 0;
 
-  window.addEventListener("scrollend", e => {
+  window.addEventListener("scrollend", () => {
     scrollendCount += 1;
   });
 

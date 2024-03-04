@@ -45,7 +45,7 @@ async function test() {
       e.stopPropagation();  // do not propagate event to |fixed| ancestor
       resolve();
     });
-    fixed.addEventListener("click", e => {
+    fixed.addEventListener("click", () => {
       // Since target's listener calls stopPropagation(), if we get here
       // then the coordinates of the click event did not correspond to
       // |target|, but somewhere else on |fixed|.

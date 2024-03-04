@@ -19,7 +19,7 @@
     let utils = SpecialPowers.getDOMWindowUtils(window);
 
     let timeStamp = document.timeline.currentTime;
-    async function sendScrollEvent(aRafTimestamp) {
+    async function sendScrollEvent() {
       if (i < scrollEvents) {
         if (timeStamp == document.timeline.currentTime) {
           // If we are in a rAF callback at the same time stamp we've already

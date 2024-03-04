@@ -63,7 +63,7 @@ function startListeningForClickEventsInChrome() {
       topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
     }
     let chromeReceivedClick = false;
-    function chromeListener(e) {
+    function chromeListener() {
       chromeReceivedClick = true;
     }
     topWin.addEventListener("click", chromeListener);

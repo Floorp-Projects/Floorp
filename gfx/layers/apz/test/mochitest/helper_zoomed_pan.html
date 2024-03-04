@@ -42,7 +42,7 @@
           x: 0,
           y: 0,
           dx: (width) => -computeDelta(width),
-          dy: (height) => 0,
+          dy: () => 0,
           expected: {
             x: [OFFSET_CSS_PX, "x-offset was adjusted"],
             y: [0, "y-offset was not affected"],
@@ -51,7 +51,7 @@
         {
           x: OFFSET_CSS_PX,
           y: 0,
-          dx: (width) => 0,
+          dx: () => 0,
           dy: (height) => -computeDelta(height),
           expected: {
             x: [OFFSET_CSS_PX, "x-offset was not affected"],

@@ -72,7 +72,7 @@ async function test() {
       e.stopPropagation();  // do not propagate event to ancestors
       resolve();
     });
-    fixed.addEventListener("click", e => {
+    fixed.addEventListener("click", () => {
       // Since target's listener calls stopPropagation(), if we get here
       // then the coordinates of the click event did not correspond to
       // |target|, but somewhere else on |fixed|.
@@ -82,7 +82,7 @@ async function test() {
       todo(false, "Fixed ancestor should not be hit");
       resolve();
     });
-    window.addEventListener("click", e => {
+    window.addEventListener("click", () => {
       // Similarly, the root content document's window should not be hit.
       ok(false, "Root document should not be hit");
       resolve();

@@ -74,7 +74,7 @@ async function doTest() {
         return new Promise(resolve => {
           content.addEventListener(
             "scroll",
-            event => {
+            () => {
               dump("Got a scroll event in the iframe\n");
               resolve();
             },

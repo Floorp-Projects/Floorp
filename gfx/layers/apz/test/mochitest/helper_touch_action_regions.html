@@ -293,7 +293,7 @@ function* test(testDriver) {
 //   waitUntilApzStable().then(runContinuation(myTest));
 function runContinuation(testFunction) {
   return function() {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var testContinuation = null;
 
       function driveTest() {

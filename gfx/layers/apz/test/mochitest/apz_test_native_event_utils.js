@@ -498,7 +498,7 @@ async function promiseNativeTouchpadPanEventAndWaitForObserver(
 
   return new Promise(resolve => {
     var observer = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (aTopic == "touchpadpanevent") {
           resolve();
         }
@@ -557,7 +557,7 @@ function promiseNativePanGestureEventAndWaitForObserver(
 ) {
   return new Promise(resolve => {
     var observer = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (aTopic == "mousescrollevent") {
           resolve();
         }
@@ -588,7 +588,7 @@ function promiseNativeWheelAndWaitForObserver(
 ) {
   return new Promise(resolve => {
     var observer = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (aTopic == "mousescrollevent") {
           resolve();
         }
@@ -614,7 +614,7 @@ function promiseNativeWheelAndWaitForWheelEvent(
     var targetWindow = windowForTarget(aTarget);
     targetWindow.addEventListener(
       "wheel",
-      function (e) {
+      function () {
         setTimeout(resolve, 0);
       },
       { once: true }
@@ -1566,7 +1566,7 @@ function promiseScrollend(aTarget = window) {
 function promiseTouchEnd(element, count = 1) {
   return new Promise(resolve => {
     var eventCount = 0;
-    var counterFunction = function (e) {
+    var counterFunction = function () {
       eventCount++;
       if (eventCount == count) {
         element.removeEventListener("touchend", counterFunction, {
@@ -1816,7 +1816,7 @@ async function panRightToLeftUpdate(aElement, aX, aY, aMultiplier) {
   );
 }
 
-async function panRightToLeftEnd(aElement, aX, aY, aMultiplier) {
+async function panRightToLeftEnd(aElement, aX, aY) {
   await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
@@ -1869,7 +1869,7 @@ async function panLeftToRightUpdate(aElement, aX, aY, aMultiplier) {
   );
 }
 
-async function panLeftToRightEnd(aElement, aX, aY, aMultiplier) {
+async function panLeftToRightEnd(aElement, aX, aY) {
   await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,

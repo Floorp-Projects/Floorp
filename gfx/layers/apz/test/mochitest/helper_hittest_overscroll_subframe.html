@@ -84,7 +84,7 @@ async function test() {
   // This makes sure we catch the case where the overscroll transform causes
   // the event to incorrectly target the document.
   let receivedClick = false;
-  let listener = function(e) {
+  let listener = function() {
     receivedClick = true;
   };
   document.addEventListener("click", listener);
