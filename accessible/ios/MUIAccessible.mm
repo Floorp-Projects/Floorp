@@ -37,6 +37,27 @@ static NSString* ToNSString(const nsAString& aString) {
                                  length:aString.Length()];
 }
 
+// These rules offer conditions for whether a gecko accessible
+// should be considered a UIKit accessibility element. Each role is mapped to a
+// rule.
+enum class IsAccessibilityElementRule {
+  // Always yes
+  Yes,
+  // Always no
+  No,
+  // If the accessible has no children. For example an empty header
+  // which is labeled.
+  IfChildless,
+  // If the accessible has no children and it is named and focusable.
+  IfChildlessWithNameAndFocusable,
+  // If this accessible isn't a child of an accessibility element. For example,
+  // a text leaf child of a button.
+  IfParentIsntElementWithName,
+  // If this accessible has multiple leafs that should functionally be
+  // united, for example a link with span elements.
+  IfBrokenUp,
+};
+
 #pragma mark -
 
 @interface NSObject (AccessibilityPrivate)
@@ -69,16 +90,89 @@ static NSString* ToNSString(const nsAString& aString) {
   [super dealloc];
 }
 
+static bool isAccessibilityElementInternal(Accessible* aAccessible) {
+  MOZ_ASSERT(aAccessible);
+  IsAccessibilityElementRule rule = IsAccessibilityElementRule::No;
+
+#define ROLE(_geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
+             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)        \
+  case roles::_geckoRole:                                                    \
+    rule = iosIsElement;                                                     \
+    break;
+  switch (aAccessible->Role()) {
+#include "RoleMap.h"
+  }
+
+  switch (rule) {
+    case IsAccessibilityElementRule::Yes:
+      return true;
+    case IsAccessibilityElementRule::No:
+      return false;
+    case IsAccessibilityElementRule::IfChildless:
+      return aAccessible->ChildCount() == 0;
+    case IsAccessibilityElementRule::IfParentIsntElementWithName: {
+      nsAutoString name;
+      aAccessible->Name(name);
+      name.CompressWhitespace();
+      if (name.IsEmpty()) {
+        return false;
+      }
+
+      if (isAccessibilityElementInternal(aAccessible->Parent())) {
+        // This is a text leaf that needs to be pruned from a button or the
+        // likes. It should also be ignored in the event of its parent being a
+        // pruned link.
+        return false;
+      }
+
+      return true;
+    }
+    case IsAccessibilityElementRule::IfChildlessWithNameAndFocusable:
+      if (aAccessible->ChildCount() == 0 &&
+          (aAccessible->State() & states::FOCUSABLE)) {
+        nsAutoString name;
+        aAccessible->Name(name);
+        name.CompressWhitespace();
+        return !name.IsEmpty();
+      }
+      return false;
+    case IsAccessibilityElementRule::IfBrokenUp: {
+      uint32_t childCount = aAccessible->ChildCount();
+      if (childCount == 1) {
+        // If this is a single child container just use the text leaf and its
+        // traits will be inherited.
+        return false;
+      }
+
+      for (uint32_t idx = 0; idx < childCount; idx++) {
+        Accessible* child = aAccessible->ChildAt(idx);
+        role accRole = child->Role();
+        if (accRole != roles::STATICTEXT && accRole != roles::TEXT_LEAF &&
+            accRole != roles::GRAPHIC) {
+          // If this container contains anything but text leafs and images
+          // ignore this accessible. Its descendants will inherit the
+          // container's traits.
+          return false;
+        }
+      }
+
+      return true;
+    }
+    default:
+      break;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unhandled IsAccessibilityElementRule");
+
+  return false;
+}
+
 - (BOOL)isAccessibilityElement {
-  if (!mGeckoAccessible || mGeckoAccessible->ChildCount()) {
-    // XXX: Containers should return NO or their children are ignored.
-    // I think that if the container has a child or descendant that
-    // returns YES for isAccessibilityElement, then a UIKit accessible
-    // is provided for the container, even if it returned NO.
+  if (!mGeckoAccessible) {
     return NO;
   }
 
-  return YES;
+  return isAccessibilityElementInternal(mGeckoAccessible) ? YES : NO;
 }
 
 - (NSString*)accessibilityLabel {

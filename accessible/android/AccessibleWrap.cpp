@@ -356,7 +356,7 @@ void AccessibleWrap::SetVirtualViewID(Accessible* aAccessible,
 
 int32_t AccessibleWrap::GetAndroidClass(role aRole) {
 #define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, nameRule)                     \
+             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)       \
   case roles::geckoRole:                                                    \
     return androidClass;
 

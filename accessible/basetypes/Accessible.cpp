@@ -594,7 +594,7 @@ nsStaticAtom* Accessible::ComputedARIARole() const {
   }
   // Role from native markup or layout.
 #define ROLE(_geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, nameRule)                      \
+             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)        \
   case roles::_geckoRole:                                                    \
     return ariaRole;
   switch (geckoRole) {
