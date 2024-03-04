@@ -64,6 +64,12 @@ if CONFIG["TARGET_CPU"] == "aarch64":
         "NEON_FLAGS"
     ]
 
+    DEFINES["USE_NEON_I8MM"] = True
+    SOURCES += ["/third_party/gemmology/kernels/GemmologyEngineNeon64I8mm.cpp"]
+    SOURCES[
+        "/third_party/gemmology/kernels/GemmologyEngineNeon64I8mm.cpp"
+    ].flags += CONFIG["NEON_I8MM_FLAGS"]
+
 SOURCES += [
     "IntegerGemmIntrinsic.cpp",
 ]

@@ -3374,6 +3374,16 @@ def path_remappings(target, build_env, sysroot_path, windows_sdk_dir, vc_path):
     return path_remappings
 
 
+@depends(target)
+def is_intel_target(target):
+    return target.cpu in ("x86", "x86_64")
+
+
+@depends(target)
+def is_aarch64_target(target):
+    return target.cpu == "aarch64"
+
+
 set_config("MMX_FLAGS", ["-mmmx"])
 set_config("SSE_FLAGS", ["-msse"])
 set_config("SSE2_FLAGS", ["-msse2"])
@@ -3384,7 +3394,9 @@ set_config("AVX2_FLAGS", ["-mavx2"])
 set_config(
     "AVXVNNI_FLAGS",
     ["-mavxvnni"],
-    try_compile(check_msg="for -mavxvnni support", flags=["-mavxvnni"]),
+    try_compile(
+        check_msg="for -mavxvnni support", flags=["-mavxvnni"], when=is_intel_target
+    ),
 )
 set_config(
     "AVX512BW_FLAGS",
@@ -3392,6 +3404,7 @@ set_config(
     try_compile(
         check_msg="for -mavx512bw support",
         flags=["-mavx512bw", "-mavx512f", "-mavx512dq", "-mavx512cd"],
+        when=is_intel_target,
     ),
 )
 
@@ -3403,6 +3416,18 @@ set_config(
     try_compile(
         check_msg="for -mavx512vnni support",
         flags=["-mavx512vnni", "-mavx512bw", "-mavx512f", "-mavx512dq", "-mavx512cd"],
+        when=is_intel_target,
+    ),
+)
+
+
+set_config(
+    "NEON_I8MM_FLAGS",
+    ["-march=armv8.2-a+i8mm"],
+    try_compile(
+        check_msg="for i8mm target feature",
+        flags=["-march=armv8.2-a+i8mm"],
+        when=is_aarch64_target,
     ),
 )
 
