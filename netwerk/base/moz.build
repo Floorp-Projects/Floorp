@@ -18,6 +18,7 @@ XPIDL_SOURCES += [
     "nsIAuthPromptCallback.idl",
     "nsIAuthPromptProvider.idl",
     "nsIBackgroundFileSaver.idl",
+    "nsIBaseChannel.idl",
     "nsIBufferedStreams.idl",
     "nsIByteRangeRequest.idl",
     "nsICacheInfoChannel.idl",
