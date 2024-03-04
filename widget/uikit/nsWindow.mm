@@ -98,6 +98,9 @@ class nsAutoRetainUIKitObject {
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event;
+
+- (void)activateWindow:(NSNotification*)notification;
+- (void)deactivateWindow:(NSNotification*)notification;
 @end
 
 @implementation ChildView
@@ -124,6 +127,21 @@ class nsAutoRetainUIKitObject {
   mTouches =
       CFDictionaryCreateMutable(kCFAllocatorDefault, 0, nullptr, nullptr);
   mNextTouchID = 0;
+
+  // This is managed with weak references by the notification center so that we
+  // do not need to call removeObserver.
+  // https://developer.apple.com/documentation/foundation/nsnotificationcenter/1415360-addobserver#discussion
+  [[NSNotificationCenter defaultCenter]
+      addObserver:self
+         selector:@selector(activateWindow:)
+             name:UIWindowDidBecomeKeyNotification
+           object:nil];
+  [[NSNotificationCenter defaultCenter]
+      addObserver:self
+         selector:@selector(deactivateWindow:)
+             name:UIWindowDidResignKeyNotification
+           object:nil];
+
   return self;
 }
 
@@ -135,6 +153,30 @@ class nsAutoRetainUIKitObject {
 - (void)delayedTearDown {
   [self removeFromSuperview];
   [self release];
+}
+
+- (void)activateWindow:(NSNotification*)notification {
+  ALOG("[[ChildView[%p] activateWindow]", (void*)self);
+
+  if (!mGeckoChild) {
+    return;
+  }
+
+  if (nsIWidgetListener* listener = mGeckoChild->GetWidgetListener()) {
+    listener->WindowActivated();
+  }
+}
+
+- (void)deactivateWindow:(NSNotification*)notification {
+  ALOG("[[ChildView[%p] deactivateWindow]", (void*)self);
+
+  if (!mGeckoChild) {
+    return;
+  }
+
+  if (nsIWidgetListener* listener = mGeckoChild->GetWidgetListener()) {
+    listener->WindowDeactivated();
+  }
 }
 
 - (void)sendMouseEvent:(EventMessage)aType
