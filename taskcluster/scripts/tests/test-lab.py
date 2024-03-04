@@ -67,7 +67,7 @@ def run_command(
         sys.stdout.flush()
         if process.returncode != 0:
             error_message = f"Command {' '.join(command)} failed with exit code {process.returncode}"
-            logging.error(msg=error_message)
+            logging.error(error_message)
         return process.returncode
 
 
@@ -77,7 +77,7 @@ def setup_environment():
     credentials_file = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if not project_id or not credentials_file:
         logging.error(
-            msg="Error: GOOGLE_PROJECT and GOOGLE_APPLICATION_CREDENTIALS environment variables must be set."
+            "Error: GOOGLE_PROJECT and GOOGLE_APPLICATION_CREDENTIALS environment variables must be set."
         )
         sys.exit(1)
 
@@ -126,7 +126,7 @@ def execute_tests(
 
     exit_code = run_command(flank_command, "flank.log")
     if exit_code == 0:
-        logging.info(msg="All UI test(s) have passed!")
+        logging.info("All UI test(s) have passed!")
     return exit_code
 
 
