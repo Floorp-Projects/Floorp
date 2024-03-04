@@ -1872,7 +1872,7 @@ class ExternalServices extends BaseExternalServices {
     FirefoxCom.request("initPassiveLoading", null);
   }
   reportTelemetry(data) {
-    FirefoxCom.request("reportTelemetry", JSON.stringify(data));
+    FirefoxCom.request("reportTelemetry", data);
   }
   updateEditorStates(data) {
     FirefoxCom.request("updateEditorStates", data);
