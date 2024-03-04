@@ -18,24 +18,34 @@ const androidReporterConfig = {
   utm_source: "android-components-reporter",
 };
 
-let reporterConfig = desktopReporterConfig;
+const getReporterConfig = (() => {
+  let promise;
+  return async () => {
+    promise ??= new Promise(resolve => {
+      browser.permissions
+        .contains({ permissions: ["nativeMessaging"] })
+        .then(needProductName => {
+          if (needProductName) {
+            const port = browser.runtime.connectNative(
+              "mozacWebcompatReporter"
+            );
+            port.onMessage.addListener(message => {
+              if ("productName" in message) {
+                androidReporterConfig.productName = message.productName;
+                resolve(androidReporterConfig);
 
-(async () => {
-  const permissions = ["nativeMessaging"];
-  if (await browser.permissions.contains({ permissions })) {
-    reporterConfig = androidReporterConfig;
-
-    const port = browser.runtime.connectNative("mozacWebcompatReporter");
-    port.onMessage.addListener(message => {
-      if ("productName" in message) {
-        reporterConfig.productName = message.productName;
-
-        // For now, setting the productName is the only use for this port, and that's only happening
-        // once after startup, so let's disconnect the port when we're done.
-        port.disconnect();
-      }
+                // For now, setting the productName is the only use for this port, and that's only happening
+                // once after startup, so let's disconnect the port when we're done.
+                port.disconnect();
+              }
+            });
+          } else {
+            resolve(desktopReporterConfig);
+          }
+        });
     });
-  }
+    return promise;
+  };
 })();
 
 async function loadTab(url) {
@@ -60,6 +70,7 @@ async function captureAndSendReport(tab) {
   try {
     const { endpointUrl, webcompatInfo } =
       await browser.tabExtras.getWebcompatInfo(id);
+    const reporterConfig = await getReporterConfig();
     const dataToSend = {
       endpointUrl,
       reportUrl: url,

@@ -3,7 +3,7 @@
   "name": "WebCompat Reporter",
   "description": "Report site compatibility issues on webcompat.com",
   "author": "Thomas Wisniewski <twisniewski@mozilla.com>",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "homepage_url": "https://github.com/mozilla/webcompat-reporter",
   "browser_specific_settings": {
     "gecko": {
@@ -37,6 +37,8 @@
   },
   "permissions": ["tabs", "<all_urls>"],
   "background": {
+    "persistent": false,
+    "type": "module",
     "scripts": ["background.js"]
   }
 }
