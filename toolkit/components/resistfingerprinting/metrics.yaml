@@ -25,3 +25,48 @@ fingerprinting.protection:
       - tschuster@mozilla.com
     expires: never
     telemetry_mirror: FINGERPRINTING_PROTECTION_CANVAS_NOISE_CALCULATE_TIME_MS
+
+
+characteristics:
+  client_identifier:
+    type: uuid
+    description: >
+      A unique identifier for a user, not the same as the normal Telemetry
+      client_id, but needed so we can deduplicate reports and only take the most
+      recent one per user.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+      - deletion-request
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154#c8
+    expires: never
+    data_sensitivity:
+      - technical
+
+  submission_schema:
+    type: quantity
+    unit: versions
+    description: >
+      An incrementing constant that represents the current schema/source of the
+      data present in a ping. By referring to this value in a ping, one can know
+      for certain the provenance of other data present in the ping, and what
+      data may or may not be present.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154#c8
+    expires: never
+    data_sensitivity:
+      - technical
