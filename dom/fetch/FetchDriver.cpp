@@ -47,6 +47,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/PreloaderBase.h"
+#include "mozilla/net/ContentRange.h"
 #include "mozilla/net/InterceptionInfo.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -1104,7 +1105,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
     if (IsBlobURI(uri)) {
       nsBaseChannel* bchan = static_cast<nsBaseChannel*>(channel.get());
       MOZ_ASSERT(bchan);
-      Maybe<nsBaseChannel::ContentRange> range = bchan->GetContentRange();
+      Maybe<mozilla::net::ContentRange> range = bchan->GetContentRange();
       if (range.isSome()) {
         range->AsHeader(contentRange);
       }

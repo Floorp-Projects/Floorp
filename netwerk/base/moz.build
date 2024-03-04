@@ -157,6 +157,7 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.net += [
     "CacheInfoIPCTypes.h",
     "CaptivePortalService.h",
+    "ContentRange.h",
     "Dashboard.h",
     "DashboardTypes.h",
     "DefaultURI.h",
@@ -178,6 +179,7 @@ UNIFIED_SOURCES += [
     "ArrayBufferInputStream.cpp",
     "BackgroundFileSaver.cpp",
     "CaptivePortalService.cpp",
+    "ContentRange.cpp",
     "Dashboard.cpp",
     "DefaultURI.cpp",
     "EventTokenBucket.cpp",
