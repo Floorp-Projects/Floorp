@@ -97,15 +97,14 @@ void WebTransportParent::Create(
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "WebTransport AsyncConnect",
       [self = RefPtr{this}, uri = std::move(uri),
-       dedicated = true /* aDedicated, see BUG 1915735.*/,
        nsServerCertHashes = std::move(nsServerCertHashes),
        principal = RefPtr{aPrincipal},
        flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
        clientInfo = aClientInfo] {
         LOG(("WebTransport %p AsyncConnect", self.get()));
         if (NS_FAILED(self->mWebTransport->AsyncConnectWithClient(
-                uri, dedicated, std::move(nsServerCertHashes), principal, flags,
-                self, clientInfo))) {
+                uri, std::move(nsServerCertHashes), principal, flags, self,
+                clientInfo))) {
           LOG(("AsyncConnect failure; we should get OnSessionClosed"));
         }
       });
