@@ -6,6 +6,7 @@
 #ifndef nsDataHandler_h___
 #define nsDataHandler_h___
 
+#include "mozilla/dom/MimeType.h"
 #include "nsIProtocolHandler.h"
 #include "nsWeakReference.h"
 
@@ -50,7 +51,7 @@ class nsDataHandler : public nsIProtocolHandler,
   [[nodiscard]] static nsresult ParsePathWithoutRef(
       const nsACString& aPath, nsCString& aContentType,
       nsCString* aContentCharset, bool& aIsBase64,
-      nsDependentCSubstring* aDataBuffer, nsCString* aMimeType = nullptr);
+      nsDependentCSubstring* aDataBuffer, RefPtr<CMimeType>* = nullptr);
 };
 
 #endif /* nsDataHandler_h___ */

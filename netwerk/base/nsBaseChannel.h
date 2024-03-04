@@ -6,6 +6,7 @@
 #ifndef nsBaseChannel_h__
 #define nsBaseChannel_h__
 
+#include "mozilla/dom/MimeType.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
@@ -292,6 +293,7 @@ class nsBaseChannel
   bool mOpenRedirectChannel{false};
   uint32_t mRedirectFlags{0};
   RefPtr<mozilla::net::ContentRange> mContentRange;
+  RefPtr<CMimeType> mFullMimeType;
 
  protected:
   nsCString mContentType;

@@ -980,3 +980,15 @@ NS_IMETHODIMP nsBaseChannel::SetContentRange(
   mContentRange = aRange;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsBaseChannel::GetFullMimeType(RefPtr<TMimeType<char>>* aOut) {
+  if (aOut) {
+    *aOut = mFullMimeType;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBaseChannel::SetFullMimeType(RefPtr<TMimeType<char>> aType) {
+  mFullMimeType = aType;
+  return NS_OK;
+}

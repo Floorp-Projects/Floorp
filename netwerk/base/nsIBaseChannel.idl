@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "mozilla/dom/MimeType.h"
 #include "mozilla/net/ContentRange.h"
 %}
 
@@ -17,6 +18,7 @@
  */
 
 native ContentRangeRef(RefPtr<mozilla::net::ContentRange>);
+native MimeTypeRef(RefPtr<TMimeType<char>>);
 
 [uuid(036d5cd7-9a53-40e3-9c72-c2ffaa15aa2b)]
 interface nsIBaseChannel : nsISupports {
@@ -26,6 +28,13 @@ interface nsIBaseChannel : nsISupports {
    * Range request header (if given) for the response body (e.g, for blob URLs)
    */
   attribute ContentRangeRef contentRange;
+
+  /**
+   * Used by fetch and XMLHttpRequest to get the standards-compliant value they
+   * should set for the Content-Type header on response (if nullptr, they will
+   * use Firefox-specific values from nsIChannel::GetContentType and GetCharset).
+   */
+  attribute MimeTypeRef fullMimeType;
 
 %{C++
   RefPtr<mozilla::net::ContentRange> ContentRange() {
@@ -42,6 +51,12 @@ interface nsIBaseChannel : nsISupports {
     }
     SetContentRange(range);
     return true;
+  }
+
+  RefPtr<CMimeType> FullMimeType() {
+    RefPtr<CMimeType> type;
+    mozilla::Unused << GetFullMimeType(&type);
+    return type;
   }
 %}
 

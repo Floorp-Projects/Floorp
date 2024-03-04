@@ -8,6 +8,7 @@
 #include "nsDataChannel.h"
 
 #include "mozilla/Base64.h"
+#include "mozilla/dom/MimeType.h"
 #include "nsDataHandler.h"
 #include "nsIInputStream.h"
 #include "nsEscape.h"
@@ -59,9 +60,10 @@ nsresult nsDataChannel::OpenContentStream(bool async, nsIInputStream** result,
 
   nsCString contentType, contentCharset;
   nsDependentCSubstring dataRange;
+  RefPtr<CMimeType> fullMimeType;
   bool lBase64;
   rv = nsDataHandler::ParsePathWithoutRef(path, contentType, &contentCharset,
-                                          lBase64, &dataRange, &mMimeType);
+                                          lBase64, &dataRange, &fullMimeType);
   if (NS_FAILED(rv)) return rv;
 
   // This will avoid a copy if nothing needs to be unescaped.
@@ -103,6 +105,7 @@ nsresult nsDataChannel::OpenContentStream(bool async, nsIInputStream** result,
 
   SetContentType(contentType);
   SetContentCharset(contentCharset);
+  SetFullMimeType(std::move(fullMimeType));
   mContentLength = contentLen;
 
   // notify "data-channel-opened" observers

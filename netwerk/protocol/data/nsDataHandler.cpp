@@ -161,7 +161,7 @@ nsresult nsDataHandler::ParsePathWithoutRef(const nsACString& aPath,
                                             nsCString* aContentCharset,
                                             bool& aIsBase64,
                                             nsDependentCSubstring* aDataBuffer,
-                                            nsCString* aMimeType) {
+                                            RefPtr<CMimeType>* aMimeType) {
   static constexpr auto kCharset = "charset"_ns;
 
   // This implements https://fetch.spec.whatwg.org/#data-url-processor
@@ -200,17 +200,17 @@ nsresult nsDataHandler::ParsePathWithoutRef(const nsACString& aPath,
   // This also checks for instances of ;base64 in the middle of the MimeType.
   // This is against the current spec, but we're doing it because we have
   // historically seen webcompat issues relying on this (see bug 781693).
-  if (mozilla::UniquePtr<CMimeType> parsed = CMimeType::Parse(mimeType)) {
+  if (RefPtr<CMimeType> parsed = CMimeType::Parse(mimeType)) {
     parsed->GetEssence(aContentType);
     if (aContentCharset) {
       parsed->GetParameterValue(kCharset, *aContentCharset);
     }
-    if (aMimeType) {
-      parsed->Serialize(*aMimeType);
-    }
     if (parsed->IsBase64() &&
         !StaticPrefs::network_url_strict_data_url_base64_placement()) {
       aIsBase64 = true;
+    }
+    if (aMimeType) {
+      *aMimeType = std::move(parsed);
     }
   } else {
     // "If mimeTypeRecord is failure, then set mimeTypeRecord to
@@ -220,7 +220,8 @@ nsresult nsDataHandler::ParsePathWithoutRef(const nsACString& aPath,
       aContentCharset->AssignLiteral("US-ASCII");
     }
     if (aMimeType) {
-      aMimeType->AssignLiteral("text/plain;charset=US-ASCII");
+      *aMimeType = new CMimeType("text"_ns, "plain"_ns);
+      (*aMimeType)->SetParameterValue("charset"_ns, "US-ASCII"_ns);
     }
   }
 

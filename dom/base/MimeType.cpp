@@ -9,8 +9,8 @@
 #include "nsUnicharUtils.h"
 
 template <typename char_type>
-/* static */ mozilla::UniquePtr<TMimeType<char_type>>
-TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
+/* static */ RefPtr<TMimeType<char_type>> TMimeType<char_type>::Parse(
+    const nsTSubstring<char_type>& aMimeType) {
   // See https://mimesniff.spec.whatwg.org/#parsing-a-mime-type
 
   // Steps 1-2
@@ -85,8 +85,8 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
   for (const char_type* c = subtypeStart; c < subtypeEnd; ++c) {
     subtype.Append(ToLowerCaseASCII(*c));
   }
-  mozilla::UniquePtr<TMimeType<char_type>> mimeType(
-      mozilla::MakeUnique<TMimeType<char_type>>(type, subtype));
+  RefPtr<TMimeType<char_type>> mimeType =
+      new TMimeType<char_type>(type, subtype);
 
   // Step 11
   while (pos < end) {
@@ -274,7 +274,7 @@ template <typename char_type>
   static char_type kCHARSET[] = {'c', 'h', 'a', 'r', 's', 'e', 't'};
   static nsTDependentSubstring<char_type> kCharset(kCHARSET, 7);
 
-  mozilla::UniquePtr<TMimeType<char_type>> parsed;
+  RefPtr<TMimeType<char_type>> parsed;
   nsTAutoString<char_type> prevContentType;
   nsTAutoString<char_type> prevCharset;
 
@@ -398,9 +398,9 @@ void TMimeType<char_type>::SetParameterValue(
   });
 }
 
-template mozilla::UniquePtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(
+template RefPtr<TMimeType<char16_t>> TMimeType<char16_t>::Parse(
     const nsTSubstring<char16_t>& aMimeType);
-template mozilla::UniquePtr<TMimeType<char>> TMimeType<char>::Parse(
+template RefPtr<TMimeType<char>> TMimeType<char>::Parse(
     const nsTSubstring<char>& aMimeType);
 template bool TMimeType<char16_t>::Parse(
     const nsTSubstring<char16_t>& aMimeType,
