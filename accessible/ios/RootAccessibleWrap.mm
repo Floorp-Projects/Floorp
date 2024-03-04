@@ -36,3 +36,15 @@ void RootAccessibleWrap::GetNativeWidget(void** aOutView) {
     }
   }
 }
+
+CGRect RootAccessibleWrap::DevPixelsRectToUIKit(
+    const LayoutDeviceIntRect& aRect) {
+  UIView* nativeWidget = nil;
+  GetNativeWidget((void**)&nativeWidget);
+  CGRect rootFrame = [nativeWidget accessibilityFrame];
+  CGFloat scale = [nativeWidget contentScaleFactor];
+  return CGRectMake(((CGFloat)aRect.x / scale) + rootFrame.origin.x,
+                    ((CGFloat)aRect.y / scale) + rootFrame.origin.y,
+                    (CGFloat)aRect.width / scale,
+                    (CGFloat)aRect.height / scale);
+}
