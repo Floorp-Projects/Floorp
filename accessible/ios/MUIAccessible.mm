@@ -14,6 +14,10 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 #ifdef A11Y_LOG
+#  define DEBUG_HINTS
+#endif
+
+#ifdef DEBUG_HINTS
 static NSString* ToNSString(const nsACString& aCString) {
   if (aCString.IsEmpty()) {
     return [NSString string];
@@ -23,6 +27,15 @@ static NSString* ToNSString(const nsACString& aCString) {
                                  encoding:NSUTF8StringEncoding] autorelease];
 }
 #endif
+
+static NSString* ToNSString(const nsAString& aString) {
+  if (aString.IsEmpty()) {
+    return [NSString string];
+  }
+  return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(
+                                            aString.BeginReading())
+                                 length:aString.Length()];
+}
 
 #pragma mark -
 
@@ -73,7 +86,18 @@ static NSString* ToNSString(const nsACString& aCString) {
     return @"";
   }
 
-#ifdef A11Y_LOG
+  nsAutoString name;
+  mGeckoAccessible->Name(name);
+
+  return ToNSString(name);
+}
+
+- (NSString*)accessibilityHint {
+  if (!mGeckoAccessible) {
+    return @"";
+  }
+
+#ifdef DEBUG_HINTS
   // Just put in a debug description as the label so we get a clue about which
   // accessible ends up where.
   nsAutoCString desc;

@@ -55,6 +55,7 @@ inline MUIAccessible* _Nullable GetNativeFromGeckoAccessible(
 // UIAccessibility
 - (BOOL)isAccessibilityElement;
 - (nullable NSString*)accessibilityLabel;
+- (nullable NSString*)accessibilityHint;
 - (CGRect)accessibilityFrame;
 - (nullable NSString*)accessibilityValue;
 - (uint64_t)accessibilityTraits;
