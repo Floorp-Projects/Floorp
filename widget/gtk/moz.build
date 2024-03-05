@@ -63,7 +63,6 @@ UNIFIED_SOURCES += [
     "AsyncGtkClipboardRequest.cpp",
     "CompositorWidgetChild.cpp",
     "CompositorWidgetParent.cpp",
-    "DBusMenu.cpp",
     "DMABufLibWrapper.cpp",
     "DMABufSurface.cpp",
     "GfxInfo.cpp",
@@ -174,6 +173,7 @@ if CONFIG["MOZ_ENABLE_DBUS"]:
     ]
     UNIFIED_SOURCES += [
         "AsyncDBus.cpp",
+        "DBusMenu.cpp",
     ]
     CXXFLAGS += CONFIG["MOZ_DBUS_CFLAGS"]
 
