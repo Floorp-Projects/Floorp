@@ -21,6 +21,14 @@ const ALLOWLIST = [
       { search_url: SEARCH_URL_BASE, search_url_get_params: SEARCH_URL_PARAMS },
     ],
   },
+  {
+    thirdPartyId: "opensearch@tests.mozilla.org",
+    engineName: ENGINE_NAME,
+    overridesId: "simple@search.mozilla.org",
+    urls: [
+      { search_url: SEARCH_URL_BASE, search_url_get_params: SEARCH_URL_PARAMS },
+    ],
+  },
 ];
 
 const CONFIG_SIMPLE_LOCALE_DE = [
@@ -70,6 +78,66 @@ const CONFIG_SIMPLE_LOCALE_DE = [
         default: "no",
       },
     ],
+  },
+];
+
+const CONFIG_SIMPLE_LOCALE_DE_V2 = [
+  {
+    recordType: "engine",
+    identifier: "basic",
+    base: {
+      name: "basic",
+      urls: {
+        search: {
+          base: "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "simple",
+    base: {
+      name: "Simple Engine",
+      urls: {
+        search: {
+          base: "https://example.com",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { locales: ["de"] },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "basic",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
   },
 ];
 
@@ -123,11 +191,74 @@ const CONFIG_SIMPLE_EVERYWHERE = [
   },
 ];
 
+const CONFIG_SIMPLE_EVERYWHERE_V2 = [
+  {
+    recordType: "engine",
+    identifier: "basic",
+    base: {
+      name: "basic",
+      urls: {
+        search: {
+          base: "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "simple",
+    base: {
+      name: "Simple Engine",
+      urls: {
+        search: {
+          base: "https://example.com",
+          params: [
+            {
+              name: "sourceId",
+              value: "Mozilla-search",
+            },
+          ],
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "basic",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
+let engine;
 let extension;
 let configStub;
 let notificationBoxStub;
 
 add_setup(async function () {
+  let server = useHttpServer();
+  server.registerContentType("sjs", "sjs");
   SearchTestUtils.useMockIdleService();
   configStub = await SearchTestUtils.useTestEngines("simple-engines");
   Services.locale.availableLocales = [
@@ -160,7 +291,16 @@ add_task(async function test_app_provided_engine_deployment_extended() {
   await assertCorrectlySwitchedWhenExtended(async () => {
     info("Change configuration to include engine in user's environment");
 
-    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_SIMPLE_EVERYWHERE);
+    await SearchTestUtils.updateRemoteSettingsConfig(
+      SearchUtils.newSearchConfigEnabled
+        ? CONFIG_SIMPLE_EVERYWHERE_V2
+        : CONFIG_SIMPLE_EVERYWHERE
+    );
+    configStub.returns(
+      SearchUtils.newSearchConfigEnabled
+        ? CONFIG_SIMPLE_EVERYWHERE_V2
+        : CONFIG_SIMPLE_EVERYWHERE
+    );
   });
 
   await assertCorrectlySwitchedWhenRemoved(async () => {
@@ -170,6 +310,45 @@ add_task(async function test_app_provided_engine_deployment_extended() {
     configStub.returns(CONFIG_SIMPLE_LOCALE_DE);
   });
 });
+
+/**
+ * Tests that overrides are correctly applied when the deployment of the app
+ * provided engine is extended into an area, or removed from an area, where a
+ * user has the OpenSearch engine installed and set as default.
+ */
+add_task(
+  async function test_app_provided_engine_deployment_extended_opensearch() {
+    await assertCorrectlySwitchedWhenExtended(async () => {
+      info("Change configuration to include engine in user's environment");
+
+      await SearchTestUtils.updateRemoteSettingsConfig(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_EVERYWHERE_V2
+          : CONFIG_SIMPLE_EVERYWHERE
+      );
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_EVERYWHERE_V2
+          : CONFIG_SIMPLE_EVERYWHERE
+      );
+    }, true);
+
+    await assertCorrectlySwitchedWhenRemoved(async () => {
+      info("Change configuration to remove engine from user's environment");
+
+      await SearchTestUtils.updateRemoteSettingsConfig(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_LOCALE_DE_V2
+          : CONFIG_SIMPLE_LOCALE_DE
+      );
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_LOCALE_DE_V2
+          : CONFIG_SIMPLE_LOCALE_DE
+      );
+    }, true);
+  }
+);
 
 add_task(
   async function test_app_provided_engine_deployment_extended_restart_only() {
@@ -274,6 +453,46 @@ add_task(
   }
 );
 
+add_task(
+  async function test_app_provided_engine_deployment_extended_opensearch_restart_only() {
+    await assertCorrectlySwitchedWhenExtended(async () => {
+      info(
+        "Change configuration with restart to include engine in user's environment"
+      );
+
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_EVERYWHERE_V2
+          : CONFIG_SIMPLE_EVERYWHERE
+      );
+      await promiseAfterSettings();
+      Services.search.wrappedJSObject.reset();
+      await Services.search.init();
+    }, true);
+
+    await assertCorrectlySwitchedWhenRemoved(async () => {
+      info(
+        "Change configuration with restart to remove engine from user's environment"
+      );
+
+      configStub.returns(
+        SearchUtils.newSearchConfigEnabled
+          ? CONFIG_SIMPLE_LOCALE_DE_V2
+          : CONFIG_SIMPLE_LOCALE_DE
+      );
+      await promiseAfterSettings();
+      Services.search.wrappedJSObject.reset();
+      await Services.search.init();
+    }, true);
+
+    let settingsData = await promiseSettingsData();
+    Assert.ok(
+      settingsData.engines.every(e => !e._metaData.overriddenBy),
+      "Should have cleared the overridden by flag after removal"
+    );
+  }
+);
+
 /**
  * Tests that overrides are correctly applied when the user's environment changes
  * e.g. they have the WebExtension installed and change to a locale where the
@@ -302,26 +521,46 @@ add_task(async function test_user_environment_changes() {
  * @param {Function} changeFn
  *   A function that applies the change to cause the application provided
  *   engine to be added for the user.
+ * @param {boolean} testOpenSearch
+ *   Set to true to test OpenSearch based engines.
  */
-async function assertCorrectlySwitchedWhenExtended(changeFn) {
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_SIMPLE_LOCALE_DE);
+async function assertCorrectlySwitchedWhenExtended(
+  changeFn,
+  testOpenSearch = false
+) {
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled
+      ? CONFIG_SIMPLE_LOCALE_DE_V2
+      : CONFIG_SIMPLE_LOCALE_DE
+  );
   notificationBoxStub.resetHistory();
 
   info("Install WebExtension based engine and set as default");
 
-  extension = await SearchTestUtils.installSearchExtension(
-    {
-      name: ENGINE_NAME,
-      search_url: SEARCH_URL_BASE,
-      search_url_get_params: SEARCH_URL_PARAMS,
-    },
-    { skipUnload: true }
-  );
-  await extension.awaitStartup();
+  if (testOpenSearch) {
+    engine = await SearchTestUtils.promiseNewSearchEngine({
+      url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
+        baseURL: SEARCH_URL_BASE,
+        queryString: SEARCH_URL_PARAMS,
+        name: ENGINE_NAME,
+        method: "GET",
+      })}`,
+    });
+  } else {
+    extension = await SearchTestUtils.installSearchExtension(
+      {
+        name: ENGINE_NAME,
+        search_url: SEARCH_URL_BASE,
+        search_url_get_params: SEARCH_URL_PARAMS,
+      },
+      { skipUnload: true }
+    );
+    await extension.awaitStartup();
 
-  let engine = Services.search.getEngineById(
-    "simpleengine@tests.mozilla.orgdefault"
-  );
+    engine = Services.search.getEngineById(
+      "simpleengine@tests.mozilla.orgdefault"
+    );
+  }
 
   await Services.search.setDefault(
     engine,
@@ -332,7 +571,7 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
   engine.alias = "star";
 
   await assertEngineCorrectlySet({
-    expectedId: "simpleengine@tests.mozilla.orgdefault",
+    expectedId: engine.id,
     expectedAlias: "star",
     appEngineOverriden: false,
   });
@@ -355,11 +594,13 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
   Services.search.wrappedJSObject.reset();
   await Services.search.init();
 
-  let extensionData = {
-    ...extension.extension,
-    startupReason: "APP_STARTUP",
-  };
-  await Services.search.maybeSetAndOverrideDefault(extensionData);
+  if (!testOpenSearch) {
+    let extensionData = {
+      ...extension.extension,
+      startupReason: "APP_STARTUP",
+    };
+    await Services.search.maybeSetAndOverrideDefault(extensionData);
+  }
 
   Assert.ok(
     notificationBoxStub.notCalled,
@@ -382,14 +623,19 @@ async function assertCorrectlySwitchedWhenExtended(changeFn) {
  * @param {Function} changeFn
  *   A function that applies the change to cause the application provided
  *   engine to be removed for the user.
+ * @param {boolean} testOpenSearch
+ *   Set to true to test OpenSearch based engines.
  */
-async function assertCorrectlySwitchedWhenRemoved(changeFn) {
+async function assertCorrectlySwitchedWhenRemoved(
+  changeFn,
+  testOpenSearch = false
+) {
   notificationBoxStub.resetHistory();
 
   await changeFn();
 
   await assertEngineCorrectlySet({
-    expectedId: "simpleengine@tests.mozilla.orgdefault",
+    expectedId: engine.id,
     expectedAlias: "star",
     appEngineOverriden: false,
   });
@@ -399,21 +645,29 @@ async function assertCorrectlySwitchedWhenRemoved(changeFn) {
   await promiseAfterSettings();
   Services.search.wrappedJSObject.reset();
 
-  let extensionData = {
-    ...extension.extension,
-    startupReason: "APP_STARTUP",
-  };
-  await Services.search.addEnginesFromExtension(extensionData);
+  if (!testOpenSearch) {
+    let extensionData = {
+      ...extension.extension,
+      startupReason: "APP_STARTUP",
+    };
+    await Services.search.addEnginesFromExtension(extensionData);
+  }
 
   await Services.search.init();
 
   await assertEngineCorrectlySet({
-    expectedId: "simpleengine@tests.mozilla.orgdefault",
+    expectedId: engine.id,
     expectedAlias: "star",
     appEngineOverriden: false,
   });
 
-  await extension.unload();
+  if (testOpenSearch) {
+    await Services.search.removeEngine(
+      Services.search.getEngineById(engine.id)
+    );
+  } else {
+    await extension.unload();
+  }
 }
 
 async function assertEngineCorrectlySet({
@@ -428,28 +682,32 @@ async function assertEngineCorrectlySet({
     "Should only be one engine with matching name after changing configuration"
   );
 
-  let engine = await Services.search.getDefault();
+  let defaultEngine = await Services.search.getDefault();
   Assert.equal(
-    engine.id,
+    defaultEngine.id,
     expectedId,
-    "Should have kept the WebExtension engine as default"
+    "Should have kept the third party engine as default"
   );
   Assert.equal(
     decodeURI(engine.getSubmission("{searchTerms}").uri.spec),
     SEARCH_URL_BASE + SEARCH_URL_PARAMS,
-    "Should have used the WebExtension's URLs"
+    "Should have used the third party engine's URLs"
   );
   Assert.equal(
-    !!engine.wrappedJSObject.getAttr("overriddenBy"),
+    !!defaultEngine.wrappedJSObject.getAttr("overriddenBy"),
     appEngineOverriden,
     "Should have correctly overridden or not."
   );
 
   Assert.equal(
-    engine.telemetryId,
+    defaultEngine.telemetryId,
     appEngineOverriden ? "simple-addon" : "other-Simple Engine",
     "Should set the correct telemetry Id"
   );
 
-  Assert.equal(engine.alias, expectedAlias, "Should have the correct alias");
+  Assert.equal(
+    defaultEngine.alias,
+    expectedAlias,
+    "Should have the correct alias"
+  );
 }
