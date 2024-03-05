@@ -197,6 +197,9 @@ class ManageRecords {
       this._elements.edit.setAttribute("disabled", "disabled");
       this._elements.remove.removeAttribute("disabled");
     }
+    this._elements.add.disabled = !Services.prefs.getBoolPref(
+      `extensions.formautofill.${this._subStorageName}.enabled`
+    );
   }
 
   /**

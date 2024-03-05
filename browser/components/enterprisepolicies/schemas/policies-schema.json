@@ -90,6 +90,14 @@
       }
     },
 
+    "AutofillAddressEnabled": {
+      "type": "boolean"
+    },
+
+    "AutofillCreditCardEnabled": {
+      "type": "boolean"
+    },
+
     "AutoLaunchProtocolsFromOrigins": {
       "type": ["array", "JSON"],
       "items": {
