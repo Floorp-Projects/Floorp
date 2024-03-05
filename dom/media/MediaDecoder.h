@@ -835,6 +835,11 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // consistent with the previous destroyed one.
   bool mPendingStatusUpdateForNewlyCreatedStateMachine = false;
 #  endif
+
+  // The time of creating the media decoder state machine, it's used to record
+  // the probe for measuring the first video frame loaded time. Reset after
+  // reporting the measurement to avoid a dulpicated report.
+  Maybe<TimeStamp> mMDSMCreationTime;
 };
 
 }  // namespace mozilla

@@ -102,6 +102,8 @@ class ExternalEngineStateMachine final
 
   bool IsCDMProxySupported(CDMProxy* aProxy) override;
 
+  bool IsExternalEngineStateMachine() const override { return true; }
+
  private:
   ~ExternalEngineStateMachine() = default;
 

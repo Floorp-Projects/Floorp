@@ -96,3 +96,47 @@ media.audio:
     notification_emails:
       - media-alerts@mozilla.com
     expires: never
+
+media.playback:
+  first_frame_loaded:
+    type: event
+    description:
+      The time that the media pipeline takes to load the first video frame.
+    metadata:
+      tags:
+        - 'Core :: Audio/Video: Playback'
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882205
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882205
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - media-alerts@mozilla.com
+    extra_keys:
+      first_frame_loaded_time:
+        description:
+          How long (in milliseconds) does the our media pipeline take to load
+          the first video frame.
+        type: quantity
+      playback_type:
+        description:
+          The type of the playback. The value could be one of following
+          (1) Non-MSE playback
+          (2) MSE playback
+          (3) EME playback
+          // Following are Windows-only
+          (4) Non-MSE media-engine playback
+          (5) MSE media-engine playback
+          (6) EME media-engine playback
+        type: string
+      video_codec:
+        description: The video codec used for playback
+        type: string
+      resolution:
+        description: The video resolution used for playback
+        type: string
+      key_system:
+        description: The key system used for the EME playback if exists
+        type: string
+    expires: never
