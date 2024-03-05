@@ -40,8 +40,8 @@
 #  define SPOOFED_OSCPU "Intel Mac OS X 10.15"
 #  define SPOOFED_PLATFORM "MacIntel"
 #elif defined(MOZ_WIDGET_ANDROID)
-#  define SPOOFED_UA_OS "Android 10; Mobile"
-#  define SPOOFED_APPVERSION "5.0 (Android 10)"
+#  define SPOOFED_UA_OS "Linux; Android 10; Mobile"
+#  define SPOOFED_APPVERSION "5.0 (Linux; Android 10)"
 #  define SPOOFED_OSCPU "Linux armv81"
 #  define SPOOFED_PLATFORM "Linux armv81"
 #else
@@ -61,7 +61,7 @@
 // For the HTTP User-Agent header, we use a simpler set of spoofed values
 // that do not reveal the specific desktop platform.
 #if defined(MOZ_WIDGET_ANDROID)
-#  define SPOOFED_HTTP_UA_OS "Android 10; Mobile"
+#  define SPOOFED_HTTP_UA_OS "Linux; Android 10; Mobile"
 #else
 #  define SPOOFED_HTTP_UA_OS "Windows NT 10.0"
 #endif
