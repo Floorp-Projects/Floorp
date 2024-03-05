@@ -68,5 +68,24 @@ characteristics:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154#c8
     expires: never
+  max_touch_points:
+    type: quantity
+    unit: Fingers
+    description: >
+      The number of touch points we will report to the web. On Android, this is
+      based on Android's FEATURE_TOUCHSCREEN* constants - Mozilla caps this at 5
+      as Android stops distinguishing between numbers greater than 5.  On
+      Windows this comes from the SM_MAXIMUMTOUCHES System Metric.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879156
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879156#c4
+    expires: never
     data_sensitivity:
       - technical
