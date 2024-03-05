@@ -66,7 +66,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
             feature = CustomTabsIntegration(
                 store = requireComponents.core.store,
                 useCases = requireComponents.useCases.customTabsUseCases,
-                toolbar = browserToolbar,
+                toolbar = browserToolbarView.view,
                 sessionId = customTabSessionId,
                 activity = activity,
                 onItemTapped = { browserToolbarInteractor.onBrowserToolbarMenuItemTapped(it) },
@@ -102,7 +102,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
                 }
             },
             owner = this,
-            view = browserToolbar,
+            view = browserToolbarView.view,
         )
 
         if (manifest != null) {

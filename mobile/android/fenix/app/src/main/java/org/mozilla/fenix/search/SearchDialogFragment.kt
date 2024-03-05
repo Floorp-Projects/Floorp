@@ -82,6 +82,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.Core.Companion.TABS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
@@ -171,6 +172,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 toolbarView.view.showKeyboard()
             }
         }
+
+        requireComponents.appStore.dispatch(
+            AppAction.UpdateSearchDialogVisibility(isVisible = true),
+        )
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -597,6 +602,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         if (!dialogHandledAction) {
             requireComponents.core.store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
         }
+
+        requireComponents.appStore.dispatch(
+            AppAction.UpdateSearchDialogVisibility(isVisible = false),
+        )
     }
 
     override fun onBackPressed(): Boolean {

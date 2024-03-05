@@ -76,6 +76,7 @@ import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.lib.state.ext.flow
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.colors.PhotonColors
@@ -95,6 +96,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
+import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.containsQueryParameters
@@ -155,6 +157,10 @@ class HomeFragment : Fragment() {
             ToolbarPosition.BOTTOM -> binding.toolbarLayout
             ToolbarPosition.TOP -> null
         }
+
+    private var _bottomToolbarContainerView: BottomToolbarContainerView? = null
+    private val bottomToolbarContainerView: BottomToolbarContainerView
+        get() = _bottomToolbarContainerView!!
 
     private val searchSelectorMenu by lazy {
         SearchSelectorMenu(
@@ -223,6 +229,7 @@ class HomeFragment : Fragment() {
     private val historyMetadataFeature = ViewBoundFeatureWrapper<RecentVisitsFeature>()
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
     private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
+    private val navbarIntegration = ViewBoundFeatureWrapper<NavbarIntegration>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -456,12 +463,25 @@ class HomeFragment : Fragment() {
                 menuButton = WeakReference(menuButton),
             ).also { it.build() }
 
-            BottomToolbarContainerView(
+            _bottomToolbarContainerView = BottomToolbarContainerView(
                 context = requireContext(),
                 parent = binding.homeLayout,
                 androidToolbarView = if (isToolbarAtBottom) binding.toolbarLayout else null,
                 menuButton = menuButton,
                 isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+            )
+
+            navbarIntegration.set(
+                feature = NavbarIntegration(
+                    toolbar = bottomToolbarContainerView.toolbarContainerView,
+                    store = requireComponents.core.store,
+                    appStore = requireComponents.appStore,
+                    viewLifecycleOwner = viewLifecycleOwner,
+                    bottomToolbarContainerView = bottomToolbarContainerView,
+                    sessionId = null,
+                ),
+                owner = this,
+                view = binding.root,
             )
         }
 
@@ -802,6 +822,7 @@ class HomeFragment : Fragment() {
         sessionControlView = null
         tabCounterView = null
         toolbarView = null
+        _bottomToolbarContainerView = null
         _binding = null
 
         bundleArgs.clear()

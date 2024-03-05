@@ -35,7 +35,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param androidToolbarView An option toolbar view that will be added atop of the navigation bar.
  * @param menuButton A [MenuButton] to be used for [ItemType.MENU].
  * @param isPrivateMode If browsing in [BrowsingMode.Private].
- * @param customTabSessionId Custom tab session ID.
  *
  * Defaults to [NavigationItems.defaultItems] which provides a standard set of navigation items.
  */
@@ -46,15 +45,13 @@ class BottomToolbarContainerView(
     androidToolbarView: View? = null,
     menuButton: MenuButton,
     isPrivateMode: Boolean = false,
-    customTabSessionId: String? = null,
 ) {
 
-    private val toolbarContainerView = ToolbarContainerView(context)
-    val navbarIntegration =
-        NavbarIntegration(toolbarContainerView, parent.context.components.core.store, customTabSessionId)
+    val toolbarContainerView = ToolbarContainerView(context)
+    val composeView: ComposeView
 
     init {
-        ComposeView(parent.context).apply {
+        composeView = ComposeView(context).apply {
             setContent {
                 val tabCount = context.components.core.store.observeAsState(initialValue = 0) { browserState ->
                     if (isPrivateMode) {

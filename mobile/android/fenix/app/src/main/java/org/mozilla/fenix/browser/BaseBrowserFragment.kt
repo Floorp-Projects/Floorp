@@ -60,7 +60,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.BrowserThumbnails
-import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.prompt.ShareData
@@ -210,7 +209,9 @@ abstract class BaseBrowserFragment :
     internal val browserToolbarView: BrowserToolbarView
         get() = _browserToolbarView!!
 
-    internal lateinit var browserToolbar: BrowserToolbar
+    private var _bottomToolbarContainerView: BottomToolbarContainerView? = null
+    private val bottomToolbarContainerView: BottomToolbarContainerView
+        get() = _bottomToolbarContainerView!!
 
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
     protected val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
@@ -441,9 +442,7 @@ abstract class BaseBrowserFragment :
             interactor = browserToolbarInteractor,
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             lifecycleOwner = viewLifecycleOwner,
-        ).also {
-            browserToolbar = it.view
-        }
+        )
 
         if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
             val isToolbarAtBottom = context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
@@ -452,6 +451,7 @@ abstract class BaseBrowserFragment :
             // We should remove it and add the view to the navigation bar container.
             // Should refactor this so there is no added view to remove to begin with:
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
+            val browserToolbar = browserToolbarView.view
             if (isToolbarAtBottom) {
                 binding.browserLayout.removeView(browserToolbar)
             }
@@ -467,19 +467,26 @@ abstract class BaseBrowserFragment :
                 )
             }
 
-            BottomToolbarContainerView(
+            _bottomToolbarContainerView = BottomToolbarContainerView(
                 context = context,
                 parent = binding.browserLayout,
                 androidToolbarView = if (isToolbarAtBottom) browserToolbar else null,
                 menuButton = menuButton,
                 isPrivateMode = activity.browsingModeManager.mode.isPrivate,
-            ).also {
-                navbarIntegration.set(
-                    feature = it.navbarIntegration,
-                    owner = this,
-                    view = view,
-                )
-            }
+            )
+
+            navbarIntegration.set(
+                feature = NavbarIntegration(
+                    toolbar = bottomToolbarContainerView.toolbarContainerView,
+                    store = requireComponents.core.store,
+                    appStore = requireComponents.appStore,
+                    viewLifecycleOwner = viewLifecycleOwner,
+                    bottomToolbarContainerView = bottomToolbarContainerView,
+                    sessionId = customTabSessionId,
+                ),
+                owner = this,
+                view = view,
+            )
         }
 
         toolbarIntegration.set(
@@ -1660,6 +1667,7 @@ abstract class BaseBrowserFragment :
         binding.engineView.setActivityContext(null)
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
 
+        _bottomToolbarContainerView = null
         _browserToolbarView = null
         _browserToolbarInteractor = null
         _binding = null

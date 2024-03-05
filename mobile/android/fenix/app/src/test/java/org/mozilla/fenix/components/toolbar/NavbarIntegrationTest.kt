@@ -21,6 +21,9 @@ class NavbarIntegrationTest {
         feature = NavbarIntegration(
             toolbar = mockk(),
             store = mockk(),
+            appStore = mockk(),
+            viewLifecycleOwner = mockk(),
+            bottomToolbarContainerView = mockk(),
             sessionId = null,
         ).apply {
             toolbarController = mockk(relaxed = true)

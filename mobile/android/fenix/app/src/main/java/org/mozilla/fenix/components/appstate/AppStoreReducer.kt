@@ -243,6 +243,7 @@ internal object AppStoreReducer {
         is AppAction.TabStripAction.UpdateLastTabClosed -> state.copy(
             wasLastTabClosedPrivate = action.private,
         )
+        is AppAction.UpdateSearchDialogVisibility -> state.copy(isSearchDialogVisible = action.isVisible)
     }
 }
 

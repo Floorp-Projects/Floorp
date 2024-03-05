@@ -116,4 +116,25 @@ class AppStoreReducerTest {
 
         assertFalse(updatedState.mode.isPrivate)
     }
+
+    @Test
+    fun `WHEN UpdateSearchDialogVisibility is called THEN isSearchDialogVisible gets updated`() {
+        val initialState = AppState()
+
+        assertFalse(initialState.isSearchDialogVisible)
+
+        var updatedState = AppStoreReducer.reduce(
+            initialState,
+            AppAction.UpdateSearchDialogVisibility(isVisible = true),
+        )
+
+        assertTrue(updatedState.isSearchDialogVisible)
+
+        updatedState = AppStoreReducer.reduce(
+            initialState,
+            AppAction.UpdateSearchDialogVisibility(isVisible = false),
+        )
+
+        assertFalse(updatedState.isSearchDialogVisible)
+    }
 }
