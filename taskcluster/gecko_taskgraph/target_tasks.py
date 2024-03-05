@@ -247,9 +247,9 @@ def accept_raptor_android_build(platform):
     if "p5" in platform and "aarch64" in platform:
         return False
     if "p6" in platform and "aarch64" in platform:
-        return False
+        return True
     if "s21" in platform and "aarch64" in platform:
-        return False
+        return True
     if "a51" in platform:
         return True
     return False
@@ -804,6 +804,8 @@ def target_tasks_custom_car_perf_testing(full_task_graph, parameters, graph_conf
             if "browsertime" in try_name and (
                 "custom-car" in try_name or "cstm-car-m" in try_name
             ):
+                if "hw-s21" in platform and "speedometer3" not in try_name:
+                    return False
                 return True
         return False
 
@@ -857,6 +859,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return True
         # Android selection
         elif accept_raptor_android_build(platform):
+            if "hw-s21" in platform and "speedometer3" not in try_name:
+                return False
             if "chrome-m" in try_name and (
                 ("ebay" in try_name and "live" not in try_name)
                 or (
@@ -939,6 +943,8 @@ def target_tasks_speedometer_tests(full_task_graph, parameters, graph_config):
             platform
         ):
             try_name = attributes.get("raptor_try_name")
+            if "hw-s21" in platform and "speedometer3" not in try_name:
+                return False
             if (
                 "browsertime" in try_name
                 and "speedometer" in try_name
