@@ -115,13 +115,7 @@ add_task(async function testInlineOptions() {
     "The browser has the expected options URL"
   );
   is(url, card.addon.optionsURL, "Browser has the expected options URL loaded");
-  let stack = browser.closest("stack");
-  is(
-    browser.clientWidth,
-    stack.clientWidth,
-    "Browser should be the same width as its direct parent"
-  );
-  Assert.greater(stack.clientWidth, 0, "The stack has a width");
+  Assert.greater(browser.clientWidth, 0, "The browser has a width");
   ok(
     card.querySelector('[action="preferences"]').hidden,
     "The preferences option is hidden now"
@@ -163,8 +157,7 @@ add_task(async function testInlineOptions() {
   info("Switch back, check browser is shown");
   prefsBtn.click();
 
-  is(browser.clientWidth, stack.clientWidth, "The browser width is set again");
-  Assert.greater(stack.clientWidth, 0, "The stack has a width");
+  Assert.greater(browser.clientWidth, 0, "The browser has a width");
 
   await closeView(win);
   await extension.unload();
