@@ -167,8 +167,9 @@ bool FrameHeader::Parse(const Span<const uint8_t>& aData) {
   mObjectType = ((aData[2] & 0xC0) >> 6) + 1;
   mSamplingIndex = (aData[2] & 0x3C) >> 2;
   mChannelConfig = (aData[2] & 0x01) << 2 | (aData[3] & 0xC0) >> 6;
-  mFrameLength = static_cast<uint32_t>(
-      (aData[3] & 0x03) << 11 | (aData[4] & 0xFF) << 3 | (aData[5] & 0xE0) >> 5);
+  mFrameLength =
+      static_cast<uint32_t>((aData[3] & 0x03) << 11 | (aData[4] & 0xFF) << 3 |
+                            (aData[5] & 0xE0) >> 5);
   mNumAACFrames = (aData[6] & 0x03) + 1;
 
   static const uint32_t SAMPLE_RATES[] = {96000, 88200, 64000, 48000, 44100,

@@ -525,8 +525,8 @@ MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
   if (isADTS) {
     ADTS::FrameParser parser;
      if(!parser.Parse(0, aSample->Data(), aSample->Data() + aSample->Size()) {
-       LOG("ADTS frame parsing error");
-       return NS_ERROR_NOT_INITIALIZED;
+      LOG("ADTS frame parsing error");
+      return NS_ERROR_NOT_INITIALIZED;
      }
 
     AudioCodecSpecificBinaryBlob blob;
