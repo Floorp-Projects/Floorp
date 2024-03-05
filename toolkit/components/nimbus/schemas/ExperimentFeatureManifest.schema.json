@@ -111,7 +111,7 @@
       }
     }
   },
-  "required": ["description", "hasExposure", "variables"],
+  "required": ["description", "hasExposure", "owner", "variables"],
   "if": {
     "properties": {
       "hasExposure": {
