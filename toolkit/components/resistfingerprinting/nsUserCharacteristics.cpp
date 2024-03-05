@@ -23,6 +23,9 @@
 static mozilla::LazyLogModule gUserCharacteristicsLog("UserCharacteristics");
 
 // ==================================================================
+namespace testing {
+extern "C" {
+
 int MaxTouchPoints() {
 #if defined(XP_WIN)
   return widget::WinUtils::GetMaxTouchPoints();
@@ -31,6 +34,9 @@ int MaxTouchPoints() {
 #endif
   return 0;
 }
+
+}  // extern "C"
+};  // namespace testing
 
 // ==================================================================
 // The current schema of the data. Anytime you add a metric, or change how a
@@ -141,7 +147,8 @@ nsresult nsUserCharacteristics::PopulateData() {
   }
   mozilla::glean::characteristics::client_identifier.Set(uuidString);
 
-  mozilla::glean::characteristics::max_touch_points.Set(MaxTouchPoints());
+  mozilla::glean::characteristics::max_touch_points.Set(
+      testing::MaxTouchPoints());
 
   return NS_OK;
 }
