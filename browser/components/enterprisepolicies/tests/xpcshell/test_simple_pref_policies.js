@@ -1032,6 +1032,19 @@ const POLICIES_TESTS = [
       "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": true,
     },
   },
+
+  // POLICY: AutofillAddressEnabled, AutofillCreditCardEnabled
+
+  {
+    policies: {
+      AutofillAddressEnabled: false,
+      AutofillCreditCardEnabled: false,
+    },
+    lockedPrefs: {
+      "extensions.formautofill.addresses.enabled": false,
+      "extensions.formautofill.creditCards.enabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

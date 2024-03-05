@@ -313,6 +313,18 @@ export var Policies = {
     },
   },
 
+  AutofillAddressEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("extensions.formautofill.addresses.enabled", param);
+    },
+  },
+
+  AutofillCreditCardEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("extensions.formautofill.creditCards.enabled", param);
+    },
+  },
+
   AutoLaunchProtocolsFromOrigins: {
     onBeforeAddons(manager, param) {
       for (let info of param) {
