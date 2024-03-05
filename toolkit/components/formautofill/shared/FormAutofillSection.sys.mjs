@@ -89,18 +89,12 @@ export class FormAutofillSection {
 
   /**
    * Override this method if the profile is needed to apply some transformers.
-   *
-   * @param {object} profile
-   *        A profile should be converted based on the specific requirement.
    */
   applyTransformers() {}
 
   /**
    * Override this method if the profile is needed to be customized for
    * previewing values.
-   *
-   * @param {object} profile
-   *        A profile for pre-processing before previewing values.
    */
   preparePreviewProfile() {}
 
@@ -108,8 +102,6 @@ export class FormAutofillSection {
    * Override this method if the profile is needed to be customized for filling
    * values.
    *
-   * @param {object} profile
-   *        A profile for pre-processing before filling values.
    * @returns {boolean} Whether the profile should be filled.
    */
   async prepareFillingProfile() {
