@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationPageSettings
 import org.mozilla.fenix.R
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
@@ -143,6 +144,7 @@ internal fun TranslationsDialog(
     onFromSelected: (Language) -> Unit,
     onToSelected: (Language) -> Unit,
 ) {
+    FxNimbus.features.translations.recordExposure()
     TranslationsDialogBottomSheet(
         translationsDialogState = translationsDialogState,
         learnMoreUrl = learnMoreUrl,

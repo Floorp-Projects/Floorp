@@ -29,6 +29,7 @@ import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 import java.util.Locale
 
@@ -65,14 +66,16 @@ fun TranslationOptionsDialog(
             )
         }
 
-        item {
-            TextListItem(
-                label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 56.dp),
-                onClick = { onTranslationSettingsClicked() },
-            )
+        if (FxNimbus.features.translations.value().globalSettingsEnabled) {
+            item {
+                TextListItem(
+                    label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 56.dp),
+                    onClick = { onTranslationSettingsClicked() },
+                )
+            }
         }
 
         item {

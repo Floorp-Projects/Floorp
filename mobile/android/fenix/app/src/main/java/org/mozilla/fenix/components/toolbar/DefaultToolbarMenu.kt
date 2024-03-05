@@ -198,7 +198,8 @@ open class DefaultToolbarMenu(
      */
     @VisibleForTesting(otherwise = PRIVATE)
     fun shouldShowTranslations(): Boolean = selectedSession?.let {
-        context.settings().enableTranslations && store.state.translationEngine.isEngineSupported == true
+        context.settings().enableTranslations && store.state.translationEngine.isEngineSupported == true &&
+            FxNimbus.features.translations.value().mainFlowBrowserMenuEnabled
     } ?: false
     // End of predicates //
 

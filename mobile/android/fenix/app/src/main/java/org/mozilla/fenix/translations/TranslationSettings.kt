@@ -22,6 +22,7 @@ import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -32,6 +33,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onNeverTranslationClicked Invoked when the user clicks on the "Never Translation" button.
  * @param onDownloadLanguageClicked Invoked when the user clicks on the "Download Language" button.
  */
+@Suppress("LongMethod")
 @Composable
 fun TranslationSettings(
     translationSwitchList: List<TranslationSwitchItem>,
@@ -79,38 +81,44 @@ fun TranslationSettings(
                 )
             }
 
-            item {
-                TextListItem(
-                    label = stringResource(id = R.string.translation_settings_automatic_translation),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = { onAutomaticTranslationClicked() },
-                )
+            if (FxNimbus.features.translations.value().globalLangSettingsEnabled) {
+                item {
+                    TextListItem(
+                        label = stringResource(id = R.string.translation_settings_automatic_translation),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 56.dp),
+                        onClick = { onAutomaticTranslationClicked() },
+                    )
+                }
             }
 
-            item {
-                TextListItem(
-                    label = stringResource(
-                        id = R.string.translation_settings_automatic_never_translate_sites,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = { onNeverTranslationClicked() },
-                )
+            if (FxNimbus.features.translations.value().globalSiteSettingsEnabled) {
+                item {
+                    TextListItem(
+                        label = stringResource(
+                            id = R.string.translation_settings_automatic_never_translate_sites,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 56.dp),
+                        onClick = { onNeverTranslationClicked() },
+                    )
+                }
             }
 
-            item {
-                TextListItem(
-                    label = stringResource(
-                        id = R.string.translation_settings_download_language,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = { onDownloadLanguageClicked() },
-                )
+            if (FxNimbus.features.translations.value().downloadsEnabled) {
+                item {
+                    TextListItem(
+                        label = stringResource(
+                            id = R.string.translation_settings_download_language,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 56.dp),
+                        onClick = { onDownloadLanguageClicked() },
+                    )
+                }
             }
         }
     }
