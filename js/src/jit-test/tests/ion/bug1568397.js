@@ -1,4 +1,4 @@
-// |jit-test| error:TypeError: can't access property
+// |jit-test| --setpref=property_error_message_fix=true; error:TypeError: can't access property "x"
 let obj = {x: 1};
 obj.x = 1.1;
 
