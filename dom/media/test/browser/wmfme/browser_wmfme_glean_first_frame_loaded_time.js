@@ -10,7 +10,9 @@
 
 /* import-globals-from ../head.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/media/test/browser/head.js", this);
+  "chrome://mochitests/content/browser/dom/media/test/browser/head.js",
+  this
+);
 
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
