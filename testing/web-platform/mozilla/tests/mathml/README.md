@@ -54,6 +54,9 @@ any specification:
    mirroring.
    See [issue 67](https://github.com/w3c/mathml-core/issues/67).
 
+- `scripts`: Tests for MathML scripted elements, for Gecko features
+   that are not defined in MathML Core or in contradiction with the spec.
+
 - `tables`: Tests for
    [table features](https://www.w3.org/TR/MathML3/chapter3.html#presm.tabmat)
    that are in the initial version of MathML Core.
