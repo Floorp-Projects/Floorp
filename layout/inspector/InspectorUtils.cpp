@@ -351,9 +351,7 @@ uint32_t InspectorUtils::GetRelativeRuleLine(GlobalObject& aGlobal,
   return aRule.GetLineNumber() + 1;
 }
 
-
-void InspectorUtils::GetRuleIndex(GlobalObject& aGlobal,
-                                  css::Rule& aRule,
+void InspectorUtils::GetRuleIndex(GlobalObject& aGlobal, css::Rule& aRule,
                                   nsTArray<uint32_t>& aResult) {
   css::Rule* currentRule = &aRule;
 
