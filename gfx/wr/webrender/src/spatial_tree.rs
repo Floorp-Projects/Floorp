@@ -2042,3 +2042,46 @@ fn test_world_transforms() {
       st.get_world_viewport_transform(scroll).into_transform(),
       LayoutToWorldTransform::identity());
 }
+
+/// Tests that a spatial node that is async zooming and all of its descendants
+/// are correctly marked as having themselves an ancestor that is zooming.
+#[test]
+fn test_is_ancestor_or_self_zooming() {
+    let mut cst = SceneSpatialTree::new();
+    let root_reference_frame_index = cst.root_reference_frame_index();
+
+    let root = add_reference_frame(
+        &mut cst,
+        root_reference_frame_index,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+        SpatialTreeItemKey::new(0, 0),
+    );
+    let child1 = add_reference_frame(
+        &mut cst,
+        root,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+        SpatialTreeItemKey::new(0, 1),
+    );
+    let child2 = add_reference_frame(
+        &mut cst,
+        child1,
+        LayoutTransform::identity(),
+        LayoutVector2D::zero(),
+        SpatialTreeItemKey::new(0, 2),
+    );
+
+    let mut st = SpatialTree::new();
+    st.apply_updates(cst.end_frame_and_get_pending_updates());
+
+    // Mark the root node as async zooming
+    st.get_spatial_node_mut(root).is_async_zooming = true;
+    st.update_tree(&SceneProperties::new());
+
+    // Ensure that the root node and all descendants are marked as having
+    // themselves or an ancestor zooming
+    assert!(st.get_spatial_node(root).is_ancestor_or_self_zooming);
+    assert!(st.get_spatial_node(child1).is_ancestor_or_self_zooming);
+    assert!(st.get_spatial_node(child2).is_ancestor_or_self_zooming);
+}
