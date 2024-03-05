@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_AudioData_h
 #define mozilla_dom_AudioData_h
 
+#include "MediaData.h"
 #include "WebCodecsUtils.h"
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
