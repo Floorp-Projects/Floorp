@@ -16,10 +16,6 @@ const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 const AUTOFILL_STATE = "autofill";
 
-const SUBMIT_FORM_SUBMIT = 1;
-const SUBMIT_PAGE_NAVIGATION = 2;
-const SUBMIT_FORM_IS_REMOVED = 3;
-
 const LOG_MESSAGE_FORM_SUBMISSION = "form submission";
 const LOG_MESSAGE_FIELD_EDIT = "field edit";
 
@@ -53,6 +49,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   FormScenarios: "resource://gre/modules/FormScenarios.sys.mjs",
+  FORM_SUBMISSION_REASON: "resource://gre/actors/FormHandlerChild.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
   LoginFormFactory: "resource://gre/modules/LoginFormFactory.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
@@ -1602,10 +1599,6 @@ export class LoginManagerChild extends JSWindowActorChild {
         this.#onDOMDocFetchSuccess(event);
         break;
       }
-      case "DOMFormBeforeSubmit": {
-        this.#onDOMFormBeforeSubmit(event);
-        break;
-      }
       case "DOMFormHasPassword": {
         this.#onDOMFormHasPassword(event, this.document.defaultView);
         let formLike = lazy.LoginFormFactory.createFromForm(
@@ -1629,6 +1622,14 @@ export class LoginManagerChild extends JSWindowActorChild {
           event.originalTarget
         );
         lazy.InsecurePasswordUtils.reportInsecurePasswords(formLike);
+        break;
+      }
+      case "form-submission-detected": {
+        if (lazy.LoginHelper.enabled) {
+          const form = event.detail.form;
+          const reason = event.detail.reason;
+          this.#onFormSubmission(form, reason);
+        }
         break;
       }
     }
@@ -1772,7 +1773,10 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
 
     lazy.log("Form is removed.");
-    this._onFormSubmit(formLike, SUBMIT_FORM_IS_REMOVED);
+    this._onFormSubmit(
+      formLike,
+      lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH
+    );
 
     docState.formLikeByObservedNode.delete(event.target);
     let weakObserveredNodes = ChromeUtils.nondeterministicGetWeakMapKeys(
@@ -1792,15 +1796,17 @@ export class LoginManagerChild extends JSWindowActorChild {
     }
   }
 
-  #onDOMFormBeforeSubmit(event) {
-    if (!event.isTrusted) {
-      return;
-    }
-
+  /**
+   * Handle form-submission-detected event (dispatched by FormHandlerChild)
+   *
+   * @param {HTMLFormElement} form that is being submitted
+   * @param {String} reason form submission reason (heuristic that detected the form submission)
+   */
+  #onFormSubmission(form, reason) {
     // We're invoked before the content's |submit| event handlers, so we
     // can grab form data before it might be modified (see bug 257781).
-    let formLike = lazy.LoginFormFactory.createFromForm(event.target);
-    this._onFormSubmit(formLike, SUBMIT_FORM_SUBMIT);
+    let formLike = lazy.LoginFormFactory.createFromForm(form);
+    this._onFormSubmit(formLike, reason);
   }
 
   onDocumentVisibilityChange(event) {
@@ -2310,7 +2316,7 @@ export class LoginManagerChild extends JSWindowActorChild {
       }
 
       let formLike = lazy.LoginFormFactory.getForRootElement(formRoot);
-      this._onFormSubmit(formLike, SUBMIT_PAGE_NAVIGATION);
+      this._onFormSubmit(formLike, lazy.FORM_SUBMISSION_REASON.PAGE_NAVIGATION);
     }
   }
 
@@ -2333,7 +2339,8 @@ export class LoginManagerChild extends JSWindowActorChild {
         isSubmission: true,
         // When this is trigger by inferring from form removal, the form is not
         // connected anymore, skip checking isConnected in this case.
-        ignoreConnect: reason == SUBMIT_FORM_IS_REMOVED,
+        ignoreConnect:
+          reason == lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH,
       }
     );
   }

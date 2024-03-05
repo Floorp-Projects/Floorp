@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillContent: "resource://autofill/FormAutofillContent.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  FORM_SUBMISSION_REASON: "resource://gre/actors/FormHandlerChild.sys.mjs",
 });
 
 const observer = {
@@ -225,8 +226,7 @@ export class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
-    const formSubmissionReason =
-      lazy.FormAutofillUtils.FORM_SUBMISSION_REASON.PAGE_NAVIGATION;
+    const formSubmissionReason = lazy.FORM_SUBMISSION_REASON.PAGE_NAVIGATION;
 
     // We only capture the form of the active field right now,
     // this means that we might miss some fields (see bug 1871356)
@@ -345,18 +345,18 @@ export class FormAutofillChild extends JSWindowActorChild {
         }
         break;
       }
-      case "DOMFormBeforeSubmit": {
-        if (lazy.FormAutofill.isAutofillEnabled) {
-          this.onDOMFormBeforeSubmit(evt);
-        }
-        break;
-      }
       case "DOMFormRemoved": {
         this.onDOMFormRemoved(evt);
         break;
       }
       case "DOMDocFetchSuccess": {
         this.onDOMDocFetchSuccess(evt);
+        break;
+      }
+      case "form-submission-detected": {
+        if (lazy.FormAutofill.isAutofillEnabled) {
+          this.onFormSubmission(evt);
+        }
         break;
       }
 
@@ -395,15 +395,13 @@ export class FormAutofillChild extends JSWindowActorChild {
   }
 
   /**
-   * Handle the DOMFormBeforeSubmit event.
+   * Handle form-submission-detected event (dispatched by FormHandlerChild)
    *
-   * @param {Event} evt
+   * @param {CustomEvent} evt form-submission-detected event
    */
-  onDOMFormBeforeSubmit(evt) {
-    const formElement = evt.target;
-
-    const formSubmissionReason =
-      lazy.FormAutofillUtils.FORM_SUBMISSION_REASON.FORM_SUBMIT_EVENT;
+  onFormSubmission(evt) {
+    const formElement = evt.detail.form;
+    const formSubmissionReason = evt.detail.reason;
 
     lazy.FormAutofillContent.formSubmitted(formElement, formSubmissionReason);
   }
@@ -420,7 +418,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     const document = evt.composedTarget.ownerDocument;
 
     const formSubmissionReason =
-      lazy.FormAutofillUtils.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH;
+      lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH;
 
     lazy.FormAutofillContent.formSubmitted(evt.target, formSubmissionReason);
 
