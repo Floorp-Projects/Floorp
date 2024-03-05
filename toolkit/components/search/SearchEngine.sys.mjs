@@ -1212,6 +1212,29 @@ export class SearchEngine {
   }
 
   /**
+   * Loads engine settings (_metaData) from the list of settings, finding
+   * the appropriate details for this engine.
+   *
+   * @param {object} [settings]
+   *   The saved settings for the user.
+   */
+  _loadSettings(settings) {
+    if (!settings) {
+      return;
+    }
+
+    let engineSettings;
+    if (settings.version <= 6) {
+      engineSettings = settings.engines?.find(e => e._name == this.name);
+    } else {
+      engineSettings = settings.engines?.find(e => e.id == this.id);
+    }
+    if (engineSettings?._metaData) {
+      this._metaData = structuredClone(engineSettings._metaData);
+    }
+  }
+
+  /**
    * Get the user-defined alias.
    *
    * @type {string}
