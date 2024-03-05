@@ -58,7 +58,7 @@ var ExtensionManager;
 
 ExtensionManager = {
   // WeakMap<WebExtensionPolicy, Map<number, WebExtensionContentScript>>
-  registeredContentScripts: new DefaultWeakMap(policy => new Map()),
+  registeredContentScripts: new DefaultWeakMap(() => new Map()),
 
   init() {
     Services.cpmm.addMessageListener("Extension:Startup", this);

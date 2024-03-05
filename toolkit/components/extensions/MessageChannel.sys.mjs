@@ -325,7 +325,7 @@ class ResponseManager extends FilteringMessageManager {
    *
    * @param {IdleDeadline} deadline
    */
-  onIdle(deadline) {
+  onIdle() {
     this.idleScheduled = false;
 
     let messages = this.idleMessages;
@@ -370,7 +370,7 @@ class ResponseManager extends FilteringMessageManager {
     this.callback(this.handlers.get(data.messageName), data);
   }
 
-  *getHandlers(messageName, sender, recipient) {
+  *getHandlers(messageName) {
     let handler = this.handlers.get(messageName);
     if (handler) {
       yield handler;
@@ -454,7 +454,7 @@ class FilteringMessageManagerMap extends Map {
     // XXXbz if target is really known to be a MessageListenerManager,
     // do we need this isInstance check?
     if (EventTarget.isInstance(target)) {
-      let onUnload = event => {
+      let onUnload = () => {
         target.removeEventListener("unload", onUnload);
         this.delete(target);
       };
@@ -1148,7 +1148,7 @@ MessageChannel = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "message-manager-close":
       case "message-manager-disconnect":

@@ -42,7 +42,7 @@ async function testReturnStatus(expectedStatus) {
 
   MockFilePicker.displayDirectory = saveDir;
 
-  MockFilePicker.showCallback = fp => {
+  MockFilePicker.showCallback = () => {
     MockFilePicker.setFiles([saveFile]);
     MockFilePicker.filterIndex = 0; // *.* - all file extensions
   };

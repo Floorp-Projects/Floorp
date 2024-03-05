@@ -369,28 +369,28 @@ class ExtensionAPI extends EventEmitter {
 
   destroy() {}
 
-  /** @param {string} entryName */
-  onManifestEntry(entryName) {}
+  /** @param {string} _entryName */
+  onManifestEntry(_entryName) {}
 
-  /** @param {boolean} isAppShutdown */
-  onShutdown(isAppShutdown) {}
+  /** @param {boolean} _isAppShutdown */
+  onShutdown(_isAppShutdown) {}
 
-  /** @param {BaseContext} context */
-  getAPI(context) {
+  /** @param {BaseContext} _context */
+  getAPI(_context) {
     throw new Error("Not Implemented");
   }
 
-  /** @param {string} id */
-  static onDisable(id) {}
+  /** @param {string} _id */
+  static onDisable(_id) {}
 
-  /** @param {string} id */
-  static onUninstall(id) {}
+  /** @param {string} _id */
+  static onUninstall(_id) {}
 
   /**
-   * @param {string} id
-   * @param {Record<string, JSONValue>} manifest
+   * @param {string} _id
+   * @param {Record<string, JSONValue>} _manifest
    */
-  static onUpdate(id, manifest) {}
+  static onUpdate(_id, _manifest) {}
 }
 
 /**
@@ -614,7 +614,7 @@ class BaseContext {
   // All child contexts must implement logActivity.  This is handled if the child
   // context subclasses ExtensionBaseContextChild.  ProxyContextParent overrides
   // this with a noop for parent contexts.
-  logActivity(type, name, data) {
+  logActivity() {
     throw new Error(`Not implemented for ${this.envType}`);
   }
 
@@ -1042,10 +1042,10 @@ class SchemaAPIInterface {
    * Calls this as a function that returns its return value.
    *
    * @abstract
-   * @param {Array} args The parameters for the function.
+   * @param {Array} _args The parameters for the function.
    * @returns {*} The return value of the invoked function.
    */
-  callFunction(args) {
+  callFunction(_args) {
     throw new Error("Not implemented");
   }
 
@@ -1053,9 +1053,9 @@ class SchemaAPIInterface {
    * Calls this as a function and ignores its return value.
    *
    * @abstract
-   * @param {Array} args The parameters for the function.
+   * @param {Array} _args The parameters for the function.
    */
-  callFunctionNoReturn(args) {
+  callFunctionNoReturn(_args) {
     throw new Error("Not implemented");
   }
 
@@ -1063,15 +1063,15 @@ class SchemaAPIInterface {
    * Calls this as a function that completes asynchronously.
    *
    * @abstract
-   * @param {Array} args The parameters for the function.
-   * @param {callback} [callback] The callback to be called when the function
+   * @param {Array} _args The parameters for the function.
+   * @param {callback} [_callback] The callback to be called when the function
    *     completes.
-   * @param {boolean} [requireUserInput=false] If true, the function should
+   * @param {boolean} [_requireUserInput=false] If true, the function should
    *                  fail if the browser is not currently handling user input.
    * @returns {Promise|undefined} Must be void if `callback` is set, and a
    *     promise otherwise. The promise is resolved when the function completes.
    */
-  callAsyncFunction(args, callback, requireUserInput = false) {
+  callAsyncFunction(_args, _callback, _requireUserInput) {
     throw new Error("Not implemented");
   }
 
@@ -1089,9 +1089,9 @@ class SchemaAPIInterface {
    * Assigns the value to this as property.
    *
    * @abstract
-   * @param {string} value The new value of the property.
+   * @param {string} _value The new value of the property.
    */
-  setProperty(value) {
+  setProperty(_value) {
     throw new Error("Not implemented");
   }
 
@@ -1099,11 +1099,11 @@ class SchemaAPIInterface {
    * Registers a `listener` to this as an event.
    *
    * @abstract
-   * @param {Function} listener The callback to be called when the event fires.
-   * @param {Array} args Extra parameters for EventManager.addListener.
+   * @param {Function} _listener The callback to be called when the event fires.
+   * @param {Array} _args Extra parameters for EventManager.addListener.
    * @see EventManager.addListener
    */
-  addListener(listener, args) {
+  addListener(_listener, _args) {
     throw new Error("Not implemented");
   }
 
@@ -1111,11 +1111,11 @@ class SchemaAPIInterface {
    * Checks whether `listener` is listening to this as an event.
    *
    * @abstract
-   * @param {Function} listener The event listener.
+   * @param {Function} _listener The event listener.
    * @returns {boolean} Whether `listener` is registered with this as an event.
    * @see EventManager.hasListener
    */
-  hasListener(listener) {
+  hasListener(_listener) {
     throw new Error("Not implemented");
   }
 
@@ -1123,10 +1123,10 @@ class SchemaAPIInterface {
    * Unregisters `listener` from this as an event.
    *
    * @abstract
-   * @param {Function} listener The event listener.
+   * @param {Function} _listener The event listener.
    * @see EventManager.removeListener
    */
-  removeListener(listener) {
+  removeListener(_listener) {
     throw new Error("Not implemented");
   }
 
@@ -2968,7 +2968,7 @@ class EventManager {
 // Simple API for event listeners where events never fire.
 function ignoreEvent(context, name) {
   return {
-    addListener: function (callback) {
+    addListener: function () {
       let id = context.extension.id;
       let frame = Components.stack.caller;
       let msg = `In add-on ${id}, attempting to use listener "${name}", which is unimplemented.`;
@@ -2986,8 +2986,8 @@ function ignoreEvent(context, name) {
       );
       Services.console.logMessage(scriptError);
     },
-    removeListener: function (callback) {},
-    hasListener: function (callback) {},
+    removeListener: function () {},
+    hasListener: function () {},
   };
 }
 

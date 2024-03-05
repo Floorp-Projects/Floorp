@@ -28,7 +28,7 @@ function getExtension() {
     let tabs = await browser.tabs.query({ url: "http://example.com/" });
     let testTab = tabs[0];
 
-    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
       if ("hidden" in changeInfo) {
         browser.test.assertEq(tabId, testTab.id, "correct tab was hidden");
         browser.test.assertTrue(changeInfo.hidden, "tab is hidden");

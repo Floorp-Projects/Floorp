@@ -63,7 +63,7 @@ add_task(async function testExecuteScript() {
               code: "* { background: rgb(100, 100, 100) !important }",
               cssOrigin: "author",
             })
-            .then(r =>
+            .then(() =>
               browser.tabs.insertCSS({
                 code: "* { background: rgb(43, 43, 43) !important }",
                 cssOrigin: "author",
@@ -81,7 +81,7 @@ add_task(async function testExecuteScript() {
               code: "* { background: rgb(100, 100, 100) !important }",
               cssOrigin: "user",
             })
-            .then(r =>
+            .then(() =>
               browser.tabs.insertCSS({
                 code: "* { background: rgb(44, 44, 44) !important }",
                 cssOrigin: "author",

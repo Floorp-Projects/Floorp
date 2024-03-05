@@ -266,7 +266,7 @@ class ChildLocalWebIDLAPIImplementation extends ChildLocalAPIImplementation {
     throw new Error("Unexpected call to setProperty");
   }
 
-  hasListener(listener) {
+  hasListener() {
     // hasListener is implemented in C++ by ExtensionEventManager, and so
     // a call to this method is unexpected.
     throw new Error("Unexpected call to hasListener");

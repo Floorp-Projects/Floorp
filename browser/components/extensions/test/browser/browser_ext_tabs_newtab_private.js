@@ -9,7 +9,7 @@ const NEWTAB_EXTENSION_CONTROLLED = "browser.newtab.extensionControlled";
 const NEWTAB_URI = "webext-newtab-1.html";
 
 function promisePrefChange(pref) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     Services.prefs.addObserver(pref, function observer() {
       Services.prefs.removeObserver(pref, observer);
       resolve(arguments);

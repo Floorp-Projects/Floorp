@@ -1035,7 +1035,7 @@ DocumentManager = {
   },
 
   observers: {
-    "inner-window-destroyed"(subject, topic, data) {
+    "inner-window-destroyed"(subject) {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
       // Close any existent content-script context for the destroyed window.

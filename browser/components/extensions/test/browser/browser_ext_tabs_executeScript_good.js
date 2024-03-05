@@ -8,7 +8,7 @@ async function testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
-    browser.runtime.onMessage.addListener((msg, sender) => {
+    browser.runtime.onMessage.addListener(msg => {
       browser.test.assertEq(msg, "script ran", "script ran");
       browser.test.notifyPass("executeScript");
     });
@@ -158,7 +158,7 @@ add_task(async function testGoodPermissions() {
       browser.contextMenus.create({ title: "activeTab", contexts: ["all"] });
       return Promise.resolve();
     },
-    setup: async function (extension) {
+    setup: async function () {
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let awaitPopupShown = BrowserTestUtils.waitForEvent(
         contextMenu,

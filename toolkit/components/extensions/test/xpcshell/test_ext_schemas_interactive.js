@@ -46,7 +46,7 @@ let experimentFiles = {
   /* globals ExtensionAPI */
   "parent.js": () => {
     this.userinputtest = class extends ExtensionAPI {
-      getAPI(context) {
+      getAPI() {
         return {
           userinputtest: {
             test() {},
@@ -58,7 +58,7 @@ let experimentFiles = {
 
   "child.js": () => {
     this.userinputtest = class extends ExtensionAPI {
-      getAPI(context) {
+      getAPI() {
         return {
           userinputtest: {
             child() {},

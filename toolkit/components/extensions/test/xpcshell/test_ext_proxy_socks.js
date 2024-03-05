@@ -46,7 +46,7 @@ class SocksClient {
     this.state = STATE_WAIT_GREETING;
     this.socket = socket;
 
-    socket.onclose = event => {
+    socket.onclose = () => {
       this.server.requestCompleted(this);
     };
     socket.ondata = event => {
@@ -566,7 +566,7 @@ add_task(async function test_webRequest_socks_proxy() {
       { urls: ["<all_urls>"] }
     );
     browser.webRequest.onAuthRequired.addListener(
-      details => {
+      () => {
         // We should never get onAuthRequired for socks proxy
         browser.test.fail("onAuthRequired");
       },

@@ -19,7 +19,7 @@ const Transferable = Components.Constructor(
 );
 
 this.clipboard = class extends ExtensionAPI {
-  getAPI(context) {
+  getAPI() {
     return {
       clipboard: {
         async setImageData(imageData, imageType) {

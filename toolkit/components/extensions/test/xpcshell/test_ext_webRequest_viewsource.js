@@ -51,7 +51,7 @@ add_task(async function test_webRequest_viewsource() {
     );
 
     browser.webRequest.onCompleted.addListener(
-      details => {
+      () => {
         // If cancel fails we get onCompleted.
         browser.test.fail("onCompleted received");
       },

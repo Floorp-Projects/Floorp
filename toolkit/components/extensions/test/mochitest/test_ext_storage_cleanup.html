@@ -71,7 +71,7 @@ const storageTestHelpers = {
           reject(new Error(`indexedDB open failed with ${e.errorCode}`));
         };
 
-        req.onupgradeneeded = e => {
+        req.onupgradeneeded = () => {
           // no database, data is not present
           resolve(false);
         };

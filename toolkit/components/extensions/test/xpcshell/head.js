@@ -299,7 +299,7 @@ function handlingUserInputFrameScript() {
 
   let handle;
   MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {
-    receiveMessage({ name, data }) {
+    receiveMessage({ data }) {
       if (data) {
         handle = content.windowUtils.setHandlingUserInput(true);
       } else if (handle) {
@@ -381,7 +381,7 @@ const optionalPermissionsPromptHandler = {
     });
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "webextension-optional-permission-prompt") {
       this.sawPrompt = true;
       let { resolve } = subject.wrappedJSObject;

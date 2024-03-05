@@ -148,7 +148,7 @@ add_task(function test_doorhanger_disable() {
 
 add_task(async function test_tabs_showhide() {
   async function background() {
-    browser.test.onMessage.addListener(async (msg, data) => {
+    browser.test.onMessage.addListener(async msg => {
       switch (msg) {
         case "hideall": {
           let tabs = await browser.tabs.query({ hidden: false });

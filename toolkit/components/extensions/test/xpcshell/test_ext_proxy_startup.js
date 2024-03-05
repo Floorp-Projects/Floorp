@@ -175,7 +175,7 @@ add_task(async function webRequest_before_proxy() {
 
   function background() {
     browser.webRequest.onBeforeRequest.addListener(
-      details => {
+      () => {
         return { redirectUrl: "data:,response_from_webRequest" };
       },
       {
@@ -185,7 +185,7 @@ add_task(async function webRequest_before_proxy() {
       ["blocking"]
     );
     browser.proxy.onRequest.addListener(
-      details => {
+      () => {
         browser.test.sendMessage("seen_proxy_request");
       },
       {

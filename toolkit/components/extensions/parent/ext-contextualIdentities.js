@@ -126,7 +126,7 @@ ExtensionPreferencesManager.addSetting(CONTAINERS_ENABLED_SETTING_NAME, {
 this.contextualIdentities = class extends ExtensionAPIPersistent {
   eventRegistrar(eventName) {
     return ({ fire }) => {
-      let observer = (subject, topic) => {
+      let observer = subject => {
         let convertedIdentity = convertIdentityFromObserver(subject);
         if (convertedIdentity) {
           fire.async({ contextualIdentity: convertedIdentity });

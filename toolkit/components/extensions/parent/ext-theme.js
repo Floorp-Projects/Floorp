@@ -435,7 +435,7 @@ this.theme = class extends ExtensionAPIPersistent {
     },
   };
 
-  onManifestEntry(entryName) {
+  onManifestEntry() {
     let { extension } = this;
     let { manifest } = extension;
 

@@ -42,9 +42,9 @@ add_task(async function test_redirect_property() {
     channel.asyncOpen({
       QueryInterface: ChromeUtils.generateQI(["nsIStreamListener"]),
 
-      onStartRequest(request) {},
+      onStartRequest() {},
 
-      onStopRequest(request, statusCode) {
+      onStopRequest(request) {
         let properties = request.QueryInterface(Ci.nsIPropertyBag);
         let id = properties.getProperty("redirectedByExtension");
         resolve({ id, url: request.QueryInterface(Ci.nsIChannel).URI.spec });

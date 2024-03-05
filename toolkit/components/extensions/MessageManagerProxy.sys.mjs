@@ -51,7 +51,7 @@ export class MessageManagerProxy {
     Services.obs.removeObserver(this, "message-manager-close");
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic === "message-manager-close") {
       if (subject === this.messageManager) {
         this.closed = true;

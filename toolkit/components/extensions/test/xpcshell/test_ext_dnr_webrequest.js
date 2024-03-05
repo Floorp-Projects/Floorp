@@ -8,7 +8,7 @@ add_setup(() => {
 const server = createHttpServer({
   hosts: ["example.com", "redir"],
 });
-server.registerPathHandler("/never_reached", (req, res) => {
+server.registerPathHandler("/never_reached", () => {
   Assert.ok(false, "Server should never have been reached");
 });
 server.registerPathHandler("/source", (req, res) => {
@@ -223,7 +223,7 @@ add_task(async function redirect_with_webRequest_after_failing_dnr_redirect() {
     const VERY_LONG_STRING = "x".repeat(network_standard_url_max_length - 20);
 
     browser.webRequest.onBeforeRequest.addListener(
-      d => {
+      () => {
         return { redirectUrl: "http://redir/destination?by-webrequest" };
       },
       { urls: ["*://example.com/*"] },

@@ -453,7 +453,7 @@ async function testHttpErrors(allowHttpErrors) {
     response.write(content);
   });
 
-  function background(code) {
+  function background() {
     let dlid = 0;
     let expectedState;
     browser.test.onMessage.addListener(async options => {

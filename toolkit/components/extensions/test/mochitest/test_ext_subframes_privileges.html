@@ -303,7 +303,7 @@ add_task(async function test_sub_subframe_conduit_verified_env() {
     `,
   };
 
-  async function expectErrors(ext, log) {
+  async function expectErrors(ext) {
     let err = await ext.awaitMessage("content_child");
     is(err, "Bad sender context envType: content_child");
 

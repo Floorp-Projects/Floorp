@@ -49,7 +49,7 @@ add_task(async function move_hidden_discarded_to_window() {
       // Listener with "urls" filter, regression test for
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1695346
       browser.tabs.onUpdated.addListener(
-        (tabId, changeInfo, tab) => {
+        (tabId, changeInfo) => {
           browser.test.assertTrue(changeInfo.hidden, "tab was hidden");
           browser.test.sendMessage("onUpdated_urls_filter");
         },

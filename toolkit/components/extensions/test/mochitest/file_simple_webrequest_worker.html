@@ -11,12 +11,12 @@
 
 fetch("file_simple_toplevel.txt");
 const worker = new Worker("file_simple_worker.js");
-worker.onmessage = (msg) => {
+worker.onmessage = () => {
   worker.postMessage("file_simple_worker.txt");
 }
 
 const sharedworker = new SharedWorker("file_simple_sharedworker.js");
-sharedworker.port.onmessage = (msg) => {
+sharedworker.port.onmessage = () => {
   dump(`postMessage to sharedworker\n`);
   sharedworker.port.postMessage("file_simple_sharedworker.txt");
 }

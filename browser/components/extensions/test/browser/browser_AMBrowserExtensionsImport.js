@@ -43,7 +43,7 @@ const ADDON_SEARCH_RESULTS = {};
 
 const mockAddonRepository = ({ addons = [] }) => {
   return {
-    async getMappedAddons(browserID, extensionIDs) {
+    async getMappedAddons() {
       return Promise.resolve({
         addons,
         matchedIDs: [],
@@ -136,7 +136,7 @@ add_task(async function test_appmenu_notification() {
     "expected a notification about the imported add-ons"
   );
 
-  const endedPromises = result.importedAddonIDs.map(id =>
+  const endedPromises = result.importedAddonIDs.map(() =>
     AddonTestUtils.promiseInstallEvent("onInstallEnded")
   );
   const menuPanelHidden = BrowserTestUtils.waitForEvent(

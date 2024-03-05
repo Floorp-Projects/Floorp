@@ -449,7 +449,7 @@ class BrowserExtensionContent extends EventEmitter {
     return this.policy.allowedOrigins;
   }
 
-  getSharedData(key, value) {
+  getSharedData(key) {
     return sharedData.get(`extension/${this.id}/${key}`);
   }
 

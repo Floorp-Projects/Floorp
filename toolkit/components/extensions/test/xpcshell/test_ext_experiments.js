@@ -76,7 +76,7 @@ let fooExperimentFiles = {
   /* globals ExtensionAPI */
   "parent.js": () => {
     this.foo = class extends ExtensionAPI {
-      getAPI(context) {
+      getAPI() {
         return {
           experiments: {
             foo: {
@@ -129,7 +129,7 @@ let fooExperimentFiles = {
               onChildEvent: new EventManagerWithAssertions({
                 context,
                 name: `experiments.foo.onChildEvent`,
-                register: fire => {
+                register: () => {
                   return () => {};
                 },
               }).api(),
@@ -379,7 +379,7 @@ add_task(async function test_unbundled_experiments() {
 
       "parent.js": () => {
         this.crunk = class extends ExtensionAPI {
-          getAPI(context) {
+          getAPI() {
             return {
               experiments: {
                 crunk: {
@@ -395,7 +395,7 @@ add_task(async function test_unbundled_experiments() {
 
       "child.js": () => {
         this.crunk = class extends ExtensionAPI {
-          getAPI(context) {
+          getAPI() {
             return {
               experiments: {
                 crunk: {

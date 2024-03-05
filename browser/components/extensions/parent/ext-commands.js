@@ -42,7 +42,7 @@ this.commands = class extends ExtensionAPIPersistent {
     return ExtensionShortcuts.removeCommandsFromStorage(extensionId);
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     let shortcuts = new ExtensionShortcuts({
       extension: this.extension,
       onCommand: name => this.emit("command", name),

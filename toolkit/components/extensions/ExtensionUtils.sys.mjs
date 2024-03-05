@@ -241,7 +241,7 @@ function promiseEvent(
   element,
   eventName,
   useCapture = true,
-  test = event => true
+  test = () => true
 ) {
   return new Promise(resolve => {
     function listener(event) {

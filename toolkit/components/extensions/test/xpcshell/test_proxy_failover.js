@@ -95,7 +95,7 @@ add_task(async function setup() {
 async function getProxyExtension(proxyDetails) {
   async function background(proxyDetails) {
     browser.proxy.onRequest.addListener(
-      details => {
+      () => {
         return proxyDetails;
       },
       { urls: ["<all_urls>"] }
@@ -165,7 +165,7 @@ add_task(
       contentUrl,
       `${contentUrl}?t=${Math.random()}`
     )
-      .then(text => {
+      .then(() => {
         ok(false, "xhr unexpectedly completed");
       })
       .catch(e => {
@@ -196,7 +196,7 @@ add_task(
         equal(req.proxy.type, "direct", "proxy failover to direct");
         equal(req.text, "ok!", "xhr completed");
       })
-      .catch(req => {
+      .catch(() => {
         ok(false, "xhr failed");
       });
 

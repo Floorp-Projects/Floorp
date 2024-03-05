@@ -14,7 +14,7 @@ server.registerPathHandler("/authenticate.sjs", (request, response) => {
   let realm = url.searchParams.get("realm") || "mochitest";
   let proxy_realm = url.searchParams.get("proxy_realm");
 
-  function checkAuthorization(authorization) {
+  function checkAuthorization() {
     let expected_user = url.searchParams.get("user");
     if (!expected_user) {
       return true;

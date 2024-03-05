@@ -7,7 +7,7 @@ const cps = Cc["@mozilla.org/addons/content-policy;1"].getService(
 );
 
 add_task(async function test_csp_validator_flags() {
-  let checkPolicy = (policy, flags, expectedResult, message = null) => {
+  let checkPolicy = (policy, flags, expectedResult) => {
     info(`Checking policy: ${policy}`);
 
     let result = cps.validateAddonCSP(policy, flags);
@@ -76,7 +76,7 @@ add_task(async function test_csp_validator_flags() {
 });
 
 add_task(async function test_csp_validator() {
-  let checkPolicy = (policy, expectedResult, message = null) => {
+  let checkPolicy = (policy, expectedResult) => {
     info(`Checking policy: ${policy}`);
 
     let result = cps.validateAddonCSP(
@@ -199,7 +199,7 @@ add_task(async function test_csp_validator() {
 });
 
 add_task(async function test_csp_validator_extension_pages() {
-  let checkPolicy = (policy, expectedResult, message = null) => {
+  let checkPolicy = (policy, expectedResult) => {
     info(`Checking policy: ${policy}`);
 
     // While Schemas.jsm uses Ci.nsIAddonContentPolicy.CSP_ALLOW_WASM, we don't

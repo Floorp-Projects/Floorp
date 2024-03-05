@@ -42,16 +42,16 @@ add_task(async function testSettings() {
   // Verify that we get the keys back we expect.
   isDeeply(
     Object.entries(settings.dataToRemove)
-      .filter(([key, value]) => value)
-      .map(([key, value]) => key)
+      .filter(([, value]) => value)
+      .map(([key]) => key)
       .sort(),
     SETTINGS_LIST,
     "dataToRemove contains expected properties."
   );
   isDeeply(
     Object.entries(settings.dataRemovalPermitted)
-      .filter(([key, value]) => value)
-      .map(([key, value]) => key)
+      .filter(([, value]) => value)
+      .map(([key]) => key)
       .sort(),
     SETTINGS_LIST,
     "dataToRemove contains expected properties."

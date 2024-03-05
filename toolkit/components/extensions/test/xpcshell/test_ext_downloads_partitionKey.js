@@ -29,7 +29,7 @@ let downloadDir;
 function observeDownloadChannel(uri, partitionKey, isPrivate) {
   return new Promise(resolve => {
     let observer = {
-      observe(subject, topic, data) {
+      observe(subject, topic) {
         if (topic === "http-on-modify-request") {
           let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
           if (httpChannel.URI.spec != uri) {

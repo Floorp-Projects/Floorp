@@ -154,7 +154,7 @@ add_task(async function test_contentscript_clipboard_permission_writetext() {
     clipboardWriteText(str).then(function() {
       // nothing here
       browser.test.sendMessage("ready");
-    }, function(err) {
+    }, function() {
       browser.test.fail("WriteText promise rejected");
       browser.test.sendMessage("ready");
     }); // clipboardWriteText
@@ -196,7 +196,7 @@ add_task(async function test_contentscript_clipboard_permission_readtext() {
         browser.test.fail("ReadText read the wrong thing from clipboard:" + strData);
       }
       browser.test.sendMessage("ready");
-    }, function(err) {
+    }, function() {
       browser.test.fail("ReadText promise rejected");
       browser.test.sendMessage("ready");
     }); // clipboardReadText
@@ -237,7 +237,7 @@ add_task(async function test_contentscript_clipboard_permission_write() {
     clipboardWrite([item]).then(function() {
       // nothing here
       browser.test.sendMessage("ready");
-    }, function(err) { // clipboardWrite promise error function
+    }, function() { // clipboardWrite promise error function
       browser.test.fail("Write promise rejected");
       browser.test.sendMessage("ready");
     }); // clipboard write
@@ -280,7 +280,7 @@ add_task(async function test_contentscript_clipboard_permission_read() {
         browser.test.fail("Read read the wrong string from clipboard:" + s);
       }
       browser.test.sendMessage("ready");
-    }, function(err) { // clipboardRead promise error function
+    }, function() { // clipboardRead promise error function
       browser.test.fail("Read promise rejected");
       browser.test.sendMessage("ready");
     }); // clipboard read

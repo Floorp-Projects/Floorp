@@ -14,7 +14,7 @@
 
 add_task(async function test_contentscript() {
   function background() {
-    browser.runtime.onMessage.addListener(([script], sender) => {
+    browser.runtime.onMessage.addListener(([script]) => {
       browser.test.sendMessage("run", {script});
       browser.test.sendMessage("run-" + script);
     });
@@ -65,7 +65,7 @@ add_task(async function test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
   let ran = 0;
-  extension.onMessage("run", ({script}) => {
+  extension.onMessage("run", () => {
     ran++;
   });
 

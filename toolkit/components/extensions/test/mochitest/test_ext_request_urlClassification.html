@@ -115,7 +115,7 @@ add_task(async function teardown() {
     /* eslint-env mozilla/chrome-script */
     // Cleanup cache
     await new Promise(resolve => {
-      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () => resolve());
     });
 
     const {UrlClassifierTestUtils} = ChromeUtils.importESModule(

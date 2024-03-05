@@ -177,7 +177,7 @@ add_task(async function testLocalStorage() {
 
       function awaitLoad(tabId) {
         return new Promise(resolve => {
-          browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+          browser.tabs.onUpdated.addListener(function listener(tabId_, changed) {
             if (tabId == tabId_ && changed.status == "complete") {
               browser.tabs.onUpdated.removeListener(listener);
               resolve();

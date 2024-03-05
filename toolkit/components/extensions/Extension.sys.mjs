@@ -1459,8 +1459,7 @@ export class ExtensionData {
     };
 
     if (this.fluentL10n || this.localeData) {
-      context.preprocessors.localize = (value, context) =>
-        this.localize(value, locale);
+      context.preprocessors.localize = value => this.localize(value, locale);
     }
 
     return lazy.Schemas.normalize(this.rawManifest, manifestType, context);
@@ -2665,8 +2664,8 @@ const PROXIED_EVENTS = new Set([
 ]);
 
 class BootstrapScope {
-  install(data, reason) {}
-  uninstall(data, reason) {
+  install() {}
+  uninstall(data) {
     lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
       `Uninstalling add-on: ${data.id}`,
       Management.emit("uninstall", { id: data.id }).then(() => {
@@ -2746,8 +2745,8 @@ class BootstrapScope {
 }
 
 class DictionaryBootstrapScope extends BootstrapScope {
-  install(data, reason) {}
-  uninstall(data, reason) {}
+  install() {}
+  uninstall() {}
 
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
@@ -2762,9 +2761,9 @@ class DictionaryBootstrapScope extends BootstrapScope {
 }
 
 class LangpackBootstrapScope extends BootstrapScope {
-  install(data, reason) {}
-  uninstall(data, reason) {}
-  async update(data, reason) {}
+  install() {}
+  uninstall() {}
+  async update() {}
 
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
@@ -2780,8 +2779,8 @@ class LangpackBootstrapScope extends BootstrapScope {
 
 // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
 class SitePermissionBootstrapScope extends BootstrapScope {
-  install(data, reason) {}
-  uninstall(data, reason) {}
+  install() {}
+  uninstall() {}
 
   startup(data, reason) {
     // eslint-disable-next-line no-use-before-define
@@ -3068,7 +3067,7 @@ export class Extension extends ExtensionData {
     return ExtensionCommon.checkLoadURL(url, this.principal, options);
   }
 
-  async promiseLocales(locale) {
+  async promiseLocales() {
     let locales = await StartupCache.locales.get(
       [this.id, "@@all_locales"],
       () => this._promiseLocaleMap()
@@ -3232,7 +3231,7 @@ export class Extension extends ExtensionData {
         children.delete(data.target);
         maybeResolve();
       }
-      function observer(subject, topic, data) {
+      function observer(subject) {
         children.delete(subject);
         maybeResolve();
       }
@@ -3260,7 +3259,7 @@ export class Extension extends ExtensionData {
     sharedData.set(key, value);
   }
 
-  getSharedData(key, value) {
+  getSharedData(key) {
     key = `extension/${this.id}/${key}`;
     return sharedData.get(key);
   }
@@ -3820,7 +3819,7 @@ export class Extension extends ExtensionData {
     return this.cleanupGeneratedFile();
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic === "xpcom-shutdown") {
       this.cleanupGeneratedFile();
     }
@@ -3852,7 +3851,7 @@ export class Extension extends ExtensionData {
 }
 
 export class Dictionary extends ExtensionData {
-  constructor(addonData, startupReason) {
+  constructor(addonData) {
     super(addonData.resourceURI);
     this.id = addonData.id;
     this.startupData = addonData.startupData;
@@ -3862,7 +3861,7 @@ export class Dictionary extends ExtensionData {
     return new DictionaryBootstrapScope();
   }
 
-  async startup(reason) {
+  async startup() {
     this.dictionaries = {};
     for (let [lang, path] of Object.entries(this.startupData.dictionaries)) {
       let uri = Services.io.newURI(
@@ -3886,7 +3885,7 @@ export class Dictionary extends ExtensionData {
 }
 
 export class Langpack extends ExtensionData {
-  constructor(addonData, startupReason) {
+  constructor(addonData) {
     super(addonData.resourceURI);
     this.startupData = addonData.startupData;
     this.manifestCacheKey = [addonData.id, addonData.version];
@@ -3896,7 +3895,7 @@ export class Langpack extends ExtensionData {
     return new LangpackBootstrapScope();
   }
 
-  async promiseLocales(locale) {
+  async promiseLocales() {
     let locales = await StartupCache.locales.get(
       [this.id, "@@all_locales"],
       () => this._promiseLocaleMap()
@@ -3911,7 +3910,7 @@ export class Langpack extends ExtensionData {
     );
   }
 
-  async startup(reason) {
+  async startup() {
     this.chromeRegistryHandle = null;
     if (this.startupData.chromeEntries.length) {
       const manifestURI = Services.io.newURI(
@@ -3971,7 +3970,7 @@ export class Langpack extends ExtensionData {
 
 // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based implementation is also removed.
 export class SitePermission extends ExtensionData {
-  constructor(addonData, startupReason) {
+  constructor(addonData) {
     super(addonData.resourceURI);
     this.id = addonData.id;
     this.hasShutdown = false;
@@ -4011,7 +4010,7 @@ export class SitePermission extends ExtensionData {
     ];
   }
 
-  async startup(reason) {
+  async startup() {
     await this.loadManifest();
 
     this.ensureNoErrors();

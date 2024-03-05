@@ -373,7 +373,7 @@ class Context {
 
     this.path = [];
     this.preprocessors = {
-      localize(value, context) {
+      localize(value) {
         return value;
       },
       ...params.preprocessors,
@@ -436,12 +436,12 @@ class Context {
   /**
    * Checks whether this context has the given permission.
    *
-   * @param {string} permission
+   * @param {string} _permission
    *        The name of the permission to check.
    *
    * @returns {boolean} True if the context has the given permission.
    */
-  hasPermission(permission) {
+  hasPermission(_permission) {
     return false;
   }
 
@@ -449,12 +449,12 @@ class Context {
    * Checks whether the given permission can be dynamically revoked or
    * granted.
    *
-   * @param {string} permission
+   * @param {string} _permission
    *        The name of the permission to check.
    *
    * @returns {boolean} True if the given permission is revokable.
    */
-  isPermissionRevokable(permission) {
+  isPermissionRevokable(_permission) {
     return false;
   }
 
@@ -882,18 +882,18 @@ class InjectionContext extends Context {
    * Check whether the API should be injected.
    *
    * @abstract
-   * @param {string} namespace The namespace of the API. This may contain dots,
+   * @param {string} _namespace The namespace of the API. This may contain dots,
    *     e.g. in the case of "devtools.inspectedWindow".
-   * @param {string?} name The name of the property in the namespace.
+   * @param {string?} _name The name of the property in the namespace.
    *     `null` if we are checking whether the namespace should be injected.
-   * @param {Array<string>} allowedContexts A list of additional contexts in
+   * @param {Array<string>} _allowedContexts A list of additional contexts in
    *      which this API should be available. May include any of:
    *         "main" - The main chrome browser process.
    *         "addon" - An addon process.
    *         "content" - A content process.
    * @returns {boolean} Whether the API should be injected.
    */
-  shouldInject(namespace, name, allowedContexts) {
+  shouldInject(_namespace, _name, _allowedContexts) {
     throw new Error("Not implemented");
   }
 
@@ -901,12 +901,12 @@ class InjectionContext extends Context {
    * Generate the implementation for `namespace`.`name`.
    *
    * @abstract
-   * @param {string} namespace The full path to the namespace of the API, minus
+   * @param {string} _namespace The full path to the namespace of the API, minus
    *     the name of the method or property. E.g. "storage.local".
-   * @param {string} name The name of the method, property or event.
+   * @param {string} _name The name of the method, property or event.
    * @returns {SchemaAPIInterface} The implementation of the API.
    */
-  getImplementation(namespace, name) {
+  getImplementation(_namespace, _name) {
     throw new Error("Not implemented");
   }
 
@@ -1035,7 +1035,7 @@ class InjectionContext extends Context {
  * format.
  */
 const FORMATS = {
-  hostname(string, context) {
+  hostname(string) {
     // TODO bug 1797376: Despite the name, this format is NOT a "hostname",
     // but hostname + port and may fail with IPv6. Use canonicalDomain instead.
     let valid = true;
@@ -1053,7 +1053,7 @@ const FORMATS = {
     return string;
   },
 
-  canonicalDomain(string, context) {
+  canonicalDomain(string) {
     let valid;
 
     try {
@@ -1129,7 +1129,7 @@ const FORMATS = {
     return FORMATS.relativeUrl(string, context);
   },
 
-  unresolvedRelativeUrl(string, context) {
+  unresolvedRelativeUrl(string) {
     if (!string.startsWith("//")) {
       try {
         new URL(string);
@@ -1191,7 +1191,7 @@ const FORMATS = {
     return string;
   },
 
-  date(string, context) {
+  date(string) {
     // A valid ISO 8601 timestamp.
     const PATTERN =
       /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|([-+]\d{2}:?\d{2})))?$/;
@@ -1207,7 +1207,7 @@ const FORMATS = {
     return string;
   },
 
-  manifestShortcutKey(string, context) {
+  manifestShortcutKey(string) {
     if (lazy.ShortcutUtils.validate(string) == lazy.ShortcutUtils.IS_VALID) {
       return string;
     }
@@ -1374,15 +1374,15 @@ class Entry {
    * Returns an object containing property descriptor for use when
    * injecting this entry into an API object.
    *
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {InjectionContext} context
+   * @param {Array<string>} _path The API path, e.g. `["storage", "local"]`.
+   * @param {InjectionContext} _context
    *
    * @returns {object?}
    *        An object containing a `descriptor` property, specifying the
    *        entry's property descriptor, and an optional `revoke`
    *        method, to be called when the entry is being revoked.
    */
-  getDescriptor(path, context) {
+  getDescriptor(_path, _context) {
     return undefined;
   }
 }
@@ -1484,7 +1484,7 @@ class Type extends Entry {
   // valid for this type. It returns true or false. It's used to fill
   // in optional arguments to functions before actually type checking
 
-  checkBaseType(baseType) {
+  checkBaseType() {
     return false;
   }
 
@@ -1517,7 +1517,7 @@ class AnyType extends Type {
     return this.postprocess({ value }, context);
   }
 
-  checkBaseType(baseType) {
+  checkBaseType() {
     return true;
   }
 }

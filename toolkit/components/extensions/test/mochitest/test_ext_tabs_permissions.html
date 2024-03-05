@@ -69,8 +69,7 @@ const helperExtensionDef = {
               hasTitleChangeInfo = false;
             browser.tabs.onUpdated.addListener(function listener(
               tabId,
-              changeInfo,
-              tab
+              changeInfo
             ) {
               if (changeInfo.url?.endsWith(message.data.urlHash)) {
                 hasURLChangeInfo = true;
@@ -413,7 +412,7 @@ async function test_restricted_properties(
 
       let hasURLChangeInfo = false,
         hasTitleChangeInfo = false;
-      function onUpdateListener(tabId, changeInfo, tab) {
+      function onUpdateListener(tabId, changeInfo) {
         if (changeInfo.url?.endsWith(urlHash)) {
           hasURLChangeInfo = true;
         }
@@ -550,7 +549,7 @@ async function test_onUpdateFilter(testCases, permissions) {
 
     async background() {
       let listenerGotCalled = false;
-      function onUpdateListener(tabId, changeInfo, tab) {
+      function onUpdateListener() {
         listenerGotCalled = true;
       }
 

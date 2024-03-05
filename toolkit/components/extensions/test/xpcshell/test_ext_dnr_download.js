@@ -2,7 +2,7 @@
 
 let server = createHttpServer({ hosts: ["example.com"] });
 let downloadReqCount = 0;
-server.registerPathHandler("/downloadtest", (req, res) => {
+server.registerPathHandler("/downloadtest", () => {
   ++downloadReqCount;
 });
 

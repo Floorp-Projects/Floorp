@@ -39,7 +39,7 @@ this.declarativeNetRequest = class extends ExtensionAPI {
     ExtensionDNR.clearRuleManager(this.extension);
   }
 
-  getAPI(context) {
+  getAPI() {
     const { extension } = this;
 
     return {

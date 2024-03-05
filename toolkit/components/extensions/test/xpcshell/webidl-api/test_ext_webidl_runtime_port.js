@@ -16,7 +16,7 @@ add_task(async function setup() {
 
 add_task(async function test_method_return_runtime_port() {
   await runExtensionAPITest("API method returns an ExtensionPort instance", {
-    backgroundScript({ testAsserts, testLog }) {
+    backgroundScript({ testAsserts }) {
       try {
         browser.mockExtensionAPI.methodReturnsPort("port-create-error");
         throw new Error("methodReturnsPort should have raised an exception");

@@ -270,7 +270,7 @@ add_task(
       background,
       devtoolsPage,
       closeToolbox: false,
-      testCase: async function (extension, tab, toolbox) {
+      testCase: async function (extension, tab) {
         info("Get the initial user agent");
         const initialUserAgent = await SpecialPowers.spawn(
           gBrowser.selectedBrowser,

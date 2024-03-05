@@ -57,7 +57,7 @@ add_task(async function test_webRequest_redirect_cors_bypass() {
   let win = window.open(WIN_URL);
   // Creating a message channel to the new tab.
   const channel = new BroadcastChannel("test_bus");
-  await new Promise((resolve, reject) => {
+  await new Promise((resolve) => {
     channel.onmessage = async function(fetch_result) {
       // Fetch result data will either be the text content of file_sample.txt -> 'Sample'
       // or a network-Error.

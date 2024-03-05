@@ -397,8 +397,7 @@ add_task(async function test_storage_local_data_migration() {
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
     true
   );
-  const filterByCategory = ([timestamp, category]) =>
-    category === EVENT_CATEGORY;
+  const filterByCategory = ([, category]) => category === EVENT_CATEGORY;
 
   ok(
     !snapshot.parent || snapshot.parent.filter(filterByCategory).length === 0,

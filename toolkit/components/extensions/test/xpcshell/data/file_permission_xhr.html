@@ -12,7 +12,7 @@
 /* globals privilegedFetch, privilegedXHR */
 /* eslint-disable mozilla/balanced-listeners */
 
-addEventListener("message", function rcv(event) {
+addEventListener("message", function rcv() {
   removeEventListener("message", rcv, false);
 
   function assertTrue(condition, description) {

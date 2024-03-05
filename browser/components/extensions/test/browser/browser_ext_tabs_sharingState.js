@@ -59,7 +59,7 @@ add_task(async function test_tabs_mediaIndicators() {
     tabs = await browser.tabs.query({ hidden: true });
     browser.test.assertEq(tabs.length, 0, "unable to hide sharing tab");
 
-    browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
       if (testTab.id !== tabId) {
         return;
       }

@@ -46,7 +46,7 @@ add_task(async function testDuplicateTab() {
 add_task(async function testDuplicateTabLazily() {
   async function background() {
     let tabLoadComplete = new Promise(resolve => {
-      browser.test.onMessage.addListener((message, tabId, result) => {
+      browser.test.onMessage.addListener((message, tabId) => {
         if (message == "duplicate-tab-done") {
           resolve(tabId);
         }
@@ -55,11 +55,7 @@ add_task(async function testDuplicateTabLazily() {
 
     function awaitLoad(tabId) {
       return new Promise(resolve => {
-        browser.tabs.onUpdated.addListener(function listener(
-          tabId_,
-          changed,
-          tab
-        ) {
+        browser.tabs.onUpdated.addListener(function listener(tabId_, changed) {
           if (tabId == tabId_ && changed.status == "complete") {
             browser.tabs.onUpdated.removeListener(listener);
             resolve();
@@ -282,7 +278,7 @@ add_task(async function testDuplicateResolvePromiseRightAway() {
 
       let resolvedRightAway = true;
       browser.tabs.onUpdated.addListener(
-        (tabId, changeInfo, tab) => {
+        () => {
           resolvedRightAway = false;
         },
         { urls: [source.url] }

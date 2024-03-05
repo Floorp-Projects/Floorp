@@ -49,7 +49,7 @@ add_task(async function runtimeSendMessageReply() {
       }
     });
 
-    browser.runtime.onMessage.addListener((msg, sender, respond) => {
+    browser.runtime.onMessage.addListener(msg => {
       if (msg == "respond-now") {
         // If a response from another listener is received first, this
         // exception should be ignored.  Test fails if it is not.
@@ -271,7 +271,7 @@ add_task(async function sendMessageResponseGC() {
           savedResolve("saved-resolve");
           return;
         case "promise-never":
-          return new Promise(r => {});
+          return new Promise(() => {});
 
         case "callback-save":
           savedRespond = respond;

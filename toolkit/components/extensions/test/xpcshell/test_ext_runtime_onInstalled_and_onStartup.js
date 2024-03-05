@@ -51,7 +51,7 @@ function background() {
     }
   });
 
-  browser.runtime.onUpdateAvailable.addListener(details => {
+  browser.runtime.onUpdateAvailable.addListener(() => {
     browser.test.sendMessage("reloading");
     browser.runtime.reload();
   });

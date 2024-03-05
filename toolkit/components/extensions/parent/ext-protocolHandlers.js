@@ -37,7 +37,7 @@ const hasHandlerApp = handlerConfig => {
 };
 
 this.protocolHandlers = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
+  onManifestEntry() {
     let { extension } = this;
     let { manifest } = extension;
 

@@ -67,7 +67,7 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
           let url = new URL(window.location.pathname, "http://example.com/");
           fetch(url, {}).then(response => {
             browser.test.sendMessage("fetch.result", response.ok);
-          }).catch(err => {
+          }).catch(() => {
             browser.test.sendMessage("fetch.result", false);
           });
         },

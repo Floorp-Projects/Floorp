@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 export class BrowsingDataDelegate {
   // Unused for now
-  constructor(extension) {}
+  constructor() {}
 
   // This method returns undefined for all data types that are _not_ handled by
   // this delegate.

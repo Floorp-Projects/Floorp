@@ -108,7 +108,7 @@ global.clickModifiersFromEvent = event => {
 global.waitForTabLoaded = (tab, url) => {
   return new Promise(resolve => {
     windowTracker.addListener("progress", {
-      onLocationChange(browser, webProgress, request, locationURI, flags) {
+      onLocationChange(browser, webProgress, request, locationURI) {
         if (
           webProgress.isTopLevel &&
           browser.ownerGlobal.gBrowser.getTabForBrowser(browser) == tab &&

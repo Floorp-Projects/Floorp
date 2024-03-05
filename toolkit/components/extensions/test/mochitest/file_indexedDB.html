@@ -15,7 +15,7 @@ request.onupgradeneeded = event => {
   let objectStore = db.createObjectStore(objectStoreName,
                                          {autoIncrement: 0});
   request = objectStore.add(test.value, test.key);
-  request.onsuccess = event => {
+  request.onsuccess = () => {
     db.close();
     window.postMessage("indexedDBCreated", "*");
   };

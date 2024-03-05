@@ -8,7 +8,7 @@ server.registerPathHandler("/dummy", (request, response) => {
   response.write("<!DOCTYPE html><html></html>");
 });
 
-server.registerPathHandler("/script.js", (request, response) => {
+server.registerPathHandler("/script.js", () => {
   ok(false, "Unexpected request to /script.js");
 });
 

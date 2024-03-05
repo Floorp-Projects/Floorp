@@ -28,14 +28,14 @@ add_task(async function test_webSocket() {
         ["blocking"]
       );
 
-      browser.test.onMessage.addListener(msg => {
+      browser.test.onMessage.addListener(() => {
         let ws = new WebSocket("ws://example.com/dummy");
-        ws.onopen = e => {
+        ws.onopen = () => {
           ws.send("data");
         };
-        ws.onclose = e => {};
-        ws.onerror = e => {};
-        ws.onmessage = e => {
+        ws.onclose = () => {};
+        ws.onerror = () => {};
+        ws.onmessage = () => {
           ws.close();
         };
       });

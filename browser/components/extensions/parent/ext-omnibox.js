@@ -15,7 +15,7 @@ this.omnibox = class extends ExtensionAPIPersistent {
   PERSISTENT_EVENTS = {
     onInputStarted({ fire }) {
       let { extension } = this;
-      let listener = eventName => {
+      let listener = () => {
         fire.sync();
       };
       extension.on(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
@@ -30,7 +30,7 @@ this.omnibox = class extends ExtensionAPIPersistent {
     },
     onInputCancelled({ fire }) {
       let { extension } = this;
-      let listener = eventName => {
+      let listener = () => {
         fire.sync();
       };
       extension.on(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
@@ -90,7 +90,7 @@ this.omnibox = class extends ExtensionAPIPersistent {
     },
   };
 
-  onManifestEntry(entryName) {
+  onManifestEntry() {
     let { extension } = this;
     let { manifest } = extension;
 

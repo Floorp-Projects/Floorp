@@ -247,7 +247,7 @@ add_task(
     info("Open the non web controlled page in _blank target");
     let onNewTabOpened = new Promise(resolve =>
       win.gBrowser.addTabsProgressListener({
-        onStateChange(browser, webProgress, request, stateFlags, status) {
+        onStateChange(browser, webProgress, request, stateFlags) {
           if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
             win.gBrowser.removeTabsProgressListener(this);
             resolve(win.gBrowser.getTabForBrowser(browser));

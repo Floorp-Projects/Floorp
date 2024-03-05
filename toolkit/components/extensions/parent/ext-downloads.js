@@ -461,7 +461,7 @@ const downloadQuery = query => {
   // an explicit value to match.
   function makeMatch(regex, value, field) {
     if (value == null && regex == null) {
-      return input => true;
+      return () => true;
     }
 
     let re;
@@ -478,7 +478,7 @@ const downloadQuery = query => {
     if (re.test(value)) {
       return input => value == input;
     }
-    return input => false;
+    return () => false;
   }
 
   const matchFilename = makeMatch(

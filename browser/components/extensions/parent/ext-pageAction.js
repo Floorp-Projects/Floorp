@@ -27,7 +27,7 @@ let pageActionMap = new WeakMap();
 
 class PageAction extends PageActionBase {
   constructor(extension, buttonDelegate) {
-    let tabContext = new TabContext(tab => this.getContextData(null));
+    let tabContext = new TabContext(() => this.getContextData(null));
     super(tabContext, extension);
     this.buttonDelegate = buttonDelegate;
   }
@@ -72,7 +72,7 @@ this.pageAction = class extends ExtensionAPIPersistent {
     BrowserUsageTelemetry.recordWidgetChange(makeWidgetId(id), null, "addon");
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     let { extension } = this;
     let options = extension.manifest.page_action;
 
@@ -120,7 +120,7 @@ this.pageAction = class extends ExtensionAPIPersistent {
           iconURL: this.action.getProperty(null, "icon"),
           pinnedToUrlbar: this.action.getPinned(),
           disabled: !this.action.getProperty(null, "enabled"),
-          onCommand: (event, buttonNode) => {
+          onCommand: event => {
             this.handleClick(event.target.ownerGlobal, {
               button: event.button || 0,
               modifiers: clickModifiersFromEvent(event),

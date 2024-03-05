@@ -104,7 +104,7 @@ export function getErrorNameForTelemetry(error) {
 class ExtensionTelemetryMetric {
   constructor(metric) {
     this.metric = metric;
-    this.gleanTimerIdsMap = new DefaultWeakMap(ext => new WeakMap());
+    this.gleanTimerIdsMap = new DefaultWeakMap(() => new WeakMap());
   }
 
   // Stopwatch methods.
@@ -325,7 +325,7 @@ const metricsCache = new Map();
  *      ExtensionTelemetry.browserActionPreloadResult.histogramAdd({category: "Shown", extension});
  */
 export var ExtensionTelemetry = new Proxy(metricsCache, {
-  get(target, prop, receiver) {
+  get(target, prop) {
     // NOTE: if we would be start adding glean probes that do not have a unified
     // telemetry histogram counterpart, we would need to change this check
     // accordingly.

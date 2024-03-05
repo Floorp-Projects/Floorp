@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 this.declarativeNetRequest = class extends ExtensionAPI {
-  getAPI(context) {
+  getAPI() {
     return {
       declarativeNetRequest: {
         get GUARANTEED_MINIMUM_STATIC_RULES() {

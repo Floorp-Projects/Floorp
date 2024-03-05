@@ -27,7 +27,7 @@ const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0))
 const ANDROID = navigator.userAgent.includes("Android");
 
 async function testImageLoading(src, expectedAction) {
-  let imageLoadingPromise = new Promise((resolve, reject) => {
+  let imageLoadingPromise = new Promise((resolve) => {
     let cleanupListeners;
     let testImage = document.createElement("img");
     // Set the src via wrappedJSObject so the load is triggered with the

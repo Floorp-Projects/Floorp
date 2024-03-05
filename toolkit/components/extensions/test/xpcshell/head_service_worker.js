@@ -150,7 +150,7 @@ class TestWorkerWatcher extends ExtensionCommon.EventEmitter {
     }
   }
 
-  observe(subject, topic, childIDString) {
+  observe() {
     // Keep the watched process and related test child process actor updated
     // when a process is created or destroyed.
     this.getAndWatchExtensionProcess();

@@ -257,7 +257,7 @@ class ExtensionStorageLocalIDB extends IndexedDB {
         };
         changed = true;
       } catch (err) {
-        transactionCompleted.catch(err => {
+        transactionCompleted.catch(() => {
           // We ignore this rejection because we are explicitly aborting the transaction,
           // the transaction.error will be null, and we throw the original error below.
         });

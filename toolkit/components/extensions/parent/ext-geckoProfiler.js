@@ -25,7 +25,7 @@ ChromeUtils.defineLazyGetter(this, "symbolicationService", () => {
 const isRunningObserver = {
   _observers: new Set(),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "profiler-started":
       case "profiler-stopped":

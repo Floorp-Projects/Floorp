@@ -30,7 +30,7 @@ async function testCookies(options) {
     let { url, domain, secure } = backgroundOptions;
 
     let failures = 0;
-    let tallyFailure = error => {
+    let tallyFailure = () => {
       failures++;
     };
 

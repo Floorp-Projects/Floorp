@@ -303,7 +303,7 @@ add_task(async function test_webRequest_tabId() {
 add_task(async function test_webRequest_tabId_browser() {
   async function background(url) {
     let tabId;
-    browser.test.onMessage.addListener(async (msg, expected) => {
+    browser.test.onMessage.addListener(async (msg) => {
       if (msg == "create") {
         let tab = await browser.tabs.create({url});
         tabId = tab.id;

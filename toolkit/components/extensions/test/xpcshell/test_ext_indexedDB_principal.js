@@ -30,13 +30,13 @@ add_task(async function test_indexedDB_principal() {
             let store = tx.objectStore("TestStore");
             tx.oncomplete = () => browser.test.sendMessage("storage-created");
             store.add("foo", "bar");
-            tx.onerror = function (e) {
+            tx.onerror = function () {
               browser.test.fail(`Failed with error ${tx.error.message}`);
               // Don't wait for timeout
               browser.test.sendMessage("storage-created");
             };
           };
-          request.onerror = function (e) {
+          request.onerror = function () {
             browser.test.fail(`Failed with error ${request.error.message}`);
             // Don't wait for timeout
             browser.test.sendMessage("storage-created");
@@ -52,7 +52,7 @@ add_task(async function test_indexedDB_principal() {
           dbRequest.onsuccess = function (e) {
             let db = e.target.result;
             let transaction = db.transaction("TestStore");
-            transaction.onerror = function (e) {
+            transaction.onerror = function () {
               browser.test.fail(
                 `Failed with error ${transaction.error.message}`
               );
@@ -60,7 +60,7 @@ add_task(async function test_indexedDB_principal() {
             };
             let objectStore = transaction.objectStore("TestStore");
             let request = objectStore.get("bar");
-            request.onsuccess = function (event) {
+            request.onsuccess = function () {
               browser.test.assertEq(
                 request.result,
                 "foo",
@@ -68,12 +68,12 @@ add_task(async function test_indexedDB_principal() {
               );
               browser.test.notifyPass("done");
             };
-            request.onerror = function (e) {
+            request.onerror = function () {
               browser.test.fail(`Failed with error ${request.error.message}`);
               browser.test.notifyFail("done");
             };
           };
-          dbRequest.onerror = function (e) {
+          dbRequest.onerror = function () {
             browser.test.fail(`Failed with error ${dbRequest.error.message}`);
             browser.test.notifyFail("done");
           };

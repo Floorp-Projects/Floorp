@@ -225,7 +225,7 @@ add_task(async function test_apiScript_async_method() {
     browser.userScripts.onBeforeScript.addListener(script => {
       script.defineGlobals({
         ...sharedTestAPIMethods,
-        testAPIMethod(param, cb, cb2, objWithCb) {
+        testAPIMethod(param, cb, cb2) {
           browser.test.assertEq(
             "function",
             typeof cb,
@@ -696,7 +696,7 @@ add_task(
         getPrototypeOf() {
           throw new Error("Proxy's getPrototypeOf trap");
         },
-        get(target, prop, receiver) {
+        get() {
           throw new Error("Proxy's get trap");
         },
       });

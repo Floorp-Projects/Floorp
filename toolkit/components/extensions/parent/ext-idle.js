@@ -29,7 +29,7 @@ const getIdleObserver = extension => {
 
   if (!observer) {
     observer = new (class extends ExtensionCommon.EventEmitter {
-      observe(subject, topic, data) {
+      observe(subject, topic) {
         if (topic == "idle" || topic == "active") {
           this.emit("stateChanged", topic);
         }

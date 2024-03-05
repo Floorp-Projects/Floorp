@@ -52,7 +52,7 @@ add_task(async function testIndexedDB() {
     // eslint-disable-next-line mozilla/balanced-listeners
     window.addEventListener(
       "message",
-      msg => {
+      () => {
         browser.test.sendMessage("indexedDBCreated");
       },
       true

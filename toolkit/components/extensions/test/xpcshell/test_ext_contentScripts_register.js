@@ -305,7 +305,7 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
 add_task(async function test_contentscripts_register_js() {
   async function background() {
     browser.runtime.onMessage.addListener(
-      ([msg, expectedStates, readyState], sender) => {
+      ([msg, expectedStates, readyState]) => {
         if (msg == "chrome-namespace-ok") {
           browser.test.sendMessage(msg);
           return;

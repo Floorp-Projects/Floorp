@@ -200,7 +200,7 @@ function background(events) {
   }
 
   let listeners = {
-    onBeforeRequest(expected, details, result) {
+    onBeforeRequest(expected, details) {
       // Save some values to test request consistency in later events.
       browser.test.assertTrue(
         details.tabId !== undefined,
@@ -263,7 +263,7 @@ function background(events) {
       }
     },
     onBeforeRedirect() {},
-    onSendHeaders(expected, details, result) {
+    onSendHeaders(expected, details) {
       if (expected.headers && expected.headers.request) {
         checkHeaders("request", expected, details);
       }
@@ -287,7 +287,7 @@ function background(events) {
     onAuthRequired(expected, details, result) {
       result.authCredentials = expected.authInfo;
     },
-    onCompleted(expected, details, result) {
+    onCompleted(expected, details) {
       // If we have already completed a GET request for this url,
       // and it was found, we expect for the response to come fromCache.
       // expected.cached may be undefined, force boolean.
@@ -322,7 +322,7 @@ function background(events) {
         checkHeaders("response", expected, details);
       }
     },
-    onErrorOccurred(expected, details, result) {
+    onErrorOccurred(expected, details) {
       if (expected.error) {
         if (Array.isArray(expected.error)) {
           browser.test.assertTrue(

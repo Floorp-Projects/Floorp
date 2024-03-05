@@ -12,7 +12,7 @@ ExtensionTestUtils.mockAppInfo();
 add_task(async function test_contentscript_runAt() {
   function background() {
     browser.runtime.onMessage.addListener(
-      ([msg, expectedStates, readyState], sender) => {
+      ([msg, expectedStates, readyState]) => {
         if (msg == "chrome-namespace-ok") {
           browser.test.sendMessage(msg);
           return;

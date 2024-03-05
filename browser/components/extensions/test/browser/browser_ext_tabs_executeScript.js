@@ -77,7 +77,7 @@ add_task(async function testExecuteScript() {
             code: "42",
           })
           .then(
-            result => {
+            () => {
               browser.test.fail(
                 "Expected not to be able to execute a script with both file and code"
               );
@@ -208,7 +208,7 @@ add_task(async function testExecuteScript() {
             code: "window",
           })
           .then(
-            result => {
+            () => {
               browser.test.fail(
                 "Expected error when returning non-structured-clonable object"
               );
@@ -232,7 +232,7 @@ add_task(async function testExecuteScript() {
             code: "Promise.resolve(window)",
           })
           .then(
-            result => {
+            () => {
               browser.test.fail(
                 "Expected error when returning non-structured-clonable object"
               );
@@ -256,7 +256,7 @@ add_task(async function testExecuteScript() {
             file: "script3.js",
           })
           .then(
-            result => {
+            () => {
               browser.test.fail(
                 "Expected error when returning non-structured-clonable object"
               );
@@ -281,7 +281,7 @@ add_task(async function testExecuteScript() {
             code: "42",
           })
           .then(
-            result => {
+            () => {
               browser.test.fail(
                 "Expected error when specifying invalid frame ID"
               );
@@ -303,7 +303,7 @@ add_task(async function testExecuteScript() {
                 code: "42",
               })
               .then(
-                result => {
+                () => {
                   browser.test.fail(
                     "Expected error when trying to execute on invalid domain"
                   );

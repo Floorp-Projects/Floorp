@@ -35,7 +35,7 @@ add_task(async function test_webRequest_serviceworker_events() {
         "onErrorOccurred",
       ]);
 
-      function listener(name, details) {
+      function listener(name) {
         browser.test.assertTrue(eventNames.has(name), `received ${name}`);
         eventNames.delete(name);
         if (name == "onCompleted") {

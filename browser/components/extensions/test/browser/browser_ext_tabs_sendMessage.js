@@ -19,7 +19,7 @@ add_task(async function tabsSendMessageReply() {
     background: async function () {
       let firstTab;
       let promiseResponse = new Promise(resolve => {
-        browser.runtime.onMessage.addListener((msg, sender, respond) => {
+        browser.runtime.onMessage.addListener((msg, sender) => {
           if (msg == "content-script-ready") {
             let tabId = sender.tab.id;
 
@@ -265,7 +265,7 @@ add_task(async function tabsSendHidden() {
 
     background: async function () {
       let resolveContent;
-      browser.runtime.onMessage.addListener((msg, sender) => {
+      browser.runtime.onMessage.addListener(msg => {
         if (msg[0] == "content-ready") {
           resolveContent(msg[1]);
         }
@@ -327,7 +327,7 @@ add_task(async function tabsSendHidden() {
         // properties of the possibly-hidden content window.
         let href = window.location.href;
 
-        browser.runtime.onMessage.addListener((msg, sender) => {
+        browser.runtime.onMessage.addListener(msg => {
           browser.test.assertEq(
             href,
             msg,

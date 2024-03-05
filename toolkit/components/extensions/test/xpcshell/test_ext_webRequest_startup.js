@@ -89,7 +89,7 @@ add_task(async function test_nonblocking() {
 
     background() {
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           browser.test.sendMessage("got-request");
         },
         { urls: ["http://example.com/data/file_sample.html"] }
@@ -163,7 +163,7 @@ add_task(async function test_eventpage_nonblocking() {
 
     background() {
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           browser.test.sendMessage("got-request");
         },
         { urls: ["http://example.com/data/file_sample.html"] }
@@ -237,7 +237,7 @@ add_task(async function test_persistent_blocking() {
 
     background() {
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           browser.test.fail("Listener should not have been called");
         },
         { urls: ["http://test1.example.com/*"] },
@@ -290,7 +290,7 @@ add_task(async function test_persistent_listener_after_sideload_upgrade() {
 
     background() {
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           browser.test.sendMessage("got-request");
         },
         { urls: ["http://example.com/data/file_sample.html"] },
@@ -405,7 +405,7 @@ add_task(
         });
 
         browser.webRequest.onBeforeRequest.addListener(
-          details => {
+          () => {
             browser.test.sendMessage("got-request");
           },
           { urls: ["http://example.com/data/file_sample.html"] },
@@ -501,14 +501,14 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
 
     background() {
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           browser.test.sendMessage("got-request");
         },
         { urls: ["http://example.com/data/file_sample.html"] },
         ["blocking"]
       );
       browser.webRequest.onSendHeaders.addListener(
-        details => {
+        () => {
           browser.test.sendMessage("got-sendheaders");
         },
         { urls: ["http://example.com/data/file_sample.html"] }
@@ -540,20 +540,20 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
   delete extensionData.manifest.optional_permissions;
   extensionData.background = function () {
     browser.webRequest.onBeforeRequest.addListener(
-      details => {
+      () => {
         browser.test.sendMessage("got-request");
       },
       { urls: ["http://example.com/data/file_sample.html"] },
       ["blocking"]
     );
     browser.webRequest.onBeforeSendHeaders.addListener(
-      details => {
+      () => {
         browser.test.sendMessage("got-beforesendheaders");
       },
       { urls: ["http://example.com/data/file_sample.html"] }
     );
     browser.webRequest.onSendHeaders.addListener(
-      details => {
+      () => {
         browser.test.sendMessage("got-sendheaders");
       },
       { urls: ["http://example.com/data/file_sample.html"] }
@@ -688,7 +688,7 @@ add_task(async function test_persistent_listener_after_permission_removal() {
 
     background() {
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           browser.test.sendMessage("got-request");
         },
         { urls: ["http://example.com/data/file_sample.html"] },

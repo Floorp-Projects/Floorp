@@ -25,7 +25,7 @@ add_task(async function test_actions_context_menu() {
       contexts: ["all"],
       command: "_execute_sidebar_action",
     });
-    browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    browser.tabs.onUpdated.addListener(tabId => {
       browser.pageAction.show(tabId);
     });
     browser.contextMenus.onClicked.addListener(() => {

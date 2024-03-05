@@ -155,7 +155,7 @@ export class ExtensionControlledPopup {
     );
   }
 
-  observe(subject, topic, data) {
+  observe(subject) {
     // Remove the observer here so we don't get multiple open() calls if we get
     // multiple observer events in quick succession.
     this.removeObserver();

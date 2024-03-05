@@ -26,7 +26,7 @@ add_setup(async () => {
   ];
 
   class API extends ExtensionAPI {
-    getAPI(context) {
+    getAPI() {
       return {
         privileged: {
           test: "hello",

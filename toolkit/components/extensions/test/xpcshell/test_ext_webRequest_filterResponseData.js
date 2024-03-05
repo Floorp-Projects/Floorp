@@ -371,7 +371,7 @@ add_task(async function test_filter_302() {
           let filter = browser.webRequest.filterResponseData(details.requestId);
           browser.test.sendMessage("filter-created");
 
-          filter.ondata = event => {
+          filter.ondata = () => {
             const script = "forceError();";
             filter.write(new Uint8Array(new TextEncoder().encode(script)));
             filter.close();

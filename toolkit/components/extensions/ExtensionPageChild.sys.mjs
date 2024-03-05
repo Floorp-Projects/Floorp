@@ -391,7 +391,7 @@ export var ExtensionPageChild = {
     Services.obs.addObserver(this, "inner-window-destroyed"); // eslint-ignore-line mozilla/balanced-listeners
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic === "inner-window-destroyed") {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 

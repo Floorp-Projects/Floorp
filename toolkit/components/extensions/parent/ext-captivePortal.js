@@ -55,7 +55,7 @@ this.captivePortal = class extends ExtensionAPIPersistent {
     onStateChanged({ fire }) {
       this.checkCaptivePortalEnabled();
 
-      let observer = (subject, topic) => {
+      let observer = () => {
         fire.async({ state: this.nameForCPSState(gCPS.state) });
       };
 
@@ -70,7 +70,7 @@ this.captivePortal = class extends ExtensionAPIPersistent {
             "ipc:network:captive-portal-set-state"
           );
         },
-        convert(_fire, context) {
+        convert(_fire) {
           fire = _fire;
         },
       };
@@ -90,13 +90,13 @@ this.captivePortal = class extends ExtensionAPIPersistent {
             "network:captive-portal-connectivity"
           );
         },
-        convert(_fire, context) {
+        convert(_fire) {
           fire = _fire;
         },
       };
     },
     "captiveURL.onChange": ({ fire }) => {
-      let listener = (text, id) => {
+      let listener = () => {
         fire.async({
           levelOfControl: "not_controllable",
           value: Services.prefs.getStringPref(CAPTIVE_URL_PREF),
@@ -107,7 +107,7 @@ this.captivePortal = class extends ExtensionAPIPersistent {
         unregister: () => {
           Services.prefs.removeObserver(CAPTIVE_URL_PREF, listener);
         },
-        convert(_fire, context) {
+        convert(_fire) {
           fire = _fire;
         },
       };

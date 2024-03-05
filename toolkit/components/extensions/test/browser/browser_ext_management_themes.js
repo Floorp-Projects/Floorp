@@ -91,7 +91,7 @@ add_task(async function test_management_themes() {
       return found;
     }
 
-    browser.test.onMessage.addListener(async msg => {
+    browser.test.onMessage.addListener(async () => {
       let theme = await getAddon("theme");
       browser.test.assertEq(
         theme.description,

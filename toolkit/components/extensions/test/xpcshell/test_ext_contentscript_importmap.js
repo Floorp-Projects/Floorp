@@ -52,7 +52,7 @@ server.registerPathHandler("/importmap.html", (request, response) => {
   response.write(importMapHtml);
 });
 
-server.registerPathHandler("/simple.js", (request, response) => {
+server.registerPathHandler("/simple.js", () => {
   ok(false, "Unexpected request to /simple.js");
 });
 

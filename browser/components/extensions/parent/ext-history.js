@@ -95,7 +95,7 @@ function executeAsyncQuery(historyQuery, options, resultConverter) {
           )
         );
       },
-      handleCompletion(reason) {
+      handleCompletion() {
         resolve(results);
       },
     });

@@ -254,7 +254,7 @@ class KintoServer {
   }
 
   installCatchAll() {
-    this.httpServer.registerPathHandler("/", (request, response) => {
+    this.httpServer.registerPathHandler("/", request => {
       dump(
         `got request: ${request.method}:${request.path}?${request.queryString}\n`
       );
@@ -774,76 +774,65 @@ add_task(async function ensureCanSync_clearAll() {
   const extension2 = { id: extensionId2 };
 
   await withContextAndServer(async function (context, server) {
-    await withSignedInUser(
-      loggedInUser,
-      async function (extensionStorageSync, fxaService) {
-        async function assertSetAndGetData(extension, data) {
-          await extensionStorageSync.set(extension, data, context);
-          let storedData = await extensionStorageSync.get(
-            extension,
-            Object.keys(data),
-            context
-          );
-          const extId = extensionId;
-          deepEqual(
-            storedData,
-            data,
-            `${extId} should get back the data we set`
-          );
-        }
-
-        async function assertDataCleared(extension, keys) {
-          const storedData = await extensionStorageSync.get(
-            extension,
-            keys,
-            context
-          );
-          deepEqual(
-            storedData,
-            {},
-            `${extension.id} should have lost the data`
-          );
-        }
-
-        server.installCollection("storage-sync-crypto");
-        server.etag = 1000;
-
-        let newKeys = await extensionStorageSync.ensureCanSync([
-          extensionId,
-          extensionId2,
-        ]);
-        ok(
-          newKeys.hasKeysFor([extensionId]),
-          `key isn't present for ${extensionId}`
+    await withSignedInUser(loggedInUser, async function (extensionStorageSync) {
+      async function assertSetAndGetData(extension, data) {
+        await extensionStorageSync.set(extension, data, context);
+        let storedData = await extensionStorageSync.get(
+          extension,
+          Object.keys(data),
+          context
         );
-        ok(
-          newKeys.hasKeysFor([extensionId2]),
-          `key isn't present for ${extensionId2}`
-        );
-
-        let posts = server.getPosts();
-        equal(posts.length, 1);
-        assertPostedNewRecord(posts[0]);
-
-        await assertSetAndGetData(extension, { "my-key": 1 });
-        await assertSetAndGetData(extension2, { "my-key": 2 });
-
-        // Call cleanup for the first extension, to double check it has
-        // been wiped out even without an active extension context.
-        cleanUpForContext(extension, context);
-
-        // clear everything.
-        await extensionStorageSync.clearAll();
-
-        // Assert that the data is gone for both the extensions.
-        await assertDataCleared(extension, ["my-key"]);
-        await assertDataCleared(extension2, ["my-key"]);
-
-        // should have been no posts caused by the clear.
-        posts = server.getPosts();
-        equal(posts.length, 1);
+        const extId = extensionId;
+        deepEqual(storedData, data, `${extId} should get back the data we set`);
       }
-    );
+
+      async function assertDataCleared(extension, keys) {
+        const storedData = await extensionStorageSync.get(
+          extension,
+          keys,
+          context
+        );
+        deepEqual(storedData, {}, `${extension.id} should have lost the data`);
+      }
+
+      server.installCollection("storage-sync-crypto");
+      server.etag = 1000;
+
+      let newKeys = await extensionStorageSync.ensureCanSync([
+        extensionId,
+        extensionId2,
+      ]);
+      ok(
+        newKeys.hasKeysFor([extensionId]),
+        `key isn't present for ${extensionId}`
+      );
+      ok(
+        newKeys.hasKeysFor([extensionId2]),
+        `key isn't present for ${extensionId2}`
+      );
+
+      let posts = server.getPosts();
+      equal(posts.length, 1);
+      assertPostedNewRecord(posts[0]);
+
+      await assertSetAndGetData(extension, { "my-key": 1 });
+      await assertSetAndGetData(extension2, { "my-key": 2 });
+
+      // Call cleanup for the first extension, to double check it has
+      // been wiped out even without an active extension context.
+      cleanUpForContext(extension, context);
+
+      // clear everything.
+      await extensionStorageSync.clearAll();
+
+      // Assert that the data is gone for both the extensions.
+      await assertDataCleared(extension, ["my-key"]);
+      await assertDataCleared(extension2, ["my-key"]);
+
+      // should have been no posts caused by the clear.
+      posts = server.getPosts();
+      equal(posts.length, 1);
+    });
   });
 
   await testExtension.unload();
@@ -1407,7 +1396,7 @@ add_task(async function checkSyncKeyRing_overwrites_on_conflict() {
   // overwrite it with our keys.
   const extensionId = uuid();
   let extensionKey;
-  await withSyncContext(async function (context) {
+  await withSyncContext(async function () {
     await withServer(async function (server) {
       // The old device has this kbHash, which is very similar to the
       // current kbHash but with the last character changed.

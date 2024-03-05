@@ -174,7 +174,7 @@ export class ExtensionStorageSync {
     return this._promisify("getBytesInUse", extension, context, keys);
   }
 
-  addOnChangedListener(extension, listener, context) {
+  addOnChangedListener(extension, listener) {
     let listeners = this.listeners.get(extension.id) || new Set();
     listeners.add(listener);
     this.listeners.set(extension.id, listeners);

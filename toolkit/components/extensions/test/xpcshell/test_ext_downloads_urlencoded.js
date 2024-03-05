@@ -62,7 +62,7 @@ function backgroundScript() {
   browser.test.sendMessage("ready");
 }
 
-async function clearDownloads(callback) {
+async function clearDownloads() {
   let list = await Downloads.getList(Downloads.ALL);
   let downloads = await list.getAll();
 

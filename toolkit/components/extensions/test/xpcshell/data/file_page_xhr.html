@@ -8,7 +8,7 @@
 <script>
 "use strict";
 
-addEventListener("message", async function(event) {
+addEventListener("message", async function() {
   const url = new URL("/return_headers.sjs", location).href;
 
   const webpageFetchResult = await fetch(url).then(res => res.json());

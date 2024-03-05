@@ -25,7 +25,7 @@ function getErrorString(nsresult) {
 }
 
 this.dns = class extends ExtensionAPI {
-  getAPI(context) {
+  getAPI() {
     return {
       dns: {
         resolve: function (hostname, flags) {

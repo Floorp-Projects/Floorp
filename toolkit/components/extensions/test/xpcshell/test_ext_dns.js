@@ -14,7 +14,7 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-function getExtension(background = undefined) {
+function getExtension() {
   let manifest = {
     permissions: ["dns", "proxy"],
   };
