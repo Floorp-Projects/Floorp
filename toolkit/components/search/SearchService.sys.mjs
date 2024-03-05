@@ -3992,7 +3992,7 @@ class SearchDefaultOverrideAllowlistHandler {
     } else if (engine instanceof lazy.OpenSearchEngine) {
       entry = overrideEntries.find(
         e =>
-          e.thirdPartyId == "opensearch@tests.mozilla.org" &&
+          e.thirdPartyId == "opensearch@search.mozilla.org" &&
           e.engineName == engine.name
       );
     }
