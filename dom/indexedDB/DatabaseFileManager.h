@@ -31,6 +31,7 @@ class DatabaseFileManager final
   const quota::OriginMetadata mOriginMetadata;
   const nsString mDatabaseName;
   const nsCString mDatabaseID;
+  const nsString mDatabaseFilePath;
 
   RefPtr<IndexedDBCipherKeyManager> mCipherKeyManager;
 
@@ -68,7 +69,8 @@ class DatabaseFileManager final
   DatabaseFileManager(PersistenceType aPersistenceType,
                       const quota::OriginMetadata& aOriginMetadata,
                       const nsAString& aDatabaseName,
-                      const nsCString& aDatabaseID, bool aEnforcingQuota,
+                      const nsCString& aDatabaseID,
+                      const nsAString& aDatabaseFilePath, bool aEnforcingQuota,
                       bool aIsInPrivateBrowsingMode);
 
   PersistenceType Type() const { return mPersistenceType; }
@@ -82,6 +84,8 @@ class DatabaseFileManager final
   const nsAString& DatabaseName() const { return mDatabaseName; }
 
   const nsCString& DatabaseID() const { return mDatabaseID; }
+
+  const nsAString& DatabaseFilePath() const { return mDatabaseFilePath; }
 
   IndexedDBCipherKeyManager& MutableCipherKeyManagerRef() const {
     MOZ_ASSERT(mIsInPrivateBrowsingMode);
