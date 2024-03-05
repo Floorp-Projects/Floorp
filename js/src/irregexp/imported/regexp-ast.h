@@ -654,12 +654,13 @@ class RegExpLookaround final : public RegExpTree {
   enum Type { LOOKAHEAD, LOOKBEHIND };
 
   RegExpLookaround(RegExpTree* body, bool is_positive, int capture_count,
-                   int capture_from, Type type)
+                   int capture_from, Type type, int index)
       : body_(body),
         is_positive_(is_positive),
         capture_count_(capture_count),
         capture_from_(capture_from),
-        type_(type) {}
+        type_(type),
+        index_(index) {}
 
   DECL_BOILERPLATE(Lookaround);
 
@@ -672,6 +673,7 @@ class RegExpLookaround final : public RegExpTree {
   int capture_count() const { return capture_count_; }
   int capture_from() const { return capture_from_; }
   Type type() const { return type_; }
+  int index() const { return index_; }
 
   class Builder {
    public:
@@ -695,13 +697,17 @@ class RegExpLookaround final : public RegExpTree {
   int capture_count_;
   int capture_from_;
   Type type_;
+  int index_;
 };
 
 
 class RegExpBackReference final : public RegExpTree {
  public:
-  RegExpBackReference() = default;
-  explicit RegExpBackReference(RegExpCapture* capture) : capture_(capture) {}
+  explicit RegExpBackReference(Zone* zone) : captures_(1, zone) {}
+  explicit RegExpBackReference(RegExpCapture* capture, Zone* zone)
+      : captures_(1, zone) {
+    captures_.Add(capture, zone);
+  }
 
   DECL_BOILERPLATE(BackReference);
 
@@ -709,14 +715,15 @@ class RegExpBackReference final : public RegExpTree {
   // The back reference may be recursive, e.g. /(\2)(\1)/. To avoid infinite
   // recursion, we give up. Ignorance is bliss.
   int max_match() override { return kInfinity; }
-  int index() const { return capture_->index(); }
-  RegExpCapture* capture() const { return capture_; }
-  void set_capture(RegExpCapture* capture) { capture_ = capture; }
+  const ZoneList<RegExpCapture*>* captures() const { return &captures_; }
+  void add_capture(RegExpCapture* capture, Zone* zone) {
+    captures_.Add(capture, zone);
+  }
   const ZoneVector<base::uc16>* name() const { return name_; }
   void set_name(const ZoneVector<base::uc16>* name) { name_ = name; }
 
  private:
-  RegExpCapture* capture_ = nullptr;
+  ZoneList<RegExpCapture*> captures_;
   const ZoneVector<base::uc16>* name_ = nullptr;
 };
 
