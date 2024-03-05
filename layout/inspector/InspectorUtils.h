@@ -268,6 +268,13 @@ class InspectorUtils {
   static void GetCSSRegisteredProperties(
       GlobalObject& aGlobal, Document& aDocument,
       nsTArray<InspectorCSSPropertyDefinition>& aResult);
+
+  /**
+   * Get the rule body text start and end offsets within aInitialText
+   */
+  static void GetRuleBodyTextOffsets(
+      GlobalObject&, const nsACString& aInitialText,
+      Nullable<InspectorGetRuleBodyTextResult>& aResult);
 };
 
 }  // namespace mozilla::dom

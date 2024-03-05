@@ -6,7 +6,7 @@ use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
 use bincode::{deserialize, serialize};
 use cssparser::ToCss as ParserToCss;
-use cssparser::{Parser, ParserInput, SourceLocation, UnicodeRange};
+use cssparser::{BasicParseError, ParseError as CssParseError, Parser, ParserInput, SourceLocation, UnicodeRange, Token};
 use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
@@ -9003,4 +9003,59 @@ pub extern "C" fn Servo_GetSelectorWarnings(
             }
         }
     });
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_GetRuleBodyTextOffsets(
+    initial_text: &nsACString,
+    result_start_offset: &mut u32,
+    result_end_offset: &mut u32,
+) -> bool {
+    let css_text = unsafe { initial_text.as_str_unchecked() };
+    let mut input = ParserInput::new(&css_text);
+    let mut input = Parser::new(&mut input);
+
+    let mut start_offset = 0;
+    let mut found_start = false;
+
+    // Search forward for the opening brace.
+    while let Ok(token) = input.next() {
+        match *token {
+            Token::CurlyBracketBlock => {
+                start_offset = input.position().byte_index();
+                found_start = true;
+                break;
+            },
+            _ => {}
+        }
+
+        if token.is_parse_error() {
+            return false;
+        }
+    }
+
+
+    if !found_start {
+        return false;
+    }
+
+    let token_start = input.position();
+    // Parse the nested block to move the parser to the end of the block
+    let _ = input.parse_nested_block(
+        |_i| -> Result<(), CssParseError<'_, BasicParseError>> {
+            Ok(())
+        }
+    );
+    let mut end_offset = input.position().byte_index();
+    // We're not guaranteed to have a closing bracket, but when we do, we need to move
+    // the end offset before it.
+    let token_slice = input.slice_from(token_start);
+    if token_slice.ends_with("}") {
+        end_offset = end_offset - 1;
+    }
+
+    *result_start_offset = start_offset as u32;
+    *result_end_offset = end_offset as u32;
+
+    return true;
 }

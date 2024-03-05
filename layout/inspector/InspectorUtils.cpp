@@ -966,5 +966,23 @@ void InspectorUtils::GetCSSRegisteredProperties(
   }
 }
 
+/* static */
+void InspectorUtils::GetRuleBodyTextOffsets(
+    GlobalObject&, const nsACString& aInitialText,
+    Nullable<InspectorGetRuleBodyTextResult>& aResult) {
+  uint32_t resultStartOffset;
+  uint32_t resultEndOffset;
+
+  if (!Servo_GetRuleBodyTextOffsets(&aInitialText, &resultStartOffset,
+                                    &resultEndOffset)) {
+    aResult.SetNull();
+    return;
+  }
+
+  InspectorGetRuleBodyTextResult& offsets = aResult.SetValue();
+  offsets.mStartOffset = resultStartOffset;
+  offsets.mEndOffset = resultEndOffset;
+}
+
 }  // namespace dom
 }  // namespace mozilla
