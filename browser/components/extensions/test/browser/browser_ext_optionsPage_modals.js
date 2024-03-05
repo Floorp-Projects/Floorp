@@ -2,6 +2,43 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PromptTestUtils",
+  "resource://testing-common/PromptTestUtils.jsm"
+);
+
+async function waitForExtensionModalPrompt(extension) {
+  const dialog = await PromptTestUtils.waitForPrompt(gBrowser.selectedBrowser, {
+    modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+  });
+  ok(dialog, "Got an active modal prompt dialog as expected");
+  Assert.equal(
+    dialog?.args.promptPrincipal.addonId,
+    extension.id,
+    "Got a prompt associated to the expected extension id"
+  );
+
+  const promptTitle = dialog?.ui.infoTitle.textContent;
+  ok(
+    /The page at TestExtName says:/.test(promptTitle),
+    `Got the expect title on the modal prompt dialog: "${promptTitle}"`
+  );
+
+  return {
+    async closeModalPrompt() {
+      info("Close the tab modal prompt");
+      await PromptTestUtils.handlePrompt(dialog);
+    },
+    assertClosedModalPrompt() {
+      ok(
+        !dialog.args.promptActive,
+        "modal prompt dialog has been closed as expected"
+      );
+    },
+  };
+}
+
 add_task(async function test_tab_options_modals() {
   function backgroundScript() {
     browser.runtime.openOptionsPage();
@@ -26,6 +63,7 @@ add_task(async function test_tab_options_modals() {
       options_ui: {
         page: "options.html",
       },
+      name: "TestExtName",
     },
     files: {
       "options.html": `<!DOCTYPE html>
@@ -42,57 +80,15 @@ add_task(async function test_tab_options_modals() {
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:addons");
 
+  const testPromptPromise = waitForExtensionModalPrompt(extension);
   await extension.startup();
 
-  const onceModalOpened = new Promise(resolve => {
-    const aboutAddonsBrowser = gBrowser.selectedBrowser;
-
-    aboutAddonsBrowser.addEventListener(
-      "DOMWillOpenModalDialog",
-      function onModalDialog(event) {
-        // Wait for the next event tick to make sure the remaining part of the
-        // testcase runs after the dialog gets opened.
-        SimpleTest.executeSoon(resolve);
-      },
-      { once: true, capture: true }
-    );
-  });
-
   info("Wait the options_ui modal to be opened");
-  await onceModalOpened;
+  const testModalPrompt = await testPromptPromise;
 
-  const optionsBrowser = getInlineOptionsBrowser(gBrowser.selectedBrowser);
-
-  // The stack that contains the tabmodalprompt elements is the parent of
-  // the extensions options_ui browser element.
-  let stack = optionsBrowser.parentNode;
-
-  let dialogs = stack.querySelectorAll("tabmodalprompt");
-  Assert.equal(
-    dialogs.length,
-    1,
-    "Expect a tab modal opened for the about addons tab"
-  );
-
-  // Verify that the expected stylesheets have been applied on the
-  // tabmodalprompt element (See Bug 1550529).
-  const tabmodalStyle = dialogs[0].ownerGlobal.getComputedStyle(dialogs[0]);
-  is(
-    tabmodalStyle["background-color"],
-    "rgba(26, 26, 26, 0.5)",
-    "Got the expected styles applied to the tabmodalprompt"
-  );
-
-  info("Close the tab modal prompt");
-  dialogs[0].querySelector(".tabmodalprompt-button0").click();
-
+  testModalPrompt.closeModalPrompt();
   await extension.awaitFinish("options-ui-modals");
-
-  Assert.equal(
-    stack.querySelectorAll("tabmodalprompt").length,
-    0,
-    "Expect the tab modal to be closed"
-  );
+  testModalPrompt.assertClosedModalPrompt();
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
