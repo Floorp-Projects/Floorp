@@ -4769,7 +4769,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     if (gWaylandProxy) {
       gWaylandProxy->RestoreWaylandDisplay();
     }
-    if (PR_GetEnv("WAYLAND_DISPLAY") && GdkIsX11Display()) {
+    if (waylandEnabled && PR_GetEnv("WAYLAND_DISPLAY") && GdkIsX11Display()) {
       // Gtk somehow switched to X11 display but we want Wayland.
       // It may happen if compositor response is missig or it's slow
       // or WAYLAND_DISPLAY is wrong. In such case throw warning but
