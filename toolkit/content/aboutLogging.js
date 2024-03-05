@@ -228,7 +228,6 @@ function populatePresets() {
       $("#log-modules").value = gLoggingPresets[dropdown.value].modules;
     }
     setPresetAndDescription(dropdown.value);
-    setLogModules();
     Services.prefs.setCharPref("logging.config.preset", dropdown.value);
   };
 
@@ -376,7 +375,6 @@ function parseURL() {
     $("#set-log-modules-button").disabled = true;
     $("#logging-preset-dropdown").disabled = true;
     someElementsDisabled = true;
-    setLogModules();
     updateLogModules();
   }
   if (outputTypeOverriden) {
