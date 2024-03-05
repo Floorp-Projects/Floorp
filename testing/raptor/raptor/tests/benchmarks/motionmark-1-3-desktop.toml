@@ -1,0 +1,28 @@
+[DEFAULT]
+alert_threshold = 2.0
+apps = "firefox, chrome, chromium, safari, custom-car"
+gecko_profile_interval = 1
+gecko_profile_features = "stackwalk,js,cpu,java,processcpu"
+gecko_profile_threads = "GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate"
+expose_browser_profiler = true
+expose_chrome_trace = true
+lower_is_better = false
+page_cycles = 1
+page_timeout = 600000
+support_class = "motionmark-1-3.py"
+test_script = "motionmark-1-3.js"
+owner = "Graphics Team"
+type = "benchmark"
+unit = "score"
+repository = "https://github.com/webkit/motionmark"
+repository_revision = "5d9c88136d59c11daf78d539c73e4e3e88c091ab"
+test_url="http://<host>:<port>/MotionMark/developer.html?warmup-length=2000&warmup-frame-count=30&first-frame-minimum-length=0&test-interval=30&display=minimal&tiles=big&controller=ramp&system-frame-rate=60&frame-rate=60&time-measurement=performance"
+cold = true
+browser_cycles = 1
+host_from_parent = false
+
+[motionmark-1-3]
+suite_name = "MotionMark"
+
+[motionmark-htmlsuite-1-3]
+suite_name = "HTML suite"

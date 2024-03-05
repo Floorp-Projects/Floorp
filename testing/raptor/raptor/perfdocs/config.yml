@@ -115,6 +115,8 @@ suites:
             assorted-dom: "FF, CH, CU"
             jetstream2: "FF, CH, CU"
             matrix-react-bench: "FF, CH, CU"
+            motionmark-1-3: "FF, CH, CU, FE, CH-M, GV"
+            motionmark-htmlsuite-1-3: "FF, CH, CU, FE, CH-M, GV"
             motionmark-animometer: "FF, CH, CU, FE, CH-M, GV"
             motionmark-animometer-ramp: "FF, CH, CU, FE, CH-M, GV"
             motionmark-htmlsuite: "FF, CH, CU, FE, CH-M, GV"

@@ -9,6 +9,10 @@
 
 ["include:tests/benchmarks/matrix-react-bench.toml"]
 
+["include:tests/benchmarks/motionmark-1-3-desktop.toml"]
+
+["include:tests/benchmarks/motionmark-1-3-mobile.toml"]
+
 ["include:tests/benchmarks/motionmark-animometer-desktop.toml"]
 
 ["include:tests/benchmarks/motionmark-animometer-mobile.toml"]

@@ -304,6 +304,8 @@ browsertime-benchmark:
                 macosx1400.*shippable.*:
                     - [speedometer, sp]
                     - [speedometer3, sp3]
+                    - [motionmark-1-3, mm-1.3]
+                    - [motionmark-htmlsuite-1-3, mm-h-1.3]
                 default:
                     by-app:
                         firefox:
@@ -315,6 +317,8 @@ browsertime-benchmark:
                             - [motionmark-animometer-ramp, mm-ar]
                             - [motionmark-htmlsuite-ramp, mm-hr]
                             - [motionmark-htmlsuite, mm-h]
+                            - [motionmark-1-3, mm-1.3]
+                            - [motionmark-htmlsuite-1-3, mm-h-1.3]
                             - [speedometer, sp]
                             - [speedometer3, sp3]
                             - [stylebench, sb]
@@ -331,6 +335,8 @@ browsertime-benchmark:
                             - [motionmark-htmlsuite, mm-h]
                             - [motionmark-animometer-ramp, mm-ar]
                             - [motionmark-htmlsuite-ramp, mm-hr]
+                            - [motionmark-1-3, mm-1.3]
+                            - [motionmark-htmlsuite-1-3, mm-h-1.3]
                             - [speedometer, sp]
                             # - [speedometer3, sp3] Perma fails on osx 10.15.x machines (Bug 1809535)
                             - [stylebench, sb]
@@ -342,6 +348,8 @@ browsertime-benchmark:
                             - [speedometer3, sp3]
                             - [motionmark-animometer-ramp, mm-ar]
                             - [motionmark-htmlsuite-ramp, mm-hr]
+                            - [motionmark-1-3, mm-1.3]
+                            - [motionmark-htmlsuite-1-3, mm-h-1.3]
                         chrome:
                             by-test-platform:
                                 macosx1015.*shippable.*:
@@ -351,6 +359,8 @@ browsertime-benchmark:
                                     - [matrix-react-bench, mrb]
                                     - [motionmark-animometer, mm-a]
                                     - [motionmark-htmlsuite, mm-h]
+                                    - [motionmark-1-3, mm-1.3]
+                                    - [motionmark-htmlsuite-1-3, mm-h-1.3]
                                     - [speedometer, sp]
                                     - [speedometer3, sp3]
                                     - [stylebench, sb]
@@ -366,6 +376,8 @@ browsertime-benchmark:
                                     - [motionmark-animometer-ramp, mm-ar]
                                     - [motionmark-htmlsuite, mm-h]
                                     - [motionmark-htmlsuite-ramp, mm-hr]
+                                    - [motionmark-1-3, mm-1.3]
+                                    - [motionmark-htmlsuite-1-3, mm-h-1.3]
                                     - [speedometer, sp]
                                     - [speedometer3, sp3]
                                     - [stylebench, sb]
@@ -381,6 +393,8 @@ browsertime-benchmark:
                             - [motionmark-animometer-ramp, mm-ar]
                             - [motionmark-htmlsuite, mm-h]
                             - [motionmark-htmlsuite-ramp, mm-hr]
+                            - [motionmark-1-3, mm-1.3]
+                            - [motionmark-htmlsuite-1-3, mm-h-1.3]
                             - [speedometer, sp]
                             - [speedometer3, sp3]
                             - [stylebench, sb]
@@ -462,6 +476,8 @@ browsertime-benchmark:
             motionmark-htmlsuite: 1500
             motionmark-htmlsuite-ramp: 3000
             motionmark-animometer-ramp: 2100
+            motionmark-1-3: 3000
+            motionmark-htmlsuite-1-3: 3000
             unity-webgl: 2400
             speedometer3:
                 by-test-platform:
