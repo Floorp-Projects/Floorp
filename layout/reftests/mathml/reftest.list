@@ -1,5 +1,3 @@
-fails-if(winWidget) fuzzy-if(gtkWidget,255-255,776226-776226) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482 (Windows), bug 1599640 (Linux)
-
 # radicalbar*.html tests rely on reftest-zoom to verify the visibility of the
 # radical bar at different zoom levels. There does not seem to be any equivalent
 # way of testing that via WPT. See bug 1850661.
