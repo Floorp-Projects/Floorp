@@ -53,7 +53,7 @@ add_task(async function test_save_doorhanger_unsupported_region_from_record() {
         },
       });
 
-      await ensureNoDoorhanger(browser);
+      await ensureNoDoorhanger();
     }
   );
 });
@@ -79,7 +79,7 @@ add_task(async function test_save_doorhanger_unsupported_region_from_pref() {
         },
       });
 
-      await ensureNoDoorhanger(browser);
+      await ensureNoDoorhanger();
     }
   );
 

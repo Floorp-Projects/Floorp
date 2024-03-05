@@ -69,7 +69,7 @@ add_task(
         });
 
         info("Ensure address doorhanger not shown");
-        await ensureNoDoorhanger(browser);
+        await ensureNoDoorhanger();
       }
     );
   }
@@ -124,7 +124,7 @@ add_task(
         });
 
         info("Ensure address doorhanger not shown");
-        await ensureNoDoorhanger(browser);
+        await ensureNoDoorhanger();
       }
     );
   }
@@ -238,7 +238,7 @@ add_task(
         });
 
         info("Ensure address doorhanger not shown");
-        await ensureNoDoorhanger;
+        await ensureNoDoorhanger();
 
         ok(true, "Address doorhanger is not shown");
       }

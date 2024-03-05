@@ -117,7 +117,7 @@ const observer = {
     LoginManagerChild.forWindow(window)._onNavigation(window.document);
   },
 
-  onStateChange(aWebProgress, aRequest, aState) {
+  onStateChange(aWebProgress, aRequest, aState, _aStatus) {
     const window = aWebProgress.DOMWindow;
     const loginManagerChild = () => LoginManagerChild.forWindow(window);
 
@@ -161,7 +161,7 @@ const observer = {
   },
 
   // nsIObserver
-  observe(subject, topic) {
+  observe(subject, topic, _data) {
     switch (topic) {
       case "autocomplete-did-enter-text": {
         let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);

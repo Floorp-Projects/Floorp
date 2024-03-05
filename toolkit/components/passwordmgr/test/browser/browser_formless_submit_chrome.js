@@ -50,7 +50,7 @@ add_setup(async function () {
 });
 
 add_task(async function test_urlbar_new_URL() {
-  await withTestPage(async function (aBrowser) {
+  await withTestPage(async aBrowser => {
     gURLBar.value = "";
     let focusPromise = BrowserTestUtils.waitForEvent(gURLBar, "focus");
     gURLBar.focus();
@@ -67,7 +67,7 @@ add_task(async function test_urlbar_new_URL() {
 });
 
 add_task(async function test_urlbar_fragment_enter() {
-  await withTestPage(function () {
+  await withTestPage(_browser => {
     gURLBar.focus();
     gURLBar.select();
     EventUtils.synthesizeKey("KEY_ArrowRight");
@@ -77,7 +77,7 @@ add_task(async function test_urlbar_fragment_enter() {
 });
 
 add_task(async function test_backButton_forwardButton() {
-  await withTestPage(async function (aBrowser) {
+  await withTestPage(async aBrowser => {
     info("Loading formless_basic.html?second");
     // Load a new page in the tab so we can test going back
     BrowserTestUtils.startLoadingURIString(
@@ -120,7 +120,7 @@ add_task(async function test_backButton_forwardButton() {
 });
 
 add_task(async function test_reloadButton() {
-  await withTestPage(async function (aBrowser) {
+  await withTestPage(async aBrowser => {
     let reloadButton = document.getElementById("reload-button");
     let loadPromise = BrowserTestUtils.browserLoaded(
       aBrowser,
@@ -137,7 +137,7 @@ add_task(async function test_reloadButton() {
 });
 
 add_task(async function test_back_keyboard_shortcut() {
-  await withTestPage(async function (aBrowser) {
+  await withTestPage(async aBrowser => {
     // Load a new page in the tab so we can test going back
     BrowserTestUtils.startLoadingURIString(
       aBrowser,

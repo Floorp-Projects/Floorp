@@ -88,9 +88,7 @@ add_task(async function test_oneUsernameOnlyForm() {
   const numUsernameOnlyForms = 1;
   const numBasicForms = 0;
 
-  // number of "other" forms doesn't change the outcome, set it to 2 here and
-  // in the following testcase just to ensure it doesn't affect the result.
-  let tab = await setupForms(numUsernameOnlyForms, numBasicForms, 2);
+  let tab = await setupForms(numUsernameOnlyForms, numBasicForms);
 
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
@@ -111,7 +109,7 @@ add_task(async function test_multipleUsernameOnlyForms() {
   const numUsernameOnlyForms = 3;
   const numBasicForms = 2;
 
-  let tab = await setupForms(numUsernameOnlyForms, numBasicForms, 2);
+  let tab = await setupForms(numUsernameOnlyForms, numBasicForms);
 
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
@@ -133,7 +131,7 @@ add_task(async function test_multipleDocument() {
   let numUsernameOnlyForms1 = 2;
   let numBasicForms1 = 2;
 
-  let tab1 = await setupForms(numUsernameOnlyForms1, numBasicForms1, 2);
+  let tab1 = await setupForms(numUsernameOnlyForms1, numBasicForms1);
 
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
@@ -150,7 +148,7 @@ add_task(async function test_multipleDocument() {
   let numUsernameOnlyForms2 = 15;
   let numBasicForms2 = 3;
 
-  let tab2 = await setupForms(numUsernameOnlyForms2, numBasicForms2, 2);
+  let tab2 = await setupForms(numUsernameOnlyForms2, numBasicForms2);
 
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",
@@ -180,7 +178,7 @@ add_task(async function test_tooManyUsernameOnlyForms() {
   const numUsernameOnlyForms = 25;
   const numBasicForms = 2;
 
-  let tab = await setupForms(numUsernameOnlyForms, numBasicForms, 2);
+  let tab = await setupForms(numUsernameOnlyForms, numBasicForms);
 
   await checkChildHistogram(
     "PWMGR_IS_USERNAME_ONLY_FORM",

@@ -203,7 +203,7 @@ add_task(async function test_pref_toggle() {
       gBrowser,
       url: "about:preferences#privacy",
     },
-    async function () {
+    async _browser => {
       const relayIntegrationCheckbox = content.document.querySelector(
         "checkbox#relayIntegration"
       );

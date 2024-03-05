@@ -56,7 +56,7 @@
     function runNextTest() {
       is(gExpectedDialogs, 0, "received expected number of auth dialogs");
       mm.sendAsyncMessage("prepareForNextTest");
-      mm.addMessageListener("prepareForNextTestDone", function prepared() {
+      mm.addMessageListener("prepareForNextTestDone", function prepared(_msg) {
         mm.removeMessageListener("prepareForNextTestDone", prepared);
         if (pendingTests.length) {
           ({expectedDialogs: gExpectedDialogs,
@@ -92,7 +92,7 @@
       const pps = parentCc["@mozilla.org/network/protocol-proxy-service;1"].
                 getService(parentCi.nsIProtocolProxyService);
       pps.asyncResolve(channel, 0, {
-        async onProxyAvailable(req, uri, pi) {
+        async onProxyAvailable(req, uri, pi, _status) {
           const mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
           const login1 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
                       createInstance(parentCi.nsILoginInfo);
@@ -110,7 +110,7 @@
         QueryInterface: ChromeUtils.generateQI([parentCi.nsIProtocolProxyCallback]),
       });
 
-      addMessageListener("prepareForNextTest", () => {
+      addMessageListener("prepareForNextTest", _message => {
         parentCc["@mozilla.org/network/http-auth-manager;1"].
           getService(parentCi.nsIHttpAuthManager).
           clearAll();
@@ -131,7 +131,7 @@
       const dialogObserverTopic = authPromptIsCommonDialog
         ? "common-dialog-loaded" : "tabmodal-dialog-loaded";
 
-      function dialogObserver(subj) {
+      function dialogObserver(subj, _topic, _data) {
         if (authPromptIsCommonDialog) {
           subj.Dialog.ui.prompt.document
           .getElementById("commonDialog")
@@ -146,18 +146,14 @@
 
       Services.obs.addObserver(dialogObserver, dialogObserverTopic);
 
-      addMessageListener("cleanup", () => {
+      addMessageListener("cleanup", _message => {
         Services.obs.removeObserver(dialogObserver, dialogObserverTopic);
         sendAsyncMessage("cleanupDone");
       });
     });
 
-    mm.addMessageListener("promptAccepted", () => {
-      gExpectedDialogs--;
-    });
-    mm.addMessageListener("setupDone", () => {
-      runNextTest();
-    });
+    mm.addMessageListener("promptAccepted", _message =>  gExpectedDialogs--);
+    mm.addMessageListener("setupDone", _message => runNextTest());
 </script>
 </body>
 </html>

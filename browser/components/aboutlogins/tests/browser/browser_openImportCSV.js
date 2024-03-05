@@ -25,7 +25,7 @@ class CsvImportHelper {
    */
   static waitForOpenFilePicker(destFile) {
     return new Promise(resolve => {
-      MockFilePicker.showCallback = () => {
+      MockFilePicker.showCallback = _fp => {
         info("showCallback");
         info("fileName: " + destFile.path);
         MockFilePicker.setFiles([destFile]);
@@ -217,8 +217,6 @@ class CsvImportHelper {
   /**
    * An utility method to fetch data from the about:loginsimportreport page.
    *
-   * @param {browser} browser
-   *        The browser object.
    * @returns {Promise<Object>} A promise that contains the detailed report data like added, modified, noChange, errors and rows.
    */
   static async getDetailedReportData() {
@@ -357,7 +355,7 @@ add_task(async function test_open_import_all_four_detailed_report() {
       await CsvImportHelper.clickImportFromCsvMenu(browser, updatedCsvData);
       await CsvImportHelper.waitForImportToComplete();
       const reportTab = await CsvImportHelper.clickDetailedReport(browser);
-      const report = await CsvImportHelper.getDetailedReportData(browser);
+      const report = await CsvImportHelper.getDetailedReportData();
       BrowserTestUtils.removeTab(reportTab);
       const { added, modified, noChange, errors, rows } = report;
       Assert.equal(added, 1, "It should have one item as added");

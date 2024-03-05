@@ -85,13 +85,7 @@ add_task(async function test() {
           let iframe = doc.createElement("iframe");
           doc.body.appendChild(iframe);
           let loaded = new Promise(resolve => {
-            iframe.addEventListener(
-              "load",
-              function () {
-                resolve();
-              },
-              { once: true }
-            );
+            iframe.addEventListener("load", _e => resolve(), { once: true });
           });
           iframe.src =
             "https://example.com/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";
@@ -113,13 +107,7 @@ add_task(async function test() {
         let iframe = doc.createElement("iframe");
         doc.body.appendChild(iframe);
         let loaded = new Promise(resolve => {
-          iframe.addEventListener(
-            "load",
-            function () {
-              resolve();
-            },
-            { once: true }
-          );
+          iframe.addEventListener("load", () => resolve(), { once: true });
         });
         iframe.src =
           "https://example.org/browser/toolkit/components/passwordmgr/test/browser/authenticate.sjs";

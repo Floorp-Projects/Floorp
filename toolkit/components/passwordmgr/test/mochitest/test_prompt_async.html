@@ -58,9 +58,7 @@
 
       function promiseLoadedContentDoc(frame) {
         return new Promise(resolve => {
-          frame.addEventListener("load", function onLoad() {
-            resolve(SpecialPowers.wrap(frame).contentDocument);
-          }, { once: true });
+          frame.addEventListener("load", _e => resolve(SpecialPowers.wrap(frame).contentDocument), { once: true });
         });
       }
 
@@ -98,7 +96,7 @@
               return this;
             },
 
-            onProxyAvailable(req, uri, pi) {
+            onProxyAvailable(req, uri, pi, _status) {
               // Add logins using the proxy host and port used by the mochitest harness.
               mozproxyOrigin = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
                 SpecialPowers.wrap(pi).port;

@@ -114,7 +114,7 @@ LoginManagerAuthPromptFactory.prototype = {
   _uiBusyPromise: null,
   _uiBusyResolve: null,
 
-  observe(subject, topic) {
+  observe(_subject, topic, _data) {
     this.log(`Observed topic: ${topic}.`);
     if (topic == "passwordmgr-crypto-login") {
       // Show the deferred prompters.

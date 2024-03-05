@@ -117,8 +117,8 @@ add_task(async function test_added_login_shows_breach_warning() {
   await reauthObserved;
   await SpecialPowers.spawn(
     browser,
-    [[TEST_LOGIN1.guid, VULNERABLE_TEST_LOGIN2.guid, TEST_LOGIN3.guid]],
-    async ([_regularLoginGuid, vulnerableLoginGuid, breachedLoginGuid]) => {
+    [[VULNERABLE_TEST_LOGIN2.guid, TEST_LOGIN3.guid]],
+    async ([vulnerableLoginGuid, breachedLoginGuid]) => {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );

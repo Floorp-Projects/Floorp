@@ -1387,9 +1387,7 @@ class nsContextMenu {
 
   useGeneratedPassword() {
     nsContextMenu.LoginManagerContextMenu.useGeneratedPassword(
-      this.targetIdentifier,
-      this.contentData.documentURIObject,
-      this.browser
+      this.targetIdentifier
     );
   }
 

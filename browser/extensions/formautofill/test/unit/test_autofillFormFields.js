@@ -895,7 +895,7 @@ function do_test(testcases, testFn) {
         // Replace the internal decrypt method with OSKeyStore API,
         // but don't pass the reauth parameter to avoid triggering
         // reauth login dialog in these tests.
-        let decryptHelper = async cipherText => {
+        let decryptHelper = async (cipherText, _reauth) => {
           return OSKeyStore.decrypt(cipherText, false);
         };
         handler.collectFormFields();

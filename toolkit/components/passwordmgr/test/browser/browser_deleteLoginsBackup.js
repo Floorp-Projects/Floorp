@@ -50,7 +50,7 @@ const loginBackupPath = PathUtils.join(
 
 async function waitForBackupUpdate() {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer() {
+    Services.obs.addObserver(function observer(_subject, _topic, _data) {
       Services.obs.removeObserver(observer, "logins-backup-updated");
       resolve();
     }, "logins-backup-updated");

@@ -105,7 +105,7 @@ add_task(async function test_mpAutocompleteUIBusy() {
     isProbablyANewPasswordField: true,
   };
 
-  function dialogObserver(subject, topic) {
+  function dialogObserver(_subject, topic, _data) {
     Assert.ok(false, "A second dialog shouldn't have been shown");
     Services.obs.removeObserver(dialogObserver, topic);
   }
