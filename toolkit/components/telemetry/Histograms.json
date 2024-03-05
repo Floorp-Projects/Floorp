@@ -12252,7 +12252,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox"],
     "operating_systems": ["windows"],
-    "expires_in_version": "126",
+    "expires_in_version": "never",
     "kind": "categorical",
     "labels": [
       "Success",
@@ -12268,7 +12268,7 @@
       "ErrBuild"
     ],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1805509],
+    "bug_numbers": [1805509, 1883466],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "description": "Result of each attempt to set the default browser with SetDefaultExtensionHandlersUserChoice() for pdf extension"
   },
