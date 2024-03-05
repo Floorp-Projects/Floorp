@@ -16,7 +16,22 @@ const { setTimeout } = ChromeUtils.importESModule(
 
 var WORKER_SOURCE_URI = "chrome://promiseworker/content/worker.js";
 do_load_manifest("data/chrome.manifest");
-var worker = new BasePromiseWorker(WORKER_SOURCE_URI);
+
+const UUID = crypto.randomUUID();
+
+const SOME_ARRAY = new Uint8Array(4);
+for (let i = 0; i < 4; ++i) {
+  SOME_ARRAY[i] = i;
+}
+
+async function echo(message) {
+  return new BasePromiseWorker.Meta([message, UUID, SOME_ARRAY.buffer], {
+    transfers: [SOME_ARRAY.buffer],
+  });
+}
+
+var worker = new BasePromiseWorker(WORKER_SOURCE_URI, {}, { echo });
+
 worker.log = function (...args) {
   info("Controller: " + args.join(" "));
 };
@@ -165,4 +180,35 @@ add_task(async function test_terminate() {
     previousWorker,
     "ChromeWorker instances should differ"
   );
+});
+
+function cloneArrayBuffer(original) {
+  const clone = new ArrayBuffer(original.byteLength);
+  const originalView = new Uint8Array(original);
+  const cloneView = new Uint8Array(clone);
+  cloneView.set(originalView);
+  return clone;
+}
+
+add_task(async function test_bidirectional() {
+  // Before we transfer the array, we clone it
+  const arrayCopy = cloneArrayBuffer(SOME_ARRAY.buffer);
+
+  let message = ["test_simple_args", Math.random()];
+
+  // Checking the array buffer size
+  Assert.equal(
+    SOME_ARRAY.buffer.byteLength,
+    4,
+    "The buffer is not detached yet"
+  );
+  let result = await worker.post("bounceWithExtraCalls", message);
+
+  // After the post call, the array was transferred and SOME_ARRAY should be empty
+  Assert.equal(SOME_ARRAY.buffer.byteLength, 0, "The buffer has been detached");
+
+  // The echo() function in the worker adds to the message a string, an uuid and has the transferred array
+  message.push(["Posting something unrelated", UUID, arrayCopy]);
+
+  Assert.deepEqual(result, message);
 });
