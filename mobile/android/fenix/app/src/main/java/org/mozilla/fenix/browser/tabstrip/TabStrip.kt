@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,19 +33,20 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
+import androidx.core.text.BidiFormatter
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -54,6 +56,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Favicon
+import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
 import org.mozilla.fenix.tabstray.browser.compose.DragItemContainer
 import org.mozilla.fenix.tabstray.browser.compose.createListReorderState
 import org.mozilla.fenix.tabstray.browser.compose.detectListPressAndDrag
@@ -66,6 +69,7 @@ private val tabStripIconSize = 24.dp
 private val spaceBetweenTabs = 4.dp
 private val tabStripStartPadding = 8.dp
 private val addTabIconSize = 20.dp
+private val titleFadeWidth = 16.dp
 
 /**
  * Top level composable for the tabs strip.
@@ -252,22 +256,23 @@ private fun TabItem(
     onCloseTabClick: (id: String, isPrivate: Boolean) -> Unit,
     onSelectedTabClick: (id: String) -> Unit,
 ) {
+    val backgroundColor = if (state.isPrivate) {
+        if (state.isSelected) {
+            FirefoxTheme.colors.layer3
+        } else {
+            FirefoxTheme.colors.layer2
+        }
+    } else {
+        if (state.isSelected) {
+            FirefoxTheme.colors.layer2
+        } else {
+            FirefoxTheme.colors.layer3
+        }
+    }
+
     TabStripCard(
         modifier = modifier.fillMaxSize(),
-        backgroundColor =
-        if (state.isPrivate) {
-            if (state.isSelected) {
-                FirefoxTheme.colors.layer3
-            } else {
-                FirefoxTheme.colors.layer2
-            }
-        } else {
-            if (state.isSelected) {
-                FirefoxTheme.colors.layer2
-            } else {
-                FirefoxTheme.colors.layer3
-            }
-        },
+        backgroundColor = backgroundColor,
         elevation = if (state.isSelected) {
             selectedTabStripCardElevation
         } else {
@@ -282,22 +287,37 @@ private fun TabItem(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // This makes sure that isRtl is only calculated when the title changes.
+                val isTitleRtl = remember(state.title) {
+                    BidiFormatter.getInstance().isRtl(state.title)
+                }
+
                 Spacer(modifier = Modifier.size(8.dp))
 
                 TabStripIcon(state.url)
 
                 Spacer(modifier = Modifier.size(8.dp))
 
-                Text(
-                    text = state.title,
-                    color = FirefoxTheme.colors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = FirefoxTheme.typography.subtitle2,
-                )
+                HorizontalFadingEdgeBox(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    fadeWidth = titleFadeWidth,
+                    backgroundColor = backgroundColor,
+                    isContentRtl = isTitleRtl,
+                ) {
+                    Text(
+                        text = state.title,
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        color = FirefoxTheme.colors.textPrimary,
+                        softWrap = false,
+                        maxLines = 1,
+                        style = FirefoxTheme.typography.subtitle2,
+                    )
+                }
             }
 
             IconButton(onClick = { onCloseTabClick(state.id, state.isPrivate) }) {
