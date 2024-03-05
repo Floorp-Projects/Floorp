@@ -3024,3 +3024,6 @@ pref("browser.mailto.dualPrompt.os", false);
 pref("browser.mailto.prompt.os", true);
 
 pref("browser.backup.enabled", false);
+
+// Pref to enable the new profiles
+pref("browser.profiles.enabled", false);

@@ -51,6 +51,7 @@ DIRS += [
     "pocket",
     "preferences",
     "privatebrowsing",
+    "profiles",
     "prompts",
     "protections",
     "protocolhandler",
