@@ -1,6 +1,15 @@
+# WARNING: This directory was used for MathML mochitests and is only preserved
+# for the ones that cannot be rewritten as web-platform-tests.
+# If you want to add new tests for MathML, please instead consider adding them
+# to `testing/web-platform/tests/mathml` (for MathML Core tests) or to
+# `testing/web-platform/mozilla/tests/mathml/` (for Gecko-specific tests).
+
 [DEFAULT]
 
 support-files = ["test_disabled_chrome_iframe.html"]
 prefs = ["mathml.disabled=true"]
 
+# FIXME(bug 1847206): Rather than a chrome mochitest, this should probably be a
+# browser mochitest, because the goal was to check `mathml.disabled` doesn't
+# apply to the user interface.
 ["test_disabled_chrome.html"]
