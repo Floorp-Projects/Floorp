@@ -46,6 +46,8 @@ class HTMLLinkAccessible : public HyperTextAccessible {
                                    const nsAttrValue* aOldValue,
                                    uint64_t aOldState) override;
 
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
+
   enum { eAction_Jump = 0 };
 };
 

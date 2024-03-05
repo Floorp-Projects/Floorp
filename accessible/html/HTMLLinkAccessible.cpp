@@ -112,6 +112,17 @@ void HTMLLinkAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   }
 }
 
+ENameValueFlag HTMLLinkAccessible::NativeName(nsString& aName) const {
+  if (mContent->IsSVGElement()) {
+    mContent->AsElement()->GetAttr(kNameSpaceID_XLink, nsGkAtoms::title, aName);
+    if (!aName.IsEmpty()) {
+      return eNameOK;
+    }
+  }
+
+  return HyperTextAccessible::NativeName(aName);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HyperLinkAccessible
 
