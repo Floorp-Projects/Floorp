@@ -88,6 +88,17 @@ namespace InspectorUtils {
   [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
   sequence<DOMString> getRegisteredCssHighlights(Document document, optional boolean activeOnly = false);
   sequence<InspectorCSSPropertyDefinition> getCSSRegisteredProperties(Document document);
+
+  // Get the start and end offsets of the first rule body within initialText
+  // Consider the following example:
+  // p {
+  //  line-height: 2em;
+  //  color: blue;
+  // }
+  // Calling the function with the whole text above would return offsets we can use to
+  // get "line-height: 2em; color: blue;"
+  // Returns null when opening curly bracket wasn't found in initialText
+  InspectorGetRuleBodyTextResult? getRuleBodyTextOffsets(UTF8String initialText);
 };
 
 dictionary SupportsOptions {
@@ -164,6 +175,11 @@ dictionary InspectorCSSPropertyDefinition {
   required boolean inherits;
   required UTF8String? initialValue;
   required boolean fromJS;
+};
+
+dictionary InspectorGetRuleBodyTextResult {
+  required double startOffset;
+  required double endOffset;
 };
 
 [Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled",
