@@ -745,9 +745,9 @@ set_define("ENABLE_WASM_TAIL_CALLS", wasm_tail_calls)
 option("--disable-wasm-gc", default=True, help="{Enable|Disable} WebAssembly GC")
 
 
-@depends("--disable-wasm-gc", "--wasm-no-experimental")
-def wasm_gc(value, no_experimental):
-    if no_experimental or not value:
+@depends("--disable-wasm-gc")
+def wasm_gc(value):
+    if not value:
         return
     return True
 
