@@ -461,7 +461,7 @@ class HomeFragment : Fragment() {
                 parent = binding.homeLayout,
                 androidToolbarView = if (isToolbarAtBottom) binding.toolbarLayout else null,
                 menuButton = menuButton,
-                browsingModeManager = browsingModeManager,
+                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
             )
         }
 

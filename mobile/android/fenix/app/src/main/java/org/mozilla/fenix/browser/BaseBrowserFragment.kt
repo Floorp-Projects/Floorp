@@ -472,7 +472,7 @@ abstract class BaseBrowserFragment :
                 parent = binding.browserLayout,
                 androidToolbarView = if (isToolbarAtBottom) browserToolbar else null,
                 menuButton = menuButton,
-                browsingModeManager = activity.browsingModeManager,
+                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
             ).also {
                 navbarIntegration.set(
                     feature = it.navbarIntegration,
