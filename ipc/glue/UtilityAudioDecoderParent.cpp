@@ -78,12 +78,12 @@ UtilityAudioDecoderParent::~UtilityAudioDecoderParent() {
 
 /* static */
 void UtilityAudioDecoderParent::GenericPreloadForSandbox() {
-#if defined(MOZ_SANDBOX) && defined(XP_WIN) && defined(MOZ_FFVPX)
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
   // Preload AV dlls so we can enable Binary Signature Policy
   // to restrict further dll loads.
   UtilityProcessImpl::LoadLibraryOrCrash(L"mozavcodec.dll");
   UtilityProcessImpl::LoadLibraryOrCrash(L"mozavutil.dll");
-#endif  // defined(MOZ_SANDBOX) && defined(XP_WIN) && defined(MOZ_FFVPX)
+#endif  // defined(MOZ_SANDBOX) && defined(XP_WIN)
 }
 
 /* static */

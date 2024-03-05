@@ -47,15 +47,13 @@ DIRS += ["agnostic/bytestreams", "agnostic/eme", "agnostic/gmp", "omx"]
 if CONFIG["MOZ_WMF"]:
     DIRS += ["wmf"]
 
-if CONFIG["MOZ_FFVPX"] or CONFIG["MOZ_FFMPEG"]:
-    UNIFIED_SOURCES += [
-        "ffmpeg/FFmpegLibWrapper.cpp",
-    ]
+UNIFIED_SOURCES += [
+    "ffmpeg/FFmpegLibWrapper.cpp",
+]
 
-if CONFIG["MOZ_FFVPX"]:
-    DIRS += [
-        "ffmpeg/ffvpx",
-    ]
+DIRS += [
+    "ffmpeg/ffvpx",
+]
 
 if CONFIG["MOZ_FFMPEG"]:
     DIRS += [

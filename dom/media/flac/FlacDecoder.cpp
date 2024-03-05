@@ -11,13 +11,7 @@
 namespace mozilla {
 
 /* static */
-bool FlacDecoder::IsEnabled() {
-#ifdef MOZ_FFVPX
-  return StaticPrefs::media_flac_enabled();
-#else
-  return false;
-#endif
-}
+bool FlacDecoder::IsEnabled() { return StaticPrefs::media_flac_enabled(); }
 
 /* static */
 bool FlacDecoder::IsSupportedType(const MediaContainerType& aContainerType) {

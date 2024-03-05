@@ -45,9 +45,6 @@
 #    include "mozilla/CDMProxy.h"
 #  endif
 #endif
-#ifdef MOZ_FFVPX
-#  include "FFVPXRuntimeLinker.h"
-#endif
 #ifdef MOZ_FFMPEG
 #  include "FFmpegRuntimeLinker.h"
 #endif
@@ -60,6 +57,7 @@
 #ifdef MOZ_OMX
 #  include "OmxDecoderModule.h"
 #endif
+#include "FFVPXRuntimeLinker.h"
 
 #include <functional>
 
@@ -99,14 +97,12 @@ class PDMInitializer final {
 #ifdef MOZ_APPLEMEDIA
     AppleDecoderModule::Init();
 #endif
-#ifdef MOZ_FFVPX
-    FFVPXRuntimeLinker::Init();
-#endif
 #ifdef MOZ_FFMPEG
     if (StaticPrefs::media_rdd_ffmpeg_enabled()) {
       FFmpegRuntimeLinker::Init();
     }
 #endif
+    FFVPXRuntimeLinker::Init();
   }
 
   static void InitUtilityPDMs() {
@@ -127,11 +123,9 @@ class PDMInitializer final {
       AppleDecoderModule::Init();
     }
 #endif
-#ifdef MOZ_FFVPX
     if (kind == ipc::SandboxingKind::GENERIC_UTILITY) {
       FFVPXRuntimeLinker::Init();
     }
-#endif
 #ifdef MOZ_FFMPEG
     if (StaticPrefs::media_utility_ffmpeg_enabled() &&
         kind == ipc::SandboxingKind::GENERIC_UTILITY) {
@@ -160,9 +154,7 @@ class PDMInitializer final {
 #ifdef MOZ_OMX
       OmxDecoderModule::Init();
 #endif
-#ifdef MOZ_FFVPX
       FFVPXRuntimeLinker::Init();
-#endif
 #ifdef MOZ_FFMPEG
       FFmpegRuntimeLinker::Init();
 #endif
@@ -183,9 +175,7 @@ class PDMInitializer final {
 #ifdef MOZ_OMX
     OmxDecoderModule::Init();
 #endif
-#ifdef MOZ_FFVPX
     FFVPXRuntimeLinker::Init();
-#endif
 #ifdef MOZ_FFMPEG
     FFmpegRuntimeLinker::Init();
 #endif
@@ -547,12 +537,7 @@ void PDMFactory::CreateRddPDMs() {
     CreateAndStartupPDM<AppleDecoderModule>();
   }
 #endif
-#ifdef MOZ_FFVPX
-  if (StaticPrefs::media_ffvpx_enabled() &&
-      StaticPrefs::media_rdd_ffvpx_enabled()) {
-    StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
-  }
-#endif
+  StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
 #ifdef MOZ_FFMPEG
   if (StaticPrefs::media_ffmpeg_enabled() &&
       StaticPrefs::media_rdd_ffmpeg_enabled() &&
@@ -580,12 +565,9 @@ void PDMFactory::CreateUtilityPDMs() {
   }
 #endif
   if (aKind == ipc::SandboxingKind::GENERIC_UTILITY) {
-#ifdef MOZ_FFVPX
-    if (StaticPrefs::media_ffvpx_enabled() &&
-        StaticPrefs::media_utility_ffvpx_enabled()) {
+    if (StaticPrefs::media_utility_ffvpx_enabled()) {
       StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
     }
-#endif
 #ifdef MOZ_FFMPEG
     if (StaticPrefs::media_ffmpeg_enabled() &&
         StaticPrefs::media_utility_ffmpeg_enabled() &&
@@ -667,11 +649,7 @@ void PDMFactory::CreateContentPDMs() {
       CreateAndStartupPDM<OmxDecoderModule>();
     }
 #endif
-#ifdef MOZ_FFVPX
-    if (StaticPrefs::media_ffvpx_enabled()) {
-      StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
-    }
-#endif
+    StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
 #ifdef MOZ_FFMPEG
     if (StaticPrefs::media_ffmpeg_enabled() &&
         !StartupPDM(FFmpegRuntimeLinker::CreateDecoder())) {
@@ -719,11 +697,7 @@ void PDMFactory::CreateDefaultPDMs() {
     CreateAndStartupPDM<OmxDecoderModule>();
   }
 #endif
-#ifdef MOZ_FFVPX
-  if (StaticPrefs::media_ffvpx_enabled()) {
-    StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
-  }
-#endif
+  StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
 #ifdef MOZ_FFMPEG
   if (StaticPrefs::media_ffmpeg_enabled() &&
       !StartupPDM(FFmpegRuntimeLinker::CreateDecoder())) {
@@ -898,9 +872,6 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
 /* static */
 bool PDMFactory::AllDecodersAreRemote() {
   return StaticPrefs::media_rdd_process_enabled() &&
-#if defined(MOZ_FFVPX)
-         StaticPrefs::media_rdd_ffvpx_enabled() &&
-#endif
          StaticPrefs::media_rdd_opus_enabled() &&
          StaticPrefs::media_rdd_theora_enabled() &&
          StaticPrefs::media_rdd_vorbis_enabled() &&
