@@ -84,6 +84,20 @@ export class SearchEngineSelectorOld {
   }
 
   /**
+   * Resets the remote settings listeners.
+   */
+  reset() {
+    if (this._listenerAdded) {
+      this._remoteConfig.off("sync", this._onConfigurationUpdated);
+      this._remoteConfigOverrides.off(
+        "sync",
+        this._onConfigurationOverridesUpdated
+      );
+      this._listenerAdded = false;
+    }
+  }
+
+  /**
    * Handles getting the configuration from remote settings.
    */
   async getEngineConfiguration() {
