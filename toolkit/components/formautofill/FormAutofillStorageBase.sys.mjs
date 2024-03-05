@@ -1493,13 +1493,6 @@ class AutofillRecords {
 
   /**
    * An interface to be inherited to mutate the argument to normalize it.
-   *
-   * @param {object} partialRecord containing the record passed by the consumer of
-   *                               storage and in the case of `update` with
-   *                               `preserveOldProperties` will only include the
-   *                               properties that the user is changing so the
-   *                               lack of a field doesn't mean that the record
-   *                               won't have that field.
    */
   _normalizeFields() {}
 
@@ -1508,8 +1501,6 @@ class AutofillRecords {
    * consistent and isn't missing required fields. Overrides should throw for
    * invalid records.
    *
-   * @param {object} record containing the complete record that would be stored
-   *                        if this doesn't throw due to an error.
    * @throws
    */
   _validateFields() {}

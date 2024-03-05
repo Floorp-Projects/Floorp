@@ -112,8 +112,6 @@ class EditAutofillForm {
 
   /**
    * Handle input events
-   *
-   * @param  {DOMEvent} event
    */
   handleInput() {}
 
@@ -139,8 +137,6 @@ class EditAutofillForm {
 
   /**
    * Run custom validity routines specific to the field and type of form.
-   *
-   * @param {DOMElement} field The field that will be validated.
    */
   updateCustomValidity() {}
 }
