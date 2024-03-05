@@ -154,6 +154,37 @@ uint32_t BytesPerSamples(const mozilla::dom::AudioSampleFormat& aFormat) {
 }
 
 Result<Ok, nsCString> IsValidAudioDataInit(const AudioDataInit& aInit) {
+  if (aInit.mSampleRate <= 0.0) {
+    auto msg = nsLiteralCString("sampleRate must be positive");
+    LOGD("%s", msg.get());
+    return Err(msg);
+  }
+  if (aInit.mNumberOfFrames == 0) {
+    auto msg = nsLiteralCString("mNumberOfFrames must be positive");
+    LOGD("%s", msg.get());
+    return Err(msg);
+  }
+  if (aInit.mNumberOfChannels == 0) {
+    auto msg = nsLiteralCString("mNumberOfChannels must be positive");
+    LOGD("%s", msg.get());
+    return Err(msg);
+  }
+
+  uint64_t totalSamples = aInit.mNumberOfFrames * aInit.mNumberOfChannels;
+  uint32_t bytesPerSamples = BytesPerSamples(aInit.mFormat);
+  uint64_t totalSize = totalSamples * bytesPerSamples;
+  uint64_t arraySizeBytes = ProcessTypedArraysFixed(
+      aInit.mData, [&](const Span<uint8_t>& aData) -> uint64_t {
+        return aData.LengthBytes();
+      });
+  if (arraySizeBytes < totalSize) {
+    auto msg =
+        nsPrintfCString("Array of size %" PRIu64
+                        " not big enough, should be at least %" PRIu64 " bytes",
+                        arraySizeBytes, totalSize);
+    LOGD("%s", msg.get());
+    return Err(msg);
+  }
   return Ok();
 }
 
@@ -190,6 +221,18 @@ already_AddRefed<AudioData> AudioData::Constructor(const GlobalObject& aGlobal,
     LOGE("Global unavailable");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
+  }
+  nsString errorMessage;
+  auto rv = IsValidAudioDataInit(aInit);
+  if (rv.isErr()) {
+    LOGD("AudioData::Constructor failure (IsValidAudioDataInit)");
+    aRv.ThrowTypeError(rv.inspectErr());
+    return nullptr;
+  }
+  auto resource = AudioDataResource::Construct(aInit.mData);
+  if (resource.isErr()) {
+    LOGD("AudioData::Constructor failure (OOM)");
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
   }
 
   return MakeAndAddRef<mozilla::dom::AudioData>(global, resource.unwrap(),
@@ -256,11 +299,26 @@ void AudioData::CopyTo(
 // https://w3c.github.io/webcodecs/#dom-audiodata-clone
 already_AddRefed<AudioData> AudioData::Clone(ErrorResult& aRv) {
   AssertIsOnOwningThread();
+
+  if (!mResource) {
+    auto msg = "No media resource in the AudioData now"_ns;
+    LOGD("%s", msg.get());
+    aRv.ThrowInvalidStateError(msg);
+    return nullptr;
+  }
+
+  return MakeAndAddRef<AudioData>(*this);
 }
 
 // https://w3c.github.io/webcodecs/#close-audiodata
 void AudioData::Close() {
   AssertIsOnOwningThread();
+
+  mResource = nullptr;
+  mSampleRate = 0;
+  mNumberOfFrames = 0;
+  mNumberOfChannels = 0;
+  mAudioSampleFormat = Nothing();
 }
 
 // https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A1
