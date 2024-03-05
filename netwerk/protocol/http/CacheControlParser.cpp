@@ -69,6 +69,7 @@ void CacheControlParser::Directive() {
 bool CacheControlParser::SecondsValue(uint32_t* seconds, uint32_t defaultVal) {
   SkipWhites();
   if (!CheckChar('=')) {
+    IgnoreDirective();
     *seconds = defaultVal;
     return !!defaultVal;
   }
@@ -76,7 +77,9 @@ bool CacheControlParser::SecondsValue(uint32_t* seconds, uint32_t defaultVal) {
   SkipWhites();
   if (!ReadInteger(seconds)) {
     NS_WARNING("Unexpected value in Cache-control header value");
-    return false;
+    IgnoreDirective();
+    *seconds = defaultVal;
+    return !!defaultVal;
   }
 
   return true;
