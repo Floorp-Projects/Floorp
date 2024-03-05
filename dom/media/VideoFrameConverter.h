@@ -109,8 +109,8 @@ class VideoFrameConverter {
             // for processing so it can be immediately sent.
             mLastFrameQueuedForProcessing.mTime = time;
 
-            MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(
-                NewRunnableMethod<StoreCopyPassByLRef<FrameToProcess>>(
+            MOZ_ALWAYS_SUCCEEDS(
+                mTaskQueue->Dispatch(NewRunnableMethod<FrameToProcess>(
                     "VideoFrameConverter::ProcessVideoFrame", this,
                     &VideoFrameConverter::ProcessVideoFrame,
                     mLastFrameQueuedForProcessing)));
@@ -138,8 +138,8 @@ class VideoFrameConverter {
             mLastFrameQueuedForProcessing.mForceBlack = true;
             mLastFrameQueuedForProcessing.mImage = nullptr;
 
-            MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(
-                NewRunnableMethod<StoreCopyPassByLRef<FrameToProcess>>(
+            MOZ_ALWAYS_SUCCEEDS(
+                mTaskQueue->Dispatch(NewRunnableMethod<FrameToProcess>(
                     "VideoFrameConverter::ProcessVideoFrame", this,
                     &VideoFrameConverter::ProcessVideoFrame,
                     mLastFrameQueuedForProcessing)));
@@ -293,11 +293,10 @@ class VideoFrameConverter {
       return;
     }
 
-    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(
-        NewRunnableMethod<StoreCopyPassByLRef<FrameToProcess>>(
-            "VideoFrameConverter::ProcessVideoFrame", this,
-            &VideoFrameConverter::ProcessVideoFrame,
-            mLastFrameQueuedForProcessing)));
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NewRunnableMethod<FrameToProcess>(
+        "VideoFrameConverter::ProcessVideoFrame", this,
+        &VideoFrameConverter::ProcessVideoFrame,
+        mLastFrameQueuedForProcessing)));
   }
 
   void ProcessVideoFrame(const FrameToProcess& aFrame) {
