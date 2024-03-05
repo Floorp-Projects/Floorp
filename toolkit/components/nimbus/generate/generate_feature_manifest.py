@@ -91,7 +91,7 @@ def validate_feature_manifest(schema_path, manifest_path, manifest):
                         f"Feature {feature_id} is not early startup but is in the allow list."
                     )
                     print("Please remove it from generate_feature_manifest.py")
-                raise Exception("isEarlyStatup is deprecated")
+                raise Exception("isEarlyStartup is deprecated")
 
             for variable, variable_def in feature.get("variables", {}).items():
                 set_pref = variable_def.get("setPref")
