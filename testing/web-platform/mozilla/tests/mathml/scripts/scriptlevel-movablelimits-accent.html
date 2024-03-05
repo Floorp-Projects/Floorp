@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test accent/accentunder</title>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=669713">
+    <link rel="help" href="https://www.w3.org/TR/MathML3/chapter3.html#presm.munder">
+    <link rel="help" href="https://www.w3.org/TR/MathML3/chapter3.html#presm.mover">
+    <link rel="help" href="https://www.w3.org/TR/MathML3/chapter3.html#presm.munderover">
+    <link rel="match" href="scriptlevel-movablelimits-accent-ref.html">
+    <meta name="assert" content="Verify accentunder='true' or accent='true' is ignored when an underover element is laid out as a subsup element.">
+  </head>
+  <body>
+    <!-- Per MathML3, setting accentunder/accent to true prevents scriptlevel
+         from being incremented, however such attributes should be ignored when
+         scripts are drawn as subcript/superscript, which is the case here
+         because U+2211 N-ARY SUMMATION defaults to movablelimits="true". -->
+    <math displaystyle="false">
+      <munderover accentunder="true" accent="true">
+        <mo>∑</mo>
+        <mi>a</mi>
+        <mi>b</mi>
+      </munderover>
+    </math>
+    <math displaystyle="false">
+      <munder accentunder="true">
+        <mo>∑</mo>
+        <mi>a</mi>
+      </munder>
+    </math>
+    <math displaystyle="false">
+      <mover accent="true">
+        <mo>∑</mo>
+        <mi>a</mi>
+      </mover>
+    </math>
+  </body>
+</html>
