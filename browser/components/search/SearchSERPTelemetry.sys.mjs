@@ -2281,7 +2281,7 @@ class DomainToCategoriesMap {
     if (this.empty) {
       return [];
     }
-    lazy.gCryptoHash.init(lazy.gCryptoHash.MD5);
+    lazy.gCryptoHash.init(lazy.gCryptoHash.SHA256);
     let bytes = new TextEncoder().encode(domain);
     lazy.gCryptoHash.update(bytes, domain.length);
     let hash = lazy.gCryptoHash.finish(true);

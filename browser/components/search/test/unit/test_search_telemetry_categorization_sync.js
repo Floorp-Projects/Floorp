@@ -16,16 +16,34 @@ ChromeUtils.defineESModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(this, "gCryptoHash", () => {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+
+function convertDomainsToHashes(domainsToCategories) {
+  let newObj = {};
+  for (let [key, value] of Object.entries(domainsToCategories)) {
+    gCryptoHash.init(gCryptoHash.SHA256);
+    let bytes = new TextEncoder().encode(key);
+    gCryptoHash.update(bytes, key.length);
+    let hash = gCryptoHash.finish(true);
+    newObj[hash] = value;
+  }
+  return newObj;
+}
+
 async function waitForDomainToCategoriesUpdate() {
   return TestUtils.topicObserved("domain-to-categories-map-update-complete");
 }
 
-async function mockRecordWithCachedAttachment({ id, version, filename }) {
+async function mockRecordWithCachedAttachment({
+  id,
+  version,
+  filename,
+  mapping,
+}) {
   // Get the bytes of the file for the hash and size for attachment metadata.
-  let data = await IOUtils.readUTF8(
-    PathUtils.join(do_get_cwd().path, filename)
-  );
-  let buffer = new TextEncoder().encode(data).buffer;
+  let buffer = new TextEncoder().encode(JSON.stringify(mapping)).buffer;
   let stream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(
     Ci.nsIArrayBufferInputStream
   );
@@ -73,21 +91,33 @@ const RECORDS = {
     id: RECORD_A_ID,
     version: 1,
     filename: "domain_category_mappings_1a.json",
+    mapping: convertDomainsToHashes({
+      "example.com": [1, 100],
+    }),
   },
   record1b: {
     id: RECORD_B_ID,
     version: 1,
     filename: "domain_category_mappings_1b.json",
+    mapping: convertDomainsToHashes({
+      "example.org": [2, 90],
+    }),
   },
   record2a: {
     id: RECORD_A_ID,
     version: 2,
     filename: "domain_category_mappings_2a.json",
+    mapping: convertDomainsToHashes({
+      "example.com": [1, 80],
+    }),
   },
   record2b: {
     id: RECORD_B_ID,
     version: 2,
     filename: "domain_category_mappings_2b.json",
+    mapping: convertDomainsToHashes({
+      "example.org": [2, 50, 4, 80],
+    }),
   },
 };
 

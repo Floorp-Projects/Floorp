@@ -12,12 +12,6 @@ firefox-appdir = "browser"
 
 ["test_search_telemetry_categorization_sync.js"]
 prefs = ["browser.search.serpEventTelemetryCategorization.enabled=true"]
-support-files = [
-  "domain_category_mappings_1a.json",
-  "domain_category_mappings_1b.json",
-  "domain_category_mappings_2a.json",
-  "domain_category_mappings_2b.json",
-]
 
 ["test_search_telemetry_compare_urls.js"]
 

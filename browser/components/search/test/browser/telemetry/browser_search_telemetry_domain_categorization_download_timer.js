@@ -119,6 +119,7 @@ add_task(async function test_download_after_failure() {
     id: "example_id",
     version: 1,
     filename: "domain_category_mappings.json",
+    mapping: CONVERTED_ATTACHMENT_VALUES,
   });
   await db.create(record);
   await db.importChanges({}, Date.now());
@@ -173,6 +174,7 @@ add_task(async function test_download_after_multiple_failures() {
     id: "example_id",
     version: 1,
     filename: "domain_category_mappings.json",
+    mapping: CONVERTED_ATTACHMENT_VALUES,
   });
   await db.create(record);
   await db.importChanges({}, Date.now());
@@ -220,6 +222,7 @@ add_task(async function test_cancel_download_timer() {
     id: "example_id",
     version: 1,
     filename: "domain_category_mappings.json",
+    mapping: CONVERTED_ATTACHMENT_VALUES,
   });
   await db.create(record);
   await db.importChanges({}, Date.now());
@@ -277,6 +280,7 @@ add_task(async function test_download_adjust() {
     id: "example_id",
     version: 1,
     filename: "domain_category_mappings.json",
+    mapping: CONVERTED_ATTACHMENT_VALUES,
   });
   await db.create(record);
   await db.importChanges({}, Date.now());

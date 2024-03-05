@@ -15,80 +15,99 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_SIMPLE = {
-  "byVQ4ej7T7s2xf/cPqgMyw==": [2, 90],
-  "1TEnSjgNCuobI6olZinMiQ==": [2, 95],
-  "/Bnju09b9iBPjg7K+5ENIw==": [2, 78, 4, 10],
-  "Ja6RJq5LQftdl7NQrX1avQ==": [2, 56, 4, 24],
-  "Jy26Qt99JrUderAcURtQ5A==": [2, 89],
-  "sZnJyyzY9QcN810Q6jfbvw==": [2, 43],
-  "QhmteGKeYk0okuB/bXzwRw==": [2, 65],
-  "CKQZZ1IJjzjjE4LUV8vUSg==": [2, 67],
-  "FK7mL5E1JaE6VzOiGMmlZg==": [2, 89],
-  "mzcR/nhDcrs0ed4kTf+ZFg==": [2, 99],
-};
+ChromeUtils.defineLazyGetter(this, "gCryptoHash", () => {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_INCONCLUSIVE = {
-  "IkOfhoSlHTMIZzWXkYf7fg==": [0, 0],
-  "PIAHxeaBOeDNY2tvZKqQuw==": [0, 0],
-  "DKx2mqmFtEvxrHAqpwSevA==": [0, 0],
-  "DlZKnz9ryYqbxJq9wodzlA==": [0, 0],
-  "n3NWT4N9JlKX0I7MUtAsYg==": [0, 0],
-  "A6KyupOlu5zXt8loti90qw==": [0, 0],
-  "gf5rpseruOaq8nXOSJPG3Q==": [0, 0],
-  "vlQYOvbcbAp6sMx54OwqCQ==": [0, 0],
-  "8PcaPATLgmHD9SR0/961Sw==": [0, 0],
-  "l+hLycEAW2v/OPE/XFpNwQ==": [0, 0],
-};
+function convertDomainsToHashes(domainsToCategories) {
+  let newObj = {};
+  for (let [key, value] of Object.entries(domainsToCategories)) {
+    gCryptoHash.init(gCryptoHash.SHA256);
+    let bytes = new TextEncoder().encode(key);
+    gCryptoHash.update(bytes, key.length);
+    let hash = gCryptoHash.finish(true);
+    newObj[hash] = value;
+  }
+  return newObj;
+}
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_UNKNOWN_AND_INCONCLUSIVE = {
-  "CEA642T3hV+Fdi2PaRH9BQ==": [0, 0],
-  "cVqopYLASYxcWdDW4F+w2w==": [0, 0],
-  "X61OdTU20n8pxZ76K2eAHg==": [0, 0],
-  "/srrOggOAwgaBGCsPdC4bA==": [0, 0],
-  "onnMGn+MmaCQx3RNLBzGOQ==": [0, 0],
-};
+const TEST_DOMAIN_TO_CATEGORIES_MAP_SIMPLE = convertDomainsToHashes({
+  "test1.com": [2, 90],
+  "test2.com": [2, 95],
+  "test3.com": [2, 78, 4, 10],
+  "test4.com": [2, 56, 4, 24],
+  "test5.com": [2, 89],
+  "test6.com": [2, 43],
+  "test7.com": [2, 65],
+  "test8.com": [2, 67],
+  "test9.com": [2, 89],
+  "test10.com": [2, 99],
+});
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_ALL_TYPES = {
-  "VSXaqgDKYWrJ/yjsFomUdg==": [3, 90],
-  "6re74Kk34n2V6VCdLmCD5w==": [3, 88],
-  "s8gOGIaFnly5hHX7nPncnw==": [3, 90, 6, 2],
-  "zfRJyKV+2jd1RKNsSHm9pw==": [3, 78, 6, 7],
-  "zcW+KbRfLRO6Dljf5qnuwQ==": [3, 97],
-  "Rau9mfbBcIRiRQIliUxkow==": [0, 0],
-  "4AFhUOmLQ8804doOsI4jBA==": [0, 0],
-};
+const TEST_DOMAIN_TO_CATEGORIES_MAP_INCONCLUSIVE = convertDomainsToHashes({
+  "test11.com": [0, 0],
+  "test12.com": [0, 0],
+  "test13.com": [0, 0],
+  "test14.com": [0, 0],
+  "test15.com": [0, 0],
+  "test16.com": [0, 0],
+  "test17.com": [0, 0],
+  "test18.com": [0, 0],
+  "test19.com": [0, 0],
+  "test20.com": [0, 0],
+});
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_TIE = {
-  "fmEqRSc+pBr9noi0l99nGw==": [1, 50, 2, 50],
-  "cms8ipz0JQ3WS9o48RtvnQ==": [1, 50, 2, 50],
-  "y8Haj7Qdmx+k762RaxCPvA==": [1, 50, 2, 50],
-  "tCbLmi5xJ/OrF8tbRm8PrA==": [1, 50, 2, 50],
-  "uYNQECmDShqI409HrSTdLQ==": [1, 50, 2, 50],
-  "D88hdsmzLWIXYhkrDal33w==": [3, 50, 4, 50],
-  "1mhx0I0B4cEaI91x8zor7Q==": [5, 50, 6, 50],
-  "dVZYATQixuBHmalCFR9+Lw==": [7, 50, 8, 50],
-  "pdOFJG49D7hE/+FtsWDihQ==": [9, 50, 10, 50],
-  "+gl+dBhWE0nx0AM69m2g5w==": [11, 50, 12, 50],
-};
+const TEST_DOMAIN_TO_CATEGORIES_MAP_UNKNOWN_AND_INCONCLUSIVE =
+  convertDomainsToHashes({
+    "test31.com": [0, 0],
+    "test32.com": [0, 0],
+    "test33.com": [0, 0],
+    "test34.com": [0, 0],
+    "test35.com": [0, 0],
+  });
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_1 = {
-  "VSXaqgDKYWrJ/yjsFomUdg==": [1, 45],
-  "6re74Kk34n2V6VCdLmCD5w==": [2, 45],
-  "s8gOGIaFnly5hHX7nPncnw==": [3, 45],
-  "zfRJyKV+2jd1RKNsSHm9pw==": [4, 45],
-  "zcW+KbRfLRO6Dljf5qnuwQ==": [5, 45],
-  "Rau9mfbBcIRiRQIliUxkow==": [6, 45],
-  "4AFhUOmLQ8804doOsI4jBA==": [7, 45],
-  "YZ3aEL73MR+Cjog0D7A24w==": [8, 45],
-  "crMclD9rwInEQ30DpZLg+g==": [9, 45],
-  "/r7oPRoE6LJAE95nuwmu7w==": [10, 45],
-};
+const TEST_DOMAIN_TO_CATEGORIES_MAP_ALL_TYPES = convertDomainsToHashes({
+  "test51.com": [3, 90],
+  "test52.com": [3, 88],
+  "test53.com": [3, 90, 6, 2],
+  "test54.com": [3, 78, 6, 7],
+  "test55.com": [3, 97],
+  "test56.com": [0, 0],
+  "test57.com": [0, 0],
+});
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2 = {
-  "sHWSmFwSYL3snycBZCY8Kg==": [1, 35, 2, 4],
-  "FZ5zPYh6ByI0KGWKkmpDoA==": [1, 5, 2, 94],
-};
+const TEST_DOMAIN_TO_CATEGORIES_MAP_TIE = convertDomainsToHashes({
+  "test41.com": [1, 50, 2, 50],
+  "test42.com": [1, 50, 2, 50],
+  "test43.com": [1, 50, 2, 50],
+  "test44.com": [1, 50, 2, 50],
+  "test45.com": [1, 50, 2, 50],
+  "test46.com": [3, 50, 4, 50],
+  "test47.com": [5, 50, 6, 50],
+  "test48.com": [7, 50, 8, 50],
+  "test49.com": [9, 50, 10, 50],
+  "test50.com": [11, 50, 12, 50],
+});
+
+const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_1 =
+  convertDomainsToHashes({
+    "test51.com": [1, 45],
+    "test52.com": [2, 45],
+    "test53.com": [3, 45],
+    "test54.com": [4, 45],
+    "test55.com": [5, 45],
+    "test56.com": [6, 45],
+    "test57.com": [7, 45],
+    "test58.com": [8, 45],
+    "test59.com": [9, 45],
+    "test60.com": [10, 45],
+  });
+
+const TEST_DOMAIN_TO_CATEGORIES_MAP_RANK_PENALIZATION_2 =
+  convertDomainsToHashes({
+    "test61.com": [1, 35, 2, 4],
+    "test62.com": [1, 5, 2, 94],
+  });
 
 add_setup(async () => {
   do_get_profile();
