@@ -8,6 +8,7 @@
 #define MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H
 
 #include "ErrorList.h"
+#include "MediaData.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
@@ -87,6 +88,9 @@ Result<Ok, nsresult> CloneBuffer(
     JSContext* aCx,
     OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest,
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aSrc);
+
+Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
 /*
  * The following are utilities to convert between VideoColorSpace values to
