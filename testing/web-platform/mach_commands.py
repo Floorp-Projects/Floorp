@@ -189,7 +189,10 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         wptrunner_path = os.path.join(self._here, "tests", "tools", "wptrunner")
         browser_cls = run.product_setup[kwargs["product"]].browser_cls
         requirements = ["requirements.txt"]
-        if hasattr(browser_cls, "requirements"):
+        if (
+            hasattr(browser_cls, "requirements")
+            and browser_cls.requirements is not None
+        ):
             requirements.append(browser_cls.requirements)
 
         for filename in requirements:
