@@ -212,18 +212,15 @@ fun Activity.setNavigationIcon(
  * @param customTabSessionId Optional custom tab session ID if navigating from a custom tab.
  *
  * @return the [NavDirections] for the given [Activity].
+ * @throws IllegalArgumentException if the given [Activity] is not supported.
  */
 fun Activity.getNavDirections(
     from: BrowserDirection,
     customTabSessionId: String? = null,
 ): NavDirections? = when (this) {
-    is ExternalAppBrowserActivity -> {
-        getExternalAppBrowserNavDirections(from, customTabSessionId)
-    }
-
-    else -> {
-        getHomeNavDirections(from)
-    }
+    is ExternalAppBrowserActivity -> getExternalAppBrowserNavDirections(from, customTabSessionId)
+    is HomeActivity -> getHomeNavDirections(from)
+    else -> throw IllegalArgumentException("$this is not supported")
 }
 
 private fun Activity.getExternalAppBrowserNavDirections(
@@ -321,10 +318,12 @@ const val EXTERNAL_APP_BROWSER_INTENT_SOURCE = "CUSTOM_TAB"
  * Depending on the [Activity], maybe derive the source of the given [intent].
  *
  * @param intent the [SafeIntent] to derive the source from.
+ * @throws IllegalArgumentException if the given [Activity] is not supported.
  */
 fun Activity.getIntentSource(intent: SafeIntent): String? = when (this) {
     is ExternalAppBrowserActivity -> EXTERNAL_APP_BROWSER_INTENT_SOURCE
-    else -> getHomeIntentSource(intent)
+    is HomeActivity -> getHomeIntentSource(intent)
+    else -> throw IllegalArgumentException("$this is not supported")
 }
 
 private fun getHomeIntentSource(intent: SafeIntent): String? {
@@ -339,10 +338,12 @@ private fun getHomeIntentSource(intent: SafeIntent): String? {
  * Depending on the [Activity], maybe derive the session ID of the given [intent].
  *
  * @param intent the [SafeIntent] to derive the session ID from.
+ * @throws IllegalArgumentException if the given [Activity] is not supported.
  */
 fun Activity.getIntentSessionId(intent: SafeIntent): String? = when (this) {
     is ExternalAppBrowserActivity -> getExternalAppBrowserIntentSessionId(intent)
-    else -> null
+    is HomeActivity -> null
+    else -> throw IllegalArgumentException("$this is not supported")
 }
 
 private fun getExternalAppBrowserIntentSessionId(intent: SafeIntent) = intent.getSessionId()
@@ -351,10 +352,12 @@ private fun getExternalAppBrowserIntentSessionId(intent: SafeIntent) = intent.ge
  * Get the breadcrumb message for the [Activity].
  *
  * @param destination the [NavDestination] required to provide the destination ID.
+ * @throws IllegalArgumentException if the given [Activity] is not supported.
  */
 fun Activity.getBreadcrumbMessage(destination: NavDestination): String = when (this) {
     is ExternalAppBrowserActivity -> getExternalAppBrowserBreadcrumbMessage(destination.id)
-    else -> getHomeBreadcrumbMessage(destination.id)
+    is HomeActivity -> getHomeBreadcrumbMessage(destination.id)
+    else -> throw IllegalArgumentException("$this is not supported")
 }
 
 private fun Activity.getExternalAppBrowserBreadcrumbMessage(destinationId: Int): String {
