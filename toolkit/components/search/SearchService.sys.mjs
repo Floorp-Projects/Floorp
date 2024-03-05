@@ -1647,7 +1647,9 @@ export class SearchService {
     // If #loadEnginesFromSettings changed the default engine, then we don't
     // need to call #checkOpenSearchOverrides as we know that the overrides have
     // only just been applied.
-    skipDefaultChangedNotification ||= this.#checkOpenSearchOverrides(settings);
+    skipDefaultChangedNotification ||= await this.#checkOpenSearchOverrides(
+      settings
+    );
 
     // Settings file version 6 and below will need a migration to store the
     // engine ids rather than engine names.
@@ -1834,20 +1836,26 @@ export class SearchService {
   /**
    * When starting up, check if any of the saved application provided engines
    * are no longer required, previously were default and were overridden by
-   * an OpenSearch engine. Add-on search engines are handled separately.
+   * an OpenSearch engine.
+   *
+   * Also check if any OpenSearch overrides need to be re-applied.
+   *
+   * Add-on search engines are handled separately.
    *
    * @param {object} settings
    *   The loaded settings for the user.
    * @returns {boolean}
    *   Returns true if the default engine was changed.
    */
-  #checkOpenSearchOverrides(settings) {
+  async #checkOpenSearchOverrides(settings) {
     let defaultEngineChanged = false;
     let savedDefaultEngineId =
       settings.metaData.defaultEngineId || settings.metaData.appDefaultEngineId;
     if (!savedDefaultEngineId) {
       return false;
     }
+    // First handle the case where the application provided engine was removed,
+    // and we need to restore the OpenSearch engine.
     for (let engineSettings of settings.engines) {
       if (
         !this._engines.get(engineSettings.id) &&
@@ -1873,6 +1881,28 @@ export class SearchService {
         delete engineSettings._metaData.overriddenByOpenSearch;
       }
     }
+    // Now handle the case where the an application provided engine has been
+    // overridden by an OpenSearch engine, and we need to re-apply the override.
+    for (let engine of this._engines.values()) {
+      if (
+        engine.isAppProvided &&
+        engine.getAttr("overriddenByOpenSearch") &&
+        engine.id == savedDefaultEngineId
+      ) {
+        let restoringEngine = new lazy.OpenSearchEngine({
+          json: engine.getAttr("overriddenByOpenSearch"),
+        });
+        if (
+          await lazy.defaultOverrideAllowlist.canEngineOverride(
+            restoringEngine,
+            engine._extensionID
+          )
+        ) {
+          engine.overrideWithEngine({ engine: restoringEngine });
+        }
+      }
+    }
+
     return defaultEngineChanged;
   }
 
