@@ -849,7 +849,7 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
   nsCString errorMessage;
   if (!VideoDecoderTraits::Validate(aConfig, errorMessage)) {
     p->MaybeRejectWithTypeError(nsPrintfCString(
-        "VideoDecoderConfig is invalid: %s", errorMessage.get()));
+        "IsConfigSupported: config is invalid: %s", errorMessage.get()));
     return p.forget();
   }
 
