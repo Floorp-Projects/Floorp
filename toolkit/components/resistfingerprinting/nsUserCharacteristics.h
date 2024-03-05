@@ -13,16 +13,7 @@ class nsUserCharacteristics {
   static void MaybeSubmitPing();
 
   // Public For testing
-  static nsresult PopulateData(bool aTesting = false);
+  static nsresult PopulateData();
   static nsresult SubmitPing();
 };
-
-namespace testing {
-extern "C" {  // Needed to call these in the gtest
-
-int MaxTouchPoints();
-
-}  // extern "C"
-};  // namespace testing
-
 #endif /*  __nsUserCharacteristics_h__ */
