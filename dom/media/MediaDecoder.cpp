@@ -194,6 +194,12 @@ void MediaDecoder::SetOutputCaptureState(OutputCaptureState aState,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   MOZ_ASSERT_IF(aState == OutputCaptureState::Capture, aDummyTrack);
+
+  if (mOutputCaptureState.Ref() != aState) {
+    LOG("Capture state change from %s to %s",
+        OutputCaptureStateToStr(mOutputCaptureState.Ref()),
+        OutputCaptureStateToStr(aState));
+  }
   mOutputCaptureState = aState;
   if (mOutputDummyTrack.Ref().get() != aDummyTrack) {
     mOutputDummyTrack = nsMainThreadPtrHandle<SharedDummyTrack>(
