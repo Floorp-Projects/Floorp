@@ -717,7 +717,6 @@ var gInitialPages = [
   "about:welcome",
   "about:welcomeback",
   "chrome://browser/content/blanktab.html",
-  "about:profilemanager",
 ];
 
 function isInitialPage(url) {
