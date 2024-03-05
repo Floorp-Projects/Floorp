@@ -33,10 +33,18 @@ export const Corroborate = {
       lazy.gCertDB.openSignedAppFileAsync(
         root,
         file,
-        (rv, _zipReader, cert) => {
+        (rv, _zipReader, signatureInfos) => {
+          // aSignatureInfos is an array of nsIAppSignatureInfo.
+          // This implementation could be modified to iterate through the array to
+          // determine if one or all of the verified signatures used a satisfactory
+          // algorithm and signing certificate.
+          // For now, though, it maintains existing behavior by inspecting the
+          // first signing certificate encountered.
           resolve(
             Components.isSuccessCode(rv) &&
-              cert.organizationalUnit === expectedOrganizationalUnit
+              signatureInfos.length &&
+              signatureInfos[0].signerCert.organizationalUnit ==
+                expectedOrganizationalUnit
           );
         }
       );

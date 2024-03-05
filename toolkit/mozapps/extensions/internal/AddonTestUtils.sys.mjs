@@ -567,7 +567,7 @@ export var AddonTestUtils = {
   },
 
   overrideCertDB() {
-    let verifyCert = async (file, result, cert, callback) => {
+    let verifyCert = async (file, result, signatureInfos, callback) => {
       if (
         result == Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED &&
         !this.useRealCertChecks &&
@@ -606,7 +606,16 @@ export var AddonTestUtils = {
             };
           }
 
-          return [callback, Cr.NS_OK, fakeCert];
+          return [
+            callback,
+            Cr.NS_OK,
+            [
+              {
+                signerCert: fakeCert,
+                signatureAlgorithm: Ci.nsIAppSignatureInfo.COSE_WITH_SHA256,
+              },
+            ],
+          ];
         } catch (e) {
           // If there is any error then just pass along the original results
         } finally {
@@ -621,7 +630,7 @@ export var AddonTestUtils = {
         }
       }
 
-      return [callback, result, cert];
+      return [callback, result, signatureInfos];
     };
 
     let FakeCertDB = {
@@ -644,10 +653,14 @@ export var AddonTestUtils = {
         this._genuine.openSignedAppFileAsync(
           root,
           file,
-          (result, zipReader, cert) => {
-            verifyCert(file.clone(), result, cert, callback).then(
-              ([callback, result, cert]) => {
-                callback.openSignedAppFileFinished(result, zipReader, cert);
+          (result, zipReader, signatureInfos) => {
+            verifyCert(file.clone(), result, signatureInfos, callback).then(
+              ([callback, result, signatureInfos]) => {
+                callback.openSignedAppFileFinished(
+                  result,
+                  zipReader,
+                  signatureInfos
+                );
               }
             );
           }

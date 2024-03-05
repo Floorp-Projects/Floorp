@@ -316,13 +316,22 @@ XPIPackage = class XPIPackage extends Package {
   verifySignedStateForRoot(addonId, root) {
     return new Promise(resolve => {
       let callback = {
-        openSignedAppFileFinished(aRv, aZipReader, aCert) {
+        openSignedAppFileFinished(aRv, aZipReader, aSignatureInfos) {
+          // aSignatureInfos is an array of nsIAppSignatureInfo.
+          // In the future, this code can iterate through the array to
+          // determine if one of the verified signatures used a satisfactory
+          // algorithm and signing certificate.
+          // For now, any verified signature is acceptable.
+          let cert;
+          if (aRv == Cr.NS_OK && aSignatureInfos.length) {
+            cert = aSignatureInfos[0].signerCert;
+          }
           if (aZipReader) {
             aZipReader.close();
           }
           resolve({
-            signedState: getSignedStatus(aRv, aCert, addonId),
-            cert: aCert,
+            signedState: getSignedStatus(aRv, cert, addonId),
+            cert,
           });
         },
       };
