@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use std::io::BufRead;
 use std::path::PathBuf;
 
-use crate::setup_config::{EnumSetupInstances, SetupInstance};
+use crate::windows::setup_config::{EnumSetupInstances, SetupInstance};
 
 pub enum VsInstance {
     Com(SetupInstance),

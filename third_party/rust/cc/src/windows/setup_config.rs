@@ -8,19 +8,19 @@
 #![allow(bad_style)]
 #![allow(unused)]
 
-use crate::winapi::Interface;
-use crate::winapi::BSTR;
-use crate::winapi::LPCOLESTR;
-use crate::winapi::LPSAFEARRAY;
-use crate::winapi::S_FALSE;
-use crate::winapi::{CoCreateInstance, CLSCTX_ALL};
-use crate::winapi::{IUnknown, IUnknownVtbl};
-use crate::winapi::{HRESULT, LCID, LPCWSTR, PULONGLONG};
-use crate::winapi::{LPFILETIME, ULONG};
-use std::ffi::OsString;
-use std::ptr::null_mut;
+use crate::windows::{
+    com::{BStr, ComPtr},
+    winapi::{
+        IUnknown, IUnknownVtbl, Interface, LCID, LPCOLESTR, LPCWSTR, LPFILETIME, LPSAFEARRAY,
+        PULONGLONG, ULONG,
+    },
+    windows_sys::{CoCreateInstance, BSTR, CLSCTX_ALL, HRESULT, S_FALSE},
+};
 
-use crate::com::{BStr, ComPtr};
+use std::{
+    ffi::OsString,
+    ptr::{null, null_mut},
+};
 
 // Bindings to the Setup.Configuration stuff
 pub type InstanceState = u32;
@@ -212,7 +212,7 @@ impl SetupInstance {
         SetupInstance(ComPtr::from_raw(obj))
     }
     pub fn instance_id(&self) -> Result<OsString, i32> {
-        let mut s = null_mut();
+        let mut s = null();
         let err = unsafe { self.0.GetInstanceId(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
         if err < 0 {
@@ -221,7 +221,7 @@ impl SetupInstance {
         Ok(bstr.to_osstring())
     }
     pub fn installation_name(&self) -> Result<OsString, i32> {
-        let mut s = null_mut();
+        let mut s = null();
         let err = unsafe { self.0.GetInstallationName(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
         if err < 0 {
@@ -230,7 +230,7 @@ impl SetupInstance {
         Ok(bstr.to_osstring())
     }
     pub fn installation_path(&self) -> Result<OsString, i32> {
-        let mut s = null_mut();
+        let mut s = null();
         let err = unsafe { self.0.GetInstallationPath(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
         if err < 0 {
@@ -239,7 +239,7 @@ impl SetupInstance {
         Ok(bstr.to_osstring())
     }
     pub fn installation_version(&self) -> Result<OsString, i32> {
-        let mut s = null_mut();
+        let mut s = null();
         let err = unsafe { self.0.GetInstallationVersion(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
         if err < 0 {
@@ -248,7 +248,7 @@ impl SetupInstance {
         Ok(bstr.to_osstring())
     }
     pub fn product_path(&self) -> Result<OsString, i32> {
-        let mut s = null_mut();
+        let mut s = null();
         let this = self.0.cast::<ISetupInstance2>()?;
         let err = unsafe { this.GetProductPath(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };

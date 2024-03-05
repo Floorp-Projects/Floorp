@@ -8,63 +8,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ffi::{OsStr, OsString};
-use std::io;
-use std::ops::RangeFrom;
-use std::os::raw;
-use std::os::windows::prelude::*;
+use crate::windows::windows_sys::{
+    RegCloseKey, RegEnumKeyExW, RegOpenKeyExW, RegQueryValueExW, ERROR_NO_MORE_ITEMS,
+    ERROR_SUCCESS, HKEY, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY, REG_SZ,
+};
+use std::{
+    ffi::{OsStr, OsString},
+    io,
+    ops::RangeFrom,
+    os::windows::prelude::*,
+    ptr::null_mut,
+};
 
 /// Must never be `HKEY_PERFORMANCE_DATA`.
 pub(crate) struct RegistryKey(Repr);
 
-type HKEY = *mut u8;
+#[allow(clippy::upper_case_acronyms)]
 type DWORD = u32;
-type LPDWORD = *mut DWORD;
-type LPCWSTR = *const u16;
-type LPWSTR = *mut u16;
-type LONG = raw::c_long;
-type PHKEY = *mut HKEY;
-type PFILETIME = *mut u8;
-type LPBYTE = *mut u8;
-type REGSAM = u32;
-
-const ERROR_SUCCESS: DWORD = 0;
-const ERROR_NO_MORE_ITEMS: DWORD = 259;
-// Sign-extend into 64 bits if needed.
-const HKEY_LOCAL_MACHINE: HKEY = 0x80000002u32 as i32 as isize as HKEY;
-const REG_SZ: DWORD = 1;
-const KEY_READ: DWORD = 0x20019;
-const KEY_WOW64_32KEY: DWORD = 0x200;
-
-#[link(name = "advapi32")]
-extern "system" {
-    fn RegOpenKeyExW(
-        key: HKEY,
-        lpSubKey: LPCWSTR,
-        ulOptions: DWORD,
-        samDesired: REGSAM,
-        phkResult: PHKEY,
-    ) -> LONG;
-    fn RegEnumKeyExW(
-        key: HKEY,
-        dwIndex: DWORD,
-        lpName: LPWSTR,
-        lpcName: LPDWORD,
-        lpReserved: LPDWORD,
-        lpClass: LPWSTR,
-        lpcClass: LPDWORD,
-        lpftLastWriteTime: PFILETIME,
-    ) -> LONG;
-    fn RegQueryValueExW(
-        hKey: HKEY,
-        lpValueName: LPCWSTR,
-        lpReserved: LPDWORD,
-        lpType: LPDWORD,
-        lpData: LPBYTE,
-        lpcbData: LPDWORD,
-    ) -> LONG;
-    fn RegCloseKey(hKey: HKEY) -> LONG;
-}
 
 struct OwnedKey(HKEY);
 
@@ -97,7 +57,7 @@ impl RegistryKey {
     /// Open a sub-key of `self`.
     pub fn open(&self, key: &OsStr) -> io::Result<RegistryKey> {
         let key = key.encode_wide().chain(Some(0)).collect::<Vec<_>>();
-        let mut ret = 0 as *mut _;
+        let mut ret = null_mut();
         let err = unsafe {
             RegOpenKeyExW(
                 self.raw(),
@@ -107,7 +67,7 @@ impl RegistryKey {
                 &mut ret,
             )
         };
-        if err == ERROR_SUCCESS as LONG {
+        if err == ERROR_SUCCESS {
             Ok(RegistryKey(Repr::Owned(OwnedKey(ret))))
         } else {
             Err(io::Error::from_raw_os_error(err as i32))
@@ -130,12 +90,12 @@ impl RegistryKey {
             let err = RegQueryValueExW(
                 self.raw(),
                 name.as_ptr(),
-                0 as *mut _,
+                null_mut(),
                 &mut kind,
-                0 as *mut _,
+                null_mut(),
                 &mut len,
             );
-            if err != ERROR_SUCCESS as LONG {
+            if err != ERROR_SUCCESS {
                 return Err(io::Error::from_raw_os_error(err as i32));
             }
             if kind != REG_SZ {
@@ -156,8 +116,8 @@ impl RegistryKey {
             let err = RegQueryValueExW(
                 self.raw(),
                 name.as_ptr(),
-                0 as *mut _,
-                0 as *mut _,
+                null_mut(),
+                null_mut(),
                 v.as_mut_ptr() as *mut _,
                 &mut len,
             );
@@ -165,7 +125,7 @@ impl RegistryKey {
             // grew between the first and second call to `RegQueryValueExW`),
             // both because it's extremely unlikely, and this is a bit more
             // defensive more defensive against weird types of registry keys.
-            if err != ERROR_SUCCESS as LONG {
+            if err != ERROR_SUCCESS {
                 return Err(io::Error::from_raw_os_error(err as i32));
             }
             // The length is allowed to change, but should still be even, as
@@ -188,7 +148,7 @@ impl RegistryKey {
             if !v.is_empty() && v[v.len() - 1] == 0 {
                 v.pop();
             }
-            return Ok(OsString::from_wide(&v));
+            Ok(OsString::from_wide(&v))
         }
     }
 }
@@ -213,14 +173,14 @@ impl<'a> Iterator for Iter<'a> {
                 i,
                 v.as_mut_ptr(),
                 &mut len,
-                0 as *mut _,
-                0 as *mut _,
-                0 as *mut _,
-                0 as *mut _,
+                null_mut(),
+                null_mut(),
+                null_mut(),
+                null_mut(),
             );
-            if ret == ERROR_NO_MORE_ITEMS as LONG {
+            if ret == ERROR_NO_MORE_ITEMS {
                 None
-            } else if ret != ERROR_SUCCESS as LONG {
+            } else if ret != ERROR_SUCCESS {
                 Some(Err(io::Error::from_raw_os_error(ret as i32)))
             } else {
                 v.set_len(len as usize);
