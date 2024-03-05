@@ -20,25 +20,9 @@ const fxaDevicesWithCommands = [
   },
 ];
 
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
-
 async function getRowsForCard(card) {
   await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
   return card.tabList.rowEls;
-}
-
-async function add_new_tab(URL) {
-  let tabChangeRaised = BrowserTestUtils.waitForEvent(
-    NonPrivateTabs,
-    "TabChange"
-  );
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
-  // wait so we can reliably compare the tab URL
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await tabChangeRaised;
-  return tab;
 }
 
 function getVisibleTabURLs(win = window) {

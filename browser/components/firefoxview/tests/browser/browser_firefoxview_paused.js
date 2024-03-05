@@ -5,9 +5,6 @@ const tabURL1 = "data:,Tab1";
 const tabURL2 = "data:,Tab2";
 const tabURL3 = "data:,Tab3";
 
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
 const TestTabs = {};
 
 function getTopLevelViewElements(document) {

@@ -1,38 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
-
 let pageWithAlert =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/tabPrompts/openPromptOffTimeout.html";
 let pageWithSound =
   "http://mochi.test:8888/browser/dom/base/test/file_audioLoop.html";
-
-function cleanup() {
-  // Cleanup
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.tabs[1]);
-  }
-}
-
-function isActiveElement(expectedLinkEl) {
-  return expectedLinkEl.getRootNode().activeElement == expectedLinkEl;
-}
-
-async function add_new_tab(URL) {
-  let tabChangeRaised = BrowserTestUtils.waitForEvent(
-    NonPrivateTabs,
-    "TabChange"
-  );
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
-  // wait so we can reliably compare the tab URL
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await tabChangeRaised;
-  return tab;
-}
 
 const arrowDown = async tabList => {
   info("Arrow down");
@@ -171,7 +144,7 @@ add_task(async function test_pin_unpin_open_tab() {
     await openTabs.updateComplete;
     await telemetryEvent(contextMenuEvent);
 
-    cleanup();
+    cleanupTabs();
   });
 });
 
@@ -320,7 +293,7 @@ add_task(async function test_indicator_pinned_tabs_with_keyboard() {
     // Switch back to other tab to close prompt before cleanup
     await BrowserTestUtils.switchTab(gBrowser, openedTab);
     EventUtils.synthesizeKey("KEY_Enter", {});
-    cleanup();
+    cleanupTabs();
   });
 });
 
@@ -376,7 +349,7 @@ add_task(async function test_mute_unmute_pinned_tab() {
       () => !unmutedTab.indicators.includes("muted")
     );
 
-    cleanup();
+    cleanupTabs();
   });
 });
 
@@ -483,6 +456,6 @@ add_task(async function test_mute_unmute_with_context_menu() {
       () => !unmutedTab.indicators.includes("muted")
     );
 
-    cleanup();
+    cleanupTabs();
   });
 });
