@@ -1967,9 +1967,9 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "visualViewport", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WakeLock", earlyBetaOrEarlier: true },
+  { name: "WakeLock" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WakeLockSentinel", earlyBetaOrEarlier: true },
+  { name: "WakeLockSentinel" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "webkitURL", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
