@@ -465,6 +465,10 @@ export class SearchService {
     this.#searchPrivateDefault = null;
     this.#maybeReloadDebounce = false;
     this._settings._batchTask?.disarm();
+    if (this.#engineSelector) {
+      this.#engineSelector.reset();
+      this.#engineSelector = null;
+    }
   }
 
   // Test-only function to set SearchService initialization status
