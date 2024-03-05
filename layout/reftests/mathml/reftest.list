@@ -1,3 +1,9 @@
+# WARNING: This directory was used for MathML reftests and is only preserved for
+# the ones that cannot be rewritten as web-platform-tests.
+# If you want to add new tests for MathML, please instead consider adding them
+# to `testing/web-platform/tests/mathml` (for MathML Core tests) or to
+# `testing/web-platform/mozilla/tests/mathml/` (for Gecko-specific tests).
+
 # radicalbar*.html tests rely on reftest-zoom to verify the visibility of the
 # radical bar at different zoom levels. There does not seem to be any equivalent
 # way of testing that via WPT. See bug 1850661.
