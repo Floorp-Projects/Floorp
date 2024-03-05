@@ -124,9 +124,11 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_net_block-pattern.js"]
 skip-if = [
-  "os == 'linux'",
-  "debug && os == 'win'", # Bug 1603355
-  "debug && os == 'mac'", # Bug 1603355
+  "os == 'linux' && os_version == '18.04'",
+  "win11_2009 && debug", # Bug 1603355
+  "win10_2009 && debug", # Bug 1603355
+  "apple_catalina && debug", # Bug 1603355
+  "apple_silicon && debug", # Bug 1603355
 ]
 
 ["browser_net_block-serviceworker.js"]
@@ -184,15 +186,17 @@ skip-if = [
 
 ["browser_net_complex-params.js"]
 skip-if = [
-  "verify && !debug && os == 'win'",
   "win11_2009", # Bug 1797751
 ]
 
 ["browser_net_content-type.js"]
-skip-if = ["!debug && os == 'mac'"]
+skip-if = [
+  "apple_catalina && !debug",
+  "apple_silicon && !debug",
+]
 
 ["browser_net_cookies_sorted.js"]
-skip-if = ["verify && debug && os == 'win'"]
+skip-if = ["win11_2009 && debug && verify"]
 
 ["browser_net_copy_as_curl.js"]
 
@@ -207,7 +211,8 @@ skip-if = ["verify && debug && os == 'win'"]
 ["browser_net_copy_params.js"]
 skip-if = [
   "win11_2009", # Bug 1797751
-  "verify && !debug && os == 'mac'", # bug 1328915, disable linux32 debug devtools for timeouts
+  "apple_catalina && !debug && verify", # bug 1328915
+  "apple_silicon && !debug && verify", # bug 1328915
 ]
 
 ["browser_net_copy_response.js"]
@@ -361,7 +366,7 @@ skip-if = ["!fission"]
 ["browser_net_params_sorted.js"]
 
 ["browser_net_pause.js"]
-skip-if = ["verify && debug && os == 'win'"]
+skip-if = ["win11_2009 && debug && verify"]
 
 ["browser_net_persistent_logs.js"]
 skip-if = ["true"] #Bug 1661612
@@ -377,7 +382,10 @@ skip-if = ["true"] #Bug 1661612
 ["browser_net_prefs-and-l10n.js"]
 
 ["browser_net_prefs-reload.js"]
-skip-if = ["os == 'win'"] # bug 1391264
+skip-if = [
+  "win10_2009", # bug 1391264
+  "win11_2009", # bug 1391264
+]
 
 ["browser_net_raw_headers.js"]
 
@@ -398,7 +406,7 @@ skip-if = ["os == 'win'"] # bug 1391264
 ["browser_net_resend_xhr.js"]
 
 ["browser_net_response_CORS_blocked.js"]
-skip-if = ["a11y_checks && os == 'linux' && !debug"] # bug 1732635
+skip-if = ["os == 'linux' && os_version == '18.04' && !debug && a11y_checks"] # bug 1732635
 
 ["browser_net_response_node-expanded.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
@@ -406,7 +414,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_net_save_response_as.js"]
 
 ["browser_net_search-results.js"]
-skip-if = ["os == 'linux' && a11y_checks"]  # Bug 1721160
+skip-if = ["os == 'linux' && os_version == '18.04' && a11y_checks"]  # Bug 1721160
 
 ["browser_net_security-details.js"]
 
@@ -433,7 +441,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_service-worker-status.js"]
-skip-if = ["verify && !debug && os == 'linux'"]
+skip-if = ["os == 'linux' && os_version == '18.04' && !debug && verify"]
 
 ["browser_net_service-worker-timings.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
