@@ -15,6 +15,7 @@ module.exports = {
   configs: {
     "browser-test": require("../lib/configs/browser-test"),
     "chrome-test": require("../lib/configs/chrome-test"),
+    "general-test": require("../lib/configs/general-test"),
     "mochitest-test": require("../lib/configs/mochitest-test"),
     recommended: require("../lib/configs/recommended"),
     "require-jsdoc": require("../lib/configs/require-jsdoc"),

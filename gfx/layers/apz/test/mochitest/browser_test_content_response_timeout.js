@@ -60,6 +60,7 @@ add_task(async () => {
   );
 
   await new Promise(resolve => {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(resolve, 200);
   });
 
