@@ -11671,6 +11671,7 @@ DatabaseFileManager::DatabaseFileManager(
           aIsInPrivateBrowsingMode
               ? new IndexedDBCipherKeyManager("IndexedDBCipherKeyManager")
               : nullptr),
+      mDatabaseVersion(0),
       mEnforcingQuota(aEnforcingQuota),
       mIsInPrivateBrowsingMode(aIsInPrivateBrowsingMode) {}
 
@@ -15777,6 +15778,8 @@ void OpenDatabaseOp::SendResults() {
       // If we just successfully completed a versionchange operation then we
       // need to update the version in our metadata.
       mMetadata->mCommonMetadata.version() = mRequestedVersion;
+
+      mFileManager->UpdateDatabaseVersion(mRequestedVersion);
 
       nsresult rv = EnsureDatabaseActorIsAlive();
       if (NS_SUCCEEDED(rv)) {
