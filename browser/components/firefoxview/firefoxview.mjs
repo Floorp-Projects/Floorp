@@ -68,7 +68,7 @@ async function updateSearchTextboxSize() {
     { id: "firefoxview-search-text-box-syncedtabs" },
     { id: "firefoxview-search-text-box-history" },
   ];
-  let maxLength = 0;
+  let maxLength = 30;
   for (const msg of await document.l10n.formatMessages(msgs)) {
     const placeholder = msg.attributes[0].value;
     maxLength = Math.max(maxLength, placeholder.length);
