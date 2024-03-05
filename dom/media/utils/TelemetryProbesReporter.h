@@ -66,6 +66,8 @@ class TelemetryProbesReporter final {
   void OnMutedChanged(bool aMuted);
   void OnDecodeSuspended();
   void OnDecodeResumed();
+  void OntFirstFrameLoaded(const TimeDuration& aLoadedFirstFrameTime,
+                           bool aIsMSE, bool aIsExternalEngineStateMachine);
 
   double GetTotalVideoPlayTimeInSeconds() const;
   double GetTotalVideoHDRPlayTimeInSeconds() const;

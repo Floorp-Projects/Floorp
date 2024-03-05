@@ -292,6 +292,52 @@ void TelemetryProbesReporter::OnDecodeResumed() {
   mOwner->DispatchAsyncTestingEvent(u"mozvideodecodesuspendedpaused"_ns);
 }
 
+void TelemetryProbesReporter::OntFirstFrameLoaded(
+    const TimeDuration& aLoadedFirstFrameTime, bool aIsMSE,
+    bool aIsExternalEngineStateMachine) {
+  const MediaInfo& info = mOwner->GetMediaInfo();
+  MOZ_ASSERT(info.HasVideo());
+  nsCString resolution;
+  DetermineResolutionForTelemetry(info, resolution);
+
+  glean::media_playback::FirstFrameLoadedExtra extraData;
+  extraData.firstFrameLoadedTime = Some(aLoadedFirstFrameTime.ToMilliseconds());
+  if (!aIsMSE && !aIsExternalEngineStateMachine) {
+    extraData.playbackType = Some("Non-MSE playback"_ns);
+  } else if (aIsMSE && !aIsExternalEngineStateMachine) {
+    extraData.playbackType = !mOwner->IsEncrypted() ? Some("MSE playback"_ns)
+                                                    : Some("EME playback"_ns);
+  } else if (!aIsMSE && aIsExternalEngineStateMachine) {
+    extraData.playbackType = Some("Non-MSE media-engine playback"_ns);
+  } else if (aIsMSE && aIsExternalEngineStateMachine) {
+    extraData.playbackType = !mOwner->IsEncrypted()
+                                 ? Some("MSE media-engine playback"_ns)
+                                 : Some("EME media-engine playback"_ns);
+  } else {
+    extraData.playbackType = Some("ERROR TYPE"_ns);
+    MOZ_ASSERT(false, "Unexpected playback type!");
+  }
+  extraData.videoCodec = Some(info.mVideo.mMimeType);
+  extraData.resolution = Some(resolution);
+  if (const auto keySystem = mOwner->GetKeySystem()) {
+    extraData.keySystem = Some(NS_ConvertUTF16toUTF8(*keySystem));
+  }
+
+  if (MOZ_LOG_TEST(gTelemetryProbesReporterLog, LogLevel::Debug)) {
+    nsPrintfCString logMessage{
+        "Media_Playabck First_Frame_Loaded event, time(ms)=%f, "
+        "playback-type=%s, videoCodec=%s, resolution=%s",
+        aLoadedFirstFrameTime.ToMilliseconds(), extraData.playbackType->get(),
+        extraData.videoCodec->get(), extraData.resolution->get()};
+    if (const auto keySystem = mOwner->GetKeySystem()) {
+      logMessage.Append(nsPrintfCString{
+          ", keySystem=%s", NS_ConvertUTF16toUTF8(*keySystem).get()});
+    }
+    LOG("%s", logMessage.get());
+  }
+  glean::media_playback::first_frame_loaded.Record(Some(extraData));
+}
+
 void TelemetryProbesReporter::OnShutdown() {
   AssertOnMainThreadAndNotShutdown();
   LOG("Shutdown");
