@@ -235,6 +235,10 @@ module.exports = {
       },
     },
     {
+      files: ["**/test/**", "**/tests/**"],
+      extends: ["plugin:mozilla/general-test"],
+    },
+    {
       // Some directories reuse `test_foo.js` files between mochitest-plain and
       // unit tests, or use custom postMessage-based assertion propagation into
       // browser tests. Ignore those too:
