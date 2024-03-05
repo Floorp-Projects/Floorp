@@ -138,7 +138,7 @@ elif CONFIG["OS_ARCH"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
     EXPORTS.mozilla.ipc += [
         "SetProcessTitle.h",
     ]
-elif CONFIG["OS_ARCH"] == "Darwin":
+elif CONFIG["TARGET_OS"] == "OSX":
     UNIFIED_SOURCES += ["ProcessUtils_mac.mm"]
 else:
     UNIFIED_SOURCES += [
