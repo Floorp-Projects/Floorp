@@ -150,6 +150,10 @@ class SettingsSubMenuAutofillRobot {
     }
 
     fun verifyAddAddressView() {
+        Log.i(TAG, "verifyAddAddressView: Trying to perform \"Close soft keyboard\" action")
+        // Closing the keyboard to ensure full visibility of the "Add address" view
+        closeSoftKeyboard()
+        Log.i(TAG, "verifyAddAddressView: Performed \"Close soft keyboard\" action")
         assertUIObjectExists(
             addAddressToolbarTitle(),
             navigateBackButton(),
@@ -159,7 +163,6 @@ class SettingsSubMenuAutofillRobot {
             cityTextInput(),
             subRegionDropDown(),
         )
-        scrollToElementByText(getStringResource(R.string.addresses_country))
         assertUIObjectExists(
             zipCodeTextInput(),
             countryDropDown(),
