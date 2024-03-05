@@ -9,7 +9,6 @@
 
 #include <mach/mach.h>
 #include <mach/message.h>
-#include <servers/bootstrap.h>
 #include <sys/types.h>
 
 #include "mozilla/Maybe.h"
