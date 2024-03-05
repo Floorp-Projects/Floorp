@@ -27,9 +27,6 @@ module.exports = {
     // Maximum depth callbacks can be nested.
     "max-nested-callbacks": ["error", 4],
 
-    // Allow the console API aside from console.log.
-    "no-console": ["error", { allow: ["error", "info", "trace", "warn"] }],
-
     // Disallow use of multiline strings (use template strings instead).
     "no-multi-str": "error",
 

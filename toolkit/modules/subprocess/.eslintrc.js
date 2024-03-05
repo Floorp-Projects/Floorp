@@ -6,8 +6,4 @@
 
 module.exports = {
   extends: "../../components/extensions/.eslintrc.js",
-
-  rules: {
-    "no-console": "off",
-  },
 };

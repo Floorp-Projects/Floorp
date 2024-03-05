@@ -34,7 +34,7 @@ function generateESMURIMap(jsm_map) {
 
 function isESMifiedSlow(resourceURI) {
   if (!(resourceURI in uri_map)) {
-    console.log(`WARNING: Unknown module: ${resourceURI}`);
+    console.warn(`WARNING: Unknown module: ${resourceURI}`);
     return { result: false, jsms: [] };
   }
 

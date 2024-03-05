@@ -8,6 +8,9 @@
  * mach itself.
  */
 
+// This is a non-production file that needs to log.
+/* eslint-disable no-console */
+
 "use strict";
 
 var mocha = require("mocha");

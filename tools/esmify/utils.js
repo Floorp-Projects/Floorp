@@ -8,7 +8,7 @@
 
 function warnForPath(inputFile, path, message) {
   const loc = path.node.loc;
-  console.log(
+  console.warn(
     `WARNING: ${inputFile}:${loc.start.line}:${loc.start.column} : ${message}`
   );
 }

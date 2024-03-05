@@ -130,8 +130,6 @@ module.exports = {
     "no-catch-shadow": 2,
     // Disallow assignment in conditional expressions.
     "no-cond-assign": 2,
-    // Allow using the console API.
-    "no-console": 0,
     // Allow use of the continue statement.
     "no-continue": 0,
     // Disallow control characters in regular expressions.
