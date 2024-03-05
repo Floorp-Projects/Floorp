@@ -144,7 +144,8 @@ WMFAudioMFTManager::Input(MediaRawData* aSample) {
 nsCString WMFAudioMFTManager::GetCodecName() const {
   if (mStreamType == WMFStreamType::AAC) {
     return "aac"_ns;
-  } else if (mStreamType == WMFStreamType::MP3) {
+  }
+  if (mStreamType == WMFStreamType::MP3) {
     return "mp3"_ns;
   }
   return "unknown"_ns;
@@ -177,8 +178,8 @@ WMFAudioMFTManager::UpdateOutputType() {
 }
 
 HRESULT
-WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
-  aOutData = nullptr;
+WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutput) {
+  aOutput = nullptr;
   RefPtr<IMFSample> sample;
   HRESULT hr;
   int typeChangeCount = 0;
@@ -242,8 +243,8 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // Output is made of floats.
-  int32_t numSamples = currentLength / sizeof(float);
-  int32_t numFrames = numSamples / mAudioChannels;
+  uint32_t numSamples = currentLength / sizeof(float);
+  uint32_t numFrames = numSamples / mAudioChannels;
   MOZ_ASSERT(numFrames >= 0);
   MOZ_ASSERT(numSamples >= 0);
   if (numFrames == 0) {
@@ -275,10 +276,10 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
     return MF_E_TRANSFORM_NEED_MORE_INPUT;
   }
 
-  aOutData = new AudioData(aStreamOffset, pts, std::move(audioData),
-                           mAudioChannels, mAudioRate, mChannelsMap);
-  MOZ_DIAGNOSTIC_ASSERT(duration == aOutData->mDuration, "must be equal");
-  mLastOutputDuration = aOutData->mDuration;
+  aOutput = new AudioData(aStreamOffset, pts, std::move(audioData),
+                          mAudioChannels, mAudioRate, mChannelsMap);
+  MOZ_DIAGNOSTIC_ASSERT(duration == aOutput->mDuration, "must be equal");
+  mLastOutputDuration = aOutput->mDuration;
 
 #ifdef LOG_SAMPLE_DECODE
   LOG("Decoded audio sample! timestamp=%lld duration=%lld currentLength=%u",
