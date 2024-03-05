@@ -16,6 +16,25 @@ const TEST_DATA = [
     throws: true,
   },
   {
+    desc: "Null input",
+    input: null,
+    line: 1,
+    column: 1,
+    throws: true,
+  },
+  {
+    desc: "Missing loc",
+    input: "#id{color:red;background:yellow;}",
+    throws: true,
+  },
+  {
+    desc: "No opening bracket",
+    input: "/* hey */",
+    line: 1,
+    column: 1,
+    throws: true,
+  },
+  {
     desc: "Simplest test case",
     input: "#id{color:red;background:yellow;}",
     line: 1,
@@ -39,18 +58,6 @@ const TEST_DATA = [
     expected: { offset: 4, text: "color:red;background:yellow;" },
   },
   {
-    desc: "Null input",
-    input: null,
-    line: 1,
-    column: 1,
-    throws: true,
-  },
-  {
-    desc: "Missing loc",
-    input: "#id{color:red;background:yellow;}",
-    throws: true,
-  },
-  {
     desc: "Multi-lines CSS",
     input: [
       "/* this is a multi line css */",
@@ -61,7 +68,7 @@ const TEST_DATA = [
       " /*something else here */",
       "* {",
       "  color: purple;",
-      "}",
+      "}       ",
     ].join("\n"),
     line: 7,
     column: 1,
@@ -107,11 +114,52 @@ const TEST_DATA = [
     },
   },
   {
+    desc: "Attribute selector containing a { character",
+    input: `div[data-x="{"]{color: gold}`,
+    line: 1,
+    column: 1,
+    expected: {
+      offset: 16,
+      text: "color: gold",
+    },
+  },
+  {
     desc: "Rule contains no tokens",
     input: "div{}",
     line: 1,
     column: 1,
     expected: { offset: 4, text: "" },
+  },
+  {
+    desc: "Rule contains invalid declaration",
+    input: `#id{color;}`,
+    line: 1,
+    column: 1,
+    expected: { offset: 4, text: "color;" },
+  },
+  {
+    desc: "Rule contains invalid declaration",
+    input: `#id{-}`,
+    line: 1,
+    column: 1,
+    expected: { offset: 4, text: "-" },
+  },
+  {
+    desc: "Rule contains nested rule",
+    input: `#id{background: gold; .nested{color:blue;} color: tomato;  }`,
+    line: 1,
+    column: 1,
+    expected: {
+      offset: 4,
+      text: "background: gold; .nested{color:blue;} color: tomato;  ",
+    },
+  },
+  {
+    desc: "Rule contains nested rule with invalid declaration",
+    input: `#id{.nested{color;}}`,
+    line: 1,
+    column: 1,
+    expected: { offset: 4, text: ".nested{color;}" },
   },
 ];
 
