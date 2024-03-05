@@ -52,6 +52,7 @@ def main(output):
     assert buildconfig.substs["MOZ_BUILD_APP"] in (
         "browser",
         "mobile/android",
+        "mobile/ios",
         "comm/mail",
         "comm/suite",
     ), (
@@ -63,6 +64,8 @@ def main(output):
     if buildconfig.substs["MOZ_BUILD_APP"] == "browser":
         dumps_locations += ["services/settings/dumps/"]
     elif buildconfig.substs["MOZ_BUILD_APP"] == "mobile/android":
+        dumps_locations += ["services/settings/dumps/"]
+    elif buildconfig.substs["MOZ_BUILD_APP"] == "mobile/ios":
         dumps_locations += ["services/settings/dumps/"]
     elif buildconfig.substs["MOZ_BUILD_APP"] == "comm/mail":
         dumps_locations += ["services/settings/dumps/"]
