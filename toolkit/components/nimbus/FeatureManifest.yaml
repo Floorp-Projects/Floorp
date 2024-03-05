@@ -1897,6 +1897,190 @@ mixedContentUpgrading:
         branch: default
         pref: security.mixed_content.upgrade_display_content.video
 
+gc:
+  description: Prefs that control gc heuristics.
+  owner: dpalmeiro@mozilla.com
+  hasExposure: false
+  variables:
+    max_nursery_size:
+      description: Set the maximum size of the GC nursery, in kb.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.nursery.max_kb"
+    min_nursery_size:
+      description: Set the minimum size of the GC nursery, in kb.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.nursery.min_kb"
+    gc_allocation_threshold_mb:
+      description: Lower limit for collecting a zone, in MB.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_allocation_threshold_mb"
+    gc_balanced_heap_limits:
+      description: Whether balanced heap limits are enabled.
+      type: boolean
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_balanced_heap_limits"
+    gc_compacting:
+      description: Whether compacting GC is enabled.
+      type: boolean
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_compacting"
+    gc_heap_growth_factor:
+      description: Heap growth parameter for balanced heap limit calculation.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_heap_growth_factor"
+    gc_helper_thread_ratio:
+      description: Number of threads to use for parallel GC work.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_helper_thread_ratio"
+    gc_high_frequency_large_heap_growth:
+      description: Heap growth factor for large heaps in the high-frequency GC state.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_high_frequency_large_heap_growth"
+    gc_high_frequency_small_heap_growth:
+      description: Heap growth factor for small heaps in the high-frequency GC state.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_high_frequency_small_heap_growth"
+    gc_high_frequency_time_limit_ms:
+      description: GCs less than this far apart in milliseconds will be
+                   considered high-frequency GCs.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_high_frequency_time_limit_ms"
+    gc_incremental:
+      description: Whether incremental GC is enabled. If not, GC will always run to completion.
+      type: boolean
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_incremental"
+    incremental_weakmap:
+      description: Enable incremental weakmap marking.
+      type: boolean
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.incremental_weakmap"
+    gc_incremental_slice_ms:
+      description: Max milliseconds to spend in an incremental GC slice.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_incremental_slice_ms"
+    gc_large_heap_incremental_limit:
+      description: Limit of how far over the incremental trigger threshold we allow the
+                   heap to grow before finishing a collection non-incrementally, for large heaps.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_large_heap_incremental_limit"
+    gc_large_heap_size_min_mb:
+      description: Lower limit for classifying a heap as large, in MB.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_large_heap_size_min_mb"
+    gc_low_frequency_heap_growth:
+      description: Heap growth factor for low frequency GCs.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_low_frequency_heap_growth"
+    gc_malloc_threshold_base_mb:
+      description: Set the malloc threshold base value in MB.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_malloc_threshold_base_mb"
+    gc_max_empty_chunk_count:
+      description: Do not keep more than this many unused chunks in the free chunk pool.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_max_empty_chunk_count"
+    gc_max_helper_threads:
+      description: The maximum number of background threads to use for parallel GC work.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_max_helper_threads"
+    gc_min_empty_chunk_count:
+      description: We try to keep at least this many unused chunks in the free chunk
+                   pool at all times, even after a shrinking GC.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_min_empty_chunk_count"
+    gc_parallel_marking:
+      description: Enable parallel marking.
+      type: boolean
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_parallel_marking"
+    gc_parallel_marking_threshold_mb:
+      description: The heap size above which to use parallel marking.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_parallel_marking_threshold_mb"
+    gc_per_zone:
+      description: Whether per-zone GC is enabled. If not, all zones are collected every time.
+      type: boolean
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_per_zone"
+    gc_small_heap_incremental_limit:
+      description: Limit of how far over the incremental trigger threshold we allow the heap
+                   to grow before finishing a collection non-incrementally, for small heaps.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_small_heap_incremental_limit"
+    gc_small_heap_size_max_mb:
+      description: Upper limit for classifying a heap as small, in MB.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_small_heap_size_max_mb"
+    gc_urgent_threshold_mb:
+      description: Set the urgent threshold, in MB.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_urgent_threshold_mb"
+    nursery_eager_collection_threshold_kb:
+      description: Set the eager collection threshold, in kb, for the nursery.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.nursery_eager_collection_threshold_kb"
+    nursery_eager_collection_threshold_percent:
+      description: Set the eager collection percent threshold for the nursery.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.nursery_eager_collection_threshold_percent"
+    nursery_eager_collection_timeout_ms:
+      description: Set the eager collection timeout, in ms, for the nursery.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.nursery_eager_collection_timeout_ms"
+
 jsParallelParsing:
   description: Pref to toggle JS parallel parsing.
   owner: dpalmeiro@mozilla.com, nbp@mozilla.com
@@ -1909,19 +2093,6 @@ jsParallelParsing:
       setPref:
         branch: user
         pref: "javascript.options.parallel_parsing"
-
-gcParallelMarking:
-  description: Pref to toggle parallel marking in the GC.
-  owner: dpalmeiro@mozilla.com, jonco@mozilla.com
-  isEarlyStartup: true
-  hasExposure: false
-  variables:
-    enabled:
-      description: True to enable parallel marking.
-      type: boolean
-      setPref:
-        branch: user
-        pref: "javascript.options.mem.gc_parallel_marking"
 
 jitThresholds:
   description: Prefs that control jit tier thresholds.
