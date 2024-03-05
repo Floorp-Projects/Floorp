@@ -47,7 +47,6 @@ using BidiClass = intl::BidiClass;
 using BidiDirection = intl::BidiDirection;
 using BidiEmbeddingLevel = intl::BidiEmbeddingLevel;
 
-static const char16_t kSpace = 0x0020;
 static const char16_t kZWSP = 0x200B;
 static const char16_t kLineSeparator = 0x2028;
 static const char16_t kObjectSubstitute = 0xFFFC;
@@ -60,7 +59,8 @@ static const char16_t kLRI = 0x2066;
 static const char16_t kRLI = 0x2067;
 static const char16_t kFSI = 0x2068;
 static const char16_t kPDI = 0x2069;
-// All characters with Bidi type Segment Separator or Block Separator
+// All characters with Bidi type Segment Separator or Block Separator.
+// This should be kept in sync with the table in ReplaceSeparators.
 static const char16_t kSeparators[] = {
     char16_t('\t'), char16_t('\r'),   char16_t('\n'), char16_t(0xb),
     char16_t(0x1c), char16_t(0x1d),   char16_t(0x1e), char16_t(0x1f),
@@ -854,11 +854,32 @@ nsresult nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame) {
   return ResolveParagraph(&bpd);
 }
 
+// In ResolveParagraph, we previously used ReplaceChar(kSeparators, kSpace)
+// to convert separators to spaces, but this hard-coded implementation is
+// substantially faster than the general-purpose ReplaceChar function.
+// This must be kept in sync with the definition of kSeparators.
+static inline void ReplaceSeparators(nsString& aText, size_t aStartIndex = 0) {
+  for (char16_t* cp = aText.BeginWriting() + aStartIndex;
+       cp < aText.EndWriting(); cp++) {
+    if (MOZ_UNLIKELY(*cp < char16_t(' '))) {
+      static constexpr char16_t SeparatorToSpace[32] = {
+          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, ' ',  ' ',
+          ' ',  0x0c, ' ',  0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+          0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, ' ',  ' ',  ' ',  ' ',
+      };
+      *cp = SeparatorToSpace[*cp];
+    } else if (MOZ_UNLIKELY(*cp == 0x0085 || *cp == 0x2026)) {
+      *cp = ' ';
+    }
+  }
+}
+
 nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
   if (aBpd->BufferLength() < 1) {
     return NS_OK;
   }
-  aBpd->mBuffer.ReplaceChar(kSeparators, kSpace);
+
+  ReplaceSeparators(aBpd->mBuffer);
 
   int32_t runCount;
 
@@ -2464,9 +2485,19 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(
   nsIRenderingContextBidiProcessor processor(&aRenderingContext,
                                              aTextRunConstructionDrawTarget,
                                              &aFontMetrics, nsPoint(aX, aY));
-  nsAutoString text(aText, aLength);
-  text.ReplaceChar(kSeparators, ' ');
-  return ProcessText(text.BeginReading(), text.Length(), aBaseLevel,
+  nsDependentSubstring text(aText, aLength);
+  auto separatorIndex = text.FindCharInSet(kSeparators);
+  if (separatorIndex == kNotFound) {
+    return ProcessText(text.BeginReading(), text.Length(), aBaseLevel,
+                       aPresContext, processor, aMode, aPosResolve,
+                       aPosResolveCount, aWidth, aPresContext->BidiEngine());
+  }
+
+  // We need to replace any block or segment separators with space for bidi
+  // processing, so make a local copy.
+  nsAutoString localText(text);
+  ReplaceSeparators(localText, separatorIndex);
+  return ProcessText(localText.BeginReading(), localText.Length(), aBaseLevel,
                      aPresContext, processor, aMode, aPosResolve,
                      aPosResolveCount, aWidth, aPresContext->BidiEngine());
 }
