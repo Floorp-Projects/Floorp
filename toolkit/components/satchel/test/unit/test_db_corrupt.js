@@ -52,7 +52,7 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
     count = await FormHistory.count({ fieldname: "name-A", value: "value-A" });
     Assert.equal(count, 0);
     run_next_test();
-  })().catch(() => {
+  })().catch(_error => {
     do_throw("DB initialized after reading a corrupt DB file is not empty.");
   });
 });

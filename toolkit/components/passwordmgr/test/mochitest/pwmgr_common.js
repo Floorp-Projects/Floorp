@@ -643,8 +643,8 @@ function registerRunTests(existingPasswordFieldsCount = 0, callback) {
 
       let foundForcer = false;
       var observer = SpecialPowers.wrapCallback(function (
-        subject,
-        topic,
+        _subject,
+        _topic,
         data
       ) {
         if (data === "observerforcer") {
@@ -715,7 +715,7 @@ function logoutPrimaryPassword() {
 function promiseFormsProcessedInSameProcess(expectedCount = 1) {
   var processedCount = 0;
   return new Promise(resolve => {
-    function onProcessedForm(subject, topic, data) {
+    function onProcessedForm(subject, _topic, data) {
       processedCount++;
       if (processedCount == expectedCount) {
         info(`${processedCount} form(s) processed`);
@@ -1068,7 +1068,7 @@ SimpleTest.registerCleanupFunction(() => {
 this.LoginManager = new Proxy(
   {},
   {
-    get(target, prop) {
+    get(_target, prop, _receiver) {
       return (...args) => {
         let loginInfoIndices = [];
         let cloneableArgs = args.map((val, index) => {

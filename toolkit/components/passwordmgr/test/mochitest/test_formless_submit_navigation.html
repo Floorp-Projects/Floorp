@@ -11,9 +11,7 @@
 <script type="application/javascript">
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("loginFrame").addEventListener("load", () => {
-      resolve();
-    });
+    document.getElementById("loginFrame").addEventListener("load", _e => resolve());
   });
 });
 
@@ -179,7 +177,7 @@ const TESTCASES = [
   },
 ];
 
-function filterFormSubmissions({ data }) {
+function filterFormSubmissions({ _origin, data }) {
   return data.newPasswordField.value != "ignore-form-submission";
 }
 

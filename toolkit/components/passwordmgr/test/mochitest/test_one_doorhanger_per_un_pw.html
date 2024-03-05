@@ -47,9 +47,8 @@
     is(password.value, "pass", "Checking for filled password");
 
     let promptShown = false;
-    promptShownPromise = promisePromptShown("passwordmgr-prompt-save").then(() => {
-      promptShown = true;
-    });
+    promptShownPromise = promisePromptShown("passwordmgr-prompt-save")
+      .then(_value => promptShown = true);
     submitButton.click();
     await new Promise(resolve => setTimeout(resolve, 1000));
     ok(!promptShown, "Prompt is not shown for the same login values a second time");

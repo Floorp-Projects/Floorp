@@ -67,13 +67,7 @@ async function editPasswordFieldInShadowDOM() {
 
 async function testForm(testcase) {
   const iframeLoaded = new Promise(resolve => {
-    IFRAME.addEventListener(
-      "load",
-      function() {
-        resolve(true);
-      },
-      { once: true }
-    );
+    IFRAME.addEventListener("load", _e => resolve(true), { once: true });
   });
 
   // This could complete before the page finishes loading.

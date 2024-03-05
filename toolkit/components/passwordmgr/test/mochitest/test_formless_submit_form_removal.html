@@ -10,10 +10,8 @@
 <body>
 <script type="application/javascript">
 let loadPromise = new Promise(resolve => {
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("loginFrame").addEventListener("load", () => {
-      resolve();
-    });
+  document.addEventListener("DOMContentLoaded", _event => {
+    document.getElementById("loginFrame").addEventListener("load", _e => resolve());
   });
 });
 
@@ -193,10 +191,8 @@ function filterFormSubmissions({ data }) {
 
 async function testFormlesSubmitFormRemoval(tc, testDoc, scriptName) {
   let loginFrame = document.getElementById("loginFrame");
-  let loadedPromise = new Promise((resolve) => {
-    loginFrame.addEventListener("load", function() {
-      resolve();
-    }, {once: true});
+  let loadedPromise = new Promise(resolve => {
+    loginFrame.addEventListener("load", _e => resolve(), {once: true});
   });
   loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
   await loadedPromise;

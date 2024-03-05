@@ -27,7 +27,7 @@ let login2 = new nsLoginInfo(
 );
 
 function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
-  function storageChangedObserved(subject, data) {
+  function storageChangedObserved(_subject, data) {
     // Watch for actions triggered from a doorhanger (not cleanup tasks with removeLogin)
     if (data == "removeLogin") {
       return false;
@@ -44,7 +44,7 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
       gBrowser,
       url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
     },
-    async function () {
+    async function (_browser) {
       Assert.ok(true, "loaded " + aPageFile);
       info("running test case task");
       await aTaskFn();

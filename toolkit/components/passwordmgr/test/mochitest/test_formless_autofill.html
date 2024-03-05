@@ -12,7 +12,7 @@
 gTestDependsOnDeprecatedLogin = true;
 let doneSetupPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("loginFrame").addEventListener("load", async () => {
+    document.getElementById("loginFrame").addEventListener("load", async _e => {
       // Tell the parent to setup test logins.
       await runChecksAfterCommonInit();
       resolve();

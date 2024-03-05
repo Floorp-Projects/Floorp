@@ -128,12 +128,12 @@ var ParentUtils = {
     await storageChangePromise;
   },
 
-  async operateAddress() {
-    await this._operateRecord(ADDRESSES_COLLECTION_NAME, ...arguments);
+  async operateAddress(type, msgData) {
+    await this._operateRecord(ADDRESSES_COLLECTION_NAME, type, msgData);
   },
 
-  async operateCreditCard() {
-    await this._operateRecord(CREDITCARDS_COLLECTION_NAME, ...arguments);
+  async operateCreditCard(type, msgData) {
+    await this._operateRecord(CREDITCARDS_COLLECTION_NAME, type, msgData);
   },
 
   async cleanUpAddresses() {
@@ -145,11 +145,7 @@ var ParentUtils = {
       return;
     }
 
-    await this.operateAddress(
-      "remove",
-      { guids },
-      "FormAutofillTest:AddressesCleanedUp"
-    );
+    await this.operateAddress("remove", { guids });
   },
 
   async cleanUpCreditCards() {
@@ -164,11 +160,7 @@ var ParentUtils = {
       return;
     }
 
-    await this.operateCreditCard(
-      "remove",
-      { guids },
-      "FormAutofillTest:CreditCardsCleanedUp"
-    );
+    await this.operateCreditCard("remove", { guids });
   },
 
   setup() {
@@ -268,7 +260,7 @@ addMessageListener("FormAutofillTest:CheckAddresses", msg => {
   return ParentUtils.checkAddresses(msg);
 });
 
-addMessageListener("FormAutofillTest:CleanUpAddresses", () => {
+addMessageListener("FormAutofillTest:CleanUpAddresses", _msg => {
   return ParentUtils.cleanUpAddresses();
 });
 
@@ -284,23 +276,21 @@ addMessageListener("FormAutofillTest:CheckCreditCards", msg => {
   return ParentUtils.checkCreditCards(msg);
 });
 
-addMessageListener("FormAutofillTest:CleanUpCreditCards", () => {
+addMessageListener("FormAutofillTest:CleanUpCreditCards", _msg => {
   return ParentUtils.cleanUpCreditCards();
 });
 
-addMessageListener("FormAutofillTest:CanTestOSKeyStoreLogin", () => {
+addMessageListener("FormAutofillTest:CanTestOSKeyStoreLogin", _msg => {
   return { canTest: OSKeyStoreTestUtils.canTestOSKeyStoreLogin() };
 });
 
-addMessageListener("FormAutofillTest:OSKeyStoreLogin", async msg => {
-  await OSKeyStoreTestUtils.waitForOSKeyStoreLogin(msg.login);
-});
+addMessageListener("FormAutofillTest:OSKeyStoreLogin", msg =>
+  OSKeyStoreTestUtils.waitForOSKeyStoreLogin(msg.login)
+);
 
-addMessageListener("setup", async () => {
-  ParentUtils.setup();
-});
+addMessageListener("setup", async _msg => ParentUtils.setup());
 
-addMessageListener("cleanup", async () => {
+addMessageListener("cleanup", async _msg => {
   destroyed = true;
   await ParentUtils.cleanup();
 });

@@ -113,7 +113,7 @@ class EditAutofillForm {
   /**
    * Handle input events
    */
-  handleInput() {}
+  handleInput(_e) {}
 
   /**
    * Attach event listener
@@ -137,8 +137,10 @@ class EditAutofillForm {
 
   /**
    * Run custom validity routines specific to the field and type of form.
+   *
+   * @param {DOMElement} _field The field that will be validated.
    */
-  updateCustomValidity() {}
+  updateCustomValidity(_field) {}
 }
 
 class EditAddress extends EditAutofillForm {

@@ -307,7 +307,7 @@ function setScriptInput(formNumber, inputName, value) {
 }
 
 function checkSubmitDoesNotSave(formNumber) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const form = document.getElementById("form" + formNumber);
     form.addEventListener("submit", async () => {
       const historyEntriesCount = await countEntries(null, null);
@@ -323,7 +323,7 @@ function checkInvalidFirstInputDoesNotSave(formNumber) {
   return new Promise((resolve) => {
     const form = document.getElementById("form" + formNumber);
     const input = form.querySelector("input");
-    input.addEventListener("invalid", async () => {
+    input.addEventListener("invalid", async _e => {
       const historyEntriesCount = await countEntries(null, null);
       ok(!historyEntriesCount, form.getAttribute("purpose"));
       resolve();
@@ -479,12 +479,12 @@ add_task(async function form19_does_not_save() {
 
 add_task(async function form20_does_not_save() {
   setUserInput(20, "test1", "dontSaveThis");
-  await checkInvalidFirstInputDoesNotSave(20, "invalid");
+  await checkInvalidFirstInputDoesNotSave(20);
 });
 
 add_task(async function form21_does_not_save() {
   setUserInput(21, "test1", "dontSaveThis");
-  await checkInvalidFirstInputDoesNotSave(21, "invalid");
+  await checkInvalidFirstInputDoesNotSave(21);
 });
 
 add_task(async function form22_does_not_save() {

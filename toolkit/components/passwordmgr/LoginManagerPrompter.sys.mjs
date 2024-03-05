@@ -73,7 +73,7 @@ const observer = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   // nsIObserver
-  observe(subject, topic) {
+  observe(subject, topic, _data) {
     switch (topic) {
       case "autocomplete-did-enter-text": {
         const input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
@@ -636,103 +636,104 @@ export class LoginManagerPrompter {
         eventCallback(topic) {
           switch (topic) {
             case "showing":
-              lazy.log.debug("showing");
-              currentNotification = this;
+              {
+                lazy.log.debug("showing");
+                currentNotification = this;
 
-              // Record the first time this instance of the doorhanger is shown.
-              if (!this.timeShown) {
-                histogram.add(PROMPT_DISPLAYED);
-                Services.obs.notifyObservers(
-                  null,
-                  "weave:telemetry:histogram",
-                  histogramName
-                );
-              }
-
-              chromeDoc
-                .getElementById("password-notification-password")
-                .removeAttribute("focused");
-              chromeDoc
-                .getElementById("password-notification-username")
-                .removeAttribute("focused");
-              chromeDoc
-                .getElementById("password-notification-username")
-                .addEventListener("input", onUsernameInput);
-              chromeDoc
-                .getElementById("password-notification-username")
-                .addEventListener("keyup", onKeyUp);
-              chromeDoc
-                .getElementById("password-notification-password")
-                .addEventListener("keyup", onKeyUp);
-              chromeDoc
-                .getElementById("password-notification-password")
-                .addEventListener("input", onPasswordInput);
-              chromeDoc
-                .getElementById("password-notification-username-dropmarker")
-                .addEventListener("click", togglePopup);
-
-              LoginManagerPrompter._getUsernameSuggestions(
-                login,
-                possibleValues?.usernames
-              ).then(usernameSuggestions => {
-                const dropmarker = chromeDoc?.getElementById(
-                  "password-notification-username-dropmarker"
-                );
-                if (dropmarker) {
-                  dropmarker.hidden = !usernameSuggestions.length;
-                }
-
-                const usernameField = chromeDoc?.getElementById(
-                  "password-notification-username"
-                );
-                if (usernameField) {
-                  usernameField.classList.toggle(
-                    "ac-has-end-icon",
-                    !!usernameSuggestions.length
+                // Record the first time this instance of the doorhanger is shown.
+                if (!this.timeShown) {
+                  histogram.add(PROMPT_DISPLAYED);
+                  Services.obs.notifyObservers(
+                    null,
+                    "weave:telemetry:histogram",
+                    histogramName
                   );
                 }
-              });
 
-              const toggleBtn = chromeDoc.getElementById(
-                "password-notification-visibilityToggle"
-              );
+                chromeDoc
+                  .getElementById("password-notification-password")
+                  .removeAttribute("focused");
+                chromeDoc
+                  .getElementById("password-notification-username")
+                  .removeAttribute("focused");
+                chromeDoc
+                  .getElementById("password-notification-username")
+                  .addEventListener("input", onUsernameInput);
+                chromeDoc
+                  .getElementById("password-notification-username")
+                  .addEventListener("keyup", onKeyUp);
+                chromeDoc
+                  .getElementById("password-notification-password")
+                  .addEventListener("keyup", onKeyUp);
+                chromeDoc
+                  .getElementById("password-notification-password")
+                  .addEventListener("input", onPasswordInput);
+                chromeDoc
+                  .getElementById("password-notification-username-dropmarker")
+                  .addEventListener("click", togglePopup);
 
-              if (
-                Services.prefs.getBoolPref(
-                  "signon.rememberSignons.visibilityToggle"
-                )
-              ) {
-                toggleBtn.addEventListener("command", onVisibilityToggle);
+                LoginManagerPrompter._getUsernameSuggestions(
+                  login,
+                  possibleValues?.usernames
+                ).then(usernameSuggestions => {
+                  const dropmarker = chromeDoc?.getElementById(
+                    "password-notification-username-dropmarker"
+                  );
+                  if (dropmarker) {
+                    dropmarker.hidden = !usernameSuggestions.length;
+                  }
 
-                toggleBtn.setAttribute("label", togglePassword.label);
-                toggleBtn.setAttribute("accesskey", togglePassword.accessKey);
+                  const usernameField = chromeDoc?.getElementById(
+                    "password-notification-username"
+                  );
+                  if (usernameField) {
+                    usernameField.classList.toggle(
+                      "ac-has-end-icon",
+                      !!usernameSuggestions.length
+                    );
+                  }
+                });
 
-                const hideToggle =
-                  lazy.LoginHelper.isPrimaryPasswordSet() ||
-                  // Don't show the toggle when the login was autofilled
-                  !!autoFilledLoginGuid ||
-                  // Dismissed-by-default prompts should still show the toggle.
-                  (this.timeShown && this.wasDismissed) ||
-                  // If we are only adding a username then the password is
-                  // one that is already saved and we don't want to reveal
-                  // it as the submitter of this form may not be the account
-                  // owner, they may just be using the saved password.
-                  (messageStringID ==
-                    "password-manager-update-login-add-username" &&
-                    login.timePasswordChanged <
-                      Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
-                toggleBtn.hidden = hideToggle;
+                const toggleBtn = chromeDoc.getElementById(
+                  "password-notification-visibilityToggle"
+                );
+
+                if (
+                  Services.prefs.getBoolPref(
+                    "signon.rememberSignons.visibilityToggle"
+                  )
+                ) {
+                  toggleBtn.addEventListener("command", onVisibilityToggle);
+
+                  toggleBtn.setAttribute("label", togglePassword.label);
+                  toggleBtn.setAttribute("accesskey", togglePassword.accessKey);
+
+                  const hideToggle =
+                    lazy.LoginHelper.isPrimaryPasswordSet() ||
+                    // Don't show the toggle when the login was autofilled
+                    !!autoFilledLoginGuid ||
+                    // Dismissed-by-default prompts should still show the toggle.
+                    (this.timeShown && this.wasDismissed) ||
+                    // If we are only adding a username then the password is
+                    // one that is already saved and we don't want to reveal
+                    // it as the submitter of this form may not be the account
+                    // owner, they may just be using the saved password.
+                    (messageStringID ==
+                      "password-manager-update-login-add-username" &&
+                      login.timePasswordChanged <
+                        Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
+                  toggleBtn.hidden = hideToggle;
+                }
+
+                let popup = chromeDoc.getElementById("PopupAutoComplete");
+                popup.onUsernameSelect = onUsernameSelect;
+                popup.onPasswordSelect = onPasswordSelect;
+
+                LoginManagerPrompter._setUsernameAutocomplete(
+                  login,
+                  possibleValues?.usernames
+                );
               }
-
-              let popup = chromeDoc.getElementById("PopupAutoComplete");
-              popup.onUsernameSelect = onUsernameSelect;
-              popup.onPasswordSelect = onPasswordSelect;
-
-              LoginManagerPrompter._setUsernameAutocomplete(
-                login,
-                possibleValues?.usernames
-              );
-
               break;
             case "shown": {
               lazy.log.debug("shown");

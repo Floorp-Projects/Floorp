@@ -7,7 +7,7 @@ async function acceptPasswordSave() {
   let notif = await getCaptureDoorhangerThatMayOpen("password-save");
   let promiseNewSavedPassword = TestUtils.topicObserved(
     "LoginStats:NewSavedPassword",
-    subject => subject == gBrowser.selectedBrowser
+    (subject, _topic, _data) => subject == gBrowser.selectedBrowser
   );
   clickDoorhangerButton(notif, REMEMBER_BUTTON);
   await promiseNewSavedPassword;

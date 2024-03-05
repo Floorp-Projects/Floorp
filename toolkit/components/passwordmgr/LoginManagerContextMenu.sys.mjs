@@ -55,7 +55,7 @@ export const LoginManagerContextMenu = {
       // login is bound so we can keep the reference to each object.
       item.addEventListener(
         "command",
-        function (login) {
+        function (login, _event) {
           this._fillTargetField(
             login,
             inputElementIdentifier,

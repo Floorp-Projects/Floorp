@@ -113,7 +113,7 @@ add_task(async function test_credit_card_not_captured_without_prior_fetch() {
       });
 
       info("Ensure that credit card doorhanger is not shown");
-      await ensureNoDoorhanger(browser);
+      await ensureNoDoorhanger();
     }
   );
 });

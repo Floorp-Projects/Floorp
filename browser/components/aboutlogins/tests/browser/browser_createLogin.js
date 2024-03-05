@@ -54,100 +54,96 @@ add_task(async function test_create_login() {
       (_, data) => data == "addLogin"
     );
 
-    await SpecialPowers.spawn(
-      browser,
-      [[originTuple, i]],
-      async ([aOriginTuple]) => {
-        let loginList = Cu.waiveXrays(
-          content.document.querySelector("login-list")
-        );
-        let createButton = loginList._createLoginButton;
-        Assert.ok(
-          ContentTaskUtils.isHidden(loginList._blankLoginListItem),
-          "the blank login list item should be hidden initially"
-        );
-        Assert.ok(
-          !createButton.disabled,
-          "Create button should not be disabled initially"
-        );
+    await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      let createButton = loginList._createLoginButton;
+      Assert.ok(
+        ContentTaskUtils.isHidden(loginList._blankLoginListItem),
+        "the blank login list item should be hidden initially"
+      );
+      Assert.ok(
+        !createButton.disabled,
+        "Create button should not be disabled initially"
+      );
 
-        let loginItem = Cu.waiveXrays(
-          content.document.querySelector("login-item")
-        );
-        let usernameInput = loginItem.shadowRoot.querySelector(
-          "input[name='username']"
-        );
-        usernameInput.placeholder = "dummy placeholder";
+      let loginItem = Cu.waiveXrays(
+        content.document.querySelector("login-item")
+      );
+      let usernameInput = loginItem.shadowRoot.querySelector(
+        "input[name='username']"
+      );
+      usernameInput.placeholder = "dummy placeholder";
 
-        createButton.click();
+      createButton.click();
 
-        Assert.ok(
-          ContentTaskUtils.isVisible(loginList._blankLoginListItem),
-          "the blank login list item should be visible after clicking on the create button"
-        );
-        Assert.ok(
-          createButton.disabled,
-          "Create button should be disabled after being clicked"
-        );
+      Assert.ok(
+        ContentTaskUtils.isVisible(loginList._blankLoginListItem),
+        "the blank login list item should be visible after clicking on the create button"
+      );
+      Assert.ok(
+        createButton.disabled,
+        "Create button should be disabled after being clicked"
+      );
 
-        let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
-        Assert.ok(
-          ContentTaskUtils.isVisible(cancelButton),
-          "cancel button should be visible in create mode with no logins saved"
-        );
+      let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
+      Assert.ok(
+        ContentTaskUtils.isVisible(cancelButton),
+        "cancel button should be visible in create mode with no logins saved"
+      );
 
-        let originInput = loginItem.shadowRoot.querySelector(
-          "input[name='origin']"
-        );
-        let passwordInput = loginItem.shadowRoot.querySelector(
-          "input[name='password']"
-        );
+      let originInput = loginItem.shadowRoot.querySelector(
+        "input[name='origin']"
+      );
+      let passwordInput = loginItem.shadowRoot.querySelector(
+        "input[name='password']"
+      );
 
-        // Upon clicking create-login-button, the origin input field is automatically focused.
-        Assert.ok(
-          ContentTaskUtils.isVisible(loginItem._originWarning),
-          "The origin warning should be visible"
-        );
+      // Upon clicking create-login-button, the origin input field is automatically focused.
+      Assert.ok(
+        ContentTaskUtils.isVisible(loginItem._originWarning),
+        "The origin warning should be visible"
+      );
 
-        // At this moment, the password input field is not focused so no warning should be displayed.
-        Assert.ok(
-          ContentTaskUtils.isHidden(loginItem._passwordWarning),
-          "The password warning should not be visible if the password input field is not focused"
-        );
+      // At this moment, the password input field is not focused so no warning should be displayed.
+      Assert.ok(
+        ContentTaskUtils.isHidden(loginItem._passwordWarning),
+        "The password warning should not be visible if the password input field is not focused"
+      );
 
-        Assert.equal(
-          content.document.l10n.getAttributes(usernameInput).id,
-          null,
-          "there should be no placeholder id on the username input in edit mode"
-        );
-        Assert.equal(
-          usernameInput.placeholder,
-          "",
-          "there should be no placeholder on the username input in edit mode"
-        );
+      Assert.equal(
+        content.document.l10n.getAttributes(usernameInput).id,
+        null,
+        "there should be no placeholder id on the username input in edit mode"
+      );
+      Assert.equal(
+        usernameInput.placeholder,
+        "",
+        "there should be no placeholder on the username input in edit mode"
+      );
 
-        originInput.value = aOriginTuple[0];
-        usernameInput.value = "testuser1";
+      originInput.value = aOriginTuple[0];
+      usernameInput.value = "testuser1";
 
-        passwordInput.focus();
-        Assert.ok(
-          ContentTaskUtils.isVisible(loginItem._passwordWarning),
-          "The password warning should not visible"
-        );
-        passwordInput.value = "testpass1";
+      passwordInput.focus();
+      Assert.ok(
+        ContentTaskUtils.isVisible(loginItem._passwordWarning),
+        "The password warning should not visible"
+      );
+      passwordInput.value = "testpass1";
 
-        // Since the password field is focused, the origin warning should not be displayed.
-        Assert.ok(
-          ContentTaskUtils.isHidden(loginItem._originWarning),
-          "The origin warning should not be visible if the origin input field is not focused"
-        );
+      // Since the password field is focused, the origin warning should not be displayed.
+      Assert.ok(
+        ContentTaskUtils.isHidden(loginItem._originWarning),
+        "The origin warning should not be visible if the origin input field is not focused"
+      );
 
-        let saveChangesButton = loginItem.shadowRoot.querySelector(
-          ".save-changes-button"
-        );
-        saveChangesButton.click();
-      }
-    );
+      let saveChangesButton = loginItem.shadowRoot.querySelector(
+        ".save-changes-button"
+      );
+      saveChangesButton.click();
+    });
 
     info("waiting for login to get added to storage");
     await storageChangedPromised;
@@ -239,7 +235,7 @@ add_task(async function test_create_login() {
     let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
       loginResult: true,
     });
-    await SpecialPowers.spawn(browser, [originTuple], async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -250,7 +246,7 @@ add_task(async function test_create_login() {
     info("waiting for oskeystore auth");
     await reauthObserved;
 
-    await SpecialPowers.spawn(browser, [originTuple], async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -318,7 +314,7 @@ add_task(async function test_create_login() {
     });
   }
 
-  await SpecialPowers.spawn(browser, [testCases.length], async () => {
+  await SpecialPowers.spawn(browser, [], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     Assert.equal(
       loginList._loginGuidsSortedOrder.length,

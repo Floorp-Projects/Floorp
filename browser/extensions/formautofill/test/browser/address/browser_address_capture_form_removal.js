@@ -118,7 +118,7 @@ add_task(async function test_address_not_captured_without_prior_fetch() {
       });
 
       info("Ensure that address doorhanger is not shown");
-      await ensureNoDoorhanger(browser);
+      await ensureNoDoorhanger();
     }
   );
 });

@@ -201,7 +201,7 @@ class StreetAddress extends AddressField {
     super(value, region);
 
     this.#structuredStreetAddress = lazy.AddressParser.parseStreetAddress(
-      lazy.AddressParser.replaceControlCharacters(this.userValue, " ")
+      lazy.AddressParser.replaceControlCharacters(this.userValue)
     );
   }
 
@@ -491,7 +491,7 @@ class Country extends AddressField {
     return this.country_code == other.country_code;
   }
 
-  contains() {
+  contains(_other) {
     return false;
   }
 
@@ -841,7 +841,7 @@ class Email extends AddressField {
     );
   }
 
-  contains() {
+  contains(_other) {
     return false;
   }
 

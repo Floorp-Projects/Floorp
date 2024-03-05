@@ -157,7 +157,7 @@ add_task(async function event_data_includes_plaintext_username_and_password() {
       "nsIObserver",
       "nsISupportsWeakReference",
     ]),
-    observe(subject) {
+    observe(subject, _topic, _data) {
       Assert.ok(subject instanceof Ci.nsILoginInfo);
       Assert.ok(subject instanceof Ci.nsILoginMetaInfo);
       Assert.equal(

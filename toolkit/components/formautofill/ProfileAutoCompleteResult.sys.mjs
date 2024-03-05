@@ -100,13 +100,16 @@ class ProfileAutoCompleteResult {
    * Get the secondary label based on the focused field name and related field names
    * in the same form.
    *
+   * @param   {string} _focusedFieldName The field name of the focused input
+   * @param   {Array<object>} _allFieldNames The field names in the same section
+   * @param   {object} _profile The profile providing the labels to show.
    * @returns {string} The secondary label
    */
-  _getSecondaryLabel() {
+  _getSecondaryLabel(_focusedFieldName, _allFieldNames, _profile) {
     return "";
   }
 
-  _generateLabels() {}
+  _generateLabels(_focusedFieldName, _allFieldNames, _profiles) {}
 
   /**
    * Get the value of the result at the given index.
@@ -187,16 +190,19 @@ class ProfileAutoCompleteResult {
   /**
    * Returns true if the value at the given index is removable
    *
+   * @param   {number}  _index The index of the result to remove
    * @returns {boolean} True if the value is removable
    */
-  isRemovableAt() {
+  isRemovableAt(_index) {
     return false;
   }
 
   /**
    * Removes a result from the resultset
+   *
+   * @param {number} _index The index of the result to remove
    */
-  removeValueAt() {
+  removeValueAt(_index) {
     // There is no plan to support removing profiles via autocomplete.
   }
 }
