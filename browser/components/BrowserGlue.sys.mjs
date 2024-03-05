@@ -674,17 +674,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  Profiles: {
-    parent: {
-      esModuleURI: "resource:///actors/ProfilesParent.sys.mjs",
-    },
-    child: {
-      esModuleURI: "resource:///actors/ProfilesChild.sys.mjs",
-    },
-    matches: ["about:profilemanager"],
-    enablePreference: "browser.profiles.enabled",
-  },
-
   Prompt: {
     parent: {
       esModuleURI: "resource:///actors/PromptParent.sys.mjs",
