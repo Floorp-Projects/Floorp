@@ -12,21 +12,16 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/FetchPriority.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/RequestBinding.h"
-#include "nsIChildChannel.h"
-#include "zlib.h"
 
 #include "prsystem.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
-#include "js/Array.h"         // JS::GetArrayLength
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::OwningCompileOptions, JS::DecodeOptions, JS::OwningDecodeOptions, JS::DelazificationOption
 #include "js/ContextOptions.h"  // JS::ContextOptionsRef
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::InstantiationStorage
 #include "js/experimental/CompileScript.h"  // JS::FrontendContext, JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::ThreadStackQuotaForSize, JS::CompilationStorage, JS::CompileGlobalScriptToStencil, JS::CompileModuleScriptToStencil, JS::DecodeStencil, JS::PrepareForInstantiate
-#include "js/friend/ErrorMessages.h"        // js::GetErrorMessage, JSMSG_*
 #include "js/loader/ScriptLoadRequest.h"
 #include "ScriptCompression.h"
 #include "js/loader/LoadedScript.h"
@@ -34,8 +29,6 @@
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
-#include "js/Realm.h"
-#include "js/SourceText.h"
 #include "js/Transcoding.h"  // JS::TranscodeRange, JS::TranscodeResult, JS::IsTranscodeFailureResult
 #include "js/Utility.h"
 #include "xpcpublic.h"
@@ -54,7 +47,6 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/Mutex.h"  // mozilla::Mutex
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -80,16 +72,12 @@
 #include "nsUnicharUtils.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
-#include "nsDocShellCID.h"
 #include "nsIContentSecurityPolicy.h"
 #include "mozilla/Logging.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsProxyRelease.h"
-#include "nsSandboxFlags.h"
-#include "nsContentTypeParser.h"
 #include "nsINetworkPredictor.h"
-#include "nsMimeTypes.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/EventQueue.h"
@@ -103,14 +91,12 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsIScriptError.h"
 #include "nsIAsyncOutputStream.h"
 #include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/Maybe.h"
 
-using JS::SourceText;
 using namespace JS::loader;
 
 using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
