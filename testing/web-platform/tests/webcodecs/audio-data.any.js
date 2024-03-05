@@ -129,6 +129,23 @@ test(t => {
   data.close();
 }, 'Test we can construct AudioData with a negative timestamp.');
 
+test(t => {
+  let audio_data_init = {
+    timestamp: 0,
+    data: new Float32Array([1,2,3,4,5,6,7,8]),
+    numberOfFrames: 4,
+    numberOfChannels: 2,
+    sampleRate: 44100,
+    format: 'f32',
+  };
+  let audioData = new AudioData(audio_data_init);
+  let dest = new Float32Array(8);
+  assert_throws_js(
+      RangeError, () => audioData.copyTo(dest, {planeIndex: 1}),
+      'copyTo from interleaved data with non-zero planeIndex throws');
+  audioData.close();
+}, 'Test that copyTo throws if copying from interleaved with a non-zero planeIndex');
+
 // Indices to pick a particular specific value in a specific sample-format
 const MIN = 0; // Minimum sample value, max amplitude
 const MAX = 1; // Maximum sample value, max amplitude
@@ -364,6 +381,14 @@ function conversionTest(sourceType, destinationType) {
       sourceType,
       "interleaved channel 0"
     );
+    let destInterleaved = new destArrayCtor(data.numberOfFrames * data.numberOfChannels);
+    data.copyTo(destInterleaved, { planeIndex: 0, format: destinationType });
+    check_array_equality(
+      destInterleaved,
+      result.testInput,
+      sourceType,
+      "copyTo from interleaved to interleaved (conversion only)"
+    );
 
     data = new AudioData({
       timestamp: defaultInit.timestamp,
@@ -388,6 +413,7 @@ function conversionTest(sourceType, destinationType) {
       sourceType,
       "planar channel 1"
     );
+    // Planar to interleaved isn't supported
   }, `Test conversion of ${sourceType} to ${destinationType}`);
 }
 
