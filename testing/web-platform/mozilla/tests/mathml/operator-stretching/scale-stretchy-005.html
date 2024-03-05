@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Largeop in display mode stretched by scaling</title>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=414277">
+    <link rel="mismatch" href="scale-stretchy-005-ref.html">
+    <meta name="assert" content="Verify that a displaystyle largeop can be drawn bigger by scaling.">
+  </head>
+  <body>
+    <!-- This assumes that the system fonts do not provide a way to draw a
+         bigger U+2A0C QUADRUPLE INTEGRAL OPERATOR and that preference
+         `mathml.scale_stretchy_operators` is enabled, so that we exercise
+         stretching of largeop using a scale. This test may still pass if
+         stretching is not performed via a scale though. -->
+    <math display="block">
+      <mo largeop="true">⨌</mo>
+    </math>
+  </body>
+</html>
