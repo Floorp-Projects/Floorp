@@ -114,7 +114,7 @@ function waitForDOMPredicate(
     return Promise.resolve(rv);
   }
   return new Promise(resolve => {
-    const observer = new target.ownerGlobal.MutationObserver(mutations => {
+    const observer = new target.ownerGlobal.MutationObserver(() => {
       rv = predicate();
       if (rv) {
         resolve(rv);

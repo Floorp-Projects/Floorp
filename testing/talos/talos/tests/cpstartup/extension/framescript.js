@@ -7,7 +7,7 @@
 
   addEventListener(
     "CPStartup:Ping",
-    e => {
+    () => {
       let evt = new content.CustomEvent("CPStartup:Pong", { bubbles: true });
       content.dispatchEvent(evt);
     },

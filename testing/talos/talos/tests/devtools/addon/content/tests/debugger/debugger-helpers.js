@@ -352,13 +352,7 @@ async function removeBreakpoints(dbg) {
 }
 exports.removeBreakpoints = removeBreakpoints;
 
-async function pauseDebugger(
-  dbg,
-  tab,
-  testFunction,
-  { line, file },
-  pauseOptions
-) {
+async function pauseDebugger(dbg, tab, testFunction, { line, file }) {
   const { getSelectedLocation, isMapScopesEnabled } = dbg.selectors;
 
   const state = dbg.store.getState();

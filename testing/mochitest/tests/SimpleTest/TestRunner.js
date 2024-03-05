@@ -63,7 +63,7 @@ function extend(obj, /* optional */ skip) {
   return ret;
 }
 
-function flattenArguments(lst /* ...*/) {
+function flattenArguments(/* ...*/) {
   var res = [];
   var args = extend(arguments);
   while (args.length) {

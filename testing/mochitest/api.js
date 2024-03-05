@@ -26,7 +26,7 @@ const windowTracker = {
     Services.obs.addObserver(this, "chrome-document-global-created");
   },
 
-  async observe(window, topic, data) {
+  async observe(window, topic) {
     if (topic === "chrome-document-global-created") {
       await new Promise(resolve =>
         window.addEventListener("DOMContentLoaded", resolve, { once: true })

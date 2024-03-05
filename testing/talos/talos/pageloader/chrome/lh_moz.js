@@ -9,7 +9,7 @@ function _contentPaintHandler() {
   if (utils.isMozAfterPaintPending) {
     addEventListener(
       "MozAfterPaint",
-      function afterpaint(e) {
+      function afterpaint() {
         removeEventListener("MozAfterPaint", afterpaint, true);
         sendAsyncMessage("PageLoader:LoadEvent", {});
       },

@@ -215,7 +215,7 @@ function createMochitestServer(serverBasePath) {
       });
       return file;
     },
-    QueryInterface(aIID) {
+    QueryInterface() {
       return this;
     },
   };

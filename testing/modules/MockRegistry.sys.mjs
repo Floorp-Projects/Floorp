@@ -34,7 +34,7 @@ export class MockRegistry {
       QueryInterface: ChromeUtils.generateQI(["nsIWindowsRegKey"]),
 
       // --- Overridden nsIWindowsRegKey interface functions ---
-      open(root, path, mode) {
+      open(root, path) {
         let rootKey = registry.getRoot(root);
         if (!rootKey.has(path)) {
           rootKey.set(path, new Map());
@@ -60,7 +60,7 @@ export class MockRegistry {
         return this.values.has(name);
       },
 
-      getValueType(name) {
+      getValueType() {
         return Ci.nsIWindowsRegKey.TYPE_STRING;
       },
 

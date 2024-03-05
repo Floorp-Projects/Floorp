@@ -257,7 +257,7 @@ let SpecialPowersHandler = {
     return Reflect.has(this.wrapped.get(target).obj, prop);
   },
 
-  get(target, prop, receiver) {
+  get(target, prop) {
     let global = Cu.getGlobalForObject(this);
     return wrapExceptions(global, () => {
       let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
@@ -266,7 +266,7 @@ let SpecialPowersHandler = {
     });
   },
 
-  set(target, prop, val, receiver) {
+  set(target, prop, val) {
     return wrapExceptions(Cu.getGlobalForObject(this), () => {
       let obj = waiveXraysIfAppropriate(this.wrapped.get(target).obj, prop);
       return Reflect.set(obj, prop, unwrapIfWrapped(val));
@@ -279,7 +279,7 @@ let SpecialPowersHandler = {
     });
   },
 
-  defineProperty(target, prop, descriptor) {
+  defineProperty() {
     throw new Error(
       "Can't call defineProperty on SpecialPowers wrapped object"
     );
@@ -332,7 +332,7 @@ let SpecialPowersHandler = {
     return Cu.cloneInto(props, Cu.getGlobalForObject(this));
   },
 
-  preventExtensions(target) {
+  preventExtensions() {
     throw new Error(
       "Can't call preventExtensions on SpecialPowers wrapped object"
     );

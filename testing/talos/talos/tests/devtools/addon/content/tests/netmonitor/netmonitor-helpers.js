@@ -45,7 +45,7 @@ async function waitForAllRequestsFinished(
     let payloadReady = 0;
     let resolveWithLessThanMaxRequestsTimer = null;
 
-    function onPayloadReady(_, id) {
+    function onPayloadReady() {
       payloadReady++;
       dump(`Waiting for ${maxExpectedRequests - payloadReady} requests\n`);
       maybeResolve();

@@ -8,8 +8,8 @@ function _contentHeroHandler(isload) {
   var obs = null;
   var el = content.window.document.querySelector("[elementtiming]");
   if (el) {
-    function callback(entries, observer) {
-      entries.forEach(entry => {
+    function callback(entries) {
+      entries.forEach(() => {
         sendAsyncMessage("PageLoader:LoadEvent", {
           time: content.window.performance.now(),
           name: "tphero",

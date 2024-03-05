@@ -5,7 +5,7 @@
 /* eslint-disable no-restricted-globals */
 
 export class DampLoadChild extends JSWindowActorChild {
-  handleEvent(evt) {
+  handleEvent() {
     this.sendAsyncMessage("DampLoadChild:PageShow", {
       browsingContext: this.browsingContext,
     });

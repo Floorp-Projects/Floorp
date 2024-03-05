@@ -45,7 +45,7 @@ var TabDestroyObserver = {
     Services.obs.removeObserver(this, "message-manager-disconnect");
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "message-manager-close") {
       this.outstanding.add(subject);
     } else if (topic == "message-manager-disconnect") {
@@ -516,7 +516,7 @@ Tester.prototype = {
     this.SimpleTest.waitForFocus(aCallback);
   },
 
-  finish: function Tester_finish(aSkipSummary) {
+  finish: function Tester_finish() {
     var passCount = this.tests.reduce((a, f) => a + f.passCount, 0);
     var failCount = this.tests.reduce((a, f) => a + f.failCount, 0);
     var todoCount = this.tests.reduce((a, f) => a + f.todoCount, 0);
@@ -564,7 +564,7 @@ Tester.prototype = {
     this.repeat = 0;
   },
 
-  observe: function Tester_observe(aSubject, aTopic, aData) {
+  observe: function Tester_observe(aSubject, aTopic) {
     if (!aTopic) {
       this.onConsoleMessage(aSubject);
     }

@@ -241,7 +241,7 @@ async function plInit() {
     // pages should be able to load in the same mode as the initial page - due
     // to this reinitialization on the switch.
     let tab = gBrowser.selectedTab;
-    tab.addEventListener("TabRemotenessChange", function (evt) {
+    tab.addEventListener("TabRemotenessChange", function () {
       loadFrameScripts(tab.linkedBrowser);
     });
     loadFrameScripts(tab.linkedBrowser);
@@ -300,7 +300,7 @@ function plLoadPage() {
   }
 
   let tab = gBrowser.selectedTab;
-  tab.addEventListener("TabRemotenessChange", evt => {
+  tab.addEventListener("TabRemotenessChange", () => {
     addMsgListeners(tab.linkedBrowser);
   });
   addMsgListeners(tab.linkedBrowser);
@@ -581,13 +581,10 @@ function waitForPDFPaint() {
 function forceContentGC() {
   return new Promise(resolve => {
     let mm = browserWindow.gBrowser.selectedBrowser.messageManager;
-    mm.addMessageListener(
-      "Talos:ForceGC:OK",
-      function onTalosContentForceGC(msg) {
-        mm.removeMessageListener("Talos:ForceGC:OK", onTalosContentForceGC);
-        resolve();
-      }
-    );
+    mm.addMessageListener("Talos:ForceGC:OK", function onTalosContentForceGC() {
+      mm.removeMessageListener("Talos:ForceGC:OK", onTalosContentForceGC);
+      resolve();
+    });
     mm.sendAsyncMessage("Talos:ForceGC");
   });
 }

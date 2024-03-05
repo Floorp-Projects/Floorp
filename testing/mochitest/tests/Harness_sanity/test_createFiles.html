@@ -23,7 +23,7 @@
           is(f.type, fileType, "File should have the specified type");
           test2();
         },
-        function (msg) { ok(false, "Should be able to create a file without an error"); test2(); }
+        function () { ok(false, "Should be able to create a file without an error"); test2(); }
       );
     }
 
@@ -36,7 +36,7 @@
 
       SpecialPowers.createFiles([{name: "/\/\/\/\/\/\/\/\/\/\/\invalidname",}],
         function () { test3Check(false); },
-        function (msg) { test3Check(true); }
+        function () { test3Check(true); }
       );
     }
 
@@ -75,7 +75,7 @@
           ok(f.name, "test4 test file should have a name");
           SimpleTest.finish();
         },
-        function (msg) {
+        function () {
           ok(false, "Should be able to create a file without a name without an error");
           SimpleTest.finish();
         }

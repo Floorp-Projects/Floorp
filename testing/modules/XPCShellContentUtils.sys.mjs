@@ -68,7 +68,7 @@ function promiseBrowserLoaded(browser, url, redirectUrl) {
         "nsIWebProgressListener",
       ]),
 
-      onStateChange(webProgress, request, stateFlags, statusCode) {
+      onStateChange(webProgress, request, stateFlags) {
         request.QueryInterface(Ci.nsIChannel);
 
         let requestURI =
@@ -233,7 +233,7 @@ class ContentPage {
     this.browser.messageManager.loadFrameScript(frameScript, false, true);
   }
 
-  didChangeBrowserRemoteness(event) {
+  didChangeBrowserRemoteness() {
     // XXX: Tests can load their own additional frame scripts, so we may need to
     // track all scripts that have been loaded, and reload them here?
     this.loadFrameScript(frameScript);

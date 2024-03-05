@@ -267,7 +267,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
       TalosPowersParent.exec("stopFrameTimeRecording", handle, cb, win);
     }
 
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       setSmooth();
 
       var handle = -1;

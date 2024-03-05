@@ -1405,13 +1405,10 @@ function synthesizeAndWaitNativeMouseMove(
   );
 
   let eventRegisteredPromise = new Promise(resolve => {
-    mm.addMessageListener(
-      "Test:MouseMoveRegistered",
-      function processed(message) {
-        mm.removeMessageListener("Test:MouseMoveRegistered", processed);
-        resolve();
-      }
-    );
+    mm.addMessageListener("Test:MouseMoveRegistered", function processed() {
+      mm.removeMessageListener("Test:MouseMoveRegistered", processed);
+      resolve();
+    });
   });
   let eventReceivedPromise = ContentTask.spawn(
     browser,
@@ -1579,7 +1576,7 @@ function synthesizeAndWaitKey(
   );
 
   let keyRegisteredPromise = new Promise(resolve => {
-    mm.addMessageListener("Test:KeyRegistered", function processed(message) {
+    mm.addMessageListener("Test:KeyRegistered", function processed() {
       mm.removeMessageListener("Test:KeyRegistered", processed);
       resolve();
     });
@@ -3884,7 +3881,7 @@ class EventCounter {
     // SpecialPowers is picky and needs to be passed an explicit reference to
     // the function to be called. To avoid having to bind "this", we therefore
     // define the method this way, via a property.
-    this.handleEvent = aEvent => {
+    this.handleEvent = () => {
       this.eventCount++;
     };
 

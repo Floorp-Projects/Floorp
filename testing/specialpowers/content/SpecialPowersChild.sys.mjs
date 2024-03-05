@@ -69,7 +69,7 @@ function SPConsoleListener(callback, contentWindow) {
 SPConsoleListener.prototype = {
   // Overload the observe method for both nsIConsoleListener and nsIObserver.
   // The topic will be null for nsIConsoleListener.
-  observe(msg, topic) {
+  observe(msg) {
     let m = {
       message: msg.message,
       errorMessage: null,
@@ -162,7 +162,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     );
   }
 
-  observe(aSubject, aTopic, aData) {
+  observe() {
     // Ignore the "{chrome/content}-document-global-created" event. It
     // is only observed to force creation of the actor.
   }
@@ -1089,7 +1089,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     }
     return val;
   }
-  _getPref(prefName, prefType, { defaultValue }) {
+  _getPref(prefName, prefType) {
     switch (prefType) {
       case "BOOL":
         return Services.prefs.getBoolPref(prefName);
@@ -1132,7 +1132,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
   removeAutoCompletePopupEventListener(window, eventname, listener) {
     this._getAutoCompletePopup(window).removeEventListener(eventname, listener);
   }
-  getFormFillController(window) {
+  getFormFillController() {
     return Cc["@mozilla.org/satchel/form-fill-controller;1"].getService(
       Ci.nsIFormFillController
     );
@@ -1927,11 +1927,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
     return this.sendQuery("SPRemoveServiceWorkerDataForExampleDomain", {});
   }
 
-  cleanUpSTSData(origin, flags) {
+  cleanUpSTSData(origin) {
     return this.sendQuery("SPCleanUpSTSData", { origin });
   }
 
-  async requestDumpCoverageCounters(cb) {
+  async requestDumpCoverageCounters() {
     // We want to avoid a roundtrip between child and parent.
     if (!lazy.PerTestCoverageUtils.enabled) {
       return;
@@ -1940,7 +1940,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     await this.sendQuery("SPRequestDumpCoverageCounters", {});
   }
 
-  async requestResetCoverageCounters(cb) {
+  async requestResetCoverageCounters() {
     // We want to avoid a roundtrip between child and parent.
     if (!lazy.PerTestCoverageUtils.enabled) {
       return;
@@ -2275,7 +2275,7 @@ SpecialPowersChild.prototype._proxiedObservers = {
     );
   },
 
-  "specialpowers-service-worker-shutdown": function (aMessage) {
+  "specialpowers-service-worker-shutdown": function () {
     Services.obs.notifyObservers(null, "specialpowers-service-worker-shutdown");
   },
 
