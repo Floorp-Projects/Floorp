@@ -443,6 +443,19 @@ impl LengthPercentage {
         }
     }
 
+    /// Converts to a `<percentage>` with given basis. Returns None if the basis is 0.
+    #[inline]
+    pub fn to_percentage_of(&self, basis: Length) -> Option<Percentage> {
+        if basis.px() == 0. {
+            return None;
+        }
+        Some(match self.unpack() {
+            Unpacked::Length(l) => Percentage(l.px() / basis.px()),
+            Unpacked::Percentage(p) => p,
+            Unpacked::Calc(ref c) => Percentage(c.resolve(basis).px() / basis.px()),
+        })
+    }
+
     /// Returns the used value.
     #[inline]
     pub fn to_used_value(&self, containing_length: Au) -> Au {
