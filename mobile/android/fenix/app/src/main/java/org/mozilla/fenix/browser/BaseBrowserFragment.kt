@@ -21,6 +21,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.CallSuper
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -137,11 +139,14 @@ import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarMenuController
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
+import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
+import org.mozilla.fenix.components.toolbar.navbar.BrowserNavBar
 import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
+import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.crashes.CrashContentIntegration
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.databinding.FragmentBrowserBinding
@@ -170,6 +175,7 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
@@ -461,6 +467,7 @@ abstract class BaseBrowserFragment :
             // We need a second menu button, but we could reuse the existing builder.
             val menuButton = MenuButton(requireContext()).apply {
                 menuBuilder = browserToolbarView.menuToolbar.menuBuilder
+                // We have to set colorFilter manually as the button isn't being managed by a [BrowserToolbarView].
                 setColorFilter(
                     ContextCompat.getColor(
                         context,
@@ -472,9 +479,63 @@ abstract class BaseBrowserFragment :
             _bottomToolbarContainerView = BottomToolbarContainerView(
                 context = context,
                 parent = binding.browserLayout,
-                androidToolbarView = if (isToolbarAtBottom) browserToolbar else null,
-                menuButton = menuButton,
-                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+                composableContent = {
+                    FirefoxTheme {
+                        Column {
+                            if (isToolbarAtBottom) {
+                                AndroidView(factory = { _ -> browserToolbar })
+                            } else {
+                                Divider()
+                            }
+
+                            BrowserNavBar(
+                                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+                                browserStore = context.components.core.store,
+                                onBackButtonClick = {
+                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                        ToolbarMenu.Item.Back(viewHistory = false),
+                                    )
+                                },
+                                onBackButtonLongPress = {
+                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                        ToolbarMenu.Item.Back(viewHistory = true),
+                                    )
+                                },
+                                onForwardButtonClick = {
+                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                        ToolbarMenu.Item.Forward(viewHistory = false),
+                                    )
+                                },
+                                onForwardButtonLongPress = {
+                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                        ToolbarMenu.Item.Forward(viewHistory = true),
+                                    )
+                                },
+                                onHomeButtonClick = {
+                                    Events.browserToolbarHomeTapped.record(NoExtras())
+                                    browserAnimator.captureEngineViewAndDrawStatically {
+                                        findNavController().navigate(
+                                            BrowserFragmentDirections.actionGlobalHome(),
+                                        )
+                                    }
+                                },
+                                menuButton = menuButton,
+                                onTabsButtonClick = {
+                                    thumbnailsFeature.get()?.requestScreenshot()
+                                    findNavController().nav(
+                                        R.id.browserFragment,
+                                        BrowserFragmentDirections.actionGlobalTabsTrayFragment(
+                                            page = when (activity.browsingModeManager.mode) {
+                                                BrowsingMode.Normal -> Page.NormalTabs
+                                                BrowsingMode.Private -> Page.PrivateTabs
+                                            },
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
             )
 
             navbarIntegration.set(

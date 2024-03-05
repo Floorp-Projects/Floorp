@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -29,6 +30,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getColor
@@ -81,12 +83,16 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Homepage
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
+import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
+import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.FenixSnackbar
@@ -96,7 +102,9 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
+import org.mozilla.fenix.components.toolbar.navbar.HomeNavBar
 import org.mozilla.fenix.components.toolbar.navbar.NavbarIntegration
+import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.containsQueryParameters
@@ -131,6 +139,7 @@ import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
+import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
@@ -466,9 +475,49 @@ class HomeFragment : Fragment() {
             _bottomToolbarContainerView = BottomToolbarContainerView(
                 context = requireContext(),
                 parent = binding.homeLayout,
-                androidToolbarView = if (isToolbarAtBottom) binding.toolbarLayout else null,
-                menuButton = menuButton,
-                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+                composableContent = {
+                    FirefoxTheme {
+                        Column {
+                            if (isToolbarAtBottom) {
+                                AndroidView(factory = { _ -> binding.toolbarLayout })
+                            } else {
+                                Divider()
+                            }
+
+                            HomeNavBar(
+                                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+                                browserStore = requireContext().components.core.store,
+                                onSearchButtonClick = {
+                                    val directions =
+                                        NavGraphDirections.actionGlobalSearchDialog(
+                                            sessionId = null,
+                                        )
+
+                                    findNavController().nav(
+                                        findNavController().currentDestination?.id,
+                                        directions,
+                                        BrowserAnimator.getToolbarNavOptions(activity),
+                                    )
+
+                                    Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
+                                },
+                                menuButton = menuButton,
+                                onTabsButtonClick = {
+                                    StartOnHome.openTabsTray.record(NoExtras())
+                                    findNavController().nav(
+                                        findNavController().currentDestination?.id,
+                                        NavGraphDirections.actionGlobalTabsTrayFragment(
+                                            page = when (browsingModeManager.mode) {
+                                                BrowsingMode.Normal -> Page.NormalTabs
+                                                BrowsingMode.Private -> Page.PrivateTabs
+                                            },
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
             )
 
             navbarIntegration.set(

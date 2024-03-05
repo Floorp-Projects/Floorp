@@ -10,6 +10,8 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
@@ -23,9 +25,12 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.navbar.BottomToolbarContainerView
+import org.mozilla.fenix.components.toolbar.navbar.BrowserNavBar
+import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.databinding.TabPreviewBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
 import kotlin.math.min
 
@@ -61,12 +66,47 @@ class TabPreview @JvmOverloads constructor(
         binding.menuButton.isVisible = !isNavBarEnabled
 
         if (isNavBarEnabled) {
+            val browserStore = context.components.core.store
             BottomToolbarContainerView(
                 context = context,
                 parent = this,
-                androidToolbarView = if (!isToolbarAtTop) binding.fakeToolbar else null,
-                menuButton = MenuButton(context),
+                composableContent = {
+                    FirefoxTheme {
+                        Column {
+                            if (!isToolbarAtTop) {
+                                AndroidView(factory = { _ -> binding.fakeToolbar })
+                            } else {
+                                Divider()
+                            }
+
+                            BrowserNavBar(
+                                isPrivateMode = browserStore.state.selectedTab?.content?.private ?: false,
+                                browserStore = browserStore,
+                                onBackButtonClick = {
+                                    // no-op
+                                },
+                                onBackButtonLongPress = {
+                                    // no-op
+                                },
+                                onForwardButtonClick = {
+                                    // no-op
+                                },
+                                onForwardButtonLongPress = {
+                                    // no-op
+                                },
+                                onHomeButtonClick = {
+                                    // no-op
+                                },
+                                menuButton = MenuButton(context),
+                                onTabsButtonClick = {
+                                    // no-op
+                                },
+                            )
+                        }
+                    }
+                },
             )
+
             removeView(binding.fakeToolbar)
         }
 
