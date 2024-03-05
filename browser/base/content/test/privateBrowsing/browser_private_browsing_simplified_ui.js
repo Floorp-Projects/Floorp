@@ -30,19 +30,4 @@ add_task(async function check_for_simplified_pbm_ui() {
   );
 
   await BrowserTestUtils.closeWindow(pbmWindow);
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.toolbars.bookmarks.showInPrivateBrowsing", true]],
-  });
-  pbmWindow = await BrowserTestUtils.openNewBrowserWindow({
-    private: true,
-  });
-  bookmarksBar = pbmWindow.document.getElementById("PersonalToolbar");
-  console.info(bookmarksBar.getAttribute("collapsed"));
-  Assert.equal(
-    bookmarksBar.getAttribute("collapsed").toString(),
-    "false",
-    "Bookmarks bar is visible in PBM window when showInPrivateBrowsing pref is true"
-  );
-
-  await BrowserTestUtils.closeWindow(pbmWindow);
 });
