@@ -55,7 +55,7 @@ export const LoginManagerContextMenu = {
       // login is bound so we can keep the reference to each object.
       item.addEventListener(
         "command",
-        function (login, event) {
+        function (login) {
           this._fillTargetField(
             login,
             inputElementIdentifier,
@@ -87,7 +87,7 @@ export const LoginManagerContextMenu = {
   /**
    * Show the password autocomplete UI with the generation option forced to appear.
    */
-  async useGeneratedPassword(inputElementIdentifier, documentURI, browser) {
+  async useGeneratedPassword(inputElementIdentifier) {
     let browsingContextId = inputElementIdentifier.browsingContextId;
     let browsingContext = BrowsingContext.get(browsingContextId);
     let actor = browsingContext.currentWindowGlobal.getActor("LoginManager");

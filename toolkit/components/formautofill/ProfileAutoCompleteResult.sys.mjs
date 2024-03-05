@@ -105,11 +105,11 @@ class ProfileAutoCompleteResult {
    * @param   {object} profile The profile providing the labels to show.
    * @returns {string} The secondary label
    */
-  _getSecondaryLabel(focusedFieldName, allFieldNames, profile) {
+  _getSecondaryLabel() {
     return "";
   }
 
-  _generateLabels(focusedFieldName, allFieldNames, profiles) {}
+  _generateLabels() {}
 
   /**
    * Get the value of the result at the given index.
@@ -193,7 +193,7 @@ class ProfileAutoCompleteResult {
    * @param   {number}  index The index of the result to remove
    * @returns {boolean} True if the value is removable
    */
-  isRemovableAt(index) {
+  isRemovableAt() {
     return false;
   }
 
@@ -202,7 +202,7 @@ class ProfileAutoCompleteResult {
    *
    * @param {number} index The index of the result to remove
    */
-  removeValueAt(index) {
+  removeValueAt() {
     // There is no plan to support removing profiles via autocomplete.
   }
 }

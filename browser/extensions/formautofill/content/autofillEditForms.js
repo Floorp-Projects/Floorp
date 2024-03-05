@@ -115,7 +115,7 @@ class EditAutofillForm {
    *
    * @param  {DOMEvent} event
    */
-  handleInput(event) {}
+  handleInput() {}
 
   /**
    * Attach event listener
@@ -142,7 +142,7 @@ class EditAutofillForm {
    *
    * @param {DOMElement} field The field that will be validated.
    */
-  updateCustomValidity(field) {}
+  updateCustomValidity() {}
 }
 
 class EditAddress extends EditAutofillForm {

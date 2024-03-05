@@ -146,15 +146,13 @@ function checkEditTelemetryRecorded(expectedCount, msg) {
       method: "filled_field_edited",
       object: "generatedpassword",
     });
-    const results = snapshot.parent.filter(
-      ([time, category, method, object]) => {
-        return (
-          category === telemetryProps.category &&
-          method === telemetryProps.method &&
-          object === telemetryProps.object
-        );
-      }
-    );
+    const results = snapshot.parent.filter(([, category, method, object]) => {
+      return (
+        category === telemetryProps.category &&
+        method === telemetryProps.method &&
+        object === telemetryProps.object
+      );
+    });
     resultsCount = results.length;
   }
   equal(

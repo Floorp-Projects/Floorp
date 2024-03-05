@@ -83,7 +83,7 @@ export class FormAutofillSection {
    * @returns {boolean} True for the record is createable, otherwise false
    *
    */
-  isRecordCreatable(record) {
+  isRecordCreatable() {
     throw new TypeError("isRecordCreatable method must be overridden");
   }
 
@@ -93,7 +93,7 @@ export class FormAutofillSection {
    * @param {object} profile
    *        A profile should be converted based on the specific requirement.
    */
-  applyTransformers(profile) {}
+  applyTransformers() {}
 
   /**
    * Override this method if the profile is needed to be customized for
@@ -102,7 +102,7 @@ export class FormAutofillSection {
    * @param {object} profile
    *        A profile for pre-processing before previewing values.
    */
-  preparePreviewProfile(profile) {}
+  preparePreviewProfile() {}
 
   /**
    * Override this method if the profile is needed to be customized for filling
@@ -112,7 +112,7 @@ export class FormAutofillSection {
    *        A profile for pre-processing before filling values.
    * @returns {boolean} Whether the profile should be filled.
    */
-  async prepareFillingProfile(profile) {
+  async prepareFillingProfile() {
     return true;
   }
 
@@ -144,7 +144,7 @@ export class FormAutofillSection {
    * @returns {String}
    *          A string of the converted value.
    */
-  computeFillingValue(value, fieldName, element) {
+  computeFillingValue(value) {
     return value;
   }
 
@@ -884,7 +884,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     }
   }
 
-  _handlePageHide(event) {
+  _handlePageHide() {
     this.handler.window.removeEventListener(
       "pagehide",
       this._handlePageHide.bind(this)

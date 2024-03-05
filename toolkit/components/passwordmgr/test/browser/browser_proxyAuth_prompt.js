@@ -13,12 +13,12 @@ function initProxy() {
     let proxyCallback = {
       QueryInterface: ChromeUtils.generateQI(["nsIProtocolProxyCallback"]),
 
-      onProxyAvailable(req, uri, pi, status) {
+      onProxyAvailable() {
         class ProxyChannelListener {
-          onStartRequest(request) {
+          onStartRequest() {
             resolve(proxyChannel);
           }
-          onStopRequest(request, status) {}
+          onStopRequest() {}
         }
         // I'm cheating a bit here... We should probably do some magic foo to get
         // something implementing nsIProxiedProtocolHandler and then call

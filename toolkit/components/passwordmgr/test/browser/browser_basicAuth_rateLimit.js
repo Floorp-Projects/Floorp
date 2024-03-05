@@ -87,7 +87,7 @@ add_task(async function test() {
           let loaded = new Promise(resolve => {
             iframe.addEventListener(
               "load",
-              function (e) {
+              function () {
                 resolve();
               },
               { once: true }
@@ -115,7 +115,7 @@ add_task(async function test() {
         let loaded = new Promise(resolve => {
           iframe.addEventListener(
             "load",
-            function (e) {
+            function () {
               resolve();
             },
             { once: true }

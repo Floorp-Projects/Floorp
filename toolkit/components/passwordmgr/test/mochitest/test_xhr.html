@@ -21,7 +21,7 @@ Login Manager test: XHR prompt
 
 /** Test for Login Manager: XHR prompts. **/
 function makeRequest(uri) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let request = new XMLHttpRequest();
     request.open("GET", uri, true);
     request.addEventListener("loadend", function onLoadEnd() {

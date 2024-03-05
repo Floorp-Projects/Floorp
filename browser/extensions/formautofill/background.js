@@ -6,7 +6,7 @@
 
 "use strict";
 
-browser.runtime.onUpdateAvailable.addListener(details => {
+browser.runtime.onUpdateAvailable.addListener(() => {
   // By listening to but ignoring this event, any updates will
   // be delayed until the next browser restart.
   // Note that if we ever wanted to change this, we should make

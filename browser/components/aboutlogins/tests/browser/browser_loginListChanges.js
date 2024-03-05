@@ -73,7 +73,7 @@ add_task(async function test_login_removed() {
     .getActor("AboutLogins")
     .sendAsyncMessage("AboutLogins:LoginRemoved", login);
 
-  await SpecialPowers.spawn(browser, [login], async removedLogin => {
+  await SpecialPowers.spawn(browser, [login], async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginRemoved = await ContentTaskUtils.waitForCondition(() => {
       return !loginList._loginGuidsSortedOrder.length;

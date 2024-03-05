@@ -491,7 +491,7 @@ class Country extends AddressField {
     return this.country_code == other.country_code;
   }
 
-  contains(other) {
+  contains() {
     return false;
   }
 
@@ -841,7 +841,7 @@ class Email extends AddressField {
     );
   }
 
-  contains(other) {
+  contains() {
     return false;
   }
 

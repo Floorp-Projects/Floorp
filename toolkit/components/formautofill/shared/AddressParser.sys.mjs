@@ -271,7 +271,7 @@ export class AddressParser {
     return s?.replace(/[.,\/#!$%\^&\*;:{}=\-_~()]/g, "");
   }
 
-  static replaceControlCharacters(s, replace) {
+  static replaceControlCharacters(s) {
     return s?.replace(/[\t\n\r]/g, " ");
   }
 

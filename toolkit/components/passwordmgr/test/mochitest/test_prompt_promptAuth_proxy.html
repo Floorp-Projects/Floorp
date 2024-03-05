@@ -86,10 +86,10 @@ let chromeScript = runInParent(() => {
   }
 
   class ProxyChannelListener {
-    onStartRequest(request) {
+    onStartRequest() {
       sendAsyncMessage("initDone");
     }
-    onStopRequest(request, status) {}
+    onStopRequest() {}
   }
 
   async function initLogins(pi) {
@@ -126,7 +126,7 @@ let chromeScript = runInParent(() => {
       return this;
     },
 
-    async onProxyAvailable(req, uri, pi, status) {
+    async onProxyAvailable(req, uri, pi) {
       await initLogins(pi);
 
       // I'm cheating a bit here... We should probably do some magic foo to get

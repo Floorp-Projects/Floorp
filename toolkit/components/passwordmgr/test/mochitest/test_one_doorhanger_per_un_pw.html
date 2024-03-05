@@ -47,7 +47,7 @@
     is(password.value, "pass", "Checking for filled password");
 
     let promptShown = false;
-    promptShownPromise = promisePromptShown("passwordmgr-prompt-save").then(value => {
+    promptShownPromise = promisePromptShown("passwordmgr-prompt-save").then(() => {
       promptShown = true;
     });
     submitButton.click();

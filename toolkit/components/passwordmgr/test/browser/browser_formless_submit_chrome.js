@@ -67,7 +67,7 @@ add_task(async function test_urlbar_new_URL() {
 });
 
 add_task(async function test_urlbar_fragment_enter() {
-  await withTestPage(function (aBrowser) {
+  await withTestPage(function () {
     gURLBar.focus();
     gURLBar.select();
     EventUtils.synthesizeKey("KEY_ArrowRight");

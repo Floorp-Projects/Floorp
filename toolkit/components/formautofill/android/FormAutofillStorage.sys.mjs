@@ -68,7 +68,7 @@ class Addresses extends AddressesBase {
     this._initializePromise = Promise.resolve();
   }
 
-  async _saveRecord(record, { sourceSync = false } = {}) {
+  async _saveRecord(record) {
     lazy.GeckoViewAutocomplete.onAddressSave(lazy.Address.fromGecko(record));
   }
 
@@ -115,17 +115,17 @@ class Addresses extends AddressesBase {
     return super.getSavedFieldNames();
   }
 
-  async reconcile(remoteRecord) {
+  async reconcile() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  async findDuplicateGUID(remoteRecord) {
+  async findDuplicateGUID() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }
 
 class CreditCards extends CreditCardsBase {
-  async _encryptNumber(creditCard) {
+  async _encryptNumber() {
     // Don't encrypt or obfuscate for GV, since we don't store or show
     // the number. The API has to always provide the original number.
   }
@@ -136,7 +136,7 @@ class CreditCards extends CreditCardsBase {
     this._initializePromise = Promise.resolve();
   }
 
-  async _saveRecord(record, { sourceSync = false } = {}) {
+  async _saveRecord(record) {
     lazy.GeckoViewAutocomplete.onCreditCardSave(
       lazy.CreditCard.fromGecko(record)
     );
@@ -220,11 +220,11 @@ class CreditCards extends CreditCardsBase {
     return null;
   }
 
-  async reconcile(remoteRecord) {
+  async reconcile() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  async findDuplicateGUID(remoteRecord) {
+  async findDuplicateGUID() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }

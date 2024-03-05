@@ -139,7 +139,7 @@ add_task(async function test_no_message_on_navigation() {
   await setup(PREFILLED_FORM_URL);
 
   let submitMessageSent = false;
-  getSubmitMessage().then(value => {
+  getSubmitMessage().then(() => {
     submitMessageSent = true;
   });
   await navigateWithoutUserInteraction();
@@ -197,7 +197,7 @@ add_task(async function test_no_message_on_autofill_without_user_interaction() {
   );
   ok(!(await checkDocumentUserHasInteracted()), "document.userHasInteracted should be initially false");
   let submitMessageSent = false;
-  getSubmitMessage().then(value => {
+  getSubmitMessage().then(() => {
     submitMessageSent = true;
   });
   info("Navigating the page")

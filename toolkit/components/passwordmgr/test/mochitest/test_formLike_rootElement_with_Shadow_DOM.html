@@ -96,7 +96,7 @@ async function testForm(testcase) {
   const iframeLoaded = new Promise(resolve => {
     IFRAME.addEventListener(
       "load",
-      function(e) {
+      function() {
         resolve(true);
       },
       { once: true }

@@ -113,7 +113,7 @@ add_task(async function test_new_logins() {
         <button type="submit" id="submitBtn">Submit</button>
       </form>`;
     await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
-    await SpecialPowers.spawn(win, [html], function(contentHtml) {
+    await SpecialPowers.spawn(win, [html], function() {
       const doc = this.content.document;
       for (const field of doc.querySelectorAll("input")) {
         const actualValue = field.value;
@@ -189,7 +189,7 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
         <button type="submit" id="submitBtn">Submit</button>
       </form>`;
     await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
-    await SpecialPowers.spawn(win, [html], function(contentHtml) {
+    await SpecialPowers.spawn(win, [html], function() {
       const doc = this.content.document;
       for (const field of doc.querySelectorAll("input")) {
         const actualValue = field.value;
@@ -248,7 +248,7 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
       <button type="submit" id="submitBtn">Submit</button>
     </form>`;
   await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
-  await SpecialPowers.spawn(win, [html], function(contentHtml) {
+  await SpecialPowers.spawn(win, [html], function() {
     const doc = this.content.document;
     for (const field of doc.querySelectorAll("input")) {
       const actualValue = field.value;
@@ -312,7 +312,7 @@ add_task(async function test_autofill_munged_username_matching_password() {
       <button type="submit" id="submitBtn">Submit</button>
     </form>`;
   await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
-  await SpecialPowers.spawn(win, [html], function(contentHtml) {
+  await SpecialPowers.spawn(win, [html], function() {
     const doc = this.content.document;
     for (const field of doc.querySelectorAll("input")) {
       const actualValue = field.value;

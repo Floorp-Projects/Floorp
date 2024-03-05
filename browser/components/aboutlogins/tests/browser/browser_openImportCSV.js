@@ -25,7 +25,7 @@ class CsvImportHelper {
    */
   static waitForOpenFilePicker(destFile) {
     return new Promise(resolve => {
-      MockFilePicker.showCallback = fp => {
+      MockFilePicker.showCallback = () => {
         info("showCallback");
         info("fileName: " + destFile.path);
         MockFilePicker.setFiles([destFile]);
@@ -221,7 +221,7 @@ class CsvImportHelper {
    *        The browser object.
    * @returns {Promise<Object>} A promise that contains the detailed report data like added, modified, noChange, errors and rows.
    */
-  static async getDetailedReportData(browser) {
+  static async getDetailedReportData() {
     const data = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [],

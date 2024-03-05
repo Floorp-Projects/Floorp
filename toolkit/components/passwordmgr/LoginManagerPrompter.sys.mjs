@@ -73,7 +73,7 @@ const observer = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   // nsIObserver
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "autocomplete-did-enter-text": {
         const input = subject.QueryInterface(Ci.nsIAutoCompleteInput);

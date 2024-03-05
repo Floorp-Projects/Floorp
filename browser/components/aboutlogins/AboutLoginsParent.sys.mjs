@@ -842,7 +842,7 @@ class AboutLoginsInternal {
     };
   }
 
-  onPasswordSyncEnabledPreferenceChange(data, previous, latest) {
+  onPasswordSyncEnabledPreferenceChange() {
     this.#messageSubscribers("AboutLogins:SyncState", this.getSyncState());
   }
 

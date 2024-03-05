@@ -255,7 +255,7 @@ async function ensureNoAutocompletePopup(browser) {
   ok(!items.length, "Should not find autocomplete items");
 }
 
-async function ensureNoDoorhanger(browser) {
+async function ensureNoDoorhanger() {
   await new Promise(resolve =>
     setTimeout(resolve, TIMEOUT_ENSURE_DOORHANGER_NOT_SHOWN)
   );
@@ -318,7 +318,7 @@ async function waitForAutofill(target, selector, value) {
  * @returns {Promise} resolves when the sub dialog is loaded
  */
 function waitForSubDialogLoad(win, dialogUrl) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     win.gSubDialog._dialogStack.addEventListener(
       "dialogopen",
       async function dialogopen(evt) {

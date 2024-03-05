@@ -109,7 +109,7 @@ function dumpLogin(label, login) {
 }
 
 addMessageListener("storageChanged", async function ({ expectedChangeTypes }) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     function storageChanged(subject, topic, data) {
       let changeType = expectedChangeTypes.shift();
       if (data != changeType) {
@@ -129,7 +129,7 @@ addMessageListener("storageChanged", async function ({ expectedChangeTypes }) {
 
 addMessageListener("promptShown", async function () {
   return new Promise(resolve => {
-    function promptShown(subject, topic, data) {
+    function promptShown(subject, topic) {
       Services.obs.removeObserver(promptShown, "passwordmgr-prompt-change");
       Services.obs.removeObserver(promptShown, "passwordmgr-prompt-save");
       resolve(topic);

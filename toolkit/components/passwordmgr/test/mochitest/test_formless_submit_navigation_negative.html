@@ -13,7 +13,7 @@ SimpleTest.requestFlakyTimeout("Testing that a message doesn't arrive");
 
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("loginFrame").addEventListener("load", (evt) => {
+    document.getElementById("loginFrame").addEventListener("load", () => {
       resolve();
     });
   });
