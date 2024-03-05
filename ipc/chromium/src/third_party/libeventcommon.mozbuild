@@ -4,35 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-os_win = 0
-os_posix = 0
-os_macosx = 0
-os_bsd = 0
-os_linux = 0
-os_solaris = 0
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    os_win = 1
+if CONFIG['TARGET_KERNEL'] == 'Darwin':
+    libevent_include_suffix = 'mac'
+elif CONFIG['TARGET_KERNEL'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
+    libevent_include_suffix = 'bsd'
+elif CONFIG['TARGET_KERNEL'] == 'SunOS':
+    libevent_include_suffix = 'solaris'
+elif CONFIG['TARGET_OS'] == 'Android':
+    libevent_include_suffix = 'android'
 else:
-    os_posix = 1
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        os_macosx = 1
-        libevent_include_suffix = 'mac'
-    elif CONFIG['OS_ARCH'] in ['DragonFly', 'FreeBSD', 'GNU_kFreeBSD',
-                               'NetBSD', 'OpenBSD']:
-        os_bsd = 1
-        libevent_include_suffix = 'bsd'
-    elif CONFIG['OS_ARCH'] == 'SunOS':
-        os_solaris = 1
-        libevent_include_suffix = 'solaris'
-    else:
-        os_linux = 1
-        if CONFIG['OS_TARGET'] == 'Android':
-            libevent_include_suffix = 'android'
-        else:
-            libevent_include_suffix = 'linux'
+    libevent_include_suffix = 'linux'
 
-if os_posix and not CONFIG['MOZ_SYSTEM_LIBEVENT']:
+if CONFIG["TARGET_KERNEL"] != "WINNT" and not CONFIG['MOZ_SYSTEM_LIBEVENT']:
     DEFINES['HAVE_CONFIG_H'] = True
     LOCAL_INCLUDES += sorted([
         'libevent',

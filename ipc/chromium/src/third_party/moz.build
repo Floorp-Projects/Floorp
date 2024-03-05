@@ -7,7 +7,7 @@
 libevent_path_prefix = '.'
 include(libevent_path_prefix + '/libeventcommon.mozbuild')
 
-if os_win:
+if CONFIG["TARGET_KERNEL"] == "WINNT":
     error('should not reach here on Windows')
 
 if CONFIG['MOZ_SYSTEM_LIBEVENT']:
@@ -42,12 +42,12 @@ SOURCES += [
     # 'libevent/evrpc.c', # Unused file. # conflicting TAILQ_ENTRY definition
 ]
 
-if os_macosx or os_bsd:
+if CONFIG["TARGET_KERNEL"] in ("Darwin", "DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
     UNIFIED_SOURCES += [
         'libevent/kqueue.c',
     ]
 
-if os_linux:
+if CONFIG["TARGET_KERNEL"] == "Linux":
     UNIFIED_SOURCES += [
         'libevent/epoll.c',
     ]
@@ -56,7 +56,7 @@ if os_linux:
             'libevent/epoll_sub.c',
         ]
 
-if os_solaris:
+if CONFIG["TARGET_KERNEL"] == "SunOS":
     SOURCES += [
         'libevent/devpoll.c',
         'libevent/evport.c',

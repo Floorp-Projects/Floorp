@@ -39,7 +39,7 @@ UNIFIED_SOURCES += [
     "src/mojo/core/ports/user_message.cc",
 ]
 
-if os_win:
+if CONFIG["TARGET_KERNEL"] == "WINNT":
     SOURCES += [
         "src/base/condition_variable_win.cc",
         "src/base/lock_impl_win.cc",
@@ -60,7 +60,7 @@ if os_win:
 elif not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
     DIRS += ["src/third_party"]
 
-if os_posix:
+if CONFIG["TARGET_KERNEL"] != "WINNT":
     UNIFIED_SOURCES += [
         "src/base/condition_variable_posix.cc",
         "src/base/lock_impl_posix.cc",
@@ -75,7 +75,7 @@ if os_posix:
         "src/chrome/common/process_watcher_posix_sigchld.cc",
     ]
 
-if os_macosx:
+if CONFIG["TARGET_KERNEL"] == "Darwin":
     UNIFIED_SOURCES += [
         "src/base/chrome_application_mac.mm",
         "src/base/mac_util.mm",
@@ -93,13 +93,13 @@ if os_macosx:
         "src/base/platform_thread_mac.mm",
     ]
 
-if os_bsd:
+if CONFIG["TARGET_KERNEL"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
     SOURCES += [
         "src/base/process_util_linux.cc",
         "src/base/time_posix.cc",
     ]
 
-if os_linux:
+if CONFIG["TARGET_KERNEL"] == "Linux":
     SOURCES += [
         "src/base/process_util_linux.cc",
         "src/base/set_process_title_linux.cc",
@@ -112,16 +112,14 @@ if os_linux:
         DEFINES["ANDROID"] = True
         DEFINES["_POSIX_MONOTONIC_CLOCK"] = 0
 
-if os_bsd or os_linux:
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-        SOURCES += [
-            "src/base/message_pump_glib.cc",
-        ]
-
-if os_solaris:
+if CONFIG["TARGET_KERNEL"] == "SunOS":
     SOURCES += [
         "src/base/process_util_linux.cc",
         "src/base/time_posix.cc",
+    ]
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    SOURCES += [
+        "src/base/message_pump_glib.cc",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":

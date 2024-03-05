@@ -847,6 +847,7 @@ add_old_configure_assignment("TARGET_CPU", target.cpu)
 set_config("TARGET_RAW_CPU", target.raw_cpu)
 set_config("TARGET_OS", target.os)
 set_config("TARGET_RAW_OS", target.raw_os)
+set_config("TARGET_KERNEL", target.kernel)
 set_config("TARGET_ENDIANNESS", target.endianness)
 
 
