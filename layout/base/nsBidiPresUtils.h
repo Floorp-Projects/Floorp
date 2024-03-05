@@ -21,7 +21,7 @@
 #endif
 
 struct BidiParagraphData;
-struct BidiLineData;
+class BidiLineData;
 class gfxContext;
 class nsFontMetrics;
 class nsIFrame;
@@ -398,6 +398,8 @@ class nsBidiPresUtils {
       mozilla::ComputedStyle* aComputedStyle);
 
  private:
+  friend class BidiLineData;
+
   static nsresult ProcessTextForRenderingContext(
       const char16_t* aText, int32_t aLength,
       mozilla::intl::BidiEmbeddingLevel aBaseLevel, nsPresContext* aPresContext,
@@ -536,7 +538,7 @@ class nsBidiPresUtils {
    *
    *  @lina 04/11/2000
    */
-  static nscoord RepositionInlineFrames(BidiLineData* aBld,
+  static nscoord RepositionInlineFrames(const BidiLineData& aBld,
                                         mozilla::WritingMode aLineWM,
                                         const nsSize& aContainerSize,
                                         nscoord aStart);
