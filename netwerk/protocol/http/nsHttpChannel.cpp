@@ -797,6 +797,19 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   mConnectionInfo->SetAnonymousAllowClientCert(
       (mLoadFlags & LOAD_ANONYMOUS_ALLOW_CLIENT_CERT) != 0);
 
+  if (mWebTransportSessionEventListener) {
+    nsTArray<RefPtr<nsIWebTransportHash>> aServerCertHashes;
+    nsresult rv;
+    nsCOMPtr<WebTransportConnectionSettings> wtconSettings =
+        do_QueryInterface(mWebTransportSessionEventListener, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    wtconSettings->GetServerCertificateHashes(aServerCertHashes);
+    gHttpHandler->ConnMgr()->StoreServerCertHashes(
+        mConnectionInfo, gHttpHandler->IsHttp2Excluded(mConnectionInfo),
+        !Http3Allowed(), std::move(aServerCertHashes));
+  }
+
   // notify "http-on-before-connect" observers
   gHttpHandler->OnBeforeConnect(this);
 
@@ -6444,6 +6457,16 @@ nsresult nsHttpChannel::BeginConnect() {
       connInfo =
           new nsHttpConnectionInfo(host, port, "h3"_ns, mUsername, proxyInfo,
                                    originAttributes, isHttps, true, true);
+      bool dedicated = true;
+      nsresult rv;
+      nsCOMPtr<WebTransportConnectionSettings> wtconSettings =
+          do_QueryInterface(mWebTransportSessionEventListener, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      wtconSettings->GetDedicated(&dedicated);
+      if (dedicated) {
+        connInfo->SetWebTransportId(
+            gHttpHandler->ConnMgr()->GenerateNewWebTransportId());
+      }
     } else {
       connInfo = new nsHttpConnectionInfo(host, port, ""_ns, mUsername,
                                           proxyInfo, originAttributes, isHttps);

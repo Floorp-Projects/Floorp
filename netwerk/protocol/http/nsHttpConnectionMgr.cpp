@@ -3821,6 +3821,62 @@ void nsHttpConnectionMgr::DecrementNumIdleConns() {
   ConditionallyStopPruneDeadConnectionsTimer();
 }
 
+// A structure used to marshall objects necessary for ServerCertificateHashaes
+class nsStoreServerCertHashesData : public ARefBase {
+ public:
+  nsStoreServerCertHashesData(
+      nsHttpConnectionInfo* aConnInfo, bool aNoSpdy, bool aNoHttp3,
+      nsTArray<RefPtr<nsIWebTransportHash>>&& aServerCertHashes)
+      : mConnInfo(aConnInfo),
+        mNoSpdy(aNoSpdy),
+        mNoHttp3(aNoHttp3),
+        mServerCertHashes(std::move(aServerCertHashes)) {}
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStoreServerCertHashesData, override)
+
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
+  bool mNoSpdy;
+  bool mNoHttp3;
+  nsTArray<RefPtr<nsIWebTransportHash>> mServerCertHashes;
+
+ private:
+  virtual ~nsStoreServerCertHashesData() = default;
+};
+
+// The connection manager needs to know the hashes used for a WebTransport
+// connection authenticated with serverCertHashes
+nsresult nsHttpConnectionMgr::StoreServerCertHashes(
+    nsHttpConnectionInfo* aConnInfo, bool aNoSpdy, bool aNoHttp3,
+    nsTArray<RefPtr<nsIWebTransportHash>>&& aServerCertHashes) {
+  RefPtr<nsHttpConnectionInfo> ci = aConnInfo->Clone();
+  RefPtr<nsStoreServerCertHashesData> data = new nsStoreServerCertHashesData(
+      ci, aNoSpdy, aNoHttp3, std::move(aServerCertHashes));
+  return PostEvent(&nsHttpConnectionMgr::OnMsgStoreServerCertHashes, 0, data);
+}
+
+void nsHttpConnectionMgr::OnMsgStoreServerCertHashes(int32_t, ARefBase* param) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  nsStoreServerCertHashesData* data =
+      static_cast<nsStoreServerCertHashesData*>(param);
+
+  bool isWildcard;
+  ConnectionEntry* connEnt = GetOrCreateConnectionEntry(
+      data->mConnInfo, true, data->mNoSpdy, data->mNoHttp3, &isWildcard);
+  MOZ_ASSERT(!isWildcard, "No webtransport with wildcard");
+  connEnt->SetServerCertHashes(std::move(data->mServerCertHashes));
+}
+
+const nsTArray<RefPtr<nsIWebTransportHash>>*
+nsHttpConnectionMgr::GetServerCertHashes(nsHttpConnectionInfo* aConnInfo) {
+  ConnectionEntry* connEnt = mCT.GetWeak(aConnInfo->HashKey());
+  if (!connEnt) {
+    MOZ_ASSERT(0);
+    return nullptr;
+  }
+  return &connEnt->GetServerCertHashes();
+}
+
 void nsHttpConnectionMgr::CheckTransInPendingQueue(nsHttpTransaction* aTrans) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // We only do this check on socket thread. When this function is called on
