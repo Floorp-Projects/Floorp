@@ -1,4 +1,4 @@
-const { getTabsTargetForWindow } = ChromeUtils.importESModule(
+const { NonPrivateTabs, getTabsTargetForWindow } = ChromeUtils.importESModule(
   "resource:///modules/OpenTabs.sys.mjs"
 );
 let privateTabsChanges;
