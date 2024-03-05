@@ -36,8 +36,25 @@ export var FirstStartup = {
    * completed, or until a timeout is reached.
    *
    * In the latter case, services are expected to run post-UI instead as usual.
+   *
+   * @param {boolean} newProfile
+   *   True if a new profile was just created, false otherwise.
    */
-  init() {
+  init(newProfile) {
+    if (!newProfile) {
+      // In this case, we actually don't want to do any FirstStartup work,
+      // since a pre-existing profile was detected (presumably, we entered here
+      // because a user re-installed via the stub installer when there existed
+      // previous user profiles on the file system). We do, however, want to
+      // measure how often this occurs.
+      Glean.firstStartup.statusCode.set(this.NOT_STARTED);
+      Glean.firstStartup.newProfile.set(false);
+      GleanPings.firstStartup.submit();
+      return;
+    }
+
+    Glean.firstStartup.newProfile.set(true);
+
     this._state = this.IN_PROGRESS;
     const timeout = Services.prefs.getIntPref(PREF_TIMEOUT, 30000); // default to 30 seconds
     let startingTime = Cu.now();
@@ -105,5 +122,12 @@ export var FirstStartup = {
 
   get state() {
     return this._state;
+  },
+
+  /**
+   * For testing only. This puts us back into the initial NOT_STARTED state.
+   */
+  resetForTesting() {
+    this._state = this.NOT_STARTED;
   },
 };

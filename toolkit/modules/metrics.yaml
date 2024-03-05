@@ -83,3 +83,23 @@ first_startup:
     expires: never
     send_in_pings:
       - first-startup
+
+  new_profile:
+    type: boolean
+    description: >
+      True if FirstStartup was initted after a new profile was just created. If
+      false, this means that FirstStartup was initted with a pre-existing
+      profile, which is a no-op.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877545
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1877545
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    expires: never
+    send_in_pings:
+      - first-startup
