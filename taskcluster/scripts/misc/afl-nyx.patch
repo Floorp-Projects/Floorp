@@ -16,3 +16,38 @@ index 988e536e..5e9870c0 100644
 +#define MAP_SIZE_POW2 23
  
  /* Do not change this unless you really know what you are doing. */
+
+diff --git a/instrumentation/afl-compiler-rt.o.c b/instrumentation/afl-compiler-rt.o.c
+index caa3c3a8..76ceb451 100644
+--- a/instrumentation/afl-compiler-rt.o.c
++++ b/instrumentation/afl-compiler-rt.o.c
+@@ -1837,7 +1837,7 @@ void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
+
+       }
+
+-      if (pc_filter) {
++      if (pc_filter && !mod_info->next) {
+
+         char PcDescr[1024];
+         // This function is a part of the sanitizer run-time.
+@@ -1864,7 +1864,7 @@ void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
+
+       }
+
+-      if (__afl_filter_pcs && strstr(mod_info->name, __afl_filter_pcs_module)) {
++      if (__afl_filter_pcs && !mod_info->next && strstr(mod_info->name, __afl_filter_pcs_module)) {
+
+         u32 result_index;
+         if (locate_in_pcs(PC, &result_index)) {
+@@ -1889,7 +1889,11 @@ void __sanitizer_cov_pcs_init(const uintptr_t *pcs_beg,
+
+     }
+
+-    mod_info->mapped = 1;
++    if (__afl_pcmap_ptr) {
++
++      mod_info->mapped = 1;
++
++    }
+
+     if (__afl_debug) {
