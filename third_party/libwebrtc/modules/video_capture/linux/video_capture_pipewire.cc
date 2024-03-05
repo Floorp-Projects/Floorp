@@ -178,8 +178,7 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
   int res = pw_stream_connect(
       stream_, PW_DIRECTION_INPUT, node_id_,
       static_cast<enum pw_stream_flags>(PW_STREAM_FLAG_AUTOCONNECT |
-                                        PW_STREAM_FLAG_DONT_RECONNECT |
-                                        PW_STREAM_FLAG_MAP_BUFFERS),
+                                        PW_STREAM_FLAG_DONT_RECONNECT),
       params.data(), params.size());
   if (res != 0) {
     RTC_LOG(LS_ERROR) << "Could not connect to camera stream: "
@@ -312,11 +311,11 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
                         0);
   }
 
+  const int buffer_types =
+      (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd) | (1 << SPA_DATA_MemPtr);
   spa_pod_builder_add(
       &builder, SPA_PARAM_BUFFERS_buffers, SPA_POD_CHOICE_RANGE_Int(8, 1, 32),
-      SPA_PARAM_BUFFERS_dataType,
-      SPA_POD_CHOICE_FLAGS_Int((1 << SPA_DATA_MemFd) | (1 << SPA_DATA_MemPtr)),
-      0);
+      SPA_PARAM_BUFFERS_dataType, SPA_POD_CHOICE_FLAGS_Int(buffer_types), 0);
   params.push_back(
       static_cast<spa_pod*>(spa_pod_builder_pop(&builder, &frame)));
 
@@ -384,14 +383,15 @@ void VideoCaptureModulePipeWire::ProcessBuffers() {
   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
 
   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
+    spa_buffer* spaBuffer = buffer->buffer;
     struct spa_meta_header* h;
     h = static_cast<struct spa_meta_header*>(
-        spa_buffer_find_meta_data(buffer->buffer, SPA_META_Header, sizeof(*h)));
+        spa_buffer_find_meta_data(spaBuffer, SPA_META_Header, sizeof(*h)));
 
     struct spa_meta_videotransform* videotransform;
     videotransform =
         static_cast<struct spa_meta_videotransform*>(spa_buffer_find_meta_data(
-            buffer->buffer, SPA_META_VideoTransform, sizeof(*videotransform)));
+            spaBuffer, SPA_META_VideoTransform, sizeof(*videotransform)));
     if (videotransform) {
       VideoRotation rotation =
           VideorotationFromPipeWireTransform(videotransform->transform);
@@ -401,11 +401,35 @@ void VideoCaptureModulePipeWire::ProcessBuffers() {
 
     if (h->flags & SPA_META_HEADER_FLAG_CORRUPTED) {
       RTC_LOG(LS_INFO) << "Dropping corruped frame.";
-    } else {
-      IncomingFrame(static_cast<unsigned char*>(buffer->buffer->datas[0].data),
-                    buffer->buffer->datas[0].chunk->size,
-                    configured_capability_);
+      pw_stream_queue_buffer(stream_, buffer);
+      continue;
     }
+
+    if (spaBuffer->datas[0].type == SPA_DATA_DmaBuf ||
+        spaBuffer->datas[0].type == SPA_DATA_MemFd) {
+      ScopedBuf frame;
+      frame.initialize(
+          static_cast<uint8_t*>(
+              mmap(nullptr,
+                   spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+                   PROT_READ, MAP_PRIVATE, spaBuffer->datas[0].fd, 0)),
+          spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+          spaBuffer->datas[0].fd, spaBuffer->datas[0].type == SPA_DATA_DmaBuf);
+
+      if (!frame) {
+        RTC_LOG(LS_ERROR) << "Failed to mmap the memory: "
+                          << std::strerror(errno);
+        return;
+      }
+
+      IncomingFrame(
+          SPA_MEMBER(frame.get(), spaBuffer->datas[0].mapoffset, uint8_t),
+          spaBuffer->datas[0].chunk->size, configured_capability_);
+    } else {  // SPA_DATA_MemPtr
+      IncomingFrame(static_cast<uint8_t*>(spaBuffer->datas[0].data),
+                    spaBuffer->datas[0].chunk->size, configured_capability_);
+    }
+
     pw_stream_queue_buffer(stream_, buffer);
   }
 }
