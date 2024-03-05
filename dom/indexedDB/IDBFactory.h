@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/GlobalTeardownObserver.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -96,6 +97,9 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
 
   static bool AllowedForPrincipal(nsIPrincipal* aPrincipal,
                                   bool* aIsSystemPrincipal = nullptr);
+
+  static quota::PersistenceType GetPersistenceType(
+      const PrincipalInfo& aPrincipalInfo);
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(IDBFactory); }
 
