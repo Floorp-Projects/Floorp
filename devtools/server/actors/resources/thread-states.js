@@ -132,7 +132,7 @@ class BreakpointWatcher {
     ]);
   }
 
-  onResumed(packet) {
+  onResumed() {
     // NOTE: resumed events are suppressed while interrupted
     // to prevent unintentional behavior.
     if (this.isInterrupted) {

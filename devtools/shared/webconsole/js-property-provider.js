@@ -752,7 +752,7 @@ var DebuggerObjectSupport = {
     }
   },
 
-  getProperty(obj, name, rootObj) {
+  getProperty() {
     // This is left unimplemented in favor to DevToolsUtils.getProperty().
     throw new Error("Unimplemented!");
   },

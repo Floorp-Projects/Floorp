@@ -133,7 +133,7 @@ function installTemporaryExtension() {
   const message = l10n.getString(
     "about-debugging-tmp-extension-install-message"
   );
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: TEMPORARY_EXTENSION_INSTALL_START });
     const file = await openTemporaryExtension(window, message);
     try {
@@ -146,7 +146,7 @@ function installTemporaryExtension() {
 }
 
 function pushServiceWorker(id, registrationFront) {
-  return async ({ dispatch, getState }) => {
+  return async () => {
     try {
       // The push button is only available if canDebugServiceWorkers is true.
       // With this configuration, `push` should always be called on the

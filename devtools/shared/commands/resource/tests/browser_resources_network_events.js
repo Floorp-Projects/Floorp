@@ -128,7 +128,7 @@ add_task(async function testCanceledRequest() {
   // from the parent process is much more reliable.
   const observer = {
     QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-    observe(subject, topic, data) {
+    observe(subject) {
       subject = subject.QueryInterface(Ci.nsIHttpChannel);
       if (subject.URI.spec == requestUrl) {
         subject.cancel(Cr.NS_BINDING_ABORTED);

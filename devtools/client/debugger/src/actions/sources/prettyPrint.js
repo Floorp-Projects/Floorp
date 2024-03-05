@@ -224,7 +224,7 @@ async function prettyPrintHtmlFile({
 }
 
 function createPrettySource(source, sourceActor) {
-  return async ({ dispatch, sourceMapLoader, getState }) => {
+  return async ({ dispatch }) => {
     const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(source.id, url);
     const prettySource = createPrettyPrintOriginalSource(id, url);
@@ -336,7 +336,7 @@ const memoizedPrettyPrintSource = memoizeableAction("setSymbols", {
 });
 
 export function prettyPrintAndSelectSource(source) {
-  return async ({ dispatch, sourceMapLoader, getState }) => {
+  return async ({ dispatch }) => {
     const prettySource = await dispatch(memoizedPrettyPrintSource(source));
 
     // Select the pretty/original source based on the location we may

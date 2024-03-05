@@ -39,7 +39,7 @@ add_task(async function () {
     usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   info("Simulate to happen connection error");
-  mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
+  mocks.runtimeClientFactoryMock.createClientForRuntime = async () => {
     throw new Error("Dummy connection error");
   };
 

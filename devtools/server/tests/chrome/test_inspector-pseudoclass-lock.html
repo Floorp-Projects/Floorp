@@ -23,7 +23,7 @@ window.onload = function() {
 let gInspectee = null;
 let gWalker = null;
 
-async function setup(callback) {
+async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target, doc } = await attachURL(url);
   gInspectee = doc;

@@ -231,7 +231,7 @@ class CommandBar extends Component {
             formatKey("trace"),
             this.props.logMethod
           ),
-      onClick: event => {
+      onClick: () => {
         this.props.toggleTracing();
       },
       onContextMenu: event => {

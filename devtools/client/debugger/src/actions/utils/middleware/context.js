@@ -27,7 +27,7 @@ function validateActionContext(getState, action) {
 
 // Middleware which looks for actions that have a cx property and ignores
 // them if the context is no longer valid.
-function context({ dispatch, getState }) {
+function context({ getState }) {
   return next => action => {
     if ("cx" in action) {
       validateActionContext(getState, action);

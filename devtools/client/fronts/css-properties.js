@@ -131,7 +131,7 @@ CssProperties.prototype = {
    *
    * @return {Array} An array of strings.
    */
-  getNames(property) {
+  getNames() {
     return Object.keys(this.properties);
   },
 

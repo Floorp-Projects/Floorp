@@ -9,13 +9,13 @@
 
 const mark = window.performance?.mark
   ? window.performance.mark.bind(window.performance)
-  : a => {};
+  : () => {};
 
 const measure = window.performance?.measure
   ? window.performance.measure.bind(window.performance)
-  : (a, b, c) => {};
+  : () => {};
 
-export function timing(store) {
+export function timing() {
   return next => action => {
     mark(`${action.type}_start`);
     const result = next(action);

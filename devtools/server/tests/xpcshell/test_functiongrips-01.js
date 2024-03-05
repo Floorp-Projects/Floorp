@@ -8,6 +8,8 @@ add_task(
     // Test named function
     function evalCode() {
       debuggee.eval(
+        // These arguments are tested.
+        // eslint-disable-next-line no-unused-vars
         function stopMe(arg1) {
           debugger;
         }.toString()

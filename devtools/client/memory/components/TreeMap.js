@@ -38,7 +38,7 @@ class TreeMap extends Component {
     return oldTreeMap !== newTreeMap;
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     this._stopVisualization();
 
     if (this.props.treeMap && this.props.treeMap.report) {

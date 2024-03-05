@@ -26,7 +26,7 @@ const debouncedRefreshDispatcher = debounce(
 );
 
 exports.setFilterStringAndRefresh = function (filterString, heapWorker) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch(setFilterString(filterString));
     debouncedRefreshDispatcher(dispatch, heapWorker);
   };

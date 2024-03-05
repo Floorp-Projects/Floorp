@@ -23,7 +23,7 @@ import { features } from "../utils/prefs";
  * @param {string} input
  */
 export function addExpression(input) {
-  return async ({ dispatch, getState, parserWorker }) => {
+  return async ({ dispatch, getState }) => {
     if (!input) {
       return null;
     }
@@ -64,7 +64,7 @@ export function clearAutocomplete() {
 }
 
 export function updateExpression(input, expression) {
-  return async ({ getState, dispatch, parserWorker }) => {
+  return async ({ dispatch }) => {
     if (!input) {
       return;
     }

@@ -67,7 +67,7 @@ add_task(async function openDebuggerFromDialog() {
   // And mochitest may consider this as an error. So ignore any rejection.
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.infiniteLoop();
-  }).catch(e => {});
+  }).catch(() => {});
 
   info("Wait for the slow script warning");
   const notification = await alert;

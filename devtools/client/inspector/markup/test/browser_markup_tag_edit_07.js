@@ -59,7 +59,7 @@ var TEST_DATA = [
     expectedAttributes: {
       style: DATA_URL_INLINE_STYLE,
     },
-    validate: (container, inspector) => {
+    validate: container => {
       const editor = container.editor;
       const visibleAttrText = editor.attrElements
         .get("style")
@@ -75,7 +75,7 @@ var TEST_DATA = [
     expectedAttributes: {
       "data-long": LONG_ATTRIBUTE,
     },
-    validate: (container, inspector) => {
+    validate: container => {
       const editor = container.editor;
       const visibleAttrText = editor.attrElements
         .get("data-long")
@@ -91,7 +91,7 @@ var TEST_DATA = [
     expectedAttributes: {
       src: DATA_URL_ATTRIBUTE,
     },
-    validate: (container, inspector) => {
+    validate: container => {
       const editor = container.editor;
       const visibleAttrText = editor.attrElements
         .get("src")
@@ -107,17 +107,17 @@ var TEST_DATA = [
     expectedAttributes: {
       "data-long": LONG_ATTRIBUTE,
     },
-    setUp(inspector) {
+    setUp() {
       Services.prefs.setBoolPref("devtools.markup.collapseAttributes", false);
     },
-    validate: (container, inspector) => {
+    validate: container => {
       const editor = container.editor;
       const visibleAttrText = editor.attrElements
         .get("data-long")
         .querySelector(".attr-value").textContent;
       is(visibleAttrText, LONG_ATTRIBUTE);
     },
-    tearDown(inspector) {
+    tearDown() {
       Services.prefs.clearUserPref("devtools.markup.collapseAttributes");
     },
   },
@@ -127,10 +127,10 @@ var TEST_DATA = [
     expectedAttributes: {
       "data-long": LONG_ATTRIBUTE,
     },
-    setUp(inspector) {
+    setUp() {
       Services.prefs.setIntPref("devtools.markup.collapseAttributeLength", 2);
     },
-    validate: (container, inspector) => {
+    validate: container => {
       const firstChar = LONG_ATTRIBUTE[0];
       const lastChar = LONG_ATTRIBUTE[LONG_ATTRIBUTE.length - 1];
       const collapsed = firstChar + "\u2026" + lastChar;
@@ -140,7 +140,7 @@ var TEST_DATA = [
         .querySelector(".attr-value").textContent;
       is(visibleAttrText, collapsed);
     },
-    tearDown(inspector) {
+    tearDown() {
       Services.prefs.clearUserPref("devtools.markup.collapseAttributeLength");
     },
   },

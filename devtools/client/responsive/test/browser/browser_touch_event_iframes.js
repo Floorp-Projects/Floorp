@@ -72,7 +72,7 @@ for (const mvcontent of META_VIEWPORT_CONTENTS) {
     `style="margin:0; border:0; width:100%; height:100%"></iframe>` +
     `</body></html>`;
 
-  addRDMTask(TEST_URL, async function ({ ui, manager, browser }) {
+  addRDMTask(TEST_URL, async function ({ ui, manager }) {
     await setViewportSize(ui, manager, VIEWPORT_DIMENSION, VIEWPORT_DIMENSION);
     await setTouchAndMetaViewportSupport(ui, true);
 

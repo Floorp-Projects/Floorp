@@ -18,7 +18,7 @@
       function openConnection() {
         return new Promise(resolve => {
           const es = new EventSource("sse_backend.sjs");
-          es.onmessage = function (e) {
+          es.onmessage = function () {
             es.close();
             resolve();
           };

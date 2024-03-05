@@ -84,7 +84,7 @@ class ConsoleOutput extends Component {
     this.ref = createRef();
     this.lazyMessageListRef = createRef();
 
-    this.resizeObserver = new ResizeObserver(entries => {
+    this.resizeObserver = new ResizeObserver(() => {
       // If we don't have the outputNode reference, or if the outputNode isn't connected
       // anymore, we disconnect the resize observer (componentWillUnmount is never called
       // on this component, so we have to do it here).
@@ -141,7 +141,7 @@ class ConsoleOutput extends Component {
   }
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
-  UNSAFE_componentWillUpdate(nextProps, nextState) {
+  UNSAFE_componentWillUpdate(nextProps) {
     this.isUpdating = true;
     if (nextProps.cacheGeneration !== this.props.cacheGeneration) {
       this.messageIdsToKeepAlive = new Set();
@@ -356,7 +356,7 @@ class ConsoleOutput extends Component {
   }
 }
 
-function mapStateToProps(state, props) {
+function mapStateToProps(state) {
   const mutableMessages = getMutableMessagesById(state);
   return {
     initialized: state.ui.initialized,

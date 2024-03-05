@@ -161,7 +161,7 @@ define(function (require, exports, module) {
       return stack;
     }
 
-    parseStackString(preview.stack).forEach((frame, index, frames) => {
+    parseStackString(preview.stack).forEach((frame, index) => {
       let onLocationClick;
       const { filename, lineNumber, columnNumber, functionName, location } =
         frame;

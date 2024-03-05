@@ -18,7 +18,7 @@ SimpleTest.waitForExplicitFinish();
 
 let expectedConsoleCalls = [];
 
-function doConsoleCalls(aState)
+function doConsoleCalls()
 {
   const longString = (new Array(DevToolsServer.LONG_STRING_LENGTH + 2)).join("a");
 
@@ -186,7 +186,7 @@ async function startTest()
   onAttach(state, response);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   onConsoleAPICall = onConsoleAPICall.bind(null, aState);
   aState.webConsoleFront.on("consoleAPICall", onConsoleAPICall);

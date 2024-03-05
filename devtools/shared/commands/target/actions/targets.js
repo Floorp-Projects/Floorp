@@ -16,7 +16,7 @@ function unregisterTarget(targetFront) {
  * @param {String} targetActorID: The actorID of the target we want to select.
  */
 function selectTarget(targetActorID) {
-  return function ({ dispatch, getState }) {
+  return function ({ dispatch }) {
     dispatch({ type: "SELECT_TARGET", targetActorID });
   };
 }

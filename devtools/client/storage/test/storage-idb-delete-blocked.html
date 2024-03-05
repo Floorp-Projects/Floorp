@@ -14,7 +14,7 @@ window.setup = async function () {
     const request = indexedDB.open("idb", 1);
 
     request.onsuccess = e => resolve(e.target.result);
-    request.onerror = e => reject(new Error("error opening db connection"));
+    request.onerror = () => reject(new Error("error opening db connection"));
   });
 
   dump("opened indexedDB\n");
@@ -29,7 +29,7 @@ window.deleteDb = async function () {
     const request = indexedDB.deleteDatabase("idb");
 
     request.onsuccess = resolve;
-    request.onerror = e => reject(new Error("error deleting db"));
+    request.onerror = () => reject(new Error("error deleting db"));
   });
 };
 

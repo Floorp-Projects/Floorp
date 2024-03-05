@@ -16,11 +16,11 @@ add_task(async function () {
       get: () => "elem0",
     });
     Object.defineProperty(array, 1, {
-      set: x => {},
+      set: () => {},
     });
     Object.defineProperty(array, 2, {
       get: () => "elem2",
-      set: x => {},
+      set: () => {},
     });
     content.wrappedJSObject.console.log("oi-array-test", array);
   });

@@ -294,7 +294,7 @@ export function newGeneratedSource(sourceInfo) {
 }
 
 export function newGeneratedSources(sourceResources) {
-  return async ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState }) => {
     if (!sourceResources.length) {
       return [];
     }
@@ -370,7 +370,7 @@ export function newGeneratedSources(sourceResources) {
 }
 
 function checkNewSources(sources) {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     for (const source of sources) {
       dispatch(checkSelectedSource(source.id));
     }

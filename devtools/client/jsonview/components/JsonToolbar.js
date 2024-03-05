@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function (require, exports) {
   const { Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -42,19 +42,19 @@ define(function (require, exports, module) {
 
     // Commands
 
-    onSave(event) {
+    onSave() {
       this.props.actions.onSaveJson();
     }
 
-    onCopy(event) {
+    onCopy() {
       this.props.actions.onCopyJson();
     }
 
-    onCollapse(event) {
+    onCollapse() {
       this.props.actions.onCollapse();
     }
 
-    onExpand(event) {
+    onExpand() {
       this.props.actions.onExpand();
     }
 

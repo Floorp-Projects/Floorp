@@ -83,7 +83,7 @@ async function getMappedExpression(hud, expression) {
 }
 
 function evaluateExpression(expression, from = "input") {
-  return async ({ dispatch, toolbox, webConsoleUI, hud, commands }) => {
+  return async ({ dispatch, webConsoleUI, hud, commands }) => {
     if (!expression) {
       expression = hud.getInputSelection() || hud.getInputValue();
     }

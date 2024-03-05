@@ -296,7 +296,7 @@ class SourceMapURLService {
     return query;
   }
 
-  _dispatchQuery(query, newSubscribers = null) {
+  _dispatchQuery(query) {
     if (!this._prefValue) {
       throw new Error("This function should only be called if the pref is on.");
     }

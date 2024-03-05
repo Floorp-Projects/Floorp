@@ -826,7 +826,7 @@ class ResourceCommand {
    * Called everytime a resource is destroyed in the remote target.
    * See _onResourceAvailable for the argument description.
    */
-  async _onResourceDestroyed({ targetFront, watcherFront }, resources) {
+  async _onResourceDestroyed({ targetFront }, resources) {
     for (const resource of resources) {
       const { resourceType, resourceId } = resource;
       this._cache.delete(cacheKey(resourceType, resourceId));
@@ -923,7 +923,7 @@ class ResourceCommand {
     return null;
   }
 
-  _onWillNavigate(targetFront) {
+  _onWillNavigate() {
     // Special case for toolboxes debugging a document,
     // purge the cache entirely when we start navigating to a new document.
     // Other toolboxes and additional target for remote iframes or content process
@@ -1243,11 +1243,7 @@ const WORKER_RESOURCE_TYPES = [
 // Each section added here should eventually be removed once the equivalent server
 // code is implement in Firefox, in its release channel.
 const LegacyListeners = {
-  async [ResourceCommand.TYPES.DOCUMENT_EVENT]({
-    targetCommand,
-    targetFront,
-    onAvailable,
-  }) {
+  async [ResourceCommand.TYPES.DOCUMENT_EVENT]({ targetFront, onAvailable }) {
     // DocumentEventsListener of webconsole handles only top level document.
     if (!targetFront.isTopLevel) {
       return;

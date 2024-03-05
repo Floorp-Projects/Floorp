@@ -111,7 +111,7 @@ async function testManyReloads({ tab, monitor, toolbox }) {
   assertNavigationRequestEntry(entry);
 }
 
-async function testClearedRequests({ tab, monitor, toolbox }) {
+async function testClearedRequests({ tab, monitor }) {
   info("Navigate to an empty page");
   const topDocumentURL =
     "https://example.org/document-builder.sjs?html=empty-document";
@@ -196,7 +196,6 @@ function assertNavigationRequestEntry(entry) {
  * Reload the page and copy all as HAR.
  */
 async function reloadAndCopyAllAsHar({
-  tab,
   monitor,
   toolbox,
   reloadTwice = false,

@@ -16,7 +16,7 @@ const DB_NAME = "db-alt";
 async function setup() { // eslint-disable-line no-unused-vars
   await new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
-    request.onerror = event => reject(Error("Error opening DB"));
+    request.onerror = () => reject(Error("Error opening DB"));
     request.onupgradeneeded = event => {
       const db = event.target.result;
       const store = db.createObjectStore("store", { keyPath: "key" });

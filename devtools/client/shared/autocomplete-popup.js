@@ -184,7 +184,7 @@ AutocompletePopup.prototype = {
     }
   },
 
-  onInputBlur(event) {
+  onInputBlur() {
     if (this.isOpen) {
       this.clearItems();
       this.hidePopup();

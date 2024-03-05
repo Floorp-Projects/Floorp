@@ -27,7 +27,7 @@ async function getWebConsoleWrapper() {
     getMappedExpression: () => {},
     commands: {
       objectCommand: {
-        releaseObjects: async frontsToRelease => {},
+        releaseObjects: async () => {},
       },
     },
   };

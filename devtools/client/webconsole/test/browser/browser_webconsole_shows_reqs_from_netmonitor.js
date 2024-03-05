@@ -20,7 +20,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref(NET_PREF);
 
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

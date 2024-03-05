@@ -39,7 +39,7 @@ function waitUntilExpanded(store, node) {
   );
 }
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const store = panel.panelWin.gStore;
   const { getState, dispatch } = store;

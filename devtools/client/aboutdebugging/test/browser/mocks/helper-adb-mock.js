@@ -39,7 +39,7 @@ function disableAdbMock() {
  */
 function createAdbMock() {
   const adbMock = {};
-  adbMock.registerListener = function (listener) {
+  adbMock.registerListener = function () {
     console.log("MOCKED METHOD registerListener");
   };
 
@@ -55,7 +55,7 @@ function createAdbMock() {
     console.log("MOCKED METHOD updateRuntimes");
   };
 
-  adbMock.unregisterListener = function (listener) {
+  adbMock.unregisterListener = function () {
     console.log("MOCKED METHOD unregisterListener");
   };
 

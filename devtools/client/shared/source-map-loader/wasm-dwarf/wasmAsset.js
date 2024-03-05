@@ -4,7 +4,7 @@
 
 "use strict";
 
-async function getDwarfToWasmData(name) {
+async function getDwarfToWasmData() {
   const response = await fetch(
     "resource://devtools/client/shared/source-map-loader/wasm-dwarf/dwarf_to_json.wasm"
   );

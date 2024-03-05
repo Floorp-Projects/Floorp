@@ -162,11 +162,11 @@ class Observable {
     }
   }
 
-  _startListeners(windows) {
+  _startListeners() {
     // To be implemented by sub-classes.
   }
 
-  _stopListeners(windows) {
+  _stopListeners() {
     // To be implemented by sub-classes.
   }
 

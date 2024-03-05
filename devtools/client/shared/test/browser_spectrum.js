@@ -245,12 +245,7 @@ function setSpectrumProps(spectrum, props, updateUI = true) {
   }
 }
 
-function testAriaAttributesOnSpectrumElements(
-  spectrum,
-  colorName,
-  rgbString,
-  alpha
-) {
+function testAriaAttributesOnSpectrumElements(spectrum, colorName, rgbString) {
   for (const slider of [spectrum.dragger, spectrum.hueSlider]) {
     is(
       slider.getAttribute("aria-describedby"),

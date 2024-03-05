@@ -20,7 +20,7 @@ const {
 } = require("resource://devtools/client/application/src/constants.js");
 
 function fetchManifest() {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: FETCH_MANIFEST_START });
     try {
       const manifest = await services.fetchManifest();

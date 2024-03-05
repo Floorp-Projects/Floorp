@@ -62,7 +62,7 @@ const reducers = {
     return newState;
   },
 
-  [RESET_EDITOR](state) {
+  [RESET_EDITOR]() {
     return { ...INITIAL_STATE };
   },
 

@@ -50,7 +50,7 @@ add_task(
           Assert.equal(debuggee.b, undefined);
 
           // Remove the breakpoint.
-          bpClient.remove(function (response) {
+          bpClient.remove(function () {
             threadFront.resume().then(resolve);
           });
         });

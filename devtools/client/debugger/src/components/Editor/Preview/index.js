@@ -44,7 +44,7 @@ class Preview extends PureComponent {
     codeMirrorWrapper.removeEventListener("mousedown", this.onMouseDown);
   }
 
-  updateListeners(prevProps) {
+  updateListeners() {
     const { codeMirror } = this.props.editor;
     const codeMirrorWrapper = codeMirror.getWrapperElement();
     codeMirror.on("tokenenter", this.onTokenEnter);

@@ -19,7 +19,7 @@ module.exports = {
     await Resources.watchResources(targetActor, entries);
   },
 
-  removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  removeSessionDataEntry(targetActor, entries) {
     Resources.unwatchResources(targetActor, entries);
   },
 };

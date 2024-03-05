@@ -1223,11 +1223,8 @@ class InactivePropertyHelper {
 
   /**
    * Check if a node is a grid item.
-   *
-   * @param {DOMNode} node
-   *        The node to check.
    */
-  isGridItem(node) {
+  isGridItem() {
     return !!this.getParentGridElement(this.node);
   }
 

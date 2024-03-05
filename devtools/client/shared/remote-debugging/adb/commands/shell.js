@@ -81,18 +81,18 @@ const shell = async function (deviceId, command) {
     };
 
     const socket = client.connect();
-    socket.s.onerror = function (event) {
+    socket.s.onerror = function () {
       dumpn("shell onerror");
       reject("SOCKET_ERROR");
     };
 
-    socket.s.onopen = function (event) {
+    socket.s.onopen = function () {
       dumpn("shell onopen");
       state = "start";
       runFSM();
     };
 
-    socket.s.onclose = function (event) {
+    socket.s.onclose = function () {
       resolve(stdout);
       dumpn("shell onclose");
     };

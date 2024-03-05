@@ -2,7 +2,7 @@
 <meta charset=utf-8>
 <script>
 'use strict';
-window.onmessage = event => {
+window.onmessage = () => {
   const innerNode = window.document.getElementById("inner-node");
   const wrappedNode = SpecialPowers.wrap(innerNode);
   const wrappedQuads = wrappedNode.getBoxQuadsFromWindowOrigin();

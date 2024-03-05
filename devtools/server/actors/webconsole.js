@@ -1704,7 +1704,7 @@ class WebConsoleActor extends Actor {
    * The "will-navigate" progress listener. This is used to clear the current
    * eval scope.
    */
-  _onWillNavigate({ window, isTopLevel }) {
+  _onWillNavigate({ isTopLevel }) {
     if (isTopLevel) {
       this._evalGlobal = null;
       EventEmitter.off(this.parentActor, "will-navigate", this._onWillNavigate);

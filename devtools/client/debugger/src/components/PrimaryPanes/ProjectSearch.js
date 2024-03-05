@@ -352,7 +352,7 @@ export class ProjectSearch extends Component {
         autoExpandAll: true,
         autoExpandDepth: 1,
         autoExpandNodeChildrenLimit: 100,
-        getParent: item => null,
+        getParent: () => null,
         getPath: getFilePath,
         renderItem: this.renderItem,
         focused: this.state.focusedItem,

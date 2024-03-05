@@ -16,7 +16,7 @@ add_task(async function () {
   // select "Remove breakpoint"
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.remove);
 
-  await waitForState(dbg, state => dbg.selectors.getBreakpointCount() === 0);
+  await waitForState(dbg, () => dbg.selectors.getBreakpointCount() === 0);
   ok(true, "successfully removed the breakpoint");
 });
 
@@ -34,7 +34,7 @@ add_task(async function () {
   // select "Disable Others"
   let dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableOthers);
-  await waitForState(dbg, state =>
+  await waitForState(dbg, () =>
     dbg.selectors
       .getBreakpointsList()
       .every(bp => (bp.location.line !== 4) === bp.disabled)
@@ -46,7 +46,7 @@ add_task(async function () {
   // select "Disable All"
   dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableAll);
-  await waitForState(dbg, state =>
+  await waitForState(dbg, () =>
     dbg.selectors.getBreakpointsList().every(bp => bp.disabled)
   );
   await dispatched;
@@ -56,7 +56,7 @@ add_task(async function () {
   // select "Enable Others"
   dispatched = waitForDispatch(dbg.store, "SET_BREAKPOINT", 2);
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableOthers);
-  await waitForState(dbg, state =>
+  await waitForState(dbg, () =>
     dbg.selectors
       .getBreakpointsList()
       .every(bp => (bp.location.line === 4) === bp.disabled)
@@ -70,7 +70,7 @@ add_task(async function () {
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeOthers);
   await waitForState(
     dbg,
-    state =>
+    () =>
       dbg.selectors.getBreakpointsList().length === 1 &&
       dbg.selectors.getBreakpointsList()[0].location.line === 4
   );

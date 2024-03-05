@@ -62,7 +62,7 @@ function test() {
         finish();
       });
     });
-  })().catch(error => {
+  })().catch(() => {
     ok(false, "There was an error running the test.");
   });
 }

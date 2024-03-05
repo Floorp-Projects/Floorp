@@ -407,7 +407,7 @@ export class NetworkResponseListener {
    * Handle progress event as data is transferred.  This is used to record the
    * size on the wire, which may be compressed / encoded.
    */
-  onProgress(request, progress, progressMax) {
+  onProgress(request, progress) {
     this.#bodySize = progress;
 
     // Need to forward as well to keep things like Download Manager's progress

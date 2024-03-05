@@ -45,7 +45,7 @@ add_task(async function () {
   const json = JSON.stringify({
     data: Array(1e5)
       .fill()
-      .map(x => "hoot"),
+      .map(() => "hoot"),
     status: "ok",
   });
   Assert.greater(

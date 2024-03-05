@@ -26,7 +26,7 @@ for (const childSpec of Object.values(childSpecs)) {
     }
 
     // Update the storage fronts `hosts` properties with potential new hosts and remove the deleted ones
-    async _onStoreUpdate({ changed, added, deleted }) {
+    async _onStoreUpdate({ added, deleted }) {
       // `resourceKey` comes from the storage resource and is set by the legacy listener
       // -or- the resource transformer.
       const { resourceKey } = this;

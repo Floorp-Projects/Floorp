@@ -74,7 +74,7 @@ add_task(async function () {
     onAvailable,
   });
   await waitFor(() => targets.length === 2);
-  const [topLevelTarget, iframeTarget] = targets.sort((a, b) =>
+  const [topLevelTarget, iframeTarget] = targets.sort((a, _) =>
     a.isTopLevel ? -1 : 1
   );
 

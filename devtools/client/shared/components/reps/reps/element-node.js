@@ -180,7 +180,7 @@ define(function (require, exports, module) {
       attributeKeys.splice(attributeKeys.indexOf("id"), 1);
       attributeKeys.unshift("id");
     }
-    const attributeElements = attributeKeys.reduce((arr, name, i, keys) => {
+    const attributeElements = attributeKeys.reduce((arr, name) => {
       const value = attributes[name];
 
       let title = isLongString(value) ? value.initial : value;

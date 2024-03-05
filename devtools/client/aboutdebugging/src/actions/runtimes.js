@@ -202,7 +202,7 @@ function connectRuntime(id) {
 }
 
 function createThisFirefoxRuntime() {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     const thisFirefoxRuntime = {
       id: RUNTIMES.THIS_FIREFOX,
       isConnecting: false,
@@ -488,7 +488,7 @@ function updateRemoteRuntimes(runtimes, type) {
  * before leaving about:debugging.
  */
 function removeRuntimeListeners() {
-  return ({ dispatch, getState }) => {
+  return ({ getState }) => {
     const allRuntimes = getAllRuntimes(getState().runtimes);
     const remoteRuntimes = allRuntimes.filter(
       r => r.type !== RUNTIMES.THIS_FIREFOX

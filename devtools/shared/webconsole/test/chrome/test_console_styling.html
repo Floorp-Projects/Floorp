@@ -18,7 +18,7 @@ SimpleTest.waitForExplicitFinish();
 
 let expectedConsoleCalls = [];
 
-function doConsoleCalls(aState)
+function doConsoleCalls()
 {
   top.console.log("%cOne formatter with no styles");
   top.console.log("%cOne formatter", "color: red");
@@ -89,7 +89,7 @@ async function startTest()
   onAttach(state, response);
 }
 
-function onAttach(aState, aResponse)
+function onAttach(aState)
 {
   onConsoleAPICall = onConsoleAPICall.bind(null, aState);
   aState.webConsoleFront.on("consoleAPICall", onConsoleAPICall);

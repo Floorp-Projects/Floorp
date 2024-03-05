@@ -14,7 +14,7 @@ async function testCase(dbg, { name, steps }) {
   } = dbg;
   const locations = [];
 
-  const recordFrame = state => {
+  const recordFrame = () => {
     const { line, column } = getTopFrame(getCurrentThread()).location;
     locations.push([line, column]);
     info(`Break on ${line}:${column}`);

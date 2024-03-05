@@ -56,8 +56,8 @@ const RELOAD_CONDITION_PREF_PREFIX = "devtools.responsive.reloadConditions.";
 const RELOAD_NOTIFICATION_PREF =
   "devtools.responsive.reloadNotification.enabled";
 
-function debug(msg) {
-  // console.log(`RDM manager: ${msg}`);
+function debug(_msg) {
+  // console.log(`RDM manager: ${_msg}`);
 }
 
 /**

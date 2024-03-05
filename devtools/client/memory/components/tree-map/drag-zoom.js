@@ -295,10 +295,9 @@ function setScrollHandlers(container, dragZoom, emitChanged, update) {
  * Account for the various mouse wheel event types, per pixel or per line
  *
  * @param  {WheelEvent} event
- * @param  {Window} window
  * @return {Number} The scroll size in pixels
  */
-function getScrollDelta(event, window) {
+function getScrollDelta(event) {
   if (event.deltaMode === LINE_SCROLL_MODE) {
     // Update by a fixed arbitrary value to normalize scroll types
     return event.deltaY * SCROLL_LINE_SIZE;

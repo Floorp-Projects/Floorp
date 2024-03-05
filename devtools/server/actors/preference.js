@@ -57,7 +57,7 @@ class PreferenceActor extends Actor {
 
   getAllPrefs() {
     const prefs = {};
-    Services.prefs.getChildList("").forEach(function (name, index) {
+    Services.prefs.getChildList("").forEach(function (name) {
       // append all key/value pairs into a huge json object.
       try {
         let value;

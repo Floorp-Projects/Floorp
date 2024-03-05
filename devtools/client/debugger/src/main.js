@@ -66,7 +66,7 @@ function setPauseOnExceptions() {
   );
 }
 
-async function loadInitialState(commands, toolbox) {
+async function loadInitialState() {
   const pendingBreakpoints = sanitizeBreakpoints(
     await asyncStore.pendingBreakpoints
   );
@@ -103,7 +103,7 @@ export async function bootstrap({
   // record events.
   setToolboxTelemetry(panel.toolbox.telemetry);
 
-  const initialState = await loadInitialState(commands, panel.toolbox);
+  const initialState = await loadInitialState();
   const workers = bootstrapWorkers(panelWorkers);
 
   const { store, actions, selectors } = bootstrapStore(

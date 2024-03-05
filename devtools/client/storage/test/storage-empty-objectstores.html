@@ -10,7 +10,7 @@
 window.setup = async function () {
   let request = indexedDB.open("idb1", 1);
   const db = await new Promise((resolve, reject) => {
-    request.onerror = e => reject(Error("error opening db connection"));
+    request.onerror = () => reject(Error("error opening db connection"));
     request.onupgradeneeded = event => {
       const _db = event.target.result;
       const store1 = _db.createObjectStore("obj1", { keyPath: "id" });
@@ -38,7 +38,7 @@ window.setup = async function () {
 
   request = indexedDB.open("idb2", 1);
   const db2 = await new Promise((resolve, reject) => {
-    request.onerror = e => reject(Error("error opening db2 connection"));
+    request.onerror = () => reject(Error("error opening db2 connection"));
     request.onupgradeneeded = event => resolve(event.target.result);
   });
 

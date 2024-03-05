@@ -20,7 +20,7 @@ const {
 const TEST_URL =
   "http://example.com/browser/devtools/client/memory/test/browser/doc_big_tree.html";
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ panel }) {
   // Taking snapshots and computing dominator trees is slow :-/
   requestLongerTimeout(4);
 

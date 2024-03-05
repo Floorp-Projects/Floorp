@@ -13,7 +13,7 @@ var gThreadFront;
 
 add_task(
   threadFrontTest(
-    async ({ threadFront, debuggee, client }) => {
+    async ({ threadFront, debuggee }) => {
       gThreadFront = threadFront;
       gDebuggee = debuggee;
 
@@ -90,7 +90,7 @@ const EXPECTED_CONTENT = String.fromCharCode(
 );
 
 function test_source() {
-  gThreadFront.once("paused", function (packet) {
+  gThreadFront.once("paused", function () {
     gThreadFront.getSources().then(function (response) {
       Assert.ok(!!response);
       Assert.ok(!!response.sources);

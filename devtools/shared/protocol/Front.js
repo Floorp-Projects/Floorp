@@ -268,7 +268,7 @@ class Front extends Pool {
    * Update the actor from its representation.
    * Subclasses should override this.
    */
-  form(form) {}
+  form() {}
 
   /**
    * Send a packet on the connection.

@@ -30,8 +30,8 @@ function prefsMiddleware(store) {
         const filters = Object.entries(
           store.getState().filters.requestFilterTypes
         )
-          .filter(([type, check]) => check)
-          .map(([type, check]) => type);
+          .filter(([, check]) => check)
+          .map(([type]) => type);
         Services.prefs.setCharPref(
           "devtools.netmonitor.filters",
           JSON.stringify(filters)

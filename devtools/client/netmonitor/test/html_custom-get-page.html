@@ -45,7 +45,7 @@
 
       // For testing the offline mode in the netmonitor
       let isOfflineEventFired = false;
-      window.addEventListener("offline", (event) => {
+      window.addEventListener("offline", () => {
         isOfflineEventFired = true
       }, { once: true });
 

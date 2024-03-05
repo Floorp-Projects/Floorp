@@ -166,7 +166,7 @@ class TestTargetActor extends protocol.Actor {
     this._extraActors.threadActor = this.threadActor;
     this.makeDebugger = makeDebugger.bind(null, {
       findDebuggees: () => [this._global],
-      shouldAddNewGlobalAsDebuggee: g => gAllowNewThreadGlobals,
+      shouldAddNewGlobalAsDebuggee: () => gAllowNewThreadGlobals,
     });
     this.dbg = this.makeDebugger();
     this.notifyResources = this.notifyResources.bind(this);
@@ -216,12 +216,12 @@ class TestTargetActor extends protocol.Actor {
     return { ...response, ...actors };
   }
 
-  detach(request) {
+  detach() {
     this.threadActor.destroy();
     return { type: "detached" };
   }
 
-  reload(request) {
+  reload() {
     this.sourcesManager.reset();
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();

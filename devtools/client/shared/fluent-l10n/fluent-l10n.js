@@ -49,13 +49,13 @@ class FluentL10n {
   /**
    * Returns the localized string for the provided id, formatted using args.
    */
-  getString(id, args, fallback) {
+  getString(...args) {
     // Forward arguments via .apply() so that the original method can:
     // - perform asserts based on the number of arguments
     // - add new arguments
     return this._reactLocalization.getString.apply(
       this._reactLocalization,
-      arguments
+      args
     );
   }
 }

@@ -18,13 +18,7 @@ import { evaluateExpressionsForCurrentContext } from "../actions/expressions";
  * @static
  */
 export function willNavigate(event) {
-  return async function ({
-    dispatch,
-    getState,
-    client,
-    sourceMapLoader,
-    parserWorker,
-  }) {
+  return async function ({ dispatch, getState, sourceMapLoader }) {
     sourceQueue.clear();
     sourceMapLoader.clearSourceMaps();
     clearWasmStates();
@@ -42,7 +36,7 @@ export function willNavigate(event) {
  * @static
  */
 export function navigated() {
-  return async function ({ getState, dispatch, panel }) {
+  return async function ({ dispatch, panel }) {
     try {
       // Update the watched expressions once the page is fully loaded
       await dispatch(evaluateExpressionsForCurrentContext());

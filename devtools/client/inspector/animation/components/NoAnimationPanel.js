@@ -26,7 +26,7 @@ class NoAnimationPanel extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return this.props.elementPickerEnabled != nextProps.elementPickerEnabled;
   }
 

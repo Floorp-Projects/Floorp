@@ -148,7 +148,7 @@ OptionsPanel.prototype = {
     }
   },
 
-  _themeRegistered(themeId) {
+  _themeRegistered() {
     this.setupThemeList();
   },
 

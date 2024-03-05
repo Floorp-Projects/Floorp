@@ -13,7 +13,7 @@ const {
  * census.
  */
 exports.setTreeMapAndRefresh = function (heapWorker, display) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     dispatch(setTreeMap(display));
     await dispatch(refresh(heapWorker));
   };

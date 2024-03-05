@@ -81,7 +81,7 @@ function GripMessageBody(props) {
     maybeScrollToBottom,
     setExpanded,
     customFormat,
-    onCmdCtrlClick: (node, { depth, event, focused, expanded }) => {
+    onCmdCtrlClick: node => {
       const front = objectInspector.utils.node.getFront(node);
       if (front) {
         dispatch(actions.showObjectInSidebar(front));

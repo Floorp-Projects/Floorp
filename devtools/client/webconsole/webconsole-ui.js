@@ -535,12 +535,8 @@ class WebConsoleUI {
    * i.e. it was already existing or has just been created.
    *
    * @private
-   * @param Front targetFront
-   *        The Front of the target that is available.
-   *        This Front inherits from TargetMixin and is typically
-   *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
-  async _onTargetAvailable({ targetFront }) {
+  async _onTargetAvailable() {
     // onTargetAvailable is a mandatory argument for watchTargets,
     // we still define it solely for being able to use onTargetDestroyed.
   }
@@ -687,7 +683,7 @@ class WebConsoleUI {
         this.hud.commands.targetCommand.reloadTopLevelTarget();
       });
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
-      shortcuts.on("Esc", event => {
+      shortcuts.on("Esc", () => {
         this.wrapper.dispatchSidebarClose();
         if (this.jsterm) {
           this.jsterm.focus();

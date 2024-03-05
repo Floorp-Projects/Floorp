@@ -65,7 +65,7 @@ class ContentProcessTargetActor extends BaseTargetActor {
     this.makeDebugger = makeDebugger.bind(null, {
       findDebuggees: dbg =>
         dbg.findAllGlobals().map(g => g.unsafeDereference()),
-      shouldAddNewGlobalAsDebuggee: global => true,
+      shouldAddNewGlobalAsDebuggee: () => true,
     });
 
     const sandboxPrototype = {

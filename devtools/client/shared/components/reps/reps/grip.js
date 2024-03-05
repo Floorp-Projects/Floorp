@@ -375,7 +375,7 @@ define(function (require, exports, module) {
   }
 
   // Registration
-  function supportsObject(object, noGrip = false) {
+  function supportsObject(object) {
     if (object?.class === "DeadObject") {
       return true;
     }

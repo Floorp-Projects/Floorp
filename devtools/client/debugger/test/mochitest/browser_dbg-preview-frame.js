@@ -60,7 +60,7 @@ add_task(async function () {
 
 function waitForSelectedFrame(dbg, displayName) {
   const { getInScopeLines, getVisibleSelectedFrame } = dbg.selectors;
-  return waitForState(dbg, state => {
+  return waitForState(dbg, () => {
     const frame = getVisibleSelectedFrame();
 
     return frame?.displayName == displayName && getInScopeLines(frame.location);

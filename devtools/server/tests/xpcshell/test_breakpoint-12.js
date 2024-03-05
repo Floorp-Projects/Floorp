@@ -23,7 +23,7 @@ add_task(
         );
         const location = { line: debuggee.line0 + 3 };
 
-        source.setBreakpoint(location).then(function ([response, bpClient]) {
+        source.setBreakpoint(location).then(function ([response]) {
           // Check that the breakpoint has properly skipped forward one line.
           Assert.equal(response.actualLocation.source.actor, source.actor);
           Assert.equal(response.actualLocation.line, location.line + 1);
@@ -75,7 +75,7 @@ add_task(
             Assert.equal(debuggee.a, 1);
             Assert.equal(debuggee.b, undefined);
 
-            threadFront.once("paused", function (packet) {
+            threadFront.once("paused", function () {
               // We don't expect any more pauses after the breakpoint was hit once.
               Assert.ok(false);
             });

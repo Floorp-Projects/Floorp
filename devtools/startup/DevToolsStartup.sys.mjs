@@ -1010,7 +1010,7 @@ DevToolsStartup.prototype = {
     let devtoolsThreadResumed = false;
     const pauseOnStartup = cmdLine.handleFlag("wait-for-jsdebugger", false);
     if (pauseOnStartup) {
-      const observe = function (subject, topic, data) {
+      const observe = function () {
         devtoolsThreadResumed = true;
         Services.obs.removeObserver(observe, "devtools-thread-ready");
       };
@@ -1399,7 +1399,7 @@ const JsonView = {
             Services.scriptSecurityManager.getSystemPrincipal()
           );
         },
-        onError(status) {
+        onError() {
           throw new Error("JSON Viewer's onSave failed in startPersistence");
         },
       });

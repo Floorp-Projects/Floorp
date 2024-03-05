@@ -518,7 +518,7 @@ class AccessibilityProxy {
     }
   }
 
-  async onTargetAvailable({ targetFront, isTargetSwitching }) {
+  async onTargetAvailable({ targetFront }) {
     targetFront.watchFronts(
       "accessibility",
       this.onAccessibilityFrontAvailable,

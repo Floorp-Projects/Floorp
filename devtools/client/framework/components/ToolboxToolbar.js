@@ -354,7 +354,7 @@ class ToolboxToolbar extends Component {
     }
 
     const items = [];
-    toolbox.frameMap.forEach((frame, index) => {
+    toolbox.frameMap.forEach(frame => {
       const label = toolbox.target.isWebExtension
         ? toolbox.target.getExtensionPathName(frame.url)
         : getUnicodeUrl(frame.url);

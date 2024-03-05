@@ -101,7 +101,7 @@ function makeFrame({ id, sourceId, thread }, opts = {}) {
   };
 }
 
-function createSourceObject(filename, props = {}) {
+function createSourceObject(filename) {
   return {
     id: filename,
     url: makeSourceURL(filename),

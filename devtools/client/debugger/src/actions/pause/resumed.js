@@ -14,7 +14,7 @@ import { inDebuggerEval } from "../../utils/pause/index";
  * Debugger has just resumed.
  */
 export function resumed(thread) {
-  return async ({ dispatch, client, getState }) => {
+  return async ({ dispatch, getState }) => {
     const why = getPauseReason(getState(), thread);
     const wasPausedInEval = inDebuggerEval(why);
     const wasStepping = isStepping(getState(), thread);

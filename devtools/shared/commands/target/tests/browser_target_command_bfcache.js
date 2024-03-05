@@ -236,7 +236,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
   await commands.destroy();
 }
 
-async function testTopLevelNavigationsOnDocumentWithIframe(bfcacheInParent) {
+async function testTopLevelNavigationsOnDocumentWithIframe() {
   info(" # Test TOP LEVEL navigations on document with iframe");
   // Create a TargetCommand for a given test tab
   const tab =

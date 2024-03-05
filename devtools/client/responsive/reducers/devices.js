@@ -70,21 +70,21 @@ const reducers = {
     };
   },
 
-  [LOAD_DEVICE_LIST_START](devices, action) {
+  [LOAD_DEVICE_LIST_START](devices) {
     return {
       ...devices,
       listState: Types.loadableState.LOADING,
     };
   },
 
-  [LOAD_DEVICE_LIST_ERROR](devices, action) {
+  [LOAD_DEVICE_LIST_ERROR](devices) {
     return {
       ...devices,
       listState: Types.loadableState.ERROR,
     };
   },
 
-  [LOAD_DEVICE_LIST_END](devices, action) {
+  [LOAD_DEVICE_LIST_END](devices) {
     return {
       ...devices,
       listState: Types.loadableState.LOADED,

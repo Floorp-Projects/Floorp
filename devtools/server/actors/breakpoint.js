@@ -90,7 +90,7 @@ class BreakpointActor {
   /**
    * Called on changes to this breakpoint's script offsets or options.
    */
-  _newOffsetsOrOptions(script, offsets, oldOptions) {
+  _newOffsetsOrOptions(script, offsets) {
     // Clear any existing handler first in case this is called multiple times
     // after options change.
     for (const offset of offsets) {

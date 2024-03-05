@@ -15,9 +15,9 @@
           // enabled, so dereferencing it would throw a ReferenceError (which
           // is then caught in the .catch() clause).
           return window.navigator.serviceWorker.register("serviceworker.js");
-        }).then(registration => {
+        }).then(() => {
           return {success: true};
-        }).catch(error => {
+        }).catch(() => {
           return {success: false};
         });
       }
@@ -36,7 +36,7 @@
 
       function iframeRegisterAndUnregister() {
         var frame = window.document.createElement("iframe");
-        var promise = new Promise(function(resolve, reject) {
+        var promise = new Promise(function(resolve) {
           frame.addEventListener("load", function() {
             Promise.resolve().then(_ => {
               return frame.contentWindow.navigator.serviceWorker.register("serviceworker.js");
@@ -45,7 +45,7 @@
             }).then(_ => {
               frame.remove();
               resolve({success: true});
-            }).catch(error => {
+            }).catch(() => {
               resolve({success: false});
             });
           }, {once: true});

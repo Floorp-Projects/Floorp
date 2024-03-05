@@ -52,7 +52,7 @@ add_task(async function testTracingWorker() {
   ok(lastFrame.frame);
 });
 
-function waitForWorkerDebugger(url, dbgUrl) {
+function waitForWorkerDebugger(url) {
   return new Promise(function (resolve) {
     wdm.addListener({
       onRegister(dbg) {

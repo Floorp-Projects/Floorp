@@ -40,7 +40,7 @@ addTest(function testRearrange() {
     const computed = gInspectee.defaultView.getComputedStyle(listNode);
     is(computed.visibility, "visible", "Node should be visible to start with");
     return gWalker.hideNode(listFront);
-  }).then(response => {
+  }).then(() => {
     const computed = gInspectee.defaultView.getComputedStyle(listNode);
     is(computed.visibility, "hidden", "Node should be hidden");
     return gWalker.unhideNode(listFront);

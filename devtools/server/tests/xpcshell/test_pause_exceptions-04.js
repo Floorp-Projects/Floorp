@@ -12,7 +12,7 @@ const { waitForTick } = require("resource://devtools/shared/DevToolsUtils.js");
 
 add_task(
   threadFrontTest(
-    async ({ threadFront, client, debuggee, commands }) => {
+    async ({ threadFront, debuggee, commands }) => {
       let onResume = null;
       let packet = null;
 

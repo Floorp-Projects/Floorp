@@ -120,7 +120,7 @@ addRDMTask(TEST_URL, async function test_tab_sender() {
       let extTab;
       const contentMessage = new Promise(resolve => {
         browser.test.log("Listen to content");
-        const listener = async (msg, sender, respond) => {
+        const listener = async (msg, sender) => {
           browser.test.assertEq(
             msg,
             "hello-from-content",

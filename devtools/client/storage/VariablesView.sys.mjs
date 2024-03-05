@@ -2596,10 +2596,8 @@ Variable.prototype = extend(Scope.prototype, {
    *
    * @param string aName
    *        The variable's name.
-   * @param object aDescriptor
-   *        The variable's descriptor.
    */
-  _init(aName, aDescriptor) {
+  _init(aName) {
     this._idString = generateId((this._nameString = aName));
     this._displayScope({ value: aName, targetClassName: this.targetClassName });
     this._displayVariable();
@@ -3699,12 +3697,12 @@ VariablesView.stringifiers.byType = {
     return null;
   },
 
-  symbol(aGrip, aOptions) {
+  symbol(aGrip) {
     const name = aGrip.name || "";
     return "Symbol(" + name + ")";
   },
 
-  mapEntry(aGrip, { concise }) {
+  mapEntry(aGrip) {
     const {
       preview: { key, value },
     } = aGrip;
@@ -4416,13 +4414,13 @@ function EditableNameAndValue(aVariable, aOptions) {
 EditableNameAndValue.create = Editable.create;
 
 EditableNameAndValue.prototype = extend(EditableName.prototype, {
-  _reset(e) {
+  _reset() {
     // Hide the Variable or Property if the user presses escape.
     this._variable.remove();
     this.deactivate();
   },
 
-  _next(e) {
+  _next() {
     // Override _next so as to set both key and value at the same time.
     const key = this._input.value;
     this.label.setAttribute("value", key);

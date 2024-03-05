@@ -18,7 +18,7 @@ loader.lazyRequireGetter(
 
 const PROMISE = (exports.PROMISE = "@@dispatch/promise");
 
-function promiseMiddleware({ dispatch, getState }) {
+function promiseMiddleware({ dispatch }) {
   return next => action => {
     if (!(PROMISE in action)) {
       return next(action);

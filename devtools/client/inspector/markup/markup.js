@@ -1551,7 +1551,7 @@ MarkupView.prototype = {
     }
   },
 
-  _onTargetAvailable({ targetFront }) {},
+  _onTargetAvailable() {},
 
   _onTargetDestroyed({ targetFront, isModeSwitching }) {
     // Bug 1776250: We only watch targets in order to update containers which
@@ -2099,14 +2099,12 @@ MarkupView.prototype = {
    * Mark the given node selected, and update the inspector.selection
    * object's NodeFront to keep consistent state between UI and selection.
    *
-   * @param  {NodeFront} aNode
+   * @param  {NodeFront} node
    *         The NodeFront to mark as selected.
-   * @param  {String} reason
-   *         The reason for marking the node as selected.
    * @return {Boolean} False if the node is already marked as selected, true
    *         otherwise.
    */
-  markNodeAsSelected(node, reason = "nodeselected") {
+  markNodeAsSelected(node) {
     const container = this.getContainer(node);
     return this._markContainerAsSelected(container);
   },

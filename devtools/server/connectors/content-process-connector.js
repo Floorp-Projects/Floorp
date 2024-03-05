@@ -109,13 +109,11 @@ function connectToContentProcess(connection, mm, onDestroy) {
       }
     }
 
-    const onMessageManagerClose = DevToolsUtils.makeInfallible(
-      (subject, topic, data) => {
-        if (subject == mm) {
-          onClose();
-        }
+    const onMessageManagerClose = DevToolsUtils.makeInfallible(subject => {
+      if (subject == mm) {
+        onClose();
       }
-    );
+    });
     Services.obs.addObserver(onMessageManagerClose, "message-manager-close");
 
     EventEmitter.on(connection, "closed", onClose);

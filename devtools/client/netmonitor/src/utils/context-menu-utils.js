@@ -8,7 +8,7 @@
  * The default format for the content copied to the
  *  clipboard when the `Copy Value` option is selected.
  */
-function baseCopyFormatter({ name, value, object, hasChildren }) {
+function baseCopyFormatter({ name, value, hasChildren }) {
   if (hasChildren) {
     return baseCopyAllFormatter({ [name]: value });
   }

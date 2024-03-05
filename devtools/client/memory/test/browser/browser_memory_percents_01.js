@@ -29,7 +29,7 @@ function checkCells(cells) {
   }
 }
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const { getState, dispatch } = panel.panelWin.gStore;
   const front = getState().front;

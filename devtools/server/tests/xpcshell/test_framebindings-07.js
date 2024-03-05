@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     const packet = await executeOnNextTickAndWaitForPause(
       () => evalCode(debuggee),
       threadFront

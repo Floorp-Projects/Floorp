@@ -173,11 +173,7 @@ export class DevToolsWorkerParent extends JSWindowActorParent {
     watcher.notifyTargetAvailable(workerTargetForm);
   }
 
-  workerTargetDestroyed({
-    watcherActorID,
-    forwardingPrefix,
-    workerTargetForm,
-  }) {
+  workerTargetDestroyed({ watcherActorID, workerTargetForm }) {
     const watcher = WatcherRegistry.getWatcher(watcherActorID);
 
     if (!watcher) {

@@ -14,4 +14,13 @@ module.exports = {
     // content privileged windows, where ownerGlobal doesn't exist.
     "mozilla/use-ownerGlobal": "off",
   },
+  overrides: [
+    {
+      // Tests verify the exact source code of these functions
+      files: ["inspector/markup/test/doc_markup_events_*.html"],
+      rules: {
+        "no-unused-vars": "off",
+      },
+    },
+  ],
 };

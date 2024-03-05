@@ -32,10 +32,9 @@ const WIDGET_ID = "profiler-button";
 /**
  * Add the profiler button to the navbar.
  *
- * @param {ChromeDocument} document  The browser's document.
  * @return {void}
  */
-function addToNavbar(document) {
+function addToNavbar() {
   const { CustomizableUI } = lazy.CustomizableUI();
 
   CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
@@ -173,7 +172,7 @@ function initialize(toggleProfilerKeyShortcuts) {
     /**
      * @type {(event: { target: ChromeHTMLElement | XULElement }) => void}
      */
-    onViewHiding(event) {
+    onViewHiding() {
       // Clean-up the view. This removes all of the event listeners.
       for (const fn of panelState.cleanup) {
         fn();
@@ -292,8 +291,7 @@ function initialize(toggleProfilerKeyShortcuts) {
       });
     },
 
-    // @ts-ignore - Bug 1674368
-    onCommand: event => {
+    onCommand: () => {
       if (Services.profiler.IsPaused()) {
         // A profile is already being captured, ignore this event.
         return;

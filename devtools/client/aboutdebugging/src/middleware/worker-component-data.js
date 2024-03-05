@@ -15,7 +15,7 @@ const {
  * This middleware converts workers object that get from DevToolsClient.listAllWorkers()
  * to data which is used in DebugTargetItem.
  */
-const workerComponentDataMiddleware = store => next => action => {
+const workerComponentDataMiddleware = () => next => action => {
   switch (action.type) {
     case REQUEST_WORKERS_SUCCESS: {
       action.otherWorkers = toComponentData(action.otherWorkers);

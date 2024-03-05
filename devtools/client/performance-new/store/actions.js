@@ -181,7 +181,7 @@ exports.startRecording = perfFront => {
  * @return {ThunkAction<Promise<MinimallyTypedGeckoProfile>>}
  */
 exports.getProfileAndStopProfiler = perfFront => {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: "REQUESTING_PROFILE" });
     const profile = await perfFront.getProfileAndStopProfiler();
     dispatch({ type: "OBTAINED_PROFILE" });
@@ -195,7 +195,7 @@ exports.getProfileAndStopProfiler = perfFront => {
  * @return {ThunkAction<void>}
  */
 exports.stopProfilerAndDiscardProfile = perfFront => {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: "REQUESTING_TO_STOP_RECORDING" });
 
     try {

@@ -7,7 +7,7 @@
 
 console.log("Initializing worker.");
 
-self.onmessage = ex => {
+self.onmessage = () => {
   console.log("Starting test.");
   try {
     ok(ChromeUtils, "Should have access to ChromeUtils in a worker.");

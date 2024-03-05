@@ -344,7 +344,7 @@ class GridOutline extends PureComponent {
     );
   }
 
-  renderGridOutlineBorder(borderWidth, borderHeight, color) {
+  renderGridOutlineBorder(borderWidth, borderHeight) {
     return dom.rect({
       key: "border",
       className: "grid-outline-border",

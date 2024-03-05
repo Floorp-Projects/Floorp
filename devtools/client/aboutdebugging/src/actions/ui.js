@@ -97,13 +97,13 @@ function updateDebugTargetCollapsibility(key, isCollapsed) {
 }
 
 function addNetworkLocation(location) {
-  return ({ dispatch, getState }) => {
+  return () => {
     NetworkLocationsModule.addNetworkLocation(location);
   };
 }
 
 function removeNetworkLocation(location) {
-  return ({ dispatch, getState }) => {
+  return () => {
     NetworkLocationsModule.removeNetworkLocation(location);
   };
 }
@@ -133,7 +133,7 @@ function updateAdbReady(isAdbReady) {
 }
 
 function updateNetworkLocations(locations) {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: NETWORK_LOCATIONS_UPDATE_START });
     try {
       await dispatch(Actions.updateNetworkRuntimes(locations));
@@ -145,7 +145,7 @@ function updateNetworkLocations(locations) {
 }
 
 function installAdbAddon() {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: ADB_ADDON_INSTALL_START });
 
     try {
@@ -160,7 +160,7 @@ function installAdbAddon() {
 }
 
 function uninstallAdbAddon() {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: ADB_ADDON_UNINSTALL_START });
 
     try {

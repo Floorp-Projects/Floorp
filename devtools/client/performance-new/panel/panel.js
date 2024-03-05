@@ -37,9 +37,9 @@ class PerformancePanel {
    * This is implemented (and overwritten) by the EventEmitter. Is there a way
    * to use mixins with JSDoc?
    *
-   * @param {string} eventName
+   * @param {string} _eventName
    */
-  emit(eventName) {}
+  emit(_eventName) {}
 
   /**
    * Open is effectively an asynchronous constructor.

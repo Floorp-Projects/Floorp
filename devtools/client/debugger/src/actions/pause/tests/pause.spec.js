@@ -25,7 +25,7 @@ const mockCommandClient = {
   getFrames: async () => [],
   setBreakpoint: () => new Promise(_resolve => {}),
   sourceContents: ({ source }) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       switch (source) {
         case "foo1":
           return resolve({
@@ -184,7 +184,7 @@ describe("pause", () => {
 
     it("maps frame to original frames", async () => {
       const sourceMapLoaderMock = {
-        getOriginalStackFrames: loc => Promise.resolve(originStackFrames),
+        getOriginalStackFrames: () => Promise.resolve(originStackFrames),
         getOriginalLocation: () =>
           Promise.resolve(debuggerToSourceMapLocation(originalLocation)),
         getOriginalLocations: async items =>

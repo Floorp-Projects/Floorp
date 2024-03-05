@@ -17,7 +17,7 @@ function setZoomForBrowser(browser, zoom) {
 
 addRDMTask(
   null,
-  async function ({ message }) {
+  async function () {
     const INITIAL_ZOOM_LEVEL = 1;
     const PRE_RDM_ZOOM_LEVEL = 1.5;
     const MID_RDM_ZOOM_LEVEL = 2;

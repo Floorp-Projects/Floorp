@@ -58,7 +58,6 @@ async function hasArrowsAndLabelsAndHandlers({ getElementAttribute }) {
 
 async function isHiddenForNonPositionedNonSizedElement({
   show,
-  hide,
   isElementHidden,
 }) {
   info("Asking to show the highlighter on an inline, non p  ositioned element");

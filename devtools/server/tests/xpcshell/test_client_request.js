@@ -203,7 +203,7 @@ function test_client_request_after_close() {
   });
 
   request.then(
-    response => {
+    () => {
       ok(false, "Request succeed even after client.close");
     },
     response => {

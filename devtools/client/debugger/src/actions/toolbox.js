@@ -30,7 +30,7 @@ export function openElementInInspectorCommand(grip) {
   };
 }
 
-export function openInspector(grip) {
+export function openInspector() {
   return async ({ panel }) => {
     return panel.openInspector();
   };

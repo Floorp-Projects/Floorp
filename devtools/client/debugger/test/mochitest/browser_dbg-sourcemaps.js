@@ -191,5 +191,5 @@ async function waitForBreakpointCount(dbg, count) {
   const {
     selectors: { getBreakpointCount },
   } = dbg;
-  await waitForState(dbg, state => getBreakpointCount() == count);
+  await waitForState(dbg, () => getBreakpointCount() == count);
 }

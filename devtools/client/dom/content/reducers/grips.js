@@ -36,7 +36,7 @@ function grips(state = getInitialState(), action) {
 /**
  * Handle requestProperties action
  */
-function onRequestProperties(state, action) {
+function onRequestProperties(state) {
   return state;
 }
 

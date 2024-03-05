@@ -96,7 +96,7 @@ function testAdvanceCharCommit(doc) {
     createInplaceEditorAndClick(
       {
         advanceChars: ":",
-        start(editor) {
+        start() {
           EventUtils.sendString("Test:");
         },
         done: onDone("Test", true, resolve),
@@ -114,7 +114,7 @@ function testAdvanceCharsFunction(doc) {
     createInplaceEditorAndClick(
       {
         initial: "",
-        advanceChars(charCode, text, insertionPoint) {
+        advanceChars(charCode, text) {
           if (charCode !== KeyboardEvent.DOM_VK_COLON) {
             return false;
           }
@@ -126,7 +126,7 @@ function testAdvanceCharsFunction(doc) {
           // Just to make sure we check it somehow.
           return !!text.length;
         },
-        start(editor) {
+        start() {
           for (const ch of ":Test:") {
             EventUtils.sendChar(ch);
           }

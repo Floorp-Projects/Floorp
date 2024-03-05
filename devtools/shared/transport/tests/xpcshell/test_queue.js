@@ -53,7 +53,7 @@ var test_transport = async function (transportFactory) {
         uri: NetUtil.newURI(getTestTempFile("bulk-input")),
         loadUsingSystemPrincipal: true,
       },
-      function (input, status) {
+      function (input) {
         copyFrom(input).then(() => {
           input.close();
         });

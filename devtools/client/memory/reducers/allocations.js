@@ -9,10 +9,7 @@ const { actions } = require("resource://devtools/client/memory/constants.js");
 
 const handlers = Object.create(null);
 
-handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function (
-  state,
-  action
-) {
+handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function (state) {
   assert(
     !state.togglingInProgress,
     "Changing recording state must not be reentrant."
@@ -24,10 +21,7 @@ handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_START] = function (
   };
 };
 
-handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_END] = function (
-  state,
-  action
-) {
+handlers[actions.TOGGLE_RECORD_ALLOCATION_STACKS_END] = function (state) {
   assert(
     state.togglingInProgress,
     "Should not complete changing recording state if we weren't changing " +

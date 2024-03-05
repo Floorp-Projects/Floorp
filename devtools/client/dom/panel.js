@@ -147,7 +147,7 @@ DomPanel.prototype = {
     this.refresh();
   },
 
-  _onTargetSelected({ targetFront }) {
+  _onTargetSelected() {
     this.forceRefresh();
   },
 

@@ -118,7 +118,7 @@ define(function (require, exports, module) {
     return returnSpan;
   }
 
-  function getClassTitle(grip) {
+  function getClassTitle() {
     return span(
       {
         className: "objectTitle",

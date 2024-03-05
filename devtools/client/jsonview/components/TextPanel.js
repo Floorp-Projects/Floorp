@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function (require, exports) {
   const { Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");

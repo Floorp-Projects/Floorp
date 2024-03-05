@@ -176,7 +176,7 @@ function clearSearchResults() {
  * @returns {Function}
  */
 function clearSearchResultAndCancel() {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch(stopOngoingSearch());
     dispatch(clearSearchResults());
   };
@@ -196,7 +196,7 @@ function updateSearchStatus(status) {
  * Close the entire search panel.
  */
 function closeSearch() {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch(stopOngoingSearch());
     dispatch({ type: OPEN_ACTION_BAR, open: false });
   };
@@ -207,7 +207,7 @@ function closeSearch() {
  * @returns {Function}
  */
 function openSearch() {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({ type: OPEN_ACTION_BAR, open: true });
 
     dispatch({
@@ -222,7 +222,7 @@ function openSearch() {
  * @returns {Function}
  */
 function toggleCaseSensitiveSearch() {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({ type: TOGGLE_SEARCH_CASE_SENSITIVE_SEARCH });
   };
 }
@@ -280,7 +280,7 @@ function stopOngoingSearch() {
  * clicked search result.
  */
 function navigate(searchResult) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     // Store target search result in Search reducer. It's used
     // for search result navigation within the side panels.
     dispatch(setTargetSearchResult(searchResult));

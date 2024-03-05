@@ -17,14 +17,14 @@
       "use strict";
 
       window.addEventListener("load", function() {
-        function initialSetup(event) {
+        function initialSetup() {
           const button = document.getElementById("initialSetup");
           button.removeEventListener("click", initialSetup);
           // eslint-disable-next-line no-debugger
           debugger;
         }
 
-        function clicker(event) {
+        function clicker() {
           window.foobar = "clicker";
         }
 

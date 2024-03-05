@@ -1576,7 +1576,7 @@ export class StyleEditorUI extends EventEmitter {
 
   // onAvailable is a mandatory argument for watchTargets,
   // but we don't do anything when a new target gets created.
-  #onTargetAvailable = ({ targetFront }) => {};
+  #onTargetAvailable = () => {};
 
   #onTargetDestroyed = ({ targetFront }) => {
     // Iterate over a copy of the list in order to prevent skipping

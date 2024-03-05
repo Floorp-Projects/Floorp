@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function (require, exports) {
   const {
     createFactory,
     Component,
@@ -71,7 +71,7 @@ define(function (require, exports, module) {
       document.removeEventListener("keypress", this.onKeyPress, true);
     }
 
-    onKeyPress(e) {
+    onKeyPress() {
       // XXX shortcut for focusing the Filter field (see Bug 1178771).
     }
 

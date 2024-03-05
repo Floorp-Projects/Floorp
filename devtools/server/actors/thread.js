@@ -990,7 +990,7 @@ class ThreadActor extends Actor {
     return this._targetActorClosed ? null : undefined;
   }
 
-  _makeOnEnterFrame({ pauseAndRespond }) {
+  _makeOnEnterFrame() {
     return frame => {
       if (this._requestedFrameRestart) {
         return null;
@@ -1099,7 +1099,7 @@ class ThreadActor extends Actor {
     return line !== newLocation.line || column !== newLocation.column;
   }
 
-  _makeOnStep({ pauseAndRespond, startFrame, steppingType, completion }) {
+  _makeOnStep({ pauseAndRespond, startFrame, completion }) {
     const thread = this;
     return function () {
       if (thread._validFrameStepOffset(this, startFrame, this.offset)) {
@@ -1346,7 +1346,7 @@ class ThreadActor extends Actor {
    * when we do not want to notify the front end of a resume, for example when
    * we are shutting down.
    */
-  doResume({ resumeLimit } = {}) {
+  doResume() {
     this._state = STATES.RUNNING;
 
     // Drop the actors in the pause actor pool.
@@ -1530,7 +1530,7 @@ class ThreadActor extends Actor {
     }
   }
 
-  sources(request) {
+  sources() {
     this.addAllSources();
 
     // No need to flush the new source packets here, as we are sending the
@@ -1823,7 +1823,7 @@ class ThreadActor extends Actor {
     this.threadLifetimePool.objectActors.set(actor.obj, actor);
   }
 
-  _onWindowReady({ isTopLevel, isBFCache, window }) {
+  _onWindowReady({ isTopLevel, isBFCache }) {
     // Note that this code relates to the disabling of Debugger API from will-navigate listener.
     // And should only be triggered when the target actor doesn't follow WindowGlobal lifecycle.
     // i.e. when the Thread Actor manages more than one top level WindowGlobal.

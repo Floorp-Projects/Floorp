@@ -793,13 +793,8 @@ class HighlightersOverlay {
 
   /**
    * Called after the shapes highlighter was hidden.
-   *
-   * @param  {Object} data
-   *         Data associated with the event.
-   *         Contains:
-   *         - {NodeFront} node: The NodeFront of the element that was highlighted.
    */
-  onShapesHighlighterHidden(data) {
+  onShapesHighlighterHidden() {
     this.emit(
       "shapes-highlighter-hidden",
       this.shapesHighlighterShown,
@@ -1178,7 +1173,7 @@ class HighlightersOverlay {
   async restoreParentGridHighlighter(node) {
     // Find the highlighter map entry for the subgrid whose parent grid is the given node.
     const entry = Array.from(this.gridHighlighters.entries()).find(
-      ([key, value]) => {
+      ([, value]) => {
         return value?.parentGridNode === node;
       }
     );

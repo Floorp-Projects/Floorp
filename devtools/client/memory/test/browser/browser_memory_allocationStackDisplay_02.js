@@ -20,7 +20,7 @@ const {
 const TEST_URL =
   "https://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
-this.test = makeMemoryTest("about:blank", async function ({ tab, panel }) {
+this.test = makeMemoryTest("about:blank", async function ({ panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;
   const { getState, dispatch } = panel.panelWin.gStore;
   const doc = panel.panelWin.document;

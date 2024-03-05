@@ -10,7 +10,7 @@ const SIDEBAR_WIDTH_PREF = "devtools.toolbox.sidebar.width";
 
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function (pickerEnable, commandsEnable) {
+add_task(async function () {
   // 74px is Chevron(26px) + Meatball(24px) + Close(24px)
   // devtools-browser.css defined this minimum width by using min-width.
   Services.prefs.setIntPref(SIDEBAR_WIDTH_PREF, 74);

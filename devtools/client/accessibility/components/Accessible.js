@@ -285,7 +285,7 @@ class Accessible extends Component {
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
   }
 
-  openLink(link, e) {
+  openLink(link) {
     openContentLink(link);
   }
 

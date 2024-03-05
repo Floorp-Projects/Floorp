@@ -71,7 +71,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
     </body>
   </html>`;
 
-addRDMTask(TEST_URL, async function ({ ui, manager, browser }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   await setViewportSize(ui, manager, WIDTH, HEIGHT);
   await setTouchAndMetaViewportSupport(ui, true);
 

@@ -18,7 +18,7 @@ add_task(async function () {
   const topLevelThreadActorID =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   info("Wait for tracing to be enabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
@@ -90,7 +90,7 @@ add_task(async function () {
   info("Disable the tracing");
   await clickElement(dbg, "trace");
   info("Wait for tracing to be disabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
   await hasConsoleMessage(dbg, "Stopped tracing");
@@ -116,7 +116,7 @@ add_task(async function () {
   const newTopLevelThread =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   info("Wait for tracing to be re-enabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return dbg.selectors.getIsThreadCurrentlyTracing(newTopLevelThread);
   });
 
@@ -216,7 +216,7 @@ add_task(async function testPageKeyShortcut() {
   });
 
   info("Wait for tracing to be enabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
@@ -236,7 +236,7 @@ add_task(async function testPageKeyShortcut() {
   });
 
   info("Wait for tracing to be disabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 });

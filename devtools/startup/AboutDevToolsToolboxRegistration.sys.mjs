@@ -23,7 +23,7 @@ AboutDevtoolsToolbox.prototype = {
     return chan;
   },
 
-  getURIFlags(uri) {
+  getURIFlags() {
     return (
       nsIAboutModule.ALLOW_SCRIPT |
       nsIAboutModule.ENABLE_INDEXED_DB |

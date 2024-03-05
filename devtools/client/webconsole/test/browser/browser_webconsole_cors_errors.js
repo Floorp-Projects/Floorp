@@ -18,7 +18,7 @@ const BASE_CORS_ERROR_URL_PARAMS = new URLSearchParams({
 
 registerCleanupFunction(async function () {
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

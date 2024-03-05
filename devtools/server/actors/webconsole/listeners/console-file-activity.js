@@ -82,7 +82,7 @@ ConsoleFileActivityListener.prototype = {
    * URI has been loaded, then the remote Web Console instance is notified.
    * @private
    */
-  _checkFileActivity(progress, request, state, status) {
+  _checkFileActivity(progress, request, state) {
     if (!(state & Ci.nsIWebProgressListener.STATE_START)) {
       return;
     }

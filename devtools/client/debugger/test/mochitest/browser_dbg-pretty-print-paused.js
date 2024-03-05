@@ -21,7 +21,7 @@ add_task(async function () {
   await waitForSelectedSource(dbg, "math.min.js:formatted");
   await waitForState(
     dbg,
-    state => dbg.selectors.getSelectedFrame(thread).location.line == 18
+    () => dbg.selectors.getSelectedFrame(thread).location.line == 18
   );
   assertPausedAtSourceAndLine(
     dbg,

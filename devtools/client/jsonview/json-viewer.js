@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function (require) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { MainTabbedArea } = createFactories(
@@ -79,7 +79,7 @@ define(function (require, exports, module) {
       theApp.setState({ searchFilter: value });
     },
 
-    onPrettify(data) {
+    onPrettify() {
       if (input.json instanceof Error) {
         // Cannot prettify invalid JSON
         return;
@@ -96,12 +96,12 @@ define(function (require, exports, module) {
       input.prettified = !input.prettified;
     },
 
-    onCollapse(data) {
+    onCollapse() {
       input.expandedNodes.clear();
       theApp.forceUpdate();
     },
 
-    onExpand(data) {
+    onExpand() {
       input.expandedNodes = TreeViewClass.getExpandedNodes(input.json);
       theApp.setState({ expandedNodes: input.expandedNodes });
     },

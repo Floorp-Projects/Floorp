@@ -14,7 +14,7 @@ function ObjectFront(grip, overrides) {
         })
       );
     },
-    enumProperties(options) {
+    enumProperties() {
       return Promise.resolve(
         this.getIterator({
           ownProperties: {},
@@ -43,7 +43,7 @@ function ObjectFront(grip, overrides) {
     // Declared here so we can override it.
     getIterator(res) {
       return {
-        slice(start, count) {
+        slice() {
           return Promise.resolve(res);
         },
       };

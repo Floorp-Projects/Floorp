@@ -49,7 +49,7 @@ function forceReloadFrame(iframe) {
 function messageServiceWorker(win, scope, message) {
   return win.navigator.serviceWorker.getRegistration(scope).then(swr => {
     return new Promise(resolve => {
-      win.navigator.serviceWorker.onmessage = evt => {
+      win.navigator.serviceWorker.onmessage = () => {
         resolve();
       };
       const sw = swr.active || swr.waiting || swr.installing;
@@ -127,7 +127,7 @@ const startTest = async function () {
 };
 addEventListener("load", startTest);
 
-const onAttach = async function (state, response) {
+const onAttach = async function (state) {
   onConsoleAPICall = onConsoleAPICall.bind(null, state);
   state.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
 

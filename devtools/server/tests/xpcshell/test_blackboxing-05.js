@@ -81,7 +81,7 @@ function evalCode(debuggee) {
     "" +
     function runTest() { // line 1
       doStuff(           // line 2
-        function(n) {    // line 3
+        function() {    // line 3
           debugger;      // line 4
         }                // line 5
       );                 // line 6

@@ -35,7 +35,7 @@ class ExtensionsBackgroundScriptStatusWatcher {
     Services.obs.addObserver(this, "extension:background-script-status");
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "extension:background-script-status": {
         const { addonId, isRunning } = subject.wrappedJSObject;

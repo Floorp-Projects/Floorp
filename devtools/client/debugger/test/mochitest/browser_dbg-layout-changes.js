@@ -46,10 +46,7 @@ async function testLayout(dbg, orientation, host) {
 
   await switchHost(dbg, host);
   await resizeToolboxWindow(dbg, host);
-  return waitForState(
-    dbg,
-    state => dbg.selectors.getOrientation() == orientation
-  );
+  return waitForState(dbg, () => dbg.selectors.getOrientation() == orientation);
 }
 
 function getHost(host) {

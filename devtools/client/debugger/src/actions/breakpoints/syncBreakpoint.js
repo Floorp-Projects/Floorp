@@ -14,7 +14,7 @@ import { originalToGeneratedId } from "devtools/client/shared/source-map-loader/
 import { getSource } from "../../selectors/index";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from "./modify";
 
-async function findBreakpointPosition({ getState, dispatch }, location) {
+async function findBreakpointPosition({ dispatch }, location) {
   const positions = await dispatch(setBreakpointPositions(location));
 
   const position = findPosition(positions, location);

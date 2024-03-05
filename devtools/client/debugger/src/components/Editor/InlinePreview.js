@@ -27,7 +27,7 @@ class InlinePreview extends PureComponent {
     };
   }
 
-  showInScopes(variable) {
+  showInScopes() {
     // TODO: focus on variable value in the scopes sidepanel
     // we will need more info from parent comp
   }

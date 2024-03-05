@@ -62,7 +62,7 @@ class WorkersListener {
     this.rootFront.on("serviceWorkerRegistrationListChanged", this._listener);
   }
 
-  removeListener(listener) {
+  removeListener() {
     if (!this._listener) {
       return;
     }

@@ -4,7 +4,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function (require, exports, module) {
+define(function (require, exports) {
   /**
    * Implementation of the default data provider. A provider is state less
    * object responsible for transformation data (usually a state) to

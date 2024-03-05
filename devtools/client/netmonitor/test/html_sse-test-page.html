@@ -20,7 +20,7 @@
     function openConnection() {
         return new Promise(resolve => {
             es = new EventSource("sjs_sse-test-server.sjs");
-            es.onmessage = function (e) {
+            es.onmessage = function () {
               es.close();
               resolve();
             };

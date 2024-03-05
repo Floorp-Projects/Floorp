@@ -171,7 +171,7 @@ class AnimationPlayerActor extends Actor {
    */
   release() {}
 
-  form(detail) {
+  form() {
     const data = this.getCurrentState();
     data.actor = this.actorID;
 

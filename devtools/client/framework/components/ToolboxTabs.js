@@ -97,7 +97,7 @@ class ToolboxTabs extends Component {
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (this.shouldUpdateToolboxTabs(prevProps, this.props)) {
       this.updateCachedToolTabsWidthMap();
       this.updateOverflowedTabs();
@@ -226,7 +226,7 @@ class ToolboxTabs extends Component {
     }
   }
 
-  resizeHandler(evt) {
+  resizeHandler() {
     window.cancelIdleCallback(this._resizeTimerId);
     this._resizeTimerId = window.requestIdleCallback(
       () => {

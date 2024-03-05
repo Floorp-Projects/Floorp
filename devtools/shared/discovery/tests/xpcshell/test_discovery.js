@@ -60,7 +60,7 @@ TestTransport.prototype = {
     this.emit("message", object);
   },
 
-  onStopListening(socket, status) {},
+  onStopListening() {},
 };
 
 // Use TestTransport instead of the usual Transport

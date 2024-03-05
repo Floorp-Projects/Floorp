@@ -476,12 +476,12 @@ class HTTPCustomRequestPanel extends Component {
                 url: this.state.url,
                 cause: this.props.request?.cause,
                 urlQueryParams: this.state.urlQueryParams.map(
-                  ({ checked, ...params }) => params
+                  ({ ...params }) => params
                 ),
                 requestHeaders: {
                   headers: this.state.headers
                     .filter(({ checked }) => checked)
-                    .map(({ checked, ...headersValues }) => headersValues),
+                    .map(({ ...headersValues }) => headersValues),
                 },
               };
 
@@ -504,7 +504,7 @@ class HTTPCustomRequestPanel extends Component {
 
 module.exports = connect(
   state => ({ request: getClickedRequest(state) }),
-  (dispatch, props) => ({
+  dispatch => ({
     sendCustomRequest: request =>
       dispatch(Actions.sendHTTPCustomRequest(request)),
   })

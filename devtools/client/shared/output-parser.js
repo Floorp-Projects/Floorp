@@ -1445,7 +1445,7 @@ class OutputParser {
       nodes[nodeIndex].classList.add(point);
     }
 
-    nodes.forEach((node, j, array) => {
+    nodes.forEach((node, j) => {
       for (const text of otherText[j]) {
         appendText(container, text);
       }

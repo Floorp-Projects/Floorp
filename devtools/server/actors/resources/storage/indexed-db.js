@@ -886,7 +886,7 @@ class IndexedDBStorageActor extends BaseStorageActor {
     const { name } = this.splitNameAndStorage(dbName);
     const request = this.openWithPrincipal(principal, name, storage);
 
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       let { objectStore, id, index, offset, size } = requestOptions;
       const data = [];
       let db;

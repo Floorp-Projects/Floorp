@@ -139,7 +139,7 @@ function testWritePostDataTextParams(data) {
   );
 }
 
-function testWriteEmptyPostDataTextParams(data) {
+function testWriteEmptyPostDataTextParams() {
   const params = CurlUtils.writePostDataTextParams(null);
   is(params, "", "Should return a empty string when no parameters provided");
 }

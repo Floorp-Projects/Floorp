@@ -761,7 +761,7 @@ async function getResponseForMessage(request, browser) {
 
       // Enable the profiler menu button.
       const { ProfilerMenuButton } = lazy.ProfilerMenuButton();
-      ProfilerMenuButton.addToNavbar(ownerDocument);
+      ProfilerMenuButton.addToNavbar();
 
       // Dispatch the change event manually, so that the shortcuts will also be
       // added.

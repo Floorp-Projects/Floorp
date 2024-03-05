@@ -878,7 +878,7 @@ function testFilterButtonsCustom(monitor, isChecked) {
  *
  */
 function promiseXHR(data) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const xhr = new content.XMLHttpRequest();
 
     const method = data.method || "GET";
@@ -891,7 +891,7 @@ function promiseXHR(data) {
 
     xhr.addEventListener(
       "loadend",
-      function (event) {
+      function () {
         resolve({ status: xhr.status, response: xhr.response });
       },
       { once: true }
@@ -925,7 +925,7 @@ function promiseXHR(data) {
  *
  */
 function promiseWS(data) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let url = data.url;
 
     if (data.nocache) {
@@ -936,7 +936,7 @@ function promiseWS(data) {
     const socket = new content.WebSocket(url);
 
     /* Since we only use HTTP server to mock websocket, so just ignore the error */
-    socket.onclose = e => {
+    socket.onclose = () => {
       socket.close();
       resolve({
         status: 101,
@@ -944,7 +944,7 @@ function promiseWS(data) {
       });
     };
 
-    socket.onerror = e => {
+    socket.onerror = () => {
       socket.close();
       resolve({
         status: 101,
@@ -1395,7 +1395,7 @@ function clickElement(element, monitor) {
  *        Target browser to observe the favicon load.
  */
 function registerFaviconNotifier(browser) {
-  const listener = async (name, data) => {
+  const listener = async name => {
     if (name == "SetIcon" || name == "SetFailedIcon") {
       await SpecialPowers.spawn(browser, [], async () => {
         content.document

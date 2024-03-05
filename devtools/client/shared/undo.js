@@ -186,5 +186,5 @@ UndoStack.prototype = {
     }
   },
 
-  onEvent(event) {},
+  onEvent() {},
 };

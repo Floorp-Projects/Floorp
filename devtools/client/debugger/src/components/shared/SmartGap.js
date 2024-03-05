@@ -109,7 +109,6 @@ function getSmartGapDimensions(
 export default function SmartGap({
   token,
   preview,
-  type,
   gapHeight,
   coords,
   offset,

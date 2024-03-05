@@ -110,7 +110,7 @@ export function onDisconnect() {
   sourceQueue.clear();
 }
 
-async function onTargetAvailable({ targetFront, isTargetSwitching }) {
+async function onTargetAvailable({ targetFront }) {
   const isBrowserToolbox = commands.descriptorFront.isBrowserProcessDescriptor;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&

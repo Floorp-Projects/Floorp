@@ -891,9 +891,8 @@ class JSTerm extends Component {
    *
    * @param {CodeMirror} cm: codeMirror instance
    * @param {String} key: The key that was handled
-   * @param {Event} e: The keypress event
    */
-  _onEditorKeyHandled(cm, key, e) {
+  _onEditorKeyHandled(cm, key) {
     // The autocloseBracket addon handle closing brackets keys when they're typed, but
     // there's already an existing closing bracket.
     // ex:

@@ -118,7 +118,7 @@ class Worker extends PureComponent {
     return this.props.worker.stateText;
   }
 
-  getClassNameForStatus(baseClass) {
+  getClassNameForStatus() {
     const { state } = this.props.worker;
 
     switch (state) {

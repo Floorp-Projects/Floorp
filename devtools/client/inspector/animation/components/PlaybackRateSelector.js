@@ -28,7 +28,7 @@ class PlaybackRateSelector extends PureComponent {
     };
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props) {
     const { animations, playbackRates } = props;
 
     const currentPlaybackRates = sortAndUnique(

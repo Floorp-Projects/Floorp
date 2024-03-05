@@ -14,7 +14,7 @@ const {
  * inspected by DevTools. Typically from the Console or Debugger.
  */
 class ObjectsManagerActor extends Actor {
-  constructor(conn, targetActor) {
+  constructor(conn) {
     super(conn, objectsManagerSpec);
   }
 

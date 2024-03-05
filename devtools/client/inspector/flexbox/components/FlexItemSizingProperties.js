@@ -90,12 +90,10 @@ class FlexItemSizingProperties extends PureComponent {
    *         The name for this CSS property
    * @param  {String} value
    *         The property value
-   * @param  {Booleam} isDefaultValue
-   *         Whether the value come from the browser default style
    * @return {Object}
    *         The React component representing this CSS property
    */
-  renderCssProperty(name, value, isDefaultValue) {
+  renderCssProperty(name, value) {
     return dom.span({ className: "css-property-link" }, `(${name}: ${value})`);
   }
 
@@ -115,7 +113,7 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
-  renderBaseSizeSection({ mainBaseSize, clampState }, properties, dimension) {
+  renderBaseSizeSection({ mainBaseSize }, properties, dimension) {
     const flexBasisValue = properties["flex-basis"];
     const dimensionValue = properties[dimension];
 

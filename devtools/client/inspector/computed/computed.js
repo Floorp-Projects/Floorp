@@ -1383,7 +1383,7 @@ class PropertyView {
   /**
    * The action when a user clicks on the MDN help link for a property.
    */
-  mdnLinkClick(event) {
+  mdnLinkClick() {
     if (!this.link) {
       return;
     }

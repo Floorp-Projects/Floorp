@@ -97,7 +97,7 @@ class SearchInFileBar extends Component {
     shortcuts.on("Escape", this.onEscape);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate() {
     if (this.refs.resultList && this.refs.resultList.refs) {
       scrollList(this.refs.resultList.refs, this.state.selectedResultIndex);
     }
@@ -111,7 +111,7 @@ class SearchInFileBar extends Component {
     const { editor: ed } = this.props;
     if (ed) {
       const ctx = { ed, cm: ed.codeMirror };
-      removeOverlay(ctx, this.state.query);
+      removeOverlay(ctx);
     }
   };
 
@@ -165,7 +165,7 @@ class SearchInFileBar extends Component {
     const ctx = { ed: editor, cm: editor.codeMirror };
 
     if (!query) {
-      clearSearch(ctx.cm, query);
+      clearSearch(ctx.cm);
       return;
     }
 
@@ -249,11 +249,11 @@ class SearchInFileBar extends Component {
     return this.doSearch(e.target.value);
   };
 
-  onFocus = e => {
+  onFocus = () => {
     this.setState({ inputFocused: true });
   };
 
-  onBlur = e => {
+  onBlur = () => {
     this.setState({ inputFocused: false });
   };
 
@@ -349,7 +349,7 @@ SearchInFileBar.contextTypes = {
   shortcuts: PropTypes.object,
 };
 
-const mapStateToProps = (state, p) => {
+const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
 
   return {

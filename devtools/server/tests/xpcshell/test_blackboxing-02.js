@@ -80,7 +80,7 @@ function evalCode(debuggee) {
   Cu.evalInSandbox(
     "" + function runTest() { // line 1
       doStuff(                // line 2
-        function(n) {         // line 3
+        function() {         // line 3
           debugger;           // line 5
         }                     // line 6
       );                      // line 7

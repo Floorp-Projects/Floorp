@@ -25,7 +25,7 @@ AboutDebugging.prototype = {
     return chan;
   },
 
-  getURIFlags(uri) {
+  getURIFlags() {
     return nsIAboutModule.ALLOW_SCRIPT | nsIAboutModule.IS_SECURE_CHROME_UI;
   },
 

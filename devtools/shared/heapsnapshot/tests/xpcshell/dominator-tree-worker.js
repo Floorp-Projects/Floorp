@@ -7,7 +7,7 @@
 
 console.log("Initializing worker.");
 
-self.onmessage = e => {
+self.onmessage = () => {
   console.log("Starting test.");
   try {
     const path = ChromeUtils.saveHeapSnapshot({ runtime: true });

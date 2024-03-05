@@ -168,7 +168,7 @@ define(function (require, exports, module) {
       return a - b;
     });
 
-    return indexes.map((index, i) => {
+    return indexes.map(index => {
       const [key, entryValue] = entries[index];
       const value =
         entryValue.value !== undefined ? entryValue.value : entryValue;

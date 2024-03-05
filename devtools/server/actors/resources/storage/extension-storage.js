@@ -310,7 +310,7 @@ class ExtensionStorageActor extends BaseStorageActor {
     });
   }
 
-  async editItem({ host, field, items, oldValue }) {
+  async editItem({ host, items }) {
     const db = this.dbConnectionForHost.get(host);
     if (!db) {
       return;

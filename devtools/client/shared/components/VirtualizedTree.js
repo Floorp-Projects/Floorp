@@ -300,7 +300,7 @@ class Tree extends Component {
   }
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps() {
     this._autoExpand();
     this._updateHeight();
   }
@@ -559,10 +559,8 @@ class Tree extends Component {
   /**
    * Fired on a scroll within the tree's container, updates
    * the stored position of the view port to handle virtual view rendering.
-   *
-   * @param {Event} e
    */
-  _onScroll(e) {
+  _onScroll() {
     this.setState({
       scroll: Math.max(this.refs.tree.scrollTop, 0),
       height: this.refs.tree.clientHeight,
@@ -882,7 +880,7 @@ class ArrowExpanderClass extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (
       this.props.item !== nextProps.item ||
       this.props.visible !== nextProps.visible ||

@@ -58,7 +58,7 @@ const INITIAL_FLEXBOX = {
 };
 
 const reducers = {
-  [CLEAR_FLEXBOX](flexbox, _) {
+  [CLEAR_FLEXBOX](_) {
     return INITIAL_FLEXBOX;
   },
 

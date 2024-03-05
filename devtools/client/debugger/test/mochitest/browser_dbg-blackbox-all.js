@@ -200,7 +200,7 @@ add_task(async function testHideAndShowBlackBoxedFiles() {
 function waitForBlackboxCount(dbg, count) {
   return waitForState(
     dbg,
-    state => Object.keys(dbg.selectors.getBlackBoxRanges()).length === count
+    () => Object.keys(dbg.selectors.getBlackBoxRanges()).length === count
   );
 }
 

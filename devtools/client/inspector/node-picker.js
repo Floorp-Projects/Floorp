@@ -22,11 +22,9 @@ loader.lazyRequireGetter(
  *
  * @param {Commands} commands
  *        The commands object with all interfaces defined from devtools/shared/commands/
- * @param {Selection} selection
- *        The global Selection object
  */
 class NodePicker extends EventEmitter {
-  constructor(commands, selection) {
+  constructor(commands) {
     super();
     this.commands = commands;
     this.targetCommand = commands.targetCommand;
@@ -305,7 +303,7 @@ class NodePicker extends EventEmitter {
    * When the picker is canceled, stop the picker, and make sure the toolbox
    * gets the focus.
    */
-  #onCanceled = data => {
+  #onCanceled = () => {
     return this.stop({ canceled: true });
   };
 }

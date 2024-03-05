@@ -626,7 +626,7 @@ function updateConsoleInputEvaluation(dbg, webConsole) {
   }
 }
 
-function getEvalInput(string, bindings) {
+function getEvalInput(string) {
   const trimmedString = string.trim();
   // Add easter egg for console.mihai().
   if (

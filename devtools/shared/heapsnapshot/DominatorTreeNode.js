@@ -127,11 +127,7 @@ LabelAndShallowSizeVisitor.prototype.exit = function (breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.count
  */
-LabelAndShallowSizeVisitor.prototype.count = function (
-  breakdown,
-  report,
-  edge
-) {
+LabelAndShallowSizeVisitor.prototype.count = function (breakdown, report) {
   if (report.count === 0) {
     return;
   }

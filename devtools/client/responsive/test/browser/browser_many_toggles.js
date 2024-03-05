@@ -21,7 +21,7 @@ addRDMTask(
       info(`Toggling RDM #${i + 1}`);
       // This may throw when we were just closing is still ongoing,
       // ignore any exception.
-      openRDM(tab).catch(e => {});
+      openRDM(tab).catch(() => {});
       // Sometime pause in order to cover both full synchronous opening and close
       // but also the same but with some pause between each operation.
       if (i % 2 == 0) {

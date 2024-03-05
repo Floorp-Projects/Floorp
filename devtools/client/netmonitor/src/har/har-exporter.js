@@ -18,7 +18,7 @@ var uid = 1;
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log(...args) {},
+  log() {},
 };
 
 /**

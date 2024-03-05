@@ -13,7 +13,7 @@ add_task(async function () {
   } = dbg;
 
   clickElement(dbg, "pause");
-  await waitForState(dbg, state => getIsWaitingOnBreak(getCurrentThread()));
+  await waitForState(dbg, () => getIsWaitingOnBreak(getCurrentThread()));
   invokeInTab("simple");
 
   await waitForPaused(dbg, "simple3");

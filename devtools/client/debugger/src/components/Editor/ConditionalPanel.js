@@ -121,7 +121,7 @@ export class ConditionalPanel extends PureComponent {
     return this.clearConditionalPanel();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     this.keepFocusOnInput();
   }
 

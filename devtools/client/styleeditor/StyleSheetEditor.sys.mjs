@@ -274,7 +274,7 @@ StyleSheetEditor.prototype = {
    *
    * This will set |this._state.text| to the new text.
    */
-  async _fetchSourceText(options = {}) {
+  async _fetchSourceText() {
     const styleSheetsFront = await this._getStyleSheetsFront();
 
     let longStr = null;

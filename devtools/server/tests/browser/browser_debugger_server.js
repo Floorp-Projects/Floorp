@@ -181,7 +181,7 @@ async function assertDevToolsOpened(tab, expected, message) {
   );
 }
 
-async function setContentServerKeepAlive(tab, keepAlive, message) {
+async function setContentServerKeepAlive(tab, keepAlive) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [keepAlive],

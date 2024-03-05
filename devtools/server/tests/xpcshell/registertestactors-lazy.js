@@ -21,13 +21,13 @@ const lazySpec = generateActorSpec({
 });
 
 class LazyActor extends Actor {
-  constructor(conn, id) {
+  constructor(conn) {
     super(conn, lazySpec);
 
     Services.obs.notifyObservers(null, "actor", "instantiated");
   }
 
-  hello(str) {
+  hello() {
     return "world";
   }
 }

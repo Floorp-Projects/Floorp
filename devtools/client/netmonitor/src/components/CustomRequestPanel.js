@@ -361,7 +361,7 @@ class CustomRequestPanel extends Component {
 
 module.exports = connect(
   state => ({ request: getSelectedRequest(state) }),
-  (dispatch, props) => ({
+  dispatch => ({
     removeSelectedCustomRequest: () =>
       dispatch(Actions.removeSelectedCustomRequest()),
     sendCustomRequest: () => dispatch(Actions.sendCustomRequest()),

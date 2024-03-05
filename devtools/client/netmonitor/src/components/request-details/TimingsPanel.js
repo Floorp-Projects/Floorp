@@ -78,7 +78,7 @@ class TimingsPanel extends Component {
         { className: "label-separator" },
         L10N.getStr("netmonitor.timings.serviceWorkerTiming")
       ),
-      Object.entries(serviceWorkerTimings).map(([key, value], index) => {
+      Object.entries(serviceWorkerTimings).map(([key, value]) => {
         if (preValue > 0) {
           offset += preValue / totalTime;
         }

@@ -114,7 +114,7 @@ function closeRequestBlocking() {
 }
 
 function openRequestBlockingAndAddUrl(url) {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     const showBlockingPanel = Services.prefs.getBoolPref(
       "devtools.netmonitor.features.requestBlocking"
     );
@@ -127,7 +127,7 @@ function openRequestBlockingAndAddUrl(url) {
 }
 
 function openRequestBlockingAndDisableUrls(url) {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     const showBlockingPanel = Services.prefs.getBoolPref(
       "devtools.netmonitor.features.requestBlocking"
     );
