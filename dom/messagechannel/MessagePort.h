@@ -110,7 +110,7 @@ class MessagePort final : public DOMEventTargetHelper {
 
   // Non WebIDL methods
 
-  void UnshippedEntangle(MessagePort* aEntangledPort);
+  void UnshippedEntangle(RefPtr<MessagePort>& aEntangledPort);
 
   bool CanBeCloned() const { return !mHasBeenTransferredOrClosed; }
 
@@ -127,6 +127,10 @@ class MessagePort final : public DOMEventTargetHelper {
 
  private:
   enum State {
+    // The plan is to be eStateUnshippedEntangled once we are told about our
+    // unshipped entangled counterpart.
+    eStateInitializingUnshippedEntangled,
+
     // When a port is created by a MessageChannel it is entangled with the
     // other. They both run on the same thread, same event loop and the
     // messages are added to the queues without using PBackground actors.
