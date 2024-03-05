@@ -686,7 +686,7 @@ set_define("MOZ_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True))
 # ==============================================================
 @depends(toolkit)
 def applemedia(toolkit):
-    if toolkit in ("cocoa", "uikit"):
+    if toolkit == "cocoa":
         return True
 
 

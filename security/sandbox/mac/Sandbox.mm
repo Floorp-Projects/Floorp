@@ -303,11 +303,13 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
         // Nothing to do here specifically
         break;
 
+#ifdef MOZ_APPLEMEDIA
       case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA: {
         profile.append(SandboxPolicyUtilityAudioDecoderAppleMediaAddend);
         params.push_back("MAC_OS_VERSION");
         params.push_back(combinedVersion.c_str());
       } break;
+#endif
 
       default:
         MOZ_ASSERT(false, "Invalid SandboxingKind");
