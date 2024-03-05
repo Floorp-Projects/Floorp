@@ -2,6 +2,7 @@
 subsuite = "media-bc"
 prefs = ["gfx.font_loader.delay=0"]
 support-files = [
+  "head.js",
   "file_empty_page.html",
   "file_media.html",
   "../av1.mp4",
@@ -16,10 +17,13 @@ support-files = [
   "../small-shot.mp3",
   "../small-shot.ogg",
   "../TestPatternHDR.mp4",
+  "../../mediasource/test/bipbop/bipbop2s.mp4",
 ]
 
 ["browser_encrypted_play_time_telemetry.js"]
 skip-if = ["apple_silicon"] # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+
+["browser_glean_first_frame_loaded_time.js"]
 
 ["browser_tab_visibility_and_play_time.js"]
 
