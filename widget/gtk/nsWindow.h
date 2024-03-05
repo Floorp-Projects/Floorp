@@ -374,7 +374,9 @@ class nsWindow final : public nsBaseWidget {
   void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;
 
+#ifdef MOZ_ENABLE_DBUS
   void SetDBusMenuBar(RefPtr<mozilla::widget::DBusMenuBar> aDbusMenuBar);
+#endif
 
   // HiDPI scale conversion
   gint GdkCeiledScaleFactor();
@@ -908,7 +910,9 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<nsWindow> mWaylandPopupNext;
   RefPtr<nsWindow> mWaylandPopupPrev;
 
+#ifdef MOZ_ENABLE_DBUS
   RefPtr<mozilla::widget::DBusMenuBar> mDBusMenuBar;
+#endif
 
   // When popup is resized by Gtk by move-to-rect callback,
   // we store final popup size here. Then we use mMoveToRectPopupSize size

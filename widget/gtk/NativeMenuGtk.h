@@ -61,6 +61,8 @@ class NativeMenuGtk : public NativeMenu {
   nsTArray<NativeMenu::Observer*> mObservers;
 };
 
+#ifdef MOZ_ENABLE_DBUS
+
 class DBusMenuBar final : public RefCounted<DBusMenuBar> {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(DBusMenuBar)
@@ -77,10 +79,12 @@ class DBusMenuBar final : public RefCounted<DBusMenuBar> {
   RefPtr<MenubarModelDBus> mMenuModel;
   RefPtr<DbusmenuServer> mServer;
   RefPtr<GDBusProxy> mProxy;
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
   xdg_dbus_annotation_v1* mAnnotation = nullptr;
-#endif
+#  endif
 };
+
+#endif
 
 }  // namespace widget
 }  // namespace mozilla

@@ -18,11 +18,13 @@ void NativeMenuSupport::CreateNativeMenuBar(nsIWidget* aParent,
   MOZ_RELEASE_ASSERT(NS_IsMainThread(),
                      "Attempting to create native menu bar on wrong thread!");
 
+#ifdef MOZ_ENABLE_DBUS
   if (aMenuBarElement && StaticPrefs::widget_gtk_global_menu_enabled() &&
       DBusMenuFunctions::Init()) {
     static_cast<nsWindow*>(aParent)->SetDBusMenuBar(
         DBusMenuBar::Create(aMenuBarElement));
   }
+#endif
 }
 
 already_AddRefed<NativeMenu> NativeMenuSupport::CreateNativeContextMenu(

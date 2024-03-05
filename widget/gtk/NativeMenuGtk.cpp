@@ -444,6 +444,8 @@ void NativeMenuGtk::CloseSubmenu(dom::Element*) {
   // TODO: For testing mostly.
 }
 
+#ifdef MOZ_ENABLE_DBUS
+
 class MenubarModelDBus final : public MenuModel {
  public:
   explicit MenubarModelDBus(dom::Element* aElement) : MenuModel(aElement) {
@@ -517,7 +519,7 @@ static uint32_t KeyFrom(const dom::Element* aElement) {
   return ParseKey(key, keycode);
 }
 
-// TODO(emilio): Unifiy with nsMenuUtilsX::GeckoModifiersForNodeAttribute (or
+// TODO(emilio): Unify with nsMenuUtilsX::GeckoModifiersForNodeAttribute (or
 // at least switch to strtok_r).
 static uint32_t ParseModifiers(const nsAString& aModifiers) {
   if (aModifiers.IsEmpty()) {
@@ -730,7 +732,7 @@ void DBusMenuBar::OnNameOwnerChanged() {
     return;
   }
 
-#ifdef MOZ_WAYLAND
+#  ifdef MOZ_WAYLAND
   if (auto* display = widget::WaylandDisplayGet()) {
     xdg_dbus_annotation_manager_v1* annotationManager =
         display->GetXdgDbusAnnotationManager();
@@ -757,8 +759,8 @@ void DBusMenuBar::OnNameOwnerChanged() {
                                        mObjectPath.get());
     return;
   }
-#endif
-#ifdef MOZ_X11
+#  endif
+#  ifdef MOZ_X11
   // legacy path
   auto xid = GDK_WINDOW_XID(gdkWin);
   widget::DBusProxyCall(mProxy, "RegisterWindow",
@@ -774,7 +776,7 @@ void DBusMenuBar::OnNameOwnerChanged() {
                        aError->message);
             self->mMenuModel->Element()->SetBoolAttr(nsGkAtoms::hidden, false);
           });
-#endif
+#  endif
 }
 
 static unsigned sID = 0;
@@ -812,5 +814,6 @@ RefPtr<DBusMenuBar> DBusMenuBar::Create(dom::Element* aElement) {
 }
 
 DBusMenuBar::~DBusMenuBar() = default;
+#endif
 
 }  // namespace mozilla::widget

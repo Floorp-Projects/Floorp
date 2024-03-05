@@ -6984,10 +6984,12 @@ void nsWindow::UpdateWindowDraggingRegion(
   }
 }
 
+#ifdef MOZ_ENABLE_DBUS
 void nsWindow::SetDBusMenuBar(
     RefPtr<mozilla::widget::DBusMenuBar> aDbusMenuBar) {
   mDBusMenuBar = std::move(aDbusMenuBar);
 }
+#endif
 
 LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
