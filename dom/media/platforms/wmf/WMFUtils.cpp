@@ -177,8 +177,7 @@ Maybe<gfx::YUVColorSpace> GetYUVColorSpace(IMFMediaType* aType) {
 }
 
 int32_t MFOffsetToInt32(const MFOffset& aOffset) {
-  return AssertedCast<int32_t>(AssertedCast<float>(aOffset.value) +
-                               (AssertedCast<float>(aOffset.fract) / 65536.0f));
+  return int32_t(aOffset.value + (aOffset.fract / 65536.0f));
 }
 
 TimeUnit GetSampleDuration(IMFSample* aSample) {
@@ -205,7 +204,7 @@ GetPictureRegion(IMFMediaType* aMediaType, gfx::IntRect& aOutPictureRegion) {
   // Determine if "pan and scan" is enabled for this media. If it is, we
   // only display a region of the video frame, not the entire frame.
   BOOL panScan =
-      !!MFGetAttributeUINT32(aMediaType, MF_MT_PAN_SCAN_ENABLED, FALSE);
+      MFGetAttributeUINT32(aMediaType, MF_MT_PAN_SCAN_ENABLED, FALSE);
 
   // If pan and scan mode is enabled. Try to get the display region.
   HRESULT hr = E_FAIL;
@@ -301,14 +300,11 @@ const char* MFTMessageTypeToStr(MFT_MESSAGE_TYPE aMsg) {
 GUID AudioMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
   if (aMimeType.EqualsLiteral("audio/mpeg")) {
     return MFAudioFormat_MP3;
-  }
-  if (MP4Decoder::IsAAC(aMimeType)) {
+  } else if (MP4Decoder::IsAAC(aMimeType)) {
     return MFAudioFormat_AAC;
-  }
-  if (aMimeType.EqualsLiteral("audio/vorbis")) {
+  } else if (aMimeType.EqualsLiteral("audio/vorbis")) {
     return MFAudioFormat_Vorbis;
-  }
-  if (aMimeType.EqualsLiteral("audio/opus")) {
+  } else if (aMimeType.EqualsLiteral("audio/opus")) {
     return MFAudioFormat_Opus;
   }
   NS_WARNING("Unsupport audio mimetype");
@@ -318,19 +314,17 @@ GUID AudioMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
 GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
   if (MP4Decoder::IsH264(aMimeType)) {
     return MFVideoFormat_H264;
-  }
-  if (VPXDecoder::IsVP8(aMimeType)) {
+  } else if (VPXDecoder::IsVP8(aMimeType)) {
     return MFVideoFormat_VP80;
-  }
-  if (VPXDecoder::IsVP9(aMimeType)) {
+  } else if (VPXDecoder::IsVP9(aMimeType)) {
     return MFVideoFormat_VP90;
   }
 #ifdef MOZ_AV1
-  if (AOMDecoder::IsAV1(aMimeType)) {
+  else if (AOMDecoder::IsAV1(aMimeType)) {
     return MFVideoFormat_AV1;
   }
 #endif
-  if (MP4Decoder::IsHEVC(aMimeType)) {
+  else if (MP4Decoder::IsHEVC(aMimeType)) {
     return MFVideoFormat_HEVC;
   }
   NS_WARNING("Unsupport video mimetype");
@@ -374,9 +368,7 @@ void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
   // the rest can be all 0x00.
   BYTE heeInfo[heeInfoLen] = {0};
   WORD* w = (WORD*)heeInfo;
-  // If extradata has been provided, assume raw AAC packets (0). Otherwise,
-  // assume ADTS (1)
-  w[0] = aConfigLength ? 0 : 1;
+  w[0] = 0x0;  // Payload type raw AAC packet
   w[1] = aAACProfileLevelIndication;
 
   aOutUserData.AppendElements(heeInfo, heeInfoLen);
@@ -385,10 +377,10 @@ void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
     // The AudioSpecificConfig is TTTTTFFF|FCCCCGGG
     // (T=ObjectType, F=Frequency, C=Channel, G=GASpecificConfig)
     // If frequency = 0xf, then the frequency is explicitly defined on 24 bits.
-    uint8_t frequency =
+    int8_t frequency =
         (aAudioSpecConfig[0] & 0x7) << 1 | (aAudioSpecConfig[1] & 0x80) >> 7;
-    uint8_t channels = (aAudioSpecConfig[1] & 0x78) >> 3;
-    uint8_t gasc = aAudioSpecConfig[1] & 0x7;
+    int8_t channels = (aAudioSpecConfig[1] & 0x78) >> 3;
+    int8_t gasc = aAudioSpecConfig[1] & 0x7;
     if (frequency != 0xf && channels && !gasc) {
       // We enter this condition if the AudioSpecificConfig should theorically
       // be 2 bytes long but it's not.
