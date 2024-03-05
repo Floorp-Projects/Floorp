@@ -6,7 +6,8 @@
 
 #include "OSPreferences.h"
 #include "mozilla/intl/LocaleService.h"
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreText/CoreText.h>
 
 using namespace mozilla::intl;
 
