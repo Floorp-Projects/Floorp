@@ -22,6 +22,7 @@ def resolve_keys(config, tasks):
             "worker.dep",
             "worker.certificate-alias",
             "worker.product",
+            "worker.google-play-track",
             "routes",
         ):
             resolve_keyed_by(
