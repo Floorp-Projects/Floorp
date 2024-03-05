@@ -692,9 +692,7 @@ nsBrowserContentHandler.prototype = {
       // tell needHomepageOverride to leave the milestone prefs alone when doing
       // this check.
       let override = needHomepageOverride(false /* updateMilestones */);
-      if (override == OVERRIDE_NEW_PROFILE) {
-        lazy.FirstStartup.init();
-      }
+      lazy.FirstStartup.init(override == OVERRIDE_NEW_PROFILE /* newProfile */);
     }
 
     var fileParam = cmdLine.handleFlagWithParam("file", false);
