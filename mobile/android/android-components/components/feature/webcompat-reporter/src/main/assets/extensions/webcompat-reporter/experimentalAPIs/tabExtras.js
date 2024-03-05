@@ -4,96 +4,50 @@
 
 "use strict";
 
-/* global ExtensionAPI, XPCOMUtils, Services */
+/* global ExtensionAPI */
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "resProto",
-  "@mozilla.org/network/protocol;1?name=resource",
-  "nsISubstitutingProtocolHandler"
-);
+const lazy = {};
+
+const DEFAULT_NEW_REPORT_ENDPOINT = "https://webcompat.com/issues/new";
+const NEW_REPORT_ENDPOINT_PREF =
+  "ui.new-webcompat-reporter.new-report-endpoint";
 
 this.tabExtras = class extends ExtensionAPI {
-  constructor(extension) {
-    super(extension);
-    this._registerActorModule();
-  }
-
   getAPI(context) {
     const { tabManager } = context.extension;
+    const queryReportBrokenSiteActor = (tabId, name, params) => {
+      const { browser } = tabManager.get(tabId);
+      const windowGlobal = browser.browsingContext.currentWindowGlobal;
+      if (!windowGlobal) {
+        return null;
+      }
+      return windowGlobal.getActor("ReportBrokenSite").sendQuery(name, params);
+    };
     return {
       tabExtras: {
         async getWebcompatInfo(tabId) {
-          const {
-            browser: { browsingContext },
-            incognito,
-          } = tabManager.get(tabId);
-          const actors = gatherActors("ReportSiteIssueHelper", browsingContext);
-          const promises = actors.map(actor => actor.sendQuery("GetLog"));
-          const logs = await Promise.all(promises);
-          const info = await actors[0].sendQuery("GetBlockingStatus");
-          info.hasMixedActiveContentBlocked = !!(
-            browsingContext.secureBrowserUI.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT
+          const endpointUrl = Services.prefs.getStringPref(
+            NEW_REPORT_ENDPOINT_PREF,
+            DEFAULT_NEW_REPORT_ENDPOINT
           );
-          info.hasMixedDisplayContentBlocked = !!(
-            browsingContext.secureBrowserUI.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT
+          const webcompatInfo = await queryReportBrokenSiteActor(
+            tabId,
+            "GetWebCompatInfo"
           );
-          info.isPB = incognito;
-          info.log = logs
-            .flat()
-            .sort((a, b) => a.timeStamp - b.timeStamp)
-            .map(m => m.message);
-          return info;
+          return {
+            webcompatInfo,
+            endpointUrl,
+          };
+        },
+        async sendWebcompatInfo(tabId, info) {
+          console.error(info);
+          return queryReportBrokenSiteActor(
+            tabId,
+            "SendDataToWebcompatCom",
+            info
+          );
         },
       },
     };
   }
-
-  onShutdown(isAppShutdown) {
-    this._unregisterActorModule();
-  }
-
-  _registerActorModule() {
-    resProto.setSubstitution(
-      "report-site-issue",
-      Services.io.newURI(
-        "experimentalAPIs/actors/",
-        null,
-        this.extension.rootURI
-      )
-    );
-    ChromeUtils.registerWindowActor("ReportSiteIssueHelper", {
-      child: {
-        moduleURI: "resource://report-site-issue/tabExtrasActor.jsm",
-      },
-      allFrames: true,
-    });
-  }
-
-  _unregisterActorModule() {
-    ChromeUtils.unregisterWindowActor("ReportSiteIssueHelper");
-    resProto.setSubstitution("report-site-issue", null);
-  }
 };
-
-function getActorForBrowsingContext(name, browsingContext) {
-  const windowGlobal = browsingContext.currentWindowGlobal;
-  return windowGlobal ? windowGlobal.getActor(name) : null;
-}
-
-function gatherActors(name, browsingContext) {
-  const list = [];
-
-  const actor = getActorForBrowsingContext(name, browsingContext);
-  if (actor) {
-    list.push(actor);
-  }
-
-  for (const child of browsingContext.children) {
-    list.push(...gatherActors(name, child));
-  }
-
-  return list;
-}
