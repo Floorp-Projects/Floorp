@@ -563,70 +563,56 @@ using RunnableFunctionImpl =
 namespace detail {
 
 template <typename CVRemoved>
-struct IsRefcountedSmartPointerHelper : std::false_type {};
+constexpr static bool IsRefcountedSmartPointerHelper = false;
 
 template <typename Pointee>
-struct IsRefcountedSmartPointerHelper<RefPtr<Pointee>> : std::true_type {};
+constexpr static bool IsRefcountedSmartPointerHelper<RefPtr<Pointee>> = true;
 
 template <typename Pointee>
-struct IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> : std::true_type {};
+constexpr static bool IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> = true;
 
 }  // namespace detail
 
 template <typename T>
-struct IsRefcountedSmartPointer
-    : detail::IsRefcountedSmartPointerHelper<std::remove_cv_t<T>> {};
+constexpr static bool IsRefcountedSmartPointer =
+    detail::IsRefcountedSmartPointerHelper<std::remove_cv_t<T>>;
 
 namespace detail {
 
-template <typename T, typename CVRemoved>
+template <typename T>
 struct RemoveSmartPointerHelper {
-  typedef T Type;
+  using Type = T;
 };
-
-template <typename T, typename Pointee>
-struct RemoveSmartPointerHelper<T, RefPtr<Pointee>> {
-  typedef Pointee Type;
-};
-
-template <typename T, typename Pointee>
-struct RemoveSmartPointerHelper<T, nsCOMPtr<Pointee>> {
-  typedef Pointee Type;
-};
-
-}  // namespace detail
 
 template <typename T>
-struct RemoveSmartPointer
-    : detail::RemoveSmartPointerHelper<T, std::remove_cv_t<T>> {};
+struct RemoveSmartPointerHelper<RefPtr<T>> {
+  using Type = T;
+};
 
-namespace detail {
+template <typename T>
+struct RemoveSmartPointerHelper<nsCOMPtr<T>> {
+  using Type = T;
+};
 
-template <typename T, typename CVRemoved>
+template <typename T>
 struct RemoveRawOrSmartPointerHelper {
-  typedef T Type;
+  using Type = typename RemoveSmartPointerHelper<T>::Type;
 };
 
-template <typename T, typename Pointee>
-struct RemoveRawOrSmartPointerHelper<T, Pointee*> {
-  typedef Pointee Type;
-};
-
-template <typename T, typename Pointee>
-struct RemoveRawOrSmartPointerHelper<T, RefPtr<Pointee>> {
-  typedef Pointee Type;
-};
-
-template <typename T, typename Pointee>
-struct RemoveRawOrSmartPointerHelper<T, nsCOMPtr<Pointee>> {
-  typedef Pointee Type;
+template <typename T>
+struct RemoveRawOrSmartPointerHelper<T*> {
+  using Type = T;
 };
 
 }  // namespace detail
 
 template <typename T>
-struct RemoveRawOrSmartPointer
-    : detail::RemoveRawOrSmartPointerHelper<T, std::remove_cv_t<T>> {};
+using RemoveSmartPointer =
+    typename detail::RemoveSmartPointerHelper<std::remove_cv_t<T>>::Type;
+
+template <typename T>
+using RemoveRawOrSmartPointer =
+    typename detail::RemoveRawOrSmartPointerHelper<std::remove_cv_t<T>>::Type;
 
 }  // namespace mozilla
 
@@ -797,23 +783,22 @@ struct nsRunnableMethodTraits;
 template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind, typename... As>
 struct nsRunnableMethodTraits<PtrType, R (C::*)(As...), Owning, Kind> {
-  typedef typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  using class_type = mozilla::RemoveRawOrSmartPointer<PtrType>;
   static_assert(std::is_base_of<C, class_type>::value,
                 "Stored class must inherit from method's class");
-  typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
+  using return_type = R;
+  using base_type = nsRunnableMethod<C, R, Owning, Kind>;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind, typename... As>
 struct nsRunnableMethodTraits<PtrType, R (C::*)(As...) const, Owning, Kind> {
-  typedef const typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type
-      class_type;
+  using class_type = const mozilla::RemoveRawOrSmartPointer<PtrType>;
   static_assert(std::is_base_of<C, class_type>::value,
                 "Stored class must inherit from method's class");
-  typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
+  using return_type = R;
+  using base_type = nsRunnableMethod<C, R, Owning, Kind>;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
@@ -822,22 +807,22 @@ template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind, typename... As>
 struct nsRunnableMethodTraits<PtrType, R (__stdcall C::*)(As...), Owning,
                               Kind> {
-  typedef typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  using class_type = mozilla::RemoveRawOrSmartPointer<PtrType>;
   static_assert(std::is_base_of<C, class_type>::value,
                 "Stored class must inherit from method's class");
-  typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
+  using return_type = R;
+  using base_type = nsRunnableMethod<C, R, Owning, Kind>;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
 template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind>
 struct nsRunnableMethodTraits<PtrType, R (NS_STDCALL C::*)(), Owning, Kind> {
-  typedef typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  using class_type = mozilla::RemoveRawOrSmartPointer<PtrType>;
   static_assert(std::is_base_of<C, class_type>::value,
                 "Stored class must inherit from method's class");
-  typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
+  using return_type = R;
+  using base_type = nsRunnableMethod<C, R, Owning, Kind>;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
@@ -845,12 +830,11 @@ template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind, typename... As>
 struct nsRunnableMethodTraits<PtrType, R (__stdcall C::*)(As...) const, Owning,
                               Kind> {
-  typedef const typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type
-      class_type;
+  using class_type = const mozilla::RemoveRawOrSmartPointer<PtrType>;
   static_assert(std::is_base_of<C, class_type>::value,
                 "Stored class must inherit from method's class");
-  typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
+  using return_type = R;
+  using base_type = nsRunnableMethod<C, R, Owning, Kind>;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 
@@ -858,12 +842,11 @@ template <typename PtrType, class C, typename R, bool Owning,
           mozilla::RunnableKind Kind>
 struct nsRunnableMethodTraits<PtrType, R (NS_STDCALL C::*)() const, Owning,
                               Kind> {
-  typedef const typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type
-      class_type;
+  using class_type = const mozilla::RemoveRawOrSmartPointer<PtrType>;
   static_assert(std::is_base_of<C, class_type>::value,
                 "Stored class must inherit from method's class");
-  typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning, Kind> base_type;
+  using return_type = R;
+  using base_type = nsRunnableMethod<C, R, Owning, Kind>;
   static const bool can_cancel = Kind == mozilla::RunnableKind::Cancelable;
 };
 #  endif
@@ -1035,7 +1018,8 @@ template <class>
 static auto HasRefCountMethodsTest(long) -> std::false_type;
 
 template <class T>
-struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0)) {};
+constexpr static bool HasRefCountMethods =
+    decltype(HasRefCountMethodsTest<T>(0))::value;
 
 template <typename TWithoutPointer>
 struct NonnsISupportsPointerStorageClass
@@ -1049,7 +1033,7 @@ struct NonnsISupportsPointerStorageClass
 template <typename TWithoutPointer>
 struct PointerStorageClass
     : std::conditional<
-          HasRefCountMethods<TWithoutPointer>::value,
+          HasRefCountMethods<TWithoutPointer>,
           StoreRefPtrPassByPtr<TWithoutPointer>,
           typename NonnsISupportsPointerStorageClass<TWithoutPointer>::Type> {
   using Type = typename PointerStorageClass::conditional::type;
@@ -1066,10 +1050,9 @@ struct LValueReferenceStorageClass
 
 template <typename T>
 struct SmartPointerStorageClass
-    : std::conditional<
-          mozilla::IsRefcountedSmartPointer<T>::value,
-          StoreRefPtrPassByPtr<typename mozilla::RemoveSmartPointer<T>::Type>,
-          StoreCopyPassByConstLRef<T>> {
+    : std::conditional<mozilla::IsRefcountedSmartPointer<T>,
+                       StoreRefPtrPassByPtr<mozilla::RemoveSmartPointer<T>>,
+                       StoreCopyPassByConstLRef<T>> {
   using Type = typename SmartPointerStorageClass::conditional::type;
 };
 
