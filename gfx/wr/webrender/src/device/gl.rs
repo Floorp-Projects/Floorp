@@ -1976,12 +1976,12 @@ impl Device {
                 }
             }
             Parameter::Bool(BoolParameter::BatchedUploads, enabled) => {
-                self.use_batched_texture_uploads = *enabled;
+                if self.capabilities.requires_batched_texture_uploads.is_none() {
+                    self.use_batched_texture_uploads = *enabled;
+                }
             }
             Parameter::Bool(BoolParameter::DrawCallsForTextureCopy, enabled) => {
-                if self.capabilities.requires_batched_texture_uploads.is_none() {
-                    self.use_draw_calls_for_texture_copy = *enabled;
-                }
+                self.use_draw_calls_for_texture_copy = *enabled;
             }
             Parameter::Int(IntParameter::BatchedUploadThreshold, threshold) => {
                 self.batched_upload_threshold = *threshold;
