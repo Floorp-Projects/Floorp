@@ -77,10 +77,7 @@ if CONFIG["TARGET_KERNEL"] != "WINNT":
 
 if CONFIG["TARGET_KERNEL"] == "Darwin":
     UNIFIED_SOURCES += [
-        "src/base/chrome_application_mac.mm",
-        "src/base/mac_util.mm",
         "src/base/message_pump_mac.mm",
-        "src/base/process_util_mac.mm",
         "src/base/scoped_nsautorelease_pool.mm",
         "src/base/sys_string_conversions_mac.mm",
         "src/base/time_mac.cc",
@@ -91,6 +88,13 @@ if CONFIG["TARGET_KERNEL"] == "Darwin":
         # This file cannot be built in unified mode because of the redefinition
         # of NoOp.
         "src/base/platform_thread_mac.mm",
+    ]
+
+if CONFIG["TARGET_OS"] == "OSX":
+    UNIFIED_SOURCES += [
+        "src/base/chrome_application_mac.mm",
+        "src/base/mac_util.mm",
+        "src/base/process_util_mac.mm",
     ]
 
 if CONFIG["TARGET_KERNEL"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
