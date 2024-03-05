@@ -304,7 +304,7 @@ add_task(async function test_login_item() {
   await SpecialPowers.spawn(
     browser,
     [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
-    async login => {
+    async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -384,7 +384,7 @@ add_task(async function test_login_item() {
   await SpecialPowers.spawn(
     browser,
     [LoginHelper.loginToVanillaObject(TEST_LOGIN1)],
-    async login => {
+    async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );

@@ -117,7 +117,7 @@ const observer = {
     LoginManagerChild.forWindow(window)._onNavigation(window.document);
   },
 
-  onStateChange(aWebProgress, aRequest, aState, aStatus) {
+  onStateChange(aWebProgress, aRequest, aState) {
     const window = aWebProgress.DOMWindow;
     const loginManagerChild = () => LoginManagerChild.forWindow(window);
 
@@ -161,7 +161,7 @@ const observer = {
   },
 
   // nsIObserver
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "autocomplete-did-enter-text": {
         let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
@@ -2452,7 +2452,6 @@ export class LoginManagerChild extends JSWindowActorChild {
       usernameField,
       newPasswordField,
       oldPasswordField,
-      confirmPasswordField,
       isSubmission,
       triggeredByFillingGenerated,
     }

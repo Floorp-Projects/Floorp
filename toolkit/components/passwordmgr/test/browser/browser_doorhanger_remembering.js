@@ -186,7 +186,7 @@ add_task(async function test_clickRemember() {
       await checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
       let promiseNewSavedPassword = TestUtils.topicObserved(
         "LoginStats:NewSavedPassword",
-        (subject, data) => subject == gBrowser.selectedBrowser
+        subject => subject == gBrowser.selectedBrowser
       );
       clickDoorhangerButton(notif, REMEMBER_BUTTON);
       await promiseNewSavedPassword;
@@ -727,7 +727,7 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
       await checkDoorhangerUsernamePassword("notifyu1", "pass2");
       let promiseLoginUpdateSaved = TestUtils.topicObserved(
         "LoginStats:LoginUpdateSaved",
-        (subject, data) => subject == gBrowser.selectedBrowser
+        subject => subject == gBrowser.selectedBrowser
       );
       clickDoorhangerButton(notif, CHANGE_BUTTON);
       await promiseLoginUpdateSaved;
@@ -1231,7 +1231,7 @@ add_task(async function test_noShowPasswordOnDismissal() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function (fieldValues) {
+    async function () {
       info("Opening popup");
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
@@ -1265,7 +1265,7 @@ add_task(async function test_showPasswordOn1stOpenOfDismissedByDefault() {
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
-    async function (fieldValues) {
+    async function () {
       info("Opening popup");
       let notif = await getCaptureDoorhangerThatMayOpen("password-save");
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");

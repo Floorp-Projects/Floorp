@@ -5,7 +5,7 @@
 
 async function waitForFormSubmissionDetected() {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subject, topic) {
+    Services.obs.addObserver(function observer() {
       Services.obs.removeObserver(
         observer,
         "passwordmgr-form-submission-detected"

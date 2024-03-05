@@ -145,7 +145,7 @@ function setUserInputValues(parentNode, selectorValues, userInput = true) {
  */
 function getSubmitMessage(aFilterFn = undefined) {
   info("getSubmitMessage");
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
       "formSubmissionProcessed",
       function processed(...args) {
@@ -170,7 +170,7 @@ function getSubmitMessage(aFilterFn = undefined) {
  */
 function getPasswordEditedMessage() {
   info("getPasswordEditedMessage");
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
       "passwordEditedOrGenerated",
       function listener(...args) {
@@ -714,7 +714,7 @@ function logoutPrimaryPassword() {
  */
 function promiseFormsProcessedInSameProcess(expectedCount = 1) {
   var processedCount = 0;
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     function onProcessedForm(subject, topic, data) {
       processedCount++;
       if (processedCount == expectedCount) {
@@ -1068,7 +1068,7 @@ SimpleTest.registerCleanupFunction(() => {
 this.LoginManager = new Proxy(
   {},
   {
-    get(target, prop, receiver) {
+    get(target, prop) {
       return (...args) => {
         let loginInfoIndices = [];
         let cloneableArgs = args.map((val, index) => {
@@ -1159,7 +1159,7 @@ async function formAutofillResult(formId) {
     delete gPwmgrCommonCapturedAutofillResults[formId];
     return autofillResult;
   }
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     PWMGR_COMMON_PARENT.addMessageListener(
       "formProcessed",
       ({ formId: id, autofillResult }) => {

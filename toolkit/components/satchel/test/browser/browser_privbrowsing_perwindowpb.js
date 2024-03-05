@@ -30,7 +30,7 @@ add_task(async function test() {
     }
   }
 
-  function testOnWindow(aOptions, aCallback) {
+  function testOnWindow(aOptions) {
     return BrowserTestUtils.openNewBrowserWindow(aOptions).then(win => {
       windowsToClose.push(win);
       return win;

@@ -128,11 +128,11 @@ var ParentUtils = {
     await storageChangePromise;
   },
 
-  async operateAddress(type, msgData) {
+  async operateAddress() {
     await this._operateRecord(ADDRESSES_COLLECTION_NAME, ...arguments);
   },
 
-  async operateCreditCard(type, msgData) {
+  async operateCreditCard() {
     await this._operateRecord(CREDITCARDS_COLLECTION_NAME, ...arguments);
   },
 
@@ -268,7 +268,7 @@ addMessageListener("FormAutofillTest:CheckAddresses", msg => {
   return ParentUtils.checkAddresses(msg);
 });
 
-addMessageListener("FormAutofillTest:CleanUpAddresses", msg => {
+addMessageListener("FormAutofillTest:CleanUpAddresses", () => {
   return ParentUtils.cleanUpAddresses();
 });
 
@@ -284,11 +284,11 @@ addMessageListener("FormAutofillTest:CheckCreditCards", msg => {
   return ParentUtils.checkCreditCards(msg);
 });
 
-addMessageListener("FormAutofillTest:CleanUpCreditCards", msg => {
+addMessageListener("FormAutofillTest:CleanUpCreditCards", () => {
   return ParentUtils.cleanUpCreditCards();
 });
 
-addMessageListener("FormAutofillTest:CanTestOSKeyStoreLogin", msg => {
+addMessageListener("FormAutofillTest:CanTestOSKeyStoreLogin", () => {
   return { canTest: OSKeyStoreTestUtils.canTestOSKeyStoreLogin() };
 });
 

@@ -265,7 +265,7 @@ class ManageRecords {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "formautofill-storage-changed": {
         this.loadRecords();

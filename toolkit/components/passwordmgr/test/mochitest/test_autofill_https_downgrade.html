@@ -30,7 +30,7 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 let win = window.open("about:blank");
 SimpleTest.registerCleanupFunction(() => win.close());
 
-async function prepareAndProcessForm(url, login) {
+async function prepareAndProcessForm(url) {
   let processedPromise = promiseFormsProcessed();
   win.location = url;
   info("prepareAndProcessForm, assigned window location: " + url);

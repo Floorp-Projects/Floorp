@@ -44,7 +44,7 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
       gBrowser,
       url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
     },
-    async function (browser) {
+    async function () {
       Assert.ok(true, "loaded " + aPageFile);
       info("running test case task");
       await aTaskFn();

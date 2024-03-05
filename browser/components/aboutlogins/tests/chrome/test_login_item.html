@@ -412,7 +412,7 @@ add_task(async function test_set_login_empty() {
   ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be hidden when creating a login");
 
   let createEventDispatched = false;
-  document.addEventListener("AboutLoginsCreateLogin", event => {
+  document.addEventListener("AboutLoginsCreateLogin", () => {
     createEventDispatched = true;
   }, {once: true});
   gLoginItem.shadowRoot.querySelector(".save-changes-button").click();

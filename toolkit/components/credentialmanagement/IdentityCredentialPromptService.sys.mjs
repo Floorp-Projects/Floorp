@@ -273,7 +273,7 @@ export class IdentityCredentialPromptService {
       let mainAction = {
         label: acceptLabel,
         accessKey: acceptKey,
-        callback(event) {
+        callback() {
           let result = listBox.querySelector(
             ".identity-credential-list-item-radio:checked"
           ).value;
@@ -284,7 +284,7 @@ export class IdentityCredentialPromptService {
         {
           label: cancelLabel,
           accessKey: cancelKey,
-          callback(event) {
+          callback() {
             reject();
           },
         },
@@ -451,7 +451,7 @@ export class IdentityCredentialPromptService {
         let mainAction = {
           label: acceptLabel,
           accessKey: acceptKey,
-          callback(event) {
+          callback() {
             resolve(true);
           },
         };
@@ -459,7 +459,7 @@ export class IdentityCredentialPromptService {
           {
             label: cancelLabel,
             accessKey: cancelKey,
-            callback(event) {
+            callback() {
               resolve(false);
             },
           },
@@ -676,7 +676,7 @@ export class IdentityCredentialPromptService {
       let mainAction = {
         label: acceptLabel,
         accessKey: acceptKey,
-        callback(event) {
+        callback() {
           let result = listBox.querySelector(
             ".identity-credential-list-item-radio:checked"
           ).value;
@@ -687,7 +687,7 @@ export class IdentityCredentialPromptService {
         {
           label: cancelLabel,
           accessKey: cancelKey,
-          callback(event) {
+          callback() {
             reject();
           },
         },

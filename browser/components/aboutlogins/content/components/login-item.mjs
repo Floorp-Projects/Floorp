@@ -437,7 +437,7 @@ export default class LoginItem extends HTMLElement {
     this._recordTelemetryEvent({ object: "password", method });
   }
 
-  async handleCancelEvent(e) {
+  async handleCancelEvent() {
     let wasExistingLogin = !!this._login.guid;
     if (wasExistingLogin) {
       if (this.hasPendingChanges()) {

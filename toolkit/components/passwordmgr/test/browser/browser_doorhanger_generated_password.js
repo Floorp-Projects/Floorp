@@ -902,7 +902,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
       await SpecialPowers.spawn(
         browser,
         [[passwordInputSelector, usernameInputSelector]],
-        function checkEmptyPasswordField([passwordSelector, usernameSelector]) {
+        function checkEmptyPasswordField([passwordSelector]) {
           Assert.equal(
             content.document.querySelector(passwordSelector).value,
             "",

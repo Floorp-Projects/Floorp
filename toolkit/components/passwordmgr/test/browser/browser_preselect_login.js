@@ -154,7 +154,7 @@ add_task(
         gBrowser,
         url: TEST_URL_PATH,
       },
-      async function (browser) {
+      async function () {
         await waitForAppMenu();
 
         const appMenuPasswordsButton = document.getElementById(

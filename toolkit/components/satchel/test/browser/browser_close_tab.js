@@ -10,10 +10,7 @@ add_task(async function test() {
   const url = `data:text/html,<input type="text" name="field1">`;
 
   // Open a dummy tab.
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url },
-    async function (browser) {}
-  );
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {});
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url },

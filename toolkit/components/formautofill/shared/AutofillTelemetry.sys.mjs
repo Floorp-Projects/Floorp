@@ -140,7 +140,7 @@ class AutofillTelemetryBase {
     this.recordGleanFormEvent("formFilledModified", section.flowId, extra);
   }
 
-  recordFormSubmitted(section, record, form) {
+  recordFormSubmitted(section, record) {
     let extra = this.#initFormEventExtra("unavailable");
 
     if (record.guid !== null) {
@@ -185,7 +185,7 @@ class AutofillTelemetryBase {
     );
   }
 
-  recordGleanFormEvent(eventName, flowId, extra) {
+  recordGleanFormEvent() {
     throw new Error("Not implemented.");
   }
 
@@ -222,7 +222,7 @@ class AutofillTelemetryBase {
     Services.telemetry.recordEvent(this.EVENT_CATEGORY, method, "manage");
   }
 
-  recordAutofillProfileCount(count) {
+  recordAutofillProfileCount() {
     throw new Error("Not implemented.");
   }
 
@@ -311,7 +311,7 @@ export class AddressTelemetry extends AutofillTelemetryBase {
     "tel",
   ];
 
-  recordGleanFormEvent(eventName, flowId, extra) {
+  recordGleanFormEvent() {
     // To be implemented when migrating the legacy event address.address_form to Glean
   }
 

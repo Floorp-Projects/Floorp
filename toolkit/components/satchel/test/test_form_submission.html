@@ -306,10 +306,10 @@ function setScriptInput(formNumber, inputName, value) {
   getFormElementByName(formNumber, inputName).value = value;
 }
 
-function checkSubmitDoesNotSave(formNumber, inputName, value) {
-  return new Promise((resolve, reject) => {
+function checkSubmitDoesNotSave(formNumber) {
+  return new Promise((resolve) => {
     const form = document.getElementById("form" + formNumber);
-    form.addEventListener("submit", async e => {
+    form.addEventListener("submit", async () => {
       const historyEntriesCount = await countEntries(null, null);
       ok(!historyEntriesCount, form.getAttribute("purpose"));
       resolve();
@@ -319,11 +319,11 @@ function checkSubmitDoesNotSave(formNumber, inputName, value) {
   });
 }
 
-function checkInvalidFirstInputDoesNotSave(formNumber, value) {
-  return new Promise((resolve, reject) => {
+function checkInvalidFirstInputDoesNotSave(formNumber) {
+  return new Promise((resolve) => {
     const form = document.getElementById("form" + formNumber);
     const input = form.querySelector("input");
-    input.addEventListener("invalid", async e => {
+    input.addEventListener("invalid", async () => {
       const historyEntriesCount = await countEntries(null, null);
       ok(!historyEntriesCount, form.getAttribute("purpose"));
       resolve();

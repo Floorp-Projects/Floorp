@@ -49,15 +49,15 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
    */
   terminate() {}
 
-  async addLoginsAsync(logins, continueOnDuplicates = false) {
+  async addLoginsAsync() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  removeLogin(login) {
+  removeLogin() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  modifyLogin(oldLogin, newLoginData) {
+  modifyLogin() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
@@ -180,7 +180,7 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
   /**
    * Use `searchLoginsAsync` instead.
    */
-  searchLogins(matchData) {
+  searchLogins() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
@@ -191,7 +191,7 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  countLogins(origin, formActionOrigin, httpRealm) {
+  countLogins() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
@@ -226,7 +226,7 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  async setSyncID(syncID) {
+  async setSyncID() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
@@ -234,7 +234,7 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  async setLastSync(timestamp) {
+  async setLastSync() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }

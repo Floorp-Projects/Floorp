@@ -31,7 +31,7 @@ const observer = {
     formAutofillChild.onPageNavigation();
   },
 
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aWebProgress, aRequest, aStateFlags) {
     if (
       // if restoring a previously-rendered presentation (bfcache)
       aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING &&
@@ -91,7 +91,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     lazy.FormAutofillContent.didDestroy();
   }
 
-  popupStateChanged(messageName, data, target) {
+  popupStateChanged(messageName, data) {
     let docShell;
     try {
       docShell = this.docShell;

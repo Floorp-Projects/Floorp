@@ -349,7 +349,7 @@ export const ProfileAutocomplete = {
     Services.obs.removeObserver(this, "autocomplete-will-enter-text");
   },
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     switch (topic) {
       case "autocomplete-will-enter-text": {
         if (!lazy.FormAutofillContent.activeInput) {

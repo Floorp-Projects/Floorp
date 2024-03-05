@@ -180,8 +180,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       let vulnerableListItem;
       await ContentTaskUtils.waitForCondition(() => {
         let entry = Object.entries(loginList._logins).find(
-          ([guid, { login, listItem }]) =>
-            login.origin == originForNewVulnerableLogin
+          ([, { login }]) => login.origin == originForNewVulnerableLogin
         );
         vulnerableListItem = entry[1].listItem;
         return !!entry;

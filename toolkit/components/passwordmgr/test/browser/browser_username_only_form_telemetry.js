@@ -5,7 +5,7 @@
 
 "use strict";
 
-async function setupForms(numUsernameOnly, numBasic, numOther) {
+async function setupForms(numUsernameOnly, numBasic) {
   const TEST_HOSTNAME = "https://example.com";
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

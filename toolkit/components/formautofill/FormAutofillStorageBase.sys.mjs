@@ -299,7 +299,7 @@ class AutofillRecords {
     });
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "formautofill-storage-changed":
         let collectionName = subject.wrappedJSObject.collectionName;
@@ -1486,10 +1486,10 @@ class AutofillRecords {
   }
 
   // An interface to be inherited.
-  _recordReadProcessor(record) {}
+  _recordReadProcessor() {}
 
   // An interface to be inherited.
-  async computeFields(record) {}
+  async computeFields() {}
 
   /**
    * An interface to be inherited to mutate the argument to normalize it.
@@ -1501,7 +1501,7 @@ class AutofillRecords {
    *                               lack of a field doesn't mean that the record
    *                               won't have that field.
    */
-  _normalizeFields(partialRecord) {}
+  _normalizeFields() {}
 
   /**
    * An interface to be inherited to validate that the complete record is
@@ -1512,10 +1512,10 @@ class AutofillRecords {
    *                        if this doesn't throw due to an error.
    * @throws
    */
-  _validateFields(record) {}
+  _validateFields() {}
 
   // An interface to be inherited.
-  migrateRemoteRecord(remoteRecord) {}
+  migrateRemoteRecord() {}
 }
 
 export class AddressesBase extends AutofillRecords {
@@ -1879,7 +1879,7 @@ export class CreditCardsBase extends AutofillRecords {
     return hasNewComputedFields;
   }
 
-  async _encryptNumber(creditCard) {
+  async _encryptNumber() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 

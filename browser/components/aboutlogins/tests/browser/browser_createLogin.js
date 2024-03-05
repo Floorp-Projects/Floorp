@@ -57,7 +57,7 @@ add_task(async function test_create_login() {
     await SpecialPowers.spawn(
       browser,
       [[originTuple, i]],
-      async ([aOriginTuple, index]) => {
+      async ([aOriginTuple]) => {
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
         );
@@ -239,7 +239,7 @@ add_task(async function test_create_login() {
     let reauthObserved = forceAuthTimeoutAndWaitForOSKeyStoreLogin({
       loginResult: true,
     });
-    await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
+    await SpecialPowers.spawn(browser, [originTuple], async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -250,7 +250,7 @@ add_task(async function test_create_login() {
     info("waiting for oskeystore auth");
     await reauthObserved;
 
-    await SpecialPowers.spawn(browser, [originTuple], async aOriginTuple => {
+    await SpecialPowers.spawn(browser, [originTuple], async () => {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
@@ -318,20 +318,14 @@ add_task(async function test_create_login() {
     });
   }
 
-  await SpecialPowers.spawn(
-    browser,
-    [testCases.length],
-    async testCasesLength => {
-      let loginList = Cu.waiveXrays(
-        content.document.querySelector("login-list")
-      );
-      Assert.equal(
-        loginList._loginGuidsSortedOrder.length,
-        5,
-        "login list should have a login per testcase"
-      );
-    }
-  );
+  await SpecialPowers.spawn(browser, [testCases.length], async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    Assert.equal(
+      loginList._loginGuidsSortedOrder.length,
+      5,
+      "login list should have a login per testcase"
+    );
+  });
 });
 
 add_task(async function test_cancel_create_login() {
