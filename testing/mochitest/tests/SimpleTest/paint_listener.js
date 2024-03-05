@@ -100,7 +100,7 @@
 
   window.promiseAllPaintsDone = function (subdoc = null, flush = false) {
     var flushmode = flush ? FlushModes.FLUSH : FlushModes.NOFLUSH;
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       // The callback is given the components of the rect, but resolve() can
       // only be given one arg, so we turn it back into an array.
       waitForPaints((l, r, t, b) => resolve([l, r, t, b]), subdoc, flushmode);

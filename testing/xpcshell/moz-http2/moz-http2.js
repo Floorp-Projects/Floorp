@@ -56,7 +56,7 @@ var framer_module = node_http2_root + "/lib/protocol/framer";
 var http2_framer = require(framer_module);
 var Serializer = http2_framer.Serializer;
 var originalTransform = Serializer.prototype._transform;
-var newTransform = function (frame, encoding, done) {
+var newTransform = function (frame) {
   if (frame.type == "DATA") {
     // Insert our empty DATA frame
     const emptyFrame = {};
@@ -1757,7 +1757,7 @@ server.on("connection", function (socket) {
   });
 });
 
-server.on("connect", function (req, clientSocket, head) {
+server.on("connect", function (req, clientSocket) {
   clientSocket.write(
     "HTTP/1.1 404 Not Found\r\nProxy-agent: Node.js-Proxy\r\n\r\n"
   );

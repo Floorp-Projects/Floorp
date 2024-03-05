@@ -13,7 +13,7 @@ function init() {
     tpRecordTime([fromParent, fromContent].join(","), 0, "tabpaint-from-parent, tabpaint-from-content");
   }, {once: true});
 
-  window.addEventListener("TabPaint:OpenFromContent", (event) => {
+  window.addEventListener("TabPaint:OpenFromContent", () => {
     let target = document.getElementById("target");
 
     //win.performance.now() + win.performance.timing.navigationStart gives the UNIX timestamp.

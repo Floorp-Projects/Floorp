@@ -67,7 +67,7 @@ module.exports = async function () {
     bigObject["attribute-" + i] = bigString;
   }
 
-  let bigArray = Array.from({ length: ARRAY_SIZE }, (_, i) => bigObject);
+  let bigArray = Array.from({ length: ARRAY_SIZE }, _ => bigObject);
 
   // Open against options to avoid noise from tools
   let toolbox = await openToolbox("options");

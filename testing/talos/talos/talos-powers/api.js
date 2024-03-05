@@ -371,7 +371,7 @@ TalosPowersService.prototype = {
     },
   */
   ParentExecServices: {
-    ping(arg, callback, win) {
+    ping(arg, callback) {
       callback();
     },
 
@@ -387,15 +387,15 @@ TalosPowersService.prototype = {
       callback(rv);
     },
 
-    requestDumpCoverageCounters(arg, callback, win) {
+    requestDumpCoverageCounters(arg, callback) {
       PerTestCoverageUtils.afterTest().then(callback);
     },
 
-    requestResetCoverageCounters(arg, callback, win) {
+    requestResetCoverageCounters(arg, callback) {
       PerTestCoverageUtils.beforeTest().then(callback);
     },
 
-    dumpAboutSupport(arg, callback, win) {
+    dumpAboutSupport(arg, callback) {
       const { Troubleshoot } = ChromeUtils.importESModule(
         "resource://gre/modules/Troubleshoot.sys.mjs"
       );

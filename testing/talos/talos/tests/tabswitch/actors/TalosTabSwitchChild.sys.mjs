@@ -21,7 +21,7 @@ export class TalosTabSwitchChild extends RemotePageChild {
     super.actorCreated();
   }
 
-  handleEvent(event) {}
+  handleEvent() {}
 
   receiveMessage(message) {
     if (message.name == "GarbageCollect") {

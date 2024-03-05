@@ -48,7 +48,7 @@ LogController.extend = function (args, skip) {
 };
 
 /* logs message with given level. Currently used locally by log() and error() */
-LogController.logWithLevel = function (level, message /*, ...*/) {
+LogController.logWithLevel = function (level /*, ...*/) {
   var msg = LogController.createLogMessage(
     level,
     LogController.extend(arguments, 1)

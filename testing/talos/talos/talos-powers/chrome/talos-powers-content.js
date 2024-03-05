@@ -35,7 +35,7 @@ addMessageListener("TalosContentProfiler:Response", msg => {
 
 addEventListener(
   "TalosPowersContentForceCCAndGC",
-  e => {
+  () => {
     Cu.forceGC();
     Cu.forceCC();
     Cu.forceShrinkingGC();
@@ -46,7 +46,7 @@ addEventListener(
 
 addEventListener(
   "TalosPowersContentFocus",
-  e => {
+  () => {
     if (
       content.location.protocol != "file:" &&
       content.location.hostname != "localhost" &&
@@ -72,7 +72,7 @@ addEventListener(
 
 addEventListener(
   "TalosPowersContentGetStartupInfo",
-  e => {
+  () => {
     sendAsyncMessage("TalosPowersContent:GetStartupInfo");
     addMessageListener(
       "TalosPowersContent:GetStartupInfo:Result",
@@ -103,7 +103,7 @@ addEventListener(
 
 addEventListener(
   "TalosPowersContentDumpConsole",
-  e => {
+  () => {
     var messages;
     try {
       messages = Services.console.getMessageArray();
@@ -147,7 +147,7 @@ addEventListener(
  */
 addEventListener(
   "TalosPowersWebRenderCapture",
-  e => {
+  () => {
     if (content && content.windowUtils) {
       content.windowUtils.wrCapture();
     } else {

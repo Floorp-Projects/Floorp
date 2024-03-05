@@ -40,7 +40,7 @@ function waitForPayload(count, panelWin) {
   return new Promise(resolve => {
     let payloadReady = 0;
 
-    function onPayloadReady(_, id) {
+    function onPayloadReady() {
       payloadReady++;
       maybeResolve();
     }

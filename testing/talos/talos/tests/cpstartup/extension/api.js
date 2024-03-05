@@ -116,7 +116,7 @@ this.cpstartup = class extends ExtensionAPI {
   removeTab(tab) {
     return new Promise(resolve => {
       let browser = tab.linkedBrowser;
-      let observer = (subject, topic, data) => {
+      let observer = subject => {
         if (subject === browser) {
           Services.obs.removeObserver(observer, BROWSER_FLUSH_TOPIC);
           resolve();

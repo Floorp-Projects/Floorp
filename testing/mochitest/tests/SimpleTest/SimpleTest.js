@@ -384,7 +384,7 @@ function usesFailurePatterns() {
  * @return {boolean} Whether a matched failure pattern is found.
  */
 function recordIfMatchesFailurePattern(name, diag) {
-  let index = SimpleTest.expected.findIndex(([pat, count]) => {
+  let index = SimpleTest.expected.findIndex(([pat]) => {
     return (
       pat == null ||
       (typeof name == "string" && name.includes(pat)) ||

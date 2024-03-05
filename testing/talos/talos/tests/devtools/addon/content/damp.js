@@ -216,7 +216,7 @@ Damp.prototype = {
     return tab;
   },
 
-  async testTeardown(url) {
+  async testTeardown() {
     // Disable closing animation to avoid intermittents and prevent having to wait for
     // animation's end. (See bug 1480953)
     this._win.gBrowser.removeCurrentTab({ animate: false });

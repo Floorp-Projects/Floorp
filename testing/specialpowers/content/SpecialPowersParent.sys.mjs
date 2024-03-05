@@ -247,7 +247,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
     swm.removeListener(this._serviceWorkerListener);
   }
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     function addDumpIDToMessage(propertyName) {
       try {
         var id = aSubject.getPropertyAsAString(propertyName);

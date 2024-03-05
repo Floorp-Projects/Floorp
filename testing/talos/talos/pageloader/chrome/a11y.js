@@ -55,7 +55,7 @@
     ensureAccessibleTreeForNode(node);
   }
 
-  addEventListener("DOMContentLoaded", e => {
+  addEventListener("DOMContentLoaded", () => {
     Cu.exportFunction(initAccessibility, content, {
       defineAs: "initAccessibility",
     });

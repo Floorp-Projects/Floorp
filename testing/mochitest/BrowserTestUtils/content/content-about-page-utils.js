@@ -14,7 +14,7 @@ function AboutPage(aboutHost, chromeURL, uriFlags) {
 
 AboutPage.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIAboutModule"]),
-  getURIFlags(aURI) {
+  getURIFlags() {
     // eslint-disable-line no-unused-vars
     return this.uriFlags;
   },

@@ -27,7 +27,7 @@ this.startup_about_home_paint = class extends ExtensionAPI {
     });
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "browser-idle-startup-tasks-finished") {
       this.checkForTelemetry();
     }

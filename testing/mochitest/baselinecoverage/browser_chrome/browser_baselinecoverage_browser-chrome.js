@@ -13,7 +13,7 @@ add_task(async function () {
       gBrowser,
       url: "about:blank",
     },
-    async function (browser) {
+    async function () {
       ok(true, "Collecting baseline coverage for browser-chrome tests.");
       await new Promise(c => setTimeout(c, 30 * 1000));
     }

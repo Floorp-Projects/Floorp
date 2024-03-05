@@ -28,7 +28,7 @@ this.sessionrestore = class extends ExtensionAPI {
     this.run();
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "browser-idle-startup-tasks-finished") {
       this.promiseIdleFinished.resolve();
     }

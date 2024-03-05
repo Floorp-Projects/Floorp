@@ -145,7 +145,7 @@ async function stepDebuggerAndLog(dbg, tab, testFunction) {
   }
 }
 
-async function testProjectSearch(dbg, tab) {
+async function testProjectSearch(dbg) {
   dump("Executing project search\n");
   const test = runTest(`custom.jsdebugger.project-search.DAMP`);
   const firstSearchResultTest = runTest(
@@ -216,7 +216,7 @@ async function testPreview(dbg, tab, testFunction) {
   await garbageCollect();
 }
 
-async function testOpeningLargeMinifiedFile(dbg, tab) {
+async function testOpeningLargeMinifiedFile(dbg) {
   const fileFirstMinifiedChars = `(()=>{var e,t,n,r,o={82603`;
 
   dump("Open minified.js (large minified file)\n");

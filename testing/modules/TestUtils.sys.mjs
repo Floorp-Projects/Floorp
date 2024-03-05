@@ -207,33 +207,30 @@ export var TestUtils = {
    */
   waitForPrefChange(prefName, checkFn) {
     return new Promise((resolve, reject) => {
-      Services.prefs.addObserver(
-        prefName,
-        function observer(subject, topic, data) {
-          try {
-            let prefValue = null;
-            switch (Services.prefs.getPrefType(prefName)) {
-              case Services.prefs.PREF_STRING:
-                prefValue = Services.prefs.getStringPref(prefName);
-                break;
-              case Services.prefs.PREF_INT:
-                prefValue = Services.prefs.getIntPref(prefName);
-                break;
-              case Services.prefs.PREF_BOOL:
-                prefValue = Services.prefs.getBoolPref(prefName);
-                break;
-            }
-            if (checkFn && !checkFn(prefValue)) {
-              return;
-            }
-            Services.prefs.removeObserver(prefName, observer);
-            resolve(prefValue);
-          } catch (ex) {
-            Services.prefs.removeObserver(prefName, observer);
-            reject(ex);
+      Services.prefs.addObserver(prefName, function observer() {
+        try {
+          let prefValue = null;
+          switch (Services.prefs.getPrefType(prefName)) {
+            case Services.prefs.PREF_STRING:
+              prefValue = Services.prefs.getStringPref(prefName);
+              break;
+            case Services.prefs.PREF_INT:
+              prefValue = Services.prefs.getIntPref(prefName);
+              break;
+            case Services.prefs.PREF_BOOL:
+              prefValue = Services.prefs.getBoolPref(prefName);
+              break;
           }
+          if (checkFn && !checkFn(prefValue)) {
+            return;
+          }
+          Services.prefs.removeObserver(prefName, observer);
+          resolve(prefValue);
+        } catch (ex) {
+          Services.prefs.removeObserver(prefName, observer);
+          reject(ex);
         }
-      );
+      });
     });
   },
 

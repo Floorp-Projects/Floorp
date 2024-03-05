@@ -247,7 +247,7 @@ TestRunner.logger.addListener(
 var gTestList = [];
 var RunSet = {};
 
-RunSet.runall = function (e) {
+RunSet.runall = function () {
   // Filter tests to include|exclude tests based on data in params.filter.
   // This allows for including or excluding tests from the gTestList
   // TODO Only used by ipc tests, remove once those are implemented sanely
@@ -265,7 +265,7 @@ RunSet.runall = function (e) {
   }
 };
 
-RunSet.runtests = function (e) {
+RunSet.runtests = function () {
   // Which tests we're going to run
   var my_tests = gTestList;
 

@@ -17,7 +17,7 @@ function success(position) {
   message.innerHTML += "<p>Altitude: " + position.coords.altitude + "</p>";
 }
 
-function error(msg) {
+function error() {
   let message = document.getElementById("status");
   message.innerHTML = "Failed to get geolocation.";
 }

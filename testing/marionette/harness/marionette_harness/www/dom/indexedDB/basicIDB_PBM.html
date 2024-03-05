@@ -10,7 +10,7 @@
 					var req = indexedDB.open(name, ver);
 					req.onerror = reject;
 
-					req.onsuccess = (event) => {
+					req.onsuccess = () => {
 						resolve(req.result);
 					};
 

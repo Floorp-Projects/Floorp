@@ -188,7 +188,7 @@
   const WARMUP_TIMESTAMPS = 30; // Must be at least 2
   const MEASURED_FRAMES   = 100;
 
-  var gDoneCallback = function placeholder(intervals) {};
+  var gDoneCallback = function placeholder() {};
   var gCurrentTimestamp = 0;
   var gResultTimestamps = [];
 
@@ -202,7 +202,7 @@
     });
   }
 
-  function draw(timestamp) {
+  function draw() {
     // It's possible that under some implementations (even if not our current one),
     // the rAF callback arg will be in some way "optimized", e.g. always point to the
     // estimated next vsync timestamp, in order to allow the callee to have less

@@ -434,7 +434,7 @@ function _setupDevToolsServer(breakpointFiles, callback) {
     // Or when devtools are destroyed and we should stop observing.
     "xpcshell-test-devtools-shutdown",
   ];
-  let observe = function (subject, topic, data) {
+  let observe = function (subject, topic) {
     if (topic === "devtools-thread-ready") {
       const threadActor = subject.wrappedJSObject;
       threadActor.setBreakpointOnLoad(breakpointFiles);
@@ -745,7 +745,7 @@ function _execute_test() {
  * @param aFiles Array of files to load.
  */
 function _load_files(aFiles) {
-  function load_file(element, index, array) {
+  function load_file(element) {
     try {
       let startTime = Cu.now();
       load(element);
@@ -1829,7 +1829,7 @@ function run_next_test() {
   }
 
   function frontLoadSetups() {
-    _gTests.sort(([propsA, funcA], [propsB, funcB]) => {
+    _gTests.sort(([propsA], [propsB]) => {
       if (propsB.isSetup === propsA.isSetup) {
         return 0;
       }

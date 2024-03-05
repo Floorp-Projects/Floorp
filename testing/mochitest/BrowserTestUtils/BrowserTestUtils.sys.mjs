@@ -704,7 +704,7 @@ export var BrowserTestUtils = {
    * @resolves When STATE_START reaches the tab's progress listener
    */
   browserStarted(browser, expectedURI) {
-    let testFn = function (aStateFlags, aStatus) {
+    let testFn = function (aStateFlags) {
       return (
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_START
@@ -763,7 +763,7 @@ export var BrowserTestUtils = {
     } else {
       urlMatches = urlToMatch => urlToMatch != "about:blank";
     }
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       tabbrowser.tabContainer.addEventListener(
         "TabOpen",
         function tabOpenListener(openEvent) {
@@ -829,15 +829,9 @@ export var BrowserTestUtils = {
    * @resolves When onLocationChange fires.
    */
   waitForLocationChange(tabbrowser, url) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       let progressListener = {
-        onLocationChange(
-          aBrowser,
-          aWebProgress,
-          aRequest,
-          aLocationURI,
-          aFlags
-        ) {
+        onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI) {
           if (
             (url && aLocationURI.spec != url) ||
             (!url && aLocationURI.spec == "about:blank")
@@ -885,7 +879,7 @@ export var BrowserTestUtils = {
     }
 
     return new Promise((resolve, reject) => {
-      let observe = async (win, topic, data) => {
+      let observe = async (win, topic) => {
         if (topic != "domwindowopened") {
           return;
         }
@@ -1002,7 +996,7 @@ export var BrowserTestUtils = {
    */
   domWindowOpened(win, checkFn) {
     return new Promise(resolve => {
-      async function observer(subject, topic, data) {
+      async function observer(subject, topic) {
         if (topic == "domwindowopened" && (!win || subject === win)) {
           let observedWindow = subject;
           if (checkFn && !(await checkFn(observedWindow))) {
@@ -1055,7 +1049,7 @@ export var BrowserTestUtils = {
    */
   domWindowClosed(win) {
     return new Promise(resolve => {
-      function observer(subject, topic, data) {
+      function observer(subject, topic) {
         if (topic == "domwindowclosed" && (!win || subject === win)) {
           Services.ww.unregisterNotification(observer);
           resolve(subject);
@@ -1167,7 +1161,7 @@ export var BrowserTestUtils = {
           win.gBrowser._insertBrowser(win.gBrowser.getTabForBrowser(browser));
         });
 
-        let observer = (subject, topic, data) => {
+        let observer = subject => {
           if (browserSet.has(subject)) {
             browserSet.delete(subject);
           }
@@ -1202,7 +1196,7 @@ export var BrowserTestUtils = {
     return new Promise(resolve => {
       let browser = tab.linkedBrowser;
       let flushTopic = "sessionstore-browser-shutdown-flush";
-      let observer = (subject, topic, data) => {
+      let observer = subject => {
         if (subject === browser) {
           Services.obs.removeObserver(observer, flushTopic);
           // Wait for the next event tick to make sure other listeners are
@@ -1615,7 +1609,7 @@ export var BrowserTestUtils = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "test-complete":
         this._cleanupContentEventListeners();
@@ -2054,7 +2048,7 @@ export var BrowserTestUtils = {
     let expectedPromises = [];
 
     let crashCleanupPromise = new Promise((resolve, reject) => {
-      let observer = (subject, topic, data) => {
+      let observer = (subject, topic) => {
         if (topic != "ipc:content-shutdown") {
           reject("Received incorrect observer topic: " + topic);
           return;
@@ -2129,7 +2123,7 @@ export var BrowserTestUtils = {
 
     if (shouldShowTabCrashPage) {
       expectedPromises.push(
-        new Promise((resolve, reject) => {
+        new Promise(resolve => {
           browser.addEventListener(
             "AboutTabCrashedReady",
             function onCrash() {
@@ -2187,7 +2181,7 @@ export var BrowserTestUtils = {
     });
 
     let sawNormalCrash = false;
-    let observer = (subject, topic, data) => {
+    let observer = () => {
       sawNormalCrash = true;
     };
 
@@ -2232,7 +2226,7 @@ export var BrowserTestUtils = {
   waitForAttribute(attr, element, value) {
     let MutationObserver = element.ownerGlobal.MutationObserver;
     return new Promise(resolve => {
-      let mut = new MutationObserver(mutations => {
+      let mut = new MutationObserver(() => {
         if (
           (!value && element.hasAttribute(attr)) ||
           (value && element.getAttribute(attr) === value)
@@ -2263,7 +2257,7 @@ export var BrowserTestUtils = {
     let MutationObserver = element.ownerGlobal.MutationObserver;
     return new Promise(resolve => {
       dump("Waiting for removal\n");
-      let mut = new MutationObserver(mutations => {
+      let mut = new MutationObserver(() => {
         if (!element.hasAttribute(attr)) {
           resolve();
           mut.disconnect();

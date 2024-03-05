@@ -27,7 +27,7 @@ const windowTracker = {
     Services.ww.registerNotification(this);
   },
 
-  async observe(window, topic, data) {
+  async observe(window, topic) {
     if (topic === "domwindowopened") {
       await new Promise(resolve =>
         window.addEventListener("DOMWindowCreated", resolve, { once: true })
@@ -50,13 +50,13 @@ function readSync(uri) {
   return new TextDecoder().decode(buffer);
 }
 
-function startup(data, reason) {
+function startup(data) {
   Services.scriptloader.loadSubScript(
     data.resourceURI.resolve("content/initialize_browser.js")
   );
   windowTracker.init();
 }
 
-function shutdown(data, reason) {}
-function install(data, reason) {}
-function uninstall(data, reason) {}
+function shutdown() {}
+function install() {}
+function uninstall() {}

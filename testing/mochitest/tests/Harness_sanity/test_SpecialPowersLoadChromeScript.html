@@ -37,7 +37,7 @@ function endOfFirstTest() {
   // that is used to run the chrome script.
   script2 = SpecialPowers.loadChromeScript(_ => {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("valid-assert", function (message) {
+    addMessageListener("valid-assert", function () {
       assert.equal(typeof XMLHttpRequest, "function", "XMLHttpRequest is defined");
       assert.equal(typeof CSS, "undefined", "CSS is not defined");
       sendAsyncMessage("valid-assert-done");
