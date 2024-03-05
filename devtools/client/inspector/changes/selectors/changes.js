@@ -65,7 +65,7 @@ function getChangesTree(state, filter = {}) {
   }
 
   return Object.entries(state)
-    .filter(([sourceId, source]) => {
+    .filter(([sourceId]) => {
       // Use only matching sources if an array to filter by was provided.
       if (sourceIdsFilter.length) {
         return sourceIdsFilter.includes(sourceId);
@@ -87,7 +87,7 @@ function getChangesTree(state, filter = {}) {
         ...source,
         // Build a new collection of rules keyed by rule id.
         rules: Object.entries(rules)
-          .filter(([ruleId, rule]) => {
+          .filter(([ruleId]) => {
             // Use only matching rules if an array to filter by was provided.
             if (rulesIdsFilter.length) {
               return rulesIdsFilter.includes(ruleId);
@@ -237,22 +237,19 @@ function getChangesStylesheet(state, filter) {
   }
 
   // Iterate through all sources in the change tree and build a CSS stylesheet string.
-  return Object.entries(changeTree).reduce(
-    (stylesheetText, [sourceId, source]) => {
-      const { href, rules } = source;
-      // Write code comment with source origin
-      stylesheetText += `\n/* ${getSourceForDisplay(source)} | ${href} */\n`;
-      // Write CSS rules
-      stylesheetText += Object.entries(rules).reduce((str, [ruleId, rule]) => {
-        // Add a new like only after top-level rules (level == 0)
-        str += writeRule(ruleId, rule, 0) + "\n";
-        return str;
-      }, "");
+  return Object.values(changeTree).reduce((stylesheetText, source) => {
+    const { href, rules } = source;
+    // Write code comment with source origin
+    stylesheetText += `\n/* ${getSourceForDisplay(source)} | ${href} */\n`;
+    // Write CSS rules
+    stylesheetText += Object.entries(rules).reduce((str, [ruleId, rule]) => {
+      // Add a new like only after top-level rules (level == 0)
+      str += writeRule(ruleId, rule, 0) + "\n";
+      return str;
+    }, "");
 
-      return stylesheetText;
-    },
-    ""
-  );
+    return stylesheetText;
+  }, "");
 }
 
 module.exports = {

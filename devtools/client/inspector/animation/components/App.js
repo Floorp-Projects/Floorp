@@ -60,7 +60,7 @@ class App extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (
       this.props.animations.length !== 0 || nextProps.animations.length !== 0
     );

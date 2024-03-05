@@ -27,7 +27,7 @@ loader.lazyRequireGetter(
  * system.
  */
 exports.HeapSnapshotFileActor = class HeapSnapshotFileActor extends Actor {
-  constructor(conn, parent) {
+  constructor(conn) {
     super(conn, heapSnapshotFileSpec);
 
     if (

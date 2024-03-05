@@ -217,7 +217,7 @@ class Editor extends PureComponent {
       codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
       codeMirrorWrapper.addEventListener("mouseover", onMouseOver(codeMirror));
 
-      const toggleFoldMarkerVisibility = e => {
+      const toggleFoldMarkerVisibility = () => {
         if (node instanceof HTMLElement) {
           node
             .querySelectorAll(".CodeMirror-guttermarker-subtle")
@@ -565,7 +565,7 @@ class Editor extends PureComponent {
     }
   }
 
-  shouldScrollToLocation(nextProps, editor) {
+  shouldScrollToLocation(nextProps) {
     if (
       !nextProps.selectedLocation?.line ||
       !nextProps.selectedSourceTextContent

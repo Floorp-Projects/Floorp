@@ -218,7 +218,7 @@ class CustomizedReload {
     return this.waitForReloadCompleted;
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic !== "initial-document-element-inserted") {
       return;
     }
@@ -319,7 +319,7 @@ class WebExtensionInspectedWindowActor extends Actor {
     this.targetActor = targetActor;
   }
 
-  destroy(conn) {
+  destroy() {
     super.destroy();
 
     if (this.customizedReload) {

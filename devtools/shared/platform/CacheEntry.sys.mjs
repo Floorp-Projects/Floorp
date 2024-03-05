@@ -98,10 +98,10 @@ export function getResponseCacheObject(request) {
       "",
       Ci.nsICacheStorage.OPEN_SECRETLY,
       {
-        onCacheEntryCheck: entry => {
+        onCacheEntryCheck: () => {
           return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
         },
-        onCacheEntryAvailable: (cacheEntry, isnew, status) => {
+        onCacheEntryAvailable: cacheEntry => {
           if (cacheEntry) {
             const cacheObject = buildResponseCacheObject(cacheEntry);
             resolve(cacheObject);

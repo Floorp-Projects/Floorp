@@ -64,18 +64,18 @@ exports.check = async function check() {
     };
 
     const setupSocket = function () {
-      socket.s.onerror = function (event) {
+      socket.s.onerror = function () {
         dumpn("running checker onerror");
         finish(false);
       };
 
-      socket.s.onopen = function (event) {
+      socket.s.onopen = function () {
         dumpn("running checker onopen");
         state = "start";
         runFSM();
       };
 
-      socket.s.onclose = function (event) {
+      socket.s.onclose = function () {
         dumpn("running checker onclose");
       };
 

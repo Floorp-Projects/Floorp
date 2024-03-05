@@ -438,7 +438,7 @@ async function testTabCharacterShortcut(shortcuts) {
 
   info("Test tab character shortcut");
 
-  once(shortcuts, "CmdOrCtrl+Alt+I", event => {
+  once(shortcuts, "CmdOrCtrl+Alt+I", () => {
     ok(false, "This handler must not be executed");
   });
 

@@ -48,7 +48,7 @@ class _ActionButton extends PureComponent {
       {
         className,
         disabled,
-        onClick: e => onClick(),
+        onClick: () => onClick(),
         title: disabled && disabledTitle ? disabledTitle : undefined,
       },
       this.props.children
@@ -102,7 +102,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
         {
           className,
           disabled,
-          onClick: e => onClick(),
+          onClick: () => onClick(),
         },
         labelId
       )

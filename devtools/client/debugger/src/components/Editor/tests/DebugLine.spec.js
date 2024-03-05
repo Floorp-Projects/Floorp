@@ -15,7 +15,7 @@ function createMockDocument(clear) {
     addLineClass: jest.fn(),
     removeLineClass: jest.fn(),
     markText: jest.fn(() => ({ clear })),
-    getLine: line => "",
+    getLine: () => "",
   };
 
   return doc;

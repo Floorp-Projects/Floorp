@@ -15,19 +15,19 @@
       "use strict";
 
       window.addEventListener("load", function() {
-        function initialSetup(event) {
+        function initialSetup() {
           // eslint-disable-next-line no-debugger
           debugger;
           const button = document.querySelector("button");
           button.onclick = clickHandler;
         }
-        function clickHandler(event) {
+        function clickHandler() {
           window.foobar = "clickHandler";
         }
-        function changeHandler(event) {
+        function changeHandler() {
           window.foobar = "changeHandler";
         }
-        function keyupHandler(event) {
+        function keyupHandler() {
           window.foobar = "keyupHandler";
         }
 

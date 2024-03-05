@@ -199,12 +199,10 @@ class TracerActor extends Actor {
    *
    * @param {Boolean} enabled
    *        True if the tracer starts tracing, false it it stops.
-   * @param {String} reason
-   *        Optional string to justify why the tracer stopped.
    * @return {Boolean}
    *         Return true, if the JavaScriptTracer should log a message to stdout.
    */
-  onTracingToggled(enabled, reason) {
+  onTracingToggled(enabled) {
     // stopTracing will clear `logMethod`, so compute this before calling it.
     const shouldLogToStdout = this.logMethod == LOG_METHODS.STDOUT;
 
@@ -382,9 +380,6 @@ class TracerActor extends Actor {
   /**
    * Called by JavaScriptTracer class when a new JavaScript frame is executed.
    *
-   * @param {Number} frameId
-   *        Unique identifier for the current frame.
-   *        This should match a frame notified via onTracingFrameExit.
    * @param {Debugger.Frame} frame
    *        A descriptor object for the JavaScript frame.
    * @param {Number} depth
@@ -401,7 +396,6 @@ class TracerActor extends Actor {
    *         Return true, if the JavaScriptTracer should log the frame to stdout.
    */
   onTracingFrame({
-    frameId,
     frame,
     depth,
     formatedDisplayName,

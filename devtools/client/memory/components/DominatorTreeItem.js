@@ -47,7 +47,7 @@ class DominatorTreeItem extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (
       this.props.item != nextProps.item ||
       this.props.depth != nextProps.depth ||

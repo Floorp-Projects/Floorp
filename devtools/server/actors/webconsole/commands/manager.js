@@ -95,7 +95,7 @@ const WebConsoleCommandsManager = {
    *     }
    *   });
    */
-  register({ name, isSideEffectFree, command, validArguments, usage }) {
+  register({ name, isSideEffectFree, command, validArguments }) {
     if (
       typeof command != "function" &&
       !(typeof command == "object" && typeof command.get == "function")
@@ -691,7 +691,7 @@ WebConsoleCommandsManager.register({
 WebConsoleCommandsManager.register({
   name: "help",
   isSideEffectFree: false,
-  command(owner, args) {
+  command(owner) {
     owner.helperResult = { type: "help" };
   },
 });

@@ -24,7 +24,7 @@
 function debounceActions(wait, maxWait) {
   let queuedActions = [];
 
-  return store => next => {
+  return () => next => {
     const debounced = debounce(
       () => {
         next(batchActions(queuedActions));

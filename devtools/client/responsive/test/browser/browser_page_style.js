@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = `${URL_ROOT}page_style.html`;
 
-addRDMTask(TEST_URL, async function ({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   // Store the RDM body text color for later.
   const rdmWindow = ui.toolWindow;
   const rdmTextColor = rdmWindow.getComputedStyle(

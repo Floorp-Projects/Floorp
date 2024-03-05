@@ -907,7 +907,7 @@ module.exports = connect(
   state => ({
     shouldExpandPreview: state.ui.shouldExpandHeadersUrlPreview,
   }),
-  (dispatch, props) => ({
+  dispatch => ({
     setHeadersUrlPreviewExpanded: expanded =>
       dispatch(Actions.setHeadersUrlPreviewExpanded(expanded)),
     openRequestBlockingAndAddUrl: url =>

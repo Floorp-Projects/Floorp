@@ -132,7 +132,7 @@ async function setProperty(rule, index, property, value) {
   await modifications.apply();
 }
 
-async function renameProperty(rule, index, oldName, newName, value) {
+async function renameProperty(rule, index, oldName, newName) {
   const modifications = rule.startModifyingProperties({ isKnown: true });
   modifications.renameProperty(index, oldName, newName);
   await modifications.apply();

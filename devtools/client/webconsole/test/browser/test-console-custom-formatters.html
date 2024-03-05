@@ -33,7 +33,7 @@
             }
             return null;
           },
-          hasBody: obj => false
+          hasBody: () => false
         },
         {
           header: obj => {
@@ -42,7 +42,7 @@
             }
             return null;
           },
-          hasBody: obj => true,
+          hasBody: () => true,
           body: obj => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
         },
         {
@@ -108,7 +108,7 @@
           ]}
         },
         {
-          header: (obj, config) => {
+          header: (obj) => {
             if (obj === proxy) {
               return [
                 "span",
@@ -118,7 +118,7 @@
             }
             return null;
           },
-          hasBody: obj => false
+          hasBody: () => false
         },
       ];
 

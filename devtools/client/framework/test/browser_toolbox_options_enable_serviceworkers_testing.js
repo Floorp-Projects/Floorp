@@ -67,7 +67,7 @@ function register() {
   return sendMessage("devtools:sw-test:register");
 }
 
-function unregister(swr) {
+function unregister() {
   return sendMessage("devtools:sw-test:unregister");
 }
 

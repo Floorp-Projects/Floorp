@@ -23,7 +23,7 @@ const POPUP_DEBUGGER_STATEMENT_URL = `https://example.com/document-builder.sjs?h
 `)}`;
 
 function isPopupPaused(popupBrowsingContext) {
-  return SpecialPowers.spawn(popupBrowsingContext, [], function (url) {
+  return SpecialPowers.spawn(popupBrowsingContext, [], function () {
     return content.wrappedJSObject.paused;
   });
 }

@@ -115,7 +115,7 @@ async function toggleTracing() {
   return commands.tracerCommand.toggle();
 }
 
-function resume(thread, frameId) {
+function resume(thread) {
   return lookupThreadFront(thread).resume();
 }
 

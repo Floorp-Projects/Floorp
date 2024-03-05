@@ -588,9 +588,8 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * On mouse out, make sure to unhighlight.
-   * @param {DOMEvent} event.
    */
-  handleMouseOut(event) {
+  handleMouseOut() {
     this.inspector.highlighters.hideHighlighterType(
       this.inspector.highlighters.TYPES.BOXMODEL
     );

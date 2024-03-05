@@ -79,7 +79,7 @@ class nsIConsoleListenerWatcher {
    * @param {TargetActor} targetActor
    * @return {Boolean}
    */
-  shouldHandleTarget(targetActor) {
+  shouldHandleTarget() {
     return true;
   }
 
@@ -91,7 +91,7 @@ class nsIConsoleListenerWatcher {
    * @param {nsIScriptError|nsIConsoleMessage} message
    * @return {Boolean}
    */
-  shouldHandleMessage(targetActor, message) {
+  shouldHandleMessage() {
     throw new Error(
       "'shouldHandleMessage' should be implemented in the class that extends nsIConsoleListenerWatcher"
     );
@@ -101,12 +101,12 @@ class nsIConsoleListenerWatcher {
    * Prepare the resource to be sent to the client. This should be implemented on the
    * child class.
    *
-   * @param targetActor
-   * @param nsIScriptError|nsIConsoleMessage message
+   * @param _targetActor
+   * @param nsIScriptError|nsIConsoleMessage _message
    * @return object
    *         The object you can send to the remote client.
    */
-  buildResource(targetActor, message) {
+  buildResource(_targetActor, _message) {
     throw new Error(
       "'buildResource' should be implemented in the class that extends nsIConsoleListenerWatcher"
     );

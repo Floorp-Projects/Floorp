@@ -43,7 +43,7 @@ async function loadGeneratedSource(sourceActor, { client }) {
 
 async function loadOriginalSource(
   source,
-  { getState, client, sourceMapLoader, prettyPrintWorker }
+  { getState, sourceMapLoader, prettyPrintWorker }
 ) {
   if (isPretty(source)) {
     const generatedSource = getGeneratedSource(getState(), source);

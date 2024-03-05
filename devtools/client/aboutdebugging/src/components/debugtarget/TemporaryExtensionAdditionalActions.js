@@ -125,7 +125,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
           className:
             "default-button default-button--micro " +
             "qa-temporary-extension-terminate-bgscript-button",
-          onClick: e => this.terminateBackgroundScript(),
+          onClick: () => this.terminateBackgroundScript(),
         },
         "Terminate Background Script"
       )
@@ -142,7 +142,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
           className:
             "default-button default-button--micro " +
             "qa-temporary-extension-remove-button",
-          onClick: e => this.remove(),
+          onClick: () => this.remove(),
         },
         "Remove"
       )
@@ -166,7 +166,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
               className:
                 "default-button default-button--micro " +
                 "qa-temporary-extension-reload-button",
-              onClick: e => this.reload(),
+              onClick: () => this.reload(),
             },
             "Reload"
           )

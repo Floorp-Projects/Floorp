@@ -5,7 +5,7 @@
 import { PROMISE } from "../utils/middleware/promise";
 
 export function pauseOnDebuggerStatement(shouldPauseOnDebuggerStatement) {
-  return ({ dispatch, getState, client }) => {
+  return ({ dispatch, client }) => {
     return dispatch({
       type: "PAUSE_ON_DEBUGGER_STATEMENT",
       shouldPauseOnDebuggerStatement,

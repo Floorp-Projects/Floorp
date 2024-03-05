@@ -332,7 +332,7 @@ function isNonEmpty(node) {
  *
  * @overrides Visitor.prototype.exit
  */
-CensusTreeNodeVisitor.prototype.exit = function (breakdown, report, edge) {
+CensusTreeNodeVisitor.prototype.exit = function () {
   // Ensure all children are sorted and have their counts/bytes aggregated. We
   // only need to consider cache children here, because other children
   // correspond to other sub-reports and we already fixed them up in an earlier
@@ -370,7 +370,7 @@ CensusTreeNodeVisitor.prototype.exit = function (breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.count
  */
-CensusTreeNodeVisitor.prototype.count = function (breakdown, report, edge) {
+CensusTreeNodeVisitor.prototype.count = function (breakdown, report) {
   const node = this._nodeStack[this._nodeStack.length - 1];
   node.reportLeafIndex = this._index;
 

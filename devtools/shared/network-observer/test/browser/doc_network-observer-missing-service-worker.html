@@ -21,9 +21,9 @@
         // NOTE: This service worker file does not exist which enables testing
         // that a 404 requests is received.
         return sw.register("serviceworker-missing.js")
-          .then(registration => {
+          .then(() => {
             throw new Error("The Service Worker file should not exist");
-          }).catch(err => {
+          }).catch(() => {
             console.log("Registration failed as expected");
           });
       }

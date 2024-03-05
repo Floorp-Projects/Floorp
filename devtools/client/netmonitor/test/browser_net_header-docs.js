@@ -48,9 +48,9 @@ add_task(async function () {
    * Tests that a "Learn More" button is only shown if
    * and only if a header is documented in MDN.
    */
-  function testShowLearnMore(data) {
+  function testShowLearnMore() {
     const selector = ".properties-view .treeRow.stringRow";
-    document.querySelectorAll(selector).forEach((rowEl, index) => {
+    document.querySelectorAll(selector).forEach(rowEl => {
       const headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0]
         .textContent;
       const headerDocURL = getHeadersURL(headerName);

@@ -27,11 +27,7 @@ function getOutOfScopeLines(outOfScopeLocations) {
   return uniqueLines;
 }
 
-async function getInScopeLines(
-  location,
-  sourceTextContent,
-  { dispatch, getState, parserWorker }
-) {
+async function getInScopeLines(location, sourceTextContent, { parserWorker }) {
   let locations = null;
   if (location.line && parserWorker.isLocationSupported(location)) {
     locations = await parserWorker.findOutOfScopeLocations(location);

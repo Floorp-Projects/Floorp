@@ -138,12 +138,10 @@ function identityWrite(v) {
  * @param object typeObject
  *    An object whose properties will be stored in the type, including
  *    the `read` and `write` methods.
- * @param object options
- *    Can specify `thawed` to prevent the type from being frozen.
  *
  * @returns a type object that can be used in protocol definitions.
  */
-types.addType = function (name, typeObject = {}, options = {}) {
+types.addType = function (name, typeObject = {}) {
   if (registeredTypes.has(name)) {
     throw Error("Type '" + name + "' already exists.");
   }

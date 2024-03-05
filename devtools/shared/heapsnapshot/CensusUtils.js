@@ -29,7 +29,7 @@ exports.Visitor = Visitor;
  *        The edge leading to this sub-report. The edge is null if (but not iff!
  *        eg, null allocation stack edges) we are entering the root report.
  */
-Visitor.prototype.enter = function (breakdown, report, edge) {};
+Visitor.prototype.enter = function () {};
 
 /**
  * The `exit` method is called when traversal of a sub-report has finished.
@@ -44,7 +44,7 @@ Visitor.prototype.enter = function (breakdown, report, edge) {};
  *        The edge leading to this sub-report. The edge is null if (but not iff!
  *        eg, null allocation stack edges) we are entering the root report.
  */
-Visitor.prototype.exit = function (breakdown, report, edge) {};
+Visitor.prototype.exit = function () {};
 
 /**
  * The `count` method is called when leaf nodes (reports whose breakdown is
@@ -60,17 +60,17 @@ Visitor.prototype.exit = function (breakdown, report, edge) {};
  *        The edge leading to this count report. The edge is null if we are
  *        entering the root report.
  */
-Visitor.prototype.count = function (breakdown, report, edge) {};
+Visitor.prototype.count = function () {};
 
 /** * getReportEdges *********************************************************/
 
 const EDGES = Object.create(null);
 
-EDGES.count = function (breakdown, report) {
+EDGES.count = function () {
   return [];
 };
 
-EDGES.bucket = function (breakdown, report) {
+EDGES.bucket = function () {
   return [];
 };
 
@@ -277,7 +277,7 @@ DiffVisitor.prototype.enter = function (breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.exit
  */
-DiffVisitor.prototype.exit = function (breakdown, report, edge) {
+DiffVisitor.prototype.exit = function (breakdown) {
   // Find all the edges in the other census report that were not traversed and
   // add them to the results directly.
   const other = this._otherCensusStack[this._otherCensusStack.length - 1];
@@ -300,7 +300,7 @@ DiffVisitor.prototype.exit = function (breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.count
  */
-DiffVisitor.prototype.count = function (breakdown, report, edge) {
+DiffVisitor.prototype.count = function (breakdown, report) {
   const other = this._otherCensusStack[this._otherCensusStack.length - 1];
   const results = this._resultsStack[this._resultsStack.length - 1];
 
@@ -447,7 +447,7 @@ GetLeavesVisitor.prototype = Object.create(Visitor.prototype);
 /**
  * @overrides Visitor.prototype.enter
  */
-GetLeavesVisitor.prototype.enter = function (breakdown, report, edge) {
+GetLeavesVisitor.prototype.enter = function (breakdown, report) {
   this._index++;
   if (this._targetIndices.has(this._index)) {
     this._leaves.push(report);

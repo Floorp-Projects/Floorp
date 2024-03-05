@@ -17,7 +17,7 @@ const {
  * This middleware converts tabs object that get from DevToolsClient.listProcesses() to
  * data which is used in DebugTargetItem.
  */
-const processComponentDataMiddleware = store => next => action => {
+const processComponentDataMiddleware = () => next => action => {
   switch (action.type) {
     case REQUEST_PROCESSES_SUCCESS: {
       const mainProcessComponentData = toMainProcessComponentData(
@@ -31,7 +31,7 @@ const processComponentDataMiddleware = store => next => action => {
   return next(action);
 };
 
-function toMainProcessComponentData(process) {
+function toMainProcessComponentData() {
   const type = DEBUG_TARGETS.PROCESS;
   const icon = "chrome://devtools/skin/images/aboutdebugging-process-icon.svg";
 

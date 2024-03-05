@@ -13,7 +13,7 @@ const {
 
 let testFileContent;
 
-function traceFrame({ frame, depth, prefix }) {
+function traceFrame({ frame }) {
   const { script } = frame;
   const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
 

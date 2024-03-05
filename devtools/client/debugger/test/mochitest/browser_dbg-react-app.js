@@ -15,7 +15,7 @@ add_task(async function () {
   invokeInTab("clickButton");
   await waitForPaused(dbg);
 
-  await waitForState(dbg, state =>
+  await waitForState(dbg, () =>
     dbg.selectors.getSelectedScopeMappings(dbg.selectors.getCurrentThread())
   );
 

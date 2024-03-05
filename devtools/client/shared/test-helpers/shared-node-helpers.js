@@ -13,7 +13,7 @@ function setMocksInGlobal() {
   global.Cc = new Proxy(
     {},
     {
-      get(target, prop, receiver) {
+      get(target, prop) {
         if (prop.startsWith("@mozilla.org")) {
           return { getService: () => ({}) };
         }

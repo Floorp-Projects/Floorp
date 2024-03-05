@@ -148,7 +148,7 @@ function getWebConsoleUiMock(hud) {
           mainRoot: {},
         },
         objectCommand: {
-          releaseObjects: async frontsToRelease => {},
+          releaseObjects: async () => {},
         },
       },
       ...hud,

@@ -44,7 +44,7 @@ class DominatorTreeSubtreeFetchingClass extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (
       this.props.depth !== nextProps.depth ||
       this.props.focused !== nextProps.focused
@@ -84,7 +84,7 @@ class DominatorTreeSiblingLinkClass extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (
       this.props.depth !== nextProps.depth ||
       this.props.focused !== nextProps.focused
@@ -129,7 +129,7 @@ class DominatorTree extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     // Safe to use referential equality here because all of our mutations on
     // dominator tree models use immutableUpdate in a persistent manner. The
     // exception to the rule are mutations of the expanded set, however we take

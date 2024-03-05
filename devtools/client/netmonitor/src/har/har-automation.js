@@ -21,7 +21,7 @@ const prefDomain = "devtools.netmonitor.har.";
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log(...args) {},
+  log() {},
 };
 
 /**
@@ -88,7 +88,7 @@ HarAutomation.prototype = {
     );
   },
 
-  pageLoadBegin(response) {
+  pageLoadBegin() {
     this.resetCollector();
   },
 
@@ -120,7 +120,7 @@ HarAutomation.prototype = {
     trace.log("HarAutomation.pageLoadDone; ", response);
 
     if (this.collector) {
-      this.collector.waitForHarLoad().then(collector => {
+      this.collector.waitForHarLoad().then(() => {
         return this.autoExport();
       });
     }

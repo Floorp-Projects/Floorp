@@ -96,7 +96,7 @@ function appendToHistory(state, prefsState, expression) {
   return state;
 }
 
-function clearHistory(state) {
+function clearHistory() {
   return getInitialState();
 }
 

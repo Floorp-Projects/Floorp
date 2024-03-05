@@ -519,7 +519,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   // eslint-disable-next-line complexity
-  handleEvent(event, id) {
+  handleEvent(event) {
     // No event handling if the highlighter is hidden
     if (this.areShapesHidden()) {
       return;
@@ -1222,7 +1222,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     coordinates.splice(point, 1);
     let polygonDef = this.fillRule ? `${this.fillRule}, ` : "";
     polygonDef += coordinates
-      .map((coords, i) => {
+      .map(coords => {
         return `${coords[0]} ${coords[1]}`;
       })
       .join(", ");
@@ -2735,11 +2735,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Update the SVG polygon to fit the CSS polygon.
-   * @param {Number} width the width of the element quads
-   * @param {Number} height the height of the element quads
-   * @param {Number} zoom the zoom level of the window
    */
-  _updatePolygonShape(width, height, zoom) {
+  _updatePolygonShape() {
     // Draw and show the polygon.
     const points = this.coordinates.map(point => point.join(",")).join(" ");
 
@@ -2758,11 +2755,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Update the SVG ellipse to fit the CSS circle or ellipse.
-   * @param {Number} width the width of the element quads
-   * @param {Number} height the height of the element quads
-   * @param {Number} zoom the zoom level of the window
    */
-  _updateEllipseShape(width, height, zoom) {
+  _updateEllipseShape() {
     const { rx, ry, cx, cy } = this.coordinates;
     const ellipseEl = this.getElement("ellipse");
     ellipseEl.setAttribute("rx", rx);
@@ -2788,11 +2782,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Update the SVG rect to fit the CSS inset.
-   * @param {Number} width the width of the element quads
-   * @param {Number} height the height of the element quads
-   * @param {Number} zoom the zoom level of the window
    */
-  _updateInsetShape(width, height, zoom) {
+  _updateInsetShape() {
     const { top, left, right, bottom } = this.coordinates;
     const rectEl = this.getElement("rect");
     rectEl.setAttribute("x", left);

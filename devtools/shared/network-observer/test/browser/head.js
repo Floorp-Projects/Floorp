@@ -84,7 +84,7 @@ class NetworkEventOwner {
  * Create a simple network event owner, with mock implementations of all
  * the expected APIs for a NetworkEventOwner.
  */
-function createNetworkEventOwner(event) {
+function createNetworkEventOwner() {
   return new NetworkEventOwner();
 }
 

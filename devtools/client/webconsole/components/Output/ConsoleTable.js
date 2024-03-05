@@ -71,7 +71,7 @@ class ConsoleTable extends Component {
     const { dispatch, serviceContainer, setExpanded } = this.props;
 
     const rows = [];
-    items.forEach((item, index) => {
+    items.forEach(item => {
       const cells = [];
 
       columns.forEach((value, key) => {

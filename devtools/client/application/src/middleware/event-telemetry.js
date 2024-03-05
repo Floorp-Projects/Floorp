@@ -15,7 +15,7 @@ function eventTelemetryMiddleware(telemetry) {
     telemetry.recordEvent(method, "application", null, details);
   }
 
-  return store => next => action => {
+  return () => next => action => {
     switch (action.type) {
       // ui telemetry
       case UPDATE_SELECTED_PAGE:

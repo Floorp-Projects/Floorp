@@ -14,14 +14,14 @@ const INITIAL_SCREENSHOT = {
 };
 
 const reducers = {
-  [TAKE_SCREENSHOT_END](screenshot, action) {
+  [TAKE_SCREENSHOT_END](screenshot) {
     return {
       ...screenshot,
       isCapturing: false,
     };
   },
 
-  [TAKE_SCREENSHOT_START](screenshot, action) {
+  [TAKE_SCREENSHOT_START](screenshot) {
     return {
       ...screenshot,
       isCapturing: true,

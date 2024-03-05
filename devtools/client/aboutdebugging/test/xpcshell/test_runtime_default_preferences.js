@@ -194,7 +194,7 @@ add_task(async function test_without_traits_with_error() {
 
 function createClientWrapper(preferencesFront) {
   const clientWrapper = {
-    getFront: name => {
+    getFront: () => {
       return preferencesFront;
     },
   };

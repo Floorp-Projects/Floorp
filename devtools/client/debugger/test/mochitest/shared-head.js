@@ -137,7 +137,7 @@ async function waitForSources(dbg, ...sources) {
 function waitForSource(dbg, url) {
   return waitForState(
     dbg,
-    state => findSource(dbg, url, { silent: true }),
+    () => findSource(dbg, url, { silent: true }),
     "source exists"
   );
 }
@@ -189,7 +189,7 @@ function assertClass(el, className, exists = true) {
 }
 
 function waitForSelectedLocation(dbg, line, column) {
-  return waitForState(dbg, state => {
+  return waitForState(dbg, () => {
     const location = dbg.selectors.getSelectedLocation();
     return (
       location &&
@@ -220,7 +220,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
 
   return waitForState(
     dbg,
-    state => {
+    () => {
       const location = dbg.selectors.getSelectedLocation() || {};
       const sourceTextContent = getSelectedSourceTextContent();
       if (!sourceTextContent) {
@@ -508,10 +508,7 @@ async function waitForLoadedScopes(dbg) {
 }
 
 function waitForBreakpointCount(dbg, count) {
-  return waitForState(
-    dbg,
-    state => dbg.selectors.getBreakpointCount() == count
-  );
+  return waitForState(dbg, () => dbg.selectors.getBreakpointCount() == count);
 }
 
 function waitForBreakpoint(dbg, url, line) {
@@ -573,7 +570,7 @@ async function waitForPaused(
 
   await waitForState(
     dbg,
-    state => isPaused(dbg) && !!getSelectedScope(getCurrentThread()),
+    () => isPaused(dbg) && !!getSelectedScope(getCurrentThread()),
     "paused"
   );
 
@@ -592,7 +589,7 @@ async function waitForPaused(
  */
 function waitForResumed(dbg) {
   info("Waiting for the debugger to resume");
-  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
+  return waitForState(dbg, () => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
 function waitForInlinePreviews(dbg) {
@@ -600,7 +597,7 @@ function waitForInlinePreviews(dbg) {
 }
 
 function waitForCondition(dbg, condition) {
-  return waitForState(dbg, state =>
+  return waitForState(dbg, () =>
     dbg.selectors
       .getBreakpointsList()
       .find(bp => bp.options.condition == condition)
@@ -608,7 +605,7 @@ function waitForCondition(dbg, condition) {
 }
 
 function waitForLog(dbg, logValue) {
-  return waitForState(dbg, state =>
+  return waitForState(dbg, () =>
     dbg.selectors
       .getBreakpointsList()
       .find(bp => bp.options.logValue == logValue)
@@ -616,10 +613,10 @@ function waitForLog(dbg, logValue) {
 }
 
 async function waitForPausedThread(dbg, thread) {
-  return waitForState(dbg, state => dbg.selectors.getIsPaused(thread));
+  return waitForState(dbg, () => dbg.selectors.getIsPaused(thread));
 }
 
-function isSelectedFrameSelected(dbg, state) {
+function isSelectedFrameSelected(dbg) {
   const frame = dbg.selectors.getVisibleSelectedFrame();
 
   // Make sure the source text is completely loaded for the
@@ -788,7 +785,7 @@ function sourceExists(dbg, url) {
 function waitForLoadedSource(dbg, url) {
   return waitForState(
     dbg,
-    state => {
+    () => {
       const source = findSource(dbg, url, { silent: true });
       return (
         source &&
@@ -2576,14 +2573,13 @@ async function assertPreviews(dbg, previews) {
  * @param {Number} column
  * @param {Object} options
  * @param {String}  options.result - Expected text shown in the preview
- * @param {String}  options.expression - The expression hovered over
  * @param {Array}  options.fields - The expected stacktrace information
  */
 async function assertInlineExceptionPreview(
   dbg,
   line,
   column,
-  { expression, result, fields }
+  { result, fields }
 ) {
   info(" # Assert preview on " + line + ":" + column);
   const { element: popupEl, tokenEl } = await tryHovering(
@@ -2634,7 +2630,7 @@ async function assertInlineExceptionPreview(
 async function waitForBreakableLine(dbg, source, lineNumber) {
   await waitForState(
     dbg,
-    state => {
+    () => {
       const currentSource = findSource(dbg, source);
 
       const breakableLines =
@@ -2997,10 +2993,7 @@ async function setLogPoint(dbg, index, value) {
 function openProjectSearch(dbg) {
   info("Opening the project search panel");
   synthesizeKeyShortcut("CmdOrCtrl+Shift+F");
-  return waitForState(
-    dbg,
-    state => dbg.selectors.getActiveSearch() === "project"
-  );
+  return waitForState(dbg, () => dbg.selectors.getActiveSearch() === "project");
 }
 
 /**
@@ -3139,7 +3132,7 @@ function assertOutlineItems(dbg, expectedItems) {
 async function checkAdditionalThreadCount(dbg, count) {
   await waitForState(
     dbg,
-    state => {
+    () => {
       return dbg.selectors.getThreads().length == count;
     },
     "Have the expected number of additional threads"

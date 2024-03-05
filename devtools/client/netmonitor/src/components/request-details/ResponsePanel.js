@@ -228,7 +228,7 @@ class ResponsePanel extends Component {
       image: "",
       priority: PriorityLevels.PRIORITY_INFO_HIGH,
       type: "info",
-      eventCallback: e => {},
+      eventCallback: () => {},
       buttons: [
         {
           mdnUrl: getCORSErrorURL(blockedReason),
@@ -394,7 +394,7 @@ class ResponsePanel extends Component {
       image: "",
       priority: PriorityLevels.PRIORITY_INFO_MEDIUM,
       type: "info",
-      eventCallback: e => {},
+      eventCallback: () => {},
       buttons: [],
     });
 

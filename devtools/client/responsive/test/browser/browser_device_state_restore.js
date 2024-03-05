@@ -75,7 +75,7 @@ addRDMTask(
 
 addRDMTaskWithPreAndPost(
   TEST_URL,
-  function rdmPreTask({ browser }) {
+  function rdmPreTask() {
     reloadOnUAChange(true);
   },
   async function ({ ui }) {
@@ -115,7 +115,7 @@ addRDMTaskWithPreAndPost(
 
     reloadOnUAChange(false);
   },
-  function rdmPostTask({ browser }) {},
+  function rdmPostTask() {},
   { waitForDeviceList: true }
 );
 

@@ -29,7 +29,7 @@ add_task(async function testTracingFunctionReturn() {
   const topLevelThreadActorID =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   info("Wait for tracing to be enabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
@@ -42,7 +42,7 @@ add_task(async function testTracingFunctionReturn() {
   await clickElement(dbg, "trace");
 
   info("Wait for tracing to be disabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
@@ -55,7 +55,7 @@ add_task(async function testTracingFunctionReturn() {
   await clickElement(dbg, "trace");
 
   info("Wait for tracing to be re-enabled with logging of returned values");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 
@@ -81,7 +81,7 @@ add_task(async function testTracingFunctionReturn() {
 
   info("Stop tracing");
   await clickElement(dbg, "trace");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 

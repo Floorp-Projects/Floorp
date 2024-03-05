@@ -54,7 +54,7 @@ add_task(async function testSuccessfulConnectionAttempt() {
 add_task(async function testFailedConnectionAttempt() {
   const { doc, mocks, runtimeId, sessionId, tab } =
     await setupConnectionAttemptTest();
-  mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
+  mocks.runtimeClientFactoryMock.createClientForRuntime = async () => {
     throw new Error("failed");
   };
 
@@ -168,8 +168,8 @@ add_task(async function testCancelledConnectionAttempt() {
     await setupConnectionAttemptTest();
 
   info("Simulate a connection timeout");
-  mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
-    await new Promise(r => {});
+  mocks.runtimeClientFactoryMock.createClientForRuntime = async () => {
+    await new Promise(() => {});
   };
 
   info("Click on the connect button and wait for the error message");

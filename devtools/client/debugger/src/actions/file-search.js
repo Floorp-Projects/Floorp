@@ -30,7 +30,7 @@ export function querySearchWorker(query, text, modifiers) {
 }
 
 export function searchContentsForHighlight(query, editor, line, ch) {
-  return async ({ getState, dispatch }) => {
+  return async ({ getState }) => {
     const modifiers = getSearchOptions(getState(), "file-search");
     const sourceTextContent = getSelectedSourceTextContent(getState());
 

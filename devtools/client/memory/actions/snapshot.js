@@ -727,7 +727,7 @@ const computeAndFetchDominatorTree = (exports.computeAndFetchDominatorTree =
       return id;
     },
 
-    async task(heapWorker, id, removeFromCache, dispatch, getState) {
+    async task(heapWorker, id, removeFromCache, dispatch) {
       const dominatorTreeId = await dispatch(
         computeDominatorTree(heapWorker, id)
       );
@@ -843,7 +843,7 @@ exports.clearSnapshots = function (heapWorker) {
  * @param {snapshotModel} snapshot
  */
 exports.deleteSnapshot = function (heapWorker, snapshot) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids: [snapshot.id] });
 
     try {

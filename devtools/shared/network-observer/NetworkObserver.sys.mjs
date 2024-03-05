@@ -10,7 +10,7 @@
 // Enable logging all platform events this module listen to
 const DEBUG_PLATFORM_EVENTS = false;
 // Enables defining criteria to filter the logs
-const DEBUG_PLATFORM_EVENTS_FILTER = (eventName, channel) => {
+const DEBUG_PLATFORM_EVENTS_FILTER = () => {
   // e.g return eventName == "HTTP_TRANSACTION:REQUEST_HEADER" && channel.URI.spec == "http://foo.com";
   return true;
 };
@@ -272,7 +272,7 @@ export class NetworkObserver {
   }
 
   #serviceWorkerRequest = DevToolsInfaillibleUtils.makeInfallible(
-    (subject, topic, data) => {
+    (subject, topic) => {
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
       if (this.#ignoreChannelFunction(channel)) {

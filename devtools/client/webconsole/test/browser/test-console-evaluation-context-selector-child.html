@@ -12,7 +12,7 @@
       var id = new URLSearchParams(document.location.search).get("id");
       document.querySelector("h2").id = id;
       document.title = `${id}|${document.location.host}`;
-      document.addEventListener("click", function(e) {
+      document.addEventListener("click", function() {
         // eslint-disable-next-line no-unused-vars
         const localVar = document;
         // eslint-disable-next-line no-debugger

@@ -13,7 +13,7 @@ const {
  * be processed by the event recording middleware.
  */
 function recordTelemetryEvent(method, details) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({ type: TELEMETRY_RECORD, method, details });
   };
 }

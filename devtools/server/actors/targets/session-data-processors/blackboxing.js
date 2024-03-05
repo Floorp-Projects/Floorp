@@ -20,7 +20,7 @@ module.exports = {
     }
   },
 
-  removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  removeSessionDataEntry(targetActor, entries) {
     for (const { url, range } of entries) {
       targetActor.sourcesManager.unblackBox(url, range);
     }

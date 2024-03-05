@@ -17,7 +17,7 @@ const sessionString = l10n.formatValueSync("storage-expires-session");
 const TESTS = [
   // index 0
   {
-    async action(win) {
+    async action() {
       await addCookie("c1", "foobar1");
       await addCookie("c2", "foobar2");
       await localStorageSetItem("l1", "foobar1");

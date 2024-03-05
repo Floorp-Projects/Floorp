@@ -10,12 +10,7 @@ const {
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 module.exports = {
-  async addOrSetSessionDataEntry(
-    targetActor,
-    entries,
-    isDocumentCreation,
-    updateType
-  ) {
+  async addOrSetSessionDataEntry(targetActor, entries) {
     // When debugging the whole browser (via the Browser Toolbox), we instantiate both content process and window global (FRAME) targets.
     // But the debugger will only use the content process target's thread actor.
     // Thread actor, Sources and Breakpoints have to be only managed for the content process target,
@@ -47,7 +42,7 @@ module.exports = {
     }
   },
 
-  removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  removeSessionDataEntry() {
     // configuration data entries are always added/updated, never removed.
   },
 };

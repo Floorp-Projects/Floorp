@@ -27,7 +27,7 @@ function SearchState() {
  * @memberof utils/source-search
  * @static
  */
-function getSearchState(cm, query) {
+function getSearchState(cm) {
   const state = cm.state.search || (cm.state.search = new SearchState());
   return state;
 }
@@ -55,7 +55,7 @@ function searchOverlay(query, modifiers) {
   });
 
   return {
-    token(stream, state) {
+    token(stream) {
       // set the last index to be the current stream position
       // this acts as an offset
       regexQuery.lastIndex = stream.pos;
@@ -141,11 +141,11 @@ function doSearch(
 
   return cm.operation(function () {
     if (!query || isWhitespace(query)) {
-      clearSearch(cm, query);
+      clearSearch(cm);
       return null;
     }
 
-    const state = getSearchState(cm, query);
+    const state = getSearchState(cm);
     const isNewQuery = state.query !== query;
     state.query = query;
 
@@ -179,7 +179,7 @@ export function searchSourceForHighlight(
   }
 
   cm.operation(function () {
-    const state = getSearchState(cm, query);
+    const state = getSearchState(cm);
     const isNewQuery = state.query !== query;
     state.query = query;
 
@@ -207,7 +207,7 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
   const { cm } = ctx;
   let nextMatch;
   cm.operation(function () {
-    const state = getSearchState(cm, query);
+    const state = getSearchState(cm);
     const pos = getCursorPos(newQuery, rev, state);
 
     if (!state.query) {
@@ -261,8 +261,8 @@ function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch) {
  * @memberof utils/source-search
  * @static
  */
-export function removeOverlay(ctx, query) {
-  const state = getSearchState(ctx.cm, query);
+export function removeOverlay(ctx) {
+  const state = getSearchState(ctx.cm);
   ctx.cm.removeOverlay(state.overlay);
   const { line, ch } = ctx.cm.getCursor();
   ctx.cm.doc.setSelection({ line, ch }, { line, ch }, { scroll: false });
@@ -274,8 +274,8 @@ export function removeOverlay(ctx, query) {
  * @memberof utils/source-search
  * @static
  */
-export function clearSearch(cm, query) {
-  const state = getSearchState(cm, query);
+export function clearSearch(cm) {
+  const state = getSearchState(cm);
 
   state.results = [];
 
@@ -293,7 +293,7 @@ export function clearSearch(cm, query) {
  * @static
  */
 export function find(ctx, query, keepSelection, modifiers, focusFirstResult) {
-  clearSearch(ctx.cm, query);
+  clearSearch(ctx.cm);
   return doSearch(
     ctx,
     false,

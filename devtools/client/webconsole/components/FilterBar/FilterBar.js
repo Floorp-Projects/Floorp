@@ -105,7 +105,7 @@ class FilterBar extends Component {
     this.resizeObserver.observe(this.wrapperNode);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     const {
       closeButtonVisible,
       displayMode,

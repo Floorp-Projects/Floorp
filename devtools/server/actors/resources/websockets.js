@@ -97,7 +97,7 @@ class WebSocketWatcher {
   }
 
   // methods for the nsIWebSocketEventService
-  webSocketCreated(webSocketSerialID, uri, protocols) {}
+  webSocketCreated() {}
 
   webSocketOpened(
     webSocketSerialID,
@@ -117,7 +117,7 @@ class WebSocketWatcher {
     this.onAvailable([resource]);
   }
 
-  webSocketMessageAvailable(webSocketSerialID, data, messageType) {}
+  webSocketMessageAvailable() {}
 
   webSocketClosed(webSocketSerialID, wasClean, code, reason) {
     const httpChannelId = this.connections.get(webSocketSerialID);

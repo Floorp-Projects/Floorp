@@ -85,7 +85,7 @@ add_task(async function () {
 
   info("Wait for next interupt in the worker thread");
   await clickElement(dbg, "pause");
-  await waitForState(dbg, state => getIsWaitingOnBreak(getCurrentThread()));
+  await waitForState(dbg, () => getIsWaitingOnBreak(getCurrentThread()));
 
   info("Trigger some code in the worker and wait for pause");
   await SpecialPowers.spawn(swTab.linkedBrowser, [], async function () {

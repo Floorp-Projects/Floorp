@@ -29,7 +29,7 @@ add_task(async function () {
 
   // Empty onAvailable callback for CSS MESSAGES, we only want to check that
   // the second resource we watch correctly provides existing resources.
-  const onCssMessageAvailable = resources => {};
+  const onCssMessageAvailable = () => {};
 
   // First call to watchResources.
   // We do not await on `watchPromise1` here, in order to simulate simultaneous

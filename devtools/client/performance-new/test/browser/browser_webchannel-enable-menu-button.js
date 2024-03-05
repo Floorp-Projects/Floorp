@@ -8,7 +8,7 @@ add_task(async function test() {
   info("Test the WebChannel mechanism works for turning on the menu button.");
   await makeSureProfilerPopupIsDisabled();
 
-  await withWebChannelTestDocument(async browser => {
+  await withWebChannelTestDocument(async () => {
     await waitForTabTitle("WebChannel Page Ready");
     await waitForProfilerMenuButton();
     ok(true, "The profiler menu button was enabled by the WebChannel.");

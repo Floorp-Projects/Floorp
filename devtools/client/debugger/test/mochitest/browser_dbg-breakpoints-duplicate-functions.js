@@ -20,7 +20,7 @@ add_task(async function () {
 
   await reload(dbg, "doc-duplicate-functions.html");
 
-  await waitForState(dbg, state => dbg.selectors.getBreakpointCount() == 1);
+  await waitForState(dbg, () => dbg.selectors.getBreakpointCount() == 1);
 
   const firstBreakpoint = dbg.selectors.getBreakpointsList()[0];
   is(firstBreakpoint.location.line, 21, "Breakpoint is on line 21");

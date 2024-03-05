@@ -12,7 +12,7 @@ pushPref("devtools.webconsole.filter.netxhr", true);
 
 registerCleanupFunction(async function () {
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

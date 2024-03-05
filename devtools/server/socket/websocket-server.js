@@ -27,7 +27,7 @@ function readLine(input) {
     let line = "";
     const wait = () => {
       input.asyncWait(
-        stream => {
+        () => {
           try {
             const amountToRead = HEADER_MAX_LEN - line.length;
             line += delimitedRead(input, "\n", amountToRead);
@@ -72,7 +72,7 @@ function writeString(output, data) {
       }
 
       output.asyncWait(
-        stream => {
+        () => {
           try {
             const written = output.write(data, data.length);
             data = data.slice(written);

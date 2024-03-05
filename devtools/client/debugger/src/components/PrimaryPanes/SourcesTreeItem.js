@@ -47,7 +47,7 @@ class SourceTreeItem extends Component {
     }
   }
 
-  onClick = e => {
+  onClick = () => {
     const { item, focusItem, selectSourceItem } = this.props;
 
     focusItem(item);

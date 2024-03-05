@@ -9,8 +9,10 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     debuggee.eval(
+      // These arguments are tested.
+      // eslint-disable-next-line no-unused-vars
       function stopMe(arg1) {
         debugger;
       }.toString()

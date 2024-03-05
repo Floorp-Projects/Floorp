@@ -35,7 +35,7 @@ function getContentDisposition(channel) {
  * a compartment at startup when no JSON is being viewed.
  */
 export class Sniffer {
-  getMIMETypeFromContent(request, data, length) {
+  getMIMETypeFromContent(request) {
     if (request instanceof Ci.nsIChannel) {
       // JSON View is enabled only for top level loads only.
       if (

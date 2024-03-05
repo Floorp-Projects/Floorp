@@ -35,7 +35,7 @@ add_task(async function () {
 });
 
 function asyncError() {
-  return async ({ dispatch, getState }) => {
+  return async () => {
     const error = "task-middleware-error-generator";
     throw error;
   };

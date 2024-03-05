@@ -18,7 +18,7 @@
       /* exported performRequests performLargePostDataRequest */
       "use strict";
 
-      function post(address, message, callback) {
+      function post(address, message) {
         return new Promise(resolve => {
           const xhr = new XMLHttpRequest();
           xhr.open("POST", address, true);

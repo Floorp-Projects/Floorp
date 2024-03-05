@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function (require, exports, module) {
+define(function (require, exports) {
   const { Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { createFactories } = require("devtools/client/shared/react-utils");
@@ -31,7 +31,7 @@ define(function (require, exports, module) {
 
     // Commands
 
-    onCopy(event) {
+    onCopy() {
       this.props.actions.onCopyHeaders();
     }
 

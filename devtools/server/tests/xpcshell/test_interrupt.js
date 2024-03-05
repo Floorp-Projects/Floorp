@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client, targetFront }) => {
+  threadFrontTest(async ({ threadFront }) => {
     const onPaused = waitForEvent(threadFront, "paused");
     await threadFront.interrupt();
     await onPaused;

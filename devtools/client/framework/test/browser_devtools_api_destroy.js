@@ -38,11 +38,11 @@ async function runTests(aTab) {
       const panel = toolbox.getPanel(toolDefinition.id);
       ok(panel, "Tool open");
 
-      gDevTools.once("toolbox-destroy", (toolbox, iframe) => {
+      gDevTools.once("toolbox-destroy", () => {
         collectedEvents.push("toolbox-destroy");
       });
 
-      gDevTools.once(toolDefinition.id + "-destroy", (toolbox, iframe) => {
+      gDevTools.once(toolDefinition.id + "-destroy", () => {
         collectedEvents.push("gDevTools-" + toolDefinition.id + "-destroy");
       });
 

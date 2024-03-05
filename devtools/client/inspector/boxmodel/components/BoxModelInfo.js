@@ -32,7 +32,7 @@ class BoxModelInfo extends PureComponent {
     this.onToggleGeometryEditor = this.onToggleGeometryEditor.bind(this);
   }
 
-  onToggleGeometryEditor(e) {
+  onToggleGeometryEditor() {
     this.props.onToggleGeometryEditor();
   }
 

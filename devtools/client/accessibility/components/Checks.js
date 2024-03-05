@@ -105,7 +105,7 @@ class Checks extends Component {
   }
 }
 
-const mapStateToProps = ({ details, ui }) => {
+const mapStateToProps = ({ details }) => {
   const { audit } = details;
   if (!audit) {
     return {};

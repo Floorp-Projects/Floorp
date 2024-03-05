@@ -17,11 +17,11 @@ function squarePromise(x) {
   return new Promise(resolve => resolve(x * x));
 }
 
-function squareError(x) {
+function squareError() {
   return new Error("Nope");
 }
 
-function squarePromiseReject(x) {
+function squarePromiseReject() {
   return new Promise((_, reject) => reject("Nope"));
 }
 

@@ -52,7 +52,7 @@ async function startTest()
   SimpleTest.finish();
 }
 
-async function checkHSTS({desc, url, usesHSTS}) {
+async function checkHSTS({ url, usesHSTS}) {
   info("Testing HSTS for " + url);
   const commands = await createCommandsForTab();
   const resourceCommand = commands.resourceCommand;

@@ -36,8 +36,8 @@ add_task(async function () {
       // to verify that the pref was applied properly.
       validateValue: () =>
         Object.entries(getState().filters.requestFilterTypes)
-          .filter(([type, check]) => check)
-          .map(([type, check]) => type),
+          .filter(([, check]) => check)
+          .map(([type]) => type),
       // Predicate used to modify the frontend when setting the new pref value,
       // before trying to validate the changes.
       modifyFrontend: value =>

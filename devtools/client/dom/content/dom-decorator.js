@@ -41,7 +41,7 @@ DomDecorator.prototype = {
    * Return custom React template for specified object. The template
    * might depend on specified column.
    */
-  getValueRep(value, colId) {},
+  getValueRep() {},
 };
 
 // Exports from this module

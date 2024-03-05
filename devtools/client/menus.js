@@ -179,7 +179,7 @@ exports.menuitems = [
     id: "extensionsForDevelopers",
     l10nKey: "extensionsForDevelopersCmd",
     appMenuL10nId: "appmenu-developer-tools-extensions",
-    oncommand(event) {
+    oncommand() {
       openDocLink(
         "https://addons.mozilla.org/firefox/collections/mozilla/webdeveloper/"
       );

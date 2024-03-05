@@ -49,7 +49,7 @@ const popView = (exports.popView = function () {
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.changeViewAndRefresh = function (view, heapWorker) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     dispatch(changeView(view));
     await dispatch(refresh.refresh(heapWorker));
   };
@@ -62,7 +62,7 @@ exports.changeViewAndRefresh = function (view, heapWorker) {
  * @param {HeapAnalysesClient} heapWorker
  */
 exports.popViewAndRefresh = function (heapWorker) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     dispatch(popView());
     await dispatch(refresh.refresh(heapWorker));
   };

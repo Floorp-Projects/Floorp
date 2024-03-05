@@ -9,7 +9,7 @@
  */
 const TEST_URI = `${URL_ROOT}doc_picker_link.html`;
 
-addRDMTask(TEST_URI, async function ({ ui, manager }) {
+addRDMTask(TEST_URI, async function ({ ui }) {
   info("Open the rule-view and select the test node before opening RDM");
   const { inspector, toolbox } = await openRuleView();
   await selectNode("body", inspector);

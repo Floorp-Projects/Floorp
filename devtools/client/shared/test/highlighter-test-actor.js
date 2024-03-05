@@ -209,7 +209,7 @@ var highlighterTestSpec = protocol.generateActorSpec({
 });
 
 class HighlighterTestActor extends protocol.Actor {
-  constructor(conn, targetActor, options) {
+  constructor(conn, targetActor) {
     super(conn, highlighterTestSpec);
 
     this.targetActor = targetActor;

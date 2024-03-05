@@ -38,7 +38,7 @@ handlers[actions.FOCUS_INDIVIDUAL] = function (individuals, { node }) {
   return immutableUpdate(individuals, { focused: node });
 };
 
-handlers[actions.FETCH_INDIVIDUALS_START] = function (individuals, action) {
+handlers[actions.FETCH_INDIVIDUALS_START] = function (individuals) {
   assert(individuals, "Should have individuals");
   return Object.freeze({
     state: individualsState.FETCHING,

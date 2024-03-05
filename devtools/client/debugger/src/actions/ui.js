@@ -66,7 +66,7 @@ export function setActiveSearch(activeSearch) {
 }
 
 export function toggleFrameworkGrouping(toggleValue) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({
       type: "TOGGLE_FRAMEWORK_GROUPING",
       value: toggleValue,
@@ -75,7 +75,7 @@ export function toggleFrameworkGrouping(toggleValue) {
 }
 
 export function toggleInlinePreview(toggleValue) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({
       type: "TOGGLE_INLINE_PREVIEW",
       value: toggleValue,
@@ -84,7 +84,7 @@ export function toggleInlinePreview(toggleValue) {
 }
 
 export function toggleEditorWrapping(toggleValue) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     updateEditorLineWrapping(toggleValue);
 
     dispatch({
@@ -95,7 +95,7 @@ export function toggleEditorWrapping(toggleValue) {
 }
 
 export function toggleSourceMapsEnabled(toggleValue) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({
       type: "TOGGLE_SOURCE_MAPS_ENABLED",
       value: toggleValue,
@@ -217,7 +217,7 @@ export function setSearchOptions(searchKey, searchOptions) {
 }
 
 export function copyToClipboard(location) {
-  return ({ dispatch, getState }) => {
+  return ({ getState }) => {
     const content = getSourceTextContent(getState(), location);
     if (content && isFulfilled(content) && content.value.type === "text") {
       copyToTheClipboard(content.value.value);
@@ -257,7 +257,7 @@ export function toggleJavascriptTracingOnNextLoad() {
 }
 
 export function setHideOrShowIgnoredSources(shouldHide) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     dispatch({ type: "HIDE_IGNORED_SOURCES", shouldHide });
   };
 }

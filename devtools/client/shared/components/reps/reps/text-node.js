@@ -123,13 +123,13 @@ define(function (require, exports, module) {
     });
   }
 
-  function getTitle(grip) {
+  function getTitle() {
     const title = "#text";
     return span({}, title);
   }
 
   // Registration
-  function supportsObject(grip, noGrip = false) {
+  function supportsObject(grip) {
     return grip?.preview && grip?.class == "Text";
   }
 

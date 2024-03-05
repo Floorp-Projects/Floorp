@@ -9,7 +9,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, commands }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     await threadFront.setBreakpoint(
       { sourceUrl: "conditional_breakpoint-04.js", line: 3 },
       { condition: "throw new Error()" }

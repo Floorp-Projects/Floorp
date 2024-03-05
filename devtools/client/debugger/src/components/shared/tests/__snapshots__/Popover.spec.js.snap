@@ -105,7 +105,6 @@ exports[`Popover mount popover 1`] = `
             "getBoundingClientRect": [Function],
           }
         }
-        type="popover"
       >
         <svg
           style={
@@ -234,7 +233,6 @@ exports[`Popover mount tooltip 1`] = `
             "getBoundingClientRect": [Function],
           }
         }
-        type="tooltip"
       >
         <svg
           style={
@@ -359,7 +357,6 @@ exports[`Popover render (tooltip) 1`] = `
             "getBoundingClientRect": [Function],
           }
         }
-        type="tooltip"
       >
         <svg
           style={
@@ -504,7 +501,6 @@ exports[`Popover render 1`] = `
             "getBoundingClientRect": [Function],
           }
         }
-        type="popover"
       >
         <svg
           style={

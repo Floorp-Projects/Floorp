@@ -124,7 +124,7 @@ export default class FrameComponent extends Component {
     this.props.showFrameContextMenu(event, frame);
   }
 
-  onMouseDown(e, frame, selectedFrame) {
+  onMouseDown(e, frame) {
     if (e.button !== 0) {
       return;
     }
@@ -132,7 +132,7 @@ export default class FrameComponent extends Component {
     this.props.selectFrame(frame);
   }
 
-  onKeyUp(event, frame, selectedFrame) {
+  onKeyUp(event, frame) {
     if (event.key != "Enter") {
       return;
     }

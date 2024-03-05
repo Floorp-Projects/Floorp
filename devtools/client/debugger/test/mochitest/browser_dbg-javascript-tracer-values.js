@@ -28,7 +28,7 @@ add_task(async function testTracingValues() {
   const topLevelThreadActorID =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
   info("Wait for tracing to be enabled");
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     return dbg.selectors.getIsThreadCurrentlyTracing(topLevelThreadActorID);
   });
 

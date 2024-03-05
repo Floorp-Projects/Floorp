@@ -28,7 +28,7 @@ add_task(async function () {
   );
 
   clickElement(dbg, "pause");
-  await waitForState(dbg, state =>
+  await waitForState(dbg, () =>
     dbg.selectors.getIsWaitingOnBreak(dbg.selectors.getCurrentThread())
   );
 

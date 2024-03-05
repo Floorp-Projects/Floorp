@@ -17,7 +17,7 @@ import { recordEvent } from "../../utils/telemetry";
 import { validateFrame } from "../../utils/context";
 
 export function selectThread(thread) {
-  return async ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState }) => {
     if (getCurrentThread(getState()) === thread) {
       return;
     }

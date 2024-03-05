@@ -60,7 +60,7 @@ add_task(async function () {
   // With that, we were chasing a precise race, where a second call to ProcessDescriptor.getTarget()
   // happens between the instantiation of ContentProcessTarget and its call to attach() from getTarget
   // function.
-  await testGetTargetWithConcurrentCalls(processes, processTarget => {
+  await testGetTargetWithConcurrentCalls(processes, () => {
     // We only call ContentProcessTargetFront.attach and not TargetMixin.attachAndInitThread.
     // So nothing is done for content process targets.
     return true;

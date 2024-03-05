@@ -69,14 +69,14 @@ function run_test() {
           );
           client2.close();
         },
-        onTransportClosed(result) {
+        onTransportClosed() {
           client1.close();
         },
       };
       client2.ready();
     },
 
-    onTransportClosed(result) {
+    onTransportClosed() {
       do_test_finished();
     },
   };

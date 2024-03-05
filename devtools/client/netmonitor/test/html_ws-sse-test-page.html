@@ -22,7 +22,7 @@
                  "ws://mochi.test:8888/browser/devtools/client/netmonitor/test/file_ws_backend"
     );
 
-               ws.onopen = e => {
+               ws.onopen = () => {
                  for (let i = 0; i < numFramesToSend; i++) {
                    ws.send("Payload " + i);
                  }
@@ -33,7 +33,7 @@
 
            function closeWsConnection() {
              return new Promise(resolve => {
-               ws.onclose = e => {
+               ws.onclose = () => {
                  resolve();
                };
                ws.close();
@@ -48,7 +48,7 @@
            function openSseConnection() {
              return new Promise(resolve => {
                es = new EventSource("sjs_sse-test-server.sjs");
-               es.onmessage = function(e) {
+               es.onmessage = function() {
                  es.close();
                  resolve();
                };

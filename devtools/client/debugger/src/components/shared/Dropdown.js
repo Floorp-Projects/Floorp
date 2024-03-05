@@ -21,7 +21,7 @@ export class Dropdown extends Component {
     };
   }
 
-  toggleDropdown = e => {
+  toggleDropdown = () => {
     this.setState(prevState => ({
       dropdownShown: !prevState.dropdownShown,
     }));

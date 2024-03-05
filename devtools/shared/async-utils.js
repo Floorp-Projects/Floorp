@@ -25,7 +25,7 @@
  *         happens
  */
 exports.listenOnce = function listenOnce(element, event, useCapture) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     const onEvent = function (ev) {
       element.removeEventListener(event, onEvent, useCapture);
       resolve(ev);

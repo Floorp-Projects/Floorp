@@ -8,7 +8,7 @@ import cases from "jest-in-case";
 
 cases(
   "Parser.getFramework",
-  ({ name, file, value }) => {
+  () => {
     const source = populateOriginalSource("frameworks/plainJavascript");
     const symbols = getSymbols(source.id);
     expect(symbols.framework).toBeNull();

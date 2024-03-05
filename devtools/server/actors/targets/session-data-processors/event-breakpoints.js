@@ -30,7 +30,7 @@ module.exports = {
     }
   },
 
-  removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  removeSessionDataEntry(targetActor, entries) {
     targetActor.threadActor.removeEventBreakpoints(entries);
   },
 };

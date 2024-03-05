@@ -66,7 +66,7 @@ async function testToggleTools() {
   await toggleTool(tab2, toolId);
 }
 
-async function toggleTool({ doc, panelWin, checkbox, tab }, toolId) {
+async function toggleTool({ panelWin, checkbox }, toolId) {
   const prevChecked = checkbox.checked;
 
   (prevChecked ? checkRegistered : checkUnregistered)(toolId);

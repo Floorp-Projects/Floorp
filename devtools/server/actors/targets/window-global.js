@@ -887,7 +887,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     return {};
   }
 
-  listFrames(request) {
+  listFrames() {
     const windows = this._docShellsToWindows(this.docShells);
     return { frames: windows };
   }
@@ -911,7 +911,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     );
   }
 
-  listWorkers(request) {
+  listWorkers() {
     return this.ensureWorkerDescriptorActorList()
       .getList()
       .then(actors => {
@@ -959,7 +959,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     this.emit("workerListChanged");
   }
 
-  _onConsoleApiProfilerEvent(subject, topic, data) {
+  _onConsoleApiProfilerEvent() {
     // TODO: We will receive console-api-profiler events for any browser running
     // in the same process as this target. We should filter irrelevant events,
     // but console-api-profiler currently doesn't emit any information to identify
@@ -976,7 +976,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     });
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     // Ignore any event that comes before/after the actor is attached.
     // That typically happens during Firefox shutdown.
     if (this.isDestroyed()) {
@@ -1186,7 +1186,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
   // Protocol Request Handlers
 
-  detach(request) {
+  detach() {
     // Destroy the actor in the next event loop in order
     // to ensure responding to the `detach` request.
     DevToolsUtils.executeSoon(() => {
@@ -1823,7 +1823,7 @@ class DebuggerProgressListener {
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden");
 
-  observe = DevToolsUtils.makeInfallible(function (subject, topic) {
+  observe = DevToolsUtils.makeInfallible(function (subject) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1858,8 +1858,7 @@ class DebuggerProgressListener {
   onStateChange = DevToolsUtils.makeInfallible(function (
     progress,
     request,
-    flag,
-    status
+    flag
   ) {
     if (this._targetActor.isDestroyed()) {
       return;

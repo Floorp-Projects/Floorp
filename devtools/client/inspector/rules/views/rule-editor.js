@@ -410,7 +410,7 @@ RuleEditor.prototype = {
         this._ruleViewIsEditing = this.ruleView.isEditing;
       });
 
-      code.addEventListener("click", event => {
+      code.addEventListener("click", () => {
         const selection = this.doc.defaultView.getSelection();
         if (selection.isCollapsed && !this._ruleViewIsEditing) {
           this.newProperty();
@@ -905,10 +905,8 @@ RuleEditor.prototype = {
    *        True if the change should be applied.
    * @param {Number} direction
    *        The move focus direction number.
-   * @param {Number} key
-   *        The event keyCode that trigger the editor to close
    */
-  async _onSelectorDone(value, commit, direction, key) {
+  async _onSelectorDone(value, commit, direction) {
     if (
       !commit ||
       this.isEditing ||

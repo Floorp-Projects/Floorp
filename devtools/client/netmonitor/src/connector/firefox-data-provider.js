@@ -460,7 +460,7 @@ class FirefoxDataProvider {
    * @param {string} protocols webSocket protocols
    * @param {string} extensions
    */
-  async onWebSocketOpened(httpChannelId, effectiveURI, protocols, extensions) {}
+  async onWebSocketOpened() {}
 
   /**
    * The "webSocketClosed" message type handler.

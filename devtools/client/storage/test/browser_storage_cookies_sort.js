@@ -53,7 +53,7 @@ function checkCells(expected) {
   const cells = [
     ...gPanelWindow.document.querySelectorAll("#name .table-widget-cell"),
   ];
-  cells.forEach(function (cell, i, arr) {
+  cells.forEach(function (cell, i) {
     // We use startsWith in order to avoid asserting the relative order of
     // "session" cookies when sorting on the "expires" column.
     ok(

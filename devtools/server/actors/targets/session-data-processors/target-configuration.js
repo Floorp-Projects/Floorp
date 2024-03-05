@@ -5,12 +5,7 @@
 "use strict";
 
 module.exports = {
-  async addOrSetSessionDataEntry(
-    targetActor,
-    entries,
-    isDocumentCreation,
-    updateType
-  ) {
+  async addOrSetSessionDataEntry(targetActor, entries, isDocumentCreation) {
     // Only WindowGlobalTargetActor implements updateTargetConfiguration,
     // skip targetActor data entry update for other targets.
     if (typeof targetActor.updateTargetConfiguration == "function") {
@@ -26,7 +21,7 @@ module.exports = {
     }
   },
 
-  removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  removeSessionDataEntry() {
     // configuration data entries are always added/updated, never removed.
   },
 };

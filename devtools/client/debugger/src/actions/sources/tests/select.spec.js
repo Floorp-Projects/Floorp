@@ -22,7 +22,7 @@ import { createLocation } from "../../../utils/location";
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
-process.on("unhandledRejection", (reason, p) => {});
+process.on("unhandledRejection", () => {});
 
 function initialLocation(sourceId) {
   return createLocation({ source: createSourceObject(sourceId), line: 1 });

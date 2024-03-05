@@ -335,12 +335,11 @@ async function runIncrementTest(editor, view, tests) {
  * @param  {String} options.description
  * @param  {Boolean} options.ctrl Small increment key
  * @param  {Boolean} options.alt Small increment key for macosx
- * @param  {Boolean} option.deadzoneIncluded True if the provided distance
+ * @param  {Boolean} options.deadzoneIncluded True if the provided distance
  *         accounts for the deadzone. When false, the deadzone will automatically
  *         be added to the distance.
- * @param  {CSSRuleView} view
  */
-async function testIncrement(editor, options, view) {
+async function testIncrement(editor, options) {
   info("Running subtest: " + options.description);
 
   editor.valueSpan.scrollIntoView();

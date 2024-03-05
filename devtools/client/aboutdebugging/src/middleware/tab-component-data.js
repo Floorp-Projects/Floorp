@@ -13,7 +13,7 @@ const {
  * This middleware converts tabs object that get from DevToolsClient.listTabs() to data
  * which is used in DebugTargetItem.
  */
-const tabComponentDataMiddleware = store => next => action => {
+const tabComponentDataMiddleware = () => next => action => {
   switch (action.type) {
     case REQUEST_TABS_SUCCESS: {
       action.tabs = toComponentData(action.tabs);

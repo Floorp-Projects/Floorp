@@ -225,7 +225,7 @@ describe("XHR Breakpoints", function () {
     }
 
     // check each expected XHR Method to see if they match the actual methods
-    expectedXHRMethods.forEach((expectedMethod, i) => {
+    expectedXHRMethods.forEach(expectedMethod => {
       function compareMethods(actualMethod) {
         return expectedMethod === actualMethod;
       }

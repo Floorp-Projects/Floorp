@@ -122,11 +122,7 @@ async function checkColorPickerConstrastData({
   expectedContrastValueScore,
   expectContrastRange = false,
   expectedMinContrastValueResult,
-  expectedMinContrastValueTitle,
-  expectedMinContrastValueScore,
   expectedMaxContrastValueResult,
-  expectedMaxContrastValueTitle,
-  expectedMaxContrastValueScore,
 }) {
   info(`Checking color picker: "${label}"`);
   const cPicker = view.tooltips.getTooltip("colorPicker");

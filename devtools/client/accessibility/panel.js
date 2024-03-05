@@ -286,7 +286,7 @@ AccessibilityPanel.prototype = {
     this._toolbox.component.setToolboxButtons(this._toolbox.toolbarButtons);
   },
 
-  togglePicker(focus) {
+  togglePicker() {
     this.picker && this.picker.toggle();
   },
 

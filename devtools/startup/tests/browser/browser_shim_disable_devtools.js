@@ -140,7 +140,7 @@ add_task(async function () {
 
 function waitForDelayedStartupFinished(win) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subject, topic) {
+    Services.obs.addObserver(function observer(subject) {
       if (win == subject) {
         Services.obs.removeObserver(
           observer,

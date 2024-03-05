@@ -11,7 +11,7 @@ import { isTopLevel } from "./utils/helpers";
 function hasTopLevelAwait(ast) {
   const hasAwait = hasNode(
     ast,
-    (node, ancestors, b) => t.isAwaitExpression(node) && isTopLevel(ancestors)
+    (node, ancestors) => t.isAwaitExpression(node) && isTopLevel(ancestors)
   );
 
   return hasAwait;

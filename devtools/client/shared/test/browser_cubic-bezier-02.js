@@ -103,7 +103,7 @@ async function curveCanBeClicked(widget, win, doc, offsets) {
   is(bezier.P1[1], 0.75, "P1 progress coordinate remained unchanged");
 }
 
-async function pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
+async function pointsCanBeMovedWithKeyboard(widget) {
   info("Checking that points respond to keyboard events");
 
   const singleStep = 3;

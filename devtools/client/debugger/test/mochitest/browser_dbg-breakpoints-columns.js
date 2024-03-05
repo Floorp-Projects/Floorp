@@ -36,7 +36,10 @@ add_task(async function () {
   await setConditionalBreakpoint(dbg, 1, "foo2");
 
   info("10. Test removing the breakpoints by clicking in the gutter");
-  await removeAllBreakpoints(dbg, 32, 0);
+  await clickGutter(dbg, 32);
+  await waitForBreakpointCount(dbg, 0);
+
+  ok(!findAllElements(dbg, "columnBreakpoints").length);
 });
 
 async function enableFirstBreakpoint(dbg) {
@@ -106,7 +109,7 @@ async function disableBreakpoint(dbg, index) {
   await waitForContextMenu(dbg);
   selectContextMenuItem(dbg, selectors.disableItem);
 
-  await waitForState(dbg, state => {
+  await waitForState(dbg, () => {
     const bp = dbg.selectors.getBreakpointsList()[index];
     return bp.disabled;
   });
@@ -121,11 +124,4 @@ async function removeFirstBreakpoint(dbg) {
   bpMarkers[0].click();
   bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
   assertClass(bpMarkers[0], "active", false);
-}
-
-async function removeAllBreakpoints(dbg, line, count) {
-  await clickGutter(dbg, 32);
-  await waitForBreakpointCount(dbg, 0);
-
-  ok(!findAllElements(dbg, "columnBreakpoints").length);
 }

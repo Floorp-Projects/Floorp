@@ -299,7 +299,7 @@ let cpt = 0;
  * tagged as tracker. The image is loaded with a incremented counter query parameter
  * each time so we can get the warning message.
  */
-function emitContentBlockedMessage(hud) {
+function emitContentBlockedMessage() {
   const url = `${BLOCKED_URL}?${++cpt}`;
   SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);

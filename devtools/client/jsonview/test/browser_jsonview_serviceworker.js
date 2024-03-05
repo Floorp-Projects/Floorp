@@ -34,7 +34,7 @@ add_task(async function () {
           resolve();
           return;
         }
-        worker.addEventListener("statechange", evt => {
+        worker.addEventListener("statechange", () => {
           if (worker.state === "activated") {
             resolve();
           }

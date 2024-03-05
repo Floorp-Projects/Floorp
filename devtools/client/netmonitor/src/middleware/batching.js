@@ -20,7 +20,7 @@ const REQUESTS_REFRESH_RATE = 50; // ms
  * - BATCH_ENABLE can be used to enable and disable the batching.
  * - BATCH_RESET discards the actions that are currently in the queue.
  */
-function batchingMiddleware(store) {
+function batchingMiddleware() {
   return next => {
     let queuedActions = [];
     let enabled = true;

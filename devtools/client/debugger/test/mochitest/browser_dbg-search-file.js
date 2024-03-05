@@ -125,7 +125,7 @@ add_task(async function () {
   is(dbg.win.document.activeElement.tagName, "INPUT", "Search field focused");
 });
 
-async function navigateWithKey(dbg, key, expectedLine, assertionMessage) {
+async function navigateWithKey(dbg, key, expectedLine) {
   pressKey(dbg, key);
   await waitForCursorPosition(dbg, expectedLine);
 }

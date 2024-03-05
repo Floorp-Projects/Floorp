@@ -289,7 +289,7 @@ const snapshotModel = (exports.snapshot = PropTypes.shape({
   creationTime: PropTypes.number,
   // The current state the snapshot is in.
   // @see ./constants.js
-  state: catchAndIgnore(function (snapshot, propName) {
+  state: catchAndIgnore(function (snapshot) {
     const current = snapshot.state;
     const shouldHavePath = [states.IMPORTING, states.SAVED, states.READ];
     const shouldHaveCreationTime = [states.READ];

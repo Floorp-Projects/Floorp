@@ -13,7 +13,7 @@ const {
   changeView,
 } = require("resource://devtools/client/memory/actions/view.js");
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ panel }) {
   const { gStore, document } = panel.panelWin;
 
   const { dispatch } = panel.panelWin.gStore;

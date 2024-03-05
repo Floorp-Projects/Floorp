@@ -10,7 +10,7 @@
 const Resources = require("resource://devtools/server/actors/resources/index.js");
 
 add_task(
-  threadFrontTest(async ({ threadActor, threadFront, debuggee, client }) => {
+  threadFrontTest(async ({ threadActor, threadFront, debuggee }) => {
     let lastMessage, lastExpression;
     const { targetActor } = threadActor;
     // Only Workers are evaluating through the WebConsoleActor.

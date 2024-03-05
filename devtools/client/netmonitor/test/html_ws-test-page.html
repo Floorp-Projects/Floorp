@@ -21,7 +21,7 @@
           ws = new WebSocket(
             "ws://mochi.test:8888/browser/devtools/client/netmonitor/test/file_ws_backend");
 
-          ws.onopen = e => {
+          ws.onopen = () => {
             for (let i = 0; i < numFramesToSend; i++) {
               ws.send("Payload " + i);
             }
@@ -41,7 +41,7 @@
 
       function closeConnection() {
         return new Promise(resolve => {
-          ws.onclose = e => {
+          ws.onclose = () => {
             resolve();
           }
           ws.close();

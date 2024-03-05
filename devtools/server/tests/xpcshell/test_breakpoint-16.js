@@ -9,7 +9,7 @@
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, client, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     const packet = await executeOnNextTickAndWaitForPause(
       () => evaluateTestCode(debuggee),
       threadFront

@@ -14,7 +14,7 @@ export function pauseOnExceptions(
   shouldPauseOnExceptions,
   shouldPauseOnCaughtExceptions
 ) {
-  return ({ dispatch, getState, client }) => {
+  return ({ dispatch, client }) => {
     recordEvent("pause_on_exceptions", {
       exceptions: shouldPauseOnExceptions,
       // There's no "n" in the key below (#1463117)

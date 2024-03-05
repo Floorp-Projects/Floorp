@@ -114,7 +114,7 @@ function evalCode() {
   Cu.evalInSandbox(
     "" + function runTest() { // line 1
       doStuff(                // line 2 - Break here
-        function (n) {        // line 3 - Step through `doStuff` to here
+        function () {        // line 3 - Step through `doStuff` to here
           (() => {})();       // line 4
           debugger;           // line 5
         }                     // line 6

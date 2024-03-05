@@ -2016,7 +2016,7 @@ Toolbox.prototype = {
     this.errorCountButton = this._createButtonState({
       id: "command-button-errorcount",
       isInStartContainer: false,
-      isToolSupported: toolbox => true,
+      isToolSupported: () => true,
       description: L10N.getStr("toolbox.errorCountButton.description"),
     });
     // Use updateErrorCountButton to set some properties so we don't have to repeat
@@ -3363,7 +3363,7 @@ Toolbox.prototype = {
     return prefFront.getBoolPref(DISABLE_AUTOHIDE_PREF);
   },
 
-  async _listFrames(event) {
+  async _listFrames() {
     if (
       !this.target.getTrait("frames") ||
       this.target.targetForm.ignoreSubFrames

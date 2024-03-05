@@ -164,7 +164,7 @@ class XHRBreakpoints extends Component {
     this.setState({ focused: true, editing: true });
   };
 
-  onMouseDown = e => {
+  onMouseDown = () => {
     this.setState({ editing: false, clickedOnFormElement: true });
   };
 
@@ -262,7 +262,7 @@ class XHRBreakpoints extends Component {
         className: "xhr-container",
         key: `${path}-${method}`,
         title: path,
-        onDoubleClick: (items, options) => this.editExpression(index),
+        onDoubleClick: () => this.editExpression(index),
       },
       label(
         null,
@@ -290,7 +290,7 @@ class XHRBreakpoints extends Component {
             className: "xhr-container__close-btn",
           },
           React.createElement(CloseButton, {
-            handleClick: e => removeXHRBreakpoint(index),
+            handleClick: () => removeXHRBreakpoint(index),
           })
         )
       )

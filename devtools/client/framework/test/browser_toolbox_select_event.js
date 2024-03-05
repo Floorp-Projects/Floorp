@@ -72,7 +72,7 @@ add_task(async function () {
   async function testSelectToolRace() {
     const toolbox = await openToolboxForTab(tab, "webconsole");
     let selected = false;
-    const onSelect = (event, id) => {
+    const onSelect = () => {
       if (selected) {
         ok(false, "Got more than one 'select' event");
       } else {

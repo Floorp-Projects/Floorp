@@ -28,7 +28,7 @@ class TestBulkActor extends Actor {
     };
   }
 
-  jsonReply({ length, reader, reply, done }) {
+  jsonReply({ length }) {
     Assert.equal(length, really_long().length);
 
     return {

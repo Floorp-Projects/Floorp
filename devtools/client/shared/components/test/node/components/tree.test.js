@@ -50,12 +50,12 @@ function mountTree(overrides = {}) {
                 getKey: x => `key-${x}`,
                 itemHeight: 1,
                 onFocus: x => {
-                  this.setState(previousState => {
+                  this.setState(() => {
                     return { focused: x };
                   });
                 },
                 onActivate: x => {
-                  this.setState(previousState => {
+                  this.setState(() => {
                     return { active: x };
                   });
                 },
@@ -207,7 +207,7 @@ describe("Tree", () => {
   });
 
   it("calls shouldItemUpdate when provided", () => {
-    const shouldItemUpdate = jest.fn((prev, next) => true);
+    const shouldItemUpdate = jest.fn(() => true);
     const wrapper = mountTree({
       shouldItemUpdate,
     });
@@ -636,7 +636,7 @@ describe("Tree", () => {
   it("renders as expected navigating with arrows on unexpandable roots", () => {
     const wrapper = mountTree({
       focused: "A",
-      isExpandable: item => false,
+      isExpandable: () => false,
     });
     expect(formatTree(wrapper)).toMatchSnapshot();
 

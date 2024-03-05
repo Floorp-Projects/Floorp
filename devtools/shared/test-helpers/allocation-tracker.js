@@ -314,14 +314,14 @@ exports.allocationTracker = function ({
     logAllocationSites(message, sources, { first = 1000 } = {}) {
       const allocationList = Object.entries(sources)
         // Sort by number of total object
-        .sort(([srcA, itemA], [srcB, itemB]) => itemB.count - itemA.count)
+        .sort(([, itemA], [, itemB]) => itemB.count - itemA.count)
         // Keep only the first n-th sources, with the most allocations
         .filter((_, i) => i < first)
         .map(([src, item]) => {
           const lines = [];
           Object.entries(item.lines)
             // Filter out lines where we only freed objects
-            .filter(([line, count]) => count > 0)
+            .filter(([, count]) => count > 0)
             .sort(([lineA, countA], [lineB, countB]) => {
               if (countA != countB) {
                 return countB - countA;

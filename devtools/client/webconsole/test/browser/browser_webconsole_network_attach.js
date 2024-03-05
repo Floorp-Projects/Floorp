@@ -10,7 +10,7 @@ const TEST_URI = TEST_PATH + TEST_FILE;
 
 registerCleanupFunction(async function () {
   await new Promise(resolve => {
-    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, () =>
       resolve()
     );
   });

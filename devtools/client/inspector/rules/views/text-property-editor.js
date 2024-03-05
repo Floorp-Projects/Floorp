@@ -385,7 +385,7 @@ TextPropertyEditor.prototype = {
         }
       });
 
-      this.valueSpan.addEventListener("mouseup", event => {
+      this.valueSpan.addEventListener("mouseup", () => {
         // if we have dragged, we will handle the pending click in _draggingOnMouseUp instead
         if (this._hasDragged) {
           return;
@@ -1146,10 +1146,8 @@ TextPropertyEditor.prototype = {
    *        True if the change should be applied.
    * @param {Number} direction
    *        The move focus direction number.
-   * @param {Number} key
-   *        The event keyCode that trigger the editor to close
    */
-  _onNameDone(value, commit, direction, key) {
+  _onNameDone(value, commit, direction) {
     const isNameUnchanged =
       (!commit && !this.ruleEditor.isEditing) || this.committed.name === value;
     if (this.prop.value && isNameUnchanged) {
@@ -1233,10 +1231,8 @@ TextPropertyEditor.prototype = {
    *        True if the change should be applied.
    * @param {Number} direction
    *        The move focus direction number.
-   * @param {Number} key
-   *        The event keyCode that trigger the editor to close
    */
-  _onValueDone(value = "", commit, direction, key) {
+  _onValueDone(value = "", commit, direction) {
     const parsedProperties = this._getValueAndExtraProperties(value);
     const val = parseSingleValue(
       this.cssProperties.isKnown,

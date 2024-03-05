@@ -138,7 +138,7 @@ add_task(async function () {
       () => {
         Assert.ok(false, "simpleThrow shouldn't succeed!");
       },
-      error => {
+      () => {
         // Check right return order
         Assert.equal(sequence++, 3);
       }
@@ -150,7 +150,7 @@ add_task(async function () {
       () => {
         Assert.ok(false, "promiseThrow shouldn't succeed!");
       },
-      error => {
+      () => {
         // Check right return order
         Assert.equal(sequence++, 4);
         Assert.ok(true, "simple throw should throw");

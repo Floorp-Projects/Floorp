@@ -366,7 +366,7 @@ async function testBrowserFrames() {
   await commands.destroy();
 }
 
-async function testTabFrames(mainRoot) {
+async function testTabFrames() {
   info("Test TargetCommand against frames via a tab target");
 
   // Create a TargetCommand for a given test tab

@@ -1381,13 +1381,13 @@ Scanner.prototype = {
    * Primary scanner entry point.  Consume one token and fill in
    * |aToken| accordingly.  Will skip over any number of comments first,
    * and will also skip over rather than return whitespace and comment
-   * tokens, depending on the value of |aSkip|.
+   * tokens.
    *
    * Returns true if it successfully consumed a token, false if EOF has
    * been reached.  Will always advance the current read position by at
    * least one character unless called when already at EOF.
    */
-  Next(aToken, aSkip) {
+  Next(aToken) {
     // do this here so we don't have to do it in dozens of other places
     aToken.mIdent = [];
     aToken.mType = eCSSToken_Symbol;

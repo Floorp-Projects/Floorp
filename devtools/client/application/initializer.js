@@ -55,7 +55,7 @@ const {
  * called to start the UI for the panel.
  */
 window.Application = {
-  async bootstrap({ toolbox, commands, panel }) {
+  async bootstrap({ toolbox, commands }) {
     // bind event handlers to `this`
     this.updateDomain = this.updateDomain.bind(this);
 

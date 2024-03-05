@@ -202,7 +202,7 @@ class WebExtensionDescriptorActor extends Actor {
    *
    * bypassCache has no impact for addon reloads.
    */
-  reloadDescriptor({ bypassCache }) {
+  reloadDescriptor() {
     return this.reload();
   }
 

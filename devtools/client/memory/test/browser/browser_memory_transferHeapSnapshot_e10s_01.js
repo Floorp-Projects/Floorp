@@ -11,7 +11,7 @@
 
 const TEST_URL = "data:text/html,<html><body></body></html>";
 
-this.test = makeMemoryTest(TEST_URL, async function ({ tab, panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ panel }) {
   const memoryFront = panel.panelWin.gStore.getState().front;
   ok(memoryFront, "Should get the MemoryFront");
 

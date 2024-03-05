@@ -168,7 +168,7 @@ add_task(async function () {
   await removeTab(gBrowser.selectedTab);
 });
 
-async function checkWorkerStatus(dbg, status) {
+async function checkWorkerStatus(_dbg, _status) {
   /* TODO: Re-Add support for showing service worker status (Bug 1641099)
   await waitUntil(() => {
     const threads = dbg.selectors.getThreads();

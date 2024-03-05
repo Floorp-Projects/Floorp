@@ -37,7 +37,7 @@ class ContentProcessStartup {
     this.maybeCreateExistingTargetActors();
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "xpcom-shutdown": {
         this.destroy();

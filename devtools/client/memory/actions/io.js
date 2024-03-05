@@ -25,7 +25,7 @@ const {
 const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
 exports.pickFileAndExportSnapshot = function (snapshot) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     const outputFile = await openFilePicker({
       title: L10N.getFormatStr("snapshot.io.save.window"),
       defaultName: PathUtils.filename(snapshot.path),
@@ -42,7 +42,7 @@ exports.pickFileAndExportSnapshot = function (snapshot) {
 };
 
 const exportSnapshot = (exports.exportSnapshot = function (snapshot, dest) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     dispatch({ type: actions.EXPORT_SNAPSHOT_START, snapshot });
 
     assert(
@@ -62,7 +62,7 @@ const exportSnapshot = (exports.exportSnapshot = function (snapshot, dest) {
 });
 
 exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     const input = await openFilePicker({
       title: L10N.getFormatStr("snapshot.io.import.window"),
       filters: [[L10N.getFormatStr("snapshot.io.filter"), "*.fxsnapshot"]],

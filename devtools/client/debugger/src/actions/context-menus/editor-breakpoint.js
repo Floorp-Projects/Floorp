@@ -85,7 +85,7 @@ export function showEditorCreateBreakpointContextMenu(
   location,
   lineText
 ) {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     const items = createBreakpointItems(location, lineText, dispatch);
 
     showMenu(event, items);

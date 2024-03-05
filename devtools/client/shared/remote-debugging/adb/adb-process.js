@@ -68,7 +68,7 @@ class AdbProcess extends EventEmitter {
         params,
         params.length,
         {
-          observe(subject, topic, data) {
+          observe(subject, topic) {
             switch (topic) {
               case "process-finished":
                 resolve();

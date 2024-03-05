@@ -46,7 +46,7 @@ add_task(async function () {
     "Listen to page reloads to check that they are indeed sent by the toolbox"
   );
   let reloadDetected = 0;
-  const reloadCounter = msg => {
+  const reloadCounter = () => {
     reloadDetected++;
     info("Detected reload #" + reloadDetected);
     is(

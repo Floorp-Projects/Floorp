@@ -102,7 +102,7 @@ class ServerSentEventWatcher {
   }
 
   // nsIEventSourceEventService specific functions
-  eventSourceConnectionOpened(httpChannelId) {}
+  eventSourceConnectionOpened() {}
 
   eventSourceConnectionClosed(httpChannelId) {
     const resource = ServerSentEventWatcher.createResource(

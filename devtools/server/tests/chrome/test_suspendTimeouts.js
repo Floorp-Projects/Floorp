@@ -131,7 +131,7 @@ window.onload = function () {
       }, 1000);
     }
 
-    function finish(message) {
+    function finish() {
       SimpleTest.info("suspendTimeouts_content.js", "called finish");
       SimpleTest.finish();
     }

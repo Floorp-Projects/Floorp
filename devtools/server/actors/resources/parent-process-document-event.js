@@ -98,7 +98,7 @@ class ParentProcessDocumentEventWatcher {
     return Promise.resolve();
   }
 
-  onStateChange(progress, request, flag, status) {
+  onStateChange(progress, request, flag) {
     const isStart = flag & Ci.nsIWebProgressListener.STATE_START;
     const isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     if (isDocument && isStart) {

@@ -42,7 +42,7 @@ add_task(async function test() {
   is(workers[1].url, WORKER2_URL);
 
   onWorkerListChanged = waitForWorkerListChanged(target);
-  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], workerUrl => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], () => {
     content.worker1.terminate();
   });
   await onWorkerListChanged;
@@ -52,7 +52,7 @@ add_task(async function test() {
   is(workers[0].url, WORKER2_URL);
 
   onWorkerListChanged = waitForWorkerListChanged(target);
-  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], workerUrl => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [WORKER2_URL], () => {
     content.worker2.terminate();
   });
   await onWorkerListChanged;

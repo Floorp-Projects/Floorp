@@ -86,7 +86,7 @@ class LazyMessageList extends Component {
   }
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
-  UNSAFE_componentWillUpdate(nextProps, nextState) {
+  UNSAFE_componentWillUpdate(nextProps) {
     if (nextProps.cacheGeneration !== this.props.cacheGeneration) {
       this.#cachedHeights = [];
       this.#startIndex = 0;
@@ -265,7 +265,7 @@ class LazyMessageList extends Component {
   #addListeners() {
     const { viewportRef } = this.props;
     viewportRef.current.addEventListener("scroll", this.#scrollHandlerBinding);
-    this.#resizeObserver = new ResizeObserver(entries => {
+    this.#resizeObserver = new ResizeObserver(() => {
       this.#viewportHeight =
         viewportRef.current.parentNode.parentNode.clientHeight;
       this.forceUpdate();

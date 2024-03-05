@@ -371,7 +371,7 @@ const reducers = {
     return state;
   },
 
-  [RESET_CHANGES](state) {
+  [RESET_CHANGES]() {
     return INITIAL_STATE;
   },
 };

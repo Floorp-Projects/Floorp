@@ -128,7 +128,7 @@ export function getPreview(target, tokenPos, codeMirror) {
 }
 
 export function getExceptionPreview(target, tokenPos, codeMirror) {
-  return async ({ dispatch, getState, parserWorker }) => {
+  return async ({ getState, parserWorker }) => {
     const match = await findExpressionMatch(
       getState(),
       parserWorker,

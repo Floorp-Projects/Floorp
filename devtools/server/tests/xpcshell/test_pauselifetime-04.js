@@ -30,6 +30,8 @@ function evaluateTestCode(debuggee) {
   debuggee.eval(
     "(" +
       function () {
+        // These arguments are tested.
+        // eslint-disable-next-line no-unused-vars
         function stopMe(obj) {
           debugger;
         }

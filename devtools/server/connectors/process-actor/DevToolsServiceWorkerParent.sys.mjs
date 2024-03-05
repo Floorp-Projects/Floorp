@@ -183,11 +183,7 @@ export class DevToolsServiceWorkerParent extends JSProcessActorParent {
     watcher.notifyTargetAvailable(serviceWorkerTargetForm);
   }
 
-  serviceWorkerTargetDestroyed({
-    watcherActorID,
-    forwardingPrefix,
-    serviceWorkerTargetForm,
-  }) {
+  serviceWorkerTargetDestroyed({ watcherActorID, serviceWorkerTargetForm }) {
     const watcher = WatcherRegistry.getWatcher(watcherActorID);
 
     if (!watcher) {

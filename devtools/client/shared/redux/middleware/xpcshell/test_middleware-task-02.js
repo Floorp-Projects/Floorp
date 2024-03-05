@@ -56,7 +56,7 @@ add_task(async function () {
 });
 
 function comboAction() {
-  return async function ({ dispatch, getState }) {
+  return async function ({ dispatch }) {
     const data = {};
     data.async = await dispatch(fetchAsync("async"));
     data.sync = await dispatch(fetchSync("sync"));

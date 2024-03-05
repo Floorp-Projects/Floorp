@@ -182,7 +182,7 @@ class InspectorActor extends Actor {
       return this._pageStylePromise;
     }
 
-    this._pageStylePromise = this.getWalker().then(walker => {
+    this._pageStylePromise = this.getWalker().then(() => {
       const pageStyle = new PageStyleActor(this);
       this.manage(pageStyle);
       return pageStyle;

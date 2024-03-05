@@ -255,7 +255,6 @@ class Popover extends Component {
       React.createElement(SmartGap, {
         token: this.props.target,
         preview: this.$tooltip || this.$popover,
-        type: this.props.type,
         gapHeight: this.gapHeight,
         coords: this.state.coords,
         offset: this.$gap.getBoundingClientRect().left,

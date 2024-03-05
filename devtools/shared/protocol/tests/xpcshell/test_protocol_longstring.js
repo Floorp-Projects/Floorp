@@ -124,7 +124,7 @@ function run_test() {
     Assert.equal(rootFront.__poolMap.size, size + 1);
   };
 
-  client.connect().then(([applicationType, traits]) => {
+  client.connect().then(([applicationType]) => {
     rootFront = client.mainRoot;
 
     // Root actor has no children yet.

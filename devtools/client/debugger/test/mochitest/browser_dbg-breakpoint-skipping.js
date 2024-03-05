@@ -15,9 +15,9 @@ add_task(async function () {
 
   info("Adding a breakpoint should remove the skipped pausing state");
   await skipPausing(dbg);
-  await waitForState(dbg, state => dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => dbg.selectors.getSkipPausing());
   await addBreakpoint(dbg, "simple3.js", 2);
-  await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => !dbg.selectors.getSkipPausing());
   invokeInTab("simple");
   await waitForPaused(dbg);
   ok(true, "The breakpoint has been hit after a breakpoint was created");
@@ -28,13 +28,13 @@ add_task(async function () {
   // during a disable
   await skipPausing(dbg);
   await disableBreakpoint(dbg, 0);
-  await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => !dbg.selectors.getSkipPausing());
   // Then re-enable the breakpoint to ensure skip pausing gets turned off
   // during an enable
   await skipPausing(dbg);
-  await waitForState(dbg, state => dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => dbg.selectors.getSkipPausing());
   toggleBreakpoint(dbg, 0);
-  await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => !dbg.selectors.getSkipPausing());
   await waitForDispatch(dbg.store, "SET_BREAKPOINT");
   invokeInTab("simple");
   await waitForPaused(dbg);
@@ -45,7 +45,7 @@ add_task(async function () {
   await addBreakpoint(dbg, "simple3.js", 3);
   await skipPausing(dbg);
   await disableBreakpoint(dbg, 0);
-  await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => !dbg.selectors.getSkipPausing());
   invokeInTab("simple");
   await waitForPaused(dbg);
   ok(true, "The breakpoint has been hit after skip pausing was disabled again");
@@ -57,7 +57,7 @@ add_task(async function () {
   const source = findSource(dbg, "simple3.js");
   removeBreakpoint(dbg, source.id, 3);
   const wait = waitForDispatch(dbg.store, "TOGGLE_SKIP_PAUSING");
-  await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
+  await waitForState(dbg, () => !dbg.selectors.getSkipPausing());
   await wait;
   invokeInTab("simple");
   await waitForPaused(dbg);
@@ -70,7 +70,7 @@ add_task(async function () {
 
 function skipPausing(dbg) {
   clickElementWithSelector(dbg, ".command-bar-skip-pausing");
-  return waitForState(dbg, state => dbg.selectors.getSkipPausing());
+  return waitForState(dbg, () => dbg.selectors.getSkipPausing());
 }
 
 function toggleBreakpoint(dbg, index) {

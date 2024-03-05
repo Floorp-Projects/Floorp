@@ -44,7 +44,7 @@ export function addHiddenBreakpoint(location) {
  * @static
  */
 export function disableBreakpointsInSource(source) {
-  return async ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState }) => {
     const breakpoints = getBreakpointsForSource(getState(), source);
     for (const breakpoint of breakpoints) {
       if (!breakpoint.disabled) {
@@ -61,7 +61,7 @@ export function disableBreakpointsInSource(source) {
  * @static
  */
 export function enableBreakpointsInSource(source) {
-  return async ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState }) => {
     const breakpoints = getBreakpointsForSource(getState(), source);
     for (const breakpoint of breakpoints) {
       if (breakpoint.disabled) {
@@ -78,7 +78,7 @@ export function enableBreakpointsInSource(source) {
  * @static
  */
 export function toggleAllBreakpoints(shouldDisableBreakpoints) {
-  return async ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState }) => {
     const breakpoints = getBreakpointsList(getState());
 
     for (const breakpoint of breakpoints) {
@@ -149,7 +149,7 @@ export function removeBreakpoints(breakpoints) {
  * @static
  */
 export function removeBreakpointsInSource(source) {
-  return async ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState }) => {
     const breakpoints = getBreakpointsForSource(getState(), source);
     for (const breakpoint of breakpoints) {
       dispatch(removeBreakpoint(breakpoint));
@@ -271,7 +271,7 @@ export function enableBreakpointsAtLine(source, line) {
 }
 
 export function toggleDisabledBreakpoint(breakpoint) {
-  return ({ dispatch, getState }) => {
+  return ({ dispatch }) => {
     if (!breakpoint.disabled) {
       return dispatch(disableBreakpoint(breakpoint));
     }
@@ -356,7 +356,7 @@ export function togglePauseOnAny() {
 }
 
 export function setXHRBreakpoint(path, method) {
-  return ({ dispatch, getState, client }) => {
+  return ({ dispatch, client }) => {
     const breakpoint = createXHRBreakpoint(path, method);
 
     return dispatch({

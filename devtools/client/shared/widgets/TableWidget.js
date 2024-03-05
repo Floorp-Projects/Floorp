@@ -1667,7 +1667,7 @@ function Cell(column, item, nextCell) {
 
   if (column.table.cellContextMenuId) {
     this.label.setAttribute("context", column.table.cellContextMenuId);
-    this.label.addEventListener("contextmenu", event => {
+    this.label.addEventListener("contextmenu", () => {
       // Make the ID of the clicked cell available as a property on the table.
       // It's then available for the popupshowing or command handler.
       column.table.contextMenuRowId = this.id;

@@ -214,7 +214,7 @@ class SecondaryPanes extends Component {
           input({
             type: "checkbox",
             checked: mapScopesEnabled ? "checked" : "",
-            onChange: e => this.props.toggleMapScopes(),
+            onChange: () => this.props.toggleMapScopes(),
           }),
           L10N.getStr("scopes.showOriginalScopes")
         ),
@@ -249,7 +249,7 @@ class SecondaryPanes extends Component {
           input({
             type: "checkbox",
             checked: logEventBreakpoints ? "checked" : "",
-            onChange: e => this.props.toggleEventLogging(),
+            onChange: () => this.props.toggleEventLogging(),
           }),
           L10N.getStr("eventlisteners.log")
         )

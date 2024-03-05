@@ -116,11 +116,11 @@ class EventListeners extends Component {
     }
   };
 
-  onFocus = event => {
+  onFocus = () => {
     this.setState({ focused: true });
   };
 
-  onBlur = event => {
+  onBlur = () => {
     this.setState({ focused: false });
   };
 

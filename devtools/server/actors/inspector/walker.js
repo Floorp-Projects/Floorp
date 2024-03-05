@@ -526,7 +526,7 @@ class WalkerActor extends Actor {
    * When a custom element is defined, send a customElementDefined mutation for all the
    * NodeActors using this tag name.
    */
-  onCustomElementDefined({ name, actors }) {
+  onCustomElementDefined({ actors }) {
     actors.forEach(actor =>
       this.queueMutation({
         target: actor.actorID,
@@ -536,7 +536,7 @@ class WalkerActor extends Actor {
     );
   }
 
-  _onReflows(reflows) {
+  _onReflows() {
     // Going through the nodes the walker knows about, see which ones have had their
     // containerType, display, scrollable or overflow state changed and send events if any.
     const containerTypeChanges = [];

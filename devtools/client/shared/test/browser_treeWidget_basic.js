@@ -34,7 +34,7 @@ add_task(async function () {
   gBrowser.removeCurrentTab();
 });
 
-function populateTree(tree, doc) {
+function populateTree(tree) {
   tree.add([
     {
       id: "level1",
@@ -179,7 +179,7 @@ function testTreeItemInsertedCorrectly(tree, doc) {
 /**
  * Populate the unsorted tree.
  */
-function populateUnsortedTree(tree, doc) {
+function populateUnsortedTree(tree) {
   tree.sorted = false;
 
   tree.add([{ id: "g-1", label: "g-1" }]);
@@ -191,7 +191,7 @@ function populateUnsortedTree(tree, doc) {
 /**
  * Test if the nodes are inserted correctly in the unsorted tree.
  */
-function testUnsortedTreeItemInsertedCorrectly(tree, doc) {
+function testUnsortedTreeItemInsertedCorrectly(tree) {
   ok(tree.root.items.has("g-1"), "g-1 top level element exists");
 
   is(

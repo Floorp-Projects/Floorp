@@ -51,7 +51,7 @@ function addTimingMarker(state, action) {
   return state;
 }
 
-function clearTimingMarkers(state) {
+function clearTimingMarkers() {
   return new TimingMarkers();
 }
 

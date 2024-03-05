@@ -106,7 +106,7 @@ class DebugTargetPane extends PureComponent {
             "undecorated-link debug-target-pane__title " +
             "qa-debug-target-pane-title",
           title,
-          onClick: e => this.toggleCollapsibility(),
+          onClick: () => this.toggleCollapsibility(),
         },
         dom.h2(
           { className: "main-subheading debug-target-pane__heading" },

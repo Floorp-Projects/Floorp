@@ -185,7 +185,7 @@ window.addEventListener(
   { once: true }
 );
 
-function onCloseCommand(event) {
+function onCloseCommand() {
   window.close();
 }
 

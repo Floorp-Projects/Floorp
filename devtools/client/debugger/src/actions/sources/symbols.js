@@ -10,7 +10,7 @@ import { loadSourceText } from "./loadSourceText";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 
-async function doSetSymbols(location, { dispatch, getState, parserWorker }) {
+async function doSetSymbols(location, { dispatch, parserWorker }) {
   await dispatch(loadSourceText(location.source, location.sourceActor));
 
   await dispatch({

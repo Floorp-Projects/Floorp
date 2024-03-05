@@ -60,7 +60,7 @@ add_task(async function () {
   somehow not overwritten and fires another "highlighter-hidden" event.
    */
   let wasEmitted = false;
-  const waitForExtraEvent = new Promise((resolve, reject) => {
+  const waitForExtraEvent = new Promise(resolve => {
     const _handler = () => {
       wasEmitted = true;
       resolve();

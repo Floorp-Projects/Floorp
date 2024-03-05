@@ -300,7 +300,7 @@ const TESTS = {
     const actual = [];
 
     const object = {
-      [handler](type) {
+      [handler]() {
         actual.push(1);
         on(target, "message", () => {
           off(target, "message", object);

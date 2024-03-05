@@ -12,7 +12,7 @@ function waitForActive(swr) {
       resolve(swr);
       return;
     }
-    sw.addEventListener("statechange", function onStateChange(evt) {
+    sw.addEventListener("statechange", function onStateChange() {
       if (sw.state === "activated") {
         sw.removeEventListener("statechange", onStateChange);
         resolve(swr);

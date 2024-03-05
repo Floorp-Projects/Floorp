@@ -6,7 +6,7 @@ import { actions, selectors, createStore } from "../../utils/test-head";
 
 const mockThreadFront = {
   evaluate: (script, { frameId }) =>
-    new Promise((resolve, reject) => {
+    new Promise(resolve => {
       if (!frameId) {
         resolve("bla");
       } else {
@@ -16,8 +16,8 @@ const mockThreadFront = {
   evaluateExpressions: (inputs, { frameId }) =>
     Promise.all(
       inputs.map(
-        input =>
-          new Promise((resolve, reject) => {
+        () =>
+          new Promise(resolve => {
             if (!frameId) {
               resolve("bla");
             } else {

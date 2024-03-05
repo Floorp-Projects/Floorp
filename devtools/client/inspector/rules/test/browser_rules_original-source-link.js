@@ -64,7 +64,7 @@ async function testClickingLink(toolbox, view) {
 
 function waitForOriginalStyleSheetEditorSelection(toolbox) {
   const panel = toolbox.getCurrentPanel();
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const maybeContinue = editor => {
       // The style editor selects the first sheet at first load before
       // selecting the desired sheet.

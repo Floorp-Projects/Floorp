@@ -193,7 +193,7 @@ class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
     });
   }
 
-  onEvent2b(a, b, c) {
+  onEvent2b(a, b) {
     this.event2arg2 = b;
   }
 }
@@ -596,7 +596,7 @@ async function testManyChildren(trace) {
   Assert.equal(ret.more[1].childID, "child7");
 }
 
-async function testGenerator(trace) {
+async function testGenerator() {
   // Test accepting a generator.
   const f = function* () {
     for (const i of [1, 2, 3, 4, 5]) {
@@ -623,7 +623,7 @@ async function testGenerator(trace) {
   Assert.ok(ret[1] instanceof ChildFront);
 }
 
-async function testPolymorphism(trace) {
+async function testPolymorphism() {
   // Check polymorphic types returned by an actor
   const firstChild = await rootFront.getPolymorphism(0);
   Assert.ok(firstChild instanceof ChildFront);
@@ -653,7 +653,7 @@ async function testPolymorphism(trace) {
   }, /Was expecting one of these actors 'childActor,otherChildActor' but instead got an actor of type: 'root'/);
 }
 
-async function testUnmanageChildren(trace) {
+async function testUnmanageChildren() {
   // There is already one front of type OtherChildFront
   Assert.equal(childrenOfType(rootFront, OtherChildFront).length, 1);
 
@@ -671,7 +671,7 @@ async function testUnmanageChildren(trace) {
   Assert.equal(childrenOfType(rootFront, OtherChildFront).length, 0);
 }
 
-async function testDestroy(trace) {
+async function testDestroy() {
   const front = await rootFront.getOtherChild();
   const otherChildFront = await front.getOtherChild();
   Assert.equal(

@@ -63,7 +63,7 @@ function adjustingBezierUpdatesPreset(widget, win, doc, rect) {
   is(widget.presets._activePreset, null, "There is no active preset");
 }
 
-async function selectingPresetUpdatesBezier(widget, win, doc, rect) {
+async function selectingPresetUpdatesBezier(widget, win, doc) {
   info("Checking that selecting a preset updates bezier curve");
 
   info("Listening for the new coordinates event");

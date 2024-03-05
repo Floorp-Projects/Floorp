@@ -7,7 +7,7 @@
  * A middleware that logs all actions coming through the system
  * to the console.
  */
-function log({ dispatch, getState }) {
+function log() {
   return next => action => {
     try {
       // Only print the action type, rather than printing the whole object

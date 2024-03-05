@@ -151,10 +151,8 @@ ToolSidebar.prototype = {
    * @param {String} tabId The ID of the tab that was used to register it, or
    * the tab id attribute value if the tab existed before the sidebar
    * got created.
-   * @param {String} tabPanelId Optional. If provided, this ID will be used
-   * instead of the tabId to retrieve and remove the corresponding <tabpanel>
    */
-  removeTab(tabId, tabPanelId) {
+  removeTab(tabId) {
     this._tabbar.removeTab(tabId);
 
     this.emit("tab-unregistered", tabId);

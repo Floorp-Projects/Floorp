@@ -55,7 +55,7 @@ class MenuList extends PureComponent {
     this.notifyHighlightedChildChange(e.target.id);
   }
 
-  onMouseOutOrBlur(e) {
+  onMouseOutOrBlur() {
     const hoveredElem = this.wrapperRef.querySelector(":hover");
     if (!hoveredElem) {
       this.notifyHighlightedChildChange(null);

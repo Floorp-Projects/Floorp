@@ -377,7 +377,7 @@ export class QuickOpenModal extends Component {
   isSourceSearch = () => this.isSourcesQuery() || this.isGotoSourceQuery();
 
   /* eslint-disable react/no-danger */
-  renderHighlight(candidateString, query, name) {
+  renderHighlight(candidateString, query) {
     const options = {
       wrap: {
         tagOpen: '<mark class="highlight">',

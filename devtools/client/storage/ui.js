@@ -403,7 +403,7 @@ class StorageUI {
 
   // We only need to listen to target destruction, but TargetCommand.watchTarget
   // requires a target available function...
-  async _onTargetAvailable({ targetFront }) {}
+  async _onTargetAvailable() {}
 
   _onTargetDestroyed({ targetFront }) {
     // Remove all storages related to this target
@@ -1574,7 +1574,7 @@ class StorageUI {
     }
   }
 
-  onVariableViewPopupShowing(event) {
+  onVariableViewPopupShowing() {
     const item = this.view.getFocusedItem();
     this._variableViewPopupCopy.setAttribute("disabled", !item);
   }

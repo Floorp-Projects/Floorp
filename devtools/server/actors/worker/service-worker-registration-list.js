@@ -103,11 +103,11 @@ class ServiceWorkerRegistrationActorList {
     this._mustNotify = false;
   }
 
-  onRegister(registration) {
+  onRegister() {
     this._notifyListChanged();
   }
 
-  onUnregister(registration) {
+  onUnregister() {
     this._notifyListChanged();
   }
 }

@@ -49,7 +49,7 @@ module.exports = {
     }
   },
 
-  removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  removeSessionDataEntry(targetActor, entries) {
     for (const { location } of entries) {
       targetActor.threadActor.removeBreakpoint(location);
     }

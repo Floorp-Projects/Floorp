@@ -16,10 +16,10 @@ const WIDTH = 160;
 const HEIGHT = 100;
 
 const HANDLER_MAP = {
-  top(areaWidth, areaHeight) {
+  top(areaWidth) {
     return { x: Math.round(areaWidth / 2), y: 0 };
   },
-  topright(areaWidth, areaHeight) {
+  topright(areaWidth) {
     return { x: areaWidth, y: 0 };
   },
   right(areaWidth, areaHeight) {
@@ -37,7 +37,7 @@ const HANDLER_MAP = {
   left(areaWidth, areaHeight) {
     return { x: 0, y: Math.round(areaHeight / 2) };
   },
-  topleft(areaWidth, areaHeight) {
+  topleft() {
     return { x: 0, y: 0 };
   },
 };

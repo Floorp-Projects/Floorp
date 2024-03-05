@@ -208,7 +208,7 @@ HarBuilder.prototype = {
     return entry;
   },
 
-  buildPageTimings(page, networkEvent) {
+  buildPageTimings() {
     // Event timing info isn't available
     const timings = {
       onContentLoad: -1,

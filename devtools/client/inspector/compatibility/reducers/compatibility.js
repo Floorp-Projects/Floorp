@@ -139,7 +139,7 @@ const reducers = {
     _showError(COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_FAILURE, error);
     return state;
   },
-  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE](state, { target }) {
+  [COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_COMPLETE](state) {
     return Object.assign({}, state, { isTopLevelTargetProcessing: false });
   },
 };

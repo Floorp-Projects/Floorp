@@ -68,7 +68,7 @@ class NetworkEventContentWatcher {
     this.networkEvents.clear();
   }
 
-  httpFailedOpeningRequest(subject, topic) {
+  httpFailedOpeningRequest(subject) {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     // Ignore preload requests to avoid duplicity request entries in

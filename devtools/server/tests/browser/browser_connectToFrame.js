@@ -39,7 +39,7 @@ add_task(async function () {
 
     const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
     class ConnectToFrameTestActor extends Actor {
-      constructor(conn, tab) {
+      constructor(conn) {
         super(conn, { typeName: "connectToFrameTest", methods: [] });
         dump("instantiate test actor\n");
         this.requestTypes = {

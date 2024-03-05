@@ -74,7 +74,7 @@ function clearDestroyedNodes() {
 }
 
 function initUserSettings() {
-  return async ({ dispatch, getState }) => {
+  return async ({ dispatch }) => {
     dispatch({ type: COMPATIBILITY_INIT_USER_SETTINGS_START });
 
     try {

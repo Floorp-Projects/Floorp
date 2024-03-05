@@ -119,7 +119,7 @@ class SideBar extends Component {
   }
 }
 
-function mapStateToProps(state, props) {
+function mapStateToProps(state) {
   return {
     front: state.ui.frontInSidebar,
   };

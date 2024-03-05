@@ -108,7 +108,7 @@ class StatisticsPanel extends Component {
     });
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     MediaQueryList.addListener(this.onLayoutChange);
 
     const { hasLoad, requests } = this.props;

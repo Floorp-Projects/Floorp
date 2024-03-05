@@ -7,7 +7,7 @@
  * Check that step out stops at the async parent's frame.
  */
 
-async function testFinish({ threadFront, devToolsClient }) {
+async function testFinish({ devToolsClient }) {
   await close(devToolsClient);
 
   do_test_finished();

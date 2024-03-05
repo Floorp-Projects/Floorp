@@ -93,11 +93,9 @@ class Actor extends Pool {
 
   /**
    * Override this method in subclasses to serialize the actor.
-   * @param [optional] string hint
-   *   Optional string to customize the form.
    * @returns A jsonable object.
    */
-  form(hint) {
+  form() {
     return { actor: this.actorID };
   }
 

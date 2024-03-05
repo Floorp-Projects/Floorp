@@ -44,7 +44,7 @@ function test_promises_run_to_completion() {
   const log = [""];
   g.log = log;
 
-  dbg.onDebuggerStatement = function handleDebuggerStatement(frame) {
+  dbg.onDebuggerStatement = function handleDebuggerStatement() {
     dbg.onDebuggerStatement = undefined;
 
     // Exercise the promise machinery: resolve a promise and perform a microtask
@@ -63,7 +63,7 @@ function test_promises_run_to_completion() {
     force_microtask_checkpoint();
     log[0] += ")";
 
-    Promise.resolve(42).then(v => {
+    Promise.resolve(42).then(() => {
       // The microtask running this callback should be handled as we leave the
       // onDebuggerStatement Debugger callback, and should not be interleaved
       // with debuggee microtasks.

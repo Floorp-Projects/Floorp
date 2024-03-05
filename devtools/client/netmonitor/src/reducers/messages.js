@@ -208,7 +208,7 @@ function toggleMessageFilterType(state, action) {
 /**
  * Toggle control frames for the WebSocket connection.
  */
-function toggleControlFrames(state, action) {
+function toggleControlFrames(state) {
   return {
     ...state,
     showControlFrames: !state.showControlFrames,

@@ -67,7 +67,7 @@ function disableRuntimeClientFactoryMock() {
  */
 function createRuntimeClientFactoryMock() {
   const RuntimeClientFactoryMock = {};
-  RuntimeClientFactoryMock.createClientForRuntime = function (runtime) {
+  RuntimeClientFactoryMock.createClientForRuntime = function () {
     console.log("MOCKED METHOD createClientForRuntime");
   };
 

@@ -48,6 +48,8 @@ function test_thread_lifetime() {
   gDebuggee.eval(
     "(" +
       function () {
+        // These arguments are tested.
+        // eslint-disable-next-line no-unused-vars
         function stopMe(arg1) {
           debugger;
         }

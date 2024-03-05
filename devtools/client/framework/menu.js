@@ -49,10 +49,10 @@ Menu.prototype.clear = function () {
 /**
  * Add an item to a specified position in the menu
  *
- * @param {int} pos
- * @param {MenuItem} menuItem
+ * @param {int} _pos
+ * @param {MenuItem} _menuItem
  */
-Menu.prototype.insert = function (pos, menuItem) {
+Menu.prototype.insert = function (_pos, _menuItem) {
   throw Error("Not implemented");
 };
 

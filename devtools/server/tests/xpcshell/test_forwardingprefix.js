@@ -51,7 +51,7 @@ function newConnection(prefix) {
 function createMainConnection() {
   ({ conn: gMainConnection, transport: gMainTransport } = newConnection());
   gClient = new DevToolsClient(gMainTransport);
-  gClient.connect().then(([type, traits]) => run_next_test());
+  gClient.connect().then(() => run_next_test());
 }
 
 /*
@@ -152,7 +152,7 @@ function createSubconnection1() {
   const { conn, transport } = newSubconnection("prefix1");
   gSubconnection1 = conn;
   transport.ready();
-  gClient.expectReply("prefix1/root", reply => run_next_test());
+  gClient.expectReply("prefix1/root", () => run_next_test());
 }
 
 // Establish forwarding, but don't put any actors in that server.
@@ -165,7 +165,7 @@ function createSubconnection2() {
   const { conn, transport } = newSubconnection("prefix2");
   gSubconnection2 = conn;
   transport.ready();
-  gClient.expectReply("prefix2/root", reply => run_next_test());
+  gClient.expectReply("prefix2/root", () => run_next_test());
 }
 
 function TestForwardPrefix12OnlyRoot() {
