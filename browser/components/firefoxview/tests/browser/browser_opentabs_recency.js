@@ -13,6 +13,9 @@ const tabURL4 = "data:,Tab4";
 
 let gInitialTab;
 let gInitialTabURL;
+const { NonPrivateTabs } = ChromeUtils.importESModule(
+  "resource:///modules/OpenTabs.sys.mjs"
+);
 
 add_setup(function () {
   gInitialTab = gBrowser.selectedTab;

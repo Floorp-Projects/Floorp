@@ -55,6 +55,12 @@ function triggerClickOn(target, options) {
   return promise;
 }
 
+async function add_new_tab(URL) {
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  return tab;
+}
+
 add_task(async function aria_attributes() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   is(
