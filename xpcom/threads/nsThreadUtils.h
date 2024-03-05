@@ -562,23 +562,6 @@ using RunnableFunctionImpl =
 
 namespace detail {
 
-template <typename CVRemoved>
-constexpr static bool IsRefcountedSmartPointerHelper = false;
-
-template <typename Pointee>
-constexpr static bool IsRefcountedSmartPointerHelper<RefPtr<Pointee>> = true;
-
-template <typename Pointee>
-constexpr static bool IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> = true;
-
-}  // namespace detail
-
-template <typename T>
-constexpr static bool IsRefcountedSmartPointer =
-    detail::IsRefcountedSmartPointerHelper<std::remove_cv_t<T>>;
-
-namespace detail {
-
 template <typename T>
 struct RemoveSmartPointerHelper {
   using Type = T;
