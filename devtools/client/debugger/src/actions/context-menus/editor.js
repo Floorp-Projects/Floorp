@@ -254,7 +254,7 @@ const blackBoxLinesMenuItem = (
   editor,
   blackboxedRanges,
   isSourceOnIgnoreList,
-  clickedLine = null,
+  clickedLine,
   dispatch
 ) => {
   const { codeMirror } = editor;

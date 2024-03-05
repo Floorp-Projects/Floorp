@@ -10,15 +10,7 @@
   if (this.module && module.id.includes("worker")) {
     // require
     const dumpn = require("devtools/shared/DevToolsUtils").dumpn;
-    factory.call(
-      this,
-      require,
-      exports,
-      module,
-      { Cc, Ci, Cu },
-      ChromeWorker,
-      dumpn
-    );
+    factory.call(this, require, exports, module, ChromeWorker, dumpn);
   } else {
     // Cu.import
     const { require } = ChromeUtils.importESModule(
@@ -26,18 +18,10 @@
     );
     this.isWorker = false;
     this.console = console;
-    factory.call(
-      this,
-      require,
-      this,
-      { exports: this },
-      { Cc, Ci, Cu },
-      ChromeWorker,
-      null
-    );
+    factory.call(this, require, this, { exports: this }, ChromeWorker, null);
     this.EXPORTED_SYMBOLS = ["DevToolsWorker", "workerify"];
   }
-}).call(this, function (require, exports, module, {}, ChromeWorker, dumpn) {
+}).call(this, function (require, exports, module, ChromeWorker, dumpn) {
   let MESSAGE_COUNTER = 0;
 
   /**
