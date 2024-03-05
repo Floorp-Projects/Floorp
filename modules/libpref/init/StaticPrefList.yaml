@@ -3505,7 +3505,7 @@
 # Enable Screen Wake Lock API
 - name: dom.screenwakelock.enabled
   type: bool
-  value: @EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether to enable the JavaScript start-up cache. This causes one of the first
