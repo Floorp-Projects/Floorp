@@ -53,6 +53,30 @@ using namespace mozilla::ipc;
 
 namespace {
 
+PersistenceType GetPersistenceType(const PrincipalInfo& aPrincipalInfo) {
+  if (aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    // Chrome privilege always gets persistent storage.
+    return PERSISTENCE_TYPE_PERSISTENT;
+  }
+
+  if (aPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
+    nsCString origin =
+        aPrincipalInfo.get_ContentPrincipalInfo().originNoSuffix();
+
+    if (QuotaManager::IsOriginInternal(origin)) {
+      // Internal origins always get persistent storage.
+      return PERSISTENCE_TYPE_PERSISTENT;
+    }
+
+    if (aPrincipalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId >
+        0) {
+      return PERSISTENCE_TYPE_PRIVATE;
+    }
+  }
+
+  return PERSISTENCE_TYPE_DEFAULT;
+}
+
 Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT IdentifyPrincipalType(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   switch (aPrincipalInfo.type()) {
@@ -658,29 +682,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     return nullptr;
   }
 
-  PersistenceType persistenceType;
-
-  bool isPersistent =
-      principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo;
-  if (!isPersistent &&
-      principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
-    nsCString origin =
-        principalInfo.get_ContentPrincipalInfo().originNoSuffix();
-    isPersistent = QuotaManager::IsOriginInternal(origin);
-  }
-
-  const bool isPrivate =
-      principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
-      principalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId > 0;
-
-  if (isPersistent) {
-    // Chrome privilege and internal origins always get persistent storage.
-    persistenceType = PERSISTENCE_TYPE_PERSISTENT;
-  } else if (isPrivate) {
-    persistenceType = PERSISTENCE_TYPE_PRIVATE;
-  } else {
-    persistenceType = PERSISTENCE_TYPE_DEFAULT;
-  }
+  PersistenceType persistenceType = GetPersistenceType(principalInfo);
 
   DatabaseMetadata& metadata = commonParams.metadata();
   metadata.name() = aName;
