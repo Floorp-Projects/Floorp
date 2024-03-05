@@ -207,6 +207,20 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // not connected to streams created by captureStreamUntilEnded.
 
   enum class OutputCaptureState { Capture, Halt, None };
+  const char* OutputCaptureStateToStr(OutputCaptureState aState) const {
+    switch (aState) {
+      case OutputCaptureState::Capture:
+        return "Capture";
+      case OutputCaptureState::Halt:
+        return "Halt";
+      case OutputCaptureState::None:
+        return "None";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Not defined state!");
+        return "Not-defined";
+    }
+  }
+
   // Set the output capture state of this decoder.
   // @param aState Capture: Output is captured into output tracks, and
   //                        aDummyTrack must be provided.
