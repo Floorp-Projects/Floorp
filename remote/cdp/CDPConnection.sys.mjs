@@ -40,6 +40,12 @@ export class CDPConnection extends WebSocketConnection {
    *     The session to register.
    */
   registerSession(session) {
+    lazy.logger.warn(
+      `Support for the Chrome DevTools Protocol (CDP) in Firefox will be deprecated after Firefox 128 (ESR) ` +
+        `and will be removed in a later release. CDP users should consider migrating ` +
+        `to WebDriver BiDi. See https://bugzilla.mozilla.org/show_bug.cgi?id=1872254`
+    );
+
     // CDP is not compatible with Fission by default, check the appropriate
     // preferences are set to ensure compatibility.
     if (
