@@ -33,7 +33,7 @@ features = ["capture", "serialize_program", "gecko", "sw_compositor"]
 dwrote = "0.11"
 winapi = "0.3"
 
-[target.'cfg(target_os = "macos")'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 core-foundation = "0.9"
 core-graphics = "0.23"
 foreign-types = "0.5.0"

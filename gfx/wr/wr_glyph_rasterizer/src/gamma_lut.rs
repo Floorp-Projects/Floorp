@@ -168,7 +168,7 @@ impl ColorLut for ColorU {
 // so we can get linear values.
 // CoreGraphics obscurely defaults to 2.0 as the smoothing gamma value.
 // The color space used does not appear to affect this choice.
-#[cfg(target_os="macos")]
+#[cfg(any(target_os="macos", target_os = "ios"))]
 fn get_inverse_gamma_table_coregraphics_smoothing() -> [u8; 256] {
     let mut table = [0u8; 256];
 
@@ -250,7 +250,7 @@ pub fn build_gamma_correcting_lut(table: &mut [u8; 256], src: u8, contrast: f32,
 
 pub struct GammaLut {
     tables: [[u8; 256]; 1 << LUM_BITS],
-    #[cfg(target_os="macos")]
+    #[cfg(any(target_os="macos", target_os="ios"))]
     cg_inverse_gamma: [u8; 256],
 }
 
@@ -280,12 +280,12 @@ impl GammaLut {
     }
 
     pub fn new(contrast: f32, paint_gamma: f32, device_gamma: f32) -> GammaLut {
-        #[cfg(target_os="macos")]
+        #[cfg(any(target_os="macos", target_os="ios"))]
         let mut table = GammaLut {
             tables: [[0; 256]; 1 << LUM_BITS],
             cg_inverse_gamma: get_inverse_gamma_table_coregraphics_smoothing(),
         };
-        #[cfg(not(target_os="macos"))]
+        #[cfg(not(any(target_os="macos", target_os="ios")))]
         let mut table = GammaLut {
             tables: [[0; 256]; 1 << LUM_BITS],
         };
@@ -337,7 +337,7 @@ impl GammaLut {
         }
     }
 
-    #[cfg(target_os="macos")]
+    #[cfg(any(target_os="macos", target_os="ios"))]
     pub fn coregraphics_convert_to_linear(&self, pixels: &mut [u8]) {
         for pixel in pixels.chunks_mut(4) {
             pixel[0] = self.cg_inverse_gamma[pixel[0] as usize];

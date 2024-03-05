@@ -7,7 +7,7 @@
 
 use gleam::gl;
 use std::cell::RefCell;
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "ios")))]
 use std::ffi::OsString;
 use std::ffi::{CStr, CString};
 use std::io::Cursor;
@@ -16,7 +16,7 @@ use std::ops::Range;
 #[cfg(target_os = "android")]
 use std::os::raw::c_int;
 use std::os::raw::{c_char, c_float, c_void};
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "windows")))]
 use std::os::unix::ffi::OsStringExt;
 #[cfg(target_os = "windows")]
 use std::os::windows::ffi::OsStringExt;
@@ -2326,7 +2326,7 @@ fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
     }
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
     // On macOS, the descriptor string is a concatenation of the PostScript name
     // and the font file path (to disambiguate cases where there are multiple
@@ -2340,7 +2340,7 @@ fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
     }
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "windows")))]
 fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
     let chars = bytes.flush_into_vec();
     NativeFontHandle {

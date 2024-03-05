@@ -2087,14 +2087,14 @@ impl ResourceCache {
                         index,
                     }
                 }
-                #[cfg(not(target_os = "macos"))]
+                #[cfg(not(any(target_os = "macos", target_os = "ios")))]
                 FontTemplate::Native(native) => {
                     PlainFontTemplate {
                         data: native.path.to_string_lossy().to_string(),
                         index: native.index,
                     }
                 }
-                #[cfg(target_os = "macos")]
+                #[cfg(any(target_os = "macos", target_os = "ios"))]
                 FontTemplate::Native(native) => {
                     PlainFontTemplate {
                         data: native.name,
