@@ -5553,12 +5553,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
@@ -5584,12 +5584,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
@@ -5949,12 +5949,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
@@ -5980,12 +5980,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - mozilla-release
         - mozilla-beta
       * - **browsertime-benchmark-speedometer3-mobile-chrome-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-cstm-car-m-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
