@@ -144,11 +144,13 @@ class MessagePumpCFRunLoopBase : public MessagePump {
   // the basis of run loops starting and stopping.
   virtual void EnterExitRunLoop(CFRunLoopActivity activity);
 
+#if !defined(XP_IOS)
   // IOKit power state change notification callback, called when the system
   // enters and leaves the sleep state.
   static void PowerStateNotification(void* info, io_service_t service,
                                      uint32_t message_type,
                                      void* message_argument);
+#endif
 
   // The thread's run loop.
   CFRunLoopRef run_loop_;
@@ -241,6 +243,23 @@ class MessagePumpNSRunLoop : public MessagePumpCFRunLoopBase {
   DISALLOW_COPY_AND_ASSIGN(MessagePumpNSRunLoop);
 };
 
+#if defined(XP_IOS)
+// This is a fake message pump.  It attaches sources to the main thread's
+// CFRunLoop, so PostTask() will work, but it is unable to drive the loop
+// directly, so calling Run() or Quit() are errors.
+class MessagePumpUIApplication : public MessagePumpCFRunLoopBase {
+ public:
+  MessagePumpUIApplication() {}
+
+  void DoRun(Delegate* delegate) override;
+  void Quit() override;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(MessagePumpUIApplication);
+};
+
+#else
+
 class MessagePumpNSApplication : public MessagePumpCFRunLoopBase {
  public:
   MessagePumpNSApplication();
@@ -264,6 +283,7 @@ class MessagePumpNSApplication : public MessagePumpCFRunLoopBase {
 
   DISALLOW_COPY_AND_ASSIGN(MessagePumpNSApplication);
 };
+#endif
 
 class MessagePumpMac {
  public:
