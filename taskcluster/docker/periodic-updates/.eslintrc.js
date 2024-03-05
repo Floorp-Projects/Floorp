@@ -24,9 +24,6 @@ module.exports = {
     // case/default clauses.
     "no-case-declarations": "error",
 
-    // Disallow use of the console API.
-    "no-console": "error",
-
     // Disallow constant expressions in conditions (except for loops).
     "no-constant-condition": ["error", { checkLoops: false }],
 

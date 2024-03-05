@@ -208,9 +208,8 @@ module.exports = {
     // Disallow use of arguments.caller or arguments.callee.
     "no-caller": "error",
 
-    // XXX Bug 1487642 - decide if we want to enable this or not.
-    // Disallow the use of console
-    "no-console": "off",
+    // Disallow the use of console, except for errors and warnings.
+    "no-console": ["error", { allow: ["createInstance", "error", "warn"] }],
 
     // Disallows expressions where the operation doesn't affect the value.
     // TODO: This is enabled by default in ESLint's v9 recommended configuration.

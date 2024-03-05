@@ -129,7 +129,6 @@ module.exports = {
     "max-statements": ["error", 50],
     "new-cap": ["error", { newIsCap: true, capIsNew: false }],
     "no-alert": "error",
-    "no-console": ["error", { allow: ["error"] }],
     "no-div-regex": "error",
     "no-duplicate-imports": "error",
     "no-eq-null": "error",

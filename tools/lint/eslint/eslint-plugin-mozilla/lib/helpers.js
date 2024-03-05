@@ -511,7 +511,7 @@ module.exports = {
             manifest,
           });
         } catch (e) {
-          console.log(
+          console.error(
             "TOML ERROR: " +
               e.message +
               " @line: " +

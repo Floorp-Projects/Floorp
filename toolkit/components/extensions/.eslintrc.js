@@ -120,9 +120,6 @@ module.exports = {
     // Allow use of bitwise operators.
     "no-bitwise": "off",
 
-    // Disallow using the console API.
-    "no-console": "error",
-
     // Allow use of the continue statement.
     "no-continue": "off",
 

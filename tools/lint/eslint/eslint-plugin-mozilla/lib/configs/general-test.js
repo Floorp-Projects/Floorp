@@ -7,6 +7,8 @@ module.exports = {
     "mozilla/mark-test-function-used": "error",
     "mozilla/no-arbitrary-setTimeout": "error",
 
+    // Bug 1883707 - Turn off no-console in tests at the moment.
+    "no-console": "off",
     // Turn off no-unsanitized for tests, as we do want to be able to use
     // these for testing.
     "no-unsanitized/method": "off",
