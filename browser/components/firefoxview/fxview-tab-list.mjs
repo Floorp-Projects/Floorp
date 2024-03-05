@@ -718,7 +718,26 @@ export class FxviewTabRow extends MozLitElement {
     }
   }
 
-  muteOrUnmuteTab() {
+  muteOrUnmuteTab(e) {
+    e?.preventDefault();
+    // If the tab has no sound playing, the mute/unmute button will be removed when toggled.
+    // We should move the focus to the right in that case. This does not apply to pinned tabs
+    // on the Open Tabs page.
+    let shouldMoveFocus =
+      (!this.pinnedTabsGridView ||
+        (!this.indicators.includes("pinned") && this.pinnedTabsGridView)) &&
+      this.mediaButtonEl &&
+      !this.indicators.includes("soundplaying") &&
+      this.currentActiveElementId === "fxview-tab-row-media-button";
+
+    if (e?.type === "keydown" && shouldMoveFocus) {
+      let tabList = this.getRootNode().host;
+      if (document.dir == "rtl") {
+        tabList.moveFocusLeft(this);
+      } else {
+        tabList.moveFocusRight(this);
+      }
+    }
     this.tabElement.toggleMuteAudio();
   }
 
@@ -880,6 +899,7 @@ export class FxviewTabRow extends MozLitElement {
           !this.indicators?.includes("muted")
         }
         @click=${this.muteOrUnmuteTab}
+        @keydown=${this.muteOrUnmuteTab}
         tabindex="${
           this.active &&
           this.currentActiveElementId === "fxview-tab-row-media-button"

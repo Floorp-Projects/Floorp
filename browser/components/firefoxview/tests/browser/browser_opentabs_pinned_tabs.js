@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
-
 let pageWithAlert =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/tabPrompts/openPromptOffTimeout.html";
@@ -16,22 +12,6 @@ function cleanup() {
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs[1]);
   }
-}
-
-function isActiveElement(expectedLinkEl) {
-  return expectedLinkEl.getRootNode().activeElement == expectedLinkEl;
-}
-
-async function add_new_tab(URL) {
-  let tabChangeRaised = BrowserTestUtils.waitForEvent(
-    NonPrivateTabs,
-    "TabChange"
-  );
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
-  // wait so we can reliably compare the tab URL
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await tabChangeRaised;
-  return tab;
 }
 
 const arrowDown = async tabList => {
@@ -170,9 +150,8 @@ add_task(async function test_pin_unpin_open_tab() {
     await tabChangeRaised;
     await openTabs.updateComplete;
     await telemetryEvent(contextMenuEvent);
-
-    cleanup();
   });
+  cleanup();
 });
 
 add_task(async function test_indicator_pinned_tabs_with_keyboard() {
@@ -320,8 +299,8 @@ add_task(async function test_indicator_pinned_tabs_with_keyboard() {
     // Switch back to other tab to close prompt before cleanup
     await BrowserTestUtils.switchTab(gBrowser, openedTab);
     EventUtils.synthesizeKey("KEY_Enter", {});
-    cleanup();
   });
+  cleanup();
 });
 
 add_task(async function test_mute_unmute_pinned_tab() {
@@ -375,9 +354,8 @@ add_task(async function test_mute_unmute_pinned_tab() {
     await TestUtils.waitForCondition(
       () => !unmutedTab.indicators.includes("muted")
     );
-
-    cleanup();
   });
+  cleanup();
 });
 
 add_task(async function test_mute_unmute_with_context_menu() {
@@ -482,7 +460,6 @@ add_task(async function test_mute_unmute_with_context_menu() {
     await TestUtils.waitForCondition(
       () => !unmutedTab.indicators.includes("muted")
     );
-
-    cleanup();
   });
+  cleanup();
 });
