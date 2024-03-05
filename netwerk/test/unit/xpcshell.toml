@@ -860,6 +860,8 @@ run-sequentially = "node server exceptions dont replay well"
 
 ["test_multipart_streamconv_missing_lead_boundary.js"]
 
+["test_multipart_set_cookie.js"]
+
 ["test_nestedabout_serialize.js"]
 
 ["test_net_addr.js"]
