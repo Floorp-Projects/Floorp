@@ -1898,7 +1898,7 @@ add_task(async function testDefaults() {
   let localWrapper = {
     manifestVersion: 2,
     cloneScope: global,
-    shouldInject(ns) {
+    shouldInject() {
       return true;
     },
     getImplementation(ns, name) {
@@ -1973,7 +1973,7 @@ add_task(async function testReturns() {
   const localWrapper = {
     manifestVersion: 2,
     cloneScope: global,
-    shouldInject(ns) {
+    shouldInject() {
       return true;
     },
     getImplementation(ns, name) {
@@ -2096,7 +2096,7 @@ add_task(async function testCrossOriginArguments() {
   let localWrapper = {
     manifestVersion: 2,
     cloneScope: sandbox,
-    shouldInject(ns) {
+    shouldInject() {
       return true;
     },
     getImplementation(ns, name) {

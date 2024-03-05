@@ -95,7 +95,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
     return browserActionMap.get(extension);
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     let { extension } = this;
 
     let options =
@@ -341,7 +341,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         );
       },
 
-      onBeforeCommand: (event, node) => {
+      onBeforeCommand: event => {
         this.lastClickInfo = {
           button: event.button || 0,
           modifiers: clickModifiersFromEvent(event),

@@ -398,7 +398,7 @@ export var ExtensionStorage = {
     Services.obs.addObserver(this, "xpcom-shutdown");
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "xpcom-shutdown") {
       Services.obs.removeObserver(this, "extension-invalidate-storage-cache");
       Services.obs.removeObserver(this, "xpcom-shutdown");

@@ -302,7 +302,7 @@ this.test = class extends ExtensionAPI {
           promise = Promise.resolve(promise);
 
           return promise.then(
-            result => {
+            () => {
               let message = `Promise resolved, expected rejection '${toSource(
                 expectedError
               )}'`;

@@ -73,7 +73,7 @@ add_task(async function test_webRequest_auth_proxy() {
     );
 
     browser.webRequest.onAuthRequired.addListener(
-      details => {
+      () => {
         // Using proxyAuthorizationHeader should prevent an auth request coming to us in the extension.
         browser.test.fail("onAuthRequired");
       },

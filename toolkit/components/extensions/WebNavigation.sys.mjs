@@ -97,7 +97,7 @@ export var WebNavigationManager = {
    * @param {string} topic
    * @param {string | undefined} data
    */
-  observe: function (subject, topic, data) {
+  observe: function (subject, topic) {
     if (topic == "urlbar-user-start-navigation") {
       this.onURLBarUserStartNavigation(subject.wrappedJSObject);
     } else if (topic == "webNavigation-createdNavigationTarget") {

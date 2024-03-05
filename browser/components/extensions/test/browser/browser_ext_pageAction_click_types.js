@@ -146,7 +146,7 @@ async function test_clickData_reset(testAsNonPersistent = false) {
 
     files: {
       "background.js": async function background() {
-        function onBrowserActionClicked(tab, info) {
+        function onBrowserActionClicked() {
           // openPopup requires user interaction, such as a browser action click.
           browser.pageAction.openPopup();
         }

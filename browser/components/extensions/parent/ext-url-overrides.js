@@ -150,7 +150,7 @@ this.urlOverrides = class extends ExtensionAPI {
     }
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     let { extension } = this;
     let { manifest } = extension;
 

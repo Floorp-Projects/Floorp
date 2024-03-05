@@ -250,10 +250,8 @@ this.scripting = class extends ExtensionAPI {
           const scriptIdsMap = gScriptIdsMap.get(extension);
 
           return Array.from(scriptIdsMap.entries())
-            .filter(
-              ([id, scriptId]) => !details?.ids || details.ids.includes(id)
-            )
-            .map(([id, scriptId]) => {
+            .filter(([id]) => !details?.ids || details.ids.includes(id))
+            .map(([, scriptId]) => {
               const options = extension.registeredContentScripts.get(scriptId);
 
               return makePublicContentScript(extension, options);

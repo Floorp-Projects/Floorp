@@ -23,7 +23,7 @@ async function test_connection_refused(url, expectedError) {
     }, {urls: ["<all_urls>"]});
 
     let tabId;
-    browser.test.onMessage.addListener(async (msg, expected) => {
+    browser.test.onMessage.addListener(async () => {
       await browser.tabs.remove(tabId);
       browser.test.sendMessage("done");
     });

@@ -102,7 +102,7 @@ function getContextWrapper(manifestVersion = 2) {
     },
 
     preprocessors: {
-      localize(value, context) {
+      localize(value) {
         return value.replace(
           /__MSG_(.*?)__/g,
           (m0, m1) => `${m1.toUpperCase()}`
@@ -118,7 +118,7 @@ function getContextWrapper(manifestVersion = 2) {
       return this.permissions.has(permission);
     },
 
-    shouldInject(ns, name, allowedContexts) {
+    shouldInject(ns, name) {
       return name != "do-not-inject";
     },
 

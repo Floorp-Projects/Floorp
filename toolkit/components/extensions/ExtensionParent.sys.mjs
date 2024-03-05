@@ -625,7 +625,7 @@ class ProxyContextParent extends BaseContext {
     }
   }
 
-  logActivity(type, name, data) {
+  logActivity() {
     // The base class will throw so we catch any subclasses that do not implement.
     // We do not want to throw here, but we also do not log here.
   }
@@ -906,7 +906,7 @@ ParentAPIManager = {
     extension.parentMessageManager = processMessageManager;
   },
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     if (topic === "message-manager-close") {
       let mm = subject;
       for (let [childId, context] of this.proxyContexts) {
@@ -1037,7 +1037,7 @@ ParentAPIManager = {
     this.proxyContexts.set(childId, context);
   },
 
-  recvContextLoaded(data, { actor, sender }) {
+  recvContextLoaded(data, { actor }) {
     let context = this.getContextById(data.childId);
     verifyActorForContext(actor, context);
     const { extension } = context;
@@ -1796,7 +1796,7 @@ function promiseMessageFromChild(messageManager, messageName) {
       unregister();
       resolve(message.data);
     }
-    function observer(subject, topic, data) {
+    function observer(subject) {
       if (subject === messageManager) {
         unregister();
         reject(
@@ -2024,7 +2024,7 @@ let IconDetails = {
 
   // Returns the appropriate icon URL for the given icons object and the
   // screen resolution of the given window.
-  getPreferredIcon(icons, extension = null, size = 16) {
+  getPreferredIcon(icons, extension, size = 16) {
     const DEFAULT = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
     let bestSize = null;
@@ -2212,13 +2212,13 @@ var StartupCache = {
       this.manifests.delete(id),
       this.permissions.delete(id),
       this.menus.delete(id),
-    ]).catch(e => {
+    ]).catch(() => {
       // Ignore the error. It happens when we try to flush the add-on
       // data after the AddonManager has flushed the entire startup cache.
     });
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic === "startupcache-invalidate") {
       this._data = new Map();
       this._dataPromise = Promise.resolve(this._data);

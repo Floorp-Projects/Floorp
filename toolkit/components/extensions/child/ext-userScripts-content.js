@@ -375,7 +375,7 @@ this.userScriptsContent = class extends ExtensionAPI {
               throw new ExtensionError(USERSCRIPT_DISABLED_ERRORMSG);
             }
 
-            let handler = (event, metadata, scriptSandbox, eventResult) => {
+            let handler = (event, metadata, scriptSandbox) => {
               const us = new UserScript({
                 context,
                 metadata,

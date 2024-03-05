@@ -406,7 +406,7 @@ this.devtools = class extends ExtensionAPI {
     this._uninitialize();
   }
 
-  getAPI(context) {
+  getAPI() {
     return {
       devtools: {},
     };

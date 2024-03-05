@@ -45,13 +45,13 @@ add_task(async function test_proxy_settings() {
       { urls: ["http://example.com/*"] }
     );
     browser.webRequest.onCompleted.addListener(
-      details => {
+      () => {
         browser.test.notifyPass("proxytest");
       },
       { urls: ["http://example.com/*"] }
     );
     browser.webRequest.onErrorOccurred.addListener(
-      details => {
+      () => {
         browser.test.notifyFail("proxytest");
       },
       { urls: ["http://example.com/*"] }

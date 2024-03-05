@@ -35,7 +35,7 @@ for (let win of iterBrowserWindows()) {
   initialTabs.set(win, new Set(getBrowserApp(win).tabs));
 }
 
-addMessageListener("check-cleanup", extensionId => {
+addMessageListener("check-cleanup", () => {
   Services.console.unregisterListener(listener);
 
   let results = {

@@ -17,7 +17,7 @@ let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
 async function testImageLoading(src, expectedAction) {
-  let imageLoadingPromise = new Promise((resolve, reject) => {
+  let imageLoadingPromise = new Promise((resolve) => {
     let cleanupListeners;
     let testImage = new window.Image();
     // Set the src via wrappedJSObject so the load is triggered with the

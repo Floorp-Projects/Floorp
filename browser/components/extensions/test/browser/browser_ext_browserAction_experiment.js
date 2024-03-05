@@ -49,7 +49,7 @@ let fooExperimentFiles = {
   /* globals ExtensionAPI */
   "parent.js": () => {
     this.foo = class extends ExtensionAPI {
-      getAPI(context) {
+      getAPI() {
         return {
           experiments: {
             foo: {
@@ -65,7 +65,7 @@ let fooExperimentFiles = {
 
   "child.js": () => {
     this.foo = class extends ExtensionAPI {
-      getAPI(context) {
+      getAPI() {
         return {
           experiments: {
             foo: {

@@ -23,7 +23,7 @@ add_task(async function test_autoDiscardable() {
       );
       const { ExtensionError } = ExtensionUtils;
       this.experiments = class extends ExtensionAPI {
-        getAPI(context) {
+        getAPI() {
           return {
             experiments: {
               async unload() {

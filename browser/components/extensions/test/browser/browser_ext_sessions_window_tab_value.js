@@ -134,7 +134,7 @@ add_task(async function test_sessions_tab_value_persistence() {
     // Wait until the newly created tab has completed loading or it will still have
     // about:blank url when it gets removed and will not appear in the removed tabs history.
     browser.webNavigation.onCompleted.addListener(
-      async function newTabListener(details) {
+      async function newTabListener() {
         browser.webNavigation.onCompleted.removeListener(newTabListener);
 
         let tabs = await browser.tabs.query({ currentWindow: true });

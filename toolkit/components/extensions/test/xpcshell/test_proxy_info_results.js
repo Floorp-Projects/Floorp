@@ -57,14 +57,14 @@ async function testProxyResolution(test) {
   if (expected.error) {
     errorMsg = extension.awaitMessage("proxy-error-received");
   }
-  let proxyInfo = await new Promise((resolve, reject) => {
+  let proxyInfo = await new Promise(resolve => {
     let channel = NetUtil.newChannel({
       uri,
       loadUsingSystemPrincipal: true,
     });
 
     gProxyService.asyncResolve(channel, 0, {
-      onProxyAvailable(req, uri, pi, status) {
+      onProxyAvailable(req, uri, pi) {
         resolve(pi && pi.QueryInterface(Ci.nsIProxyInfo));
       },
     });

@@ -258,7 +258,7 @@ let tabSwitchTestData = {
     "2.png": imageBuffer,
   },
 
-  getTests: function (tabs, windows) {
+  getTests: function (tabs) {
     let manifest = browser.runtime.getManifest();
     let { manifest_version } = manifest;
     const action = manifest_version < 3 ? "browserAction" : "action";
@@ -491,7 +491,7 @@ add_task(async function testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests: function (tabs, windows) {
+    getTests: function (tabs) {
       let details = [
         {
           title: "Foo Extension",

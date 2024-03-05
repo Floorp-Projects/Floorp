@@ -67,7 +67,7 @@ this.storage = class extends ExtensionAPI {
     };
   }
 
-  getLocalIDBBackend(context, { fireOnChanged, serialize, storagePrincipal }) {
+  getLocalIDBBackend(context, { fireOnChanged, storagePrincipal }) {
     let dbPromise;
     async function getDB() {
       if (dbPromise) {
@@ -348,10 +348,10 @@ this.storage = class extends ExtensionAPI {
               .callParentAsyncFunction("storage.managed.get", [serialize(keys)])
               .then(deserialize);
           },
-          set(items) {
+          set() {
             return Promise.reject({ message: "storage.managed is read-only" });
           },
-          remove(keys) {
+          remove() {
             return Promise.reject({ message: "storage.managed is read-only" });
           },
           clear() {

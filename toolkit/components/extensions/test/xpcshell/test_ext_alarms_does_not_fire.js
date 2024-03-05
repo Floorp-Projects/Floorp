@@ -7,7 +7,7 @@ add_task(async function test_cleared_alarm_does_not_fire() {
   async function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
 
-    browser.alarms.onAlarm.addListener(alarm => {
+    browser.alarms.onAlarm.addListener(() => {
       browser.test.fail("cleared alarm does not fire");
       browser.test.notifyFail("alarm-cleared");
     });

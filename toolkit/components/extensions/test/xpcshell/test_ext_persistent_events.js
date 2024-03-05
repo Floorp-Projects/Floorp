@@ -41,7 +41,7 @@ const API = class extends ExtensionAPI {
 
     const FIRE_TOPIC = `fire-${namespace}.${event}`;
 
-    async function listener(subject, topic, data) {
+    async function listener(subject) {
       try {
         if (subject.wrappedJSObject.waitForBackground) {
           await fire.wakeup();
@@ -257,7 +257,7 @@ const global = this;
 async function promiseObservable(topic, count, fn = null) {
   let _countResolve;
   let results = [];
-  function listener(subject, _topic, data) {
+  function listener(subject, _topic) {
     const eventDetails = subject.wrappedJSObject;
     results.push(eventDetails);
     if (results.length > count) {

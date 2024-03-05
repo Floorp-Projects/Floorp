@@ -434,7 +434,7 @@ const cryptoCollectionIdSchema = {
     throw new Error("cannot generate IDs for system collection");
   },
 
-  validate(id) {
+  validate() {
     return true;
   },
 };

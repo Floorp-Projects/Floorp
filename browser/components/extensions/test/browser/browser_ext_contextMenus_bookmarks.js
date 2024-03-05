@@ -20,7 +20,7 @@ function bookmarkContextMenuExtension() {
         {
           title: CONTEXT_ENTRY_LABEL,
           contexts: ["bookmark"],
-          onclick: (info, tab) => {
+          onclick: info => {
             browser.test.sendMessage(`clicked`, info.bookmarkId);
           },
         },

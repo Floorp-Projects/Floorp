@@ -16,7 +16,7 @@ async function testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
-    browser.runtime.onMessage.addListener((msg, sender) => {
+    browser.runtime.onMessage.addListener((msg) => {
       browser.test.assertEq(msg, "script ran", "script ran");
       browser.test.notifyPass("executeScript");
     });

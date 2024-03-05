@@ -73,7 +73,7 @@ function compareLists(list1, list2, kind) {
   equal(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-async function openAndCloseContentPage(url) {
+async function openAndCloseContentPage() {
   let contentPage = await ExtensionTestUtils.loadContentPage(URL);
   // Clear the sheet cache so that it doesn't interact with following tests: A
   // stylesheet with the same URI loaded from the same origin doesn't otherwise

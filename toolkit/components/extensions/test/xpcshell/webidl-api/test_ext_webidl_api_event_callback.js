@@ -18,7 +18,7 @@ add_task(async function setup() {
 
 add_task(async function test_api_event_manager_methods() {
   await runExtensionAPITest("extension event manager methods", {
-    backgroundScript({ testAsserts, testLog }) {
+    backgroundScript({ testAsserts }) {
       const api = browser.mockExtensionAPI;
       const listener = () => {};
 
@@ -48,7 +48,7 @@ add_task(async function test_api_event_manager_methods() {
         );
       }
     },
-    assertResults({ testError, testResult }) {
+    assertResults({ testError }) {
       Assert.deepEqual(testError, null, "Got no error as expected");
     },
   });
@@ -104,7 +104,7 @@ add_task(async function test_api_event_eventListener_call_with_result() {
   await runExtensionAPITest(
     "extension event eventListener wrapper forwarded call result",
     {
-      backgroundScript({ testAsserts, testLog }) {
+      backgroundScript({ testLog }) {
         const api = browser.mockExtensionAPI;
         let listener;
 
@@ -206,11 +206,11 @@ add_task(async function test_api_event_eventListener_result_rejected() {
   await runExtensionAPITest(
     "extension event eventListener throws (mozIExtensionCallback.call)",
     {
-      backgroundScript({ testAsserts, testLog }) {
+      backgroundScript({ testLog }) {
         const api = browser.mockExtensionAPI;
         let listener;
 
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
           testLog("addListener and wait for event to be fired");
           listener = (msg, arg1) => {
             if (msg === "test-done") {
@@ -263,7 +263,7 @@ add_task(async function test_api_event_eventListener_throws_on_call() {
   await runExtensionAPITest(
     "extension event eventListener throws (mozIExtensionCallback.call)",
     {
-      backgroundScript({ testAsserts, testLog }) {
+      backgroundScript({ testLog }) {
         const api = browser.mockExtensionAPI;
         let listener;
 
@@ -280,7 +280,7 @@ add_task(async function test_api_event_eventListener_throws_on_call() {
           api.onTestEvent.addListener(listener);
         });
       },
-      assertResults({ testError, testResult }) {
+      assertResults({ testError }) {
         Assert.deepEqual(testError, null, "Got no error as expected");
       },
       mockAPIRequestHandler(policy, request) {
@@ -305,7 +305,7 @@ add_task(async function test_send_response_eventListener() {
   await runExtensionAPITest(
     "extension event eventListener sendResponse eventListener argument",
     {
-      backgroundScript({ testAsserts, testLog }) {
+      backgroundScript({ testLog }) {
         const api = browser.mockExtensionAPI;
         let listener;
 
@@ -353,14 +353,14 @@ add_task(async function test_send_response_eventListener() {
 
 add_task(async function test_send_response_multiple_eventListener() {
   await runExtensionAPITest("multiple extension event eventListeners", {
-    backgroundScript({ testAsserts, testLog }) {
+    backgroundScript({ testLog }) {
       const api = browser.mockExtensionAPI;
       let listenerNoReply;
       let listenerSendResponseReply;
 
       return new Promise(resolve => {
         testLog("addListener and wait for event to be fired");
-        listenerNoReply = (msg, sendResponse) => {
+        listenerNoReply = () => {
           return false;
         };
         listenerSendResponseReply = (msg, sendResponse) => {

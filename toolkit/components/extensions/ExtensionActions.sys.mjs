@@ -322,64 +322,64 @@ class PanelActionBase {
    * If it only changes a parameter for a single window, `target` will be that window.
    * Otherwise `target` will be null.
    *
-   * @param {XULElement|ChromeWindow|null} target
+   * @param {XULElement|ChromeWindow|null} _target
    *        Browser tab or browser chrome window, may be null.
    */
-  updateOnChange(target) {}
+  updateOnChange(_target) {}
 
   /**
    * Get tab object from tabId.
    *
-   * @param {string} tabId
+   * @param {string} _tabId
    *        Internal id of the tab to get.
    */
-  getTab(tabId) {}
+  getTab(_tabId) {}
 
   /**
    * Get window object from windowId
    *
-   * @param {string} windowId
+   * @param {string} _windowId
    *        Internal id of the window to get.
    */
-  getWindow(windowId) {}
+  getWindow(_windowId) {}
 
   /**
    * Gets the target object corresponding to the `details` parameter of the various
    * get* and set* API methods.
    *
-   * @param {object} details
+   * @param {object} _details
    *        An object with optional `tabId` or `windowId` properties.
-   * @param {number} [details.tabId]
-   * @param {number} [details.windowId]
+   * @param {number} [_details.tabId]
+   * @param {number} [_details.windowId]
    * @throws if both `tabId` and `windowId` are specified, or if they are invalid.
    * @returns {XULElement|ChromeWindow|null}
    *        If a `tabId` was specified, the corresponding XULElement tab.
    *        If a `windowId` was specified, the corresponding ChromeWindow.
    *        Otherwise, `null`.
    */
-  getTargetFromDetails({ tabId, windowId }) {
+  getTargetFromDetails(_details) {
     return null;
   }
 
   /**
    * Triggers a click event.
    *
-   * @param {XULElement} tab
+   * @param {XULElement} _tab
    *        The tab where this event should be fired.
-   * @param {object} clickInfo
+   * @param {object} _clickInfo
    *        Extra data passed to the second parameter to the action API's
    *        onClicked event.
    */
-  dispatchClick(tab, clickInfo) {}
+  dispatchClick(_tab, _clickInfo) {}
 
   /**
    * Checks whether this action is shown.
    *
-   * @param {XULElement} tab
+   * @param {XULElement} _tab
    *        The tab to be checked
    * @returns {boolean}
    */
-  isShownForTab(tab) {
+  isShownForTab(_tab) {
     return false;
   }
 }
@@ -481,7 +481,7 @@ export class PageActionBase extends PanelActionBase {
     return this.globals.pinned;
   }
 
-  getTargetFromDetails({ tabId, windowId }) {
+  getTargetFromDetails({ tabId }) {
     // PageActionBase doesn't support |windowId|
     if (tabId != null) {
       return this.getTab(tabId);

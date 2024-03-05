@@ -169,7 +169,7 @@ function promiseAnimationFrame(win = window) {
 
 function promisePopupHidden(popup) {
   return new Promise(resolve => {
-    let onPopupHidden = event => {
+    let onPopupHidden = () => {
       popup.removeEventListener("popuphidden", onPopupHidden);
       resolve();
     };
@@ -323,7 +323,7 @@ var awaitExtensionPanel = function (extension, win = window, awaitLoad = true) {
   return AppUiTestDelegate.awaitExtensionPanel(win, extension.id, awaitLoad);
 };
 
-function getCustomizableUIPanelID(win = window) {
+function getCustomizableUIPanelID() {
   return CustomizableUI.AREA_ADDONS;
 }
 
@@ -605,7 +605,7 @@ async function openChromeContextMenu(menuId, target, win = window) {
   return menu;
 }
 
-async function openSubmenu(submenuItem, win = window) {
+async function openSubmenu(submenuItem) {
   const submenu = submenuItem.menupopup;
   const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
   submenuItem.openMenu(true);
@@ -763,7 +763,7 @@ function closePageAction(extension, win = window) {
 }
 
 function promisePrefChangeObserved(pref) {
-  return new Promise((resolve, reject) =>
+  return new Promise(resolve =>
     Preferences.observe(pref, function prefObserver() {
       Preferences.ignore(pref, prefObserver);
       resolve();

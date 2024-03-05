@@ -28,7 +28,7 @@ function promisePopupShown(popup) {
     } else {
       popup.addEventListener(
         "popupshown",
-        function (event) {
+        function () {
           resolve();
         },
         { once: true }
@@ -385,7 +385,7 @@ export class BasePopup {
   }
 
   unblockParser() {
-    this.browserReady.then(browser => {
+    this.browserReady.then(() => {
       if (this.destroyed) {
         return;
       }

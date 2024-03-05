@@ -202,11 +202,11 @@ add_task(async function test_devtools_page_and_extension_tab_messaging() {
   }
 
   function devtools_page() {
-    browser.runtime.onConnect.addListener(port => {
+    browser.runtime.onConnect.addListener(() => {
       browser.test.sendMessage("devtools_page_onconnect");
     });
 
-    browser.runtime.onMessage.addListener((msg, sender) => {
+    browser.runtime.onMessage.addListener(() => {
       browser.test.sendMessage("devtools_page_onmessage");
     });
 

@@ -21,7 +21,7 @@ add_task(async function testInvalidIconSizes() {
         let promises = [];
         for (let api of ["pageAction", "browserAction"]) {
           // helper function to run setIcon and check if it fails
-          let assertSetIconThrows = function (detail, error, message) {
+          let assertSetIconThrows = function (detail) {
             detail.tabId = tabId;
             browser.test.assertThrows(
               () => browser[api].setIcon(detail),
@@ -203,7 +203,7 @@ add_task(async function testSecureManifestURLsDenied() {
     for (let api of apis) {
       info(`TEST ${api} icon url: ${url}`);
 
-      let matchURLForbidden = url => ({
+      let matchURLForbidden = () => ({
         message: new RegExp(`match the format "strictRelativeUrl"`),
       });
 

@@ -145,7 +145,7 @@ async function test_clickData_reset({ manifest_version }) {
         browser.test.sendMessage("onClick", info);
       }
 
-      function onPageActionClicked(tab, info) {
+      function onPageActionClicked() {
         browser.test.sendMessage("open-popup");
       }
 

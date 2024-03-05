@@ -18,7 +18,7 @@ add_setup(() => {
 const server = createHttpServer({
   hosts: ["example.com", "example.net", "example.org"],
 });
-server.registerPathHandler("/never_reached", (req, res) => {
+server.registerPathHandler("/never_reached", () => {
   Assert.ok(false, "Server should never have been reached");
 });
 server.registerPathHandler("/allowed", (req, res) => {

@@ -227,7 +227,7 @@ this.webNavigation = class extends ExtensionAPIPersistent {
         onTabReplaced: new EventManager({
           context,
           name: "webNavigation.onTabReplaced",
-          register: fire => {
+          register: () => {
             return () => {};
           },
         }).api(),

@@ -90,7 +90,7 @@ async function test_multiple_pages() {
     contentPage = await ExtensionTestUtils.loadContentPage(url, { extension });
     extension.sendMessage("page-loaded");
   });
-  extension.onMessage("remove-page", async url => {
+  extension.onMessage("remove-page", async () => {
     await contentPage.close();
     extension.sendMessage("page-removed");
   });

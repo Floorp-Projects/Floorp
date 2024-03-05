@@ -94,7 +94,7 @@ const openOAuthWindow = (details, redirectURI) => {
     };
 
     httpObserver = {
-      observeActivity(channel, type, subtype, timestamp, sizeData, stringData) {
+      observeActivity(channel) {
         try {
           channel.QueryInterface(Ci.nsIChannel);
         } catch {
@@ -123,7 +123,7 @@ const openOAuthWindow = (details, redirectURI) => {
 };
 
 this.identity = class extends ExtensionAPI {
-  getAPI(context) {
+  getAPI() {
     return {
       identity: {
         launchWebAuthFlowInParent: function (details, redirectURI) {

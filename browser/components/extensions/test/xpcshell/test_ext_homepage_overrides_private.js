@@ -32,7 +32,7 @@ AddonTestUtils.overrideCertDB();
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 function promisePrefChange(pref) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     Services.prefs.addObserver(pref, function observer() {
       Services.prefs.removeObserver(pref, observer);
       resolve(arguments);

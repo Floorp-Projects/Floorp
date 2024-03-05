@@ -31,7 +31,7 @@ add_task(async function test_suspend() {
 
     background() {
       browser.webRequest.onBeforeSendHeaders.addListener(
-        details => {
+        () => {
           // Make sure that returning undefined or a promise that resolves to
           // undefined does not break later handlers.
         },
@@ -40,7 +40,7 @@ add_task(async function test_suspend() {
       );
 
       browser.webRequest.onBeforeSendHeaders.addListener(
-        details => {
+        () => {
           return Promise.resolve();
         },
         { urls: ["<all_urls>"] },

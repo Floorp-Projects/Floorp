@@ -634,20 +634,20 @@ class ModifyHeadersBase {
   }
 
   /**
-   * @param {MatchedRule} matchedRule
+   * @param {MatchedRule} _matchedRule
    * @returns {object[]}
    */
-  headerActionsFor(matchedRule) {
+  headerActionsFor(_matchedRule) {
     throw new Error("Not implemented.");
   }
 
   /**
-   * @param {MatchedRule} matchedrule
-   * @param {string} name
-   * @param {string} value
-   * @param {boolean} merge
+   * @param {MatchedRule} _matchedrule
+   * @param {string} _name
+   * @param {string} _value
+   * @param {boolean} _merge
    */
-  setHeaderImpl(matchedrule, name, value, merge) {
+  setHeaderImpl(_matchedrule, _name, _value, _merge) {
     throw new Error("Not implemented.");
   }
 
@@ -2034,7 +2034,7 @@ const NetworkIntegration = {
     properties.setProperty("cancelledByExtension", addonId);
   },
 
-  applyUpgradeScheme(channel, matchedRule) {
+  applyUpgradeScheme(channel) {
     // Request upgrade. No-op if already secure (i.e. https).
     channel.upgradeToSecure();
   },

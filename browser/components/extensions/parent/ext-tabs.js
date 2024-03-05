@@ -82,7 +82,7 @@ let tabListener = {
     }
   },
 
-  onLocationChange(browser, webProgress, request, locationURI, flags) {
+  onLocationChange(browser, webProgress) {
     if (webProgress.isTopLevel) {
       let { gBrowser } = browser.ownerGlobal;
       let nativeTab = gBrowser.getTabForBrowser(browser);
@@ -356,7 +356,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         return windowId;
       }
 
-      function matchFilters(tab, changed) {
+      function matchFilters(tab) {
         if (!filterProps) {
           return true;
         }
@@ -663,7 +663,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         onReplaced: new EventManager({
           context,
           name: "tabs.onReplaced",
-          register: fire => {
+          register: () => {
             return () => {};
           },
         }).api(),
@@ -683,7 +683,7 @@ this.tabs = class extends ExtensionAPIPersistent {
         }).api(),
 
         create(createProperties) {
-          return new Promise((resolve, reject) => {
+          return new Promise(resolve => {
             let window =
               createProperties.windowId !== null
                 ? windowTracker.getWindow(createProperties.windowId, context)
@@ -695,7 +695,7 @@ this.tabs = class extends ExtensionAPIPersistent {
             }
             let { gBrowserInit } = window;
             if (!gBrowserInit || !gBrowserInit.delayedStartupFinished) {
-              let obs = (finishedWindow, topic, data) => {
+              let obs = finishedWindow => {
                 if (finishedWindow != window) {
                   return;
                 }

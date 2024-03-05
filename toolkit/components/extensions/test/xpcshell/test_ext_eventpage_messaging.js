@@ -107,7 +107,7 @@ add_task(async function test_runtime_onConnect_cancels_suspend() {
       // extension API. This ensures that if the event page suspend is canceled,
       // that it was intentionally done by the listener, and not as a side
       // effect of an unrelated extension API call.
-      browser.runtime.onConnect.addListener(port => {
+      browser.runtime.onConnect.addListener(() => {
         // Set by extensionPageScript before runtime.connect():
         globalThis.notify_extensionPage_got_onConnect();
       });
@@ -162,7 +162,7 @@ add_task(async function test_runtime_Port_onMessage_cancels_suspend() {
       // that it was intentionally done by the listener, and not as a side
       // effect of an unrelated extension API call.
       browser.runtime.onConnect.addListener(port => {
-        port.onMessage.addListener(msg => {
+        port.onMessage.addListener(() => {
           // Set by extensionPageScript before runtime.connect():
           globalThis.notify_extensionPage_got_port_onMessage();
         });

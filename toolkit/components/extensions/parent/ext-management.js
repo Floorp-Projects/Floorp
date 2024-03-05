@@ -188,7 +188,7 @@ this.management = class extends ExtensionAPIPersistent {
         unregister: () => {
           this.addonListener.off(eventName, listener);
         },
-        convert(_fire, context) {
+        convert(_fire) {
           fire = _fire;
         },
       };

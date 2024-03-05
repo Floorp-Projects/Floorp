@@ -53,7 +53,7 @@ add_task(async () => {
           filter.ondata = event => {
             filter.write(event.data);
           };
-          filter.onstop = event => {
+          filter.onstop = () => {
             filter.write(new TextEncoder().encode(" End"));
             filter.close();
           };

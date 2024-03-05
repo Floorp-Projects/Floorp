@@ -81,7 +81,7 @@ add_task(async function test_sanitize_offlineApps_extension_indexedDB() {
         const store = tx.objectStore("TestStore");
         return new Promise((resolve, reject) => {
           const req = store.get(k);
-          tx.oncomplete = evt => resolve(req.result);
+          tx.oncomplete = () => resolve(req.result);
           tx.onerror = evt => reject(evt.target.error);
         });
       });

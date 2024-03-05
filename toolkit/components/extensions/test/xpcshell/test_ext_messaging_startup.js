@@ -158,7 +158,7 @@ add_task(function test_onMessage() {
   }
 
   async function background() {
-    browser.runtime.onMessage.addListener((msg, sender) => {
+    browser.runtime.onMessage.addListener(msg => {
       browser.test.assertEq(
         msg,
         "ping",
@@ -217,7 +217,7 @@ add_task(async function test_other_startup() {
     useAddonManager: "permanent",
 
     async background() {
-      browser.runtime.onMessage.addListener(msg => {
+      browser.runtime.onMessage.addListener(() => {
         browser.test.notifyPass("startup");
       });
 

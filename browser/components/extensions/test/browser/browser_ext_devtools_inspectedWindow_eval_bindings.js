@@ -231,7 +231,7 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
       info("Waiting for the object properties to be displayed");
       // If this is the case, we wait for the properties to be fetched and displayed.
       await new Promise(resolve => {
-        const observer = new MutationObserver(mutations => {
+        const observer = new MutationObserver(() => {
           resolve();
           observer.disconnect();
         });

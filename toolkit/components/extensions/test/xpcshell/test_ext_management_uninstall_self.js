@@ -59,7 +59,7 @@ add_task(async function setup() {
 
 add_task(async function test_management_uninstall_no_prompt() {
   function background() {
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(() => {
       browser.management.uninstallSelf();
     });
   }
@@ -82,7 +82,7 @@ add_task(async function test_management_uninstall_prompt_uninstall() {
   promptService._response = 0;
 
   function background() {
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(() => {
       browser.management.uninstallSelf({ showConfirmDialog: true });
     });
   }
@@ -114,7 +114,7 @@ add_task(async function test_management_uninstall_prompt_keep() {
   promptService._response = 1;
 
   function background() {
-    browser.test.onMessage.addListener(async msg => {
+    browser.test.onMessage.addListener(async () => {
       await browser.test.assertRejects(
         browser.management.uninstallSelf({ showConfirmDialog: true }),
         "User cancelled uninstall of extension",

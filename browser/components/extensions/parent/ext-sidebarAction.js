@@ -28,7 +28,7 @@ this.sidebarAction = class extends ExtensionAPI {
     return sidebarActionMap.get(extension);
   }
 
-  onManifestEntry(entryName) {
+  onManifestEntry() {
     let { extension } = this;
 
     extension.once("ready", this.onReady.bind(this));

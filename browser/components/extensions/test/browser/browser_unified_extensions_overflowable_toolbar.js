@@ -217,7 +217,7 @@ async function withWindowOverflowed(
       return this._deferred.promise;
     },
 
-    onWidgetAdded(widgetID, area) {
+    onWidgetAdded(widgetID) {
       if (widgetID.endsWith("-browser-action")) {
         this._remainingBrowserActions--;
       }
@@ -263,7 +263,7 @@ async function withWindowOverflowed(
         return this._deferred.promise;
       },
 
-      onWidgetOverflow(widgetNode, areaNode) {
+      onWidgetOverflow() {
         this._remainingOverflowables--;
         if (!this._remainingOverflowables) {
           this._deferred.resolve();
@@ -489,7 +489,7 @@ add_task(async function test_context_menu() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   await withWindowOverflowed(win, {
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+    whenOverflowed: async (defaultList, unifiedExtensionList) => {
       Assert.ok(
         unifiedExtensionList.children.length,
         "Should have items in the Unified Extension list."
@@ -587,7 +587,7 @@ add_task(async function test_message_deck() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   await withWindowOverflowed(win, {
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+    whenOverflowed: async (defaultList, unifiedExtensionList) => {
       Assert.ok(
         unifiedExtensionList.children.length,
         "Should have items in the Unified Extension list."
@@ -825,7 +825,7 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
         "expected no .toolbarbutton-1 CSS class on the menu button in the panel"
       );
     },
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+    whenOverflowed: async (defaultList, unifiedExtensionList) => {
       ok(
         actionButton.classList.contains("subviewbutton"),
         "expected .subviewbutton CSS class on the action button in the panel"
@@ -893,7 +893,7 @@ add_task(async function test_unpin_overflowed_widget() {
   let extensionID;
 
   await withWindowOverflowed(win, {
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+    whenOverflowed: async (defaultList, unifiedExtensionList) => {
       const firstExtensionWidget = unifiedExtensionList.children[0];
       Assert.ok(firstExtensionWidget, "expected an extension widget");
       extensionID = firstExtensionWidget.dataset.extensionid;
@@ -1120,7 +1120,7 @@ add_task(async function test_overflow_with_a_second_window() {
         "expected no .subviewbutton CSS class on the menu button in the second window"
       );
     },
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+    whenOverflowed: async () => {
       // The DOM node should have been overflowed.
       Assert.ok(
         aNode.hasAttribute("overflowedItem"),
@@ -1356,7 +1356,7 @@ add_task(async function test_overflowed_extension_cannot_be_moved() {
   let extensionID;
 
   await withWindowOverflowed(win, {
-    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+    whenOverflowed: async (defaultList, unifiedExtensionList) => {
       const secondExtensionWidget = unifiedExtensionList.children[1];
       Assert.ok(secondExtensionWidget, "expected an extension widget");
       extensionID = secondExtensionWidget.dataset.extensionid;

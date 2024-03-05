@@ -17,7 +17,7 @@ AddonTestUtils.createAppInfo(
 // is no JSON schema for this namespace so we add one here that is tailored for
 // our testing needs.
 const API = class extends ExtensionAPI {
-  getAPI(context) {
+  getAPI() {
     return {
       mockExtensionAPI: {
         methodAsync: files => {

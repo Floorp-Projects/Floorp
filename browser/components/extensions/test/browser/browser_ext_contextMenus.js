@@ -391,7 +391,7 @@ add_task(async function () {
   checkClickInfo(result);
 
   // Select some text
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function (arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let doc = content.document;
     let range = doc.createRange();
     let selection = content.getSelection();
@@ -459,7 +459,7 @@ add_task(async function () {
   checkClickInfo(result);
 
   // Select a lot of text
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function (arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let doc = content.document;
     let range = doc.createRange();
     let selection = content.getSelection();
@@ -501,7 +501,7 @@ add_task(async function () {
 
   // Select a lot of text, excercise the editable element code path in
   // the Browser:GetSelection handler.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function (arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let doc = content.document;
     let node = doc.getElementById("editabletext");
     // content.js handleContentContextMenu fails intermittently without focus.

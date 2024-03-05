@@ -283,7 +283,7 @@ add_task(async function () {
     },
 
     background: function () {
-      browser.test.onMessage.addListener(async msg => {
+      browser.test.onMessage.addListener(async () => {
         let tabs = await browser.tabs.query({ active: true });
 
         browser.test.assertEq(tabs.length, 1, "should have one tab");

@@ -15,13 +15,13 @@ function getExtension() {
   async function background() {
     let expect;
     let urls = ["*://*.example.org/tests/*"];
-    browser.webRequest.onBeforeRequest.addListener(details => {
+    browser.webRequest.onBeforeRequest.addListener(() => {
       browser.test.assertEq(expect.shift(), "onBeforeRequest");
     }, {urls}, ["blocking"]);
-    browser.webRequest.onBeforeSendHeaders.addListener(details => {
+    browser.webRequest.onBeforeSendHeaders.addListener(() => {
       browser.test.assertEq(expect.shift(), "onBeforeSendHeaders");
     }, {urls}, ["blocking", "requestHeaders"]);
-    browser.webRequest.onSendHeaders.addListener(details => {
+    browser.webRequest.onSendHeaders.addListener(() => {
       browser.test.assertEq(expect.shift(), "onSendHeaders");
     }, {urls}, ["requestHeaders"]);
 
@@ -82,10 +82,10 @@ function getExtension() {
       }
       return {responseHeaders: headers};
     }, {urls}, ["blocking", "responseHeaders"]);
-    browser.webRequest.onBeforeRedirect.addListener(details => {
+    browser.webRequest.onBeforeRedirect.addListener(() => {
       browser.test.assertEq(expect.shift(), "onBeforeRedirect");
     }, {urls});
-    browser.webRequest.onResponseStarted.addListener(details => {
+    browser.webRequest.onResponseStarted.addListener(() => {
       browser.test.assertEq(expect.shift(), "onResponseStarted");
     }, {urls});
     browser.webRequest.onCompleted.addListener(details => {

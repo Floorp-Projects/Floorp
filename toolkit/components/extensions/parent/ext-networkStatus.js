@@ -55,7 +55,7 @@ this.networkStatus = class extends ExtensionAPI {
           context,
           name: "networkStatus.onConnectionChanged",
           register: fire => {
-            let observerStatus = (subject, topic, data) => {
+            let observerStatus = () => {
               fire.async(getLinkInfo());
             };
 

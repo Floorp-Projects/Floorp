@@ -5,7 +5,7 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 add_task(async function test_contentscript_create_iframe() {
   function background() {
-    browser.runtime.onMessage.addListener((msg, sender) => {
+    browser.runtime.onMessage.addListener(msg => {
       let { name, availableAPIs, manifest, testGetManifest } = msg;
       let hasExtTabsAPI = availableAPIs.indexOf("tabs") > 0;
       let hasExtWindowsAPI = availableAPIs.indexOf("windows") > 0;

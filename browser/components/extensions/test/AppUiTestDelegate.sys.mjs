@@ -112,7 +112,7 @@ async function promisePopupShown(popup) {
     if (popup.state == "open") {
       resolve();
     } else {
-      let onPopupShown = event => {
+      let onPopupShown = () => {
         popup.removeEventListener("popupshown", onPopupShown);
         resolve();
       };
@@ -129,7 +129,7 @@ function awaitBrowserLoaded(browser) {
     return Promise.resolve();
   }
   return new Promise(resolve => {
-    const listener = ev => {
+    const listener = () => {
       if (browser.currentURI.spec === "about:blank") {
         return;
       }

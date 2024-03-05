@@ -11,14 +11,14 @@ const TRANSPARENT_PROXY_RESOLVES_HOST =
   Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST;
 
 function getProxyInfo(url = "http://www.mozilla.org/") {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let channel = NetUtil.newChannel({
       uri: url,
       loadUsingSystemPrincipal: true,
     });
 
     gProxyService.asyncResolve(channel, 0, {
-      onProxyAvailable(req, uri, pi, status) {
+      onProxyAvailable(req, uri, pi) {
         resolve(pi);
       },
     });
@@ -214,7 +214,7 @@ async function getExtension(expectedProxyInfo) {
       `testing proxy.onRequest with proxyInfo = ${JSON.stringify(proxyInfo)}`
     );
     browser.proxy.onRequest.addListener(
-      details => {
+      () => {
         return proxyInfo;
       },
       { urls: ["<all_urls>"] }

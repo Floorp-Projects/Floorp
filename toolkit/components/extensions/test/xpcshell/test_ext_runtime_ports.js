@@ -17,7 +17,7 @@ add_task(async function test_port_disconnected_from_wrong_window() {
           done = true;
         });
 
-        port.onDisconnect.addListener(err => {
+        port.onDisconnect.addListener(() => {
           if (port === ports[1]) {
             browser.test.log("Port 1 disconnected, sending message via port 2");
             ports[2].postMessage("port-2-msg");

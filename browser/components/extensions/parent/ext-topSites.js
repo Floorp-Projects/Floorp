@@ -19,7 +19,7 @@ const TOPSITES_FEED_PREF =
   "browser.newtabpage.activity-stream.feeds.system.topsites";
 
 this.topSites = class extends ExtensionAPI {
-  getAPI(context) {
+  getAPI() {
     return {
       topSites: {
         get: async function (options) {

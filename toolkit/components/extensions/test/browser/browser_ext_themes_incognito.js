@@ -36,7 +36,7 @@ add_task(async function test_theme_incognito_not_allowed() {
       },
     };
 
-    browser.theme.onUpdated.addListener(info => {
+    browser.theme.onUpdated.addListener(() => {
       browser.test.log("got theme onChanged");
       browser.test.fail("theme");
     });

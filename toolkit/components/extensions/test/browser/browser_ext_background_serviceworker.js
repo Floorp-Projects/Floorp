@@ -175,7 +175,7 @@ async function testServiceWorker({ extension, expectMessageReply }) {
       let msgFromV1 = await SpecialPowers.spawn(
         browser,
         [swRegInfo.scriptURL],
-        async url => {
+        async () => {
           const { active } = await content.navigator.serviceWorker.ready;
           const { port1, port2 } = new content.MessageChannel();
 

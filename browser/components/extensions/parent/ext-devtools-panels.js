@@ -593,7 +593,7 @@ this.devtools_panels = class extends ExtensionAPI {
               context,
               name: "devtools.panels.elements.onSelectionChanged",
               register: fire => {
-                const listener = eventName => {
+                const listener = () => {
                   fire.async();
                 };
                 toolboxSelectionObserver.on("selectionChanged", listener);

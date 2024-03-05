@@ -65,7 +65,7 @@ add_task(async function test_management_permission() {
 
     await testAvailable();
 
-    browser.test.onMessage.addListener(async msg => {
+    browser.test.onMessage.addListener(async () => {
       browser.test.log("test with permission");
 
       // get permission

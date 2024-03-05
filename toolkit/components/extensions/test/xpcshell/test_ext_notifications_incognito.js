@@ -33,7 +33,7 @@ const mockAlertsService = {
     this.showAlert({ cookie, title, text, privateBrowsing }, alertListener);
   },
 
-  closeAlert(name) {
+  closeAlert() {
     // This mock immediately close the alert on show, so this is empty.
   },
 

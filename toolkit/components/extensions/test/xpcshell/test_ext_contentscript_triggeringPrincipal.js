@@ -989,7 +989,7 @@ function awaitLoads(urlsPromise, origins) {
       }
     });
 
-    observer = (channel, topic, data) => {
+    observer = channel => {
       if (expectedURLs) {
         checkChannel(channel.QueryInterface(Ci.nsIChannel));
       } else {

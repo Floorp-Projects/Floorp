@@ -259,7 +259,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     await chrome_settings_overrides.removeEngine(id);
   }
 
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     let { extension } = this;
     let { manifest } = extension;
     let homepageUrl = manifest.chrome_settings_overrides.homepage;

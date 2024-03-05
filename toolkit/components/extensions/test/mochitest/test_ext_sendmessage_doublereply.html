@@ -41,7 +41,7 @@ function background() {
   }
 
   let done_count = 0;
-  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+  browser.runtime.onMessage.addListener((msg, sender) => {
     browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
 
     if (msg == "done") {

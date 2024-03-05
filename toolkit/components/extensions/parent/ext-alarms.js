@@ -43,7 +43,7 @@ class Alarm {
     this.canceled = true;
   }
 
-  observe(subject, topic, data) {
+  observe() {
     if (this.canceled) {
       return;
     }
@@ -97,7 +97,7 @@ this.alarms = class extends ExtensionAPIPersistent {
         unregister: () => {
           this.callbacks.delete(callback);
         },
-        convert(_fire, context) {
+        convert(_fire) {
           fire = _fire;
         },
       };

@@ -260,7 +260,7 @@ add_task(async function testPositionBoundaryCheck() {
   const extension = ExtensionTestUtils.loadExtension({
     async background() {
       function waitMessage() {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
           const onMessage = message => {
             if (message == "continue") {
               browser.test.onMessage.removeListener(onMessage);
@@ -309,7 +309,7 @@ add_task(async function testPositionBoundaryCheck() {
     },
   });
 
-  const promisedWin = new Promise((resolve, reject) => {
+  const promisedWin = new Promise(resolve => {
     const windowListener = (window, topic) => {
       if (topic == "domwindowopened") {
         Services.ww.unregisterNotification(windowListener);

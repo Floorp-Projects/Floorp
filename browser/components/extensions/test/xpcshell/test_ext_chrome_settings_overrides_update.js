@@ -113,7 +113,7 @@ add_task(async function test_overrides_update_removal() {
   // that is the default, we do not prompt for default.
   let deferredPrompt = topicObservable(
     "webextension-defaultsearch-prompt",
-    (subject, message) => {
+    subject => {
       if (subject.wrappedJSObject.id == extension.id) {
         ok(false, "default override should not prompt");
       }
@@ -243,7 +243,7 @@ add_task(async function test_overrides_update_adding() {
 
   let deferredUpgradePrompt = topicObservable(
     "webextension-defaultsearch-prompt",
-    (subject, message) => {
+    subject => {
       if (subject.wrappedJSObject.id == extension.id) {
         ok(false, "should not prompt on update");
       }
@@ -351,7 +351,7 @@ async function withHandlingDefaultSearchPrompt({ extensionId, respond }, cb) {
   );
   const prompted = TestUtils.topicObserved(
     "webextension-defaultsearch-prompt",
-    (subject, message) => {
+    subject => {
       if (subject.wrappedJSObject.id == extensionId) {
         return subject.wrappedJSObject.respond(respond);
       }
@@ -364,7 +364,7 @@ async function withHandlingDefaultSearchPrompt({ extensionId, respond }, cb) {
 async function assertUpdateDoNotPrompt(extension, updateExtensionInfo) {
   let deferredUpgradePrompt = topicObservable(
     "webextension-defaultsearch-prompt",
-    (subject, message) => {
+    subject => {
       if (subject.wrappedJSObject.id == extension.id) {
         ok(false, "should not prompt on update");
       }

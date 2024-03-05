@@ -82,7 +82,7 @@ add_task(async function test_webRequest_mozextension_fetch() {
       browser.test.sendMessage("request-complete");
     }, {urls: [browser.runtime.getURL("*")]});
 
-    browser.test.onMessage.addListener((msg, data) => {
+    browser.test.onMessage.addListener(() => {
       fetch(page).then(() => {
         browser.test.notifyPass("fetch success");
         browser.test.sendMessage("done");

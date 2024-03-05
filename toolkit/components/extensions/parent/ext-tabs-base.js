@@ -1188,7 +1188,7 @@ class WindowBase {
   /**
    * Returns the window state of the given window.
    *
-   * @param {DOMWindow} window
+   * @param {DOMWindow} _window
    *        The window for which to return a state.
    *
    * @returns {string}
@@ -1197,7 +1197,7 @@ class WindowBase {
    * @static
    * @abstract
    */
-  static getState(window) {
+  static getState(_window) {
     throw new Error("Not implemented");
   }
 
@@ -1229,12 +1229,12 @@ class WindowBase {
   /**
    * Returns the window's tab at the specified index.
    *
-   * @param {integer} index
+   * @param {integer} _index
    *        The index of the desired tab.
    *
    * @returns {TabBase|undefined}
    */
-  getTabAtIndex(index) {
+  getTabAtIndex(_index) {
     throw new Error("Not implemented");
   }
   /* eslint-enable valid-jsdoc */
@@ -1358,23 +1358,23 @@ class TabTrackerBase extends EventEmitter {
   /**
    * Returns the numeric ID for the given native tab.
    *
-   * @param {NativeTab} nativeTab
+   * @param {NativeTab} _nativeTab
    *        The native tab for which to return an ID.
    *
    * @returns {integer}
    *        The tab's numeric ID.
    * @abstract
    */
-  getId(nativeTab) {
+  getId(_nativeTab) {
     throw new Error("Not implemented");
   }
 
   /**
    * Returns the native tab with the given numeric ID.
    *
-   * @param {integer} tabId
+   * @param {integer} _tabId
    *        The numeric ID of the tab to return.
-   * @param {*} default_
+   * @param {*} _default
    *        The value to return if no tab exists with the given ID.
    *
    * @returns {NativeTab}
@@ -1383,7 +1383,7 @@ class TabTrackerBase extends EventEmitter {
    *       provided.
    * @abstract
    */
-  getTab(tabId, default_ = undefined) {
+  getTab(_tabId, _default) {
     throw new Error("Not implemented");
   }
 
@@ -1398,7 +1398,7 @@ class TabTrackerBase extends EventEmitter {
    * @abstract
    */
   /* eslint-enable valid-jsdoc */
-  getBrowserData(browser) {
+  getBrowserData() {
     throw new Error("Not implemented");
   }
 
@@ -1454,7 +1454,7 @@ class StatusListener {
     }
   }
 
-  onLocationChange(browser, webProgress, request, locationURI, flags) {
+  onLocationChange(browser, webProgress, request, locationURI) {
     if (webProgress.isTopLevel) {
       let status = webProgress.isLoadingDocument ? "loading" : "complete";
       this.listener({ browser, status, url: locationURI.spec });
@@ -1888,26 +1888,26 @@ class WindowTrackerBase extends EventEmitter {
   /**
    * Adds a tab progress listener to the given browser window.
    *
-   * @param {DOMWindow} window
+   * @param {DOMWindow} _window
    *        The browser window to which to add the listener.
-   * @param {object} listener
+   * @param {object} _listener
    *        The tab progress listener to add.
    * @abstract
    */
-  addProgressListener(window, listener) {
+  addProgressListener(_window, _listener) {
     throw new Error("Not implemented");
   }
 
   /**
    * Removes a tab progress listener from the given browser window.
    *
-   * @param {DOMWindow} window
+   * @param {DOMWindow} _window
    *        The browser window from which to remove the listener.
-   * @param {object} listener
+   * @param {object} _listener
    *        The tab progress listener to remove.
    * @abstract
    */
-  removeProgressListener(window, listener) {
+  removeProgressListener(_window, _listener) {
     throw new Error("Not implemented");
   }
 }
@@ -2034,14 +2034,14 @@ class TabManagerBase {
   /**
    * Determines access using extension context.
    *
-   * @param {NativeTab} nativeTab
+   * @param {NativeTab} _nativeTab
    *        The tab to check access on.
    * @returns {boolean}
    *        True if the extension has permissions for this tab.
    * @protected
    * @abstract
    */
-  canAccessTab(nativeTab) {
+  canAccessTab(_nativeTab) {
     throw new Error("Not implemented");
   }
 
@@ -2135,7 +2135,7 @@ class TabManagerBase {
   /**
    * Returns a TabBase wrapper for the tab with the given ID.
    *
-   * @param {integer} tabId
+   * @param {integer} _tabId
    *        The ID of the tab for which to return a wrapper.
    *
    * @returns {TabBase}
@@ -2143,22 +2143,21 @@ class TabManagerBase {
    *        If no tab exists with the given ID.
    * @abstract
    */
-  get(tabId) {
+  get(_tabId) {
     throw new Error("Not implemented");
   }
 
   /**
    * Returns a new TabBase instance wrapping the given native tab.
    *
-   * @param {NativeTab} nativeTab
+   * @param {NativeTab} _nativeTab
    *        The native tab for which to return a wrapper.
    *
    * @returns {TabBase}
    * @protected
    * @abstract
    */
-  /* eslint-enable valid-jsdoc */
-  wrapTab(nativeTab) {
+  wrapTab(_nativeTab) {
     throw new Error("Not implemented");
   }
 }
@@ -2276,9 +2275,9 @@ class WindowManagerBase {
   /**
    * Returns a WindowBase wrapper for the browser window with the given ID.
    *
-   * @param {integer} windowId
+   * @param {integer} _windowId
    *        The ID of the browser window for which to return a wrapper.
-   * @param {BaseContext} context
+   * @param {BaseContext} _context
    *        The extension context for which the matching is being performed.
    *        Used to determine the current window for relevant properties.
    *
@@ -2287,7 +2286,7 @@ class WindowManagerBase {
    *        If no window exists with the given ID.
    * @abstract
    */
-  get(windowId, context) {
+  get(_windowId, _context) {
     throw new Error("Not implemented");
   }
 
@@ -2305,14 +2304,14 @@ class WindowManagerBase {
   /**
    * Returns a new WindowBase instance wrapping the given browser window.
    *
-   * @param {DOMWindow} window
+   * @param {DOMWindow} _window
    *        The browser window for which to return a wrapper.
    *
    * @returns {WindowBase}
    * @protected
    * @abstract
    */
-  wrapWindow(window) {
+  wrapWindow(_window) {
     throw new Error("Not implemented");
   }
   /* eslint-enable valid-jsdoc */

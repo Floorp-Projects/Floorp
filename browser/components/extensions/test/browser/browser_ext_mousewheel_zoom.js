@@ -40,7 +40,7 @@ async function test_mousewheel_zoom(test) {
 
   function contentScript() {
     // eslint-disable-next-line mozilla/balanced-listeners
-    document.addEventListener("mousedown", e => {
+    document.addEventListener("mousedown", () => {
       // Send the zoom level back as a "zoom" message.
       const zoom = SpecialPowers.getFullZoom(window).toFixed(2);
       browser.test.sendMessage("zoom", zoom);
@@ -49,7 +49,7 @@ async function test_mousewheel_zoom(test) {
 
   function sidebarContentScript() {
     // eslint-disable-next-line mozilla/balanced-listeners
-    document.addEventListener("mousedown", e => {
+    document.addEventListener("mousedown", () => {
       // Send the zoom level back as a "zoom" message.
       const zoom = SpecialPowers.getFullZoom(window).toFixed(2);
       browser.test.sendMessage("zoom", zoom);

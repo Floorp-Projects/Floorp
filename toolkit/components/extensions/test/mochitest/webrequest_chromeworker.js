@@ -2,7 +2,7 @@
 
 /* eslint-env worker */
 
-onmessage = function (event) {
+onmessage = function () {
   fetch("https://example.com/example.txt").then(() => {
     postMessage("Done!");
   });

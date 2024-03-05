@@ -44,7 +44,7 @@ add_task(async function tabs_discarded_load_and_discard() {
         title: [],
         url: [],
       };
-      function tabsOnUpdatedAfterLoad(tabId, changeInfo, tab) {
+      function tabsOnUpdatedAfterLoad(tabId, changeInfo) {
         browser.test.assertEq(TAB_ID, tabId, "tabId for tabs.onUpdated");
         for (let [prop, value] of Object.entries(changeInfo)) {
           observedChanges[prop].push(value);

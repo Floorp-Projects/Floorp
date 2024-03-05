@@ -718,7 +718,7 @@ class BackgroundBuilder {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "timer-callback") {
       let { extension } = this;
       this.clearIdleTimer();
@@ -1028,7 +1028,7 @@ class BackgroundBuilder {
 }
 
 this.backgroundPage = class extends ExtensionAPI {
-  async onManifestEntry(entryName) {
+  async onManifestEntry() {
     let { extension } = this;
 
     // When in PPB background pages all run in a private context.  This check

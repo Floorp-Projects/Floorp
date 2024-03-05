@@ -23,7 +23,7 @@ add_task(async function test_filter_url() {
   let ext_perm = ExtensionTestUtils.loadExtension({
     background() {
       browser.tabs.onUpdated.addListener(
-        (tabId, changeInfo) => {
+        () => {
           browser.test.fail(
             `received unexpected onUpdated event without tabs permission`
           );
@@ -73,7 +73,7 @@ add_task(async function test_filter_url_activeTab() {
     },
     background() {
       browser.tabs.onUpdated.addListener(
-        (tabId, changeInfo) => {
+        () => {
           browser.test.fail(
             "should only have notification for activeTab, selectedTab is not activeTab"
           );

@@ -27,7 +27,7 @@ add_task(async function test_sessions_restore() {
         });
       } else if (msg == "restore-reject") {
         browser.sessions.restore("not-a-valid-session-id").then(
-          sessions => {
+          () => {
             browser.test.fail("restore rejected with an invalid sessionId");
           },
           error => {

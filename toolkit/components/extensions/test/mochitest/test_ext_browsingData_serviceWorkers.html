@@ -33,7 +33,7 @@ add_task(async function testServiceWorkers() {
     const PAGE =
       "/tests/toolkit/components/extensions/test/mochitest/file_serviceWorker.html";
 
-    browser.runtime.onMessage.addListener(msg => {
+    browser.runtime.onMessage.addListener(() => {
       browser.test.sendMessage("serviceWorkerRegistered");
     });
 

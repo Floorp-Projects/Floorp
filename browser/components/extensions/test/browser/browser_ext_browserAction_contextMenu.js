@@ -452,7 +452,7 @@ async function browseraction_contextmenu_remove_extension_helper() {
     Services.prompt = prompt;
   });
 
-  async function testContextMenu(menuId, customizing) {
+  async function testContextMenu(menuId) {
     info(`Open browserAction context menu in ${menuId}`);
     let confirmArgs = promptService.confirmArgs();
     let menu = await openContextMenu(menuId, buttonId);

@@ -18,7 +18,7 @@ const SETTINGS_LIST = [
 
 add_task(async function testSettingsProperties() {
   function background() {
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(() => {
       browser.browsingData.settings().then(settings => {
         browser.test.sendMessage("settings", settings);
       });
@@ -108,7 +108,7 @@ add_task(async function testSettingsSince() {
   };
 
   function background() {
-    browser.test.onMessage.addListener(msg => {
+    browser.test.onMessage.addListener(() => {
       browser.browsingData.settings().then(settings => {
         browser.test.sendMessage("settings", settings);
       });

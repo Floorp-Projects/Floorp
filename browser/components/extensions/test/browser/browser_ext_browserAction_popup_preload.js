@@ -136,7 +136,7 @@ add_task(async function testBrowserActionClickCanceled() {
     widget.node,
     "mouseup",
     false,
-    event => {
+    () => {
       isnot(browserAction.pendingPopup, null, "Pending popup was not cleared");
       isnot(
         browserAction.pendingPopupTimeout,
@@ -279,7 +279,7 @@ add_task(async function testBrowserActionDisabled() {
     widget.node,
     "mouseup",
     false,
-    event => {
+    () => {
       is(browserAction.pendingPopup, null, "Have no pending popup");
       is(
         browserAction.pendingPopupTimeout,

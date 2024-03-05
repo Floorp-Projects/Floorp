@@ -128,7 +128,7 @@ const TASKS = [
         `(${num}): Got expected initial status`
       );
 
-      filter.onstart = event => {
+      filter.onstart = () => {
         browser.test.assertEq(
           "transferringdata",
           filter.status,
@@ -136,7 +136,7 @@ const TASKS = [
         );
       };
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         browser.test.fail(
           `(${num}): Got unexpected onStop event while disconnected`
         );
@@ -207,7 +207,7 @@ const TASKS = [
         }
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -222,7 +222,7 @@ const TASKS = [
     task(filter, resolve, num) {
       let decoder = new TextDecoder("utf-8");
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         browser.test.fail(
           `(${num}): Got unexpected onStop event while disconnected`
         );
@@ -254,7 +254,7 @@ const TASKS = [
         }
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -269,7 +269,7 @@ const TASKS = [
     task(filter, resolve, num) {
       let encoder = new TextEncoder();
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         browser.test.fail(
           `(${num}): Got unexpected onStop event while disconnected`
         );
@@ -330,7 +330,7 @@ const TASKS = [
         }
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -346,7 +346,7 @@ const TASKS = [
       let encoder = new TextEncoder();
       let decoder = new TextDecoder("utf-8");
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         browser.test.fail(`(${num}): Got unexpected onStop event while closed`);
       };
 
@@ -406,7 +406,7 @@ const TASKS = [
         }
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -422,11 +422,11 @@ const TASKS = [
       let response = "";
       let decoder = new TextDecoder("utf-8");
 
-      filter.onstart = event => {
+      filter.onstart = () => {
         browser.test.log(`(${num}): Request start`);
       };
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         browser.test.assertEq(
           "finishedtransferringdata",
           filter.status,
@@ -456,7 +456,7 @@ const TASKS = [
         filter.write(event.data);
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -469,11 +469,11 @@ const TASKS = [
   {
     url: "multipart",
     task(filter, resolve, num) {
-      filter.onstart = event => {
+      filter.onstart = () => {
         browser.test.log(`(${num}): Request start`);
       };
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         filter.disconnect();
         resolve();
       };
@@ -482,7 +482,7 @@ const TASKS = [
         filter.write(event.data);
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -499,11 +499,11 @@ const TASKS = [
   {
     url: "multipart2",
     task(filter, resolve, num) {
-      filter.onstart = event => {
+      filter.onstart = () => {
         browser.test.log(`(${num}): Request start`);
       };
 
-      filter.onstop = event => {
+      filter.onstop = () => {
         filter.disconnect();
         resolve();
       };
@@ -512,7 +512,7 @@ const TASKS = [
         filter.write(event.data);
       };
 
-      filter.onerror = event => {
+      filter.onerror = () => {
         browser.test.fail(
           `(${num}): Got unexpected error event: ${filter.error}`
         );
@@ -628,7 +628,7 @@ add_task(async function test_cachedResponse() {
         data => {
           let filter = browser.webRequest.filterResponseData(data.requestId);
 
-          filter.onstop = event => {
+          filter.onstop = () => {
             filter.close();
           };
           filter.ondata = event => {
@@ -669,7 +669,7 @@ add_task(async function test_late_close() {
         data => {
           let filter = browser.webRequest.filterResponseData(data.requestId);
 
-          filter.onstop = event => {
+          filter.onstop = () => {
             browser.test.fail("Should not receive onstop after close()");
             browser.test.assertEq(
               "closed",

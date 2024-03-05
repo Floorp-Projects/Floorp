@@ -72,7 +72,7 @@ add_task(async function test_moz_extension_iframe_messaging() {
       },
     },
     background() {
-      browser.test.onMessage.addListener(async msg => {
+      browser.test.onMessage.addListener(async () => {
 
         await browser.test.assertRejects(
           browser.runtime.sendMessage("from-background"),

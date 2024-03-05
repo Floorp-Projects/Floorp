@@ -18,7 +18,7 @@ class StubContext extends BaseContext {
     this.sandbox = Cu.Sandbox(global);
   }
 
-  logActivity(type, name, data) {
+  logActivity() {
     // no-op required by subclass
   }
 
@@ -128,7 +128,7 @@ class Context extends BaseContext {
     this.sandbox = Cu.Sandbox(principal, { wantXrays: false });
   }
 
-  logActivity(type, name, data) {
+  logActivity() {
     // no-op required by subclass
   }
 

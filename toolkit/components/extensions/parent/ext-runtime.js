@@ -90,7 +90,7 @@ this.runtime = class extends ExtensionAPIPersistent {
     onPerformanceWarning({ fire }) {
       let { extension } = this;
 
-      let observer = (subject, topic) => {
+      let observer = subject => {
         let report = subject.QueryInterface(Ci.nsIHangReport);
 
         if (report?.addonId !== extension.id) {
@@ -119,7 +119,7 @@ this.runtime = class extends ExtensionAPIPersistent {
         unregister: () => {
           Services.obs.removeObserver(observer, "process-hang-report");
         },
-        convert(_fire, context) {
+        convert(_fire) {
           fire = _fire;
         },
       };

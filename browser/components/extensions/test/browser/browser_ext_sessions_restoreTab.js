@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(this, {
 add_task(async function test_restoringModifiedTab() {
   function background() {
     browser.tabs.create({ url: "http://example.com/" });
-    browser.test.onMessage.addListener((msg, filter) => {
+    browser.test.onMessage.addListener(msg => {
       if (msg == "change-tab") {
         browser.tabs.executeScript({ code: 'location.href += "?changedTab";' });
       }
@@ -83,7 +83,7 @@ add_task(async function test_restoringModifiedTab() {
 
 add_task(async function test_restoringClosedTabWithTooLargeIndex() {
   function background() {
-    browser.test.onMessage.addListener(async (msg, filter) => {
+    browser.test.onMessage.addListener(async msg => {
       if (msg != "restoreTab") {
         return;
       }

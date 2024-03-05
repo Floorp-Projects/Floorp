@@ -187,7 +187,7 @@ add_task(async function test_ExtensionPageContextChild_in_child_frame() {
   );
   await extension.awaitMessage("extensionPageLoaded");
 
-  await contentPage.legacySpawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async () => {
     let { ExtensionPageChild } = ChromeUtils.importESModule(
       "resource://gre/modules/ExtensionPageChild.sys.mjs"
     );
@@ -237,7 +237,7 @@ add_task(async function test_ExtensionPageContextChild_in_toplevel() {
   );
   await extension.awaitMessage("extensionPageLoaded");
 
-  await contentPage.legacySpawn(extension.id, async extensionId => {
+  await contentPage.legacySpawn(extension.id, async () => {
     let { ExtensionPageChild } = ChromeUtils.importESModule(
       "resource://gre/modules/ExtensionPageChild.sys.mjs"
     );

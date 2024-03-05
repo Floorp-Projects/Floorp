@@ -38,7 +38,7 @@ let testExtension = {
       "onCompleted",
     ];
 
-    function listener(name, details) {
+    function listener(name) {
       // If we get anything, we failed.  Removing the system principal check
       // in ext-webrequest triggers this failure.
       browser.test.fail(`received ${name}`);
@@ -58,7 +58,7 @@ add_task(async function test_webRequest_chromeworker_events() {
   await extension.startup();
   await new Promise(resolve => {
     let worker = new ChromeWorker("webrequest_chromeworker.js");
-    worker.onmessage = event => {
+    worker.onmessage = () => {
       ok("chrome worker fetch finished");
       resolve();
     };

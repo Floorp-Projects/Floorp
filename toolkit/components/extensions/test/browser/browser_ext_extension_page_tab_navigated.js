@@ -73,7 +73,7 @@ function createTestExtPageScript(name) {
 // Triggers a WebRequest listener registered by the test extensions by
 // opening a tab on the given web page URL and then closing it after
 // it did load.
-async function triggerWebRequestListener(webPageURL, pause) {
+async function triggerWebRequestListener(webPageURL) {
   let webPageTab = await BrowserTestUtils.openNewForegroundTab(
     {
       gBrowser,

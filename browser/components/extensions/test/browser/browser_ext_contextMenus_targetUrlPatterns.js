@@ -72,7 +72,7 @@ add_task(async function unsupportedSchemes() {
     },
   ];
 
-  async function testScript(testcases) {
+  async function testScript() {
     let testcase;
 
     browser.contextMenus.onShown.addListener(({ menuIds, linkUrl }) => {

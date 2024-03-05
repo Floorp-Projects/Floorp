@@ -47,7 +47,7 @@ add_task(async function test_permissions() {
 
   const frameScript = () => {
     const messageListener = {
-      async receiveMessage({ target, messageName, recipient, data, name }) {
+      async receiveMessage() {
         /* globals content */
         let doc = content.document;
         let iframe = doc.createElement("iframe");
@@ -130,7 +130,7 @@ add_task(async function test_no_webRequestBlocking_error() {
       browser.test.assertThrows(
         () => {
           browser.webRequest[eventName].addListener(
-            details => {},
+            () => {},
             { urls: ["<all_urls>"] },
             ["blocking"]
           );

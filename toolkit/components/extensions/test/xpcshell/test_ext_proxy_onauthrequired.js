@@ -191,7 +191,7 @@ add_task(async function test_webRequest_auth_proxy_https() {
     let authReceived = false;
 
     browser.webRequest.onBeforeSendHeaders.addListener(
-      details => {
+      () => {
         if (authReceived) {
           browser.test.sendMessage("done");
           return { cancel: true };
@@ -202,7 +202,7 @@ add_task(async function test_webRequest_auth_proxy_https() {
     );
 
     browser.webRequest.onAuthRequired.addListener(
-      details => {
+      () => {
         authReceived = true;
         return { authCredentials: { username: "puser", password: "ppass" } };
       },
@@ -241,14 +241,14 @@ add_task(async function test_webRequest_auth_proxy_https() {
 add_task(async function test_webRequest_auth_proxy_system() {
   async function background(port) {
     browser.webRequest.onBeforeRequest.addListener(
-      details => {
+      () => {
         browser.test.fail("onBeforeRequest");
       },
       { urls: ["<all_urls>"] }
     );
 
     browser.webRequest.onAuthRequired.addListener(
-      details => {
+      () => {
         browser.test.sendMessage("onAuthRequired");
         // cancel is silently ignored, if it were not (e.g someone messes up in
         // WebRequest.jsm and allows cancel) this test would fail.

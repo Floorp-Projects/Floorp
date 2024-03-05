@@ -41,9 +41,9 @@ add_task(async function test_cancel_with_reason() {
     channel.asyncOpen({
       QueryInterface: ChromeUtils.generateQI(["nsIStreamListener"]),
 
-      onStartRequest(request) {},
+      onStartRequest() {},
 
-      onStopRequest(request, statusCode) {
+      onStopRequest(request) {
         let properties = request.QueryInterface(Ci.nsIPropertyBag);
         let id = properties.getProperty("cancelledByExtension");
         let reason = request.loadInfo.requestBlockingReason;

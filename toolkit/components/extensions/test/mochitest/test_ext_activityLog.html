@@ -27,7 +27,7 @@ add_task(async function test_api() {
       // This privileged test extension should not affect the webRequest
       // data received by non-privileged extensions (See Bug 1576272).
       browser.webRequest.onBeforeRequest.addListener(
-        details => {
+        () => {
           return { cancel: false };
         },
         { urls: ["http://mochi.test/*/file_sample.html"] },
@@ -79,7 +79,7 @@ add_task(async function test_api() {
         browser.storage.onChanged.removeListener(listen);
 
         // Test a parent event manager.
-        let webRequestListener = details => {
+        let webRequestListener = () => {
           browser.webRequest.onBeforeRequest.removeListener(webRequestListener);
           return { cancel: false };
         };

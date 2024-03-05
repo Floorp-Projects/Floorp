@@ -149,7 +149,7 @@ let wrapper = {
   },
 
   preprocessors: {
-    localize(value, context) {
+    localize(value) {
       return value.replace(/__MSG_(.*?)__/g, (m0, m1) => `${m1.toUpperCase()}`);
     },
   },

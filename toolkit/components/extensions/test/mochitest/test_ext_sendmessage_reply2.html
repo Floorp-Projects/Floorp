@@ -54,7 +54,7 @@ function backgroundScript(token, id, otherId) {
 
 function contentScript(token, id, otherId) {
   let gotContentMessage = false;
-  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+  browser.runtime.onMessage.addListener((msg, sender) => {
     browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
 
     browser.test.assertEq(`${token}-contentMessage`, msg,
@@ -83,7 +83,7 @@ function contentScript(token, id, otherId) {
 
 async function tabScript(token, id, otherId) {
   let gotTabMessage = false;
-  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+  browser.runtime.onMessage.addListener((msg, sender) => {
     browser.test.assertEq(id, sender.id, `${id}: Got expected sender ID`);
 
     if (String(msg).startsWith("content-")) {

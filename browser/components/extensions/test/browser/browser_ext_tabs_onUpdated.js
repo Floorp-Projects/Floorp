@@ -267,7 +267,7 @@ add_task(async function test_onUpdated_after_onRemoved() {
 
       // If remove happens fast and we never receive onUpdated, that is ok, but
       // we never want to receive onUpdated after onRemoved.
-      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+      browser.tabs.onUpdated.addListener(function onUpdated(tabId) {
         if (!tab || tab.id !== tabId) {
           return;
         }
@@ -277,7 +277,7 @@ add_task(async function test_onUpdated_after_onRemoved() {
         );
       });
 
-      browser.tabs.onRemoved.addListener((tabId, removedInfo) => {
+      browser.tabs.onRemoved.addListener(tabId => {
         if (!tab || tab.id !== tabId) {
           return;
         }

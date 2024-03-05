@@ -32,7 +32,7 @@ function awaitEvent(eventName) {
 
 function awaitPrefChange(prefName) {
   return new Promise(resolve => {
-    let listener = args => {
+    let listener = () => {
       Preferences.ignore(prefName, listener);
       resolve();
     };

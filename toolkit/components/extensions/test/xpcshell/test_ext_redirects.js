@@ -52,10 +52,10 @@ function onStopListener(channel) {
 }
 
 async function onModifyListener(originUrl, redirectToUrl) {
-  return TestUtils.topicObserved("http-on-modify-request", (subject, data) => {
+  return TestUtils.topicObserved("http-on-modify-request", subject => {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     return channel.URI && channel.URI.spec == originUrl;
-  }).then(([subject, data]) => {
+  }).then(([subject]) => {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
     if (redirectToUrl) {
       channel.redirectTo(Services.io.newURI(redirectToUrl));
@@ -229,7 +229,7 @@ add_task(async function test_extension_302_redirect_web() {
       { urls: [serverUrl] }
     );
     browser.webRequest.onHeadersReceived.addListener(
-      details => {
+      () => {
         browser.test.assertEq(
           expected.shift(),
           "onHeadersReceived",
@@ -239,7 +239,7 @@ add_task(async function test_extension_302_redirect_web() {
       { urls: [serverUrl] }
     );
     browser.webRequest.onResponseStarted.addListener(
-      details => {
+      () => {
         browser.test.assertEq(
           expected.shift(),
           "onResponseStarted",
@@ -527,7 +527,7 @@ add_task(async function test_extension_redirect() {
     let myuri = browser.runtime.getURL("*");
     let exturi = browser.runtime.getURL("finished.html");
     browser.webRequest.onBeforeRequest.addListener(
-      details => {
+      () => {
         return { redirectUrl: exturi };
       },
       { urls: ["<all_urls>", myuri] },

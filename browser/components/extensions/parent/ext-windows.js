@@ -112,7 +112,7 @@ this.windows = class extends ExtensionAPIPersistent {
       // Keep track of the last windowId used to fire an onFocusChanged event
       let lastOnFocusChangedWindowId;
 
-      let listener = event => {
+      let listener = () => {
         // Wait a tick to avoid firing a superfluous WINDOW_ID_NONE
         // event when switching focus between two Firefox windows.
         Promise.resolve().then(() => {

@@ -1226,7 +1226,7 @@ HttpObserverManager = {
     return false;
   },
 
-  examine(channel, topic, data) {
+  examine(channel) {
     if (this.listeners.onHeadersReceived.size || this.dnrActive) {
       this.runChannelListener(channel, "onHeadersReceived");
     }

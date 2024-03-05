@@ -97,7 +97,7 @@ server.registerPathHandler("/final", (request, response) => {
 function promiseFinalResponse() {
   Assert.deepEqual(receivedCookies, [], "Test starts without observed cookies");
   return new Promise(resolve => {
-    server.registerPathHandler("/final_and_clean", (request, response) => {
+    server.registerPathHandler("/final_and_clean", request => {
       Assert.equal(request.host, SITE_FINAL);
       Assert.equal(getCookies(request), "", "Cookies cleaned up");
       resolve(receivedCookies.splice(0));

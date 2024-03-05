@@ -29,7 +29,7 @@ add_task(async function test_sw_api_request_handling_local_process_api() {
     files: {
       "page.html": "<!DOCTYPE html><body></body>",
       "sw.js": async function () {
-        browser.test.onMessage.addListener(async msg => {
+        browser.test.onMessage.addListener(async () => {
           browser.test.succeed("call to test.succeed");
           browser.test.assertTrue(true, "call to test.assertTrue");
           browser.test.assertFalse(false, "call to test.assertFalse");
