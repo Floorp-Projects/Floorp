@@ -97,6 +97,11 @@ if CONFIG["TARGET_OS"] == "OSX":
         "src/base/process_util_mac.mm",
     ]
 
+if CONFIG["TARGET_OS"] == "iOS":
+    UNIFIED_SOURCES += [
+        "src/base/process_util_ios.cpp",
+    ]
+
 if CONFIG["TARGET_KERNEL"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
     SOURCES += [
         "src/base/process_util_linux.cc",
