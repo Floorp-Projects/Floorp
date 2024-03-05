@@ -9,7 +9,7 @@
 //! ## Usage
 //!
 
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "windows"))]
 mod gamma_lut;
 mod rasterizer;
 mod telemetry;
@@ -38,18 +38,18 @@ extern crate serde;
 extern crate malloc_size_of;
 
 pub mod platform {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     pub use crate::platform::macos::font;
-    #[cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))]
+    #[cfg(any(target_os = "android", all(unix, not(any(target_os = "ios", target_os = "macos")))))]
     pub use crate::platform::unix::font;
     #[cfg(target_os = "windows")]
     pub use crate::platform::windows::font;
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "ios", target_os = "macos"))]
     pub mod macos {
         pub mod font;
     }
-    #[cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))]
+    #[cfg(any(target_os = "android", all(unix, not(any(target_os = "macos", target_os = "ios")))))]
     pub mod unix {
         pub mod font;
     }

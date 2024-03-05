@@ -28,11 +28,11 @@ extern crate dwrote;
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 extern crate core_foundation;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 extern crate core_graphics;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 extern crate foreign_types;
 
 mod program_cache;
