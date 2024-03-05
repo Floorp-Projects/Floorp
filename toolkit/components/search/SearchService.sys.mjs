@@ -1623,7 +1623,11 @@ export class SearchService {
     this.#loadEnginesFromPolicies(settings);
 
     // `loadEnginesFromSettings` loads the engines and their settings together.
-    this.#loadEnginesFromSettings(settings.engines);
+    // If loading the settings caused the default engine to change because of an
+    // override, then we don't want to show the notification box.
+    let skipDefaultChangedNotification = await this.#loadEnginesFromSettings(
+      settings
+    );
 
     // Settings file version 6 and below will need a migration to store the
     // engine ids rather than engine names.
@@ -1640,6 +1644,7 @@ export class SearchService {
     );
 
     if (
+      !skipDefaultChangedNotification &&
       this.#shouldDisplayRemovalOfEngineNotificationBox(
         settings,
         prevMetaData,
@@ -2269,19 +2274,28 @@ export class SearchService {
     }
   }
 
-  #loadEnginesFromSettings(enginesCache) {
-    if (!enginesCache) {
-      return;
+  /**
+   * Loads remaining user search engines from settings.
+   *
+   * @param {object} [settings]
+   *   The saved settings for the user.
+   * @returns {boolean}
+   *   Returns true if the default engine was changed.
+   */
+  async #loadEnginesFromSettings(settings) {
+    if (!settings.engines) {
+      return false;
     }
 
     lazy.logConsole.debug(
       "#loadEnginesFromSettings: Loading",
-      enginesCache.length,
+      settings.engines.length,
       "engines from settings"
     );
 
+    let defaultEngineChanged = false;
     let skippedEngines = 0;
-    for (let engineJSON of enginesCache) {
+    for (let engineJSON of settings.engines) {
       // We renamed isBuiltin to isAppProvided in bug 1631898,
       // keep checking isBuiltin for older settings.
       if (engineJSON._isAppProvided || engineJSON._isBuiltin) {
@@ -2324,6 +2338,36 @@ export class SearchService {
             isAppProvided: false,
             json: engineJSON,
           });
+
+          // If an engine with the same name already exists, we're not going to
+          // be allowed to add it - however, if it is default, and it
+          // matches an existing engine, then we might be allowed to
+          // override the application provided engine.
+          if (settings.metaData?.defaultEngineId == engine.id) {
+            let existingEngine = this.#getEngineByName(engine.name);
+            if (
+              existingEngine?.isAppProvided &&
+              (await lazy.defaultOverrideAllowlist.canEngineOverride(
+                engine,
+                existingEngine?._extensionID
+              ))
+            ) {
+              existingEngine.overrideWithExtension({
+                engine,
+              });
+              this.#setEngineDefault(
+                false,
+                existingEngine,
+                // We assume that the application provided engine was added due
+                // to a configuration change. It is possible that it was actually
+                // due to a locale/region change, but that is harder to detect
+                // here.
+                Ci.nsISearchService.CHANGE_REASON_CONFIG
+              );
+              defaultEngineChanged = true;
+              continue;
+            }
+          }
         } else {
           engine = new lazy.OpenSearchEngine({
             json: engineJSON,
@@ -2348,6 +2392,7 @@ export class SearchService {
         "built-in/policy engines."
       );
     }
+    return defaultEngineChanged;
   }
 
   // This is prefixed with _ rather than # because it is
@@ -2727,7 +2772,8 @@ export class SearchService {
       await this.init();
     }
 
-    let isCurrent = false;
+    let shouldSetAsDefault = false;
+    let changeReason = Ci.nsISearchService.CHANGE_REASON_UNKNOWN;
 
     for (let engine of this._engines.values()) {
       if (
@@ -2736,7 +2782,7 @@ export class SearchService {
       ) {
         // This is a legacy extension engine that needs to be migrated to WebExtensions.
         lazy.logConsole.debug("Migrating existing engine");
-        isCurrent = isCurrent || this.defaultEngine == engine;
+        shouldSetAsDefault = shouldSetAsDefault || this.defaultEngine == engine;
         await this.removeEngine(engine);
       }
     }
@@ -2754,9 +2800,50 @@ export class SearchService {
       locale,
     });
 
+    // If this extension is starting up, check to see if it previously overrode
+    // an application provided engine that has now been removed from the user's
+    // set-up. If the application provided engine has been removed and was
+    // default, then we should set this engine back to default and copy
+    // the settings across.
+    if (extension.startupReason == "APP_STARTUP") {
+      if (!settings) {
+        settings = await this._settings.get();
+      }
+      // We check the saved settings for the overridden flag, because if the engine
+      // has been removed, we won't have that in _engines.
+      let previouslyOverridden = settings.engines?.find(
+        e => !!e._metaData.overriddenBy
+      );
+      if (previouslyOverridden) {
+        let previousWebExtensionId = previouslyOverridden.id.endsWith("default")
+          ? previouslyOverridden.id.slice(0, -7)
+          : previouslyOverridden.id;
+
+        // Only allow override if we were previously overriding and the
+        // engine is no longer installed, and the new engine still matches the
+        // override allow list.
+        if (
+          previouslyOverridden._metaData.overriddenBy == extension.id &&
+          !this._engines.get(previouslyOverridden.id) &&
+          (await lazy.defaultOverrideAllowlist.canEngineOverride(
+            newEngine,
+            previousWebExtensionId
+          ))
+        ) {
+          shouldSetAsDefault = true;
+          // We assume that the app provided engine was removed due to a
+          // configuration change, and therefore we have re-added the add-on
+          // search engine. It is possible that it was actually due to a
+          // locale/region change, but that is harder to detect here.
+          changeReason = Ci.nsISearchService.CHANGE_REASON_CONFIG;
+          newEngine.copyUserSettingsFrom(previouslyOverridden);
+        }
+      }
+    }
+
     this.#addEngineToStore(newEngine);
-    if (isCurrent) {
-      this.defaultEngine = newEngine;
+    if (shouldSetAsDefault) {
+      this.#setEngineDefault(false, newEngine, changeReason);
     }
     return newEngine;
   }
