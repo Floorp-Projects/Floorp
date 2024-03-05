@@ -22,11 +22,15 @@ class BasePythonSupport:
         """
         pass
 
-    def modify_command(self, cmd):
+    def modify_command(self, cmd, test):
         """Used to modify the Browsertime command before running the test.
 
         The `cmd` arg holds the current browsertime command to run. It can
         be changed directly to change how browsertime runs.
+
+        The `test` arg is the test itself with all of its current settings.
+        It can be modified as needed to add additional information to the
+        test that will run.
         """
         pass
 
