@@ -82,24 +82,22 @@ struct MethodTrait : MethodTraitsHelper<std::remove_reference_t<T>> {};
 
 }  // namespace detail
 
-template <typename MethodType>
-using TakesArgument =
-    std::integral_constant<bool, detail::MethodTrait<MethodType>::ArgSize != 0>;
+template <typename T>
+using MethodReturnType = typename detail::MethodTrait<T>::ReturnType;
 
-template <typename MethodType, typename TargetType>
-using ReturnTypeIs =
-    std::is_convertible<typename detail::MethodTrait<MethodType>::ReturnType,
-                        TargetType>;
+template <typename MethodType>
+constexpr bool TakesAnyArguments =
+    detail::MethodTrait<MethodType>::ArgSize != 0;
 
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
 
-template <typename Return>
-struct IsMozPromise : std::false_type {};
+template <typename T>
+constexpr bool IsMozPromise = false;
 
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
-struct IsMozPromise<MozPromise<ResolveValueT, RejectValueT, IsExclusive>>
-    : std::true_type {};
+constexpr bool
+    IsMozPromise<MozPromise<ResolveValueT, RejectValueT, IsExclusive>> = true;
 
 /*
  * A promise manages an asynchronous request that may or may not be able to be
@@ -176,8 +174,8 @@ class MozPromise : public MozPromiseBase {
   }
 
  public:
-  typedef ResolveValueT ResolveValueType;
-  typedef RejectValueT RejectValueType;
+  using ResolveValueType = ResolveValueT;
+  using RejectValueType = RejectValueT;
   class ResolveOrRejectValue {
    public:
     template <typename ResolveValueType_>
@@ -288,12 +286,10 @@ class MozPromise : public MozPromiseBase {
     return p;
   }
 
-  typedef MozPromise<CopyableTArray<ResolveValueType>, RejectValueType,
-                     IsExclusive>
-      AllPromiseType;
-
-  typedef MozPromise<CopyableTArray<ResolveOrRejectValue>, bool, IsExclusive>
-      AllSettledPromiseType;
+  using AllPromiseType = MozPromise<CopyableTArray<ResolveValueType>,
+                                    RejectValueType, IsExclusive>;
+  using AllSettledPromiseType =
+      MozPromise<CopyableTArray<ResolveOrRejectValue>, bool, IsExclusive>;
 
  private:
   class AllPromiseHolder : public MozPromiseRefcountable {
@@ -350,17 +346,17 @@ class MozPromise : public MozPromiseBase {
   // Trying to pass ResolveOrRejectValue by value fails static analysis checks,
   // so we need to use either a const& or an rvalue reference, depending on
   // whether IsExclusive is true or not.
-  typedef std::conditional_t<IsExclusive, ResolveOrRejectValue&&,
-                             const ResolveOrRejectValue&>
-      ResolveOrRejectValueParam;
+  using ResolveOrRejectValueParam =
+      std::conditional_t<IsExclusive, ResolveOrRejectValue&&,
+                         const ResolveOrRejectValue&>;
 
-  typedef std::conditional_t<IsExclusive, ResolveValueType&&,
-                             const ResolveValueType&>
-      ResolveValueTypeParam;
+  using ResolveValueTypeParam =
+      std::conditional_t<IsExclusive, ResolveValueType&&,
+                         const ResolveValueType&>;
 
-  typedef std::conditional_t<IsExclusive, RejectValueType&&,
-                             const RejectValueType&>
-      RejectValueTypeParam;
+  using RejectValueTypeParam =
+      std::conditional_t<IsExclusive, RejectValueType&&,
+                         const RejectValueType&>;
 
   class AllSettledPromiseHolder : public MozPromiseRefcountable {
    public:
@@ -648,15 +644,15 @@ class MozPromise : public MozPromiseBase {
    * make the resolve/reject value argument "optional".
    */
   template <typename ThisType, typename MethodType, typename ValueType>
-  static std::enable_if_t<TakesArgument<MethodType>::value,
-                          typename detail::MethodTrait<MethodType>::ReturnType>
+  static std::enable_if_t<TakesAnyArguments<MethodType>,
+                          MethodReturnType<MethodType>>
   InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue) {
     return (aThisVal->*aMethod)(std::forward<ValueType>(aValue));
   }
 
   template <typename ThisType, typename MethodType, typename ValueType>
-  static std::enable_if_t<!TakesArgument<MethodType>::value,
-                          typename detail::MethodTrait<MethodType>::ReturnType>
+  static std::enable_if_t<!TakesAnyArguments<MethodType>,
+                          MethodReturnType<MethodType>>
   InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue) {
     return (aThisVal->*aMethod)();
   }
@@ -697,18 +693,16 @@ class MozPromise : public MozPromiseBase {
       : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 = typename RemoveSmartPointer<
-        typename detail::MethodTrait<ResolveMethodType>::ReturnType>::Type;
-    using R2 = typename RemoveSmartPointer<
-        typename detail::MethodTrait<RejectMethodType>::ReturnType>::Type;
-    using SupportChaining =
-        std::integral_constant<bool, IsMozPromise<R1>::value &&
-                                         std::is_same_v<R1, R2>>;
+    using R1 =
+        typename RemoveSmartPointer<MethodReturnType<ResolveMethodType>>::Type;
+    using R2 =
+        typename RemoveSmartPointer<MethodReturnType<RejectMethodType>>::Type;
+    constexpr static bool SupportChaining =
+        IsMozPromise<R1> && std::is_same_v<R1, R2>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
-    using PromiseType =
-        std::conditional_t<SupportChaining::value, R1, MozPromise>;
+    using PromiseType = std::conditional_t<SupportChaining, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget, ThisType* aThisVal,
@@ -736,13 +730,13 @@ class MozPromise : public MozPromiseBase {
 
     void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override {
       if (aValue.IsResolve()) {
-        InvokeCallbackMethod<SupportChaining::value>(
-            mThisVal.get(), mResolveMethod, MaybeMove(aValue.ResolveValue()),
-            std::move(mCompletionPromise));
+        InvokeCallbackMethod<SupportChaining>(mThisVal.get(), mResolveMethod,
+                                              MaybeMove(aValue.ResolveValue()),
+                                              std::move(mCompletionPromise));
       } else {
-        InvokeCallbackMethod<SupportChaining::value>(
-            mThisVal.get(), mRejectMethod, MaybeMove(aValue.RejectValue()),
-            std::move(mCompletionPromise));
+        InvokeCallbackMethod<SupportChaining>(mThisVal.get(), mRejectMethod,
+                                              MaybeMove(aValue.RejectValue()),
+                                              std::move(mCompletionPromise));
       }
 
       // Null out mThisVal after invoking the callback so that any references
@@ -764,15 +758,13 @@ class MozPromise : public MozPromiseBase {
   class ThenValue<ThisType*, ResolveRejectMethodType> : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 = typename RemoveSmartPointer<typename detail::MethodTrait<
-        ResolveRejectMethodType>::ReturnType>::Type;
-    using SupportChaining =
-        std::integral_constant<bool, IsMozPromise<R1>::value>;
+    using R1 = typename RemoveSmartPointer<
+        MethodReturnType<ResolveRejectMethodType>>::Type;
+    constexpr static bool SupportChaining = IsMozPromise<R1>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
-    using PromiseType =
-        std::conditional_t<SupportChaining::value, R1, MozPromise>;
+    using PromiseType = std::conditional_t<SupportChaining, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget, ThisType* aThisVal,
@@ -798,7 +790,7 @@ class MozPromise : public MozPromiseBase {
     }
 
     void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override {
-      InvokeCallbackMethod<SupportChaining::value>(
+      InvokeCallbackMethod<SupportChaining>(
           mThisVal.get(), mResolveRejectMethod, MaybeMove(aValue),
           std::move(mCompletionPromise));
 
@@ -822,18 +814,16 @@ class MozPromise : public MozPromiseBase {
   class ThenValue<ResolveFunction, RejectFunction> : public ThenValueBase {
     friend class ThenCommand<ThenValue>;
 
-    using R1 = typename RemoveSmartPointer<
-        typename detail::MethodTrait<ResolveFunction>::ReturnType>::Type;
-    using R2 = typename RemoveSmartPointer<
-        typename detail::MethodTrait<RejectFunction>::ReturnType>::Type;
-    using SupportChaining =
-        std::integral_constant<bool, IsMozPromise<R1>::value &&
-                                         std::is_same_v<R1, R2>>;
+    using R1 =
+        typename RemoveSmartPointer<MethodReturnType<ResolveFunction>>::Type;
+    using R2 =
+        typename RemoveSmartPointer<MethodReturnType<RejectFunction>>::Type;
+    constexpr static bool SupportChaining =
+        IsMozPromise<R1> && std::is_same_v<R1, R2>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
-    using PromiseType =
-        std::conditional_t<SupportChaining::value, R1, MozPromise>;
+    using PromiseType = std::conditional_t<SupportChaining, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget,
@@ -867,11 +857,11 @@ class MozPromise : public MozPromiseBase {
       // easily. We could fix this if need be, though it's quite easy to work
       // around by just capturing something.
       if (aValue.IsResolve()) {
-        InvokeCallbackMethod<SupportChaining::value>(
+        InvokeCallbackMethod<SupportChaining>(
             mResolveFunction.ptr(), &ResolveFunction::operator(),
             MaybeMove(aValue.ResolveValue()), std::move(mCompletionPromise));
       } else {
-        InvokeCallbackMethod<SupportChaining::value>(
+        InvokeCallbackMethod<SupportChaining>(
             mRejectFunction.ptr(), &RejectFunction::operator(),
             MaybeMove(aValue.RejectValue()), std::move(mCompletionPromise));
       }
@@ -897,14 +887,12 @@ class MozPromise : public MozPromiseBase {
     friend class ThenCommand<ThenValue>;
 
     using R1 = typename RemoveSmartPointer<
-        typename detail::MethodTrait<ResolveRejectFunction>::ReturnType>::Type;
-    using SupportChaining =
-        std::integral_constant<bool, IsMozPromise<R1>::value>;
+        MethodReturnType<ResolveRejectFunction>>::Type;
+    constexpr static bool SupportChaining = IsMozPromise<R1>;
 
     // Fall back to MozPromise when promise chaining is not supported to make
     // code compile.
-    using PromiseType =
-        std::conditional_t<SupportChaining::value, R1, MozPromise>;
+    using PromiseType = std::conditional_t<SupportChaining, R1, MozPromise>;
 
    public:
     ThenValue(nsISerialEventTarget* aResponseTarget,
@@ -935,7 +923,7 @@ class MozPromise : public MozPromiseBase {
       // classes with ::operator()), since it allows us to share code more
       // easily. We could fix this if need be, though it's quite easy to work
       // around by just capturing something.
-      InvokeCallbackMethod<SupportChaining::value>(
+      InvokeCallbackMethod<SupportChaining>(
           mResolveRejectFunction.ptr(), &ResolveRejectFunction::operator(),
           MaybeMove(aValue), std::move(mCompletionPromise));
 
@@ -998,7 +986,7 @@ class MozPromise : public MozPromiseBase {
                 MozPromise* aReceiver)
         : mCallSite(aCallSite), mThenValue(aThenValue), mReceiver(aReceiver) {}
 
-    ThenCommand(ThenCommand&& aOther) = default;
+    ThenCommand(ThenCommand&& aOther) noexcept = default;
 
    public:
     ~ThenCommand() {
@@ -1013,7 +1001,7 @@ class MozPromise : public MozPromiseBase {
     //       p->Then(thread2, ...);
     operator RefPtr<PromiseType>() {
       static_assert(
-          ThenValueType::SupportChaining::value,
+          ThenValueType::SupportChaining,
           "The resolve/reject callback needs to return a RefPtr<MozPromise> "
           "in order to do promise chaining.");
 
@@ -1336,12 +1324,18 @@ class MozPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
 };
 
 // A generic promise type that does the trick for simple use cases.
-typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> GenericPromise;
+//
+// Vaguely deprecated: prefer explicitly naming the resolve- and reject-type.
+// Additionally, prefer `mozilla::Ok` as the resolve-type if the boolean's value
+// is irrelevant.
+using GenericPromise = MozPromise<bool, nsresult, /* IsExclusive = */ true>;
 
 // A generic, non-exclusive promise type that does the trick for simple use
 // cases.
-typedef MozPromise<bool, nsresult, /* IsExclusive = */ false>
-    GenericNonExclusivePromise;
+//
+// Vaguely deprecated, as above.
+using GenericNonExclusivePromise =
+    MozPromise<bool, nsresult, /* IsExclusive = */ false>;
 
 /*
  * Class to encapsulate a promise for a particular role. Use this as the member
@@ -1352,8 +1346,9 @@ class MozPromiseHolderBase {
  public:
   MozPromiseHolderBase() = default;
 
-  MozPromiseHolderBase(MozPromiseHolderBase&& aOther) = default;
-  MozPromiseHolderBase& operator=(MozPromiseHolderBase&& aOther) = default;
+  MozPromiseHolderBase(MozPromiseHolderBase&& aOther) noexcept = default;
+  MozPromiseHolderBase& operator=(MozPromiseHolderBase&& aOther) noexcept =
+      default;
 
   ~MozPromiseHolderBase() { MOZ_ASSERT(!mPromise); }
 
@@ -1720,7 +1715,7 @@ static auto InvokeAsync(nsISerialEventTarget* aTarget, const char* aCallerName,
   static_assert(
       IsRefcountedSmartPointer<decltype(aFunction())>::value &&
           IsMozPromise<
-              typename RemoveSmartPointer<decltype(aFunction())>::Type>::value,
+              typename RemoveSmartPointer<decltype(aFunction())>::Type>,
       "Function object must return RefPtr<MozPromise>");
   MOZ_ASSERT(aTarget);
   typedef typename RemoveSmartPointer<decltype(aFunction())>::Type PromiseType;
