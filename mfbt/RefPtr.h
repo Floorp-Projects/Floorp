@@ -97,7 +97,7 @@ class MOZ_IS_REFPTR RefPtr {
     }
   }
 
-  RefPtr(RefPtr<T>&& aRefPtr) : mRawPtr(aRefPtr.mRawPtr) {
+  RefPtr(RefPtr<T>&& aRefPtr) noexcept : mRawPtr(aRefPtr.mRawPtr) {
     aRefPtr.mRawPtr = nullptr;
   }
 
@@ -224,7 +224,7 @@ class MOZ_IS_REFPTR RefPtr {
 
   template <typename I,
             typename = std::enable_if_t<std::is_convertible_v<I*, T*>>>
-  RefPtr<T>& operator=(RefPtr<I>&& aRefPtr) {
+  RefPtr<T>& operator=(RefPtr<I>&& aRefPtr) noexcept {
     assign_assuming_AddRef(aRefPtr.forget().take());
     return *this;
   }
