@@ -450,6 +450,7 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
   }
   LOG("Need to create a new %s state machine",
       needExternalEngine ? "external engine" : "normal");
+  mStateMachineRecreated = true;
 
   nsresult rv = CreateAndInitStateMachine(
       false /* live stream */,

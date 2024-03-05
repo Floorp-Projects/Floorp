@@ -85,6 +85,11 @@ class MediaSourceDecoder : public MediaDecoder,
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
   bool CanPlayThroughImpl() override;
 
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  void MetadataLoaded(UniquePtr<MediaInfo> aInfo, UniquePtr<MetadataTags> aTags,
+                      MediaDecoderEventVisibility aEventVisibility) override;
+#endif
+
   RefPtr<nsIPrincipal> mPrincipal;
 
   // The owning MediaSource holds a strong reference to this decoder, and
