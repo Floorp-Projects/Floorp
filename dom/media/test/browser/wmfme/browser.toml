@@ -3,11 +3,17 @@ subsuite = "media-bc"
 tags = "media-engine-compatible"
 run-if = ["wmfme"]
 support-files = [
-  "head.js",
   "file_video.html",
+  "head.js",
+  "../head.js",
+  "../../eme_standalone.js",
   "../../gizmo.mp4",
+  "../../sintel-short-clearkey-subsample-encrypted-video.webm",
+  "../../../mediasource/test/bipbop/bipbop2s.mp4",
 ]
 
 ["browser_wmfme_crash.js"]
+
+["browser_wmfme_glean_first_frame_loaded_time.js"]
 
 ["browser_wmfme_max_crashes.js"]
