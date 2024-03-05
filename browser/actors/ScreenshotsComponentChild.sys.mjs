@@ -49,6 +49,10 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
   }
 
   handleEvent(event) {
+    if (!event.isTrusted) {
+      return;
+    }
+
     switch (event.type) {
       case "click":
       case "pointerdown":

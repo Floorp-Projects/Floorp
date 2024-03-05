@@ -817,7 +817,8 @@ export class ScreenshotsOverlay {
    * @param {object} detail Extra details to send to the child actor
    */
   #dispatchEvent(eventType, detail) {
-    this.window.dispatchEvent(
+    this.window.windowUtils.dispatchEventToChromeOnly(
+      this.window,
       new CustomEvent(eventType, {
         bubbles: true,
         detail,
