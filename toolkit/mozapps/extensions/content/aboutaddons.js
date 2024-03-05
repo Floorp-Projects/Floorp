@@ -1744,6 +1744,8 @@ class InlineOptionsBrowser extends HTMLElement {
       readyPromise = promiseEvent("load", browser, true);
     }
 
+    // TODO(rpl): we can remove this stack element once we are ripping off
+    // the content prompt support (and `prompts.contentPromptSubDialog` pref).
     let stack = document.createXULElement("stack");
     stack.classList.add("inline-options-stack");
     stack.appendChild(browser);
