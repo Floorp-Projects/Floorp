@@ -48,6 +48,12 @@ add_setup(
     );
     let nssComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsINSSComponent);
     await nssComponent.asyncClearSSLExternalAndInternalSessionCache();
+
+    // See Bug 1878505
+    Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
+    registerCleanupFunction(async () => {
+      Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+    });
   }
 );
 
