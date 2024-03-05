@@ -219,14 +219,6 @@ inline already_AddRefed<MediaByteBuffer> ForceGetAudioCodecSpecificBlob(
 // information as a blob or where a blob is ambiguous.
 inline already_AddRefed<MediaByteBuffer> GetAudioCodecSpecificBlob(
     const AudioCodecSpecificVariant& v) {
-  MOZ_ASSERT(!v.is<NoCodecSpecificData>(),
-             "NoCodecSpecificData shouldn't be used as a blob");
-  MOZ_ASSERT(!v.is<AacCodecSpecificData>(),
-             "AacCodecSpecificData has 2 blobs internally, one should "
-             "explicitly be selected");
-  MOZ_ASSERT(!v.is<Mp3CodecSpecificData>(),
-             "Mp3CodecSpecificData shouldn't be used as a blob");
-
   return ForceGetAudioCodecSpecificBlob(v);
 }
 
