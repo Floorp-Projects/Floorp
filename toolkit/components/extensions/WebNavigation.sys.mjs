@@ -95,7 +95,6 @@ export var WebNavigationManager = {
    *
    * @param {nsIAutoCompleteInput | object} subject
    * @param {string} topic
-   * @param {string | undefined} data
    */
   observe: function (subject, topic) {
     if (topic == "urlbar-user-start-navigation") {

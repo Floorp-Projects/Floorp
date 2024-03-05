@@ -322,8 +322,6 @@ class ResponseManager extends FilteringMessageManager {
   /**
    * Called when the event queue is idle, and dispatches any pending
    * low-priority messages in a single chunk.
-   *
-   * @param {IdleDeadline} deadline
    */
   onIdle() {
     this.idleScheduled = false;
