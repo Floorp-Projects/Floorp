@@ -21,8 +21,9 @@ support-files = [
 
 ["browser_net_har_copy_all_as_har.js"]
 skip-if = [
-  "!debug && os == 'mac'", #Bug 1622925
-  "!debug && os == 'linux'", #Bug 1622925
+  "apple_catalina && !debug", #Bug 1622925
+  "apple_silicon && !debug", #Bug 1622925
+  "os == 'linux' && os_version == '18.04' && !debug", #Bug 1622925
   "win11_2009", # Bug 1797751
 ]
 

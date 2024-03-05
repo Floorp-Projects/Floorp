@@ -194,7 +194,7 @@ skip-if = [
 ["test_resizeby.html"]
 skip-if = [
   "os == 'android'", # Window sizes cannot be controled on android; Windows
-  "os == 'linux' && bits == 64",# Bug 1604152
+  "os == 'linux' && os_version == '18.04' && bits == 64",# Bug 1604152
 ]
 
 ["test_resource_timing.html"]
@@ -261,8 +261,10 @@ skip-if = [
 
 ["test_toggling_performance_navigation_timing.html"]
 skip-if = [
-  "os == 'win' && bits == 64 && !debug", # Bug 1730152
-  "os == 'mac' && bits == 64 && !debug", # Bug 1730152
+  "win10_2009 && bits == 64 && !debug", # Bug 1730152
+  "win11_2009 && bits == 64 && !debug", # Bug 1730152
+  "apple_catalina && !debug", # Bug 1730152
+  "apple_silicon && !debug", # Bug 1730152
 ]
 
 ["test_vibrator.html"]
