@@ -164,7 +164,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     int16_t* data = reinterpret_cast<int16_t**>(aFrame->data)[0];
     for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
       for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = AudioSampleToFloat(*data++);
+        *tmp++ = ConvertAudioSample<float>(*data++);
       }
     }
   } else if (aFrame->format == AV_SAMPLE_FMT_S16P) {
@@ -174,7 +174,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     int16_t** data = reinterpret_cast<int16_t**>(aFrame->data);
     for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
       for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = AudioSampleToFloat(data[channel][frame]);
+        *tmp++ = ConvertAudioSample<float>(data[channel][frame]);
       }
     }
   } else if (aFrame->format == AV_SAMPLE_FMT_S32) {
@@ -183,7 +183,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     int32_t* data = reinterpret_cast<int32_t**>(aFrame->data)[0];
     for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
       for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = AudioSampleToFloat(*data++);
+        *tmp++ = ConvertAudioSample<float>(*data++);
       }
     }
   } else if (aFrame->format == AV_SAMPLE_FMT_S32P) {
@@ -193,7 +193,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     int32_t** data = reinterpret_cast<int32_t**>(aFrame->data);
     for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
       for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = AudioSampleToFloat(data[channel][frame]);
+        *tmp++ = ConvertAudioSample<float>(data[channel][frame]);
       }
     }
   } else if (aFrame->format == AV_SAMPLE_FMT_U8) {
@@ -202,7 +202,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     uint8_t* data = reinterpret_cast<uint8_t**>(aFrame->data)[0];
     for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
       for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = UInt8bitToAudioSample<AudioDataValue>(*data++);
+        *tmp++ = ConvertAudioSample<float>(*data++);
       }
     }
   } else if (aFrame->format == AV_SAMPLE_FMT_U8P) {
@@ -212,7 +212,7 @@ static AlignedAudioBuffer CopyAndPackAudio(AVFrame* aFrame,
     uint8_t** data = reinterpret_cast<uint8_t**>(aFrame->data);
     for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
       for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = UInt8bitToAudioSample<AudioDataValue>(data[channel][frame]);
+        *tmp++ = ConvertAudioSample<float>(data[channel][frame]);
       }
     }
   }

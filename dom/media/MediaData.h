@@ -268,7 +268,7 @@ class InflatableShortBuffer {
     // capacity, and the loop goes backward.
     float* output = reinterpret_cast<float*>(mBuffer.mData);
     for (size_t i = Length(); i--;) {
-      output[i] = AudioSampleToFloat(mBuffer.mData[i]);
+      output[i] = ConvertAudioSample<float>(mBuffer.mData[i]);
     }
     AlignedFloatBuffer rv;
     rv.mBuffer = std::move(mBuffer.mBuffer);

@@ -1462,7 +1462,7 @@ float rmsf32(AudioDataValue* aSamples, uint32_t aChannels, uint32_t aFrames) {
   for (uint32_t i = 0; i < aFrames; i++) {
     downmixed = 0.;
     for (uint32_t j = 0; j < aChannels; j++) {
-      downmixed += AudioSampleToFloat(aSamples[readIdx++]);
+      downmixed += ConvertAudioSample<float>(aSamples[readIdx++]);
     }
     rms += downmixed * downmixed;
   }
