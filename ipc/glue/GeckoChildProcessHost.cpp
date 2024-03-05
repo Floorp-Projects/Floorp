@@ -343,7 +343,20 @@ class LinuxProcessLauncher : public PosixProcessLauncher {
   virtual Result<Ok, LaunchError> DoSetup() override;
 };
 typedef LinuxProcessLauncher ProcessLauncher;
-#  elif
+#  elif defined(MOZ_WIDGET_UIKIT)
+class IosProcessLauncher : public PosixProcessLauncher {
+ public:
+  IosProcessLauncher(GeckoChildProcessHost* aHost,
+                     std::vector<std::string>&& aExtraOpts)
+      : PosixProcessLauncher(aHost, std::move(aExtraOpts)) {}
+
+ protected:
+  virtual RefPtr<ProcessHandlePromise> DoLaunch() override {
+    MOZ_CRASH("IosProcessLauncher::DoLaunch not implemented");
+  }
+};
+typedef IosProcessLauncher ProcessLauncher;
+#  else
 #    error "Unknown platform"
 #  endif
 #endif  // XP_UNIX
@@ -1189,7 +1202,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
     }
     mLaunchOptions->env_map["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
 
-#  elif XP_DARWIN
+#  elif XP_MACOSX
     // With signed production Mac builds, the dynamic linker (dyld) will
     // ignore dyld environment variables preventing the use of variables
     // such as DYLD_LIBRARY_PATH and DYLD_INSERT_LIBRARIES.
@@ -1212,7 +1225,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
     // Prevent connection attempts to diagnosticd(8) to save cycles. Log
     // messages can trigger these connection attempts, but access to
     // diagnosticd is blocked in sandboxed child processes.
-#    ifdef MOZ_SANDBOX
+#    if defined(MOZ_SANDBOX) && defined(XP_MACOSX)
     if (mDisableOSActivityMode) {
       mLaunchOptions->env_map["OS_ACTIVITY_MODE"] = "disable";
     }
