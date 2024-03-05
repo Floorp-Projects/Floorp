@@ -31,6 +31,9 @@ const { FeatureCalloutMessages } = ChromeUtils.importESModule(
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
+const { NonPrivateTabs } = ChromeUtils.importESModule(
+  "resource:///modules/OpenTabs.sys.mjs"
+);
 
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 const { SessionStoreTestUtils } = ChromeUtils.importESModule(
@@ -693,4 +696,26 @@ async function waitForRecentlyClosedTabsList(doc) {
     return cardMainSlotNode.rowEls.length;
   });
   return [cardMainSlotNode, cardMainSlotNode.rowEls];
+}
+
+async function add_new_tab(URL) {
+  let tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabChange"
+  );
+  let tab = BrowserTestUtils.addTab(gBrowser, URL);
+  // wait so we can reliably compare the tab URL
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await tabChangeRaised;
+  return tab;
+}
+
+function isActiveElement(expectedLinkEl) {
+  return expectedLinkEl.getRootNode().activeElement == expectedLinkEl;
+}
+
+function cleanupTabs() {
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
+  }
 }

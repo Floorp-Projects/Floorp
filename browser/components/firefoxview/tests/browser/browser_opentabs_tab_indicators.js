@@ -3,22 +3,11 @@
 
 requestLongerTimeout(2);
 
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
-
 let pageWithAlert =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://example.com/browser/browser/base/content/test/tabPrompts/openPromptOffTimeout.html";
 let pageWithSound =
   "http://mochi.test:8888/browser/dom/base/test/file_audioLoop.html";
-
-function cleanup() {
-  // Cleanup
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
-  }
-}
 
 add_task(async function test_notification_dot_indicator() {
   clearHistory();
@@ -62,7 +51,7 @@ add_task(async function test_notification_dot_indicator() {
     await BrowserTestUtils.switchTab(gBrowser, openedTab);
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
 
-    cleanup();
+    cleanupTabs();
   });
 });
 
@@ -120,7 +109,7 @@ add_task(async function test_container_indicator() {
 
     info("The newly opened tab is marked as a container tab.");
 
-    cleanup();
+    cleanupTabs();
   });
 });
 
@@ -222,7 +211,7 @@ add_task(async function test_sound_playing_muted_indicator() {
       "The tab has the unmute button showing."
     );
 
-    cleanup();
+    cleanupTabs();
   });
 });
 
@@ -287,6 +276,6 @@ add_task(async function test_bookmark_indicator() {
       "The bookmark star is removed."
     );
   });
-  await cleanup();
+  await cleanupTabs();
   await PlacesUtils.bookmarks.eraseEverything();
 });
