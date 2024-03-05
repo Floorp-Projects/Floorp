@@ -12,8 +12,11 @@ with Files("*TextInput*"):
 
 SOURCES += [
     "GfxInfo.cpp",
+    "MediaKeysEventSourceFactory.cpp",
     "nsAppShell.mm",
+    "nsBidiKeyboard.mm",
     "nsLookAndFeel.mm",
+    "nsNativeThemeUIKit.mm",
     "nsWidgetFactory.mm",
     "nsWindow.mm",
     "TextInputHandler.mm",
