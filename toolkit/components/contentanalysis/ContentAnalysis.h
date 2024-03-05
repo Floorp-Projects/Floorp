@@ -99,6 +99,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
   ContentAnalysis(const ContentAnalysis&) = delete;
   ContentAnalysis& operator=(ContentAnalysis&) = delete;
   nsresult CreateContentAnalysisClient(nsCString&& aPipePathName,
+                                       nsString&& aClientSignatureSetting,
                                        bool aIsPerUser);
   nsresult RunAnalyzeRequestTask(
       const RefPtr<nsIContentAnalysisRequest>& aRequest, bool aAutoAcknowledge,

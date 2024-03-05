@@ -32,6 +32,7 @@
 #  include <windows.h>
 #  define SECURITY_WIN32 1
 #  include <security.h>
+#  include "mozilla/WinDllServices.h"
 #endif  // XP_WIN
 
 namespace mozilla::contentanalysis {
@@ -53,6 +54,7 @@ const char* kIsDLPEnabledPref = "browser.contentanalysis.enabled";
 const char* kIsPerUserPref = "browser.contentanalysis.is_per_user";
 const char* kPipePathNamePref = "browser.contentanalysis.pipe_path_name";
 const char* kDefaultAllowPref = "browser.contentanalysis.default_allow";
+const char* kClientSignature = "browser.contentanalysis.client_signature";
 
 nsresult MakePromise(JSContext* aCx, RefPtr<mozilla::dom::Promise>* aPromise) {
   nsIGlobalObject* go = xpc::CurrentNativeGlobal(aCx);
@@ -179,8 +181,9 @@ ContentAnalysisRequest::GetWindowGlobalParent(
   return NS_OK;
 }
 
-nsresult ContentAnalysis::CreateContentAnalysisClient(nsCString&& aPipePathName,
-                                                      bool aIsPerUser) {
+nsresult ContentAnalysis::CreateContentAnalysisClient(
+    nsCString&& aPipePathName, nsString&& aClientSignatureSetting,
+    bool aIsPerUser) {
   MOZ_ASSERT(!NS_IsMainThread());
   // This method should only be called once
   MOZ_ASSERT(!mCaClientPromise->IsResolved());
@@ -189,6 +192,30 @@ nsresult ContentAnalysis::CreateContentAnalysisClient(nsCString&& aPipePathName,
       content_analysis::sdk::Client::Create({aPipePathName.Data(), aIsPerUser})
           .release());
   LOGD("Content analysis is %s", client ? "connected" : "not available");
+#ifdef XP_WIN
+  if (client && !aClientSignatureSetting.IsEmpty()) {
+    std::string agentPath = client->GetAgentInfo().binary_path;
+    nsString agentWidePath = NS_ConvertUTF8toUTF16(agentPath);
+    UniquePtr<wchar_t[]> orgName =
+        mozilla::DllServices::Get()->GetBinaryOrgName(agentWidePath.Data());
+    bool signatureMatches = false;
+    if (orgName) {
+      auto dependentOrgName = nsDependentString(orgName.get());
+      LOGD("Content analysis client signed with organization name \"%S\"",
+           static_cast<const wchar_t*>(dependentOrgName.get()));
+      signatureMatches = aClientSignatureSetting.Equals(dependentOrgName);
+    } else {
+      LOGD("Content analysis client has no signature");
+    }
+    if (!signatureMatches) {
+      LOGE(
+          "Got mismatched content analysis client signature! All content "
+          "analysis operations will fail.");
+      mCaClientPromise->Reject(NS_ERROR_INVALID_SIGNATURE, __func__);
+      return NS_OK;
+    }
+  }
+#endif  // XP_WIN
   mCaClientPromise->Resolve(client, __func__);
 
   return NS_OK;
@@ -709,12 +736,15 @@ ContentAnalysis::GetIsActive(bool* aIsActive) {
       return rv;
     }
     bool isPerUser = Preferences::GetBool(kIsPerUserPref);
+    nsString clientSignature;
+    // It's OK if this fails, we will default to the empty string
+    Preferences::GetString(kClientSignature, clientSignature);
     rv = NS_DispatchBackgroundTask(NS_NewCancelableRunnableFunction(
         "ContentAnalysis::CreateContentAnalysisClient",
         [owner = RefPtr{this}, pipePathName = std::move(pipePathName),
-         isPerUser]() mutable {
-          owner->CreateContentAnalysisClient(std::move(pipePathName),
-                                             isPerUser);
+         clientSignature = std::move(clientSignature), isPerUser]() mutable {
+          owner->CreateContentAnalysisClient(
+              std::move(pipePathName), std::move(clientSignature), isPerUser);
         }));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mCaClientPromise->Reject(rv, __func__);

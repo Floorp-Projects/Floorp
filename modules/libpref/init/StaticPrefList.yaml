@@ -1147,6 +1147,14 @@
   value: "A DLP agent"
   mirror: never
 
+# (optional) The organization name that the DLP agent should have. If this is
+# non-empty and the DLP agent is not signed with this organization name,
+# Firefox will fail the connection.
+- name: browser.contentanalysis.client_signature
+  type: String
+  value: ""
+  mirror: never
+
 # Content analysis by external applications, e.g. data-loss prevention apps
 - name: browser.contentanalysis.enabled
   type: bool
