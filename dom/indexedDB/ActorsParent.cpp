@@ -11660,11 +11660,13 @@ DatabaseFileManager::DatabaseFileManager(
     PersistenceType aPersistenceType,
     const quota::OriginMetadata& aOriginMetadata,
     const nsAString& aDatabaseName, const nsCString& aDatabaseID,
-    bool aEnforcingQuota, bool aIsInPrivateBrowsingMode)
+    const nsAString& aDatabaseFilePath, bool aEnforcingQuota,
+    bool aIsInPrivateBrowsingMode)
     : mPersistenceType(aPersistenceType),
       mOriginMetadata(aOriginMetadata),
       mDatabaseName(aDatabaseName),
       mDatabaseID(aDatabaseID),
+      mDatabaseFilePath(aDatabaseFilePath),
       mCipherKeyManager(
           aIsInPrivateBrowsingMode
               ? new IndexedDBCipherKeyManager("IndexedDBCipherKeyManager")
@@ -15171,7 +15173,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   if (!fileManager) {
     fileManager = MakeSafeRefPtr<DatabaseFileManager>(
         persistenceType, mOriginMetadata, databaseName, mDatabaseId.ref(),
-        mEnforcingQuota, mInPrivateBrowsing);
+        mDatabaseFilePath.ref(), mEnforcingQuota, mInPrivateBrowsing);
   }
 
   Maybe<const CipherKey> maybeKey =
@@ -16185,7 +16187,7 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
   if (!fileManager) {
     fileManager = MakeSafeRefPtr<DatabaseFileManager>(
         persistenceType, mOriginMetadata, databaseName, mDatabaseId.ref(),
-        mEnforcingQuota, mInPrivateBrowsing);
+        mDatabaseFilePath.ref(), mEnforcingQuota, mInPrivateBrowsing);
   }
 
   const auto maybeKey =

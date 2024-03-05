@@ -67,6 +67,10 @@ class FileManagerInfo {
   [[nodiscard]] SafeRefPtr<DatabaseFileManager> GetFileManager(
       PersistenceType aPersistenceType, const nsAString& aName) const;
 
+  [[nodiscard]] SafeRefPtr<DatabaseFileManager>
+  GetFileManagerByDatabaseFilePath(PersistenceType aPersistenceType,
+                                   const nsAString& aDatabaseFilePath) const;
+
   void AddFileManager(SafeRefPtr<DatabaseFileManager> aFileManager);
 
   bool HasFileManagers() const {
@@ -196,6 +200,13 @@ auto DatabaseNameMatchPredicate(const nsAString* const aName) {
   MOZ_ASSERT(aName);
   return [aName](const auto& fileManager) {
     return fileManager->DatabaseName() == *aName;
+  };
+}
+
+auto DatabaseFilePathMatchPredicate(const nsAString* const aDatabaseFilePath) {
+  MOZ_ASSERT(aDatabaseFilePath);
+  return [aDatabaseFilePath](const auto& fileManager) {
+    return fileManager->DatabaseFilePath() == *aDatabaseFilePath;
   };
 }
 
@@ -476,6 +487,21 @@ SafeRefPtr<DatabaseFileManager> IndexedDatabaseManager::GetFileManager(
   return info->GetFileManager(aPersistenceType, aDatabaseName);
 }
 
+SafeRefPtr<DatabaseFileManager>
+IndexedDatabaseManager::GetFileManagerByDatabaseFilePath(
+    PersistenceType aPersistenceType, const nsACString& aOrigin,
+    const nsAString& aDatabaseFilePath) {
+  AssertIsOnIOThread();
+
+  FileManagerInfo* info;
+  if (!mFileManagerInfos.Get(aOrigin, &info)) {
+    return nullptr;
+  }
+
+  return info->GetFileManagerByDatabaseFilePath(aPersistenceType,
+                                                aDatabaseFilePath);
+}
+
 void IndexedDatabaseManager::AddFileManager(
     SafeRefPtr<DatabaseFileManager> aFileManager) {
   AssertIsOnIOThread();
@@ -676,6 +702,22 @@ SafeRefPtr<DatabaseFileManager> FileManagerInfo::GetFileManager(
   const auto end = managers.cend();
   const auto foundIt =
       std::find_if(managers.cbegin(), end, DatabaseNameMatchPredicate(&aName));
+
+  return foundIt != end ? foundIt->clonePtr() : nullptr;
+}
+
+SafeRefPtr<DatabaseFileManager>
+FileManagerInfo::GetFileManagerByDatabaseFilePath(
+    PersistenceType aPersistenceType,
+    const nsAString& aDatabaseFilePath) const {
+  AssertIsOnIOThread();
+
+  const auto& managers = GetImmutableArray(aPersistenceType);
+
+  const auto end = managers.cend();
+  const auto foundIt =
+      std::find_if(managers.cbegin(), end,
+                   DatabaseFilePathMatchPredicate(&aDatabaseFilePath));
 
   return foundIt != end ? foundIt->clonePtr() : nullptr;
 }
