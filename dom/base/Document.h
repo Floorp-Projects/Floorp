@@ -57,7 +57,6 @@
 #include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WakeLockBinding.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "nsAtom.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -320,6 +319,9 @@ enum BFCacheStatus {
 };
 
 }  // namespace dom
+namespace glean::perf {
+struct PageLoadExtra;
+}
 }  // namespace mozilla
 
 namespace mozilla::net {

@@ -6,9 +6,9 @@
 
 #include "PerformanceTiming.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/PerformanceTimingBinding.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/dom/PerformanceTimingBinding.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIHttpChannel.h"

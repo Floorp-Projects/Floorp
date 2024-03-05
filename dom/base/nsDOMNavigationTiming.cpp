@@ -7,12 +7,11 @@
 #include "nsDOMNavigationTiming.h"
 
 #include "GeckoProfiler.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCOMPtr.h"

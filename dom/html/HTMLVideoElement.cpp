@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLVideoElement.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLVideoElementBinding.h"
 #include "nsGenericHTMLElement.h"

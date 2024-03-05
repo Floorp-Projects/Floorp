@@ -8,6 +8,7 @@
 #  include "mozilla/UniquePtr.h"
 
 #  include "ICUUtils.h"
+#  include "mozilla/ClearOnShutdown.h"
 #  include "mozilla/StaticPrefs_dom.h"
 #  include "mozilla/intl/LocaleService.h"
 #  include "mozilla/intl/FormatBuffer.h"
