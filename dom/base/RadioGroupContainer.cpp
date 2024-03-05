@@ -131,6 +131,17 @@ nsresult RadioGroupContainer::GetNextRadioButton(
   return NS_OK;
 }
 
+HTMLInputElement* RadioGroupContainer::GetFirstRadioButton(
+    const nsAString& aName) {
+  nsRadioGroupStruct* radioGroup = GetOrCreateRadioGroup(aName);
+  for (HTMLInputElement* radio : radioGroup->mRadioButtons.AsList()) {
+    if (!radio->Disabled()) {
+      return radio;
+    }
+  }
+  return nullptr;
+}
+
 void RadioGroupContainer::AddToRadioGroup(const nsAString& aName,
                                           HTMLInputElement* aRadio,
                                           nsIContent* aAncestor) {
