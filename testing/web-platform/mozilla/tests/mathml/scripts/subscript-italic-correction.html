@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html>
   <head>
-    <title>subscript</title>
+    <title>italic correction for subscripts</title>
     <meta charset="utf-8"/>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=945254">
+    <link rel="help" href="https://w3c.github.io/mathml-core/#dfn-italic-correction">
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
     <script type="text/javascript">
       function verifyItalicCorrections()
       {
@@ -12,24 +16,21 @@
           var sup = document.getElementById("s" + (i+1));
           var italicCorrection =
            sup.getBoundingClientRect().left - sub.getBoundingClientRect().left;
-           if (italicCorrection < epsilon) {
-             return false;
-           }
+          assert_greater_than(italicCorrection, epsilon);
         }
-        return true;
       }
 
-      function doTest()
-      {
-        if (verifyItalicCorrections()) {
-          document.body.style.background = "#5f5";
-        }
-        document.documentElement.removeAttribute("class");
-      }
-      window.addEventListener("MozReftestInvalidate", doTest);
+      promise_test(() => {
+        return new Promise(resolve => {
+          window.addEventListener("load", resolve);
+        }).then(verifyItalicCorrections);
+      }, "Italic correction of base is used to place subscripts.");
     </script>
+    <style>
+      math { font-size: 50px; }
+    </style>
   </head>
-  <body style="background: #f00; font-size: 50px;">
+  <body>
 
     <div>
       <math>
