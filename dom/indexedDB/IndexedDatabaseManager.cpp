@@ -90,18 +90,18 @@ class FileManagerInfo {
                                       const nsAString& aName);
 
  private:
-  nsTArray<SafeRefPtr<DatabaseFileManager> >& GetArray(
+  nsTArray<SafeRefPtr<DatabaseFileManager>>& GetArray(
       PersistenceType aPersistenceType);
 
-  const nsTArray<SafeRefPtr<DatabaseFileManager> >& GetImmutableArray(
+  const nsTArray<SafeRefPtr<DatabaseFileManager>>& GetImmutableArray(
       PersistenceType aPersistenceType) const {
     return const_cast<FileManagerInfo*>(this)->GetArray(aPersistenceType);
   }
 
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mPersistentStorageFileManagers;
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mTemporaryStorageFileManagers;
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mDefaultStorageFileManagers;
-  nsTArray<SafeRefPtr<DatabaseFileManager> > mPrivateStorageFileManagers;
+  nsTArray<SafeRefPtr<DatabaseFileManager>> mPersistentStorageFileManagers;
+  nsTArray<SafeRefPtr<DatabaseFileManager>> mTemporaryStorageFileManagers;
+  nsTArray<SafeRefPtr<DatabaseFileManager>> mDefaultStorageFileManagers;
+  nsTArray<SafeRefPtr<DatabaseFileManager>> mPrivateStorageFileManagers;
 };
 
 }  // namespace indexedDB
@@ -726,7 +726,7 @@ void FileManagerInfo::AddFileManager(
     SafeRefPtr<DatabaseFileManager> aFileManager) {
   AssertIsOnIOThread();
 
-  nsTArray<SafeRefPtr<DatabaseFileManager> >& managers =
+  nsTArray<SafeRefPtr<DatabaseFileManager>>& managers =
       GetArray(aFileManager->Type());
 
   NS_ASSERTION(!managers.Contains(aFileManager), "Adding more than once?!");
@@ -760,7 +760,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManagers(
     PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
 
-  nsTArray<SafeRefPtr<DatabaseFileManager> >& managers =
+  nsTArray<SafeRefPtr<DatabaseFileManager>>& managers =
       GetArray(aPersistenceType);
 
   for (uint32_t i = 0; i < managers.Length(); i++) {
@@ -785,7 +785,7 @@ void FileManagerInfo::InvalidateAndRemoveFileManager(
   }
 }
 
-nsTArray<SafeRefPtr<DatabaseFileManager> >& FileManagerInfo::GetArray(
+nsTArray<SafeRefPtr<DatabaseFileManager>>& FileManagerInfo::GetArray(
     PersistenceType aPersistenceType) {
   switch (aPersistenceType) {
     case PERSISTENCE_TYPE_PERSISTENT:
