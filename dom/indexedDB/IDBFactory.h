@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/GlobalTeardownObserver.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -60,7 +59,6 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
 
   UniquePtr<PrincipalInfo> mPrincipalInfo;
 
-  // TODO: Unused, remove me!
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // This will only be set if the factory belongs to a window in a child
@@ -97,9 +95,6 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
 
   static bool AllowedForPrincipal(nsIPrincipal* aPrincipal,
                                   bool* aIsSystemPrincipal = nullptr);
-
-  static quota::PersistenceType GetPersistenceType(
-      const PrincipalInfo& aPrincipalInfo);
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(IDBFactory); }
 
@@ -162,8 +157,6 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
       JSContext* aCx, const nsAString& aName, const IDBOpenDBOptions& aOptions,
       CallerType aCallerType, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Databases(JSContext* aCx);
-
   int16_t Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
               JS::Handle<JS::Value> aSecond, ErrorResult& aRv);
 
@@ -200,8 +193,6 @@ class IDBFactory final : public GlobalTeardownObserver, public nsWrapperCache {
 
   static nsresult AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
                                            nsCOMPtr<nsIPrincipal>* aPrincipal);
-
-  nsresult EnsureBackgroundActor();
 
   [[nodiscard]] RefPtr<IDBOpenDBRequest> OpenInternal(
       JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,

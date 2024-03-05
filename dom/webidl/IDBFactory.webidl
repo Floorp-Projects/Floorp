@@ -39,8 +39,6 @@ interface IDBFactory {
   deleteDatabase(DOMString name,
                  optional IDBOpenDBOptions options = {});
 
-  Promise<sequence<IDBDatabaseInfo>> databases();
-
   [Throws]
   short
   cmp(any first,
@@ -63,9 +61,4 @@ interface IDBFactory {
   deleteForPrincipal(Principal principal,
                      DOMString name,
                      optional IDBOpenDBOptions options = {});
-};
-
-dictionary IDBDatabaseInfo {
-  DOMString name;
-  unsigned long long version;
 };
