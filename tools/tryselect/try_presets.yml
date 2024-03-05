@@ -9,6 +9,14 @@
 
 # yamllint disable rule:line-length
 
+android-components:
+    selector: fuzzy
+    description: >-
+        Run android-components builds and tests.
+    query:
+        - "'build-components"
+        - "'test-components"
+
 builds:
     selector: fuzzy
     description: >-
@@ -82,6 +90,50 @@ devtools-linux:
         - "'mozlint-eslint"
         - "'mochitest-devtools-chrome | 'mochitest-chrome-1proc 'linux '64-qr/ !swr"
         - "'xpcshell 'linux !nofis '64-qr/"
+
+fenix:
+    selector: fuzzy
+    description: >-
+        Run Fenix builds and tests.
+    query:
+        - "'build-apk-fenix-debug"
+        - "'signing-apk-fenix-debug"
+        - "'build-apk-fenix-android-test-debug"
+        - "'signing-apk-fenix-android-test-debug"
+        - "'test-apk-fenix-debug"
+        - "'ui-test-apk-fenix-arm-debug"
+
+firefox-android:
+    selector: fuzzy
+    description: >-
+        Run android-components, Focus, and Fenix builds and tests.
+    query:
+        - "'build-components"
+        - "'test-components"
+        - "'build-apk-fenix-debug"
+        - "'signing-apk-fenix-debug"
+        - "'build-apk-fenix-android-test-debug"
+        - "'signing-apk-fenix-android-test-debug"
+        - "'test-apk-fenix-debug"
+        - "'ui-test-apk-fenix-arm-debug"
+        - "'build-apk-focus-debug"
+        - "'signing-apk-focus-debug"
+        - "'build-apk-focus-android-test-debug"
+        - "'signing-apk-focus-android-test-debug"
+        - "'test-apk-focus-debug"
+        - "'ui-test-apk-focus-arm-debug"
+
+focus:
+    selector: fuzzy
+    description: >-
+        Run Focus builds and tests.
+    query:
+        - "'build-apk-focus-debug"
+        - "'signing-apk-focus-debug"
+        - "'build-apk-focus-android-test-debug"
+        - "'signing-apk-focus-android-test-debug"
+        - "'test-apk-focus-debug"
+        - "'ui-test-apk-focus-arm-debug"
 
 fpush-linux-android:
     selector: fuzzy
