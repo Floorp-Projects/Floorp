@@ -1,6 +1,5 @@
-const { NonPrivateTabs } = ChromeUtils.importESModule(
-  "resource:///modules/OpenTabs.sys.mjs"
-);
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test_open_tab_row_navigation() {
   await withFirefoxView({}, async browser => {
@@ -59,9 +58,66 @@ add_task(async function test_open_tab_row_navigation() {
     info("The tab row main element has focus.");
   });
 
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
-  }
+  cleanupTabs();
+});
+
+add_task(async function test_focus_moves_after_unmute() {
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    let win = browser.ownerGlobal;
+    await navigateToViewAndWait(document, "opentabs");
+    let openTabs = document.querySelector("view-opentabs[name=opentabs]");
+    await openTabs.updateComplete;
+    await TestUtils.waitForCondition(
+      () => openTabs.viewCards[0].tabList.rowEls.length,
+      "The tab list has rendered."
+    );
+    await openTabs.openTabsTarget.readyWindowsPromise;
+    let card = openTabs.viewCards[0];
+    let openTabEl = card.tabList.rowEls[0];
+    let tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabChange"
+    );
+
+    // Mute tab
+    openTabEl.muteOrUnmuteTab();
+
+    await tabChangeRaised;
+    await openTabs.updateComplete;
+
+    let mutedTab = card.tabList.rowEls[0];
+    await TestUtils.waitForCondition(
+      () => mutedTab.indicators.includes("muted"),
+      "The tab has been muted."
+    );
+
+    // Unmute using keyboard
+    card.tabList.currentActiveElementId = mutedTab.focusMediaButton();
+    isActiveElement(mutedTab.mediaButtonEl);
+    info("The media button has focus.");
+
+    tabChangeRaised = BrowserTestUtils.waitForEvent(
+      NonPrivateTabs,
+      "TabChange"
+    );
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+
+    await tabChangeRaised;
+    await openTabs.updateComplete;
+
+    let unmutedTab = card.tabList.rowEls[0];
+    await TestUtils.waitForCondition(
+      () => !unmutedTab.indicators.includes("muted"),
+      "The tab is no longer muted."
+    );
+    isActiveElement(unmutedTab.secondaryButtonEl);
+    info(
+      "Focus should be on the tab's secondary button element after unmuting."
+    );
+  });
+
+  cleanupTabs();
 });
 
 add_task(async function test_open_tab_row_with_sound_navigation() {
@@ -89,7 +145,7 @@ add_task(async function test_open_tab_row_with_sound_navigation() {
 
     await TestUtils.waitForCondition(
       () => openTabs.viewCards[0].tabList?.rowEls.length === 2,
-      "The tab list hasn't rendered"
+      "The tab list has rendered."
     );
 
     // Focus tab row with sound playing
@@ -163,7 +219,5 @@ add_task(async function test_open_tab_row_with_sound_navigation() {
     info("The tab row main element has focus.");
   });
 
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
-  }
+  cleanupTabs();
 });
