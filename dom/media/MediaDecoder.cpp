@@ -140,9 +140,7 @@ void MediaDecoder::InitStatics() {
 #  if defined(MOZ_FFMPEG)
     Preferences::Lock("media.utility-ffmpeg.enabled");
 #  endif  // defined(MOZ_FFMPEG)
-#  if defined(MOZ_FFVPX)
     Preferences::Lock("media.utility-ffvpx.enabled");
-#  endif  // defined(MOZ_FFVPX)
 #  if defined(MOZ_WMF)
     Preferences::Lock("media.utility-wmf.enabled");
 #  endif  // defined(MOZ_WMF)

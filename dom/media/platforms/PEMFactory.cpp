@@ -20,12 +20,11 @@
 #  include "WMFEncoderModule.h"
 #endif
 
-#ifdef MOZ_FFVPX
-#  include "FFVPXRuntimeLinker.h"
-#endif
 #ifdef MOZ_FFMPEG
 #  include "FFmpegRuntimeLinker.h"
 #endif
+
+#include "FFVPXRuntimeLinker.h"
 
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -56,15 +55,12 @@ PEMFactory::PEMFactory() {
   mCurrentPEMs.AppendElement(new WMFEncoderModule());
 #endif
 
-#ifdef MOZ_FFVPX
-  if (StaticPrefs::media_ffvpx_enabled() &&
-      StaticPrefs::media_ffmpeg_encoder_enabled()) {
+  if (StaticPrefs::media_ffmpeg_encoder_enabled()) {
     if (RefPtr<PlatformEncoderModule> pem =
             FFVPXRuntimeLinker::CreateEncoder()) {
       mCurrentPEMs.AppendElement(pem);
     }
   }
-#endif
 
 #ifdef MOZ_FFMPEG
   if (StaticPrefs::media_ffmpeg_enabled() &&

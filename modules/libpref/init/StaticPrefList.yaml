@@ -9868,7 +9868,7 @@
   mirror: always
 #endif
 
-#ifdef MOZ_FFVPX
+
 - name: media.rdd-ffvpx.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)
@@ -9885,7 +9885,6 @@
   value: false
 #endif
   mirror: always
-#endif
 
 #ifdef MOZ_WMF
 - name: media.rdd-wmf.enabled
@@ -10029,12 +10028,10 @@
   mirror: always
 #endif
 
-#ifdef MOZ_FFVPX
 - name: media.utility-ffvpx.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
-#endif
 
 #ifdef MOZ_WMF
 - name: media.utility-wmf.enabled
@@ -10131,13 +10128,11 @@
 #endif
     mirror: always
 
-#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
 # Allow using openh264 decoding with ffmpeg
 -   name: media.ffmpeg.allow-openh264
     type: RelaxedAtomicBool
     value: @IS_NOT_NIGHTLY_BUILD@
     mirror: always
-#endif  # MOZ_FFMPEG || MOZ_FFVPX
 
 #ifdef MOZ_WIDGET_GTK
 # Use VA-API for ffmpeg video playback on Linux
@@ -10156,15 +10151,6 @@
   value: 2
   mirror: once
 #endif # MOZ_WIDGET_GTK
-
--   name: media.ffvpx.enabled
-    type: RelaxedAtomicBool
-#ifdef MOZ_FFVPX
-    value: true
-#else
-    value: false
-#endif
-    mirror: always
 
 # Set to true in marionette tests to disable the sanity test
 # which would lead to unnecessary start of the RDD process.

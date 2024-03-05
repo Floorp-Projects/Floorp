@@ -2399,77 +2399,76 @@ with only_when(compile_environment):
 # FFmpeg's ffvpx configuration
 # ==============================================================
 
-# Artifact builds need MOZ_FFVPX defined as if compilation happened.
-with only_when(compile_environment | artifact_builds):
 
-    @depends(target)
-    def ffvpx(target):
-        enable = use_nasm = True
-        flac_only = False
-        flags = []
+@depends(target)
+def ffvpx(target):
+    use_nasm = True
+    audio_only = False
+    flags = []
 
-        if target.kernel == "WINNT":
-            if target.cpu == "x86":
-                # 32-bit windows need to prefix symbols with an underscore.
-                flags = ["-DPIC", "-DWIN32", "-DPREFIX", "-Pconfig_win32.asm"]
-            elif target.cpu == "x86_64":
-                flags = [
-                    "-D__x86_64__",
-                    "-DPIC",
-                    "-DWIN64",
-                    "-DMSVC",
-                    "-Pconfig_win64.asm",
-                ]
-            elif target.cpu == "aarch64":
-                flags = ["-DPIC", "-DWIN64"]
-                use_nasm = False
-        elif target.kernel == "Darwin":
-            # 32/64-bit macosx assemblers need to prefix symbols with an
-            # underscore.
-            flags = ["-DPIC", "-DMACHO", "-DPREFIX"]
-            if target.cpu == "x86_64":
-                flags += [
-                    "-D__x86_64__",
-                    "-Pconfig_darwin64.asm",
-                ]
-            elif target.cpu == "aarch64":
-                use_nasm = False
+    # This enables audio and video codecs paths on Windows  x86 and x86_64,
+    # macOS (all arch), and Linux x86_64. On other arch / OS combinations,
+    # only audio codecs are enabled.
+    if target.kernel == "WINNT":
+        if target.cpu == "x86":
+            # 32-bit windows need to prefix symbols with an underscore.
+            flags = ["-DPIC", "-DWIN32", "-DPREFIX", "-Pconfig_win32.asm"]
         elif target.cpu == "x86_64":
-            flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_unix64.asm"]
-        elif target.cpu in ("x86", "arm", "aarch64"):
-            flac_only = True
-        else:
-            enable = False
-
-        if flac_only or not enable:
+            flags = [
+                "-D__x86_64__",
+                "-DPIC",
+                "-DWIN64",
+                "-DMSVC",
+                "-Pconfig_win64.asm",
+            ]
+        elif target.cpu == "aarch64":
+            flags = ["-DPIC", "-DWIN64"]
             use_nasm = False
+    elif target.kernel == "Darwin":
+        # 32/64-bit macosx assemblers need to prefix symbols with an
+        # underscore.
+        flags = ["-DPIC", "-DMACHO", "-DPREFIX"]
+        if target.cpu == "x86_64":
+            flags += [
+                "-D__x86_64__",
+                "-Pconfig_darwin64.asm",
+            ]
+        elif target.cpu == "aarch64":
+            use_nasm = False
+    elif target.cpu == "x86_64":
+        flags = ["-D__x86_64__", "-DPIC", "-DELF", "-Pconfig_unix64.asm"]
+    else:
+        audio_only = True
 
-        return namespace(
-            enable=enable,
-            use_nasm=use_nasm,
-            flac_only=flac_only,
-            flags=flags,
-        )
+    if audio_only:
+        use_nasm = False
 
-    @depends(when=ffvpx.use_nasm)
-    def ffvpx_nasm():
-        # nasm 2.10 for AVX-2 support.
-        return namespace(version="2.10", what="FFVPX")
+    return namespace(
+        use_nasm=use_nasm,
+        audio_only=audio_only,
+        flags=flags,
+    )
 
-    # ffvpx_nasm can't indirectly depend on vpx_as_flags, because it depends
-    # on a compiler test, so we have to do a little bit of dance here.
-    @depends(ffvpx, vpx_as_flags, target)
-    def ffvpx(ffvpx, vpx_as_flags, target):
-        if ffvpx and vpx_as_flags and target.cpu in ("arm", "aarch64"):
-            ffvpx.flags.extend(vpx_as_flags)
-        return ffvpx
 
-    set_config("MOZ_FFVPX", True, when=ffvpx.enable)
-    set_define("MOZ_FFVPX", True, when=ffvpx.enable)
-    set_config("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.flac_only)
-    set_define("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.flac_only)
-    set_config("FFVPX_ASFLAGS", ffvpx.flags)
-    set_config("FFVPX_USE_NASM", True, when=ffvpx.use_nasm)
+@depends(when=ffvpx.use_nasm)
+def ffvpx_nasm():
+    # nasm 2.10 for AVX-2 support.
+    return namespace(version="2.10", what="FFVPX")
+
+
+# ffvpx_nasm can't indirectly depend on vpx_as_flags, because it depends
+# on a compiler test, so we have to do a little bit of dance here.
+@depends(ffvpx, vpx_as_flags, target)
+def ffvpx(ffvpx, vpx_as_flags, target):
+    if ffvpx and vpx_as_flags and target.cpu in ("arm", "aarch64"):
+        ffvpx.flags.extend(vpx_as_flags)
+    return ffvpx
+
+
+set_config("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.audio_only)
+set_define("MOZ_FFVPX_AUDIOONLY", True, when=ffvpx.audio_only)
+set_config("FFVPX_ASFLAGS", ffvpx.flags)
+set_config("FFVPX_USE_NASM", True, when=ffvpx.use_nasm)
 
 
 # nasm detection

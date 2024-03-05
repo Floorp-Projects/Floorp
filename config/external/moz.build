@@ -49,8 +49,7 @@ if not CONFIG["MOZ_SYSTEM_PNG"]:
 if not CONFIG["MOZ_SYSTEM_WEBP"]:
     external_dirs += ["media/libwebp"]
 
-if CONFIG["MOZ_FFVPX"]:
-    external_dirs += ["media/ffvpx"]
+external_dirs += ["media/ffvpx"]
 
 if CONFIG["MOZ_JXL"]:
     external_dirs += ["media/libjxl", "media/highway"]
