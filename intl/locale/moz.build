@@ -14,7 +14,7 @@ toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 if toolkit == "windows":
     DIRS += ["windows"]
-elif toolkit == "cocoa":
+elif toolkit in ("cocoa", "uikit"):
     DIRS += ["mac"]
 elif toolkit == "gtk":
     DIRS += ["gtk"]
