@@ -68,6 +68,7 @@ characteristics:
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1879154#c8
     expires: never
+
   max_touch_points:
     type: quantity
     unit: Fingers
@@ -86,6 +87,155 @@ characteristics:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1879156
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1879156#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  video_dynamic_range:
+    type: boolean
+    description: >
+      What LookAndFeel(VideoDynamicRange) reports. Note that CSSVideoDynamicRange
+      has an additional dependency on Color Depth.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  prefers_reduced_transparency:
+    type: boolean
+    description: >
+      What LookAndFeel(PrefersReducedTransparency) reports.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  prefers_reduced_motion:
+    type: boolean
+    description: >
+      What LookAndFeel(PrefersReducedMotion) reports.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  prefers_contrast:
+    type: quantity
+    unit: enum StylePrefersContrast value
+    description: >
+      What Gecko_MediaFeatures_PrefersContrast reports for a ContentDocument
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  inverted_colors:
+    type: boolean
+    description: >
+      What LookAndFeel(InvertedColors) reports.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_scheme:
+    type: quantity
+    unit: enum mozilla::ColorScheme value
+    description: >
+      The Color Scheme used for Content, from ContentPrefs() Preference Sheet.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_gamut:
+    type: quantity
+    unit: enum dom::ScreenColorGamut value
+    description: >
+      The Color Gamut reported by CSS
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
+    expires: never
+    data_sensitivity:
+      - technical
+
+  color_depth:
+    type: quantity
+    unit: bits
+    description: >
+      The Color Depth reported by CSS
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879624#c4
     expires: never
     data_sensitivity:
       - technical
