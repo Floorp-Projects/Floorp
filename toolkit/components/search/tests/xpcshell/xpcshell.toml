@@ -223,6 +223,8 @@ support-files = [
 
 ["test_reload_engines.js"]
 
+["test_reload_engines_duplicate.js"]
+
 ["test_reload_engines_experiment.js"]
 
 ["test_reload_engines_locales.js"]
@@ -271,8 +273,6 @@ support-files = ["data/search_ignorelist.json"]
 ["test_settings_obsolete.js"]
 
 ["test_settings_persist.js"]
-
-["test_settings_persist_diff_locale_same_name.js"]
 
 ["test_sort_orders-no-hints.js"]
 

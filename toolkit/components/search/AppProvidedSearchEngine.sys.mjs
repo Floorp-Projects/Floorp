@@ -27,10 +27,14 @@ export class AppProvidedSearchEngine extends SearchEngine {
   ]);
 
   /**
-   * @param {object} config
+   * @param {object} options
+   *   The options for this search engine.
+   * @param {object} options.config
    *   The engine config from Remote Settings.
+   * @param {object} [options.settings]
+   *   The saved settings for the user.
    */
-  constructor(config) {
+  constructor({ config, settings }) {
     // TODO Bug 1875912 - Remove the webextension.id and webextension.locale when
     // we're ready to remove old search-config and use search-config-v2 for all
     // clients. The id in appProvidedSearchEngine should be changed to
@@ -48,6 +52,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
     this._locale = config.webExtension.locale;
 
     this.#init(config);
+
+    this._loadSettings(settings);
   }
 
   /**
