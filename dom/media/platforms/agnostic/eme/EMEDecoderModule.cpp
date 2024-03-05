@@ -28,7 +28,7 @@
 
 namespace mozilla {
 
-using DecryptPromiseRequestHolder = MozPromiseRequestHolder<DecryptPromise>;
+typedef MozPromiseRequestHolder<DecryptPromise> DecryptPromiseRequestHolder;
 
 DDLoggedTypeDeclNameAndBase(EMEDecryptor, MediaDataDecoder);
 
@@ -45,7 +45,7 @@ class ADTSSampleConverter {
         // doesn't care what is set.
         ,
         mProfile(aInfo.mProfile < 1 || aInfo.mProfile > 4 ? 2 : aInfo.mProfile),
-        mFrequencyIndex(ADTS::GetFrequencyIndex(aInfo.mRate).unwrapOr(255)) {
+        mFrequencyIndex(Adts::GetFrequencyIndex(aInfo.mRate)) {
     EME_LOG("ADTSSampleConvertor(): aInfo.mProfile=%" PRIi8
             " aInfo.mExtendedProfile=%" PRIi8,
             aInfo.mProfile, aInfo.mExtendedProfile);
@@ -56,17 +56,17 @@ class ADTSSampleConverter {
     }
   }
   bool Convert(MediaRawData* aSample) const {
-    return ADTS::ConvertSample(mNumChannels, mFrequencyIndex, mProfile,
+    return Adts::ConvertSample(mNumChannels, mFrequencyIndex, mProfile,
                                aSample);
   }
   bool Revert(MediaRawData* aSample) const {
-    return ADTS::RevertSample(aSample);
+    return Adts::RevertSample(aSample);
   }
 
  private:
   const uint32_t mNumChannels;
   const uint8_t mProfile;
-  const uint8_t mFrequencyIndex{};
+  const uint8_t mFrequencyIndex;
 };
 
 class EMEDecryptor final : public MediaDataDecoder,
@@ -124,7 +124,7 @@ class EMEDecryptor final : public MediaDataDecoder,
     mThroughputLimiter->Throttle(aSample)
         ->Then(
             mThread, __func__,
-            [self](const RefPtr<MediaRawData>& aSample) {
+            [self](RefPtr<MediaRawData> aSample) {
               self->mThrottleRequest.Complete();
               self->AttemptDecode(aSample);
             },
@@ -223,7 +223,7 @@ class EMEDecryptor final : public MediaDataDecoder,
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mThroughputLimiter->Flush();
     for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
-      auto* holder = iter.UserData();
+      auto holder = iter.UserData();
       holder->DisconnectIfExists();
       iter.Remove();
     }
@@ -240,7 +240,7 @@ class EMEDecryptor final : public MediaDataDecoder,
     MOZ_ASSERT(mDecodePromise.IsEmpty() && !mDecodeRequest.Exists(),
                "Must wait for decoding to complete");
     for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
-      auto* holder = iter.UserData();
+      auto holder = iter.UserData();
       holder->DisconnectIfExists();
       iter.Remove();
     }
@@ -323,7 +323,7 @@ RefPtr<MediaDataDecoder::DecodePromise> EMEMediaDataDecoderProxy::Decode(
     mSamplesWaitingForKey->WaitIfKeyNotUsable(sample)
         ->Then(
             mThread, __func__,
-            [self, this](const RefPtr<MediaRawData>& aSample) {
+            [self, this](RefPtr<MediaRawData> aSample) {
               mKeyRequest.Complete();
 
               MediaDataDecoderProxy::Decode(aSample)

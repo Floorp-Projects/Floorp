@@ -219,6 +219,14 @@ inline already_AddRefed<MediaByteBuffer> ForceGetAudioCodecSpecificBlob(
 // information as a blob or where a blob is ambiguous.
 inline already_AddRefed<MediaByteBuffer> GetAudioCodecSpecificBlob(
     const AudioCodecSpecificVariant& v) {
+  MOZ_ASSERT(!v.is<NoCodecSpecificData>(),
+             "NoCodecSpecificData shouldn't be used as a blob");
+  MOZ_ASSERT(!v.is<AacCodecSpecificData>(),
+             "AacCodecSpecificData has 2 blobs internally, one should "
+             "explicitly be selected");
+  MOZ_ASSERT(!v.is<Mp3CodecSpecificData>(),
+             "Mp3CodecSpecificData shouldn't be used as a blob");
+
   return ForceGetAudioCodecSpecificBlob(v);
 }
 
@@ -462,8 +470,7 @@ class VideoInfo : public TrackInfo {
       rv.AppendPrintf("extra data: %zu bytes", mExtraData->Length());
     }
     rv.AppendPrintf("rotation: %d", static_cast<int>(mRotation));
-    rv.AppendPrintf("colors: %s",
-                    ColorDepthStrings[static_cast<int>(mColorDepth)]);
+    rv.AppendPrintf("colors: %s", ColorDepthStrings[static_cast<int>(mColorDepth)]);
     if (mColorSpace) {
       rv.AppendPrintf(
           "YUV colorspace: %s ",
@@ -479,8 +486,7 @@ class VideoInfo : public TrackInfo {
           "transfer function %s ",
           TransferFunctionStrings[static_cast<int>(mTransferFunction.value())]);
     }
-    rv.AppendPrintf("color range: %s",
-                    ColorRangeStrings[static_cast<int>(mColorRange)]);
+    rv.AppendPrintf("color range: %s", ColorRangeStrings[static_cast<int>(mColorRange)]);
     if (mImageRect) {
       rv.AppendPrintf("image rect: %dx%d", mImageRect->Width(),
                       mImageRect->Height());
