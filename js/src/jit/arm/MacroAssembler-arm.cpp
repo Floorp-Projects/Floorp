@@ -5843,11 +5843,13 @@ inline void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
       masm.quotient32(rhs, lhsOutput, isUnsigned);
     }
   } else {
-    // Ensure that the output registers are saved and restored properly,
-    MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal0));
-    MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal1));
+    // Ensure that the output registers are saved and restored properly.
+    LiveRegisterSet liveRegs = volatileLiveRegs;
+    liveRegs.addUnchecked(ReturnRegVal0);
+    liveRegs.addUnchecked(ReturnRegVal1);
 
-    masm.PushRegsInMask(volatileLiveRegs);
+    masm.PushRegsInMask(liveRegs);
+
     using Fn = int64_t (*)(int, int);
     {
       ScratchRegisterScope scratch(masm);
@@ -5870,7 +5872,7 @@ inline void EmitRemainderOrQuotient(bool isRemainder, MacroAssembler& masm,
 
     LiveRegisterSet ignore;
     ignore.add(lhsOutput);
-    masm.PopRegsInMaskIgnore(volatileLiveRegs, ignore);
+    masm.PopRegsInMaskIgnore(liveRegs, ignore);
   }
 }
 
@@ -5899,10 +5901,12 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
     remainder32(rhs, remOutput, isUnsigned);
     quotient32(rhs, lhsOutput, isUnsigned);
   } else {
-    // Ensure that the output registers are saved and restored properly,
-    MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal0));
-    MOZ_ASSERT(volatileLiveRegs.has(ReturnRegVal1));
-    PushRegsInMask(volatileLiveRegs);
+    // Ensure that the output registers are saved and restored properly.
+    LiveRegisterSet liveRegs = volatileLiveRegs;
+    liveRegs.addUnchecked(ReturnRegVal0);
+    liveRegs.addUnchecked(ReturnRegVal1);
+
+    PushRegsInMask(liveRegs);
 
     using Fn = int64_t (*)(int, int);
     {
@@ -5923,7 +5927,7 @@ void MacroAssembler::flexibleDivMod32(Register rhs, Register lhsOutput,
     LiveRegisterSet ignore;
     ignore.add(remOutput);
     ignore.add(lhsOutput);
-    PopRegsInMaskIgnore(volatileLiveRegs, ignore);
+    PopRegsInMaskIgnore(liveRegs, ignore);
   }
 }
 
