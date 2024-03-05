@@ -212,11 +212,11 @@ class HTMLFormElement final : public nsGenericHTMLElement {
    *
    * @return Whether the form is valid.
    *
-   * @note Do not call this method if novalidate/formnovalidate is used.
    * @note This method might disappear with bug 592124, hopefuly.
    * @see
    * https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#interactively-validate-the-constraints
    */
+  MOZ_CAN_RUN_SCRIPT
   bool CheckValidFormSubmission();
 
   /**
@@ -330,6 +330,7 @@ class HTMLFormElement final : public nsGenericHTMLElement {
 
   bool CheckValidity() { return CheckFormValidity(nullptr); }
 
+  MOZ_CAN_RUN_SCRIPT
   bool ReportValidity() { return CheckValidFormSubmission(); }
 
   Element* IndexedGetter(uint32_t aIndex, bool& aFound);
@@ -584,7 +585,8 @@ class HTMLFormElement final : public nsGenericHTMLElement {
   void MaybeFireFormRemoved();
 
   MOZ_CAN_RUN_SCRIPT
-  void ReportInvalidUnfocusableElements();
+  void ReportInvalidUnfocusableElements(
+      const nsTArray<RefPtr<Element>>&& aInvalidElements);
 
   ~HTMLFormElement();
 };
