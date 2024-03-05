@@ -142,6 +142,22 @@ function objEquiv(a, b) {
   if ((a.prototype || undefined) != (b.prototype || undefined)) {
     return false;
   }
+
+  // Check for ArrayBuffer equality
+  if (instanceOf(a, "ArrayBuffer") && instanceOf(b, "ArrayBuffer")) {
+    if (a.byteLength !== b.byteLength) {
+      return false;
+    }
+    const viewA = new Uint8Array(a);
+    const viewB = new Uint8Array(b);
+    for (let i = 0; i < viewA.length; i++) {
+      if (viewA[i] !== viewB[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Object.keys may be broken through screwy arguments passing. Converting to
   // an array solves the problem.
   if (isArguments(a)) {

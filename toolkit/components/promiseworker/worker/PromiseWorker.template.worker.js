@@ -102,18 +102,56 @@ function Meta(data, meta) {
  */
 function AbstractWorker(agent) {
   this._agent = agent;
+  this._deferredJobs = new Map();
+  this._deferredJobId = 0;
 }
+
 AbstractWorker.prototype = {
   // Default logger: discard all messages
   log() {},
+
+  _generateDeferredJobId() {
+    this._deferredJobId += 1;
+    return "WorkerToThread-" + this._deferredJobId;
+  },
+
+  /**
+   * Post and wait for an answer from the thread.
+   */
+  callMainThread(funcName, args) {
+    const messageId = this._generateDeferredJobId();
+
+    const message = {
+      id: messageId,
+      fun: funcName,
+      args,
+    };
+
+    return new Promise((resolve, reject) => {
+      this._deferredJobs.set(messageId, { resolve, reject });
+      this.postMessage(message);
+    });
+  },
 
   /**
    * Handle a message.
    */
   async handleMessage(msg) {
     let data = msg.data;
-    this.log("Received message", data);
     let id = data.id;
+
+    // if the id is found in _deferredJobs, we proceed with the message
+    if (this._deferredJobs.has(id)) {
+      const { resolve, reject } = this._deferredJobs.get(id);
+
+      if ("ok" in data) {
+        resolve(data);
+      } else if ("fail" in data) {
+        reject(data);
+      }
+      this._deferredJobs.delete(id);
+      return;
+    }
 
     let start;
     let options;
