@@ -6,7 +6,7 @@ from base_python_support import BasePythonSupport
 
 
 class SamplePythonSupport(BasePythonSupport):
-    def modify_command(self, cmd):
+    def modify_command(self, cmd, test):
         for i, entry in enumerate(cmd):
             if "{replace-with-constant-value}" in entry:
                 cmd[i] = "25"

@@ -914,7 +914,7 @@ class Browsertime(Perftest):
 
         if test.get("support_class", None):
             LOG.info("Test support class is modifying the command...")
-            test.get("support_class").modify_command(cmd)
+            test.get("support_class").modify_command(cmd, test)
 
         output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
         if test.get("type", "") == "scenario":
