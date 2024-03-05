@@ -30,3 +30,7 @@ LOCAL_INCLUDES += [
 XPCOM_MANIFESTS += [
     "components.conf",
 ]
+
+OS_LIBS += [
+    "-framework UIKit",
+]
