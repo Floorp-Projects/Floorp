@@ -673,7 +673,7 @@ impl SpatialNode {
 
     pub fn prepare_state_for_children(&self, state: &mut TransformUpdateState) {
         state.current_coordinate_system_id = self.coordinate_system_id;
-        state.is_ancestor_or_self_zooming = self.is_async_zooming;
+        state.is_ancestor_or_self_zooming = self.is_ancestor_or_self_zooming;
         state.invertible &= self.invertible;
 
         // The transformation we are passing is the transformation of the parent
