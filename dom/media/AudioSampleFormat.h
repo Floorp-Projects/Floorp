@@ -1,13 +1,15 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 #ifndef MOZILLA_AUDIOSAMPLEFORMAT_H_
 #define MOZILLA_AUDIOSAMPLEFORMAT_H_
 
 #include "mozilla/Assertions.h"
+#include "mozilla/PodOperations.h"
 #include <algorithm>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -62,113 +64,191 @@ class AudioSampleTypeToFormat<short> {
   static const AudioSampleFormat Format = AUDIO_FORMAT_S16;
 };
 
-// Single-sample conversion
-/*
- * Use "2^N" conversion since it's simple, fast, "bit transparent", used by
- * many other libraries and apparently behaves reasonably.
- * http://blog.bjornroche.com/2009/12/int-float-int-its-jungle-out-there.html
- * http://blog.bjornroche.com/2009/12/linearity-and-dynamic-range-in-int.html
- */
-inline float AudioSampleToFloat(float aValue) { return aValue; }
-inline float AudioSampleToFloat(int16_t aValue) {
-  return static_cast<float>(aValue) / 32768.0f;
-}
-inline float AudioSampleToFloat(int32_t aValue) {
-  return static_cast<float>(aValue) / (float)(1U << 31);
+template <typename T>
+constexpr float MaxAsFloat() {
+  return static_cast<float>(std::numeric_limits<T>::max());
 }
 
 template <typename T>
-T FloatToAudioSample(float aValue);
+constexpr float LowestAsFloat() {
+  return static_cast<float>(std::numeric_limits<T>::lowest());
+}
+
+// The maximum value for an audio sample. If T is signed, the absolute value of
+// this number is smaller (by exactly 1) than ::Min().
+template <typename T>
+constexpr T Max() {
+  return std::numeric_limits<T>::max();
+}
+
+// The minimum value for an audio sample. If T is signed, the absolute value of
+// this number is greater (by exactly 1) than ::Max()
+template <typename T>
+constexpr T Min() {
+  return std::numeric_limits<T>::lowest();
+}
 
 template <>
-inline float FloatToAudioSample<float>(float aValue) {
-  return aValue;
+constexpr float Max<float>() {
+  return 1.0f;
 }
+
 template <>
-inline int16_t FloatToAudioSample<int16_t>(float aValue) {
-  float v = aValue * 32768.0f;
-  float clamped = std::max(-32768.0f, std::min(32767.0f, v));
-  return int16_t(clamped);
+constexpr float Min<float>() {
+  return -1.0f;
+}
+
+// The bias value is the middle of the range. In linear PCM audio, if the
+// values are all equal to the bias value, the audio is silent.
+template <typename T>
+constexpr T Bias() {
+  return 0;
+}
+
+template <>
+constexpr uint8_t Bias<uint8_t>() {
+  return 128;
+}
+
+// Clip a floating point audio sample to its nominal range. This is
+// destructive, and is only used here for avoiding overflow in some edge cases,
+// so it's not going to be generally audible.
+inline float Clip(float aValue) { return std::clamp(aValue, -1.0f, 1.0f); }
+
+template <typename T>
+T FloatToAudioSample(float aValue) {
+  if constexpr (std::is_same_v<float, T>) {
+    return aValue;
+  }
+  if constexpr (std::is_same_v<uint8_t, T>) {
+    return static_cast<T>(std::clamp((aValue + 1.0f) * 128.f,
+                                     LowestAsFloat<T>(), MaxAsFloat<T>()));
+  } else if constexpr (std::is_same_v<int16_t, T>) {
+    // This produces correct results accross the range.
+    return static_cast<T>(std::clamp(aValue * -LowestAsFloat<T>(),
+                                     LowestAsFloat<T>(), MaxAsFloat<T>()));
+  } else if constexpr (std::is_same_v<int32_t, T>) {
+    // We need to handle this differently because of rounding between INT32_MAX
+    // and float 32-bits, to maximise precision.
+    if (aValue >= 0.) {
+      // if the input sample is greater OR EQUAL to 1.0, then clip and return
+      // the max value.
+      if (aValue >= 1.0) {
+        return std::numeric_limits<T>::max();
+      }
+      // otherwise cast to a double and map to the positive range.
+      // float 32-bits cannot represent int32_max (but can represent int32_min)
+      constexpr double magnitudePos = std::numeric_limits<int32_t>::max();
+      return static_cast<int32_t>(aValue * magnitudePos);
+    }
+    // Similarly for the negative range.
+    if (aValue <= -1.0) {
+      return std::numeric_limits<T>::lowest();
+    }
+    constexpr double magnitudeNegative =
+        -1.0 * std::numeric_limits<int32_t>::lowest();
+    return static_cast<int32_t>(aValue * magnitudeNegative);
+  }
 }
 
 template <typename T>
-T UInt8bitToAudioSample(uint8_t aValue);
-
-template <>
-inline float UInt8bitToAudioSample<float>(uint8_t aValue) {
-  return static_cast<float>(aValue) * (static_cast<float>(2) / UINT8_MAX) -
-         static_cast<float>(1);
-}
-template <>
-inline int16_t UInt8bitToAudioSample<int16_t>(uint8_t aValue) {
-  return static_cast<int16_t>((aValue << 8) + aValue + INT16_MIN);
-}
-
-template <typename T>
-T IntegerToAudioSample(int16_t aValue);
-
-template <>
-inline float IntegerToAudioSample<float>(int16_t aValue) {
-  return static_cast<float>(aValue) / 32768.0f;
-}
-template <>
-inline int16_t IntegerToAudioSample<int16_t>(int16_t aValue) {
-  return aValue;
+T UInt8bitToAudioSample(uint8_t aValue) {
+  if constexpr (std::is_same_v<uint8_t, T>) {
+    return aValue;
+  } else if constexpr (std::is_same_v<int16_t, T>) {
+    return (static_cast<int16_t>(aValue) << 8) - (1 << 15);
+  } else if constexpr (std::is_same_v<int32_t, T>) {
+    return (static_cast<int32_t>(aValue) << 24) - (1 << 31);
+  } else if constexpr (std::is_same_v<float, T>) {
+    float biased = static_cast<float>(aValue) - Bias<uint8_t>();
+    if (aValue >= Bias<uint8_t>()) {
+      return Clip(biased / MaxAsFloat<int8_t>());
+    }
+    return Clip(biased / -LowestAsFloat<int8_t>());
+  }
 }
 
 template <typename T>
-T Int24bitToAudioSample(int32_t aValue);
-
-template <>
-inline float Int24bitToAudioSample<float>(int32_t aValue) {
-  return static_cast<float>(aValue) / static_cast<float>(1 << 23);
-}
-template <>
-inline int16_t Int24bitToAudioSample<int16_t>(int32_t aValue) {
-  return static_cast<int16_t>(aValue / 256);
-}
-
-template <typename SrcT, typename DstT>
-inline void ConvertAudioSample(SrcT aIn, DstT& aOut);
-
-template <>
-inline void ConvertAudioSample(int16_t aIn, int16_t& aOut) {
-  aOut = aIn;
+T Int16ToAudioSample(int16_t aValue) {
+  if constexpr (std::is_same_v<uint8_t, T>) {
+    return static_cast<uint8_t>(aValue >> 8) + 128;
+  } else if constexpr (std::is_same_v<int16_t, T>) {
+    return aValue;
+  } else if constexpr (std::is_same_v<int32_t, T>) {
+    return aValue << 16;
+  } else if constexpr (std::is_same_v<float, T>) {
+    if (aValue >= 0) {
+      return Clip(static_cast<float>(aValue) / MaxAsFloat<int16_t>());
+    }
+    return Clip(static_cast<float>(aValue) / -LowestAsFloat<int16_t>());
+  }
 }
 
-template <>
-inline void ConvertAudioSample(int16_t aIn, float& aOut) {
-  aOut = AudioSampleToFloat(aIn);
+// 24-bits audio samples are stored in 32-bits variables.
+template <typename T>
+T Int24ToAudioSample(int32_t aValue) {
+  if constexpr (std::is_same_v<uint8_t, T>) {
+    return static_cast<uint8_t>(aValue >> 16) + 128;
+  } else if constexpr (std::is_same_v<int16_t, T>) {
+    return static_cast<int16_t>(aValue >> 8);
+  } else if constexpr (std::is_same_v<int32_t, T>) {
+    return aValue << 8;
+  } else if constexpr (std::is_same_v<float, T>) {
+    const int32_t min = -(2 << 22);
+    const int32_t max = (2 << 22) - 1;
+    if (aValue >= 0) {
+      return Clip(static_cast<float>(aValue) / static_cast<float>(max));
+    }
+    return Clip(static_cast<float>(aValue) / -static_cast<float>(min));
+  }
 }
 
-template <>
-inline void ConvertAudioSample(float aIn, float& aOut) {
-  aOut = aIn;
+template <typename T>
+T Int32ToAudioSample(int32_t aValue) {
+  if constexpr (std::is_same_v<uint8_t, T>) {
+    return static_cast<uint8_t>(aValue >> 24) + 128;
+  } else if constexpr (std::is_same_v<int16_t, T>) {
+    return aValue >> 16;
+  } else if constexpr (std::is_same_v<int32_t, T>) {
+    return aValue;
+  } else if constexpr (std::is_same_v<float, T>) {
+    if (aValue >= 0) {
+      return Clip(static_cast<float>(aValue) / MaxAsFloat<int32_t>());
+    }
+    return Clip(static_cast<float>(aValue) / -LowestAsFloat<int32_t>());
+  }
 }
 
-template <>
-inline void ConvertAudioSample(float aIn, int16_t& aOut) {
-  aOut = FloatToAudioSample<int16_t>(aIn);
+// This does not handle 24-bits audio, call the function explicitly when
+// needed.
+template <typename D, typename S>
+inline D ConvertAudioSample(const S& aSource) {
+  if constexpr (std::is_same_v<S, D>) {
+    return aSource;
+  } else if constexpr (std::is_same_v<S, uint8_t>) {
+    return UInt8bitToAudioSample<D>(aSource);
+  } else if constexpr (std::is_same_v<S, int16_t>) {
+    return Int16ToAudioSample<D>(aSource);
+  } else if constexpr (std::is_same_v<S, int32_t>) {
+    return Int32ToAudioSample<D>(aSource);
+  } else if constexpr (std::is_same_v<S, float>) {
+    return FloatToAudioSample<D>(aSource);
+  }
 }
 
 // Sample buffer conversion
-
 template <typename From, typename To>
 inline void ConvertAudioSamples(const From* aFrom, To* aTo, int aCount) {
-  for (int i = 0; i < aCount; ++i) {
-    aTo[i] = FloatToAudioSample<To>(AudioSampleToFloat(aFrom[i]));
+  if constexpr (std::is_same_v<From, To>) {
+    PodCopy(aTo, aFrom, aCount);
+    return;
   }
-}
-inline void ConvertAudioSamples(const int16_t* aFrom, int16_t* aTo,
-                                int aCount) {
-  memcpy(aTo, aFrom, sizeof(*aTo) * aCount);
-}
-inline void ConvertAudioSamples(const float* aFrom, float* aTo, int aCount) {
-  memcpy(aTo, aFrom, sizeof(*aTo) * aCount);
+  for (int i = 0; i < aCount; ++i) {
+    aTo[i] = ConvertAudioSample<To>(aFrom[i]);
+  }
 }
 
 // Sample buffer conversion with scale
-
 template <typename From, typename To>
 inline void ConvertAudioSamplesWithScale(const From* aFrom, To* aTo, int aCount,
                                          float aScale) {
@@ -177,7 +257,8 @@ inline void ConvertAudioSamplesWithScale(const From* aFrom, To* aTo, int aCount,
     return;
   }
   for (int i = 0; i < aCount; ++i) {
-    aTo[i] = FloatToAudioSample<To>(AudioSampleToFloat(aFrom[i]) * aScale);
+    aTo[i] =
+        ConvertAudioSample<To>(ConvertAudioSample<float>(aFrom[i]) * aScale);
   }
 }
 inline void ConvertAudioSamplesWithScale(const int16_t* aFrom, int16_t* aTo,
@@ -194,7 +275,8 @@ inline void ConvertAudioSamplesWithScale(const int16_t* aFrom, int16_t* aTo,
     return;
   }
   for (int i = 0; i < aCount; ++i) {
-    aTo[i] = FloatToAudioSample<int16_t>(AudioSampleToFloat(aFrom[i]) * aScale);
+    aTo[i] = FloatToAudioSample<int16_t>(ConvertAudioSample<float>(aFrom[i]) *
+                                         aScale);
   }
 }
 
@@ -202,8 +284,9 @@ template <typename From, typename To>
 inline void AddAudioSamplesWithScale(const From* aFrom, To* aTo, int aCount,
                                      float aScale) {
   for (int i = 0; i < aCount; ++i) {
-    aTo[i] = FloatToAudioSample<To>(AudioSampleToFloat(aTo[i]) +
-                                    AudioSampleToFloat(aFrom[i]) * aScale);
+    aTo[i] =
+        ConvertAudioSample<To>(ConvertAudioSample<float>(aTo[i]) +
+                               ConvertAudioSample<float>(aFrom[i]) * aScale);
   }
 }
 
