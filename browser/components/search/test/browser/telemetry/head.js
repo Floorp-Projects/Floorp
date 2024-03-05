@@ -45,6 +45,10 @@ ChromeUtils.defineLazyGetter(this, "SEARCH_AD_CLICK_SCALARS", () => {
   ];
 });
 
+ChromeUtils.defineLazyGetter(this, "gCryptoHash", () => {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+
 // For use with categorization.
 const APP_MAJOR_VERSION = parseInt(Services.appinfo.version).toString();
 const CHANNEL = SearchUtils.MODIFIED_APP_CHANNEL;
@@ -508,10 +512,9 @@ registerCleanupFunction(async () => {
   await PlacesUtils.history.clear();
 });
 
-async function mockRecordWithAttachment({ id, version, filename }) {
+async function mockRecordWithAttachment({ id, version, filename, mapping }) {
   // Get the bytes of the file for the hash and size for attachment metadata.
-  let data = await IOUtils.readUTF8(getTestFilePath(filename));
-  let buffer = new TextEncoder().encode(data).buffer;
+  let buffer = new TextEncoder().encode(JSON.stringify(mapping)).buffer;
   let stream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(
     Ci.nsIArrayBufferInputStream
   );
@@ -555,6 +558,30 @@ async function resetCategorizationCollection(record) {
   await client.db.importChanges({}, Date.now());
 }
 
+const MOCK_ATTACHMENT_VALUES = {
+  "abc.com": [2, 95],
+  "abc.org": [4, 90],
+  "def.com": [2, 78, 4, 10],
+  "def.org": [4, 90],
+  "foobar.org": [3, 90],
+};
+
+const CONVERTED_ATTACHMENT_VALUES = convertDomainsToHashes(
+  MOCK_ATTACHMENT_VALUES
+);
+
+function convertDomainsToHashes(domainsToCategories) {
+  let newObj = {};
+  for (let [key, value] of Object.entries(domainsToCategories)) {
+    gCryptoHash.init(gCryptoHash.SHA256);
+    let bytes = new TextEncoder().encode(key);
+    gCryptoHash.update(bytes, key.length);
+    let hash = gCryptoHash.finish(true);
+    newObj[hash] = value;
+  }
+  return newObj;
+}
+
 async function insertRecordIntoCollection() {
   const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
   const db = client.db;
@@ -564,6 +591,7 @@ async function insertRecordIntoCollection() {
     id: "example_id",
     version: 1,
     filename: "domain_category_mappings.json",
+    mapping: CONVERTED_ATTACHMENT_VALUES,
   });
   await db.create(record);
   await client.attachments.cacheImpl.set(record.id, attachment);

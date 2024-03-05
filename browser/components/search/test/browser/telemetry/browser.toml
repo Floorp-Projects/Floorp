@@ -4,10 +4,7 @@ support-files = ["head.js", "head-spa.js"]
 prefs = ["browser.search.log=true"]
 
 ["browser_search_glean_serp_event_telemetry_categorization_enabled_by_nimbus_variable.js"]
-support-files = [
-  "domain_category_mappings.json",
-  "searchTelemetryDomainCategorizationReporting.html",
-]
+support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 
 ["browser_search_glean_serp_event_telemetry_enabled_by_nimbus_variable.js"]
 support-files = ["searchTelemetryAd.html"]
@@ -48,7 +45,6 @@ support-files = ["searchTelemetryAd_searchbox_with_content.html", "serp.css"]
 support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 
 ["browser_search_telemetry_domain_categorization_download_timer.js"]
-support-files = ["domain_category_mappings.json"]
 
 ["browser_search_telemetry_domain_categorization_extraction.js"]
 support-files = ["searchTelemetryDomainExtraction.html"]
