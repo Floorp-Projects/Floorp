@@ -1165,7 +1165,8 @@ nsresult VerifyPK7Signature(
     AppTrustedRoot aTrustedRoot, nsIZipReader* aZip, SignaturePolicy& aPolicy,
     /* out */ nsTHashtable<nsCStringHashKey>& aIgnoredFiles,
     /* out */ bool& aVerified,
-    /* out */ nsTArray<uint8_t>& aSignerCert) {
+    /* out */ nsTArray<uint8_t>& aSignerCert,
+    /* out */ SECOidTag& aHashAlgorithm) {
   NS_ENSURE_ARG_POINTER(aZip);
   bool required = aPolicy.PK7Required();
   aVerified = false;
@@ -1255,22 +1256,50 @@ nsresult VerifyPK7Signature(
   }
 
   aVerified = true;
+  aHashAlgorithm = digestToUse;
   return NS_OK;
 }
 
-nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
-                           SignaturePolicy aPolicy,
-                           /* out, optional */ nsIZipReader** aZipReader,
-                           /* out, optional */ nsIX509Cert** aSignerCert) {
+class AppSignatureInfo final : public nsIAppSignatureInfo {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  AppSignatureInfo(RefPtr<nsIX509Cert>&& signerCert,
+                   nsIAppSignatureInfo::SignatureAlgorithm signatureAlgorithm)
+      : mSignerCert(std::move(signerCert)),
+        mSignatureAlgorithm(signatureAlgorithm) {}
+
+  NS_IMETHODIMP GetSignerCert(nsIX509Cert** signerCert) override {
+    *signerCert = do_AddRef(mSignerCert).take();
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP GetSignatureAlgorithm(
+      nsIAppSignatureInfo::SignatureAlgorithm* signatureAlgorithm) override {
+    *signatureAlgorithm = mSignatureAlgorithm;
+    return NS_OK;
+  }
+
+ private:
+  ~AppSignatureInfo() = default;
+
+  RefPtr<nsIX509Cert> mSignerCert;
+  nsIAppSignatureInfo::SignatureAlgorithm mSignatureAlgorithm;
+};
+
+NS_IMPL_ISUPPORTS(AppSignatureInfo, nsIAppSignatureInfo)
+
+nsresult OpenSignedAppFile(
+    AppTrustedRoot aTrustedRoot, nsIFile* aJarFile, SignaturePolicy aPolicy,
+    /* out */ nsIZipReader** aZipReader,
+    /* out */ nsTArray<RefPtr<nsIAppSignatureInfo>>& aSignatureInfos) {
   NS_ENSURE_ARG_POINTER(aJarFile);
 
   if (aZipReader) {
     *aZipReader = nullptr;
   }
 
-  if (aSignerCert) {
-    *aSignerCert = nullptr;
-  }
+  aSignatureInfos.Clear();
 
   nsresult rv;
 
@@ -1281,10 +1310,11 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   rv = zip->Open(aJarFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool pk7Verified = false;
-  bool coseVerified = false;
   nsTHashtable<nsCStringHashKey> ignoredFiles;
+  bool pk7Verified = false;
   nsTArray<uint8_t> pkcs7CertDER;
+  SECOidTag pkcs7HashAlgorithm = SEC_OID_UNKNOWN;
+  bool coseVerified = false;
   nsTArray<uint8_t> coseCertDER;
 
   // First we have to verify the PKCS#7 signature if there is one.
@@ -1294,7 +1324,7 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   // signature verification.
   if (aPolicy.ProcessPK7()) {
     rv = VerifyPK7Signature(aTrustedRoot, zip, aPolicy, ignoredFiles,
-                            pk7Verified, pkcs7CertDER);
+                            pk7Verified, pkcs7CertDER, pkcs7HashAlgorithm);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1334,24 +1364,34 @@ nsresult OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     zip.forget(aZipReader);
   }
 
-  // Return the signer's certificate to the reader if they want it.
-  if (aSignerCert) {
-    // The COSE certificate is authoritative.
-    if (aPolicy.COSERequired() || !coseCertDER.IsEmpty()) {
-      if (coseCertDER.IsEmpty()) {
+  // Return the signature information (a list of signing certificate and
+  // algorithm pairs). If present, the COSE signature will be first, followed
+  // by any PKCS7 signatures.
+  if (coseVerified && !coseCertDER.IsEmpty()) {
+    RefPtr<nsIX509Cert> signerCert(
+        new nsNSSCertificate(std::move(coseCertDER)));
+    aSignatureInfos.AppendElement(new AppSignatureInfo(
+        std::move(signerCert),
+        nsIAppSignatureInfo::SignatureAlgorithm::COSE_WITH_SHA256));
+  }
+  if (pk7Verified && !pkcs7CertDER.IsEmpty()) {
+    RefPtr<nsIX509Cert> signerCert(
+        new nsNSSCertificate(std::move(pkcs7CertDER)));
+    nsIAppSignatureInfo::SignatureAlgorithm signatureAlgorithm;
+    switch (pkcs7HashAlgorithm) {
+      case SEC_OID_SHA1:
+        signatureAlgorithm =
+            nsIAppSignatureInfo::SignatureAlgorithm::PKCS7_WITH_SHA1;
+        break;
+      case SEC_OID_SHA256:
+        signatureAlgorithm =
+            nsIAppSignatureInfo::SignatureAlgorithm::PKCS7_WITH_SHA256;
+        break;
+      default:
         return NS_ERROR_FAILURE;
-      }
-      nsCOMPtr<nsIX509Cert> signerCert(
-          new nsNSSCertificate(std::move(coseCertDER)));
-      signerCert.forget(aSignerCert);
-    } else {
-      if (pkcs7CertDER.IsEmpty()) {
-        return NS_ERROR_FAILURE;
-      }
-      nsCOMPtr<nsIX509Cert> signerCert(
-          new nsNSSCertificate(std::move(pkcs7CertDER)));
-      signerCert.forget(aSignerCert);
     }
+    aSignatureInfos.AppendElement(
+        new AppSignatureInfo(std::move(signerCert), signatureAlgorithm));
   }
 
   return NS_OK;
@@ -1371,20 +1411,19 @@ class OpenSignedAppFileTask final : public CryptoTask {
  private:
   virtual nsresult CalculateResult() override {
     return OpenSignedAppFile(mTrustedRoot, mJarFile, mPolicy,
-                             getter_AddRefs(mZipReader),
-                             getter_AddRefs(mSignerCert));
+                             getter_AddRefs(mZipReader), mSignatureInfos);
   }
 
   virtual void CallCallback(nsresult rv) override {
-    (void)mCallback->OpenSignedAppFileFinished(rv, mZipReader, mSignerCert);
+    (void)mCallback->OpenSignedAppFileFinished(rv, mZipReader, mSignatureInfos);
   }
 
   const AppTrustedRoot mTrustedRoot;
   const nsCOMPtr<nsIFile> mJarFile;
   const SignaturePolicy mPolicy;
   nsMainThreadPtrHandle<nsIOpenSignedAppFileCallback> mCallback;
-  nsCOMPtr<nsIZipReader> mZipReader;  // out
-  nsCOMPtr<nsIX509Cert> mSignerCert;  // out
+  nsCOMPtr<nsIZipReader> mZipReader;                      // out
+  nsTArray<RefPtr<nsIAppSignatureInfo>> mSignatureInfos;  // out
 };
 
 static const int32_t sDefaultSignaturePolicy = 0b10;

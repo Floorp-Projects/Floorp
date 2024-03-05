@@ -19,12 +19,26 @@ interface nsIInputStream;
 
 typedef uint32_t AppTrustedRoot;
 
+[scriptable, builtinclass, uuid(e5795418-86e0-4c0b-9b98-ac7eee0c2af7)]
+interface nsIAppSignatureInfo : nsISupports {
+  // Supported signature algorithms.
+  cenum SignatureAlgorithm : 32 {
+    PKCS7_WITH_SHA1,
+    PKCS7_WITH_SHA256,
+    COSE_WITH_SHA256,
+  };
+
+  // The certificate that created the signature.
+  readonly attribute nsIX509Cert signerCert;
+  readonly attribute nsIAppSignatureInfo_SignatureAlgorithm signatureAlgorithm;
+};
+
 [scriptable, function, uuid(fc2b60e5-9a07-47c2-a2cd-b83b68a660ac)]
 interface nsIOpenSignedAppFileCallback : nsISupports
 {
   void openSignedAppFileFinished(in nsresult rv,
                                  in nsIZipReader aZipReader,
-                                 in nsIX509Cert aSignerCert);
+                                 in Array<nsIAppSignatureInfo> aSignatureInfos);
 };
 
 [scriptable, function, uuid(07c08655-8b11-4650-b6c4-0c145595ceb5)]
