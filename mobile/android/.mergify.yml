@@ -2,6 +2,9 @@ queue_rules:
   - name: default
     conditions:
       - status-success=complete-pr
+      - or:
+        - current-datetime<2024-03-15T00:00:00Z
+        - base!=main
     allow_checks_interruption: false
     priority_rules:
       - name: high priority
