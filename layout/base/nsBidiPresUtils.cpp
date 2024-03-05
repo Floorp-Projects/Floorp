@@ -478,115 +478,99 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   }
 };
 
-struct MOZ_STACK_CLASS BidiLineData {
-  AutoTArray<nsIFrame*, 16> mLogicalFrames;
-  AutoTArray<nsIFrame*, 16> mVisualFrames;
-  AutoTArray<int32_t, 16> mIndexMap;
-  AutoTArray<BidiEmbeddingLevel, 16> mLevels;
-  bool mIsReordered;
-
+class MOZ_STACK_CLASS BidiLineData {
+ public:
   BidiLineData(nsIFrame* aFirstFrameOnLine, int32_t aNumFramesOnLine) {
-    /**
-     * Initialize the logically-ordered array of frames using the top-level
-     * frames of a single line
-     */
-    bool isReordered = false;
-    bool hasRTLFrames = false;
-    bool hasVirtualControls = false;
-
+    // Initialize the logically-ordered array of frames using the top-level
+    // frames of a single line
     auto appendFrame = [&](nsIFrame* frame, BidiEmbeddingLevel level) {
       mLogicalFrames.AppendElement(frame);
       mLevels.AppendElement(level);
       mIndexMap.AppendElement(0);
-      if (level.IsRTL()) {
-        hasRTLFrames = true;
-      }
     };
 
-    bool firstFrame = true;
     for (nsIFrame* frame = aFirstFrameOnLine; frame && aNumFramesOnLine--;
          frame = frame->GetNextSibling()) {
       FrameBidiData bidiData = nsBidiPresUtils::GetFrameBidiData(frame);
-      // Ignore virtual control before the first frame. Doing so should
-      // not affect the visual result, but could avoid running into the
-      // stripping code below for many cases.
-      if (!firstFrame && bidiData.precedingControl != kBidiLevelNone) {
+      if (bidiData.precedingControl != kBidiLevelNone) {
         appendFrame(NS_BIDI_CONTROL_FRAME, bidiData.precedingControl);
-        hasVirtualControls = true;
       }
       appendFrame(frame, bidiData.embeddingLevel);
-      firstFrame = false;
     }
 
     // Reorder the line
-    BidiEngine::ReorderVisual(mLevels.Elements(), FrameCount(),
+    BidiEngine::ReorderVisual(mLevels.Elements(), mLevels.Length(),
                               mIndexMap.Elements());
 
-    // Strip virtual frames
-    if (hasVirtualControls) {
-      auto originalCount = mLogicalFrames.Length();
-      AutoTArray<int32_t, 16> realFrameMap;
-      realFrameMap.SetCapacity(originalCount);
-      size_t count = 0;
-      for (auto i : IntegerRange(originalCount)) {
-        if (mLogicalFrames[i] == NS_BIDI_CONTROL_FRAME) {
-          realFrameMap.AppendElement(-1);
-        } else {
-          mLogicalFrames[count] = mLogicalFrames[i];
-          mLevels[count] = mLevels[i];
-          realFrameMap.AppendElement(count);
-          count++;
-        }
+    // Collect the frames in visual order, omitting virtual controls
+    // and noting whether frames are reordered.
+    for (uint32_t i = 0; i < mIndexMap.Length(); i++) {
+      nsIFrame* frame = mLogicalFrames[mIndexMap[i]];
+      if (frame == NS_BIDI_CONTROL_FRAME) {
+        continue;
       }
-      // Only keep index map for real frames.
-      for (size_t i = 0, j = 0; i < originalCount; ++i) {
-        auto newIndex = realFrameMap[mIndexMap[i]];
-        if (newIndex != -1) {
-          mIndexMap[j] = newIndex;
-          j++;
-        }
-      }
-      mLogicalFrames.TruncateLength(count);
-      mLevels.TruncateLength(count);
-      mIndexMap.TruncateLength(count);
-    }
-
-    for (int32_t i = 0; i < FrameCount(); i++) {
-      mVisualFrames.AppendElement(LogicalFrameAt(mIndexMap[i]));
-      if (i != mIndexMap[i]) {
-        isReordered = true;
+      mVisualFrameIndex.AppendElement(mIndexMap[i]);
+      if (int32_t(i) != mIndexMap[i]) {
+        mIsReordered = true;
       }
     }
-
-    // If there's an RTL frame, assume the line is reordered
-    mIsReordered = isReordered || hasRTLFrames;
   }
 
-  int32_t FrameCount() const { return mLogicalFrames.Length(); }
+  uint32_t LogicalFrameCount() const { return mLogicalFrames.Length(); }
+  uint32_t VisualFrameCount() const { return mVisualFrameIndex.Length(); }
 
-  nsIFrame* LogicalFrameAt(int32_t aIndex) const {
+  nsIFrame* LogicalFrameAt(uint32_t aIndex) const {
     return mLogicalFrames[aIndex];
   }
 
-  nsIFrame* VisualFrameAt(int32_t aIndex) const {
-    return mVisualFrames[aIndex];
+  nsIFrame* VisualFrameAt(uint32_t aIndex) const {
+    return mLogicalFrames[mVisualFrameIndex[aIndex]];
   }
+
+  std::pair<nsIFrame*, BidiEmbeddingLevel> VisualFrameAndLevelAt(
+      uint32_t aIndex) const {
+    int32_t index = mVisualFrameIndex[aIndex];
+    return std::pair(mLogicalFrames[index], mLevels[index]);
+  }
+
+  bool IsReordered() const { return mIsReordered; }
+
+  void InitContinuationStates(nsContinuationStates* aContinuationStates) const {
+    for (auto* frame : mLogicalFrames) {
+      if (frame != NS_BIDI_CONTROL_FRAME) {
+        nsBidiPresUtils::InitContinuationStates(frame, aContinuationStates);
+      }
+    }
+  }
+
+ private:
+  AutoTArray<nsIFrame*, 16> mLogicalFrames;
+  AutoTArray<int32_t, 16> mVisualFrameIndex;
+  AutoTArray<int32_t, 16> mIndexMap;
+  AutoTArray<BidiEmbeddingLevel, 16> mLevels;
+  bool mIsReordered = false;
 };
 
 #ifdef DEBUG
 extern "C" {
-void MOZ_EXPORT DumpFrameArray(const nsTArray<nsIFrame*>& aFrames) {
-  for (nsIFrame* frame : aFrames) {
+void MOZ_EXPORT DumpBidiLine(BidiLineData* aData, bool aVisualOrder) {
+  auto dump = [](nsIFrame* frame) {
     if (frame == NS_BIDI_CONTROL_FRAME) {
       fprintf_stderr(stderr, "(Bidi control frame)\n");
     } else {
       frame->List();
     }
-  }
-}
+  };
 
-void MOZ_EXPORT DumpBidiLine(BidiLineData* aData, bool aVisualOrder) {
-  DumpFrameArray(aVisualOrder ? aData->mVisualFrames : aData->mLogicalFrames);
+  if (aVisualOrder) {
+    for (uint32_t i = 0; i < aData->VisualFrameCount(); i++) {
+      dump(aData->VisualFrameAt(i));
+    }
+  } else {
+    for (uint32_t i = 0; i < aData->LogicalFrameCount(); i++) {
+      dump(aData->LogicalFrameAt(i));
+    }
+  }
 }
 }
 #endif
@@ -1506,8 +1490,19 @@ nscoord nsBidiPresUtils::ReorderFrames(nsIFrame* aFirstFrameOnLine,
     aStart = 0;
   }
 
+  // No need to bidi-reorder the line if there's only a single frame.
+  if (aNumFramesOnLine == 1) {
+    auto bidiData = nsBidiPresUtils::GetFrameBidiData(aFirstFrameOnLine);
+    nsContinuationStates continuationStates;
+    InitContinuationStates(aFirstFrameOnLine, &continuationStates);
+    return aStart + RepositionFrame(aFirstFrameOnLine,
+                                    bidiData.embeddingLevel.IsLTR(), aStart,
+                                    &continuationStates, aLineWM, false,
+                                    containerSize);
+  }
+
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
-  return RepositionInlineFrames(&bld, aLineWM, containerSize, aStart);
+  return RepositionInlineFrames(bld, aLineWM, containerSize, aStart);
 }
 
 nsIFrame* nsBidiPresUtils::GetFirstLeaf(nsIFrame* aFrame) {
@@ -1857,40 +1852,30 @@ void nsBidiPresUtils::InitContinuationStates(
 }
 
 /* static */
-nscoord nsBidiPresUtils::RepositionInlineFrames(BidiLineData* aBld,
+nscoord nsBidiPresUtils::RepositionInlineFrames(const BidiLineData& aBld,
                                                 WritingMode aLineWM,
                                                 const nsSize& aContainerSize,
                                                 nscoord aStart) {
-  nscoord start = aStart;
-  nsIFrame* frame;
-  int32_t count = aBld->mVisualFrames.Length();
-  int32_t index;
   nsContinuationStates continuationStates;
+  aBld.InitContinuationStates(&continuationStates);
 
-  // Initialize continuation states to (nullptr, 0) for
-  // each frame on the line.
-  for (index = 0; index < count; index++) {
-    InitContinuationStates(aBld->VisualFrameAt(index), &continuationStates);
-  }
-
-  // Reposition frames in visual order
-  int32_t step, limit;
   if (aLineWM.IsBidiLTR()) {
-    index = 0;
-    step = 1;
-    limit = count;
+    for (auto index : IntegerRange(aBld.VisualFrameCount())) {
+      auto [frame, level] = aBld.VisualFrameAndLevelAt(index);
+      aStart +=
+          RepositionFrame(frame, level.IsLTR(), aStart, &continuationStates,
+                          aLineWM, false, aContainerSize);
+    }
   } else {
-    index = count - 1;
-    step = -1;
-    limit = -1;
+    for (auto index : Reversed(IntegerRange(aBld.VisualFrameCount()))) {
+      auto [frame, level] = aBld.VisualFrameAndLevelAt(index);
+      aStart +=
+          RepositionFrame(frame, level.IsLTR(), aStart, &continuationStates,
+                          aLineWM, false, aContainerSize);
+    }
   }
-  for (; index != limit; index += step) {
-    frame = aBld->VisualFrameAt(index);
-    start += RepositionFrame(
-        frame, !(aBld->mLevels[aBld->mIndexMap[index]].IsRTL()), start,
-        &continuationStates, aLineWM, false, aContainerSize);
-  }
-  return start;
+
+  return aStart;
 }
 
 bool nsBidiPresUtils::CheckLineOrder(nsIFrame* aFirstFrameOnLine,
@@ -1898,16 +1883,15 @@ bool nsBidiPresUtils::CheckLineOrder(nsIFrame* aFirstFrameOnLine,
                                      nsIFrame** aFirstVisual,
                                      nsIFrame** aLastVisual) {
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
-  int32_t count = bld.FrameCount();
 
   if (aFirstVisual) {
     *aFirstVisual = bld.VisualFrameAt(0);
   }
   if (aLastVisual) {
-    *aLastVisual = bld.VisualFrameAt(count - 1);
+    *aLastVisual = bld.VisualFrameAt(bld.VisualFrameCount() - 1);
   }
 
-  return bld.mIsReordered;
+  return bld.IsReordered();
 }
 
 nsIFrame* nsBidiPresUtils::GetFrameToRightOf(const nsIFrame* aFrame,
@@ -1915,9 +1899,11 @@ nsIFrame* nsBidiPresUtils::GetFrameToRightOf(const nsIFrame* aFrame,
                                              int32_t aNumFramesOnLine) {
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
 
-  int32_t count = bld.mVisualFrames.Length();
+  int32_t count = bld.VisualFrameCount();
 
-  if (aFrame == nullptr && count) return bld.VisualFrameAt(0);
+  if (!aFrame && count) {
+    return bld.VisualFrameAt(0);
+  }
 
   for (int32_t i = 0; i < count - 1; i++) {
     if (bld.VisualFrameAt(i) == aFrame) {
@@ -1933,9 +1919,11 @@ nsIFrame* nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame* aFrame,
                                             int32_t aNumFramesOnLine) {
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
 
-  int32_t count = bld.mVisualFrames.Length();
+  int32_t count = bld.VisualFrameCount();
 
-  if (aFrame == nullptr && count) return bld.VisualFrameAt(count - 1);
+  if (!aFrame && count) {
+    return bld.VisualFrameAt(count - 1);
+  }
 
   for (int32_t i = 1; i < count; i++) {
     if (bld.VisualFrameAt(i) == aFrame) {
