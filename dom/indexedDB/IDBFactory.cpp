@@ -15,9 +15,8 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
-#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -379,32 +378,6 @@ bool IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
   return !aPrincipal->GetIsNullPrincipal();
 }
 
-// static
-PersistenceType IDBFactory::GetPersistenceType(
-    const PrincipalInfo& aPrincipalInfo) {
-  if (aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    // Chrome privilege always gets persistent storage.
-    return PERSISTENCE_TYPE_PERSISTENT;
-  }
-
-  if (aPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
-    nsCString origin =
-        aPrincipalInfo.get_ContentPrincipalInfo().originNoSuffix();
-
-    if (QuotaManager::IsOriginInternal(origin)) {
-      // Internal origins always get persistent storage.
-      return PERSISTENCE_TYPE_PERSISTENT;
-    }
-
-    if (aPrincipalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId >
-        0) {
-      return PERSISTENCE_TYPE_PRIVATE;
-    }
-  }
-
-  return PERSISTENCE_TYPE_DEFAULT;
-}
-
 void IDBFactory::UpdateActiveTransactionCount(int32_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || (mActiveTransactionCount + aDelta) <
@@ -468,71 +441,6 @@ RefPtr<IDBOpenDBRequest> IDBFactory::DeleteDatabase(
   return OpenInternal(aCx,
                       /* aPrincipal */ nullptr, aName, Optional<uint64_t>(),
                       /* aDeleting */ true, aCallerType, aRv);
-}
-
-already_AddRefed<Promise> IDBFactory::Databases(JSContext* const aCx) {
-  RefPtr<Promise> promise = Promise::CreateInfallible(GetOwnerGlobal());
-
-  // Nothing can be done here if we have previously failed to create a
-  // background actor.
-  if (mBackgroundActorFailed) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-    return promise.forget();
-  }
-
-  PersistenceType persistenceType = GetPersistenceType(*mPrincipalInfo);
-
-  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()), [&promise](const nsresult rv) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  });
-
-  mBackgroundActor->SendGetDatabases(persistenceType, *mPrincipalInfo)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [promise](const PBackgroundIDBFactoryChild::GetDatabasesPromise::
-                        ResolveOrRejectValue& aValue) {
-            if (aValue.IsReject()) {
-              promise->MaybeReject(NS_ERROR_FAILURE);
-              return;
-            }
-
-            const GetDatabasesResponse& response = aValue.ResolveValue();
-
-            switch (response.type()) {
-              case GetDatabasesResponse::Tnsresult:
-                promise->MaybeReject(response.get_nsresult());
-
-                break;
-
-              case GetDatabasesResponse::TArrayOfDatabaseMetadata: {
-                const auto& array = response.get_ArrayOfDatabaseMetadata();
-
-                Sequence<IDBDatabaseInfo> databaseInfos;
-
-                for (const auto& databaseMetadata : array) {
-                  IDBDatabaseInfo databaseInfo;
-
-                  databaseInfo.mName.Construct(databaseMetadata.name());
-                  databaseInfo.mVersion.Construct(databaseMetadata.version());
-
-                  if (!databaseInfos.AppendElement(std::move(databaseInfo),
-                                                   fallible)) {
-                    promise->MaybeRejectWithTypeError("Out of memory");
-                    return;
-                  }
-                }
-
-                promise->MaybeResolve(databaseInfos);
-
-                break;
-              }
-              default:
-                MOZ_CRASH("Unknown response type!");
-            }
-          });
-
-  return promise.forget();
 }
 
 int16_t IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
@@ -602,63 +510,6 @@ RefPtr<IDBOpenDBRequest> IDBFactory::DeleteForPrincipal(
 
   return OpenInternal(aCx, aPrincipal, aName, Optional<uint64_t>(),
                       /* aDeleting */ true, aGuarantee, aRv);
-}
-
-nsresult IDBFactory::EnsureBackgroundActor() {
-  if (mBackgroundActor) {
-    return NS_OK;
-  }
-
-  BackgroundChildImpl::ThreadLocal* threadLocal =
-      BackgroundChildImpl::GetThreadLocalForCurrentThread();
-
-  UniquePtr<ThreadLocal> newIDBThreadLocal;
-  ThreadLocal* idbThreadLocal;
-
-  if (threadLocal && threadLocal->mIndexedDBThreadLocal) {
-    idbThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
-  } else {
-    nsCOMPtr<nsIUUIDGenerator> uuidGen =
-        do_GetService("@mozilla.org/uuid-generator;1");
-    MOZ_ASSERT(uuidGen);
-
-    nsID id{};
-    MOZ_ALWAYS_SUCCEEDS(uuidGen->GenerateUUIDInPlace(&id));
-
-    newIDBThreadLocal = WrapUnique(new ThreadLocal(id));
-    idbThreadLocal = newIDBThreadLocal.get();
-  }
-
-  PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
-  if (NS_WARN_IF(!backgroundActor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  {
-    BackgroundFactoryChild* actor = new BackgroundFactoryChild(*this);
-
-    mBackgroundActor = static_cast<BackgroundFactoryChild*>(
-        backgroundActor->SendPBackgroundIDBFactoryConstructor(
-            actor, idbThreadLocal->GetLoggingInfo(),
-            IndexedDatabaseManager::GetLocale()));
-
-    if (NS_WARN_IF(!mBackgroundActor)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  if (newIDBThreadLocal) {
-    if (!threadLocal) {
-      threadLocal = BackgroundChildImpl::GetThreadLocalForCurrentThread();
-    }
-    MOZ_ASSERT(threadLocal);
-    MOZ_ASSERT(!threadLocal->mIndexedDBThreadLocal);
-
-    threadLocal->mIndexedDBThreadLocal = std::move(newIDBThreadLocal);
-  }
-
-  return NS_OK;
 }
 
 RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
@@ -739,7 +590,29 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     return nullptr;
   }
 
-  PersistenceType persistenceType = GetPersistenceType(principalInfo);
+  PersistenceType persistenceType;
+
+  bool isPersistent =
+      principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo;
+  if (!isPersistent &&
+      principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
+    nsCString origin =
+        principalInfo.get_ContentPrincipalInfo().originNoSuffix();
+    isPersistent = QuotaManager::IsOriginInternal(origin);
+  }
+
+  const bool isPrivate =
+      principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
+      principalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId > 0;
+
+  if (isPersistent) {
+    // Chrome privilege and internal origins always get persistent storage.
+    persistenceType = PERSISTENCE_TYPE_PERSISTENT;
+  } else if (isPrivate) {
+    persistenceType = PERSISTENCE_TYPE_PRIVATE;
+  } else {
+    persistenceType = PERSISTENCE_TYPE_DEFAULT;
+  }
 
   DatabaseMetadata& metadata = commonParams.metadata();
   metadata.name() = aName;
@@ -754,11 +627,60 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     params = OpenDatabaseRequestParams(commonParams);
   }
 
-  nsresult rv = EnsureBackgroundActor();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    IDB_REPORT_INTERNAL_ERR();
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    return nullptr;
+  if (!mBackgroundActor) {
+    BackgroundChildImpl::ThreadLocal* threadLocal =
+        BackgroundChildImpl::GetThreadLocalForCurrentThread();
+
+    UniquePtr<ThreadLocal> newIDBThreadLocal;
+    ThreadLocal* idbThreadLocal;
+
+    if (threadLocal && threadLocal->mIndexedDBThreadLocal) {
+      idbThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
+    } else {
+      nsCOMPtr<nsIUUIDGenerator> uuidGen =
+          do_GetService("@mozilla.org/uuid-generator;1");
+      MOZ_ASSERT(uuidGen);
+
+      nsID id;
+      MOZ_ALWAYS_SUCCEEDS(uuidGen->GenerateUUIDInPlace(&id));
+
+      newIDBThreadLocal = WrapUnique(new ThreadLocal(id));
+      idbThreadLocal = newIDBThreadLocal.get();
+    }
+
+    PBackgroundChild* backgroundActor =
+        BackgroundChild::GetOrCreateForCurrentThread();
+    if (NS_WARN_IF(!backgroundActor)) {
+      IDB_REPORT_INTERNAL_ERR();
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return nullptr;
+    }
+
+    {
+      BackgroundFactoryChild* actor = new BackgroundFactoryChild(*this);
+
+      mBackgroundActor = static_cast<BackgroundFactoryChild*>(
+          backgroundActor->SendPBackgroundIDBFactoryConstructor(
+              actor, idbThreadLocal->GetLoggingInfo(),
+              IndexedDatabaseManager::GetLocale()));
+
+      if (NS_WARN_IF(!mBackgroundActor)) {
+        mBackgroundActorFailed = true;
+        IDB_REPORT_INTERNAL_ERR();
+        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+        return nullptr;
+      }
+    }
+
+    if (newIDBThreadLocal) {
+      if (!threadLocal) {
+        threadLocal = BackgroundChildImpl::GetThreadLocalForCurrentThread();
+      }
+      MOZ_ASSERT(threadLocal);
+      MOZ_ASSERT(!threadLocal->mIndexedDBThreadLocal);
+
+      threadLocal->mIndexedDBThreadLocal = std::move(newIDBThreadLocal);
+    }
   }
 
   RefPtr<IDBOpenDBRequest> request = IDBOpenDBRequest::Create(
@@ -782,7 +704,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
         IDB_LOG_STRINGIFY(aVersion));
   }
 
-  rv = InitiateRequest(WrapNotNull(request), params);
+  nsresult rv = InitiateRequest(WrapNotNull(request), params);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     IDB_REPORT_INTERNAL_ERR();
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);

@@ -99,14 +99,6 @@ class IndexedDatabaseManager final {
       PersistenceType aPersistenceType, const nsACString& aOrigin,
       const nsAString& aDatabaseName);
 
-  [[nodiscard]] SafeRefPtr<DatabaseFileManager>
-  GetFileManagerByDatabaseFilePath(PersistenceType aPersistenceType,
-                                   const nsACString& aOrigin,
-                                   const nsAString& aDatabaseFilePath);
-
-  const nsTArray<SafeRefPtr<DatabaseFileManager>>& GetFileManagers(
-      PersistenceType aPersistenceType, const nsACString& aOrigin);
-
   void AddFileManager(SafeRefPtr<DatabaseFileManager> aFileManager);
 
   void InvalidateAllFileManagers();
