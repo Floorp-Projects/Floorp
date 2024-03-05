@@ -353,6 +353,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Voittoa tavoittelemattoman tahon tukema selaimemme auttaa estämään yrityksiä seuraamasta sinua salaa verkossa.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Yli 100 miljoonaa ihmistä suojaa yksityisyyttään valitsemalla voittoa tavoittelemattoman järjestön tukeman selaimen.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Tunnetut seuraimet? Estetty automaattisesti. Laajennukset? Kokeile kaikkia 700:aa. PDF-tiedostoja? Sisäänrakennettu lukija tekee niistä helposti hallittavia.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Voittoa tavoittelemattoman tahon tukema selaimemme auttaa estämään yrityksiä seuraamasta sinua salaa verkossa.\n\nLisätietoja on tietosuojakäytännössämme.</string>

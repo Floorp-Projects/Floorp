@@ -253,6 +253,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">แปลหน้า</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">แปลหน้าจาก%1$sเป็น%2$sแล้ว</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">ภาษาที่เลือก</string>
@@ -331,11 +336,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">ประกาศความเป็นส่วนตัวของ Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติมในประกาศความเป็นส่วนตัวของเรา</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">เรารักที่จะดูแลคุณให้ปลอดภัย</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">ค้นพบว่าทำไมผู้คนนับล้านถึงรัก Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">ท่องเว็บอย่างปลอดภัยพร้อมตัวเลือกที่มากขึ้น</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">เบราว์เซอร์ที่สนับสนุนโดยองค์กรไม่แสวงหาผลกำไรของเราจะช่วยหยุดบริษัทต่างๆ ไม่ให้แอบติดตามคุณทางเว็บได้</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">ผู้คนมากกว่า 100 ล้านคนปกป้องความเป็นส่วนตัวของตัวเองด้วยการเลือกเบราว์เซอร์ที่ได้รับการสนับสนุนจากองค์กรไม่แสวงหาผลกำไร</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">เครื่องมือติดตามที่รู้จักล่ะ? จะปิดกั้นให้โดยอัตโนมัติเลย ส่วนขยายล่ะ? ลองดูส่วนขยายทั้งหมดกว่า 700 อันเลย ไฟล์ PDF ล่ะ? ใช้ตัวอ่านภายในตัวของเราเลยเพื่อให้จัดการไฟล์เหล่านั้นได้ง่าย</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">เบราว์เซอร์ที่ได้รับการสนับสนุนจากองค์กรไม่แสวงหาผลกำไรของเราช่วยหยุดบริษัทต่าง ๆ ไม่ให้แอบติดตามคุณทางเว็บได้\n\nเรียนรู้เพิ่มเติมในประกาศความเป็นส่วนตัวของเรา</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -695,9 +710,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">ที่คั่นหน้า</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">การเข้าสู่ระบบ</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบ</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">รหัสผ่าน</string>
+    <string name="preferences_sync_logins_2">รหัสผ่าน</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">แท็บที่เปิดอยู่</string>
     <!-- Preference for signing out -->
@@ -723,9 +738,9 @@
     <string name="default_device_name_2">%1$s บน %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">บัตรเครดิต</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">บัตรเครดิต</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">วิธีการชำระเงิน</string>
+    <string name="preferences_sync_credit_cards_2">วิธีการชำระเงิน</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ที่อยู่</string>
 
@@ -1665,14 +1680,14 @@
     <string name="add_to_homescreen_description_2">คุณสามารถเพิ่มเว็บไซต์นี้ลงในหน้าจอหลักของอุปกรณ์ของคุณเพื่อเข้าถึงและเรียกดูได้เร็วขึ้นด้วยประสบการณ์ที่เหมือนแอป</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">การเข้าสู่ระบบและรหัสผ่าน</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบและรหัสผ่าน</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">รหัสผ่าน</string>
+    <string name="preferences_passwords_logins_and_passwords_2">รหัสผ่าน</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">บันทึกการเข้าสู่ระบบและรหัสผ่าน</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกการเข้าสู่ระบบและรหัสผ่าน</string>
 
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">บันทึกรหัสผ่าน</string>
+    <string name="preferences_passwords_save_logins_2">บันทึกรหัสผ่าน</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">ถามเพื่อบันทึก</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1688,47 +1703,47 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">เติมชื่อผู้ใช้และรหัสผ่านในแอปอื่น ๆ บนอุปกรณ์ของคุณ</string>
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">เพิ่มการเข้าสู่ระบบ</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">เพิ่มการเข้าสู่ระบบ</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">เพิ่มรหัสผ่าน</string>
+    <string name="preferences_logins_add_login_2">เพิ่มรหัสผ่าน</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">ซิงค์การเข้าสู่ระบบ</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">ซิงค์รหัสผ่าน</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ซิงค์การเข้าสู่ระบบ</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">ซิงค์รหัสผ่าน</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">ซิงค์การเข้าสู่ระบบระหว่างอุปกรณ์</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">ซิงค์การเข้าสู่ระบบระหว่างอุปกรณ์</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">ซิงค์รหัสผ่านระหว่างอุปกรณ์</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">ซิงค์รหัสผ่านระหว่างอุปกรณ์</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">การเข้าสู่ระบบที่บันทึกไว้</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบที่บันทึกไว้</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">รหัสผ่านที่บันทึกไว้</string>
+    <string name="preferences_passwords_saved_logins_2">รหัสผ่านที่บันทึกไว้</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">การเข้าสู่ระบบที่คุณบันทึกหรือซิงค์กับ %s จะปรากฏที่นี่</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบที่คุณบันทึกหรือซิงค์กับ %s จะปรากฏที่นี่</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">รหัสผ่านที่คุณบันทึกหรือซิงค์กับ %s จะแสดงอยู่ที่นี่ รหัสผ่านทั้งหมดที่คุณบันทึกจะถูกเข้ารหัสไว้</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">รหัสผ่านที่คุณบันทึกหรือซิงค์กับ %s จะแสดงอยู่ที่นี่ รหัสผ่านทั้งหมดที่คุณบันทึกจะถูกเข้ารหัสไว้</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">เรียนรู้เพิ่มเติมเกี่ยวกับ Sync</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติมเกี่ยวกับ Sync</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">เรียนรู้เพิ่มเติมเกี่ยวกับซิงค์</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">เรียนรู้เพิ่มเติมเกี่ยวกับซิงค์</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ข้อยกเว้น</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">การเข้าสู่ระบบและรหัสผ่านที่ไม่ได้บันทึกจะถูกแสดงที่นี่</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบและรหัสผ่านที่ไม่ได้บันทึกจะถูกแสดงที่นี่</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์ที่แสดงอยู่ที่นี่</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์ที่แสดงอยู่ที่นี่</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">การเข้าสู่ระบบและรหัสผ่านจะไม่ถูกบันทึกสำหรับไซต์เหล่านี้</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">การเข้าสู่ระบบและรหัสผ่านจะไม่ถูกบันทึกสำหรับไซต์เหล่านี้</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์เหล่านี้</string>
+    <string name="preferences_passwords_exceptions_description_2">%s จะไม่บันทึกรหัสผ่านสำหรับไซต์เหล่านี้</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ลบข้อยกเว้นทั้งหมด</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">ค้นหาการเข้าสู่ระบบ</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">ค้นหาการเข้าสู่ระบบ</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">ค้นหารหัสผ่าน</string>
+    <string name="preferences_passwords_saved_logins_search_2">ค้นหารหัสผ่าน</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">ไซต์</string>
     <!-- The header for the username for a login -->
@@ -1756,17 +1771,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">ซ่อนรหัสผ่าน</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">ปลดล็อกเพื่อดูการเข้าสู่ระบบที่บันทึกไว้ของคุณ</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ปลดล็อกเพื่อดูการเข้าสู่ระบบที่บันทึกไว้ของคุณ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">ปลดล็อกเพื่อดูรหัสผ่านที่บันทึกไว้ของคุณ</string>
+    <string name="logins_biometric_prompt_message_2">ปลดล็อกเพื่อดูรหัสผ่านที่บันทึกไว้ของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">รักษาความปลอดภัยการเข้าสู่ระบบและรหัสผ่านของคุณ</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">รักษาความปลอดภัยการเข้าสู่ระบบและรหัสผ่านของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">รักษาความปลอดภัยให้กับรหัสผ่านที่บันทึกไว้ของคุณ</string>
+    <string name="logins_warning_dialog_title_2">รักษาความปลอดภัยให้กับรหัสผ่านที่บันทึกไว้ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงการเข้าสู่ระบบและรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงการเข้าสู่ระบบและรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <string name="logins_warning_dialog_message_2">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงรหัสผ่านที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">ภายหลัง</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1784,10 +1799,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">ใช้งานครั้งสุดท้าย</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">เรียงเมนูเข้าสู่ระบบ</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">เรียงเมนูเข้าสู่ระบบ</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">เมนูเรียงลำดับรหัสผ่าน</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">เมนูเรียงลำดับรหัสผ่าน</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1795,44 +1810,44 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">ที่อยู่</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">บัตรเครดิต</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">บัตรเครดิต</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">วิธีการชำระเงิน</string>
+    <string name="preferences_credit_cards_2">วิธีการชำระเงิน</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">บันทึกและเติมข้อมูลบัตรอัตโนมัติ</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกและเติมข้อมูลบัตรอัตโนมัติ</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">บันทึกและเติมวิธีการชำระเงิน</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">บันทึกและเติมวิธีการชำระเงิน</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">ข้อมูลถูกเข้ารหัส</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ข้อมูลถูกเข้ารหัส</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s จะเข้ารหัสลับวิธีการชำระเงินทั้งหมดที่คุณบันทึกไว้</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s จะเข้ารหัสลับวิธีการชำระเงินทั้งหมดที่คุณบันทึกไว้</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ซิงค์บัตรระหว่างอุปกรณ์</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">ซิงค์บัตร</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">เพิ่มบัตรเครดิต</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">เพิ่มบัตรเครดิต</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">เพิ่มบัตร</string>
+    <string name="preferences_credit_cards_add_credit_card_2">เพิ่มบัตร</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">จัดการบัตรที่บันทึกไว้</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">จัดการบัตรที่บันทึกไว้</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">จัดการบัตร</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">จัดการบัตร</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">เพิ่มที่อยู่</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">จัดการที่อยู่</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">บันทึกและป้อนที่อยู่อัตโนมัติ</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกและป้อนที่อยู่อัตโนมัติ</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">บันทึกและเติมที่อยู่อัตโนมัติ</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">บันทึกและเติมที่อยู่อัตโนมัติ</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">รวมข้อมูลเช่นหมายเลข อีเมล และที่อยู่ในการจัดส่ง</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">รวมข้อมูลเช่นหมายเลข อีเมล และที่อยู่ในการจัดส่ง</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">รวมหมายเลขโทรศัพท์และที่อยู่อีเมล</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">รวมหมายเลขโทรศัพท์และที่อยู่อีเมล</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">เพิ่มบัตร</string>
@@ -1853,9 +1868,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">ลบบัตร</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">คุณแน่ใจหรือไม่ว่าต้องการลบบัตรเครดิตนี้?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการลบบัตรเครดิตนี้?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">ลบบัตร?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">ลบบัตร?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ลบ</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1869,23 +1884,23 @@
     <string name="credit_cards_saved_cards">บัตรที่บันทึกไว้</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">โปรดป้อนหมายเลขบัตรเครดิตที่ถูกต้อง</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">โปรดป้อนหมายเลขบัตรเครดิตที่ถูกต้อง</string>
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">ใส่หมายเลขบัตรที่ถูกต้อง</string>
+    <string name="credit_cards_number_validation_error_message_2">ใส่หมายเลขบัตรที่ถูกต้อง</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">โปรดกรอกช่องนี้</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">โปรดกรอกช่องนี้</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">เพิ่มชื่อ</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">เพิ่มชื่อ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ปลดล็อกเพื่อดูบัตรเครดิตที่บันทึกไว้ของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">รักษาความปลอดภัยให้กับบัตรเครดิตของคุณ</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">รักษาความปลอดภัยให้กับบัตรเครดิตของคุณ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">รักษาความปลอดภัยให้กับวิธีการชำระเงินที่บันทึกไว้ของคุณ</string>
+    <string name="credit_cards_warning_dialog_title_2">รักษาความปลอดภัยให้กับวิธีการชำระเงินที่บันทึกไว้ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงบัตรเครดิตที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงบัตรเครดิตที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงวิธีการชำระเงินที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
+    <string name="credit_cards_warning_dialog_message_3">ตั้งค่ารูปแบบการล็อกอุปกรณ์, PIN, หรือรหัสผ่านเพื่อปกป้องไม่ให้ใครเข้าถึงวิธีการชำระเงินที่บันทึกไว้ของคุณหากคนอื่นมีอุปกรณ์ของคุณ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">ตั้งค่าตอนนี้</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1893,10 +1908,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">ปลดล็อกอุปกรณ์ของคุณ</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">ปลดล็อกเพื่อใช้ข้อมูลบัตรเครดิตที่เก็บไว้</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ปลดล็อกเพื่อใช้ข้อมูลบัตรเครดิตที่เก็บไว้</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">ปลดล็อกเพื่อใช้วิธีการชำระเงินที่บันทึกไว้</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">ปลดล็อกเพื่อใช้วิธีการชำระเงินที่บันทึกไว้</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">เพิ่มที่อยู่</string>
     <!-- Title of the "Edit address" screen -->
@@ -1904,11 +1919,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">จัดการที่อยู่</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">ชื่อจริง</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">ชื่อจริง</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">ชื่อกลาง</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">ชื่อกลาง</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">นามสกุล</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">นามสกุล</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">ชื่อ</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">ที่อยู่ถนน</string>
     <!-- The header for the city of an address -->
@@ -1933,9 +1950,9 @@
     <string name="addressess_delete_address_button">ลบที่อยู่</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">ลบที่อยู่นี้หรือไม่?</string>
+    <string name="addressess_confirm_dialog_message_2">ลบที่อยู่นี้หรือไม่?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">ลบ</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2033,49 +2050,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">แก้ไข</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">คุณแน่ใจหรือไม่ที่ต้องการจะลบการเข้าสู่ระบบนี้?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ที่ต้องการจะลบการเข้าสู่ระบบนี้?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">คุณแน่ใจหรือไม่ว่าต้องการลบรหัสผ่านนี้?</string>
+    <string name="login_deletion_confirmation_2">คุณแน่ใจหรือไม่ว่าต้องการลบรหัสผ่านนี้?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ลบ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ยกเลิก</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">ตัวเลือกการเข้าสู่ระบบ</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">ตัวเลือกการเข้าสู่ระบบ</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">ตัวเลือกรหัสผ่าน</string>
+    <string name="login_options_menu_2">ตัวเลือกรหัสผ่าน</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บของการเข้าสู่ระบบ</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บของการเข้าสู่ระบบ</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บไซต์</string>
+    <string name="saved_login_hostname_description_3">ช่องข้อความที่แก้ไขได้สำหรับที่อยู่เว็บไซต์</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้ของการเข้าสู่ระบบ</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้ของการเข้าสู่ระบบ</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้</string>
+    <string name="saved_login_username_description_3">ช่องข้อความที่แก้ไขได้สำหรับชื่อผู้ใช้</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่านของการเข้าสู่ระบบ</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่านของการเข้าสู่ระบบ</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่าน</string>
+    <string name="saved_login_password_description_2">ช่องข้อความที่แก้ไขได้สำหรับรหัสผ่าน</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">บันทึกการเปลี่ยนแปลงเพื่อเข้าสู่ระบบ</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">บันทึกการเปลี่ยนแปลง</string>
+    <string name="save_changes_to_login_2">บันทึกการเปลี่ยนแปลง</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">แก้ไข</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">แก้ไข</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">แก้ไขรหัสผ่าน</string>
+    <string name="edit_2">แก้ไขรหัสผ่าน</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">เพิ่มการเข้าสู่ระบบใหม่</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">เพิ่มการเข้าสู่ระบบใหม่</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">เพิ่มรหัสผ่าน</string>
+    <string name="add_login_2">เพิ่มรหัสผ่าน</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">ต้องการรหัสผ่าน</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ต้องการรหัสผ่าน</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">ใส่รหัสผ่าน</string>
+    <string name="saved_login_password_required_2">ใส่รหัสผ่าน</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">ต้องการชื่อผู้ใช้</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">ต้องการชื่อผู้ใช้</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">ป้อนชื่อผู้ใช้</string>
+    <string name="saved_login_username_required_2">ป้อนชื่อผู้ใช้</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ต้องการชื่อโฮสต์</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2188,7 +2205,7 @@
     <string name="radio_preference_info_content_description">คลิกเพื่อดูรายละเอียดเพิ่มเติม</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">นำทางขึ้นไปด้านบน</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">นำทางขึ้นไปด้านบน</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ปิด</string>
@@ -2228,8 +2245,6 @@
     <string name="review_quality_check_grade_title">บทวิจารณ์เหล่านี้น่าเชื่อถือแค่ไหน</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">คะแนนที่ปรับแล้ว</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">เอาบทวิจารณ์ที่ไม่น่าเชื่อถือออกแล้ว</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">อ้างอิงจากบทวิจารณ์ที่เชื่อถือได้</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2286,10 +2301,6 @@
     <string name="review_quality_check_product_availability_warning_body">หากคุณเห็นว่าสินค้านี้มีอยู่ในสต็อกแล้ว โปรดรายงานแล้วเราจะทำการตรวจสอบบทวิจารณ์</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">รายงานสินค้ามีในสต็อก</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">กำลังตรวจสอบคุณภาพบทวิจารณ์</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">กำลังตรวจสอบคุณภาพบทวิจารณ์</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">กำลังตรวจสอบคุณภาพบทวิจารณ์ (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2335,13 +2346,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">เรียนรู้เพิ่มเติม</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sและ%3$sของ %1$s โดย Mozilla</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sและ%3$sของ %1$s โดย Mozilla</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับข้อตกลงต่อไปนี้จาก %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sของ %1$s และ%4$sของ %3$s</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sของ %1$s และ%4$sของ %3$s</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">นโยบายความเป็นส่วนตัว</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">นโยบายความเป็นส่วนตัว</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">นโยบายความเป็นส่วนตัว</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">ประกาศความเป็นส่วนตัว</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">เงื่อนไขการใช้งาน</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2412,6 +2429,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">แปลหน้านี้?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">แปลหน้าจาก%1$sเป็น%2$sแล้ว</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">ลองใช้การแปลแบบส่วนตัวใน %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2424,6 +2445,8 @@
     <string name="translations_bottom_sheet_translate_to">แปลเป็น</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">ไม่ใช่ตอนนี้</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">แสดงต้นฉบับ</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">เสร็จสิ้น</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2445,6 +2468,9 @@
     <string name="translation_error_language_not_supported_warning_text">ขออภัย เรายังไม่รองรับภาษา%1$s</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">เรียนรู้เพิ่มเติม</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">กำลังแปล…</string>
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
