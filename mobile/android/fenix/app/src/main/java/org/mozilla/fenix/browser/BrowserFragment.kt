@@ -323,10 +323,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             AppCompatResources.getDrawable(
                 context,
                 R.drawable.mozac_ic_translate_24,
-            )!!.apply {
-                setTint(ContextCompat.getColor(context, R.color.fx_mobile_text_color_primary))
-            },
+            ),
             contentDescription = context.getString(R.string.browser_toolbar_translate),
+            iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             visible = { translationsAvailable },
             listener = {
                 browserToolbarInteractor.onTranslationsButtonClicked()
@@ -346,7 +345,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                             tintColorResource = if (isTranslated) {
                                 R.color.fx_mobile_icon_color_accent_violet
                             } else {
-                                R.color.fx_mobile_text_color_primary
+                                ThemeManager.resolveAttribute(R.attr.textPrimary, context)
                             },
                             contentDescription = if (isTranslated) {
                                 context.getString(
