@@ -396,3 +396,23 @@ test.nested:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+
+  an_object:
+    type: object
+    description: An example object
+    bugs:
+      - https://bugzilla.mozilla.org/1839640
+    data_reviews:
+      - http://example.com/reviews
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: never
+    structure:
+      type: array
+      items:
+        type: object
+        properties:
+          colour:
+            type: string
+          diameter:
+            type: number

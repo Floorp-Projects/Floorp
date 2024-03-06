@@ -16,6 +16,7 @@ mod event;
 mod labeled;
 mod memory_distribution;
 mod numerator;
+mod object;
 mod ping;
 mod quantity;
 mod rate;

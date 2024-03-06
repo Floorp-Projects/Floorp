@@ -1706,6 +1706,7 @@ dependencies = [
  "nsstring",
  "once_cell",
  "serde",
+ "serde_json",
  "tempfile",
  "thin-vec",
  "uuid",

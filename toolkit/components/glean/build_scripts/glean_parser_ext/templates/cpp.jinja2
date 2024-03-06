@@ -78,6 +78,7 @@ enum class DynamicLabel: uint16_t { };
 {% for category_name, objs in all_objs.items() %}
 namespace {{ category_name|snake_case }} {
   {% for obj in objs.values() %}
+  {% if obj.type != "object" %}{# TODO(bug 1881023): Add C++ support #}
   /**
    * generated from {{ category_name }}.{{ obj.name }}
    */
@@ -91,6 +92,7 @@ namespace {{ category_name|snake_case }} {
    * {{ obj.description|wordwrap() | replace('\n', '\n     * ') }}
    */
   constexpr impl::{{ obj|type_name }} {{obj.name|snake_case }}({{obj|metric_id}});
+  {% endif %}
 
   {% endfor %}
 }

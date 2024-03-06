@@ -23,7 +23,9 @@ use crate::private::{
     Ping,
     LabeledMetric,
 {% for metric_type_name in metric_types.keys() if not metric_type_name.startswith('labeled_') %}
+    {% if metric_type_name != "object" %}{# TODO(bug 1883857): Add JOG support #}
     {{ metric_type_name|Camelize }}Metric,
+    {% endif %}
 {% endfor %}};
 use crate::private::traits::HistogramType;
 
@@ -50,7 +52,7 @@ pub(crate) mod __jog_metric_maps {
     use std::collections::HashMap;
     use std::sync::{Arc, RwLock};
 
-{% for metric_type_name in metric_types.keys() if metric_type_name != "event" and not metric_type_name.startswith('labeled_') %}
+{% for metric_type_name in metric_types.keys() if metric_type_name != "event" and not metric_type_name.startswith('labeled_') and metric_type_name != "object" %}
     pub static {{ metric_type_name.upper() }}_MAP: Lazy<Arc<RwLock<HashMap<MetricId, {{ metric_type_name|Camelize }}Metric>>>> =
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
@@ -66,6 +68,10 @@ pub(crate) mod __jog_metric_maps {
 
 {# Event metrics are special because they're EventMetric<K> #}
     pub static EVENT_MAP: Lazy<Arc<RwLock<HashMap<MetricId, EventMetric<NoExtraKeys>>>>> =
+        Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
+{# Object metrics are special because they're ObjectMetric<K> #}
+    #[allow(dead_code)]
+    pub static OBJECT_MAP: Lazy<Arc<RwLock<HashMap<MetricId, ObjectMetric<()>>>>> =
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 }
 
@@ -105,6 +111,9 @@ map of argument name to argument type. I may regret this if I need it again. #}
     let metric32 = match metric_type {
 {% for metric_type_name, metric_type in metric_types.items() %}
         "{{ metric_type_name }}" => {
+            {% if metric_type_name == "object" %}{# TODO(bug 1883857): Add JOG support #}
+            return Err(Box::new(MetricTypeNotFoundError(metric_type.to_string())));
+            {% else %}
             let metric = {{ metric_type_name|Camelize if not metric_type_name.startswith('labeled_') else "Labeled"}}Metric::{% if metric_type_name == 'event' %}with_runtime_extra_keys{% else %}new{% endif %}(metric_id.into(), CommonMetricData {
                 {% for arg_name in common_metric_data_args if arg_name in metric_type.args %}
                 {{ arg_name }},
@@ -124,6 +133,7 @@ map of argument name to argument type. I may regret this if I need it again. #}
                 "We should never insert a runtime metric with an already-used id."
             );
             metric32
+            {% endif %}
         }
 {% endfor %}
         _ => return Err(Box::new(MetricTypeNotFoundError(metric_type.to_string())))

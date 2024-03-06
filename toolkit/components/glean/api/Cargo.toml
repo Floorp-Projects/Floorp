@@ -19,6 +19,7 @@ uuid = { version = "1.0", features = ["v4"] }
 xpcom = { path = "../../../../xpcom/rust/xpcom", optional = true }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 mozbuild = "0.1"
+serde_json = "1"
 
 [dev-dependencies]
 tempfile = "3.1.0"

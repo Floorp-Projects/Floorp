@@ -459,3 +459,100 @@ add_task(async function test_fog_text_works_unusual_character() {
 
   Assert.greater(rslt.length, 100);
 });
+
+add_task(async function test_fog_object_works() {
+  Assert.equal(
+    undefined,
+    Glean.testOnly.balloons.testGetValue(),
+    "No object stored"
+  );
+
+  // Can't store not-objects.
+  let invalidValues = [1, "str", false, undefined, null, NaN, Infinity];
+  for (let value of invalidValues) {
+    Assert.throws(
+      () => Glean.testOnly.balloons.set(value),
+      /is not an object/,
+      "Should throw a type error"
+    );
+  }
+
+  // No invalid value will be stored.
+  Assert.equal(
+    undefined,
+    Glean.testOnly.balloons.testGetValue(),
+    "No object stored"
+  );
+
+  // `JS_Stringify` internally throws
+  // an `TypeError: cyclic object value` exception.
+  // That's cleared and `set` should not throw on it.
+  // This eventually should log a proper error in Glean.
+  let selfref = {};
+  selfref.a = selfref;
+  Glean.testOnly.balloons.set(selfref);
+  Assert.equal(
+    undefined,
+    Glean.testOnly.balloons.testGetValue(),
+    "No object stored"
+  );
+
+  let balloons = [
+    { colour: "red", diameter: 5 },
+    { colour: "blue", diameter: 7 },
+    { colour: "orange" },
+  ];
+  Glean.testOnly.balloons.set(balloons);
+
+  let result = Glean.testOnly.balloons.testGetValue();
+  let expected = [
+    { colour: "red", diameter: 5 },
+    { colour: "blue", diameter: 7 },
+    { colour: "orange", diameter: null },
+  ];
+  Assert.deepEqual(expected, result);
+
+  // These values are coerced to null or removed.
+  balloons = [
+    { colour: "inf", diameter: Infinity },
+    { colour: "negative-inf", diameter: -1 / 0 },
+    { colour: "nan", diameter: NaN },
+    { colour: "undef", diameter: undefined },
+  ];
+  Glean.testOnly.balloons.set(balloons);
+  result = Glean.testOnly.balloons.testGetValue();
+  expected = [
+    { colour: "inf", diameter: null },
+    { colour: "negative-inf", diameter: null },
+    { colour: "nan", diameter: null },
+    { colour: "undef", diameter: null },
+  ];
+  Assert.deepEqual(expected, result);
+
+  // colour != color.
+  let invalid = [{ color: "orange" }, { color: "red", diameter: "small" }];
+  Glean.testOnly.balloons.set(invalid);
+  Assert.throws(
+    () => Glean.testOnly.balloons.testGetValue(),
+    /invalid_value/,
+    "Should throw because last object was invalid."
+  );
+
+  Services.fog.testResetFOG();
+  // set again to ensure it's stored
+  balloons = [
+    { colour: "red", diameter: 5 },
+    { colour: "blue", diameter: 7 },
+  ];
+  Glean.testOnly.balloons.set(balloons);
+  result = Glean.testOnly.balloons.testGetValue();
+  Assert.deepEqual(balloons, result);
+
+  invalid = [{ colour: "red", diameter: 5, extra: "field" }];
+  Glean.testOnly.balloons.set(invalid);
+  Assert.throws(
+    () => Glean.testOnly.balloons.testGetValue(),
+    /invalid_value/,
+    "Should throw because last object was invalid."
+  );
+});

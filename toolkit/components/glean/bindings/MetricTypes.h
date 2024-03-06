@@ -14,6 +14,7 @@
 #include "mozilla/glean/bindings/Labeled.h"
 #include "mozilla/glean/bindings/MemoryDistribution.h"
 #include "mozilla/glean/bindings/Numerator.h"
+#include "mozilla/glean/bindings/Object.h"
 #include "mozilla/glean/bindings/Quantity.h"
 #include "mozilla/glean/bindings/Rate.h"
 #include "mozilla/glean/bindings/String.h"
