@@ -68,6 +68,11 @@ async function generateConsoleApiStubs() {
   await commands.targetCommand.startListening();
   const resourceCommand = commands.resourceCommand;
 
+  // Ensure waiting for sources in order to populate message.sourceId correctly.
+  await resourceCommand.watchResources([resourceCommand.TYPES.SOURCE], {
+    onAvailable() {},
+  });
+
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
   // resource to `handleConsoleMessage`, dynamically updated for each command.

@@ -145,7 +145,12 @@ async function testTopLevelNavigations(bfcacheInParent) {
   // Go back to the first page, this should be a bfcache navigation, and,
   // we should get a new target
   info("Go back to the first page");
+  const onPageShow = BrowserTestUtils.waitForContentEvent(
+    gBrowser.selectedBrowser,
+    "pageshow"
+  );
   gBrowser.selectedBrowser.goBack();
+  await onPageShow;
 
   await waitFor(
     () => targets.length == 3,

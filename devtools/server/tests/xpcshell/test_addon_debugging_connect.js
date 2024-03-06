@@ -53,7 +53,7 @@ function promiseFrameUpdate(front, matcher = () => true) {
 add_task(
   {
     // This test needs to run only when the extension are running in a separate
-    // child process, otherwise attachThread would pause the main process and this
+    // child process, otherwise the thread actor would pause the main process and this
     // test would get stuck.
     skip_if: () => !WebExtensionPolicy.useRemoteWebExtensions,
   },
@@ -90,7 +90,7 @@ add_task(
       .pop();
     ok(backgroundPageFrame, "Found the frame for the background page");
 
-    const threadFront = await addonTarget.attachThread();
+    const threadFront = await addonTarget.getFront("thread");
 
     ok(threadFront, "Got a threadFront for the target addon");
     equal(threadFront.paused, false, "The addon threadActor isn't paused");
