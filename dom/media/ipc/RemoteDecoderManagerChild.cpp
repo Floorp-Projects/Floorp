@@ -311,16 +311,6 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
         __func__);
   }
 
-  if (!aParams.mMediaEngineId &&
-      aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
-    return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-                    nsPrintfCString("%s only support for media engine playback",
-                                    RemoteDecodeInToStr(aLocation))
-                        .get()),
-        __func__);
-  }
-
   RefPtr<GenericNonExclusivePromise> launchPromise;
   if (StaticPrefs::media_utility_process_enabled() &&
       (aLocation == RemoteDecodeIn::UtilityProcess_Generic ||
@@ -390,16 +380,6 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
     return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_CANCELED,
                     nsPrintfCString("%s doesn't support video decoding",
-                                    RemoteDecodeInToStr(aLocation))
-                        .get()),
-        __func__);
-  }
-
-  if (!aParams.mMediaEngineId &&
-      aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
-    return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-                    nsPrintfCString("%s only support for media engine playback",
                                     RemoteDecodeInToStr(aLocation))
                         .get()),
         __func__);

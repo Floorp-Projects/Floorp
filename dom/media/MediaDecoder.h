@@ -207,20 +207,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // not connected to streams created by captureStreamUntilEnded.
 
   enum class OutputCaptureState { Capture, Halt, None };
-  const char* OutputCaptureStateToStr(OutputCaptureState aState) const {
-    switch (aState) {
-      case OutputCaptureState::Capture:
-        return "Capture";
-      case OutputCaptureState::Halt:
-        return "Halt";
-      case OutputCaptureState::None:
-        return "None";
-      default:
-        MOZ_ASSERT_UNREACHABLE("Not defined state!");
-        return "Not-defined";
-    }
-  }
-
   // Set the output capture state of this decoder.
   // @param aState Capture: Output is captured into output tracks, and
   //                        aDummyTrack must be provided.
@@ -755,12 +741,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // resume to when we stop delaying seeking.
   bool mShouldDelaySeek = false;
   Maybe<SeekTarget> mDelayedSeekTarget;
-
-#  ifdef MOZ_WMF_MEDIA_ENGINE
-  // True if we've ever recreated a new state machine due to the previous state
-  // didn't support the media format or key system.
-  bool mStateMachineRecreated = false;
-#  endif
 
  public:
   Canonical<double>& CanonicalVolume() { return mVolume; }
