@@ -7,16 +7,12 @@
 #ifndef mozilla_dom_AudioData_h
 #define mozilla_dom_AudioData_h
 
-#include "AudioSampleFormat.h"
 #include "WebCodecsUtils.h"
 #include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/NotNull.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/AudioDataBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -128,7 +124,7 @@ class AudioData final : public nsISupports, public nsWrapperCache {
 
 class AudioDataResource final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioDataResource);
-  AudioDataResource(FallibleTArray<uint8_t>&& aData)
+  explicit AudioDataResource(FallibleTArray<uint8_t>&& aData)
       : mData(std::move(aData)) {}
 
   explicit AudioDataResource()
@@ -155,7 +151,7 @@ class AudioDataResource final {
 };
 
 struct AudioDataSerializedData {
-  AudioDataSerializedData(const AudioData& aFrom)
+  explicit AudioDataSerializedData(const AudioData& aFrom)
       : mTimestamp(aFrom.Timestamp()),
         mNumberOfChannels(aFrom.NumberOfChannels()),
         mNumberOfFrames(aFrom.NumberOfFrames()),

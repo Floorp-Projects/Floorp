@@ -233,6 +233,7 @@ already_AddRefed<AudioData> AudioData::Constructor(const GlobalObject& aGlobal,
   if (resource.isErr()) {
     LOGD("AudioData::Constructor failure (OOM)");
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
   }
 
   return MakeAndAddRef<mozilla::dom::AudioData>(global, resource.unwrap(),
@@ -634,23 +635,66 @@ JSObject* AudioData::ReadStructuredClone(JSContext* aCx,
                                          nsIGlobalObject* aGlobal,
                                          JSStructuredCloneReader* aReader,
                                          const AudioDataSerializedData& aData) {
+  JS::Rooted<JS::Value> value(aCx, JS::NullValue());
+  // To avoid a rooting hazard error from returning a raw JSObject* before
+  // running the RefPtr destructor, RefPtr needs to be destructed before
+  // returning the raw JSObject*, which is why the RefPtr<AudioData> is created
+  // in the scope below. Otherwise, the static analysis infers the RefPtr cannot
+  // be safely destructed while the unrooted return JSObject* is on the stack.
+  {
+    RefPtr<AudioData> frame = MakeAndAddRef<AudioData>(aGlobal, aData);
+    if (!GetOrCreateDOMReflector(aCx, frame, &value) || !value.isObject()) {
+      LOGE("GetOrCreateDOMReflect failure");
+      return nullptr;
+    }
+  }
+  return value.toObjectOrNull();
 }
 
 // https://w3c.github.io/webcodecs/#ref-for-audiodata%E2%91%A2%E2%91%A2
 bool AudioData::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
                                      StructuredCloneHolder* aHolder) const {
   AssertIsOnOwningThread();
+
+  // AudioData closed
+  if (!mResource) {
+    LOGD("AudioData was already close in WriteStructuredClone");
+    return false;
+  }
+  const uint32_t index = aHolder->AudioData().Length();
+  // https://github.com/w3c/webcodecs/issues/717
+  // For now, serialization is only allowed in the same address space, it's OK
+  // to send a refptr here instead of copying the backing buffer.
+  aHolder->AudioData().AppendElement(AudioDataSerializedData(*this));
+
+  return !NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_AUDIODATA, index));
 }
 
 // https://w3c.github.io/webcodecs/#ref-for-transfer-steps
 UniquePtr<AudioData::TransferredData> AudioData::Transfer() {
   AssertIsOnOwningThread();
+
+  if (!mResource) {
+    // Closed
+    LOGD("AudioData was already close in Transfer");
+    return nullptr;
+  }
+
+  // This adds a ref to the resource
+  auto serialized = MakeUnique<AudioDataSerializedData>(*this);
+  // This removes the ref to the resource, effectively transfering the backing
+  // storage.
+  Close();
+  return serialized;
 }
 
 // https://w3c.github.io/webcodecs/#ref-for-transfer-receiving-steps
 /* static */
 already_AddRefed<AudioData> AudioData::FromTransferred(nsIGlobalObject* aGlobal,
                                                        TransferredData* aData) {
+  MOZ_ASSERT(aData);
+
+  return MakeAndAddRef<AudioData>(aGlobal, *aData);
 }
 
 void AudioData::CloseIfNeeded() {
