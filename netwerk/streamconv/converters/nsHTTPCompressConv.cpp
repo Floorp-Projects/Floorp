@@ -264,7 +264,6 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
               reinterpret_cast<const char*>(outBuffer.get()), outSize))) {
         return self->mBrotli->mStatus;
       }
-      self->mBrotli->mSourceOffset += outSize;
     }
 
     // See bug 1759745. If the decoder has more output data, take it.
@@ -277,7 +276,6 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
                                         outSize))) {
         return self->mBrotli->mStatus;
       }
-      self->mBrotli->mSourceOffset += outSize;
     }
 
     if (res == BROTLI_DECODER_RESULT_SUCCESS ||
@@ -297,8 +295,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
                                     uint64_t aSourceOffset, uint32_t aCount) {
   nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
   uint32_t streamLen = aCount;
-  LOG(("nsHttpCompressConv %p OnDataAvailable aSourceOffset:%lu count:%u", this,
-       aSourceOffset, aCount));
+  LOG(("nsHttpCompressConv %p OnDataAvailable %d", this, aCount));
 
   if (streamLen == 0) {
     NS_ERROR("count of zero passed to OnDataAvailable");
@@ -564,10 +561,6 @@ nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  LOG(
-      ("nsHTTPCompressConv::do_OnDataAvailable req:%p offset: offset:%lu "
-       "count:%u",
-       request, offset, count));
   nsresult rv = listener->OnDataAvailable(request, mStream, offset, count);
 
   // Make sure the stream no longer references |buffer| in case our listener
