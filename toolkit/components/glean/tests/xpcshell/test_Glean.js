@@ -182,6 +182,7 @@ add_task(async function test_fog_memory_distribution_works() {
   Glean.testOnly.doYouRemember.accumulate(17);
 
   let data = Glean.testOnly.doYouRemember.testGetValue("test-ping");
+  Assert.equal(2, data.count, "Count of entries is correct");
   // `data.sum` is in bytes, but the metric is in MB.
   Assert.equal(24 * 1024 * 1024, data.sum, "Sum's correct");
   for (let [bucket, count] of Object.entries(data.values)) {
@@ -196,6 +197,7 @@ add_task(async function test_fog_custom_distribution_works() {
   Glean.testOnlyIpc.aCustomDist.accumulateSamples([7, 268435458]);
 
   let data = Glean.testOnlyIpc.aCustomDist.testGetValue("store1");
+  Assert.equal(2, data.count, "Count of entries is correct");
   Assert.equal(7 + 268435458, data.sum, "Sum's correct");
   for (let [bucket, count] of Object.entries(data.values)) {
     Assert.ok(
@@ -255,6 +257,10 @@ add_task(async function test_fog_timing_distribution_works() {
   Glean.testOnly.whatTimeIsIt.stopAndAccumulate(t3); // 5ms
 
   let data = Glean.testOnly.whatTimeIsIt.testGetValue();
+
+  // Cancelled timers should not be counted.
+  Assert.equal(2, data.count, "Count of entries is correct");
+
   const NANOS_IN_MILLIS = 1e6;
   // bug 1701949 - Sleep gets close, but sometimes doesn't wait long enough.
   const EPSILON = 40000;

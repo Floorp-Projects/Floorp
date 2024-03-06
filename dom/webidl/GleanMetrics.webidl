@@ -111,6 +111,7 @@ interface GleanCounter : GleanMetric {
 
 dictionary GleanDistributionData {
   required unsigned long long sum;
+  required unsigned long long count;
   required record<UTF8String, unsigned long long> values;
 };
 
