@@ -25,8 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#ifndef __NSQ_DEL_DEC_MIPSR1_H__
-#define __NSQ_DEL_DEC_MIPSR1_H__
+#ifndef NSQ_DEL_DEC_MIPSR1_H__
+#define NSQ_DEL_DEC_MIPSR1_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -407,4 +407,4 @@ static inline void silk_noise_shape_quantizer_del_dec(
     }
 }
 
-#endif /* __NSQ_DEL_DEC_MIPSR1_H__ */
+#endif /* NSQ_DEL_DEC_MIPSR1_H__ */

@@ -1003,7 +1003,7 @@ int opus_multistream_encode_native
          return OPUS_INTERNAL_ERROR;
       }
       len = opus_repacketizer_out_range_impl(&rp, 0, opus_repacketizer_get_nb_frames(&rp),
-            data, max_data_bytes-tot_size, s != st->layout.nb_streams-1, !vbr && s == st->layout.nb_streams-1);
+            data, max_data_bytes-tot_size, s != st->layout.nb_streams-1, !vbr && s == st->layout.nb_streams-1, NULL, 0);
       data += len;
       tot_size += len;
    }

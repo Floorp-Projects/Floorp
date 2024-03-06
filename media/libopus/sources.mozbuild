@@ -47,6 +47,10 @@ celt_sources_sse4_1 = [
     'celt/x86/pitch_sse4_1.c',
 ]
 
+celt_sources_avx2 = [
+    'celt/x86/pitch_avx.c',
+]
+
 celt_sources_arm_rtcd = [
     'celt/arm/arm_celt_map.c',
     'celt/arm/armcpu.c',
@@ -71,6 +75,7 @@ celt_sources_arm_ne10 = [
 ]
 
 opus_sources = [
+    'src/extensions.c',
     'src/opus.c',
     'src/opus_decoder.c',
     'src/opus_encoder.c',
@@ -174,6 +179,10 @@ silk_sources_sse4_1 = [
     'silk/x86/VQ_WMat_EC_sse4_1.c',
 ]
 
+silk_sources_avx2 = [
+    'silk/x86/NSQ_del_dec_avx2.c',
+]
+
 silk_sources_arm_rtcd = [
     'silk/arm/arm_silk_map.c',
 ]
@@ -247,5 +256,9 @@ silk_sources_float = [
     'silk/float/sort_FLP.c',
     'silk/float/warped_autocorrelation_FLP.c',
     'silk/float/wrappers_FLP.c',
+]
+
+silk_sources_float_avx2 = [
+    'silk/float/x86/inner_product_FLP_avx2.c',
 ]
 

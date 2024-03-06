@@ -929,9 +929,9 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
     features[23] = info->tonality_slope + 0.069216f;
     features[24] = tonal->lowECount - 0.067930f;
 
-    compute_dense(&layer0, layer_out, features);
-    compute_gru(&layer1, tonal->rnn_state, layer_out);
-    compute_dense(&layer2, frame_probs, tonal->rnn_state);
+    analysis_compute_dense(&layer0, layer_out, features);
+    analysis_compute_gru(&layer1, tonal->rnn_state, layer_out);
+    analysis_compute_dense(&layer2, frame_probs, tonal->rnn_state);
 
     /* Probability of speech or music vs noise */
     info->activity_probability = frame_probs[1];

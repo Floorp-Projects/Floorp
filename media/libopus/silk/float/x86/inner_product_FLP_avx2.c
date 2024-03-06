@@ -1,5 +1,6 @@
 /***********************************************************************
 Copyright (c) 2006-2011, Skype Limited. All rights reserved.
+              2023 Amazon
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -29,56 +30,56 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "config.h"
 #endif
 
-#include "main.h"
+#include "SigProc_FLP.h"
+#include <immintrin.h>
 
-#ifdef ENABLE_OSCE
-#include "osce.h"
-#endif
 
-#include "structs.h"
-
-/************************/
-/* Reset Decoder State  */
-/************************/
-opus_int silk_reset_decoder(
-    silk_decoder_state          *psDec                          /* I/O  Decoder state pointer                       */
+/* inner product of two silk_float arrays, with result as double */
+double silk_inner_product_FLP_avx2(
+    const silk_float    *data1,
+    const silk_float    *data2,
+    opus_int            dataSize
 )
 {
-    /* Clear the entire encoder state, except anything copied */
-    silk_memset( &psDec->SILK_DECODER_STATE_RESET_START, 0, sizeof( silk_decoder_state ) - ((char*) &psDec->SILK_DECODER_STATE_RESET_START - (char*)psDec) );
+    opus_int i;
+    __m256d accum1, accum2;
+    double   result;
 
-    /* Used to deactivate LSF interpolation */
-    psDec->first_frame_after_reset = 1;
-    psDec->prev_gain_Q16 = 65536;
-    psDec->arch = opus_select_arch();
+    /* 4x unrolled loop */
+    result = 0.0;
+    accum1 = accum2 = _mm256_setzero_pd();
+    for( i = 0; i < dataSize - 7; i += 8 ) {
+        __m128  x1f, x2f;
+        __m256d x1d, x2d;
+        x1f = _mm_loadu_ps( &data1[ i ] );
+        x2f = _mm_loadu_ps( &data2[ i ] );
+        x1d = _mm256_cvtps_pd( x1f );
+        x2d = _mm256_cvtps_pd( x2f );
+        accum1 = _mm256_fmadd_pd( x1d, x2d, accum1 );
+        x1f = _mm_loadu_ps( &data1[ i + 4 ] );
+        x2f = _mm_loadu_ps( &data2[ i + 4 ] );
+        x1d = _mm256_cvtps_pd( x1f );
+        x2d = _mm256_cvtps_pd( x2f );
+        accum2 = _mm256_fmadd_pd( x1d, x2d, accum2 );
+    }
+    for( ; i < dataSize - 3; i += 4 ) {
+        __m128  x1f, x2f;
+        __m256d x1d, x2d;
+        x1f = _mm_loadu_ps( &data1[ i ] );
+        x2f = _mm_loadu_ps( &data2[ i ] );
+        x1d = _mm256_cvtps_pd( x1f );
+        x2d = _mm256_cvtps_pd( x2f );
+        accum1 = _mm256_fmadd_pd( x1d, x2d, accum1 );
+    }
+    accum1 = _mm256_add_pd(accum1, accum2);
+    accum1 = _mm256_add_pd(accum1, _mm256_permute2f128_pd(accum1, accum1, 1));
+    accum1 = _mm256_hadd_pd(accum1,accum1);
+    result = _mm256_cvtsd_f64(accum1);
 
-    /* Reset CNG state */
-    silk_CNG_Reset( psDec );
+    /* add any remaining products */
+    for( ; i < dataSize; i++ ) {
+        result += data1[ i ] * (double)data2[ i ];
+    }
 
-    /* Reset PLC state */
-    silk_PLC_Reset( psDec );
-
-#ifdef ENABLE_OSCE
-    /* Reset OSCE state and method */
-    osce_reset(&psDec->osce, OSCE_DEFAULT_METHOD);
-#endif
-
-    return 0;
+    return result;
 }
-
-
-/************************/
-/* Init Decoder State   */
-/************************/
-opus_int silk_init_decoder(
-    silk_decoder_state          *psDec                          /* I/O  Decoder state pointer                       */
-)
-{
-    /* Clear the entire encoder state, except anything copied */
-    silk_memset( psDec, 0, sizeof( silk_decoder_state ) );
-
-    silk_reset_decoder( psDec );
-
-    return(0);
-}
-
