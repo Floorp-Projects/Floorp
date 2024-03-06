@@ -12,29 +12,28 @@ import {UnsupportedOperation} from '../common/Errors.js';
 
 import {BidiDeserializer} from './Deserializer.js';
 import type {BidiRealm} from './Realm.js';
-import type {Sandbox} from './Sandbox.js';
-import {releaseReference} from './util.js';
 
 /**
  * @internal
  */
 export class BidiJSHandle<T = unknown> extends JSHandle<T> {
-  #disposed = false;
-  readonly #sandbox: Sandbox;
+  static from<T>(
+    value: Bidi.Script.RemoteValue,
+    realm: BidiRealm
+  ): BidiJSHandle<T> {
+    return new BidiJSHandle(value, realm);
+  }
+
   readonly #remoteValue: Bidi.Script.RemoteValue;
 
-  constructor(sandbox: Sandbox, remoteValue: Bidi.Script.RemoteValue) {
+  override readonly realm: BidiRealm;
+
+  #disposed = false;
+
+  constructor(value: Bidi.Script.RemoteValue, realm: BidiRealm) {
     super();
-    this.#sandbox = sandbox;
-    this.#remoteValue = remoteValue;
-  }
-
-  context(): BidiRealm {
-    return this.realm.environment.context();
-  }
-
-  override get realm(): Sandbox {
-    return this.#sandbox;
+    this.#remoteValue = value;
+    this.realm = realm;
   }
 
   override get disposed(): boolean {
@@ -56,12 +55,7 @@ export class BidiJSHandle<T = unknown> extends JSHandle<T> {
       return;
     }
     this.#disposed = true;
-    if ('handle' in this.#remoteValue) {
-      await releaseReference(
-        this.context(),
-        this.#remoteValue as Bidi.Script.RemoteReference
-      );
-    }
+    await this.realm.destroyHandles([this]);
   }
 
   get isPrimitiveValue(): boolean {

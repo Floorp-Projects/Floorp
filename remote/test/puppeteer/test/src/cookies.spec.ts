@@ -150,9 +150,7 @@ describe('Cookie specs', () => {
           expires: -1,
           size: 11,
           httpOnly: false,
-          secure: true,
           session: true,
-          sourcePort: 443,
           sourceScheme: 'Secure',
         },
         {
@@ -164,12 +162,46 @@ describe('Cookie specs', () => {
           expires: -1,
           size: 10,
           httpOnly: false,
-          secure: true,
           session: true,
-          sourcePort: 443,
           sourceScheme: 'Secure',
         },
       ]);
+    });
+    it('should not get cookies from subdomain', async () => {
+      const {page} = await getTestState();
+      await page.setCookie({
+        url: 'https://base_domain.com',
+        name: 'doggo',
+        value: 'woofs',
+      });
+      const cookies = await page.cookies('https://sub_domain.base_domain.com');
+      expect(cookies).toHaveLength(0);
+    });
+    it('should get cookies from nested path', async () => {
+      const {page} = await getTestState();
+      await page.setCookie({
+        url: 'https://foo.com',
+        path: '/some_path',
+        name: 'doggo',
+        value: 'woofs',
+      });
+      const cookies = await page.cookies(
+        'https://foo.com/some_path/nested_path'
+      );
+      expect(cookies).toHaveLength(1);
+    });
+    it('should not get cookies from not nested path', async () => {
+      const {page} = await getTestState();
+      await page.setCookie({
+        url: 'https://foo.com',
+        path: '/some_path',
+        name: 'doggo',
+        value: 'woofs',
+      });
+      const cookies = await page.cookies(
+        'https://foo.com/some_path_looks_like_nested'
+      );
+      expect(cookies).toHaveLength(0);
     });
   });
   describe('Page.setCookie', function () {
@@ -190,24 +222,27 @@ describe('Cookie specs', () => {
     it('should isolate cookies in browser contexts', async () => {
       const {page, server, browser} = await getTestState();
 
-      const anotherContext = await browser.createIncognitoBrowserContext();
-      const anotherPage = await anotherContext.newPage();
+      const anotherContext = await browser.createBrowserContext();
+      try {
+        const anotherPage = await anotherContext.newPage();
 
-      await page.goto(server.EMPTY_PAGE);
-      await anotherPage.goto(server.EMPTY_PAGE);
+        await page.goto(server.EMPTY_PAGE);
+        await anotherPage.goto(server.EMPTY_PAGE);
 
-      await page.setCookie({name: 'page1cookie', value: 'page1value'});
-      await anotherPage.setCookie({name: 'page2cookie', value: 'page2value'});
+        await page.setCookie({name: 'page1cookie', value: 'page1value'});
+        await anotherPage.setCookie({name: 'page2cookie', value: 'page2value'});
 
-      const cookies1 = await page.cookies();
-      const cookies2 = await anotherPage.cookies();
-      expect(cookies1).toHaveLength(1);
-      expect(cookies2).toHaveLength(1);
-      expect(cookies1[0]!.name).toBe('page1cookie');
-      expect(cookies1[0]!.value).toBe('page1value');
-      expect(cookies2[0]!.name).toBe('page2cookie');
-      expect(cookies2[0]!.value).toBe('page2value');
-      await anotherContext.close();
+        const cookies1 = await page.cookies();
+        const cookies2 = await anotherPage.cookies();
+        expect(cookies1).toHaveLength(1);
+        expect(cookies2).toHaveLength(1);
+        expect(cookies1[0]!.name).toBe('page1cookie');
+        expect(cookies1[0]!.value).toBe('page1value');
+        expect(cookies2[0]!.name).toBe('page2cookie');
+        expect(cookies2[0]!.value).toBe('page2value');
+      } finally {
+        await anotherContext.close();
+      }
     });
     it('should set multiple cookies', async () => {
       const {page, server} = await getTestState();
@@ -271,7 +306,6 @@ describe('Cookie specs', () => {
             httpOnly: false,
             secure: false,
             session: true,
-            sourcePort: 80,
             sourceScheme: 'NonSecure',
           },
         ]
@@ -298,7 +332,6 @@ describe('Cookie specs', () => {
           httpOnly: false,
           secure: false,
           session: true,
-          sourcePort: 80,
           sourceScheme: 'NonSecure',
         },
       ]);
@@ -401,9 +434,7 @@ describe('Cookie specs', () => {
           expires: -1,
           size: 18,
           httpOnly: false,
-          secure: true,
           session: true,
-          sourcePort: 443,
           sourceScheme: 'Secure',
         },
       ]);
@@ -446,7 +477,6 @@ describe('Cookie specs', () => {
           httpOnly: false,
           secure: false,
           session: true,
-          sourcePort: 80,
           sourceScheme: 'NonSecure',
         },
       ]);
@@ -465,7 +495,6 @@ describe('Cookie specs', () => {
             httpOnly: false,
             secure: false,
             session: true,
-            sourcePort: 80,
             sourceScheme: 'NonSecure',
           },
         ]
@@ -515,7 +544,6 @@ describe('Cookie specs', () => {
               sameSite: 'None',
               secure: true,
               session: true,
-              sourcePort: 443,
               sourceScheme: 'Secure',
             },
           ]
@@ -527,7 +555,7 @@ describe('Cookie specs', () => {
   });
 
   describe('Page.deleteCookie', function () {
-    it('should work', async () => {
+    it('should delete cookie', async () => {
       const {page, server} = await getTestState();
 
       await page.goto(server.EMPTY_PAGE);
@@ -552,6 +580,140 @@ describe('Cookie specs', () => {
       expect(await page.evaluate('document.cookie')).toBe(
         'cookie1=1; cookie3=3'
       );
+    });
+    it('should not delete cookie for different domain', async () => {
+      const {page, server} = await getTestState();
+      const COOKIE_DESTINATION_URL = 'https://example.com';
+      const COOKIE_NAME = 'some_cookie_name';
+
+      await page.goto(server.EMPTY_PAGE);
+      // Set a cookie for the current page.
+      await page.setCookie({
+        name: COOKIE_NAME,
+        value: 'local page cookie value',
+      });
+      expect(await page.cookies()).toHaveLength(1);
+
+      // Set a cookie for different domain.
+      await page.setCookie({
+        url: COOKIE_DESTINATION_URL,
+        name: COOKIE_NAME,
+        value: 'COOKIE_DESTINATION_URL cookie value',
+      });
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(1);
+
+      await page.deleteCookie({name: COOKIE_NAME});
+
+      // Verify the cookie is deleted for the current page.
+      expect(await page.cookies()).toHaveLength(0);
+
+      // Verify the cookie is not deleted for different domain.
+      await expectCookieEquals(await page.cookies(COOKIE_DESTINATION_URL), [
+        {
+          name: COOKIE_NAME,
+          value: 'COOKIE_DESTINATION_URL cookie value',
+          domain: 'example.com',
+          path: '/',
+          sameParty: false,
+          expires: -1,
+          size: 51,
+          httpOnly: false,
+          secure: true,
+          session: true,
+          sourceScheme: 'Secure',
+        },
+      ]);
+    });
+    it('should delete cookie for specified URL', async () => {
+      const {page, server} = await getTestState();
+      const COOKIE_DESTINATION_URL = 'https://example.com';
+      const COOKIE_NAME = 'some_cookie_name';
+
+      await page.goto(server.EMPTY_PAGE);
+      // Set a cookie for the current page.
+      await page.setCookie({
+        name: COOKIE_NAME,
+        value: 'some_cookie_value',
+      });
+      expect(await page.cookies()).toHaveLength(1);
+
+      // Set a cookie for specified URL.
+      await page.setCookie({
+        url: COOKIE_DESTINATION_URL,
+        name: COOKIE_NAME,
+        value: 'another_cookie_value',
+      });
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(1);
+
+      // Delete the cookie for specified URL.
+      await page.deleteCookie({
+        url: COOKIE_DESTINATION_URL,
+        name: COOKIE_NAME,
+      });
+
+      // Verify the cookie is deleted for specified URL.
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(0);
+
+      // Verify the cookie is not deleted for the current page.
+      await expectCookieEquals(await page.cookies(), [
+        {
+          name: COOKIE_NAME,
+          value: 'some_cookie_value',
+          domain: 'localhost',
+          path: '/',
+          sameParty: false,
+          expires: -1,
+          size: 33,
+          httpOnly: false,
+          secure: false,
+          session: true,
+          sourceScheme: 'NonSecure',
+        },
+      ]);
+    });
+    it('should delete cookie for specified URL regardless of the current page', async () => {
+      // This test verifies the page.deleteCookie method deletes cookies for the custom
+      // destination URL, even if it was set from another page. Depending on the cookie
+      // partitioning implementation, this test case does not pass, if source origin is in
+      // the default cookie partition.
+
+      const {page, server} = await getTestState();
+      const COOKIE_DESTINATION_URL = 'https://example.com';
+      const COOKIE_NAME = 'some_cookie_name';
+      const URL_1 = server.EMPTY_PAGE;
+      const URL_2 = server.CROSS_PROCESS_PREFIX + '/empty.html';
+
+      await page.goto(URL_1);
+      // Set a cookie for the COOKIE_DESTINATION from URL_1.
+      await page.setCookie({
+        url: COOKIE_DESTINATION_URL,
+        name: COOKIE_NAME,
+        value: 'Cookie from URL_1',
+      });
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(1);
+
+      await page.goto(URL_2);
+      // Set a cookie for the COOKIE_DESTINATION from URL_2.
+      await page.setCookie({
+        url: COOKIE_DESTINATION_URL,
+        name: COOKIE_NAME,
+        value: 'Cookie from URL_2',
+      });
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(1);
+
+      // Delete the cookie for the COOKIE_DESTINATION from URL_2.
+      await page.deleteCookie({
+        name: COOKIE_NAME,
+        url: COOKIE_DESTINATION_URL,
+      });
+
+      // Expect the cookie for the COOKIE_DESTINATION from URL_2 is deleted.
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(0);
+
+      // Navigate back to the URL_1.
+      await page.goto(server.EMPTY_PAGE);
+      // Expect the cookie for the COOKIE_DESTINATION from URL_1 is deleted.
+      expect(await page.cookies(COOKIE_DESTINATION_URL)).toHaveLength(0);
     });
   });
 });

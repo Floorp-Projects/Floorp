@@ -235,10 +235,6 @@ function defaultProfilePreferences(
     // Disable the GFX sanity window
     'media.sanity-test.disabled': true,
 
-    // Prevent various error message on the console
-    // jest-puppeteer asserts that no error message is emitted by the console
-    'network.cookie.cookieBehavior': 0,
-
     // Disable experimental feature that is only available in Nightly
     'network.cookie.sameSite.laxByDefault': false,
 
@@ -327,4 +323,9 @@ async function writePreferences(options: ProfileOptions): Promise<void> {
     const prefsBackupPath = path.join(options.path, 'prefs.js.puppeteer');
     await fs.promises.copyFile(prefsPath, prefsBackupPath);
   }
+}
+
+export function compareVersions(a: string, b: string): number {
+  // TODO: this is a not very reliable check.
+  return parseInt(a.replace('.', ''), 16) - parseInt(b.replace('.', ''), 16);
 }

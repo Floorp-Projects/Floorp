@@ -29,6 +29,99 @@ All notable changes to this project will be documented in this file. See [standa
     * puppeteer-core bumped from 21.0.2 to 21.0.3
     * @puppeteer/browsers bumped from 1.5.1 to 1.6.0
 
+## [22.4.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v22.3.0...puppeteer-v22.4.0) (2024-03-05)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 22.3.0 to 22.4.0
+
+## [22.3.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v22.2.0...puppeteer-v22.3.0) (2024-02-25)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 22.2.0 to 22.3.0
+
+## [22.2.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v22.1.0...puppeteer-v22.2.0) (2024-02-21)
+
+
+### Features
+
+* support local aliases when launching a browser ([#11947](https://github.com/puppeteer/puppeteer/issues/11947)) ([561e4cd](https://github.com/puppeteer/puppeteer/commit/561e4cd6ee79b19ac43f2c2fceaa1fce51052c02))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 22.1.0 to 22.2.0
+    * @puppeteer/browsers bumped from 2.0.1 to 2.1.0
+
+## [22.1.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v22.0.0...puppeteer-v22.1.0) (2024-02-17)
+
+
+### Miscellaneous Chores
+
+* **puppeteer:** Synchronize puppeteer versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 22.0.0 to 22.1.0
+    * @puppeteer/browsers bumped from 2.0.0 to 2.0.1
+
+## [22.0.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.11.0...puppeteer-v22.0.0) (2024-02-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove PUPPETEER_DOWNLOAD_PATH in favor of PUPPETEER_CACHE_DIR ([#11605](https://github.com/puppeteer/puppeteer/issues/11605))
+* drop support for node16 ([#10912](https://github.com/puppeteer/puppeteer/issues/10912))
+
+### Features
+
+* drop support for node16 ([#10912](https://github.com/puppeteer/puppeteer/issues/10912)) ([953f420](https://github.com/puppeteer/puppeteer/commit/953f4207b17210fa7231225e6f29a826f77e0832))
+* remove PUPPETEER_DOWNLOAD_PATH in favor of PUPPETEER_CACHE_DIR ([#11605](https://github.com/puppeteer/puppeteer/issues/11605)) ([4677281](https://github.com/puppeteer/puppeteer/commit/467728187737283191f6528676e50d53dae6e5ef))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.11.0 to 22.0.0
+    * @puppeteer/browsers bumped from 1.9.1 to 2.0.0
+
+## [21.11.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.10.0...puppeteer-v21.11.0) (2024-02-02)
+
+
+### Features
+
+* implement boolean env vars ([#11811](https://github.com/puppeteer/puppeteer/issues/11811)) ([0a9f6d6](https://github.com/puppeteer/puppeteer/commit/0a9f6d670a86c6d1399501b2780fbb46cbe97b2c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * puppeteer-core bumped from 21.10.0 to 21.11.0
+
 ## [21.10.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-v21.9.0...puppeteer-v21.10.0) (2024-01-29)
 
 

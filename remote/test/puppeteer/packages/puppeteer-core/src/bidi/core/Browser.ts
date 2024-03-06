@@ -11,7 +11,7 @@ import {inertIfDisposed, throwIfDisposed} from '../../util/decorators.js';
 import {DisposableStack, disposeSymbol} from '../../util/disposable.js';
 
 import type {BrowsingContext} from './BrowsingContext.js';
-import type {SharedWorkerRealm} from './Realm.js';
+import {SharedWorkerRealm} from './Realm.js';
 import type {Session} from './Session.js';
 import {UserContext} from './UserContext.js';
 
@@ -57,6 +57,7 @@ export class Browser extends EventEmitter<{
   readonly #disposables = new DisposableStack();
   readonly #userContexts = new Map<string, UserContext>();
   readonly session: Session;
+  readonly #sharedWorkers = new Map<string, SharedWorkerRealm>();
   // keep-sorted end
 
   private constructor(session: Session) {
@@ -64,11 +65,6 @@ export class Browser extends EventEmitter<{
     // keep-sorted start
     this.session = session;
     // keep-sorted end
-
-    this.#userContexts.set(
-      UserContext.DEFAULT,
-      UserContext.create(this, UserContext.DEFAULT)
-    );
   }
 
   async #initialize() {
@@ -80,12 +76,27 @@ export class Browser extends EventEmitter<{
     });
 
     sessionEmitter.on('script.realmCreated', info => {
-      if (info.type === 'shared-worker') {
-        // TODO: Create a SharedWorkerRealm.
+      if (info.type !== 'shared-worker') {
+        return;
       }
+      this.#sharedWorkers.set(
+        info.realm,
+        SharedWorkerRealm.from(this, info.realm, info.origin)
+      );
     });
 
+    await this.#syncUserContexts();
     await this.#syncBrowsingContexts();
+  }
+
+  async #syncUserContexts() {
+    const {
+      result: {userContexts},
+    } = await this.session.send('browser.getUserContexts', {});
+
+    for (const context of userContexts) {
+      this.#createUserContext(context.userContext);
+    }
   }
 
   async #syncBrowsingContexts() {
@@ -99,22 +110,35 @@ export class Browser extends EventEmitter<{
       sessionEmitter.on('browsingContext.contextCreated', info => {
         contextIds.add(info.context);
       });
-      sessionEmitter.on('browsingContext.contextDestroyed', info => {
-        contextIds.delete(info.context);
-      });
       const {result} = await this.session.send('browsingContext.getTree', {});
       contexts = result.contexts;
     }
 
     // Simulating events so contexts are created naturally.
     for (const info of contexts) {
-      if (contextIds.has(info.context)) {
+      if (!contextIds.has(info.context)) {
         this.session.emit('browsingContext.contextCreated', info);
       }
       if (info.children) {
         contexts.push(...info.children);
       }
     }
+  }
+
+  #createUserContext(id: string) {
+    const userContext = UserContext.create(this, id);
+    this.#userContexts.set(userContext.id, userContext);
+
+    const userContextEmitter = this.#disposables.use(
+      new EventEmitter(userContext)
+    );
+    userContextEmitter.once('closed', () => {
+      userContextEmitter.removeAllListeners();
+
+      this.#userContexts.delete(userContext.id);
+    });
+
+    return userContext;
   }
 
   // keep-sorted start block=yes
@@ -185,30 +209,15 @@ export class Browser extends EventEmitter<{
     });
   }
 
-  static userContextId = 0;
   @throwIfDisposed<Browser>(browser => {
     // SAFETY: By definition of `disposed`, `#reason` is defined.
     return browser.#reason!;
   })
   async createUserContext(): Promise<UserContext> {
-    // TODO: implement incognito context https://github.com/w3c/webdriver-bidi/issues/289.
-    // TODO: Call `createUserContext` once available.
-    // Generating a monotonically increasing context id.
-    const context = `${++Browser.userContextId}`;
-
-    const userContext = UserContext.create(this, context);
-    this.#userContexts.set(userContext.id, userContext);
-
-    const userContextEmitter = this.#disposables.use(
-      new EventEmitter(userContext)
-    );
-    userContextEmitter.once('closed', () => {
-      userContextEmitter.removeAllListeners();
-
-      this.#userContexts.delete(context);
-    });
-
-    return userContext;
+    const {
+      result: {userContext: context},
+    } = await this.session.send('browser.createUserContext', {});
+    return this.#createUserContext(context);
   }
 
   [disposeSymbol](): void {

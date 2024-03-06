@@ -8,13 +8,13 @@ import fs from 'fs';
 import path from 'path';
 
 import {TestServer} from '@pptr/testserver';
-import type {Protocol} from 'devtools-protocol';
 import expect from 'expect';
 import type * as MochaBase from 'mocha';
 import puppeteer from 'puppeteer/lib/cjs/puppeteer/puppeteer.js';
 import type {Browser} from 'puppeteer-core/internal/api/Browser.js';
 import type {BrowserContext} from 'puppeteer-core/internal/api/BrowserContext.js';
 import type {Page} from 'puppeteer-core/internal/api/Page.js';
+import type {Cookie} from 'puppeteer-core/internal/common/Cookie.js';
 import type {
   PuppeteerLaunchOptions,
   PuppeteerNode,
@@ -68,8 +68,8 @@ const product =
 const headless = (process.env['HEADLESS'] || 'true').trim().toLowerCase() as
   | 'true'
   | 'false'
-  | 'new';
-export const isHeadless = headless === 'true' || headless === 'new';
+  | 'shell';
+export const isHeadless = headless === 'true' || headless === 'shell';
 const isFirefox = product === 'firefox';
 const isChrome = product === 'chrome';
 const protocol = (process.env['PUPPETEER_PROTOCOL'] || 'cdp') as
@@ -93,7 +93,7 @@ const defaultBrowserOptions = Object.assign(
   {
     handleSIGINT: true,
     executablePath: process.env['BINARY'],
-    headless: headless === 'new' ? ('new' as const) : isHeadless,
+    headless: headless === 'shell' ? ('shell' as const) : isHeadless,
     dumpio: !!process.env['DUMPIO'],
     protocol,
   },
@@ -115,7 +115,7 @@ if (defaultBrowserOptions.executablePath) {
 
 const processVariables: {
   product: string;
-  headless: 'true' | 'false' | 'new';
+  headless: 'true' | 'false' | 'shell';
   isHeadless: boolean;
   isFirefox: boolean;
   isChrome: boolean;
@@ -216,7 +216,7 @@ export const getTestState = async (
   }
 
   if (!skipContextCreation) {
-    state.context = await state.browser!.createIncognitoBrowserContext();
+    state.context = await state.browser!.createBrowserContext();
     state.page = await state.context.newPage();
   }
   return state as PuppeteerTestState;
@@ -245,7 +245,7 @@ export interface PuppeteerTestState {
   isFirefox: boolean;
   isChrome: boolean;
   isHeadless: boolean;
-  headless: 'true' | 'false' | 'new';
+  headless: 'true' | 'false' | 'shell';
   puppeteerPath: string;
 }
 const state: Partial<PuppeteerTestState> = {};
@@ -263,7 +263,7 @@ if (
   }
   -> mode: ${
     processVariables.isHeadless
-      ? processVariables.headless === 'new'
+      ? processVariables.headless === 'true'
         ? '--headless=new'
         : '--headless'
       : 'headful'
@@ -372,23 +372,27 @@ expect.extend({
 });
 
 export const expectCookieEquals = async (
-  cookies: Protocol.Network.Cookie[],
-  expectedCookies: Array<Partial<Protocol.Network.Cookie>>
+  cookies: Cookie[],
+  expectedCookies: Array<Partial<Cookie>>
 ): Promise<void> => {
   if (!processVariables.isChrome) {
     // Only keep standard properties when testing on a browser other than Chrome.
     expectedCookies = expectedCookies.map(cookie => {
-      return {
-        domain: cookie.domain,
-        expires: cookie.expires,
-        httpOnly: cookie.httpOnly,
-        name: cookie.name,
-        path: cookie.path,
-        secure: cookie.secure,
-        session: cookie.session,
-        size: cookie.size,
-        value: cookie.value,
-      };
+      return Object.fromEntries(
+        Object.entries(cookie).filter(([key]) => {
+          return [
+            'domain',
+            'expires',
+            'httpOnly',
+            'name',
+            'path',
+            'secure',
+            'session',
+            'size',
+            'value',
+          ].includes(key);
+        })
+      );
     });
   }
 
@@ -479,7 +483,7 @@ export const launch = async (
     let context: BrowserContext;
     let page: Page;
     if (createContext) {
-      context = await browser.createIncognitoBrowserContext();
+      context = await browser.createBrowserContext();
       cleanupStorage.push(() => {
         return context.close();
       });

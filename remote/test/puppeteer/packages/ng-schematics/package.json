@@ -1,10 +1,10 @@
 {
   "name": "@puppeteer/ng-schematics",
-  "version": "0.5.6",
+  "version": "0.6.0",
   "description": "Puppeteer Angular schematics",
   "scripts": {
     "build": "wireit",
-    "clean": "../../tools/clean.js",
+    "clean": "../../tools/clean.mjs",
     "dev:test": "npm run test --watch",
     "dev": "npm run build --watch",
     "unit": "wireit"
@@ -48,16 +48,16 @@
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=16.13.2"
+    "node": ">=18"
   },
   "dependencies": {
-    "@angular-devkit/architect": "^0.1701.1",
-    "@angular-devkit/core": "^17.0.7",
-    "@angular-devkit/schematics": "^17.0.7"
+    "@angular-devkit/architect": "0.1702.2",
+    "@angular-devkit/core": "17.2.2",
+    "@angular-devkit/schematics": "17.2.2"
   },
   "devDependencies": {
-    "@schematics/angular": "^17.0.7",
-    "@angular/cli": "^17.0.7"
+    "@schematics/angular": "17.2.2",
+    "@angular/cli": "17.2.2"
   },
   "files": [
     "lib",
