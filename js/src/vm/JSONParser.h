@@ -167,7 +167,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   // State for an object that is currently being parsed. This includes all
   // the key/value pairs that have been seen so far.
-  using PropertyVector = JS::GCVector<IdValuePair, 10>;
+  using PropertyVector = IdValueVector;
 
   enum class ParseType {
     // Parsing a string as if by JSON.parse.
