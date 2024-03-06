@@ -51,9 +51,9 @@
 
 #elif defined(__aarch64__)
 
-#include <asm-generic/unistd.h>
+// The unistd.h included in the sysroot has a very old __NR_syscalls
 #define MIN_SYSCALL 0u
-#define MAX_PUBLIC_SYSCALL __NR_syscalls
+#define MAX_PUBLIC_SYSCALL  (MIN_SYSCALL + 1024u)
 #define MAX_SYSCALL MAX_PUBLIC_SYSCALL
 
 #else
