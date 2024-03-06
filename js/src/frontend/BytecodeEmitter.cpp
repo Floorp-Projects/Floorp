@@ -2602,6 +2602,7 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
       *emitted = 0;
       break;
 
+    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &target->as<PropertyAccess>();
       bool isSuper = prop->isSuper();
@@ -2761,6 +2762,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
       break;
     }
 
+    case ParseNodeKind::ArgumentsLength:
     case ParseNodeKind::DotExpr: {
       // The reference is already pushed by emitDestructuringLHSRef.
       //            [stack] # if Super
