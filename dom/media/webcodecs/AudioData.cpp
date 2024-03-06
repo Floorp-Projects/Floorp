@@ -52,7 +52,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AudioData)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AudioData)
 // AudioData should be released as soon as its refcount drops to zero,
 // without waiting for async deletion by the cycle collector, since it may hold
