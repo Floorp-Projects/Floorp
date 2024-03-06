@@ -58,6 +58,7 @@
 #include "mozilla/dom/TransformStream.h"
 #include "mozilla/dom/TransformStreamBinding.h"
 #include "mozilla/dom/VideoFrame.h"
+#include "mozilla/dom/AudioData.h"
 #include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/dom/WebIDLSerializable.h"
 #include "mozilla/dom/WritableStream.h"
@@ -1127,6 +1128,17 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     }
   }
 
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_AUDIODATA &&
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+    JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
+    if (AudioData_Binding::ConstructorEnabled(aCx, global)) {
+      return AudioData::ReadStructuredClone(aCx, mGlobal, aReader,
+                                            AudioData()[aIndex]);
+    }
+  }
+
   return ReadFullySerializableObjects(aCx, aReader, aTag, false);
 }
 
@@ -1242,6 +1254,17 @@ bool StructuredCloneHolder::CustomWriteHandler(
       SameProcessScopeRequired(aSameProcessScopeRequired);
       return CloneScope() == StructuredCloneScope::SameProcess
                  ? encodedVideoChunk->WriteStructuredClone(aWriter, this)
+                 : false;
+    }
+  }
+
+  // See if this is an AudioData object.
+  if (StaticPrefs::dom_media_webcodecs_enabled()) {
+    mozilla::dom::AudioData* audioData = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(AudioData, &obj, audioData))) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess
+                 ? audioData->WriteStructuredClone(aWriter, this)
                  : false;
     }
   }
@@ -1429,6 +1452,39 @@ StructuredCloneHolder::CustomReadTransferHandler(
     return true;
   }
 
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_AUDIODATA &&
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+    MOZ_ASSERT(aContent);
+
+    JS::Rooted<JSObject*> globalObj(aCx, mGlobal->GetGlobalJSObject());
+    // aContent will be released in CustomFreeTransferHandler.
+    if (!AudioData_Binding::ConstructorEnabled(aCx, globalObj)) {
+      return false;
+    }
+
+    AudioData::TransferredData* data =
+        static_cast<AudioData::TransferredData*>(aContent);
+    nsCOMPtr<nsIGlobalObject> global = mGlobal;
+    RefPtr<mozilla::dom::AudioData> audioData =
+        AudioData::FromTransferred(global.get(), data);
+    // aContent will be released in CustomFreeTransferHandler if frame is null.
+    if (!audioData) {
+      return false;
+    }
+    delete data;
+    aContent = nullptr;
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, audioData, &value)) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+    aReturnObject.set(&value.toObject());
+    return true;
+  }
+
   return false;
 }
 
@@ -1521,6 +1577,26 @@ StructuredCloneHolder::CustomWriteTransferHandler(
           *aContent = nullptr;
 
           UniquePtr<VideoFrame::TransferredData> data = videoFrame->Transfer();
+          if (!data) {
+            return false;
+          }
+          *aContent = data.release();
+          MOZ_ASSERT(*aContent);
+          *aOwnership = JS::SCTAG_TMO_CUSTOM;
+          return true;
+        }
+      }
+      if (StaticPrefs::dom_media_webcodecs_enabled()) {
+        mozilla::dom::AudioData* audioData = nullptr;
+        rv = UNWRAP_OBJECT(AudioData, &obj, audioData);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_ASSERT(audioData);
+
+          *aExtraData = 0;
+          *aTag = SCTAG_DOM_AUDIODATA;
+          *aContent = nullptr;
+
+          UniquePtr<AudioData::TransferredData> data = audioData->Transfer();
           if (!data) {
             return false;
           }
@@ -1667,6 +1743,16 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
     }
     return;
   }
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_AUDIODATA &&
+      CloneScope() == StructuredCloneScope::SameProcess) {
+    if (aContent) {
+      AudioData::TransferredData* data =
+          static_cast<AudioData::TransferredData*>(aContent);
+      delete data;
+    }
+    return;
+  }
 }
 
 bool StructuredCloneHolder::CustomCanTransferHandler(
@@ -1744,6 +1830,15 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
   if (StaticPrefs::dom_media_webcodecs_enabled()) {
     VideoFrame* videoframe = nullptr;
     nsresult rv = UNWRAP_OBJECT(VideoFrame, &obj, videoframe);
+    if (NS_SUCCEEDED(rv)) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess;
+    }
+  }
+
+  if (StaticPrefs::dom_media_webcodecs_enabled()) {
+    mozilla::dom::AudioData* audioData = nullptr;
+    nsresult rv = UNWRAP_OBJECT(AudioData, &obj, audioData);
     if (NS_SUCCEEDED(rv)) {
       SameProcessScopeRequired(aSameProcessScopeRequired);
       return CloneScope() == StructuredCloneScope::SameProcess;
