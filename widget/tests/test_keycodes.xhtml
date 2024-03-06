@@ -519,14 +519,14 @@ function* runKeyEventTests()
   document.addEventListener("keypress", onKeyEvent);
   document.addEventListener("keyup",    onKeyEvent);
   // Prevent almost all shortcut key handlers.
-  SpecialPowers.addSystemEventListener(document, "keypress", consumer, true);
+  SpecialPowers.wrap(document).addEventListener("keypress", consumer, { capture: true, mozSystemGroup: true });
 
   function cleanup()
   {
     document.removeEventListener("keydown",  onKeyEvent);
     document.removeEventListener("keypress", onKeyEvent);
     document.removeEventListener("keyup",    onKeyEvent);
-    SpecialPowers.removeSystemEventListener(document, "keypress", consumer, true);
+    SpecialPowers.wrap(document).removeEventListener("keypress", consumer, { capture: true, mozSystemGroup: true });
   }
 
   function* testKeysOnMac()
@@ -4968,10 +4968,10 @@ function* runXULKeyTests()
   buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup, true);
   buttonParent.addEventListener("keydown", onKeyInDefaultEventGroup);
   buttonParent.addEventListener("keypress", onKeyInDefaultEventGroup);
-  SpecialPowers.addSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, true);
-  SpecialPowers.addSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, true);
-  SpecialPowers.addSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, false);
-  SpecialPowers.addSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, false);
+  SpecialPowers.wrap(buttonParent).addEventListener("keydown", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+  SpecialPowers.wrap(buttonParent).addEventListener("keypress", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+  SpecialPowers.wrap(buttonParent).addEventListener("keydown", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
+  SpecialPowers.wrap(buttonParent).addEventListener("keypress", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
 
   function finializeKeyElementTest()
   {
@@ -4979,10 +4979,10 @@ function* runXULKeyTests()
     buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup, true);
     buttonParent.removeEventListener("keydown", onKeyInDefaultEventGroup);
     buttonParent.removeEventListener("keypress", onKeyInDefaultEventGroup);
-    SpecialPowers.removeSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, true);
-    SpecialPowers.removeSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, true);
-    SpecialPowers.removeSystemEventListener(buttonParent, "keydown", onKeyInSystemEventGroup, false);
-    SpecialPowers.removeSystemEventListener(buttonParent, "keypress", onKeyInSystemEventGroup, false);
+    SpecialPowers.wrap(buttonParent).removeEventListener("keydown", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+    SpecialPowers.wrap(buttonParent).removeEventListener("keypress", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+    SpecialPowers.wrap(buttonParent).removeEventListener("keydown", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
+    SpecialPowers.wrap(buttonParent).removeEventListener("keypress", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
   }
 
   // If aKeyElement is empty string, this function tests if the event kicks
@@ -5218,10 +5218,10 @@ function* runReservedKeyTests()
     contents[i].addEventListener("keypress", onKeyInDefaultEventGroup, true);
     contents[i].addEventListener("keydown", onKeyInDefaultEventGroup);
     contents[i].addEventListener("keypress", onKeyInDefaultEventGroup);
-    SpecialPowers.addSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, true);
-    SpecialPowers.addSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, true);
-    SpecialPowers.addSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, false);
-    SpecialPowers.addSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, false);
+    SpecialPowers.wrap(contents[i]).addEventListener("keydown", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+    SpecialPowers.wrap(contents[i]).addEventListener("keypress", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+    SpecialPowers.wrap(contents[i]).addEventListener("keydown", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
+    SpecialPowers.wrap(contents[i]).addEventListener("keypress", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
   }
 
   var keyEvents = [];
@@ -5256,10 +5256,10 @@ function* runReservedKeyTests()
       contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup, true);
       contents[i].removeEventListener("keydown", onKeyInDefaultEventGroup);
       contents[i].removeEventListener("keypress", onKeyInDefaultEventGroup);
-      SpecialPowers.removeSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, true);
-      SpecialPowers.removeSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, true);
-      SpecialPowers.removeSystemEventListener(contents[i], "keydown", onKeyInSystemEventGroup, false);
-      SpecialPowers.removeSystemEventListener(contents[i], "keypress", onKeyInSystemEventGroup, false);
+      SpecialPowers.wrap(contents[i]).removeEventListener("keydown", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+      SpecialPowers.wrap(contents[i]).removeEventListener("keypress", onKeyInSystemEventGroup, { capture: true, mozSystemGroup: true });
+      SpecialPowers.wrap(contents[i]).removeEventListener("keydown", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
+      SpecialPowers.wrap(contents[i]).removeEventListener("keypress", onKeyInSystemEventGroup, { capture: false, mozSystemGroup: true });
     }
   }
 
