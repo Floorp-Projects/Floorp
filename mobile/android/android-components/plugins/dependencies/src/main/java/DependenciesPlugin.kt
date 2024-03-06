@@ -59,7 +59,7 @@ object Versions {
         const val annotation = "1.7.1"
         const val appcompat = "1.6.1"
         const val autofill = "1.1.0"
-        const val browser = "1.7.0"
+        const val browser = "1.8.0"
         const val biometric = "1.1.0"
         const val cardview = "1.0.0"
         const val compose_bom = "2024.02.02"
