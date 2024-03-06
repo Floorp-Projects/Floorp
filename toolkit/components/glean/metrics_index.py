@@ -20,6 +20,7 @@ gecko_metrics = [
     "dom/base/use_counter_metrics.yaml",
     "dom/media/metrics.yaml",
     "dom/media/webrtc/metrics.yaml",
+    "dom/security/metrics.yaml",
     "dom/metrics.yaml",
     "dom/performance/metrics.yaml",
     "gfx/metrics.yaml",
