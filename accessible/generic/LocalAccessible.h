@@ -1010,6 +1010,17 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   nsIFrame* FindNearestAccessibleAncestorFrame();
 
+  /*
+   * This function assumes that the current role is not valid. It searches for a
+   * fallback role in the role attribute string, and returns it. If there is no
+   * valid fallback role in the role attribute string, the function returns the
+   * native role. The aRolesToSkip parameter will cause the function to skip any
+   * roles found in the role attribute string when searching for the next valid
+   * role.
+   */
+  role FindNextValidARIARole(
+      std::initializer_list<nsStaticAtom*> aRolesToSkip) const;
+
   LocalAccessible* GetPopoverTargetDetailsRelation() const;
 };
 

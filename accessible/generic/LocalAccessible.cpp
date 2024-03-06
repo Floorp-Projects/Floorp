@@ -1840,6 +1840,34 @@ bool LocalAccessible::SetCurValue(double aValue) {
       kNameSpaceID_None, nsGkAtoms::aria_valuenow, strValue, true));
 }
 
+role LocalAccessible::FindNextValidARIARole(
+    std::initializer_list<nsStaticAtom*> aRolesToSkip) const {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry && mContent && mContent->IsElement()) {
+    dom::Element* elem = mContent->AsElement();
+    if (!nsAccUtils::ARIAAttrValueIs(elem, nsGkAtoms::role,
+                                     roleMapEntry->roleAtom, eIgnoreCase)) {
+      // Get the next valid token that isn't in the list of roles to skip.
+      uint8_t roleMapIndex =
+          aria::GetFirstValidRoleMapIndexExcluding(elem, aRolesToSkip);
+      // If we don't find a valid token, fall back to the native role.
+      if (roleMapIndex == aria::NO_ROLE_MAP_ENTRY_INDEX ||
+          roleMapIndex == aria::LANDMARK_ROLE_MAP_ENTRY_INDEX) {
+        return NativeRole();
+      }
+      const nsRoleMapEntry* fallbackRoleMapEntry =
+          aria::GetRoleMapFromIndex(roleMapIndex);
+      if (!fallbackRoleMapEntry) {
+        return NativeRole();
+      }
+      // Return the next valid role, but validate that first, too.
+      return ARIATransformRole(fallbackRoleMapEntry->role);
+    }
+  }
+  // Fall back to the native role.
+  return NativeRole();
+}
+
 role LocalAccessible::ARIATransformRole(role aRole) const {
   // Beginning with ARIA 1.1, user agents are expected to use the native host
   // language role of the element when the form or region roles are used without
@@ -1854,7 +1882,17 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
   // another example of why we should consider caching the accessible name. See:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1378235.
   if (aRole == roles::REGION || aRole == roles::FORM) {
-    return NameIsEmpty() ? NativeRole() : aRole;
+    if (NameIsEmpty()) {
+      // If we have a "form" or "region" role, but no accessible name, we need
+      // to search for the next valid role. First, we search through the role
+      // attribute value string - there might be a valid fallback there. Skip
+      // all "form" or "region" attributes; we know they're not valid since
+      // there's no accessible name. If we find a valid role that's not "form"
+      // or "region", fall back to it (but run it through ARIATransformRole
+      // first). Otherwise, fall back to the element's native role.
+      return FindNextValidARIARole({nsGkAtoms::region, nsGkAtoms::form});
+    }
+    return aRole;
   }
 
   // XXX: these unfortunate exceptions don't fit into the ARIA table. This is
