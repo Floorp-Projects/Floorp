@@ -318,13 +318,6 @@ Maybe<VideoPixelFormat> ImageBitmapFormatToVideoPixelFormat(
   return Nothing();
 }
 
-Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
-  Unused << AppendTypedArrayDataTo(aBuffer, *data);
-  return data->Length() > 0 ? data : nullptr;
-}
-
 bool IsOnAndroid() {
 #if defined(ANDROID)
   return true;
@@ -582,4 +575,13 @@ nsString ConfigToString(const VideoDecoderConfig& aConfig) {
   return internal->ToString();
 }
 
-};  // namespace mozilla::dom
+Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
+  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
+  if (!AppendTypedArrayDataTo(aBuffer, *data)) {
+    return Err(NS_ERROR_OUT_OF_MEMORY);
+  }
+  return data->Length() > 0 ? data : nullptr;
+}
+
+} // namespace mozilla::dom
