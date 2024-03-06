@@ -22,6 +22,9 @@ panel-list-checked = Checked
 panel-list-badged = Badged, look at me
 panel-list-passwords = Passwords
 panel-list-settings = Settings
+submenu-item-one = Submenu Item One
+submenu-item-two = Submenu Item Two
+submenu-item-three = Submenu Item Three
     `,
   },
 };
@@ -36,7 +39,7 @@ function openMenu(event) {
   }
 }
 
-const Template = ({ isOpen, items, wideAnchor }) =>
+const Template = ({ isOpen, items, wideAnchor, hasSubMenu }) =>
   html`
     <style>
       panel-item[icon="passwords"]::part(button) {
@@ -93,21 +96,35 @@ const Template = ({ isOpen, items, wideAnchor }) =>
       ?open=${isOpen}
       ?min-width-from-anchor=${wideAnchor}
     >
-      ${items.map(i =>
-        i == "<hr>"
+      ${items.map((item, index) => {
+        // Always showing submenu on the first item for simplicity.
+        let showSubMenu = hasSubMenu && index == 0;
+        let subMenuId = showSubMenu ? "example-sub-menu" : undefined;
+        return item == "<hr>"
           ? html` <hr /> `
           : html`
               <panel-item
-                icon=${i.icon ?? ""}
-                ?checked=${i.checked}
-                ?badged=${i.badged}
-                accesskey=${ifDefined(i.accesskey)}
-                data-l10n-id=${i.l10nId ?? i}
-              ></panel-item>
-            `
-      )}
+                icon=${item.icon ?? ""}
+                ?checked=${item.checked}
+                ?badged=${item.badged}
+                accesskey=${ifDefined(item.accesskey)}
+                data-l10n-id=${item.l10nId ?? item}
+                submenu=${ifDefined(subMenuId)}
+              >
+                ${showSubMenu ? subMenuTemplate() : ""}
+              </panel-item>
+            `;
+      })}
     </panel-list>
   `;
+
+const subMenuTemplate = () => html`
+  <panel-list slot="submenu" id="example-sub-menu">
+    <panel-item data-l10n-id="submenu-item-one"></panel-item>
+    <panel-item data-l10n-id="submenu-item-two"></panel-item>
+    <panel-item data-l10n-id="submenu-item-three"></panel-item>
+  </panel-list>
+`;
 
 export const Simple = Template.bind({});
 Simple.args = {
@@ -144,4 +161,10 @@ export const Wide = Template.bind({});
 Wide.args = {
   ...Simple.args,
   wideAnchor: true,
+};
+
+export const SubMenu = Template.bind({});
+SubMenu.args = {
+  ...Simple.args,
+  hasSubMenu: true,
 };

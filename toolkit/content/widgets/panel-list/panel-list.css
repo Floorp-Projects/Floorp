@@ -26,6 +26,10 @@
   box-sizing: border-box;
 }
 
+:host([has-submenu]) {
+  overflow-y: visible;
+}
+
 :host(:not([slot=submenu])) {
   max-height: 100%;
 }
