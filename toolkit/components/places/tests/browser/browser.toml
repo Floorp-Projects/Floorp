@@ -44,6 +44,8 @@ support-files = [
   "redirect_twice.sjs",
 ]
 
+["browser_favicon.js"]
+
 ["browser_favicon_privatebrowsing_perwindowpb.js"]
 
 ["browser_history_post.js"]
