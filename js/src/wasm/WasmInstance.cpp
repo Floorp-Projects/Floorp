@@ -1531,8 +1531,10 @@ static bool ArrayCopyFromData(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
 
   // Because `numBytesToCopy` is an in-range `CheckedUint32`, the cast to
   // `size_t` is safe even on a 32-bit target.
-  memcpy(arrayObj->data_, &seg->bytes[segByteOffset],
-         size_t(numBytesToCopy.value()));
+  if (!seg->bytes.empty()) {
+    memcpy(arrayObj->data_, &seg->bytes[segByteOffset],
+           size_t(numBytesToCopy.value()));
+  }
 
   return true;
 }
