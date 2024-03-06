@@ -165,6 +165,7 @@ class StructuredCloneHolderBase {
 };
 
 class BlobImpl;
+class EncodedAudioChunkData;
 class EncodedVideoChunkData;
 class MessagePort;
 class MessagePortIdentifier;
@@ -277,6 +278,10 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
     return mEncodedVideoChunks;
   }
 
+  nsTArray<EncodedAudioChunkData>& EncodedAudioChunks() {
+    return mEncodedAudioChunks;
+  }
+
   // Implementations of the virtual methods to allow cloning of objects which
   // JS engine itself doesn't clone.
 
@@ -387,6 +392,9 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Used for cloning EncodedVideoChunk in the structured cloning algorithm.
   nsTArray<EncodedVideoChunkData> mEncodedVideoChunks;
+
+  // Used for cloning EncodedAudioChunk in the structured cloning algorithm.
+  nsTArray<EncodedAudioChunkData> mEncodedAudioChunks;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;
