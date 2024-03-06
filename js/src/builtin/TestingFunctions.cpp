@@ -2113,7 +2113,8 @@ static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    JSObject* results = NewPlainObjectWithUniqueNames(cx, props);
+    JSObject* results =
+        NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
     args.rval().setObject(*results);
 
     return true;

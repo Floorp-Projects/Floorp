@@ -692,9 +692,8 @@ inline bool JSONFullParseHandlerAnyChar::finishObject(
   if (gcHeap == gc::Heap::Tenured) {
     newKind = TenuredObject;
   }
-  // properties is traced in the parser; see JSONParser<CharT>::trace()
   JSObject* obj = NewPlainObjectWithMaybeDuplicateKeys(
-      cx, Handle<IdValueVector>::fromMarkedLocation(properties), newKind);
+      cx, properties->begin(), properties->length(), newKind);
   if (!obj) {
     return false;
   }

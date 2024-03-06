@@ -17,7 +17,6 @@
 #include <stddef.h>
 
 #include "builtin/Array.h"
-#include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
 #include "js/GCVariant.h"
 #include "js/RealmOptions.h"
@@ -130,7 +129,7 @@ class NewPlainObjectWithPropsCache {
  public:
   NewPlainObjectWithPropsCache() { purge(); }
 
-  SharedShape* lookup(Handle<IdValueVector> properties) const;
+  SharedShape* lookup(IdValuePair* properties, size_t nproperties) const;
   void add(SharedShape* shape);
 
   void purge() {
