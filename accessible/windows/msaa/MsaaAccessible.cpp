@@ -608,16 +608,20 @@ MsaaAccessible::get_accChildCount(long __RPC_FAR* pcountChildren) {
 
   if (!mAcc) return CO_E_OBJNOTCONNECTED;
 
-  if (Compatibility::IsA11ySuppressedForClipboardCopy() && mAcc->IsRoot()) {
+  if ((Compatibility::A11ySuppressionReasons() &
+       SuppressionReasons::Clipboard) &&
+      mAcc->IsRoot()) {
     // Bug 1798098: Windows Suggested Actions (introduced in Windows 11 22H2)
-    // might walk the entire a11y tree using UIA whenever anything is copied to
-    // the clipboard. This causes an unacceptable hang, particularly when the
-    // cache is disabled. We prevent this tree walk by returning a 0 child count
-    // for the root window, from which Windows might walk.
+    // might walk the entire a11y tree using UIA whenever anything is copied
+    // to the clipboard. This causes an unacceptable hang, particularly when
+    // the cache is disabled. We prevent this tree walk by returning a 0 child
+    // count for the root window, from which Windows might walk.
     return S_OK;
   }
 
-  if (nsAccUtils::MustPrune(mAcc)) return S_OK;
+  if (nsAccUtils::MustPrune(mAcc)) {
+    return S_OK;
+  }
 
   *pcountChildren = mAcc->ChildCount();
   return S_OK;

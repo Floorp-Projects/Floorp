@@ -142,9 +142,20 @@ void Compatibility::GetHumanReadableConsumersStr(nsAString& aResult) {
   }
 }
 
-// Time when SuppressA11yForClipboardCopy() was called, as returned by
-// ::GetTickCount().
-static DWORD sA11yClipboardCopySuppressionStartTime = 0;
+struct SuppressionTimer {
+  constexpr SuppressionTimer() = default;
+  void Start() { mStart = ::GetTickCount(); }
+  bool IsActive(DWORD aTickCount) const {
+    return mStart && aTickCount - mStart < kSuppressTimeout;
+  }
+  // Last time Start() was called, as returned by ::GetTickCount().
+  DWORD mStart = 0;
+
+  static constexpr DWORD kSuppressTimeout = 1500;  // ms
+};
+
+static SuppressionTimer sClipboardSuppressionTimer;
+static SuppressionTimer sSnapLayoutsSuppressionTimer;
 
 /* static */
 void Compatibility::SuppressA11yForClipboardCopy() {
@@ -166,16 +177,40 @@ void Compatibility::SuppressA11yForClipboardCopy() {
   }();
 
   if (doSuppress) {
-    sA11yClipboardCopySuppressionStartTime = ::GetTickCount();
+    sClipboardSuppressionTimer.Start();
   }
 }
 
 /* static */
-bool Compatibility::IsA11ySuppressedForClipboardCopy() {
-  constexpr DWORD kSuppressTimeout = 1500;  // ms
-  if (!sA11yClipboardCopySuppressionStartTime) {
-    return false;
+void Compatibility::SuppressA11yForSnapLayouts() {
+  // Bug 1883132: Snap Layouts might enable a11y to find the maximize button
+  // position.
+  bool doSuppress = [&] {
+    switch (StaticPrefs::accessibility_windows_suppress_for_snap_layout()) {
+      case 0:
+        return false;
+      case 1:
+        return true;
+      default:
+        // Our workaround for Snap Layouts is needed from Windows 11 22H2
+        return IsWin1122H2OrLater();
+    }
+  }();
+
+  if (doSuppress) {
+    sSnapLayoutsSuppressionTimer.Start();
   }
-  return ::GetTickCount() - sA11yClipboardCopySuppressionStartTime <
-         kSuppressTimeout;
+}
+
+/* static */
+SuppressionReasons Compatibility::A11ySuppressionReasons() {
+  const auto now = ::GetTickCount();
+  auto reasons = SuppressionReasons::None;
+  if (sClipboardSuppressionTimer.IsActive(now)) {
+    reasons |= SuppressionReasons::Clipboard;
+  }
+  if (sSnapLayoutsSuppressionTimer.IsActive(now)) {
+    reasons |= SuppressionReasons::SnapLayouts;
+  }
+  return reasons;
 }

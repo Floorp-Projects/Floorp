@@ -249,11 +249,7 @@ bool LazyInstantiator::ShouldInstantiate(const DWORD aClientPid) {
  * various different types of clients.
  */
 bool LazyInstantiator::ShouldInstantiate() {
-  if (Compatibility::IsA11ySuppressedForClipboardCopy()) {
-    // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
-    // walks the entire a11y tree using UIA whenever anything is copied to the
-    // clipboard. This causes an unacceptable hang, particularly when the cache
-    // is disabled. Don't allow a11y to be instantiated by this.
+  if (Compatibility::IsA11ySuppressed()) {
     return false;
   }
   if (DWORD pid = GetRemoteMsaaClientPid()) {
