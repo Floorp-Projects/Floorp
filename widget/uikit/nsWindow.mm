@@ -75,7 +75,7 @@ static CGRect DevPixelsToUIKitPoints(const LayoutDeviceIntRect& aRect,
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainUIKitObject {
  public:
-  nsAutoRetainUIKitObject(id anObject) { mObject = [anObject retain]; }
+  explicit nsAutoRetainUIKitObject(id anObject) { mObject = [anObject retain]; }
   ~nsAutoRetainUIKitObject() { [mObject release]; }
 
  private:
@@ -941,6 +941,7 @@ nsresult nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus& aStatus) {
   aStatus = nsEventStatus_eIgnore;
   nsCOMPtr<nsIWidget> kungFuDeathGrip(aEvent->mWidget);
+  mozilla::Unused << kungFuDeathGrip;  // Not used within this function
 
   if (mAttachedWidgetListener) {
     aStatus = mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
