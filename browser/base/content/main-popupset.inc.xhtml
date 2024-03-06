@@ -36,10 +36,10 @@
     <menuitem id="context_bookmarkSelectedTabs"
               hidden="true"
               data-lazy-l10n-id="bookmark-selected-tabs"
-              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"/>
+              oncommand="PlacesCommandHook.bookmarkTabs(gBrowser.selectedTabs);"/>
     <menuitem id="context_bookmarkTab"
               data-lazy-l10n-id="tab-context-bookmark-tab"
-              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.getUniquePages([TabContextMenu.contextTab]));"/>
+              oncommand="PlacesCommandHook.bookmarkTabs([TabContextMenu.contextTab]);"/>
     <menu id="context_moveTabOptions"
           data-lazy-l10n-id="tab-context-move-tabs"
           data-l10n-args='{"tabCount": 1}'>
@@ -326,11 +326,11 @@
               data-lazy-l10n-id="toolbar-context-menu-reload-selected-tabs"/>
     <menuitem id="toolbar-context-bookmarkSelectedTab"
               contexttype="tabbar"
-              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"
+              oncommand="PlacesCommandHook.bookmarkTabs(gBrowser.selectedTabs);"
               data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tab"/>
     <menuitem id="toolbar-context-bookmarkSelectedTabs"
               contexttype="tabbar"
-              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueSelectedPages);"
+              oncommand="PlacesCommandHook.bookmarkTabs(gBrowser.selectedTabs);"
               data-lazy-l10n-id="toolbar-context-menu-bookmark-selected-tabs"/>
     <menuitem id="toolbar-context-selectAllTabs"
               contexttype="tabbar"
