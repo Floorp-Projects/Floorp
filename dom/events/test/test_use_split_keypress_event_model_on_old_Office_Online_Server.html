@@ -23,7 +23,7 @@ function srcdocLoaded() {
    waitForCheckKeyPressEventModelEvent = new Promise(resolve => {
       dump(document.querySelector("iframe").contentDocument.location + "\n");
       var doc = document.querySelector("iframe").contentDocument;
-      SpecialPowers.addSystemEventListener(doc, "CheckKeyPressEventModel", resolve, {once: true});
+      SpecialPowers.wrap(doc).addEventListener("CheckKeyPressEventModel", resolve, {mozSystemGroup: true, once: true});
       doc.getElementById("WACViewPanel_EditingElement").contentEditable = "true";
    });
 }

@@ -36,10 +36,10 @@ function runTests() {
 
   let target = iframe.contentDocument.body.firstChild;
   allPointerEvents.forEach((event, idx, arr) => {
-    SpecialPowers.addSystemEventListener(target, event, () => {
+    SpecialPowers.wrap(target).addEventListener(event, () => {
       ok(false, "Shouldn't dispatch " + event + " in the system group");
       receivePointerEvents = true;
-    });
+    }, { mozSystemGroup: true });
   });
   target.addEventListener("pointerdown", (e) => {
     target.setPointerCapture(e.pointerId);
