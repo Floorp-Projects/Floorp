@@ -96,7 +96,7 @@ int32_t DeviceInfoPipeWire::CreateCapabilityMap(
       continue;
 
     _captureCapabilities = node.capabilities();
-    _lastUsedDeviceNameLength = node.display_name().length();
+    _lastUsedDeviceNameLength = node.unique_id().length();
     _lastUsedDeviceName = static_cast<char*>(
         realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
     memcpy(_lastUsedDeviceName, deviceUniqueIdUTF8,
