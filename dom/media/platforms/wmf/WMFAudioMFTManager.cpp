@@ -55,6 +55,9 @@ WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
       audioSpecConfig = audioCodecSpecificBinaryBlob->Elements();
       configLength = audioCodecSpecificBinaryBlob->Length();
     }
+    // If no extradata has been provided, assume this is ADTS. Otherwise,
+    // assume raw AAC packets.
+    mIsADTS = !configLength;
     AACAudioSpecificConfigToUserData(aConfig.mExtendedProfile, audioSpecConfig,
                                      configLength, mUserData);
   }
@@ -104,7 +107,8 @@ bool WMFAudioMFTManager::Init() {
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   if (mStreamType == WMFStreamType::AAC) {
-    hr = inputType->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0);  // Raw AAC packet
+    UINT32 payloadType = mIsADTS ? 1 : 0;
+    hr = inputType->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, payloadType);
     NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
     hr = inputType->SetBlob(MF_MT_USER_DATA, mUserData.Elements(),

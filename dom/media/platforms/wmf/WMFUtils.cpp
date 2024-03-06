@@ -374,7 +374,9 @@ void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
   // the rest can be all 0x00.
   BYTE heeInfo[heeInfoLen] = {0};
   WORD* w = (WORD*)heeInfo;
-  w[0] = 0x0;  // Payload type raw AAC packet
+  // If extradata has been provided, assume raw AAC packets (0). Otherwise,
+  // assume ADTS (1)
+  w[0] = aConfigLength ? 0 : 1;
   w[1] = aAACProfileLevelIndication;
 
   aOutUserData.AppendElements(heeInfo, heeInfoLen);
