@@ -49,11 +49,11 @@ add_task(async function popupEnterEvent() {
   }
 
   const submitTested = new Promise(resolve => {
-    SpecialPowers.addSystemEventListener(input, "keypress", handleEnter, true);
+    SpecialPowers.wrap(input).addEventListener("keypress", handleEnter, { capture: true, mozSystemGroup: true });
     form.addEventListener("submit", e => {
       e.preventDefault();
       is(input.value, expectedValue, "Check input value in the submit handler");
-      SpecialPowers.removeSystemEventListener(input, "keypress", handleEnter, true);
+      SpecialPowers.wrap(input).removeEventListener("keypress", handleEnter, { capture: true, mozSystemGroup: true });
       resolve();
     }, { once: true });
   });

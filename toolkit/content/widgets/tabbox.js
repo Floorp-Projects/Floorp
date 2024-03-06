@@ -24,15 +24,15 @@
     }
 
     connectedCallback() {
-      Services.els.addSystemEventListener(document, "keydown", this, false);
+      document.addEventListener("keydown", this, { mozSystemGroup: true });
       window.addEventListener("unload", this.disconnectedCallback, {
         once: true,
       });
     }
 
     disconnectedCallback() {
+      document.removeEventListener("keydown", this, { mozSystemGroup: true });
       window.removeEventListener("unload", this.disconnectedCallback);
-      Services.els.removeSystemEventListener(document, "keydown", this, false);
     }
 
     set handleCtrlTab(val) {

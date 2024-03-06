@@ -182,12 +182,18 @@ export var ClipboardContextMenu = {
 
   _startWatchingForSpammyActivation() {
     let doc = this._menuitem.ownerDocument;
-    Services.els.addSystemEventListener(doc, "keydown", this, true);
+    doc.addEventListener("keydown", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
   },
 
   _stopWatchingForSpammyActivation() {
     let doc = this._menuitem.ownerDocument;
-    Services.els.removeSystemEventListener(doc, "keydown", this, true);
+    doc.removeEventListener("keydown", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
   },
 
   _delayTimer: null,

@@ -11,16 +11,12 @@
     "resource://gre/modules/AppConstants.sys.mjs"
   );
 
-  // For the non-native context menu styling, we need to know if we need
-  // a gutter for checkboxes. To do this, check whether there are any
-  // radio/checkbox type menuitems in a menupopup when showing it. We use a
-  // system bubbling event listener to ensure we run *after* the "normal"
-  // popupshowing listeners, so (visibility) changes they make to their items
-  // take effect first, before we check for checkable menuitems.
-  Services.els.addSystemEventListener(
-    document,
+  document.addEventListener(
     "popupshowing",
     function (e) {
+      // For the non-native context menu styling, we need to know if we need
+      // a gutter for checkboxes. To do this, check whether there are any
+      // radio/checkbox type menuitems in a menupopup when showing it.
       if (e.target.nodeName == "menupopup") {
         let haveCheckableChild = e.target.querySelector(
           `:scope > menuitem:not([hidden]):is([type=checkbox],[type=radio]${
@@ -33,7 +29,10 @@
         e.target.toggleAttribute("needsgutter", haveCheckableChild);
       }
     },
-    false
+    // we use a system bubbling event listener to ensure we run *after* the
+    // "normal" popupshowing listeners, so (visibility) changes they make to
+    // their items take effect first, before we check for checkable menuitems.
+    { mozSystemGroup: true }
   );
 
   class MozMenuPopup extends MozElements.MozElementMixin(XULPopupElement) {
