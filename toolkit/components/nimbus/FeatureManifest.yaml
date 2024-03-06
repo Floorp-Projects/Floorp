@@ -51,7 +51,6 @@ nimbus-qa-1:
 nimbus-qa-2:
   description: A feature for testing pref-setting on the user branch.
   owner: barret@mozilla.com
-  isEarlyStartup: true
   hasExposure: false
   variables:
     value:

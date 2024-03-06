@@ -43,7 +43,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "majorRelease2022",
     "migrationWizard",
     "newtab",
-    "nimbus-qa-2",
     "opaqueResponseBlocking",
     "phc",
     "pocketNewtab",
