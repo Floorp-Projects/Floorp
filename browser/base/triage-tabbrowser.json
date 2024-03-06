@@ -3,32 +3,49 @@
     "Dão Gottwald": {
       "bzmail": "dao+bmo@mozilla.com"
     },
+    "DJ Walker": {
+      "bzmail": "dwalker@mozilla.com"
+    },
     "Marco Bonardo": {
       "bzmail": "mak@mozilla.com"
     },
     "Mike Conley": {
       "bzmail": "mconley@mozilla.com"
+    },
+    "Niklas Baumgardner": {
+      "bzmail": "nbaumgardner@mozilla.com"
     }
   },
   "duty-start-dates": {
-    "2024-03-16": "Marco Bonardo",
-    "2024-04-01": "Dão Gottwald",
-    "2024-04-16": "Mike Conley",
-    "2024-05-01": "Dão Gottwald",
-    "2024-05-16": "Marco Bonardo",
-    "2024-06-01": "Dão Gottwald",
-    "2024-06-16": "Mike Conley",
-    "2024-07-01": "Dão Gottwald",
+    "2024-03-01": "Marco Bonardo",
+    "2024-03-16": "Dão Gottwald",
+    "2024-04-01": "Mike Conley",
+    "2024-04-16": "Dão Gottwald",
+    "2024-05-01": "Marco Bonardo",
+    "2024-05-16": "Mike Conley",
+    "2024-06-01": "Niklas Baumgardner",
+    "2024-06-16": "Dão Gottwald",
+    "2024-07-01": "DJ Walker",
     "2024-07-16": "Marco Bonardo",
-    "2024-08-01": "Dão Gottwald",
-    "2024-08-16": "Mike Conley",
+    "2024-08-01": "Mike Conley",
+    "2024-08-16": "Niklas Baumgardner",
     "2024-09-01": "Dão Gottwald",
-    "2024-09-16": "Marco Bonardo",
-    "2024-10-01": "Dão Gottwald",
+    "2024-09-16": "DJ Walker",
+    "2024-10-01": "Marco Bonardo",
     "2024-10-16": "Mike Conley",
-    "2024-11-01": "Dão Gottwald",
-    "2024-11-16": "Marco Bonardo",
-    "2024-12-01": "Dão Gottwald",
-    "2024-12-16": "Mike Conley"
+    "2024-11-01": "Niklas Baumgardner",
+    "2024-11-16": "Dão Gottwald",
+    "2024-12-01": "DJ Walker",
+    "2024-12-16": "Marco Bonardo",
+    "2025-01-01": "Mike Conley",
+    "2025-01-16": "Niklas Baumgardner",
+    "2025-02-01": "Dão Gottwald",
+    "2025-02-16": "DJ Walker",
+    "2025-03-01": "Marco Bonardo",
+    "2025-03-16": "Mike Conley",
+    "2025-04-01": "Niklas Baumgardner",
+    "2025-04-16": "Dão Gottwald",
+    "2025-05-01": "DJ Walker",
+    "2025-05-16": "Marco Bonardo"
   }
 }
