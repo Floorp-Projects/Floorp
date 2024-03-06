@@ -15,8 +15,6 @@
 #include "MediaData.h"
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Try.h"
@@ -30,7 +28,6 @@
 #include "mozilla/dom/WebCodecsUtils.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
-#include "nsThreadUtils.h"
 
 #ifdef XP_MACOSX
 #  include "MacIOSurfaceImage.h"
@@ -96,9 +93,6 @@ VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
   return init;
 };
 
-static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
-
 VideoDecoderConfigInternal::VideoDecoderConfigInternal(
     const nsAString& aCodec, Maybe<uint32_t>&& aCodedHeight,
     Maybe<uint32_t>&& aCodedWidth, Maybe<VideoColorSpaceInternal>&& aColorSpace,
@@ -128,7 +122,7 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
 
   Maybe<RefPtr<MediaByteBuffer>> description;
   if (aConfig.mDescription.WasPassed()) {
-    auto rv = GetExtraData(aConfig.mDescription.Value());
+    auto rv = GetExtraDataFromArrayBuffer(aConfig.mDescription.Value());
     if (rv.isErr()) {  // Invalid description data.
       LOGE(
           "Failed to create VideoDecoderConfigInternal due to invalid "
@@ -274,15 +268,6 @@ static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
     }
   }
   return {};
-}
-
-static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
-  if (!AppendTypedArrayDataTo(aBuffer, *data)) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
-  return data->Length() > 0 ? data : nullptr;
 }
 
 static Result<Ok, nsresult> CloneConfiguration(
