@@ -2709,6 +2709,7 @@ enum class ServoPostTraversalFlags : uint32_t {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoPostTraversalFlags)
 
+#ifdef ACCESSIBILITY
 static bool IsVisibleForA11y(const ComputedStyle& aStyle) {
   return aStyle.StyleVisibility()->IsVisible() && !aStyle.StyleUI()->IsInert();
 }
@@ -2717,6 +2718,7 @@ static bool IsSubtreeVisibleForA11y(const ComputedStyle& aStyle) {
   return aStyle.StyleDisplay()->mContentVisibility !=
          StyleContentVisibility::Hidden;
 }
+#endif
 
 // Send proper accessibility notifications and return post traversal
 // flags for kids.
