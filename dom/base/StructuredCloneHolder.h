@@ -165,12 +165,10 @@ class StructuredCloneHolderBase {
 };
 
 class BlobImpl;
-class EncodedAudioChunkData;
 class EncodedVideoChunkData;
 class MessagePort;
 class MessagePortIdentifier;
 struct VideoFrameSerializedData;
-struct AudioDataSerializedData;
 
 class StructuredCloneHolder : public StructuredCloneHolderBase {
  public:
@@ -272,14 +270,8 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   nsTArray<VideoFrameSerializedData>& VideoFrames() { return mVideoFrames; }
 
-  nsTArray<AudioDataSerializedData>& AudioData() { return mAudioData; }
-
   nsTArray<EncodedVideoChunkData>& EncodedVideoChunks() {
     return mEncodedVideoChunks;
-  }
-
-  nsTArray<EncodedAudioChunkData>& EncodedAudioChunks() {
-    return mEncodedAudioChunks;
   }
 
   // Implementations of the virtual methods to allow cloning of objects which
@@ -387,14 +379,8 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   // Used for cloning VideoFrame in the structured cloning algorithm.
   nsTArray<VideoFrameSerializedData> mVideoFrames;
 
-  // Used for cloning AudioData in the structured cloning algorithm.
-  nsTArray<AudioDataSerializedData> mAudioData;
-
   // Used for cloning EncodedVideoChunk in the structured cloning algorithm.
   nsTArray<EncodedVideoChunkData> mEncodedVideoChunks;
-
-  // Used for cloning EncodedAudioChunk in the structured cloning algorithm.
-  nsTArray<EncodedAudioChunkData> mEncodedAudioChunks;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsIGlobalObject* MOZ_NON_OWNING_REF mGlobal;

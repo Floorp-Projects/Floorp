@@ -31,7 +31,6 @@ UNIFIED_SOURCES += [
     "TestAudioMixer.cpp",
     "TestAudioPacketizer.cpp",
     "TestAudioRingBuffer.cpp",
-    "TestAudioSampleFormat.cpp",
     "TestAudioSegment.cpp",
     "TestAudioSinkWrapper.cpp",
     "TestAudioTrackEncoder.cpp",

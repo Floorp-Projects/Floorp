@@ -139,8 +139,8 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
 
   nsCString errorMessage;
   if (!DecoderType::Validate(aConfig, errorMessage)) {
-    LOG("Configure: Validate error: %s", errorMessage.get());
-    aRv.ThrowTypeError(errorMessage);
+    aRv.ThrowTypeError(
+        nsPrintfCString("config is invalid: %s", errorMessage.get()));
     return;
   }
 
@@ -322,13 +322,13 @@ void DecoderTemplate<DecoderType>::OutputDecodedData(
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(mActiveConfig);
 
-  nsTArray<RefPtr<OutputType>> frames = DecodedDataToOutputType(
+  nsTArray<RefPtr<VideoFrame>> frames = DecodedDataToOutputType(
       GetParentObject(), std::move(aData), *mActiveConfig);
-  RefPtr<OutputCallbackType> cb(mOutputCallback);
-  for (RefPtr<OutputType>& frame : frames) {
+  RefPtr<VideoFrameOutputCallback> cb(mOutputCallback);
+  for (RefPtr<VideoFrame>& frame : frames) {
     LOG("Outputing decoded data: ts: %" PRId64, frame->Timestamp());
-    RefPtr<OutputType> f = frame;
-    cb->Call((OutputType&)(*f));
+    RefPtr<VideoFrame> f = frame;
+    cb->Call((VideoFrame&)(*f));
   }
 }
 
@@ -881,7 +881,6 @@ void DecoderTemplate<DecoderType>::DestroyDecoderAgentIfAny() {
 }
 
 template class DecoderTemplate<VideoDecoderTraits>;
-template class DecoderTemplate<AudioDecoderTraits>;
 
 #undef LOG
 #undef LOGW
