@@ -6,8 +6,6 @@
 
 #include "DecoderAgent.h"
 
-#include <atomic>
-
 #include "ImageContainer.h"
 #include "MediaDataDecoderProxy.h"
 #include "PDMFactory.h"
