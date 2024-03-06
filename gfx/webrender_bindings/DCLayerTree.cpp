@@ -1241,7 +1241,6 @@ static bool GetVpAutoHDRSupported(UINT aGpuVendorId,
   if (aGpuVendorId == 0x10DE) {
     return GetNvidiaRTXVideoTrueHDRSupported(aVideoContext, aVideoProcessor);
   }
-  MOZ_ASSERT_UNREACHABLE("Unexpected to be called");
   return false;
 }
 
