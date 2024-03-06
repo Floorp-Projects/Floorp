@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <tuple>
+
 #include "CubebUtils.h"
 #include "GraphDriver.h"
 
@@ -56,10 +58,10 @@ class MockGraphInterface : public GraphInterface {
       return IterationResult::CreateStop(
           NS_NewRunnableFunction(__func__, [] {}));
     }
-    GraphDriver* next = mNextDriver.exchange(nullptr);
-    if (next) {
-      return IterationResult::CreateSwitchDriver(
-          next, NS_NewRunnableFunction(__func__, [] {}));
+    if (auto guard = mNextDriver.Lock(); guard->isSome()) {
+      auto tup = guard->extract();
+      const auto& [driver, switchedRunnable] = tup;
+      return IterationResult::CreateSwitchDriver(driver, switchedRunnable);
     }
     if (mEnsureNextIteration) {
       driver->EnsureNextIteration();
@@ -75,7 +77,14 @@ class MockGraphInterface : public GraphInterface {
 
   void StopIterating() { mKeepProcessing = false; }
 
-  void SwitchTo(GraphDriver* aDriver) { mNextDriver = aDriver; }
+  void SwitchTo(RefPtr<GraphDriver> aDriver,
+                RefPtr<Runnable> aSwitchedRunnable = NS_NewRunnableFunction(
+                    "DefaultNoopSwitchedRunnable", [] {})) {
+    auto guard = mNextDriver.Lock();
+    MOZ_ASSERT(guard->isNothing());
+    *guard =
+        Some(std::make_tuple(std::move(aDriver), std::move(aSwitchedRunnable)));
+  }
   const TrackRate mSampleRate;
 
   MediaEventSource<uint32_t>& FramesIteratedEvent() {
@@ -88,7 +97,9 @@ class MockGraphInterface : public GraphInterface {
   Atomic<GraphDriver*> mCurrentDriver{nullptr};
   Atomic<bool> mEnsureNextIteration{false};
   Atomic<bool> mKeepProcessing{true};
-  Atomic<GraphDriver*> mNextDriver{nullptr};
+  DataMutex<Maybe<std::tuple<RefPtr<GraphDriver>, RefPtr<Runnable>>>>
+      mNextDriver{"MockGraphInterface::mNextDriver"};
+  RefPtr<Runnable> mNextDriverSwitchedRunnable;
   MediaEventProducer<uint32_t> mFramesIteratedEvent;
   AudioMixer mMixer;
   virtual ~MockGraphInterface() = default;
@@ -370,6 +381,97 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
 
   // This will block until all events have been queued.
   MOZ_KnownLive(driver)->Shutdown();
+  // Drain the event queue.
+  NS_ProcessPendingEvents(nullptr);
+}
+
+TEST(TestAudioCallbackDriver, DeviceChangeAfterStop)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+  constexpr TrackRate rate = 48000;
+  MockCubeb* cubeb = new MockCubeb(MockCubeb::RunningMode::Manual);
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  auto graph = MakeRefPtr<MockGraphInterface>(rate);
+  auto driver = MakeRefPtr<AudioCallbackDriver>(
+      graph, nullptr, rate, 2, 1, nullptr, (void*)1, AudioInputType::Voice);
+  EXPECT_FALSE(driver->ThreadRunning()) << "Verify thread is not running";
+  EXPECT_FALSE(driver->IsStarted()) << "Verify thread is not started";
+
+  auto newDriver = MakeRefPtr<AudioCallbackDriver>(
+      graph, nullptr, rate, 2, 1, nullptr, (void*)1, AudioInputType::Voice);
+  EXPECT_FALSE(newDriver->ThreadRunning()) << "Verify thread is not running";
+  EXPECT_FALSE(newDriver->IsStarted()) << "Verify thread is not started";
+
+#ifdef DEBUG
+  std::atomic<std::thread::id> threadInDriverIteration(
+      (std::this_thread::get_id()));
+  EXPECT_CALL(*graph, InDriverIteration(_)).WillRepeatedly([&] {
+    return std::this_thread::get_id() == threadInDriverIteration;
+  });
+#endif
+  EXPECT_CALL(*graph, NotifyInputData(_, 0, rate, 1, _)).Times(AnyNumber());
+  EXPECT_CALL(*graph, DeviceChanged);
+
+  graph->SetCurrentDriver(driver);
+  graph->SetEnsureNextIteration(true);
+  // This starts the fallback driver.
+  driver->Start();
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+
+  // Wait for the audio driver to have started or the DeviceChanged event will
+  // be ignored. driver->Start() does a dispatch to the cubeb operation thread
+  // and starts the stream there.
+  nsCOMPtr<nsIEventTarget> cubebOpThread = CUBEB_TASK_THREAD;
+  MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(
+      cubebOpThread, NS_NewRunnableFunction(__func__, [] {})));
+
+#ifdef DEBUG
+  AutoSetter as(threadInDriverIteration, std::this_thread::get_id());
+#endif
+
+  // This marks the audio driver as running.
+  EXPECT_EQ(stream->ManualDataCallback(0),
+            MockCubebStream::KeepProcessing::Yes);
+
+  // If a fallback driver callback happens between the audio callback above, and
+  // the SwitchTo below, the audio driver will perform the switch instead of the
+  // fallback since the fallback will have stopped. This test may therefore
+  // intermittently take different code paths.
+
+  // Stop the fallback driver by switching audio driver in the graph.
+  {
+    Monitor mon(__func__);
+    MonitorAutoLock lock(mon);
+    bool switched = false;
+    graph->SwitchTo(newDriver, NS_NewRunnableFunction(__func__, [&] {
+                      MonitorAutoLock lock(mon);
+                      switched = true;
+                      lock.Notify();
+                    }));
+    while (!switched) {
+      lock.Wait();
+    }
+  }
+
+  {
+#ifdef DEBUG
+    AutoSetter as(threadInDriverIteration, std::thread::id());
+#endif
+    // After stopping the fallback driver, but before newDriver has stopped the
+    // old audio driver, fire a DeviceChanged event to ensure it is handled
+    // properly.
+    AudioCallbackDriver::DeviceChangedCallback_s(driver);
+  }
+
+  graph->StopIterating();
+  newDriver->EnsureNextIteration();
+  while (newDriver->OnFallback()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // This will block until all events have been queued.
+  MOZ_KnownLive(driver)->Shutdown();
+  MOZ_KnownLive(newDriver)->Shutdown();
   // Drain the event queue.
   NS_ProcessPendingEvents(nullptr);
 }

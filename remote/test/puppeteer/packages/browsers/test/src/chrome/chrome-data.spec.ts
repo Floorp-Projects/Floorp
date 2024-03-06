@@ -16,29 +16,30 @@ import {
   relativeExecutablePath,
   resolveSystemExecutablePath,
   resolveBuildId,
+  compareVersions,
 } from '../../../lib/cjs/browser-data/chrome.js';
 
 describe('Chrome', () => {
   it('should resolve download URLs', () => {
     assert.strictEqual(
       resolveDownloadUrl(BrowserPlatform.LINUX, '113.0.5672.0'),
-      'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/113.0.5672.0/linux64/chrome-linux64.zip'
+      'https://storage.googleapis.com/chrome-for-testing-public/113.0.5672.0/linux64/chrome-linux64.zip'
     );
     assert.strictEqual(
       resolveDownloadUrl(BrowserPlatform.MAC, '113.0.5672.0'),
-      'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/113.0.5672.0/mac-x64/chrome-mac-x64.zip'
+      'https://storage.googleapis.com/chrome-for-testing-public/113.0.5672.0/mac-x64/chrome-mac-x64.zip'
     );
     assert.strictEqual(
       resolveDownloadUrl(BrowserPlatform.MAC_ARM, '113.0.5672.0'),
-      'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/113.0.5672.0/mac-arm64/chrome-mac-arm64.zip'
+      'https://storage.googleapis.com/chrome-for-testing-public/113.0.5672.0/mac-arm64/chrome-mac-arm64.zip'
     );
     assert.strictEqual(
       resolveDownloadUrl(BrowserPlatform.WIN32, '113.0.5672.0'),
-      'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/113.0.5672.0/win32/chrome-win32.zip'
+      'https://storage.googleapis.com/chrome-for-testing-public/113.0.5672.0/win32/chrome-win32.zip'
     );
     assert.strictEqual(
       resolveDownloadUrl(BrowserPlatform.WIN64, '113.0.5672.0'),
-      'https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/113.0.5672.0/win64/chrome-win64.zip'
+      'https://storage.googleapis.com/chrome-for-testing-public/113.0.5672.0/win64/chrome-win64.zip'
     );
   });
 
@@ -115,5 +116,11 @@ describe('Chrome', () => {
 
   it('should resolve build prefix', async () => {
     assert.strictEqual(await resolveBuildId('115.0.5790'), '115.0.5790.170');
+  });
+
+  it('should compare versions', async () => {
+    assert.ok(compareVersions('115.0.5790', '115.0.5789') >= 1);
+    assert.ok(compareVersions('115.0.5789', '115.0.5790') <= -1);
+    assert.ok(compareVersions('115.0.5790', '115.0.5790') === 0);
   });
 });

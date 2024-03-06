@@ -6,18 +6,25 @@
 
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
-import type {WaitForTargetOptions} from '../api/Browser.js';
-import {BrowserContext} from '../api/BrowserContext.js';
-import type {Page} from '../api/Page.js';
+import type {Permission} from '../api/Browser.js';
+import {WEB_PERMISSION_TO_PROTOCOL_PERMISSION} from '../api/Browser.js';
+import type {BrowserContextEvents} from '../api/BrowserContext.js';
+import {BrowserContext, BrowserContextEvent} from '../api/BrowserContext.js';
+import {PageEvent, type Page} from '../api/Page.js';
 import type {Target} from '../api/Target.js';
-import {UnsupportedOperation} from '../common/Errors.js';
+import {EventEmitter} from '../common/EventEmitter.js';
 import {debugError} from '../common/util.js';
 import type {Viewport} from '../common/Viewport.js';
+import {bubble} from '../util/decorators.js';
 
 import type {BidiBrowser} from './Browser.js';
-import type {BidiConnection} from './Connection.js';
+import type {BrowsingContext} from './core/BrowsingContext.js';
 import {UserContext} from './core/UserContext.js';
-import type {BidiPage} from './Page.js';
+import type {BidiFrame} from './Frame.js';
+import {BidiPage} from './Page.js';
+import {BidiWorkerTarget} from './Target.js';
+import {BidiFrameTarget, BidiPageTarget} from './Target.js';
+import type {BidiWebWorker} from './WebWorker.js';
 
 /**
  * @internal
@@ -30,56 +37,134 @@ export interface BidiBrowserContextOptions {
  * @internal
  */
 export class BidiBrowserContext extends BrowserContext {
-  #browser: BidiBrowser;
-  #connection: BidiConnection;
-  #defaultViewport: Viewport | null;
-  #userContext: UserContext;
+  static from(
+    browser: BidiBrowser,
+    userContext: UserContext,
+    options: BidiBrowserContextOptions
+  ): BidiBrowserContext {
+    const context = new BidiBrowserContext(browser, userContext, options);
+    context.#initialize();
+    return context;
+  }
 
-  constructor(
+  @bubble()
+  accessor trustedEmitter = new EventEmitter<BrowserContextEvents>();
+
+  readonly #browser: BidiBrowser;
+  readonly #defaultViewport: Viewport | null;
+  // This is public because of cookies.
+  readonly userContext: UserContext;
+  readonly #pages = new WeakMap<BrowsingContext, BidiPage>();
+  readonly #targets = new Map<
+    BidiPage,
+    [
+      BidiPageTarget,
+      Map<BidiFrame | BidiWebWorker, BidiFrameTarget | BidiWorkerTarget>,
+    ]
+  >();
+
+  #overrides: Array<{origin: string; permission: Permission}> = [];
+
+  private constructor(
     browser: BidiBrowser,
     userContext: UserContext,
     options: BidiBrowserContextOptions
   ) {
     super();
     this.#browser = browser;
-    this.#userContext = userContext;
-    this.#connection = this.#browser.connection;
+    this.userContext = userContext;
     this.#defaultViewport = options.defaultViewport;
   }
 
-  override targets(): Target[] {
-    return this.#browser.targets().filter(target => {
-      return target.browserContext() === this;
+  #initialize() {
+    // Create targets for existing browsing contexts.
+    for (const browsingContext of this.userContext.browsingContexts) {
+      this.#createPage(browsingContext);
+    }
+
+    this.userContext.on('browsingcontext', ({browsingContext}) => {
+      this.#createPage(browsingContext);
+    });
+    this.userContext.on('closed', () => {
+      this.trustedEmitter.removeAllListeners();
     });
   }
 
-  override waitForTarget(
-    predicate: (x: Target) => boolean | Promise<boolean>,
-    options: WaitForTargetOptions = {}
-  ): Promise<Target> {
-    return this.#browser.waitForTarget(target => {
-      return target.browserContext() === this && predicate(target);
-    }, options);
+  #createPage(browsingContext: BrowsingContext): BidiPage {
+    const page = BidiPage.from(this, browsingContext);
+    this.#pages.set(browsingContext, page);
+    page.trustedEmitter.on(PageEvent.Close, () => {
+      this.#pages.delete(browsingContext);
+    });
+
+    // -- Target stuff starts here --
+    const pageTarget = new BidiPageTarget(page);
+    const pageTargets = new Map();
+    this.#targets.set(page, [pageTarget, pageTargets]);
+
+    page.trustedEmitter.on(PageEvent.FrameAttached, frame => {
+      const bidiFrame = frame as BidiFrame;
+      const target = new BidiFrameTarget(bidiFrame);
+      pageTargets.set(bidiFrame, target);
+      this.trustedEmitter.emit(BrowserContextEvent.TargetCreated, target);
+    });
+    page.trustedEmitter.on(PageEvent.FrameNavigated, frame => {
+      const bidiFrame = frame as BidiFrame;
+      const target = pageTargets.get(bidiFrame);
+      // If there is no target, then this is the page's frame.
+      if (target === undefined) {
+        this.trustedEmitter.emit(BrowserContextEvent.TargetChanged, pageTarget);
+      } else {
+        this.trustedEmitter.emit(BrowserContextEvent.TargetChanged, target);
+      }
+    });
+    page.trustedEmitter.on(PageEvent.FrameDetached, frame => {
+      const bidiFrame = frame as BidiFrame;
+      const target = pageTargets.get(bidiFrame);
+      if (target === undefined) {
+        return;
+      }
+      pageTargets.delete(bidiFrame);
+      this.trustedEmitter.emit(BrowserContextEvent.TargetDestroyed, target);
+    });
+
+    page.trustedEmitter.on(PageEvent.WorkerCreated, worker => {
+      const bidiWorker = worker as BidiWebWorker;
+      const target = new BidiWorkerTarget(bidiWorker);
+      pageTargets.set(bidiWorker, target);
+      this.trustedEmitter.emit(BrowserContextEvent.TargetCreated, target);
+    });
+    page.trustedEmitter.on(PageEvent.WorkerDestroyed, worker => {
+      const bidiWorker = worker as BidiWebWorker;
+      const target = pageTargets.get(bidiWorker);
+      if (target === undefined) {
+        return;
+      }
+      pageTargets.delete(worker);
+      this.trustedEmitter.emit(BrowserContextEvent.TargetDestroyed, target);
+    });
+
+    page.trustedEmitter.on(PageEvent.Close, () => {
+      this.#targets.delete(page);
+      this.trustedEmitter.emit(BrowserContextEvent.TargetDestroyed, pageTarget);
+    });
+    this.trustedEmitter.emit(BrowserContextEvent.TargetCreated, pageTarget);
+    // -- Target stuff ends here --
+
+    return page;
   }
 
-  get connection(): BidiConnection {
-    return this.#connection;
+  override targets(): Target[] {
+    return [...this.#targets.values()].flatMap(([target, frames]) => {
+      return [target, ...frames.values()];
+    });
   }
 
   override async newPage(): Promise<Page> {
-    const {result} = await this.#connection.send('browsingContext.create', {
-      type: Bidi.BrowsingContext.CreateType.Tab,
-    });
-    const target = this.#browser._getTargetById(result.context);
-
-    // TODO: once BiDi has some concept matching BrowserContext, the newly
-    // created contexts should get automatically assigned to the right
-    // BrowserContext. For now, we assume that only explicitly created pages go
-    // to the current BrowserContext. Otherwise, the contexts get assigned to
-    // the default BrowserContext by the Browser.
-    target._setBrowserContext(this);
-
-    const page = await target.page();
+    const context = await this.userContext.createBrowsingContext(
+      Bidi.BrowsingContext.CreateType.Tab
+    );
+    const page = this.#pages.get(context)!;
     if (!page) {
       throw new Error('Page is not found');
     }
@@ -99,18 +184,8 @@ export class BidiBrowserContext extends BrowserContext {
       throw new Error('Default context cannot be closed!');
     }
 
-    // TODO: Remove once we have adopted the new browsing contexts.
-    for (const target of this.targets()) {
-      const page = await target?.page();
-      try {
-        await page?.close();
-      } catch (error) {
-        debugError(error);
-      }
-    }
-
     try {
-      await this.#userContext.remove();
+      await this.userContext.remove();
     } catch (error) {
       debugError(error);
     }
@@ -121,25 +196,73 @@ export class BidiBrowserContext extends BrowserContext {
   }
 
   override async pages(): Promise<BidiPage[]> {
-    const results = await Promise.all(
-      [...this.targets()].map(t => {
-        return t.page();
-      })
-    );
-    return results.filter((p): p is BidiPage => {
-      return p !== null;
+    return [...this.userContext.browsingContexts].map(context => {
+      return this.#pages.get(context)!;
     });
   }
 
   override isIncognito(): boolean {
-    return this.#userContext.id !== UserContext.DEFAULT;
+    return this.userContext.id !== UserContext.DEFAULT;
   }
 
-  override overridePermissions(): never {
-    throw new UnsupportedOperation();
+  override async overridePermissions(
+    origin: string,
+    permissions: Permission[]
+  ): Promise<void> {
+    const permissionsSet = new Set(
+      permissions.map(permission => {
+        const protocolPermission =
+          WEB_PERMISSION_TO_PROTOCOL_PERMISSION.get(permission);
+        if (!protocolPermission) {
+          throw new Error('Unknown permission: ' + permission);
+        }
+        return permission;
+      })
+    );
+    await Promise.all(
+      Array.from(WEB_PERMISSION_TO_PROTOCOL_PERMISSION.keys()).map(
+        permission => {
+          const result = this.userContext.setPermissions(
+            origin,
+            {
+              name: permission,
+            },
+            permissionsSet.has(permission)
+              ? Bidi.Permissions.PermissionState.Granted
+              : Bidi.Permissions.PermissionState.Denied
+          );
+          this.#overrides.push({origin, permission});
+          // TODO: some permissions are outdated and setting them to denied does
+          // not work.
+          if (!permissionsSet.has(permission)) {
+            return result.catch(debugError);
+          }
+          return result;
+        }
+      )
+    );
   }
 
-  override clearPermissionOverrides(): never {
-    throw new UnsupportedOperation();
+  override async clearPermissionOverrides(): Promise<void> {
+    const promises = this.#overrides.map(({permission, origin}) => {
+      return this.userContext
+        .setPermissions(
+          origin,
+          {
+            name: permission,
+          },
+          Bidi.Permissions.PermissionState.Prompt
+        )
+        .catch(debugError);
+    });
+    this.#overrides = [];
+    await Promise.all(promises);
+  }
+
+  override get id(): string | undefined {
+    if (this.userContext.id === UserContext.DEFAULT) {
+      return undefined;
+    }
+    return this.userContext.id;
   }
 }

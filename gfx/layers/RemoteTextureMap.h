@@ -304,13 +304,14 @@ class RemoteTextureMap {
   void NotifyContextRestored(const RemoteTextureOwnerIdSet& aOwnerIds,
                              const base::ProcessId aForPid);
 
+  bool WaitForRemoteTextureOwner(RemoteTextureHostWrapper* aTextureHostWrapper);
+
   // Get remote texture's TextureHost for RemoteTextureHostWrapper.
   //
   // return true when aReadyCallback will be called.
   bool GetRemoteTexture(
       RemoteTextureHostWrapper* aTextureHostWrapper,
-      std::function<void(const RemoteTextureInfo&)>&& aReadyCallback,
-      bool aWaitForRemoteTextureOwner = false);
+      std::function<void(const RemoteTextureInfo&)>&& aReadyCallback);
 
   bool WaitForTxn(const RemoteTextureOwnerId aOwnerId,
                   const base::ProcessId aForPid, RemoteTextureTxnType aTxnType,
@@ -403,7 +404,8 @@ class RemoteTextureMap {
     std::deque<UniquePtr<RenderingReadyCallbackHolder>>
         mRenderingReadyCallbackHolders;
 
-    RemoteTextureId mLatestTextureId = {0};
+    RemoteTextureId mLatestPushedTextureId = {0};
+    RemoteTextureId mLatestUsingTextureId = {0};
     CompositableTextureHostRef mLatestTextureHost;
     CompositableTextureHostRef mLatestRenderedTextureHost;
     // Holds compositable refs to TextureHosts of RenderTextureHosts that are

@@ -1,12 +1,12 @@
 {
   "name": "@puppeteer/browsers",
-  "version": "1.9.1",
+  "version": "2.1.0",
   "description": "Download and launch browsers",
   "scripts": {
     "build:docs": "wireit",
     "build": "wireit",
     "build:test": "wireit",
-    "clean": "../../tools/clean.js",
+    "clean": "../../tools/clean.mjs",
     "test": "wireit"
   },
   "type": "commonjs",
@@ -87,7 +87,7 @@
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=16.3.0"
+    "node": ">=18"
   },
   "files": [
     "lib",
@@ -98,10 +98,11 @@
     "debug": "4.3.4",
     "extract-zip": "2.0.1",
     "progress": "2.0.3",
-    "proxy-agent": "6.3.1",
-    "tar-fs": "3.0.4",
+    "proxy-agent": "6.4.0",
+    "tar-fs": "3.0.5",
     "unbzip2-stream": "1.4.3",
-    "yargs": "17.7.2"
+    "yargs": "17.7.2",
+    "semver": "7.6.0"
   },
   "devDependencies": {
     "@types/debug": "4.1.12",

@@ -17,6 +17,7 @@ import {
   Browser,
   BrowserPlatform,
   Cache,
+  computeExecutablePath,
 } from '../../../lib/cjs/main.js';
 import {getServerUrl, setupTestServer} from '../utils.js';
 import {testChromeBuildId} from '../versions.js';
@@ -63,6 +64,42 @@ describe('Chrome install', () => {
     );
   });
 
+  it('can detect missing executables', async function () {
+    this.timeout(60000);
+    const expectedOutputPath = path.join(
+      tmpDir,
+      'chrome',
+      `${BrowserPlatform.LINUX}-${testChromeBuildId}`
+    );
+    fs.mkdirSync(expectedOutputPath, {recursive: true});
+    assert.strictEqual(fs.existsSync(expectedOutputPath), true);
+    async function installThatThrows(): Promise<Error | undefined> {
+      try {
+        await install({
+          cacheDir: tmpDir,
+          browser: Browser.CHROME,
+          platform: BrowserPlatform.LINUX,
+          buildId: testChromeBuildId,
+        });
+        return undefined;
+      } catch (err) {
+        return err as Error;
+      }
+    }
+    assert.strictEqual(
+      (await installThatThrows())?.message,
+      `The browser folder (${expectedOutputPath}) exists but the executable (${computeExecutablePath(
+        {
+          cacheDir: tmpDir,
+          browser: Browser.CHROME,
+          platform: BrowserPlatform.LINUX,
+          buildId: testChromeBuildId,
+        }
+      )}) is missing`
+    );
+    assert.strictEqual(fs.existsSync(expectedOutputPath), true);
+  });
+
   it('should download a buildId that is a zip archive', async function () {
     this.timeout(60000);
     const expectedOutputPath = path.join(
@@ -100,30 +137,21 @@ describe('Chrome install', () => {
     );
   });
 
-  it('throws on invalid URL', async function () {
+  it('falls back to the chrome-for-testing dashboard URLs if URL is not available', async function () {
     const expectedOutputPath = path.join(
       tmpDir,
       'chrome',
       `${BrowserPlatform.LINUX}-${testChromeBuildId}`
     );
     assert.strictEqual(fs.existsSync(expectedOutputPath), false);
-
-    async function installThatThrows(): Promise<unknown> {
-      try {
-        await install({
-          cacheDir: tmpDir,
-          browser: Browser.CHROME,
-          platform: BrowserPlatform.LINUX,
-          buildId: testChromeBuildId,
-          baseUrl: 'https://127.0.0.1',
-        });
-        return undefined;
-      } catch (err) {
-        return err;
-      }
-    }
-    assert.ok(await installThatThrows());
-    assert.strictEqual(fs.existsSync(expectedOutputPath), false);
+    await install({
+      cacheDir: tmpDir,
+      browser: Browser.CHROME,
+      platform: BrowserPlatform.LINUX,
+      buildId: testChromeBuildId,
+      baseUrl: 'https://127.0.0.1',
+    });
+    assert.strictEqual(fs.existsSync(expectedOutputPath), true);
   });
 
   describe('with proxy', () => {
@@ -198,7 +226,7 @@ describe('Chrome install', () => {
         true
       );
       assert.deepStrictEqual(proxiedRequestUrls, [
-        getServerUrl() + '/113.0.5672.0/linux64/chrome-linux64.zip',
+        getServerUrl() + `/${testChromeBuildId}/linux64/chrome-linux64.zip`,
       ]);
       assert.deepStrictEqual(proxiedRequestHosts, [
         getServerUrl().replace('http://', ''),
@@ -223,7 +251,7 @@ describe('Chrome install', () => {
       assert.strictEqual(browser.path, expectedOutputPath);
       assert.ok(fs.existsSync(expectedOutputPath));
       assert.deepStrictEqual(proxiedRequestUrls, [
-        getServerUrl() + '/113.0.5672.0/linux64/chrome-linux64.zip',
+        getServerUrl() + `/${testChromeBuildId}/linux64/chrome-linux64.zip`,
       ]);
       assert.deepStrictEqual(proxiedRequestHosts, [
         getServerUrl().replace('http://', ''),

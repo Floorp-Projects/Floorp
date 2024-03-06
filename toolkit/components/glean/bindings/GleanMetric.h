@@ -11,6 +11,7 @@
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 #include "nsClassHashtable.h"
+#include "nsGlobalWindowInner.h"
 #include "nsTHashMap.h"
 #include "mozilla/DataMutex.h"
 

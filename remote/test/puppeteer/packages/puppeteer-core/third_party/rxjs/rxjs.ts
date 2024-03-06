@@ -1,13 +1,11 @@
-/**
- * @license
- * Copyright 2023 Google Inc.
- * SPDX-License-Identifier: Apache-2.0
- */
+// esline-disable rulesdir/check-license
 export {
   bufferCount,
   catchError,
+  combineLatest,
   concat,
   concatMap,
+  debounceTime,
   defaultIfEmpty,
   defer,
   delay,
@@ -16,6 +14,7 @@ export {
   first,
   firstValueFrom,
   forkJoin,
+  delayWhen,
   from,
   fromEvent,
   identity,
@@ -24,6 +23,7 @@ export {
   map,
   merge,
   mergeMap,
+  mergeScan,
   NEVER,
   noop,
   Observable,
@@ -31,9 +31,11 @@ export {
   pipe,
   race,
   raceWith,
+  ReplaySubject,
   retry,
   startWith,
   switchMap,
+  take,
   takeUntil,
   tap,
   throwIfEmpty,
@@ -42,20 +44,3 @@ export {
 } from 'rxjs';
 
 export type * from 'rxjs';
-
-import {filter, from, map, mergeMap, type Observable} from 'rxjs';
-
-export function filterAsync<T>(
-  predicate: (value: T) => boolean | PromiseLike<boolean>
-) {
-  return mergeMap<T, Observable<T>>(value => {
-    return from(Promise.resolve(predicate(value))).pipe(
-      filter(isMatch => {
-        return isMatch;
-      }),
-      map(() => {
-        return value;
-      })
-    );
-  });
-}

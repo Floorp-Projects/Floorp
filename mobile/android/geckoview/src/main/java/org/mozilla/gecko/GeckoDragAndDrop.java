@@ -42,7 +42,11 @@ public class GeckoDragAndDrop {
     private final Bitmap mBitmap;
 
     public DrawDragImage(final Bitmap bitmap) {
-      mBitmap = bitmap;
+      if (bitmap != null && bitmap.getWidth() > 0 && bitmap.getHeight() > 0) {
+        mBitmap = bitmap;
+        return;
+      }
+      mBitmap = null;
     }
 
     @Override

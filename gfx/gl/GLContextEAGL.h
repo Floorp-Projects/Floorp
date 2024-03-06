@@ -23,7 +23,7 @@ class GLContextEAGL : public GLContext {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEAGL, override)
   GLContextEAGL(const GLContextDesc&, EAGLContext* context,
-                GLContext* sharedContext, ContextProfile profile);
+                GLContext* sharedContext);
 
   ~GLContextEAGL();
 

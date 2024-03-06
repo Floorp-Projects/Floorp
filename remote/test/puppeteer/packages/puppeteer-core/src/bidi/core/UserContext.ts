@@ -12,6 +12,7 @@ import {inertIfDisposed, throwIfDisposed} from '../../util/decorators.js';
 import {DisposableStack, disposeSymbol} from '../../util/disposable.js';
 
 import type {Browser} from './Browser.js';
+import type {GetCookiesOptions} from './BrowsingContext.js';
 import {BrowsingContext} from './BrowsingContext.js';
 
 /**
@@ -43,7 +44,7 @@ export class UserContext extends EventEmitter<{
     reason: string;
   };
 }> {
-  static DEFAULT = 'default';
+  static DEFAULT = 'default' as const;
 
   static create(browser: Browser, id: string): UserContext {
     const context = new UserContext(browser, id);
@@ -81,6 +82,10 @@ export class UserContext extends EventEmitter<{
     );
     sessionEmitter.on('browsingContext.contextCreated', info => {
       if (info.parent) {
+        return;
+      }
+
+      if (info.userContext !== this.#id) {
         return;
       }
 
@@ -143,6 +148,7 @@ export class UserContext extends EventEmitter<{
       type,
       ...options,
       referenceContext: options.referenceContext?.id,
+      userContext: this.#id,
     });
 
     const browsingContext = this.#browsingContexts.get(contextId);
@@ -161,10 +167,69 @@ export class UserContext extends EventEmitter<{
   })
   async remove(): Promise<void> {
     try {
-      // TODO: Call `removeUserContext` once available.
+      await this.#session.send('browser.removeUserContext', {
+        userContext: this.#id,
+      });
     } finally {
       this.dispose('User context already closed.');
     }
+  }
+
+  @throwIfDisposed<UserContext>(context => {
+    // SAFETY: Disposal implies this exists.
+    return context.#reason!;
+  })
+  async getCookies(
+    options: GetCookiesOptions = {},
+    sourceOrigin: string | undefined = undefined
+  ): Promise<Bidi.Network.Cookie[]> {
+    const {
+      result: {cookies},
+    } = await this.#session.send('storage.getCookies', {
+      ...options,
+      partition: {
+        type: 'storageKey',
+        userContext: this.#id,
+        sourceOrigin,
+      },
+    });
+    return cookies;
+  }
+
+  @throwIfDisposed<UserContext>(context => {
+    // SAFETY: Disposal implies this exists.
+    return context.#reason!;
+  })
+  async setCookie(
+    cookie: Bidi.Storage.PartialCookie,
+    sourceOrigin?: string
+  ): Promise<void> {
+    await this.#session.send('storage.setCookie', {
+      cookie,
+      partition: {
+        type: 'storageKey',
+        sourceOrigin,
+        userContext: this.id,
+      },
+    });
+  }
+
+  @throwIfDisposed<UserContext>(context => {
+    // SAFETY: Disposal implies this exists.
+    return context.#reason!;
+  })
+  async setPermissions(
+    origin: string,
+    descriptor: Bidi.Permissions.PermissionDescriptor,
+    state: Bidi.Permissions.PermissionState
+  ): Promise<void> {
+    await this.#session.send('permissions.setPermission', {
+      origin,
+      descriptor,
+      state,
+      // @ts-expect-error not standard implementation.
+      'goog:userContext': this.#id,
+    });
   }
 
   [disposeSymbol](): void {

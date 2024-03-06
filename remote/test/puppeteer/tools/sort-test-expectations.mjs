@@ -13,8 +13,21 @@ import prettier from 'prettier';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const source = 'test/TestExpectations.json';
-const testExpectations = JSON.parse(fs.readFileSync(source, 'utf-8'));
+let testExpectations = JSON.parse(fs.readFileSync(source, 'utf-8'));
 const committedExpectations = structuredClone(testExpectations);
+
+function testIdMatchesExpectationPattern(title, pattern) {
+  const patternRegExString = pattern
+    // Replace `*` with non special character
+    .replace(/\*/g, '--STAR--')
+    // Escape special characters https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    // Replace placeholder with greedy match
+    .replace(/--STAR--/g, '(.*)?');
+  // Match beginning and end explicitly
+  const patternRegEx = new RegExp(`^${patternRegExString}$`);
+  return patternRegEx.test(title);
+}
 
 const prettierConfig = await import(
   path.join(__dirname, '..', '.prettierrc.cjs')
@@ -43,14 +56,93 @@ testExpectations.forEach(item => {
   item.parameters.sort();
   item.expectations.sort();
   item.platforms.sort();
+  // Delete comments for PASS expectations. They are likely outdated.
+  if (item.expectations.length === 1 && item.expectations[0] === 'PASS') {
+    delete item.comment;
+  }
+});
+
+function isSubset(superset, subset) {
+  let isSubset = true;
+
+  for (const p of subset) {
+    if (!superset.has(p)) {
+      isSubset = false;
+    }
+  }
+
+  return isSubset;
+}
+
+const toBeRemoved = new Set();
+for (let i = testExpectations.length - 1; i >= 0; i--) {
+  const expectation = testExpectations[i];
+  const params = new Set(expectation.parameters);
+  const labels = new Set(expectation.expectations);
+  const platforms = new Set(expectation.platforms);
+
+  let foundMatch = false;
+  for (let j = i - 1; j >= 0; j--) {
+    const candidate = testExpectations[j];
+    const candidateParams = new Set(candidate.parameters);
+    const candidateLabels = new Set(candidate.expectations);
+    const candidatePlatforms = new Set(candidate.platforms);
+
+    if (
+      testIdMatchesExpectationPattern(
+        expectation.testIdPattern,
+        candidate.testIdPattern
+      ) &&
+      isSubset(candidateParams, params) &&
+      isSubset(candidatePlatforms, platforms)
+    ) {
+      foundMatch = true;
+      if (isSubset(candidateLabels, labels)) {
+        console.log('removing', expectation, 'already covered by', candidate);
+        toBeRemoved.add(expectation);
+      }
+      break;
+    }
+  }
+
+  if (!foundMatch && isSubset(new Set(['PASS']), labels)) {
+    console.log(
+      'removing',
+      expectation,
+      'because the default expectation is to pass'
+    );
+    toBeRemoved.add(expectation);
+  }
+}
+
+testExpectations = testExpectations.filter(item => {
+  return !toBeRemoved.has(item);
 });
 
 if (process.argv.includes('--lint')) {
+  const missingComments = [];
+  testExpectations.forEach(item => {
+    if (item.expectations.length === 1 && item.expectations[0] === 'PASS') {
+      return;
+    }
+    if (!item.comment) {
+      missingComments.push(item);
+    }
+  });
+
   if (
     JSON.stringify(committedExpectations) !== JSON.stringify(testExpectations)
   ) {
     console.error(
       `${source} is not formatted properly. Run 'npm run format:expectations'.`
+    );
+    process.exit(1);
+  }
+
+  if (missingComments.length > 0) {
+    console.error(
+      `${source}: missing comments for the following expectations:`,
+      missingComments
     );
     process.exit(1);
   }

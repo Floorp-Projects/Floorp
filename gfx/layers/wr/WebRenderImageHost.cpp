@@ -198,8 +198,11 @@ void WebRenderImageHost::UseRemoteTexture() {
     while (!mPendingRemoteTextureWrappers.empty()) {
       auto* wrapper =
           mPendingRemoteTextureWrappers.front()->AsRemoteTextureHostWrapper();
-      mWaitingReadyCallback = RemoteTextureMap::Get()->GetRemoteTexture(
-          wrapper, readyCallback, mWaitForRemoteTextureOwner);
+      if (mWaitForRemoteTextureOwner) {
+        RemoteTextureMap::Get()->WaitForRemoteTextureOwner(wrapper);
+      }
+      mWaitingReadyCallback =
+          RemoteTextureMap::Get()->GetRemoteTexture(wrapper, readyCallback);
       MOZ_ASSERT_IF(mWaitingReadyCallback, !wrapper->IsReadyForRendering());
       if (!wrapper->IsReadyForRendering()) {
         break;
@@ -213,9 +216,9 @@ void WebRenderImageHost::UseRemoteTexture() {
     mPendingRemoteTextureWrappers.pop_front();
     MOZ_ASSERT(mPendingRemoteTextureWrappers.empty());
 
-    std::function<void(const RemoteTextureInfo&)> function;
-    RemoteTextureMap::Get()->GetRemoteTexture(wrapper, std::move(function),
-                                              mWaitForRemoteTextureOwner);
+    if (mWaitForRemoteTextureOwner) {
+      RemoteTextureMap::Get()->WaitForRemoteTextureOwner(wrapper);
+    }
     mWaitForRemoteTextureOwner = false;
   }
 

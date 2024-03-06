@@ -5,6 +5,7 @@
 
 #include "GLContextProvider.h"
 #include "GLContextEAGL.h"
+#include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "gfxFailure.h"
@@ -107,7 +108,7 @@ bool GLContextEAGL::IsCurrentImpl() const {
 
 static PRFuncPtr GLAPIENTRY GetLoadedProcAddress(const char* const name) {
   PRLibrary* lib = nullptr;
-  const auto& ret = PR_FindFunctionSymbolAndLibrary(name, &leakedLibRef);
+  const auto& ret = PR_FindFunctionSymbolAndLibrary(name, &lib);
   if (lib) {
     PR_UnloadLibrary(lib);
   }
@@ -195,7 +196,7 @@ already_AddRefed<GLContext> GLContextProviderEAGL::CreateForCompositorWidget(
 already_AddRefed<GLContext> GLContextProviderEAGL::CreateHeadless(
     const GLContextCreateDesc& createDesc, nsACString* const out_failureId) {
   auto desc = GLContextDesc{createDesc};
-  desc.isOffcreen = true;
+  desc.isOffscreen = true;
   return CreateEAGLContext(desc, GetGlobalContextEAGL()).forget();
 }
 
@@ -208,7 +209,8 @@ GLContext* GLContextProviderEAGL::GetGlobalContext() {
 
     MOZ_RELEASE_ASSERT(!gGlobalContext,
                        "GFX: Global GL context already initialized.");
-    RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
+    nsCString discardFailureId;
+    RefPtr<GLContext> temp = CreateHeadless({}, &discardFailureId);
     gGlobalContext = temp;
 
     if (!gGlobalContext) {
