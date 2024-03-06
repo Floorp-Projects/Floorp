@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for setParameter conversion to XSLT type</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script>
+  let parser = new DOMParser();
+  let xml = parser.parseFromString('<?xml version="1.0" encoding="utf-8" ?><root/>', "text/xml");
+  let xslt = parser.parseFromString(`<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:param name="test" />
+<xsl:template match="/">
+  <xsl:value-of select="$test" />
+</xsl:template>
+</xsl:stylesheet>`, "text/xml");
+
+  let processor = new XSLTProcessor();
+  processor.importStylesheet(xslt);
+
+  let callbackCalled = false;
+  let param = {
+    [Symbol.toPrimitive](hint) {
+      callbackCalled = true;
+      processor.removeParameter(null, 'test');
+      if (hint == 'string') {
+        return "Value";
+      }
+      throw new Error("Not converting to string?");
+    }
+  };
+
+  processor.setParameter(null, 'test', param);
+  ok(callbackCalled, "Parameter was converted during call to setParameter.");
+  is(processor.getParameter(null, 'test'), "Value", "processor.removeParameter during string conversion should have no effect.");
+
+  callbackCalled = false;
+  processor.transformToDocument(xml);
+  ok(!callbackCalled, "Parameter was not converted during call to transformToDocument.");
+  is(processor.getParameter(null, 'test'), "Value", "processor.removeParameter during string conversion should have no effect.");
+</script>
+</pre>
+</body>
+</html>
