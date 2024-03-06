@@ -187,9 +187,10 @@ TimingDistributionMetric::TestGetValue(const nsACString& aPingName) const {
   nsTArray<uint64_t> buckets;
   nsTArray<uint64_t> counts;
   uint64_t sum;
-  fog_timing_distribution_test_get_value(mId, &aPingName, &sum, &buckets,
-                                         &counts);
-  return Some(DistributionData(buckets, counts, sum));
+  uint64_t count;
+  fog_timing_distribution_test_get_value(mId, &aPingName, &sum, &count,
+                                         &buckets, &counts);
+  return Some(DistributionData(buckets, counts, sum, count));
 }
 
 }  // namespace impl
@@ -225,6 +226,7 @@ void GleanTimingDistribution::TestGetValue(
 
   dom::GleanDistributionData ret;
   ret.mSum = optresult.ref().sum;
+  ret.mCount = optresult.ref().count;
   auto& data = optresult.ref().values;
   for (const auto& entry : data) {
     dom::binding_detail::RecordEntry<nsCString, uint64_t> bucket;

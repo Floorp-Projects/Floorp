@@ -181,6 +181,7 @@ TEST_F(FOGFixture, TestCppMemoryDistWorks) {
   // Sum is in bytes, test_only::do_you_remember is in megabytes. So
   // multiplication ahoy!
   ASSERT_EQ(data.sum, 24UL * 1024 * 1024);
+  ASSERT_EQ(data.count, 2UL);
   for (const auto& entry : data.values) {
     const uint64_t bucket = entry.GetKey();
     const uint64_t count = entry.GetData();
@@ -196,6 +197,7 @@ TEST_F(FOGFixture, TestCppCustomDistWorks) {
   DistributionData data =
       test_only_ipc::a_custom_dist.TestGetValue("store1"_ns).unwrap().ref();
   ASSERT_EQ(data.sum, 7UL + 268435458);
+  ASSERT_EQ(data.count, 2UL);
   for (const auto& entry : data.values) {
     const uint64_t bucket = entry.GetKey();
     const uint64_t count = entry.GetData();
@@ -253,6 +255,10 @@ TEST_F(FOGFixture, TestCppTimingDistWorks) {
 
   DistributionData data =
       test_only::what_time_is_it.TestGetValue().unwrap().ref();
+
+  // Cancelled timers should not increase count.
+  ASSERT_EQ(data.count, 2UL);
+
   const uint64_t NANOS_IN_MILLIS = 1e6;
 
   // bug 1701847 - Sleeps don't necessarily round up as you'd expect.

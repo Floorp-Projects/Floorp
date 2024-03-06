@@ -22,6 +22,7 @@ pub extern "C" fn fog_memory_distribution_test_get_value(
     id: u32,
     ping_name: &nsACString,
     sum: &mut u64,
+    count: &mut u64,
     buckets: &mut ThinVec<u64>,
     counts: &mut ThinVec<u64>,
 ) {
@@ -32,6 +33,7 @@ pub extern "C" fn fog_memory_distribution_test_get_value(
         test_get!(metric, ping_name)
     );
     *sum = val.sum as _;
+    *count = val.count as _;
     for (&bucket, &count) in val.values.iter() {
         buckets.push(bucket as _);
         counts.push(count as _);
