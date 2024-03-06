@@ -37,8 +37,3 @@ interface nsILoginManagerAuthPrompter : nsISupports {
    */
   attribute Element browser;
 };
-%{C++
-
-#define NS_LOGINMANAGERAUTHPROMPTER_CONTRACTID "@mozilla.org/login-manager/authprompter/;1"
-
-%}

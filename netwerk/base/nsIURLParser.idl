@@ -90,9 +90,3 @@ interface nsIURLParser : nsISupports
                           out unsigned long basenamePos,  out long basenameLen,
                           out unsigned long extensionPos, out long extensionLen);
 };
-
-%{C++
-// url parser key for use with the category manager
-// mapping from scheme to url parser.
-#define NS_IURLPARSER_KEY "@mozilla.org/urlparser;1"
-%}

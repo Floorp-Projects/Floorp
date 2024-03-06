@@ -364,43 +364,9 @@ interface nsIBasicCardChangeDetails : nsIMethodChangeDetails
 
 
 %{C++
-#define NS_GENERAL_RESPONSE_DATA_CID \
-  { 0xb986773e, 0x2b30, 0x4ed2, { 0xb8, 0xfe, 0x6a, 0x96, 0x63, 0x1c, 0x80, 0x00 } }
-#define NS_GENERAL_RESPONSE_DATA_CONTRACT_ID \
-  "@mozilla.org/dom/payments/general-response-data;1"
-
-#define NS_BASICCARD_RESPONSE_DATA_CID \
-  { 0x0d55a5e6, 0xd185, 0x44f0, { 0xb9, 0x92, 0xa8, 0xe1, 0x32, 0x1e, 0x4b, 0xce } }
-#define NS_BASICCARD_RESPONSE_DATA_CONTRACT_ID \
-  "@mozilla.org/dom/payments/basiccard-response-data;1"
-
-#define NS_PAYMENT_CANMAKE_ACTION_RESPONSE_CID \
-  { 0x52fc3f9f, 0xc0cb, 0x4874, { 0xb3, 0xd4, 0xee, 0x4b, 0x6e, 0x9c, 0xbe, 0x9c } }
 #define NS_PAYMENT_CANMAKE_ACTION_RESPONSE_CONTRACT_ID \
   "@mozilla.org/dom/payments/payment-canmake-action-response;1"
 
-#define NS_PAYMENT_SHOW_ACTION_RESPONSE_CID \
-  { 0x184385cb, 0x2d35, 0x4b99, { 0xa9, 0xa3, 0x7c, 0x78, 0x0b, 0xf6, 0x6b, 0x9b } }
 #define NS_PAYMENT_SHOW_ACTION_RESPONSE_CONTRACT_ID \
   "@mozilla.org/dom/payments/payment-show-action-response;1"
-
-#define NS_PAYMENT_ABORT_ACTION_RESPONSE_CID \
-  { 0x8c72bcdb, 0x0c37, 0x4786, { 0xa9, 0xe5, 0x51, 0x0a, 0xfa, 0x2f, 0x8e, 0xde } }
-#define NS_PAYMENT_ABORT_ACTION_RESPONSE_CONTRACT_ID \
-  "@mozilla.org/dom/payments/payment-abort-action-response;1"
-
-#define NS_PAYMENT_COMPLETE_ACTION_RESPONSE_CID \
-  { 0x62c01e69, 0x9ca4, 0x4060, { 0x99, 0xe4, 0xb9, 0x5f, 0x62, 0x8c, 0x8e, 0x6d } }
-#define NS_PAYMENT_COMPLETE_ACTION_RESPONSE_CONTRACT_ID \
-  "@mozilla.org/dom/payments/payment-complete-action-response;1"
-
-#define NS_GENERAL_CHANGE_DETAILS_CID \
-  { 0xe031267e, 0xbec8, 0x4f3c, { 0xb0, 0xb1, 0x39, 0x6b, 0x77, 0xca, 0x26, 0x0c } }
-#define NS_GENERAL_CHANGE_DETAILS_CONTRACT_ID \
-  "@mozilla.org/dom/payments/general-change-details;1"
-
-#define NS_BASICCARD_CHANGE_DETAILS_CID \
-  { 0x5296f79e, 0x15ea, 0x40c3, { 0x81, 0x96, 0x19, 0xcf, 0xa6, 0x4d, 0x32, 0x8c } }
-#define NS_BASICCARD_CHANGE_DETAILS_CONTRACT_ID \
-  "@mozilla.org/dom/payments/basiccard-change-details;1"
 %}

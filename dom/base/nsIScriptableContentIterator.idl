@@ -64,11 +64,3 @@ interface nsIScriptableContentIterator : nsISupports
   // See ContentIteratorBase::PositionAt(nsINode*)
   void positionAt(in Node aNode);
 };
-
-%{C++
-#define SCRIPTABLE_CONTENT_ITERATOR_CID \
-  { 0xf68037ec, 0x2790, 0x44c5, \
-    { 0x8e, 0x5f, 0xdf, 0x5d, 0xa5, 0x8b, 0x93, 0xa7 } }
-#define SCRIPTABLE_CONTENT_ITERATOR_CONTRACTID \
-  "@mozilla.org/scriptable-content-iterator;1"
-%}

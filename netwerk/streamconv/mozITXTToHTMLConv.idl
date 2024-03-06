@@ -14,10 +14,6 @@
 #include "nsIStreamConverter.idl"
 
 %{C++
-// {77c0e42a-1dd2-11b2-8ebf-edc6606f2f4b}
-#define MOZITXTTOHTMLCONV_CID \
-    { 0x77c0e42a, 0x1dd2, 0x11b2, \
-    { 0x8e, 0xbf, 0xed, 0xc6, 0x60, 0x6f, 0x2f, 0x4b } }
 
 #define MOZ_TXTTOHTMLCONV_CONTRACTID \
   "@mozilla.org/txttohtmlconv;1"

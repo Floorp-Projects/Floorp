@@ -65,18 +65,6 @@ interface nsISynthVoiceRegistry : nsISupports
 };
 
 %{C++
-#define NS_SYNTHVOICEREGISTRY_CID                   \
-  { /* {7090524d-5574-4492-a77f-d8d558ced59d} */       \
-    0x7090524d,                                        \
-    0x5574,                                            \
-    0x4492,                                            \
-    { 0xa7, 0x7f, 0xd8, 0xd5, 0x58, 0xce, 0xd5, 0x9d } \
-  }
-
 #define NS_SYNTHVOICEREGISTRY_CONTRACTID \
     "@mozilla.org/synth-voice-registry;1"
-
-#define NS_SYNTHVOICEREGISTRY_CLASSNAME \
-    "Speech Synthesis Voice Registry"
-
 %}

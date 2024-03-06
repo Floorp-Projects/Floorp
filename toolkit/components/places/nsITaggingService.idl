@@ -58,9 +58,3 @@ interface nsITaggingService : nsISupports
   Array<AString> getTagsForURI(in nsIURI aURI);
 
 };
-
-%{C++
-
-#define TAGGING_SERVICE_CID "@mozilla.org/browser/tagging-service;1"
-
-%}

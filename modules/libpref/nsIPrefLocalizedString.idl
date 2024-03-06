@@ -21,14 +21,6 @@ interface nsIPrefLocalizedString : nsISupportsString {};
 
 %{C++
 
-#define NS_PREFLOCALIZEDSTRING_CID                     \
-  { /* {064d9cee-1dd2-11b2-83e3-d25ab0193c26} */       \
-    0x064d9cee,                                        \
-    0x1dd2,                                            \
-    0x11b2,                                            \
-    { 0x83, 0xe3, 0xd2, 0x5a, 0xb0, 0x19, 0x3c, 0x26 } \
-  }
-
 #define NS_PREFLOCALIZEDSTRING_CONTRACTID "@mozilla.org/pref-localizedstring;1"
 
 %}

@@ -6,10 +6,6 @@
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
 
-%{C++
-#define NS_CERTSTORAGE_CONTRACTID "@mozilla.org/security/certstorage;1"
-%}
-
 /**
  * Callback type used to notify callers that an operation performed by
  * nsICertStorage has completed. Indicates the result of the requested

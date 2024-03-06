@@ -10,16 +10,6 @@ interface nsIMIMEInfo;
 interface nsIURI;
 interface nsIChannel;
 
-%{C++
-#define NS_MIMESERVICE_CID                           \
-{ /* 03af31da-3109-11d3-8cd0-0060b0fc14a3 */         \
-    0x03af31da,                                      \
-    0x3109,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-%}
-
 /**
  * The MIME service is responsible for mapping file extensions to MIME-types
  * (see RFC 2045). It also provides access to nsIMIMEInfo interfaces and

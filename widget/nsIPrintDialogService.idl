@@ -56,11 +56,3 @@ interface nsIPrintDialogService : nsISupports
                            in nsIPrintSettings aPrintSettings);
 
 };
-
-%{C++
-#define NS_PRINTDIALOGSERVICE_IID \
- {0x88af6712, 0xa9fd, 0x4393, { 0x9a, 0xf3, 0x3f, 0xfb, 0xb1, 0xf2, 0xca, 0xaf}}
-
-#define NS_PRINTDIALOGSERVICE_CONTRACTID \
-  ("@mozilla.org/widget/printdialog-service;1")
-%}

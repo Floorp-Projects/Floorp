@@ -223,7 +223,3 @@ interface nsIAsyncShutdownService: nsISupports {
   // makes it easier to cause shutdown hangs.
 
 };
-
-%{C++
-#define NS_ASYNCSHUTDOWNSERVICE_CONTRACTID "@mozilla.org/async-shutdown-service;1"
-%}

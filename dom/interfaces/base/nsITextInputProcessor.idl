@@ -664,11 +664,3 @@ interface nsITextInputProcessor : nsISupports
                     in AString aKeyValue,
                     [optional] in jsval aLocation);
 };
-
-%{C++
-#define TEXT_INPUT_PROCESSOR_CID \
-  { 0xcaaab47f, 0x1e31, 0x478e, \
-    { 0x89, 0x19, 0x97, 0x09, 0x04, 0xe9, 0xcb, 0x72 } }
-#define TEXT_INPUT_PROCESSOR_CONTRACTID \
-  "@mozilla.org/text-input-processor;1"
-%}

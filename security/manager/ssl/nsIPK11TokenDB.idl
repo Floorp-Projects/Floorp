@@ -14,9 +14,6 @@ interface nsIPK11Token;
  * Interfaces: nsIPK11TokenDB
  * Threading: ??
  */
-%{C++
-#define NS_PK11TOKENDB_CONTRACTID "@mozilla.org/security/pk11tokendb;1"
-%}
 
 /**
  * nsIPK11TokenDB - Manages PK11 Tokens
