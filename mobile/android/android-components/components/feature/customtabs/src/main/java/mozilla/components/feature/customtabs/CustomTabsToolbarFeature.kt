@@ -69,6 +69,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @property updateTheme Whether or not the toolbar and system bar colors should be changed.
  * @property forceActionButtonTinting When set to true the [toolbar] action button will always be tinted
  * based on the [toolbar] background, ignoring the value of [CustomTabActionButtonConfig.tint].
+ * @property isNavBarEnabled Whether or not the navigation bar is enabled.
  * @property shareListener Invoked when the share button is pressed.
  * @property closeListener Invoked when the close button is pressed.
  */
@@ -83,6 +84,7 @@ class CustomTabsToolbarFeature(
     private val window: Window? = null,
     private val updateTheme: Boolean = true,
     private val forceActionButtonTinting: Boolean = false,
+    private val isNavBarEnabled: Boolean = false,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit,
 ) : LifecycleAwareFeature, UserInteractionHandler {
@@ -176,6 +178,10 @@ class CustomTabsToolbarFeature(
         // Add menu items
         if (config.menuItems.isNotEmpty() || menuBuilder?.items?.isNotEmpty() == true) {
             addMenuItems(config.menuItems, menuItemIndex)
+        }
+
+        if (isNavBarEnabled) {
+            toolbar.display.hideMenuButton()
         }
     }
 

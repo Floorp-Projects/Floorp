@@ -652,7 +652,7 @@ class DisplayToolbar internal constructor(
     /**
      * Hides the menu button in display mode.
      */
-    internal fun hideMenuButton() {
+    fun hideMenuButton() {
         views.menu.setShouldBeHidden(true)
     }
 
