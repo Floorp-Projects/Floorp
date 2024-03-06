@@ -65,7 +65,16 @@ add_task(async function parsing() {
         // in the database are correct.
         for (let i = 0; i < uris.length; i++) {
           await PlacesUtils.history.remove(uris[i]);
-          await checkDB(expectedOrigins.slice(i + 1, expectedOrigins.length));
+
+          let uri = Services.io.newURI(uris[i]);
+          if (uri.hasUserPass) {
+            // The history cannot be deleted at a URL with a user path.
+          } else {
+            expectedOrigins = expectedOrigins.filter(
+              ([prefix, hostPort]) => !prefix.startsWith(uri.scheme + ":")
+            );
+          }
+          await checkDB(expectedOrigins);
         }
         await cleanUp();
       }
