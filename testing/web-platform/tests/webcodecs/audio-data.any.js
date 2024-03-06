@@ -323,13 +323,13 @@ function arrayTypeToType(array) {
   }
 }
 
-function check_array_equality(values, expected, sourceType, message) {
+function check_array_equality(values, expected, sourceType, message, assert_func) {
   if (values.length != expected.length) {
     throw "Array not of the same length";
   }
   for (var i = 0; i < values.length; i++) {
     var eps = epsilon(expected[i], sourceType, arrayTypeToType(values));
-    assert_true(
+    assert_func(
       Math.abs(expected[i] - values[i]) <= eps,
       `Got ${values[i]} but expected result ${
         expected[i]
@@ -338,7 +338,7 @@ function check_array_equality(values, expected, sourceType, message) {
       )}, epsilon ${eps}`
     );
   }
-  assert_true(
+  assert_func(
     true,
     `${values} is equal to ${expected} when converting from ${sourceType} to ${arrayTypeToType(
       values
@@ -372,14 +372,16 @@ function conversionTest(sourceType, destinationType) {
       dest,
       result.testVectorInterleavedResult[0],
       sourceType,
-      "interleaved channel 0"
+      "interleaved channel 0",
+      assert_func
     );
     data.copyTo(dest, { planeIndex: 1, format: destinationType + "-planar" });
     check_array_equality(
       dest,
       result.testVectorInterleavedResult[1],
       sourceType,
-      "interleaved channel 0"
+      "interleaved channel 0",
+      assert_func
     );
     let destInterleaved = new destArrayCtor(data.numberOfFrames * data.numberOfChannels);
     data.copyTo(destInterleaved, { planeIndex: 0, format: destinationType });
@@ -387,7 +389,8 @@ function conversionTest(sourceType, destinationType) {
       destInterleaved,
       result.testInput,
       sourceType,
-      "copyTo from interleaved to interleaved (conversion only)"
+      "copyTo from interleaved to interleaved (conversion only)",
+      assert_implements_optional
     );
 
     data = new AudioData({
@@ -404,14 +407,16 @@ function conversionTest(sourceType, destinationType) {
       dest,
       result.testVectorPlanarResult[0],
       sourceType,
-      "planar channel 0"
+      "planar channel 0",
+      assert_func,
     );
     data.copyTo(dest, { planeIndex: 1, format: destinationType + "-planar" });
     check_array_equality(
       dest,
       result.testVectorPlanarResult[1],
       sourceType,
-      "planar channel 1"
+      "planar channel 1",
+      assert_func
     );
     // Planar to interleaved isn't supported
   }, `Test conversion of ${sourceType} to ${destinationType}`);
