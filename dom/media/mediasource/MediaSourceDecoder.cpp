@@ -57,13 +57,8 @@ MediaDecoderStateMachineBase* MediaSourceDecoder::CreateStateMachine(
                            TrackingId::TrackAcrossProcesses::Yes);
   mReader = new MediaFormatReader(init, mDemuxer);
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  // Our main purpose is to only using this state machine for encrypted playback
-  // (unless explicitly set the pref to allow non-encrypted playback), but we
-  // can't determine if playback is encrypted or not at the moment. Therefore,
-  // we will handle that in ExternalEngineStateMachine, and report special
-  // errors, such as NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR or
-  // NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR, to switch the state
-  // machine if necessary.
+  // TODO : Only for testing development for now. In the future this should be
+  // used for encrypted content only.
   if (StaticPrefs::media_wmf_media_engine_enabled() &&
       !aDisableExternalEngine) {
     return new ExternalEngineStateMachine(this, mReader);
@@ -371,23 +366,6 @@ bool MediaSourceDecoder::HadCrossOriginRedirects() {
   MOZ_ASSERT(NS_IsMainThread());
   return false;
 }
-
-#ifdef MOZ_WMF_MEDIA_ENGINE
-void MediaSourceDecoder::MetadataLoaded(
-    UniquePtr<MediaInfo> aInfo, UniquePtr<MetadataTags> aTags,
-    MediaDecoderEventVisibility aEventVisibility) {
-  // If the previous state machine has loaded the metadata, then we don't need
-  // to load it again. This can happen when the media format or key system is
-  // not supported by previous state machine.
-  if (mFiredMetadataLoaded && mStateMachineRecreated) {
-    MSE_DEBUG(
-        "Metadata already loaded and being informed by previous state machine");
-    return;
-  }
-  MediaDecoder::MetadataLoaded(std::move(aInfo), std::move(aTags),
-                               aEventVisibility);
-}
-#endif
 
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
