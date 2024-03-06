@@ -613,16 +613,15 @@
               hidden="true"/>
       </vbox>
       <!-- updateCTAPanel will control if we show this panel -->
-      <vbox id="PanelUI-fxa-pxi-cta-menu">
+      <vbox id="PanelUI-fxa-cta-menu">
         <toolbarbutton id="PanelUI-fxa-menu-sync-button" class="subviewbutton subviewbutton-iconic"
           oncommand="gSync.openPrefsFromFxaButton('sync_cta', this);">
           <vbox flex="1">
             <label id="fxa-menu-header-title" crop="end" data-l10n-id="fxa-menu-sync-title" />
             <label id="cta-menu-header-description" crop="end" data-l10n-id="fxa-menu-sync-description" />
           </vbox>
-          <toolbarseparator id="PanelUI-remote-tabs-separator" />
         </toolbarbutton>
-        <toolbarseparator id="PanelUI-remote-tabs-separator" />
+        <toolbarseparator id="PanelUI-products-separator" />
         <toolbarbutton id="PanelUI-fxa-menu-monitor-button" class="subviewbutton subviewbutton-iconic"
           oncommand="gSync.openMonitorLink(this)">
           <vbox flex="1">

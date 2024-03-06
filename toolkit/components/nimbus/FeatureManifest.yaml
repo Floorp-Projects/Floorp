@@ -1680,6 +1680,27 @@ fxaButtonVisibility:
       setPref:
         branch: user
         pref: identity.fxaccounts.toolbar.pxiToolbarEnabled
+    monitorEnabled:
+      description: >-
+        Toggle the Monitor CTA
+      type: boolean
+      setPref:
+        branch: user
+        pref: identity.fxaccounts.toolbar.pxiToolbarEnabled.monitorEnabled
+    relayEnabled:
+      description: >-
+        Toggle the Relay CTA
+      type: boolean
+      setPref:
+        branch: user
+        pref: identity.fxaccounts.toolbar.pxiToolbarEnabled.relayEnabled
+    vpnEnabled:
+      description: >-
+        Toggle the VPN CTA
+      type: boolean
+      setPref:
+        branch: user
+        pref: identity.fxaccounts.toolbar.pxiToolbarEnabled.vpnEnabled
 
 legacyHeartbeat:
   description: Normandy Heartbeat exposed to Nimbus

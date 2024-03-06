@@ -2052,7 +2052,7 @@ var gSync = {
   updateCTAPanel() {
     const mainPanelEl = PanelMultiView.getViewNode(
       document,
-      "PanelUI-fxa-pxi-cta-menu"
+      "PanelUI-fxa-cta-menu"
     );
 
     const syncCtaEl = PanelMultiView.getViewNode(
@@ -2070,12 +2070,51 @@ var gSync = {
     // If we're already signed in an syncing, we shouldn't show the sync CTA
     syncCtaEl.hidden = this.isSignedIn;
 
-    // ensure the container is visible
+    // Monitor checks
+    let monitorPanelEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-monitor-button"
+    );
+    let monitorEnabled = Services.prefs.getBoolPref(
+      "identity.fxaccounts.toolbar.pxiToolbarEnabled.monitorEnabled",
+      false
+    );
+    monitorPanelEl.hidden = !monitorEnabled;
+
+    // Relay checks
+    let relayPanelEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-relay-button"
+    );
+    let relayEnabled =
+      BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.RELAY) &&
+      Services.prefs.getBoolPref(
+        "identity.fxaccounts.toolbar.pxiToolbarEnabled.relayEnabled",
+        false
+      );
+    relayPanelEl.hidden = !relayEnabled;
+
+    // VPN checks
+    let VpnPanelEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-vpn-button"
+    );
+    let vpnEnabled =
+      BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.VPN) &&
+      Services.prefs.getBoolPref(
+        "identity.fxaccounts.toolbar.pxiToolbarEnabled.vpnEnabled",
+        false
+      );
+    VpnPanelEl.hidden = !vpnEnabled;
+
+    // We should only the show the separator if we have at least one CTA enabled
+    PanelMultiView.getViewNode(document, "PanelUI-products-separator").hidden =
+      !monitorEnabled && !relayEnabled && !vpnEnabled;
     mainPanelEl.hidden = false;
   },
   async openMonitorLink(panel) {
     this.emitFxaToolbarTelemetry("monitor_cta", panel);
-    await this.openPXILink(
+    await this.openCtaLink(
       FX_MONITOR_OAUTH_CLIENT_ID,
       new URL("https://monitor.firefox.com"),
       new URL("https://monitor.firefox.com/user/breaches")
@@ -2084,7 +2123,7 @@ var gSync = {
 
   async openRelayLink(panel) {
     this.emitFxaToolbarTelemetry("relay_cta", panel);
-    await this.openPXILink(
+    await this.openCtaLink(
       FX_RELAY_OAUTH_CLIENT_ID,
       new URL("https://relay.firefox.com"),
       new URL("https://relay.firefox.com/accounts/profile")
@@ -2093,7 +2132,7 @@ var gSync = {
 
   async openVPNLink(panel) {
     this.emitFxaToolbarTelemetry("vpn_cta", panel);
-    await this.openPXILink(
+    await this.openCtaLink(
       VPN_OAUTH_CLIENT_ID,
       new URL("https://www.mozilla.org/en-US/products/vpn/"),
       new URL("https://www.mozilla.org/en-US/products/vpn/")
@@ -2101,17 +2140,17 @@ var gSync = {
   },
 
   // A generic opening based on
-  async openPXILink(clientId, defaultUrl, signedInUrl) {
+  async openCtaLink(clientId, defaultUrl, signedInUrl) {
     const params = {
       utm_medium: "firefox-desktop",
       utm_source: "toolbar",
       utm_campaign: "discovery",
     };
-    const pxiSearchParams = new URLSearchParams(params);
+    const searchParams = new URLSearchParams(params);
 
     if (!this.isSignedIn) {
       // Add the base params + not signed in
-      defaultUrl.search = pxiSearchParams.toString();
+      defaultUrl.search = searchParams.toString();
       defaultUrl.searchParams.append("utm_content", "notsignedin");
       this.openLink(defaultUrl);
       PanelUI.hide();
@@ -2125,7 +2164,7 @@ var gSync = {
 
     const url = hasPXIClient ? signedInUrl : defaultUrl;
     // Add base params + signed in
-    url.search = pxiSearchParams.toString();
+    url.search = searchParams.toString();
     url.searchParams.append("utm_content", "signedIn");
 
     this.openLink(url);
