@@ -234,7 +234,6 @@ docshell/test/iframesandbox/test_child_navigation_by_location.html
 docshell/test/mochitest/bug529119-window.html
 docshell/test/mochitest/test_bug387979.html
 docshell/test/mochitest/test_bug509055.html
-docshell/test/mochitest/test_bug511449.html
 docshell/test/mochitest/test_bug530396.html
 docshell/test/mochitest/test_forceinheritprincipal_overrule_owner.html
 docshell/test/navigation/file_triggeringprincipal_frame_1.html

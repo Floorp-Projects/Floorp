@@ -74,9 +74,6 @@ with Files("mochitest/*402210*"):
 with Files("mochitest/*509055*"):
     BUG_COMPONENT = ("Firefox", "Bookmarks & History")
 
-with Files("mochitest/*511449*"):
-    BUG_COMPONENT = ("Core", "Widget: Cocoa")
-
 with Files("mochitest/*551225*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
