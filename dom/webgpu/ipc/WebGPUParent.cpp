@@ -154,6 +154,12 @@ class ErrorBuffer {
     }
     return Some(Error{*filterType, false, nsCString{mMessageUtf8}});
   }
+
+  void CoerceValidationToInternal() {
+    if (mType == ffi::WGPUErrorBufferType_Validation) {
+      mType = ffi::WGPUErrorBufferType_Internal;
+    }
+  }
 };
 
 struct PendingSwapChainDrop {
@@ -1001,6 +1007,7 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     ErrorBuffer getRangeError;
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
         req->mContext, bufferId, 0, bufferSize, getRangeError.ToFFI());
+    getRangeError.CoerceValidationToInternal();
     if (req->mData->mParent) {
       req->mData->mParent->ForwardError(data->mDeviceId, getRangeError);
     } else if (auto innerError = getRangeError.GetError()) {
@@ -1036,6 +1043,7 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     }
     ErrorBuffer unmapError;
     wgpu_server_buffer_unmap(req->mContext, bufferId, unmapError.ToFFI());
+    unmapError.CoerceValidationToInternal();
     if (req->mData->mParent) {
       req->mData->mParent->ForwardError(data->mDeviceId, unmapError);
     } else if (auto innerError = unmapError.GetError()) {
