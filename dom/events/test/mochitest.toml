@@ -472,6 +472,9 @@ skip-if = [
   "http2",
 ]
 
+["test_mouse_events_after_touchend.html"]
+skip-if = ["os == 'mac'"] # Bug 1881864
+
 ["test_mouse_over_at_removing_down_target.html"]
 
 ["test_moving_and_expanding_selection_per_page.html"]
