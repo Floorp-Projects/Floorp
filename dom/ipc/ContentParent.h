@@ -964,16 +964,15 @@ class ContentParent final : public PContentParent,
                                                const int32_t& aWhichClipboard,
                                                bool* aHasType);
 
+  mozilla::ipc::IPCResult RecvGetExternalClipboardFormats(
+      const int32_t& aWhichClipboard, const bool& aPlainTextOnly,
+      nsTArray<nsCString>* aTypes);
+
   mozilla::ipc::IPCResult RecvGetClipboardAsync(
       nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
       const MaybeDiscarded<WindowContext>& aRequestingWindowContext,
       mozilla::NotNull<nsIPrincipal*> aRequestingPrincipal,
       GetClipboardAsyncResolver&& aResolver);
-
-  mozilla::ipc::IPCResult RecvGetClipboardDataSnapshotSync(
-      nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
-      const MaybeDiscarded<WindowContext>& aRequestingWindowContext,
-      ClipboardReadRequestOrError* aRequestOrError);
 
   already_AddRefed<PClipboardWriteRequestParent>
   AllocPClipboardWriteRequestParent(const int32_t& aClipboardType);
