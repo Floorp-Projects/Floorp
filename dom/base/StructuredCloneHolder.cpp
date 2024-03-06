@@ -1153,7 +1153,6 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     }
   }
 
-
   return ReadFullySerializableObjects(aCx, aReader, aTag, false);
 }
 
