@@ -42,7 +42,7 @@ const REMOTE_SETTINGS_RESULTS = [
         icon: "https://example.com/first-addon.svg",
         title: "First Addon",
         rating: "4.7",
-        keywords: ["first", "1st", "two words", "a b c"],
+        keywords: ["first", "1st", "two words", "aa b c"],
         description: "Description for the First Addon",
         number_of_ratings: 1256,
         score: 0.25,
@@ -353,35 +353,35 @@ add_tasks_with_rust(async function remoteSettings() {
       }),
     },
     {
-      input: "a",
+      input: "aa",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
     },
     {
-      input: "a ",
+      input: "aa ",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
     },
     {
-      input: "a b",
+      input: "aa b",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
     },
     {
-      input: "a b ",
+      input: "aa b ",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
     },
     {
-      input: "a b c",
+      input: "aa b c",
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
