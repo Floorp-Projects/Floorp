@@ -196,12 +196,21 @@ def android_lldb_server(target, host, ndk, lldb):
             x for x in listdir(clang_path) if isdir(os.path.join(clang_path, x))
         ]
         log.debug("Got %r" % clang_subdirs)
-        if len(clang_subdirs) != 1:
+        if len(clang_subdirs) == 0:
             die(
                 "Could not resolve lldb-server in %s. Please specify --with-android-lldb-server=/path/to/android/lldb-server"
                 % quote(clang_path)
             )
-        log.debug("Found version %s" % quote(clang_subdirs[0]))
+        sorted_versions = sorted(clang_subdirs, key=Version)
+        highest_version = sorted_versions[-1]
+        log.warning("Using highest version available: %s" % quote(highest_version))
+        log.warning(
+            " Available versions: "
+            + ", ".join(str(version) for version in sorted_versions)
+        )
+        log.warning(
+            "(To use an older version, please specify --with-android-lldb-server=/path/to/desired/android/lldb-server)"
+        )
 
         if target.cpu == "x86":
             target_cpu = "i386"
@@ -209,7 +218,7 @@ def android_lldb_server(target, host, ndk, lldb):
             target_cpu = target.cpu
 
         full_path = os.path.join(
-            clang_path, clang_subdirs[0], llvm_lib, target_cpu, "lldb-server"
+            clang_path, highest_version, llvm_lib, target_cpu, "lldb-server"
         )
         log.debug("Trying %s" % quote(full_path))
 
