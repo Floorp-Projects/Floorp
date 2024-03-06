@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     "nsIPromptFactory.idl",
     "nsIPromptService.idl",
     "nsIWindowWatcher.idl",
-    "nsPIPromptService.idl",
     "nsPIWindowWatcher.idl",
 ]
 

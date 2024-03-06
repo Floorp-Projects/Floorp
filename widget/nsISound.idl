@@ -23,10 +23,6 @@ interface nsISound : nsISupports
   /**
    * In some situations, playEventSound will be called.  Then, each
    * implementations will play a system sound for the event if it's necessary.
-   *
-   * NOTE: Don't change these values because they are used in
-   * nsPIPromptService.idl. So, if they are changed, that makes big impact for
-   * the embedders.
    */
   const unsigned long EVENT_NEW_MAIL_RECEIVED           = 0;
   const unsigned long EVENT_ALERT_DIALOG_OPEN           = 1;
