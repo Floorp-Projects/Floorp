@@ -44,6 +44,7 @@ h1.translations-panel-header-wrapper {
 
 #full-page-translations-panel-intro {
   line-height: 1.6;
+  margin-block-end: var(--arrowpanel-padding);
 }
 
 .translations-panel-settings-gear-icon > image {
