@@ -107,10 +107,6 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
   }
   mPrefSerializer->AddSharedPrefCmdLineArgs(*this, aExtraOpts);
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  mSandboxLevel = Preferences::GetInt("security.sandbox.utility.level");
-#endif
-
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
   EnsureWidevineL1PathForSandbox(aExtraOpts);
 #endif

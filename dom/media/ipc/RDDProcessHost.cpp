@@ -53,10 +53,6 @@ bool RDDProcessHost::Launch(StringVector aExtraOpts) {
   }
   mPrefSerializer->AddSharedPrefCmdLineArgs(*this, aExtraOpts);
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  mSandboxLevel = Preferences::GetInt("security.sandbox.rdd.level");
-#endif
-
   mLaunchPhase = LaunchPhase::Waiting;
   mLaunchTime = TimeStamp::Now();
 
