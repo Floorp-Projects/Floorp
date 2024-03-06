@@ -56,6 +56,7 @@ class BrowsingContextGroup;
 class ClientInfo;
 class ClientState;
 class ContentFrameMessageManager;
+class DataTransfer;
 class DocGroup;
 class Document;
 class Element;
@@ -655,6 +656,9 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   };
   bool HasActiveWebTransports() { return mWebTransportCount > 0; }
 
+  void SetCurrentPasteDataTransfer(mozilla::dom::DataTransfer* aDataTransfer);
+  mozilla::dom::DataTransfer* GetCurrentPasteDataTransfer() const;
+
  protected:
   void CreatePerformanceObjectIfNeeded();
 
@@ -777,6 +781,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
    * workers.
    */
   uint32_t mWebTransportCount = 0;
+
+  // Cache the DataTransfer created for a paste event, this will be reset after
+  // the event is dispatched.
+  RefPtr<mozilla::dom::DataTransfer> mCurrentPasteDataTransfer;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
