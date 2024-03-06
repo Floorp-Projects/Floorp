@@ -36,11 +36,17 @@ export interface Credentials {
  * @public
  */
 export interface NetworkConditions {
-  // Download speed (bytes/s)
+  /**
+   * Download speed (bytes/s)
+   */
   download: number;
-  // Upload speed (bytes/s)
+  /**
+   * Upload speed (bytes/s)
+   */
   upload: number;
-  // Latency (ms)
+  /**
+   * Latency (ms)
+   */
   latency: number;
 }
 
@@ -631,7 +637,7 @@ export class NetworkManager extends EventEmitter<NetworkManagerEvents> {
   }
 
   #forgetRequest(request: CdpHTTPRequest, events: boolean): void {
-    const requestId = request._requestId;
+    const requestId = request.id;
     const interceptionId = request._interceptionId;
 
     this.#networkEventManager.forgetRequest(requestId);

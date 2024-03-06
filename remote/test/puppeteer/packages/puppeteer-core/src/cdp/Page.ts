@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {Readable} from 'stream';
-
 import type {Protocol} from 'devtools-protocol';
 
 import {firstValueFrom, from, raceWith} from '../../third_party/rxjs/rxjs.js';
@@ -32,6 +30,11 @@ import {
   ConsoleMessage,
   type ConsoleMessageType,
 } from '../common/ConsoleMessage.js';
+import type {
+  Cookie,
+  DeleteCookiesRequest,
+  CookieParam,
+} from '../common/Cookie.js';
 import {TargetCloseError} from '../common/Errors.js';
 import {FileChooser} from '../common/FileChooser.js';
 import {NetworkManagerEvent} from '../common/NetworkManagerEvents.js';
@@ -79,6 +82,15 @@ import {
   valueFromRemoteObject,
 } from './utils.js';
 import {CdpWebWorker} from './WebWorker.js';
+
+function convertConsoleMessageLevel(method: string): ConsoleMessageType {
+  switch (method) {
+    case 'warning':
+      return 'warn';
+    default:
+      return method as ConsoleMessageType;
+  }
+}
 
 /**
  * @internal
@@ -346,6 +358,8 @@ export class CdpPage extends Page {
       const worker = new CdpWebWorker(
         session,
         session._target().url(),
+        session._target()._targetId,
+        session._target().type(),
         this.#addConsoleMessage.bind(this),
         this.#handleException.bind(this)
       );
@@ -470,7 +484,12 @@ export class CdpPage extends Page {
     if (source !== 'worker') {
       this.emit(
         PageEvent.Console,
-        new ConsoleMessage(level, text, [], [{url, lineNumber}])
+        new ConsoleMessage(
+          convertConsoleMessageLevel(level),
+          text,
+          [],
+          [{url, lineNumber}]
+        )
       );
     }
   }
@@ -572,16 +591,14 @@ export class CdpPage extends Page {
     ) as HandleFor<Prototype[]>;
   }
 
-  override async cookies(
-    ...urls: string[]
-  ): Promise<Protocol.Network.Cookie[]> {
+  override async cookies(...urls: string[]): Promise<Cookie[]> {
     const originalCookies = (
       await this.#primaryTargetClient.send('Network.getCookies', {
         urls: urls.length ? urls : [this.url()],
       })
     ).cookies;
 
-    const unsupportedCookieAttributes = ['priority'];
+    const unsupportedCookieAttributes = ['sourcePort'];
     const filterUnsupportedAttributes = (
       cookie: Protocol.Network.Cookie
     ): Protocol.Network.Cookie => {
@@ -594,7 +611,7 @@ export class CdpPage extends Page {
   }
 
   override async deleteCookie(
-    ...cookies: Protocol.Network.DeleteCookiesRequest[]
+    ...cookies: DeleteCookiesRequest[]
   ): Promise<void> {
     const pageURL = this.url();
     for (const cookie of cookies) {
@@ -606,9 +623,7 @@ export class CdpPage extends Page {
     }
   }
 
-  override async setCookie(
-    ...cookies: Protocol.Network.CookieParam[]
-  ): Promise<void> {
+  override async setCookie(...cookies: CookieParam[]): Promise<void> {
     const pageURL = this.url();
     const startsWithHTTP = pageURL.startsWith('http');
     const items = cookies.map(cookie => {
@@ -810,7 +825,11 @@ export class CdpPage extends Page {
     const values = event.args.map(arg => {
       return createCdpHandle(context._world, arg);
     });
-    this.#addConsoleMessage(event.type, values, event.stackTrace);
+    this.#addConsoleMessage(
+      convertConsoleMessageLevel(event.type),
+      values,
+      event.stackTrace
+    );
   }
 
   async #onBindingCalled(
@@ -842,7 +861,7 @@ export class CdpPage extends Page {
   }
 
   #addConsoleMessage(
-    eventType: ConsoleMessageType,
+    eventType: string,
     args: JSHandle[],
     stackTrace?: Protocol.Runtime.StackTrace
   ): void {
@@ -874,7 +893,7 @@ export class CdpPage extends Page {
       }
     }
     const message = new ConsoleMessage(
-      eventType,
+      convertConsoleMessageLevel(eventType),
       textTokens.join(' '),
       args,
       stackTraceLocations
@@ -1086,7 +1105,9 @@ export class CdpPage extends Page {
     return data;
   }
 
-  override async createPDFStream(options: PDFOptions = {}): Promise<Readable> {
+  override async createPDFStream(
+    options: PDFOptions = {}
+  ): Promise<ReadableStream<Uint8Array>> {
     const {timeout: ms = this._timeoutSettings.timeout()} = options;
     const {
       landscape,
@@ -1102,6 +1123,7 @@ export class CdpPage extends Page {
       preferCSSPageSize,
       omitBackground,
       tagged: generateTaggedPDF,
+      outline: generateDocumentOutline,
     } = parsePDFOptions(options);
 
     if (omitBackground) {
@@ -1127,6 +1149,7 @@ export class CdpPage extends Page {
         pageRanges,
         preferCSSPageSize,
         generateTaggedPDF,
+        generateDocumentOutline,
       }
     );
 

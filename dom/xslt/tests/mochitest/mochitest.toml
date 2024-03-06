@@ -54,4 +54,6 @@ support-files = ["file_metaRefresh.xml"]
 
 ["test_parameter.html"]
 
+["test_parameter_conversion.html"]
+
 ["test_sorting_invalid_lang.html"]

@@ -34,18 +34,14 @@ describe('ElementHandle specs', function () {
       expect(box).toEqual({x: 100, y: 50, width: 50, height: 50});
     });
     it('should handle nested frames', async () => {
-      const {page, server, isChrome} = await getTestState();
+      const {page, server} = await getTestState();
 
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/frames/nested-frames.html');
       const nestedFrame = page.frames()[1]!.childFrames()[1]!;
       using elementHandle = (await nestedFrame.$('div'))!;
       const box = await elementHandle.boundingBox();
-      if (isChrome) {
-        expect(box).toEqual({x: 28, y: 182, width: 264, height: 18});
-      } else {
-        expect(box).toEqual({x: 28, y: 182, width: 254, height: 18});
-      }
+      expect(box).toEqual({x: 28, y: 182, width: 300, height: 18});
     });
     it('should return null for invisible elements', async () => {
       const {page} = await getTestState();
@@ -472,10 +468,8 @@ describe('ElementHandle specs', function () {
         })
       ).toStrictEqual('bar1');
     });
-  });
 
-  describe('Element.waitForXPath', () => {
-    it('should wait correctly with waitForXPath on an element', async () => {
+    it('should wait correctly with waitForSelector and xpath on an element', async () => {
       const {page} = await getTestState();
       // Set the page content after the waitFor has been started.
       await page.setContent(
@@ -490,20 +484,18 @@ describe('ElementHandle specs', function () {
         </div>`
       );
 
-      using el1 = (await page.waitForSelector(
+      using elById = (await page.waitForSelector(
         '#el1'
       )) as ElementHandle<HTMLDivElement>;
 
-      for (const path of ['//div', './/div']) {
-        using e = (await el1.waitForXPath(
-          path
-        )) as ElementHandle<HTMLDivElement>;
-        expect(
-          await e.evaluate(el => {
-            return el.id;
-          })
-        ).toStrictEqual('el2');
-      }
+      using elByXpath = (await elById.waitForSelector(
+        'xpath/.//div'
+      )) as ElementHandle<HTMLDivElement>;
+      expect(
+        await elByXpath.evaluate(el => {
+          return el.id;
+        })
+      ).toStrictEqual('el2');
     });
   });
 

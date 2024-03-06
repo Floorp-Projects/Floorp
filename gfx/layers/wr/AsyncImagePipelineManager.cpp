@@ -229,8 +229,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   auto* wrapper = aTexture ? aTexture->AsRemoteTextureHostWrapper() : nullptr;
   if (wrapper && !aPipeline->mImageHost->GetAsyncRef()) {
     std::function<void(const RemoteTextureInfo&)> function;
-    RemoteTextureMap::Get()->GetRemoteTexture(
-        wrapper, std::move(function), /* aWaitForRemoteTextureOwner */ false);
+    RemoteTextureMap::Get()->GetRemoteTexture(wrapper, std::move(function));
   }
 
   if (!aTexture || aTexture->NumSubTextures() == 0) {

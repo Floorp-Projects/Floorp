@@ -94,7 +94,8 @@ export abstract class HTTPRequest {
   /**
    * @internal
    */
-  _requestId = '';
+  abstract get id(): string;
+
   /**
    * @internal
    */
@@ -392,13 +393,6 @@ export enum InterceptResolutionAction {
   None = 'none',
   AlreadyHandled = 'already-handled',
 }
-
-/**
- * @public
- *
- * @deprecated please use {@link InterceptResolutionAction} instead.
- */
-export type InterceptResolutionStrategy = InterceptResolutionAction;
 
 /**
  * @public

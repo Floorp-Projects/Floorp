@@ -18,9 +18,13 @@ describe('BrowserContext', function () {
     const {browser} = await getTestState({
       skipContextCreation: true,
     });
-    expect(browser.browserContexts()).toHaveLength(1);
-    const defaultContext = browser.browserContexts()[0]!;
-    expect(defaultContext!.isIncognito()).toBe(false);
+
+    expect(browser.browserContexts().length).toBeGreaterThanOrEqual(1);
+    const defaultContext = browser.browserContexts().find(context => {
+      return !context.isIncognito();
+    });
+    expect(defaultContext).toBeDefined();
+
     let error!: Error;
     await defaultContext!.close().catch(error_ => {
       return (error = error_);
@@ -33,13 +37,14 @@ describe('BrowserContext', function () {
       skipContextCreation: true,
     });
 
-    expect(browser.browserContexts()).toHaveLength(1);
-    const context = await browser.createIncognitoBrowserContext();
+    const contextCount = browser.browserContexts().length;
+    expect(contextCount).toBeGreaterThanOrEqual(1);
+    const context = await browser.createBrowserContext();
     expect(context.isIncognito()).toBe(true);
-    expect(browser.browserContexts()).toHaveLength(2);
+    expect(browser.browserContexts()).toHaveLength(contextCount + 1);
     expect(browser.browserContexts().indexOf(context) !== -1).toBe(true);
     await context.close();
-    expect(browser.browserContexts()).toHaveLength(1);
+    expect(browser.browserContexts()).toHaveLength(contextCount);
   });
   it('should close all belonging targets once closing context', async () => {
     const {browser} = await getTestState({
@@ -48,7 +53,7 @@ describe('BrowserContext', function () {
 
     expect(await browser.pages()).toHaveLength(1);
 
-    const context = await browser.createIncognitoBrowserContext();
+    const context = await browser.createBrowserContext();
     await context.newPage();
     expect(await browser.pages()).toHaveLength(2);
     expect(await context.pages()).toHaveLength(1);
@@ -128,7 +133,7 @@ describe('BrowserContext', function () {
   it('should timeout waiting for a non-existent target', async () => {
     const {browser, server} = await getTestState();
 
-    const context = await browser.createIncognitoBrowserContext();
+    const context = await browser.createBrowserContext();
     const error = await context
       .waitForTarget(
         target => {
@@ -151,8 +156,8 @@ describe('BrowserContext', function () {
     });
 
     // Create two incognito contexts.
-    const context1 = await browser.createIncognitoBrowserContext();
-    const context2 = await browser.createIncognitoBrowserContext();
+    const context1 = await browser.createBrowserContext();
+    const context2 = await browser.createBrowserContext();
     expect(context1.targets()).toHaveLength(0);
     expect(context2.targets()).toHaveLength(0);
 
@@ -176,9 +181,9 @@ describe('BrowserContext', function () {
     });
 
     expect(context1.targets()).toHaveLength(1);
-    expect(context1.targets()[0]).toBe(page1.target());
+    expect(await context1.targets()[0]?.page()).toBe(page1);
     expect(context2.targets()).toHaveLength(1);
-    expect(context2.targets()[0]).toBe(page2.target());
+    expect(await context2.targets()[0]?.page()).toBe(page2);
 
     // Make sure pages don't share localstorage or cookies.
     expect(
@@ -213,16 +218,19 @@ describe('BrowserContext', function () {
     });
 
     expect(browser.browserContexts()).toHaveLength(1);
-    const context = await browser.createIncognitoBrowserContext();
-    expect(browser.browserContexts()).toHaveLength(2);
-    const remoteBrowser = await puppeteer.connect({
-      browserWSEndpoint: browser.wsEndpoint(),
-      protocol: browser.protocol,
-    });
-    const contexts = remoteBrowser.browserContexts();
-    expect(contexts).toHaveLength(2);
-    await remoteBrowser.disconnect();
-    await context.close();
+    const context = await browser.createBrowserContext();
+    try {
+      expect(browser.browserContexts()).toHaveLength(2);
+      const remoteBrowser = await puppeteer.connect({
+        browserWSEndpoint: browser.wsEndpoint(),
+        protocol: browser.protocol,
+      });
+      const contexts = remoteBrowser.browserContexts();
+      expect(contexts).toHaveLength(2);
+      await remoteBrowser.disconnect();
+    } finally {
+      await context.close();
+    }
   });
 
   it('should provide a context id', async () => {
@@ -233,7 +241,7 @@ describe('BrowserContext', function () {
     expect(browser.browserContexts()).toHaveLength(1);
     expect(browser.browserContexts()[0]!.id).toBeUndefined();
 
-    const context = await browser.createIncognitoBrowserContext();
+    const context = await browser.createBrowserContext();
     expect(browser.browserContexts()).toHaveLength(2);
     expect(browser.browserContexts()[1]!.id).toBeDefined();
     await context.close();
@@ -333,7 +341,7 @@ describe('BrowserContext', function () {
       const {page, server, context, browser} = await getTestState();
 
       await page.goto(server.EMPTY_PAGE);
-      const otherContext = await browser.createIncognitoBrowserContext();
+      const otherContext = await browser.createBrowserContext();
       const otherPage = await otherContext.newPage();
       await otherPage.goto(server.EMPTY_PAGE);
       expect(await getPermission(page, 'geolocation')).toBe('prompt');
