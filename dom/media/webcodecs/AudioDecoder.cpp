@@ -91,7 +91,8 @@ UniquePtr<AudioDecoderConfigInternal> AudioDecoderConfigInternal::Create(
       GetErrorName(rv.unwrapErr(), error);
       LOGE(
           "Failed to create AudioDecoderConfigInternal due to invalid "
-          "description data. Error: %s", error.get());
+          "description data. Error: %s",
+          error.get());
       return nullptr;
     }
     description.emplace(rv.unwrap());
@@ -115,10 +116,10 @@ struct AudioMIMECreateParam {
   const nsString mParsedCodec;
 };
 
-
 // Map between WebCodecs pcm types as strings and codec numbers
 // All other codecs
-nsCString ConvertCodecName(const nsCString& aContainer, const nsCString& aCodec) {
+nsCString ConvertCodecName(const nsCString& aContainer,
+                           const nsCString& aCodec) {
   if (!aContainer.EqualsLiteral("x-wav")) {
     return aCodec;
   }
@@ -216,8 +217,8 @@ static Result<Ok, nsresult> CloneConfiguration(
 }
 
 // https://w3c.github.io/webcodecs/#create-a-audiodata
-static RefPtr<AudioData> CreateAudioData(
-    nsIGlobalObject* aGlobalObject, mozilla::AudioData* aData) {
+static RefPtr<AudioData> CreateAudioData(nsIGlobalObject* aGlobalObject,
+                                         mozilla::AudioData* aData) {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aData);
 
@@ -282,7 +283,8 @@ Result<UniquePtr<TrackInfo>, nsresult> AudioDecoderTraits::CreateTrackInfo(
 
 // https://w3c.github.io/webcodecs/#valid-audiodecoderconfig
 /* static */
-bool AudioDecoderTraits::Validate(const AudioDecoderConfig& aConfig, nsCString& aErrorMessage) {
+bool AudioDecoderTraits::Validate(const AudioDecoderConfig& aConfig,
+                                  nsCString& aErrorMessage) {
   Maybe<nsString> codec = ParseCodecString(aConfig.mCodec);
   if (!codec || codec->IsEmpty()) {
     LOGE("Validating AudioDecoderConfig: invalid codec string");
@@ -395,7 +397,6 @@ already_AddRefed<Promise> AudioDecoder::IsConfigSupported(
     return p.forget();
   }
 
-
   // TODO: Move the following works to another thread to unblock the current
   // thread, as what spec suggests.
 
@@ -405,8 +406,7 @@ already_AddRefed<Promise> AudioDecoder::IsConfigSupported(
     nsresult e = r.unwrapErr();
     nsCString error;
     GetErrorName(e, error);
-    LOGE("Failed to clone AudioDecoderConfig. Error: %s",
-         error.get());
+    LOGE("Failed to clone AudioDecoderConfig. Error: %s", error.get());
     p->MaybeRejectWithTypeError("Failed to clone AudioDecoderConfig");
     aRv.Throw(e);
     return p.forget();
