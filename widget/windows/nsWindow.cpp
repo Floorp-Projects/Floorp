@@ -1352,7 +1352,7 @@ DWORD nsWindow::WindowExStyle() {
   if (mIsAlert) {
     MOZ_ASSERT(mWindowType == WindowType::Dialog,
                "Expect alert windows to have type=dialog");
-    return WS_EX_TOOLWINDOW;
+    return WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
   }
   return WS_EX_WINDOWEDGE;
 }
