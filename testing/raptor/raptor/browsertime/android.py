@@ -126,6 +126,10 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 ]
             )
 
+        if self.config["app"] == "geckoview":
+            # This is needed as geckoview is crashing on shutdown and is throwing marionette errors similar to 1768889
+            args_list.extend(["--ignoreShutdownFailures", "true"])
+
         if self.config["app"] == "fenix":
             # See bug 1768889
             args_list.extend(["--ignoreShutdownFailures", "true"])
