@@ -300,7 +300,7 @@ function getWatchingBrowsingContexts(watcher) {
   // => we should no longer reach any browsing context.
   //
   // For "all" (=browser toolbox), there is only the special ParentProcessTargetActor we might want to return here.
-  // But this is actually handled by the WatcherActor which uses `WatcherActor.getTargetActorInParentProcess` to convey session data.
+  // But this is actually handled by the WatcherActor which uses `WatcherActor.getTargetActorsInParentProcess` to convey session data.
   // => we should no longer reach any browsing context.
   //
   // For "webextension" debugging, there is the special WebExtensionTargetActor, which doesn't run in the parent process,
