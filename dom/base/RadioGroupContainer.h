@@ -32,7 +32,6 @@ class RadioGroupContainer final {
   nsresult GetNextRadioButton(const nsAString& aName, const bool aPrevious,
                               HTMLInputElement* aFocusedRadio,
                               HTMLInputElement** aRadioOut);
-  HTMLInputElement* GetFirstRadioButton(const nsAString& aName);
   void AddToRadioGroup(const nsAString& aName, HTMLInputElement* aRadio,
                        nsIContent* aAncestor);
   void RemoveFromRadioGroup(const nsAString& aName, HTMLInputElement* aRadio);
