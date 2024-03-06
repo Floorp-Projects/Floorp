@@ -634,7 +634,8 @@ class nsTableFrame : public nsContainerFrame {
   // distribute extra block-size to table rows if the table has a specified
   // block-size larger than the intrinsic block-size.
   nscoord CalcDesiredBSize(const ReflowInput& aReflowInput,
-                           const LogicalMargin& aBorderPadding);
+                           const LogicalMargin& aBorderPadding,
+                           const nsReflowStatus& aStatus);
 
   // The following is a helper for CalcDesiredBSize
   void DistributeBSizeToRows(const ReflowInput& aReflowInput, nscoord aAmount);
