@@ -604,6 +604,21 @@ assertErrorMessage(() => wasmEvalText(`(module
     },WebAssembly.RuntimeError, /index out of bounds/);
 }
 
+// run: zeroes everywhere
+{
+  let { newData } = wasmEvalText(`(module
+      (type $a (array i8))
+      (data $d "")
+      (func (export "newData") (result eqref)
+              (; offset=0 into data ;) i32.const 0
+              (; size=0 into data ;) i32.const 0
+              array.new_data $a $d
+      )
+      )`).exports;
+  let arr = newData();
+  assertEq(wasmGcArrayLength(arr), 0);
+}
+
 // run: resulting array is as expected
 {
     let { newData } = wasmEvalText(`(module
@@ -800,6 +815,21 @@ assertErrorMessage(() => wasmEvalText(`(module
     assertErrorMessage(() => {
         newElem();
     },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: zeroes everywhere
+{
+    let { newElem, f1, f2, f3, f4 } = wasmEvalText(`(module
+        (type $a (array funcref))
+        (elem $e func)
+        (func (export "newElem") (result eqref)
+                (; offset=0 into elem ;) i32.const 0
+                (; size=0 into elem ;) i32.const 0
+                array.new_elem $a $e
+        )
+        )`).exports;
+    let arr = newElem();
+    assertEq(wasmGcArrayLength(arr), 0);
 }
 
 // run: resulting array is as expected
@@ -1128,6 +1158,29 @@ assertErrorMessage(() => wasmEvalText(`(module
   assertErrorMessage(() => {
     initData();
   },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: zeroes everywhere
+{
+  let { initData } = wasmEvalText(`(module
+    (type $a (array (mut i8)))
+    (data $d "")
+    (func (export "initData") (result eqref)
+      (local $arr (ref $a))
+      (local.set $arr (array.new_default $a (i32.const 0)))
+
+      (; array to init ;)       local.get $arr
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into data ;)  i32.const 0
+      (; size=0 elements ;)     i32.const 0
+      array.init_data $a $d
+
+      local.get $arr
+    )
+    (func data.drop 0) ;; force write of data count section, see https://github.com/bytecodealliance/wasm-tools/pull/1194
+  )`).exports;
+  let arr = initData();
+  assertEq(wasmGcArrayLength(arr), 0);
 }
 
 // run: resulting array is as expected
@@ -1486,6 +1539,28 @@ assertErrorMessage(() => wasmEvalText(`(module
   assertErrorMessage(() => {
     initElem();
   },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: zeroes everywhere
+{
+  let { initElem, f1, f2, f3, f4 } = wasmEvalText(`(module
+    (type $a (array (mut funcref)))
+    (elem $e func)
+    (func (export "initElem") (result eqref)
+      (local $arr (ref $a))
+      (local.set $arr (array.new_default $a (i32.const 0)))
+
+      (; array to init ;)       local.get $arr
+      (; offset=0 into array ;) i32.const 0
+      (; offset=0 into elem ;)  i32.const 0
+      (; size=0 into elem ;)    i32.const 0
+      array.init_elem $a $e
+
+      local.get $arr
+    )
+  )`).exports;
+  let arr = initElem();
+  assertEq(wasmGcArrayLength(arr), 0);
 }
 
 // run: resulting array is as expected
