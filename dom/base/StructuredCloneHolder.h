@@ -169,6 +169,7 @@ class EncodedVideoChunkData;
 class MessagePort;
 class MessagePortIdentifier;
 struct VideoFrameSerializedData;
+struct AudioDataSerializedData;
 
 class StructuredCloneHolder : public StructuredCloneHolderBase {
  public:
@@ -269,6 +270,8 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
   }
 
   nsTArray<VideoFrameSerializedData>& VideoFrames() { return mVideoFrames; }
+
+  nsTArray<AudioDataSerializedData>& AudioData() { return mAudioData; }
 
   nsTArray<EncodedVideoChunkData>& EncodedVideoChunks() {
     return mEncodedVideoChunks;
@@ -378,6 +381,9 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   // Used for cloning VideoFrame in the structured cloning algorithm.
   nsTArray<VideoFrameSerializedData> mVideoFrames;
+
+  // Used for cloning AudioData in the structured cloning algorithm.
+  nsTArray<AudioDataSerializedData> mAudioData;
 
   // Used for cloning EncodedVideoChunk in the structured cloning algorithm.
   nsTArray<EncodedVideoChunkData> mEncodedVideoChunks;
