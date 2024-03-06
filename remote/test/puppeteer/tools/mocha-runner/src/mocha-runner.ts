@@ -1,4 +1,4 @@
-#! /usr/bin/env node
+#! /usr/bin/env -S node
 
 /**
  * @license
@@ -52,7 +52,7 @@ const {
   .scriptName('@puppeteer/mocha-runner')
   .option('coverage', {
     boolean: true,
-    default: true,
+    default: false,
   })
   .option('suggestions', {
     boolean: true,

@@ -18,7 +18,6 @@ import {
   type IsPageTargetCallback,
   type Permission,
   type TargetFilterCallback,
-  type WaitForTargetOptions,
 } from '../api/Browser.js';
 import {BrowserContext, BrowserContextEvent} from '../api/BrowserContext.js';
 import {CDPSessionEvent, type CDPSession} from '../api/CDPSession.js';
@@ -201,7 +200,7 @@ export class CdpBrowser extends BrowserBase {
     return this.#isPageTargetCallback;
   }
 
-  override async createIncognitoBrowserContext(
+  override async createBrowserContext(
     options: BrowserContextOptions = {}
   ): Promise<CdpBrowserContext> {
     const {proxyServer, proxyBypassList} = options;
@@ -449,15 +448,6 @@ export class CdpBrowserContext extends BrowserContext {
     return this.#browser.targets().filter(target => {
       return target.browserContext() === this;
     });
-  }
-
-  override waitForTarget(
-    predicate: (x: Target) => boolean | Promise<boolean>,
-    options: WaitForTargetOptions = {}
-  ): Promise<Target> {
-    return this.#browser.waitForTarget(target => {
-      return target.browserContext() === this && predicate(target);
-    }, options);
   }
 
   override async pages(): Promise<Page[]> {

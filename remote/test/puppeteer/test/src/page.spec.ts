@@ -15,6 +15,7 @@ import type {HTTPRequest} from 'puppeteer-core/internal/api/HTTPRequest.js';
 import type {Metrics, Page} from 'puppeteer-core/internal/api/Page.js';
 import type {CdpPage} from 'puppeteer-core/internal/cdp/Page.js';
 import type {ConsoleMessage} from 'puppeteer-core/internal/common/ConsoleMessage.js';
+import {Deferred} from 'puppeteer-core/internal/util/Deferred.js';
 import sinon from 'sinon';
 
 import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
@@ -42,9 +43,9 @@ describe('Page', function () {
       expect(error.message).toContain('Protocol error');
     });
     it('should not be visible in browser.pages', async () => {
-      const {browser} = await getTestState();
+      const {browser, context} = await getTestState();
 
-      const newPage = await browser.newPage();
+      const newPage = await context.newPage();
       expect(await browser.pages()).toContain(newPage);
       await newPage.close();
       expect(await browser.pages()).not.toContain(newPage);
@@ -102,7 +103,11 @@ describe('Page', function () {
       ]);
       for (let i = 0; i < 2; i++) {
         const message = results[i].message;
-        expect(message).atLeastOneToContain(['Target closed', 'Page closed!']);
+        expect(message).atLeastOneToContain([
+          'Target closed',
+          'Page closed!',
+          'Frame detached',
+        ]);
         expect(message).not.toContain('Timeout');
       }
     });
@@ -445,7 +450,7 @@ describe('Page', function () {
         messages.map(msg => {
           return msg.type();
         })
-      ).toEqual(['trace', 'dir', 'warning', 'error', 'log']);
+      ).toEqual(['trace', 'dir', 'warn', 'error', 'log']);
       expect(
         messages.map(msg => {
           return msg.text();
@@ -491,6 +496,21 @@ describe('Page', function () {
         'JSHandle@object',
         'JSHandle@window',
       ]);
+    });
+    it('should return remote objects', async () => {
+      const {page} = await getTestState();
+
+      const logPromise = waitEvent<ConsoleMessage>(page, 'console');
+      await page.evaluate(() => {
+        (globalThis as any).test = 1;
+        console.log(1, 2, 3, globalThis);
+      });
+      const log = await logPromise;
+      expect(log.text()).toBe('1 2 3 JSHandle@object');
+      expect(log.args()).toHaveLength(4);
+      expect(await (await log.args()[3]!.getProperty('test')).jsonValue()).toBe(
+        1
+      );
     });
     it('should trigger correct Log', async () => {
       const {page, server, isChrome} = await getTestState();
@@ -583,14 +603,10 @@ describe('Page', function () {
         // 3. After that, remove the iframe.
         frame.remove();
       });
-      const popupTarget = page
-        .browserContext()
-        .targets()
-        .find(target => {
-          return target !== page.target();
-        })!;
-      // 4. Connect to the popup and make sure it doesn't throw.
-      await popupTarget.page();
+      // 4. The target will always be the last one.
+      const popupTarget = page.browserContext().targets().at(-1)!;
+      // 5. Connect to the popup and make sure it doesn't throw and is not the same page.
+      expect(await popupTarget.page()).not.toBe(page);
     });
   });
 
@@ -1015,15 +1031,15 @@ describe('Page', function () {
     it('should be callable from-inside evaluateOnNewDocument', async () => {
       const {page} = await getTestState();
 
-      let called = false;
+      const called = new Deferred<void>();
       await page.exposeFunction('woof', function () {
-        called = true;
+        called.resolve();
       });
       await page.evaluateOnNewDocument(() => {
         return (globalThis as any).woof();
       });
       await page.reload();
-      expect(called).toBe(true);
+      await called.valueOrThrow();
     });
     it('should survive navigation', async () => {
       const {page, server} = await getTestState();
@@ -1217,7 +1233,7 @@ describe('Page', function () {
         page.goto(server.PREFIX + '/error.html'),
       ]);
       expect(error.message).toContain('Fancy');
-      expect(error.stack?.split('\n')[1]).toContain('error.html:13');
+      expect(error.stack?.split('\n').at(-1)).toContain('error.html:3:1');
     });
   });
 
@@ -1940,33 +1956,20 @@ describe('Page', function () {
       }
     });
 
-    it('can print to PDF with accessible', async () => {
-      const {page, server} = await getTestState();
-
-      const outputFile = __dirname + '/../assets/output.pdf';
-      const outputFileAccessible =
-        __dirname + '/../assets/output-accessible.pdf';
-      await page.goto(server.PREFIX + '/pdf.html');
-      await page.pdf({path: outputFile});
-      await page.pdf({path: outputFileAccessible, tagged: true});
-      try {
-        expect(
-          fs.readFileSync(outputFileAccessible).byteLength
-        ).toBeGreaterThan(fs.readFileSync(outputFile).byteLength);
-      } finally {
-        fs.unlinkSync(outputFileAccessible);
-        fs.unlinkSync(outputFile);
-      }
-    });
-
     it('can print to PDF and stream the result', async () => {
       const {page} = await getTestState();
 
       const stream = await page.createPDFStream();
       let size = 0;
-      for await (const chunk of stream) {
-        size += chunk.length;
+      const reader = stream.getReader();
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) {
+          break;
+        }
+        size += value.length;
       }
+
       expect(size).toBeGreaterThan(0);
     });
 
@@ -2252,9 +2255,9 @@ describe('Page', function () {
 
   describe('Page.bringToFront', function () {
     it('should work', async () => {
-      const {browser} = await getTestState();
-      const page1 = await browser.newPage();
-      const page2 = await browser.newPage();
+      const {context} = await getTestState();
+      const page1 = await context.newPage();
+      const page2 = await context.newPage();
 
       await page1.bringToFront();
       expect(
