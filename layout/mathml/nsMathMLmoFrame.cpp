@@ -732,7 +732,7 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
   // Place our children using the default method
   // This will allow our child text frame to get its DidReflow()
   nsresult rv = Place(aDrawTarget, true, aDesiredStretchSize);
-  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+  if (NS_FAILED(rv)) {
     // Make sure the child frames get their DidReflow() calls.
     DidReflowChildren(mFrames.FirstChild());
   }

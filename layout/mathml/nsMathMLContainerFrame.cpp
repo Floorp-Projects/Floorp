@@ -33,45 +33,6 @@ NS_QUERYFRAME_HEAD(nsMathMLContainerFrame)
   NS_QUERYFRAME_ENTRY(nsMathMLContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-// =============================================================================
-
-namespace mozilla {
-
-class nsDisplayMathMLError : public nsPaintedDisplayItem {
- public:
-  nsDisplayMathMLError(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsPaintedDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayMathMLError);
-  }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLError)
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-  NS_DISPLAY_DECL_NAME("MathMLError", TYPE_MATHML_ERROR)
-};
-
-void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
-                                 gfxContext* aCtx) {
-  // Set color and font ...
-  RefPtr<nsFontMetrics> fm =
-      nsLayoutUtils::GetFontMetricsForFrame(mFrame, 1.0f);
-
-  nsPoint pt = ToReferenceFrame();
-  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  Rect rect = NSRectToSnappedRect(nsRect(pt, mFrame->GetSize()),
-                                  appUnitsPerDevPixel, *drawTarget);
-  ColorPattern red(ToDeviceColor(sRGBColor(1.f, 0.f, 0.f, 1.f)));
-  drawTarget->FillRect(rect, red);
-
-  aCtx->SetColor(sRGBColor::OpaqueWhite());
-  nscoord ascent = fm->MaxAscent();
-  constexpr auto errorMsg = u"invalid-markup"_ns;
-  nsLayoutUtils::DrawUniDirString(errorMsg.get(), uint32_t(errorMsg.Length()),
-                                  nsPoint(pt.x, pt.y + ascent), *fm, *aCtx);
-}
-
-}  // namespace mozilla
-
 /* /////////////
  * nsIMathMLFrame - support methods for stretchy elements
  * =============================================================================
@@ -244,11 +205,6 @@ nsMathMLContainerFrame::Stretch(DrawTarget* aDrawTarget,
     }
     mPresentationData.flags |= NS_MATHML_STRETCH_DONE;
 
-    if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-      NS_WARNING("it is wrong to fire stretch on a erroneous frame");
-      return NS_OK;
-    }
-
     // Pass the stretch to the base child ...
 
     nsIFrame* baseFrame = mPresentationData.baseFrame;
@@ -341,7 +297,7 @@ nsMathMLContainerFrame::Stretch(DrawTarget* aDrawTarget,
 
         // re-position all our children
         nsresult rv = Place(aDrawTarget, true, aDesiredStretchSize);
-        if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+        if (NS_FAILED(rv)) {
           // Make sure the child frames get their DidReflow() calls.
           DidReflowChildren(mFrames.FirstChild());
         }
@@ -430,7 +386,7 @@ nsresult nsMathMLContainerFrame::FinalizeReflow(DrawTarget* aDrawTarget,
   // that still needs it here (or we may crash - bug 366012).
   // If placeOrigin is false we should reach Place() with aPlaceOrigin == true
   // through Stretch() eventually.
-  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+  if (NS_FAILED(rv)) {
     GatherAndStoreOverflow(&aDesiredSize);
     DidReflowChildren(PrincipalChildList().FirstChild());
     return rv;
@@ -566,14 +522,6 @@ void nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(
 
 void nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                               const nsDisplayListSet& aLists) {
-  // report an error if something wrong was found in this frame
-  if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    if (!IsVisibleForPainting()) return;
-
-    aLists.Content()->AppendNewToTop<nsDisplayMathMLError>(aBuilder, this);
-    return;
-  }
-
   BuildDisplayListForInline(aBuilder, aLists);
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -798,7 +746,6 @@ void nsMathMLContainerFrame::Reflow(nsPresContext* aPresContext,
   MarkInReflow();
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  mPresentationData.flags &= ~NS_MATHML_ERROR;
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
   aDesiredSize.SetBlockStartAscent(0);
   aDesiredSize.mBoundingMetrics = nsBoundingMetrics();

@@ -291,11 +291,6 @@ struct nsPresentationData {
 // feature setting.
 #define NS_MATHML_DTLS 0x00000080U
 
-// This bit is set when the frame cannot be formatted due to an
-// error (e.g., invalid markup such as a <msup> without an overscript).
-// When set, a visual feedback will be provided to the user.
-#define NS_MATHML_ERROR 0x80000000U
-
 // a bit used for debug
 #define NS_MATHML_STRETCH_DONE 0x20000000U
 
@@ -323,9 +318,6 @@ struct nsPresentationData {
 
 #define NS_MATHML_IS_DTLS_SET(_flags) \
   (NS_MATHML_DTLS == ((_flags) & NS_MATHML_DTLS))
-
-#define NS_MATHML_HAS_ERROR(_flags) \
-  (NS_MATHML_ERROR == ((_flags) & NS_MATHML_ERROR))
 
 #define NS_MATHML_STRETCH_WAS_DONE(_flags) \
   (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))
