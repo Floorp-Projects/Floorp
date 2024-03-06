@@ -10,12 +10,6 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/protocol.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "getThreadOptions",
-  "resource://devtools/client/shared/thread-utils.js",
-  true
-);
 
 /**
  * A Target represents a debuggable context. It can be a browser tab, a tab on
@@ -420,39 +414,16 @@ function TargetMixin(parentClass) {
         return;
       }
 
-      const options = await getThreadOptions();
       // If the target is destroyed or soon will be, don't go further
       if (this.isDestroyedOrBeingDestroyed()) {
         return;
       }
-      await this.attachThread(options);
-    }
-
-    async attachThread(options = {}) {
       if (!this.targetForm || !this.targetForm.threadActor) {
         throw new Error(
-          "TargetMixin sub class should set targetForm.threadActor before calling " +
-            "attachThread"
+          "TargetMixin sub class should set targetForm.threadActor before calling attachAndInitThread"
         );
       }
       this.threadFront = await this.getFront("thread");
-
-      // Avoid attaching if the thread actor was already attached on target creation from the server side.
-      // This doesn't include:
-      // * targets that aren't yet supported by the Watcher (like web extensions),
-      // * workers, which still use a unique codepath for thread actor attach
-      // * all targets when connecting to an older server
-      // If all targets are supported by watcher actor, and workers no longer use
-      // its unique attach sequence, we can assume the thread front is always attached.
-      const isAttached = await this.threadFront.isAttached();
-
-      const isDestroyed =
-        this.isDestroyedOrBeingDestroyed() || this.threadFront.isDestroyed();
-      if (!isAttached && !isDestroyed) {
-        await this.threadFront.attach(options);
-      }
-
-      return this.threadFront;
     }
 
     isDestroyedOrBeingDestroyed() {

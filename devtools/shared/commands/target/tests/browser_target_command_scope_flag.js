@@ -27,6 +27,12 @@ add_task(async function () {
   const commands = await CommandsFactory.forMainProcess();
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
+
+  // Pass any configuration, in order to ensure attaching all the thread actors
+  await commands.threadConfigurationCommand.updateConfiguration({
+    skipBreakpoints: false,
+  });
+
   const { TYPES } = targetCommand;
 
   const targets = new Set();
