@@ -443,6 +443,7 @@ void CopySamples(Span<S> aSource, Span<D> aDest, uint32_t aSourceChannelCount,
   }
 
   if (!IsInterleaved(aSourceFormat) && IsInterleaved(aCopyToSpec.mFormat)) {
+    MOZ_CRASH("This should never be hit -- current spec doesn't support it");
     // Planar to interleaved -- copy of all channels of the source into the
     // destination buffer.
     MOZ_ASSERT(aCopyToSpec.mPlaneIndex == 0);
