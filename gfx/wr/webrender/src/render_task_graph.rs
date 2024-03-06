@@ -445,6 +445,13 @@ impl RenderTaskGraphBuilder {
                                 )
                             };
 
+                            if surface_size.is_empty() {
+                                // We would panic in the guillotine allocator. Instead, panic here
+                                // with some context.
+                                let task_name = graph.tasks[task_id.index as usize].kind.as_str();
+                                panic!("{} render task has invalid size {:?}", task_name, surface_size);
+                            }
+
                             let format = match kind {
                                 RenderTargetKind::Color => ImageFormat::RGBA8,
                                 RenderTargetKind::Alpha => ImageFormat::R8,
