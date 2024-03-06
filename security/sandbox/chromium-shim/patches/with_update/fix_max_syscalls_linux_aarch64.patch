@@ -1,0 +1,25 @@
+# HG changeset patch
+# User Paul Bone <pbone@mozilla.org>
+# Date 1708492973 -39600
+#      Wed Feb 21 16:22:53 2024 +1100
+# Node ID 501cb36ee885ebd0939e1892f821d55ac149ceec
+# Parent  cf015b6f24b494190f562b255147f96e8b8b4139
+Bug 1866396 - Hard code the number of system calls for Linux on aarch64 r=jld
+
+Differential Revision: https://phabricator.services.mozilla.com/D202293
+
+diff --git a/security/sandbox/chromium/sandbox/linux/bpf_dsl/linux_syscall_ranges.h b/security/sandbox/chromium/sandbox/linux/bpf_dsl/linux_syscall_ranges.h
+--- a/security/sandbox/chromium/sandbox/linux/bpf_dsl/linux_syscall_ranges.h
++++ b/security/sandbox/chromium/sandbox/linux/bpf_dsl/linux_syscall_ranges.h
+@@ -51,9 +51,9 @@
+ 
+ #elif defined(__aarch64__)
+ 
+-#include <asm-generic/unistd.h>
++// The unistd.h included in the sysroot has a very old __NR_syscalls
+ #define MIN_SYSCALL 0u
+-#define MAX_PUBLIC_SYSCALL __NR_syscalls
++#define MAX_PUBLIC_SYSCALL  (MIN_SYSCALL + 1024u)
+ #define MAX_SYSCALL MAX_PUBLIC_SYSCALL
+ 
+ #else
