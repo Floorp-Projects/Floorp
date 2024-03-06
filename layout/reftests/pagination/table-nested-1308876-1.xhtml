@@ -2,6 +2,10 @@
 <!--
 Reduced from layout/base/crashtests/470851-1.xhtml and turned into a reftest.
 -->
+<style>
+@page { size: 5in 3in; margin: 0.5in; }
+html, body { margin: 0; padding: 0; }
+</style>
 <table style="background: black">
 <tbody>
 <tr>
@@ -15,7 +19,7 @@ Reduced from layout/base/crashtests/470851-1.xhtml and turned into a reftest.
         <tr><td>A</td></tr>
       </tbody>
       <tbody style="background: fuchsia">
-        <tr><td><div style="background: aqua; line-height: 4in">A</div></td></tr>
+        <tr><td><div style="background: aqua; line-height: 4in; color: transparent">A</div></td></tr>
       </tbody>
     </table>
   </td>
