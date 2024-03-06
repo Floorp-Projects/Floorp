@@ -2548,6 +2548,10 @@ void LocalAccessible::Shutdown() {
 
 // LocalAccessible protected
 void LocalAccessible::ARIAName(nsString& aName) const {
+  // 'slot' elements should ignore aria-label and aria-labelledby.
+  if (mContent->IsHTMLElement(nsGkAtoms::slot)) {
+    return;
+  }
   // aria-labelledby now takes precedence over aria-label
   nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
       this, nsGkAtoms::aria_labelledby, aName);
