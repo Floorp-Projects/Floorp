@@ -19,11 +19,6 @@ module.exports = async function ({ targetCommand, targetFront, onAvailable }) {
     return;
   }
 
-  // Wait for the thread actor to be attached, otherwise getFront(thread) will throw for worker targets
-  // This is because worker target are still kind of descriptors and are only resolved into real target
-  // after being attached. And the thread actor ID is only retrieved and available after being attached.
-  await targetFront.onThreadAttached;
-
   if (targetFront.isDestroyed()) {
     return;
   }
