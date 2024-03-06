@@ -182,6 +182,10 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioContext", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "AudioData", insecureContext: true, nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "AudioDecoder" },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioBufferSourceNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioDestinationNode", insecureContext: true },
@@ -399,6 +403,8 @@ let interfaceNamesInGlobalScope = [
   { name: "Element", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ElementInternals", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "EncodedAudioChunk", insecureContext: true, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "EncodedVideoChunk", insecureContext: true, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
