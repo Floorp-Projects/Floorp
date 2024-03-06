@@ -3025,5 +3025,8 @@ pref("browser.mailto.prompt.os", true);
 
 pref("browser.backup.enabled", false);
 
+// Pref to enable the new profiles
+pref("browser.profiles.enabled", false);
+
 pref("startup.homepage_override_url_nimbus", "");
 pref("startup.homepage_override_nimbus_maxVersion", "");
