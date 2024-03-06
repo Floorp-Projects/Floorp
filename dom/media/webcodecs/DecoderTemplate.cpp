@@ -881,6 +881,7 @@ void DecoderTemplate<DecoderType>::DestroyDecoderAgentIfAny() {
 }
 
 template class DecoderTemplate<VideoDecoderTraits>;
+template class DecoderTemplate<AudioDecoderTraits>;
 
 #undef LOG
 #undef LOGW

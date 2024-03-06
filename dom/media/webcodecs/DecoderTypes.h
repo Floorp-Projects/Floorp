@@ -9,6 +9,9 @@
 
 #include "MediaData.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/AudioData.h"
+#include "mozilla/dom/AudioDecoderBinding.h"
+#include "mozilla/dom/EncodedAudioChunk.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
 #include "mozilla/dom/VideoDecoderBinding.h"
@@ -58,17 +61,17 @@ class VideoDecoderConfigInternal {
 
   bool Equals(const VideoDecoderConfigInternal& aOther) const {
     if (mDescription.isSome() != aOther.mDescription.isSome()) {
-        return false;
+      return false;
     }
     if (mDescription.isSome() && aOther.mDescription.isSome()) {
-        auto lhs = mDescription.value();
-        auto rhs = aOther.mDescription.value();
-        if (lhs->Length() != rhs->Length()) {
-            return false;
-        }
-        if (!ArrayEqual(lhs->Elements(), rhs->Elements(), lhs->Length())) {
-            return false;
-        }
+      auto lhs = mDescription.value();
+      auto rhs = aOther.mDescription.value();
+      if (lhs->Length() != rhs->Length()) {
+        return false;
+      }
+      if (!ArrayEqual(lhs->Elements(), rhs->Elements(), lhs->Length())) {
+        return false;
+      }
     }
     return mCodec.Equals(aOther.mCodec) &&
            mCodedHeight == aOther.mCodedHeight &&
@@ -104,6 +107,49 @@ class VideoDecoderTraits {
   static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
       const ConfigTypeInternal& aConfig);
   static bool Validate(const ConfigType& aConfig, nsCString& aErrorMessage);
+  static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
+      const ConfigType& aConfig);
+  static bool IsKeyChunk(const InputType& aInput);
+  static UniquePtr<InputTypeInternal> CreateInputInternal(
+      const InputType& aInput);
+};
+
+class AudioDecoderConfigInternal {
+ public:
+  static UniquePtr<AudioDecoderConfigInternal> Create(
+      const AudioDecoderConfig& aConfig);
+  ~AudioDecoderConfigInternal() = default;
+
+  nsString mCodec;
+  uint32_t mSampleRate;
+  uint32_t mNumberOfChannels;
+  Maybe<RefPtr<MediaByteBuffer>> mDescription;
+  // Compilation fix, should be abstracted by DecoderAgent since those are not
+  // supported
+  HardwareAcceleration mHardwareAcceleration =
+      HardwareAcceleration::No_preference;
+  Maybe<bool> mOptimizeForLatency;
+
+ private:
+  AudioDecoderConfigInternal(const nsAString& aCodec, uint32_t aSampleRate,
+                             uint32_t aNumberOfChannels,
+                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription);
+};
+
+class AudioDecoderTraits {
+ public:
+  static constexpr nsLiteralCString Name = "AudioDecoder"_ns;
+  using ConfigType = AudioDecoderConfig;
+  using ConfigTypeInternal = AudioDecoderConfigInternal;
+  using InputType = EncodedAudioChunk;
+  using InputTypeInternal = EncodedAudioChunkData;
+  using OutputType = AudioData;
+  using OutputCallbackType = AudioDataOutputCallback;
+
+  static bool IsSupported(const ConfigTypeInternal& aConfig);
+  static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
+      const ConfigTypeInternal& aConfig);
+  static bool Validate(const ConfigType& aConfig);
   static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
       const ConfigType& aConfig);
   static bool IsKeyChunk(const InputType& aInput);
