@@ -175,12 +175,11 @@
 #include <zmouse.h>
 #include <richedit.h>
 
-#if defined(ACCESSIBILITY)
-
+#ifdef ACCESSIBILITY
 #  ifdef DEBUG
 #    include "mozilla/a11y/Logging.h"
 #  endif
-
+#  include "mozilla/a11y/Compatibility.h"
 #  include "oleidl.h"
 #  include <winuser.h>
 #  include "nsAccessibilityService.h"
@@ -190,7 +189,7 @@
 #  if !defined(WINABLEAPI)
 #    include <winable.h>
 #  endif  // !defined(WINABLEAPI)
-#endif    // defined(ACCESSIBILITY)
+#endif
 
 #include "WindowsUIUtils.h"
 
@@ -6169,6 +6168,9 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t aX, int32_t aY) {
     if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt)) {
       testResult = HTMINBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt)) {
+#ifdef ACCESSIBILITY
+      a11y::Compatibility::SuppressA11yForSnapLayouts();
+#endif
       testResult = HTMAXBUTTON;
     } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt)) {
       testResult = HTCLOSE;
