@@ -300,7 +300,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   uint32_t GetLoadType() const { return mLoadStateLoadType; }
   bool IsDownload() const { return mIsDownload; }
   bool IsLoadingJSURI() const { return mIsLoadingJSURI; }
-  nsDOMNavigationTiming* GetTiming() { return mTiming; }
 
   mozilla::dom::LoadingSessionHistoryInfo* GetLoadingSessionHistoryInfo() {
     return mLoadingSessionHistoryInfo.get();

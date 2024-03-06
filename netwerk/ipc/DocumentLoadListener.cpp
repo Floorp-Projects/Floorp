@@ -2379,8 +2379,8 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
   // we can downgrade the scheme to HTTP again.
   bool isHTTPSFirstFixup = false;
   if (!newURI) {
-    newURI =
-        nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(this, aStatus);
+    newURI = nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(mChannel,
+                                                                     aStatus);
     isHTTPSFirstFixup = true;
   }
 
