@@ -344,6 +344,10 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Naš neprofitni brskalnik preprečuje podjetjem, da bi vas skrivaj spremljala po spletu.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Več kot 100 milijonov ljudi ščiti svojo zasebnost z izbiro brskalnika, ki ga razvija neprofitna organizacija.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Znani sledilci? Samodejno blokirani. Razširitve? Preskusite vseh 700. PDF-ji? Naš vgrajeni bralnik omogoča enostavno pregledovanje.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Naš neprofitni brskalnik pomaga podjetjem preprečiti, da bi vam na skrivaj sledila po spletu.\n\nVeč o tem v našem pravilniku o zasebnosti.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
@@ -2440,6 +2444,7 @@
     <string name="translation_error_language_not_supported_warning_text">%1$s žal še ni podprt jezik.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Več o tem</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
