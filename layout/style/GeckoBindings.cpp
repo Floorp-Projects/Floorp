@@ -44,6 +44,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/AttributeStyles.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/FontPropertyTypes.h"

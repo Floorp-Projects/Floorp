@@ -16,6 +16,7 @@
 #include "js/JSON.h"           // JS_ParseJSON
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
