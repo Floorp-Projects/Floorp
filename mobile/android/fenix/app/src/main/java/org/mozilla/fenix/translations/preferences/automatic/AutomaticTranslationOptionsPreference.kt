@@ -47,6 +47,7 @@ fun AutomaticTranslationOptionsPreference(
                         item.summaryId.first(),
                         stringResource(item.summaryId.last()),
                     ),
+                    maxDescriptionLines = Int.MAX_VALUE,
                     onClick = {
                         selected.value = item
                     },
