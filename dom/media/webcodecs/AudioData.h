@@ -128,8 +128,7 @@ class AudioDataResource final {
   explicit AudioDataResource(FallibleTArray<uint8_t>&& aData)
       : mData(std::move(aData)) {}
 
-  explicit AudioDataResource()
-      : mData() {}
+  explicit AudioDataResource() : mData() {}
 
   static AudioDataResource* Create(const Span<uint8_t>& aData) {
     AudioDataResource* resource = new AudioDataResource();
