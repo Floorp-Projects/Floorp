@@ -58,6 +58,8 @@ import java.util.Locale
 
 object AppAndSystemHelper {
 
+    private val bookmarksStorage = PlacesBookmarksStorage(appContext.applicationContext)
+    suspend fun bookmarks() = bookmarksStorage.getTree(BookmarkRoot.Mobile.id)?.children
     fun getPermissionAllowID(): String {
         return when
             (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
@@ -122,23 +124,26 @@ object AppAndSystemHelper {
 
             // Check if the downloads folder exists
             if (downloadsFolder.exists() && downloadsFolder.isDirectory) {
-                Log.i(TAG, "clearDownloadsFolder: Verified that \"DOWNLOADS\" folder exists")
-                val files = downloadsFolder.listFiles()
+                Log.i(TAG, "clearDownloadsFolder: Verified that \"DOWNLOADS\" folder exists.")
+                var files = downloadsFolder.listFiles()
 
                 // Check if the folder is not empty
-                // If you run this method before a test, files.isNotEmpty() will always return false.
                 if (files != null && files.isNotEmpty()) {
                     Log.i(
                         TAG,
-                        "clearDownloadsFolder: Before cleanup: Downloads storage contains: ${files.size} file(s)",
+                        "clearDownloadsFolder: Before cleanup: Downloads storage contains: ${files.size} file(s).",
                     )
                     // Delete all files in the folder
-                    for (file in files) {
+                    for (file in files!!) {
                         file.delete()
                         Log.i(
                             TAG,
-                            "clearDownloadsFolder: Deleted $file from \"DOWNLOADS\" folder." +
-                                " Downloads storage contains ${files.size} file(s): $file",
+                            "clearDownloadsFolder: Deleted $file from \"DOWNLOADS\" folder.",
+                        )
+                        files = downloadsFolder.listFiles()
+                        Log.i(
+                            TAG,
+                            "clearDownloadsFolder: After cleanup: Downloads storage contains: ${files?.size} file(s).",
                         )
                     }
                 } else {
@@ -179,8 +184,7 @@ object AppAndSystemHelper {
     }
 
     suspend fun deleteBookmarksStorage() {
-        val bookmarksStorage = PlacesBookmarksStorage(appContext.applicationContext)
-        val bookmarks = bookmarksStorage.getTree(BookmarkRoot.Mobile.id)?.children
+        val bookmarks = bookmarks()
         Log.i(TAG, "deleteBookmarksStorage before cleanup: Bookmarks storage contains: $bookmarks")
         if (bookmarks?.isNotEmpty() == true) {
             bookmarks.forEach {
@@ -189,10 +193,9 @@ object AppAndSystemHelper {
                     "deleteBookmarksStorage: Trying to delete $it bookmark from storage.",
                 )
                 bookmarksStorage.deleteNode(it.guid)
-                // TODO: Follow-up with a method to handle the DB update; the logs will still show the bookmarks in the storage before the test starts.
                 Log.i(
                     TAG,
-                    "deleteBookmarksStorage: Bookmark deleted. Bookmarks storage contains: $bookmarks",
+                    "deleteBookmarksStorage: Bookmark deleted. Bookmarks storage contains: ${bookmarks()}",
                 )
             }
         }

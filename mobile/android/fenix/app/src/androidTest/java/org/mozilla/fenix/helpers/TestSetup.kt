@@ -72,9 +72,6 @@ open class TestSetup {
     open fun tearDown() {
         Log.i(TAG, "TestSetup: Starting the @After tearDown methods.")
         runBlocking {
-            // Check and clear the downloads folder.
-            AppAndSystemHelper.clearDownloadsFolder()
-
             // Reset locale to EN-US if needed.
             // This method is only here temporarily, to set the language before a new activity is started.
             // TODO: When https://bugzilla.mozilla.org/show_bug.cgi?id=1812183 is fixed, it should be removed.
