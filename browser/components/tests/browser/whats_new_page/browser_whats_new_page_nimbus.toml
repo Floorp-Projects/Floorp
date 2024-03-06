@@ -1,0 +1,6 @@
+[DEFAULT]
+
+["browser_whats_new_page_nimbus.js"]
+# This is a pref set by nimbus to be used for What's new pages
+prefs = ["startup.homepage_override_url_nimbus='https://www.mozilla.org/en-US/projects/firefox/whatsnew/|https://www.mozilla.org/en-US/projects/firefox/whatsnew/'",
+"startup.homepage_override_nimbus_maxVersion='99999999.0'"]

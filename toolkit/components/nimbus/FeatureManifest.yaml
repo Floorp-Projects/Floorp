@@ -1251,6 +1251,26 @@ fxms-message-11:
     path: "browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json"
   variables: {}
 
+whatsNewPage:
+  description: "A Firefox Messaging System message for the What's new page channel"
+  owner: omc@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
+  variables:
+    overrideUrl:
+      description: URL of the What's new page
+      type: string
+      setPref:
+        branch: user
+        pref: startup.homepage_override_url_nimbus
+    maxVersion:
+      description: Maximum Firefox update version
+      type: string
+      setPref:
+        branch: user
+        pref: startup.homepage_override_nimbus_maxVersion
+
 pbNewtab:
   description: "A Firefox Messaging System message for the pbNewtab message channel"
   owner: omc@mozilla.com

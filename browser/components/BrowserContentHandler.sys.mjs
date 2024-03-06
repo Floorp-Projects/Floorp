@@ -240,10 +240,16 @@ function needHomepageOverride(updateMilestones = true) {
  * @param  update
  *         The nsIUpdate for the update that has been applied.
  * @param  defaultOverridePage
- *         The default override page.
+ *         The default override page
+ * @param  nimbusOverridePage
+ *         Nimbus provided URL
  * @return The override page.
  */
-function getPostUpdateOverridePage(update, defaultOverridePage) {
+function getPostUpdateOverridePage(
+  update,
+  defaultOverridePage,
+  nimbusOverridePage
+) {
   update = update.QueryInterface(Ci.nsIWritablePropertyBag);
   let actions = update.getProperty("actions");
   // When the update doesn't specify actions fallback to the original behavior
@@ -258,11 +264,14 @@ function getPostUpdateOverridePage(update, defaultOverridePage) {
     return "";
   }
 
-  // If a policy was set to not allow the update.xml-provided
-  // URL to be used, use the default fallback (which will also
-  // be provided by the policy).
+  // If a policy was set to not allow the update.xml-provided URL to be used,
+  // use the default fallback (which will also be provided by the policy).
   if (!Services.policies.isAllowed("postUpdateCustomPage")) {
     return defaultOverridePage;
+  }
+
+  if (nimbusOverridePage) {
+    return nimbusOverridePage;
   }
 
   return update.getProperty("openURL") || defaultOverridePage;
@@ -798,7 +807,7 @@ nsBrowserContentHandler.prototype = {
             // Turn on 'later run' pages for new profiles.
             lazy.LaterRun.enable(lazy.LaterRun.ENABLE_REASON_NEW_PROFILE);
             break;
-          case OVERRIDE_NEW_MSTONE:
+          case OVERRIDE_NEW_MSTONE: {
             // Check whether we will restore a session. If we will, we assume
             // that this is an "update" session. This does not take crashes
             // into account because that requires waiting for the session file
@@ -811,11 +820,70 @@ nsBrowserContentHandler.prototype = {
               "startup.homepage_override_url"
             );
             let update = lazy.UpdateManager.readyUpdate;
+
+            /** If the override URL is provided by an experiment, is a valid
+             * Firefox What's New Page URL, and the update version is less than
+             * or equal to the maxVersion set by the experiment, we'll try to use
+             * the experiment override URL instead of the default or the
+             * update-provided URL. Additional policy checks are done in
+             * @see getPostUpdateOverridePage */
+            const nimbusOverrideUrl = Services.urlFormatter.formatURLPref(
+              "startup.homepage_override_url_nimbus"
+            );
+            const maxVersion = Services.prefs.getCharPref(
+              "startup.homepage_override_nimbus_maxVersion",
+              ""
+            );
+            let nimbusWNP;
+
+            // Update version should be less than or equal to maxVersion set by
+            // the experiment
+            if (
+              nimbusOverrideUrl &&
+              Services.vc.compare(update.appVersion, maxVersion) <= 0
+            ) {
+              try {
+                let uri = Services.io.newURI(nimbusOverrideUrl);
+                // Only allow https://www.mozilla.org and https://www.mozilla.com
+                if (
+                  uri.scheme === "https" &&
+                  ["www.mozilla.org", "www.mozilla.com"].includes(uri.host)
+                ) {
+                  nimbusWNP = uri.spec;
+                } else {
+                  throw new Error("Bad URL");
+                }
+              } catch {
+                console.error("Invalid WNP URL: ", nimbusOverrideUrl);
+              }
+            }
+
             if (
               update &&
               Services.vc.compare(update.appVersion, old_mstone) > 0
             ) {
-              overridePage = getPostUpdateOverridePage(update, overridePage);
+              overridePage = getPostUpdateOverridePage(
+                update,
+                overridePage,
+                nimbusWNP
+              );
+              // Record a Nimbus exposure event for the whatsNewPage feature.
+              // The override page could be set in 3 ways: 1. set by Nimbus 2.
+              // set by the update file(openURL) 3. The default evergreen page(Set by the
+              // startup.homepage_override_url pref, could be different
+              // depending on the Fx channel). This is done to record that the
+              // control cohort could have seen the experimental What's New Page
+              // (and will instead see the default What's New Page).
+              // recordExposureEvent only records an event if the user is
+              // enrolled in an experiment or rollout on the whatsNewPage
+              // feature, so it's safe to call it unconditionally.
+              if (overridePage) {
+                let nimbusWNPFeature = lazy.NimbusFeatures.whatsNewPage;
+                nimbusWNPFeature
+                  .ready()
+                  .then(() => nimbusWNPFeature.recordExposureEvent());
+              }
+
               // Send the update ping to signal that the update was successful.
               lazy.UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
               lazy.LaterRun.enable(lazy.LaterRun.ENABLE_REASON_UPDATE_APPLIED);
@@ -823,6 +891,7 @@ nsBrowserContentHandler.prototype = {
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
+          }
           case OVERRIDE_NEW_BUILD_ID:
             if (lazy.UpdateManager.readyUpdate) {
               // Send the update ping to signal that the update was successful.
