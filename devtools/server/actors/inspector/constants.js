@@ -10,7 +10,7 @@
  *
  *   const someListener = () => {};
  *   someListener[EXCLUDED_LISTENER] = true;
- *   eventListenerService.addSystemEventListener(node, "event", someListener);
+ *   node.addEventListener("event", someListener);
  */
 const EXCLUDED_LISTENER = Symbol("event-collector-excluded-listener");
 
