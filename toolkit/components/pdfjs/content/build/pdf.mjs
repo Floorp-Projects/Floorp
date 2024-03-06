@@ -4554,7 +4554,7 @@ class AnnotationStorage {
     } : SerializableEmpty;
   }
   get editorStats() {
-    const stats = Object.create(null);
+    let stats = null;
     const typeToEditor = new Map();
     for (const value of this.#storage.values()) {
       if (!(value instanceof AnnotationEditor)) {
@@ -4570,6 +4570,7 @@ class AnnotationStorage {
       if (!typeToEditor.has(type)) {
         typeToEditor.set(type, Object.getPrototypeOf(value).constructor);
       }
+      stats ||= Object.create(null);
       const map = stats[type] ||= new Map();
       for (const [key, val] of Object.entries(editorStats)) {
         if (key === "type") {
@@ -8969,7 +8970,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.247",
+    apiVersion: "4.1.249",
     data,
     password,
     disableAutoFetch,
@@ -10601,8 +10602,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.247";
-const build = "29c493d36";
+const version = "4.1.249";
+const build = "d07f37f44";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -15122,7 +15123,8 @@ class HighlightEditor extends AnnotationEditor {
       parent.createAndAddNewEditor(event, false, {
         highlightId: this._freeHighlightId,
         highlightOutlines: this._freeHighlight.getOutlines(),
-        clipPathId: this._freeHighlightClipId
+        clipPathId: this._freeHighlightClipId,
+        methodOfCreation: "main_toolbar"
       });
     } else {
       parent.drawLayer.removeFreeHighlight(this._freeHighlightId);
@@ -17144,8 +17146,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.247";
-const pdfjsBuild = "29c493d36";
+const pdfjsVersion = "4.1.249";
+const pdfjsBuild = "d07f37f44";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
