@@ -19,3 +19,5 @@ prefs = [
 ]
 
 ["browser_whats_new_page.js"]
+
+["include:./browser_whats_new_page_nimbus.toml"]
