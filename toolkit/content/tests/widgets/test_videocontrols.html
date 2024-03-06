@@ -67,7 +67,7 @@ let expectingEventPromise;
 async function isMuteButtonMuted() {
   const muteButton = getElementWithinVideo(video, "muteButton");
   await new Promise(SimpleTest.executeSoon);
-  return muteButton.getAttribute("muted") === "true";
+  return muteButton.hasAttribute("muted");
 }
 
 async function isVolumeSliderShowingCorrectVolume(expectedVolume) {
