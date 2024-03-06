@@ -198,6 +198,9 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_dbg-features-asm.js"]
 
 ["browser_dbg-features-breakable-lines.js"]
+skip-if = [
+  "apple_catalina && !debug", # Bug 1767701
+]
 
 ["browser_dbg-features-breakable-positions.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
