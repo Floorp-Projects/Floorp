@@ -3057,9 +3057,7 @@ void nsWindow::SetTransparencyMode(TransparencyMode aMode) {
 
 void nsWindow::UpdateWindowDraggingRegion(
     const LayoutDeviceIntRegion& aRegion) {
-  if (mDraggableRegion != aRegion) {
-    mDraggableRegion = aRegion;
-  }
+  mDraggableRegion = aRegion;
 }
 
 /**************************************************************
@@ -5037,6 +5035,44 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
       break;
     }
+
+    case WM_GETTITLEBARINFOEX: {
+      if (!mCustomNonClient) {
+        break;
+      }
+      auto* info = reinterpret_cast<TITLEBARINFOEX*>(lParam);
+      const LayoutDeviceIntPoint origin = WidgetToScreenOffset();
+      auto GeckoClientToWinScreenRect =
+          [&origin](LayoutDeviceIntRect aRect) -> RECT {
+        aRect.MoveBy(origin);
+        return {
+            .left = aRect.x,
+            .top = aRect.y,
+            .right = aRect.XMost(),
+            .bottom = aRect.YMost(),
+        };
+      };
+      auto SetButton = [&](size_t aIndex, WindowButtonType aType) {
+        info->rgrect[aIndex] =
+            GeckoClientToWinScreenRect(mWindowBtnRect[aType]);
+        DWORD& state = info->rgstate[aIndex];
+        if (mWindowBtnRect[aType].IsEmpty()) {
+          state = STATE_SYSTEM_INVISIBLE;
+        } else {
+          state = STATE_SYSTEM_FOCUSABLE;
+        }
+      };
+      info->rgrect[0] = info->rcTitleBar =
+          GeckoClientToWinScreenRect(mDraggableRegion.GetBounds());
+      info->rgstate[0] = 0;
+      SetButton(2, WindowButtonType::Minimize);
+      SetButton(3, WindowButtonType::Maximize);
+      SetButton(5, WindowButtonType::Close);
+      // We don't have a help button.
+      info->rgstate[4] = STATE_SYSTEM_INVISIBLE;
+      info->rgrect[4] = {0, 0, 0, 0};
+      result = true;
+    } break;
 
     case WM_NCHITTEST: {
       if (mInputRegion.mFullyTransparent) {
