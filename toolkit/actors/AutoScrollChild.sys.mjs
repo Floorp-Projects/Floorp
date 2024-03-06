@@ -215,8 +215,14 @@ export class AutoScrollChild extends JSWindowActorChild {
       return;
     }
 
-    Services.els.addSystemEventListener(this.document, "mousemove", this, true);
-    Services.els.addSystemEventListener(this.document, "mouseup", this, true);
+    this.document.addEventListener("mousemove", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
+    this.document.addEventListener("mouseup", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
     this.document.addEventListener("pagehide", this, true);
 
     this._startX = event.screenX;
@@ -254,18 +260,14 @@ export class AutoScrollChild extends JSWindowActorChild {
       this._scrollable.mozScrollSnap();
       this._scrollable = null;
 
-      Services.els.removeSystemEventListener(
-        this.document,
-        "mousemove",
-        this,
-        true
-      );
-      Services.els.removeSystemEventListener(
-        this.document,
-        "mouseup",
-        this,
-        true
-      );
+      this.document.removeEventListener("mousemove", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+      this.document.removeEventListener("mouseup", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
       this.document.removeEventListener("pagehide", this, true);
       if (this._autoscrollHandledByApz) {
         Services.obs.removeObserver(

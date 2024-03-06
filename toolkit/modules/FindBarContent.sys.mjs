@@ -27,12 +27,9 @@ export class FindBarContent {
   startQuickFind(event, autostart = false) {
     if (!this.addedEventListener) {
       this.addedEventListener = true;
-      Services.els.addSystemEventListener(
-        this.actor.document.defaultView,
-        "mouseup",
-        this,
-        false
-      );
+      this.actor.document.defaultView.addEventListener("mouseup", this, {
+        mozSystemGroup: true,
+      });
     }
 
     let mode = FIND_TYPEAHEAD;

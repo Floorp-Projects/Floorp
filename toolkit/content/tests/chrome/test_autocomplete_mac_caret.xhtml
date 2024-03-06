@@ -57,9 +57,9 @@ function checkKeyCaretTest(key, expectedStart, expectedEnd, result, testid)
       keypressFired = true;
     }
   }
-  SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
+  SpecialPowers.wrap(window).addEventListener("keypress", listener, { mozSystemGroup: true });
   synthesizeKey(key, {});
-  SpecialPowers.removeSystemEventListener(window, "keypress", listener, false);
+  SpecialPowers.wrap(window).removeEventListener("keypress", listener, { mozSystemGroup: true });
   is(keypressFired, result, `${testid} keypress event should${result ? "" : " not"} be fired`);
   is(autocomplete.selectionStart, expectedStart, testid + " selectionStart");
   is(autocomplete.selectionEnd, expectedEnd, testid + " selectionEnd");
