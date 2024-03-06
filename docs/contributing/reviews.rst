@@ -68,6 +68,9 @@ Review groups
    * - #firefox-svg-reviewers
      - SVG-related changes
      - `Member list <https://phabricator.services.mozilla.com/project/members/97/>`__
+   * - #android-reviewers
+     - Changes to Fenix, Focus and Android Components.
+     - `Member list <https://phabricator.services.mozilla.com/project/members/200/>`__
    * - #geckoview-reviewers
      - Changes to GeckoView
      - `Member list <https://phabricator.services.mozilla.com/project/members/92/>`__
