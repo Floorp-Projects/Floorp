@@ -40,10 +40,10 @@ void WebGPUChild::JsWarning(nsIGlobalObject* aGlobal,
   if (aGlobal) {
     dom::AutoJSAPI api;
     if (api.Init(aGlobal)) {
-      JS::WarnUTF8(api.cx(), "%s", flatString.get());
+      JS::WarnUTF8(api.cx(), "Uncaptured WebGPU error: %s", flatString.get());
     }
   } else {
-    printf_stderr("Validation error without device target: %s\n",
+    printf_stderr("Uncaptured WebGPU error without device target: %s\n",
                   flatString.get());
   }
 }
