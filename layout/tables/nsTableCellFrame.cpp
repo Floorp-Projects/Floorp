@@ -456,7 +456,7 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent) {
   ReflowOutput desiredSize(aWM);
   desiredSize.SetSize(aWM, GetLogicalSize(aWM));
 
-  nsRect overflow(nsPoint(0, 0), GetSize());
+  nsRect overflow(nsPoint(), GetSize());
   overflow.Inflate(GetBorderOverflow());
   desiredSize.mOverflowAreas.SetAllTo(overflow);
   ConsiderChildOverflow(desiredSize.mOverflowAreas, firstKid);
