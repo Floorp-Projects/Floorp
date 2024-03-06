@@ -34,6 +34,8 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/EncodedAudioChunk.h"
+#include "mozilla/dom/EncodedAudioChunkBinding.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 #include "mozilla/dom/File.h"
@@ -400,6 +402,7 @@ void StructuredCloneHolder::Read(nsIGlobalObject* aGlobal, JSContext* aCx,
     mClonedSurfaces.Clear();
     mInputStreamArray.Clear();
     mVideoFrames.Clear();
+    mEncodedAudioChunks.Clear();
     mEncodedVideoChunks.Clear();
     Clear();
   }
@@ -1139,6 +1142,18 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
     }
   }
 
+  if (StaticPrefs::dom_media_webcodecs_enabled() &&
+      aTag == SCTAG_DOM_ENCODEDAUDIOCHUNK &&
+      CloneScope() == StructuredCloneScope::SameProcess &&
+      aCloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed()) {
+    JS::Rooted<JSObject*> global(aCx, mGlobal->GetGlobalJSObject());
+    if (EncodedAudioChunk_Binding::ConstructorEnabled(aCx, global)) {
+      return EncodedAudioChunk::ReadStructuredClone(
+          aCx, mGlobal, aReader, EncodedAudioChunks()[aIndex]);
+    }
+  }
+
+
   return ReadFullySerializableObjects(aCx, aReader, aTag, false);
 }
 
@@ -1265,6 +1280,18 @@ bool StructuredCloneHolder::CustomWriteHandler(
       SameProcessScopeRequired(aSameProcessScopeRequired);
       return CloneScope() == StructuredCloneScope::SameProcess
                  ? audioData->WriteStructuredClone(aWriter, this)
+                 : false;
+    }
+  }
+
+  // See if this is a EncodedAudioChunk object.
+  if (StaticPrefs::dom_media_webcodecs_enabled()) {
+    EncodedAudioChunk* encodedAudioChunk = nullptr;
+    if (NS_SUCCEEDED(
+            UNWRAP_OBJECT(EncodedAudioChunk, &obj, encodedAudioChunk))) {
+      SameProcessScopeRequired(aSameProcessScopeRequired);
+      return CloneScope() == StructuredCloneScope::SameProcess
+                 ? encodedAudioChunk->WriteStructuredClone(aWriter, this)
                  : false;
     }
   }
