@@ -258,54 +258,6 @@ static already_AddRefed<EventListener> ToEventListener(
 }
 
 NS_IMETHODIMP
-EventListenerService::AddSystemEventListener(EventTarget* aTarget,
-                                             const nsAString& aType,
-                                             JS::Handle<JS::Value> aListener,
-                                             bool aUseCapture, JSContext* aCx) {
-  MOZ_ASSERT(aTarget, "Missing target");
-
-  NS_ENSURE_TRUE(aTarget, NS_ERROR_UNEXPECTED);
-
-  RefPtr<EventListener> listener = ToEventListener(aCx, aListener);
-  if (!listener) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  EventListenerManager* manager = aTarget->GetOrCreateListenerManager();
-  NS_ENSURE_STATE(manager);
-
-  EventListenerFlags flags = aUseCapture ? TrustedEventsAtSystemGroupCapture()
-                                         : TrustedEventsAtSystemGroupBubble();
-  manager->AddEventListenerByType(listener, aType, flags);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EventListenerService::RemoveSystemEventListener(EventTarget* aTarget,
-                                                const nsAString& aType,
-                                                JS::Handle<JS::Value> aListener,
-                                                bool aUseCapture,
-                                                JSContext* aCx) {
-  MOZ_ASSERT(aTarget, "Missing target");
-
-  NS_ENSURE_TRUE(aTarget, NS_ERROR_UNEXPECTED);
-
-  RefPtr<EventListener> listener = ToEventListener(aCx, aListener);
-  if (!listener) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  EventListenerManager* manager = aTarget->GetExistingListenerManager();
-  if (manager) {
-    EventListenerFlags flags = aUseCapture ? TrustedEventsAtSystemGroupCapture()
-                                           : TrustedEventsAtSystemGroupBubble();
-    manager->RemoveEventListenerByType(listener, aType, flags);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EventListenerService::AddListenerForAllEvents(
     EventTarget* aTarget, JS::Handle<JS::Value> aListener, bool aUseCapture,
     bool aWantsUntrusted, bool aSystemEventGroup, JSContext* aCx) {
