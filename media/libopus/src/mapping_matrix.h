@@ -117,6 +117,12 @@ extern const opus_int16 mapping_matrix_soa_mixing_data[121];
 extern const MappingMatrix mapping_matrix_toa_mixing;
 extern const opus_int16 mapping_matrix_toa_mixing_data[324];
 
+extern const MappingMatrix mapping_matrix_fourthoa_mixing;
+extern const opus_int16 mapping_matrix_fourthoa_mixing_data[729];
+
+extern const MappingMatrix mapping_matrix_fifthoa_mixing;
+extern const opus_int16 mapping_matrix_fifthoa_mixing_data[1444];
+
 extern const MappingMatrix mapping_matrix_foa_demixing;
 extern const opus_int16 mapping_matrix_foa_demixing_data[36];
 
@@ -125,6 +131,12 @@ extern const opus_int16 mapping_matrix_soa_demixing_data[121];
 
 extern const MappingMatrix mapping_matrix_toa_demixing;
 extern const opus_int16 mapping_matrix_toa_demixing_data[324];
+
+extern const MappingMatrix mapping_matrix_fourthoa_demixing;
+extern const opus_int16 mapping_matrix_fourthoa_demixing_data[729];
+
+extern const MappingMatrix mapping_matrix_fifthoa_demixing;
+extern const opus_int16 mapping_matrix_fifthoa_demixing_data[1444];
 
 #ifdef __cplusplus
 }

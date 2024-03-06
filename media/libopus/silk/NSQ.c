@@ -80,7 +80,7 @@ void silk_NSQ_c
     SideInfoIndices             *psIndices,                                   /* I/O  Quantization Indices            */
     const opus_int16            x16[],                                        /* I    Input                           */
     opus_int8                   pulses[],                                     /* O    Quantized pulse signal          */
-    const opus_int16            PredCoef_Q12[ 2 * MAX_LPC_ORDER ],            /* I    Short term prediction coefs     */
+    const opus_int16            *PredCoef_Q12,                                /* I    Short term prediction coefs     */
     const opus_int16            LTPCoef_Q14[ LTP_ORDER * MAX_NB_SUBFR ],      /* I    Long term prediction coefs      */
     const opus_int16            AR_Q13[ MAX_NB_SUBFR * MAX_SHAPE_LPC_ORDER ], /* I    Noise shaping coefs             */
     const opus_int              HarmShapeGain_Q14[ MAX_NB_SUBFR ],            /* I    Long term shaping coefs         */

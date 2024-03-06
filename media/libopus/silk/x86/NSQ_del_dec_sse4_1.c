@@ -119,7 +119,7 @@ void silk_NSQ_del_dec_sse4_1(
     SideInfoIndices             *psIndices,                                   /* I/O  Quantization Indices            */
     const opus_int16            x16[],                                        /* I    Input                           */
     opus_int8                   pulses[],                                     /* O    Quantized pulse signal          */
-    const opus_int16            PredCoef_Q12[ 2 * MAX_LPC_ORDER ],            /* I    Short term prediction coefs     */
+    const opus_int16            *PredCoef_Q12,                                /* I    Short term prediction coefs     */
     const opus_int16            LTPCoef_Q14[ LTP_ORDER * MAX_NB_SUBFR ],      /* I    Long term prediction coefs      */
     const opus_int16            AR_Q13[ MAX_NB_SUBFR * MAX_SHAPE_LPC_ORDER ], /* I    Noise shaping coefs             */
     const opus_int              HarmShapeGain_Q14[ MAX_NB_SUBFR ],            /* I    Long term shaping coefs         */
@@ -428,7 +428,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
             LTP_pred_Q14 = 2;
             {
                 __m128i tmpa, tmpb, pred_lag_ptr_tmp;
-                pred_lag_ptr_tmp    = _mm_loadu_si128( (__m128i *)(&pred_lag_ptr[ -3 ] ) );
+                pred_lag_ptr_tmp    = _mm_loadu_si128( (__m128i *)(void*)(&pred_lag_ptr[ -3 ] ) );
                 pred_lag_ptr_tmp    = _mm_shuffle_epi32( pred_lag_ptr_tmp, 0x1B );
                 tmpa                = _mm_mul_epi32( pred_lag_ptr_tmp, b_Q12_0123 );
                 tmpa                = _mm_srli_si128( tmpa, 2 );
@@ -483,7 +483,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
                 tmpb = _mm_setzero_si128();
 
                 /* step 1 */
-                psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(&psLPC_Q14[ -3 ] ) ); /* -3, -2 , -1, 0 */
+                psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(void*)(&psLPC_Q14[ -3 ] ) ); /* -3, -2 , -1, 0 */
                 psLPC_Q14_tmp   = _mm_shuffle_epi32( psLPC_Q14_tmp, 0x1B );      /* 0, -1, -2, -3 */
                 tmpa            = _mm_mul_epi32( psLPC_Q14_tmp, a_Q12_0123 );    /* 0, -1, -2, -3 * 0123 -> 0*0, 2*-2 */
 
@@ -497,7 +497,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
                 tmpb            = _mm_add_epi32( tmpb, psLPC_Q14_tmp );
 
                 /* step 2 */
-                psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(&psLPC_Q14[ -7 ] ) );
+                psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(void*)(&psLPC_Q14[ -7 ] ) );
                 psLPC_Q14_tmp   = _mm_shuffle_epi32( psLPC_Q14_tmp, 0x1B );
                 tmpa            = _mm_mul_epi32( psLPC_Q14_tmp, a_Q12_4567 );
                 tmpa            = _mm_srli_epi64( tmpa, 16 );
@@ -512,7 +512,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
                 if ( opus_likely( predictLPCOrder == 16 ) )
                 {
                     /* step 3 */
-                    psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(&psLPC_Q14[ -11 ] ) );
+                    psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(void*)(&psLPC_Q14[ -11 ] ) );
                     psLPC_Q14_tmp   = _mm_shuffle_epi32( psLPC_Q14_tmp, 0x1B );
                     tmpa            = _mm_mul_epi32( psLPC_Q14_tmp, a_Q12_89AB );
                     tmpa            = _mm_srli_epi64( tmpa, 16 );
@@ -525,7 +525,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
                     tmpb            = _mm_add_epi32( tmpb, psLPC_Q14_tmp );
 
                     /* step 4 */
-                    psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(&psLPC_Q14[ -15 ] ) );
+                    psLPC_Q14_tmp   = _mm_loadu_si128( (__m128i *)(void*)(&psLPC_Q14[ -15 ] ) );
                     psLPC_Q14_tmp   = _mm_shuffle_epi32( psLPC_Q14_tmp, 0x1B );
                     tmpa            = _mm_mul_epi32( psLPC_Q14_tmp, a_Q12_CDEF );
                     tmpa            = _mm_srli_epi64( tmpa, 16 );
@@ -830,7 +830,7 @@ static OPUS_INLINE void silk_nsq_del_dec_scale_states_sse4_1(
 
         xmm_x16_x2x0 = _mm_blend_epi16( xmm_x16_x2x0, xmm_x16_x3x1, 0xCC );
 
-        _mm_storeu_si128( (__m128i *)(&(x_sc_Q10[ i ] ) ), xmm_x16_x2x0 );
+        _mm_storeu_si128( (__m128i *)(void*)(&(x_sc_Q10[ i ] ) ), xmm_x16_x2x0 );
     }
 
     for( ; i < psEncC->subfr_length; i++ ) {
@@ -862,7 +862,7 @@ static OPUS_INLINE void silk_nsq_del_dec_scale_states_sse4_1(
 
             for( i = NSQ->sLTP_shp_buf_idx - psEncC->ltp_mem_length; i < NSQ->sLTP_shp_buf_idx - 3; i += 4 )
             {
-                xmm_sLTP_shp_Q14_x2x0 = _mm_loadu_si128( (__m128i *)(&(NSQ->sLTP_shp_Q14[ i ] ) ) );
+                xmm_sLTP_shp_Q14_x2x0 = _mm_loadu_si128( (__m128i *)(void*)(&(NSQ->sLTP_shp_Q14[ i ] ) ) );
                 /* equal shift right 4 bytes*/
                 xmm_sLTP_shp_Q14_x3x1 = _mm_shuffle_epi32( xmm_sLTP_shp_Q14_x2x0, _MM_SHUFFLE( 0, 3, 2, 1 ) );
 
@@ -874,7 +874,7 @@ static OPUS_INLINE void silk_nsq_del_dec_scale_states_sse4_1(
 
                 xmm_sLTP_shp_Q14_x2x0 = _mm_blend_epi16( xmm_sLTP_shp_Q14_x2x0, xmm_sLTP_shp_Q14_x3x1, 0xCC );
 
-                _mm_storeu_si128( (__m128i *)(&(NSQ->sLTP_shp_Q14[ i ] ) ), xmm_sLTP_shp_Q14_x2x0 );
+                _mm_storeu_si128( (__m128i *)(void*)(&(NSQ->sLTP_shp_Q14[ i ] ) ), xmm_sLTP_shp_Q14_x2x0 );
             }
 
             for( ; i < NSQ->sLTP_shp_buf_idx; i++ ) {

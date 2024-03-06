@@ -262,7 +262,16 @@ celt_pitch_xcorr_c(const opus_val16 *_x, const opus_val16 *_y,
    for (i=0;i<max_pitch-3;i+=4)
    {
       opus_val32 sum[4]={0,0,0,0};
-      xcorr_kernel(_x, _y+i, sum, len, arch);
+#if defined(OPUS_CHECK_ASM) && defined(FIXED_POINT)
+      {
+         opus_val32 sum_c[4]={0,0,0,0};
+         xcorr_kernel_c(_x, _y+i, sum_c, len);
+#endif
+         xcorr_kernel(_x, _y+i, sum, len, arch);
+#if defined(OPUS_CHECK_ASM) && defined(FIXED_POINT)
+         celt_assert(memcmp(sum, sum_c, sizeof(sum)) == 0);
+      }
+#endif
       xcorr[i]=sum[0];
       xcorr[i+1]=sum[1];
       xcorr[i+2]=sum[2];

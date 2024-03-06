@@ -230,6 +230,12 @@ static OPUS_INLINE opus_val32 celt_exp2_frac(opus_val16 x)
    frac = SHL16(x, 4);
    return ADD16(D0, MULT16_16_Q15(frac, ADD16(D1, MULT16_16_Q15(frac, ADD16(D2 , MULT16_16_Q15(D3,frac))))));
 }
+
+#undef D0
+#undef D1
+#undef D2
+#undef D3
+
 /** Base-2 exponential approximation (2^x). (Q10 input, Q16 output) */
 static OPUS_INLINE opus_val32 celt_exp2(opus_val16 x)
 {

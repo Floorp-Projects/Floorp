@@ -1,4 +1,4 @@
-/* Copyright (c) 2016  Jean-Marc Valin */
+/* Copyright (c) 2023 Amazon */
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
@@ -14,8 +14,8 @@
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
-   OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
@@ -24,29 +24,24 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef VQ_SSE_H
-#define VQ_SSE_H
+#ifdef _MSC_VER
 
-#if defined(OPUS_X86_MAY_HAVE_SSE2) && !defined(FIXED_POINT)
+# ifdef OPUS_X86_MAY_HAVE_SSE
+#  ifndef __SSE__
+#   define __SSE__
+#  endif
+# endif
 
-opus_val16 op_pvq_search_sse2(celt_norm *_X, int *iy, int K, int N, int arch);
+# ifdef OPUS_X86_MAY_HAVE_SSE2
+#  ifndef __SSE2__
+#   define __SSE2__
+#  endif
+# endif
 
-#if defined(OPUS_X86_PRESUME_SSE2)
-
-#define OVERRIDE_OP_PVQ_SEARCH
-#define op_pvq_search(x, iy, K, N, arch) \
-    (op_pvq_search_sse2(x, iy, K, N, arch))
-
-#elif defined(OPUS_HAVE_RTCD)
-
-#define OVERRIDE_OP_PVQ_SEARCH
-extern opus_val16 (*const OP_PVQ_SEARCH_IMPL[OPUS_ARCHMASK + 1])(
-      celt_norm *_X, int *iy, int K, int N, int arch);
-
-#  define op_pvq_search(X, iy, K, N, arch) \
-    ((*OP_PVQ_SEARCH_IMPL[(arch) & OPUS_ARCHMASK])(X, iy, K, N, arch))
-
-#endif
-#endif
+# ifdef OPUS_X86_MAY_HAVE_SSE4_1
+#  ifndef __SSE4_1__
+#   define __SSE4_1__
+#  endif
+# endif
 
 #endif
