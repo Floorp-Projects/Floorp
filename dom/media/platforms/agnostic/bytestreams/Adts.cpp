@@ -4,37 +4,56 @@
 
 #include "Adts.h"
 #include "MediaData.h"
+#include "PlatformDecoderModule.h"
 #include "mozilla/Array.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Logging.h"
+#include "ADTSDemuxer.h"
+
+extern mozilla::LazyLogModule gMediaDemuxerLog;
+#define LOG(msg, ...) \
+  MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
+#define ADTSLOG(msg, ...) \
+  DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
+#define ADTSLOGV(msg, ...) \
+  DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, msg, ##__VA_ARGS__)
 
 namespace mozilla {
+namespace ADTS {
 
 static const int kADTSHeaderSize = 7;
 
-int8_t Adts::GetFrequencyIndex(uint32_t aSamplesPerSecond) {
-  static const uint32_t freq_lookup[] = {96000, 88200, 64000, 48000, 44100,
-                                         32000, 24000, 22050, 16000, 12000,
-                                         11025, 8000,  7350,  0};
+constexpr std::array FREQ_LOOKUP{96000, 88200, 64000, 48000, 44100,
+                                 32000, 24000, 22050, 16000, 12000,
+                                 11025, 8000,  7350,  0};
 
-  int8_t i = 0;
-  while (freq_lookup[i] && aSamplesPerSecond < freq_lookup[i]) {
-    i++;
+Result<uint8_t, bool> GetFrequencyIndex(uint32_t aSamplesPerSecond) {
+  auto found =
+      std::find(FREQ_LOOKUP.begin(), FREQ_LOOKUP.end(), aSamplesPerSecond);
+
+  if (found == FREQ_LOOKUP.end()) {
+    return Err(false);
   }
 
-  if (!freq_lookup[i]) {
-    return -1;
-  }
-
-  return i;
+  return std::distance(FREQ_LOOKUP.begin(), found);
 }
 
-bool Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
-                         int8_t aProfile, MediaRawData* aSample) {
+bool ConvertSample(uint16_t aChannelCount, uint8_t aFrequencyIndex,
+                   uint8_t aProfile, MediaRawData* aSample) {
   size_t newSize = aSample->Size() + kADTSHeaderSize;
 
+  MOZ_LOG(sPDMLog, LogLevel::Debug,
+          ("Converting sample to ADTS format: newSize: %zu, ch: %u, "
+           "profile: %u, freq index: %d",
+           newSize, aChannelCount, aProfile, aFrequencyIndex));
+
   // ADTS header uses 13 bits for packet size.
-  if (newSize >= (1 << 13) || aChannelCount > 15 || aFrequencyIndex < 0 ||
-      aProfile < 1 || aProfile > 4) {
+  if (newSize >= (1 << 13) || aChannelCount > 15 || aProfile < 1 ||
+      aProfile > 4 || aFrequencyIndex >= FREQ_LOOKUP.size()) {
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
+            ("Couldn't convert sample to ADTS format: newSize: %zu, ch: %u, "
+             "profile: %u, freq index: %d",
+             newSize, aChannelCount, aProfile, aFrequencyIndex));
     return false;
   }
 
@@ -66,7 +85,7 @@ bool Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
   return true;
 }
 
-bool Adts::RevertSample(MediaRawData* aSample) {
+bool RevertSample(MediaRawData* aSample) {
   if (aSample->Size() < kADTSHeaderSize) {
     return false;
   }
@@ -91,4 +110,155 @@ bool Adts::RevertSample(MediaRawData* aSample) {
 
   return true;
 }
-}  // namespace mozilla
+
+bool FrameHeader::MatchesSync(const Span<const uint8_t>& aData) {
+  return aData.Length() >= 2 && aData[0] == 0xFF && (aData[1] & 0xF6) == 0xF0;
+}
+
+FrameHeader::FrameHeader() { Reset(); }
+
+// Header size
+uint64_t FrameHeader::HeaderSize() const { return (mHaveCrc) ? 9 : 7; }
+
+bool FrameHeader::IsValid() const { return mFrameLength > 0; }
+
+// Resets the state to allow for a new parsing session.
+void FrameHeader::Reset() { PodZero(this); }
+
+// Returns whether the byte creates a valid sequence up to this point.
+bool FrameHeader::Parse(const Span<const uint8_t>& aData) {
+  if (!MatchesSync(aData)) {
+    return false;
+  }
+
+  // AAC has 1024 samples per frame per channel.
+  mSamples = 1024;
+
+  mHaveCrc = !(aData[1] & 0x01);
+  mObjectType = ((aData[2] & 0xC0) >> 6) + 1;
+  mSamplingIndex = (aData[2] & 0x3C) >> 2;
+  mChannelConfig = (aData[2] & 0x01) << 2 | (aData[3] & 0xC0) >> 6;
+  mFrameLength = static_cast<uint32_t>(
+      (aData[3] & 0x03) << 11 | (aData[4] & 0xFF) << 3 | (aData[5] & 0xE0) >> 5);
+  mNumAACFrames = (aData[6] & 0x03) + 1;
+
+  static const uint32_t SAMPLE_RATES[] = {96000, 88200, 64000, 48000, 44100,
+                                          32000, 24000, 22050, 16000, 12000,
+                                          11025, 8000,  7350};
+  if (mSamplingIndex >= ArrayLength(SAMPLE_RATES)) {
+    LOG(("ADTS: Init() failure: invalid sample-rate index value: %" PRIu32 ".",
+         mSamplingIndex));
+    // This marks the header as invalid.
+    mFrameLength = 0;
+    return false;
+  }
+  mSampleRate = SAMPLE_RATES[mSamplingIndex];
+
+  MOZ_ASSERT(mChannelConfig < 8);
+  mChannels = (mChannelConfig == 7) ? 8 : mChannelConfig;
+
+  return true;
+}
+
+Frame::Frame() : mOffset(0), mHeader() {}
+uint64_t Frame::Offset() const { return mOffset; }
+size_t Frame::Length() const {
+  // TODO: If fields are zero'd when invalid, this check wouldn't be
+  // necessary.
+  if (!mHeader.IsValid()) {
+    return 0;
+  }
+
+  return mHeader.mFrameLength;
+}
+
+// Returns the offset to the start of frame's raw data.
+uint64_t Frame::PayloadOffset() const { return mOffset + mHeader.HeaderSize(); }
+
+// Returns the length of the frame's raw data (excluding the header) in bytes.
+size_t Frame::PayloadLength() const {
+  // TODO: If fields are zero'd when invalid, this check wouldn't be
+  // necessary.
+  if (!mHeader.IsValid()) {
+    return 0;
+  }
+
+  return mHeader.mFrameLength - mHeader.HeaderSize();
+}
+
+// Returns the parsed frame header.
+const FrameHeader& Frame::Header() const { return mHeader; }
+
+bool Frame::IsValid() const { return mHeader.IsValid(); }
+
+// Resets the frame header and data.
+void Frame::Reset() {
+  mHeader.Reset();
+  mOffset = 0;
+}
+
+// Returns whether the valid
+bool Frame::Parse(uint64_t aOffset, const uint8_t* aStart,
+                  const uint8_t* aEnd) {
+  MOZ_ASSERT(aStart && aEnd && aStart <= aEnd);
+
+  bool found = false;
+  const uint8_t* ptr = aStart;
+  // Require at least 7 bytes of data at the end of the buffer for the minimum
+  // ADTS frame header.
+  while (ptr < aEnd - 7 && !found) {
+    found = mHeader.Parse(Span(ptr, aEnd));
+    ptr++;
+  }
+
+  mOffset = aOffset + (static_cast<size_t>(ptr - aStart)) - 1u;
+
+  return found;
+}
+
+const Frame& FrameParser::CurrentFrame() { return mFrame; }
+
+const Frame& FrameParser::FirstFrame() const { return mFirstFrame; }
+
+void FrameParser::Reset() {
+  EndFrameSession();
+  mFirstFrame.Reset();
+}
+
+void FrameParser::EndFrameSession() { mFrame.Reset(); }
+
+bool FrameParser::Parse(uint64_t aOffset, const uint8_t* aStart,
+                        const uint8_t* aEnd) {
+  const bool found = mFrame.Parse(aOffset, aStart, aEnd);
+
+  if (mFrame.Length() && !mFirstFrame.Length()) {
+    mFirstFrame = mFrame;
+  }
+
+  return found;
+}
+
+// Initialize the AAC AudioSpecificConfig.
+// Only handles two-byte version for AAC-LC.
+void InitAudioSpecificConfig(const ADTS::Frame& frame,
+                             MediaByteBuffer* aBuffer) {
+  const ADTS::FrameHeader& header = frame.Header();
+  MOZ_ASSERT(header.IsValid());
+
+  int audioObjectType = header.mObjectType;
+  int samplingFrequencyIndex = header.mSamplingIndex;
+  int channelConfig = header.mChannelConfig;
+
+  uint8_t asc[2];
+  asc[0] = (audioObjectType & 0x1F) << 3 | (samplingFrequencyIndex & 0x0E) >> 1;
+  asc[1] = (samplingFrequencyIndex & 0x01) << 7 | (channelConfig & 0x0F) << 3;
+
+  aBuffer->AppendElements(asc, 2);
+}
+
+};  // namespace ADTS
+};  // namespace mozilla
+
+#undef LOG
+#undef ADTSLOG
+#undef ADTSLOGV
