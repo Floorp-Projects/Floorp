@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>color_canvas.html</title>
+  </head>
+  <!--
+# color_canvas.html
+
+* Default is a 100x100 'css' canvas-equivalent div, filled with 50% srgb red.
+
+* We default to showing the settings pane when loaded without a query string.
+  This way, someone naively opens this in a browser, they can immediately see
+  all available options.
+
+* The 'Publish' button updates the url, and so causes the settings pane to
+  hide.
+
+* Clicking on the canvas toggles the settings pane for further editing.
+  -->
+  <body>
+    <form id=e_settings><fieldset><legend>Settings</legend>
+      Width: <input id=e_width type=text value=100>
+      <br>
+      Height: <input id=e_height type=text value=100>
+      <br>
+      <fieldset><legend>Canvas Context</legend>
+        Type: <select id=e_context>
+          <option value=css selected>css</option>
+          <option value=2d>2d</option>
+          <option value=webgl>webgl</option>
+        </select>
+        <br>
+        Options: <input id=e_options type=text value={}>
+        <br>
+        Colorspace: <input id=e_cspace type=text placeholder=srgb>
+        <br>
+        WebGL Format: <input id=e_webgl_format type=text placeholder=RGBA8>
+      </fieldset>
+      <br>
+      Color: <input id=e_color type=text value='color(srgb 0 0.5 0)'>
+      <br>
+      <input id=e_publish type=button value=Publish>
+      <input type=checkbox id=e_publish_omit_defaults checked><label for=e_publish_omit_defaults>Omit defaults</label>
+      <hr>
+    </fieldset></form>
+    <div id=e_canvas_list><canvas></canvas></div>
+    <script>
+'use strict';
+
+// -
+
+function walk_nodes_depth_first(e, fn) {
+  if (fn(e) === false) return; // Don't stop on `true`, or `undefined`!
+  for (const c of e.childNodes) {
+    walk_nodes_depth_first(c, fn);
+  }
+}
+
+// -
+
+// Click the canvas to toggle the settings pane.
+e_canvas_list.addEventListener('click', () => {
+  // Toggle display:none to hide/unhide.
+  e_settings.hidden = !e_settings.hidden;
+});
+
+// Hide settings initially if there's a query string in the url.
+if (window.location.search.startsWith('?')) {
+  e_settings.hidden = true;
+}
+
+// -
+
+// Imply .name from .id, because `new FormData` collects based on names.
+walk_nodes_depth_first(e_settings, e => {
+  if (e.id) {
+    e.name = e.id;
+    e._default_value = e.value;
+  }
+});
+
+// -
+
+const URL_PARAMS = new URLSearchParams(window.location.search);
+URL_PARAMS.forEach((v,k) => {
+  const e = window[k];
+  if (!e) {
+    if (k) {
+      console.warn(`Unrecognized setting: ${k} = ${v}`);
+    }
+    return;
+  }
+  v = decode_url_v(k,v);
+  e.value = v;
+});
+
+// -
+
+globalThis.ASSERT = (() => {
+  function toPrettyString(arg) {
+    if (!arg) return ''+arg;
+
+    if (arg.call) {
+      let s = arg.toString();
+      const RE_TRIVIAL_LAMBDA = /\( *\) *=> *(.*)/;
+      const m = RE_TRIVIAL_LAMBDA.exec(s);
+      if (m) {
+        s = '`' + m[1] + '`';
+      }
+      return s;
+    }
+    if (arg.constructor == Array) {
+      return `[${[].join.call(arg, ', ')}]`;
+    }
+    return JSON.stringify(arg);
+  }
+
+  /// new AssertArg(): Construct a wrapper for args to assert functions.
+  function AssertArg(dict) {
+    this.label = Object.keys(dict)[0];
+
+    this.set = function(arg) {
+      this.arg = arg;
+      this.value = (arg && arg.call) ? arg.call() : arg;
+      this.value = toPrettyString(this.value);
+    };
+    this.set(dict[this.label]);
+
+    this.toString = function() {
+      let ret = `${this.label} ${toPrettyString(this.arg)}`;
+      if (this.arg.call) {
+        ret += ` (${this.value})`;
+      }
+      return ret;
+    }
+  }
+
+  const eq = (a,b) => a == b;
+  const neq = (a,b) => a != b;
+
+  const CMP_BY_NAME = {
+    '==': eq,
+    '!=': neq,
+  };
+
+  function IS(cmp, was, expected, _console) {
+    _console = _console || console;
+
+    _console.assert(was.call, '`was.call` not defined.');
+    was = new AssertArg({was});
+    expected = new AssertArg({expected});
+
+    const fn_cmp = CMP_BY_NAME[cmp] || cmp;
+
+    _console.assert(fn_cmp(was.value, expected.value), `${toPrettyString(was.arg)} => ${was.value} not ${cmp} ${expected}`);
+    if (was.value != expected.value) {
+    } else if (globalThis.ASSERT && globalThis.ASSERT.verbose) {
+      const maybe_cmp_str = (cmp == '==') ? '' : ` ${was.value} ${cmp}`;
+      _console.log(`${toPrettyString(was.arg)} => ${maybe_cmp_str}${expected}`);
+    }
+  }
+
+  // -
+
+  const MOCK_CONSOLE = {
+    _asserts: [],
+    assert: function(expr, ...args) {
+      if (!expr) {
+        this._asserts.push(args);
+      }
+    },
+    log: function(...args) {
+      // Don't record.
+    },
+  };
+
+  // -
+  // Test `==`
+
+  IS('==', () => 1, 1, MOCK_CONSOLE);
+  console.assert(MOCK_CONSOLE._asserts.length == 0, MOCK_CONSOLE._asserts);
+  MOCK_CONSOLE._asserts = [];
+
+  IS('==', () => 2, 2, MOCK_CONSOLE);
+  console.assert(MOCK_CONSOLE._asserts.length == 0, MOCK_CONSOLE._asserts);
+  MOCK_CONSOLE._asserts = [];
+
+  IS('==', () => 5, () => 3, MOCK_CONSOLE);
+  console.assert(MOCK_CONSOLE._asserts.length == 1, MOCK_CONSOLE._asserts);
+  MOCK_CONSOLE._asserts = [];
+
+  IS('==', () => [1,2], () => [1,2], MOCK_CONSOLE);
+  console.assert(MOCK_CONSOLE._asserts.length == 0, MOCK_CONSOLE._asserts);
+  MOCK_CONSOLE._asserts = [];
+
+  // -
+  // Test `!=`
+
+  IS('!=', () => [1,2,5], () => [1,2,3], MOCK_CONSOLE);
+  console.assert(MOCK_CONSOLE._asserts.length == 0, MOCK_CONSOLE._asserts);
+  MOCK_CONSOLE._asserts = [];
+
+  // -
+
+  const ret = {
+    verbose: false,
+    IS,
+  };
+  ret.EQ = (was,expected) => ret.IS('==', was, expected);
+  ret.NEQ = (was,expected) => ret.IS('!=', was, expected);
+  ret.EEQ = (was,expected) => ret.IS('===', was, expected);
+  ret.NEEQ = (was,expected) => ret.IS('!==', was, expected);
+  ret.TRUE = was => ret.EQ(was, true);
+  ret.FALSE = was => ret.EQ(was, false);
+  ret.NULL = was => ret.EEQ(was, null);
+  return ret;
+})();
+
+// -
+
+function parse_css_rgb(str) {
+  //          rgb  (R      ,G      ,B             /A         )
+  const m = /rgba?\(([^,]+),([^,]+),([^/)]+)(?: *\/([^)]+))?\)/.exec(str);
+  if (!m) throw str;
+  const rgba = m.slice(1,1+4).map((s,i) => {
+    if (s === undefined && i == 3) {
+      s = '1'; // Alpha defaults to 1.
+    }
+    s = s.trim();
+    let v = parseFloat(s);
+    if (s.endsWith('%')) {
+      v /= 100;
+    } else {
+      if (i < 3) { // r,g,b but not a!
+        v /= 255;
+      }
+    }
+    return v;
+  });
+  return rgba;
+}
+ASSERT.EQ(() => parse_css_rgb('rgb(255,255,255)'), [1,1,1,1]);
+ASSERT.EQ(() => parse_css_rgb('rgba(255,255,255)'), [1,1,1,1]);
+ASSERT.EQ(() => parse_css_rgb('rgb(255,255,255)'), [1,1,1,1]);
+ASSERT.EQ(() => parse_css_rgb('rgba(255,255,255)'), [1,1,1,1]);
+ASSERT.EQ(() => parse_css_rgb('rgb(20,40,60)'), () => [20/255, 40/255, 60/255, 1]);
+ASSERT.EQ(() => parse_css_rgb('rgb(20,40,60 / 0.5)'), () => [20/255, 40/255, 60/255, 0.5]);
+ASSERT.EQ(() => parse_css_rgb('rgb(20,40,60 / 0)'), () => [20/255, 40/255, 60/255, 0]);
+
+// -
+
+function parse_css_color(str) {
+  //         color (  srgb     R        G        B           /A         )
+  const m = /color\( *([^ ]+) +([^ ]+) +([^ ]+) +([^/)]+)(?:\/([^)]+))?\)/.exec(str);
+  if (!m) {
+    return ['srgb', ...parse_css_rgb(str)];
+  }
+
+  const cspace = m[1].trim();
+  let has_extreme_colors = false;
+  const rgba = m.slice(2, 2+4).map((s,i) => {
+    if (s === undefined && i == 3) {
+      s = '1'; // Alpha defaults to 1.
+    }
+    s = s.trim();
+    let v = parseFloat(s);
+    if (s.endsWith('%')) {
+      v /= 100;
+    }
+    if (v < 0 || v > 1) {
+      has_extreme_colors = true;
+    }
+    return v;
+  });
+  if (has_extreme_colors) {
+    console.warn(`parse_css_color('${str}') has colors outside [0.0,1.0]: ${JSON.stringify(rgba)}`);
+  }
+  return [cspace, ...rgba];
+}
+ASSERT.EQ(() => parse_css_color('rgb(255,255,255)'), ['srgb',1,1,1,1]);
+ASSERT.EQ(() => parse_css_color('rgb(20,40,60 / 0.5)'), () => ['srgb', 20/255, 40/255, 60/255, 0.5]);
+ASSERT.EQ(() => parse_css_color('color(srgb 1 0 1 /0.3)'), ['srgb',1,0,1,0.3]);
+ASSERT.EQ(() => parse_css_color('color(display-p3 1 0% 100%/ 30%)'), ['display-p3',1,0,1,0.3]);
+
+// -
+
+class CssColor {
+  constructor(cspace, r,g,b,a=1) {
+    this.cspace = cspace;
+    this.rgba = [this.r, this.g, this.b, this.a] = [r,g,b,a];
+    this.rgb = this.rgba.slice(0,3);
+    this.tuple = [this.cspace, ...this.rgba];
+  }
+
+  toString() {
+    return `color(${this.cspace} ${this.rgb.join(' ')} / ${this.a})`;
+  }
+};
+CssColor.parse = function(str) {
+  return new CssColor(...parse_css_color(str));
+}
+
+{
+  let STR;
+  // Test round-trip.
+  STR = 'color(display-p3 1 0 1 / 0.3)';
+  ASSERT.EQ(() => CssColor.parse(STR).toString(), STR);
+
+  // Test round-trip normalization
+  ASSERT.EQ(() => CssColor.parse('color( display-p3  1   0  1/30% )').toString(), 'color(display-p3 1 0 1 / 0.3)');
+}
+
+// -
+
+function redraw() {
+  while (e_canvas_list.firstChild) {
+    e_canvas_list.removeChild(e_canvas_list.firstChild);
+  }
+
+  const c = make_canvas(e_color.value.trim());
+  c.style.border = '4px solid black';
+  e_canvas_list.appendChild(c);
+}
+
+function fill_canvas_rect(context /*: CanvasRenderingContext | WebGLRenderingContext*/, css_color, rect=null) {
+  rect = rect || {left: 0, top: 0, w: context.canvas.width, h: context.canvas.height};
+
+  const is_c2d = ('fillRect' in context);
+  if (is_c2d) {
+    const c2d = context;
+    c2d.fillStyle = css_color;
+    c2d.fillRect(rect.left, rect.top, rect.w, rect.h);
+    return;
+  }
+
+  const is_webgl = ('drawArrays' in context);
+  if (is_webgl) {
+    const gl = context;
+    console.assert(context.canvas.width == gl.drawingBufferWidth, context.canvas.width, '!=', gl.drawingBufferWidth);
+    console.assert(context.canvas.height == gl.drawingBufferHeight, context.canvas.height, '!=', gl.drawingBufferHeight);
+
+    gl.enable(gl.SCISSOR_TEST);
+    gl.disable(gl.DEPTH_TEST);
+    const bottom = rect.top + rect.h; // in y-down c2d coords
+    gl.scissor(rect.left, context.canvas.height - bottom, rect.w, rect.h);
+
+    const canvas_cspace = context.drawingBufferColorSpace || 'srgb';
+    if (css_color.cspace != canvas_cspace) {
+      console.warn(`Ignoring mismatched color vs webgl canvas cspace: ${css_color.cspace} vs ${canvas_cspace}`);
+    }
+    gl.clearColor(...css_color.rgba);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    return;
+  }
+
+  console.error('Unhandled context kind:', context);
+}
+
+window.e_canvas = null;
+
+function make_canvas(css_color) {
+  css_color = CssColor.parse(css_color);
+
+  // `e_width` and e_friends are elements (by id) that we added to the raw HTML above.
+  // `e_width` is an old shorthand for `window.e_width || document.getElementById('e_width')`.
+  const W = parseInt(e_width.value);
+  const H = parseInt(e_height.value);
+  if (e_context.value == 'css') {
+    e_canvas = document.createElement('div');
+    e_canvas.style.width = `${W}px`;
+    e_canvas.style.height = `${H}px`;
+    e_canvas.style.backgroundColor = css_color;
+    return e_canvas;
+  }
+  e_canvas = document.createElement('canvas');
+  e_canvas.width = W;
+  e_canvas.height = H;
+
+  let requested_options = JSON.parse(e_options.value);
+  requested_options.colorSpace = e_cspace.value || undefined;
+
+  const context = e_canvas.getContext(e_context.value, requested_options);
+  if (requested_options.colorSpace) {
+    if (!context.drawingBufferColorSpace) {
+      console.warn(`${context.constructor.name}.drawingBufferColorSpace not supported by browser.`);
+    } else {
+      context.drawingBufferColorSpace = requested_options.colorSpace;
+    }
+  }
+
+  if (e_webgl_format.value) {
+    if (!context.drawingBufferStorage) {
+      console.warn(`${context.constructor.name}.drawingBufferStorage not supported by browser.`);
+    } else {
+      context.drawingBufferStorage(W, H, context[e_webgl_format.value]);
+    }
+  }
+
+  let actual_options;
+  if (!context.getContextAttributes) {
+    console.warn(`${canvas.constructor.name}.getContextAttributes not supported by browser.`);
+    actual_options = requested_options;
+  } else {
+    actual_options = context.getContextAttributes();
+  }
+
+  // -
+
+  fill_canvas_rect(context, css_color);
+
+  return e_canvas;
+}
+
+e_settings.addEventListener('change', async () => {
+  redraw();
+  const e_updated = document.createElement('i');
+  e_updated.textContent = '(Updated!)';
+  document.body.appendChild(e_updated);
+  await new Promise(go => setTimeout(go, 1000));
+  document.body.removeChild(e_updated);
+});
+redraw();
+
+// -
+
+function encode_url_v(k,v) {
+  if (k == 'e_color') {
+    v = v.replaceAll(' ', ',');
+  }
+  console.assert(!v.includes(' '), v);
+  return v
+}
+function decode_url_v(k,v) {
+  console.assert(!v.includes(' '), v);
+  if (k == 'e_color') {
+    v = v.replaceAll(',', ' ');
+  }
+  return v
+}
+ASSERT.EQ(() => decode_url_v('e_color', encode_url_v('e_color', 'color(srgb 1 0 0)')), 'color(srgb 1 0 0)')
+
+e_publish.addEventListener('click', () => {
+  const fd = new FormData(e_settings);
+  let settings = [];
+  for (let [k,v] of fd) {
+    const e = window[k];
+    if (e_publish_omit_defaults.checked && v == e._default_value) continue;
+
+    v = encode_url_v(k,v);
+    settings.push(`${k}=${v}`);
+  }
+  settings = settings.join('&');
+  if (!settings) {
+    settings = '='; // Empty key-value pair is 'publish with default settings'
+  }
+  window.location.search = '?' + settings;
+});
+    </script>
+  </body>
+</html>
