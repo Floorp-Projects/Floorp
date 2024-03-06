@@ -189,6 +189,15 @@
     ],
     "test.nested": [
       [
+        "object",
+        "an_object",
+        [
+          "metrics"
+        ],
+        "ping",
+        false
+      ],
+      [
         "datetime",
         "datetime_metric",
         [

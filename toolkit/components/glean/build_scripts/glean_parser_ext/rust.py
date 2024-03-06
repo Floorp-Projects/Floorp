@@ -68,9 +68,10 @@ def rust_datatypes_filter(value):
             # CowString is also a 'str' but is a special case.
             # Ensure its case is handled before str's (below).
             elif isinstance(value, CowString):
-                yield f'::std::borrow::Cow::from("{value.inner}")'
+                value = json.dumps(value)
+                yield f"::std::borrow::Cow::from({value})"
             elif isinstance(value, str):
-                yield '"' + value + '".into()'
+                yield f"{json.dumps(value)}.into()"
             elif isinstance(value, Rate):
                 yield "CommonMetricData {"
                 for arg_name in common_metric_data_args:
@@ -118,6 +119,10 @@ def type_name(obj):
                 return "{}<{}>".format(
                     class_name(obj.type), util.Camelize(obj.name) + suffix
                 )
+    generate_structure = getattr(obj, "_generate_structure", [])
+    if len(generate_structure):
+        generic = util.Camelize(obj.name) + "Object"
+        return "{}<{}>".format(class_name(obj.type), generic)
     return class_name(obj.type)
 
 
@@ -132,6 +137,21 @@ def extra_type_name(typ: str) -> str:
         return "String"
     elif typ == "quantity":
         return "u32"
+    else:
+        return "UNSUPPORTED"
+
+
+def structure_type_name(typ: str) -> str:
+    """
+    Returns the corresponding Rust type for structure items.
+    """
+
+    if typ == "boolean":
+        return "bool"
+    elif typ == "string":
+        return "String"
+    elif typ == "number":
+        return "i64"
     else:
         return "UNSUPPORTED"
 
@@ -208,6 +228,14 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
     #   17 -> "test_only::an_event"
     events_by_id = {}
 
+    # Map from a metric ID to the fully qualified path of the object metric in Rust.
+    # Required for the special handling of object lookups.
+    #
+    # Example:
+    #
+    #   18 -> "test_only::an_object"
+    objects_by_id = {}
+
     # Map from a labeled type (e.g. "counter") to a map from metric ID to the
     # fully qualified path of the labeled metric object in Rust paired with
     # whether the labeled metric has an enum.
@@ -238,6 +266,9 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
                 if metric.type == "event":
                     events_by_id[get_metric_id(metric)] = full_path
                     continue
+                if metric.type == "object":
+                    objects_by_id[get_metric_id(metric)] = full_path
+                    continue
 
                 if getattr(metric, "labeled", False):
                     labeled_type = metric.type[8:]
@@ -261,6 +292,7 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
             ("snake_case", util.snake_case),
             ("type_name", type_name),
             ("extra_type_name", extra_type_name),
+            ("structure_type_name", structure_type_name),
             ("ctor", ctor),
             ("extra_keys", extra_keys),
             ("metric_id", get_metric_id),
@@ -275,6 +307,7 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
             metric_by_type=objs_by_type,
             extra_args=util.extra_args,
             events_by_id=events_by_id,
+            objects_by_id=objects_by_id,
             labeleds_by_id_by_type=labeleds_by_id_by_type,
             submetric_bit=ID_BITS - ID_SIGNAL_BITS,
             ping_names_by_app_id=ping_names_by_app_id,
