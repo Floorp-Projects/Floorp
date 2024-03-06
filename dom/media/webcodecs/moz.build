@@ -21,6 +21,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    "AudioData.h",
     "DecoderTemplate.h",
     "DecoderTypes.h",
     "EncodedVideoChunk.h",
@@ -35,6 +36,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    "AudioData.cpp",
     "DecoderAgent.cpp",
     "DecoderTemplate.cpp",
     "EncodedVideoChunk.cpp",
