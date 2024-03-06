@@ -470,8 +470,13 @@ struct IPCImage {
     ImageIntSize size;
 };
 
-union PClipboardReadRequestOrError {
-    PClipboardReadRequest;
+struct ClipboardReadRequest {
+    ManagedEndpoint<PClipboardReadRequestChild> childEndpoint;
+    nsCString[] availableTypes;
+};
+
+union ClipboardReadRequestOrError {
+    ClipboardReadRequest;
     nsresult;
 };
 
@@ -1057,8 +1062,6 @@ child:
 
     async PRemotePrintJob();
 
-    async PClipboardReadRequest(nsCString[] aTypes);
-
 parent:
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
                                         nullable nsILayoutHistoryState aState);
@@ -1233,7 +1236,7 @@ parent:
     async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard,
                             MaybeDiscardedWindowContext aRequestingWindowContext,
                             nsIPrincipal aRequestingPrincipal)
-        returns (PClipboardReadRequestOrError aClipboardReadRequest);
+        returns (ClipboardReadRequestOrError aClipboardReadRequestOrError);
 
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);
