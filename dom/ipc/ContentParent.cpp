@@ -3639,6 +3639,48 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboardAsync(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvGetClipboardDataSnapshotSync(
+    nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
+    const MaybeDiscarded<WindowContext>& aRequestingWindowContext,
+    ClipboardReadRequestOrError* aRequestOrError) {
+  // If the requesting context has been discarded, cancel the paste.
+  if (aRequestingWindowContext.IsDiscarded()) {
+    *aRequestOrError = NS_ERROR_FAILURE;
+    return IPC_OK();
+  }
+
+  RefPtr<WindowGlobalParent> requestingWindow =
+      aRequestingWindowContext.get_canonical();
+  if (requestingWindow && requestingWindow->GetContentParent() != this) {
+    return IPC_FAIL(
+        this, "attempt to paste into WindowContext loaded in another process");
+  }
+
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID));
+  if (!clipboard) {
+    *aRequestOrError = NS_ERROR_FAILURE;
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIAsyncGetClipboardData> asyncGetClipboardData;
+  nsresult rv =
+      clipboard->GetDataSnapshotSync(aTypes, aWhichClipboard, requestingWindow,
+                                     getter_AddRefs(asyncGetClipboardData));
+  if (NS_FAILED(rv)) {
+    *aRequestOrError = rv;
+    return IPC_OK();
+  }
+
+  auto result = CreateClipboardReadRequest(*this, *asyncGetClipboardData);
+  if (result.isErr()) {
+    *aRequestOrError = result.unwrapErr();
+    return IPC_OK();
+  }
+
+  *aRequestOrError = result.unwrap();
+  return IPC_OK();
+}
+
 already_AddRefed<PClipboardWriteRequestParent>
 ContentParent::AllocPClipboardWriteRequestParent(
     const int32_t& aClipboardType) {

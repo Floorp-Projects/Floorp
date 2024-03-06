@@ -239,6 +239,35 @@ NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
   return NS_OK;
 }
 
+NS_IMETHODIMP nsClipboardProxy::GetDataSnapshotSync(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+    mozilla::dom::WindowContext* aRequestingWindowContext,
+    nsIAsyncGetClipboardData** _retval) {
+  *_retval = nullptr;
+
+  if (aFlavorList.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                      aWhichClipboard);
+    return NS_ERROR_FAILURE;
+  }
+
+  ContentChild* contentChild = ContentChild::GetSingleton();
+  ClipboardReadRequestOrError requestOrError;
+  contentChild->SendGetClipboardDataSnapshotSync(
+      aFlavorList, aWhichClipboard, aRequestingWindowContext, &requestOrError);
+  auto result = CreateAsyncGetClipboardDataProxy(std::move(requestOrError));
+  if (result.isErr()) {
+    return result.unwrapErr();
+  }
+
+  result.unwrap().forget(_retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsClipboardProxy::EmptyClipboard(int32_t aWhichClipboard) {
   ContentChild::GetSingleton()->SendEmptyClipboard(aWhichClipboard);
