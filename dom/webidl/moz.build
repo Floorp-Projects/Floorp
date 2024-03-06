@@ -416,6 +416,7 @@ WEBIDL_FILES = [
     "AudioBuffer.webidl",
     "AudioBufferSourceNode.webidl",
     "AudioContext.webidl",
+    "AudioData.webidl",
     "AudioDestinationNode.webidl",
     "AudioListener.webidl",
     "AudioNode.webidl",
