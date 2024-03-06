@@ -79,8 +79,8 @@ async function runTests() {
        getDesciption(aPreventedOnBubbling) + "prevented on bubbling phase");
   }
 
-  SpecialPowers.addSystemEventListener(window, "keypress", listener, true);
-  SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
+  SpecialPowers.wrap(window).addEventListener("keypress", listener, { capture: true, mozSystemGroup: true });
+  SpecialPowers.wrap(window).addEventListener("keypress", listener, { capture: false, mozSystemGroup: true });
 
   // eslint-disable-next-line complexity
   async function doTest(
@@ -754,8 +754,8 @@ async function runTests() {
   await doTest(htmlEditor, "readonly and non-tabbable HTML editor but plaintext mode",
          true, false, true);
 
-  SpecialPowers.removeSystemEventListener(window, "keypress", listener, true);
-  SpecialPowers.removeSystemEventListener(window, "keypress", listener, false);
+  SpecialPowers.wrap(window).removeEventListener("keypress", listener, { capture: true, mozSystemGroup: true });
+  SpecialPowers.wrap(window).removeEventListener("keypress", listener, { capture: false, mozSystemGroup: true });
 
   SimpleTest.finish();
 }

@@ -54,19 +54,15 @@ function runTest() {
       sendAsyncMessage("ok", [true, "onPromptFocus is called"]);
       gPromptInput.removeEventListener("focus", onPromptFocus);
 
-      var listenerService = Services.els;
-
       var listener = {
         handleEvent: function _hv(aEvent) {
           var isPrevented = aEvent.defaultPrevented;
           sendAsyncMessage("ok", [!isPrevented,
                            "ESC key event is prevented by editor"]);
-          listenerService.removeSystemEventListener(gPromptInput, "keypress",
-                                                    listener, false);
+          gPromptInput.removeEventListener("keypress", listener, { mozSystemGroup: true });
         },
       };
-      listenerService.addSystemEventListener(gPromptInput, "keypress",
-                                             listener, false);
+      gPromptInput.addEventListener("keypress", listener, { mozSystemGroup: true });
 
       sendAsyncMessage("info", "sending key");
       var EventUtils = {};

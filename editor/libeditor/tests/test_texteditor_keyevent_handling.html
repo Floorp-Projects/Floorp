@@ -80,10 +80,8 @@ async function runTests() {
   }
 
   var parentElement = document.getElementById("display");
-  SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
-                                       true);
-  SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
-                                       false);
+  SpecialPowers.wrap(parentElement).addEventListener("keypress", listener, { capture: true, mozSystemGroup: true });
+  SpecialPowers.wrap(parentElement).addEventListener("keypress", listener, { capture: false, mozSystemGroup: true });
 
   async function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly) {
     function reset(aText) {
@@ -457,10 +455,8 @@ async function runTests() {
   textarea.setAttribute("readonly", "readonly");
   await doTest(textarea, "<textarea readonly>", false, true);
 
-  SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
-                                          true);
-  SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
-                                          false);
+  SpecialPowers.wrap(parentElement).removeEventListener("keypress", listener, { capture: true, mozSystemGroup: true });
+  SpecialPowers.wrap(parentElement).removeEventListener("keypress", listener, { capture: false, mozSystemGroup: true });
 
   SimpleTest.finish();
 }
