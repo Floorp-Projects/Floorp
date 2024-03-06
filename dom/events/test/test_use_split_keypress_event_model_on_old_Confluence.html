@@ -39,7 +39,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function doTests() {
   let iframe = document.getElementById("iframe");
   let waitForCheckKeyPressEventModelEvent = new Promise(resolve => {
-    SpecialPowers.addSystemEventListener(iframe.contentDocument, "CheckKeyPressEventModel", resolve, {once: true});
+    SpecialPowers.wrap(iframe.contentDocument).addEventListener("CheckKeyPressEventModel", resolve, {mozSystemGroup: true, once: true});
   });
   iframe.contentDocument.body.setAttribute("contenteditable", "true");
   await waitForCheckKeyPressEventModelEvent;
