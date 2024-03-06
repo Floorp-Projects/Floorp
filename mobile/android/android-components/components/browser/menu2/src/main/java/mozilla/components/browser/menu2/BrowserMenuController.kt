@@ -46,6 +46,11 @@ class BrowserMenuController(
         orientation: Orientation?,
         autoDismiss: Boolean,
     ): PopupWindow {
+        // If the menu is already displayed do not display it again.
+        currentPopupInfo?.window?.let {
+            return it
+        }
+
         val view = MenuView(anchor.context).apply {
             // Show nested list if present, or the standard menu candidates list.
             submitList(menuCandidates)
