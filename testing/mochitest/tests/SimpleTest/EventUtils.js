@@ -1020,7 +1020,9 @@ function _sendWheelAndPaint(
   }
 
   var onwheel = function () {
-    SpecialPowers.removeSystemEventListener(window, "wheel", onwheel);
+    SpecialPowers.wrap(window).removeEventListener("wheel", onwheel, {
+      mozSystemGroup: true,
+    });
 
     // Wait one frame since the wheel event has not caused a refresh observer
     // to be added yet.
@@ -1055,7 +1057,9 @@ function _sendWheelAndPaint(
 
   // Listen for the system wheel event, because it happens after all of
   // the other wheel events, including legacy events.
-  SpecialPowers.addSystemEventListener(aWindow, "wheel", onwheel);
+  SpecialPowers.wrap(aWindow).addEventListener("wheel", onwheel, {
+    mozSystemGroup: true,
+  });
   if (aFlushMode === _FlushModes.FLUSH) {
     synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
   } else {
@@ -3850,21 +3854,19 @@ async function synthesizePlainDragAndCancel(
       aExpectedDataTransferItems
     );
   }
-  SpecialPowers.addSystemEventListener(
-    srcElement.ownerDocument,
+  SpecialPowers.wrap(srcElement.ownerDocument).addEventListener(
     "dragstart",
     onDragStart,
-    { capture: true }
+    { capture: true, mozSystemGroup: true }
   );
   try {
     aParams.expectCancelDragStart = true;
     await synthesizePlainDragAndDrop(aParams);
   } finally {
-    SpecialPowers.removeSystemEventListener(
-      srcElement.ownerDocument,
+    SpecialPowers.wrap(srcElement.ownerDocument).removeEventListener(
       "dragstart",
       onDragStart,
-      { capture: true }
+      { capture: true, mozSystemGroup: true }
     );
   }
   return result;
@@ -3885,29 +3887,19 @@ class EventCounter {
       this.eventCount++;
     };
 
-    if (aOptions.mozSystemGroup) {
-      SpecialPowers.addSystemEventListener(
-        aTarget,
-        aType,
-        this.handleEvent,
-        aOptions.capture
-      );
-    } else {
-      aTarget.addEventListener(aType, this, aOptions);
-    }
+    SpecialPowers.wrap(aTarget).addEventListener(
+      aType,
+      this.handleEvent,
+      aOptions
+    );
   }
 
   unregister() {
-    if (this.options.mozSystemGroup) {
-      SpecialPowers.removeSystemEventListener(
-        this.target,
-        this.type,
-        this.handleEvent,
-        this.options.capture
-      );
-    } else {
-      this.target.removeEventListener(this.type, this, this.options);
-    }
+    SpecialPowers.wrap(this.target).removeEventListener(
+      this.type,
+      this.handleEvent,
+      this.options
+    );
   }
 
   get count() {
