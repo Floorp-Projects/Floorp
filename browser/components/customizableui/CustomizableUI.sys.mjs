@@ -1251,8 +1251,8 @@ var CustomizableUIInternal = {
   },
 
   addPanelCloseListeners(aPanel) {
-    Services.els.addSystemEventListener(aPanel, "click", this, false);
-    Services.els.addSystemEventListener(aPanel, "keypress", this, false);
+    aPanel.addEventListener("click", this, { mozSystemGroup: true });
+    aPanel.addEventListener("keypress", this, { mozSystemGroup: true });
     let win = aPanel.ownerGlobal;
     if (!gPanelsForWindow.has(win)) {
       gPanelsForWindow.set(win, new Set());
@@ -1261,8 +1261,8 @@ var CustomizableUIInternal = {
   },
 
   removePanelCloseListeners(aPanel) {
-    Services.els.removeSystemEventListener(aPanel, "click", this, false);
-    Services.els.removeSystemEventListener(aPanel, "keypress", this, false);
+    aPanel.removeEventListener("click", this, { mozSystemGroup: true });
+    aPanel.removeEventListener("keypress", this, { mozSystemGroup: true });
     let win = aPanel.ownerGlobal;
     let panels = gPanelsForWindow.get(win);
     if (panels) {
@@ -5483,7 +5483,10 @@ class OverflowableToolbar {
       let mainViewId = multiview.getAttribute("mainViewId");
       let mainView = doc.getElementById(mainViewId);
       let contextMenu = doc.getElementById(mainView.getAttribute("context"));
-      Services.els.addSystemEventListener(contextMenu, "command", this, true);
+      contextMenu.addEventListener("command", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
       let anchor = this.#defaultListButton.icon;
 
       let popupshown = false;
@@ -6082,12 +6085,10 @@ class OverflowableToolbar {
     let contextMenuId = this.#defaultListPanel.getAttribute("context");
     if (contextMenuId) {
       let contextMenu = doc.getElementById(contextMenuId);
-      Services.els.removeSystemEventListener(
-        contextMenu,
-        "command",
-        this,
-        true
-      );
+      contextMenu.removeEventListener("command", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
     }
   }
 

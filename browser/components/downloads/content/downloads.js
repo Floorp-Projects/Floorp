@@ -528,7 +528,10 @@ var DownloadsPanel = {
   },
 
   _startWatchingForSpammyDownloadActivation() {
-    Services.els.addSystemEventListener(window, "keydown", this, true);
+    window.addEventListener("keydown", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
   },
 
   _lastBeepTime: 0,
@@ -546,7 +549,10 @@ var DownloadsPanel = {
   },
 
   _stopWatchingForSpammyDownloadActivation() {
-    Services.els.removeSystemEventListener(window, "keydown", this, true);
+    window.removeEventListener("keydown", this, {
+      capture: true,
+      mozSystemGroup: true,
+    });
   },
 
   /**

@@ -24,16 +24,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222285
 
   // This test makes sure that system event group will still get real keyboard event.
   function doTestForSystemEventGroup() {
-    SpecialPowers.addSystemEventListener(document, "keydown",
+    SpecialPowers.wrap(document).addEventListener("keydown",
       function eventHandler(aEvent) {
-        SpecialPowers.removeSystemEventListener(document,
-          "keydown", eventHandler, true);
-
         is(aEvent.code, "Minus", "The system group event should get real code.");
         is(aEvent.keyCode, 63, "The system group event should get real keyCode.");
 
         doTestModifiersForSystemEventGroup();
-      }, true);
+      }, { once: true, capture: true, mozSystemGroup: true });
 
     // Send key event to the system group.
     synthesizeKey("\u00DF", {code: "Minus", keyCode: 63});
@@ -41,14 +38,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222285
 
   // Test that will system group event still get suppressed modifier keys
   function doTestModifiersForSystemEventGroup() {
-    SpecialPowers.addSystemEventListener(document, "keydown",
+    SpecialPowers.wrap(document).addEventListener("keydown",
       function eventHandler(aEvent) {
-        SpecialPowers.removeSystemEventListener(document,
-          "keydown", eventHandler, true);
         is(aEvent.key, "Alt", "The system group event get the suppressed keyboard event.");
 
         SimpleTest.finish();
-      }, true);
+      }, { once: true, capture: true, mozSystemGroup: true });
 
     // Send key event to the system group.
     synthesizeKey("KEY_Alt", {altKey: true});

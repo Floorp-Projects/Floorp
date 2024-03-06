@@ -119,8 +119,8 @@
 
       Services.obs.addObserver(this, "contextual-identity-updated");
 
-      Services.els.addSystemEventListener(document, "keydown", this, false);
-      Services.els.addSystemEventListener(document, "keypress", this, false);
+      document.addEventListener("keydown", this, { mozSystemGroup: true });
+      document.addEventListener("keypress", this, { mozSystemGroup: true });
       document.addEventListener("visibilitychange", this);
       window.addEventListener("framefocusrequested", this);
       window.addEventListener("activate", this);
@@ -5948,14 +5948,11 @@
         }
       }
 
-      Services.els.removeSystemEventListener(document, "keydown", this, false);
+      document.removeEventListener("keydown", this, { mozSystemGroup: true });
       if (AppConstants.platform == "macosx") {
-        Services.els.removeSystemEventListener(
-          document,
-          "keypress",
-          this,
-          false
-        );
+        document.removeEventListener("keypress", this, {
+          mozSystemGroup: true,
+        });
       }
       document.removeEventListener("visibilitychange", this);
       window.removeEventListener("framefocusrequested", this);
