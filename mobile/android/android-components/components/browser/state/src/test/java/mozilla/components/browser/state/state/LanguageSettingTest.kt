@@ -58,7 +58,7 @@ class LanguageSettingTest {
 
         isAlways = false
         conversion = ALWAYS.toLanguageSetting(value = isAlways)
-        assertEquals(conversion, NEVER)
+        assertEquals(conversion, OFFER)
     }
 
     @Test
@@ -69,7 +69,7 @@ class LanguageSettingTest {
 
         isNever = false
         conversion = NEVER.toLanguageSetting(value = isNever)
-        assertEquals(conversion, ALWAYS)
+        assertEquals(conversion, OFFER)
     }
 
     @Test

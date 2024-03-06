@@ -102,7 +102,7 @@ enum class LanguageSetting(private val languageSetting: String) {
             ALWAYS -> {
                 return when (value) {
                     true -> ALWAYS
-                    false -> NEVER
+                    false -> OFFER
                 }
             }
 
@@ -117,7 +117,7 @@ enum class LanguageSetting(private val languageSetting: String) {
             NEVER -> {
                 return when (value) {
                     true -> NEVER
-                    false -> ALWAYS
+                    false -> OFFER
                 }
             }
         }

@@ -414,6 +414,7 @@ class TranslationsMiddleware(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         tabId: String,
     ) {
+        logger.info("Requesting page settings.")
         // Always offer setting
         val alwaysOfferPopup: Boolean = engine.getTranslationsOfferPopup()
 
@@ -434,6 +435,7 @@ class TranslationsMiddleware(
             neverTranslateLanguage != null &&
             neverTranslateSite != null
         ) {
+            logger.info("Successfully found all page settings.")
             context.store.dispatch(
                 TranslationsAction.SetPageSettingsAction(
                     tabId = tabId,
@@ -446,6 +448,7 @@ class TranslationsMiddleware(
                 ),
             )
         } else {
+            logger.error("Could not find all page settings.")
             // Any null values indicate something went wrong, alert an error occurred
             context.store.dispatch(
                 TranslationsAction.TranslateExceptionAction(
@@ -470,10 +473,12 @@ class TranslationsMiddleware(
                 languageCode = pageLanguage,
 
                 onSuccess = { setting ->
+                    logger.info("Success requesting language settings.")
                     continuation.resume(setting)
                 },
 
                 onError = {
+                    logger.error("Could not retrieve language settings: $it")
                     continuation.resume(null)
                 },
             )
@@ -546,9 +551,11 @@ class TranslationsMiddleware(
         return suspendCoroutine { continuation ->
             engineSession.getNeverTranslateSiteSetting(
                 onResult = { setting ->
+                    logger.info("Success requesting never translate site settings.")
                     continuation.resume(setting)
                 },
                 onException = {
+                    logger.error("Could not retrieve never translate site settings: $it")
                     continuation.resume(null)
                 },
             )
@@ -682,6 +689,7 @@ class TranslationsMiddleware(
                 ),
             )
         } else {
+            logger.info("Updating language setting.")
             updateLanguageSetting(context, tabId, pageLanguage, convertedSetting)
         }
     }
