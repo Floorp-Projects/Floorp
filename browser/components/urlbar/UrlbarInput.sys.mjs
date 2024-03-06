@@ -923,32 +923,9 @@ export class UrlbarInput {
       return;
     }
 
-    let urlOverride;
     if (element?.dataset.command) {
-      this.controller.engagementEvent.record(event, {
-        result,
-        element,
-        searchString: this._lastSearchString,
-        selType:
-          element.dataset.command == "help" &&
-          result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
-            ? "tiphelp"
-            : element.dataset.command,
-      });
-
-      if (element.dataset.command == "manage") {
-        this.window.openPreferences("search-locationBar");
-        return;
-      }
-
-      if (element.dataset.command == "help") {
-        urlOverride = result.payload.helpUrl;
-      }
-
-      urlOverride ||= element.dataset.url;
-      if (!urlOverride) {
-        return;
-      }
+      this.#pickMenuResult(result, event, element, browser);
+      return;
     }
 
     // When a one-off is selected, we restyle heuristic results to look like
@@ -983,9 +960,13 @@ export class UrlbarInput {
       return;
     }
 
-    urlOverride ||= element?.dataset.url;
+    let resultUrl = element?.dataset.url;
     let originalUntrimmedValue = this.untrimmedValue;
-    let isCanonized = this.setValueFromResult({ result, event, urlOverride });
+    let isCanonized = this.setValueFromResult({
+      result,
+      event,
+      urlOverride: resultUrl,
+    });
     let where = this._whereToOpen(event);
     let openParams = {
       allowInheritPrincipal: false,
@@ -999,7 +980,7 @@ export class UrlbarInput {
     };
 
     if (
-      urlOverride &&
+      resultUrl &&
       result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP &&
       where == "current"
     ) {
@@ -1025,8 +1006,8 @@ export class UrlbarInput {
       return;
     }
 
-    let { url, postData } = urlOverride
-      ? { url: urlOverride, postData: null }
+    let { url, postData } = resultUrl
+      ? { url: resultUrl, postData: null }
       : lazy.UrlbarUtils.getUrlFromResult(result);
     openParams.postData = postData;
 
@@ -1203,10 +1184,7 @@ export class UrlbarInput {
         break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
-        let scalarName =
-          element.dataset.command == "help"
-            ? `${result.payload.type}-help`
-            : `${result.payload.type}-picked`;
+        let scalarName = `${result.payload.type}-picked`;
         Services.telemetry.keyedScalarAdd("urlbar.tips", scalarName, 1);
         if (url) {
           break;
@@ -2748,6 +2726,73 @@ export class UrlbarInput {
       selectionStart,
       selectionEnd,
     };
+  }
+
+  /**
+   * Called when a menu item from results menu is picked.
+   *
+   * @param {UrlbarResult} result The result that was picked.
+   * @param {Event} event The event that picked the result.
+   * @param {DOMElement} element the picked view element, if available.
+   * @param {object} browser The browser to use for the load.
+   */
+  #pickMenuResult(result, event, element, browser) {
+    this.controller.engagementEvent.record(event, {
+      result,
+      element,
+      searchString: this._lastSearchString,
+      selType:
+        element.dataset.command == "help" &&
+        result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
+          ? "tiphelp"
+          : element.dataset.command,
+    });
+
+    if (element.dataset.command == "manage") {
+      this.window.openPreferences("search-locationBar");
+      return;
+    }
+
+    let url =
+      element.dataset.command == "help"
+        ? result.payload.helpUrl
+        : element.dataset.url;
+    if (!url) {
+      return;
+    }
+
+    let where = this._whereToOpen(event);
+    if (
+      url &&
+      result.type != lazy.UrlbarUtils.RESULT_TYPE.TIP &&
+      where == "current"
+    ) {
+      // Open non-tip help links in a new tab unless the user held a modifier.
+      // TODO (bug 1696232): Do this for tip help links, too.
+      where = "tab";
+    }
+
+    this.view.close({ elementPicked: true });
+
+    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
+      let scalarName = `${result.payload.type}-help`;
+      Services.telemetry.keyedScalarAdd("urlbar.tips", scalarName, 1);
+    }
+
+    this._loadURL(
+      url,
+      event,
+      where,
+      {
+        allowInheritPrincipal: false,
+        private: this.isPrivate,
+      },
+      {
+        source: result.source,
+        type: result.type,
+      },
+      browser
+    );
   }
 
   /**
