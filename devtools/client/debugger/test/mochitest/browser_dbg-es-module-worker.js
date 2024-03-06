@@ -40,8 +40,7 @@ add_task(async function () {
   is(threads.length, 1, "Got the page and the worker threads");
   is(threads[0].name, WORKER_URL, "Thread name is correct");
 
-  await waitForSource(dbg, "worker.js");
-  const source = findSource(dbg, "worker.js");
+  const source = await waitForSource(dbg, "worker.js");
   await selectSource(dbg, source);
   await addBreakpoint(dbg, source, 3);
 

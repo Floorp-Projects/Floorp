@@ -68,25 +68,27 @@ const DEBUGGER_L10N = new LocalizationHelper(
 /**
  * Waits for `predicate()` to be true. `state` is the redux app state.
  *
- * @memberof mochitest/waits
  * @param {Object} dbg
  * @param {Function} predicate
+ * @param {String} msg
  * @return {Promise}
- * @static
  */
-function waitForState(dbg, predicate, msg) {
+function waitForState(dbg, predicate, msg = "") {
   return new Promise(resolve => {
-    info(`Waiting for state change: ${msg || ""}`);
-    if (predicate(dbg.store.getState())) {
-      info(`Finished waiting for state change: ${msg || ""}`);
-      resolve();
+    info(`Waiting for state change: ${msg}`);
+    let result = predicate(dbg.store.getState());
+    if (result) {
+      info(
+        `--> The state was immediately correct (should rather do an immediate assertion?)`
+      );
+      resolve(result);
       return;
     }
 
     const unsubscribe = dbg.store.subscribe(() => {
-      const result = predicate(dbg.store.getState());
+      result = predicate(dbg.store.getState());
       if (result) {
-        info(`Finished waiting for state change: ${msg || ""}`);
+        info(`Finished waiting for state change: ${msg}`);
         unsubscribe();
         resolve(result);
       }
