@@ -1450,13 +1450,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
     return this.getIntPref("fission.webContentIsolationStrategy");
   }
 
-  addSystemEventListener(target, type, listener, useCapture) {
-    Services.els.addSystemEventListener(target, type, listener, useCapture);
-  }
-  removeSystemEventListener(target, type, listener, useCapture) {
-    Services.els.removeSystemEventListener(target, type, listener, useCapture);
-  }
-
   // helper method to check if the event is consumed by either default group's
   // event listener or system group's event listener.
   defaultPreventedInAnyGroup(event) {
