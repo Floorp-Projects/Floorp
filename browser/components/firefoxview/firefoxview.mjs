@@ -20,13 +20,7 @@ function onHashChange() {
 
 function changeView(view) {
   viewsDeck.selectedViewName = view;
-  pageNav.currentPage = view;
-  if (pageNav.pageNavButtons.includes(document.activeElement)) {
-    let currentPageButton = pageNav.pageNavButtons.find(
-      pageButton => pageButton.view === view
-    );
-    (currentPageButton || pageNav.pageNavButtons[0]).focus();
-  }
+  pageNav.currentView = view;
 }
 
 function onViewsDeckViewChange() {
