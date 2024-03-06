@@ -1,4 +1,5 @@
 # Canvas Filter Reftests
+include colors/_generated_reftest.list
 include filters/reftest.list
 include color_quads.list
 
