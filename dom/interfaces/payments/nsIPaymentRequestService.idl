@@ -95,8 +95,6 @@ interface nsIPaymentRequestService : nsISupports
 };
 
 %{C++
-#define NS_PAYMENT_REQUEST_SERVICE_CID \
-  { 0xcccd665f, 0xedf3, 0x41fc, { 0xab, 0x9b, 0xfc, 0x55, 0xb3, 0x73, 0x40, 0xaa } }
 #define NS_PAYMENT_REQUEST_SERVICE_CONTRACT_ID \
   "@mozilla.org/dom/payments/payment-request-service;1"
 %}

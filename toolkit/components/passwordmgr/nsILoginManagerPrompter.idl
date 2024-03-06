@@ -96,8 +96,3 @@ interface nsILoginManagerPrompter : nsISupports {
           in Array<nsILoginInfo> logins,
           in nsILoginInfo aNewLogin);
 };
-%{C++
-
-#define NS_LOGINMANAGERPROMPTER_CONTRACTID "@mozilla.org/login-manager/prompter/;1"
-
-%}

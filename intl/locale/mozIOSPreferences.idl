@@ -5,14 +5,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-// Define Contractid and CID
-#define MOZ_OSPREFERENCES_CID \
-  { 0x65944815, 0xe9ae, 0x48bd, { 0xa2, 0xbf, 0xf1, 0x10, 0x87, 0x20, 0x95, 0x0c } }
-
-#define MOZ_OSPREFERENCES_CONTRACTID "@mozilla.org/intl/ospreferences;1"
-%}
-
 [scriptable, uuid(65944815-e9ae-48bd-a2bf-f1108720950c)]
 interface mozIOSPreferences : nsISupports
 {

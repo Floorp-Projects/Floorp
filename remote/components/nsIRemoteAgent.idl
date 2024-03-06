@@ -30,7 +30,4 @@ interface nsIRemoteAgent : nsISupports
 
 %{C++
 #define NS_REMOTEAGENT_CONTRACTID "@mozilla.org/remote/agent;1"
-#define NS_REMOTEAGENT_CID \
-  { 0x8f685a9d, 0x8181, 0x46d6, \
-    { 0xa7, 0x1d, x86, x92, x89, x09, x9c, x6d } }
 %}

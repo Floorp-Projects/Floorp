@@ -418,10 +418,3 @@ interface nsIBitsCallback : nsISupports
                      in nsBitsErrorStage errorStage,
                      in AUTF8String errorMessage);
 };
-
-%{C++
-#define NS_BITS_CID \
-  { 0xa334de05, 0xb9de, 0x46a1, \
-    { 0x98, 0xa9, 0x3f, 0x5c, 0xed, 0x82, 0x1e, 0x68 } }
-#define NS_BITS_CONTRACTID "@mozilla.org/bits;1"
-%}

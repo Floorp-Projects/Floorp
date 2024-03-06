@@ -5,10 +5,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#define NS_NSSVERSION_CONTRACTID "@mozilla.org/security/nssversion;1"
-%}
-
 [scriptable, uuid(a8a53a2b-75cc-4c68-a9bb-9791dbddaa00)]
 interface nsINSSVersion : nsISupports {
     /* Minimal required versions as used at build time */

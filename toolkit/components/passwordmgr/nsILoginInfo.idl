@@ -152,9 +152,3 @@ interface nsILoginInfo : nsISupports {
    */
   nsILoginInfo clone();
 };
-
-%{C++
-
-#define NS_LOGININFO_CONTRACTID "@mozilla.org/login-manager/loginInfo;1"
-
-%}

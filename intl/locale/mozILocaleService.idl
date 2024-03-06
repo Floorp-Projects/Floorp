@@ -5,14 +5,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-// Define Contractid and CID
-#define MOZ_LOCALESERVICE_CID \
-  { 0x92735ff4, 0x6384, 0x4ad6, { 0x85, 0x08, 0x75, 0x70, 0x10, 0xe1, 0x49, 0xee } }
-
-#define MOZ_LOCALESERVICE_CONTRACTID "@mozilla.org/intl/localeservice;1"
-%}
-
 [scriptable, uuid(C27F8983-B48B-4D1A-92D7-FEB8106F212D)]
 interface mozILocaleService : nsISupports
 {

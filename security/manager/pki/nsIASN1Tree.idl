@@ -16,9 +16,3 @@ interface nsIASN1Tree : nsITreeView {
   [must_use]
   AString getDisplayData(in unsigned long index);
 };
-
-%{C++
-
-#define NS_ASN1TREE_CONTRACTID "@mozilla.org/security/nsASN1Tree;1"
-
-%}

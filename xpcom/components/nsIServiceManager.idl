@@ -59,9 +59,6 @@ interface nsIServiceManager : nsISupports
 
 
 %{C++
-// Observing xpcom autoregistration.  Topics will be 'start' and 'stop'.
-#define NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID "xpcom-autoregistration"
-
 #ifdef MOZILLA_INTERNAL_API
 #include "nsXPCOM.h"
 #include "nsComponentManagerUtils.h"

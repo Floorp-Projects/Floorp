@@ -7,12 +7,6 @@
 
 interface nsIInputStream;
 
-%{C++
-// {0A698C44-3BFF-11d4-9649-00C0CA135B4E}
-#define NS_ISCRIPTABLEUNICODECONVERTER_CID { 0x0A698C44, 0x3BFF, 0x11d4, { 0x96, 0x49, 0x00, 0xC0, 0xCA, 0x13, 0x5B, 0x4E } }
-#define NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID "@mozilla.org/intl/scriptableunicodeconverter"
-%}
-
 /**
  * In new code, please use the WebIDL TextDecoder and TextEncoder
  * instead. They represent bytes as Uint8Array (or as view to such

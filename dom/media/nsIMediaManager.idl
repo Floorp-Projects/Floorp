@@ -8,11 +8,6 @@ interface nsIArray;
 interface nsIDOMWindow;
 interface nsIMediaDevice;
 
-%{C++
-#define NS_MEDIAMANAGERSERVICE_CID {0xabc622ea, 0x9655, 0x4123, {0x80, 0xd9, 0x22, 0x62, 0x1b, 0xdd, 0x54, 0x65}}
-#define MEDIAMANAGERSERVICE_CONTRACTID "@mozilla.org/mediaManagerService;1"
-%}
-
 [scriptable, builtinclass, uuid(24b23e01-33fd-401f-ba25-6e52658750b0)]
 interface nsIMediaManagerService : nsISupports
 {

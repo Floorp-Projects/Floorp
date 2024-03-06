@@ -51,10 +51,6 @@ interface nsIDeviceSensors : nsISupports
 
 %{C++
 
-#define NS_DEVICE_SENSORS_CID \
-{ 0xecba5203, 0x77da, 0x465a, \
-{ 0x86, 0x5e, 0x78, 0xb7, 0xaf, 0x10, 0xd8, 0xf7 } }
-
 #define NS_DEVICE_SENSORS_CONTRACTID "@mozilla.org/devicesensors;1"
 
 %}

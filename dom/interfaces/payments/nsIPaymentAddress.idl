@@ -34,10 +34,3 @@ interface nsIPaymentAddress : nsISupports
             in AString aRecipient,
             in AString aPhone);
 };
-
-%{C++
-#define NS_PAYMENT_ADDRESS_CID \
-  { 0x49a02241, 0x7e48, 0x477a, { 0x93, 0x45, 0x9f, 0x24, 0x69, 0x25, 0xdc, 0xb3 } }
-#define NS_PAYMENT_ADDRESS_CONTRACT_ID \
-  "@mozilla.org/dom/payments/payment-address;1"
-%}

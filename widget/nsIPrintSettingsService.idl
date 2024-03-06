@@ -143,9 +143,3 @@ interface nsIPrintSettingsService : nsISupports
                                   in nsIPrintSettings aPrintSettings);
 
 };
-
-%{C++
-// {841387C8-72E6-484b-9296-BF6EEA80D58A}
-#define NS_PRINTSETTINGSSERVICE_IID \
- {0x841387c8, 0x72e6, 0x484b, { 0x92, 0x96, 0xbf, 0x6e, 0xea, 0x80, 0xd5, 0x8a}}
-%}

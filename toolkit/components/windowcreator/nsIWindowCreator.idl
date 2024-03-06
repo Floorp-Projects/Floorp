@@ -44,9 +44,3 @@ interface nsIWindowCreator : nsISupports {
                                          in nsIOpenWindowInfo aOpenWindowInfo,
                                          out boolean cancel);
 };
-
-%{C++
-// {30465632-A777-44cc-90F9-8145475EF999}
-#define NS_WINDOWCREATOR_IID \
- {0x30465632, 0xa777, 0x44cc, {0x90, 0xf9, 0x81, 0x45, 0x47, 0x5e, 0xf9, 0x99}}
-%}
