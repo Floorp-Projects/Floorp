@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tests for mouse events after touchend</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+<script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style>
+#parent, #child {
+  width: 300px;
+  height: 64px;
+  padding: 16px;
+}
+#parent {
+  background-color: black;
+}
+#child {
+  background-color: gray;
+}
+</style>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("Required for waiting to prevent double tap at second tap");
+SimpleTest.waitForFocus(async () => {
+  function stringifyEvent(event) {
+    return `{ type: ${event.type}, target: ${
+      event.target.id || event.target.nodeName
+    }${
+      event.detail !== undefined ? `, detail: ${event.detail}` : ""
+    }${
+      event.button !== undefined ? `, button: ${event.button}` : ""
+    }${
+      event.buttons !== undefined ? `, buttons: ${event.buttons}` : ""
+    } }`;
+  }
+  function stringifyEvents(arrayOfEvents) {
+    if (!arrayOfEvents.length) {
+      return "[]";
+    }
+    let ret = "";
+    for (const event of arrayOfEvents) {
+      if (ret === "") {
+        ret = "[ ";
+      } else {
+        ret += ", ";
+      }
+      ret += stringifyEvent(event);
+    }
+    return ret + " ]";
+  }
+
+  let events = [];
+  for (const type of ["mousemove",
+                      "mousedown",
+                      "mouseup",
+                      "click",
+                      "dblclick",
+                      "contextmenu",
+                      "touchend"]) {
+    if (type == "touchend") {
+      addEventListener(type, event => {
+        info(`Received: ${stringifyEvent(event)}`);
+        events.push({type, target: event.target});
+      }, {capture: true});
+    } else {
+      addEventListener(type, event => {
+        info(`Received: ${stringifyEvent(event)}`);
+        events.push({
+          type: event.type,
+          target: event.target,
+          detail: event.detail,
+          button: event.button,
+          buttons: event.buttons,
+        });
+      }, {capture: true});
+    }
+  }
+
+  function shiftEventsBefore(arrayOfEvents, aType) {
+    const index = arrayOfEvents.findIndex(event => event.type == aType);
+    if (index <= 0) {
+      return [];
+    }
+    let ret = [];
+    for (let i = 0; i < index; i++) {
+      ret.push(arrayOfEvents.shift());
+    }
+    return ret;
+  }
+
+  const parent = document.getElementById("parent");
+  const child = document.getElementById("child");
+
+  function promiseEvent(aType) {
+    return new Promise(resolve =>
+      addEventListener(aType, resolve, {once: true})
+    );
+  }
+
+  async function promiseFlushingAPZGestureState() {
+    await promiseApzFlushedRepaints();
+    // Wait for a while to avoid that the next tap will be treated as 2nd tap of
+    // a double tap.
+    return new Promise(
+      resolve => setTimeout(
+        resolve,
+        // NOTE: x1.0 is not enough to avoid intermittent failures.
+        SpecialPowers.getIntPref("apz.max_tap_time") * 1.2
+      )
+    );
+  }
+
+  await waitUntilApzStable();
+  for (const prefValue of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["test.events.async.enabled", prefValue],
+        ["ui.click_hold_context_menus.delay", 15000], // disable long tap
+      ]
+    });
+    const desc = `(test.events.async.enabled=${prefValue})`;
+
+    await (async function test_single_tap() {
+      await promiseFlushingAPZGestureState();
+      info("test_single_tap: testing...");
+      events = [];
+      const waitForClick = promiseEvent("click");
+      synthesizeTouch(child, 5, 5);
+      await waitForClick;
+      is(
+        stringifyEvents(events),
+        stringifyEvents([
+          { type: "touchend", target: child },
+          { type: "mousemove", target: child, detail: 0, button: 0, buttons: 0 },
+          { type: "mousedown", target: child, detail: 1, button: 0, buttons: 1 },
+          { type: "mouseup", target: child, detail: 1, button: 0, buttons: 0 },
+          { type: "click", target: child, detail: 1, button: 0, buttons: 0 },
+        ]),
+        `Single tap should cause a click ${desc}`
+      );
+    })();
+
+    await (async function test_single_tap_with_consuming_touchstart() {
+      await promiseFlushingAPZGestureState();
+      info("test_single_tap_with_consuming_touchstart: testing...");
+      events = [];
+      const waitForTouchEnd = promiseEvent("touchend");
+      child.addEventListener("touchstart", event => {
+        event.preventDefault();
+      }, {once: true});
+      synthesizeTouch(child, 5, 5);
+      await waitForTouchEnd;
+      const result = stringifyEvents(events);
+      const expected = stringifyEvents([{ type: "touchend", target: child }]);
+      // If testing this with APZ, the result is really unstable. Let's allow to
+      // fail for now.
+      (prefValue && result != expected ? todo_is : is)(
+        result,
+        expected,
+        `Single tap should not cause mouse events if touchstart is consumed ${desc}`
+      );
+    })();
+
+
+    await (async function test_single_tap_with_consuming_touchend() {
+      await promiseFlushingAPZGestureState();
+      info("test_single_tap_with_consuming_touchend: testing...");
+      events = [];
+      const waitForTouchEnd = promiseEvent("touchend");
+      child.addEventListener("touchend", event => {
+        event.preventDefault();
+      }, {once: true});
+      synthesizeTouch(child, 5, 5);
+      await waitForTouchEnd;
+      is(
+        stringifyEvents(shiftEventsBefore(events)),
+        stringifyEvents([]),
+        `test_single_tap_with_consuming_touchstart() shouldn't cause mouse events after touchend`
+      )
+      is(
+        stringifyEvents(events),
+        stringifyEvents([
+          { type: "touchend", target: child },
+        ]),
+        `Single tap should not cause mouse events if touchend is consumed ${desc}`
+      );
+    })();
+
+    await (async function test_multi_touch() {
+      await promiseFlushingAPZGestureState();
+      events = [];
+      info("test_multi_touch: testing...");
+      const waitForTouchEnd = new Promise(resolve => {
+        let count = 0;
+        function onTouchEnd(event) {
+          if (++count == 2) {
+            removeEventListener("touchend", onTouchEnd, {capture: true});
+            requestAnimationFrame(() => requestAnimationFrame(resolve));
+          }
+        }
+        addEventListener("touchend", onTouchEnd, {capture: true});
+      });
+      synthesizeTouch(child, [5, 25], 5);
+      await waitForTouchEnd;
+      is(
+        stringifyEvents(shiftEventsBefore(events)),
+        stringifyEvents([]),
+        `test_single_tap_with_consuming_touchend() shouldn't cause mouse events after touchend`
+      )
+      is(
+        stringifyEvents(events),
+        stringifyEvents([
+          { type: "touchend", target: child },
+          { type: "touchend", target: child },
+        ]),
+        `Multiple touch should not cause mouse events ${desc}`
+      );
+    })();
+  }
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body><div id="parent"><div id="child"></div></div></body>
+</html>
