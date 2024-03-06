@@ -581,7 +581,7 @@ var ctrlTab = {
       return;
     }
 
-    Services.els.addSystemEventListener(document, "keyup", this, false);
+    document.addEventListener("keyup", this, { mozSystemGroup: true });
 
     let tabs = gBrowser.visibleTabs;
     if (tabs.length > 2) {
@@ -706,12 +706,7 @@ var ctrlTab = {
         event.stopPropagation();
 
         if (event.keyCode === event.DOM_VK_CONTROL) {
-          Services.els.removeSystemEventListener(
-            document,
-            "keyup",
-            this,
-            false
-          );
+          document.removeEventListener("keyup", this, { mozSystemGroup: true });
 
           if (this.isOpen) {
             this.pick();
@@ -787,9 +782,9 @@ var ctrlTab = {
     tabContainer[toggleEventListener]("TabShow", this);
 
     if (enable) {
-      Services.els.addSystemEventListener(document, "keydown", this, false);
+      document.addEventListener("keydown", this, { mozSystemGroup: true });
     } else {
-      Services.els.removeSystemEventListener(document, "keydown", this, false);
+      document.removeEventListener("keydown", this, { mozSystemGroup: true });
     }
     document[toggleEventListener]("keypress", this);
     gBrowser.tabbox.handleCtrlTab = !enable;

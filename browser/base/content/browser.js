@@ -1694,12 +1694,10 @@ var gBrowserInit = {
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
-      Services.els.addSystemEventListener(
-        gBrowser.tabpanels,
-        "click",
-        contentAreaClick,
-        true
-      );
+      gBrowser.tabpanels.addEventListener("click", contentAreaClick, {
+        capture: true,
+        mozSystemGroup: true,
+      });
     }
 
     // hook up UI through progress listener

@@ -411,12 +411,9 @@ TabListView.prototype = {
 
   // Set up the custom context menu
   _setupContextMenu() {
-    Services.els.addSystemEventListener(
-      this._window,
-      "contextmenu",
-      this,
-      false
-    );
+    this._window.addEventListener("contextmenu", this, {
+      mozSystemGroup: true,
+    });
     for (let getMenu of [getContextMenu, getTabsFilterContextMenu]) {
       let menu = getMenu(this._window);
       menu.addEventListener("popupshowing", this, true);
@@ -426,12 +423,9 @@ TabListView.prototype = {
 
   _teardownContextMenu() {
     // Tear down context menu
-    Services.els.removeSystemEventListener(
-      this._window,
-      "contextmenu",
-      this,
-      false
-    );
+    this._window.removeEventListener("contextmenu", this, {
+      mozSystemGroup: true,
+    });
     for (let getMenu of [getContextMenu, getTabsFilterContextMenu]) {
       let menu = getMenu(this._window);
       menu.removeEventListener("popupshowing", this, true);
