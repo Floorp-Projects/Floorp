@@ -2393,15 +2393,16 @@ nsMargin nsTableFrame::GetUsedMargin() const {
   return nsMargin(0, 0, 0, 0);
 }
 
-// TODO(TYLin): Should this property only be set on the first-in-flow of
-// nsTableFrame?
+// This property is only set on the first-in-flow of nsTableFrame.
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCDataProperty, TableBCData)
 
 TableBCData* nsTableFrame::GetTableBCData() const {
-  return GetProperty(TableBCDataProperty());
+  return FirstInFlow()->GetProperty(TableBCDataProperty());
 }
 
 TableBCData* nsTableFrame::GetOrCreateTableBCData() {
+  MOZ_ASSERT(!GetPrevInFlow(),
+             "TableBCProperty should only be set on the first-in-flow!");
   TableBCData* value = GetProperty(TableBCDataProperty());
   if (!value) {
     value = new TableBCData();
