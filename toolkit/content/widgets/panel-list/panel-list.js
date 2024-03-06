@@ -308,7 +308,7 @@
     }
 
     addHideListeners() {
-      if (this.hasAttribute("stay-open") && !this.lastAnchorNode.hasSubmenu) {
+      if (this.hasAttribute("stay-open") && !this.lastAnchorNode?.hasSubmenu) {
         // This is intended for inspection in Storybook.
         return;
       }
@@ -631,31 +631,12 @@
       this.#defaultSlot = document.createElement("slot");
       this.#defaultSlot.style.display = "none";
 
-      if (this.hasSubmenu) {
-        this.icon = document.createElement("div");
-        this.icon.setAttribute("class", "submenu-icon");
-        this.label.setAttribute("class", "submenu-label");
-
-        this.button.setAttribute("class", "submenu-container");
-        this.button.appendChild(this.icon);
-
-        this.submenuSlot = document.createElement("slot");
-        this.submenuSlot.name = "submenu";
-
-        this.shadowRoot.append(
-          style,
-          this.button,
-          this.#defaultSlot,
-          this.submenuSlot
-        );
-      } else {
-        this.shadowRoot.append(
-          style,
-          this.button,
-          supportLinkSlot,
-          this.#defaultSlot
-        );
-      }
+      this.shadowRoot.append(
+        style,
+        this.button,
+        supportLinkSlot,
+        this.#defaultSlot
+      );
     }
 
     connectedCallback() {
@@ -663,6 +644,10 @@
         document.l10n.connectRoot(this.shadowRoot);
         this._l10nRootConnected = true;
       }
+
+      this.panel =
+        this.getRootNode()?.host?.closest("panel-list") ||
+        this.closest("panel-list");
 
       if (!this.#initialized) {
         this.#initialized = true;
@@ -683,18 +668,28 @@
         });
 
         if (this.hasSubmenu) {
+          this.panel.setAttribute("has-submenu", "");
+          this.icon = document.createElement("div");
+          this.icon.setAttribute("class", "submenu-icon");
+          this.label.setAttribute("class", "submenu-label");
+
+          this.button.setAttribute("class", "submenu-container");
+          this.button.appendChild(this.icon);
+
+          this.submenuSlot = document.createElement("slot");
+          this.submenuSlot.name = "submenu";
+
+          this.shadowRoot.append(this.submenuSlot);
+
           this.setSubmenuContents();
         }
       }
-
-      this.panel =
-        this.getRootNode()?.host?.closest("panel-list") ||
-        this.closest("panel-list");
 
       if (this.panel) {
         this.panel.addEventListener("hidden", this);
         this.panel.addEventListener("shown", this);
       }
+
       if (this.hasSubmenu) {
         this.addEventListener("mouseenter", this);
         this.addEventListener("mouseleave", this);
@@ -762,7 +757,9 @@
 
     setSubmenuContents() {
       this.submenuPanel = this.submenuSlot.assignedNodes()[0];
-      this.shadowRoot.append(this.submenuPanel);
+      if (this.submenuPanel) {
+        this.shadowRoot.append(this.submenuPanel);
+      }
     }
 
     get disabled() {

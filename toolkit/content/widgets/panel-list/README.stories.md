@@ -6,7 +6,7 @@ children and optional `hr` elements as separators. The `panel-list` will anchor
 itself to the target of the initiating event when opened with
 `panelList.toggle(event)`.
 
-Note: Nested menus are not currently supported. XUL is currently required to
+Note: XUL is currently required to
 support accesskey underlining (although using `moz-label` could change that).
 Shortcuts are not displayed automatically in the `panel-item`.
 
@@ -229,3 +229,23 @@ grow larger than its containing window if needed.
   </html:panel-list>
 </panel>
 ```
+
+### Submenus
+
+`panel-list` supports nested submenus. Submenus can be created by nesting a second `panel-list` in a `panel-item`'s `submenu` slot and specifying a `submenu` attribute on that `panel-item` that points to the nested list's ID. For example:
+
+```html
+<panel-list>
+  <panel-item>No submenu</panel-item>
+  <panel-item>No submenu</panel-item>
+  <panel-item submenu="example-submenu">
+    Has a submenu
+    <panel-list slot="submenu" id="example-submenu">
+      <panel-item>I'm a submenu item!</panel-item>
+      <panel-item>I'm also a submenu item!</panel-item>
+    </panel-list>
+  </panel-item>
+</panel-list>
+```
+
+As of February 2024 submenus are only in use in Firefox View and support for nesting beyond one submenu may be limited.
