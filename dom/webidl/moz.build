@@ -527,6 +527,7 @@ WEBIDL_FILES = [
     "DynamicsCompressorNode.webidl",
     "Element.webidl",
     "ElementInternals.webidl",
+    "EncodedAudioChunk.webidl",
     "EncodedVideoChunk.webidl",
     "Event.webidl",
     "EventHandler.webidl",
