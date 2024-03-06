@@ -31,7 +31,7 @@ float GetLowValue<float>() {
 
 template <>
 int16_t GetLowValue<short>() {
-  return -INT16_MAX;
+  return INT16_MIN;
 }
 
 template <>
@@ -62,7 +62,7 @@ const T* const* GetPlanarChannelArray(size_t aChannels, size_t aSize) {
   for (size_t c = 0; c < aChannels; c++) {
     channels[c] = new T[aSize];
     for (size_t i = 0; i < aSize; i++) {
-      channels[c][i] = FloatToAudioSample<T>(1. / (c + 1));
+      channels[c][i] = ConvertAudioSample<T>(1.f / static_cast<float>(c + 1));
     }
   }
   return channels;
@@ -104,7 +104,7 @@ const T* GetInterleavedChannelArray(size_t aChannels, size_t aSize) {
   T* samples = new T[sampleCount];
   for (size_t i = 0; i < sampleCount; i++) {
     uint32_t channel = (i % aChannels) + 1;
-    samples[i] = FloatToAudioSample<T>(1. / channel);
+    samples[i] = ConvertAudioSample<T>(1.f / static_cast<float>(channel));
   }
   return samples;
 }
@@ -128,8 +128,9 @@ void TestInterleaveAndConvert() {
 
     uint32_t channelIndex = 0;
     for (size_t i = 0; i < arraySize * channels; i++) {
-      ASSERT_TRUE(FuzzyEqual(
-          dst[i], FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
+      ASSERT_TRUE(
+          FuzzyEqual(dst[i], ConvertAudioSample<DstT>(
+                                 1.f / static_cast<float>(channelIndex + 1))));
       channelIndex++;
       channelIndex %= channels;
     }
@@ -151,8 +152,9 @@ void TestDeinterleaveAndConvert() {
 
     for (size_t channel = 0; channel < channels; channel++) {
       for (size_t i = 0; i < arraySize; i++) {
-        ASSERT_TRUE(FuzzyEqual(dst[channel][i],
-                               FloatToAudioSample<DstT>(1. / (channel + 1))));
+        ASSERT_TRUE(FuzzyEqual(
+            dst[channel][i],
+            ConvertAudioSample<DstT>(1.f / static_cast<float>(channel + 1))));
       }
     }
 
