@@ -58,7 +58,6 @@ class WMFAudioMFTManager : public MFTManager {
   media::TimeUnit mLastOutputDuration = media::TimeUnit::Zero();
 
   bool mFirstFrame = true;
-  bool mIsADTS = false;
 
   uint64_t mTotalMediaFrames = 0;
   uint32_t mEncoderDelay = 0;

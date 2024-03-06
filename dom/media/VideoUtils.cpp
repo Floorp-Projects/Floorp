@@ -4,6 +4,7 @@
 
 #include "VideoUtils.h"
 
+#include <functional>
 #include <stdint.h>
 
 #include "CubebUtils.h"
@@ -18,6 +19,7 @@
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Telemetry.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentTypeParser.h"
 #include "nsIConsoleService.h"
@@ -27,6 +29,7 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "AudioStream.h"
 
 namespace mozilla {
 

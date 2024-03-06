@@ -67,7 +67,7 @@ class AudibilityMonitor {
     for (uint32_t i = 0; i < frameCount; i++) {
       bool atLeastOneAudible = false;
       for (uint32_t j = 0; j < aChannels; j++) {
-        if (std::fabs(ConvertAudioSample<float>(samples[readIndex++])) >
+        if (std::fabs(AudioSampleToFloat(samples[readIndex++])) >
             AUDIBILITY_THRESHOLD) {
           atLeastOneAudible = true;
         }
