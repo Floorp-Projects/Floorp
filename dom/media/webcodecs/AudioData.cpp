@@ -149,6 +149,8 @@ uint32_t BytesPerSamples(const mozilla::dom::AudioSampleFormat& aFormat) {
     case AudioSampleFormat::S32_planar:
     case AudioSampleFormat::F32_planar:
       return sizeof(float);
+    default:
+      MOZ_ASSERT_UNREACHABLE("wrong enum value");
   }
 }
 
@@ -205,6 +207,8 @@ const char* FormatToString(AudioSampleFormat aFormat) {
       return "s32-planar";
     case AudioSampleFormat::F32_planar:
       return "f32-planar";
+    default:
+      MOZ_ASSERT_UNREACHABLE("wrong enum value");
   }
 }
 
