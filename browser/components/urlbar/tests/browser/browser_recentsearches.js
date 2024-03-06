@@ -6,6 +6,13 @@ const CONFIG_DEFAULT = [
   {
     webExtension: { id: "basic@search.mozilla.org" },
     appliesTo: [{ included: { everywhere: true } }],
+    urls: {
+      trending: {
+        fullPath:
+          "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+        query: "",
+      },
+    },
     default: "yes",
   },
 ];
@@ -135,4 +142,53 @@ add_task(async () => {
   Assert.equal(result.providerName, "RecentSearches");
 
   await BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+// Test that triggering the help menu of trending suggestions does not
+// record that selection as a search.
+add_task(async () => {
+  await UrlbarTestUtils.formHistory.clear();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.topsites", false],
+      ["browser.urlbar.suggest.trending", true],
+      ["browser.urlbar.trending.featureGate", true],
+      ["browser.urlbar.trending.requireSearchMode", false],
+      ["app.support.baseURL", "https://example.com"],
+    ],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "data:text/html,"
+  );
+
+  info("Open the urlbar and pick the help menu of a trending result.");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+
+  await UrlbarTestUtils.openResultMenuAndClickItem(window, "help", {
+    resultIndex: 1,
+    openByMouse: true,
+  });
+
+  info("Open the urlbar and check that a recent search has not been added.");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+
+  let { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.notEqual(
+    result.providerName,
+    "RecentSearches",
+    "Click on help URL did not record a search"
+  );
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
 });
