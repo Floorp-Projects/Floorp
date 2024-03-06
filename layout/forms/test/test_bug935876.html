@@ -112,7 +112,7 @@ function runTests()
   var listbox = document.getElementById("listbox");
   listbox.addEventListener("keydown", onKeydown);
   listbox.addEventListener("keypress", onKeypress);
-  SpecialPowers.addSystemEventListener(listbox, "keydown", onkeydownInSystemEventGroup, false);
+  SpecialPowers.wrap(listbox).addEventListener("keydown", onkeydownInSystemEventGroup, { mozSystemGroup: true });
 
   listbox.focus();
 
@@ -185,14 +185,13 @@ function runTests()
 
   listbox.removeEventListener("keydown", onKeydown);
   listbox.removeEventListener("keypress", onKeypress);
-  SpecialPowers.removeSystemEventListener(listbox, "keydown", onkeydownInSystemEventGroup, false);
-
+  SpecialPowers.wrap(listbox).removeEventListener("keydown", onkeydownInSystemEventGroup, { mozSystemGroup: true });
 
 
   var multipleListbox = document.getElementById("multipleListbox");
   multipleListbox.addEventListener("keydown", onKeydown);
   multipleListbox.addEventListener("keypress", onKeypress);
-  SpecialPowers.addSystemEventListener(multipleListbox, "keydown", onkeydownInSystemEventGroup, false);
+  SpecialPowers.wrap(multipleListbox).addEventListener("keydown", onkeydownInSystemEventGroup, { mozSystemGroup: true });
 
   multipleListbox.focus();
 
@@ -265,14 +264,13 @@ function runTests()
 
   multipleListbox.removeEventListener("keydown", onKeydown);
   multipleListbox.removeEventListener("keypress", onKeypress);
-  SpecialPowers.removeSystemEventListener(multipleListbox, "keydown", onkeydownInSystemEventGroup, false);
-
+  SpecialPowers.wrap(multipleListbox).removeEventListener("keydown", onkeydownInSystemEventGroup, { mozSystemGroup: true });
 
 
   var combobox = document.getElementById("combobox");
   combobox.addEventListener("keydown", onKeydown);
   combobox.addEventListener("keypress", onKeypress);
-  SpecialPowers.addSystemEventListener(combobox, "keydown", onkeydownInSystemEventGroup, false);
+  SpecialPowers.wrap(combobox).addEventListener("keydown", onkeydownInSystemEventGroup, { mozSystemGroup: true });
 
   combobox.focus();
 
@@ -353,7 +351,7 @@ function runTests()
   {
     combobox.removeEventListener("keydown", onKeydown);
     combobox.removeEventListener("keypress", onKeypress);
-    SpecialPowers.removeSystemEventListener(combobox, "keydown", onkeydownInSystemEventGroup, false);
+    SpecialPowers.wrap(combobox).removeEventListener("keydown", onkeydownInSystemEventGroup, { mozSystemGroup: true });
     SimpleTest.finish();
   }
 
