@@ -203,6 +203,7 @@ windows11-64-2009-hw-ref-shippable/opt:
             msix: repackage-signing-msix-win64/opt
             default: build-signing-win64/opt
     test-sets:
+        - talos-ref-hw
         - windows-ref-hw-tests
 
 windows11-64-2009-hw-ref/opt:
@@ -212,6 +213,7 @@ windows11-64-2009-hw-ref/opt:
             msix: repackage-signing-msix-win64/opt
             default: build-signing-win64/opt
     test-sets:
+        - talos-ref-hw
         - windows-ref-hw-tests
 
 windows10-64-shippable-qr/opt:
