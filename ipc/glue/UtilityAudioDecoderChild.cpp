@@ -110,8 +110,13 @@ mozilla::ipc::IPCResult
 UtilityAudioDecoderChild::RecvCompleteCreatedVideoBridge() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
-  mHasCreatedVideoBridge = State::Created;
+  mHasCreatedVideoBridge = true;
   return IPC_OK();
+}
+
+bool UtilityAudioDecoderChild::HasCreatedVideoBridge() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mHasCreatedVideoBridge;
 }
 
 void UtilityAudioDecoderChild::OnVarChanged(const gfx::GfxVarUpdate& aVar) {
@@ -122,7 +127,7 @@ void UtilityAudioDecoderChild::OnVarChanged(const gfx::GfxVarUpdate& aVar) {
 void UtilityAudioDecoderChild::OnCompositorUnexpectedShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
-  mHasCreatedVideoBridge = State::None;
+  mHasCreatedVideoBridge = false;
   CreateVideoBridge();
 }
 
@@ -130,11 +135,9 @@ bool UtilityAudioDecoderChild::CreateVideoBridge() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM);
 
-  // Creating or already created, avoiding reinit a bridge.
-  if (mHasCreatedVideoBridge != State::None) {
+  if (HasCreatedVideoBridge()) {
     return true;
   }
-  mHasCreatedVideoBridge = State::Creating;
 
   // Build content device data first; this ensure that the GPU process is fully
   // ready.
