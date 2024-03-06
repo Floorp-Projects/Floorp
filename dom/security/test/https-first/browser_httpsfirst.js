@@ -31,6 +31,7 @@ add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first", false]],
   });
+  Services.fog.testResetFOG();
 
   await runPrefTest(
     "http://example.com",
@@ -41,6 +42,23 @@ add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first", true]],
   });
+
+  for (const key of [
+    "upgraded",
+    "upgradedSchemeless",
+    "downgraded",
+    "downgradedSchemeless",
+    "downgradedOnTimer",
+    "downgradedOnTimerSchemeless",
+    "downgradeTime",
+    "downgradeTimeSchemeless",
+  ]) {
+    is(
+      Glean.httpsfirst[key].testGetValue(),
+      null,
+      `No telemetry should have been recorded yet for ${key}`
+    );
+  }
 
   await runPrefTest(
     "http://example.com",
@@ -71,4 +89,21 @@ add_task(async function () {
     "Should downgrade after timeout.",
     "http://"
   );
+
+  info("Checking expected telemetry");
+  is(Glean.httpsfirst.upgraded.testGetValue(), 5);
+  is(Glean.httpsfirst.upgradedSchemeless.testGetValue(), null);
+  is(Glean.httpsfirst.downgraded.testGetValue(), 3);
+  is(Glean.httpsfirst.downgradedSchemeless.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedOnTimer.testGetValue().numerator, 1);
+  is(Glean.httpsfirst.downgradedOnTimerSchemeless.testGetValue(), null);
+  const downgradeSeconds =
+    Glean.httpsfirst.downgradeTime.testGetValue().sum / 1_000_000_000;
+  ok(
+    downgradeSeconds > 2 && downgradeSeconds < 30,
+    `Summed downgrade time should be above 2 and below 30 seconds (is ${downgradeSeconds.toFixed(
+      2
+    )}s)`
+  );
+  is(null, Glean.httpsfirst.downgradeTimeSchemeless.testGetValue());
 });

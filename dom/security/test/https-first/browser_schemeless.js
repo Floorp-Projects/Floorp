@@ -153,6 +153,7 @@ async function runTest(aInput, aDesc, aExpectedScheme) {
 
 add_task(async function () {
   requestLongerTimeout(10);
+  Services.fog.testResetFOG();
 
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -183,9 +184,36 @@ add_task(async function () {
     "http"
   );
 
+  for (const key of [
+    "upgraded",
+    "upgradedSchemeless",
+    "downgraded",
+    "downgradedSchemeless",
+    "downgradedOnTimer",
+    "downgradedOnTimerSchemeless",
+    "downgradeTime",
+    "downgradeTimeSchemeless",
+  ]) {
+    is(
+      Glean.httpsfirst[key].testGetValue(),
+      null,
+      `No telemetry should have been recorded yet for ${key}`
+    );
+  }
+
   await runTest(
     "example.com",
     "Should upgrade upgradeable website without explicit scheme",
     "https"
   );
+
+  info("Checking expected telemetry");
+  is(Glean.httpsfirst.upgraded.testGetValue(), null);
+  is(Glean.httpsfirst.upgradedSchemeless.testGetValue(), 5);
+  is(Glean.httpsfirst.downgraded.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedSchemeless.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedOnTimer.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedOnTimerSchemeless.testGetValue(), null);
+  is(Glean.httpsfirst.downgradeTime.testGetValue(), null);
+  is(Glean.httpsfirst.downgradeTimeSchemeless.testGetValue(), null);
 });

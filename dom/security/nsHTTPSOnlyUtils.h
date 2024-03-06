@@ -95,12 +95,13 @@ class nsHTTPSOnlyUtils {
   /**
    * Determines if the request was previously upgraded with HTTPS-First, creates
    * a downgraded URI and logs to console.
-   * @param  aStatus   Status code
-   * @param  aChannel Failed channel
-   * @return          URI with http-scheme or nullptr
+   * @param  aStatus               Status code
+   * @param  aDocumentLoadListener Failed document load listener
+   * @return                       URI with http-scheme or nullptr
    */
   static already_AddRefed<nsIURI> PotentiallyDowngradeHttpsFirstRequest(
-      nsIChannel* aChannel, nsresult aStatus);
+      mozilla::net::DocumentLoadListener* aDocumentLoadListener,
+      nsresult aStatus);
 
   /**
    * Checks if the error code is on a block-list of codes that are probably
