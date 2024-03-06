@@ -34,8 +34,7 @@ function runTests() {
       aEvent.preventDefault(); // prevent the browser default behavior
     },
   };
-  var els = Services.els;
-  els.addSystemEventListener(window, "keypress", listener, false);
+  SpecialPowers.wrap(window).addEventListener("keypress", listener, { mozSystemGroup: true });
 
   var staticContent = document.getElementById("static");
   staticContent._defaultValue = getTextValue(staticContent);
@@ -306,7 +305,7 @@ function runTests() {
   testTextInput(inputInEditor);
   testTextInput(textareaInEditor);
 
-  els.removeSystemEventListener(window, "keypress", listener, false);
+  SpecialPowers.wrap(window).removeEventListener("keypress", listener, { mozSystemGroup: true });
 
   SimpleTest.finish();
 }
