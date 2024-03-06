@@ -35,9 +35,11 @@ support-files = [
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1816325
 # Several tests rely on redirecting to data: URIs, which was allowed for a long
 # time but now forbidden. So we enable it just for these tests.
+# Native HTTPS query changes timings for some tests. Disable it for now.
 prefs = [
   "dom.serviceWorkers.enabled=true",
- "network.allow_redirect_to_data=true",
+  "network.allow_redirect_to_data=true",
+  "network.dns.native_https_query=false",
 ]
 
 ["test_1073747.js"]
