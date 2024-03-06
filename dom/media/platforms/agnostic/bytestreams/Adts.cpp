@@ -85,6 +85,35 @@ bool ConvertSample(uint16_t aChannelCount, uint8_t aFrequencyIndex,
   return true;
 }
 
+bool StripHeader(MediaRawData* aSample) {
+  if (aSample->Size() < kADTSHeaderSize) {
+    return false;
+  }
+
+  FrameHeader header;
+  auto data = Span{aSample->Data(), aSample->Size()};
+  MOZ_ASSERT(FrameHeader::MatchesSync(data),
+             "Don't attempt to strip the ADTS header of a raw AAC packet.");
+
+  bool crcPresent = header.mHaveCrc;
+
+  LOG(("Stripping ADTS, crc %spresent", crcPresent ? "" : "not "));
+
+  size_t toStrip = crcPresent ? kADTSHeaderSize + 2 : kADTSHeaderSize;
+
+  UniquePtr<MediaRawDataWriter> writer(aSample->CreateWriter());
+  writer->PopFront(toStrip);
+
+  if (aSample->mCrypto.IsEncrypted()) {
+    if (aSample->mCrypto.mPlainSizes.Length() > 0 &&
+        writer->mCrypto.mPlainSizes[0] >= kADTSHeaderSize) {
+      writer->mCrypto.mPlainSizes[0] -= kADTSHeaderSize;
+    }
+  }
+
+  return true;
+}
+
 bool RevertSample(MediaRawData* aSample) {
   if (aSample->Size() < kADTSHeaderSize) {
     return false;
