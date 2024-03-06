@@ -303,7 +303,6 @@ void nsMathMLmpaddedFrame::Reflow(nsPresContext* aPresContext,
                                   nsReflowStatus& aStatus) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  mPresentationData.flags &= ~NS_MATHML_ERROR;
   ProcessAttributes();
 
   ///////////////
@@ -317,7 +316,7 @@ void nsMathMLmpaddedFrame::Reflow(nsPresContext* aPresContext,
 nsresult nsMathMLmpaddedFrame::Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
                                      ReflowOutput& aDesiredSize) {
   nsresult rv = nsMathMLContainerFrame::Place(aDrawTarget, false, aDesiredSize);
-  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+  if (NS_FAILED(rv)) {
     DidReflowChildren(PrincipalChildList().FirstChild());
     return rv;
   }

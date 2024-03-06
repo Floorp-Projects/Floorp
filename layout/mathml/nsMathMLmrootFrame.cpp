@@ -80,20 +80,18 @@ void nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   /////////////
   // paint the sqrt symbol
-  if (!NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
-    mSqrChar.Display(aBuilder, this, aLists, 0);
+  mSqrChar.Display(aBuilder, this, aLists, 0);
 
-    DisplayBar(aBuilder, this, mBarRect, aLists);
+  DisplayBar(aBuilder, this, mBarRect, aLists);
 
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
-    // for visual debug
-    nsRect rect;
-    mSqrChar.GetRect(rect);
-    nsBoundingMetrics bm;
-    mSqrChar.GetBoundingMetrics(bm);
-    DisplayBoundingMetrics(aBuilder, this, rect.TopLeft(), bm, aLists);
+  // for visual debug
+  nsRect rect;
+  mSqrChar.GetRect(rect);
+  nsBoundingMetrics bm;
+  mSqrChar.GetBoundingMetrics(bm);
+  DisplayBoundingMetrics(aBuilder, this, rect.TopLeft(), bm, aLists);
 #endif
-  }
 }
 
 void nsMathMLmrootFrame::GetRadicalXOffsets(nscoord aIndexWidth,
@@ -162,7 +160,6 @@ void nsMathMLmrootFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   nsReflowStatus childStatus;
-  mPresentationData.flags &= ~NS_MATHML_ERROR;
   aDesiredSize.ClearSize();
   aDesiredSize.SetBlockStartAscent(0);
 
