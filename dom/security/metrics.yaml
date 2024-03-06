@@ -1,0 +1,153 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: DOM: Security'
+
+httpsfirst:
+  upgraded:
+    type: counter
+    description: >
+      Counts how often a load is marked to be upgraded to HTTPS because of
+      HTTPS-First (`dom.security.https_first` enabled).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  upgraded_schemeless:
+    type: counter
+    description: >
+      Counts how often a load is marked to be upgraded to HTTPS because of
+      schemeless HTTPS-First (`dom.security.https_first` disabled, but load
+      marked as schemeless).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  downgraded:
+    type: counter
+    description: >
+      How many regular HTTPS-First (`dom.security.https_first` enabled)
+      upgrades get downgraded again.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  downgraded_schemeless:
+    type: counter
+    description: >
+      How many schemeless HTTPS-First (`dom.security.https_first` disabled, but
+      load marked as schemeless) upgrades get downgraded again.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  downgraded_on_timer:
+    type: rate
+    description: >
+      How many HTTPS-First (`dom.security.https_first` enabled) upgrades get
+      downgraded again because the HTTP request fired after 3s received a answer
+      faster than the HTTPS request.
+    denominator_metric: httpsfirst.downgraded
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  downgraded_on_timer_schemeless:
+    type: rate
+    description: >
+      How many of schemeless HTTPS-First (`dom.security.https_first` disabled,
+      but load marked as schemeless) upgrades get downgraded again because the
+      HTTP request fired after 3s received a answer faster than the HTTPS
+      request
+    denominator_metric: httpsfirst.downgraded_schemeless
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  downgrade_time:
+    type: timing_distribution
+    description: >
+      If a HTTPS-First (`dom.security.https_first` enabled) upgrade isn't
+      successful, measures the timespan between the navigation start and the
+      downgrade. This is essentially the overhead caused by HTTPS-First if a
+      site does not support HTTPS.
+    time_unit: millisecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+
+  downgrade_time_schemeless:
+    type: timing_distribution
+    description: >
+      If a schemeless HTTPS-First (`dom.security.https_first` disabled, but
+      load marked as schemeless) upgrade isn't successful, measures the
+      timespan between the navigation start and the downgrade. This is
+      essentially the overhead caused by HTTPS-First if a site does not support
+      HTTPS.
+    time_unit: millisecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868380#c10
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mjurgens@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never

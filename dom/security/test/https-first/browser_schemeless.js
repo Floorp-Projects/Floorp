@@ -183,9 +183,32 @@ add_task(async function () {
     "http"
   );
 
+  is(
+    null,
+    Glean.httpsfirst.upgraded.testGetValue() ??
+      Glean.httpsfirst.upgradedSchemeless.testGetValue() ??
+      Glean.httpsfirst.downgraded.testGetValue() ??
+      Glean.httpsfirst.downgradedSchemeless.testGetValue() ??
+      Glean.httpsfirst.downgradedOnTimer.testGetValue() ??
+      Glean.httpsfirst.downgradedOnTimerSchemeless.testGetValue() ??
+      Glean.httpsfirst.downgradeTime.testGetValue() ??
+      Glean.httpsfirst.downgradeTimeSchemeless.testGetValue(),
+    "No telemetry should have been recorded yet"
+  );
+
   await runTest(
     "example.com",
     "Should upgrade upgradeable website without explicit scheme",
     "https"
   );
+
+  info("Checking expected telemetry");
+  is(Glean.httpsfirst.upgraded.testGetValue(), null);
+  is(Glean.httpsfirst.upgradedSchemeless.testGetValue(), 5);
+  is(Glean.httpsfirst.downgraded.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedSchemeless.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedOnTimer.testGetValue(), null);
+  is(Glean.httpsfirst.downgradedOnTimerSchemeless.testGetValue(), null);
+  is(Glean.httpsfirst.downgradeTime.testGetValue(), null);
+  is(Glean.httpsfirst.downgradeTimeSchemeless.testGetValue(), null);
 });
