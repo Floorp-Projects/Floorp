@@ -1013,7 +1013,8 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     }
     if (auto innerError = getRangeError.GetError()) {
       MOZ_LOG(sLogger, LogLevel::Info,
-              ("WebGPU present: buffer get_mapped_range failed: %s\n",
+              ("WebGPU present: buffer get_mapped_range for internal "
+               "presentation readback failed: %s\n",
                innerError->message.get()));
       return;
     }
@@ -1048,7 +1049,8 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     }
     if (auto innerError = unmapError.GetError()) {
       MOZ_LOG(sLogger, LogLevel::Info,
-              ("WebGPU present: buffer unmap failed: %s\n",
+              ("WebGPU present: buffer unmap for internal presentation "
+               "readback failed: %s\n",
                innerError->message.get()));
     }
   } else {
