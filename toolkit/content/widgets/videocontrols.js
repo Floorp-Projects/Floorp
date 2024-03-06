@@ -2787,10 +2787,6 @@ this.VideoControlsImplWidget = class {
     if (this.Utils.isTouchControls) {
       this.TouchUtils.init(this.shadowRoot, this.Utils);
     }
-    this.shadowRoot.firstChild.dispatchEvent(
-      new this.window.CustomEvent("VideoBindingAttached")
-    );
-
     this._setupEventListeners();
   }
 
@@ -3063,9 +3059,6 @@ this.NoControlsMobileImplWidget = class {
       },
     };
     this.Utils.init(this.shadowRoot);
-    this.Utils.video.dispatchEvent(
-      new this.window.CustomEvent("MozNoControlsVideoBindingAttached")
-    );
   }
 
   elementStateMatches() {
