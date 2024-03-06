@@ -19,13 +19,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
+  ShellService: "resource:///modules/ShellService.sys.mjs",
 });
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   AlertsService: ["@mozilla.org/alerts-service;1", "nsIAlertsService"],
-  XreDirProvider: [
-    "@mozilla.org/xre/directory-provider;1",
-    "nsIXREDirProvider",
-  ],
 });
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -244,9 +242,9 @@ async function doTask(defaultAgent, force) {
       kNotificationAction.makeFirefoxDefaultButton ||
     notificationTelemetry.action == kNotificationAction.toastClicked
   ) {
-    let aumid = lazy.XreDirProvider.getInstallHash();
-    lazy.log.info(`Setting default browser with AUMID: ${aumid}`);
-    defaultAgent.setDefaultBrowserUserChoice(aumid, []);
+    await lazy.ShellService.setDefaultBrowser(false).catch(e => {
+      lazy.log.error(`setDefaultBrowser failed: ${e}`);
+    });
   }
 
   defaultAgent.sendPing(
