@@ -430,7 +430,7 @@ void nsLineLayout::BeginSpan(nsIFrame* aFrame,
   psd->mIStart = aIStart;
   psd->mICoord = aIStart;
   psd->mIEnd = aIEnd;
-  psd->mInset = mCurrentSpan->mInset;
+  psd->mInset = 0;  // inset applies only to the root span
   psd->mBaseline = aBaseline;
 
   nsIFrame* frame = aSpanReflowInput->mFrame;
