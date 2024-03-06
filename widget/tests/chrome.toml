@@ -9,6 +9,9 @@ support-files = [
 
 # Privacy relevant
 
+["test_bug1123480.xhtml"]
+skip-if = ["win11_2009 && bits == 32"]
+
 ["test_bug343416.xhtml"]
 skip-if = ["debug"]
 
@@ -63,8 +66,8 @@ run-if = ["os == 'mac'"] # Cocoa widget test
 
 ["test_bug760802.xhtml"]
 
-["test_bug1123480.xhtml"]
-skip-if = ["win11_2009 && bits == 32"]
+["test_clipboard_chrome.html"]
+support-files = "file_test_clipboard.js"
 
 ["test_clipboard_asyncGetData_chrome.html"]
 support-files = "file_test_clipboard_asyncGetData.js"
@@ -73,12 +76,6 @@ support-files = "file_test_clipboard_asyncGetData.js"
 support-files = "file_test_clipboard_asyncSetData.js"
 
 ["test_clipboard_cache_chrome.html"]
-
-["test_clipboard_chrome.html"]
-support-files = "file_test_clipboard.js"
-
-["test_clipboard_getDataSnapshotSync_chrome.html"]
-support-files = "file_test_clipboard_getDataSnapshotSync.js"
 
 ["test_clipboard_owner_chrome.html"]
 
