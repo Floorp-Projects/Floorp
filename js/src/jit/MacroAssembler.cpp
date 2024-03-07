@@ -6787,6 +6787,11 @@ void MacroAssembler::wasmNewArrayObject(Register instance, Register result,
                 Address(temp, gc::AllocSite::offsetOfScriptAndState()),
                 Imm32(gc::AllocSite::LONG_LIVED_BIT), fail);
 
+  // Ensure that the numElements is small enough to fit in inline storage.
+  branch32(Assembler::Above, numElements,
+           Imm32(WasmArrayObject::maxInlineElementsForElemSize(elemSize)),
+           fail);
+
   // Push numElements for later; numElements will be used as a temp in the
   // meantime. Make sure that all exit paths pop the value again!
   Label popAndFail;
@@ -6799,33 +6804,19 @@ void MacroAssembler::wasmNewArrayObject(Register instance, Register result,
   push(numElements);
 #endif
 
-  // TODO: Compute the maximum number of elements for each elemSize, then do a
-  // single branch up front rather than checking overflow constantly.
+  // Compute the size of the allocation in bytes. The final size must correspond
+  // to an AllocKind. See WasmArrayObject::calcStorageBytes and
+  // WasmArrayObject::allocKindForIL.
 
-  // Compute the size of the allocation in bytes, checking for overflow. In case
-  // of overflow, we'll just fall back to the OOL path in C++, which will trap
-  // and all that. The final size must correspond to an AllocKind. (Signed
-  // overflow vs. unsigned overflow doesn't matter; any overflow indicates that
-  // we are too big and must bail to C++.)
-  //
-  // See WasmArrayObject::calcStorageBytes and WasmArrayObject::allocKindForIL.
-  //
-  // We start with elemSize * numElements and go from there.
-  move32(Imm32(elemSize), temp);
-  branchMul32(Assembler::Overflow, temp, numElements, &popAndFail);
-  // Add the data header
-  branchAdd32(Assembler::Overflow, Imm32(sizeof(WasmArrayObject::DataHeader)),
-              numElements, &popAndFail);
+  // Compute the size of all array element data.
+  mul32(Imm32(elemSize), numElements);
+  // Add the data header.
+  add32(Imm32(sizeof(WasmArrayObject::DataHeader)), numElements);
   // Round up to gc::CellAlignBytes to play nice with the GC and to simplify the
   // zeroing logic below.
-  branchAdd32(Assembler::Overflow, Imm32(gc::CellAlignBytes - 1), numElements,
-              &popAndFail);
+  add32(Imm32(gc::CellAlignBytes - 1), numElements);
   and32(Imm32(~int32_t(gc::CellAlignBytes - 1)), numElements);
-  // Fall back to OOL code if the array size is too large for inline data
-  branch32(Assembler::Above, numElements, Imm32(WasmArrayObject_MaxInlineBytes),
-           &popAndFail);
   // Add the size of the WasmArrayObject to get the full allocation size.
-  // Overflow checks are no longer necessary.
   static_assert(WasmArrayObject_MaxInlineBytes + sizeof(WasmArrayObject) <
                 INT32_MAX);
   add32(Imm32(sizeof(WasmArrayObject)), numElements);
