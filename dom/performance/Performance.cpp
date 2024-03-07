@@ -605,6 +605,7 @@ void Performance::MaybeEmitExternalProfilerMarker(
     return;
   }
 
+#if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
   ErrorResult rv;
   auto [startTimeStamp, endTimeStamp] =
       GetTimeStampsForMarker(aStartMark, aEndMark, aOptions, rv);
@@ -612,6 +613,7 @@ void Performance::MaybeEmitExternalProfilerMarker(
   if (NS_WARN_IF(rv.Failed())) {
     return;
   }
+#endif
 
 #ifdef XP_LINUX
   uint64_t rawStart = startTimeStamp.RawClockMonotonicNanosecondsSinceBoot();
