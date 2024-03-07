@@ -35,6 +35,7 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "saveToPocket",
     "searchConfiguration",
     "shellService",
+    "testFeature",
     "updatePrompt",
     "upgradeDialog",
 }
