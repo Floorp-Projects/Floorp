@@ -126,17 +126,6 @@
   margin: 0;
 }
 
-#editBookmarkPanelContent > html|input,
-#editBookmarkPanelContent > hbox > html|input {
-  appearance: none;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid var(--input-border-color, ThreeDShadow);
-  background-color: var(--input-bgcolor, Field);
-  color: var(--input-color, FieldText);
-  margin: 0;
-}
-
 /* Focus outlines */
 
 #editBookmarkPanel .expander-up:focus-visible,

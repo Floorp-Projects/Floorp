@@ -933,20 +933,6 @@ popupnotificationcontent {
   margin-inline: 0;
 }
 
-.popup-notification-body :is(input, textarea) {
-  padding: 8px;
-  border-radius: 4px;
-  border: 0;
-  outline: 1px solid var(--input-border-color, ThreeDShadow);
-  outline-offset: -1px;
-  background-color: var(--input-bgcolor, Field);
-  color: var(--input-color, FieldText);
-}
-
-.popup-notification-body input:focus-visible {
-  outline: 2px solid var(--focus-outline-color);
-}
-
 .popup-notification-description {
   font-weight: 600;
   margin-top: 0;

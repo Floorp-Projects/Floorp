@@ -89,12 +89,6 @@ xul|separator.groove[orient="vertical"] {
   margin-inline: 0.4em;
 }
 
-/* Input margins */
-
-html|input {
-  margin: 2px 4px;
-}
-
 /* Content select */
 
 .contentSelectDropdown-ingroup > .menu-iconic-text {
