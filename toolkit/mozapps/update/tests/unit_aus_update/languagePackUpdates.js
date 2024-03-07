@@ -246,9 +246,9 @@ add_task(async function testRedownload() {
 
   let downloadCount = 0;
   let listener = {
-    onStartRequest: aRequest => {},
-    onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {},
-    onStatus: (aRequest, aStatus, aStatusText) => {},
+    onStartRequest: _aRequest => {},
+    onProgress: (_aRequest, _aContext, _aProgress, _aMaxProgress) => {},
+    onStatus: (_aRequest, _aStatus, _aStatusText) => {},
     onStopRequest: (request, status) => {
       Assert.equal(
         status,

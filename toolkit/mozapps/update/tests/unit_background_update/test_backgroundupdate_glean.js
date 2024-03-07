@@ -140,7 +140,7 @@ async function do_readTargeting(content, beforeNextSubmitCallback) {
 
 // Missing targeting is anticipated.
 add_task(async function test_targeting_missing() {
-  await do_readTargeting(null, reason => {
+  await do_readTargeting(null, _reason => {
     Assert.equal(false, Glean.backgroundUpdate.targetingExists.testGetValue());
 
     Assert.equal(
@@ -152,7 +152,7 @@ add_task(async function test_targeting_missing() {
 
 // Malformed JSON yields an exception.
 add_task(async function test_targeting_exception() {
-  await do_readTargeting("{", reason => {
+  await do_readTargeting("{", _reason => {
     Assert.equal(false, Glean.backgroundUpdate.targetingExists.testGetValue());
 
     Assert.equal(
@@ -193,7 +193,7 @@ add_task(async function test_targeting_exists() {
     targets: [manager.createTargetingContext(), target],
   });
 
-  await do_readTargeting(JSON.stringify(targetSnapshot), reason => {
+  await do_readTargeting(JSON.stringify(targetSnapshot), _reason => {
     Assert.equal(true, Glean.backgroundUpdate.targetingExists.testGetValue());
 
     Assert.equal(

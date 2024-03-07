@@ -493,7 +493,7 @@ function waitForAboutDialog() {
         var domwindow = aXULWindow.docShell.domWindow;
         domwindow.addEventListener("load", aboutDialogOnLoad, true);
       },
-      onCloseWindow: aXULWindow => {},
+      onCloseWindow: _aXULWindow => {},
     };
 
     Services.wm.addListener(listener);

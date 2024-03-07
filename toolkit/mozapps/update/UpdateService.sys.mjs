@@ -440,7 +440,7 @@ let gOtherInstancePollPromise;
  *
  * @return true if at least one other instance is running, false if not
  */
-function isOtherInstanceRunning(callback) {
+function isOtherInstanceRunning() {
   const checkEnabled = Services.prefs.getBoolPref(
     PREF_APP_UPDATE_CHECK_ONLY_INSTANCE_ENABLED,
     true
@@ -497,7 +497,7 @@ function waitForOtherInstances() {
   let iterations = 0;
   const maxIterations = Math.ceil(timeout / interval);
 
-  gOtherInstancePollPromise = new Promise(function (resolve, reject) {
+  gOtherInstancePollPromise = new Promise(function (resolve) {
     let poll = function () {
       iterations++;
       if (!isOtherInstanceRunning()) {
@@ -3352,10 +3352,10 @@ UpdateService.prototype = {
 
   /**
    * Notified when a timer fires
-   * @param   timer
+   * @param   _timer
    *          The timer that fired
    */
-  notify: function AUS_notify(timer) {
+  notify: function AUS_notify(_timer) {
     this._checkForBackgroundUpdates(true);
   },
 
@@ -4907,7 +4907,7 @@ UpdateManager.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  doInstallCleanup: async function UM_doInstallCleanup(isUninstall) {
+  doInstallCleanup: async function UM_doInstallCleanup() {
     LOG("UpdateManager:doInstallCleanup - cleaning up");
     let completionPromises = [];
 
@@ -4949,7 +4949,7 @@ UpdateManager.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  doUninstallCleanup: async function UM_doUninstallCleanup(isUninstall) {
+  doUninstallCleanup: async function UM_doUninstallCleanup() {
     LOG("UpdateManager:doUninstallCleanup - cleaning up.");
     let completionPromises = [];
 
@@ -5272,13 +5272,13 @@ export class CheckerService {
         return;
       }
 
-      let onLoad = event => {
+      let onLoad = _event => {
         request.removeEventListener("load", onLoad);
         LOG("CheckerService:#updateCheck - request got 'load' event");
         resolve(UPDATE_CHECK_LOAD_SUCCESS);
       };
       request.addEventListener("load", onLoad);
-      let onError = event => {
+      let onError = _event => {
         request.removeEventListener("error", onLoad);
         LOG("CheckerService:#updateCheck - request got 'error' event");
         resolve(UPDATE_CHECK_LOAD_ERROR);
@@ -5702,11 +5702,9 @@ Downloader.prototype = {
    * set of update patches.
    * @param   update
    *          A nsIUpdate object to select a patch from
-   * @param   updateDir
-   *          A nsIFile representing the update directory
    * @return  A nsIUpdatePatch object to download
    */
-  _selectPatch: function Downloader__selectPatch(update, updateDir) {
+  _selectPatch: function Downloader__selectPatch(update) {
     // Given an update to download, we will always try to download the patch
     // for a partial update over the patch for a full update.
 
@@ -5934,7 +5932,7 @@ Downloader.prototype = {
 
     // This function may return null, which indicates that there are no patches
     // to download.
-    this._patch = this._selectPatch(update, updateDir);
+    this._patch = this._selectPatch(update);
     if (!this._patch) {
       LOG("Downloader:downloadUpdate - no patch to download");
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE_PATCH);

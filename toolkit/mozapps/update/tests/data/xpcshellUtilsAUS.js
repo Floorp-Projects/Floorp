@@ -3823,7 +3823,7 @@ function checkFilesAfterUpdateSuccess(
           "xattr value changed"
         );
       },
-      reason => {
+      _reason => {
         Assert.fail(MAC_APP_XATTR_KEY + " xattr is missing!");
       }
     );
@@ -4290,9 +4290,9 @@ async function waitForUpdateDownload(aUpdates, aExpectedStatus) {
   }
   return new Promise(resolve =>
     gAUS.addDownloadListener({
-      onStartRequest: aRequest => {},
-      onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {},
-      onStatus: (aRequest, aStatus, aStatusText) => {},
+      onStartRequest: _aRequest => {},
+      onProgress: (_aRequest, _aContext, _aProgress, _aMaxProgress) => {},
+      onStatus: (_aRequest, _aStatus, _aStatusText) => {},
       onStopRequest(request, status) {
         gAUS.removeDownloadListener(this);
         Assert.equal(
@@ -4609,7 +4609,7 @@ function adjustGeneralPaths() {
  * The timer callback to kill the process if it takes too long.
  */
 const gAppTimerCallback = {
-  notify: function TC_notify(aTimer) {
+  notify: function TC_notify(_aTimer) {
     gAppTimer = null;
     if (gProcess.isRunning) {
       logTestInfo("attempting to kill process");
@@ -4719,7 +4719,7 @@ function IncrementalDownload() {
 
 IncrementalDownload.prototype = {
   /* nsIIncrementalDownload */
-  init(uri, file, chunkSize, intervalInSeconds) {
+  init(uri, file, _chunkSize, _intervalInSeconds) {
     this._destination = file;
     this._URI = uri;
     this._finalURI = uri;
@@ -4786,7 +4786,7 @@ IncrementalDownload.prototype = {
   },
 
   /* nsIRequest */
-  cancel(aStatus) {
+  cancel(_aStatus) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   suspend() {

@@ -926,7 +926,7 @@ async function continueFileHandler(leafName) {
     "Waiting for file to be deleted, path: " + continueFile.path,
     interval,
     retries
-  ).catch(e => {
+  ).catch(_e => {
     logTestInfo(
       "Continue file was not removed after checking " +
         retries +
