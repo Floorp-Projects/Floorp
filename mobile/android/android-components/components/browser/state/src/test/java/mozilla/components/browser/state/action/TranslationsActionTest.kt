@@ -25,6 +25,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -191,6 +192,41 @@ class TranslationsActionTest {
         store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = translatedEngineState))
             .joinBlocking()
         assertFalse(tabState().translationsState.isOfferTranslate)
+    }
+
+    @Test
+    fun `WHEN a TranslateStateChangeAction is dispatched THEN the translationError status updates accordingly`() {
+        // Initial State
+        assertNull(tabState().translationsState.translationEngineState)
+        assertNull(tabState().translationsState.translationError)
+
+        // Sending an initial request to set state, notice the supportedDocumentLang isn't supported
+        val noSupportedState = TranslationEngineState(
+            detectedLanguages = DetectedLanguages(documentLangTag = "unknown", supportedDocumentLang = false, userPreferredLangTag = "en"),
+            error = null,
+            isEngineReady = true,
+            requestedTranslationPair = null,
+        )
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = noSupportedState))
+            .joinBlocking()
+
+        // Response state
+        assertEquals(noSupportedState, tabState().translationsState.translationEngineState)
+        assertNotNull(tabState().translationsState.translationError)
+
+        // Sending a request to show state change, notice the supportedDocumentLang is now supported
+        val supportedState = TranslationEngineState(
+            detectedLanguages = DetectedLanguages(documentLangTag = "es", supportedDocumentLang = true, userPreferredLangTag = "en"),
+            error = null,
+            isEngineReady = true,
+            requestedTranslationPair = null,
+        )
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, translationEngineState = supportedState))
+            .joinBlocking()
+
+        // Response state
+        assertEquals(supportedState, tabState().translationsState.translationEngineState)
+        assertNull(tabState().translationsState.translationError)
     }
 
     @Test

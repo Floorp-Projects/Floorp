@@ -9,6 +9,7 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TranslationsState
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettings
@@ -67,12 +68,17 @@ internal object TranslationsStateReducer {
                 action.translationEngineState.requestedTranslationPair?.toLanguage == null
             ) {
                 // In an untranslated state
+                var translationsError: TranslationError? = null
+                if (action.translationEngineState.detectedLanguages?.supportedDocumentLang == false) {
+                    translationsError = TranslationError.LanguageNotSupportedError(cause = null)
+                }
                 state.copyWithTranslationsState(action.tabId) {
                     it.copy(
                         isOfferTranslate = isOfferTranslate,
                         isExpectedTranslate = isExpectedTranslate,
                         isTranslated = false,
                         translationEngineState = action.translationEngineState,
+                        translationError = translationsError,
                     )
                 }
             } else {
