@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const editingHost = document.querySelector("div[contenteditable]");
+  const div2 = editingHost.querySelector("div ~ div");
+  const div3 = editingHost.querySelector("div ~ div ~ div");
+  editingHost.focus();
+  getSelection().setBaseAndExtent(div2, 0, div3.firstChild, div3.firstChild.length);
+  const promisePaste = new Promise(resolve => {
+    editingHost.addEventListener("input", resolve, {once: true});
+  });
+  synthesizeKey("c", { accelKey: true });
+  document.execCommand("selectAll");
+  synthesizeKey("v", { accelKey: true });
+  await promisePaste;
+  is(
+    editingHost.innerHTML.trim(),
+    "<div>def</div>\n<div>ghi</div>",
+    "Copied 2 <div>s should be pasted as-is"
+  );
+  SimpleTest.finish();
+});
+</script>
+<body>
+<div contenteditable>
+<div>abc</div>
+<div>def</div>
+<div>ghi<br></div>
+<div>jkl</div>
+</div>
+</body>
+</html>
