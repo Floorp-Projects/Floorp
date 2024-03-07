@@ -2533,7 +2533,6 @@ phc:
   description: Prefs to control the Probabalistic Heap Checker (PHC)
   owner: pbone@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     phcEnabled:
       description: Whether to enable PHC
