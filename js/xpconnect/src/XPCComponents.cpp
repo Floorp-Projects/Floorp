@@ -1777,7 +1777,7 @@ nsXPCComponents_Utils::GetFunctionSourceLocation(HandleValue funcValue,
     NS_ENSURE_TRUE(func, NS_ERROR_INVALID_ARG);
 
     RootedScript script(cx, JS_GetFunctionScript(cx, func));
-    NS_ENSURE_TRUE(func, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(script, NS_ERROR_FAILURE);
 
     AppendUTF8toUTF16(nsDependentCString(JS_GetScriptFilename(script)),
                       filename);
