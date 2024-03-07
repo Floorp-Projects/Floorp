@@ -257,9 +257,10 @@ nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
   MOZ_ASSERT(aBuilder);
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
   ErrorResult rv;
-  nsHtml5OtherDocUpdate update(aParent->OwnerDoc(), aBuilder->GetDocument());
+  Document* ownerDoc = aParent->OwnerDoc();
+  nsHtml5OtherDocUpdate update(ownerDoc, aBuilder->GetDocument());
   aParent->AppendChildTo(aNode, false, rv);
-  if (!rv.Failed()) {
+  if (!rv.Failed() && !ownerDoc->DOMNotificationsSuspended()) {
     aNode->SetParserHasNotified();
     MutationObservers::NotifyContentAppended(aParent, aNode);
   }
@@ -303,8 +304,10 @@ nsresult nsHtml5TreeOperation::AppendToDocument(
     return rv.StealNSResult();
   }
 
-  aNode->SetParserHasNotified();
-  MutationObservers::NotifyContentInserted(doc, aNode);
+  if (!doc->DOMNotificationsSuspended()) {
+    aNode->SetParserHasNotified();
+    MutationObservers::NotifyContentInserted(doc, aNode);
+  }
 
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot to block scripts");
