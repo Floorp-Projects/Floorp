@@ -37,6 +37,9 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_os = "windows")] {
         #[path = "windows/mod.rs"]
         mod ui_impl;
+    } else if #[cfg(target_os = "macos")] {
+        #[path = "macos/mod.rs"]
+        mod ui_impl;
     } else {
         mod ui_impl {
             #[derive(Default)]
