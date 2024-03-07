@@ -888,6 +888,14 @@ nsresult nsHttpChannel::ConnectOnTailUnblock() {
         Telemetry::LABELS_NETWORK_RACE_CACHE_VALIDATION::NotSent);
   }
 
+  // When racing, if OnCacheEntryAvailable is called before AsyncOpenURI
+  // returns, then we may not have started reading from the cache.
+  // If the content is valid, we should attempt to do so, as technically the
+  // cache has won the race.
+  if (mRaceCacheWithNetwork && mCachedContentIsValid) {
+    Unused << ReadFromCache(true);
+  }
+
   return TriggerNetwork();
 }
 
@@ -992,28 +1000,11 @@ nsresult nsHttpChannel::DoConnectActual(
   LOG(("nsHttpChannel::DoConnectActual [this=%p, aTransWithStickyConn=%p]\n",
        this, aTransWithStickyConn));
 
-  nsresult rv = SetupChannelForTransaction();
+  nsresult rv = SetupTransaction();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  gHttpHandler->OnDispatchingTransaction(this);
-  // could be cancelled or suspended here.
-
-  RefPtr<HttpTransactionShell> trans(aTransWithStickyConn);
-  return CallOrWaitForResume([trans{std::move(trans)}](auto* self) {
-    return self->DispatchTransaction(trans);
-  });
-}
-
-nsresult nsHttpChannel::DispatchTransaction(
-    HttpTransactionShell* aTransWithStickyConn) {
-  LOG(("nsHttpChannel::DispatchTransaction [this=%p, aTransWithStickyConn=%p]",
-       this, aTransWithStickyConn));
-  nsresult rv = InitTransaction();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
   if (aTransWithStickyConn) {
     rv = gHttpHandler->InitiateTransactionWithStickyConn(
         mTransaction, mPriority, aTransWithStickyConn);
@@ -1028,17 +1019,6 @@ nsresult nsHttpChannel::DispatchTransaction(
   rv = mTransaction->AsyncRead(this, getter_AddRefs(mTransactionPump));
   if (NS_FAILED(rv)) {
     return rv;
-  }
-
-  // When racing, if OnCacheEntryAvailable is called before AsyncOpenURI
-  // returns, then we may not have started reading from the cache.
-  // If the content is valid, we should attempt to do so, as technically the
-  // cache has won the race.
-  // We start reading from here, because CallOrWaitForResume is also used
-  // when processing the response, and we don't want mCallOnResume to be
-  // replaced.
-  if (mRaceCacheWithNetwork && mCachedContentIsValid) {
-    Unused << ReadFromCache(true);
   }
 
   uint32_t suspendCount = mSuspendCount;
@@ -1210,11 +1190,10 @@ void nsHttpChannel::HandleAsyncNotModified() {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 }
 
-nsresult nsHttpChannel::SetupChannelForTransaction() {
-  LOG((
-      "nsHttpChannel::SetupChannelForTransaction [this=%p, cos=%lu, inc=%d "
-      "prio=%d]\n",
-      this, mClassOfService.Flags(), mClassOfService.Incremental(), mPriority));
+nsresult nsHttpChannel::SetupTransaction() {
+  LOG(("nsHttpChannel::SetupTransaction [this=%p, cos=%lu, inc=%d prio=%d]\n",
+       this, mClassOfService.Flags(), mClassOfService.Incremental(),
+       mPriority));
 
   NS_ENSURE_TRUE(!mTransaction, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -1390,30 +1369,6 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
     }
   }
 
-  // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
-  if (mLoadFlags & LOAD_ANONYMOUS) mCaps |= NS_HTTP_LOAD_ANONYMOUS;
-
-  if (LoadTimingEnabled()) mCaps |= NS_HTTP_TIMING_ENABLED;
-
-  if (mUpgradeProtocolCallback) {
-    rv = mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = mRequestHead.SetHeaderOnce(nsHttp::Connection, nsHttp::Upgrade.get(),
-                                    true);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    mCaps |= NS_HTTP_STICKY_CONNECTION;
-    mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
-  }
-
-  if (mWebTransportSessionEventListener) {
-    mCaps |= NS_HTTP_STICKY_CONNECTION;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsHttpChannel::InitTransaction() {
-  nsresult rv;
   // create wrapper for this channel's notification callbacks
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
@@ -1463,6 +1418,25 @@ nsresult nsHttpChannel::InitTransaction() {
   // Save the mapping of channel id and the channel. We need this mapping for
   // nsIHttpActivityObserver.
   gHttpHandler->AddHttpChannel(mChannelId, ToSupports(this));
+
+  // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
+  if (mLoadFlags & LOAD_ANONYMOUS) mCaps |= NS_HTTP_LOAD_ANONYMOUS;
+
+  if (LoadTimingEnabled()) mCaps |= NS_HTTP_TIMING_ENABLED;
+
+  if (mUpgradeProtocolCallback) {
+    rv = mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = mRequestHead.SetHeaderOnce(nsHttp::Connection, nsHttp::Upgrade.get(),
+                                    true);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    mCaps |= NS_HTTP_STICKY_CONNECTION;
+    mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
+  }
+
+  if (mWebTransportSessionEventListener) {
+    mCaps |= NS_HTTP_STICKY_CONNECTION;
+  }
 
   nsCOMPtr<nsIHttpPushListener> pushListener;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
